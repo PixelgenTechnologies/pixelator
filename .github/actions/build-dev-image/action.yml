@@ -15,9 +15,12 @@ inputs:
     default: linux/amd64/v3
 
 outputs:
-  dev-tag:
-    description: "The tags that were pushed"
+  tags:
+    description: "All tags that were pushed"
     value: ${{ steps.meta.outputs.tags }}
+  dev-tag:
+    description: "The dev tag that was pushed"
+    value: ${{ steps.build_input_options.outputs.dev-tag }}
 
 runs:
   using: "composite"
