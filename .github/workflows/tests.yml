@@ -83,7 +83,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install poetry tox
+          python -m pip install --user pipx
+          python -m pipx ensurepath
+          pipx install poetry
+          pip install tox
+          poetry self add poetry-plugin-export
           poetry export --output dev_requirements.txt --quiet --no-interaction --no-ansi --without-hashes --with dev
           pip install -r dev_requirements.txt
           pip install -e .

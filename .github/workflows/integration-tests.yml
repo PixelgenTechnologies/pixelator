@@ -89,7 +89,9 @@ jobs:
     steps:
       - name: Install poetry
         run: |
-          pip3 install poetry
+          python -m pip install --user pipx
+          python -m pipx ensurepath
+          pipx install poetry
           poetry self add poetry-plugin-export
 
       - name: Install dev dependencies
