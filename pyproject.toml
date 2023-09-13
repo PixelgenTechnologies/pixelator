@@ -59,6 +59,7 @@ polars = "^0.17.12"
 importlib-resources = "^5.12.0"
 flake8-docstrings = "^1.7.0"
 louvain = "^0.8.1"
+fsspec = "^2023.9.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.244"
