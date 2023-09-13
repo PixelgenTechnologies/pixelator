@@ -1,0 +1,12 @@
+name: base
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # TODO lock versions?
+  - python=3.10
+  - mamba
+  - fastp
+  - python-annoy
+  - tox
+  - poetry

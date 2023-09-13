@@ -1,0 +1,142 @@
+name: D21
+assay_spec:
+  - region_id: amplicon
+    region_type: amplicon
+    name: amplicon
+    sequence_type: joined
+    regions:
+      - region_id: amplicon
+        region_type: amplicon
+        name: amplicon
+        sequence_type: joined
+        regions:
+          - region_id: amplicon
+            region_type: amplicon
+            name: amplicon
+            sequence_type: joined
+            regions:
+              - region_id: amplicon
+                region_type: amplicon
+                name: amplicon
+                sequence_type: joined
+                regions:
+                  - region_id: amplicon
+                    region_type: amplicon
+                    name: amplicon
+                    sequence_type: joined
+                    regions:
+                      - region_id: amplicon
+                        region_type: amplicon
+                        name: amplicon
+                        sequence_type: joined
+                        regions:
+                          - region_id: amplicon
+                            region_type: amplicon
+                            name: amplicon
+                            sequence_type: joined
+                            regions:
+                              - region_id: amplicon
+                                region_type: amplicon
+                                name: amplicon
+                                sequence_type: joined
+                                regions:
+                                  - region_id: amplicon
+                                    region_type: amplicon
+                                    name: amplicon
+                                    sequence_type: joined
+                                    regions:
+                                      - region_id: amplicon
+                                        region_type: amplicon
+                                        name: amplicon
+                                        sequence_type: joined
+                                        regions:
+                                          - region_id: amplicon
+                                            region_type: amplicon
+                                            name: amplicon
+                                            sequence_type: joined
+                                            regions:
+                                              - region_id: amplicon
+                                                region_type: amplicon
+                                                name: amplicon
+                                                sequence_type: joined
+                                                regions:
+                                                  - region_id: amplicon
+                                                    region_type: amplicon
+                                                    name: amplicon
+                                                    sequence_type: joined
+                                                    regions:
+                                                      - region_id: amplicon
+                                                        region_type: amplicon
+                                                        name: amplicon
+                                                        sequence_type: joined
+                                                        regions:
+                                                          - region_id: amplicon
+                                                            region_type: amplicon
+                                                            name: amplicon
+                                                            sequence_type: joined
+                                                            regions:
+                                                              - region_id: amplicon
+                                                                region_type: amplicon
+                                                                name: amplicon
+                                                                sequence_type: joined
+                                                                regions:
+                                                                  - region_id: amplicon
+                                                                    region_type: amplicon
+                                                                    name: amplicon
+                                                                    sequence_type: joined
+                                                                    regions:
+                                                                      - region_id: amplicon
+                                                                        region_type: amplicon
+                                                                        name: amplicon
+                                                                        sequence_type: joined
+                                                                        regions:
+                                                                          - region_id: amplicon
+                                                                            region_type: amplicon
+                                                                            name: amplicon
+                                                                            sequence_type: joined
+                                                                            regions:
+                                                                              - region_id: amplicon
+                                                                                region_type: amplicon
+                                                                                name: amplicon
+                                                                                sequence_type: joined
+                                                                                regions:
+                                                                                  - region_id: amplicon
+                                                                                    region_type: amplicon
+                                                                                    name: amplicon
+                                                                                    sequence_type: joined
+                                                                                    regions:
+                                                                                      - region_id: amplicon
+                                                                                        region_type: amplicon
+                                                                                        name: amplicon
+                                                                                        sequence_type: joined
+                                                                                        regions:
+                                                                                          - region_id: amplicon
+                                                                                            region_type: amplicon
+                                                                                            name: amplicon
+                                                                                            sequence_type: joined
+                                                                                            regions:
+                                                                                              - region_id: amplicon
+                                                                                                region_type: amplicon
+                                                                                                name: amplicon
+                                                                                                sequence_type: joined
+                                                                                                regions:
+                                                                                                  - region_id: amplicon
+                                                                                                    region_type: amplicon
+                                                                                                    name: amplicon
+                                                                                                    sequence_type: joined
+                                                                                                    regions:
+                                                                                                      - region_id: amplicon
+                                                                                                        region_type: amplicon
+                                                                                                        name: amplicon
+                                                                                                        sequence_type: joined
+                                                                                                        regions:
+                                                                                                          - region_id: amplicon
+                                                                                                            region_type: amplicon
+                                                                                                            name: amplicon
+                                                                                                            sequence_type: joined
+                                                                                                            regions:
+                                                                                                              - region_id: amplicon
+                                                                                                                region_type: amplicon
+                                                                                                                name: amplicon
+                                                                                                                sequence_type: joined
+                                                                                                                regions:

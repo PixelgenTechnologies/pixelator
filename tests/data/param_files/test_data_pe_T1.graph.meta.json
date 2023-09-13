@@ -1,0 +1,11 @@
+{
+    "cli": {
+        "command": "pixelator single-cell graph",
+        "options": {
+            "--multiplet-recovery": "True",
+            "--leiden-iterations": 10,
+            "--min-count": 2,
+            "--output": "."
+        }
+    }
+}

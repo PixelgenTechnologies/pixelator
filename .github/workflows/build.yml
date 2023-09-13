@@ -1,0 +1,65 @@
+#schema: https://github.com/softprops/github-actions-schemas/blob/master/workflow.json
+name: "Build containers"
+
+on:
+  push:
+    branches: [main, dev]
+    tags:
+      - "v*"   # Push events to matching v*, i.e. v1.0, v20.15.10
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+
+
+permissions:
+  id-token: write
+  actions: write
+  contents: read
+  packages: write
+
+
+jobs:
+  pre_job:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      paths_result: ${{ steps.skip_check.outputs.paths_result }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        if: ${{ !github.event.act }}
+        with:
+          concurrent_skipping: "same_content_newer"
+          skip_after_successful_duplicate: "true"
+          do_not_skip: '["workflow_dispatch"]'
+          paths_filter: |
+            python:
+              paths:
+                - 'pyproject.toml'
+                - 'poetry.lock'
+                - 'src/pixelator/**'
+
+  build:
+    name: "Build"
+    runs-on: ubuntu-latest
+    needs: [pre_job]
+    if: needs.pre_job.outputs.paths_result == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
+    outputs:
+      tag: ${{ steps.build_dev_image.outputs.dev-tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up build environment
+        id: setup_build_env
+        uses: ./.github/actions/setup-image-build-env
+
+      - name: Build and push dev image
+        id: build_dev_image
+        uses: ./.github/actions/build-dev-image
+        with:
+          cache-from: "type=registry,ref=ghcr.io/pixelgentechnologies/pixelator:dev-buildcache"
+          cache-to: "type=registry,ref=ghcr.io/pixelgentechnologies/pixelator:dev-buildcache,mode=max"

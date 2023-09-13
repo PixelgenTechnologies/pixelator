@@ -1,0 +1,431 @@
+{
+  "info": {
+    "pixelator_version": "v0.6.3",
+    "generation_date": "2023-02-09T16:29:46+0000",
+    "sample_id": "MPIX_PBMCS_1K_1",
+    "sample_description": "PHA stimulation",
+    "pixel_version": "D21",
+    "panel_name": "Single Cell Spatial Proteomics - Immunology Human",
+    "panel_version": "1.0.0",
+    "parameters": [
+      {
+        "command": "pixelator single-cell analysis",
+        "options": [
+          {
+            "name": "--compute-polarization",
+            "value": true,
+            "default_value": false,
+            "description": "Compute polarization scores matrix (components by markers)"
+          },
+          {
+            "name": "--compute-colocalization",
+            "value": true,
+            "default_value": false,
+            "description": "Compute colocalization scores (marker by marker) for each component"
+          },
+          {
+            "name": "--use-full-bipartite",
+            "value": true,
+            "default_value": false,
+            "description": "Use the bipartite graph instead of the one-node projection (UPIA) when computing polarization, coabundance and colocalization scores"
+          },
+          {
+            "name": "--normalization",
+            "value": "clr",
+            "default_value": "clr",
+            "description": "Which approach to use to normalize the antibody counts: \nraw will use the raw counts\nclr will use the CLR transformed counts\ndenoise will use CLR transformed counts and subtract the counts of the control antibodies"
+          },
+          {
+            "name": "--binarization",
+            "value": false,
+            "default_value": false,
+            "description": "Transform the antibody counts to 0-1 (binarize) when computing polarization scores"
+          },
+          {
+            "name": "--output",
+            "value": ".",
+            "default_value": null,
+            "description": "The path where the results will be placed (it is created if it does not exist)"
+          }
+        ]
+      },
+      {
+        "command": "pixelator single-cell annotate",
+        "options": [
+          {
+            "name": "--panel",
+            "value": "/home/fbdtemme/Documents/pixelgen/pixelator/tests/data/test_panel.csv",
+            "default_value": null,
+            "description": "A csv file with the antibody panel conjugations"
+          },
+          {
+            "name": "--min-size",
+            "value": 2,
+            "default_value": null,
+            "description": "The minimum size (edges) a component must have (default is disabled)"
+          },
+          {
+            "name": "--max-size",
+            "value": 100000,
+            "default_value": null,
+            "description": "The maximum size (edges) a component must have (default is disabled)"
+          },
+          {
+            "name": "--dynamic-filter",
+            "value": null,
+            "default_value": null,
+            "description": "Enable the estimation of dynamic size filters using a log-rank approach\nboth: estimate both min and max size    min: estimate min size (--min-size)     max: estimate max size (--max-size)"
+          },
+          {
+            "name": "--aggregate-calling",
+            "value": false,
+            "default_value": false,
+            "description": "Enable aggregate calling, information on potential aggregates will be added to the output data"
+          },
+          {
+            "name": "--output",
+            "value": ".",
+            "default_value": null,
+            "description": "The path where the results will be placed (it is created if it does not exist)"
+          }
+        ]
+      },
+      {
+        "command": "pixelator single-cell graph",
+        "options": [
+          {
+            "name": "--multiplet-recovery",
+            "value": "True",
+            "default_value": null,
+            "description": "Activate the multiplet recovery"
+          },
+          {
+            "name": "--leiden-iterations",
+            "value": 10,
+            "default_value": 10,
+            "description": "Number of iterations for the leiden algorithm, high values will decrease the variance of the results but increase the runtime"
+          },
+          {
+            "name": "--min-count",
+            "value": 2,
+            "default_value": 2,
+            "description": "Discard edges (pixels) with with a count (reads) below this (use 1 to disable)"
+          },
+          {
+            "name": "--output",
+            "value": ".",
+            "default_value": null,
+            "description": "The path where the results will be placed (it is created if it does not exist)"
+          }
+        ]
+      },
+      {
+        "command": "pixelator single-cell collapse",
+        "options": [
+          {
+            "name": "--markers-ignore",
+            "value": null,
+            "default_value": null,
+            "description": "A list of comma separated antibodies to ignore (discard)"
+          },
+          {
+            "name": "--algorithm",
+            "value": "adjacency",
+            "default_value": "adjacency",
+            "description": "The algorithm to use for collapsing (adjacency will perform error correction using the number of mismatches given)"
+          },
+          {
+            "name": "--upia-start",
+            "value": null,
+            "default_value": null,
+            "description": "The start position (0-based) of UPIA.\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--upia-end",
+            "value": null,
+            "default_value": null,
+            "description": "The end position (1-based) of UPIA.\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--upib-start",
+            "value": null,
+            "default_value": null,
+            "description": "The start position (0-based) of UPIB.\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--upib-end",
+            "value": null,
+            "default_value": null,
+            "description": "The end position (1-based) of UPIB.\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--umia-start",
+            "value": null,
+            "default_value": null,
+            "description": "The start position (0-based) of UMIA (disabled by default).\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--umia-end",
+            "value": null,
+            "default_value": null,
+            "description": "The end position (1-based) of UMIA (disabled by default).\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--umib-start",
+            "value": null,
+            "default_value": null,
+            "description": "The start position (0-based) of UMIB (disabled by default).\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--umib-end",
+            "value": null,
+            "default_value": null,
+            "description": "The end position (1-based) of UMIB (disabled by default).\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--neighbours",
+            "value": 60,
+            "default_value": 60,
+            "description": "The number of neighbors to use when searching for similar sequences (adjacency)\nThis number depends on the sequence depth and the ratio of erronous molecules\nexpected. A high value can make the algorithm slower."
+          },
+          {
+            "name": "--mismatches",
+            "value": 2,
+            "default_value": 2,
+            "description": "The number of mismatches allowed when collapsing (adjacency)"
+          },
+          {
+            "name": "--min-count",
+            "value": 1,
+            "default_value": 1,
+            "description": "Discard molecules with with a count (reads) lower than this (set to 1 to disable)"
+          },
+          {
+            "name": "--output",
+            "value": ".",
+            "default_value": null,
+            "description": "The path where the results will be placed (it is created if it does not exist)"
+          },
+          {
+            "name": "--design",
+            "value": "D12",
+            "default_value": null,
+            "description": "The design to load from the configuration file"
+          }
+        ]
+      },
+      {
+        "command": "pixelator single-cell demux",
+        "options": [
+          {
+            "name": "--mismatches",
+            "value": 0.1,
+            "default_value": 0.1,
+            "description": "The number of mismatches allowed (in percentage)"
+          },
+          {
+            "name": "--min-length",
+            "value": null,
+            "default_value": null,
+            "description": "The minimum length of the barcode that must overlap when matching.\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--panel",
+            "value": "test_panel.csv",
+            "default_value": null,
+            "description": "A csv file with the antibody panel conjugations"
+          },
+          {
+            "name": "--anchored",
+            "value": false,
+            "default_value": false,
+            "description": "Enforce the barcodes to be anchored (at the end of the read)"
+          },
+          {
+            "name": "--rev-complement",
+            "value": false,
+            "default_value": false,
+            "description": "Use the reverse complement of the barcodes sequences"
+          },
+          {
+            "name": "--output",
+            "value": ".",
+            "default_value": null,
+            "description": "The path where the results will be placed (it is created if it does not exist)"
+          },
+          {
+            "name": "--design",
+            "value": "D12",
+            "default_value": null,
+            "description": "The design to load from the configuration file"
+          }
+        ]
+      },
+      {
+        "command": "pixelator single-cell adapterqc",
+        "options": [
+          {
+            "name": "--mismatches",
+            "value": 0.1,
+            "default_value": 0.1,
+            "description": "The number of mismatches allowed (in percentage)"
+          },
+          {
+            "name": "--pbs1",
+            "value": null,
+            "default_value": null,
+            "description": "The PBS1 sequence that must be present in the reads.\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--pbs2",
+            "value": null,
+            "default_value": null,
+            "description": "The PBS2 sequence that must be present in the reads.\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--output",
+            "value": ".",
+            "default_value": null,
+            "description": "The path where the results will be placed (it is created if it does not exist)"
+          },
+          {
+            "name": "--design",
+            "value": "D12",
+            "default_value": null,
+            "description": "The design to load from the configuration file"
+          }
+        ]
+      },
+      {
+        "command": "pixelator single-cell preqc",
+        "options": [
+          {
+            "name": "--trim-front",
+            "value": 0,
+            "default_value": 0,
+            "description": "Trim N bases from the front of the reads"
+          },
+          {
+            "name": "--trim-tail",
+            "value": 0,
+            "default_value": 0,
+            "description": "Trim N bases from the tail of the reads"
+          },
+          {
+            "name": "--max-length",
+            "value": null,
+            "default_value": null,
+            "description": "The maximum length (bases) of a read (longer reads will be trimmed off).\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--min-length",
+            "value": null,
+            "default_value": null,
+            "description": "The minimum length (bases) of a read (shorter reads will be discarded).\nIf you set this argument it will overrule the value from the chosen design"
+          },
+          {
+            "name": "--max-n-bases",
+            "value": 0,
+            "default_value": 0,
+            "description": "The maximum number of Ns allowed in a read (default of 0 means any reads with N in it will be filtered out)"
+          },
+          {
+            "name": "--avg-qual",
+            "value": 20,
+            "default_value": 20,
+            "description": "Minimum avg. quality a read must have (0 will disable the filter)"
+          },
+          {
+            "name": "--dedup",
+            "value": false,
+            "default_value": false,
+            "description": "Remove duplicated reads (exact same sequence)"
+          },
+          {
+            "name": "--remove-polyg",
+            "value": false,
+            "default_value": false,
+            "description": "Remove PolyG sequences (length of 10 or more)"
+          },
+          {
+            "name": "--output",
+            "value": ".",
+            "default_value": null,
+            "description": "The path where the results will be placed (it is created if it does not exist)"
+          },
+          {
+            "name": "--design",
+            "value": "D12",
+            "default_value": null,
+            "description": "The design to load from the configuration file"
+          }
+        ]
+      },
+      {
+        "command": "pixelator single-cell amplicon",
+        "options": [
+          {
+            "name": "--input1-pattern",
+            "value": "_R1",
+            "default_value": "_R1",
+            "description": "The string pattern to use to identify forward (R1) files"
+          },
+          {
+            "name": "--input2-pattern",
+            "value": "_R2",
+            "default_value": "_R2",
+            "description": "The string pattern to use to identify reverse (R2) files"
+          },
+          {
+            "name": "--output",
+            "value": ".",
+            "default_value": null,
+            "description": "The path where the results will be placed (it is created if it does not exist)"
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "number_of_cells": 960,
+    "average_reads_per_cell": 97120,
+    "median_antibody_molecules_per_cell": 14850,
+    "median_umis_per_upi_per_cell": 9,
+    "median_upis_per_cell": 1650,
+    "average_modularity_per_cell": null,
+    "fraction_reads_in_cells": null,
+    "median_antibodies_per_cell": 55,
+    "total_antibodies_detected": 100,
+    "number_of_reads": 110425320,
+    "number_of_short_reads_skipped": 1656300,
+    "fraction_valid_pbs": 0.991,
+    "fraction_valid_umis": 1.0,
+    "sequencing_saturation": 0.415,
+    "fraction_q30_bases_in_antibody_barcode": 0.966,
+    "fraction_q30_bases_in_umi": 0.968,
+    "fraction_q30_bases_in_upia": 0.968,
+    "fraction_q30_bases_in_upib": 0.968,
+    "fraction_q30_bases_in_pbs1": 0.968,
+    "fraction_q30_bases_in_pbs2": 0.968,
+    "fraction_q30_bases_in_read": 0.961,
+    "antibody_reads": 4953,
+    "antibody_reads_usable_per_cell": 5000,
+    "antibody_reads_in_aggregates": 323,
+    "unrecognized_antibodies": 312,
+    "median_antibody_molecules_umis_per_cell": 31,
+    "fraction_antibody_reads": 0.4953,
+    "fraction_antibody_reads_usable_per_cell": 0.98,
+    "fraction_antibody_reads_in_aggregates": 0.07,
+    "fraction_unrecognized_antibodies": 0.049,
+    "predicted_cell_type_b_cells": 413,
+    "predicted_cell_type_t_cells": 420,
+    "predicted_cell_type_nk_cells": 132,
+    "predicted_cell_type_monocytes": 20,
+    "predicted_cell_type_dead": 8,
+    "fraction_predicted_cell_type_b_cells": 0.088,
+    "fraction_predicted_cell_type_t_cells": 0.723,
+    "fraction_predicted_cell_type_nk_cells": 0.092,
+    "fraction_predicted_cell_type_monocytes": 0.023,
+    "fraction_predicted_cell_type_dead": 0.002
+  }
+}

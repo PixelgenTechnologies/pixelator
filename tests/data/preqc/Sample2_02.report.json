@@ -1,0 +1,21 @@
+{
+	"summary": {
+		"before_filtering": {
+			"total_reads": 200000
+		}
+	},
+	"filtering_result": {
+		"passed_filter_reads": 198866,
+		"low_quality_reads": 83,
+		"too_many_N_reads": 0,
+		"too_short_reads": 1051,
+		"too_long_reads": 0,
+		"fraction_q30_upia": 0.9,
+		"fraction_q30_upib": 0.9,
+		"fraction_q30_umi": 0.9,
+		"fraction_q30_pbs1": 0.9,
+		"fraction_q30_pbs2": 0.9,
+		"fraction_q30_bc": 0.9,
+		"fraction_q30": 0.9
+	}
+}

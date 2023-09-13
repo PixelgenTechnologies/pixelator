@@ -1,0 +1,15 @@
+{
+    "total_upia": 16358,
+    "total_upib": 16183,
+    "total_umi": 100,
+    "markers": 65,
+    "edges": 17423,
+    "vertices": 32541,
+    "components": 100,
+    "components_modularity": 0.99,
+    "frac_upib_upia": 0.5,
+    "frac_largest_edges": 0.1,
+    "frac_largest_vertices": 0.1,
+    "upia_degree_mean": 1.0,
+    "upia_degree_median": 1.0
+}

@@ -1,0 +1,82 @@
+name: "build-dev-image"
+description: "Build a dev image and push it to the Pixelgen container registries"
+inputs:
+  tag:
+    description: "The tag to use for the image"
+    required: true
+  cache-from:
+    description: "The cache to use for the build"
+    default: ""
+  cache-to:
+    description: "The cache to push to for the build"
+    default: ""
+  platforms:
+    description: "The platforms to build for (seperated by comma) - defaults to linux/amd64/v3"
+    default: linux/amd64/v3
+
+outputs:
+  dev-tag:
+    description: "The tags that were pushed"
+    value: ${{ steps.meta.outputs.tags }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: |
+          ghcr.io/pixelgentechnologies/pixelator
+          890888997283.dkr.ecr.eu-north-1.amazonaws.com/pixelator
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha
+
+    - name: Build input options
+      id: build_input_options
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const shaShort = context.sha.substring(0, 7)
+          const inputParams = ${{ toJSON(inputs) }}
+          const meta = ${{ steps.meta.outputs.json }}
+          const tags = meta["tags"]
+
+          const cacheFromArray = inputParams["cache-from"].split('\n').map((line) => line.trim())
+            .filter((line) => line !== "")
+            .map((line) => "*.cache-from=" + line)
+
+          const cacheToArray = inputParams["cache-to"].split('\n').map((line) => line.trim())
+            .filter((line) => line !== "")
+            .map((line) => "*.cache-to=" + line)
+
+          const tagsArray = tags.map((tag) => "*.tags=" + tag)
+
+          const platformArray = inputParams["platforms"].split(',').map((line) => line.trim())
+            .filter((line) => line !== "")
+            .map((line) => "*.platform=" + line)
+
+          let bakeSetCommands = []
+          bakeSetCommands.push(...tagsArray)
+          bakeSetCommands.push(...cacheFromArray)
+          bakeSetCommands.push(...cacheToArray)
+          bakeSetCommands.push(...platformArray)
+
+          const gitSHAtag = tagsArray.find((tag) => tag.includes('ghcr') && tag.includes('sha'))
+
+          bakeSetCommandsText = bakeSetCommands.join('\n')
+          core.setOutput('set', bakeSetCommandsText)
+          core.setOutput('dev-tag', gitSHAtag)
+
+
+    - name: Build and push to ghcr and ecr
+      uses: docker/bake-action@v3
+      with:
+        push: true
+        targets: pixelator-prod
+        provenance: false
+        set: ${{ steps.build_input_options.outputs.set }}

@@ -1,0 +1,10 @@
+{
+    "cli": {
+        "command": "pixelator single-cell amplicon",
+        "options": {
+            "--input1-pattern": "_R1",
+            "--input2-pattern": "_R2",
+            "--output": "."
+        }
+    }
+}

@@ -1,0 +1,13 @@
+name: pixelator
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.10.*
+  - setuptools>=65.0
+  - poetry
+  - poetry-plugin-export
+  - poetry-dynamic-versioning[plugin]
+  - virtualenv
+  - fastp

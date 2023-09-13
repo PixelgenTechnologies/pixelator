@@ -1,0 +1,117 @@
+[tool]
+[tool.poetry]
+name = "pixelator"
+version = "0.0.0"
+homepage = "https://github.com/PixelgenTechnologies/pixelator"
+repository = "https://github.com/PixelgenTechnologies/pixelator"
+documentation = ""
+description = "Software package to process sequencing FASTQ from Molecular Pixelation (MPX) assays"
+authors = ["Pixelgen Technologies Developers <developers@pixelgen.com>",]
+readme = "README.md"
+license =  "MIT"
+keywords = ["protein", "single-cell", "molecular-pixelation", "spatial", "proteomics"]
+classifiers=[
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: MIT Software License',
+    'Natural Language :: English',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10']
+
+packages = [
+    { include = "pixelator", from = "src" },
+    { include = "tests", format = "sdist" }]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.11"
+click = "*"
+yapf = "*"
+cutadapt = ">=4.2"
+umi_tools = "<=1.1.4"
+pyfastx = "*"
+yappi = "*"
+igraph = "0.10.2"
+pandas = ">=2.0.0"
+numpy = "<1.24.0"
+annoy = "<=1.17.0"
+esda = "*"
+libpysal = "*"
+xopen = "*"
+anndata = "*"
+numba = ">=0.56.4"
+scanpy = "*"
+leidenalg = "*"
+lxml = "*"
+cssselect = "*"
+typing_extensions = "*"
+scipy = "*"
+pyarrow = "*"
+semver = "*"
+ruamel-yaml = "^0.17.21"
+pydantic = "^1.10.7"
+polars = "^0.17.12"
+importlib-resources = "^5.12.0"
+flake8-docstrings = "^1.7.0"
+louvain = "^0.8.1"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.0.244"
+pre-commit = "^3.2.2"
+bumpversion = "*"
+coverage = "*"
+flake8 = "*"
+invoke = "*"
+isort = "*"
+pylint = "*"
+pytest = "*"
+sphinx = "*"
+tox = "*"
+tox-current-env = "^0.0.11"
+black = "*"
+mypy = "*"
+pytest-watch = "*"
+pytest-snapshot = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+pytest-dependency = "*"
+sphinx-copybutton = "^0.5.2"
+sphinx-design = "^0.4.1"
+sphinx-inline-tabs = "^2023.4.21"
+myst-parser = "^2.0.0"
+furo = "^2023.5.20"
+
+
+[tool.poetry.scripts]
+pixelator = 'pixelator.cli:main_cli'
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.pytest.ini_options]
+pythonpath = [ "src" ]
+markers = [
+    "integration_test: Marks a test as an integration test, which is often slow (deselect with '-m \"not integration_test\"')",
+    "workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow (deselect with '-m \"not workflow_test\"')"]
+
+addopts = ["-p no:pytest-workflow", "-m not workflow_test",]
+filterwarnings = ["ignore::DeprecationWarning",]
+
+[tool.ruff]
+
+[tool.ruff.per-file-ignores]
+"pixelator/report/__init__.py" = ["E501"]
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+# Metadata is unset, only add sha when not on a version tag
+dirty = true
+style = "pep440"
+bump = false
+latest-tag = true
+strict = false
+
+[tool.poetry-dynamic-versioning.substitution]
+files = []

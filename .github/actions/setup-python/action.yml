@@ -1,0 +1,29 @@
+name: "setup python"
+description: "Setup python"
+inputs:
+  python-version:
+    description: "The python version to setup"
+    required: true
+outputs: {}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Detect x86_64 feature level
+      id: x86_64_feature_level
+      uses: ./.github/actions/x86_64_feature_level
+
+    - name: Write file with feature level
+      shell: bash
+      run: |
+        echo "${{ steps.x86_64_feature_level.outputs.level }}" > x86_64_feature_level.txt
+
+    - name: Set up Python environment
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          **/pyproject.toml
+          **/poetry.lock
+          **/dev_requirements.txt

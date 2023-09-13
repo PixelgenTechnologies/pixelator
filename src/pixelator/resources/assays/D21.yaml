@@ -1,0 +1,58 @@
+name: D21
+assay_spec:
+  - region_id: amplicon
+    region_type: amplicon
+    name: amplicon
+    sequence_type: joined
+    regions:
+
+      - region_id: upi-b
+        region_type: upi
+        name: Unique pixel identifier B
+        sequence_type: random
+        sequence: NNNNNNNNNNNNNNNNNNNNNNNNN
+        min_len: 25
+        max_len: 25
+
+      - region_id: pbs-2
+        region_type: pbs
+        name: Pixel binding site 2
+        sequence_type: fixed
+        sequence: CTGCCTGTGTATCCTGATGTTGGTTAGGCGAATTGGACGAGG
+        min_len: 42
+        max_len: 42
+
+      - region_id: upi-a
+        region_type: upi
+        name: Unique pixel identifier A
+        sequence_type: fixed
+        sequence: NNNNNNNNNNNNNNNNNNNNNNNNN
+        min_len: 25
+        max_len: 25
+
+      - region_id: pbs-1
+        region_type: pbs
+        name: Pixel binding site 1
+        sequence_type: fixed
+        sequence: GGAACTCGAGGAATGTAAGACC
+        min_len: 22
+        max_len: 22
+
+      - region_id: umi-b
+        region_type: umi
+        name: Pixel binding site 1
+        sequence_type: random
+        sequence: NNNNNNNNNN
+        min_len: 10
+        max_len: 10
+
+      - region_id: bc
+        region_type: barcode
+        name: barcode
+        sequence_type: random
+        sequence: NNNNNNNN
+        min_len: 8
+        max_len: 8
+        data:
+          anchored: true
+          reverse_complement: false

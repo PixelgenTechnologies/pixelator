@@ -1,0 +1,127 @@
+#schema: https://github.com/softprops/github-actions-schemas/blob/master/workflow.json
+name: "Test"
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+
+
+permissions:
+  id-token: write
+  actions: write
+  contents: read
+  packages: write
+
+
+env:
+  ANNOY_COMPILER_ARGS: "-DANNOYLIB_MULTITHREADED_BUILD,-mno-avx512f"
+
+jobs:
+  pre_job:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      paths_result: ${{ steps.skip_check.outputs.paths_result }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        if: ${{ !github.event.act }}
+        with:
+          concurrent_skipping: "same_content_newer"
+          skip_after_successful_duplicate: "true"
+          do_not_skip: '["workflow_dispatch"]'
+          paths_filter: |
+            python:
+              paths:
+                - 'pyproject.toml'
+                - 'poetry.lock'
+                - 'src/pixelator/**'
+                - 'tests/**'
+              paths_ignore:
+                - 'tests/**/*.md'
+
+  test:
+    name: Test - python ${{ matrix.py }}
+    if: needs.pre_job.outputs.should_skip == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
+    runs-on: ubuntu-latest
+    needs: [pre_job]
+    strategy:
+      fail-fast: false
+      matrix:
+        py:
+          - "3.10"
+          - "3.9"
+          - "3.8"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python environment - ${{ matrix.py }}
+        uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ matrix.py }}
+
+      - uses: supplypike/setup-bin@v3
+        with:
+          uri: 'https://opengene.org/fastp/fastp'
+          name: 'fastp'
+          version: '0.23.2'
+
+      - name: Generate tox env for python version
+        uses: actions/github-script@v4
+        id: set_tox_env
+        with:
+          script: |
+            const pythonVersion = "${{ matrix.py }}"
+            const toxEnv = "py" + pythonVersion.replace(/\./g, '')
+            core.setOutput("tox_env", toxEnv)
+
+      - name: Install dependencies
+        run: |
+          pip install poetry tox
+          poetry export --output dev_requirements.txt --quiet --no-interaction --no-ansi --without-hashes --with dev
+          pip install -r dev_requirements.txt
+          pip install -e .
+
+      - name: Run test suite on local python version
+        run: tox -e ${{ steps.set_tox_env.outputs.tox_env }} --current-env
+
+  test-workflow:
+    name: Test small workflow - ${{ matrix.case }}
+    runs-on: ubuntu-latest
+    needs: [ pre_job ]
+    strategy:
+      fail-fast: false
+      matrix:
+        case:
+          - D21
+
+    if: needs.pre_job.outputs.should_skip == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python environment
+        uses: ./.github/actions/setup-python
+        with:
+          python-version: "3.10"
+
+      - uses: supplypike/setup-bin@v3
+        with:
+          uri: 'https://opengene.org/fastp/fastp'
+          name: 'fastp'
+          version: '0.23.2'
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi --with dev
+          pip install -r requirements.txt
+
+      - name: Run workflow tests
+        run: |
+          pytest -s -m "workflow_test" --basetemp=/tmp/pytest-results tests/integration/test_small_${{ matrix.case }}.yaml --log-cli-level=DEBUG

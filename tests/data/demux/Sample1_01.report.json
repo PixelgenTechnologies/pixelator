@@ -1,0 +1,24 @@
+{
+  "read_counts": {
+    "input": 50000,
+    "read1_with_adapter": 10000
+  },
+  "adapters_read1": [
+    {
+      "name": "CD1",
+      "total_matches": 1000
+    },
+    {
+      "name": "CD2",
+      "total_matches": 2000
+    },
+    {
+      "name": "CD3",
+      "total_matches": 3000
+    },
+    {
+      "name": "CD4",
+      "total_matches": 4000
+    }
+  ]
+}
