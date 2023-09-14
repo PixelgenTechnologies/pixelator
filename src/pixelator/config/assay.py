@@ -49,6 +49,7 @@ class RegionModel(BaseModel):
     name: str
     sequence_type: SequenceType
     sequence: Optional[str]
+    required: Optional[bool]
     min_len: Optional[int]
     max_len: Optional[int]
     data: Optional[Mapping[str, Any]]
@@ -93,6 +94,7 @@ class Region:
     :ivar name: name of the region
     :ivar sequence_type: type of the sequence
     :ivar sequence: string representation of the region
+    :ivar required: required region or not for an assay
     :ivar min_len: minimum length of the region
     :ivar max_len: maximum length of the region
     :ivar regions: list of sub-regions
@@ -105,6 +107,7 @@ class Region:
         region_type: RegionType,
         name: str,
         sequence_type: SequenceType,
+        required: bool = False,
         sequence: str = "",
         min_len: Optional[int] = None,
         max_len: Optional[int] = None,
@@ -117,6 +120,7 @@ class Region:
         self.name = name
         self.sequence_type = sequence_type
         self.sequence = sequence
+        self.required = required
         self.data = data
 
         self.min_len: int
@@ -182,6 +186,14 @@ class Region:
 
         return min_l, max_l
 
+    def is_required(self) -> bool:
+        """Mark if Region is required or not in Assay
+
+        :return: if Region is required in the Assay or not
+        :rtype: bool
+        """
+        return self.required
+
     def update_attr(self):
         if self.regions:
             for idx, r in enumerate(self.regions):
@@ -198,6 +210,7 @@ class Region:
             "name": self.name,
             "sequence_type": self.sequence_type,
             "sequence": self.sequence,
+            "required": self.required,
             "min_len": self.min_len,
             "max_len": self.max_len,
             "regions": self.regions,
@@ -211,6 +224,7 @@ class Region:
             "name": self.name,
             "sequence_type": self.sequence_type,
             "sequence": self.sequence,
+            "required": self.required,
             "min_len": self.min_len,
             "max_len": self.max_len,
             "regions": [i.to_dict() for i in (self.regions or [])],
@@ -272,20 +286,25 @@ class Region:
 
         return rtypes
 
-    def get_subregion_ids(self) -> Set[str]:
+    def get_subregion_ids(self) -> List[str]:
         """
         Return a set of the region_ids of all subregions
+
+        It is important that the regions are returned in the order
+        of the design, therefore, we create an empty List that
+        we populate and then, use a dictionary of keys in order to
+        make the multiple `region_id` unique.
         """
-        ids: Set[str] = set()
+        ids: List[str] = list()
 
         if not self.regions:
             return ids
 
         for r in self.regions:
-            ids.add(r.region_id)
-            ids.update(r.get_subregion_ids())
+            ids.append(r.region_id)
+            ids.extend(r.get_subregion_ids())
 
-        return ids
+        return list(dict.fromkeys(ids))
 
 
 class Assay:
@@ -372,6 +391,18 @@ class Assay:
         for r in self.assay_spec:
             ids.add(r.region_id)
             ids.update(r.get_subregion_ids())
+
+        return ids
+
+    @property
+    def required_regions(self) -> Set[str]:
+        """
+        Return a set with all regions ids required in this assay.
+        """
+        ids = set()
+        for r in self.assay_spec:
+            if r.is_required():
+                ids.add(r.region_id)
 
         return ids
 

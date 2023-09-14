@@ -4,6 +4,7 @@ Copyright (c) 2022 Pixelgen Technologies AB.
 """
 import json
 import logging
+from pathlib import Path
 
 # List is used as type hint in comment
 from typing import BinaryIO, Sequence, Tuple  # noqa: F401
@@ -138,6 +139,21 @@ def amplicon_fastq(
     :rtype: None
     :raises RuntimeError: raises an exception
     """
+
+    def _mode_read_len(input: PathType, n: int = 10000) -> int:
+        """Find the most common mode of read lengths from n number of reads."""
+        from collections import Counter
+
+        lengths = []
+        for record in pyfastx.Fastq(str(input), build_index=False):
+            r_name, r_seq, r_qual = record
+            lengths.append(len(r_seq))
+            if len(lengths) == n:
+                break
+        data = Counter(lengths)
+
+        return data.most_common(1)[0][0]
+
     logger.debug("Using design %s", design)
     assay = config.get_assay(design)
 
@@ -161,7 +177,18 @@ def amplicon_fastq(
 
     # Single end mode
     if mode == "single-end":
-        logger.debug(start1_log_msg, inputs[0], output)
+        input = inputs[0] if Path(inputs[0]).is_file() else inputs[1]
+        logger.debug(start1_log_msg, input, output)
+
+        mode = _mode_read_len(input)
+        amplicon_len = amplicon.get_len()[0]
+        if mode < amplicon_len:
+            raise ValueError(
+                (
+                    f"Read input length in {input} ({mode}) is less "
+                    f"than amplicon length ({amplicon_len})"
+                )
+            )
 
         with xopen(output, "wb") as f:
             for record in pyfastx.Fastq(str(inputs[0]), build_index=False):
@@ -171,6 +198,40 @@ def amplicon_fastq(
 
     if mode == "paired-end":
         logger.debug(start2_log_msg, inputs[0], inputs[1], output)
+
+        mode1 = _mode_read_len(inputs[0])
+        mode2 = _mode_read_len(inputs[1])
+        total_amplicon_space = mode1 + mode2
+        curr_amplicon_space = total_amplicon_space
+        region_ids = amplicon.get_subregion_ids()
+        regions_covered = []
+        while total_amplicon_space and len(region_ids):
+            first_el = region_ids.pop(0)
+            regions_covered.append(first_el)
+            curr_amplicon_space -= amplicon.get_region_by_id(first_el).max_len
+            if curr_amplicon_space and len(region_ids):
+                last_el = region_ids.pop(-1)
+                regions_covered.append(last_el)
+                curr_amplicon_space -= amplicon.get_region_by_id(last_el).max_len
+
+        logger.debug(amplicon.get_subregion_ids())
+        logger.debug(assay.region_ids)
+        for r in assay.region_ids:
+            logger.debug(amplicon.get_region_by_id(r).required)
+            logger.debug(amplicon.get_region_by_id(r).is_required())
+        logger.debug(assay)
+        for r in assay.assay_spec:
+            logger.debug(r)
+        regions_required = assay.required_regions
+        logger.debug(regions_required)
+        if not (regions_required.issubset(set(regions_covered))):
+            raise ValueError(
+                (
+                    f"Read input length in {inputs[0]} and {inputs[1]} "
+                    f"({total_amplicon_space}) is less than recommendation"
+                )
+            )
+        logger.fatal("Here we go!")
 
         with xopen(output, "wb") as f:
             for record1, record2 in zip(
