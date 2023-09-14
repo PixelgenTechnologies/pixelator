@@ -9,9 +9,12 @@
 [//]: # (![pypi]&#40;https://img.shields.io/pypi/v/pixelgen-pixelator&#41;)
 
 
-[**Documentation**](#Documentation) |
+[**Documentation**](#documentation) |
 [**Installation**](#installation) |
-[**License**](#License)
+[**Contributing**](#contributing) |
+[**Contact**](#contact) |
+[**License**](#license) |
+[**Credits**](#credits)
 
 
 Pixelator is a software package to process sequencing FASTQ from Molecular Pixelation (MPX) assays
@@ -74,11 +77,7 @@ docker pull ghcr.io/pixelgentechnologies/pixelator:latest
 docker run ghcr.io/pixelgentechnologies/pixelator:latest pixelator --help
 ```
 
-## License
-
-Pixelator is licensed under the [GPL-2.0](./LICENSE) license.
-
-## How to contribute
+## Contributing
 
 Contribution are welcome!
 Please check out the [contributing guidelines](./CONTRIBUTING.md) for more information.
@@ -90,9 +89,18 @@ For questions, comments, or suggestions you can use the GitHub discussions.
 
 You can also email the development team at [developers@pixelgen.com](mailto:developers@pixelgen.com).
 
-# Credits
+## License
+
+Pixelator is licensed under the [GPL-2.0](./LICENSE) license.
+
+## Credits
 
 Pixelator is developed and maintained by the [developers](https://github.com/PixelgenTechnologies) at [Pixelgen Technologies](https://pixelgen.com).
+
+When using pixelator in your research, please cite the following publication:
+
+> Karlsson, Filip, Tomasz Kallas, Divya Thiagarajan, Max Karlsson, Maud Schweitzer, Jose Fernandez Navarro, Louise Leijonancker, et al. “Molecular Pixelation: Single Cell Spatial Proteomics by Sequencing.” bioRxiv, June 8, 2023. https://doi.org/10.1101/2023.06.05.543770.
+
 
 Main development happened thanks to:
 
@@ -101,9 +109,10 @@ Main development happened thanks to:
 - Johan Dahlberg ([@johandahlberg](https://github.com/johandahlberg))
 - Florian De Temmerman ([@fbdtemme](https://github.com/fbdtemme))
 
-A huge thank you to all code contributors! See the [Contributors Graph](https://github.com/PixelgenTechnologies/pixelator/graphs/contributors) for details.
+A huge thank you to all [code contributors](https://github.com/PixelgenTechnologies/pixelator/graphs/contributors)!
 
 A non-exhaustive list of contributors follows:
 
 - Filip Karlsson ([@fika-pixelgen](https://github.com/fika-pixelgen))
 - Max Karlsson ([@maxkarlsson](https://github.com/maxkarlsson))
+
