@@ -57,12 +57,12 @@ def test_prepare_from_graph_and_edgelist_eq_for_no_neigbours(edgelist):
         # We drop the indexes since whey will be named differently depending on the
         # method.
         assert_frame_equal(
-            graph_result.sort_index().reset_index(drop=True),
-            edgelist_result.sort_index().reset_index(drop=True),
-            check_dtype=False,
-            check_names=False,
-            check_column_type=False,
+            graph_result.sort_index(),
+            edgelist_result.sort_index(),
         )
+
+
+# noqa: D103
 
 
 def test_filter_by_region_counts():

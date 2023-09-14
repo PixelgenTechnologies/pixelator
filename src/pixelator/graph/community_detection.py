@@ -354,7 +354,7 @@ def recover_technical_multiplets(
     # add the combined upi here as a way to make sure we can use it to
     # check edge membership for between the old and the (potential)
     # new components.
-    edgelist["upi"] = edgelist["upia"] + edgelist["upib"]
+    edgelist["upi"] = edgelist["upia"].astype(str) + edgelist["upib"].astype(str)
     filename = None
     if filename is not None:
         logger.debug("Saving edge list with discarded edges to %s", filename)

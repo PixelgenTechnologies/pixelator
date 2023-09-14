@@ -7,9 +7,7 @@ repository = "https://github.com/PixelgenTechnologies/pixelator"
 documentation = "https://software.pixelgen.com"
 description = "A command-line tool and library to process and analyze sequencing data from Molecular Pixelation (MPX) assays."
 authors = ["Pixelgen Technologies AB <developers@pixelgen.com>",]
-maintainers = [
-    "Alvaro Martinez Barrio <alvaro.martinez.barrio@pixelgen.com>"
-]
+maintainers = ["Alvaro Martinez Barrio <alvaro.martinez.barrio@pixelgen.com>"]
 readme = "README.md"
 license =  "GPL-2.0-only"
 keywords = ["protein", "single-cell", "molecular-pixelation", "spatial", "proteomics"]
@@ -51,7 +49,7 @@ lxml = "*"
 cssselect = "*"
 typing_extensions = "*"
 scipy = "*"
-pyarrow = "*"
+pyarrow = "^13.0.0"
 semver = "^3.0.0"
 ruamel-yaml = "^0.17.21"
 pydantic = "^1.10.7"

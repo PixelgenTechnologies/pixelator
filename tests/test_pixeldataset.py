@@ -8,14 +8,16 @@ import logging
 import random
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest import mock
 
 import numpy as np
 import pandas as pd
+import pytest
 from anndata import AnnData
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 from pixelator.config import AntibodyPanel
-from pixelator.graph import write_recovered_components
+from pixelator.graph import Graph, write_recovered_components
 from pixelator.pixeldataset import (
     FileBasedPixelDatasetBackend,
     ObjectBasedPixelDatasetBackend,
@@ -23,6 +25,7 @@ from pixelator.pixeldataset import (
     PixelFileCSVFormatSpec,
     PixelFileFormatSpec,
     PixelFileParquetFormatSpec,
+    _enforce_edgelist_types,
     antibody_metrics,
     component_antibody_counts,
     edgelist_to_anndata,
@@ -92,6 +95,13 @@ def test_pixeldataset(setup_basic_pixel_dataset):
     )
 
     assert_frame_equal(
+        edgelist,
+        dataset.edgelist_lazy.collect().to_pandas(),
+        check_categorical=False,
+        check_dtype=False,
+    )
+
+    assert_frame_equal(
         adata.to_df(),
         dataset.adata.to_df(),
     )
@@ -140,7 +150,13 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     dataset.save(str(file_target))
     dataset_new = PixelDataset.from_file(str(file_target))
 
-    assert_frame_equal(edgelist, dataset_new.edgelist, check_dtype=False)
+    assert_frame_equal(edgelist, dataset_new.edgelist)
+    assert_frame_equal(
+        edgelist,
+        dataset_new.edgelist_lazy.collect().to_pandas(),
+        check_categorical=False,
+        check_dtype=False,
+    )
 
     assert_frame_equal(
         adata.to_df(),
@@ -154,6 +170,94 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     assert_frame_equal(
         colocalization_scores, dataset_new.colocalization, check_dtype=False
     )
+
+
+def test_pixeldataset_from_file_parquet_backward_comp_with_pyarrow_types(
+    setup_basic_pixel_dataset, tmp_path
+):
+    (
+        dataset,
+        edgelist,
+        adata,
+        metadata,
+        polarization_scores,
+        colocalization_scores,
+    ) = setup_basic_pixel_dataset
+
+    # When reading the old file-format we will fall back to the
+    # polars file reader
+    with mock.patch(
+        "pixelator.pixeldataset.pd.read_parquet",
+        side_effect=ValueError(),
+    ):
+        file_target = tmp_path / "dataset.pxl"
+        dataset.save(str(file_target))
+        dataset_new = PixelDataset.from_file(str(file_target))
+
+        assert_frame_equal(edgelist, dataset_new.edgelist, check_categorical=False)
+        assert_frame_equal(
+            edgelist,
+            dataset_new.edgelist_lazy.collect().to_pandas(),
+            check_categorical=False,
+            check_dtype=False,
+        )
+
+        assert_frame_equal(
+            adata.to_df(),
+            dataset_new.adata.to_df(),
+        )
+
+        assert metadata == dataset_new.metadata
+
+        assert_frame_equal(
+            polarization_scores, dataset_new.polarization, check_dtype=False
+        )
+
+        assert_frame_equal(
+            colocalization_scores, dataset_new.colocalization, check_dtype=False
+        )
+
+
+def test_pixeldataset_can_save_and_load_with_empty_edgelist(
+    setup_basic_pixel_dataset, tmp_path
+):
+    dataset, *_ = setup_basic_pixel_dataset
+    file_target = tmp_path / "dataset.pxl"
+    dataset.edgelist = pd.DataFrame()
+    dataset.save(str(file_target))
+    dataset_new = PixelDataset.from_file(str(file_target))
+    assert dataset_new.edgelist.shape == (0, 9)
+    assert dataset_new.edgelist.columns.tolist() == [
+        "count",
+        "umi_unique_count",
+        "upi_unique_count",
+        "upia",
+        "upib",
+        "umi",
+        "marker",
+        "sequence",
+        "component",
+    ]
+
+
+def test_pixeldataset_graph(setup_basic_pixel_dataset):
+    dataset, *_ = setup_basic_pixel_dataset
+    full_graph = dataset.graph()
+    assert isinstance(full_graph, Graph)
+    assert len(full_graph.components()) == 5
+
+
+def test_pixeldataset_graph_raises_when_component_not_found(setup_basic_pixel_dataset):
+    dataset, *_ = setup_basic_pixel_dataset
+    with pytest.raises(KeyError):
+        dataset.graph("not-a-component")
+
+
+def test_pixeldataset_graph_finds_component(setup_basic_pixel_dataset):
+    dataset, *_ = setup_basic_pixel_dataset
+    component_graph = dataset.graph("PXLCMP0000000")
+    assert isinstance(component_graph, Graph)
+    assert len(component_graph.components()) == 1
 
 
 def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
@@ -170,7 +274,9 @@ def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
     dataset.save(str(file_target), file_format="csv")
     dataset_new = PixelDataset.from_file(str(file_target))
 
-    assert_frame_equal(edgelist, dataset_new.edgelist, check_dtype=False)
+    assert_frame_equal(edgelist, dataset_new.edgelist, check_categorical=False)
+    with pytest.raises(NotImplementedError):
+        dataset_new.edgelist_lazy
 
     assert_frame_equal(
         adata.to_df(),
@@ -283,7 +389,10 @@ def test_antibody_metrics(full_graph_edgelist: pd.DataFrame):
                 "components": [1, 1],
                 "antibody_pct": [0.5, 0.5],
             },
-            index=pd.Index(["A", "B"], name="marker"),
+            index=pd.CategoricalIndex(
+                ["A", "B"],
+                name="marker",
+            ),
         ),
     )
 
@@ -572,6 +681,21 @@ def test_simple_aggregate(setup_basic_pixel_dataset):
     assert result.metadata["samples"]["sample1"] == dataset_1.metadata
 
 
+def test_simple_aggregate_ignore_edgelist(setup_basic_pixel_dataset):
+    """test_simple_aggregate."""
+    dataset_1, *_ = setup_basic_pixel_dataset
+    dataset_2 = dataset_1.copy()
+
+    result = simple_aggregate(
+        sample_names=["sample1", "sample2"],
+        datasets=[dataset_1, dataset_2],
+        ignore_edgelists=True,
+    )
+
+    # We want an empty edgelist, but wit all the correct columns
+    assert result.edgelist.shape == (0, 9)
+
+
 def test_copy(setup_basic_pixel_dataset):
     """test_copy."""
     dataset_1, *_ = setup_basic_pixel_dataset
@@ -715,3 +839,35 @@ def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
     # The edgelist should contain all the original markers since it should
     # not be filtered
     assert set(result.edgelist["marker"]) == original_edgelist_markers
+
+
+def test__enforce_edgelist_types():
+    data = pd.DataFrame(
+        {
+            "count": [1, 3, 1],
+            "umi_unique_count": [2, 4, 2],
+            "upi_unique_count": [3, 6, 3],
+            "upia": ["AAA", "AAA", "ATT"],
+            "upib": ["GGG", "GGG", "GCC"],
+            "umi": ["TAT", "ATA", "TTC"],
+            "marker": ["CD20", "CD20", "CD3"],
+            "sequence": ["AAA", "AAA", "TTT"],
+            "component": ["PXL000001", "PXL000001", "PXL000001"],
+        }
+    )
+
+    result = _enforce_edgelist_types(data)
+    expected = {
+        "count": "uint16",
+        "umi_unique_count": "uint16",
+        "upi_unique_count": "uint16",
+        "upia": "category",
+        "upib": "category",
+        "umi": "category",
+        "marker": "category",
+        "sequence": "category",
+        "component": "category",
+    }
+    assert result.dtypes.to_dict() == expected
+
+    _ = _enforce_edgelist_types(result)

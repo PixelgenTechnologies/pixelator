@@ -22,6 +22,7 @@ from tests.graph.igraph.test_tools import (
 from tests.graph.test_graph import (
     create_simple_edge_list_from_graph,
 )
+from tests.test_tools import enforce_edgelist_types_for_tests
 
 DATA_ROOT = Path(__file__).parent / "data"
 
@@ -56,11 +57,9 @@ def data_root_fixture():
 @pytest.fixture(name="edgelist", scope="module")
 def edgelist_fixture(data_root):
     """Load an example edgelist from disk."""
-    edgelist = pd.read_csv(
-        str(data_root / "test_edge_list.csv"), dtype_backend="pyarrow"
-    )
+    edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
     edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
-    return edgelist
+    return enforce_edgelist_types_for_tests(edgelist)
 
 
 @pytest.fixture(name="edgelist_with_communities", scope="module")
@@ -87,6 +86,11 @@ def edgelist_with_communities_fixture():
     edgelist["umi"] = "UMI"
     edgelist["marker"] = "A"
     edgelist["sequence"] = "ATCG"
+    edgelist["count"] = 1
+    edgelist["umi_unique_count"] = 1
+    edgelist["upi_unique_count"] = 1
+
+    edgelist = enforce_edgelist_types_for_tests(edgelist)
     return edgelist
 
 
@@ -96,6 +100,7 @@ def full_graph_edgelist_fixture():
     g = create_fully_connected_bipartite_graph(50)
     edgelist = create_simple_edge_list_from_graph(g)
     edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
+    edgelist = enforce_edgelist_types_for_tests(edgelist)
     return edgelist
 
 
@@ -121,13 +126,13 @@ def random_graph_edgelist_fixture():
     g = create_random_graph(n_nodes=500, prob=0.005)
     edgelist = create_simple_edge_list_from_graph(g)
     edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
+    edgelist = enforce_edgelist_types_for_tests(edgelist)
     return edgelist
 
 
 @pytest.fixture(name="setup_basic_pixel_dataset")
 def setup_basic_pixel_dataset(edgelist: pd.DataFrame, adata: AnnData):
     """Create basic pixel dataset, with some dummy data."""
-
     # TODO make these dataframes more realistic
     # Right now the edgelist does line up with the polarization
     # and colocalization dataframes, and they do not contain all the

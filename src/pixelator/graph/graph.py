@@ -62,11 +62,18 @@ class Graph:
             edgelist.shape[0],
         )
 
+        # igraph requires these types to work properly with indexing the vertices
+        edgelist = edgelist.astype({"upia": "object", "upib": "object"})
+
         vertices = pd.DataFrame(
             set(edgelist["upia"].unique()).union(set(edgelist["upib"].unique()))
         )
+
         graph = igraph.Graph.DataFrame(
-            edgelist, vertices=vertices, directed=False, use_vids=False
+            edgelist,
+            vertices=vertices,
+            directed=False,
+            use_vids=False,
         )
         if "sequence" in edgelist.columns:
             all_sequences = edgelist["sequence"].unique()

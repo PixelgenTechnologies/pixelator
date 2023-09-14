@@ -121,6 +121,14 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
     )
 
 
+def _create_df_with_expected_types(df):
+    df.columns.name = "markers"
+    df.columns = df.columns.astype("string[pyarrow]")
+    df.index = df.index.astype("string[pyarrow]")
+    df.index.name = "node"
+    return df
+
+
 def test_create_node_markers_counts_k_eq_0(pentagram_graph):
     """Test build a node marker matrix with a neigbourhood of 0."""
     result = create_node_markers_counts(graph=pentagram_graph, k=0)
@@ -135,8 +143,8 @@ def test_create_node_markers_counts_k_eq_0(pentagram_graph):
         ],
         columns=["A", "B", "C", "D", "E"],
     )
-    expected.columns.name = "markers"
-    assert_frame_equal(result, expected)
+    expected = _create_df_with_expected_types(expected)
+    assert_frame_equal(result.sort_index(), expected.sort_index())
 
 
 def test_create_node_markers_counts_k_eq_1(pentagram_graph):
@@ -153,7 +161,7 @@ def test_create_node_markers_counts_k_eq_1(pentagram_graph):
         ],
         columns=["A", "B", "C", "D", "E"],
     )
-    expected.columns.name = "markers"
+    expected = _create_df_with_expected_types(expected)
     assert_frame_equal(result, expected)
 
 
@@ -171,7 +179,7 @@ def test_create_node_markers_counts_k_eq_2(pentagram_graph):
         ],
         columns=["A", "B", "C", "D", "E"],
     )
-    expected.columns.name = "markers"
+    expected = _create_df_with_expected_types(expected)
     assert_frame_equal(result, expected)
 
 
@@ -191,7 +199,7 @@ def test_create_node_markers_counts_k_eq_2_with_mean(pentagram_graph):
         ],
         columns=["A", "B", "C", "D", "E"],
     )
-    expected.columns.name = "markers"
+    expected = _create_df_with_expected_types(expected)
     assert_frame_equal(result, expected)
 
 
@@ -272,7 +280,7 @@ def test_create_node_markers_counts_k_eq_1_with_mean(pentagram_graph):
         ],
         columns=["A", "B", "C", "D", "E"],
     )
-    expected.columns.name = "markers"
+    expected = _create_df_with_expected_types(expected)
     assert_frame_equal(result, expected)
 
 
