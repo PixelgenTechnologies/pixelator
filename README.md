@@ -23,12 +23,12 @@ and analyze PXL data.
 It provides the `pixelator` commandline tool to process FASTQ files and generate PXL files and reports
 and can be used as a python library for further downstream processing.
 
-© 2023 - Pixelgen Technologies AB
 
 <p align="center">
     <img src="https://www.pixelgen.com/wp-content/uploads/2022/12/share-image-pixelgen.png" height=200
      alt="Pixelgen Technologies" />
 </p>
+<div align="center">© 2023 - Pixelgen Technologies AB</div>
 
 ## Documentation
 
