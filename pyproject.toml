@@ -1,19 +1,24 @@
 [tool]
 [tool.poetry]
-name = "pixelator"
+name = "pixelgen-pixelator"
 version = "0.0.0"
 homepage = "https://github.com/PixelgenTechnologies/pixelator"
 repository = "https://github.com/PixelgenTechnologies/pixelator"
 documentation = ""
 description = "Software package to process sequencing FASTQ from Molecular Pixelation (MPX) assays"
-authors = ["Pixelgen Technologies Developers <developers@pixelgen.com>",]
+authors = ["Pixelgen Technologies AB <developers@pixelgen.com>",]
+maintainers = [
+    "Alvaro Martinez Barrio <alvaro.martinez.barrio@pixelgen.com>"
+]
 readme = "README.md"
-license =  "MIT"
+license =  "GPL-2.0-only"
 keywords = ["protein", "single-cell", "molecular-pixelation", "spatial", "proteomics"]
 classifiers=[
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT Software License',
+    'Intended Audience :: Science/Research',
+    'Topic :: Scientific/Engineering :: Bio-Informatics',
+    'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
     'Natural Language :: English',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',

@@ -60,20 +60,11 @@ Ready to contribute? Here's how to set up ``pixelator`` for local development.
 
     where your `yourgithubuser` is the user/org where you have cloned the repo.
 
-3. Configure your environment.
+3. Configure your environment and install pixelator.
 
    We recommend that you follow the instructions in [DEVELOPERS.md](DEVELOPERS.md).
 
-4. Install pixelator.
-
-   And make sure `fastp` is installed in your system.
-
-    ```shell
-    poetry install
-    fastp -v
-    ```
-
-5. Create a branch for local development.
+4. Create a branch for local development.
 
     ```shell
     git checkout -b name-of-your-bugfix-or-feature
@@ -81,14 +72,14 @@ Ready to contribute? Here's how to set up ``pixelator`` for local development.
 
    Now you can make your changes locally.
 
-6. When you're done making changes, check that your changes pass the
+5. When you're done making changes, check that your changes pass the
    tests, including testing other Python versions, with tox:
 
     ```shell
     tox
     ```
 
-7. Commit your changes and push your branch to GitHub:
+6. Commit your changes and push your branch to GitHub:
 
     ```shell
     git add .
@@ -96,7 +87,7 @@ Ready to contribute? Here's how to set up ``pixelator`` for local development.
     git push origin name-of-your-bugfix-or-feature
     ```
 
-8. Submit a pull request through the GitHub website.
+7. Submit a pull request through the GitHub website.
 
 ## Testing
 
