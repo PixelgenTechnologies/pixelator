@@ -140,7 +140,9 @@ def create_node_markers_counts(
     if "markers" not in graph.vs.attributes():
         raise AssertionError("Could not find 'markers' in vertex attributes")
     markers = list(sorted(graph.vs[0]["markers"].keys()))
-    node_marker_counts = pd.DataFrame.from_records(graph.vs["markers"], columns=markers)
+    node_marker_counts = pd.DataFrame.from_records(
+        graph.vs["markers"], columns=markers, index=graph.vs["name"]
+    )
     node_marker_counts = node_marker_counts.reindex(
         sorted(node_marker_counts.columns), axis=1
     )
