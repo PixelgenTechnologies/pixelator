@@ -32,7 +32,7 @@ and can be used as a python library for further downstream processing.
 
 ## Documentation
 
-More information about pixelator is available on the [Pixelgen Techologies Software documentation site](https://software.pixelgen.com/).
+More information about pixelator is available on the [Pixelgen Technologies Software documentation site](https://software.pixelgen.com/).
 
 ## Installation
 
