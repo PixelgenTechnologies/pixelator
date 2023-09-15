@@ -26,6 +26,20 @@ from tests.graph.test_graph import (
 DATA_ROOT = Path(__file__).parent / "data"
 
 
+def pytest_addoption(parser: pytest.Parser):
+    """Register a command line option for pytest.
+    This flag is used in workflow integration tests defined in
+    tests/integration.
+    :param parser: the pytest parser instance
+    """
+    parser.addoption(
+        "--keep-workdirs",
+        action="store_true",
+        default=False,
+        help="Do not delete the working directory.",
+    )
+
+
 @pytest.fixture(name="adata", scope="module")
 def adata_fixture(edgelist: pd.DataFrame, panel: AntibodyPanel):
     """Create an anndata instance."""

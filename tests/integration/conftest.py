@@ -47,19 +47,6 @@ def handle_unhandled_exception(
 sys.excepthook = handle_unhandled_exception
 
 
-def pytest_addoption(parser: pytest.Parser):
-    """Register a command line option for pytest.
-
-    :param parser: the pytest parser instance
-    """
-    parser.addoption(
-        "--keep-workdirs",
-        action="store_true",
-        default=False,
-        help="Do not delete the working directory.",
-    )
-
-
 def pytest_collect_file(
     parent: YamlIntegrationTestsCollector, file_path: PathType
 ) -> YamlIntegrationTestsCollector:
