@@ -119,4 +119,4 @@ latest-tag = true
 strict = false
 
 [tool.poetry-dynamic-versioning.substitution]
-files = []
+files = [ "src/pixelator/__init__.py", ]

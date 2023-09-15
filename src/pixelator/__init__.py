@@ -5,6 +5,7 @@ Copyright (c) 2022 Pixelgen Technologies AB.
 from importlib import metadata
 
 __version__ = "0.0.0"
+
 try:
     __version__ = metadata.version("pixelator")
 except metadata.PackageNotFoundError:
