@@ -6,7 +6,7 @@ import itertools
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 import pandas as pd
@@ -158,7 +158,7 @@ def community_detection_crossing_edges(
     graph: Graph,
     leiden_iterations: int = 10,
     beta: float = 0,
-) -> List[Tuple[str]]:
+) -> List[Set[str]]:
     """Detect spurious edges connecting components by community detection.
 
     Use the Leiden [1]_ community detection algorithm to detect communities in a graph.
@@ -174,8 +174,8 @@ def community_detection_crossing_edges(
     :param beta: parameter to control the randomness on cluster selection when Leiden
                  merges clustering (0 - maximize objective function i.e. modularity;
                  inf - uniform distribution to merge with any other cluster)
-    :returns: a list of tuples with the edges between communities (edges ids)
-    :rtype: List[Tuple[str]]
+    :returns: a list of sets with the edges between communities (edges ids)
+    :rtype: List[Set[str]]
     :raises AssertionError: if the method is not supported
     """
     logger.debug(
@@ -203,8 +203,8 @@ def community_detection_crossing_edges(
         # get the crossing edges
         graph.es["is_crossing"] = vertex_clustering.crossing()
         edges = graph.es.select(is_crossing_eq=True)
-        # translate the edges to tuples of their corresponding vertex names
-        edges = [(e.vertex_tuple[0]["name"], e.vertex_tuple[1]["name"]) for e in edges]
+        # translate the edges to sets of their corresponding vertex names
+        edges = [{e.vertex_tuple[0]["name"], e.vertex_tuple[1]["name"]} for e in edges]
         logger.debug(
             "Community detection detected %i crossing edges in %i communities with a "
             "modularity of %f",
@@ -220,7 +220,7 @@ def community_detection_crossing_edges(
 def detect_edges_to_remove(
     edgelist: pd.DataFrame,
     leiden_iterations: int = 10,
-) -> List[Tuple[str]]:
+) -> List[Set[str]]:
     """Use Leiden algorithm to detect communities from an edgelist.
 
     This method uses the community detection Leiden algorithm to detect
@@ -228,8 +228,8 @@ def detect_edges_to_remove(
     Edges connecting the communities are computed and returned.
     :param edgelist: The edge list used to create the graph
     :param leiden_iterations: the number of iterations for the leiden algorithm
-    :return: A list of edges (tuple) that are connecting communities
-    :rtype: List[Tuple[str]]
+    :return: A list of edges (sets) that are connecting communities
+    :rtype: List[Set[str]]
     """
     logger.debug(
         "Detecting edges to remove using the leiden algorithm"
@@ -320,7 +320,7 @@ def recover_technical_multiplets(
     """
 
     def vertex_name_pairs_to_upis(
-        edge_tuples: List[Tuple[str]],
+        edge_tuples: List[Set[str]],
     ) -> List[str]:
         """Translate each pair of vertices into full UPI info.
 

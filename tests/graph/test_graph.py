@@ -161,7 +161,7 @@ def test_community_detection_crossing_edges(graph_with_communities):
         graph=graph_with_communities,
         leiden_iterations=2,
     )
-    assert result == [("CTCGTACCTGGGACTGATACT", "TGTAAGTCAGTTGCAGGTTGG")]
+    assert result == [{"CTCGTACCTGGGACTGATACT", "TGTAAGTCAGTTGCAGGTTGG"}]
 
 
 def test_community_detection_crossing_edges_no_communities(graph_without_communities):
@@ -176,4 +176,4 @@ def test_community_detection_crossing_edges_no_communities(graph_without_communi
 def test_detect_edges_to_remove(edgelist_with_communities):
     """Test discovery of edges to remove from edgelist."""
     result = detect_edges_to_remove(edgelist_with_communities, leiden_iterations=2)
-    assert result == [("CTCGTACCTGGGACTGATACT", "TGTAAGTCAGTTGCAGGTTGG")]
+    assert result == [{"CTCGTACCTGGGACTGATACT", "TGTAAGTCAGTTGCAGGTTGG"}]

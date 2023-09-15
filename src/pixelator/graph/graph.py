@@ -62,7 +62,12 @@ class Graph:
             edgelist.shape[0],
         )
 
-        graph = igraph.Graph.DataFrame(edgelist, directed=False, use_vids=False)
+        vertices = pd.DataFrame(
+            set(edgelist["upia"].unique()).union(set(edgelist["upib"].unique()))
+        )
+        graph = igraph.Graph.DataFrame(
+            edgelist, vertices=vertices, directed=False, use_vids=False
+        )
         if "sequence" in edgelist.columns:
             all_sequences = edgelist["sequence"].unique()
             logger.debug(

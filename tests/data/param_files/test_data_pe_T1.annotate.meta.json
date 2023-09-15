@@ -6,8 +6,6 @@
             "--min-size": 1,
             "--max-size": 10000,
             "--dynamic-filter": null,
-            "--cell-type-assignments": false,
-            "--majority-vote": false,
             "--aggregate-calling": true,
             "--output": "."
         }

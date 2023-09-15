@@ -41,10 +41,7 @@ def pentagram_graph_fixture():
         (4, 1),
         (4, 2),
     ]
-    edgelist = pd.DataFrame(edges)
-    # add dummy upia/upib data since the creation methods requires it
-    edgelist["upia"] = "a"
-    edgelist["upib"] = "a"
+    edgelist = pd.DataFrame(edges, columns=["upia", "upib"])
     g = Graph.from_edgelist(
         edgelist=edgelist,
         add_marker_counts=False,
