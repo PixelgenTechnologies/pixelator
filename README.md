@@ -32,13 +32,13 @@ and can be used as a python library for further downstream processing.
 
 ## Documentation
 
-More information about pixelator is available on the [Pixelgen Techologies documentation site](https://software.pixelgen.com/).
+More information about pixelator is available on the [Pixelgen Techologies Software documentation site](https://software.pixelgen.com/).
 
 ## Installation
 
 ### Installation with pip
 
-pixelator is available on pypi as `pixelgen-pixelator` and can be installed with pip.
+Our software pixelator is available on pypi as `pixelgen-pixelator` and can be installed with pip.
 It is recommended to install pixelator in a separate virtual environment.
 
 ```shell
@@ -59,7 +59,7 @@ mamba install -c bioconda pixelator
 
 ### Installation from source
 
-Pixelator can be installed from source by cloning the repository.
+You can also install pixelator from source by cloning the repository.
 
 ```shell
 git clone https://github.com/pixelgentechnologies/pixelator.git
@@ -69,7 +69,7 @@ pip install .
 
 ### Using docker
 
-The pixelator commandline tool can be run with docker images available on
+The `pixelator`` command-line tool can be run with docker images available on
 the [GitHub container registry](https://github.com/PixelgenTechnologies/pixelator/pkgs/container/pixelator).
 
 ```shell
@@ -84,8 +84,8 @@ Please check out the [contributing guidelines](./CONTRIBUTING.md) for more infor
 
 ## Contact
 
-For feature requests or bug reports, please use the GitHub issues.
-For questions, comments, or suggestions you can use the GitHub discussions.
+For feature requests or bug reports, please use the GitHub [issues](https://github.com/PixelgenTechnologies/pixelator/issues).
+For questions, comments, or suggestions you can use the GitHub [discussions](https://github.com/PixelgenTechnologies/pixelator/discussions).
 
 You can also email the development team at [developers@pixelgen.com](mailto:developers@pixelgen.com).
 
