@@ -56,5 +56,5 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published in downstream modules
 - [ ] I have checked my code and documentation and corrected any misspellings
-- [ ] Usage Documentation in [USAGE.md](../USAGE.md) is updated
+- [ ] Usage Documentation is updated
 - [ ] If you are doing a [release](../RELEASING.md#Releasing), or a significant change to the code, update [CHANGELOG.md](../CHANGELOG.md)
