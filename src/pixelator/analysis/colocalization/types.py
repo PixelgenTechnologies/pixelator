@@ -1,4 +1,5 @@
-"""
+"""Types associated with colocalization.
+
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
@@ -10,15 +11,12 @@ import pandas as pd
 RegionByCountsDataFrame = pd.DataFrame
 MarkerColocalizationResults = pd.DataFrame
 
-TransformationTypes = Literal["raw", "clr", "log1p", "relative"]
+TransformationTypes = Literal["raw", "log1p"]
 
 
 @dataclass
 class CoLocalizationFunction:
-    """
-    Holds the name to use for a colocalization function to make them
-    easier to work with as a pair
-    """
+    """Container for colocalization functions and their names."""
 
     name: str
     func: Callable[  # type: ignore

@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+* `clr` and `relative` transformation options for the colocalization computations in `analysis`
+
 
 ## [0.13.0] - 2023-09-13
 
