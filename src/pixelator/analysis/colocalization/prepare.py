@@ -61,7 +61,7 @@ def filter_by_region_counts(
     how many counts are in the region
 
     :param df: dataframe to filter
-    :param min_region_counts: minumum number of counts in region (exlusive),
+    :param min_region_counts: minimum number of counts in region > min_region_counts,
                               defaults to 5
     :return: the filtered dataframe
     :rtype: RegionByCountsDataFrame
@@ -94,8 +94,8 @@ def filter_by_unique_values(
     number of unique values for that marker
 
     :param df: dataframe to filter
-    :param at_least_n_unique: minimum number of unique values >= at_least_n_unique
-                              inclusive), defaults to 1
+    :param at_least_n_unique: minimum number of unique values >= at_least_n_unique,
+                              defaults to 1
     :return: the filtered dataframe
     :rtype: RegionByCountsDataFrame
     """

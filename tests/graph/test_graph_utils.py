@@ -145,6 +145,8 @@ def test_create_node_markers_counts_k_eq_0(pentagram_graph):
         columns=["A", "B", "C", "D", "E"],
     )
     expected = _create_df_with_expected_types(expected)
+    # The sort order is not guaranteed to be deterministic here,
+    # hence the sorting.
     assert_frame_equal(result.sort_index(), expected.sort_index())
 
 

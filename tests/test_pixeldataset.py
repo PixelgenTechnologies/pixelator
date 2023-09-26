@@ -836,6 +836,12 @@ def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
 
 
 def test__enforce_edgelist_types():
+    # Typically we don't test private functions, but in this case
+    # I wanted to make sure that this function works as expected
+    # without exposing it as a public function (since the user shouldn't
+    # have to worry about it). Importing it here in tests, will have to
+    # be seen as a pragmatic solution to this problem.
+
     data = pd.DataFrame(
         {
             "count": [1, 3, 1],
