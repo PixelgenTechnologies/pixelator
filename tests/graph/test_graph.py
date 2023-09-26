@@ -17,6 +17,7 @@ from pixelator.graph import (
 
 from tests.graph.test_graph_utils import add_random_names_to_vertexes
 from tests.graph.igraph.test_tools import full_graph
+from tests.test_tools import enforce_edgelist_types_for_tests
 
 
 def create_simple_edge_list_from_graph(
@@ -56,6 +57,7 @@ def create_simple_edge_list_from_graph(
         "G": "CAGT",
     }
     df["sequence"] = df["marker"].map(marker_to_seq)
+    df = enforce_edgelist_types_for_tests(df)
     return df
 
 
@@ -69,6 +71,9 @@ def input_edgelist_fixture(tmp_path, edgelist_with_communities: pd.DataFrame):
         index=False,
     )
     assert len(edgelist_with_communities["component"].unique()) == 1
+    edgelist_with_communities = enforce_edgelist_types_for_tests(
+        edgelist_with_communities
+    )
     yield input_edgelist
 
 

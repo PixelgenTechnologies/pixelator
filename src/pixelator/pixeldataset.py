@@ -28,8 +28,10 @@ from zipfile import ZIP_STORED, ZipFile
 import numpy as np
 import pandas as pd
 import polars as pl
+import pyarrow.dataset as ds
 from anndata import AnnData, read_h5ad
 from anndata import concat as concatenate_anndata
+from fsspec.implementations.zip import ZipFileSystem
 
 from pixelator.graph import Graph, components_metrics
 from pixelator.statistics import (
@@ -63,8 +65,30 @@ def read(path: PathType) -> PixelDataset:
     return PixelDataset.from_file(path)
 
 
+def _get_attr_and_index_by_component(attribute, sample_names, datasets):
+    for name, dataset in zip(sample_names, datasets):
+        attr = getattr(dataset, attribute, None)
+        if attr is not None:
+            attr["sample"] = pd.Categorical([name] * len(attr))
+            attr["component"] = pd.Categorical(
+                attr["component"].astype(str) + "_" + attr["sample"].astype(str)
+            )
+            attr.set_index(["component"])
+            yield attr
+
+
+def _concatenate_edgelists(datasets):
+    with pl.StringCache():
+        concatenated = datasets[0].edgelist_lazy.collect()
+        for subsequent in datasets[:1]:
+            concatenated = concatenated.extend(subsequent.edgelist_lazy.collect())
+    return concatenated
+
+
 def simple_aggregate(
-    sample_names: List[str], datasets: List[PixelDataset]
+    sample_names: List[str],
+    datasets: List[PixelDataset],
+    ignore_edgelists: bool = False,
 ) -> PixelDataset:
     """Aggregate samples in a simple way (see caveats).
 
@@ -77,8 +101,15 @@ def simple_aggregate(
 
     The metadata dictionary will contain one key per sample.
 
+    Since the edgelists will take up considerable amounts of memory it is possible to
+    ignore them when aggregating the data. This will mean that they are not directly
+    available for downstream analysis.
+
     :param sample_names: an iterable of the sample names to use for each dataset
     :param datasets: an iterable of the datasets you want to aggregate
+    :param ignore_edgelists: ignoring merging the edgelists, leaving them empty in the
+                             resulting PixelDataset. Defaults to False.
+
     :raises AssertionError: If not all pre-conditions are meet.
     :return: a PixelDataset instance with all the merged samples
     :rtype: PixelDataset
@@ -116,19 +147,23 @@ def simple_aggregate(
     adata = AnnData(tmp_adatas.X, obs=tmp_adatas.obs, var=datasets[0].adata.var)
     update_metrics_anndata(adata=adata, inplace=True)
 
-    def _get_attr_and_index_by_component(attribute):
-        for name, dataset in zip(sample_names, datasets):
-            attr = getattr(dataset, attribute, None)
-            if attr is not None:
-                attr["sample"] = name
-                attr["component"] = attr["component"].astype(str) + "_" + attr["sample"]
-                attr.set_index(["component"])
-                yield attr
-
-    edgelists = pd.concat(_get_attr_and_index_by_component("edgelist"), axis=0)
-    polarizations = pd.concat(_get_attr_and_index_by_component("polarization"), axis=0)
+    if ignore_edgelists:
+        edgelists = pd.DataFrame()
+    else:
+        edgelists = _enforce_edgelist_types(
+            _concatenate_edgelists(datasets).to_pandas()
+        )
+    polarizations = pd.concat(
+        _get_attr_and_index_by_component(
+            "polarization", datasets=datasets, sample_names=sample_names
+        ),
+        axis=0,
+    )
     colocalizations = pd.concat(
-        _get_attr_and_index_by_component("colocalization"), axis=0
+        _get_attr_and_index_by_component(
+            "colocalization", datasets=datasets, sample_names=sample_names
+        ),
+        axis=0,
     )
     metadata = {
         "samples": {
@@ -142,6 +177,8 @@ def simple_aggregate(
         polarization=polarizations,
         colocalization=colocalizations,
         metadata=metadata,
+        copy=False,
+        allow_empty_edgelist=ignore_edgelists,
     )
 
 
@@ -172,6 +209,10 @@ class PixelDatasetBackend(Protocol):
     @edgelist.setter
     def edgelist(self, value: pd.DataFrame) -> None:
         """Set the edge list instance."""
+
+    @property
+    def edgelist_lazy(self) -> pl.LazyFrame:
+        """Return the edgelist as a LazyFrame."""
 
     @property
     def polarization(self) -> Optional[pd.DataFrame]:
@@ -271,6 +312,21 @@ class PixelFileFormatSpec(ABC):
         """
         ...
 
+    @staticmethod
+    @abstractmethod
+    def deserialize_dataframe_lazy(path: PathType, key: str) -> Optional[pl.LazyFrame]:
+        """Deserialize a data frame from a .pxl file as a lazy frame.
+
+        Deserialize a data frame from a .pxl file at `path`, which has been
+        stored with the file name `key` in the zip archive, as a lazy frame.
+
+        :param path: the path to a pxl file
+        :param key: the file name that the data frame was stored under
+        :return: a `pl.LazyFrame` instance or None
+        :rtype: Optional[pl.LazyFrame]
+        """
+        ...
+
     def file_format_version(self, path: PathType) -> Optional[int]:
         """Get the file format version of the file given `path`.
 
@@ -337,14 +393,17 @@ class PixelFileFormatSpec(ABC):
                 }
                 zip_archive.writestr(self.METADATA_KEY, json.dumps(metadata))
 
-            if dataset.polarization is not None:
+            if dataset.polarization is not None and dataset.polarization.shape[0] > 0:
                 # create and save temporary polarization scores
                 file = tempfile.mkstemp(suffix=".csv.gz")[1]
                 self.serialize_dataframe(dataset.polarization, file)
                 zip_archive.write(file, self.POLARIZATION_KEY)
                 Path(file).unlink()
 
-            if dataset.colocalization is not None:
+            if (
+                dataset.colocalization is not None
+                and dataset.colocalization.shape[0] > 0
+            ):
                 # create and save temporary colocalization scores
                 file = tempfile.mkstemp(suffix=".csv.gz")[1]
                 self.serialize_dataframe(dataset.colocalization, file)
@@ -378,6 +437,11 @@ class PixelFileCSVFormatSpec(PixelFileFormatSpec):
         return PixelFileCSVFormatSpec._read_dataframe_from_zip(path, key)
 
     @staticmethod
+    def deserialize_dataframe_lazy(path: PathType, key: str) -> Optional[pl.LazyFrame]:
+        """Deserialize a lazy frame from the give path."""
+        return PixelFileCSVFormatSpec._read_dataframe_from_zip_lazy(path, key)
+
+    @staticmethod
     def _read_dataframe_from_zip(
         path: PathType, key: PathType
     ) -> Optional[pd.DataFrame]:
@@ -393,6 +457,17 @@ class PixelFileCSVFormatSpec(PixelFileFormatSpec):
                     # performance."
                     delattr(gz, "name")
                     return pl.read_csv(gz).to_pandas()  # type: ignore
+
+    @staticmethod
+    def _read_dataframe_from_zip_lazy(
+        path: PathType, key: str
+    ) -> Optional[pl.LazyFrame]:
+        raise NotImplementedError(
+            "You are trying to read data lazily from a csv-based pxl file. "
+            "This is currently not supported. "
+            "You can fix this issue by converting your pxl file by saving it "
+            "as a parquet based pxl file."
+        )
 
 
 class PixelFileParquetFormatSpec(PixelFileFormatSpec):
@@ -411,13 +486,17 @@ class PixelFileParquetFormatSpec(PixelFileFormatSpec):
     @staticmethod
     def serialize_dataframe(dataframe: pd.DataFrame, path: PathType) -> None:
         """Serialize a dataframe from the give path."""
-        kwargs = {"compression": "zstd"}
-        pl.from_pandas(dataframe).write_parquet(path, **kwargs)  # type: ignore
+        dataframe.to_parquet(path, engine="fastparquet", compression="zstd")
 
     @staticmethod
     def deserialize_dataframe(path: PathType, key: str) -> pd.DataFrame:
         """Deserialize a dataframe from the give path."""
         return PixelFileParquetFormatSpec._read_dataframe_from_zip(path, key)
+
+    @staticmethod
+    def deserialize_dataframe_lazy(path: PathType, key: str) -> Optional[pl.LazyFrame]:
+        """Deserialize a dataframe from the give path."""
+        return PixelFileParquetFormatSpec._read_dataframe_from_zip_lazy(path, key)
 
     @staticmethod
     def _read_dataframe_from_zip(path: PathType, key: str) -> Optional[pd.DataFrame]:
@@ -426,8 +505,18 @@ class PixelFileParquetFormatSpec(PixelFileFormatSpec):
             if key not in members:
                 return None
             with zip_archive.open(key) as f:
-                df = pl.read_parquet(f)  # type: ignore
-                return df.to_pandas(use_pyarrow_extension_array=True)
+                try:
+                    return pd.read_parquet(f, engine="fastparquet")
+                except ValueError:
+                    return pl.read_parquet(f).to_pandas()  # type: ignore
+
+    @staticmethod
+    def _read_dataframe_from_zip_lazy(
+        path: PathType, key: str
+    ) -> Optional[pl.LazyFrame]:
+        file_system = ZipFileSystem(path)
+        dataset = ds.dataset(key, filesystem=file_system)
+        return pl.scan_pyarrow_dataset(dataset)
 
 
 class PixelDataset:
@@ -479,10 +568,12 @@ class PixelDataset:
     @staticmethod
     def from_data(
         adata: AnnData,
-        edgelist: pd.DataFrame,
+        edgelist: Optional[pd.DataFrame],
         metadata: Optional[Dict[str, Any]] = None,
         polarization: Optional[pd.DataFrame] = None,
         colocalization: Optional[pd.DataFrame] = None,
+        copy: bool = True,
+        allow_empty_edgelist: bool = False,
     ) -> PixelDataset:
         """Create a new instance of PixelDataset from the provided underlying objects.
 
@@ -493,6 +584,9 @@ class PixelDataset:
                              defaults to None
         :param colocalization: a `pd.DataFrame` with colocalization information,
                                defaults to None
+        :param copy: specify if the input data should be copied or not.
+                     Defaults to True.
+        :param allow_empty_edgelist: allow the edgelist to be empty. Defaults to False.
         :return: An instance of PixelDataset
         :rtype: PixelDataset
         """
@@ -503,6 +597,8 @@ class PixelDataset:
                 metadata=metadata,
                 polarization=polarization,
                 colocalization=colocalization,
+                copy=copy,
+                allow_edgelist_to_be_empty=allow_empty_edgelist,
             )
         )
 
@@ -519,12 +615,17 @@ class PixelDataset:
     @property
     def edgelist(self) -> pd.DataFrame:
         """Get the edge list."""
-        return self._backend.edgelist
+        return _enforce_edgelist_types(self._backend.edgelist)
 
     @edgelist.setter
     def edgelist(self, value: pd.DataFrame) -> None:
         """Set the edge list."""
-        self._backend.edgelist = value
+        self._backend.edgelist = _enforce_edgelist_types(value)
+
+    @property
+    def edgelist_lazy(self) -> pl.LazyFrame:
+        """Get the edge list as a lazy dataframe."""
+        return self._backend.edgelist_lazy
 
     @property
     def polarization(self) -> Optional[pd.DataFrame]:
@@ -580,10 +681,17 @@ class PixelDataset:
         :raises: KeyError if the provided `component_id` is not found in the edgelist
         """
         if component_id:
-            if not np.any(self.edgelist["component"] == component_id):
+            potential_component = _enforce_edgelist_types(
+                (
+                    self.edgelist_lazy.filter(pl.col("component") == component_id)
+                    .collect()
+                    .to_pandas(use_pyarrow_extension_array=True)
+                )
+            )
+            if potential_component.empty:
                 raise KeyError(f"{component_id} not found in edgelist")
             return Graph.from_edgelist(
-                self.edgelist[self.edgelist["component"] == component_id],
+                potential_component,
                 add_marker_counts=add_node_marker_counts,
                 simplify=simplify,
                 use_full_bipartite=use_full_bipartite,
@@ -597,10 +705,11 @@ class PixelDataset:
 
     def __str__(self) -> str:
         """Get a string representation of this object."""
+        nbr_of_edges = self.edgelist_lazy.select(pl.count()).collect()[0, 0]
         msg = (
             f"Pixel dataset contains:\n"
             f"\tAnnData with {self.adata.n_obs} obs and {self.adata.n_vars} vars\n"
-            f"\tEdge list with {self.edgelist.shape[0]} edges"
+            f"\tEdge list with {nbr_of_edges} edges"
         )
 
         if self.polarization is not None:
@@ -707,12 +816,17 @@ class PixelDataset:
         adata = self.adata[adata_component_mask, adata_marker_mask]
         update_metrics_anndata(adata, inplace=True)
 
-        edgelist_mask = (
-            self.edgelist["component"].isin(components)
-            if change_components
-            else _all_true_array(self.edgelist.index.shape)
-        )
-        edgelist = self.edgelist[edgelist_mask]
+        with pl.StringCache():
+            lz_df = self.edgelist_lazy
+            edgelist_pred = (
+                lz_df.filter(pl.col("component").is_in(set(components)))  # type: ignore
+                if change_components
+                else self.edgelist_lazy
+            )
+
+            edgelist = _enforce_edgelist_types(
+                edgelist_pred.collect().to_pandas(use_pyarrow_extension_array=True)
+            )
 
         if self.polarization is not None:
             polarization_mask = (
@@ -765,6 +879,8 @@ class ObjectBasedPixelDatasetBackend:
         metadata: Optional[Dict[str, Any]] = None,
         polarization: Optional[pd.DataFrame] = None,
         colocalization: Optional[pd.DataFrame] = None,
+        copy: bool = True,
+        allow_edgelist_to_be_empty: bool = False,
     ) -> None:
         """Create a new instance of ObjectBasedPixelDatasetBackend.
 
@@ -773,23 +889,28 @@ class ObjectBasedPixelDatasetBackend:
         :param metadata: a dict with metadata, defaults to None
         :param polarization: a polarization dataframe, defaults to None
         :param colocalization: a colocalization dataframe, defaults to None
+        :param copy: decide if the input data should be copied or not. Defaults to True.
+        :param allow_edgelist_to_be_empty: allow the edgelist to be empty.
+                                           Defaults to False.
         :raises AssertionError: if `adata` or `edgelist` contains no data.
         """
         if adata is None or adata.n_obs == 0:
             raise AssertionError("adata cannot be empty")
 
         if edgelist is None or edgelist.shape[0] == 0:
-            raise AssertionError("edgelist cannot be empty")
+            if not allow_edgelist_to_be_empty:
+                raise AssertionError("edgelist cannot be empty")
+            edgelist = _enforce_edgelist_types(pd.DataFrame())
 
-        self._edgelist = edgelist.copy()
-        self._adata = adata.copy()
+        self._edgelist = _enforce_edgelist_types(edgelist.copy() if copy else edgelist)
+        self._adata = adata.copy() if copy else adata
         self._metadata = metadata
         self._polarization = None
         if polarization is not None:
-            self._polarization = polarization.copy()
+            self._polarization = polarization.copy() if copy else polarization
         self._colocalization = None
         if colocalization is not None:
-            self._colocalization = colocalization.copy()
+            self._colocalization = colocalization.copy() if copy else colocalization
 
     @property
     def adata(self) -> AnnData:
@@ -810,6 +931,11 @@ class ObjectBasedPixelDatasetBackend:
     def edgelist(self, value: pd.DataFrame) -> None:
         """Set the edge list for the pixel dataset."""
         self._edgelist = value
+
+    @property
+    def edgelist_lazy(self) -> pl.LazyFrame:
+        """Get a lazy frame representation of the edgelist."""
+        return pl.LazyFrame(self._edgelist)
 
     @property
     def metadata(self) -> Optional[pd.DataFrame]:
@@ -870,6 +996,13 @@ class FileBasedPixelDatasetBackend:
     def edgelist(self) -> pd.DataFrame:
         """Get the edge list object for the pixel dataset."""
         return self._file_format.deserialize_dataframe(
+            self._path, self._file_format.EDGELIST_KEY
+        )
+
+    @property
+    def edgelist_lazy(self) -> Optional[pl.LazyFrame]:
+        """Get a lazy frame representation of the edgelist."""
+        return self._file_format.deserialize_dataframe_lazy(
             self._path, self._file_format.EDGELIST_KEY
         )
 
@@ -963,7 +1096,10 @@ def component_antibody_counts(edgelist: pd.DataFrame) -> pd.DataFrame:
     # TODO this seems to be memory demanding so a simpler groupby() over
     # the component column may perform better in terms of memory
     df = (
-        edgelist.groupby(["component", "marker"]).agg("size").unstack().fillna(0)
+        edgelist.groupby(["component", "marker"], observed=True)
+        .agg("size")
+        .unstack()
+        .fillna(0)
     ).astype(int)
     df.index.name = "component"
 
@@ -1125,3 +1261,37 @@ def update_metrics_anndata(adata: AnnData, inplace: bool = True) -> Optional[Ann
 
     logger.debug("Metrics in AnnData object updated")
     return None if inplace else adata
+
+
+def _enforce_edgelist_types(edgelist: pd.DataFrame) -> pd.DataFrame:
+    """Enforce the data types of the edgelist."""
+    # Enforcing the types of the edgelist reduces the memory
+    # usage by roughly 2/3s.
+
+    required_types = {
+        "count": "uint16",
+        "umi_unique_count": "uint16",
+        "upi_unique_count": "uint16",
+        "upia": "category",
+        "upib": "category",
+        "umi": "category",
+        "marker": "category",
+        "sequence": "category",
+        "component": "category",
+    }
+
+    # if the dataframe is empty just enforce the types.
+    if edgelist.shape[0] == 0:
+        edgelist = pd.DataFrame(columns=required_types.keys())
+
+    # If all of the prescribed types are already set, just return the edgelist
+    type_dict = edgelist.dtypes.to_dict()
+    if all(type_dict[key] == type_ for key, type_ in required_types.items()):
+        return edgelist
+
+    return edgelist.astype(
+        required_types,
+        # Do not copy here, since otherwise the memory usage
+        # blows up
+        copy=False,
+    )
