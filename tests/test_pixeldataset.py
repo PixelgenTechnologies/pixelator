@@ -863,5 +863,3 @@ def test__enforce_edgelist_types():
         "component": "category",
     }
     assert result.dtypes.to_dict() == expected
-
-    _ = _enforce_edgelist_types(result)

@@ -578,7 +578,7 @@ class PixelDataset:
         """Create a new instance of PixelDataset from the provided underlying objects.
 
         :param adata: an instance of `AnnData`
-        :param edgelist: an edgelist as a `pd.DataFrame`, defaults to None
+        :param edgelist: an edgelist as a `pd.DataFrame`
         :param metadata: an instance of a dictionary with metadata, defaults to None
         :param polarization: a `pd.DataFrame` with polarization information,
                              defaults to None
