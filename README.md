@@ -69,7 +69,7 @@ pip install .
 
 ### Using docker
 
-The `pixelator`` command-line tool can be run with docker images available on
+The `pixelator` command-line tool can be run with docker images available on
 the [GitHub container registry](https://github.com/PixelgenTechnologies/pixelator/pkgs/container/pixelator).
 
 ```shell
@@ -99,7 +99,7 @@ Pixelator is developed and maintained by the [developers](https://github.com/Pix
 
 When using pixelator in your research, please cite the following publication:
 
-> Karlsson, Filip, Tomasz Kallas, Divya Thiagarajan, Max Karlsson, Maud Schweitzer, Jose Fernandez Navarro, Louise Leijonancker, et al. “Molecular Pixelation: Single Cell Spatial Proteomics by Sequencing.” bioRxiv, June 8, 2023. https://doi.org/10.1101/2023.06.05.543770.
+> Karlsson, Filip, Tomasz Kallas, Divya Thiagarajan, Max Karlsson, Maud Schweitzer, Jose Fernandez Navarro, Louise Leijonancker, _et al._ “Molecular Pixelation: Single Cell Spatial Proteomics by Sequencing.” bioRxiv, June 8, 2023. https://doi.org/10.1101/2023.06.05.543770.
 
 
 Main development happened thanks to:
