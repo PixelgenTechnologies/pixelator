@@ -96,9 +96,7 @@ def test_pixeldataset(setup_basic_pixel_dataset):
 
     assert_frame_equal(
         edgelist,
-        dataset.edgelist_lazy.collect().to_pandas(),
-        check_categorical=False,
-        check_dtype=False,
+        _enforce_edgelist_types(dataset.edgelist_lazy.collect().to_pandas()),
     )
 
     assert_frame_equal(
@@ -153,9 +151,11 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     assert_frame_equal(edgelist, dataset_new.edgelist)
     assert_frame_equal(
         edgelist,
-        dataset_new.edgelist_lazy.collect().to_pandas(),
-        check_categorical=False,
-        check_dtype=False,
+        # Note that we need to enforce the types manually here for this to work,
+        # this is expected since the lazy edgelist is an advanced feature
+        # where the user will need to manage the required datatypes themselves
+        # as needed.
+        _enforce_edgelist_types(dataset_new.edgelist_lazy.collect().to_pandas()),
     )
 
     assert_frame_equal(
@@ -165,11 +165,9 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
 
     assert metadata == dataset_new.metadata
 
-    assert_frame_equal(polarization_scores, dataset_new.polarization, check_dtype=False)
+    assert_frame_equal(polarization_scores, dataset_new.polarization)
 
-    assert_frame_equal(
-        colocalization_scores, dataset_new.colocalization, check_dtype=False
-    )
+    assert_frame_equal(colocalization_scores, dataset_new.colocalization)
 
 
 def test_pixeldataset_from_file_parquet_backward_comp_with_pyarrow_types(
@@ -194,12 +192,14 @@ def test_pixeldataset_from_file_parquet_backward_comp_with_pyarrow_types(
         dataset.save(str(file_target))
         dataset_new = PixelDataset.from_file(str(file_target))
 
-        assert_frame_equal(edgelist, dataset_new.edgelist, check_categorical=False)
+        assert_frame_equal(edgelist, dataset_new.edgelist)
         assert_frame_equal(
             edgelist,
-            dataset_new.edgelist_lazy.collect().to_pandas(),
-            check_categorical=False,
-            check_dtype=False,
+            # Note that we need to enforce the types manually here for this to work,
+            # this is expected since the lazy edgelist is an advanced feature
+            # where the user will need to manage the required datatypes themselves
+            # as needed.
+            _enforce_edgelist_types(dataset_new.edgelist_lazy.collect().to_pandas()),
         )
 
         assert_frame_equal(
@@ -209,13 +209,9 @@ def test_pixeldataset_from_file_parquet_backward_comp_with_pyarrow_types(
 
         assert metadata == dataset_new.metadata
 
-        assert_frame_equal(
-            polarization_scores, dataset_new.polarization, check_dtype=False
-        )
+        assert_frame_equal(polarization_scores, dataset_new.polarization)
 
-        assert_frame_equal(
-            colocalization_scores, dataset_new.colocalization, check_dtype=False
-        )
+        assert_frame_equal(colocalization_scores, dataset_new.colocalization)
 
 
 def test_pixeldataset_can_save_and_load_with_empty_edgelist(
@@ -274,7 +270,7 @@ def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
     dataset.save(str(file_target), file_format="csv")
     dataset_new = PixelDataset.from_file(str(file_target))
 
-    assert_frame_equal(edgelist, dataset_new.edgelist, check_categorical=False)
+    assert_frame_equal(edgelist, dataset_new.edgelist)
     with pytest.raises(NotImplementedError):
         dataset_new.edgelist_lazy
 
@@ -285,11 +281,9 @@ def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
 
     assert metadata == dataset_new.metadata
 
-    assert_frame_equal(polarization_scores, dataset_new.polarization, check_dtype=False)
+    assert_frame_equal(polarization_scores, dataset_new.polarization)
 
-    assert_frame_equal(
-        colocalization_scores, dataset_new.colocalization, check_dtype=False
-    )
+    assert_frame_equal(colocalization_scores, dataset_new.colocalization)
 
 
 def test_pixeldataset_repr(setup_basic_pixel_dataset):
