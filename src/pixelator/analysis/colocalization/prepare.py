@@ -78,8 +78,7 @@ def filter_by_marker_counts(
     available for that marker
 
     :param df: dataframe to filter
-    :param min_marker_counts: minmum number of counts for the marker (exclusive),
-                              defaults to 10
+    :param min_marker_counts: marker > min_marker_counts, defaults to 10
     :return: the filtered dataframe
     :rtype: RegionByCountsDataFrame
     """
@@ -95,8 +94,8 @@ def filter_by_unique_values(
     number of unique values for that marker
 
     :param df: dataframe to filter
-    :param at_least_n_unique: minimum number of unique values
-                              (inclusive), defaults to 1
+    :param at_least_n_unique: minimum number of unique values >= at_least_n_unique
+                              inclusive), defaults to 1
     :return: the filtered dataframe
     :rtype: RegionByCountsDataFrame
     """

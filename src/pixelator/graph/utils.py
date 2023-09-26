@@ -134,7 +134,7 @@ def create_node_markers_counts(
                           building neighborhoods
     :returns: a pd.DataFrame with the antibody counts per node
     :rtype: pd.DataFrame
-    :raises: Assertion error if no 'markers' attribute is found on the vertices
+    :raises AssertionError: if no 'markers' attribute is found on the vertices
     """
     if k == 0 and normalization:
         warnings.warn(

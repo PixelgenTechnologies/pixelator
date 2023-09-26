@@ -62,9 +62,6 @@ def test_prepare_from_graph_and_edgelist_eq_for_no_neigbours(edgelist):
         )
 
 
-# noqa: D103
-
-
 def test_filter_by_region_counts():
     df = pd.DataFrame(
         [[1, 2, 3, 4], [2, 3, 5, 6], [10, 5, 3, 8]],

@@ -64,7 +64,7 @@ def edgelist_fixture(data_root):
 
 @pytest.fixture(name="edgelist_with_communities", scope="module")
 def edgelist_with_communities_fixture():
-    """Create an edgelist that has to communities."""
+    """Create an edgelist that has one component, but two distinct communities."""
     random.seed(7319)
 
     graph1 = create_fully_connected_bipartite_graph(n_nodes=50)
