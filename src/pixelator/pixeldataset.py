@@ -508,7 +508,7 @@ class PixelFileParquetFormatSpec(PixelFileFormatSpec):
                 try:
                     return pd.read_parquet(f, engine="fastparquet")
                 except ValueError:
-                    return pl.read_parquet(f).to_pandas()
+                    return pl.read_parquet(f).to_pandas()  # type: ignore
 
     @staticmethod
     def _read_dataframe_from_zip_lazy(
