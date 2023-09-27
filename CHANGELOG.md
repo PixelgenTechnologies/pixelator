@@ -24,9 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-* Fix an issue where `--keep-workdirs` option for pytest was not available when running pytest without
-  restricting the testdir to `tests/integration`.
-* Fix an issue where pixelator --version would return 0.0.0.
+* Fix an issue where pixelator --version would return 0.0.0 when installing in editable mode.
 
 ### Removed
 
