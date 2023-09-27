@@ -7,7 +7,7 @@ from importlib import metadata
 __version__ = "0.0.0"
 
 try:
-    __version__ = metadata.version("pixelator")
+    __version__ = metadata.version("pixelgen-pixelator")
 except metadata.PackageNotFoundError:
     pass
 
