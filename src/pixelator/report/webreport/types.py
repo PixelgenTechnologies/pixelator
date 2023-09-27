@@ -218,7 +218,9 @@ class Metrics(TypedDict, total=False):
     #: Pixelation amplicon.
     sequencing_saturation: float
 
-    #: TODO: @ambarrio
+    #: The average number of reads per molecule is a measure of sequencing depth in
+    #: the sample and hints if the underlying molecule distribution has been well
+    #: characterized.
     average_reads_per_molecule: float
 
     #: Fraction of Antibody Barcode bases with Q-score ≥ 30, excluding very low

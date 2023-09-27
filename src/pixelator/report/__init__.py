@@ -519,6 +519,7 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics = {}
         metrics["cells_filtered"] = adata.n_obs
         metrics["total_markers"] = adata.n_vars
+        metrics["total_umis"] = adata.obs["umi"].sum()
         metrics["total_reads_cell"] = adata.obs["reads"].sum()
         metrics["median_reads_cell"] = adata.obs["reads"].median()
         metrics["mean_reads_cell"] = adata.obs["reads"].mean()
@@ -658,8 +659,8 @@ def create_dynamic_report(
     }
 
     fraction_of_umis_in_non_cell_components = (
-        summary_cell_calling["umi"] - summary_cell_calling["umis_of_aggregates"]
-    ) / summary_graph["total_umi"]
+        summary_cell_calling["total_umis"] - summary_cell_calling["umis_of_aggregates"]
+    ) / summary_graph["umi"]
 
     metrics = Metrics(
         number_of_cells=summary_cell_calling["cells_filtered"],

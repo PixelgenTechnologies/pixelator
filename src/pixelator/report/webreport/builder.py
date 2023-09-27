@@ -1,4 +1,5 @@
-"""
+"""Webreport builder.
+
 The WebreportBuilder is used to inject all webreport data into the
 template and write the final webreport to a file.
 
@@ -26,8 +27,7 @@ DEFAULT_WEBREPORT_TEMPLATE = Path(__file__).parent / "template.html"
 
 
 class WebreportBuilder:
-    """
-    Build a webreport from a html template and the required data (CSV and JSON).
+    """Build a webreport from a html template and the required data (CSV and JSON).
 
     This will parse a webreport template and, using the write method, inject CSV
     and JSON strings into the template using `html <script>` tags under the
@@ -45,11 +45,10 @@ class WebreportBuilder:
     """
 
     _JSON_OPTIONS: ClassVar[Dict[str, Any]] = {"indent": None, "separators": (",", ":")}
-    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.7.0", ">=0.5.0"]
+    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.8.0", ">=0.7.0"]
 
     def __init__(self, template: Union[str, Path] = DEFAULT_WEBREPORT_TEMPLATE):
-        """
-        Construct a webreport builder given a html template.
+        """Construct a webreport builder given a html template.
 
         :param template: path to the webreport template
         :raises FileNotFoundError: if the template file does not exist
@@ -61,11 +60,11 @@ class WebreportBuilder:
         self.template = Path(template)
 
     def _load_template(self) -> Tuple[LxmlElement, LxmlElement]:
-        """
-        Load and parse the webreport template.
+        """Load and parse the webreport template.
 
         :raises AssertionError: if no body tag is found in the template
         :raises AssertionError: if the webreport template version is not supported
+        :rtype: Tuple[LxmlElement, LxmlElement]
         """
         logger.debug("Loading web report template %s", self.template)
 
@@ -101,7 +100,7 @@ class WebreportBuilder:
                     f"not satisfy constraint: {constraint}"
                 )
 
-    def write(
+    def write(  # noqa: DOC502
         self,
         fp: BinaryIO,
         sample_info: SampleInfo,
@@ -109,8 +108,7 @@ class WebreportBuilder:
         data: WebreportData,
         metrics_definition_file: Optional[PathType] = None,
     ) -> None:
-        """
-        Inject given data into the webreport and write the results to a stream.
+        """Inject given data into the webreport and write the results to a stream.
 
         :param fp: binary stream to write the report to
         :param sample_info: Sample information
@@ -171,9 +169,7 @@ class WebreportBuilder:
     def _build_metric_definition_file_element(
         self, metrics_definition_file: PathType, template_body: LxmlElement
     ) -> LxmlElement:
-        """
-        Create a lxml HTML object to inject the metrics definition file.
-        """
+        """Create a lxml HTML object to inject the metrics definition file."""
         template_body.cssselect('script[data-type="metric-definitions"]')
         if len(template_body) > 0:
             metrics_definition_file_el = template_body[0]
@@ -197,9 +193,7 @@ class WebreportBuilder:
     def _build_sample_and_metrics_element(
         self, sample_info: SampleInfo, metrics: Metrics
     ) -> LxmlElement:
-        """
-        Create a lxml HTML object to inject the metrics and sample info.
-        """
+        """Create a lxml HTML object to inject the metrics and sample info."""
         metrics_el = E.SCRIPT(
             **{
                 "type": "application/octet-stream;base64",
@@ -217,8 +211,7 @@ class WebreportBuilder:
         return metrics_el
 
     def _build_ranked_component_size_element(self, data: str) -> LxmlElement:
-        """
-        Create a lxml HTML injecting the ranked component data.
+        """Create a lxml HTML injecting the ranked component data.
 
         This data is used for the rank plot and the component size vs marker
         scatter plot.
@@ -234,9 +227,7 @@ class WebreportBuilder:
         return ranked_component_size_el
 
     def _build_component_data_element(self, data: str) -> LxmlElement:
-        """
-        Create a lxml HTML injecting the component data.
-        """
+        """Create a lxml HTML injecting the component data."""
         component_data_el = E.SCRIPT(
             **{
                 "type": "application/octet-stream;base64",
@@ -248,9 +239,7 @@ class WebreportBuilder:
         return component_data_el
 
     def _build_antibodies_per_component_element(self, data: str) -> LxmlElement:
-        """
-        Create a lxml HTML injecting the antibodies_per_cell data.
-        """
+        """Create a lxml HTML injecting the antibodies_per_cell data."""
         antibodies_per_cell_el = E.SCRIPT(
             **{
                 "type": "text/csv",
@@ -262,9 +251,7 @@ class WebreportBuilder:
         return antibodies_per_cell_el
 
     def _build_sequencing_saturation_element(self, data: str):
-        """
-        Create an HTML object injecting the sequencing saturation data.
-        """
+        """Create an HTML object injecting the sequencing saturation data."""
         sequencing_saturation_el = E.SCRIPT(
             **{
                 "type": "text/csv",
@@ -276,9 +263,7 @@ class WebreportBuilder:
         return sequencing_saturation_el
 
     def _build_antibody_percentages_element(self, data: str) -> LxmlElement:
-        """
-        Create a HTML object injecting the antibody counts data.
-        """
+        """Create a HTML object injecting the antibody counts data."""
         antibody_counts_el = E.SCRIPT(
             **{
                 "type": "text/csv",
@@ -290,9 +275,7 @@ class WebreportBuilder:
         return antibody_counts_el
 
     def _build_antibody_counts_element(self, data: str) -> LxmlElement:
-        """
-        Create an HTML object injecting the antibody counts data.
-        """
+        """Create an HTML object injecting the antibody counts data."""
         antibody_distribution_el = E.SCRIPT(
             **{
                 "type": "application/octet-stream;base64",
@@ -305,7 +288,5 @@ class WebreportBuilder:
 
     @staticmethod
     def _compress_data(data: str):
-        """
-        Compress the data using gzip and encode with base64.
-        """
+        """Compress the data using gzip and encode with base64."""
         return base64.b64encode(gzip.compress(data.encode("utf-8")))
