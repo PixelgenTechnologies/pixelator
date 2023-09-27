@@ -536,18 +536,20 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics["mean_markers_cell"] = adata.obs["antibodies"].mean()
         metrics["upib_per_upia"] = adata.obs["upib"].sum() / adata.obs["upia"].sum()
 
-        metrics[
-            "reads_of_aggregates"
-        ] = 0  # This metric needs to be initialized for the webreport
+        # This metric needs to be initialized for the webreport
+        metrics["reads_of_aggregates"] = 0
+        metrics["umis_of_aggregates"] = 0
+
         # Tau type will only be available if it has been added in the annotate step
         if "tau_type" in adata.obs:
-            metrics["number_of_aggregates"] = np.sum(adata.obs["tau_type"] != "normal")
-            metrics["fraction_of_aggregates"] = np.sum(
-                adata.obs["tau_type"] != "normal"
-            ) / len(adata.obs["tau_type"])
-            metrics["reads_of_aggregates"] = (
-                adata[adata.obs["tau_type"] != "normal"].obs["reads"].sum()
+            aggregates_mask = adata.obs["tau_type"] != "normal"
+            number_of_aggregates = np.sum(aggregates_mask)
+            metrics["number_of_aggregates"] = number_of_aggregates
+            metrics["fraction_of_aggregates"] = number_of_aggregates / len(
+                adata.obs["tau_type"]
             )
+            metrics["reads_of_aggregates"] = adata[aggregates_mask].obs["reads"].sum()
+            metrics["umis_of_aggregates"] = adata[aggregates_mask].obs["umi"].sum()
 
         if "min_size_threshold" in adata.uns:
             metrics["minimum_size_threshold"] = adata.uns["min_size_threshold"]
@@ -597,6 +599,7 @@ def create_dynamic_report(
     summary_preqc: pd.Series,
     summary_demux: pd.Series,
     summary_collapse: pd.Series,
+    summary_graph: pd.Series,
     summary_annotate: pd.Series,
     summary_cell_calling: pd.Series,
     info: SampleInfo,
@@ -615,6 +618,8 @@ def create_dynamic_report(
     :param summary_preqc: a pd.Series with the `preqc` stage metrics of the sample
     :param summary_demux: a pd.Series with the `demux` stage metrics of the sample
     :param summary_collapse: a pd.Series with the `collapse` stage metrics
+        of the sample
+    :param summary_graph: a pd.Series with the `graph` stage metrics
         of the sample
     :param summary_annotate: a pd.Series with the `annotate` metrics of the sample
     :param summary_cell_calling: a pd.Series with the per cell calling metrics
@@ -652,6 +657,10 @@ def create_dynamic_report(
         / summary_all["reads"],
     }
 
+    fraction_of_umis_in_non_cell_components = (
+        summary_cell_calling["umi"] - summary_cell_calling["umis_of_aggregates"]
+    ) / summary_graph["total_umi"]
+
     metrics = Metrics(
         number_of_cells=summary_cell_calling["cells_filtered"],
         average_reads_usable_per_cell=summary_cell_calling["mean_reads_cell"],
@@ -663,6 +672,7 @@ def create_dynamic_report(
         average_umis_per_upi=summary_cell_calling["mean_umi_upia_cell"],
         fraction_reads_in_cells=summary_cell_calling["total_reads_cell"]
         / summary_all["reads"],
+        fraction_umis_in_non_cell_components=fraction_of_umis_in_non_cell_components,
         median_antibodies_per_cell=summary_cell_calling["median_markers_cell"],
         total_antibodies_detected=summary_cell_calling["total_markers"],
         number_of_reads=summary_all["reads"],
@@ -876,6 +886,7 @@ def make_report(
             summary_preqc=summary_preqc.loc[sample, :],
             summary_demux=summary_demux.loc[sample, :],
             summary_collapse=summary_collapse.loc[sample, :],
+            summary_graph=summary_graph.loc[sample, :],
             summary_annotate=summary_annotate.loc[sample, :],
             summary_cell_calling=summary_cell_calling.loc[sample, :],
             info=sample_info,
