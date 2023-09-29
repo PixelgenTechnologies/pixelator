@@ -243,7 +243,7 @@ class WebreportBuilder:
         antibodies_per_cell_el = E.SCRIPT(
             **{
                 "type": "text/csv",
-                "data-type": "antibodies-per-cell",
+                "data-type": "antibodies-per-component",
                 "data-dataset-id": "0",
             }
         )
@@ -263,11 +263,11 @@ class WebreportBuilder:
         return sequencing_saturation_el
 
     def _build_antibody_percentages_element(self, data: str) -> LxmlElement:
-        """Create a HTML object injecting the antibody counts data."""
+        """Create an HTML object injecting the antibody counts data."""
         antibody_counts_el = E.SCRIPT(
             **{
                 "type": "text/csv",
-                "data-type": "antibody-counts",
+                "data-type": "antibody-percentages",
                 "data-dataset-id": "0",
             }
         )
@@ -279,7 +279,7 @@ class WebreportBuilder:
         antibody_distribution_el = E.SCRIPT(
             **{
                 "type": "application/octet-stream;base64",
-                "data-type": "antibody-distribution",
+                "data-type": "antibody-counts",
                 "data-dataset-id": "0",
             }
         )

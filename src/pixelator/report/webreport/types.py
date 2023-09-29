@@ -192,7 +192,7 @@ class Metrics(TypedDict, total=False):
     fraction_reads_in_cells: float
 
     #: The percentage of UMIs in non-cell components.
-    fraction_umis_in_non_cell_components: float
+    fraction_discarded_umis: float
 
     #: The total number of antibodies with at least {min-count} reads from molecules
     #: (UMI+UPI) in any cell. **(link to min-count parameter documentation)**

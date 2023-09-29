@@ -1,6 +1,4 @@
-"""
-This module contains helper functions to collect necessary data for plots of
-the dynamic webreport.
+"""Helper functions to collect data for report generation.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -10,7 +8,7 @@ import typing
 import warnings
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import click
 import numpy as np
@@ -25,12 +23,11 @@ logger = logging.getLogger(__name__)
 
 
 def components_umap_data(adata: AnnData) -> str:
-    """
-    Create a csv formatted string with the components umap data
-    for he webreport.
+    """Create a csv formatted string with the components umap data for the webreport.
 
     :param adata: an AnnData object with the umap data (obs)
     :return: a csv formatted string with umap data
+    :rtype: str
     """
     empty = np.full(adata.n_obs, np.nan)
 
@@ -57,14 +54,14 @@ def components_umap_data(adata: AnnData) -> str:
 
 
 def antibody_percentages_data(adata: AnnData) -> str:
-    """
-    Create the antibody percentages histogram data for the webreport.
+    """Create the antibody percentages histogram data for the webreport.
 
     This function created a csv formatted string with the antibody name and the
     percentage of the antibody aggregated over all components.
 
     :param adata: an AnnData object with antibody counts percentages data
     :return: a csv formatted string with antibody percentages data
+    :rtype: str
     """
     index = adata.var.index.set_names("antibody", inplace=False)
     df = pd.DataFrame({"percentage": adata.var["antibody_pct"]}, index=index)
@@ -72,54 +69,55 @@ def antibody_percentages_data(adata: AnnData) -> str:
 
 
 def antibody_counts_data(adata: AnnData) -> str:
-    """
-    Create the antibody counts data for the webreport.
+    """Create the antibody counts data for the webreport.
 
     :param adata: an AnnData object with the antibody counts data
     :return: a csv formatted string with the antibody counts data
+    :rtype: str
     """
     return adata.to_df().to_csv(index=True, index_label="component")
 
 
 def component_ranked_component_size_data(components_metrics: pd.DataFrame) -> str:
-    """
-    Create data for the `cell calling` and `component size distribution` plot
-    in the webreport.
+    """Create data for the `cell calling` and `component size distribution` plot.
 
     This collects the component size and the number of antibodies per component.
     Components that pass the filters (is_filtered) are marked as selected.
 
     :param components_metrics: a pd.DataFrame with the components metrics
     :return: a csv formatted string with the plotting data
+    :rtype: str
     """
     component_sizes = components_metrics[SIZE_DEFINITION].to_numpy()
     df = pd.DataFrame({"component_size": component_sizes})
-    df["rank"] = df.rank(ascending=False, method="first")
+    df["rank"] = df.rank(method="first").astype(int)
     df["selected"] = components_metrics["is_filtered"].to_numpy()
     df["markers"] = components_metrics["antibodies"].to_numpy()
     df.sort_values(by="rank", inplace=True)
+    df.set_index("rank", inplace=True)
     return df.to_csv(index=True)
 
 
 def collect_parameter_info(
     input_path: str, sample_name: Optional[str] = None
 ) -> List[CommandInfo]:
-    """
-    Collect all metainfo files from the workdir and generate parameter info.
+    """Collect all metainfo files from the workdir and generate parameter info.
 
     :param input_path: Path to the workdir
+    :param sample_name: The sample name to filter on
     :returns: A list of CommandInfo objects
+    :rtype: List[CommandInfo]
     """
     # Function scope import to avoid circular dependencies
     from pixelator.cli import main_cli
 
     workdir = PixelatorWorkdir(input_path)
     param_files = workdir.metadata_files(sample_name)
-    return generate_parameter_info(main_cli, param_files)
+    return generate_parameter_info(main_cli, param_files)  # type: ignore
 
 
 def _clean_commmand_path(click_context: click.Group, data: Dict[str, Any]) -> str:
-    """Helper to remove pipeline CSV from the command list."""
+    """Remove `pipeline CSV` from the command list."""
     command_path = data["cli"]["command"].split(" ")
 
     # This is a hack to rewrite the weird command_path when using ctx.invoke
@@ -146,12 +144,7 @@ def _clean_commmand_path(click_context: click.Group, data: Dict[str, Any]) -> st
 def _find_click_command(
     click_context: click.Group, data: Dict[str, Any]
 ) -> click.Command:
-    """
-    Find the click command for a given parsed meta.json file.
-
-    :param click_context: The click context of the main pixelator command
-    :param data: The parsed meta.json file
-    """
+    """Find the click command for a given parsed meta.json file."""
     command_path = data["cli"]["command"].split(" ")
     command_group: click.Group = click_context
 
@@ -173,13 +166,13 @@ def _find_click_command(
 def _process_meta_json_data(
     click_context: click.Group, data: Dict[str, Any]
 ) -> CommandInfo:
-    """
-    Process a single meta.json file and generate the parameter info.
+    """Process a single metadata file and generate the parameter info object.
 
-    :params click_context: The click context of the main pixelator command
-    :params file_data: The parsed meta.json file
+    :param click_context: The click context of the main pixelator command
+    :param data: The parsed meta.json file
+    :returns: A CommandInfo object
+    :rtype: CommandInfo
     """
-
     leaf_command = _find_click_command(click_context, data)
     param_data: List[CommandOption] = []
     opt_lookup = {p.opts[0]: p for p in leaf_command.params}
@@ -223,17 +216,17 @@ def _process_meta_json_data(
     return command
 
 
-def generate_parameter_info(
+def generate_parameter_info(  # noqa: DOC502
     click_context: click.Group, param_files: List[Path]
 ) -> List[CommandInfo]:
-    """
-    Combine and enrich commmand parameters for use in the webreport.
+    """Combine and enrich commmand parameters for use in the webreport.
 
     :param click_context: The click context of the main pixelator command
     :param param_files: A list with paths of meta.json files
     :raises ValueError: If the command parsed from meta files is not found
         in the click context.
     :returns: A list of CommandInfo objects
+    :rtype: List[CommandInfo]
     """
     data_flat: List[CommandInfo] = []
     order = list(click_context.commands["single-cell"].commands.keys())  # type: ignore
@@ -249,11 +242,14 @@ def generate_parameter_info(
     return data_flat
 
 
-def index_parameter_info(data: List[CommandInfo]):
-    """
-    Create two lookup tables for finding parameter info.
+def index_parameter_info(
+    data: List[CommandInfo],
+) -> Tuple[Dict[str, CommandInfo], Dict[str, Dict[str, CommandOption]]]:
+    """Create two lookup tables for finding parameter info.
 
     :param data: the result from `generate_parameter_info`
+    :returns: A tuple with two lookup tables
+    :rtype: Tuple[Dict[str, CommandInfo], Dict[str, Dict[str, CommandOption]]]
     """
     command_index = {}
     comand_option_index: Dict[str, Dict[str, CommandOption]] = defaultdict(dict)
@@ -267,13 +263,14 @@ def index_parameter_info(data: List[CommandInfo]):
 
 
 def collect_report_data(input_path: str, sample_id: str) -> WebreportData:
-    """
-    Collect the data needed to generate figures in the webreport.
+    """Collect the data needed to generate figures in the webreport.
 
     The `annotate` folder must be present in `input_path`.
 
     :param input_path: The path to the input folder
     :param sample_id: The sample id
+    :returns: A WebreportData object
+    :rtype: WebreportData
     :raises NotADirectoryError: If the input folder is missing the annotate folder
     :raises FileNotFoundError: If the annotate folder is missing the datasets
     """

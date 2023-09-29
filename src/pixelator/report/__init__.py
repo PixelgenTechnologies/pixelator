@@ -450,6 +450,7 @@ def graph_and_annotate_metrics(
                     "upia": data["total_upia"],
                     "upib": data["total_upib"],
                     "umi": data["total_umi"],
+                    "mean_count": data["mean_count"],
                     "vertices": data["vertices"],
                     "edges": data["edges"],
                     cell_column: data["components"],
@@ -637,7 +638,7 @@ def create_dynamic_report(
     antibodies_data_values = {
         "antibody_reads": summary_demux["output"],
         "antibody_reads_usable_per_cell": summary_cell_calling["total_reads_cell"],
-        "antibody_reads_in_aggregates": summary_cell_calling["reads_of_aggregates"],
+        "antibody_reads_in_outliers": summary_cell_calling["reads_of_aggregates"],
         "unrecognized_antibodies": summary_demux["input"] - summary_demux["output"],
     }
 
@@ -648,14 +649,29 @@ def create_dynamic_report(
             "antibody_reads_usable_per_cell"
         ]
         / summary_all["reads"],
-        "fraction_antibody_reads_in_aggregates": antibodies_data_values[
-            "antibody_reads_in_aggregates"
+        "fraction_antibody_reads_in_outliers": antibodies_data_values[
+            "antibody_reads_in_outliers"
         ]
         / summary_all["reads"],
         "fraction_unrecognized_antibodies": antibodies_data_values[
             "unrecognized_antibodies"
         ]
         / summary_all["reads"],
+    }
+
+    placeholder_cell_predictions = {
+        "predicted_cell_type_b_cells": None,
+        "fraction_predicted_cell_type_b_cells": None,
+        "predicted_cell_type_cd4p_cells": None,
+        "fraction_predicted_cell_type_cd4p_cells": None,
+        "predicted_cell_type_cd8p_cells": None,
+        "fraction_predicted_cell_type_cd8p_cells": None,
+        "predicted_cell_type_monocytes": None,
+        "fraction_predicted_cell_type_monocytes": None,
+        "predicted_cell_type_nk_cells": None,
+        "fraction_predicted_cell_type_nk_cells": None,
+        "predicted_cell_type_unknown": None,
+        "fraction_predicted_cell_type_unknown": None,
     }
 
     fraction_of_umis_in_non_cell_components = (
@@ -669,17 +685,17 @@ def create_dynamic_report(
             summary_all["reads"] / summary_cell_calling["cells_filtered"]
         ),
         median_antibody_molecules_per_cell=summary_cell_calling["median_umi_cell"],
-        average_upis_per_cell=summary_cell_calling["mean_upia_cell"],
-        average_umis_per_upi=summary_cell_calling["mean_umi_upia_cell"],
+        average_upias_per_cell=summary_cell_calling["mean_upia_cell"],
+        average_umis_per_upia=summary_cell_calling["mean_umi_upia_cell"],
         fraction_reads_in_cells=summary_cell_calling["total_reads_cell"]
         / summary_all["reads"],
-        fraction_umis_in_non_cell_components=fraction_of_umis_in_non_cell_components,
-        median_antibodies_per_cell=summary_cell_calling["median_markers_cell"],
-        total_antibodies_detected=summary_cell_calling["total_markers"],
+        fraction_discarded_umis=fraction_of_umis_in_non_cell_components,
+        total_unique_antibodies_detected=summary_cell_calling["total_markers"],
         number_of_reads=summary_all["reads"],
         number_of_short_reads_skipped=summary_preqc["too_short_reads"],
         fraction_valid_pbs=summary_all["adapterqc"] / summary_all["reads"],
         fraction_valid_umis=summary_collapse["input"] / summary_all["reads"],
+        average_reads_per_molecule=summary_graph["mean_count"],
         sequencing_saturation=summary_all["duplication"],
         fraction_q30_bases_in_antibody_barcode=summary_amplicon["fraction_q30_barcode"],
         fraction_q30_bases_in_umi=summary_amplicon["fraction_q30_umi"],
@@ -690,6 +706,7 @@ def create_dynamic_report(
         fraction_q30_bases_in_read=summary_amplicon["fraction_q30"],
         **antibodies_data_values,  # type: ignore
         **antibodies_data_fractions,  # type: ignore
+        **placeholder_cell_predictions,  # type: ignore
     )
 
     data = collect_report_data(input_path, sample_id)
