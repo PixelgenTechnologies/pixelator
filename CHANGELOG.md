@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Types on the edge list in memory will utilize the `pandas` `category` type for string, and
   `uint16` for numeric values to lower the memory consumption when working with the
   edge list
+* Remove `--pbs1` and `--pbs2` commandline arguments to `pixelator single-cell adapterqc`.
 
 ### Fixed
 

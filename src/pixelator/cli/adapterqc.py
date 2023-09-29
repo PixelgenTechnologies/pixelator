@@ -1,5 +1,4 @@
-"""
-Console script for pixelator (adapterqc)
+"""Console script for pixelator (adapterqc).
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -44,28 +43,6 @@ from pixelator.utils import (
     show_default=True,
     help="The number of mismatches allowed (in percentage)",
 )
-@click.option(
-    "--pbs1",
-    default=None,
-    required=False,
-    type=click.STRING,
-    show_default=False,
-    help=(
-        "The PBS1 sequence that must be present in the reads.\n"
-        "If you set this argument it will overrule the value from the chosen design"
-    ),
-)
-@click.option(
-    "--pbs2",
-    default=None,
-    required=False,
-    type=click.STRING,
-    show_default=False,
-    help=(
-        "The PBS2 sequence that must be present in the reads.\n"
-        "If you set this argument it will overrule the value from the chosen design"
-    ),
-)
 @output_option
 @design_option
 @click.pass_context
@@ -74,15 +51,10 @@ def adapterqc(
     ctx,
     input_files,
     mismatches,
-    pbs1,
-    pbs2,
     output,
     design,
 ):
-    """
-    Process Molecular Pixelation data (FASTQ) to check for the presence of
-    PBS1/2 sequences
-    """
+    """Check for the presence of PBS1/2 sequences in FASTQ input files."""
     from pixelator.config import config
 
     # log input parameters
@@ -91,8 +63,6 @@ def adapterqc(
         input_files=input_files,
         output=output,
         mismatches=mismatches,
-        pbs1=pbs1,
-        pbs2=pbs2,
         design=design,
     )
 
@@ -102,10 +72,8 @@ def adapterqc(
     # update arguments from config file (CLI arguments have priority)
     try:
         amplicon = config.get_assay(design).get_region_by_id("amplicon")
-        if pbs1 is None:
-            pbs1 = amplicon.get_region_by_id("pbs-1").get_sequence()
-        if pbs2 is None:
-            pbs2 = amplicon.get_region_by_id("pbs-2").get_sequence()
+        pbs1 = amplicon.get_region_by_id("pbs-1").get_sequence()
+        pbs2 = amplicon.get_region_by_id("pbs-2").get_sequence()
     except KeyError as exc:
         raise click.ClickException(f"Parsing attribute from config file {exc}")
 
