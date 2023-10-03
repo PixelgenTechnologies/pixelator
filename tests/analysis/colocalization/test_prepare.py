@@ -34,7 +34,7 @@ def test_prepare_from_graph(edgelist):
         simplify=True,
         use_full_bipartite=False,
     )
-    for component in graph.components().subgraphs():
+    for component in graph.connected_components().subgraphs():
         result = prepare_from_graph(component, n_neighbours=0)
         assert len(result) == len(component.vs)
         unique_markers_in_component = functools.reduce(

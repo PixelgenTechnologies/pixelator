@@ -240,7 +240,7 @@ def test_pixeldataset_graph(setup_basic_pixel_dataset):
     dataset, *_ = setup_basic_pixel_dataset
     full_graph = dataset.graph()
     assert isinstance(full_graph, Graph)
-    assert len(full_graph.components()) == 5
+    assert len(full_graph.connected_components()) == 5
 
 
 def test_pixeldataset_graph_raises_when_component_not_found(setup_basic_pixel_dataset):
@@ -253,7 +253,7 @@ def test_pixeldataset_graph_finds_component(setup_basic_pixel_dataset):
     dataset, *_ = setup_basic_pixel_dataset
     component_graph = dataset.graph("PXLCMP0000000")
     assert isinstance(component_graph, Graph)
-    assert len(component_graph.components()) == 1
+    assert len(component_graph.connected_components()) == 1
 
 
 def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
