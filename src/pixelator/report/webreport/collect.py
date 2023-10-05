@@ -90,7 +90,7 @@ def component_ranked_component_size_data(components_metrics: pd.DataFrame) -> st
     """
     component_sizes = components_metrics[SIZE_DEFINITION].to_numpy()
     df = pd.DataFrame({"component_size": component_sizes})
-    df["rank"] = df.rank(method="first").astype(int)
+    df["rank"] = df.rank(method="first", ascending=False).astype(int)
     df["selected"] = components_metrics["is_filtered"].to_numpy()
     df["markers"] = components_metrics["antibodies"].to_numpy()
     df.sort_values(by="rank", inplace=True)
