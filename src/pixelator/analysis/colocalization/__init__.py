@@ -1,5 +1,4 @@
-"""
-This module contains functions for the colocalization analysis in pixelator
+"""Functions for the colocalization analysis in pixelator.
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
@@ -31,10 +30,8 @@ from pixelator.analysis.colocalization.types import (
 )
 from pixelator.graph.utils import Graph
 from pixelator.statistics import (
-    clr_transformation,
     correct_pvalues,
     log1p_transformation,
-    rel_normalization,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,9 +47,7 @@ def colocalization_from_component_edgelist(
     min_region_count: int = 5,
     random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
-    """
-    Get the colocalization scores for the component represented by the given
-    `edgelist`.
+    """Get the colocalization scores for the component in the given `edgelist`.
 
     :param edgelist: edgelist to compute colocalization scores for
     :param component_id: name of the component
@@ -66,8 +61,8 @@ def colocalization_from_component_edgelist(
                              to 5
     :param random_seed: Set the random seed for the permutation tests, defaults to None
     :return: a dataframe with computed colocalization scores
+    :rtype: pd.DataFrame
     """
-
     graph = Graph.from_edgelist(
         edgelist=edgelist,
         add_marker_counts=True,
@@ -90,13 +85,8 @@ def _transform_data(
 ) -> MarkerColocalizationResults:
     if transform == "raw":
         return data
-    if transform == "clr":
-        # TODO Check that we want to do row-wise clr here.
-        return clr_transformation(data, axis=0)
     if transform == "log1p":
         return log1p_transformation(data)
-    if transform == "relative":
-        return rel_normalization(data, axis=0)
     raise ValueError(
         f"`transform`must be one of: {'/'.join(get_args(TransformationTypes))}"
     )
@@ -111,8 +101,7 @@ def colocalization_from_component_graph(
     min_region_count: int = 5,
     random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
-    """
-    Compute the colocalization scores for this component graph
+    """Compute the colocalization scores for this component graph.
 
     :param graph: graph to compute scores for
     :param component_id: name of the component
@@ -124,6 +113,7 @@ def colocalization_from_component_graph(
                              to 5
     :param random_seed: Set the random seed for the permutation tests, defaults to None
     :return: a dataframe containing colocalization scores for this component
+    :rtype: pd.DataFrame
     """
     logger.debug("Computing colocalization for component: %s", component_id)
     logger.debug("Prepare the graph data for computing colocalization")
@@ -187,8 +177,10 @@ def colocalization_scores(
     neighbourhood_size: int = 1,
     n_permutations: int = 50,
     min_region_count: int = 5,
+    random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
-    """
+    """Compute colocalization scores for antibody pairs.
+
     Computes colocalization scores (unique antibody pairs) for each component
     in the `edgelist` given as input. Only the unique combination of antibodies
     are included and the component id is present in the dataframe which has the
@@ -223,7 +215,9 @@ def colocalization_scores(
     :param min_region_count: The minimum size of the region (e.g. number
                              of counts in the neighbourhood) required
                              for it to be considered
+    :param random_seed: Set a random seed for the permutation function
     :returns: a pd.DataFrame of scores
+    :rtype: pd.DataFrame
     :raises: AssertionError when the input is not valid
     """
     if "component" not in edgelist.columns:
@@ -258,6 +252,7 @@ def colocalization_scores(
                 neighbourhood_size=neighbourhood_size,
                 n_permutations=n_permutations,
                 min_region_count=min_region_count,
+                random_seed=random_seed,
             )
 
     # create dataframe with all the scores

@@ -2,6 +2,8 @@
 
 Pytest configuration for integration testing pixelator
 """
+from pathlib import Path
+
 import pytest
 from types import TracebackType
 from typing import Optional, Type
@@ -49,7 +51,7 @@ sys.excepthook = handle_unhandled_exception
 
 def pytest_collect_file(
     parent: YamlIntegrationTestsCollector, file_path: PathType
-) -> YamlIntegrationTestsCollector:
+) -> Optional[YamlIntegrationTestsCollector]:
     """Collect test into a specific instance of :class:`YamlIntegrationTestsCollector`.
 
     :param parent: the parent object
@@ -57,7 +59,10 @@ def pytest_collect_file(
     :return: A custom pytest collector that generates tests from yaml files.
     :rtype: YamlIntegrationTestsCollector
     """
+    file_path = Path(file_path)
     if file_path.suffix == ".yaml" and file_path.name.startswith("test_"):
         yaml_tests = YamlIntegrationTestsCollector.from_parent(parent, path=file_path)
         yaml_tests.add_marker(pytest.mark.workflow_test)
         return yaml_tests
+
+    return None

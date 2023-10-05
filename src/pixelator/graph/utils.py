@@ -1,6 +1,4 @@
-"""
-This module contains functions providing to utility procedures
-on pixelator graph operations.
+"""Module contains various useful graph functions.
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
@@ -24,13 +22,15 @@ logger = logging.getLogger(__name__)
 
 
 def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
-    """
+    """Calculate metrics per component.
+
     A helper function that computes a dataframe of metrics for
     each component in the data present in the edge list given
     as input (component column). The metrics include: vertices,
     edges, markers, upis, degree mean and max.
     :param edgelist: an edge list dataframe with a membership column
     :returns: a pd.DataFrame with the metrics per component
+    :rtype: pd.DataFrame
     :raises: AssertionError when the input edge list is not valid
     """
     if "component" not in edgelist.columns:
@@ -56,10 +56,15 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
         mean_count = group_df["count"].mean()
         median_count = group_df["count"].median()
         tot_umi = group_df["umi"].nunique()
-        upia_degree = group_df.groupby("upia")["upib"].nunique()
+        # Please note that we need to use observed=True
+        # here upia is a categorical column, and since not
+        # all values are present in all components, this is
+        # required to get a correct value.
+        upia_degree = group_df.groupby("upia", observed=True)["upib"].nunique()
         upia_mean_degree = upia_degree.mean()
         upia_median_degree = upia_degree.median()
-        umi_degree = group_df.groupby("upia")["umi"].count()
+        # Same reasoning as above
+        umi_degree = group_df.groupby("upia", observed=True)["umi"].count()
         upi_umi_median = umi_degree.median()
         upi_umi_mean = umi_degree.mean()
         upia_per_upib = upia_count / upib_count
@@ -114,7 +119,8 @@ def create_node_markers_counts(
     k: int = 0,
     normalization: Optional[Literal["mean"]] = None,
 ) -> pd.DataFrame:
-    """
+    """Create a matrix of marker counts for each in the graph.
+
     A helper function that computes and returns a data frame of antibody counts per
     node (vertex) of the graph given as input (preferably a fully connected component).
     The parameter k allows to include neighbors (of each node) when computing the
@@ -127,8 +133,9 @@ def create_node_markers_counts(
     :param normalization: selects a normalization method to apply when
                           building neighborhoods
     :returns: a pd.DataFrame with the antibody counts per node
+    :rtype: pd.DataFrame
+    :raises AssertionError: if no 'markers' attribute is found on the vertices
     """
-
     if k == 0 and normalization:
         warnings.warn(
             (
@@ -147,6 +154,10 @@ def create_node_markers_counts(
         sorted(node_marker_counts.columns), axis=1
     )
     node_marker_counts.columns.name = "markers"
+    node_marker_counts.columns = node_marker_counts.columns.astype("string[pyarrow]")
+    node_marker_counts.index = pd.Index(
+        graph.vs["name"], dtype="string[pyarrow]", name="node"
+    )
     if k == 0:
         return node_marker_counts
 
@@ -174,18 +185,23 @@ def create_node_markers_counts(
         neighbourhood_counts = neighbourhood_counts / nbr_of_neighbors_per_node
 
     df = pd.DataFrame(
-        data=neighbourhood_counts, columns=node_marker_counts.columns.copy()
+        data=neighbourhood_counts,
+        columns=node_marker_counts.columns.copy(),
+        index=pd.Index(graph.vs["name"], dtype="string[pyarrow]", name="node"),
     )
     df.columns.name = "markers"
     return df
 
 
 def edgelist_metrics(edgelist: pd.DataFrame) -> Dict[str, Union[int, float]]:
-    """
+    """Compute edgelist metrics.
+
     A simple function that computes a dictionary of basic metrics
     from an edge list (pd.DataFrame).
+
     :param edgelist: the edge list (pd.DataFrame)
     :returns: a dictionary of metrics (metric -> float)
+    :rtype: Dict[str, Union[int, float]]
     """
     metrics: Dict[str, Union[int, float]] = {}
     metrics["total_upia"] = edgelist["upia"].nunique()
@@ -195,7 +211,13 @@ def edgelist_metrics(edgelist: pd.DataFrame) -> Dict[str, Union[int, float]]:
     metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
     metrics["markers"] = edgelist["marker"].nunique()
     metrics["edges"] = edgelist.shape[0]
-    upia_degree = edgelist.groupby("upia")["upib"].nunique()
+    metrics["mean_count"] = round(edgelist["count"].mean(), 2)
+
+    # Please note that we need to use observed=True
+    # here upia is a categorical column, and since not
+    # all values are present in all components, this is
+    # required to get a correct value.
+    upia_degree = edgelist.groupby("upia", observed=True)["upib"].nunique()
     metrics["upia_degree_mean"] = round(upia_degree.mean(), 2)
     metrics["upia_degree_median"] = round(upia_degree.median(), 2)
     graph = Graph.from_edgelist(
@@ -218,16 +240,19 @@ def update_edgelist_membership(
     edgelist: pd.DataFrame,
     prefix: Optional[str] = None,
 ) -> pd.DataFrame:
-    """
+    """Update the edgelist with component names.
+
     A helper function that computes a vector of component membership ids (str)
     for each edge (row) in the given `edgelist` (pd.DataFrame). Each component id
     corresponds to a connected component in the respective graph (iGraph). The
     prefix attribute `prefix` is prepended to each component id. The component ids
     will be added to the returned edge list in a column called component.
-    :params edgelist: the edge list (pd.DataFrame)
-    :params prefix: the prefix to prepend to the component ids, if None will
+
+    :param edgelist: the edge list (pd.DataFrame)
+    :param prefix: the prefix to prepend to the component ids, if None will
                     use `DEFAULT_COMPONENT_PREFIX`
     :returns: the update edge list (pd.DataFrame)
+    :rtype: pd.DataFrame
     """
     logger.debug("Updating membership in edge list with %i rows", edgelist.shape[0])
 

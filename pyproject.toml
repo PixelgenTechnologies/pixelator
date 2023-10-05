@@ -7,9 +7,7 @@ repository = "https://github.com/PixelgenTechnologies/pixelator"
 documentation = "https://software.pixelgen.com"
 description = "A command-line tool and library to process and analyze sequencing data from Molecular Pixelation (MPX) assays."
 authors = ["Pixelgen Technologies AB <developers@pixelgen.com>",]
-maintainers = [
-    "Alvaro Martinez Barrio <alvaro.martinez.barrio@pixelgen.com>"
-]
+maintainers = ["Alvaro Martinez Barrio <alvaro.martinez.barrio@pixelgen.com>"]
 readme = "README.md"
 license =  "GPL-2.0-only"
 keywords = ["protein", "single-cell", "molecular-pixelation", "spatial", "proteomics"]
@@ -51,7 +49,7 @@ lxml = "*"
 cssselect = "*"
 typing_extensions = "*"
 scipy = "*"
-pyarrow = "*"
+pyarrow = "^13.0.0"
 semver = "^3.0.0"
 ruamel-yaml = "^0.17.21"
 pydantic = "^1.10.7"
@@ -59,6 +57,8 @@ polars = "^0.17.12"
 importlib-resources = "^5.12.0"
 flake8-docstrings = "^1.7.0"
 louvain = "^0.8.1"
+fsspec = "^2023.9.0"
+fastparquet = "^2023.8.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.244"
@@ -91,7 +91,7 @@ furo = "^2023.5.20"
 pixelator = 'pixelator.cli:main_cli'
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.1"]
 build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.pytest.ini_options]

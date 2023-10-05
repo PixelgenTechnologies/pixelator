@@ -151,7 +151,7 @@ def annotate_components(
     logger.debug("Parsing edge list %s", input)
 
     # load data (edge list in data frame format)
-    edgelist = pd.read_csv(input, dtype_backend="pyarrow")
+    edgelist = pd.read_csv(input)
 
     # get component metrics from the edge list
     component_metrics = components_metrics(edgelist=edgelist)

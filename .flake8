@@ -3,7 +3,7 @@ extend-ignore = E501,E402,W503,E203,D213,D203,DOC301
 exclude = .git,__pycache__,docs/source/conf.py,old,build,dist,cue.mod
 docstring-convention = all
 style = sphinx
-require-return-section-when-returning-none = False
+require-return-section-when-returning-nothing = False
 arg-type-hints-in-signature = True
 arg-type-hints-in-docstring = False
 # Ignore documentation linting in tests
