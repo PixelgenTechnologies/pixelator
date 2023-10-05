@@ -674,9 +674,10 @@ def create_dynamic_report(
         "fraction_predicted_cell_type_unknown": None,
     }
 
-    fraction_discarded_umis = (
-        summary_cell_calling["total_umis"] - summary_cell_calling["umis_of_aggregates"]
-    ) / summary_graph["umi"]
+    fraction_discarded_umis = round(
+        summary_cell_calling["umis_of_aggregates"] / summary_cell_calling["total_umis"],
+        2,
+    )
 
     metrics = Metrics(
         number_of_cells=summary_cell_calling["cells_filtered"],
@@ -687,8 +688,9 @@ def create_dynamic_report(
         median_antibody_molecules_per_cell=summary_cell_calling["median_umi_cell"],
         average_upias_per_cell=summary_cell_calling["mean_upia_cell"],
         average_umis_per_upia=summary_cell_calling["mean_umi_upia_cell"],
-        fraction_reads_in_cells=summary_cell_calling["total_reads_cell"]
-        / summary_all["reads"],
+        fraction_reads_in_cells=(
+            summary_cell_calling["total_reads_cell"] / summary_all["reads"]
+        ),
         fraction_discarded_umis=fraction_discarded_umis,
         total_unique_antibodies_detected=summary_cell_calling["total_markers"],
         number_of_reads=summary_all["reads"],
