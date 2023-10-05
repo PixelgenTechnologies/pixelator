@@ -450,6 +450,7 @@ def graph_and_annotate_metrics(
                     "upia": data["total_upia"],
                     "upib": data["total_upib"],
                     "umi": data["total_umi"],
+                    "mean_count": data["mean_count"],
                     "vertices": data["vertices"],
                     "edges": data["edges"],
                     cell_column: data["components"],
@@ -519,6 +520,7 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics = {}
         metrics["cells_filtered"] = adata.n_obs
         metrics["total_markers"] = adata.n_vars
+        metrics["total_umis"] = adata.obs["umi"].sum()
         metrics["total_reads_cell"] = adata.obs["reads"].sum()
         metrics["median_reads_cell"] = adata.obs["reads"].median()
         metrics["mean_reads_cell"] = adata.obs["reads"].mean()
@@ -536,18 +538,20 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics["mean_markers_cell"] = adata.obs["antibodies"].mean()
         metrics["upib_per_upia"] = adata.obs["upib"].sum() / adata.obs["upia"].sum()
 
-        metrics[
-            "reads_of_aggregates"
-        ] = 0  # This metric needs to be initialized for the webreport
+        # This metric needs to be initialized for the webreport
+        metrics["reads_of_aggregates"] = 0
+        metrics["umis_of_aggregates"] = 0
+
         # Tau type will only be available if it has been added in the annotate step
         if "tau_type" in adata.obs:
-            metrics["number_of_aggregates"] = np.sum(adata.obs["tau_type"] != "normal")
-            metrics["fraction_of_aggregates"] = np.sum(
-                adata.obs["tau_type"] != "normal"
-            ) / len(adata.obs["tau_type"])
-            metrics["reads_of_aggregates"] = (
-                adata[adata.obs["tau_type"] != "normal"].obs["reads"].sum()
+            aggregates_mask = adata.obs["tau_type"] != "normal"
+            number_of_aggregates = np.sum(aggregates_mask)
+            metrics["number_of_aggregates"] = number_of_aggregates
+            metrics["fraction_of_aggregates"] = number_of_aggregates / len(
+                adata.obs["tau_type"]
             )
+            metrics["reads_of_aggregates"] = adata[aggregates_mask].obs["reads"].sum()
+            metrics["umis_of_aggregates"] = adata[aggregates_mask].obs["umi"].sum()
 
         if "min_size_threshold" in adata.uns:
             metrics["minimum_size_threshold"] = adata.uns["min_size_threshold"]
@@ -597,6 +601,7 @@ def create_dynamic_report(
     summary_preqc: pd.Series,
     summary_demux: pd.Series,
     summary_collapse: pd.Series,
+    summary_graph: pd.Series,
     summary_annotate: pd.Series,
     summary_cell_calling: pd.Series,
     info: SampleInfo,
@@ -616,6 +621,8 @@ def create_dynamic_report(
     :param summary_demux: a pd.Series with the `demux` stage metrics of the sample
     :param summary_collapse: a pd.Series with the `collapse` stage metrics
         of the sample
+    :param summary_graph: a pd.Series with the `graph` stage metrics
+        of the sample
     :param summary_annotate: a pd.Series with the `annotate` metrics of the sample
     :param summary_cell_calling: a pd.Series with the per cell calling metrics
         of the sample
@@ -631,7 +638,7 @@ def create_dynamic_report(
     antibodies_data_values = {
         "antibody_reads": summary_demux["output"],
         "antibody_reads_usable_per_cell": summary_cell_calling["total_reads_cell"],
-        "antibody_reads_in_aggregates": summary_cell_calling["reads_of_aggregates"],
+        "antibody_reads_in_outliers": summary_cell_calling["reads_of_aggregates"],
         "unrecognized_antibodies": summary_demux["input"] - summary_demux["output"],
     }
 
@@ -642,8 +649,8 @@ def create_dynamic_report(
             "antibody_reads_usable_per_cell"
         ]
         / summary_all["reads"],
-        "fraction_antibody_reads_in_aggregates": antibodies_data_values[
-            "antibody_reads_in_aggregates"
+        "fraction_antibody_reads_in_outliers": antibodies_data_values[
+            "antibody_reads_in_outliers"
         ]
         / summary_all["reads"],
         "fraction_unrecognized_antibodies": antibodies_data_values[
@@ -652,6 +659,26 @@ def create_dynamic_report(
         / summary_all["reads"],
     }
 
+    placeholder_cell_predictions = {
+        "predicted_cell_type_b_cells": None,
+        "fraction_predicted_cell_type_b_cells": None,
+        "predicted_cell_type_cd4p_cells": None,
+        "fraction_predicted_cell_type_cd4p_cells": None,
+        "predicted_cell_type_cd8p_cells": None,
+        "fraction_predicted_cell_type_cd8p_cells": None,
+        "predicted_cell_type_monocytes": None,
+        "fraction_predicted_cell_type_monocytes": None,
+        "predicted_cell_type_nk_cells": None,
+        "fraction_predicted_cell_type_nk_cells": None,
+        "predicted_cell_type_unknown": None,
+        "fraction_predicted_cell_type_unknown": None,
+    }
+
+    fraction_discarded_umis = round(
+        summary_cell_calling["umis_of_aggregates"] / summary_cell_calling["total_umis"],
+        2,
+    )
+
     metrics = Metrics(
         number_of_cells=summary_cell_calling["cells_filtered"],
         average_reads_usable_per_cell=summary_cell_calling["mean_reads_cell"],
@@ -659,16 +686,18 @@ def create_dynamic_report(
             summary_all["reads"] / summary_cell_calling["cells_filtered"]
         ),
         median_antibody_molecules_per_cell=summary_cell_calling["median_umi_cell"],
-        average_upis_per_cell=summary_cell_calling["mean_upia_cell"],
-        average_umis_per_upi=summary_cell_calling["mean_umi_upia_cell"],
-        fraction_reads_in_cells=summary_cell_calling["total_reads_cell"]
-        / summary_all["reads"],
-        median_antibodies_per_cell=summary_cell_calling["median_markers_cell"],
-        total_antibodies_detected=summary_cell_calling["total_markers"],
+        average_upias_per_cell=summary_cell_calling["mean_upia_cell"],
+        average_umis_per_upia=summary_cell_calling["mean_umi_upia_cell"],
+        fraction_reads_in_cells=(
+            summary_cell_calling["total_reads_cell"] / summary_all["reads"]
+        ),
+        fraction_discarded_umis=fraction_discarded_umis,
+        total_unique_antibodies_detected=summary_cell_calling["total_markers"],
         number_of_reads=summary_all["reads"],
         number_of_short_reads_skipped=summary_preqc["too_short_reads"],
         fraction_valid_pbs=summary_all["adapterqc"] / summary_all["reads"],
         fraction_valid_umis=summary_collapse["input"] / summary_all["reads"],
+        average_reads_per_molecule=summary_graph["mean_count"],
         sequencing_saturation=summary_all["duplication"],
         fraction_q30_bases_in_antibody_barcode=summary_amplicon["fraction_q30_barcode"],
         fraction_q30_bases_in_umi=summary_amplicon["fraction_q30_umi"],
@@ -679,6 +708,7 @@ def create_dynamic_report(
         fraction_q30_bases_in_read=summary_amplicon["fraction_q30"],
         **antibodies_data_values,  # type: ignore
         **antibodies_data_fractions,  # type: ignore
+        **placeholder_cell_predictions,  # type: ignore
     )
 
     data = collect_report_data(input_path, sample_id)
@@ -876,6 +906,7 @@ def make_report(
             summary_preqc=summary_preqc.loc[sample, :],
             summary_demux=summary_demux.loc[sample, :],
             summary_collapse=summary_collapse.loc[sample, :],
+            summary_graph=summary_graph.loc[sample, :],
             summary_annotate=summary_annotate.loc[sample, :],
             summary_cell_calling=summary_cell_calling.loc[sample, :],
             info=sample_info,

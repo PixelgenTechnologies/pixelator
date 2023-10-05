@@ -316,6 +316,7 @@ def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
         "vertices": 100,
         "total_upia": 50,
         "total_upib": 50,
+        "mean_count": 1.0,
         "total_umi": 1,
         "total_upi": 100,
         "frac_upib_upia": 1.0,

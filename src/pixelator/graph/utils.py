@@ -211,6 +211,7 @@ def edgelist_metrics(edgelist: pd.DataFrame) -> Dict[str, Union[int, float]]:
     metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
     metrics["markers"] = edgelist["marker"].nunique()
     metrics["edges"] = edgelist.shape[0]
+    metrics["mean_count"] = round(edgelist["count"].mean(), 2)
 
     # Please note that we need to use observed=True
     # here upia is a categorical column, and since not
