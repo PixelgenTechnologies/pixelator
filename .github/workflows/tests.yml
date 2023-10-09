@@ -73,7 +73,7 @@ jobs:
           version: '0.23.2'
 
       - name: Generate tox env for python version
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         id: set_tox_env
         with:
           script: |

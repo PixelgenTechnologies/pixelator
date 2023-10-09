@@ -17,6 +17,9 @@ on:
         options:
           - pypi
           - testpypi
+      skip_version_check:
+        description: "Skip checks that pixelator version matches tag"
+        default: false
 
 # Needed for PyPI OIDC permissions
 permissions:
@@ -33,17 +36,16 @@ jobs:
       pypi_repo_url: ${{ steps.get_version_tag.outputs.pypi_repo_url }}
 
     steps:
-      - name: Get version tag
+      - name: Get version tag & repo url
         id: get_version_tag
-        uses: actions/github-script@v4
-
+        uses: actions/github-script@v6
         with:
           script: |
             const inputs = ${{ toJSON(inputs) }}
             const gh_event = ${{ toJSON(github.event) }}
 
-            const tag = null
-            const pypi_repo_url = null
+            let tag = null
+            let pypi_repo_url = null
 
             if (inputs.repository == "testpypi") {
               pypi_repo_url = "https://test.pypi.org/legacy/"
@@ -63,12 +65,15 @@ jobs:
             core.setOutput('pypi_repo_url', pypi_repo_url)
 
   build:
+    name: Build
     runs-on: ubuntu-latest
     needs: [ pre_job ]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python environment
         uses: actions/setup-python@v4
@@ -114,30 +119,56 @@ jobs:
         run: poetry build
 
       #----------------------------------------------
+      #   Verify build version
+      #----------------------------------------------
+      - name: Install package
+        run: |
+          pip install --no-input dist/*.whl
+
+      - name: Verify build version
+        if: ${{ inputs.skip_version_check != 'true' }}
+        run: |
+          python -c "import pixelator; assert  'v' + str(pixelator.__version__) == '${{ needs.pre_job.outputs.tag }}', 'Version mismatch: pixelator = v%s vs tag = %s' % (pixelator.__version__, '${{ needs.pre_job.outputs.tag }}')"
+          VERSION="$( pixelator --version | sed 's/pixelator, version //g' )"
+          TAG='${{ needs.pre_job.outputs.tag }}'
+
+          if [[ ! v$VERSION =~ $TAG ]]; then
+            echo "Version mismatch: pixelator = v$VERSION vs tag = $TAG";
+            exit 1;
+          fi
+
+      #----------------------------------------------
       #   archive python package build output
       #----------------------------------------------
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: dist-${{ jobs.pre_job.outputs.tag }}
+          name: dist-${{ needs.pre_job.outputs.tag }}
           path: |
             dist
 
   pypi-publish:
-      name: upload release to PyPI
+      name: Upload to PyPI
       runs-on: ubuntu-latest
       needs: [pre_job, build]
       environment: release
       steps:
+        - name: Set up Python environment
+          uses: actions/setup-python@v4
+          id: setup-python
+          with:
+            python-version: '3.10'
+
         - name: Download build artifacts
           uses: actions/download-artifact@v3
           with:
-            name: dist-${{ jobs.pre_job.outputs.tag }}
+            name: dist-${{ needs.pre_job.outputs.tag }}
+            path: dist
 
         - name: Publish package distributions to PyPI
           uses: pypa/gh-action-pypi-publish@release/v1
           with:
-            repository-url: ${{ jobs.pre_job.outputs.pypi_repo_url }}
+            repository-url: ${{ needs.pre_job.outputs.pypi_repo_url }}
             verbose: true
             print-hash: true
             skip-existing: true
