@@ -6,7 +6,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import igraph
 import networkx as nx
@@ -358,7 +358,7 @@ class IgraphGraphBackend(_GraphBackend):
         """Get all vertices as a pandas DataFrame."""
         return self._raw.get_vertex_dataframe()
 
-    def add_edges(self, edges: List[Tuple[int]]) -> None:
+    def add_edges(self, edges: Iterable[Tuple[int]]) -> None:
         """Add edges to the graph instance.
 
         :param edges: Add the following edges to the graph instance.
@@ -542,7 +542,7 @@ class NetworkXGraphBackend(_GraphBackend):
         """Get all vertices as a pandas DataFrame."""
         raise NotImplementedError()
 
-    def add_edges(self, edges: List[Tuple[int]]) -> None:
+    def add_edges(self, edges: Iterable[Tuple[int]]) -> None:
         """Add edges to the graph instance.
 
         :param edges: Add the following edges to the graph instance.

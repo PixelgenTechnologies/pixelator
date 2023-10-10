@@ -5,7 +5,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-from typing import Dict, List, Protocol, Tuple
+from typing import Dict, Iterable, List, Protocol, Tuple
 
 import networkx as nx
 import pandas as pd
@@ -130,7 +130,7 @@ class _GraphBackend(Protocol):
         """Get all vertices as a pandas DataFrame."""
         ...
 
-    def add_edges(self, edges: List[Tuple[int]]) -> None:
+    def add_edges(self, edges: Iterable[Tuple[int]]) -> None:
         """Add edges to the graph instance.
 
         :param edges: Add the following edges to the graph instance.

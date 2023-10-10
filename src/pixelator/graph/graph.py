@@ -5,11 +5,11 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 import logging
 import os
-from typing import Dict, List, Tuple, Union
+from typing import Dict, Iterable, List, Tuple, Union
 
 import igraph
-import pandas as pd
 import networkx as nx
+import pandas as pd
 from scipy.sparse import csr_matrix
 
 from pixelator.graph.backends.implementations import (
@@ -171,7 +171,7 @@ class Graph:
         """Get all vertices as a pandas DataFrame."""
         return self._backend.get_vertex_dataframe()
 
-    def add_edges(self, edges: List[Tuple[int]]) -> None:
+    def add_edges(self, edges: Iterable[Tuple[int]]) -> None:
         """Add edges to the graph instance.
 
         :param edges: Add the following edges to the graph instance.
