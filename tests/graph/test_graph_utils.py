@@ -4,10 +4,8 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import random
 
-import numpy as np
 import pandas as pd
 import pytest
-from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 from pixelator.graph.utils import (
     components_metrics,
@@ -67,27 +65,29 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
     """Test generating component metrics."""
     # test component metrics
     metrics = components_metrics(edgelist=full_graph_edgelist)
-    assert_array_equal(
-        metrics.to_numpy(),
-        np.array([[100, 2500, 2, 50, 50, 1, 2500, 1, 1, 50, 50, 50, 50, 1]]),
-    )
-    assert sorted(metrics.columns) == sorted(
-        [
-            "vertices",
-            "edges",
-            "antibodies",
-            "upia",
-            "upib",
-            "umi",
-            "reads",
-            "mean_reads",
-            "median_reads",
-            "mean_upia_degree",
-            "median_upia_degree",
-            "mean_umi_per_upia",
-            "median_umi_per_upia",
-            "upia_per_upib",
-        ]
+    assert_frame_equal(
+        metrics,
+        pd.DataFrame.from_records(
+            [
+                {
+                    "vertices": 100,
+                    "edges": 2500,
+                    "antibodies": 2,
+                    "upia": 50,
+                    "upib": 50,
+                    "umi": 1860,
+                    "reads": 2500,
+                    "mean_reads": 1.0,
+                    "median_reads": 1.0,
+                    "mean_upia_degree": 50.0,
+                    "median_upia_degree": 50.0,
+                    "mean_umi_per_upia": 50.0,
+                    "median_umi_per_upia": 50.0,
+                    "upia_per_upib": 1.0,
+                }
+            ],
+            index=pd.Index(["PXLCMP0000000"], name="component"),
+        ),
     )
 
 
@@ -287,7 +287,7 @@ def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
         "total_upia": 50,
         "total_upib": 50,
         "mean_count": 1.0,
-        "total_umi": 1,
+        "total_umi": 1860,
         "total_upi": 100,
         "frac_upib_upia": 1.0,
         "upia_degree_mean": 50.0,

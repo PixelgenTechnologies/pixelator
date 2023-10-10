@@ -5,9 +5,10 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Protocol, Tuple
+from typing import Dict, Iterable, List, Protocol, Tuple, Union
 
 import networkx as nx
+import polars as pl
 import pandas as pd
 from scipy.sparse import csr_matrix
 
@@ -17,7 +18,7 @@ class _GraphBackend(Protocol):
 
     @staticmethod
     def from_edgelist(
-        edgelist: pd.DataFrame,
+        edgelist: Union[pd.DataFrame, pl.LazyFrame],
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
