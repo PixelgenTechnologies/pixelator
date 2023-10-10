@@ -41,7 +41,7 @@ runs:
 
     - name: Build input options
       id: build_input_options
-      uses: actions/github-script@v4
+      uses: actions/github-script@v6
       with:
         script: |
           const shaShort = context.sha.substring(0, 7)
