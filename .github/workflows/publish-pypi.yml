@@ -12,13 +12,13 @@ on:
         description: 'Release tag'
         required: true
       repository:
-        description: "The PyPI repository."
+        description: "The PyPI repository to upload to."
         required: true
         options:
           - pypi
           - testpypi
       skip_version_check:
-        description: "Skip checks that pixelator version matches tag"
+        description: "Skip check that verifies the pixelator version matches the release tag"
         default: false
 
 # Needed for PyPI OIDC permissions
