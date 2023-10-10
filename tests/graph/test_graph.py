@@ -52,7 +52,6 @@ def create_simple_edge_list_from_graph(
 
 
 def test_build_graph_full_bipartite(full_graph_edgelist: pd.DataFrame):
-    """Build full-bipartite graph."""
     graph = Graph.from_edgelist(
         edgelist=full_graph_edgelist,
         add_marker_counts=True,
@@ -66,12 +65,78 @@ def test_build_graph_full_bipartite(full_graph_edgelist: pd.DataFrame):
     assert graph.vs.attributes() == ["name", "markers", "type", "pixel_type"]
 
 
+def test_build_graph_full_bipartite_do_not_add_marker_counts(
+    full_graph_edgelist: pd.DataFrame,
+):
+    graph = Graph.from_edgelist(
+        edgelist=full_graph_edgelist,
+        add_marker_counts=False,
+        simplify=True,
+        use_full_bipartite=True,
+    )
+    assert graph.vcount() == 100
+    assert graph.ecount() == 2500
+    assert graph.vs.attributes() == ["name", "type", "pixel_type"]
+
+
+def test_build_graph_full_bipartite_do_not_simplify(
+    full_graph_edgelist: pd.DataFrame,
+):
+    edgelist_with_multiedges = full_graph_edgelist.copy()
+    # Duplicate one row to create a multiedge
+    edgelist_with_multiedges = pd.concat(
+        [edgelist_with_multiedges.iloc[0].to_frame().T, edgelist_with_multiedges],
+        axis=0,
+        ignore_index=True,
+    )
+
+    # When not simplifying all edges should be kept
+    graph = Graph.from_edgelist(
+        edgelist=edgelist_with_multiedges,
+        add_marker_counts=False,
+        simplify=False,
+        use_full_bipartite=True,
+    )
+    assert graph.vcount() == 100
+    assert graph.ecount() == 2501
+    assert graph.vs.attributes() == ["name", "type", "pixel_type"]
+
+    # And the duplicate edge should disappear when we simplify
+    graph = Graph.from_edgelist(
+        edgelist=edgelist_with_multiedges,
+        add_marker_counts=False,
+        simplify=True,
+        use_full_bipartite=True,
+    )
+    assert graph.vcount() == 100
+    assert graph.ecount() == 2500
+    assert graph.vs.attributes() == ["name", "type", "pixel_type"]
+
+
 def test_build_graph_a_node_projected(full_graph_edgelist: pd.DataFrame):
     """Build an A-node projected graph."""
     graph = Graph.from_edgelist(
         edgelist=full_graph_edgelist,
         add_marker_counts=True,
         simplify=True,
+        use_full_bipartite=False,
+    )
+    assert graph.vcount() == 50
+    assert graph.ecount() == ((50 * 50) / 2) - (50 / 2)
+    assert "markers" in graph.vs.attributes()
+    assert sorted(list(graph.vs[0]["markers"].keys())) == ["A", "B"]
+    assert graph.vs.attributes() == ["name", "markers", "type", "pixel_type"]
+
+
+def test_build_graph_a_node_projected_without_simplifying(
+    full_graph_edgelist: pd.DataFrame,
+):
+    # The A-node projection disregards any multiedges, so running it with
+    # or with out simplification should yield the same result
+    graph = Graph.from_edgelist(
+        edgelist=full_graph_edgelist,
+        add_marker_counts=True,
+        simplify=False,
         use_full_bipartite=False,
     )
     assert graph.vcount() == 50
