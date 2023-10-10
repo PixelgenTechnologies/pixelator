@@ -3,6 +3,8 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
+from __future__ import annotations
+
 from typing import Dict, List, Protocol, Tuple
 
 import networkx as nx
@@ -19,7 +21,7 @@ class _GraphBackend(Protocol):
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
-    ) -> "_GraphBackend":
+    ) -> _GraphBackend:
         """Build a graph from an edgelist.
 
         Build a Graph from an edge list (pd.DataFrame). Multiple options are available
@@ -44,7 +46,7 @@ class _GraphBackend(Protocol):
         ...
 
     @staticmethod
-    def from_raw(graph: nx.Graph) -> "_GraphBackend":
+    def from_raw(graph: nx.Graph) -> _GraphBackend:
         """Generate a Graph from an networkx.Graph object.
 
         :param graph: input igraph to use

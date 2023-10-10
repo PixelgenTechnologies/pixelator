@@ -3,6 +3,7 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
+from __future__ import annotations
 
 import logging
 from typing import Dict, List, Optional, Tuple
@@ -130,7 +131,7 @@ class IgraphGraphBackend(_GraphBackend):
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
-    ) -> "IgraphGraphBackend":
+    ) -> IgraphGraphBackend:
         """Build a graph from an edgelist.
 
         Build a Graph from an edge list (pd.DataFrame). Multiple options are available
@@ -432,7 +433,7 @@ class NetworkXGraphBackend(_GraphBackend):
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
-    ) -> "NetworkXGraphBackend":
+    ) -> NetworkXGraphBackend:
         """Build a graph from an edgelist.
 
         Build a Graph from an edge list (pd.DataFrame). Multiple options are available
@@ -493,7 +494,6 @@ class NetworkXGraphBackend(_GraphBackend):
         """Get the sparse adjacency matrix."""
         raise NotImplementedError()
 
-    @property
     def connected_components(self):
         """Get the connected components in the Graph instance."""
         raise NotImplementedError()
