@@ -10,6 +10,7 @@ from typing import Dict, Iterable, List, Tuple, Union
 import igraph
 import networkx as nx
 import pandas as pd
+import polars as pl
 from scipy.sparse import csr_matrix
 
 from pixelator.graph.backends.implementations import (
@@ -36,7 +37,7 @@ class Graph:
 
     @staticmethod
     def from_edgelist(
-        edgelist: pd.DataFrame,
+        edgelist: Union[pd.DataFrame, pl.LazyFrame],
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
@@ -53,7 +54,9 @@ class Graph:
         vertex (node) when `add_marker_counts` is True. If `use_full_bipartite` is
         False or `simplify` is True the edge attributes will be lost.
 
-        :param edgelist: the edge list (dataframe) corresponding to the graph
+        :param edgelist: the edge list (dataframe) corresponding to the graph either as
+                         a pandas data frame or as a polars LazyFrame. To minimize the
+                         memory usage the LazyFrame is preferred.
         :param add_marker_counts: add a dictionary of marker counts to each node
         :param simplify: simplifies the graph (remove redundant edges)
         :param use_full_bipartite: use the bipartite graph instead of the projection
