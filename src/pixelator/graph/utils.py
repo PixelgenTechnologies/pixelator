@@ -6,12 +6,14 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 import logging
 import warnings
 from functools import reduce
-from typing import Dict, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
+import igraph
 import numpy as np
 import pandas as pd
 from scipy.sparse import identity
 
+from pixelator.graph.backends.implementations import IgraphGraphBackend
 from pixelator.graph.constants import (
     DEFAULT_COMPONENT_PREFIX,
     DIGITS,
@@ -19,6 +21,31 @@ from pixelator.graph.constants import (
 from pixelator.graph.graph import Graph
 
 logger = logging.getLogger(__name__)
+
+
+def union(graphs: List[Graph]) -> Graph:
+    """Create union of graphs.
+
+    Create a union of the provided graphs, merging any vertices
+    which share the same name.
+
+    :param graphs: the graphs to create the union from
+    :return: a new graph that is the union of the input `graphs`
+    :rtype: Graph
+    :raises: AssertionError if not all underlying graphs have the same backend type.
+    """
+    backends = [type(g._backend) for g in graphs]
+    if not all(map(lambda b: backends[0] == b, backends)):
+        raise AssertionError("All graph objects must share the same backend")
+
+    if backends[0] == IgraphGraphBackend:
+        return Graph(
+            backend=IgraphGraphBackend(
+                igraph.union([graph._backend.raw for graph in graphs])
+            )
+        )
+
+    raise NotImplementedError()
 
 
 def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:

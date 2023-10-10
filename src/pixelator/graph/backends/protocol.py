@@ -1,38 +1,19 @@
-"""Functions related to the graph dataclass used in pixelator graph operations.
+"""Protocol of graph backends used by pixelator.
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
-import logging
-import os
-from typing import Dict, Iterable, List, Tuple, Union
+from __future__ import annotations
 
-import igraph
+from typing import Dict, Iterable, List, Protocol, Tuple
+
 import networkx as nx
 import pandas as pd
 from scipy.sparse import csr_matrix
 
-from pixelator.graph.backends.implementations import (
-    IgraphGraphBackend,
-    NetworkXGraphBackend,
-)
-from pixelator.graph.backends.protocol import _GraphBackend
 
-logger = logging.getLogger(__name__)
-
-
-class Graph:
-    """`Graph` represents a graph, i.e. a collection of vertices and edges."""
-
-    def __init__(self, backend: _GraphBackend):
-        """Create a new Graph instance.
-
-        Create a Graph instance (as an end-user this is probably not the interface
-        you are looking for). Try `Graph.from_edgelist`.
-
-        :param backend: The backend used to represent the graph
-        """
-        self._backend = backend
+class _GraphBackend(Protocol):
+    """Protocol for graph backends."""
 
     @staticmethod
     def from_edgelist(
@@ -40,7 +21,7 @@ class Graph:
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
-    ) -> "Graph":
+    ) -> _GraphBackend:
         """Build a graph from an edgelist.
 
         Build a Graph from an edge list (pd.DataFrame). Multiple options are available
@@ -59,73 +40,55 @@ class Graph:
         :param use_full_bipartite: use the bipartite graph instead of the projection
                                   (UPIA)
         :returns: a Graph instance
-        :rtype: Graph
+        :rtype: _GraphBackend
         :raises: AssertionError when the input edge list is not valid
         """
-        if os.environ.get("ENABLE_NETWORKX_BACKEND", False):
-            return Graph(
-                backend=NetworkXGraphBackend.from_edgelist(
-                    edgelist=edgelist,
-                    add_marker_counts=add_marker_counts,
-                    simplify=simplify,
-                    use_full_bipartite=use_full_bipartite,
-                )
-            )
-
-        return Graph(
-            backend=IgraphGraphBackend.from_edgelist(
-                edgelist=edgelist,
-                add_marker_counts=add_marker_counts,
-                simplify=simplify,
-                use_full_bipartite=use_full_bipartite,
-            )
-        )
+        ...
 
     @staticmethod
-    def from_raw(graph: Union[igraph.Graph, nx.Graph]) -> "Graph":
-        """Generate a Graph from an igraph.Graph object.
+    def from_raw(graph: nx.Graph) -> _GraphBackend:
+        """Generate a Graph from an networkx.Graph object.
 
         :param graph: input igraph to use
         :return: A pixelator Graph object
-        :rtype: Graph
+        :rtype: _GraphBackend
         """
-        if os.environ.get("ENABLE_NETWORKX_BACKEND", False):
-            return Graph(backend=NetworkXGraphBackend(graph))
-        return Graph(backend=IgraphGraphBackend(graph))
+        ...
 
     @property
-    def _raw(self):
-        return self._backend._raw
+    def raw(self):
+        """Get the raw underlying graph representation."""
+        ...
 
     @property
     def vs(self):
         """Get a sequence of the vertices in the Graph instance."""
-        return self._backend.vs
+        ...
 
     @property
     def es(self):
         """A sequence of the edges in the Graph instance."""
-        return self._backend.es
+        ...
 
     def vcount(self):
         """Get the total number of vertices in the Graph instance."""
-        return self._backend.vcount()
+        ...
 
     def ecount(self):
         """Get the total number of edges in the Graph instance."""
-        return self._backend.ecount()
+        ...
 
     def get_adjacency_sparse(self) -> csr_matrix:
         """Get the sparse adjacency matrix."""
-        return self._backend.get_adjacency_sparse()
+        ...
 
     def connected_components(self):
         """Get the connected components in the Graph instance."""
-        return self._backend.connected_components()
+        ...
 
     def community_leiden(self, **kwargs):
         """Run community detection using the Leiden algorithm."""
-        return self._backend.community_leiden(**kwargs)
+        ...
 
     def layout_coordinates(
         self,
@@ -157,28 +120,22 @@ class Graph:
         :raises: AssertionError if the provided `layout_algorithm` is not valid
         :raises: ValueError if the provided current graph instance is empty
         """
-        return self._backend.layout_coordinates(
-            layout_algorithm=layout_algorithm,
-            only_keep_a_pixels=only_keep_a_pixels,
-            get_node_marker_matrix=get_node_marker_matrix,
-        )
+        ...
 
     def get_edge_dataframe(self):
         """Get the edges as a pandas DataFrame."""
-        return self._backend.get_edge_dataframe()
+        ...
 
     def get_vertex_dataframe(self):
         """Get all vertices as a pandas DataFrame."""
-        return self._backend.get_vertex_dataframe()
+        ...
 
     def add_edges(self, edges: Iterable[Tuple[int]]) -> None:
         """Add edges to the graph instance.
 
         :param edges: Add the following edges to the graph instance.
         """
-        if not self._backend.raw:
-            self._backend.from_raw(igraph.Graph())
-        self._backend.add_edges(edges)
+        ...
 
     def add_vertices(self, n_vertices: int, attrs: Dict[str, List]) -> None:
         """Add some number of vertices to the graph instance.
@@ -190,7 +147,7 @@ class Graph:
         :raises IndexError: if the number of graph vertices to add and lists of
                             attributes are of different lengths
         """
-        self._backend.add_vertices(n_vertices=n_vertices, attrs=attrs)
+        ...
 
     def add_names_to_vertexes(self, vs_names: List[str]) -> None:
         """Rename the current vertices on the graph instance.
@@ -200,4 +157,4 @@ class Graph:
         :raises IndexError: if the number of graph vertices and list of names are
                             of different length
         """
-        self._backend.add_names_to_vertexes(vs_names=vs_names)
+        ...
