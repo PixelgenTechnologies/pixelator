@@ -110,4 +110,4 @@ jobs:
           if [[ "${{ github.event.inputs.keep-workdirs }}" == "true" ]]; then
             CMD="$CMD --keep-workdirs"
           fi
-          $CMD -m "workflow_test" "${{ matrix.test }}"
+          $CMD -m "workflow_test" -k "${{ matrix.test }}"
