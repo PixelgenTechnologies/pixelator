@@ -32,10 +32,11 @@ class YamlIntegrationTestsCollector(pytest.File):
 
         for case in config.keys():
             name = case.split("-")[1]
+            case_config = config.get_test_config(case)
             wf = type(
                 f"TestWorkflow{name}",
                 (PixelatorWorkflowTest,),
-                {"test_id": case, **config.get_test_config(case)},
+                {"test_id": case, **case_config},
             )
 
             collector = NoModuleClass.from_parent(parent=self, name=self.path.stem)

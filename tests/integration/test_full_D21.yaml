@@ -13,11 +13,13 @@ full-D21:
         "--multiplet-recovery"
       ]
     annotate:
-      params: []
+      params: [
+        "--dynamic-filter", "min",
+        "--aggregate-calling"
+      ]
 
     analysis:
       params: [
          "--compute-polarization",
          "--compute-colocalization",
-         "--use-full-bipartite"
       ]
