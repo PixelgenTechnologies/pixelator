@@ -6,7 +6,7 @@ ARG MAKEJOBS=4
 # Install pixelator dependencies in a separate stage to improve caching
 FROM registry.fedoraproject.org/fedora-minimal:38 as runtime-base
 RUN microdnf install -y \
-        python3.10 \
+        python3.11 \
         git \
         sqlite \
         zlib \
@@ -16,22 +16,21 @@ RUN microdnf install -y \
      && microdnf clean all
 
 ENV PIPX_BIN_DIR="/usr/local/bin"
-RUN python3.10 -m ensurepip
-RUN pip3.10 install --upgrade pip
-RUN pip3.10 install pipx
+RUN python3.11 -m ensurepip
+RUN pip3.11 install --upgrade pip
+RUN pip3.11 install pipx
 RUN pipx install poetry
 
-# Set python3.10 as the default python interpreter
 # This is needed to easily run other python scripts inside the pixelator container
 # eg. samplesheet checking in nf-core/pixelator
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
 
 
 FROM runtime-base as builder-base
 
 RUN microdnf install -y \
-        python3.10 \
-        python3.10-devel \
+        python3.11 \
+        python3.11-devel \
         wget \
         git \
         sqlite-devel \
@@ -84,10 +83,10 @@ ENV ANNOY_TARGET_VARIANT="${TARGETVARIANT:-v3}"
 RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
     export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
     echo "Building Annoy for explicit target $TARGETPLATFORM/$ANNOY_TARGET_VARIANT"; \
-    pip3.10 install --prefix=/runtime -r requirements.txt; \
+    pip3.11 install --prefix=/runtime -r requirements.txt; \
    else \
         echo "Building Annoy without implicit target $TARGETPLATFORM"; \
-        pip3.10 install --prefix=/runtime -r requirements.txt; \
+        pip3.11 install --prefix=/runtime -r requirements.txt; \
     fi \
     && rm requirements.txt
 
@@ -97,7 +96,7 @@ FROM runtime-base as  poetry-deps-install-arm64
 WORKDIR /pixelator
 COPY poetry.lock pyproject.toml ./
 RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi
-RUN pip3.10 install --prefix=/runtime -r requirements.txt && rm requirements.txt
+RUN pip3.11 install --prefix=/runtime -r requirements.txt && rm requirements.txt
 
 FROM runtime-base as runtime-amd64
 
@@ -117,11 +116,11 @@ FROM runtime-${TARGETARCH} as runtime-final
 # We add this explicitly since nextflow often runs with PYTHONNOUSERSITE set
 # to fix interference with conda and this can cause problems.
 # Fastp will also build isal and we need to make that available
-ENV PYTHONPATH="$PYTHONPATH:/usr/local/lib/python3.10/site-packages:/usr/local/lib64/python3.10/site-packages"
+ENV PYTHONPATH="$PYTHONPATH:/usr/local/lib/python3.11/site-packages:/usr/local/lib64/python3.11/site-packages"
 RUN ldconfig /usr/local/lib64
 
 COPY . /pixelator
-RUN pip3.10 install /pixelator
+RUN pip3.11 install /pixelator
 RUN rm -rf /pixelator
 
-RUN pip3.10 cache purge
+RUN pip3.11 cache purge

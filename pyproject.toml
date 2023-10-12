@@ -20,14 +20,16 @@ classifiers=[
     'Natural Language :: English',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10']
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11'
+]
 
 packages = [
     { include = "pixelator", from = "src" },
     { include = "tests", format = "sdist" }]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.8,<3.12"
 click = "*"
 yapf = "*"
 cutadapt = ">=4.2"
