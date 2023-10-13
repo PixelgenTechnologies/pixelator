@@ -18,9 +18,6 @@ on:
         description: 'Keep working directories for debugging'
         required: false
         default: 'false'
-  push:
-    branches:
-      - fix/ci-integration-tests
   schedule:
     # 01:00 every day, using last commit on default branch
     - cron: "0 1 * * *"
