@@ -1250,7 +1250,7 @@ def update_metrics_anndata(adata: AnnData, inplace: bool = True) -> Optional[Ann
     df = adata.to_df()
 
     # update the var layer (antibody metrics)
-    adata.var["antibody_count"] = df.sum()
+    adata.var["antibody_count"] = df.sum().astype(int)
     adata.var["components"] = (df != 0).sum()
     adata.var["antibody_pct"] = (
         adata.var["antibody_count"] / adata.var["antibody_count"].sum()
