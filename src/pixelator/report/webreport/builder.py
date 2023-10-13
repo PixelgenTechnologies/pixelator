@@ -45,7 +45,7 @@ class WebreportBuilder:
     """
 
     _JSON_OPTIONS: ClassVar[Dict[str, Any]] = {"indent": None, "separators": (",", ":")}
-    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.8.0", ">=0.7.0"]
+    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.9.0", ">=0.7.0"]
 
     def __init__(self, template: Union[str, Path] = DEFAULT_WEBREPORT_TEMPLATE):
         """Construct a webreport builder given a html template.
