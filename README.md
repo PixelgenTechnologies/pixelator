@@ -1,7 +1,7 @@
 # Pixelator
 
 
-![python-version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue)
+![python-version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 [//]: # (TODO: Enable this once available)
@@ -115,4 +115,3 @@ A non-exhaustive list of contributors follows:
 
 - Filip Karlsson ([@fika-pixelgen](https://github.com/fika-pixelgen))
 - Max Karlsson ([@maxkarlsson](https://github.com/maxkarlsson))
-
