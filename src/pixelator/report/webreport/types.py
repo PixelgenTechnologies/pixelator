@@ -188,21 +188,21 @@ class Metrics(TypedDict, total=False):
 
     #: The percentage of sequenced reads usable in cells. A usable read contains a
     #: recognized Antibody DNA-barcode, a valid UMI, valid PBS adapters and valid UPI
-    #: Molecular Pixelation identifiers. **(link to Antibody Reads Usable per Cell)**
+    #: Molecular Pixelation identifiers.
     fraction_reads_in_cells: float
 
     #: The percentage of UMIs in non-cell components.
     fraction_discarded_umis: float
 
     #: The total number of antibodies with at least {min-count} reads from molecules
-    #: (UMI+UPI) in any cell. **(link to min-count parameter documentation)**
+    #: (UMI+UPI) in any cell.
     total_unique_antibodies_detected: int
 
     #: Total number of read pairs that were input to this library.
     number_of_reads: int
 
     #: Total number of read pairs ignored by the pipeline that do not satisfy the
-    #: minimum length requirements **(link to requirements)**
+    #: minimum length requirements.
     number_of_short_reads_skipped: int
 
     #: Fraction of reads found with valid Molecular Pixelation binding adapter.
