@@ -5,11 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.15.0] - UNRELEASED
+## [0.15.0]- 2023-10-13
 
 ### Added
 
-* Add support for Python 3.11
+* Add support for Python 3.11.
+* Add early enablement work for a networkx backend for the graph stage.
+
+### Fixed
+
+* Fix report color axis in report figures not updating when selecting markers or cell types.
+* Remove placeholder links in report tooltips.
 
 ### Fixed
 
