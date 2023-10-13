@@ -1,0 +1,25 @@
+full-D21:
+  design: D21
+  panel: "human-sc-immunology-spatial-proteomics"
+  panel_file: null
+  input_files:
+    - /mnt/pixelgen-technologies-datasets/mpx-datasets/scsp/1.0/1k-human-pbmcs-v1.0-immunology-I/Sample01_human_pbmcs_unstimulated_R1_001.fastq.gz
+    - /mnt/pixelgen-technologies-datasets/mpx-datasets/scsp/1.0/1k-human-pbmcs-v1.0-immunology-I/Sample01_human_pbmcs_unstimulated_R2_001.fastq.gz
+  options:
+    common:
+      verbose: true
+    graph:
+      params: [
+        "--multiplet-recovery"
+      ]
+    annotate:
+      params: [
+        "--dynamic-filter", "min",
+        "--aggregate-calling"
+      ]
+
+    analysis:
+      params: [
+         "--compute-polarization",
+         "--compute-colocalization",
+      ]

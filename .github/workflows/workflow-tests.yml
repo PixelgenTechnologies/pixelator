@@ -13,18 +13,13 @@ on:
       container-tag:
         description: 'Container tag'
         required: true
-        default: 'latest-dev'
+        default: 'dev'
       keep-workdirs:
         description: 'Keep working directories for debugging'
         required: false
         default: 'false'
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
   schedule:
-    # 01:00 every day
+    # 01:00 every day, using last commit on default branch
     - cron: "0 1 * * *"
 
 jobs:
@@ -51,6 +46,7 @@ jobs:
                 - 'poetry.lock'
               paths_ignore:
                 - 'tests/**/*.md'
+
   setup:
     runs-on: ubuntu-latest
     needs: pre_job
@@ -74,19 +70,20 @@ jobs:
           mask-password: 'false'
 
   test:
-    runs-on: [ "self-hosted", "linux", "x64", "ubuntu-latest" ]
+    runs-on: [ "self-hosted", "Linux", "X64" ]
     needs: [setup]
     container:
-      image: 890888997283.dkr.ecr.eu-north-1.amazonaws.com/pixelator:${{ github.event.inputs.container-tag || 'latest-dev' }}
+      image: 890888997283.dkr.ecr.eu-north-1.amazonaws.com/pixelator:${{ github.event.inputs.container-tag || 'dev' }}
       credentials:
         username: ${{ needs.setup.outputs.docker_username }}
         password: ${{ needs.setup.outputs.docker_password }}
       volumes:
-        - /mnt/github-actions-data:/data
+        - /mnt/pixelgen-github-actions-data:/mnt/pixelgen-github-actions-data
+        - /mnt/pixelgen-technologies-datasets:/mnt/pixelgen-technologies-datasets
     strategy:
       fail-fast: false
       matrix:
-        test: [ "small", "single-cell", "tissue" ]
+        test: [ "test_small_D21", "test_full_D21" ]
 
     steps:
       - name: Install poetry
@@ -96,25 +93,18 @@ jobs:
           pipx install poetry
           poetry self add poetry-plugin-export
 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Install dev dependencies
-        working-directory: /pixelator
         run: |
           poetry export -f requirements.txt --output requirements_only_dev.txt --only dev
           pip3 install -r requirements_only_dev.txt
 
-      - name: Prepare test case string
-        uses: actions/github-script@v6
-        id: test_case_file
-        with:
-          script: |
-            const test_name = "${{ matrix.test }}"
-            const test_file_name = `test_${test_name.replace(/-/g, '_')}.py`
-            core.setOutput('filename', test_file_name)
-
       - name: Test pixelator
         run: |
-          CMD="pytest /pixelator/tests/integration/${{ steps.test_case_file.outputs.filename }} --log-cli-level=DEBUG"
+          CMD="pytest --log-cli-level=DEBUG"
           if [[ "${{ github.event.inputs.keep-workdirs }}" == "true" ]]; then
             CMD="$CMD --keep-workdirs"
           fi
-          $CMD -m "workflow_test"
+          $CMD -m "workflow_test" -k "${{ matrix.test }}"
