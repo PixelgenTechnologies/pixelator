@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Add support for Python 3.11
 
+### Fixed
+
+* A bug where aggregating data did not add the correct sample, and unique component columns
+
+
 ## [0.14.0] - 2023-10-05
 
 ### Added

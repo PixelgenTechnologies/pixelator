@@ -6,6 +6,7 @@ Copyright (c) 2022 Pixelgen Technologies AB.
 
 import logging
 import random
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
@@ -515,6 +516,7 @@ def test_edgelist_to_anndata(
     assert set(adata.obs_names) == set(edgelist["component"].unique())
 
 
+@pytest.mark.test_this
 def test_simple_aggregate(setup_basic_pixel_dataset):
     """test_simple_aggregate."""
     dataset_1, *_ = setup_basic_pixel_dataset
@@ -537,6 +539,13 @@ def test_simple_aggregate(setup_basic_pixel_dataset):
     )
 
     assert len(result.edgelist) == 2 * len(dataset_1.edgelist)
+    assert "sample" in result.edgelist.columns
+    row = result.edgelist.iloc[0]
+    assert re.match(r"PXLCMP(\d+)_sample\d", row["component"])
+    assert result.edgelist["sample"].dtype == pd.CategoricalDtype(
+        categories=["sample1", "sample2"], ordered=False
+    )
+    assert isinstance(result.edgelist["component"].dtype, pd.CategoricalDtype)
 
     assert len(result.adata) == 2 * len(dataset_1.adata)
     assert len(result.adata.var) == len(dataset_1.adata.var)

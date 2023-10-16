@@ -77,11 +77,26 @@ def _get_attr_and_index_by_component(attribute, sample_names, datasets):
             yield attr
 
 
-def _concatenate_edgelists(datasets):
+def _concatenate_edgelists(datasets, sample_names):
     with pl.StringCache():
-        concatenated = datasets[0].edgelist_lazy.collect()
-        for subsequent in datasets[:1]:
-            concatenated = concatenated.extend(subsequent.edgelist_lazy.collect())
+        concatenated = datasets[0].edgelist_lazy
+        concatenated = concatenated.with_columns(
+            sample=pl.lit(sample_names[0], dtype=pl.Categorical)
+        )
+        concatenated = concatenated.collect()
+
+        for idx, subsequent in enumerate(datasets[:1], start=1):
+            concatenated = concatenated.extend(
+                subsequent.edgelist_lazy.collect().with_columns(
+                    sample=pl.lit(sample_names[idx], dtype=pl.Categorical)
+                )
+            )
+
+        concatenated = concatenated.with_columns(
+            component=pl.concat_str(
+                pl.col("component"), pl.col("sample"), separator="_"
+            )
+        )
     return concatenated
 
 
@@ -151,7 +166,7 @@ def simple_aggregate(
         edgelists = pd.DataFrame()
     else:
         edgelists = _enforce_edgelist_types(
-            _concatenate_edgelists(datasets).to_pandas()
+            _concatenate_edgelists(datasets, sample_names).to_pandas()
         )
     polarizations = pd.concat(
         _get_attr_and_index_by_component(
