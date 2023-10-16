@@ -1,13 +1,13 @@
 # Pixelator
 
 
-![python-version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue)
+![python-version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![DOI](https://img.shields.io/badge/DOI-10.1101/2023.06.05.543770-B31B1B.svg)](https://www.biorxiv.org/content/10.1101/2023.06.05.543770v1)
+![conda](https://anaconda.org/bioconda/pixelator/badges/version.svg)
+![pypi](https://img.shields.io/pypi/v/pixelgen-pixelator)
 
-[//]: # (TODO: Enable this once available)
-[//]: # (![conda]&#40;https://anaconda.org/bioconda/pixelator/badges/version.svg&#41;)
-[//]: # (![pypi]&#40;https://img.shields.io/pypi/v/pixelgen-pixelator&#41;)
-
+[![Tests](https://github.com/PixelgenTechnologies/pixelator/actions/workflows/tests.yml/badge.svg)](https://github.com/PixelgenTechnologies/pixelator/actions/workflows/tests.yml)
 
 [**Documentation**](#documentation) |
 [**Installation**](#installation) |
@@ -69,6 +69,8 @@ pip install .
 
 ### Using docker
 
+
+
 The `pixelator` command-line tool can be run with docker images available on
 the [GitHub container registry](https://github.com/PixelgenTechnologies/pixelator/pkgs/container/pixelator).
 
@@ -76,6 +78,8 @@ the [GitHub container registry](https://github.com/PixelgenTechnologies/pixelato
 docker pull ghcr.io/pixelgentechnologies/pixelator:latest
 docker run ghcr.io/pixelgentechnologies/pixelator:latest pixelator --help
 ```
+
+You can also use the containers provided by the biocontainers project on [quay.io](https://quay.io/repository/biocontainers/pixelator).
 
 ## Contributing
 
@@ -115,4 +119,3 @@ A non-exhaustive list of contributors follows:
 
 - Filip Karlsson ([@fika-pixelgen](https://github.com/fika-pixelgen))
 - Max Karlsson ([@maxkarlsson](https://github.com/maxkarlsson))
-
