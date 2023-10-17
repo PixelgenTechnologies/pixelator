@@ -700,7 +700,7 @@ class PixelDataset:
                 (
                     self.edgelist_lazy.filter(pl.col("component") == component_id)
                     .collect()
-                    .to_pandas(use_pyarrow_extension_array=True)
+                    .to_pandas()
                 )
             )
             if potential_component.empty:
@@ -839,9 +839,7 @@ class PixelDataset:
                 else self.edgelist_lazy
             )
 
-            edgelist = _enforce_edgelist_types(
-                edgelist_pred.collect().to_pandas(use_pyarrow_extension_array=True)
-            )
+            edgelist = _enforce_edgelist_types(edgelist_pred.collect().to_pandas())
 
         if self.polarization is not None:
             polarization_mask = (
@@ -1298,6 +1296,11 @@ def _enforce_edgelist_types(edgelist: pd.DataFrame) -> pd.DataFrame:
     # if the dataframe is empty just enforce the types.
     if edgelist.shape[0] == 0:
         edgelist = pd.DataFrame(columns=required_types.keys())
+
+    # If we have the optional sample column, this should be
+    # set to use a categorical type
+    if "sample" in edgelist.columns:
+        required_types["sample"] = "category"
 
     # If all of the prescribed types are already set, just return the edgelist
     type_dict = edgelist.dtypes.to_dict()

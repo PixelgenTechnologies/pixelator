@@ -516,7 +516,6 @@ def test_edgelist_to_anndata(
     assert set(adata.obs_names) == set(edgelist["component"].unique())
 
 
-@pytest.mark.test_this
 def test_simple_aggregate(setup_basic_pixel_dataset):
     """test_simple_aggregate."""
     dataset_1, *_ = setup_basic_pixel_dataset
@@ -697,6 +696,23 @@ def test_simple_aggregate_ignore_edgelist(setup_basic_pixel_dataset):
 
     # We want an empty edgelist, but wit all the correct columns
     assert result.edgelist.shape == (0, 9)
+
+
+def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_dataset):
+    # Test to check for bug EXE-1177
+    # This bug was caused by filtering returning an incorrectly typed
+    # edgelist, which in turn caused getting the graph to fail
+    dataset_1, *_ = setup_basic_pixel_dataset
+    dataset_2 = dataset_1.copy()
+
+    aggregated_data = simple_aggregate(
+        sample_names=["sample1", "sample2"], datasets=[dataset_1, dataset_2]
+    )
+
+    result = aggregated_data.filter(components=aggregated_data.adata.obs.index[:2])
+    assert isinstance(result.edgelist["component"].dtype, pd.CategoricalDtype)
+    # Running graph here to make sure it does not raise an exception
+    result.graph(result.adata.obs.index[0])
 
 
 def test_copy(setup_basic_pixel_dataset):
