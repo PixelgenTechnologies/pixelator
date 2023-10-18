@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-* Fixed bug in filtering pixeldataset causing it to return the wrong types
-* Fixed bug in graph layout generation
+* Fixed a bug in filtering pixeldataset causing it to return the wrong types.
+* Fixed a bug in graph layout generation due to incorrect data frame concatenation.
 
 
 ## [0.15.0] - 2023-10-16
