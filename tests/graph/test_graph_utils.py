@@ -93,6 +93,76 @@ def test_build_graph_a_node_projected(full_graph_edgelist: pd.DataFrame):
     assert graph.vs.attributes() == ["name", "markers", "type", "pixel_type"]
 
 
+def test_layout_coordinates_all_pixels(full_graph_edgelist: pd.DataFrame):
+    graph = Graph.from_edgelist(
+        edgelist=full_graph_edgelist,
+        add_marker_counts=True,
+        simplify=True,
+        use_full_bipartite=True,
+    )
+    result = graph.layout_coordinates(only_keep_a_pixels=False)
+    assert result.shape == (100, 4)
+    assert set(result.columns) == {"x", "y", "A", "B"}
+
+
+def test_layout_coordinates_3d_layout(full_graph_edgelist: pd.DataFrame):
+    graph = Graph.from_edgelist(
+        edgelist=full_graph_edgelist,
+        add_marker_counts=True,
+        simplify=True,
+        use_full_bipartite=True,
+    )
+    result = graph.layout_coordinates(
+        layout_algorithm="fruchterman_reingold_3d", only_keep_a_pixels=False
+    )
+    assert set(result.columns) == {
+        "x",
+        "y",
+        "z",
+        "x_norm",
+        "y_norm",
+        "z_norm",
+        "A",
+        "B",
+    }
+    assert result.shape == (100, 8)
+
+
+def test_layout_coordinates_only_a_pixels(full_graph_edgelist: pd.DataFrame):
+    graph = Graph.from_edgelist(
+        edgelist=full_graph_edgelist,
+        add_marker_counts=True,
+        simplify=True,
+        use_full_bipartite=True,
+    )
+    result = graph.layout_coordinates(only_keep_a_pixels=True)
+    assert result.shape == (50, 4)
+    assert set(result.columns) == {"x", "y", "A", "B"}
+
+
+def test_layout_coordinates_3d_layout_only_a_pixels(full_graph_edgelist: pd.DataFrame):
+    graph = Graph.from_edgelist(
+        edgelist=full_graph_edgelist,
+        add_marker_counts=True,
+        simplify=True,
+        use_full_bipartite=True,
+    )
+    result = graph.layout_coordinates(
+        layout_algorithm="fruchterman_reingold_3d", only_keep_a_pixels=True
+    )
+    assert set(result.columns) == {
+        "x",
+        "y",
+        "z",
+        "x_norm",
+        "y_norm",
+        "z_norm",
+        "A",
+        "B",
+    }
+    assert result.shape == (50, 8)
+
+
 def test_components_metrics(full_graph_edgelist: pd.DataFrame):
     """Test generating component metrics."""
     # test component metrics
