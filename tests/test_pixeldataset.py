@@ -719,7 +719,7 @@ def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_datas
 # TODO Write test to check for write/read round-trips on parquet files
 
 
-def test_not_passing_unique_sample_names_should_raise(
+def test_on_aggregation_not_passing_unique_sample_names_should_raise(
     tmp_path,
     setup_basic_pixel_dataset,
 ):
@@ -739,6 +739,59 @@ def test_not_passing_unique_sample_names_should_raise(
                 read(file_target_2),
             ],
         )
+
+
+def test_aggregation_all_samples_show_up(
+    tmp_path,
+    setup_basic_pixel_dataset,
+):
+    dataset_1, *_ = setup_basic_pixel_dataset
+    dataset_2 = dataset_1.copy()
+    dataset_3 = dataset_1.copy()
+    dataset_4 = dataset_1.copy()
+
+    file_target_1 = tmp_path / "dataset_1.pxl"
+    dataset_1.save(str(file_target_1))
+    file_target_2 = tmp_path / "dataset_2.pxl"
+    dataset_2.save(str(file_target_2))
+    file_target_3 = tmp_path / "dataset_3.pxl"
+    dataset_3.save(str(file_target_3))
+    file_target_4 = tmp_path / "dataset_4.pxl"
+    dataset_4.save(str(file_target_4))
+
+    result = simple_aggregate(
+        sample_names=["sample1", "sample2", "sample3", "sample4"],
+        datasets=[
+            read(file_target_1),
+            read(file_target_2),
+            read(file_target_3),
+            read(file_target_4),
+        ],
+    )
+    assert set(result.edgelist["sample"].unique()) == {
+        "sample1",
+        "sample2",
+        "sample3",
+        "sample4",
+    }
+    assert set(result.polarization["sample"].unique()) == {
+        "sample1",
+        "sample2",
+        "sample3",
+        "sample4",
+    }
+    assert set(result.colocalization["sample"].unique()) == {
+        "sample1",
+        "sample2",
+        "sample3",
+        "sample4",
+    }
+    assert set(result.adata.obs["sample"].unique()) == {
+        "sample1",
+        "sample2",
+        "sample3",
+        "sample4",
+    }
 
 
 def test_lazy_edgelist_should_warn_and_rm_on_index_column(setup_basic_pixel_dataset):

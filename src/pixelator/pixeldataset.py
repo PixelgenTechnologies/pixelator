@@ -85,7 +85,7 @@ def _concatenate_edgelists(datasets, sample_names):
         )
         concatenated = concatenated.collect()
 
-        for idx, subsequent in enumerate(datasets[:1], start=1):
+        for idx, subsequent in enumerate(datasets[1:], start=1):
             concatenated = concatenated.extend(
                 subsequent.edgelist_lazy.collect().with_columns(
                     sample=pl.lit(sample_names[idx], dtype=pl.Categorical)
