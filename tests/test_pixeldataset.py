@@ -698,6 +698,7 @@ def test_simple_aggregate_ignore_edgelist(setup_basic_pixel_dataset):
     assert result.edgelist.shape == (0, 9)
 
 
+@pytest.mark.test_this
 def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_dataset):
     # Test to check for bug EXE-1177
     # This bug was caused by filtering returning an incorrectly typed
@@ -713,6 +714,57 @@ def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_datas
     assert isinstance(result.edgelist["component"].dtype, pd.CategoricalDtype)
     # Running graph here to make sure it does not raise an exception
     result.graph(result.adata.obs.index[0])
+
+
+# TODO Write test to check for write/read round-trips on parquet files
+
+
+def test_not_passing_unique_sample_names_should_raise(
+    tmp_path,
+    setup_basic_pixel_dataset,
+):
+    dataset_1, *_ = setup_basic_pixel_dataset
+    dataset_2 = dataset_1.copy()
+
+    file_target_1 = tmp_path / "dataset_1.pxl"
+    dataset_1.save(str(file_target_1))
+    file_target_2 = tmp_path / "dataset_2.pxl"
+    dataset_2.save(str(file_target_2))
+
+    with pytest.raises(AssertionError):
+        simple_aggregate(
+            sample_names=["sample1", "sample1"],
+            datasets=[
+                read(file_target_1),
+                read(file_target_2),
+            ],
+        )
+
+
+def test_lazy_edgelist_should_warn_and_rm_on_index_column(setup_basic_pixel_dataset):
+    # Checking EXE-1184
+    # Pixelator 0.13.0-0.15.2 stored an index column in the parquet files
+    # which showed up as a column when reading the lazy frames. This
+    # caused graph building to fail when working on concatenated
+    # pixeldatasets, since then this column would be propagated to the
+    # edgelist - can this broke the igraph Graph construction since
+    # it assumes that the first two columns should be the vertices
+    dataset, *_ = setup_basic_pixel_dataset
+    dataset.edgelist["index"] = pd.Series(range(len(dataset.edgelist)))
+
+    with pytest.warns(UserWarning):
+        result = dataset.edgelist_lazy
+        assert set(result.columns) == {
+            "sequence",
+            "upib",
+            "upia",
+            "upi_unique_count",
+            "umi",
+            "umi_unique_count",
+            "component",
+            "count",
+            "marker",
+        }
 
 
 def test_copy(setup_basic_pixel_dataset):

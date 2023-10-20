@@ -97,6 +97,7 @@ def _concatenate_edgelists(datasets, sample_names):
                 pl.col("component"), pl.col("sample"), separator="_"
             )
         )
+
     return concatenated
 
 
@@ -137,6 +138,8 @@ def simple_aggregate(
         raise AssertionError(
             "There must be as many sample names provided as there are dataset"
         )
+    if not len(set(sample_names)) == len(sample_names):
+        raise AssertionError("All provided sample names must be unique")
 
     all_var_identical = all(
         map(
@@ -168,6 +171,7 @@ def simple_aggregate(
         edgelists = _enforce_edgelist_types(
             _concatenate_edgelists(datasets, sample_names).to_pandas()
         )
+
     polarizations = pd.concat(
         _get_attr_and_index_by_component(
             "polarization", datasets=datasets, sample_names=sample_names
@@ -501,7 +505,9 @@ class PixelFileParquetFormatSpec(PixelFileFormatSpec):
     @staticmethod
     def serialize_dataframe(dataframe: pd.DataFrame, path: PathType) -> None:
         """Serialize a dataframe from the give path."""
-        dataframe.to_parquet(path, engine="fastparquet", compression="zstd")
+        dataframe.to_parquet(
+            path, engine="fastparquet", compression="zstd", index=False
+        )
 
     @staticmethod
     def deserialize_dataframe(path: PathType, key: str) -> pd.DataFrame:
@@ -640,7 +646,14 @@ class PixelDataset:
     @property
     def edgelist_lazy(self) -> pl.LazyFrame:
         """Get the edge list as a lazy dataframe."""
-        return self._backend.edgelist_lazy
+        lz_edgelist = self._backend.edgelist_lazy
+        if "index" in lz_edgelist.columns:
+            warnings.warn(
+                "A column called `index` was identified in your edgelist. "
+                "This will be removed."
+            )
+            lz_edgelist = lz_edgelist.drop("index")
+        return lz_edgelist
 
     @property
     def polarization(self) -> Optional[pd.DataFrame]:
