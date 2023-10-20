@@ -13,6 +13,7 @@ from unittest import mock
 
 import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
 from anndata import AnnData
 from numpy.testing import assert_array_equal
@@ -68,6 +69,22 @@ def test_pixel_file_parquet_format_spec_can_save(setup_basic_pixel_dataset, tmp_
     assert not file_target.is_file()
     PixelFileParquetFormatSpec().save(dataset, str(file_target))
     assert file_target.is_file()
+
+
+def test_pixel_file_parquet_no_index_in_parquet_files(tmp_path):
+    # Checking EXE-1184
+    # We do not want an index added to the parquet file, regardless of if they
+    # read with pandas or polars
+    file_target = tmp_path / "df.parquet"
+    df = pd.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]}, index=["X", "Y", "Z"])
+    PixelFileParquetFormatSpec().serialize_dataframe(df, path=file_target)
+    assert file_target.is_file()
+    res1 = pd.read_parquet(file_target)
+    assert set(res1.columns) == {"A", "B"}
+    res2 = pl.scan_parquet(file_target)
+    assert set(res2.columns) == {"A", "B"}
+    res3 = pl.read_parquet(file_target)
+    assert set(res3.columns) == {"A", "B"}
 
 
 def test_pixel_file_csv_format_spec_can_save(setup_basic_pixel_dataset, tmp_path):
@@ -698,7 +715,6 @@ def test_simple_aggregate_ignore_edgelist(setup_basic_pixel_dataset):
     assert result.edgelist.shape == (0, 9)
 
 
-@pytest.mark.test_this
 def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_dataset):
     # Test to check for bug EXE-1177
     # This bug was caused by filtering returning an incorrectly typed
@@ -714,9 +730,6 @@ def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_datas
     assert isinstance(result.edgelist["component"].dtype, pd.CategoricalDtype)
     # Running graph here to make sure it does not raise an exception
     result.graph(result.adata.obs.index[0])
-
-
-# TODO Write test to check for write/read round-trips on parquet files
 
 
 def test_on_aggregation_not_passing_unique_sample_names_should_raise(
