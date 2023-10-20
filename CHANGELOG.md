@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [UNRELEASED] - ...
+
+### Fixed
+
+* Fixed broken pixeldataset aggregation for more than two sample
+* Fixed bug in graph generation caused by accidentally written index in parquet file.
+  For backwards compatiblity, if there is an column named `index`` in the edgelist, this
+  will be removed and the user will get a warning indicating that this has happened.
+
 ## [0.15.1] - 2023-10-18
 
 ### Fixed
