@@ -758,6 +758,10 @@ def test_aggregation_all_samples_show_up(
     tmp_path,
     setup_basic_pixel_dataset,
 ):
+    # There used to be a bug (EXE-1186) where only the first two samples
+    # were actually aggregated. This test is here to catch that potential
+    # problem in the future.
+
     dataset_1, *_ = setup_basic_pixel_dataset
     dataset_2 = dataset_1.copy()
     dataset_3 = dataset_1.copy()
