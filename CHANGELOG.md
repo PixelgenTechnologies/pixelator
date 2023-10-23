@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - YYYY-MM-DD
+
+### Changed
+
+* `mean_reads` and `median_reads` in adata.obs to `mean_reads_per_molecule` and `median_reads_per_molecule` respectively.
+
+
 ## [0.15.2] - 2023-10-23
 
 ### Fixed
@@ -45,7 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   all of it into memory.
 * Option (`ignore_edgelists`) to skip the edge lists when aggregating files. This defaults
   to `False`.
-
 
 ### Changed
 
