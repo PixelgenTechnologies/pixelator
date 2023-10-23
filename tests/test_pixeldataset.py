@@ -13,6 +13,7 @@ from unittest import mock
 
 import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
 from anndata import AnnData
 from numpy.testing import assert_array_equal
@@ -68,6 +69,22 @@ def test_pixel_file_parquet_format_spec_can_save(setup_basic_pixel_dataset, tmp_
     assert not file_target.is_file()
     PixelFileParquetFormatSpec().save(dataset, str(file_target))
     assert file_target.is_file()
+
+
+def test_pixel_file_parquet_no_index_in_parquet_files(tmp_path):
+    # Checking EXE-1184
+    # We do not want an index added to the parquet file, regardless of if they
+    # read with pandas or polars
+    file_target = tmp_path / "df.parquet"
+    df = pd.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]}, index=["X", "Y", "Z"])
+    PixelFileParquetFormatSpec().serialize_dataframe(df, path=file_target)
+    assert file_target.is_file()
+    res1 = pd.read_parquet(file_target)
+    assert set(res1.columns) == {"A", "B"}
+    res2 = pl.scan_parquet(file_target)
+    assert set(res2.columns) == {"A", "B"}
+    res3 = pl.read_parquet(file_target)
+    assert set(res3.columns) == {"A", "B"}
 
 
 def test_pixel_file_csv_format_spec_can_save(setup_basic_pixel_dataset, tmp_path):
@@ -713,6 +730,107 @@ def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_datas
     assert isinstance(result.edgelist["component"].dtype, pd.CategoricalDtype)
     # Running graph here to make sure it does not raise an exception
     result.graph(result.adata.obs.index[0])
+
+
+def test_on_aggregation_not_passing_unique_sample_names_should_raise(
+    tmp_path,
+    setup_basic_pixel_dataset,
+):
+    dataset_1, *_ = setup_basic_pixel_dataset
+    dataset_2 = dataset_1.copy()
+
+    file_target_1 = tmp_path / "dataset_1.pxl"
+    dataset_1.save(str(file_target_1))
+    file_target_2 = tmp_path / "dataset_2.pxl"
+    dataset_2.save(str(file_target_2))
+
+    with pytest.raises(AssertionError):
+        simple_aggregate(
+            sample_names=["sample1", "sample1"],
+            datasets=[
+                read(file_target_1),
+                read(file_target_2),
+            ],
+        )
+
+
+def test_aggregation_all_samples_show_up(
+    tmp_path,
+    setup_basic_pixel_dataset,
+):
+    dataset_1, *_ = setup_basic_pixel_dataset
+    dataset_2 = dataset_1.copy()
+    dataset_3 = dataset_1.copy()
+    dataset_4 = dataset_1.copy()
+
+    file_target_1 = tmp_path / "dataset_1.pxl"
+    dataset_1.save(str(file_target_1))
+    file_target_2 = tmp_path / "dataset_2.pxl"
+    dataset_2.save(str(file_target_2))
+    file_target_3 = tmp_path / "dataset_3.pxl"
+    dataset_3.save(str(file_target_3))
+    file_target_4 = tmp_path / "dataset_4.pxl"
+    dataset_4.save(str(file_target_4))
+
+    result = simple_aggregate(
+        sample_names=["sample1", "sample2", "sample3", "sample4"],
+        datasets=[
+            read(file_target_1),
+            read(file_target_2),
+            read(file_target_3),
+            read(file_target_4),
+        ],
+    )
+    assert set(result.edgelist["sample"].unique()) == {
+        "sample1",
+        "sample2",
+        "sample3",
+        "sample4",
+    }
+    assert set(result.polarization["sample"].unique()) == {
+        "sample1",
+        "sample2",
+        "sample3",
+        "sample4",
+    }
+    assert set(result.colocalization["sample"].unique()) == {
+        "sample1",
+        "sample2",
+        "sample3",
+        "sample4",
+    }
+    assert set(result.adata.obs["sample"].unique()) == {
+        "sample1",
+        "sample2",
+        "sample3",
+        "sample4",
+    }
+
+
+def test_lazy_edgelist_should_warn_and_rm_on_index_column(setup_basic_pixel_dataset):
+    # Checking EXE-1184
+    # Pixelator 0.13.0-0.15.2 stored an index column in the parquet files
+    # which showed up as a column when reading the lazy frames. This
+    # caused graph building to fail when working on concatenated
+    # pixeldatasets, since then this column would be propagated to the
+    # edgelist - can this broke the igraph Graph construction since
+    # it assumes that the first two columns should be the vertices
+    dataset, *_ = setup_basic_pixel_dataset
+    dataset.edgelist["index"] = pd.Series(range(len(dataset.edgelist)))
+
+    with pytest.warns(UserWarning):
+        result = dataset.edgelist_lazy
+        assert set(result.columns) == {
+            "sequence",
+            "upib",
+            "upia",
+            "upi_unique_count",
+            "umi",
+            "umi_unique_count",
+            "component",
+            "count",
+            "marker",
+        }
 
 
 def test_copy(setup_basic_pixel_dataset):
