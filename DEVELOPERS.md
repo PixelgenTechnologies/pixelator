@@ -136,6 +136,10 @@ container as well.
  - When you start the container VSCode might complain that e.g. `pylint` is not installed. Just wait
    until the installation process has finished - then it should have been installed.
 
+ - An issue that you might run into is that the `pytest` test discovery does not work. A work-around
+   for that is to install the pre-release version of the `ms-python.python` vscode extension, and then
+   running the `Python: Clear Cache and Reload Window` action in vscode.
+
 ## Plugins system
 
 ### CLI plugins
