@@ -566,6 +566,7 @@ class NetworkXGraphBackend(_GraphBackend):
 
         return g
 
+    @staticmethod
     def _add_node_attributes(graph: Union[nx.Graph, nx.MultiGraph], a_nodes: set[str]):
         node_names = {node: node for node in graph.nodes()}
         pixel_type = {node: "A" if node in a_nodes else "B" for node in graph.nodes()}
@@ -574,6 +575,7 @@ class NetworkXGraphBackend(_GraphBackend):
         nx.set_node_attributes(graph, pixel_type, "pixel_type")
         nx.set_node_attributes(graph, type_, "type")
 
+    @staticmethod
     def _project_on_a_nodes(graph: Union[nx.Graph, nx.MultiGraph], a_nodes: set[str]):
         if isinstance(graph, nx.MultiGraph):
             warnings.warn(
@@ -584,6 +586,7 @@ class NetworkXGraphBackend(_GraphBackend):
 
         return bipartite.projected_graph(graph, a_nodes)
 
+    @staticmethod
     def _build_graph_with_marker_counts(
         edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
     ):
@@ -597,6 +600,7 @@ class NetworkXGraphBackend(_GraphBackend):
             return graph
         return NetworkXGraphBackend._project_on_a_nodes(graph, a_nodes)
 
+    @staticmethod
     def _build_plain_graph(
         edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
     ):
