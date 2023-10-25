@@ -521,7 +521,7 @@ class NetworkXGraphBackend(_GraphBackend):
     def _build_plain_graph_from_edgelist(
         df: pl.LazyFrame,
         create_using: Union[nx.Graph, nx.MultiGraph],
-    ):
+    ) -> Union[nx.Graph, nx.MultiGraph]:
         g = nx.empty_graph(0, create_using)
         g.add_edges_from(
             (row[0], row[1])
@@ -535,7 +535,7 @@ class NetworkXGraphBackend(_GraphBackend):
     def _build_graph_with_node_counts_from_edgelist(
         df: pl.LazyFrame,
         create_using: bool,
-    ):
+    ) -> Union[nx.Graph, nx.MultiGraph]:
         unique_markers = set(df.unique("marker").collect()["marker"].to_list())
         initial_marker_dict = {marker: 0 for marker in unique_markers}
 
@@ -561,7 +561,9 @@ class NetworkXGraphBackend(_GraphBackend):
         return g
 
     @staticmethod
-    def _add_node_attributes(graph: Union[nx.Graph, nx.MultiGraph], a_nodes: set[str]):
+    def _add_node_attributes(
+        graph: Union[nx.Graph, nx.MultiGraph], a_nodes: set[str]
+    ) -> None:
         node_names = {node: node for node in graph.nodes()}
         pixel_type = {node: "A" if node in a_nodes else "B" for node in graph.nodes()}
         type_ = {node: node in a_nodes for node in graph.nodes()}
@@ -570,7 +572,9 @@ class NetworkXGraphBackend(_GraphBackend):
         nx.set_node_attributes(graph, type_, "type")
 
     @staticmethod
-    def _project_on_a_nodes(graph: Union[nx.Graph, nx.MultiGraph], a_nodes: set[str]):
+    def _project_on_a_nodes(
+        graph: Union[nx.Graph, nx.MultiGraph], a_nodes: set[str]
+    ) -> Union[nx.Graph, nx.MultiGraph]:
         if isinstance(graph, nx.MultiGraph):
             warnings.warn(
                 "Using `use_full_bipartite=True` together with `simplify=False` "
@@ -583,7 +587,7 @@ class NetworkXGraphBackend(_GraphBackend):
     @staticmethod
     def _build_graph_with_marker_counts(
         edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
-    ):
+    ) -> Union[nx.Graph, nx.MultiGraph]:
         graph = NetworkXGraphBackend._build_graph_with_node_counts_from_edgelist(
             edgelist,
             create_using=nx.Graph if simplify else nx.MultiGraph,
@@ -597,7 +601,7 @@ class NetworkXGraphBackend(_GraphBackend):
     @staticmethod
     def _build_plain_graph(
         edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
-    ):
+    ) -> Union[nx.Graph, nx.MultiGraph]:
         graph = NetworkXGraphBackend._build_plain_graph_from_edgelist(
             edgelist.select(["upia", "upib", "umi"]),
             create_using=nx.Graph if simplify else nx.MultiGraph,
