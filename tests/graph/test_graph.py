@@ -195,16 +195,25 @@ def test_build_graph_a_node_projected_without_simplifying(
     enable_backend,
     full_graph_edgelist: pd.DataFrame,
 ):
-    # The A-node projection disregards any multiedges, so running it with
-    # or with out simplification should yield the same result
-    graph = Graph.from_edgelist(
-        edgelist=full_graph_edgelist,
-        add_marker_counts=True,
-        simplify=False,
-        use_full_bipartite=False,
-    )
-    assert graph.vcount() == 50
-    assert graph.ecount() == ((50 * 50) / 2) - (50 / 2)
-    assert "markers" in graph.vs.attributes()
-    assert sorted(list(graph.vs[0]["markers"].keys())) == ["A", "B"]
-    assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
+    def _test():
+        # The A-node projection disregards any multiedges, so running it with
+        # or with out simplification should yield the same result
+        graph = Graph.from_edgelist(
+            edgelist=full_graph_edgelist,
+            add_marker_counts=True,
+            simplify=False,
+            use_full_bipartite=False,
+        )
+        assert graph.vcount() == 50
+        assert graph.ecount() == ((50 * 50) / 2) - (50 / 2)
+        assert "markers" in graph.vs.attributes()
+        assert sorted(list(graph.vs[0]["markers"].keys())) == ["A", "B"]
+        assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
+
+    # We want to warn when these to there is an a-node projection
+    # without simplification.
+    if os.environ.get("ENABLE_NETWORKX_BACKEND"):
+        with pytest.warns(UserWarning):
+            _test()
+    else:
+        _test()
