@@ -57,7 +57,7 @@ class IgraphBasedEdgeSequence:
         self._raw = raw
 
     def select(self, **kwargs):
-        """Select a subset of vertices.
+        """Select a subset of edges.
 
         See https://python.igraph.org/en/stable/api/igraph.EdgeSeq.html#select
         """
@@ -110,17 +110,14 @@ class IgraphBasedVertexClustering:
 
 
 class NetworkxBasedVertexSequence:
-    """Proxy for a igraph.VertexSeq."""
+    """Proxy for a networkx based vertex sequence."""
 
     def __init__(self, raw) -> None:
         """Instantiate a new NetworkxBasedVertexSequence."""
         self._raw = raw
 
     def select(self, **kwargs):
-        """Select a subset of vertices.
-
-        See https://python.igraph.org/en/stable/api/igraph.VertexSeq.html#select
-        """
+        """Select a subset of vertices."""
         raise NotImplementedError()
 
     def attributes(self):
@@ -144,17 +141,14 @@ class NetworkxBasedVertexSequence:
 
 
 class NetworkxBasedEdgeSequence:
-    """Proxy for a TODO."""
+    """Proxy for a networkx based edge sequence."""
 
     def __init__(self, raw) -> None:
         """Instantiate a new NetworkxBasedEdgeSequence."""
         self._raw = raw
 
     def select(self, **kwargs):
-        """Select a subset of vertices.
-
-        See https://python.igraph.org/en/stable/api/igraph.EdgeSeq.html#select
-        """
+        """Select a subset of edges."""
         raise NotImplementedError()
 
     def __getitem__(self, edge):
@@ -170,7 +164,7 @@ class NetworkxBasedVertexClustering:
     """Wrapper class for a cluster of vertexes."""
 
     def __init__(self, raw) -> None:
-        """Instantiate a TODO."""
+        """Instantiate a NetworkxBasedVertexClustering."""
         self._raw = raw
 
     def __len__(self):
