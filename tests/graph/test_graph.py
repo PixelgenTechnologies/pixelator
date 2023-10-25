@@ -171,7 +171,6 @@ def test_build_graph_a_node_projected(
     assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
 
-@pytest.mark.test_this
 @pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_build_graph_a_node_projected_benchmark(
     benchmark, enable_backend, full_graph_edgelist: pd.DataFrame
