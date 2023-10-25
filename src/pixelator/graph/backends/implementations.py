@@ -578,7 +578,7 @@ class NetworkXGraphBackend(_GraphBackend):
         if isinstance(graph, nx.MultiGraph):
             warnings.warn(
                 "Using `use_full_bipartite=True` together with `simplify=False` "
-                "will still impliclitly simplify the graph."
+                "will still implicitly simplify the graph."
             )
             graph = nx.Graph(graph)
 
