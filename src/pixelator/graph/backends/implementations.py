@@ -525,8 +525,8 @@ class NetworkXGraphBackend(_GraphBackend):
 
     @staticmethod
     def _build_plain_graph_from_edgelist(
-        df,
-        create_using,
+        df: pl.LazyFrame,
+        create_using: Union[nx.Graph, nx.MultiGraph],
     ):
         g = nx.empty_graph(0, create_using)
         g.add_edges_from(
@@ -566,7 +566,7 @@ class NetworkXGraphBackend(_GraphBackend):
 
         return g
 
-    def _add_node_attributes(graph, a_nodes):
+    def _add_node_attributes(graph: Union[nx.Graph, nx.MultiGraph], a_nodes: set[str]):
         node_names = {node: node for node in graph.nodes()}
         pixel_type = {node: "A" if node in a_nodes else "B" for node in graph.nodes()}
         type_ = {node: node in a_nodes for node in graph.nodes()}
@@ -574,7 +574,7 @@ class NetworkXGraphBackend(_GraphBackend):
         nx.set_node_attributes(graph, pixel_type, "pixel_type")
         nx.set_node_attributes(graph, type_, "type")
 
-    def _project_on_a_nodes(graph, a_nodes):
+    def _project_on_a_nodes(graph: Union[nx.Graph, nx.MultiGraph], a_nodes: set[str]):
         if isinstance(graph, nx.MultiGraph):
             warnings.warn(
                 "Using `use_full_bipartite=True` together with `simplify=False` "
@@ -584,7 +584,9 @@ class NetworkXGraphBackend(_GraphBackend):
 
         return bipartite.projected_graph(graph, a_nodes)
 
-    def _build_graph_with_marker_counts(edgelist, simplify, use_full_bipartite):
+    def _build_graph_with_marker_counts(
+        edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
+    ):
         graph = NetworkXGraphBackend._build_graph_with_node_counts_from_edgelist(
             edgelist,
             create_using=nx.Graph if simplify else nx.MultiGraph,
@@ -595,7 +597,9 @@ class NetworkXGraphBackend(_GraphBackend):
             return graph
         return NetworkXGraphBackend._project_on_a_nodes(graph, a_nodes)
 
-    def _build_plain_graph(edgelist, simplify, use_full_bipartite):
+    def _build_plain_graph(
+        edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
+    ):
         graph = NetworkXGraphBackend._build_plain_graph_from_edgelist(
             edgelist.select(["upia", "upib", "umi"]),
             create_using=nx.Graph if simplify else nx.MultiGraph,
