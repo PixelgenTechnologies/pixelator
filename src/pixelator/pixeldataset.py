@@ -709,14 +709,10 @@ class PixelDataset:
         :raises: KeyError if the provided `component_id` is not found in the edgelist
         """
         if component_id:
-            potential_component = _enforce_edgelist_types(
-                (
-                    self.edgelist_lazy.filter(pl.col("component") == component_id)
-                    .collect()
-                    .to_pandas()
-                )
+            potential_component = self.edgelist_lazy.filter(
+                pl.col("component") == component_id
             )
-            if potential_component.empty:
+            if potential_component.fetch(1).is_empty():
                 raise KeyError(f"{component_id} not found in edgelist")
             return Graph.from_edgelist(
                 potential_component,
@@ -725,7 +721,7 @@ class PixelDataset:
                 use_full_bipartite=use_full_bipartite,
             )
         return Graph.from_edgelist(
-            self.edgelist,
+            self.edgelist_lazy,
             add_marker_counts=add_node_marker_counts,
             simplify=simplify,
             use_full_bipartite=use_full_bipartite,
