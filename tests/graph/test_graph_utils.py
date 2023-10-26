@@ -4,18 +4,16 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import random
 
-import numpy as np
 import pandas as pd
 import pytest
-from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
-from pixelator.graph import (
-    Graph,
+from pixelator.graph.utils import (
     components_metrics,
     create_node_markers_counts,
     edgelist_metrics,
     update_edgelist_membership,
 )
+from pixelator.graph import Graph
 
 
 def add_random_names_to_vertexes(graph: Graph) -> None:
@@ -63,131 +61,33 @@ def random_sequence(size: int) -> str:
     return "".join(random.choices("CGTA", k=size))
 
 
-def test_build_graph_full_bipartite(full_graph_edgelist: pd.DataFrame):
-    """Build full-bipartite graph."""
-    graph = Graph.from_edgelist(
-        edgelist=full_graph_edgelist,
-        add_marker_counts=True,
-        simplify=True,
-        use_full_bipartite=True,
-    )
-    assert graph.vcount() == 50 + 50
-    assert graph.ecount() == 50 * 50
-    assert "markers" in graph.vs.attributes()
-    assert sorted(list(graph.vs[0]["markers"].keys())) == ["A", "B"]
-    assert graph.vs.attributes() == ["name", "markers", "type", "pixel_type"]
-
-
-def test_build_graph_a_node_projected(full_graph_edgelist: pd.DataFrame):
-    """Build an A-node projected graph."""
-    graph = Graph.from_edgelist(
-        edgelist=full_graph_edgelist,
-        add_marker_counts=True,
-        simplify=True,
-        use_full_bipartite=False,
-    )
-    assert graph.vcount() == 50
-    assert graph.ecount() == ((50 * 50) / 2) - (50 / 2)
-    assert "markers" in graph.vs.attributes()
-    assert sorted(list(graph.vs[0]["markers"].keys())) == ["A", "B"]
-    assert graph.vs.attributes() == ["name", "markers", "type", "pixel_type"]
-
-
-def test_layout_coordinates_all_pixels(full_graph_edgelist: pd.DataFrame):
-    graph = Graph.from_edgelist(
-        edgelist=full_graph_edgelist,
-        add_marker_counts=True,
-        simplify=True,
-        use_full_bipartite=True,
-    )
-    result = graph.layout_coordinates(only_keep_a_pixels=False)
-    assert result.shape == (100, 4)
-    assert set(result.columns) == {"x", "y", "A", "B"}
-
-
-def test_layout_coordinates_3d_layout(full_graph_edgelist: pd.DataFrame):
-    graph = Graph.from_edgelist(
-        edgelist=full_graph_edgelist,
-        add_marker_counts=True,
-        simplify=True,
-        use_full_bipartite=True,
-    )
-    result = graph.layout_coordinates(
-        layout_algorithm="fruchterman_reingold_3d", only_keep_a_pixels=False
-    )
-    assert set(result.columns) == {
-        "x",
-        "y",
-        "z",
-        "x_norm",
-        "y_norm",
-        "z_norm",
-        "A",
-        "B",
-    }
-    assert result.shape == (100, 8)
-
-
-def test_layout_coordinates_only_a_pixels(full_graph_edgelist: pd.DataFrame):
-    graph = Graph.from_edgelist(
-        edgelist=full_graph_edgelist,
-        add_marker_counts=True,
-        simplify=True,
-        use_full_bipartite=True,
-    )
-    result = graph.layout_coordinates(only_keep_a_pixels=True)
-    assert result.shape == (50, 4)
-    assert set(result.columns) == {"x", "y", "A", "B"}
-
-
-def test_layout_coordinates_3d_layout_only_a_pixels(full_graph_edgelist: pd.DataFrame):
-    graph = Graph.from_edgelist(
-        edgelist=full_graph_edgelist,
-        add_marker_counts=True,
-        simplify=True,
-        use_full_bipartite=True,
-    )
-    result = graph.layout_coordinates(
-        layout_algorithm="fruchterman_reingold_3d", only_keep_a_pixels=True
-    )
-    assert set(result.columns) == {
-        "x",
-        "y",
-        "z",
-        "x_norm",
-        "y_norm",
-        "z_norm",
-        "A",
-        "B",
-    }
-    assert result.shape == (50, 8)
-
-
 def test_components_metrics(full_graph_edgelist: pd.DataFrame):
     """Test generating component metrics."""
     # test component metrics
     metrics = components_metrics(edgelist=full_graph_edgelist)
-    assert_array_equal(
-        metrics.to_numpy(),
-        np.array([[100, 2500, 2, 50, 50, 1, 2500, 1, 1, 50, 50, 50, 50, 1]]),
-    )
-    assert sorted(metrics.columns) == sorted(
-        [
-            "vertices",
-            "edges",
-            "antibodies",
-            "upia",
-            "upib",
-            "umi",
-            "reads",
-            "mean_reads",
-            "median_reads",
-            "mean_upia_degree",
-            "median_upia_degree",
-            "mean_umi_per_upia",
-            "median_umi_per_upia",
-            "upia_per_upib",
-        ]
+    assert_frame_equal(
+        metrics,
+        pd.DataFrame.from_records(
+            [
+                {
+                    "vertices": 100,
+                    "edges": 2500,
+                    "antibodies": 2,
+                    "upia": 50,
+                    "upib": 50,
+                    "umi": 1860,
+                    "reads": 2500,
+                    "mean_reads": 1.0,
+                    "median_reads": 1.0,
+                    "mean_upia_degree": 50.0,
+                    "median_upia_degree": 50.0,
+                    "mean_umi_per_upia": 50.0,
+                    "median_umi_per_upia": 50.0,
+                    "upia_per_upib": 1.0,
+                }
+            ],
+            index=pd.Index(["PXLCMP0000000"], name="component"),
+        ),
     )
 
 
@@ -387,7 +287,7 @@ def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
         "total_upia": 50,
         "total_upib": 50,
         "mean_count": 1.0,
-        "total_umi": 1,
+        "total_umi": 1860,
         "total_upi": 100,
         "frac_upib_upia": 1.0,
         "upia_degree_mean": 50.0,

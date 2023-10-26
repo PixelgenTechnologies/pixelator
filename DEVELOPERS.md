@@ -217,7 +217,7 @@ def extend_config(config: "Config"):
 myplugin = "myplugin:extend_config"
 ```
 
-## Pixelator integration test
+## Pixelator integration tests
 
 Some infrastructure is defined in `src/pixelator/test_utils` to run a pipeline of all commands using pytest.
 
@@ -234,3 +234,8 @@ e.g.:
 panel: "human-sc-immunology-spatial-proteomics"
 panel_file: null
 ```
+
+## Pixelator benchmark tests
+
+Pixelator uses `pytest-benchmark` to enable running micro-benchmarks. Normally when running the tests these are disabled.
+You can enabled them by running `pytest --benchmark-enable tests/`.

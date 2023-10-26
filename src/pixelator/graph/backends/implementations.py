@@ -6,12 +6,15 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import logging
-from typing import Dict, Iterable, List, Optional, Tuple
+import warnings
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import igraph
 import networkx as nx
 import numpy as np
 import pandas as pd
+import polars as pl
+from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
 from pixelator.graph.backends.protocol import _GraphBackend
@@ -33,10 +36,9 @@ class IgraphBasedVertexSequence:
         """
         return self._raw.select(**kwargs)
 
-    @property
     def attributes(self):
         """Get all attributes associated with the vertices."""
-        return self._raw.attributes
+        return set(self._raw.attributes())
 
     def __getitem__(self, vertex):
         """Get the provide vertex."""
@@ -55,7 +57,7 @@ class IgraphBasedEdgeSequence:
         self._raw = raw
 
     def select(self, **kwargs):
-        """Select a subset of vertices.
+        """Select a subset of edges.
 
         See https://python.igraph.org/en/stable/api/igraph.EdgeSeq.html#select
         """
@@ -107,6 +109,90 @@ class IgraphBasedVertexClustering:
         return [Graph(g) for g in self._raw.subgraphs()]
 
 
+class NetworkxBasedVertexSequence:
+    """Proxy for a networkx based vertex sequence."""
+
+    def __init__(self, raw) -> None:
+        """Instantiate a new NetworkxBasedVertexSequence."""
+        self._raw = raw
+
+    def select(self, **kwargs):
+        """Select a subset of vertices."""
+        raise NotImplementedError()
+
+    def attributes(self):
+        """Get all attributes associated with the vertices."""
+
+        def all_attributes():
+            for node in self._raw:
+                data = node[1]
+                for key in data.keys():
+                    yield key
+
+        return set(all_attributes())
+
+    def __getitem__(self, vertex):
+        """Get the provide vertex."""
+        return self._raw[vertex]
+
+    def __setitem__(self, attribute, attribute_vector):
+        """Set the given vertex attribute to the values in the attribute vector."""
+        raise NotImplementedError()
+
+
+class NetworkxBasedEdgeSequence:
+    """Proxy for a networkx based edge sequence."""
+
+    def __init__(self, raw) -> None:
+        """Instantiate a new NetworkxBasedEdgeSequence."""
+        self._raw = raw
+
+    def select(self, **kwargs):
+        """Select a subset of edges."""
+        raise NotImplementedError()
+
+    def __getitem__(self, edge):
+        """Get the provided edge."""
+        raise NotImplementedError()
+
+    def __setitem__(self, key, newvalue):
+        """Set the given edge attribute to the values in the attribute vector."""
+        raise NotImplementedError()
+
+
+class NetworkxBasedVertexClustering:
+    """Wrapper class for a cluster of vertexes."""
+
+    def __init__(self, raw) -> None:
+        """Instantiate a NetworkxBasedVertexClustering."""
+        self._raw = raw
+
+    def __len__(self):
+        """Get the number of clusters."""
+        raise NotImplementedError()
+
+    def __iter__(self):
+        """Provide an iterator over the clusters."""
+        raise NotImplementedError()
+
+    @property
+    def modularity(self):
+        """Get the modularity of the clusters."""
+        raise NotImplementedError()
+
+    def crossing(self):
+        """Get any crossing edges."""
+        raise NotImplementedError()
+
+    def giant(self):
+        """Get the largest component."""
+        raise NotImplementedError()
+
+    def subgraphs(self):
+        """Get subgraphs of each cluster."""
+        raise NotImplementedError()
+
+
 class IgraphGraphBackend(_GraphBackend):
     """`IGraphGraphBackend` represents a graph, using igraph."""
 
@@ -127,7 +213,7 @@ class IgraphGraphBackend(_GraphBackend):
 
     @staticmethod
     def from_edgelist(
-        edgelist: pd.DataFrame,
+        edgelist: Union[pd.DataFrame, pl.LazyFrame],
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
@@ -153,6 +239,9 @@ class IgraphGraphBackend(_GraphBackend):
         :rtype: IgraphGraphBackend
         :raises: AssertionError when the input edge list is not valid
         """
+        if isinstance(edgelist, pl.LazyFrame):
+            edgelist = edgelist.collect().to_pandas()
+
         logger.debug(
             "Creating graph from edge list with %i edges",
             edgelist.shape[0],
@@ -429,8 +518,118 @@ class NetworkXGraphBackend(_GraphBackend):
         self._raw = raw
 
     @staticmethod
+    def _build_plain_graph_from_edgelist(
+        df: pl.LazyFrame,
+        create_using: Union[nx.Graph, nx.MultiGraph],
+    ) -> Union[nx.Graph, nx.MultiGraph]:
+        g = nx.empty_graph(0, create_using)
+        g.add_edges_from(
+            (row[0], row[1])
+            for row in df.collect(streaming=True).iter_rows(
+                named=False, buffer_size=1000
+            )
+        )
+        return g
+
+    @staticmethod
+    def _build_graph_with_node_counts_from_edgelist(
+        df: pl.LazyFrame,
+        create_using: Union[nx.Graph, nx.MultiGraph],
+    ) -> Union[nx.Graph, nx.MultiGraph]:
+        unique_markers = set(df.unique("marker").collect()["marker"].to_list())
+        initial_marker_dict = {marker: 0 for marker in unique_markers}
+
+        g: nx.Graph = nx.empty_graph(0, create_using)
+
+        for row in (
+            df.select(["upia", "upib", "marker"])
+            .collect(streaming=True)
+            .iter_rows(named=False, buffer_size=1000)
+        ):
+            # We are duplicating code here, since it gives
+            # a performance boost of roughly 10% here.
+            # Which isn't that much, but will add up when
+            # we have large edge lists.
+            node_1 = row[0]
+            node_2 = row[1]
+            marker = row[2]
+
+            existing_node_1 = g.nodes.get(node_1)
+            if existing_node_1:
+                existing_node_1["markers"][marker] += 1
+            else:
+                marker_dict = initial_marker_dict.copy()
+                marker_dict[marker] += 1
+                g.add_node(node_1, markers=marker_dict)
+
+            existing_node_2 = g.nodes.get(node_2)
+            if existing_node_2:
+                existing_node_2["markers"][marker] += 1
+            else:
+                marker_dict = initial_marker_dict.copy()
+                marker_dict[marker] += 1
+                g.add_node(node_2, markers=marker_dict)
+
+            g.add_edge(node_1, node_2)
+
+        return g
+
+    @staticmethod
+    def _add_node_attributes(
+        graph: Union[nx.Graph, nx.MultiGraph], a_nodes: set[str]
+    ) -> None:
+        node_names = {node: node for node in graph.nodes()}
+        pixel_type = {node: "A" if node in a_nodes else "B" for node in graph.nodes()}
+        type_ = {node: node in a_nodes for node in graph.nodes()}
+        nx.set_node_attributes(graph, node_names, "name")
+        nx.set_node_attributes(graph, pixel_type, "pixel_type")
+        nx.set_node_attributes(graph, type_, "type")
+
+    @staticmethod
+    def _project_on_a_nodes(
+        graph: Union[nx.Graph, nx.MultiGraph], a_nodes: set[str]
+    ) -> Union[nx.Graph, nx.MultiGraph]:
+        if isinstance(graph, nx.MultiGraph):
+            warnings.warn(
+                "Using `use_full_bipartite=False` together with `simplify=False` "
+                "will still implicitly simplify the graph, since the multi-edges "
+                "will be lost upon A-node projection."
+            )
+            graph = nx.Graph(graph)
+
+        return nx_bipartite.projected_graph(graph, a_nodes)
+
+    @staticmethod
+    def _build_graph_with_marker_counts(
+        edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
+    ) -> Union[nx.Graph, nx.MultiGraph]:
+        graph = NetworkXGraphBackend._build_graph_with_node_counts_from_edgelist(
+            edgelist,
+            create_using=nx.Graph if simplify else nx.MultiGraph,
+        )
+        a_nodes = set(edgelist.select(["upia"]).unique().collect()["upia"].to_list())
+        NetworkXGraphBackend._add_node_attributes(graph, a_nodes)
+        if use_full_bipartite:
+            return graph
+        return NetworkXGraphBackend._project_on_a_nodes(graph, a_nodes)
+
+    @staticmethod
+    def _build_plain_graph(
+        edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
+    ) -> Union[nx.Graph, nx.MultiGraph]:
+        graph = NetworkXGraphBackend._build_plain_graph_from_edgelist(
+            edgelist.select(["upia", "upib", "umi"]),
+            create_using=nx.Graph if simplify else nx.MultiGraph,
+        )
+        a_nodes = set(edgelist.select(["upia"]).unique().collect()["upia"].to_list())
+        NetworkXGraphBackend._add_node_attributes(graph, a_nodes)
+        if use_full_bipartite:
+            return graph
+        return NetworkXGraphBackend._project_on_a_nodes(graph, a_nodes)
+
+    @staticmethod
     def from_edgelist(
-        edgelist: pd.DataFrame,
+        edgelist: Union[pd.DataFrame, pl.LazyFrame],
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
@@ -456,17 +655,34 @@ class NetworkXGraphBackend(_GraphBackend):
         :rtype: NetworkXGraphBackend
         :raises: AssertionError when the input edge list is not valid
         """
-        raise NotImplementedError()
+        if isinstance(edgelist, pd.DataFrame):
+            edgelist: pl.LazyFrame = pl.LazyFrame(edgelist)  # type: ignore
+
+        if add_marker_counts:
+            graph = NetworkXGraphBackend._build_graph_with_marker_counts(
+                edgelist, simplify, use_full_bipartite
+            )
+        else:
+            graph = NetworkXGraphBackend._build_plain_graph(
+                edgelist, simplify, use_full_bipartite
+            )
+
+        # TODO igraph uses integer indexing. This converts the networkx graph to using
+        # the same-ish schema. We probably evaluate if this is really necessary later,
+        # or potentially only do it on request.
+        graph = nx.convert_node_labels_to_integers(graph, ordering="sorted")
+
+        return NetworkXGraphBackend(raw=graph)
 
     @staticmethod
-    def from_raw(graph: nx.Graph) -> "NetworkXGraphBackend":
+    def from_raw(graph: nx.Graph) -> NetworkXGraphBackend:
         """Generate a Graph from an networkx.Graph object.
 
         :param graph: input igraph to use
         :return: A pixelator Graph object
         :rtype: NetworkXGraphBackend
         """
-        raise NotImplementedError()
+        return NetworkXGraphBackend(graph)
 
     @property
     def raw(self):
@@ -476,20 +692,20 @@ class NetworkXGraphBackend(_GraphBackend):
     @property
     def vs(self):
         """Get a sequence of the vertices in the Graph instance."""
-        raise NotImplementedError()
+        return NetworkxBasedVertexSequence(self.raw.nodes(data=True))
 
     @property
     def es(self):
         """A sequence of the edges in the Graph instance."""
-        raise NotImplementedError()
+        return NetworkxBasedEdgeSequence(self.raw.nodes())
 
     def vcount(self):
         """Get the total number of vertices in the Graph instance."""
-        raise NotImplementedError()
+        return self._raw.number_of_nodes()
 
     def ecount(self):
         """Get the total number of edges in the Graph instance."""
-        raise NotImplementedError()
+        return self._raw.number_of_edges()
 
     def get_adjacency_sparse(self):
         """Get the sparse adjacency matrix."""

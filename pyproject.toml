@@ -54,7 +54,7 @@ pyarrow = "^13.0.0"
 semver = "^3.0.0"
 ruamel-yaml = "^0.17.21"
 pydantic = "^1.10.7"
-polars = "^0.17.12"
+polars = "^0.19"
 importlib-resources = "^5.12.0"
 flake8-docstrings = "^1.7.0"
 louvain = "^0.8.1"
@@ -86,6 +86,7 @@ sphinx-design = ">=0.4.1"
 sphinx-inline-tabs = ">=2023.4.21"
 myst-parser = "^2.0.0"
 furo = "^2023.5.20"
+pytest-benchmark = "^4.0.0"
 
 
 [tool.poetry.scripts]
@@ -101,7 +102,7 @@ markers = [
     "integration_test: Marks a test as an integration test, which is often slow (deselect with '-m \"not integration_test\"')",
     "workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow (deselect with '-m \"not workflow_test\"')"]
 
-addopts = ["-p no:pytest-workflow", "-m not workflow_test",]
+addopts = ["-p no:pytest-workflow", "-m not workflow_test", "--benchmark-disable"]
 filterwarnings = ["ignore::DeprecationWarning",]
 
 [tool.ruff]
