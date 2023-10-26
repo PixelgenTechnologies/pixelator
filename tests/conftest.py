@@ -13,8 +13,8 @@ from pixelator.graph import update_edgelist_membership
 from pixelator.graph.utils import union as graph_union
 from pixelator.pixeldataset import (
     PixelDataset,
-    edgelist_to_anndata,
 )
+from pixelator.pixeldataset.utils import edgelist_to_anndata
 
 from tests.graph.igraph.test_tools import (
     create_fully_connected_bipartite_graph,
