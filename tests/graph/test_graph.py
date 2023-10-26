@@ -210,8 +210,7 @@ def test_build_graph_a_node_projected_without_simplifying(
         assert sorted(list(graph.vs[0]["markers"].keys())) == ["A", "B"]
         assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
-    # We want to warn when these to there is an a-node projection
-    # without simplification.
+    # We want to warn when a-node projection is requested without simplification.
     if os.environ.get("ENABLE_NETWORKX_BACKEND"):
         with pytest.warns(UserWarning):
             _test()

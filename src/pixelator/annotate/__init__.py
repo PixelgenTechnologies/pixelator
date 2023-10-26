@@ -1,6 +1,4 @@
-"""
-This module contains functions for the filtering and annotation of
-pixel data in edge list format.
+"""Functions for filtering and annotating of pixel data in edge list format.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -22,13 +20,13 @@ from pixelator.annotate.cell_calling import find_component_size_limits
 from pixelator.annotate.constants import (
     MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION,
 )
-from pixelator.graph.utils import components_metrics, edgelist_metrics
 from pixelator.config import AntibodyPanel
+from pixelator.graph.utils import components_metrics, edgelist_metrics
 from pixelator.pixeldataset import (
     SIZE_DEFINITION,
     PixelDataset,
-    edgelist_to_anndata,
 )
+from pixelator.pixeldataset.utils import edgelist_to_anndata
 from pixelator.utils import np_encoder
 
 # TODO
@@ -45,7 +43,8 @@ def filter_components_sizes(
     min_size: Optional[int],
     max_size: Optional[int],
 ) -> np.ndarray:
-    """
+    """Filter components by size.
+
     Filter the component sizes provided in `component_sizes` using the size
     cut-offs defined in `min_size` and `max_size`. The components are not
     actually filtered, the function returns a boolean numpy array which
@@ -56,6 +55,7 @@ def filter_components_sizes(
     :param max_size: the maximum size a component must have
     :returns: a boolean np.array with the filtered status (True if the component
               pass the filters)
+    :rtype: np.ndarray
     :raises: RuntimeError if all the components are filtered
     """
     n_components = len(component_sizes)
@@ -103,7 +103,8 @@ def annotate_components(
     aggregate_calling: bool,
     verbose: bool,
 ) -> None:
-    """
+    """Create a pixeldataset from a provided edgelist.
+
     This function takes as input an `edge list` dataframe (csv) that has been
     generated with `pixelator cluster`.
 
@@ -146,6 +147,7 @@ def annotate_components(
     :param aggregate_calling: activate aggregate calling
     :param verbose: run if verbose mode when true
     :returns: None
+    :rtype: None
     :raises: RuntimeError if max_size is smaller than min_size
     """
     logger.debug("Parsing edge list %s", input)
@@ -232,7 +234,8 @@ def cluster_components(
     obsmkey: Optional[Literal["denoised", "clr", "log1p", "normalized_rel"]] = "clr",
     inplace: bool = True,
 ) -> Optional[AnnData]:
-    """
+    """Cluster the components based on their antibody counts.
+
     Clusters components based on their clr transformed antibody counts using
     the k-nearest neighbors, UMAP and leiden algorithms.
 
@@ -249,6 +252,7 @@ def cluster_components(
     :param obsmkey: Key to access the values `obsm` layer of `adata`
     :param inplace: If `True` performs the operation inplace on `adata`
     :returns: a new Anndata object if `inplace` is `True` or None
+    :rtype: Optional[AnnData]
     :raises: AssertionError if `obsmkey` is missing
     """
     if obsmkey not in adata.obsm:
