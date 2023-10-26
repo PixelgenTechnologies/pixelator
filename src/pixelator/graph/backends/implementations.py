@@ -14,7 +14,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
-from networkx.algorithms import bipartite
+from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
 from pixelator.graph.backends.protocol import _GraphBackend
@@ -534,7 +534,7 @@ class NetworkXGraphBackend(_GraphBackend):
     @staticmethod
     def _build_graph_with_node_counts_from_edgelist(
         df: pl.LazyFrame,
-        create_using: bool,
+        create_using: Union[nx.Graph, nx.MultiGraph],
     ) -> Union[nx.Graph, nx.MultiGraph]:
         unique_markers = set(df.unique("marker").collect()["marker"].to_list())
         initial_marker_dict = {marker: 0 for marker in unique_markers}
@@ -596,7 +596,7 @@ class NetworkXGraphBackend(_GraphBackend):
             )
             graph = nx.Graph(graph)
 
-        return bipartite.projected_graph(graph, a_nodes)
+        return nx_bipartite.projected_graph(graph, a_nodes)
 
     @staticmethod
     def _build_graph_with_marker_counts(
@@ -654,8 +654,6 @@ class NetworkXGraphBackend(_GraphBackend):
         :rtype: NetworkXGraphBackend
         :raises: AssertionError when the input edge list is not valid
         """
-        # TODO If we could change the signature here to work with lazy frames
-        # later we could probably reduce the memory usage quite a lot
         if isinstance(edgelist, pd.DataFrame):
             edgelist: pl.LazyFrame = pl.LazyFrame(edgelist)  # type: ignore
 
@@ -668,9 +666,9 @@ class NetworkXGraphBackend(_GraphBackend):
                 edgelist, simplify, use_full_bipartite
             )
 
-        # TODO igraph uses integer indexing. This converts the igraph graph to using the
-        # same-ish schema. We probably evaluate if this is really necessary later, or
-        # potentially only do it on request.
+        # TODO igraph uses integer indexing. This converts the networkx graph to using
+        # the same-ish schema. We probably evaluate if this is really necessary later,
+        # or potentially only do it on request.
         graph = nx.convert_node_labels_to_integers(graph, ordering="sorted")
 
         return NetworkXGraphBackend(raw=graph)
