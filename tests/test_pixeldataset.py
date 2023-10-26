@@ -27,13 +27,15 @@ from pixelator.pixeldataset import (
     PixelFileCSVFormatSpec,
     PixelFileFormatSpec,
     PixelFileParquetFormatSpec,
+    read,
+)
+from pixelator.pixeldataset.aggregation import simple_aggregate
+from pixelator.pixeldataset.utils import (
     _enforce_edgelist_types,
     antibody_metrics,
     component_antibody_counts,
     edgelist_to_anndata,
-    read,
     read_anndata,
-    simple_aggregate,
     write_anndata,
 )
 from pixelator.statistics import (
