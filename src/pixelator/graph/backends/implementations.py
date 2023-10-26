@@ -540,8 +540,9 @@ class NetworkXGraphBackend(_GraphBackend):
         initial_marker_dict = {marker: 0 for marker in unique_markers}
 
         def _add_or_append_to_node(g, node, marker):
-            if g.nodes.get(node):
-                g.nodes.get(node)["markers"][marker] += 1
+            existing_node = g.nodes.get(node)
+            if existing_node:
+                existing_node["markers"][marker] += 1
             else:
                 marker_dict = initial_marker_dict.copy()
                 marker_dict[marker] += 1
