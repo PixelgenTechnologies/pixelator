@@ -96,6 +96,36 @@ jobs:
       - name: Run test suite on local python version
         run: tox -e ${{ steps.set_tox_env.outputs.tox_env }} --current-env
 
+  test-coverage:
+    name: "Check the test coverage"
+    runs-on: ubuntu-latest
+    needs:
+      - pre_job
+    if: needs.pre_job.outputs.should_skip == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python environment
+        uses: ./.github/actions/setup-python
+        with:
+          python-version: "3.11"
+
+      - name: Create dependencies file
+        run: |
+          pip install poetry
+          poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi --with dev
+          pip install -r requirements.txt
+
+      - name: Run test suite
+        run: |
+          pytest --cov=src/
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   test-workflow:
     name: Test small workflow - ${{ matrix.case }}
     runs-on: ubuntu-latest
