@@ -591,8 +591,9 @@ class NetworkXGraphBackend(_GraphBackend):
     ) -> Union[nx.Graph, nx.MultiGraph]:
         if isinstance(graph, nx.MultiGraph):
             warnings.warn(
-                "Using `use_full_bipartite=True` together with `simplify=False` "
-                "will still implicitly simplify the graph."
+                "Using `use_full_bipartite=False` together with `simplify=False` "
+                "will still implicitly simplify the graph, since the multi-edges "
+                "will be lost upon A-node projection."
             )
             graph = nx.Graph(graph)
 
