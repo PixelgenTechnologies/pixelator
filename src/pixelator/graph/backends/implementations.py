@@ -539,15 +539,6 @@ class NetworkXGraphBackend(_GraphBackend):
         unique_markers = set(df.unique("marker").collect()["marker"].to_list())
         initial_marker_dict = {marker: 0 for marker in unique_markers}
 
-        def _add_or_append_to_node(g, node, marker):
-            existing_node = g.nodes.get(node)
-            if existing_node:
-                existing_node["markers"][marker] += 1
-            else:
-                marker_dict = initial_marker_dict.copy()
-                marker_dict[marker] += 1
-                g.add_node(node, markers=marker_dict)
-
         g: nx.Graph = nx.empty_graph(0, create_using)
 
         for row in (
@@ -555,9 +546,31 @@ class NetworkXGraphBackend(_GraphBackend):
             .collect(streaming=True)
             .iter_rows(named=False, buffer_size=1000)
         ):
-            _add_or_append_to_node(g, row[0], row[2])
-            _add_or_append_to_node(g, row[1], row[2])
-            g.add_edge(row[0], row[1])
+            # We are duplicating code here, since it gives
+            # a performance boost of roughly 10% here.
+            # Which isn't that much, but will add up when
+            # we have large edge lists.
+            node_1 = row[0]
+            node_2 = row[1]
+            marker = row[2]
+
+            existing_node_1 = g.nodes.get(node_1)
+            if existing_node_1:
+                existing_node_1["markers"][marker] += 1
+            else:
+                marker_dict = initial_marker_dict.copy()
+                marker_dict[marker] += 1
+                g.add_node(node_1, markers=marker_dict)
+
+            existing_node_2 = g.nodes.get(node_2)
+            if existing_node_2:
+                existing_node_2["markers"][marker] += 1
+            else:
+                marker_dict = initial_marker_dict.copy()
+                marker_dict[marker] += 1
+                g.add_node(node_2, markers=marker_dict)
+
+            g.add_edge(node_1, node_2)
 
         return g
 
