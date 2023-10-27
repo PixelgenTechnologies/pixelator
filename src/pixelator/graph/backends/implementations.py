@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 import warnings
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union
 
 import igraph
 import networkx as nx
@@ -17,180 +17,17 @@ import polars as pl
 from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
-from pixelator.graph.backends.protocol import _GraphBackend
+from pixelator.graph.backends.protocol import (
+    EdgeSequence,
+    VertexClustering,
+    VertexSequence,
+    _GraphBackend,
+)
+
+if TYPE_CHECKING:
+    from pixelator.graph import Graph
 
 logger = logging.getLogger(__name__)
-
-
-class IgraphBasedVertexSequence:
-    """Proxy for a igraph.VertexSeq."""
-
-    def __init__(self, raw) -> None:
-        """Instantiate a new IgraphBasedVertexSequence."""
-        self._raw = raw
-
-    def select(self, **kwargs):
-        """Select a subset of vertices.
-
-        See https://python.igraph.org/en/stable/api/igraph.VertexSeq.html#select
-        """
-        return self._raw.select(**kwargs)
-
-    def attributes(self):
-        """Get all attributes associated with the vertices."""
-        return set(self._raw.attributes())
-
-    def __getitem__(self, vertex):
-        """Get the provide vertex."""
-        return self._raw[vertex]
-
-    def __setitem__(self, attribute, attribute_vector):
-        """Set the given vertex attribute to the values in the attribute vector."""
-        self._raw[attribute] = attribute_vector
-
-
-class IgraphBasedEdgeSequence:
-    """Proxy for a igraph.EdgeSeq."""
-
-    def __init__(self, raw) -> None:
-        """Instantiate a new IgraphBasedEdgeSequence."""
-        self._raw = raw
-
-    def select(self, **kwargs):
-        """Select a subset of edges.
-
-        See https://python.igraph.org/en/stable/api/igraph.EdgeSeq.html#select
-        """
-        return self._raw.select(**kwargs)
-
-    def __getitem__(self, edge):
-        """Get the provided edge."""
-        return self._raw[edge]
-
-    def __setitem__(self, key, newvalue):
-        """Set the given edge attribute to the values in the attribute vector."""
-        self._raw[key] = newvalue
-
-
-class IgraphBasedVertexClustering:
-    """Wrapper class for a cluster of vertexes."""
-
-    def __init__(self, raw) -> None:
-        """Instantiate a VertexClustering."""
-        self._raw = raw
-
-    def __len__(self):
-        """Get the number of clusters."""
-        return len(self._raw)
-
-    def __iter__(self):
-        """Provide an iterator over the clusters."""
-        for cluster in self._raw:
-            yield cluster
-
-    @property
-    def modularity(self):
-        """Get the modularity of the clusters."""
-        return self._raw.modularity
-
-    def crossing(self):
-        """Get any crossing edges."""
-        return self._raw.crossing()
-
-    def giant(self):
-        """Get the largest component."""
-        return self._raw.giant()
-
-    def subgraphs(self):
-        """Get subgraphs of each cluster."""
-        # Avoid a circular import at init time, for now...
-        from pixelator.graph import Graph
-
-        return [Graph(g) for g in self._raw.subgraphs()]
-
-
-class NetworkxBasedVertexSequence:
-    """Proxy for a networkx based vertex sequence."""
-
-    def __init__(self, raw) -> None:
-        """Instantiate a new NetworkxBasedVertexSequence."""
-        self._raw = raw
-
-    def select(self, **kwargs):
-        """Select a subset of vertices."""
-        raise NotImplementedError()
-
-    def attributes(self):
-        """Get all attributes associated with the vertices."""
-
-        def all_attributes():
-            for node in self._raw:
-                data = node[1]
-                for key in data.keys():
-                    yield key
-
-        return set(all_attributes())
-
-    def __getitem__(self, vertex):
-        """Get the provide vertex."""
-        return self._raw[vertex]
-
-    def __setitem__(self, attribute, attribute_vector):
-        """Set the given vertex attribute to the values in the attribute vector."""
-        raise NotImplementedError()
-
-
-class NetworkxBasedEdgeSequence:
-    """Proxy for a networkx based edge sequence."""
-
-    def __init__(self, raw) -> None:
-        """Instantiate a new NetworkxBasedEdgeSequence."""
-        self._raw = raw
-
-    def select(self, **kwargs):
-        """Select a subset of edges."""
-        raise NotImplementedError()
-
-    def __getitem__(self, edge):
-        """Get the provided edge."""
-        raise NotImplementedError()
-
-    def __setitem__(self, key, newvalue):
-        """Set the given edge attribute to the values in the attribute vector."""
-        raise NotImplementedError()
-
-
-class NetworkxBasedVertexClustering:
-    """Wrapper class for a cluster of vertexes."""
-
-    def __init__(self, raw) -> None:
-        """Instantiate a NetworkxBasedVertexClustering."""
-        self._raw = raw
-
-    def __len__(self):
-        """Get the number of clusters."""
-        raise NotImplementedError()
-
-    def __iter__(self):
-        """Provide an iterator over the clusters."""
-        raise NotImplementedError()
-
-    @property
-    def modularity(self):
-        """Get the modularity of the clusters."""
-        raise NotImplementedError()
-
-    def crossing(self):
-        """Get any crossing edges."""
-        raise NotImplementedError()
-
-    def giant(self):
-        """Get the largest component."""
-        raise NotImplementedError()
-
-    def subgraphs(self):
-        """Get subgraphs of each cluster."""
-        raise NotImplementedError()
 
 
 class IgraphGraphBackend(_GraphBackend):
@@ -713,7 +550,9 @@ class NetworkXGraphBackend(_GraphBackend):
 
     def connected_components(self):
         """Get the connected components in the Graph instance."""
-        raise NotImplementedError()
+        return NetworkxBasedVertexClustering(
+            self._raw, nx.connected_components(self._raw)
+        )
 
     def community_leiden(self, **kwargs):
         """Run community detection using the Leiden algorithm."""
@@ -787,3 +626,197 @@ class NetworkXGraphBackend(_GraphBackend):
                             of different length
         """
         raise NotImplementedError()
+
+
+class IgraphBasedVertexSequence(VertexSequence):
+    """Proxy for a igraph.VertexSeq."""
+
+    def __init__(self, raw) -> None:
+        """Instantiate a new IgraphBasedVertexSequence."""
+        self._raw = raw
+
+    def select(self, **kwargs):
+        """Select a subset of vertices.
+
+        See https://python.igraph.org/en/stable/api/igraph.VertexSeq.html#select
+        """
+        return self._raw.select(**kwargs)
+
+    def __len__(self) -> int:
+        """Get the number of vertexes."""
+        return len(self._raw)
+
+    def attributes(self):
+        """Get all attributes associated with the vertices."""
+        return set(self._raw.attributes())
+
+    def __getitem__(self, vertex):
+        """Get the provide vertex."""
+        return self._raw[vertex]
+
+    def __setitem__(self, attribute, attribute_vector):
+        """Set the given vertex attribute to the values in the attribute vector."""
+        self._raw[attribute] = attribute_vector
+
+
+class IgraphBasedEdgeSequence(EdgeSequence):
+    """Proxy for a igraph.EdgeSeq."""
+
+    def __init__(self, raw) -> None:
+        """Instantiate a new IgraphBasedEdgeSequence."""
+        self._raw = raw
+
+    def select(self, **kwargs):
+        """Select a subset of edges.
+
+        See https://python.igraph.org/en/stable/api/igraph.EdgeSeq.html#select
+        """
+        return self._raw.select(**kwargs)
+
+    def __getitem__(self, edge):
+        """Get the provided edge."""
+        return self._raw[edge]
+
+    def __setitem__(self, key, newvalue):
+        """Set the given edge attribute to the values in the attribute vector."""
+        self._raw[key] = newvalue
+
+
+class IgraphBasedVertexClustering(VertexClustering):
+    """Wrapper class for a cluster of vertexes."""
+
+    def __init__(self, raw) -> None:
+        """Instantiate a VertexClustering."""
+        self._raw = raw
+
+    def __len__(self) -> int:
+        """Get the number of clusters."""
+        return len(self._raw)
+
+    def __iter__(self):
+        """Provide an iterator over the clusters."""
+        for cluster in self._raw:
+            yield cluster
+
+    @property
+    def modularity(self):
+        """Get the modularity of the clusters."""
+        return self._raw.modularity
+
+    def crossing(self):
+        """Get any crossing edges."""
+        return self._raw.crossing()
+
+    def giant(self):
+        """Get the largest component."""
+        # TODO Avoid a circular import at init time, for now...
+        from pixelator.graph import Graph
+
+        return Graph(IgraphGraphBackend(self._raw.giant()))
+
+    def subgraphs(self):
+        """Get subgraphs of each cluster."""
+        # TODO Avoid a circular import at init time, for now...
+        from pixelator.graph import Graph
+
+        return [Graph(IgraphGraphBackend(g)) for g in self._raw.subgraphs()]
+
+
+class NetworkxBasedVertexSequence(VertexSequence):
+    """Proxy for a networkx based vertex sequence."""
+
+    def __init__(self, raw) -> None:
+        """Instantiate a new NetworkxBasedVertexSequence."""
+        self._raw = raw
+
+    def __len__(self) -> int:
+        """Get the number of vertexes."""
+        return len(self._raw)
+
+    def select(self, **kwargs):
+        """Select a subset of vertices."""
+        raise NotImplementedError()
+
+    def attributes(self):
+        """Get all attributes associated with the vertices."""
+
+        def all_attributes():
+            for node in self._raw:
+                data = node[1]
+                for key in data.keys():
+                    yield key
+
+        return set(all_attributes())
+
+    def __getitem__(self, vertex):
+        """Get the provide vertex."""
+        return self._raw[vertex]
+
+    def __setitem__(self, attribute, attribute_vector):
+        """Set the given vertex attribute to the values in the attribute vector."""
+        raise NotImplementedError()
+
+
+class NetworkxBasedEdgeSequence(EdgeSequence):
+    """Proxy for a networkx based edge sequence."""
+
+    def __init__(self, raw) -> None:
+        """Instantiate a new NetworkxBasedEdgeSequence."""
+        self._raw = raw
+
+    def select(self, **kwargs):
+        """Select a subset of edges."""
+        raise NotImplementedError()
+
+    def __getitem__(self, edge):
+        """Get the provided edge."""
+        raise NotImplementedError()
+
+    def __setitem__(self, key, newvalue):
+        """Set the given edge attribute to the values in the attribute vector."""
+        raise NotImplementedError()
+
+
+class NetworkxBasedVertexClustering(VertexClustering):
+    """Wrapper class for a cluster of vertexes."""
+
+    def __init__(self, graph: Union[nx.Graph, nx.MultiGraph], clustering) -> None:
+        """Instantiate a NetworkxBasedVertexClustering."""
+        self._graph = graph
+        self._clustering = list(clustering)
+
+    def __len__(self) -> int:
+        """Get the number of clusters."""
+        return len(self._clustering)
+
+    def __iter__(self):
+        """Provide an iterator over the clusters."""
+        for cluster in self._clustering:
+            yield cluster
+
+    @property
+    def modularity(self):
+        """Get the modularity of the clusters."""
+        raise NotImplementedError()
+
+    def crossing(self):
+        """Get any crossing edges."""
+        raise NotImplementedError()
+
+    def giant(self) -> Graph:
+        """Get the largest component."""
+        from pixelator.graph import Graph
+
+        return Graph(
+            NetworkXGraphBackend(
+                self._graph.subgraph(max(self._clustering, key=len).copy())
+            )
+        )
+
+    def subgraphs(self) -> Iterable[Graph]:
+        """Get subgraphs of each cluster."""
+        # TODO Add tests for this!
+        return [
+            Graph(NetworkXGraphBackend(self._graph.subgraph(cluster).copy()))
+            for cluster in self._clustering
+        ]
