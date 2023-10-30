@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 import warnings
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union, Any, Set
 
 import igraph
 import networkx as nx
@@ -23,6 +23,7 @@ from pixelator.graph.backends.protocol import (
     VertexSequence,
     _GraphBackend,
 )
+
 
 if TYPE_CHECKING:
     from pixelator.graph import Graph
@@ -183,11 +184,11 @@ class IgraphGraphBackend(_GraphBackend):
         """Get the sparse adjacency matrix."""
         return self._raw.get_adjacency_sparse()
 
-    def connected_components(self):
+    def connected_components(self) -> VertexClustering:
         """Get the connected components in the Graph instance."""
         return IgraphBasedVertexClustering(self._raw.connected_components())
 
-    def community_leiden(self, **kwargs):
+    def community_leiden(self, **kwargs) -> VertexClustering:
         """Run community detection using the Leiden algorithm."""
         return IgraphBasedVertexClustering(self._raw.community_leiden(**kwargs))
 
@@ -544,17 +545,17 @@ class NetworkXGraphBackend(_GraphBackend):
         """Get the total number of edges in the Graph instance."""
         return self._raw.number_of_edges()
 
-    def get_adjacency_sparse(self):
+    def get_adjacency_sparse(self) -> csr_matrix:
         """Get the sparse adjacency matrix."""
         raise NotImplementedError()
 
-    def connected_components(self):
+    def connected_components(self) -> VertexClustering:
         """Get the connected components in the Graph instance."""
         return NetworkxBasedVertexClustering(
             self._raw, nx.connected_components(self._raw)
         )
 
-    def community_leiden(self, **kwargs):
+    def community_leiden(self, **kwargs) -> VertexClustering:
         """Run community detection using the Leiden algorithm."""
         raise NotImplementedError()
 
@@ -646,11 +647,11 @@ class IgraphBasedVertexSequence(VertexSequence):
         """Get the number of vertexes."""
         return len(self._raw)
 
-    def attributes(self):
+    def attributes(self) -> Set[str]:
         """Get all attributes associated with the vertices."""
         return set(self._raw.attributes())
 
-    def __getitem__(self, vertex):
+    def __getitem__(self, vertex: str) -> VertexSequence:
         """Get the provide vertex."""
         return self._raw[vertex]
 
@@ -666,18 +667,18 @@ class IgraphBasedEdgeSequence(EdgeSequence):
         """Instantiate a new IgraphBasedEdgeSequence."""
         self._raw = raw
 
-    def select(self, **kwargs):
+    def select(self, **kwargs) -> EdgeSequence:
         """Select a subset of edges.
 
         See https://python.igraph.org/en/stable/api/igraph.EdgeSeq.html#select
         """
         return self._raw.select(**kwargs)
 
-    def __getitem__(self, edge):
-        """Get the provided edge."""
-        return self._raw[edge]
+    def __getitem__(self, attr: str) -> Iterable[Any]:
+        """Get the requested attribute of the provided edge."""
+        return self._raw[attr]
 
-    def __setitem__(self, key, newvalue):
+    def __setitem__(self, key: str, newvalue: Iterable[Any]):
         """Set the given edge attribute to the values in the attribute vector."""
         self._raw[key] = newvalue
 
@@ -693,30 +694,28 @@ class IgraphBasedVertexClustering(VertexClustering):
         """Get the number of clusters."""
         return len(self._raw)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[VertexSequence]:
         """Provide an iterator over the clusters."""
         for cluster in self._raw:
-            yield cluster
+            yield IgraphBasedVertexSequence(cluster)
 
     @property
-    def modularity(self):
+    def modularity(self) -> float:
         """Get the modularity of the clusters."""
         return self._raw.modularity
 
-    def crossing(self):
+    def crossing(self) -> EdgeSequence:
         """Get any crossing edges."""
         return self._raw.crossing()
 
-    def giant(self):
+    def giant(self) -> Graph:
         """Get the largest component."""
-        # TODO Avoid a circular import at init time, for now...
         from pixelator.graph import Graph
 
         return Graph(IgraphGraphBackend(self._raw.giant()))
 
-    def subgraphs(self):
+    def subgraphs(self) -> Iterable[Graph]:
         """Get subgraphs of each cluster."""
-        # TODO Avoid a circular import at init time, for now...
         from pixelator.graph import Graph
 
         return [Graph(IgraphGraphBackend(g)) for g in self._raw.subgraphs()]
@@ -737,7 +736,7 @@ class NetworkxBasedVertexSequence(VertexSequence):
         """Select a subset of vertices."""
         raise NotImplementedError()
 
-    def attributes(self):
+    def attributes(self) -> Set[str]:
         """Get all attributes associated with the vertices."""
 
         def all_attributes():
@@ -748,7 +747,7 @@ class NetworkxBasedVertexSequence(VertexSequence):
 
         return set(all_attributes())
 
-    def __getitem__(self, vertex):
+    def __getitem__(self, vertex) -> VertexSequence:
         """Get the provide vertex."""
         return self._raw[vertex]
 
@@ -764,15 +763,15 @@ class NetworkxBasedEdgeSequence(EdgeSequence):
         """Instantiate a new NetworkxBasedEdgeSequence."""
         self._raw = raw
 
-    def select(self, **kwargs):
+    def select(self, **kwargs) -> EdgeSequence:
         """Select a subset of edges."""
         raise NotImplementedError()
 
-    def __getitem__(self, edge):
+    def __getitem__(self, edge) -> Iterable[Any]:
         """Get the provided edge."""
         raise NotImplementedError()
 
-    def __setitem__(self, key, newvalue):
+    def __setitem__(self, key: str, newvalue: Iterable[Any]):
         """Set the given edge attribute to the values in the attribute vector."""
         raise NotImplementedError()
 
@@ -789,17 +788,17 @@ class NetworkxBasedVertexClustering(VertexClustering):
         """Get the number of clusters."""
         return len(self._clustering)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[VertexSequence]:
         """Provide an iterator over the clusters."""
         for cluster in self._clustering:
-            yield cluster
+            yield NetworkxBasedVertexSequence(cluster)
 
     @property
-    def modularity(self):
+    def modularity(self) -> float:
         """Get the modularity of the clusters."""
         raise NotImplementedError()
 
-    def crossing(self):
+    def crossing(self) -> EdgeSequence:
         """Get any crossing edges."""
         raise NotImplementedError()
 
@@ -815,7 +814,8 @@ class NetworkxBasedVertexClustering(VertexClustering):
 
     def subgraphs(self) -> Iterable[Graph]:
         """Get subgraphs of each cluster."""
-        # TODO Add tests for this!
+        from pixelator.graph import Graph
+
         return [
             Graph(NetworkXGraphBackend(self._graph.subgraph(cluster).copy()))
             for cluster in self._clustering

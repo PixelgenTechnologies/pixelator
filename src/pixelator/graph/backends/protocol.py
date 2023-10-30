@@ -5,12 +5,15 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Protocol, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Protocol, Set, Tuple, Union
 
 import networkx as nx
 import pandas as pd
 import polars as pl
 from scipy.sparse import csr_matrix
+
+if TYPE_CHECKING:
+    from pixelator.graph import Graph
 
 
 class _GraphBackend(Protocol):
@@ -167,7 +170,6 @@ class VertexSequence(Protocol):
     def select(self, **kwargs):
         """Select a subset of vertices.
 
-        TODO Rewrite this
         See https://python.igraph.org/en/stable/api/igraph.VertexSeq.html#select
         """
         # TODO Reimplement this with a more specific interface for
@@ -182,12 +184,11 @@ class VertexSequence(Protocol):
         """Get all attributes associated with the vertices."""
         ...
 
-    def __getitem__(self, vertex):
-        """Get the provide vertex."""
-        # TODO Figure out this type signature!
+    def __getitem__(self, attr: str) -> VertexSequence:
+        """Get the requested attribute of the vertices."""
         ...
 
-    def __setitem__(self, attribute, attribute_vector):
+    def __setitem__(self, attribute: str, attribute_vector: Iterable[Any]):
         """Set the given vertex attribute to the values in the attribute vector."""
         # TODO Better docs here!
         ...
@@ -196,10 +197,8 @@ class VertexSequence(Protocol):
 class EdgeSequence(Protocol):
     """A sequence of edges from a graph."""
 
-    def select(self, **kwargs):
+    def select(self, **kwargs) -> EdgeSequence:
         """Select a subset of edges.
-
-        TODO Rewrite docs!
 
         See https://python.igraph.org/en/stable/api/igraph.EdgeSeq.html#select
         """
@@ -207,27 +206,24 @@ class EdgeSequence(Protocol):
         # interface for the things we actually use
         ...
 
-    def __getitem__(self, edge):
-        """Get the provided edge."""
-        # TODO Figure out this type signature!
+    def __getitem__(self, attr: str) -> Iterable[Any]:
+        """Get the requested attribute of the edges."""
         ...
 
-    def __setitem__(self, key, newvalue):
+    def __setitem__(self, key: str, newvalue: Iterable[Any]):
         """Set the given edge attribute to the values in the attribute vector."""
-        # TODO Figure out this type signature!
-        self._raw[key] = newvalue
+        ...
 
 
 class VertexClustering(Protocol):
     """A cluster of vertexes, such as a community in a graph."""
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Get the number of clusters."""
         ...
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[VertexSequence]:
         """Provide an iterator over the clusters."""
-        # TODO Figure out type signature
         ...
 
     @property
@@ -239,12 +235,10 @@ class VertexClustering(Protocol):
         """Get any crossing edges."""
         ...
 
-    def giant(self):
+    def giant(self) -> Graph:
         """Get the largest component."""
-        # TODO Figure out type signature
         ...
 
-    def subgraphs(self):
+    def subgraphs(self) -> Iterable[Graph]:
         """Get subgraphs of each cluster."""
-        # TODO Figure out type signature
         ...
