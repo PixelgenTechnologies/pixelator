@@ -96,7 +96,6 @@ def test_build_graph_full_bipartite_do_not_add_marker_counts(
     assert graph.vs.attributes() == {"name", "type", "pixel_type"}
 
 
-@pytest.mark.test_this
 @pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_build_graph_full_bipartite_do_not_add_marker_counts_benchmark(
     benchmark,
@@ -216,3 +215,39 @@ def test_build_graph_a_node_projected_without_simplifying(
             _test()
     else:
         _test()
+
+
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_connected_components(enable_backend, edgelist):
+    graph = Graph.from_edgelist(
+        edgelist, add_marker_counts=False, simplify=False, use_full_bipartite=True
+    )
+    result = graph.connected_components()
+    assert len(result) == 5
+    vertex_cluster_sizes = {len(c) for c in result}
+    assert vertex_cluster_sizes == {1996, 1995, 1998, 1996, 1995}
+    assert len(result.giant().vs) == 1998
+    subgraphs = list(result.subgraphs())
+    graph_sizes = {len(g.vs) for g in subgraphs}
+    assert len(subgraphs) == 5
+    assert graph_sizes == {1996, 1995, 1998, 1996, 1995}
+
+
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_connected_components_benchmark(benchmark, enable_backend, edgelist):
+    graph = benchmark(
+        Graph.from_edgelist,
+        edgelist,
+        add_marker_counts=False,
+        simplify=False,
+        use_full_bipartite=True,
+    )
+    result = graph.connected_components()
+    assert len(result) == 5
+    vertex_cluster_sizes = {len(c) for c in result}
+    assert vertex_cluster_sizes == {1996, 1995, 1998, 1996, 1995}
+    assert len(result.giant().vs) == 1998
+    subgraphs = list(result.subgraphs())
+    graph_sizes = {len(g.vs) for g in subgraphs}
+    assert len(subgraphs) == 5
+    assert graph_sizes == {1996, 1995, 1998, 1996, 1995}

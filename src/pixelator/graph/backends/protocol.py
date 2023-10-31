@@ -5,12 +5,15 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Protocol, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Protocol, Set, Tuple, Union
 
 import networkx as nx
-import polars as pl
 import pandas as pd
+import polars as pl
 from scipy.sparse import csr_matrix
+
+if TYPE_CHECKING:
+    from pixelator.graph import Graph
 
 
 class _GraphBackend(Protocol):
@@ -158,4 +161,84 @@ class _GraphBackend(Protocol):
         :raises IndexError: if the number of graph vertices and list of names are
                             of different length
         """
+        ...
+
+
+class VertexSequence(Protocol):
+    """A sequence of vertexes from a graph."""
+
+    def select(self, **kwargs):
+        """Select a subset of vertices.
+
+        See https://python.igraph.org/en/stable/api/igraph.VertexSeq.html#select
+        """
+        # TODO Reimplement this with a more specific interface for
+        # the things we actually use
+        ...
+
+    def __len__(self) -> int:
+        """Get the number of vertexes."""
+        ...
+
+    def attributes(self) -> Set[str]:
+        """Get all attributes associated with the vertices."""
+        ...
+
+    def __getitem__(self, attr: str) -> VertexSequence:
+        """Get the requested attribute of the vertices."""
+        ...
+
+    def __setitem__(self, attribute: str, attribute_vector: Iterable[Any]):
+        """Set the given vertex attribute to the values in the attribute vector."""
+        # TODO Better docs here!
+        ...
+
+
+class EdgeSequence(Protocol):
+    """A sequence of edges from a graph."""
+
+    def select(self, **kwargs) -> EdgeSequence:
+        """Select a subset of edges.
+
+        See https://python.igraph.org/en/stable/api/igraph.EdgeSeq.html#select
+        """
+        # TODO Reimplement this with a more specific
+        # interface for the things we actually use
+        ...
+
+    def __getitem__(self, attr: str) -> Iterable[Any]:
+        """Get the requested attribute of the edges."""
+        ...
+
+    def __setitem__(self, key: str, newvalue: Iterable[Any]):
+        """Set the given edge attribute to the values in the attribute vector."""
+        ...
+
+
+class VertexClustering(Protocol):
+    """A cluster of vertexes, such as a community in a graph."""
+
+    def __len__(self) -> int:
+        """Get the number of clusters."""
+        ...
+
+    def __iter__(self) -> Iterable[VertexSequence]:
+        """Provide an iterator over the clusters."""
+        ...
+
+    @property
+    def modularity(self) -> float:
+        """Get the modularity of the clusters."""
+        ...
+
+    def crossing(self) -> EdgeSequence:
+        """Get any crossing edges."""
+        ...
+
+    def giant(self) -> Graph:
+        """Get the largest component."""
+        ...
+
+    def subgraphs(self) -> Iterable[Graph]:
+        """Get subgraphs of each cluster."""
         ...
