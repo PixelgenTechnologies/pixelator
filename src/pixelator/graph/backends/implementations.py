@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 import warnings
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union, Any, Set
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import igraph
 import networkx as nx
@@ -23,7 +23,6 @@ from pixelator.graph.backends.protocol import (
     VertexSequence,
     _GraphBackend,
 )
-
 
 if TYPE_CHECKING:
     from pixelator.graph import Graph
