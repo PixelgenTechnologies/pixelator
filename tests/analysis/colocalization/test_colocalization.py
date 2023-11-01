@@ -6,8 +6,8 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 import numpy as np
 import pandas as pd
+import pytest
 from pandas.testing import assert_frame_equal
-
 from pixelator.analysis.colocalization import (
     colocalization_from_component_edgelist,
     colocalization_scores,
@@ -112,3 +112,40 @@ def test_colocalization_scores_log1p(full_graph_edgelist: pd.DataFrame):
     )
 
     assert_frame_equal(result, expected)
+
+
+def test_colocalization_scores_should_not_fail_when_one_component_has_single_node(
+    full_graph_edgelist,
+):
+    edgelist = full_graph_edgelist.copy()
+    artificial_single_node_component = edgelist["component"].astype("str")
+    artificial_single_node_component.iloc[0] = "PXLCMP0000001"
+    edgelist["component"] = pd.Categorical(artificial_single_node_component)
+    colocalization_scores(
+        edgelist=edgelist,
+        use_full_bipartite=False,
+        transformation="log1p",
+        neighbourhood_size=1,
+        n_permutations=50,
+        min_region_count=0,
+        random_seed=1477,
+    )
+
+
+def test_colocalization_scores_should_warn_when_no_data(full_graph_edgelist, caplog):
+    with pytest.raises(ValueError):
+        edgelist = full_graph_edgelist.copy()
+        edgelist = edgelist.iloc[[0]]
+        colocalization_scores(
+            edgelist=edgelist,
+            use_full_bipartite=False,
+            transformation="log1p",
+            neighbourhood_size=1,
+            n_permutations=50,
+            min_region_count=0,
+            random_seed=1477,
+        )
+    assert (
+        "No data was found to compute colocalization, probably because "
+        "all components had less than a single node."
+    ) in caplog.text
