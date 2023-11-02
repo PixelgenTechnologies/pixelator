@@ -146,6 +146,6 @@ def test_colocalization_scores_should_warn_when_no_data(full_graph_edgelist, cap
             random_seed=1477,
         )
     assert (
-        "No data was found to compute colocalization, probably because "
-        "all components had less than a single node."
+        "No data was found to compute colocalization, probably "
+        "because all components only had a single node."
     ) in caplog.text
