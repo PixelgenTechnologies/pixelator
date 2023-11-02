@@ -218,7 +218,10 @@ def colocalization_scores(
     :param random_seed: Set a random seed for the permutation function
     :returns: a pd.DataFrame of scores
     :rtype: pd.DataFrame
-    :raises: AssertionError when the input is not valid
+    :raises AssertionError: when the input is not valid
+    :raises ValueError: when no components were found to be valid for
+                        computing colocalization.
+
     """
     if "component" not in edgelist.columns:
         raise AssertionError("edge list is missing the membership column")
@@ -244,6 +247,12 @@ def colocalization_scores(
                 simplify=False,
                 use_full_bipartite=use_full_bipartite,
             )
+            if len(graph.vs) < 2:
+                logger.warning(
+                    "Component %s only had a single node. It will be skipped.",
+                    component_id,
+                )
+                continue
 
             yield colocalization_from_component_graph(
                 graph=graph,
@@ -256,7 +265,15 @@ def colocalization_scores(
             )
 
     # create dataframe with all the scores
-    scores = pd.concat(data(), axis=0)
+    try:
+        scores = pd.concat(data(), axis=0)
+    except ValueError as error:
+        logger.error(
+            "No data was found to compute colocalization, probably "
+            "because all components only had a single node."
+        )
+        raise error
+
     p_value_columns = filter(lambda x: "_p" in x, scores.columns)
     for p_value_col in p_value_columns:
         scores.insert(
