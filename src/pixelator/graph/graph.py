@@ -5,7 +5,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 import logging
 import os
-from typing import Dict, Iterable, List, Tuple, Union
+from typing import Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 import igraph
 import networkx as nx
@@ -17,7 +17,7 @@ from pixelator.graph.backends.implementations import (
     IgraphGraphBackend,
     NetworkXGraphBackend,
 )
-from pixelator.graph.backends.protocol import _GraphBackend
+from pixelator.graph.backends.protocol import VertexClustering, _GraphBackend
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,8 @@ class Graph:
         :param backend: The backend used to represent the graph
         """
         self._backend = backend
+        self._connected_components_needs_recompute = False
+        self._connected_components: Optional[VertexClustering] = None
 
     @staticmethod
     def from_edgelist(
@@ -66,6 +68,7 @@ class Graph:
         :raises: AssertionError when the input edge list is not valid
         """
         if os.environ.get("ENABLE_NETWORKX_BACKEND", False):
+            logger.debug("Create a graph using networkx as the graph backend")
             return Graph(
                 backend=NetworkXGraphBackend.from_edgelist(
                     edgelist=edgelist,
@@ -75,6 +78,7 @@ class Graph:
                 )
             )
 
+        logger.debug("Create a graph using igraph as the graph backend")
         return Graph(
             backend=IgraphGraphBackend.from_edgelist(
                 edgelist=edgelist,
@@ -122,13 +126,45 @@ class Graph:
         """Get the sparse adjacency matrix."""
         return self._backend.get_adjacency_sparse()
 
-    def connected_components(self):
+    def connected_components(self) -> VertexClustering:
         """Get the connected components in the Graph instance."""
-        return self._backend.connected_components()
+        # Recompute if there has been changes, otherwise pick the
+        # cached value
+        if not self._connected_components:
+            self._connected_components = self._backend.connected_components()
+            self._connected_components_needs_recompute = False
+        if self._connected_components and self._connected_components_needs_recompute:
+            self._connected_components = self._backend.connected_components()
+            self._connected_components_needs_recompute = False
 
-    def community_leiden(self, **kwargs):
-        """Run community detection using the Leiden algorithm."""
-        return self._backend.community_leiden(**kwargs)
+        return self._connected_components  # type: ignore
+
+    def community_leiden(
+        self,
+        objective_function: Literal["modularity", "cpm"] = "modularity",
+        n_iterations: int = 2,
+        beta: float = 0.01,
+        **kwargs
+    ) -> VertexClustering:
+        """Run community detection using the Leiden algorithm.
+
+        Run community detection on the graph, using the Leiden algorithm.
+        As an example we use this to remove edges that jump between cells
+        due to chimeric PCR products.
+
+        :param objective_function: modularity or cpm (for Constant Potts Model (CPM))
+        :param n_iterations: number of iterations to use in the Leiden algorithm
+        :param beta: controls the randomness of the refinement step of the
+                     Leiden algorithm
+        :param **kwargs: will be passed to the underlying Leiden implementation
+        :rtype: VertexClustering
+        """
+        return self._backend.community_leiden(
+            objective_function=objective_function,
+            n_iterations=n_iterations,
+            beta=beta,
+            **kwargs
+        )
 
     def layout_coordinates(
         self,
@@ -182,6 +218,7 @@ class Graph:
         if not self._backend.raw:
             self._backend.from_raw(igraph.Graph())
         self._backend.add_edges(edges)
+        self._connected_components_needs_recompute = True
 
     def add_vertices(self, n_vertices: int, attrs: Dict[str, List]) -> None:
         """Add some number of vertices to the graph instance.
@@ -194,6 +231,7 @@ class Graph:
                             attributes are of different lengths
         """
         self._backend.add_vertices(n_vertices=n_vertices, attrs=attrs)
+        self._connected_components_needs_recompute = True
 
     def add_names_to_vertexes(self, vs_names: List[str]) -> None:
         """Rename the current vertices on the graph instance.

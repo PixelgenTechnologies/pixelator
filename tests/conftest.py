@@ -99,6 +99,7 @@ def edgelist_with_communities_fixture():
 @pytest.fixture(name="full_graph_edgelist", scope="module")
 def full_graph_edgelist_fixture():
     """Create edgelist from fully connected bipartie graph."""
+    random.seed(10)
     g = create_fully_connected_bipartite_graph(50)
     edgelist = create_simple_edge_list_from_graph(g)
     edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
