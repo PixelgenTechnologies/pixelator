@@ -9,14 +9,16 @@ import pandas as pd
 import pytest
 from pixelator.graph import Graph
 
-from tests.test_tools import enforce_edgelist_types_for_tests
 from tests.graph.test_graph_utils import random_sequence
+from tests.test_tools import enforce_edgelist_types_for_tests
 
 
 def create_simple_edge_list_from_graph(
     graph: Graph, random_markers: bool = False
 ) -> pd.DataFrame:
     """Convert a graph to edge list (dataframe)."""
+    random.seed(7319)
+
     df = graph.get_edge_dataframe()
     df_vert = graph.get_vertex_dataframe()
     df["source"].replace(df_vert["name"], inplace=True)
@@ -54,17 +56,6 @@ def create_simple_edge_list_from_graph(
     return df
 
 
-@pytest.fixture
-def enable_backend(request):
-    previous_environment = os.environ
-    if request.param == "networkx":
-        new_environment = previous_environment.copy()
-        new_environment["ENABLE_NETWORKX_BACKEND"] = True
-        os.environ = new_environment
-    yield
-    os.environ = previous_environment
-
-
 @pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_build_graph_full_bipartite(enable_backend, full_graph_edgelist: pd.DataFrame):
     graph = Graph.from_edgelist(
@@ -76,7 +67,7 @@ def test_build_graph_full_bipartite(enable_backend, full_graph_edgelist: pd.Data
     assert graph.vcount() == 50 + 50
     assert graph.ecount() == 50 * 50
     assert "markers" in graph.vs.attributes()
-    assert sorted(list(graph.vs[0]["markers"].keys())) == ["A", "B"]
+    assert sorted(list(graph.vs.get_vertex(0)["markers"].keys())) == ["A", "B"]
     assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
 
@@ -166,7 +157,7 @@ def test_build_graph_a_node_projected(
     assert graph.vcount() == 50
     assert graph.ecount() == ((50 * 50) / 2) - (50 / 2)
     assert "markers" in graph.vs.attributes()
-    assert sorted(list(graph.vs[0]["markers"].keys())) == ["A", "B"]
+    assert sorted(list(graph.vs.get_vertex(0)["markers"].keys())) == ["A", "B"]
     assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
 
@@ -185,7 +176,7 @@ def test_build_graph_a_node_projected_benchmark(
     assert graph.vcount() == 50
     assert graph.ecount() == ((50 * 50) / 2) - (50 / 2)
     assert "markers" in graph.vs.attributes()
-    assert sorted(list(graph.vs[0]["markers"].keys())) == ["A", "B"]
+    assert sorted(list(graph.vs.get_vertex(0)["markers"].keys())) == ["A", "B"]
     assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
 
@@ -206,7 +197,7 @@ def test_build_graph_a_node_projected_without_simplifying(
         assert graph.vcount() == 50
         assert graph.ecount() == ((50 * 50) / 2) - (50 / 2)
         assert "markers" in graph.vs.attributes()
-        assert sorted(list(graph.vs[0]["markers"].keys())) == ["A", "B"]
+        assert sorted(list(graph.vs.get_vertex(0)["markers"].keys())) == ["A", "B"]
         assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
     # We want to warn when a-node projection is requested without simplification.
