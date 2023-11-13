@@ -47,6 +47,20 @@ files = [
 ]
 
 [[package]]
+name = "anytree"
+version = "2.12.1"
+description = "Powerful and Lightweight Python Tree Data Structure with various plugins"
+optional = false
+python-versions = ">=3.7.2,<4"
+files = [
+    {file = "anytree-2.12.1-py3-none-any.whl", hash = "sha256:5ea9e61caf96db1e5b3d0a914378d2cd83c269dfce1fb8242ce96589fa3382f0"},
+    {file = "anytree-2.12.1.tar.gz", hash = "sha256:244def434ccf31b668ed282954e5d315b4e066c4940b94aff4a7962d85947830"},
+]
+
+[package.dependencies]
+six = "*"
+
+[[package]]
 name = "astroid"
 version = "3.0.1"
 description = "An abstract syntax tree for Python with inference support."
@@ -79,6 +93,21 @@ tests = ["attrs[tests-no-zope]", "zope-interface"]
 tests-no-zope = ["cloudpickle", "hypothesis", "mypy (>=1.1.1)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "pytest-xdist[psutil]"]
 
 [[package]]
+name = "autograd"
+version = "1.6.2"
+description = "Efficiently computes derivatives of numpy code."
+optional = false
+python-versions = "*"
+files = [
+    {file = "autograd-1.6.2-py3-none-any.whl", hash = "sha256:208dde2a938e63b4f8f5049b1985505139e529068b0d26f8cd7771fd3eb145d5"},
+    {file = "autograd-1.6.2.tar.gz", hash = "sha256:8731e08a0c4e389d8695a40072ada4512641c113b6cace8f4cfbe8eb7e9aedeb"},
+]
+
+[package.dependencies]
+future = ">=0.15.2"
+numpy = ">=1.12"
+
+[[package]]
 name = "babel"
 version = "2.13.0"
 description = "Internationalization utilities"
@@ -94,6 +123,24 @@ pytz = {version = ">=2015.7", markers = "python_version < \"3.9\""}
 
 [package.extras]
 dev = ["freezegun (>=1.0,<2.0)", "pytest (>=6.0)", "pytest-cov"]
+
+[[package]]
+name = "beartype"
+version = "0.16.4"
+description = "Unbearably fast runtime type checking in pure Python."
+optional = false
+python-versions = ">=3.8.0"
+files = [
+    {file = "beartype-0.16.4-py3-none-any.whl", hash = "sha256:64865952f9dff1e17f22684b3c7286fc79754553b47eaefeb1286224ae8c1bd9"},
+    {file = "beartype-0.16.4.tar.gz", hash = "sha256:1ada89cf2d6eb30eb6e156eed2eb5493357782937910d74380918e53c2eae0bf"},
+]
+
+[package.extras]
+all = ["typing-extensions (>=3.10.0.0)"]
+dev = ["autoapi (>=0.9.0)", "coverage (>=5.5)", "mypy (>=0.800)", "numpy", "pandera", "pydata-sphinx-theme (<=0.7.2)", "pytest (>=4.0.0)", "sphinx", "sphinx (>=4.2.0,<6.0.0)", "sphinxext-opengraph (>=0.7.5)", "tox (>=3.20.1)", "typing-extensions (>=3.10.0.0)"]
+doc-rtd = ["autoapi (>=0.9.0)", "pydata-sphinx-theme (<=0.7.2)", "sphinx (>=4.2.0,<6.0.0)", "sphinxext-opengraph (>=0.7.5)"]
+test-tox = ["mypy (>=0.800)", "numpy", "pandera", "pytest (>=4.0.0)", "sphinx", "typing-extensions (>=3.10.0.0)"]
+test-tox-coverage = ["coverage (>=5.5)"]
 
 [[package]]
 name = "beautifulsoup4"
@@ -1044,6 +1091,47 @@ files = [
 ]
 
 [[package]]
+name = "gensim"
+version = "4.3.2"
+description = "Python framework for fast Vector Space Modelling"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "gensim-4.3.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:31b3cb313939b6940ee21660177f6405e71b920da462dbf065b2458a24ab33e1"},
+    {file = "gensim-4.3.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:67c41b15e19e4950f57124f633c45839b5c84268ffa58079c5b0c0f04d2a9cb9"},
+    {file = "gensim-4.3.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a9bf1a8ee2e8214499c517008a0fd175ce5c649954a88569358cfae6bfca42dc"},
+    {file = "gensim-4.3.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5e34ee6f8a318fbf0b65e6d39a985ecf9e9051febfd1221ae6255fff1972c547"},
+    {file = "gensim-4.3.2-cp310-cp310-win_amd64.whl", hash = "sha256:c46b7395dc57c83329932f3febed9660891fdcc75327d56f55000e3e08898983"},
+    {file = "gensim-4.3.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:a919493339cfad39d5e76768c1bc546cd507f715c5fca93165cc174a97657457"},
+    {file = "gensim-4.3.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:8dcd1419266bd563c371d25530f4dce3505fe78059b2c0c08724e4f9e5479b38"},
+    {file = "gensim-4.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e3e8035ac3f54dca3a8ca56bec526ddfe5b23006e0134b7375ca5f5dbfaef70a"},
+    {file = "gensim-4.3.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8c3b537c1fd4699c8e6d59c3ffa2fdd9918cd4e5555bf5ee7c1fbedd89b2d643"},
+    {file = "gensim-4.3.2-cp311-cp311-win_amd64.whl", hash = "sha256:5a52001226f9e89f7833503f99c9b4fd028fdf837002f24cdc1bc3cf901a4003"},
+    {file = "gensim-4.3.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:e8d62604efb8281a25254e5a6c14227034c267ed56635e590c9cae2635196dca"},
+    {file = "gensim-4.3.2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:bf7a9dc37c2ca465c7834863a7b264369c1373bb474135df225cee654b8adfab"},
+    {file = "gensim-4.3.2-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6a33ff0d4cf3e50e7ddd7353fb38ed2d4af2e48a6ef58d622809862c30c8b8a2"},
+    {file = "gensim-4.3.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:99876be00b73c7cef01f427d241b07eb1c1b298fb411580cc1067d22c43a13be"},
+    {file = "gensim-4.3.2-cp38-cp38-win_amd64.whl", hash = "sha256:f785b3caf376a1f2989e0f3c890642e5b1566393fd3831dab03fc6670d672814"},
+    {file = "gensim-4.3.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:c86915cf0e0b86658a40a070bd7e04db0814065963657e92910303070275865d"},
+    {file = "gensim-4.3.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:548c7bf983e619d6b8d78b6a5321dcbcba5b39f68779a0d36e38a5a971416276"},
+    {file = "gensim-4.3.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:226690ea081b92a2289661a25e8a89069ae09b1ed4137b67a0d6ec211e0371d3"},
+    {file = "gensim-4.3.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4715eafcd309c2f7e030829eddba72fe47bbe9bb466811fce3158127d29c8979"},
+    {file = "gensim-4.3.2-cp39-cp39-win_amd64.whl", hash = "sha256:b3f26299ac241ff54329a54c37c22eac1bf4c4a337068adf2637259ee0d8484a"},
+    {file = "gensim-4.3.2.tar.gz", hash = "sha256:99ac6af6ffd40682e70155ed9f92ecbf4384d59fb50af120d343ea5ee1b308ab"},
+]
+
+[package.dependencies]
+numpy = ">=1.18.5"
+scipy = ">=1.7.0"
+smart-open = ">=1.8.1"
+
+[package.extras]
+distributed = ["Pyro4 (>=4.27)"]
+docs = ["POT", "Pyro4", "Pyro4 (>=4.27)", "annoy", "matplotlib", "memory-profiler", "mock", "nltk", "pandas", "pytest", "pytest-cov", "scikit-learn", "sphinx (==5.1.1)", "sphinx-gallery (==0.11.1)", "sphinxcontrib-napoleon (==0.7)", "sphinxcontrib.programoutput (==0.17)", "statsmodels", "testfixtures", "visdom (>=0.1.8,!=0.1.8.7)"]
+test = ["POT", "mock", "pytest", "pytest-cov", "testfixtures", "visdom (>=0.1.8,!=0.1.8.7)"]
+test-win = ["POT", "mock", "pytest", "pytest-cov", "testfixtures"]
+
+[[package]]
 name = "geopandas"
 version = "0.13.2"
 description = "Geographic pandas extensions"
@@ -1060,6 +1148,49 @@ packaging = "*"
 pandas = ">=1.1.0"
 pyproj = ">=3.0.1"
 shapely = ">=1.7.1"
+
+[[package]]
+name = "graspologic"
+version = "3.3.0"
+description = "A set of python modules for graph statistics"
+optional = false
+python-versions = "<3.12,>=3.8"
+files = [
+    {file = "graspologic-3.3.0.tar.gz", hash = "sha256:08fe052694a027995b3222d01d8cb64e1bf242e7915a5016268927c64f6229fc"},
+]
+
+[package.dependencies]
+anytree = ">=2.8.0"
+beartype = ">=0.10.0"
+gensim = ">=4.0.0,<4.2.0 || >4.2.0"
+graspologic-native = ">=1.1.1"
+hyppo = ">=0.3.2"
+joblib = ">=0.17.0"
+matplotlib = ">=3.0.0,<3.3.dev0 || >=3.4.dev0,<3.6.1 || >3.6.1"
+networkx = ">=2.1"
+numpy = ">=1.8.1"
+POT = ">=0.7.0"
+scikit-learn = ">=0.22.0"
+scipy = ">=1.9.0"
+seaborn = ">=0.11.0"
+statsmodels = ">=0.13.2"
+typing-extensions = ">=4.4.0"
+umap-learn = ">=0.4.6"
+
+[package.extras]
+dev = ["black", "ipykernel (>=5.1.0)", "ipython (>=7.4.0,!=8.7.0)", "isort (>=5.9.3)", "mypy (>=0.910)", "nbsphinx (>=0.8.7)", "numpydoc (>=1.1.0)", "pandoc (>=1.1.0)", "pytest (>=6.2.5)", "pytest-cov (>=3.0.0)", "sphinx (>=4.2.0)", "sphinx-rtd-theme (>=1.0.0)", "sphinxcontrib-rawfiles (>=0.1.1)", "testfixtures (>=6.18.3)"]
+
+[[package]]
+name = "graspologic-native"
+version = "1.2.0"
+description = "Python native companion module to the graspologic library"
+optional = false
+python-versions = "*"
+files = [
+    {file = "graspologic_native-1.2.0-cp36-abi3-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:e8965ee1dd46b5ada7ef3081c033dc91d9fa5c837f82a46f1c6d1382839cbb10"},
+    {file = "graspologic_native-1.2.0-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6f026899b5fb6312c1969832ab105d1501373bd3cebbd3384f35e0a94a31c161"},
+    {file = "graspologic_native-1.2.0-cp36-abi3-win_amd64.whl", hash = "sha256:6c3dc18f07dfc4ac683792c83c9fbcd836ca87ef581a9495d05a41055ef889e0"},
+]
 
 [[package]]
 name = "h5py"
@@ -1097,6 +1228,23 @@ files = [
 
 [package.dependencies]
 numpy = ">=1.17.3"
+
+[[package]]
+name = "hyppo"
+version = "0.4.0"
+description = "A comprehensive independence testing package"
+optional = false
+python-versions = "*"
+files = [
+    {file = "hyppo-0.4.0-py3-none-any.whl", hash = "sha256:4e75565b8deb601485cd7bc1b5c3f44e6ddf329136fc81e65d011f9b4e95132f"},
+]
+
+[package.dependencies]
+autograd = ">=1.3"
+numba = ">=0.46"
+numpy = ">=1.17"
+scikit-learn = ">=0.19.1"
+scipy = ">=1.4.0"
 
 [[package]]
 name = "identify"
@@ -2405,6 +2553,58 @@ xlsx2csv = ["xlsx2csv (>=0.8.0)"]
 xlsxwriter = ["xlsxwriter"]
 
 [[package]]
+name = "pot"
+version = "0.9.1"
+description = "Python Optimal Transport Library"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "POT-0.9.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:1db30b6d691877552123ba0fdbd35face7208c7f172e087d44cf29dfde25c0f6"},
+    {file = "POT-0.9.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e1b62da65eb57af99cacd25f0417ab50778ee38ce3b1718e6e1d796c0417a6ed"},
+    {file = "POT-0.9.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:7f884cb91cbbd670dadfffd0505729a4fee4690d04d34862882c26af757f3c59"},
+    {file = "POT-0.9.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:03896592c6fc7660993fecbbe7ca0e97b17c5f5f23a99bd5878802338835f83c"},
+    {file = "POT-0.9.1-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:9ed0b31f28a0f1da4293cb659bff58f2f6d07234680f0c9cdb3f1eeb59825ba9"},
+    {file = "POT-0.9.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:006ffac008f4d8704b0ed1936215a8def827a8b39f65f68a2fda24f5e79039d8"},
+    {file = "POT-0.9.1-cp310-cp310-win32.whl", hash = "sha256:de2d0db4743d67a7be9de0d80dad695eb4eaa5689999677e2ddb87a5d0572550"},
+    {file = "POT-0.9.1-cp310-cp310-win_amd64.whl", hash = "sha256:6ead4dc2e99218f0c9dd2e56c16f3bc4eba9748d78dc6d1275d0011f198fdc62"},
+    {file = "POT-0.9.1-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:1f1b22cad4983a38920d1323b046c1411abaac97234fc7bdd47e55562c0d0f3a"},
+    {file = "POT-0.9.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:2d635454f090c672961910cb773e5587e7e1a82db388d75c9b2c30d66cc25567"},
+    {file = "POT-0.9.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:be75ca74b488d012d4e52646b12935451aecc42f854329fcd76673ddf3ab6930"},
+    {file = "POT-0.9.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f91f3be38a16e1c30d84b0b8a6abbd37d41860a1280dc0f80de2001c329c866f"},
+    {file = "POT-0.9.1-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:e8a7c88bf12a48e7effc211a4fa261533ec2b6eed6348cc33e586fbbf0556769"},
+    {file = "POT-0.9.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ac61418c433fe644d0b459157bc621bb6e426053b161994f1d5b9457ca16d61a"},
+    {file = "POT-0.9.1-cp311-cp311-win32.whl", hash = "sha256:c645550487f3f9c8531bf7d70b619ea47435e00bf8026fb90ca0d9e79c4debeb"},
+    {file = "POT-0.9.1-cp311-cp311-win_amd64.whl", hash = "sha256:74cdbfb6a345a3b1e552c7d6dc1c93f53a67a310bb6f456852b8b1b76bf2357d"},
+    {file = "POT-0.9.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:6ad9a8bd1756f4e6a378105e30fe3f2f94a057411de8555390b090ed9765456c"},
+    {file = "POT-0.9.1-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2d99b663d84d16a3f8720939fb2cc5ddfeb72efc4cb0df0153b5376aab02d424"},
+    {file = "POT-0.9.1-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7ea2168c3c46e55d37d01dacb6b0108af50a417922cb8dbae3b71eaa041e8f88"},
+    {file = "POT-0.9.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f32baa6a782eb4d66c6316881a796874bfde44a860c7c62346467cf53541362c"},
+    {file = "POT-0.9.1-cp37-cp37m-win32.whl", hash = "sha256:88d3cc03ac898067b7090f3ca90ac3ce27b5d6c472f15abab14211770cd18c01"},
+    {file = "POT-0.9.1-cp37-cp37m-win_amd64.whl", hash = "sha256:c8b0179a607b15b565e69002d770f9451540067558553856207aadd2e6cdbf20"},
+    {file = "POT-0.9.1-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:fe1c1639ab8ee1ea8493d231439cd2f75ecea80a3aba8c73ad7d09cd2934915f"},
+    {file = "POT-0.9.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:8c1d17e30cd30026433db9649e33e9075a565d1fbd8f862c82f5b6cfcf774b5c"},
+    {file = "POT-0.9.1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:e957573ba21f3d200f892b23bde6fd962bdfdde526c03c02d06d3daa1b83fad4"},
+    {file = "POT-0.9.1-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:50417c88f69adcc5d81a6b5092744ae5cc3bab140eefd6859e5abdf12bd54a36"},
+    {file = "POT-0.9.1-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6959c48a8cc4dee74a8a16f15e0c8df1d9fdfa28c6bdd3bba5ecda7cedec7d1e"},
+    {file = "POT-0.9.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:60af1ebdaf940dc0a1a3092ccd7d5b0bb3fcbdb277d1dfd0aedbf97c3d2a967f"},
+    {file = "POT-0.9.1-cp38-cp38-win32.whl", hash = "sha256:e0b3972ec956828c1a63260704a2bbb2fa68e9ed819b00c5d93600fa610ca227"},
+    {file = "POT-0.9.1-cp38-cp38-win_amd64.whl", hash = "sha256:93694ebd11f023d4ccf5ab13c182b7f7874a7e2e38c8972fbe309db5ed615bfc"},
+    {file = "POT-0.9.1-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:476a1499cacd98b46e20a17b905142ece3223febe3234f0a39aa8a01540ed508"},
+    {file = "POT-0.9.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:d628a46c8de53c43e2e1b02941fb978e221a13d381973861b3d32aed7a378f1c"},
+    {file = "POT-0.9.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:7bae6872a4d975ddfb6f48e22d437f24e6b4f6dbf2aec1fef293f6ab975a137f"},
+    {file = "POT-0.9.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:30490cea737811ef28dc983be4c7336cbb6e41ed425005a3ac5da6e69583665f"},
+    {file = "POT-0.9.1-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c801b8a2e5119e5b36d12914d4e3b93a36b9c9d479763fd31a15f4b7ee31a6b0"},
+    {file = "POT-0.9.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a6e51e9a38873cf352fd5bb73b2e1d66aadb5c3802660acbf87d38179a8163d0"},
+    {file = "POT-0.9.1-cp39-cp39-win32.whl", hash = "sha256:bef713fa4110547b2d7b9b7390c9f5e15845d6808309f11eeafa84fee9350144"},
+    {file = "POT-0.9.1-cp39-cp39-win_amd64.whl", hash = "sha256:fb5488ccc0633d4381f8346bf8a00f27cb9ab8b8ec4f55adb66134b0fae71e2a"},
+    {file = "POT-0.9.1.tar.gz", hash = "sha256:81c25327a00197ff11c1fe5221cf181ad1dffe615644152e2e115ddddf5e591b"},
+]
+
+[package.dependencies]
+numpy = ">=1.16"
+scipy = ">=1.0"
+
+[[package]]
 name = "pre-commit"
 version = "3.5.0"
 description = "A framework for managing and maintaining multi-language pre-commit hooks."
@@ -3143,24 +3343,24 @@ python-versions = ">=3.6"
 files = [
     {file = "ruamel.yaml.clib-0.2.8-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:b42169467c42b692c19cf539c38d4602069d8c1505e97b86387fcf7afb766e1d"},
     {file = "ruamel.yaml.clib-0.2.8-cp310-cp310-macosx_13_0_arm64.whl", hash = "sha256:07238db9cbdf8fc1e9de2489a4f68474e70dffcb32232db7c08fa61ca0c7c462"},
+    {file = "ruamel.yaml.clib-0.2.8-cp310-cp310-manylinux2014_aarch64.whl", hash = "sha256:d92f81886165cb14d7b067ef37e142256f1c6a90a65cd156b063a43da1708cfd"},
     {file = "ruamel.yaml.clib-0.2.8-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:fff3573c2db359f091e1589c3d7c5fc2f86f5bdb6f24252c2d8e539d4e45f412"},
-    {file = "ruamel.yaml.clib-0.2.8-cp310-cp310-manylinux_2_24_aarch64.whl", hash = "sha256:aa2267c6a303eb483de8d02db2871afb5c5fc15618d894300b88958f729ad74f"},
     {file = "ruamel.yaml.clib-0.2.8-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:840f0c7f194986a63d2c2465ca63af8ccbbc90ab1c6001b1978f05119b5e7334"},
     {file = "ruamel.yaml.clib-0.2.8-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:024cfe1fc7c7f4e1aff4a81e718109e13409767e4f871443cbff3dba3578203d"},
     {file = "ruamel.yaml.clib-0.2.8-cp310-cp310-win32.whl", hash = "sha256:c69212f63169ec1cfc9bb44723bf2917cbbd8f6191a00ef3410f5a7fe300722d"},
     {file = "ruamel.yaml.clib-0.2.8-cp310-cp310-win_amd64.whl", hash = "sha256:cabddb8d8ead485e255fe80429f833172b4cadf99274db39abc080e068cbcc31"},
     {file = "ruamel.yaml.clib-0.2.8-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:bef08cd86169d9eafb3ccb0a39edb11d8e25f3dae2b28f5c52fd997521133069"},
     {file = "ruamel.yaml.clib-0.2.8-cp311-cp311-macosx_13_0_arm64.whl", hash = "sha256:b16420e621d26fdfa949a8b4b47ade8810c56002f5389970db4ddda51dbff248"},
+    {file = "ruamel.yaml.clib-0.2.8-cp311-cp311-manylinux2014_aarch64.whl", hash = "sha256:b5edda50e5e9e15e54a6a8a0070302b00c518a9d32accc2346ad6c984aacd279"},
     {file = "ruamel.yaml.clib-0.2.8-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:25c515e350e5b739842fc3228d662413ef28f295791af5e5110b543cf0b57d9b"},
-    {file = "ruamel.yaml.clib-0.2.8-cp311-cp311-manylinux_2_24_aarch64.whl", hash = "sha256:1707814f0d9791df063f8c19bb51b0d1278b8e9a2353abbb676c2f685dee6afe"},
     {file = "ruamel.yaml.clib-0.2.8-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:46d378daaac94f454b3a0e3d8d78cafd78a026b1d71443f4966c696b48a6d899"},
     {file = "ruamel.yaml.clib-0.2.8-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:09b055c05697b38ecacb7ac50bdab2240bfca1a0c4872b0fd309bb07dc9aa3a9"},
     {file = "ruamel.yaml.clib-0.2.8-cp311-cp311-win32.whl", hash = "sha256:53a300ed9cea38cf5a2a9b069058137c2ca1ce658a874b79baceb8f892f915a7"},
     {file = "ruamel.yaml.clib-0.2.8-cp311-cp311-win_amd64.whl", hash = "sha256:c2a72e9109ea74e511e29032f3b670835f8a59bbdc9ce692c5b4ed91ccf1eedb"},
     {file = "ruamel.yaml.clib-0.2.8-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:ebc06178e8821efc9692ea7544aa5644217358490145629914d8020042c24aa1"},
     {file = "ruamel.yaml.clib-0.2.8-cp312-cp312-macosx_13_0_arm64.whl", hash = "sha256:edaef1c1200c4b4cb914583150dcaa3bc30e592e907c01117c08b13a07255ec2"},
+    {file = "ruamel.yaml.clib-0.2.8-cp312-cp312-manylinux2014_aarch64.whl", hash = "sha256:7048c338b6c86627afb27faecf418768acb6331fc24cfa56c93e8c9780f815fa"},
     {file = "ruamel.yaml.clib-0.2.8-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d176b57452ab5b7028ac47e7b3cf644bcfdc8cacfecf7e71759f7f51a59e5c92"},
-    {file = "ruamel.yaml.clib-0.2.8-cp312-cp312-manylinux_2_24_aarch64.whl", hash = "sha256:1dc67314e7e1086c9fdf2680b7b6c2be1c0d8e3a8279f2e993ca2a7545fecf62"},
     {file = "ruamel.yaml.clib-0.2.8-cp312-cp312-musllinux_1_1_i686.whl", hash = "sha256:3213ece08ea033eb159ac52ae052a4899b56ecc124bb80020d9bbceeb50258e9"},
     {file = "ruamel.yaml.clib-0.2.8-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:aab7fd643f71d7946f2ee58cc88c9b7bfc97debd71dcc93e03e2d174628e7e2d"},
     {file = "ruamel.yaml.clib-0.2.8-cp312-cp312-win32.whl", hash = "sha256:5c365d91c88390c8d0a8545df0b5857172824b1c604e867161e6b3d59a827eaa"},
@@ -3168,7 +3368,7 @@ files = [
     {file = "ruamel.yaml.clib-0.2.8-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:a5aa27bad2bb83670b71683aae140a1f52b0857a2deff56ad3f6c13a017a26ed"},
     {file = "ruamel.yaml.clib-0.2.8-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:c58ecd827313af6864893e7af0a3bb85fd529f862b6adbefe14643947cfe2942"},
     {file = "ruamel.yaml.clib-0.2.8-cp37-cp37m-macosx_12_0_arm64.whl", hash = "sha256:f481f16baec5290e45aebdc2a5168ebc6d35189ae6fea7a58787613a25f6e875"},
-    {file = "ruamel.yaml.clib-0.2.8-cp37-cp37m-manylinux_2_24_aarch64.whl", hash = "sha256:77159f5d5b5c14f7c34073862a6b7d34944075d9f93e681638f6d753606c6ce6"},
+    {file = "ruamel.yaml.clib-0.2.8-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:3fcc54cb0c8b811ff66082de1680b4b14cf8a81dce0d4fbf665c2265a81e07a1"},
     {file = "ruamel.yaml.clib-0.2.8-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:7f67a1ee819dc4562d444bbafb135832b0b909f81cc90f7aa00260968c9ca1b3"},
     {file = "ruamel.yaml.clib-0.2.8-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:4ecbf9c3e19f9562c7fdd462e8d18dd902a47ca046a2e64dba80699f0b6c09b7"},
     {file = "ruamel.yaml.clib-0.2.8-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:87ea5ff66d8064301a154b3933ae406b0863402a799b16e4a1d24d9fbbcbe0d3"},
@@ -3176,7 +3376,7 @@ files = [
     {file = "ruamel.yaml.clib-0.2.8-cp37-cp37m-win_amd64.whl", hash = "sha256:3f215c5daf6a9d7bbed4a0a4f760f3113b10e82ff4c5c44bec20a68c8014f675"},
     {file = "ruamel.yaml.clib-0.2.8-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:1b617618914cb00bf5c34d4357c37aa15183fa229b24767259657746c9077615"},
     {file = "ruamel.yaml.clib-0.2.8-cp38-cp38-macosx_12_0_arm64.whl", hash = "sha256:a6a9ffd280b71ad062eae53ac1659ad86a17f59a0fdc7699fd9be40525153337"},
-    {file = "ruamel.yaml.clib-0.2.8-cp38-cp38-manylinux_2_24_aarch64.whl", hash = "sha256:305889baa4043a09e5b76f8e2a51d4ffba44259f6b4c72dec8ca56207d9c6fe1"},
+    {file = "ruamel.yaml.clib-0.2.8-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:665f58bfd29b167039f714c6998178d27ccd83984084c286110ef26b230f259f"},
     {file = "ruamel.yaml.clib-0.2.8-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:700e4ebb569e59e16a976857c8798aee258dceac7c7d6b50cab63e080058df91"},
     {file = "ruamel.yaml.clib-0.2.8-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:e2b4c44b60eadec492926a7270abb100ef9f72798e18743939bdbf037aab8c28"},
     {file = "ruamel.yaml.clib-0.2.8-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:e79e5db08739731b0ce4850bed599235d601701d5694c36570a99a0c5ca41a9d"},
@@ -3184,7 +3384,7 @@ files = [
     {file = "ruamel.yaml.clib-0.2.8-cp38-cp38-win_amd64.whl", hash = "sha256:56f4252222c067b4ce51ae12cbac231bce32aee1d33fbfc9d17e5b8d6966c312"},
     {file = "ruamel.yaml.clib-0.2.8-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:03d1162b6d1df1caa3a4bd27aa51ce17c9afc2046c31b0ad60a0a96ec22f8001"},
     {file = "ruamel.yaml.clib-0.2.8-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:bba64af9fa9cebe325a62fa398760f5c7206b215201b0ec825005f1b18b9bccf"},
-    {file = "ruamel.yaml.clib-0.2.8-cp39-cp39-manylinux_2_24_aarch64.whl", hash = "sha256:a1a45e0bb052edf6a1d3a93baef85319733a888363938e1fc9924cb00c8df24c"},
+    {file = "ruamel.yaml.clib-0.2.8-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:9eb5dee2772b0f704ca2e45b1713e4e5198c18f515b52743576d196348f374d3"},
     {file = "ruamel.yaml.clib-0.2.8-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:da09ad1c359a728e112d60116f626cc9f29730ff3e0e7db72b9a2dbc2e4beed5"},
     {file = "ruamel.yaml.clib-0.2.8-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:184565012b60405d93838167f425713180b949e9d8dd0bbc7b49f074407c5a8b"},
     {file = "ruamel.yaml.clib-0.2.8-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:a75879bacf2c987c003368cf14bed0ffe99e8e85acfa6c0bfffc21a090f16880"},
@@ -3502,6 +3702,27 @@ files = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
 ]
+
+[[package]]
+name = "smart-open"
+version = "6.4.0"
+description = "Utils for streaming large files (S3, HDFS, GCS, Azure Blob Storage, gzip, bz2...)"
+optional = false
+python-versions = ">=3.6,<4.0"
+files = [
+    {file = "smart_open-6.4.0-py3-none-any.whl", hash = "sha256:8d3ef7e6997e8e42dd55c74166ed21e6ac70664caa32dd940b26d54a8f6b4142"},
+    {file = "smart_open-6.4.0.tar.gz", hash = "sha256:be3c92c246fbe80ebce8fbacb180494a481a77fcdcb7c1aadb2ea5b9c2bee8b9"},
+]
+
+[package.extras]
+all = ["azure-common", "azure-core", "azure-storage-blob", "boto3", "google-cloud-storage (>=2.6.0)", "paramiko", "requests"]
+azure = ["azure-common", "azure-core", "azure-storage-blob"]
+gcs = ["google-cloud-storage (>=2.6.0)"]
+http = ["requests"]
+s3 = ["boto3"]
+ssh = ["paramiko"]
+test = ["azure-common", "azure-core", "azure-storage-blob", "boto3", "google-cloud-storage (>=2.6.0)", "moto[server]", "paramiko", "pytest", "pytest-rerunfailures", "requests", "responses"]
+webhdfs = ["requests"]
 
 [[package]]
 name = "snowballstemmer"
@@ -4151,4 +4372,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "00319dc7b720145948bf178a7f0c8ac1e2284174550c7c5cc9f3a0cfa8422d1a"
+content-hash = "0d81ad5f37fcffc6f273e0cc815a8fba8fb751fe8927ce748fe6ad9162c8e1c0"
