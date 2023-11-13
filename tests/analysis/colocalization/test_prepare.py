@@ -39,7 +39,10 @@ def test_prepare_from_graph(edgelist):
         assert len(result) == len(component.vs)
         unique_markers_in_component = functools.reduce(
             set.union,
-            [set(node_markers.keys()) for node_markers in component.vs["markers"]],
+            [
+                set(node_markers.keys())
+                for node_markers in component.vs.get_attribute("markers")
+            ],
         )
         assert len(result.columns) == len(unique_markers_in_component)
 

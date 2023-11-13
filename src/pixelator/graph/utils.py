@@ -173,9 +173,9 @@ def create_node_markers_counts(
 
     if "markers" not in graph.vs.attributes():
         raise AssertionError("Could not find 'markers' in vertex attributes")
-    markers = list(sorted(graph.vs[0]["markers"].keys()))
+    markers = list(sorted(graph.vs.get_vertex(0)["markers"].keys()))
     node_marker_counts = pd.DataFrame.from_records(
-        graph.vs["markers"], columns=markers, index=graph.vs["name"]
+        graph.vs.attribute("markers"), columns=markers, index=graph.vs.attribute("name")
     )
     node_marker_counts = node_marker_counts.reindex(
         sorted(node_marker_counts.columns), axis=1
@@ -183,7 +183,7 @@ def create_node_markers_counts(
     node_marker_counts.columns.name = "markers"
     node_marker_counts.columns = node_marker_counts.columns.astype("string[pyarrow]")
     node_marker_counts.index = pd.Index(
-        graph.vs["name"], dtype="string[pyarrow]", name="node"
+        graph.vs.attribute("name"), dtype="string[pyarrow]", name="node"
     )
     if k == 0:
         return node_marker_counts
@@ -214,19 +214,25 @@ def create_node_markers_counts(
     df = pd.DataFrame(
         data=neighbourhood_counts,
         columns=node_marker_counts.columns.copy(),
-        index=pd.Index(graph.vs["name"], dtype="string[pyarrow]", name="node"),
+        index=pd.Index(
+            graph.vs.attribute("name"), dtype="string[pyarrow]", name="node"
+        ),
     )
     df.columns.name = "markers"
     return df
 
 
-def edgelist_metrics(edgelist: pd.DataFrame) -> Dict[str, Union[int, float]]:
+def edgelist_metrics(
+    edgelist: pd.DataFrame, graph: Optional[Graph] = None
+) -> Dict[str, Union[int, float]]:
     """Compute edgelist metrics.
 
     A simple function that computes a dictionary of basic metrics
     from an edge list (pd.DataFrame).
 
     :param edgelist: the edge list (pd.DataFrame)
+    :param graph: optionally add the graph instance that corresponds to the
+                  edgelist (to not have to re-compute it)
     :returns: a dictionary of metrics (metric -> float)
     :rtype: Dict[str, Union[int, float]]
     """
@@ -247,12 +253,13 @@ def edgelist_metrics(edgelist: pd.DataFrame) -> Dict[str, Union[int, float]]:
     upia_degree = edgelist.groupby("upia", observed=True)["upib"].nunique()
     metrics["upia_degree_mean"] = round(upia_degree.mean(), 2)
     metrics["upia_degree_median"] = round(upia_degree.median(), 2)
-    graph = Graph.from_edgelist(
-        edgelist=edgelist,
-        add_marker_counts=False,
-        simplify=False,
-        use_full_bipartite=True,
-    )
+    if not graph:
+        graph = Graph.from_edgelist(
+            edgelist=edgelist,
+            add_marker_counts=False,
+            simplify=False,
+            use_full_bipartite=True,
+        )
     components = graph.connected_components()
     metrics["vertices"] = graph.vcount()
     metrics["components"] = len(components)
@@ -265,6 +272,7 @@ def edgelist_metrics(edgelist: pd.DataFrame) -> Dict[str, Union[int, float]]:
 
 def update_edgelist_membership(
     edgelist: pd.DataFrame,
+    graph: Optional[Graph] = None,
     prefix: Optional[str] = None,
 ) -> pd.DataFrame:
     """Update the edgelist with component names.
@@ -276,6 +284,9 @@ def update_edgelist_membership(
     will be added to the returned edge list in a column called component.
 
     :param edgelist: the edge list (pd.DataFrame)
+    :param graph: optional graph if you have already computed this, it is important
+                  that you know that the edgelist and the graph is in-sync if you
+                  use this feature.
     :param prefix: the prefix to prepend to the component ids, if None will
                     use `DEFAULT_COMPONENT_PREFIX`
     :returns: the update edge list (pd.DataFrame)
@@ -286,29 +297,32 @@ def update_edgelist_membership(
     if prefix is None:
         prefix = DEFAULT_COMPONENT_PREFIX
 
-    # check if the edge list contains a component
     if "component" in edgelist.columns:
         logger.info("The input edge list already contain a component column")
 
-    # create graph
-    graph = Graph.from_edgelist(
-        edgelist=edgelist,
-        add_marker_counts=False,
-        simplify=False,
-        use_full_bipartite=True,
+    if not graph:
+        graph = Graph.from_edgelist(
+            edgelist=edgelist,
+            add_marker_counts=False,
+            simplify=False,
+            use_full_bipartite=True,
+        )
+
+    logger.debug("Fetching connected components")
+    connected_components = graph.connected_components()
+    logger.debug(
+        "Got the connected components. Will begin the iteration to updated edge memberships"
     )
 
-    # iterate the components to create the membership column
     membership = np.empty(edgelist.shape[0], dtype=object)
-    connected_components = graph.connected_components()
     component_id_format = f"{prefix}{{:0{DIGITS}d}}"
     for i, component in enumerate(connected_components):
         component_id = component_id_format.format(i)
-        edges = [e.index for e in graph.es.select(_within=component)]
+        edges = [
+            e.index
+            for e in graph.es.select_within({v.index for v in component.vertices()})
+        ]
         membership[edges] = component_id
-
-    # update the edge list
     edgelist = edgelist.assign(component=membership)
-    logger.debug("Membership in edge list updated")
 
     return edgelist

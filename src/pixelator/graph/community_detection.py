@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from pixelator.graph.constants import (
     DEFAULT_COMPONENT_PREFIX,
@@ -73,8 +74,11 @@ def connect_components(
     """
     logger.debug("Parsing edge list %s", input)
 
+    # TODO We could probably benefit quite a lot here
+    # from using parquet and lazy data frames here.
+
     # load data (edge list in data frame format)
-    edgelist = pd.read_csv(input, dtype_backend="pyarrow")
+    edgelist = pl.read_csv(input).to_pandas()
 
     # filter data by count
     if min_count > 1:
@@ -108,13 +112,28 @@ def connect_components(
             "The edge list has 0 elements after removing problematic edges"
         )
 
+    # TODO We could potentially save quite a lot of time
+    # here by not writing the raw edgelist since it is to
+    # 99.9% the same as the collapsed data going in here
+    # plus the component information, which can be computed ad-hoc
+    # for use-cases where you want to work on the raw edge-list.
+
+    graph = Graph.from_edgelist(
+        edgelist=edgelist,
+        add_marker_counts=False,
+        simplify=False,
+        use_full_bipartite=True,
+    )
+
     # assign component column to edge list
     edgelist = update_edgelist_membership(
         edgelist=edgelist,
+        graph=graph,
         prefix=DEFAULT_COMPONENT_PREFIX,
     )
 
     # save the edge list (raw)
+    logger.debug("Writing raw edgelist memberships")
     edgelist.to_csv(
         Path(output) / f"{output_prefix}.raw_edgelist.csv.gz",
         header=True,
@@ -124,11 +143,13 @@ def connect_components(
     )
 
     # get raw metrics before multiplets recovery
-    raw_metrics = edgelist_metrics(edgelist)
+    logger.debug("Calculating raw edgelist metrics")
+    raw_metrics = edgelist_metrics(edgelist, graph)
 
     if multiplet_recovery:
         edgelist, info = recover_technical_multiplets(
             edgelist=edgelist,
+            graph=graph,
             leiden_iterations=leiden_iterations,
             filename=Path(output) / f"{output_prefix}.discarded_edgelist.csv.gz",
         )
@@ -140,6 +161,7 @@ def connect_components(
         )
 
     # save the edge list (recovered)
+    logger.debug("Save the edgelist")
     edgelist.to_csv(
         Path(output) / f"{output_prefix}.edgelist.csv.gz",
         header=True,
@@ -157,7 +179,7 @@ def connect_components(
 def community_detection_crossing_edges(
     graph: Graph,
     leiden_iterations: int = 10,
-    beta: float = 0,
+    beta: float = 0.01,
 ) -> List[Set[str]]:
     """Detect spurious edges connecting components by community detection.
 
@@ -171,9 +193,8 @@ def community_detection_crossing_edges(
 
     :param graph: a graph object
     :param leiden_iterations: the number of iterations for the leiden algorithm
-    :param beta: parameter to control the randomness on cluster selection when Leiden
-                 merges clustering (0 - maximize objective function i.e. modularity;
-                 inf - uniform distribution to merge with any other cluster)
+    :param beta: parameter to control the randomness of the cluster refinement in
+                 the Leiden algorithm. Must be a non-zero float.
     :returns: a list of sets with the edges between communities (edges ids)
     :rtype: List[Set[str]]
     :raises AssertionError: if the method is not supported
@@ -185,12 +206,10 @@ def community_detection_crossing_edges(
         graph.ecount(),
     )
 
-    if beta < 0:
-        raise ValueError(f"Beta parameter cannot be a negative value: {beta}")
+    if not beta > 0:
+        raise ValueError(f"Beta parameter must be larger than 0: {beta}")
 
     # compute communities
-    # NOTE the default number of iterations is 2 but a higher number is needed to
-    # mitigate the random variability between runs
     vertex_clustering = graph.community_leiden(
         objective_function="modularity",
         n_iterations=leiden_iterations,
@@ -198,13 +217,16 @@ def community_detection_crossing_edges(
     )
 
     # obtain the list of edges connecting the communities (crossing edges)
-    edges = []
     if vertex_clustering is not None:
         # get the crossing edges
-        graph.es["is_crossing"] = vertex_clustering.crossing()
-        edges = graph.es.select(is_crossing_eq=True)
+        crossing_edges = vertex_clustering.crossing()
         # translate the edges to sets of their corresponding vertex names
-        edges = [{e.vertex_tuple[0]["name"], e.vertex_tuple[1]["name"]} for e in edges]
+        logger.debug("Iterating over crossing edges")
+        edges = [
+            {e.vertex_tuple[0]["name"], e.vertex_tuple[1]["name"]}
+            for e in crossing_edges
+        ]
+        logger.debug("Finished iterating over crossing edges")
         logger.debug(
             "Community detection detected %i crossing edges in %i communities with a "
             "modularity of %f",
@@ -212,13 +234,13 @@ def community_detection_crossing_edges(
             len(vertex_clustering),
             vertex_clustering.modularity,
         )
-    else:
-        logger.debug("Community detection returned an empty list")
-    return edges
+        return edges
+    logger.debug("Community detection returned an empty list")
+    return []
 
 
 def detect_edges_to_remove(
-    edgelist: pd.DataFrame,
+    graph: Graph,
     leiden_iterations: int = 10,
 ) -> List[Set[str]]:
     """Use Leiden algorithm to detect communities from an edgelist.
@@ -226,25 +248,11 @@ def detect_edges_to_remove(
     This method uses the community detection Leiden algorithm to detect
     communities in the whole graph corresponding to the edge list given as input.
     Edges connecting the communities are computed and returned.
-    :param edgelist: The edge list used to create the graph
+    :param graph: The graph to detect edges to remove from.
     :param leiden_iterations: the number of iterations for the leiden algorithm
     :return: A list of edges (sets) that are connecting communities
     :rtype: List[Set[str]]
     """
-    logger.debug(
-        "Detecting edges to remove using the leiden algorithm"
-        " with an edge list with %i rows",
-        edgelist.shape[0],
-    )
-
-    # build the graph from the edge list
-    graph = Graph.from_edgelist(
-        edgelist=edgelist,
-        add_marker_counts=False,
-        simplify=False,
-        use_full_bipartite=True,
-    )
-
     # perform community detection
     edges = community_detection_crossing_edges(
         graph=graph,
@@ -288,6 +296,7 @@ def recovered_component_info(
 
 def recover_technical_multiplets(
     edgelist: pd.DataFrame,
+    graph: Graph,
     leiden_iterations: int = 10,
     filename: Optional[PathType] = None,
 ) -> Tuple[pd.DataFrame, Dict[str, List[str]]]:
@@ -311,6 +320,8 @@ def recover_technical_multiplets(
         https://doi.org/10.1038/s4q:598-019-41695-z
 
     :param edgelist: The edge list used to create the graph
+    :param graph: optionally add the graph corresponding to the edgelist, this will
+                 speed up the function by bypassing the graph creation step
     :param leiden_iterations: the number of iterations for the leiden algorithm
     :param filename: If not None, the edge list with the discarded edges will
                      be saved to this file
@@ -340,7 +351,7 @@ def recover_technical_multiplets(
 
     # perform community detection
     edges_to_remove = detect_edges_to_remove(
-        edgelist=edgelist,
+        graph=graph,
         leiden_iterations=leiden_iterations,
     )
 
@@ -355,7 +366,6 @@ def recover_technical_multiplets(
     # check edge membership for between the old and the (potential)
     # new components.
     edgelist["upi"] = edgelist["upia"].astype(str) + edgelist["upib"].astype(str)
-    filename = None
     if filename is not None:
         logger.debug("Saving edge list with discarded edges to %s", filename)
         # save the discarded edges to a file
@@ -372,6 +382,9 @@ def recover_technical_multiplets(
     edgelist = edgelist[~edgelist["upi"].isin(edges_to_remove)]
     edgelist = update_edgelist_membership(
         edgelist=edgelist,
+        graph=None,  # We need to make sure that a new graph is built
+        # from the edgelist here,
+        # otherwise the edge indexes will not match.
         prefix=DEFAULT_COMPONENT_PREFIX_RECOVERY,
     )
 
