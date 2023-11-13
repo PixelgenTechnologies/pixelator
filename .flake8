@@ -1,5 +1,5 @@
 [flake8]
-extend-ignore = E501,E402,W503,E203,D213,D203,DOC301,DOC501,DOC502
+extend-ignore = E501,E402,W503,E203,D213,D203,DOC301,DOC502
 exclude = .git,__pycache__,docs/source/conf.py,old,build,dist,cue.mod
 docstring-convention = all
 style = sphinx
