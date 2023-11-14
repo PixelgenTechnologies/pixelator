@@ -12,6 +12,8 @@ from pixelator.graph.community_detection import (
     recover_technical_multiplets,
 )
 
+import polars as pl
+
 
 @pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_connect_components(enable_backend, input_edgelist, output_dir, metrics_file):
@@ -25,8 +27,8 @@ def test_connect_components(enable_backend, input_edgelist, output_dir, metrics_
         min_count=1,
     )
 
-    result_pixel_data_file = next(output_dir.glob("*.edgelist.csv.gz"))
-    result = pd.read_csv(result_pixel_data_file)
+    result_pixel_data_file = next(output_dir.glob("*.edgelist.parquet"))
+    result = pd.read_parquet(result_pixel_data_file)
     assert len(result["component"].unique()) == 2
 
 
@@ -44,8 +46,8 @@ def test_connect_components_benchmark(
         min_count=1,
     )
 
-    result_pixel_data_file = next(output_dir.glob("*.edgelist.csv.gz"))
-    result = pd.read_csv(result_pixel_data_file)
+    result_pixel_data_file = next(output_dir.glob("*.edgelist.parquet"))
+    result = pd.read_parquet(result_pixel_data_file)
     assert len(result["component"].unique()) == 2
 
 
@@ -63,8 +65,8 @@ def test_connect_components_no_recovery(
         min_count=1,
     )
 
-    result_pixel_data_file = next(output_dir.glob("*.edgelist.csv.gz"))
-    result = pd.read_csv(result_pixel_data_file)
+    result_pixel_data_file = next(output_dir.glob("*.edgelist.parquet"))
+    result = pd.read_parquet(result_pixel_data_file)
     assert len(result["component"].unique()) == 1
 
 
@@ -76,9 +78,10 @@ def test_recovery_technical_multiplets(
     assert len(edgelist_with_communities["component"].unique()) == 1
 
     result, info = recover_technical_multiplets(
-        edgelist=edgelist_with_communities.copy(), graph=graph_with_communities
+        edgelist=pl.DataFrame(edgelist_with_communities).lazy(),
+        graph=graph_with_communities,
     )
-    assert len(result["component"].unique()) == 2
+    assert len(result.collect().to_pandas()["component"].unique()) == 2
     assert info.keys() == {"PXLCMP0000000"}
     assert sorted(list(info.values())[0]) == ["RCVCMP0000000", "RCVCMP0000001"]
 
@@ -94,10 +97,10 @@ def test_recovery_technical_multiplets_benchmark(
 
     result, info = benchmark(
         recover_technical_multiplets,
-        edgelist=edgelist_with_communities.copy(),
+        edgelist=pl.LazyFrame(edgelist_with_communities).lazy(),
         graph=graph_with_communities,
     )
-    assert len(result["component"].unique()) == 2
+    assert len(result.collect().to_pandas()["component"].unique()) == 2
     assert info.keys() == {"PXLCMP0000000"}
     assert sorted(list(info.values())[0]) == ["RCVCMP0000000", "RCVCMP0000001"]
 

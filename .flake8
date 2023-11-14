@@ -9,3 +9,6 @@ arg-type-hints-in-docstring = False
 # Ignore documentation linting in tests
 per-file-ignores =
     tests/**: D101, D102, D103, D200, D202, D205, D212, D121, D400, D401, D403, D404, D415, DOC
+    # Since click uses a different layout for the docs strings to generate the
+    # cli docs, we ignore these rules here.
+    src/pixelator/cli/**: D200, D212, D400, D415
