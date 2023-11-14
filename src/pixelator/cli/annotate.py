@@ -1,5 +1,4 @@
-"""
-Console script for pixelator (annotate)
+"""Console script for pixelator (annotate).
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -32,7 +31,7 @@ from pixelator.utils import (
     nargs=-1,
     required=True,
     type=click.Path(exists=True),
-    metavar="CSV",
+    metavar="parquet",
 )
 @click.option(
     "--panel",
@@ -109,7 +108,7 @@ def annotate(
     )
 
     # some basic sanity check on the input files
-    sanity_check_inputs(input_files, allowed_extensions="csv.gz")
+    sanity_check_inputs(input_files, allowed_extensions="parquet")
 
     # sanity check on thresholds and input parameters
     if min_size is not None and min_size < 0:

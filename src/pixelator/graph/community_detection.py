@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
-import pandas as pd
 import polars as pl
 
 from pixelator.graph.constants import (
@@ -61,7 +60,7 @@ def connect_components(
         well-connected communities. Sci Rep 9, 5233 (2019).
         https://doi.org/10.1038/s4q:598-019-41695-z
 
-    :param input: the path to the edge list dataframe (csv)
+    :param input: the path to the edge list dataframe (parquet)
     :param output: the path to the output folder
     :param output_prefix: the prefix to prepend to the files (sample name)
     :param metrics_file: the path to a JSON file to write metrics
@@ -74,49 +73,48 @@ def connect_components(
     """
     logger.debug("Parsing edge list %s", input)
 
-    # TODO We could probably benefit quite a lot here
-    # from using parquet and lazy data frames here.
-
     # load data (edge list in data frame format)
-    edgelist = pl.read_csv(input).to_pandas()
+    edgelist = pl.scan_parquet(input)
 
+    nbr_of_rows = edgelist.select(pl.count()).collect()[0, 0]
     # filter data by count
     if min_count > 1:
         logger.debug(
             "Filtering edge list with %i rows using %i as minimum count",
-            edgelist.shape[0],
+            nbr_of_rows,
             min_count,
         )
-        edgelist = edgelist[edgelist["count"] >= min_count]
-        logger.debug("Filtered edge list has %i elements", edgelist.shape[0])
+        edgelist = edgelist.filter(pl.col("count") >= min_count)
+        nbr_of_rows = edgelist.select(pl.count()).collect()[0, 0]
+        logger.debug("Filtered edge list has %i elements", nbr_of_rows)
 
-    if edgelist.shape[0] == 0:
+    if nbr_of_rows == 0:
         raise RuntimeError(
             f"The edge list has 0 elements after filtering by %{min_count}"
         )
 
     # check if the are problematic edges (same upib and upia)
-    problematic_edges = np.intersect1d(edgelist["upib"], edgelist["upia"])
+    problematic_edges = set(
+        np.intersect1d(
+            edgelist.select("upib").collect().to_numpy(),
+            edgelist.select("upia").collect().to_numpy(),
+        )
+    )
     if len(problematic_edges) > 0:
         logger.warning(
             "The edge list has %i intersecting UPIA and UPIB, these will be removed",
             len(problematic_edges),
         )
-        edgelist = edgelist[
-            (~edgelist["upib"].isin(problematic_edges))
-            & (~edgelist["upia"].isin(problematic_edges))
-        ]
+        edgelist = edgelist.filter(
+            (~pl.col("upib").is_in(problematic_edges))
+            & (~pl.col("upia").is_in(problematic_edges))
+        )
 
-    if edgelist.shape[0] == 0:
+    nbr_of_rows = edgelist.select(pl.count()).collect()[0, 0]
+    if nbr_of_rows == 0:
         raise RuntimeError(
             "The edge list has 0 elements after removing problematic edges"
         )
-
-    # TODO We could potentially save quite a lot of time
-    # here by not writing the raw edgelist since it is to
-    # 99.9% the same as the collapsed data going in here
-    # plus the component information, which can be computed ad-hoc
-    # for use-cases where you want to work on the raw edge-list.
 
     graph = Graph.from_edgelist(
         edgelist=edgelist,
@@ -132,16 +130,6 @@ def connect_components(
         prefix=DEFAULT_COMPONENT_PREFIX,
     )
 
-    # save the edge list (raw)
-    logger.debug("Writing raw edgelist memberships")
-    edgelist.to_csv(
-        Path(output) / f"{output_prefix}.raw_edgelist.csv.gz",
-        header=True,
-        index=False,
-        sep=",",
-        compression="gzip",
-    )
-
     # get raw metrics before multiplets recovery
     logger.debug("Calculating raw edgelist metrics")
     raw_metrics = edgelist_metrics(edgelist, graph)
@@ -151,7 +139,8 @@ def connect_components(
             edgelist=edgelist,
             graph=graph,
             leiden_iterations=leiden_iterations,
-            filename=Path(output) / f"{output_prefix}.discarded_edgelist.csv.gz",
+            removed_edges_edgelist_file=Path(output)
+            / f"{output_prefix}.discarded_edgelist.parquet",
         )
 
         # save the recovered components info to a file
@@ -160,14 +149,13 @@ def connect_components(
             filename=Path(output) / f"{output_prefix}.components_recovered.csv",
         )
 
+    del graph
+
     # save the edge list (recovered)
     logger.debug("Save the edgelist")
-    edgelist.to_csv(
-        Path(output) / f"{output_prefix}.edgelist.csv.gz",
-        header=True,
-        index=False,
-        sep=",",
-        compression="gzip",
+    edgelist.collect(streaming=True, no_optimization=True).write_parquet(
+        Path(output) / f"{output_prefix}.edgelist.parquet",
+        compression="zstd",
     )
 
     # save metrics raw (JSON)
@@ -258,7 +246,7 @@ def detect_edges_to_remove(
 
 
 def recovered_component_info(
-    old_edgelist: pd.DataFrame, new_edgelist: pd.DataFrame
+    old_edgelist: pl.LazyFrame, new_edgelist: pl.LazyFrame
 ) -> Dict[str, List[str]]:
     """Map the old component naming to new component naming.
 
@@ -271,29 +259,24 @@ def recovered_component_info(
               new components as value
     :rtype: Dict[str, List[str]]
     """
-    old_memberships = old_edgelist[["upi", "component"]]
-    new_memberships = new_edgelist[["upi", "component"]]
-    merged = pd.merge(
-        old_memberships,
-        new_memberships,
-        on="upi",
-        suffixes=["_old", "_new"],
-        indicator=True,
-    )
-    return (
-        merged[["component_old", "component_new"]]
-        .groupby(["component_old"])
-        .apply(lambda x: list(x["component_new"].value_counts().index))
-        .to_dict()
+    old_memberships = old_edgelist.select(pl.col("upi"), pl.col("component"))
+    new_memberships = new_edgelist.select(pl.col("upi"), pl.col("component"))
+    merged = old_memberships.join(new_memberships, how="left", on="upi", suffix="_new")
+    return dict(
+        merged.select(pl.col("component"), pl.col("component_new"))
+        .group_by(pl.col("component"))
+        .agg(pl.col("component_new").unique().drop_nulls())
+        .collect(streaming=True, projection_pushdown=False)
+        .iter_rows()
     )
 
 
 def recover_technical_multiplets(
-    edgelist: pd.DataFrame,
+    edgelist: pl.LazyFrame,
     graph: Graph,
     leiden_iterations: int = 10,
-    filename: Optional[PathType] = None,
-) -> Tuple[pd.DataFrame, Dict[str, List[str]]]:
+    removed_edges_edgelist_file: Optional[PathType] = None,
+) -> Tuple[pl.LazyFrame, Dict[str, List[str]]]:
     """Perform mega-cluster recovery by deleting spurious edges.
 
     The molecular pixelation assay may under some conditions introduce spurious
@@ -317,30 +300,31 @@ def recover_technical_multiplets(
     :param graph: optionally add the graph corresponding to the edgelist, this will
                  speed up the function by bypassing the graph creation step
     :param leiden_iterations: the number of iterations for the leiden algorithm
-    :param filename: If not None, the edge list with the discarded edges will
-                     be saved to this file
+    :param removed_edges_edgelist_file: If not None, the edge list with the discarded
+                                        edges will be saved to this file
     :return: A tuple with the modified edge list and a dictionary with the mapping of
              old component to new component ids
-    :rtype: Tuple[pd.DataFrame, Dict[str, List[str]]]
+    :rtype: Tuple[pl.LazyFrame, Dict[str, List[str]]]
     """
 
     def vertex_name_pairs_to_upis(
         edge_tuples: List[Set[str]],
-    ) -> List[str]:
+    ) -> Set[str]:
         """Translate each pair of vertices into full UPI info.
 
         Each pair of vertices should be translated into their UPI. Since we can not
         know which order they were in in the original edge list we create both, i.e.
         [(A,B), (C, D)] becomes [AB, BA, CD, DC].
         """
-        return [
+        return {
             "".join(combo)
             for edge in edge_tuples
             for combo in itertools.permutations(edge, 2)
-        ]
+        }
 
     logger.debug(
-        "Starting multiplets recovery in edge list with %i rows", edgelist.shape[0]
+        "Starting multiplets recovery in edge list with %i rows",
+        edgelist.select(pl.count()).collect().item(0, 0),
     )
 
     # perform community detection
@@ -348,6 +332,8 @@ def recover_technical_multiplets(
         graph=graph,
         leiden_iterations=leiden_iterations,
     )
+
+    del graph
 
     if len(edges_to_remove) == 0:
         logger.info("Obtained 0 edges to remove, no recovery performed")
@@ -359,21 +345,24 @@ def recover_technical_multiplets(
     # add the combined upi here as a way to make sure we can use it to
     # check edge membership for between the old and the (potential)
     # new components.
-    edgelist["upi"] = edgelist["upia"].astype(str) + edgelist["upib"].astype(str)
-    if filename is not None:
-        logger.debug("Saving edge list with discarded edges to %s", filename)
+    edgelist = edgelist.with_columns(
+        pl.concat_str(pl.col("upia"), pl.col("upib")).alias("upi")
+    )
+
+    if removed_edges_edgelist_file is not None:
+        logger.debug(
+            "Saving edge list with discarded edges to %s", removed_edges_edgelist_file
+        )
         # save the discarded edges to a file
-        masked_df = edgelist[edgelist["upi"].isin(edges_to_remove)]
-        masked_df.to_csv(
-            filename,
-            header=True,
-            index=False,
-            sep=",",
-            compression="gzip",
+        masked_df = edgelist.filter(pl.col("upi").is_in(edges_to_remove))
+        masked_df.collect().write_parquet(
+            removed_edges_edgelist_file,
+            compression="zstd",
         )
 
-    old_edgelist = edgelist[["upi", "component"]]
-    edgelist = edgelist[~edgelist["upi"].isin(edges_to_remove)]
+    old_edgelist = edgelist.select(pl.col("upi"), pl.col("component"))
+    edgelist = edgelist.filter(~pl.col("upi").is_in(edges_to_remove))
+
     edgelist = update_edgelist_membership(
         edgelist=edgelist,
         graph=None,  # We need to make sure that a new graph is built
@@ -386,12 +375,11 @@ def recover_technical_multiplets(
     info = recovered_component_info(old_edgelist, edgelist)
 
     # remove the upi column and reset index
-    edgelist = edgelist.drop("upi", axis=1, inplace=False)
-    edgelist = edgelist.reset_index(drop=True, inplace=False)
+    edgelist = edgelist.drop("upi")
 
     logger.info(
         "Obtained %i components after removing %i edges",
-        edgelist["component"].nunique(),
+        edgelist.select(pl.col("component").n_unique()),
         len(edges_to_remove),
     )
     return edgelist, info

@@ -90,10 +90,8 @@ def test_annotate_adata(edgelist: pd.DataFrame, tmp_path: Path, panel: AntibodyP
 
     # TODO test dynamic_filter ON (need to change distribution of test data)
 
-    tmp_edgelist_file = tmp_path / "tmp_edgelist.csv.gz"
-    edgelist.to_csv(
-        tmp_edgelist_file, header=True, index=False, sep=",", compression="gzip"
-    )
+    tmp_edgelist_file = tmp_path / "tmp_edgelist.parquet"
+    edgelist.to_parquet(tmp_edgelist_file, index=False)
 
     annotate_components(
         input=str(tmp_edgelist_file),

@@ -392,7 +392,9 @@ class NetworkXGraphBackend(GraphBackend):
         g = nx.empty_graph(0, create_using)
 
         for idx, row in enumerate(
-            df.collect(streaming=True).iter_rows(named=False, buffer_size=1000)
+            df.collect(streaming=True, projection_pushdown=False).iter_rows(
+                named=False, buffer_size=1000
+            )
         ):
             g.add_edge(row[0], row[1], index=idx)
         return g
@@ -486,7 +488,7 @@ class NetworkXGraphBackend(GraphBackend):
         edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
     ) -> Union[nx.Graph, nx.MultiGraph]:
         graph = NetworkXGraphBackend._build_plain_graph_from_edgelist(
-            edgelist.select(["upia", "upib", "umi"]),
+            edgelist.select(pl.col("upia"), pl.col("upib")),
             create_using=nx.Graph if simplify else nx.MultiGraph,
         )
         a_nodes = set(edgelist.select(["upia"]).unique().collect()["upia"].to_list())
