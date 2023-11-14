@@ -79,6 +79,7 @@ class TestEdgeClassesImplementEdgeProtocol:
 def ig_vertex_seq(ig_graph):
     ig_graph.add_vertex(my_attr="a", other_attr=1)
     ig_graph.add_vertex(my_attr="b", other_attr=2)
+    ig_graph.add_vertex(my_attr="n", other_attr=2)
     yield IgraphBasedVertexSequence(ig_graph.vs, ig_graph)
 
 
@@ -88,6 +89,7 @@ def nx_vertex_seq():
         [
             NetworkxBasedVertex(0, {"my_attr": "a", "other_attr": 1}),
             NetworkxBasedVertex(1, {"my_attr": "b", "other_attr": 2}),
+            NetworkxBasedVertex(2, {"my_attr": "n", "other_attr": 2}),
         ]
     )
 
@@ -96,11 +98,11 @@ def nx_vertex_seq():
 class TestVertexSequenceClassesImplementVertexSequenceProtocol:
     def test_vertices(self, vertex_seq, request):
         vertex_seq = request.getfixturevalue(vertex_seq)
-        assert list(map(lambda x: x.index, vertex_seq.vertices())) == [0, 1]
+        assert list(map(lambda x: x.index, vertex_seq.vertices())) == [0, 1, 2]
 
     def test__len__(self, vertex_seq, request):
         vertex_seq = request.getfixturevalue(vertex_seq)
-        assert len(vertex_seq) == 2
+        assert len(vertex_seq) == 3
 
     def test__iter__(self, vertex_seq, request):
         vertex_seq = request.getfixturevalue(vertex_seq)
@@ -117,10 +119,19 @@ class TestVertexSequenceClassesImplementVertexSequenceProtocol:
         assert vertex.index == 0
         assert vertex["my_attr"] == "a"
 
+        vertex = vertex_seq.get_vertex(2)
+        assert vertex.index == 2
+        assert vertex["my_attr"] == "n"
+
+    def test_get_vertex_raises_key_error(self, vertex_seq, request):
+        vertex_seq = request.getfixturevalue(vertex_seq)
+        with pytest.raises(KeyError):
+            vertex_seq.get_vertex(10)
+
     def test_get_attributes(self, vertex_seq, request):
         vertex_seq = request.getfixturevalue(vertex_seq)
-        assert list(vertex_seq.get_attribute("my_attr")) == ["a", "b"]
-        assert list(vertex_seq.get_attribute("other_attr")) == [1, 2]
+        assert list(vertex_seq.get_attribute("my_attr")) == ["a", "b", "n"]
+        assert list(vertex_seq.get_attribute("other_attr")) == [1, 2, 2]
 
 
 @pytest.fixture
