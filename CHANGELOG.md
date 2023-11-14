@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - YYYY-MM-DD
 
+### Added
+
+* Finding connected components and doing Lieden based community detection using
+  networkx/graspologic (experimental feature).
+
 ### Changed
 
 * `mean_reads` and `median_reads` in adata.obs to `mean_reads_per_molecule` and `median_reads_per_molecule` respectively.
@@ -22,9 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Fixed broken pixeldataset aggregation for more than two samples.
 * Fixed a bug in graph generation caused by accidentally writing the index to the parquet file.
-  For backwards compatiblity, if there is an column named `index` in the edgelist, this
+  For backwards compatibility, if there is an column named `index` in the edgelist, this
   will be removed and the user will get a warning indicating that this has happened.
-  
+
 
 ## [0.15.1] - 2023-10-18
 
