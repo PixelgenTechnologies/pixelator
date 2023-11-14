@@ -8,4 +8,4 @@ arg-type-hints-in-signature = True
 arg-type-hints-in-docstring = False
 # Ignore documentation linting in tests
 per-file-ignores =
-    tests/*: D101, D103, D200, D202, D205, D212, D121, D400, D401, D403, D404, D415, DOC
+    tests/**: D101, D102, D103, D200, D202, D205, D212, D121, D400, D401, D403, D404, D415, DOC

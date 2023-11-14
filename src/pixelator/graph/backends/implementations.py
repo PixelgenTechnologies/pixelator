@@ -780,7 +780,7 @@ class IgraphBasedVertexSequence(VertexSequence):
     def get_vertex(self, vertex: int) -> Vertex:
         """Get the vertex corresponding to the vertex id."""
         try:
-            return IgraphBasedVertex(list(self._vertex_seq)[vertex])
+            return IgraphBasedVertex({v.index: v for v in self._vertex_seq}[vertex])
         except KeyError as e:
             raise KeyError(
                 (
