@@ -5,6 +5,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 import os
 import random
 
+from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 from pixelator.graph import Graph
@@ -222,6 +223,19 @@ def test_connected_components(enable_backend, edgelist):
     graph_sizes = {len(g.vs) for g in subgraphs}
     assert len(subgraphs) == 5
     assert graph_sizes == {1996, 1995, 1998, 1996, 1995}
+
+
+def test_connected_components_caches_results(edgelist):
+    graph = Graph.from_edgelist(
+        edgelist, add_marker_counts=False, simplify=False, use_full_bipartite=True
+    )
+    mock_func = MagicMock()
+    graph._backend.connected_components = mock_func
+
+    # The backend connected component should only be called once, since it caches
+    graph.connected_components()
+    graph.connected_components()
+    mock_func.assert_called_once()
 
 
 @pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
