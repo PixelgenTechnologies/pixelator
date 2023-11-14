@@ -6,6 +6,7 @@ import random
 
 import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
 from pixelator.graph.utils import (
@@ -296,6 +297,28 @@ def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
     }
 
 
+def test_edgelist_metrics_on_lazy_dataframe(full_graph_edgelist: pd.DataFrame):
+    full_graph_edgelist = pl.DataFrame(full_graph_edgelist).lazy()
+    metrics = edgelist_metrics(full_graph_edgelist)
+    assert metrics == {
+        "components": 1,
+        "components_modularity": 0.0,
+        "edges": 2500,
+        "frac_largest_edges": 1.0,
+        "frac_largest_vertices": 1.0,
+        "markers": 2,
+        "vertices": 100,
+        "total_upia": 50,
+        "total_upib": 50,
+        "mean_count": 1.0,
+        "total_umi": 1908,
+        "total_upi": 100,
+        "frac_upib_upia": 1.0,
+        "upia_degree_mean": 50.0,
+        "upia_degree_median": 50.0,
+    }
+
+
 @pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_update_edgelist_membership(enable_backend, data_root):
     """Test updating the edgelist membership."""
@@ -319,6 +342,22 @@ def test_update_edgelist_membership_benchmark(benchmark, enable_backend, data_ro
     result = benchmark(update_edgelist_membership, edgelist.copy(), prefix="PXLCMP")
 
     assert "component" not in edgelist.columns
+    assert set(result["component"].unique()) == {
+        "PXLCMP0000000",
+        "PXLCMP0000001",
+        "PXLCMP0000002",
+        "PXLCMP0000003",
+        "PXLCMP0000004",
+    }
+
+
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_update_edgelist_membership_lazyframe(enable_backend, data_root):
+    edgelist = pl.read_csv(str(data_root / "test_edge_list.csv")).lazy()
+    assert "component" not in edgelist.columns
+
+    result = update_edgelist_membership(edgelist, prefix="PXLCMP").collect().to_pandas()
+
     assert set(result["component"].unique()) == {
         "PXLCMP0000000",
         "PXLCMP0000001",

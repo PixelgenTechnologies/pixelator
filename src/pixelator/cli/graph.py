@@ -30,7 +30,7 @@ from pixelator.utils import (
     nargs=-1,
     required=True,
     type=click.Path(exists=True),
-    metavar="CSV",
+    metavar="parquet",
 )
 @click.option(
     "--multiplet-recovery",
@@ -84,7 +84,7 @@ def graph(
     )
 
     # some basic sanity check on the input files
-    sanity_check_inputs(input_files, allowed_extensions="csv.gz")
+    sanity_check_inputs(input_files, allowed_extensions="parquet")
 
     # create output folder if it does not exist
     graph_output = create_output_stage_dir(output, "graph")

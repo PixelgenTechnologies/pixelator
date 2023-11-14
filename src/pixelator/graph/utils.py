@@ -11,6 +11,7 @@ from typing import Dict, List, Literal, Optional, Union
 import igraph
 import numpy as np
 import pandas as pd
+import polars as pl
 from scipy.sparse import identity
 
 from pixelator.graph.backends.implementations import IgraphGraphBackend
@@ -222,37 +223,12 @@ def create_node_markers_counts(
     return df
 
 
-def edgelist_metrics(
-    edgelist: pd.DataFrame, graph: Optional[Graph] = None
-) -> Dict[str, Union[int, float]]:
-    """Compute edgelist metrics.
+MetricsDict = Dict[str, Union[int, float]]
 
-    A simple function that computes a dictionary of basic metrics
-    from an edge list (pd.DataFrame).
 
-    :param edgelist: the edge list (pd.DataFrame)
-    :param graph: optionally add the graph instance that corresponds to the
-                  edgelist (to not have to re-compute it)
-    :returns: a dictionary of metrics (metric -> float)
-    :rtype: Dict[str, Union[int, float]]
-    """
-    metrics: Dict[str, Union[int, float]] = {}
-    metrics["total_upia"] = edgelist["upia"].nunique()
-    metrics["total_upib"] = edgelist["upib"].nunique()
-    metrics["total_umi"] = edgelist["umi"].nunique()
-    metrics["total_upi"] = metrics["total_upia"] + metrics["total_upib"]
-    metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
-    metrics["markers"] = edgelist["marker"].nunique()
-    metrics["edges"] = edgelist.shape[0]
-    metrics["mean_count"] = round(edgelist["count"].mean(), 2)
-
-    # Please note that we need to use observed=True
-    # here upia is a categorical column, and since not
-    # all values are present in all components, this is
-    # required to get a correct value.
-    upia_degree = edgelist.groupby("upia", observed=True)["upib"].nunique()
-    metrics["upia_degree_mean"] = round(upia_degree.mean(), 2)
-    metrics["upia_degree_median"] = round(upia_degree.median(), 2)
+def _calculate_graph_metrics(
+    metrics, graph: Optional[Graph], edgelist: Union[pd.DataFrame, pl.LazyFrame]
+) -> MetricsDict:
     if not graph:
         graph = Graph.from_edgelist(
             edgelist=edgelist,
@@ -270,28 +246,90 @@ def edgelist_metrics(
     return metrics
 
 
-def update_edgelist_membership(
+def _edgelist_metrics_pandas_dataframe(
+    edgelist: pd.DataFrame, graph: Optional[Graph] = None
+) -> MetricsDict:
+    metrics: Dict[str, Union[int, float]] = {}
+    metrics["total_upia"] = edgelist["upia"].nunique()
+    metrics["total_upib"] = edgelist["upib"].nunique()
+    metrics["total_umi"] = edgelist["umi"].nunique()
+    metrics["total_upi"] = metrics["total_upia"] + metrics["total_upib"]
+    metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
+    metrics["markers"] = edgelist["marker"].nunique()
+    metrics["edges"] = edgelist.shape[0]
+    metrics["mean_count"] = round(edgelist["count"].mean(), 2)
+
+    # Please note that we need to use observed=True
+    # here upia is a categorical column, and since not
+    # all values are present in all components, this is
+    # required to get a correct value.
+    upia_degree = edgelist.groupby("upia", observed=True)["upib"].nunique()
+    metrics["upia_degree_mean"] = round(upia_degree.mean(), 2)
+    metrics["upia_degree_median"] = round(upia_degree.median(), 2)
+
+    metrics = _calculate_graph_metrics(metrics=metrics, graph=graph, edgelist=edgelist)
+    return metrics
+
+
+def _edgelist_metrics_polars_lazy_frame(
+    edgelist: pl.LazyFrame, graph: Optional[Graph] = None
+) -> MetricsDict:
+    metrics: Dict[str, Union[int, float]] = {}
+    metrics["total_upia"] = edgelist.select(pl.col("upia")).collect().n_unique()
+    metrics["total_upib"] = edgelist.select(pl.col("upib")).collect().n_unique()
+    metrics["total_umi"] = edgelist.select(pl.col("umi")).collect().n_unique()
+    metrics["total_upi"] = metrics["total_upia"] + metrics["total_upib"]
+    metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
+    metrics["markers"] = edgelist.select(pl.col("marker")).collect().n_unique()
+    # Note that we get upi here and count that, because otherwise just calling count
+    # here confuses polars since there is a column with that name.
+    metrics["edges"] = (
+        edgelist.select(pl.col("upia")).select(pl.count()).collect()[0, 0]
+    )
+    metrics["mean_count"] = round(
+        edgelist.select(pl.col("count")).mean().collect()[0, 0], 2
+    )
+
+    upia_degree = edgelist.group_by(pl.col("upia")).agg(pl.col("upib").unique().count())
+    metrics["upia_degree_mean"] = round(upia_degree.mean().collect()[0, 1], 2)
+    metrics["upia_degree_median"] = round(upia_degree.median().collect()[0, 1], 2)
+
+    metrics = _calculate_graph_metrics(metrics=metrics, graph=graph, edgelist=edgelist)
+
+    return metrics
+
+
+def edgelist_metrics(
+    edgelist: Union[pd.DataFrame, pl.LazyFrame], graph: Optional[Graph] = None
+) -> Dict[str, Union[int, float]]:
+    """Compute edgelist metrics.
+
+    A simple function that computes a dictionary of basic metrics
+    from an edge list (pd.DataFrame).
+
+    :param edgelist: the edge list (pd.DataFrame)
+    :param graph: optionally add the graph instance that corresponds to the
+                  edgelist (to not have to re-compute it)
+    :returns: a dictionary of metrics (metric -> float)
+    :rtype: Dict[str, Union[int, float]]
+    :raises TypeError: if edgelist is not either pd.DataFrame or pl.LazyFrame
+    """
+    if isinstance(edgelist, pd.DataFrame):
+        logger.debug("Compputing edgelist metrics where edgelist type is pd.DataFrame")
+        return _edgelist_metrics_pandas_dataframe(edgelist=edgelist, graph=graph)
+
+    if isinstance(edgelist, pl.LazyFrame):
+        logger.debug("Computing edgelist metrics where edgelist type is pl.LazyFrame")
+        return _edgelist_metrics_polars_lazy_frame(edgelist=edgelist, graph=graph)
+
+    raise TypeError("edgelist was not of type `pd.DataFrame` or `pl.LazyFrame")
+
+
+def _update_edgelist_membership_pandas_data_frame(
     edgelist: pd.DataFrame,
     graph: Optional[Graph] = None,
     prefix: Optional[str] = None,
 ) -> pd.DataFrame:
-    """Update the edgelist with component names.
-
-    A helper function that computes a vector of component membership ids (str)
-    for each edge (row) in the given `edgelist` (pd.DataFrame). Each component id
-    corresponds to a connected component in the respective graph (iGraph). The
-    prefix attribute `prefix` is prepended to each component id. The component ids
-    will be added to the returned edge list in a column called component.
-
-    :param edgelist: the edge list (pd.DataFrame)
-    :param graph: optional graph if you have already computed this, it is important
-                  that you know that the edgelist and the graph is in-sync if you
-                  use this feature.
-    :param prefix: the prefix to prepend to the component ids, if None will
-                    use `DEFAULT_COMPONENT_PREFIX`
-    :returns: the update edge list (pd.DataFrame)
-    :rtype: pd.DataFrame
-    """
     logger.debug("Updating membership in edge list with %i rows", edgelist.shape[0])
 
     if prefix is None:
@@ -311,10 +349,8 @@ def update_edgelist_membership(
     logger.debug("Fetching connected components")
     connected_components = graph.connected_components()
     logger.debug(
-        (
-            "Got the connected components. Will begin the iteration "
-            "to updated edge memberships"
-        )
+        "Got the connected components. "
+        "Will begin the iteration to updated edge memberships"
     )
 
     membership = np.empty(edgelist.shape[0], dtype=object)
@@ -330,3 +366,83 @@ def update_edgelist_membership(
 
     logger.debug("Membership in edge list updated")
     return edgelist
+
+
+def _update_edgelist_membership_lazyframe(
+    edgelist: pl.LazyFrame,
+    graph: Optional[Graph] = None,
+    prefix: Optional[str] = None,
+) -> pl.LazyFrame:
+    if prefix is None:
+        prefix = DEFAULT_COMPONENT_PREFIX
+
+    if "component" in edgelist.columns:
+        logger.info("The input edge list already contain a component column")
+
+    if not graph:
+        graph = Graph.from_edgelist(
+            edgelist=edgelist,
+            add_marker_counts=False,
+            simplify=False,
+            use_full_bipartite=True,
+        )
+
+    connected_components = graph.connected_components()
+    component_id_format = f"{prefix}{{:0{DIGITS}d}}"
+
+    edge_index_to_component_mapping = {
+        e.index: component_id_format.format(component_idx)
+        for component_idx, component in enumerate(connected_components)
+        for e in graph.es.select_within({v.index for v in component.vertices()})
+    }
+
+    edgelist_with_component_info = edgelist.with_row_count(
+        name="edge_index"
+    ).with_columns(
+        pl.col("edge_index")
+        .map_dict(edge_index_to_component_mapping)
+        .cast(pl.Utf8)
+        .alias("component")
+    )
+    edgelist_with_component_info = edgelist_with_component_info.drop(
+        columns="edge_index"
+    )
+    return edgelist_with_component_info
+
+
+def update_edgelist_membership(
+    edgelist: Union[pd.DataFrame, pl.LazyFrame],
+    graph: Optional[Graph] = None,
+    prefix: Optional[str] = None,
+) -> pd.DataFrame:
+    """Update the edgelist with component names.
+
+    A helper function that computes a vector of component membership ids (str)
+    for each edge (row) in the given `edgelist` (pd.DataFrame). Each component id
+    corresponds to a connected component in the respective graph (iGraph). The
+    prefix attribute `prefix` is prepended to each component id. The component ids
+    will be added to the returned edge list in a column called component.
+
+    :param edgelist: the edge list (pd.DataFrame)
+    :param graph: optional graph if you have already computed this, it is important
+                  that you know that the edgelist and the graph is in-sync if you
+                  use this feature.
+    :param prefix: the prefix to prepend to the component ids, if None will
+                    use `DEFAULT_COMPONENT_PREFIX`
+    :returns: the update edge list (pd.DataFrame)
+    :rtype: pd.DataFrame
+    :raises TypeError: if edgelist is not either pd.DataFrame or pl.LazyFrame
+    """
+    if isinstance(edgelist, pd.DataFrame):
+        logger.debug("Updating edgelist where type is pd.DataFrame")
+        return _update_edgelist_membership_pandas_data_frame(
+            edgelist=edgelist, graph=graph, prefix=prefix
+        )
+
+    if isinstance(edgelist, pl.LazyFrame):
+        logger.debug("Updating edgelist where type is pl.LazyFrame")
+        return _update_edgelist_membership_lazyframe(
+            edgelist=edgelist, graph=graph, prefix=prefix
+        )
+
+    raise TypeError("edgelist was not of type pd.DataFrame or pl.LazyFrame")

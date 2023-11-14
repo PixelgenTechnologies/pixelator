@@ -191,9 +191,6 @@ def collapse(
     for sample, files in input_samples.items():
         logger.info(f"Processing {len(files)} files for sample {sample}")
 
-        output_file = collapse_output / f"{sample}.collapsed.csv.gz"
-        json_file = collapse_output / f"{sample}.report.json"
-
         write_parameters_file(
             ctx,
             collapse_output / f"{sample}.meta.json",
@@ -253,7 +250,11 @@ def collapse(
         df = pd.concat(
             (pd.read_feather(f, use_threads=True) for f in tmp_files), axis=0
         )
-        df.to_csv(output_file, header=True, index=False, compression="gzip")
+
+        output_file = collapse_output / f"{sample}.collapsed.parquet"
+        df.to_parquet(
+            output_file, engine="fastparquet", compression="zstd", index=False
+        )
 
         # remove temporary edge list files
         for f in tmp_files:
@@ -267,5 +268,6 @@ def collapse(
             "total_unique_umi": int(df["umi_unique_count"].sum()),
             "total_unique_upi": int(df["upi_unique_count"].sum()),
         }
+        json_file = collapse_output / f"{sample}.report.json"
         with open(json_file, "w") as outfile:
             json.dump(metrics, outfile)
