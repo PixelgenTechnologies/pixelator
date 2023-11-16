@@ -360,9 +360,11 @@ def recover_technical_multiplets(
             compression="zstd",
         )
 
+    logger.debug("Preparing edge list for computing new components")
     old_edgelist = edgelist.select(pl.col("upi"), pl.col("component"))
     edgelist = edgelist.filter(~pl.col("upi").is_in(edges_to_remove))
 
+    logger.debug("Creating updated edgelist")
     edgelist = update_edgelist_membership(
         edgelist=edgelist,
         graph=None,  # We need to make sure that a new graph is built

@@ -387,25 +387,36 @@ def _update_edgelist_membership_lazyframe(
             use_full_bipartite=True,
         )
 
+    logger.debug("Searching for connected components")
     connected_components = graph.connected_components()
-    component_id_format = f"{prefix}{{:0{DIGITS}d}}"
 
+    logger.debug("Building edge to component mappings")
     edge_index_to_component_mapping = {
-        e.index: component_id_format.format(component_idx)
+        e.index: component_idx
         for component_idx, component in enumerate(connected_components)
         for e in graph.es.select_within({v.index for v in component.vertices()})
     }
 
-    edgelist_with_component_info = edgelist.with_row_count(
-        name="edge_index"
-    ).with_columns(
-        pl.col("edge_index")
-        .map_dict(edge_index_to_component_mapping)
-        .cast(pl.Utf8)
-        .alias("component")
+    logger.debug("Mapping components on the edge list")
+    edgelist_with_component_info = (
+        edgelist.with_row_count(name="edge_index")
+        .with_columns(
+            pl.col("edge_index")
+            .map_dict(edge_index_to_component_mapping)
+            .alias("component_index")
+        )
+        .with_columns(
+            pl.format(
+                "{}{}",
+                pl.lit(prefix),
+                pl.col("component_index")
+                .cast(pl.Utf8)
+                .str.pad_start(length=DIGITS, fill_char="0"),
+            ).alias("component")
+        )
     )
     edgelist_with_component_info = edgelist_with_component_info.drop(
-        columns="edge_index"
+        columns=["edge_index", "component_index"]
     )
     return edgelist_with_component_info
 
