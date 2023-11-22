@@ -208,7 +208,6 @@ def community_detection_crossing_edges(
 
     # compute communities
     vertex_clustering = graph.community_leiden(
-        objective_function="modularity",
         n_iterations=leiden_iterations,
         beta=beta,
     )

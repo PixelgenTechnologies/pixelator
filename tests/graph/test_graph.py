@@ -229,8 +229,6 @@ def test_community_leiden_raises_for_invalid_options(edgelist):
     graph = Graph.from_edgelist(
         edgelist, add_marker_counts=False, simplify=False, use_full_bipartite=True
     )
-    with pytest.raises(AssertionError):
-        _ = graph.community_leiden(objective_function="non-valid-option")
 
     with pytest.raises(AssertionError):
         _ = graph.community_leiden(beta=-1.0)
