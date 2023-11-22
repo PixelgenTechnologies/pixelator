@@ -5,7 +5,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 import logging
 import os
-from typing import Dict, Iterable, List, Literal, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import igraph
 import networkx as nx
@@ -141,7 +141,6 @@ class Graph:
 
     def community_leiden(
         self,
-        objective_function: Literal["modularity", "cpm"] = "modularity",
         n_iterations: int = 2,
         beta: float = 0.01,
         **kwargs,
@@ -152,7 +151,6 @@ class Graph:
         As an example we use this to remove edges that jump between cells
         due to chimeric PCR products.
 
-        :param objective_function: modularity or cpm (for Constant Potts Model (CPM))
         :param n_iterations: number of iterations to use in the Leiden algorithm
         :param beta: controls the randomness of the refinement step of the
                      Leiden algorithm
@@ -165,16 +163,7 @@ class Graph:
                 f"Beta parameter must be larger than 0. Beta was: {beta}"
             )
 
-        if objective_function not in ["modularity", "cpm"]:
-            raise AssertionError(
-                (
-                    "`object_function` must be either `modularity` or `cmp`."
-                    f"Value given was: {objective_function}"
-                )
-            )
-
         return self._backend.community_leiden(
-            objective_function=objective_function,
             n_iterations=n_iterations,
             beta=beta,
             **kwargs,
