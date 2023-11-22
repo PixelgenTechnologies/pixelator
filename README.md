@@ -1,7 +1,7 @@
 # Pixelator
 
 
-![python-version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)
+![python-version](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 [![DOI](https://img.shields.io/badge/DOI-10.1101/2023.06.05.543770-B31B1B.svg)](https://www.biorxiv.org/content/10.1101/2023.06.05.543770v1)
 ![conda](https://anaconda.org/bioconda/pixelator/badges/version.svg)
