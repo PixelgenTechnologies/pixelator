@@ -118,9 +118,9 @@ def collect_reads_per_umi_frequency(dataset: PixelDataset) -> str:
         pl.col("reads_per_umi"),
         frequency=pl.col("counts") / pl.col("counts").sum(),
     )
-    freq = freq.rename({"counts": "count"}).sort(by="reads_per_umi").to_pandas()
+    pd_freq = freq.rename({"counts": "count"}).sort(by="reads_per_umi").to_pandas()
 
-    return freq.to_csv(index=False)
+    return pd_freq.to_csv(index=False)
 
 
 def collect_parameter_info(
