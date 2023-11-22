@@ -290,7 +290,7 @@ def _edgelist_metrics_polars_lazy_frame(
         edgelist.select(pl.col("count")).mean().collect()[0, 0], 2
     )
 
-    upia_degree = edgelist.group_by(pl.col("upia")).agg(pl.col("upib").unique().count())
+    upia_degree = edgelist.group_by(pl.col("upia")).agg(pl.n_unique("upib"))
     metrics["upia_degree_mean"] = round(upia_degree.mean().collect()[0, 1], 2)
     metrics["upia_degree_median"] = round(upia_degree.median().collect()[0, 1], 2)
 
