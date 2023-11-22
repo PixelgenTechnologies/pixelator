@@ -59,8 +59,7 @@ class BaseReportTestsMixin(BaseWorkflowTestMixin):
         assert self.__this_result.exit_code == 0
 
     @pytest.mark.dependency(depends=["test_report_run"])
-    def test_report_customer_exists(self):
+    def test_report_qc_report_exists(self):
         """Check if the qc report html exists."""
-        report_files = (self.workdir / "report").glob("*.qc-report.html")
-        for f in report_files:
-            assert f.is_file()
+        report_files = list((self.workdir / "report").glob("*.qc-report.html"))
+        assert len(report_files) > 0
