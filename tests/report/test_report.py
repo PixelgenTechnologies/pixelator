@@ -23,13 +23,13 @@ from pixelator.report import (
     graph_and_annotate_metrics,
     preqc_metrics,
 )
-from pixelator.report.webreport.builder import WebreportBuilder
-from pixelator.report.webreport.collect import generate_parameter_info
-from pixelator.report.webreport.types import (
+from pixelator.report.qcreport.builder import QCReportBuilder
+from pixelator.report.qcreport.collect import generate_parameter_info
+from pixelator.report.qcreport.types import (
     InfoAndMetrics,
     Metrics,
     SampleInfo,
-    WebreportData,
+    QCReportData,
 )
 from pixelator.report.workdir import PixelatorWorkdir
 
@@ -59,7 +59,7 @@ def main_data(data_root) -> InfoAndMetrics:
 
 
 @pytest.fixture
-def figure_data(data_root) -> WebreportData:
+def figure_data(data_root) -> QCReportData:
     data_dir = data_root / "report"
 
     with open(data_dir / "component_data.csv") as f:
@@ -80,20 +80,24 @@ def figure_data(data_root) -> WebreportData:
     with open(data_dir / "antibody_counts.csv") as f:
         ab_counts = f.read()
 
-    webreport_data = WebreportData(
+    with open(data_dir / "reads-per-umi-frequency.csv") as f:
+        reads_per_umi_freq = f.read()
+
+    webreport_data = QCReportData(
         component_data=embedding_data,
         ranked_component_size=ranked_component_size_data,
         sequencing_saturation=seq_saturation,
         antibodies_per_cell=ab_per_cell,
         antibody_percentages=ab_pct,
         antibody_counts=ab_counts,
+        reads_per_umi_frequency=reads_per_umi_freq,
     )
     return webreport_data
 
 
 def test_write_webreport(tmp_path, main_data, figure_data):
     output_report = tmp_path / "test_webreport.html"
-    builder = WebreportBuilder()
+    builder = QCReportBuilder()
 
     with open(output_report, "wb") as f:
         builder.write(
@@ -315,7 +319,7 @@ def test_generate_parameter_info(data_root):
 
 def test_create_dynamic_report(tmp_path):
     with mock.patch(
-        "pixelator.report.WebreportBuilder"
+        "pixelator.report.QCReportBuilder"
     ) as mock_builder_factory, mock.patch("pixelator.report.collect_report_data"):
         instance = mock_builder_factory.return_value
 
@@ -363,7 +367,7 @@ def test_create_dynamic_report(tmp_path):
                     "umis_of_aggregates": 3,
                     "cells_filtered": 10,
                     "mean_reads_cell": 10,
-                    "median_umi_cell": 11,
+                    "mean_umi_cell": 11,
                     "mean_upia_cell": 3,
                     "mean_umi_upia_cell": 3,
                     "median_markers_cell": 14,
