@@ -389,7 +389,7 @@
   "metrics": {
     "number_of_cells": 960,
     "average_reads_per_cell": 97120,
-    "median_antibody_molecules_per_cell": 14850,
+    "average_antibody_molecules_per_cell": 14850,
     "median_umis_per_upi_per_cell": 9,
     "median_upis_per_cell": 1650,
     "average_modularity_per_cell": null,

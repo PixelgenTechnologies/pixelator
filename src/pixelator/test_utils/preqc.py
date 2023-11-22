@@ -1,4 +1,5 @@
-"""
+"""Workflow test helper for single-cell preqc command.
+
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import logging
@@ -11,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class BasePreQCTestsMixin(BaseWorkflowTestMixin):
-    """
-    Base class for preqc command tests.
+    """Base class for preqc command tests.
 
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
@@ -25,6 +25,7 @@ class BasePreQCTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(name="test_preqc_run", depends=["test_amplicon_run"])
     def test_preqc_run(self):
+        """Test and run the preqc command."""
         design = self.__get_data("design")
         params = self.__get_parameters()
         verbose = self.__get_options("common").get("verbose")
@@ -60,32 +61,38 @@ class BasePreQCTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(depends=["test_preqc_run"])
     def test_preqc_logfile_exist(self):
+        """Check if the log file exists."""
         assert (self.workdir / "preqc-pixelator.log").is_file()
 
     @pytest.mark.dependency(depends=["test_preqc_run"])
     def test_preqc_results_folder_exists(self):
+        """Check if the output directory is created."""
         assert (self.workdir / "preqc").is_dir()
 
     @pytest.mark.dependency(depends=["test_preqc_run"])
     def test_preqc_processed_output_exists(self):
+        """Check if the per antibody "processed" fastq files exist."""
         processed_files = (self.workdir / "preqc").glob("*.processed.fastq.gz")
         for f in processed_files:
             assert f.is_file()
 
     @pytest.mark.dependency(depends=["test_preqc_run"])
     def test_preqc_failed_output_exists(self):
+        """Check if the "failed" fastq files exist."""
         failed_files = (self.workdir / "preqc").glob("*.failed.fastq.gz")
         for f in failed_files:
             assert f.is_file()
 
     @pytest.mark.dependency(depends=["test_preqc_run"])
     def test_preqc_html_output_exists(self):
+        """Check if the fastp html report exist."""
         html_files = (self.workdir / "preqc").glob("*.report.html")
         for f in html_files:
             assert f.is_file()
 
     @pytest.mark.dependency(depends=["test_preqc_run"])
     def test_preqc_json_output_exists(self):
+        """Check if the report.json summary exist."""
         json_files = (self.workdir / "preqc").glob("*.report.json")
         for f in json_files:
             assert f.is_file()

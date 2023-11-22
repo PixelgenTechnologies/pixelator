@@ -1,4 +1,5 @@
-"""
+"""Workflow test helper for single-cell report command.
+
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import logging
@@ -12,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseReportTestsMixin(BaseWorkflowTestMixin):
-    """
-    Base class for report command tests.
+    """Base class for report command tests.
 
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
@@ -26,6 +26,7 @@ class BaseReportTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(name="test_report_run", depends=["test_analysis_run"])
     def test_report_run(self):
+        """Test and run the report command."""
         params = self.__get_parameters()
         verbose = self.__get_options("common").get("verbose")
         panel = self.__get_data("panel")
@@ -59,6 +60,7 @@ class BaseReportTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(depends=["test_report_run"])
     def test_report_customer_exists(self):
-        report_files = (self.workdir / "report").glob("*_report.html")
+        """Check if the qc report html exists."""
+        report_files = (self.workdir / "report").glob("*.qc-report.html")
         for f in report_files:
             assert f.is_file()
