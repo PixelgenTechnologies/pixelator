@@ -311,7 +311,10 @@ def update_edgelist_membership(
     logger.debug("Fetching connected components")
     connected_components = graph.connected_components()
     logger.debug(
-        "Got the connected components. Will begin the iteration to updated edge memberships"
+        (
+            "Got the connected components. Will begin the iteration "
+            "to updated edge memberships"
+        )
     )
 
     membership = np.empty(edgelist.shape[0], dtype=object)
@@ -325,4 +328,5 @@ def update_edgelist_membership(
         membership[edges] = component_id
     edgelist = edgelist.assign(component=membership)
 
+    logger.debug("Membership in edge list updated")
     return edgelist
