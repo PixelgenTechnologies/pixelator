@@ -194,10 +194,10 @@ def community_detection_crossing_edges(
     :param graph: a graph object
     :param leiden_iterations: the number of iterations for the leiden algorithm
     :param beta: parameter to control the randomness of the cluster refinement in
-                 the Leiden algorithm. Must be a non-zero float.
+                 the Leiden algorithm. Must be a positive, non-zero float.
     :returns: a list of sets with the edges between communities (edges ids)
     :rtype: List[Set[str]]
-    :raises AssertionError: if the method is not supported
+    :raises AssertionError: if unsupported community detection options are found.
     """
     logger.debug(
         "Computing community detection using the leiden algorithm in a graph "
@@ -205,9 +205,6 @@ def community_detection_crossing_edges(
         graph.vcount(),
         graph.ecount(),
     )
-
-    if not beta > 0:
-        raise ValueError(f"Beta parameter must be larger than 0: {beta}")
 
     # compute communities
     vertex_clustering = graph.community_leiden(
@@ -217,28 +214,26 @@ def community_detection_crossing_edges(
     )
 
     # obtain the list of edges connecting the communities (crossing edges)
-    if vertex_clustering is not None:
-        # get the crossing edges
-        crossing_edges = vertex_clustering.crossing()
-        # translate the edges to sets of their corresponding vertex names
-        logger.debug("Iterating over crossing edges")
-        edges = [
-            {e.vertex_tuple[0]["name"], e.vertex_tuple[1]["name"]}
-            for e in crossing_edges
-        ]
-        logger.debug("Finished iterating over crossing edges")
-        logger.debug(
-            "Community detection detected %i crossing edges in %i communities with a "
-            "modularity of %f",
-            len(edges),
-            len(vertex_clustering),
-            vertex_clustering.modularity,
-        )
-        return edges
-    logger.debug("Community detection returned an empty list")
-    return []
+    # get the crossing edges
+    crossing_edges = vertex_clustering.crossing()
+    # translate the edges to sets of their corresponding vertex names
+    logger.debug("Iterating over crossing edges")
+    edges = [
+        {e.vertex_tuple[0]["name"], e.vertex_tuple[1]["name"]} for e in crossing_edges
+    ]
+    logger.debug("Finished iterating over crossing edges")
+    logger.debug(
+        "Community detection detected %i crossing edges in %i communities with a "
+        "modularity of %f",
+        len(edges),
+        len(vertex_clustering),
+        vertex_clustering.modularity,
+    )
+    return edges
 
 
+# TODO Perhaps we can drop this method, since it doesn't
+# add very much.
 def detect_edges_to_remove(
     graph: Graph,
     leiden_iterations: int = 10,
