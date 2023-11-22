@@ -50,6 +50,12 @@ class TestVertexClassesImplementVertexProtocol:
         vertex_instance = request.getfixturevalue(vertex)
         assert vertex_instance["my_attr"] == "a"
 
+    def test__setitem__(self, vertex, request):
+        vertex_instance = request.getfixturevalue(vertex)
+        assert vertex_instance["my_attr"] == "a"
+        vertex_instance["my_attr"] = "changed"
+        assert vertex_instance["my_attr"] == "changed"
+
 
 @pytest.fixture
 def ig_edge(ig_graph):
@@ -80,7 +86,7 @@ def ig_vertex_seq(ig_graph):
     ig_graph.add_vertex(my_attr="a", other_attr=1)
     ig_graph.add_vertex(my_attr="b", other_attr=2)
     ig_graph.add_vertex(my_attr="n", other_attr=2)
-    yield IgraphBasedVertexSequence(ig_graph.vs, ig_graph)
+    yield IgraphBasedVertexSequence(ig_graph.vs)
 
 
 @pytest.fixture

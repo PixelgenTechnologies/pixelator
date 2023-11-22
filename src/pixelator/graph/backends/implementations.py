@@ -37,7 +37,7 @@ from pixelator.graph.backends.protocol import (
     Vertex,
     VertexClustering,
     VertexSequence,
-    _GraphBackend,
+    GraphBackend,
 )
 
 if TYPE_CHECKING:
@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class IgraphGraphBackend(_GraphBackend):
+class IgraphGraphBackend(GraphBackend):
     """`IGraphGraphBackend` represents a graph, using igraph."""
 
     def __init__(
@@ -180,7 +180,7 @@ class IgraphGraphBackend(_GraphBackend):
     @property
     def vs(self):
         """Get a sequence of the vertices in the Graph instance."""
-        return IgraphBasedVertexSequence(self._raw.vs, self._raw)
+        return IgraphBasedVertexSequence(self._raw.vs)
 
     @property
     def es(self):
@@ -370,7 +370,7 @@ class IgraphGraphBackend(_GraphBackend):
             vertex["name"] = vs_names
 
 
-class NetworkXGraphBackend(_GraphBackend):
+class NetworkXGraphBackend(GraphBackend):
     """`IGraphGraphBackend` represents a graph, using networkx."""
 
     def __init__(
@@ -571,7 +571,7 @@ class NetworkXGraphBackend(_GraphBackend):
     @property
     def es(self):
         """A sequence of the edges in the Graph instance."""
-        return NetworkxBasedEdgeSequence(self._raw, self.raw.edges(data=True))
+        return NetworkxBasedEdgeSequence(self._raw, self._raw.edges(data=True))
 
     def vcount(self):
         """Get the total number of vertices in the Graph instance."""
@@ -746,24 +746,18 @@ class IgraphBasedEdge(Edge):
 class IgraphBasedVertexSequence(VertexSequence):
     """Proxy for a igraph.VertexSeq."""
 
-    def __init__(self, vertex_sequence: igraph.VertexSeq, graph: igraph.Graph) -> None:
+    def __init__(self, vertex_sequence: igraph.VertexSeq) -> None:
         """Instantiate a new IgraphBasedVertexSequence."""
         self._vertex_seq = vertex_sequence
-        self._graph = graph
 
     def vertices(self) -> Iterable[Vertex]:
         """Return an iterable of vertices."""
         return [IgraphBasedVertex(vertex) for vertex in self._vertex_seq]
 
-    def select(self, **kwargs):
-        """Select a subset of vertices.
-
-        See https://python.igraph.org/en/stable/api/igraph.VertexSeq.html#select
-        """
-        # TODO This needs to be fixed to actually wrap a vertex and be
-        # implemented as part of the protocol, but I will defer this for
-        # now as this method is only used in the generation of test data.
-        return self._vertex_seq.select(**kwargs)
+    def select_where(self, key, value):
+        """Select a subset of vertices where key == value."""
+        kwargs = {key: value}
+        return IgraphBasedVertexSequence(self._vertex_seq.select(**kwargs))
 
     def __len__(self) -> int:
         """Get the number of vertexes."""
@@ -777,15 +771,15 @@ class IgraphBasedVertexSequence(VertexSequence):
         """Get all attributes associated with the vertices."""
         return set(self._vertex_seq.attributes())
 
-    def get_vertex(self, vertex: int) -> Vertex:
-        """Get the vertex corresponding to the vertex id."""
+    def get_vertex(self, vertex_id: int) -> Vertex:
+        """Get the Vertex corresponding to the vertex id."""
         try:
-            return IgraphBasedVertex({v.index: v for v in self._vertex_seq}[vertex])
+            return IgraphBasedVertex({v.index: v for v in self._vertex_seq}[vertex_id])
         except KeyError as e:
             raise KeyError(
                 (
-                    f"Vertex {vertex} not found in VertexSequence. "
-                    f"Contains: {self._vertex_seq}"
+                    f"Vertex {vertex_id} not found in VertexSequence. "
+                    f"Contains: {self.vertices()}"
                 )
             ) from e
 
@@ -845,7 +839,7 @@ class IgraphBasedVertexClustering(VertexClustering):
     def __iter__(self) -> Iterator[VertexSequence]:
         """Provide an iterator over the clusters."""
         for cluster in self._vertex_clustering:
-            yield IgraphBasedVertexSequence(self._graph.vs[cluster], self._graph)
+            yield IgraphBasedVertexSequence(self._graph.vs[cluster])
 
     @property
     def modularity(self) -> float:
@@ -891,7 +885,7 @@ class NetworkxBasedVertex(Vertex):
 
     @property
     def data(self) -> Dict:
-        """Get the of the vertex as a dict."""
+        """Get the data of the vertex as a dict."""
         return self._data
 
     def __getitem__(self, attr: str) -> Any:
@@ -951,11 +945,11 @@ class NetworkxBasedVertexSequence(VertexSequence):
         """Get the number of vertexes."""
         return len(self._vertices.keys())
 
-    def vertices(self):
+    def vertices(self) -> Iterable[Vertex]:
         """Get an iterable of vertices."""
         return self._vertices.values()
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Vertex]:
         """Get an iterator over the vertices in the sequence."""
         return iter(self._vertices.values())
 
@@ -969,9 +963,9 @@ class NetworkxBasedVertexSequence(VertexSequence):
 
         return set(all_attributes())
 
-    def get_vertex(self, vertex: int) -> Vertex:
-        """Get the vertex corresponding to the vertex id."""
-        return self._vertices[vertex]
+    def get_vertex(self, vertex_id: int) -> Vertex:
+        """Get the Vertex corresponding to the vertex id."""
+        return self._vertices[vertex_id]
 
     def get_attribute(self, attr: str) -> Iterable[Any]:
         """Get the values of the attribute."""

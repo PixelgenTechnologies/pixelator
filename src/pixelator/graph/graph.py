@@ -17,7 +17,7 @@ from pixelator.graph.backends.implementations import (
     IgraphGraphBackend,
     NetworkXGraphBackend,
 )
-from pixelator.graph.backends.protocol import VertexClustering, _GraphBackend
+from pixelator.graph.backends.protocol import VertexClustering, GraphBackend
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class Graph:
     """`Graph` represents a graph, i.e. a collection of vertices and edges."""
 
-    def __init__(self, backend: _GraphBackend):
+    def __init__(self, backend: GraphBackend):
         """Create a new Graph instance.
 
         Create a Graph instance (as an end-user this is probably not the interface
@@ -144,7 +144,7 @@ class Graph:
         objective_function: Literal["modularity", "cpm"] = "modularity",
         n_iterations: int = 2,
         beta: float = 0.01,
-        **kwargs
+        **kwargs,
     ) -> VertexClustering:
         """Run community detection using the Leiden algorithm.
 
@@ -158,12 +158,26 @@ class Graph:
                      Leiden algorithm
         :param **kwargs: will be passed to the underlying Leiden implementation
         :rtype: VertexClustering
+        :raises AssertionError: if invalid options are passed.
         """
+        if not beta > 0:
+            raise AssertionError(
+                f"Beta parameter must be larger than 0. Beta was: {beta}"
+            )
+
+        if objective_function not in ["modularity", "cpm"]:
+            raise AssertionError(
+                (
+                    "`object_function` must be either `modularity` or `cmp`."
+                    f"Value given was: {objective_function}"
+                )
+            )
+
         return self._backend.community_leiden(
             objective_function=objective_function,
             n_iterations=n_iterations,
             beta=beta,
-            **kwargs
+            **kwargs,
         )
 
     def layout_coordinates(
