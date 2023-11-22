@@ -15,7 +15,6 @@ from typing import (
     Protocol,
     Set,
     Tuple,
-    Literal,
     Union,
 )
 
@@ -104,7 +103,6 @@ class GraphBackend(Protocol):
 
     def community_leiden(
         self,
-        objective_function: Literal["modularity", "cpm"] = "modularity",
         n_iterations: int = 10,
         beta: float = 0.01,
         **kwargs,
@@ -115,7 +113,6 @@ class GraphBackend(Protocol):
         As an example we use this to remove edges that jump between cells
         due to chimeric PCR products.
 
-        :param objective_function: modularity or cpm (for Constant Potts Model (CPM))
         :param n_iterations: number of iterations to use in the Leiden algorithm
         :param beta: parameter to control the randomness of the cluster refinement in
                  the Leiden algorithm. Must be a positive, non-zero float.

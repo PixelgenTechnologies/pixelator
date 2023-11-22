@@ -15,7 +15,6 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Literal,
     Optional,
     Set,
     Tuple,
@@ -207,7 +206,6 @@ class IgraphGraphBackend(GraphBackend):
 
     def community_leiden(
         self,
-        objective_function: Literal["modularity", "cpm"] = "modularity",
         n_iterations: int = 2,
         beta: float = 0.01,
         **kwargs,
@@ -215,7 +213,7 @@ class IgraphGraphBackend(GraphBackend):
         """Run community detection using the Leiden algorithm."""
         return IgraphBasedVertexClustering(
             self._raw.community_leiden(
-                objective_function=objective_function,
+                objective_function="modularity",
                 n_iterations=n_iterations,
                 beta=beta,
                 **kwargs,
@@ -593,8 +591,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def community_leiden(
         self,
-        objective_function: Literal["modularity", "cpm"] = "modularity",
-        n_iterations: int = 2,
+        n_iterations: int = 10,
         beta: float = 0.01,
         **kwargs,
     ) -> VertexClustering:
@@ -612,7 +609,7 @@ class NetworkXGraphBackend(GraphBackend):
 
         leiden_communities = leiden(
             graph,
-            use_modularity=(objective_function == "modularity"),
+            use_modularity=True,
             randomness=beta,
             extra_forced_iterations=n_iterations,
             **kwargs,
