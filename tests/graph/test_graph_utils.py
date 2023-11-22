@@ -4,6 +4,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import random
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -76,7 +77,7 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
                     "upia": 50,
                     "upib": 50,
                     "umi": 1908,
-                    "reads": 2500,
+                    "reads": np.uint64(2500),
                     "mean_reads_per_molecule": 1.0,
                     "median_reads_per_molecule": 1.0,
                     "mean_upia_degree": 50.0,
@@ -274,6 +275,7 @@ def test_create_node_markers_counts_with_neighbourhood_1(
 
 
 def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
+    """Test generating edgelist metrics."""
     metrics = edgelist_metrics(full_graph_edgelist)
     assert metrics == {
         "components": 1,
