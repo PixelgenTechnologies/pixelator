@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from pixelator.graph import Graph
 
 
-class _GraphBackend(Protocol):
+class GraphBackend(Protocol):
     """Protocol for graph backends."""
 
     @staticmethod
@@ -37,7 +37,7 @@ class _GraphBackend(Protocol):
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
-    ) -> _GraphBackend:
+    ) -> GraphBackend:
         """Build a graph from an edgelist.
 
         Build a Graph from an edge list (pd.DataFrame). Multiple options are available
@@ -56,18 +56,18 @@ class _GraphBackend(Protocol):
         :param use_full_bipartite: use the bipartite graph instead of the projection
                                   (UPIA)
         :returns: a Graph instance
-        :rtype: _GraphBackend
+        :rtype: GraphBackend
         :raises: AssertionError when the input edge list is not valid
         """
         ...
 
     @staticmethod
-    def from_raw(graph: nx.Graph) -> _GraphBackend:
+    def from_raw(graph: nx.Graph) -> GraphBackend:
         """Generate a Graph from an networkx.Graph object.
 
         :param graph: input igraph to use
         :return: A pixelator Graph object
-        :rtype: _GraphBackend
+        :rtype: GraphBackend
         """
         ...
 
@@ -105,7 +105,7 @@ class _GraphBackend(Protocol):
     def community_leiden(
         self,
         objective_function: Literal["modularity", "cpm"] = "modularity",
-        n_iterations: int = 2,
+        n_iterations: int = 10,
         beta: float = 0.01,
         **kwargs,
     ) -> VertexClustering:
@@ -117,8 +117,8 @@ class _GraphBackend(Protocol):
 
         :param objective_function: modularity or cpm (for Constant Potts Model (CPM))
         :param n_iterations: number of iterations to use in the Leiden algorithm
-        :param beta: controls the randomness of the refinement step of the
-                     Leiden algorithm
+        :param beta: parameter to control the randomness of the cluster refinement in
+                 the Leiden algorithm. Must be a positive, non-zero float.
         :param **kwargs: will be passed to the underlying Leiden implementation
         :rtype: VertexClustering
         """
@@ -195,7 +195,7 @@ class _GraphBackend(Protocol):
 
 
 class Vertex(Protocol):
-    """Protocol for vertices in a graph."""
+    """Protocol for a single vertex in a graph."""
 
     @property
     def index(self) -> int:
@@ -256,8 +256,8 @@ class VertexSequence(Iterable[Vertex], Protocol):
         """Get all attributes associated with the vertices."""
         ...
 
-    def get_vertex(self, vertex: int) -> Vertex:
-        """Get the vertex corresponding to the vertex id."""
+    def get_vertex(self, vertex_id: int) -> Vertex:
+        """Get the Vertex corresponding to the vertex id."""
         ...
 
     def get_attribute(self, attr: str) -> Iterable[Any]:
