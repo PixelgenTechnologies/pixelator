@@ -49,6 +49,7 @@ def prepare_from_edgelist(
         sorted(markers_per_pixel.columns), axis=1
     )
     markers_per_pixel.columns = markers_per_pixel.columns.astype("string[pyarrow]")
+    markers_per_pixel = markers_per_pixel.astype("int64", copy=False)
     return markers_per_pixel
 
 
