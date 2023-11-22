@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Change output format of `collapse` from csv to parquet.
 * Change input and output format of `graph` from csv to parquet.
 * Change input format of `annotate` from csv to parquet.
+* Rename the report to "qc report"
+* Add a Reads per Molecule frequency figure to the sequencing section of the qc report.
+* Remove placeholder warning of missing data for not yet implemented features.
+* Change "Median antibody molecules per cell" to "Average antibody molecules per cell" in the qc report.
 
 ### Fixed
 
@@ -34,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Fixed broken pixeldataset aggregation for more than two samples.
 * Fixed a bug in graph generation caused by accidentally writing the index to the parquet file.
-  For backwards compatibility, if there is an column named `index` in the edgelist, this
+  For backwards compatibility, if there is a column named `index` in the edgelist, this
   will be removed and the user will get a warning indicating that this has happened.
 
 
