@@ -18,8 +18,6 @@ classifiers=[
     'Topic :: Scientific/Engineering :: Bio-Informatics',
     'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
     'Natural Language :: English',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11']
 
@@ -28,7 +26,7 @@ packages = [
     { include = "tests", format = "sdist" }]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.12"
+python = ">=3.10,<3.12"
 click = "*"
 yapf = "*"
 cutadapt = ">=4.2"
@@ -40,7 +38,7 @@ pandas = "^2.0.0"
 numpy = "<1.24.0"
 annoy = "<=1.17.0"
 esda = "*"
-libpysal = "*"
+libpysal = ">=4.9.2"
 xopen = "*"
 anndata = ">=0.8.0"
 numba = ">=0.56.4"
