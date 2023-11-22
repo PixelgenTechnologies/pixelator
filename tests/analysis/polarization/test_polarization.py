@@ -41,13 +41,13 @@ def test_polarization_with_differentially_polarized_markers():
     )
 
     graph.vs["markers"] = [{"A": 0, "B": 1, "C": 0} for _ in range(graph.vcount())]
-    random_vertex = graph.vs[random.randint(0, graph.vcount())]
+    random_vertex = graph.vs.get_vertex(random.randint(0, graph.vcount()))
     random_vertex["markers"]["A"] = 5
     neighbors = random_vertex.neighbors()
     for n in neighbors:
         n["markers"]["A"] = 2
 
-    random_vertex = graph.vs[random.randint(0, graph.vcount())]
+    random_vertex = graph.vs.get_vertex(random.randint(0, graph.vcount()))
     random_vertex["markers"]["C"] = 10
 
     scores = polarization_scores_component(graph, component_id="PXLCMP0000000")

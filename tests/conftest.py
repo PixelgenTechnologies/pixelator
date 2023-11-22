@@ -72,14 +72,14 @@ def edgelist_with_communities_fixture():
     graph2 = create_fully_connected_bipartite_graph(n_nodes=50)
 
     # Make sure to retain the bipartite structure after joining
-    source = graph1.vs.select(type=True)[0]["name"]
-    target = graph2.vs.select(type=False)[0]["name"]
+    source = graph1.vs.select_where(key="type", value=True).get_vertex(50)["name"]
+    target = graph2.vs.select_where(key="type", value=False).get_vertex(0)["name"]
 
     joined_graph = graph_union([graph1, graph2])
     joined_graph.add_edges([(source, target)])
 
     def data():
-        for upib in joined_graph.vs.select(type=True):
+        for upib in joined_graph.vs.select_where(key="type", value=True):
             for upia in upib.neighbors():
                 yield {"upia": upia["name"], "upib": upib["name"]}
 
@@ -99,6 +99,7 @@ def edgelist_with_communities_fixture():
 @pytest.fixture(name="full_graph_edgelist", scope="module")
 def full_graph_edgelist_fixture():
     """Create edgelist from fully connected bipartie graph."""
+    random.seed(10)
     g = create_fully_connected_bipartite_graph(50)
     edgelist = create_simple_edge_list_from_graph(g)
     edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")

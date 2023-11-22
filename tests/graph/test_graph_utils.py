@@ -48,11 +48,11 @@ def pentagram_graph_fixture():
     )
 
     default_marker = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0}
-    g.vs[0]["markers"] = dict(default_marker, A=1)
-    g.vs[1]["markers"] = dict(default_marker, B=1)
-    g.vs[2]["markers"] = dict(default_marker, C=1)
-    g.vs[3]["markers"] = dict(default_marker, D=1)
-    g.vs[4]["markers"] = dict(default_marker, E=1)
+    g.vs.get_vertex(0)["markers"] = dict(default_marker, A=1)
+    g.vs.get_vertex(1)["markers"] = dict(default_marker, B=1)
+    g.vs.get_vertex(2)["markers"] = dict(default_marker, C=1)
+    g.vs.get_vertex(3)["markers"] = dict(default_marker, D=1)
+    g.vs.get_vertex(4)["markers"] = dict(default_marker, E=1)
     return g
 
 
@@ -75,7 +75,7 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
                     "antibodies": 2,
                     "upia": 50,
                     "upib": 50,
-                    "umi": 1860,
+                    "umi": 1908,
                     "reads": 2500,
                     "mean_reads_per_molecule": 1.0,
                     "median_reads_per_molecule": 1.0,
@@ -274,7 +274,6 @@ def test_create_node_markers_counts_with_neighbourhood_1(
 
 
 def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
-    """Test generating edgelist metrics."""
     metrics = edgelist_metrics(full_graph_edgelist)
     assert metrics == {
         "components": 1,
@@ -287,7 +286,7 @@ def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
         "total_upia": 50,
         "total_upib": 50,
         "mean_count": 1.0,
-        "total_umi": 1860,
+        "total_umi": 1908,
         "total_upi": 100,
         "frac_upib_upia": 1.0,
         "upia_degree_mean": 50.0,
@@ -295,10 +294,27 @@ def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
     }
 
 
-def test_update_edgelist_membership(data_root):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_update_edgelist_membership(enable_backend, data_root):
     """Test updating the edgelist membership."""
     edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
     result = update_edgelist_membership(edgelist.copy(), prefix="PXLCMP")
+
+    assert "component" not in edgelist.columns
+    assert set(result["component"].unique()) == {
+        "PXLCMP0000000",
+        "PXLCMP0000001",
+        "PXLCMP0000002",
+        "PXLCMP0000003",
+        "PXLCMP0000004",
+    }
+
+
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_update_edgelist_membership_benchmark(benchmark, enable_backend, data_root):
+    """Test updating the edgelist membership."""
+    edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
+    result = benchmark(update_edgelist_membership, edgelist.copy(), prefix="PXLCMP")
 
     assert "component" not in edgelist.columns
     assert set(result["component"].unique()) == {

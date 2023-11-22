@@ -5,7 +5,18 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Protocol, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Protocol,
+    Set,
+    Tuple,
+    Union,
+)
 
 import networkx as nx
 import pandas as pd
@@ -16,7 +27,7 @@ if TYPE_CHECKING:
     from pixelator.graph import Graph
 
 
-class _GraphBackend(Protocol):
+class GraphBackend(Protocol):
     """Protocol for graph backends."""
 
     @staticmethod
@@ -25,7 +36,7 @@ class _GraphBackend(Protocol):
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
-    ) -> _GraphBackend:
+    ) -> GraphBackend:
         """Build a graph from an edgelist.
 
         Build a Graph from an edge list (pd.DataFrame). Multiple options are available
@@ -44,18 +55,18 @@ class _GraphBackend(Protocol):
         :param use_full_bipartite: use the bipartite graph instead of the projection
                                   (UPIA)
         :returns: a Graph instance
-        :rtype: _GraphBackend
+        :rtype: GraphBackend
         :raises: AssertionError when the input edge list is not valid
         """
         ...
 
     @staticmethod
-    def from_raw(graph: nx.Graph) -> _GraphBackend:
+    def from_raw(graph: nx.Graph) -> GraphBackend:
         """Generate a Graph from an networkx.Graph object.
 
         :param graph: input igraph to use
         :return: A pixelator Graph object
-        :rtype: _GraphBackend
+        :rtype: GraphBackend
         """
         ...
 
@@ -65,20 +76,20 @@ class _GraphBackend(Protocol):
         ...
 
     @property
-    def vs(self):
+    def vs(self) -> VertexSequence:
         """Get a sequence of the vertices in the Graph instance."""
         ...
 
     @property
-    def es(self):
+    def es(self) -> EdgeSequence:
         """A sequence of the edges in the Graph instance."""
         ...
 
-    def vcount(self):
+    def vcount(self) -> int:
         """Get the total number of vertices in the Graph instance."""
         ...
 
-    def ecount(self):
+    def ecount(self) -> int:
         """Get the total number of edges in the Graph instance."""
         ...
 
@@ -86,12 +97,28 @@ class _GraphBackend(Protocol):
         """Get the sparse adjacency matrix."""
         ...
 
-    def connected_components(self):
+    def connected_components(self) -> VertexClustering:
         """Get the connected components in the Graph instance."""
         ...
 
-    def community_leiden(self, **kwargs):
-        """Run community detection using the Leiden algorithm."""
+    def community_leiden(
+        self,
+        n_iterations: int = 10,
+        beta: float = 0.01,
+        **kwargs,
+    ) -> VertexClustering:
+        """Run community detection using the Leiden algorithm.
+
+        Run community detection on the graph, using the Leiden algorithm.
+        As an example we use this to remove edges that jump between cells
+        due to chimeric PCR products.
+
+        :param n_iterations: number of iterations to use in the Leiden algorithm
+        :param beta: parameter to control the randomness of the cluster refinement in
+                 the Leiden algorithm. Must be a positive, non-zero float.
+        :param **kwargs: will be passed to the underlying Leiden implementation
+        :rtype: VertexClustering
+        """
         ...
 
     def layout_coordinates(
@@ -126,11 +153,11 @@ class _GraphBackend(Protocol):
         """
         ...
 
-    def get_edge_dataframe(self):
+    def get_edge_dataframe(self) -> pd.DataFrame:
         """Get the edges as a pandas DataFrame."""
         ...
 
-    def get_vertex_dataframe(self):
+    def get_vertex_dataframe(self) -> pd.DataFrame:
         """Get all vertices as a pandas DataFrame."""
         ...
 
@@ -164,65 +191,105 @@ class _GraphBackend(Protocol):
         ...
 
 
-class VertexSequence(Protocol):
+class Vertex(Protocol):
+    """Protocol for a single vertex in a graph."""
+
+    @property
+    def index(self) -> int:
+        """Get the index of the vertex."""
+        ...
+
+    def __getitem__(self, attr: str) -> Any:
+        """Get the value of the vertex attribute `attr`."""
+        ...
+
+    def __str__(self) -> str:
+        """Get a string representation of the vertex."""
+        return f"Vertex({self.index})"
+
+    def __repr__(self) -> str:
+        """Get a representation of the vertex."""
+        return str(self)
+
+
+class Edge(Protocol):
+    """Protocol for edges in a graph."""
+
+    @property
+    def vertex_tuple(self) -> Tuple[Vertex, Vertex]:
+        """Return the vertices the edge connects as a tuple."""
+        ...
+
+    @property
+    def index(self) -> int:
+        """The index of the edge."""
+        ...
+
+    def __str__(self) -> str:
+        """Get a string representation of the edge."""
+        return f"Edge({self.vertex_tuple})"
+
+    def __repr__(self) -> str:
+        """Get a representation of the edge."""
+        return str(self)
+
+
+class VertexSequence(Iterable[Vertex], Protocol):
     """A sequence of vertexes from a graph."""
 
-    def select(self, **kwargs):
-        """Select a subset of vertices.
-
-        See https://python.igraph.org/en/stable/api/igraph.VertexSeq.html#select
-        """
-        # TODO Reimplement this with a more specific interface for
-        # the things we actually use
+    def vertices(self) -> Iterable[Vertex]:
+        """Get an iterable of vertices."""
         ...
 
     def __len__(self) -> int:
         """Get the number of vertexes."""
         ...
 
+    def __iter__(self) -> Iterator[Vertex]:
+        """Get an iterator over the vertices in the sequence."""
+        ...
+
     def attributes(self) -> Set[str]:
         """Get all attributes associated with the vertices."""
         ...
 
-    def __getitem__(self, attr: str) -> VertexSequence:
-        """Get the requested attribute of the vertices."""
+    def get_vertex(self, vertex_id: int) -> Vertex:
+        """Get the Vertex corresponding to the vertex id."""
         ...
 
-    def __setitem__(self, attribute: str, attribute_vector: Iterable[Any]):
-        """Set the given vertex attribute to the values in the attribute vector."""
-        # TODO Better docs here!
+    def get_attribute(self, attr: str) -> Iterable[Any]:
+        """Get the values of the attribute."""
         ...
 
 
-class EdgeSequence(Protocol):
+class EdgeSequence(Iterable[Edge], Protocol):
     """A sequence of edges from a graph."""
 
-    def select(self, **kwargs) -> EdgeSequence:
-        """Select a subset of edges.
-
-        See https://python.igraph.org/en/stable/api/igraph.EdgeSeq.html#select
-        """
-        # TODO Reimplement this with a more specific
-        # interface for the things we actually use
+    def __len__(self) -> int:
+        """Get the number of edges."""
         ...
 
-    def __getitem__(self, attr: str) -> Iterable[Any]:
-        """Get the requested attribute of the edges."""
+    def __iter__(self) -> Iterator[Edge]:
+        """Get an iterator over the edges."""
         ...
 
-    def __setitem__(self, key: str, newvalue: Iterable[Any]):
-        """Set the given edge attribute to the values in the attribute vector."""
+    def select_where(self, key, value) -> EdgeSequence:
+        """Select a subset of edges where `key == value`."""
+        ...
+
+    def select_within(self, component):
+        """Select all edges that are part of `component`."""
         ...
 
 
-class VertexClustering(Protocol):
+class VertexClustering(Iterable[VertexSequence], Protocol):
     """A cluster of vertexes, such as a community in a graph."""
 
     def __len__(self) -> int:
         """Get the number of clusters."""
         ...
 
-    def __iter__(self) -> Iterable[VertexSequence]:
+    def __iter__(self) -> Iterator[VertexSequence]:
         """Provide an iterator over the clusters."""
         ...
 
