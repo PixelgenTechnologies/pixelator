@@ -83,7 +83,7 @@ def figure_data(data_root) -> QCReportData:
     with open(data_dir / "reads-per-umi-frequency.csv") as f:
         reads_per_umi_freq = f.read()
 
-    webreport_data = QCReportData(
+    qc_report_data = QCReportData(
         component_data=embedding_data,
         ranked_component_size=ranked_component_size_data,
         sequencing_saturation=seq_saturation,
@@ -92,7 +92,7 @@ def figure_data(data_root) -> QCReportData:
         antibody_counts=ab_counts,
         reads_per_umi_frequency=reads_per_umi_freq,
     )
-    return webreport_data
+    return qc_report_data
 
 
 def test_write_webreport(tmp_path, main_data, figure_data):
