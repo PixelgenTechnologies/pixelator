@@ -17,13 +17,13 @@ from anndata import AnnData
 
 from pixelator import __version__
 from pixelator.pixeldataset import PixelDataset
-from pixelator.report.webreport import (
+from pixelator.report.qcreport import (
     Metrics,
     SampleInfo,
-    WebreportBuilder,
+    QCReportBuilder,
     collect_report_data,
 )
-from pixelator.report.webreport.collect import (
+from pixelator.report.qcreport.collect import (
     collect_parameter_info,
     index_parameter_info,
 )
@@ -607,7 +607,7 @@ def create_dynamic_report(
     info: SampleInfo,
     output_path: str,
 ) -> None:
-    """Create a dynamics web report of a single sample.
+    """Create a dynamics qc report of a single sample.
 
     A helper function to create a dynamic web report of a single sample. The
     function uses a template stored in 'webreport/template.html' as a base
@@ -632,7 +632,7 @@ def create_dynamic_report(
     :rtype: None
     """
     sample_id = info.sample_id
-    logger.debug("Creating dynamic web report for sample %s", sample_id)
+    logger.debug("Creating QC report for sample %s", sample_id)
 
     # Collect antibody metrics
     antibodies_data_values = {
@@ -685,7 +685,7 @@ def create_dynamic_report(
         average_reads_per_cell=(
             summary_all["reads"] / summary_cell_calling["cells_filtered"]
         ),
-        median_antibody_molecules_per_cell=summary_cell_calling["median_umi_cell"],
+        average_antibody_molecules_per_cell=summary_cell_calling["mean_umi_cell"],
         average_upias_per_cell=summary_cell_calling["mean_upia_cell"],
         average_umis_per_upia=summary_cell_calling["mean_umi_upia_cell"],
         fraction_reads_in_cells=(
@@ -714,9 +714,9 @@ def create_dynamic_report(
     data = collect_report_data(input_path, sample_id)
 
     # uses the default template
-    builder = WebreportBuilder()
+    builder = QCReportBuilder()
 
-    report_path = str(Path(output_path) / f"{sample_id}_report.html")
+    report_path = str(Path(output_path) / f"{sample_id}.qc-report.html")
     with open(report_path, "wb") as f:
         builder.write(f, sample_info=info, metrics=metrics, data=data)
 
@@ -752,7 +752,7 @@ def make_report(
     """
     from pixelator.config import config, load_antibody_panel
 
-    logger.debug("Creating web reports from %s", input_path)
+    logger.debug("Creating QC reports from %s", input_path)
 
     # TODO: Move file collection and workdir scanning
     #       logic of *_metrics functions to PixelatorWorkdir
@@ -913,4 +913,4 @@ def make_report(
             output_path=output_path,
         )
 
-    logger.debug("Finish creating web reports")
+    logger.debug("Finish creating QC reports")

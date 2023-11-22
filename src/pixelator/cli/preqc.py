@@ -1,5 +1,4 @@
-"""
-Console script for pixelator (preqc)
+"""Console script for pixelator (preqc).
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -130,10 +129,9 @@ def preqc(
     output,
     design,
 ):
-    """
-    Process raw Molecular Pixelation data (FASTQ) to perform QC, filtering,
-    trimming and removal of duplicates
-    """
+    """Process raw Molecular Pixelation data (FASTQ) to perform QC, filtering,
+    trimming and removal of duplicates.
+    """  # noqa: D205,D400,D415
     # log input parameters
     log_step_start(
         "fastp",
@@ -183,7 +181,7 @@ def preqc(
             extension = get_extension(fastq_file)
             output_file = preqc_output / f"{clean_name}.processed.{extension}"
             failed_file = preqc_output / f"{clean_name}.failed.{extension}"
-            html_file = preqc_output / f"{clean_name}.report.html"
+            html_file = preqc_output / f"{clean_name}.qc-report.html"
             json_file = preqc_output / f"{clean_name}.report.json"
 
             write_parameters_file(
