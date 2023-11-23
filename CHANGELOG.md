@@ -16,11 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * `mean_reads` and `median_reads` in adata.obs to `mean_reads_per_molecule` and `median_reads_per_molecule` respectively.
 * Drop support for python 3.8 and 3.9.
+* Change output format of `collapse` from csv to parquet.
+* Change input and output format of `graph` from csv to parquet.
+* Change input format of `annotate` from csv to parquet.
 
 ### Fixed
 
 * Nicer error messages when there are no components valid for computing colocalization.
 
+### Removed
+
+* `graph` no longer outputs the raw edge list
 
 ## [0.15.2] - 2023-10-23
 
