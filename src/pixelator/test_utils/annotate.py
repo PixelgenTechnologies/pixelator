@@ -1,4 +1,5 @@
-"""
+"""Integration tests for the annotate command.
+
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import logging
@@ -12,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
-    """
-    Base class for annotate command tests.
+    """Base class for annotate command tests.
 
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
@@ -26,13 +26,14 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(name="test_annotate_run", depends=["test_graph_run"])
     def test_annotate_run(self):
+        """Run method for the test."""
         params = self.__get_parameters()
         verbose = self.__get_options("common").get("verbose")
         panel = self.__get_data("panel")
         panel_file = self.__get_data("panel_file")
 
         input_files = list(
-            map(lambda f: str(f), (self.workdir / "graph").glob("*.edgelist.csv.gz"))
+            map(lambda f: str(f), (self.workdir / "graph").glob("*.edgelist.parquet"))
         )
 
         command = [
@@ -66,18 +67,21 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(depends=["test_annotate_run"])
     def test_annotate_dataset_exists(self):
+        """Check that the pixel file is created."""
         dataset_files = (self.workdir / "annotate").glob("*.dataset.pxl")
         for f in dataset_files:
             assert f.is_file()
 
     @pytest.mark.dependency(depends=["test_annotate_run"])
     def test_annotate_report_exists(self):
+        """Check that the json report exists."""
         json_files = (self.workdir / "annotate").glob("*.report.json")
         for f in json_files:
             assert f.is_file()
 
     @pytest.mark.dependency(depends=["test_annotate_run"])
     def test_annotate_images_exist(self):
+        """Check that the rank size plot has been created."""
         png_files = (self.workdir / "annotate").glob("*.rank_vs_size.png")
 
         if "--verbose" not in self.__this_command:
@@ -90,6 +94,7 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(depends=["test_annotate_run"])
     def test_raw_component_metrics_exist(self):
+        """Check that the raw metrics exists."""
         metric_files = (self.workdir / "annotate").glob(
             "*.raw_components_metrics.csv.gz"
         )
@@ -104,6 +109,7 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(depends=["test_annotate_run"])
     def test_doublet_calling_vertex_communities_exists(self):
+        """Check that the vertex community file has been created."""
         vertex_files = (self.workdir / "annotate").glob("*.vertex_communities.csv.gz")
 
         if "--doublet-calling" not in self.__this_command:
@@ -123,6 +129,7 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(depends=["test_annotate_run"])
     def test_umap_png_exists(self):
+        """Check that the umap png exists."""
         png_files = (self.workdir / "annotate").glob("*.umap.png")
 
         if "--verbose" not in self.__this_command:
