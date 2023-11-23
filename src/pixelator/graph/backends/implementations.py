@@ -391,6 +391,10 @@ class NetworkXGraphBackend(GraphBackend):
     ) -> Union[nx.Graph, nx.MultiGraph]:
         g = nx.empty_graph(0, create_using)
 
+        # TODO Look at how to deal with setting project_pushdown=False
+        # here. If it is needed or not seems to depend on the
+        # exact call context, so it might be that we can actually
+        # enable it again here and improve the memory usage.
         for idx, row in enumerate(
             df.collect(streaming=True, projection_pushdown=False).iter_rows(
                 named=False, buffer_size=1000
