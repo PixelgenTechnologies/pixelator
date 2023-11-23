@@ -74,7 +74,7 @@ def connect_components(
     logger.debug("Parsing edge list %s", input)
 
     # load data (edge list in data frame format)
-    edgelist = pl.scan_parquet(input)
+    edgelist = pl.scan_parquet(input, low_memory=True)
 
     nbr_of_rows = edgelist.select(pl.count()).collect()[0, 0]
     # filter data by count
