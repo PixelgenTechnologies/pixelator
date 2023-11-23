@@ -57,14 +57,6 @@ class BaseGraphTestsMixin(BaseWorkflowTestMixin):
         self.context.run_command("graph", command, input_files)
         assert self.__this_result.exit_code == 0
 
-    # TODO I think we should remove this test. Look at it later.
-    @pytest.mark.dependency(depends=["test_graph_run"])
-    def test_graph_raw_edgelist_exists(self):
-        """Check that the raw edgelist has been created."""
-        raw_edge_files = (self.workdir / "graph").glob("*.raw_edgelist.parquet")
-        for f in raw_edge_files:
-            assert f.is_file()
-
     @pytest.mark.dependency(depends=["test_graph_run"])
     def test_graph_edgelist_exists(self):
         """Check that the edgelist exists."""
