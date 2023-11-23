@@ -1,4 +1,5 @@
-"""
+"""Annotation tests for the graph step.
+
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
@@ -12,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseGraphTestsMixin(BaseWorkflowTestMixin):
-    """
-    Base class for graph command tests.
+    """Base class for graph command tests.
 
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
@@ -26,12 +26,14 @@ class BaseGraphTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(name="test_graph_run", depends=["test_collapse_run"])
     def test_graph_run(self):
+        """Run the graph command."""
         params = self.__get_parameters()
         verbose = self.__get_options("common").get("verbose")
 
         input_files = list(
             map(
-                lambda f: str(f), (self.workdir / "collapse").glob("*.collapsed.csv.gz")
+                lambda f: str(f),
+                (self.workdir / "collapse").glob("*.collapsed.parquet"),
             )
         )
 
@@ -55,20 +57,24 @@ class BaseGraphTestsMixin(BaseWorkflowTestMixin):
         self.context.run_command("graph", command, input_files)
         assert self.__this_result.exit_code == 0
 
+    # TODO I think we should remove this test. Look at it later.
     @pytest.mark.dependency(depends=["test_graph_run"])
     def test_graph_raw_edgelist_exists(self):
-        raw_edge_files = (self.workdir / "graph").glob("*.raw_edgelist.csv.gz")
+        """Check that the raw edgelist has been created."""
+        raw_edge_files = (self.workdir / "graph").glob("*.raw_edgelist.parquet")
         for f in raw_edge_files:
             assert f.is_file()
 
     @pytest.mark.dependency(depends=["test_graph_run"])
     def test_graph_edgelist_exists(self):
-        edge_files = (self.workdir / "graph").glob("*.edgelist.csv.gz")
+        """Check that the edgelist exists."""
+        edge_files = (self.workdir / "graph").glob("*.edgelist.parquet")
         for f in edge_files:
             assert f.is_file()
 
     @pytest.mark.dependency(depends=["test_graph_run"])
     def test_graph_report_exists(self):
+        """Check that the json report exists."""
         json_files = (self.workdir / "graph").glob("*.report.json")
         for f in json_files:
             assert f.is_file()
