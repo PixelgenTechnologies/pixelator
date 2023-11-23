@@ -263,7 +263,7 @@ def recovered_component_info(
     new_memberships = new_edgelist.select(pl.col("upi"), pl.col("component"))
     merged = old_memberships.join(new_memberships, how="left", on="upi", suffix="_new")
     return dict(
-        merged.select(pl.col("component"), pl.col("component_new"))
+        merged.select(pl.col("component"), pl.col("component_new"))  # type: ignore
         .group_by(pl.col("component"))
         .agg(pl.col("component_new").unique().drop_nulls())
         .collect(streaming=True, projection_pushdown=False)
@@ -356,7 +356,7 @@ def recover_technical_multiplets(
         # save the discarded edges to a file
         masked_df = edgelist.filter(pl.col("upi").is_in(edges_to_remove))
         masked_df.collect().write_parquet(
-            removed_edges_edgelist_file,
+            removed_edges_edgelist_file,  # type: ignore
             compression="zstd",
         )
 
