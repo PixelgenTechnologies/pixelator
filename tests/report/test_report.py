@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from unittest import mock
 
+import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
@@ -254,7 +255,7 @@ def test_cell_calling_metrics(adata: AnnData, edgelist: pd.DataFrame, tmp_path: 
                 "cells_filtered": [5, 5],
                 "total_markers": [22, 22],
                 "total_umis": [5, 5],
-                "total_reads_cell": [30000, 30000],
+                "total_reads_cell": np.array([30000, 30000], dtype=np.uint64),
                 "median_reads_cell": [6000.0, 6000.0],
                 "mean_reads_cell": [6000.0, 6000.0],
                 "median_upi_cell": [1996.0, 1996.0],
@@ -270,7 +271,7 @@ def test_cell_calling_metrics(adata: AnnData, edgelist: pd.DataFrame, tmp_path: 
                 "median_markers_cell": [7.0, 7.0],
                 "mean_markers_cell": [7.0, 7.0],
                 "upib_per_upia": [1.0, 1.0],
-                "reads_of_aggregates": [18000, 18000],
+                "reads_of_aggregates": np.array([18000, 18000], dtype=np.uint64),
                 "umis_of_aggregates": [3, 3],
                 "number_of_aggregates": [3, 3],
                 "fraction_of_aggregates": [0.6, 0.6],
