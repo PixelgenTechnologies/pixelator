@@ -6,12 +6,14 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 import igraph as ig
 import networkx as nx
 import pytest
-from pixelator.graph.backends.implementations import (
+from pixelator.graph.backends.implementations._igraph import (
     IgraphBasedEdge,
     IgraphBasedEdgeSequence,
     IgraphBasedVertex,
     IgraphBasedVertexClustering,
     IgraphBasedVertexSequence,
+)
+from pixelator.graph.backends.implementations._networkx import (
     NetworkxBasedEdge,
     NetworkxBasedEdgeSequence,
     NetworkxBasedVertex,

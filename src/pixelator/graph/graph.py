@@ -16,8 +16,9 @@ from scipy.sparse import csr_matrix
 from pixelator.graph.backends.implementations import (
     IgraphGraphBackend,
     NetworkXGraphBackend,
+    graph_backend,
 )
-from pixelator.graph.backends.protocol import VertexClustering, GraphBackend
+from pixelator.graph.backends.protocol import GraphBackend, VertexClustering
 
 logger = logging.getLogger(__name__)
 
@@ -67,26 +68,14 @@ class Graph:
         :rtype: Graph
         :raises: AssertionError when the input edge list is not valid
         """
-        if os.environ.get("ENABLE_NETWORKX_BACKEND", False):
-            logger.debug("Create a graph using networkx as the graph backend")
-            return Graph(
-                backend=NetworkXGraphBackend.from_edgelist(
-                    edgelist=edgelist,
-                    add_marker_counts=add_marker_counts,
-                    simplify=simplify,
-                    use_full_bipartite=use_full_bipartite,
-                )
-            )
-
-        logger.debug("Create a graph using igraph as the graph backend")
-        return Graph(
-            backend=IgraphGraphBackend.from_edgelist(
-                edgelist=edgelist,
-                add_marker_counts=add_marker_counts,
-                simplify=simplify,
-                use_full_bipartite=use_full_bipartite,
-            )
+        backend = graph_backend().from_edgelist(
+            edgelist=edgelist,
+            add_marker_counts=add_marker_counts,
+            simplify=simplify,
+            use_full_bipartite=use_full_bipartite,
         )
+
+        return Graph(backend=backend)
 
     @staticmethod
     def from_raw(graph: Union[igraph.Graph, nx.Graph]) -> "Graph":
