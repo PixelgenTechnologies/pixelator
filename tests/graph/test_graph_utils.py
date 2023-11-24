@@ -4,17 +4,18 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import random
 
+import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
+from pixelator.graph import Graph
 from pixelator.graph.utils import (
     components_metrics,
     create_node_markers_counts,
     edgelist_metrics,
     update_edgelist_membership,
 )
-from pixelator.graph import Graph
 
 
 def add_random_names_to_vertexes(graph: Graph) -> None:
@@ -77,7 +78,7 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
                     "upia": 50,
                     "upib": 50,
                     "umi": 1908,
-                    "reads": 2500,
+                    "reads": np.uint64(2500),
                     "mean_reads_per_molecule": 1.0,
                     "median_reads_per_molecule": 1.0,
                     "mean_upia_degree": 50.0,
