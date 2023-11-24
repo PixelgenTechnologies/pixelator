@@ -227,7 +227,9 @@ MetricsDict = Dict[str, Union[int, float]]
 
 
 def _calculate_graph_metrics(
-    metrics, graph: Optional[Graph], edgelist: Union[pd.DataFrame, pl.LazyFrame]
+    metrics: MetricsDict,
+    graph: Optional[Graph],
+    edgelist: Union[pd.DataFrame, pl.LazyFrame],
 ) -> MetricsDict:
     if not graph:
         graph = Graph.from_edgelist(
@@ -246,7 +248,7 @@ def _calculate_graph_metrics(
     return metrics
 
 
-def _edgelist_metrics_pandas_dataframe(
+def _edgelist_metrics_pandas_data_frame(
     edgelist: pd.DataFrame, graph: Optional[Graph] = None
 ) -> MetricsDict:
     metrics: Dict[str, Union[int, float]] = {}
@@ -271,7 +273,7 @@ def _edgelist_metrics_pandas_dataframe(
     return metrics
 
 
-def _edgelist_metrics_polars_lazy_frame(
+def _edgelist_metrics_lazy_frame(
     edgelist: pl.LazyFrame, graph: Optional[Graph] = None
 ) -> MetricsDict:
     metrics: Dict[str, Union[int, float]] = {}
@@ -310,22 +312,22 @@ def edgelist_metrics(
     :param edgelist: the edge list (pd.DataFrame)
     :param graph: optionally add the graph instance that corresponds to the
                   edgelist (to not have to re-compute it)
-    :returns: a dictionary of metrics (metric -> float)
+    :returns: a dictionary of metrics
     :rtype: Dict[str, Union[int, float]]
     :raises TypeError: if edgelist is not either pd.DataFrame or pl.LazyFrame
     """
     if isinstance(edgelist, pd.DataFrame):
         logger.debug("Compputing edgelist metrics where edgelist type is pd.DataFrame")
-        return _edgelist_metrics_pandas_dataframe(edgelist=edgelist, graph=graph)
+        return _edgelist_metrics_pandas_data_frame(edgelist=edgelist, graph=graph)
 
     if isinstance(edgelist, pl.LazyFrame):
         logger.debug("Computing edgelist metrics where edgelist type is pl.LazyFrame")
-        return _edgelist_metrics_polars_lazy_frame(edgelist=edgelist, graph=graph)
+        return _edgelist_metrics_lazy_frame(edgelist=edgelist, graph=graph)
 
     raise TypeError("edgelist was not of type `pd.DataFrame` or `pl.LazyFrame")
 
 
-def _update_edgelist_membership_pandas_data_frame(
+def _update_edgelist_membership_data_frame(
     edgelist: pd.DataFrame,
     graph: Optional[Graph] = None,
     prefix: Optional[str] = None,
@@ -397,23 +399,23 @@ def _update_edgelist_membership_lazyframe(
         for e in graph.es.select_within({v.index for v in component.vertices()})
     }
 
+    def _map_edge_index_to_component_id():
+        return pl.col("edge_index").map_dict(edge_index_to_component_mapping)
+
+    def _build_component_name_str():
+        return pl.format(
+            "{}{}",
+            pl.lit(prefix),
+            pl.col("component_index")
+            .cast(pl.Utf8)
+            .str.pad_start(length=DIGITS, fill_char="0"),
+        )
+
     logger.debug("Mapping components on the edge list")
     edgelist_with_component_info = (
         edgelist.with_row_count(name="edge_index")
-        .with_columns(
-            pl.col("edge_index")
-            .map_dict(edge_index_to_component_mapping)
-            .alias("component_index")
-        )
-        .with_columns(
-            pl.format(
-                "{}{}",
-                pl.lit(prefix),
-                pl.col("component_index")
-                .cast(pl.Utf8)
-                .str.pad_start(length=DIGITS, fill_char="0"),
-            ).alias("component")
-        )
+        .with_columns(_map_edge_index_to_component_id().alias("component_index"))
+        .with_columns(_build_component_name_str().alias("component"))
     )
     edgelist_with_component_info = edgelist_with_component_info.drop(
         columns=["edge_index", "component_index"]
@@ -425,28 +427,33 @@ def update_edgelist_membership(
     edgelist: Union[pd.DataFrame, pl.LazyFrame],
     graph: Optional[Graph] = None,
     prefix: Optional[str] = None,
-) -> pd.DataFrame:
+) -> Union[pd.DataFrame, pl.LazyFrame]:
     """Update the edgelist with component names.
 
-    A helper function that computes a vector of component membership ids (str)
-    for each edge (row) in the given `edgelist` (pd.DataFrame). Each component id
-    corresponds to a connected component in the respective graph (iGraph). The
-    prefix attribute `prefix` is prepended to each component id. The component ids
-    will be added to the returned edge list in a column called component.
+    Compute the connected components of the graph represented
+    by the `edgelist` (or directly on the `graph` if provided).
+    These connected components are assigned a numeric id. These
+    id's are added as a `component` column in the `edgelist`.
+    If a component column already exists, this will be updated.
 
-    :param edgelist: the edge list (pd.DataFrame)
-    :param graph: optional graph if you have already computed this, it is important
-                  that you know that the edgelist and the graph is in-sync if you
-                  use this feature.
+    The name of each component will be determined in the following way:
+    `prefix`+[up to 7 0's of padding]+[component number].
+
+    :param edgelist: the edge list
+    :param graph: optionally, the graph the corresponding to the edgelist
+                  if you have already computed this. This is convenient to
+                  avoid graph recomputation when it is not necessary.
+                  It is important that you know that the edgelist and the graph
+                  are in-sync if you use this feature.
     :param prefix: the prefix to prepend to the component ids, if None will
                     use `DEFAULT_COMPONENT_PREFIX`
-    :returns: the update edge list (pd.DataFrame)
-    :rtype: pd.DataFrame
+    :returns: the updated edge list
+    :rtype: Union[pd.DataFrame, pl.LazyFrame]
     :raises TypeError: if edgelist is not either pd.DataFrame or pl.LazyFrame
     """
     if isinstance(edgelist, pd.DataFrame):
         logger.debug("Updating edgelist where type is pd.DataFrame")
-        return _update_edgelist_membership_pandas_data_frame(
+        return _update_edgelist_membership_data_frame(
             edgelist=edgelist, graph=graph, prefix=prefix
         )
 
