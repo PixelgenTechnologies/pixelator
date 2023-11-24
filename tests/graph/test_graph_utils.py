@@ -4,7 +4,6 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import random
 
-import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
@@ -78,7 +77,7 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
                     "upia": 50,
                     "upib": 50,
                     "umi": 1908,
-                    "reads": np.uint64(2500),
+                    "reads": 2500,
                     "mean_reads_per_molecule": 1.0,
                     "median_reads_per_molecule": 1.0,
                     "mean_upia_degree": 50.0,
