@@ -61,7 +61,7 @@ def graph_without_communities_fixture():
     # Somewhat hacky solution make sure this works with both
     # the igraph and networkx tests
 
-    if os.environ.get("ENABLE_NETWORKX_BACKEND"):
+    if os.environ.get("PIXELATOR_GRAPH_BACKEND"):
         graph = Graph.from_raw(nx.fast_gnp_random_graph(100, p=0.1, seed=10))
         # Remove any unattached nodes, since that messes up the community
         # detection
@@ -78,7 +78,7 @@ def enable_backend(request):
     previous_environment = os.environ
     if request.param == "networkx":
         new_environment = previous_environment.copy()
-        new_environment["ENABLE_NETWORKX_BACKEND"] = True
+        new_environment["PIXELATOR_GRAPH_BACKEND"] = "NetworkXGraphBackend"
         os.environ = new_environment
     yield
     os.environ = previous_environment

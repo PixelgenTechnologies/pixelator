@@ -28,7 +28,7 @@ def graph_backend(
 
     Pick up a GraphBackend. Defaults to `IgraphGraphBackend` unless
     the the following variable is set in the environment:
-    `ENABLE_NETWORKX_BACKEND=True`
+    `PIXELATOR_GRAPH_BACKEND=True`
     :param graph_backend_class: name of the graph backend class to try to pickup.
     :returns: A concrete graph backend instance
     :rtype: GraphBackend
@@ -56,11 +56,7 @@ def graph_backend(
             f"Class name {graph_backend_class} not recognized as `GraphBackend`"
         )
 
-    if str(os.environ.get("ENABLE_NETWORKX_BACKEND", False)) in (
-        "True",
-        "true",
-        "1",
-    ):
+    if str(os.environ.get("PIXELATOR_GRAPH_BACKEND", None)) == "NetworkXGraphBackend":
         return _load_nx()
 
     return _load_ig()
