@@ -6,12 +6,16 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 import igraph as ig
 import networkx as nx
 import pytest
+from pixelator.graph.backends.implementations import (
+    graph_backend,
+)
 from pixelator.graph.backends.implementations._igraph import (
     IgraphBasedEdge,
     IgraphBasedEdgeSequence,
     IgraphBasedVertex,
     IgraphBasedVertexClustering,
     IgraphBasedVertexSequence,
+    IgraphGraphBackend,
 )
 from pixelator.graph.backends.implementations._networkx import (
     NetworkxBasedEdge,
@@ -19,7 +23,29 @@ from pixelator.graph.backends.implementations._networkx import (
     NetworkxBasedVertex,
     NetworkxBasedVertexClustering,
     NetworkxBasedVertexSequence,
+    NetworkXGraphBackend,
 )
+
+
+def test_graph_backend_default():
+    result = graph_backend()
+    assert isinstance(result(), IgraphGraphBackend)
+
+
+def test_graph_backend_request_igraph():
+    result = graph_backend("IgraphGraphBackend")
+    assert isinstance(result(), IgraphGraphBackend)
+
+
+def test_graph_backend_request_networkx():
+    result = graph_backend("NetworkXGraphBackend")
+    assert isinstance(result(), NetworkXGraphBackend)
+
+
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_graph_backend_request_networkx_when_env_var_set(enable_backend):
+    result = graph_backend()
+    assert isinstance(result(), NetworkXGraphBackend)
 
 
 @pytest.fixture
