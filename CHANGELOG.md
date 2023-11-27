@@ -24,10 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Remove placeholder warning of missing data for not yet implemented features.
 * Change "Median antibody molecules per cell" to "Average antibody molecules per cell" in the qc report.
 * Refactoring of the graph backend implementations module.
+* Activating networkx as the backend is now done by setting `PIXELATOR_GRAPH_BACKEND="NetworkXGraphBackend"`
+  (previously `PIXELATOR_GRAPH_BACKEND=True` was used).
 
 ### Fixed
 
 * Nicer error messages when there are no components valid for computing colocalization.
+* Cleaned out remaining igraph remnants from `Graph` class
 
 ### Removed
 
