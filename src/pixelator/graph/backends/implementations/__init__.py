@@ -5,7 +5,10 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 import logging
 import os
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
+
+import networkx as nx
+import igraph
 
 from pixelator.graph.backends.protocol import GraphBackend
 from pixelator.graph.backends.implementations._igraph import IgraphGraphBackend
@@ -25,7 +28,7 @@ def graph_backend(
 
     Pick up a GraphBackend. Defaults to `IgraphGraphBackend` unless
     the the following variable is set in the environment:
-    `ENABLE_NETWORKX_BACKEND=True`
+    `PIXELATOR_GRAPH_BACKEND=True`
     :param graph_backend_class: name of the graph backend class to try to pickup.
     :returns: A concrete graph backend instance
     :rtype: GraphBackend
@@ -42,22 +45,27 @@ def graph_backend(
         logger.debug("Setting up an igraph based backend")
         return IgraphGraphBackend
 
-    if not graph_backend_class:
-        if str(os.environ.get("ENABLE_NETWORKX_BACKEND", False)) in (
-            "True",
-            "true",
-            "1",
-        ):
+    if graph_backend_class:
+        if graph_backend_class == "NetworkXGraphBackend":
             return _load_nx()
 
-        return _load_ig()
+        if graph_backend_class == "IgraphGraphBackend":
+            return _load_ig()
 
-    if graph_backend_class == "NetworkXGraphBackend":
+        raise ValueError(
+            f"Class name {graph_backend_class} not recognized as `GraphBackend`"
+        )
+
+    if str(os.environ.get("PIXELATOR_GRAPH_BACKEND", None)) == "NetworkXGraphBackend":
         return _load_nx()
 
-    if graph_backend_class == "IgraphGraphBackend":
-        return _load_ig()
+    return _load_ig()
 
-    raise ValueError(
-        f"Class name {graph_backend_class} not recognized as `GraphBackend`"
-    )
+
+def graph_backend_from_graph_type(graph: Union[nx.Graph, nx.MultiGraph, igraph.Graph]):
+    """Pick the correct backend type based on the graph type."""
+    if isinstance(graph, nx.Graph):
+        return graph_backend("NetworkXGraphBackend")
+    if isinstance(graph, igraph.Graph):
+        return graph_backend("IgraphGraphBackend")
+    raise ValueError("Cannot recognize type of `graph`")

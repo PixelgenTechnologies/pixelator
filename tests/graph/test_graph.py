@@ -202,7 +202,7 @@ def test_build_graph_a_node_projected_without_simplifying(
         assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
     # We want to warn when a-node projection is requested without simplification.
-    if os.environ.get("ENABLE_NETWORKX_BACKEND"):
+    if os.environ.get("PIXELATOR_GRAPH_BACKEND"):
         with pytest.warns(UserWarning):
             _test()
     else:

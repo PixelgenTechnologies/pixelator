@@ -224,10 +224,10 @@ class NetworkXGraphBackend(GraphBackend):
         return NetworkXGraphBackend(raw=graph)
 
     @staticmethod
-    def from_raw(graph: nx.Graph) -> NetworkXGraphBackend:
+    def from_raw(graph: Union[nx.Graph, nx.MultiGraph]) -> NetworkXGraphBackend:
         """Generate a Graph from an networkx.Graph object.
 
-        :param graph: input igraph to use
+        :param graph: input networkx graph to use
         :return: A pixelator Graph object
         :rtype: NetworkXGraphBackend
         """
