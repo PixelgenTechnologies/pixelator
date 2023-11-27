@@ -3,20 +3,18 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
-import logging
-import os
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from __future__ import annotations
 
-import igraph
-import networkx as nx
+import logging
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+
 import pandas as pd
 import polars as pl
 from scipy.sparse import csr_matrix
 
 from pixelator.graph.backends.implementations import (
-    IgraphGraphBackend,
-    NetworkXGraphBackend,
     graph_backend,
+    graph_backend_from_graph_type,
 )
 from pixelator.graph.backends.protocol import GraphBackend, VertexClustering
 
@@ -44,7 +42,7 @@ class Graph:
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
-    ) -> "Graph":
+    ) -> Graph:
         """Build a graph from an edgelist.
 
         Build a Graph from an edge list (pd.DataFrame). Multiple options are available
@@ -78,16 +76,20 @@ class Graph:
         return Graph(backend=backend)
 
     @staticmethod
-    def from_raw(graph: Union[igraph.Graph, nx.Graph]) -> "Graph":
-        """Generate a Graph from an igraph.Graph object.
+    def from_raw(graph: Any) -> Graph:
+        """Generate a Graph from a graph object.
 
-        :param graph: input igraph to use
+        Which graph object is valid depends on the underlying
+        graph implementation. In general end users should use
+        the `from_edgelist` method instead.
+
+        :param graph: input graph to use
         :return: A pixelator Graph object
         :rtype: Graph
+        :raises ValueError: if type of `graph` is not recognized.
         """
-        if os.environ.get("ENABLE_NETWORKX_BACKEND", False):
-            return Graph(backend=NetworkXGraphBackend(graph))
-        return Graph(backend=IgraphGraphBackend(graph))
+        Backend = graph_backend_from_graph_type(graph)
+        return Graph(backend=Backend(graph))
 
     @property
     def _raw(self):
@@ -207,8 +209,6 @@ class Graph:
 
         :param edges: Add the following edges to the graph instance.
         """
-        if not self._backend.raw:
-            self._backend.from_raw(igraph.Graph())
         self._backend.add_edges(edges)
         self._connected_components_needs_recompute = True
 

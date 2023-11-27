@@ -18,7 +18,6 @@ from typing import (
     Union,
 )
 
-import networkx as nx
 import pandas as pd
 import polars as pl
 from scipy.sparse import csr_matrix
@@ -61,11 +60,16 @@ class GraphBackend(Protocol):
         ...
 
     @staticmethod
-    def from_raw(graph: nx.Graph) -> GraphBackend:
-        """Generate a Graph from an networkx.Graph object.
+    def from_raw(graph: Any) -> GraphBackend:
+        """Generate a Graph from a valid Graph object.
 
-        :param graph: input igraph to use
-        :return: A pixelator Graph object
+        What the valid graph object is depends on the underlying
+        GraphBackend implementation.
+
+        Typically what you want to use is `from_edgelist`.
+
+        :param graph: input graph to use
+        :return: A pixelator GraphBackend object
         :rtype: GraphBackend
         """
         ...
