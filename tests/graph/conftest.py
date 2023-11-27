@@ -13,7 +13,6 @@ from pixelator.graph import Graph
 
 from tests.graph.igraph.test_tools import full_graph
 from tests.graph.test_graph_utils import add_random_names_to_vertexes
-from tests.test_tools import enforce_edgelist_types_for_tests
 
 
 @pytest.fixture(name="output_dir")
@@ -34,15 +33,9 @@ def metrics_file_fixture(tmp_path):
 @pytest.fixture(name="input_edgelist")
 def input_edgelist_fixture(tmp_path, edgelist_with_communities: pd.DataFrame):
     """Fix an input edgelist."""
-    input_edgelist = tmp_path / "tmp_edgelist.csv"
-    edgelist_with_communities.to_csv(
-        input_edgelist,
-        header=True,
-        index=False,
-    )
-    assert len(edgelist_with_communities["component"].unique()) == 1
-    edgelist_with_communities = enforce_edgelist_types_for_tests(
-        edgelist_with_communities
+    input_edgelist = tmp_path / "tmp_edgelist.parquet"
+    edgelist_with_communities.to_parquet(
+        input_edgelist, engine="fastparquet", compression="zstd", index=False
     )
     yield input_edgelist
 

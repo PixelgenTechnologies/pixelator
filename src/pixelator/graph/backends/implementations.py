@@ -391,8 +391,14 @@ class NetworkXGraphBackend(GraphBackend):
     ) -> Union[nx.Graph, nx.MultiGraph]:
         g = nx.empty_graph(0, create_using)
 
+        # TODO Look at how to deal with setting project_pushdown=False
+        # here. If it is needed or not seems to depend on the
+        # exact call context, so it might be that we can actually
+        # enable it again here and improve the memory usage.
         for idx, row in enumerate(
-            df.collect(streaming=True).iter_rows(named=False, buffer_size=1000)
+            df.collect(streaming=True, projection_pushdown=False).iter_rows(
+                named=False, buffer_size=1000
+            )
         ):
             g.add_edge(row[0], row[1], index=idx)
         return g
@@ -486,7 +492,7 @@ class NetworkXGraphBackend(GraphBackend):
         edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
     ) -> Union[nx.Graph, nx.MultiGraph]:
         graph = NetworkXGraphBackend._build_plain_graph_from_edgelist(
-            edgelist.select(["upia", "upib", "umi"]),
+            edgelist.select(pl.col("upia"), pl.col("upib")),
             create_using=nx.Graph if simplify else nx.MultiGraph,
         )
         a_nodes = set(edgelist.select(["upia"]).unique().collect()["upia"].to_list())

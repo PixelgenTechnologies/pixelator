@@ -10,7 +10,7 @@ from typing import Literal, Optional
 
 import numba
 import numpy as np
-import pandas as pd
+import polars as pl
 import scanpy as sc
 from anndata import AnnData
 
@@ -136,7 +136,7 @@ def annotate_components(
     - a dataframe with the components metrics before filtering (csv)
     - a PixelDataset with the filtered AnnData and edge list (zip)
 
-    :param input: the path to the edge list dataframe (csv)
+    :param input: the path to the edge list dataframe (parquet)
     :param panel: the AntibodyPanel of the panel used to generate the data
     :param output: the path to the output folder
     :param output_prefix: the prefix to prepend to the files (sample name)
@@ -153,7 +153,7 @@ def annotate_components(
     logger.debug("Parsing edge list %s", input)
 
     # load data (edge list in data frame format)
-    edgelist = pd.read_csv(input)
+    edgelist = pl.read_parquet(input).to_pandas()
 
     # get component metrics from the edge list
     component_metrics = components_metrics(edgelist=edgelist)
