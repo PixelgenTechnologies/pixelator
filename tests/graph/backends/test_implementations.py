@@ -8,6 +8,7 @@ import networkx as nx
 import pytest
 from pixelator.graph.backends.implementations import (
     graph_backend,
+    graph_backend_from_graph_type,
 )
 from pixelator.graph.backends.implementations._igraph import (
     IgraphBasedEdge,
@@ -46,6 +47,24 @@ def test_graph_backend_request_networkx():
 def test_graph_backend_request_networkx_when_env_var_set(enable_backend):
     result = graph_backend()
     assert isinstance(result(), NetworkXGraphBackend)
+
+
+def test_graph_backend_from_graph_type_igraph():
+    result = graph_backend_from_graph_type(graph=ig.Graph())
+    assert isinstance(result(), IgraphGraphBackend)
+
+
+def test_graph_backend_from_graph_type_networkx():
+    result = graph_backend_from_graph_type(graph=nx.Graph())
+    assert isinstance(result(), NetworkXGraphBackend)
+
+    result = graph_backend_from_graph_type(graph=nx.MultiGraph())
+    assert isinstance(result(), NetworkXGraphBackend)
+
+
+def test_graph_backend_from_graph_type_unknown():
+    with pytest.raises(ValueError):
+        graph_backend_from_graph_type(graph="hello")
 
 
 @pytest.fixture
