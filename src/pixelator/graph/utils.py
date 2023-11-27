@@ -370,7 +370,7 @@ def _update_edgelist_membership_data_frame(
     return edgelist
 
 
-def _update_edgelist_membership_lazyframe(
+def _update_edgelist_membership_lazy_frame(
     edgelist: pl.LazyFrame,
     graph: Optional[Graph] = None,
     prefix: Optional[str] = None,
@@ -379,7 +379,7 @@ def _update_edgelist_membership_lazyframe(
         prefix = DEFAULT_COMPONENT_PREFIX
 
     if "component" in edgelist.columns:
-        logger.info("The input edge list already contain a component column")
+        logger.info("The input edge list already contains a component column")
 
     if not graph:
         graph = Graph.from_edgelist(
@@ -459,7 +459,7 @@ def update_edgelist_membership(
 
     if isinstance(edgelist, pl.LazyFrame):
         logger.debug("Updating edgelist where type is pl.LazyFrame")
-        return _update_edgelist_membership_lazyframe(
+        return _update_edgelist_membership_lazy_frame(
             edgelist=edgelist, graph=graph, prefix=prefix
         )
 
