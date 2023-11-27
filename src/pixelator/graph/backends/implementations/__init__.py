@@ -32,7 +32,7 @@ def graph_backend(
     :raises ValueError: when `graph_backend_class` is not recognized
     """
     # TODO Later on we could use this as an entry point for loading
-    # graph backend from plugins if we would like.
+    # a graph backend from plugins if we would like.
 
     def _load_nx():
         logger.debug("Setting up a networkx based backend")
