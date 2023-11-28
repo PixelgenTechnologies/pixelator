@@ -14,7 +14,10 @@ from pixelator.analysis.colocalization import (
 )
 
 
-def test_colocalization_from_component_edgelist(full_graph_edgelist: pd.DataFrame):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_colocalization_from_component_edgelist(
+    enable_backend, full_graph_edgelist: pd.DataFrame
+):
     # TODO we should test more scenarios here (no overlapping and half overlapping)
     result = colocalization_from_component_edgelist(
         edgelist=full_graph_edgelist,
@@ -39,14 +42,19 @@ def test_colocalization_from_component_edgelist(full_graph_edgelist: pd.DataFram
             "jaccard_stdev": {0: 0.0, 1: 0.0, 2: 0.0},
             "jaccard_z": {0: np.nan, 1: np.nan, 2: np.nan},
             "jaccard_p_value": {0: np.nan, 1: np.nan, 2: np.nan},
-            "component": {0: "PXLCMP0000000", 1: "PXLCMP0000000", 2: "PXLCMP0000000"},
+            "component": {
+                0: "PXLCMP0000000",
+                1: "PXLCMP0000000",
+                2: "PXLCMP0000000",
+            },
         }
     )
 
     assert_frame_equal(result, expected)
 
 
-def test_colocalization_scores(full_graph_edgelist: pd.DataFrame):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_colocalization_scores(enable_backend, full_graph_edgelist: pd.DataFrame):
     # TODO we should test more scenarios here (no overlapping and half overlapping)
     result = colocalization_scores(
         edgelist=full_graph_edgelist,
@@ -73,14 +81,19 @@ def test_colocalization_scores(full_graph_edgelist: pd.DataFrame):
             "jaccard_z": {0: np.nan, 1: np.nan, 2: np.nan},
             "jaccard_p_value": {0: np.nan, 1: np.nan, 2: np.nan},
             "jaccard_p_value_adjusted": {0: np.nan, 1: np.nan, 2: np.nan},
-            "component": {0: "PXLCMP0000000", 1: "PXLCMP0000000", 2: "PXLCMP0000000"},
+            "component": {
+                0: "PXLCMP0000000",
+                1: "PXLCMP0000000",
+                2: "PXLCMP0000000",
+            },
         }
     )
 
     assert_frame_equal(result, expected)
 
 
-def test_colocalization_scores_log1p(full_graph_edgelist: pd.DataFrame):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_colocalization_scores_log1p(enable_backend, full_graph_edgelist: pd.DataFrame):
     result = colocalization_scores(
         edgelist=full_graph_edgelist,
         use_full_bipartite=True,
@@ -100,21 +113,31 @@ def test_colocalization_scores_log1p(full_graph_edgelist: pd.DataFrame):
             "pearson_stdev": {0: 0.0, 1: 0.00010716932087924583, 2: 0.0},
             "pearson_z": {0: np.nan, 1: -2.708503319504645, 2: np.nan},
             "pearson_p_value": {0: np.nan, 1: 0.0033793717998496305, 2: np.nan},
-            "pearson_p_value_adjusted": {0: np.nan, 1: 0.010138115400118594, 2: np.nan},
+            "pearson_p_value_adjusted": {
+                0: np.nan,
+                1: 0.010138115400118594,
+                2: np.nan,
+            },
             "jaccard": {0: 1.0, 1: 1.0, 2: 1.0},
             "jaccard_mean": {0: 1.0, 1: 1.0, 2: 1.0},
             "jaccard_stdev": {0: 0.0, 1: 0.0, 2: 0.0},
             "jaccard_z": {0: np.nan, 1: np.nan, 2: np.nan},
             "jaccard_p_value": {0: np.nan, 1: np.nan, 2: np.nan},
             "jaccard_p_value_adjusted": {0: np.nan, 1: np.nan, 2: np.nan},
-            "component": {0: "PXLCMP0000000", 1: "PXLCMP0000000", 2: "PXLCMP0000000"},
+            "component": {
+                0: "PXLCMP0000000",
+                1: "PXLCMP0000000",
+                2: "PXLCMP0000000",
+            },
         }
     )
 
     assert_frame_equal(result, expected)
 
 
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_colocalization_scores_should_not_fail_when_one_component_has_single_node(
+    enable_backend,
     full_graph_edgelist,
 ):
     edgelist = full_graph_edgelist.copy()
@@ -132,7 +155,10 @@ def test_colocalization_scores_should_not_fail_when_one_component_has_single_nod
     )
 
 
-def test_colocalization_scores_should_warn_when_no_data(full_graph_edgelist, caplog):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_colocalization_scores_should_warn_when_no_data(
+    enable_backend, full_graph_edgelist, caplog
+):
     with pytest.raises(ValueError):
         edgelist = full_graph_edgelist.copy()
         edgelist = edgelist.iloc[[0]]

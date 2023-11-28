@@ -262,7 +262,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def get_adjacency_sparse(self) -> csr_matrix:
         """Get the sparse adjacency matrix."""
-        raise NotImplementedError()
+        return nx.to_scipy_sparse_array(self._raw)
 
     def connected_components(self) -> NetworkxBasedVertexClustering:
         """Get the connected components in the Graph instance."""

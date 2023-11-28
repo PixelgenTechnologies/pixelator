@@ -10,9 +10,9 @@ import networkx as nx
 import pandas as pd
 import pytest
 from pixelator.graph import Graph
+from pixelator.graph.backends.implementations import graph_backend
 
-from tests.graph.igraph.test_tools import full_graph
-from tests.graph.test_graph_utils import add_random_names_to_vertexes
+from tests.graph.igraph.test_tools import add_random_names_to_vertexes, full_graph
 
 
 @pytest.fixture(name="output_dir")
@@ -73,12 +73,38 @@ def graph_without_communities_fixture():
     return graph
 
 
-@pytest.fixture
-def enable_backend(request):
-    previous_environment = os.environ
-    if request.param == "networkx":
-        new_environment = previous_environment.copy()
-        new_environment["PIXELATOR_GRAPH_BACKEND"] = "NetworkXGraphBackend"
-        os.environ = new_environment
-    yield
-    os.environ = previous_environment
+@pytest.fixture(name="pentagram_graph")
+def pentagram_graph_fixture():
+    """Build a graph in the shape of a five pointed star."""
+    # Construct a graph in the shape of a five pointed
+    # star with a single marker in each point
+    edges = [
+        (0, 2),
+        (0, 3),
+        (1, 3),
+        (1, 4),
+        (2, 0),
+        (2, 4),
+        (3, 0),
+        (3, 1),
+        (4, 1),
+        (4, 2),
+    ]
+    edgelist = pd.DataFrame(edges, columns=["upia", "upib"])
+    GraphBackend = graph_backend()
+    g = Graph(
+        backend=GraphBackend.from_edgelist(
+            edgelist=edgelist,
+            add_marker_counts=False,
+            simplify=True,
+            use_full_bipartite=True,
+        )
+    )
+
+    default_marker = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0}
+    g.vs.get_vertex(0)["markers"] = dict(default_marker, A=1)
+    g.vs.get_vertex(1)["markers"] = dict(default_marker, B=1)
+    g.vs.get_vertex(2)["markers"] = dict(default_marker, C=1)
+    g.vs.get_vertex(3)["markers"] = dict(default_marker, D=1)
+    g.vs.get_vertex(4)["markers"] = dict(default_marker, E=1)
+    return g

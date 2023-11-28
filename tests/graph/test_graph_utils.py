@@ -2,7 +2,6 @@
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
-import random
 
 import numpy as np
 import pandas as pd
@@ -16,51 +15,6 @@ from pixelator.graph.utils import (
     edgelist_metrics,
     update_edgelist_membership,
 )
-
-
-def add_random_names_to_vertexes(graph: Graph) -> None:
-    """Add some random names to vertices on the graph."""
-    for vertex in graph.vs:
-        vertex["name"] = random_sequence(21)
-
-
-@pytest.fixture(name="pentagram_graph")
-def pentagram_graph_fixture():
-    """Build a graph in the shape of a five pointed star."""
-    # Construct a graph in the shape of a five pointed
-    # star with a single marker in each point
-    edges = [
-        (0, 2),
-        (0, 3),
-        (1, 3),
-        (1, 4),
-        (2, 0),
-        (2, 4),
-        (3, 0),
-        (3, 1),
-        (4, 1),
-        (4, 2),
-    ]
-    edgelist = pd.DataFrame(edges, columns=["upia", "upib"])
-    g = Graph.from_edgelist(
-        edgelist=edgelist,
-        add_marker_counts=False,
-        simplify=True,
-        use_full_bipartite=True,
-    )
-
-    default_marker = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0}
-    g.vs.get_vertex(0)["markers"] = dict(default_marker, A=1)
-    g.vs.get_vertex(1)["markers"] = dict(default_marker, B=1)
-    g.vs.get_vertex(2)["markers"] = dict(default_marker, C=1)
-    g.vs.get_vertex(3)["markers"] = dict(default_marker, D=1)
-    g.vs.get_vertex(4)["markers"] = dict(default_marker, E=1)
-    return g
-
-
-def random_sequence(size: int) -> str:
-    """Create a random sequence of size (size)."""
-    return "".join(random.choices("CGTA", k=size))
 
 
 def test_components_metrics(full_graph_edgelist: pd.DataFrame):
@@ -102,7 +56,8 @@ def _create_df_with_expected_types(df):
     return df
 
 
-def test_create_node_markers_counts_k_eq_0(pentagram_graph):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_create_node_markers_counts_k_eq_0(enable_backend, pentagram_graph):
     """Test build a node marker matrix with a neigbourhood of 0."""
     result = create_node_markers_counts(graph=pentagram_graph, k=0)
 
@@ -122,7 +77,8 @@ def test_create_node_markers_counts_k_eq_0(pentagram_graph):
     assert_frame_equal(result.sort_index(), expected.sort_index())
 
 
-def test_create_node_markers_counts_k_eq_1(pentagram_graph):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_create_node_markers_counts_k_eq_1(enable_backend, pentagram_graph):
     """Test build a node marker matrix with a neigbourhood of 1."""
     result = create_node_markers_counts(graph=pentagram_graph, k=1)
 
@@ -137,10 +93,11 @@ def test_create_node_markers_counts_k_eq_1(pentagram_graph):
         columns=["A", "B", "C", "D", "E"],
     )
     expected = _create_df_with_expected_types(expected)
-    assert_frame_equal(result, expected)
+    assert_frame_equal(result.sort_index(), expected)
 
 
-def test_create_node_markers_counts_k_eq_2(pentagram_graph):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_create_node_markers_counts_k_eq_2(enable_backend, pentagram_graph):
     """Test build a node marker matrix with a neigbourhood of 2."""
     result = create_node_markers_counts(graph=pentagram_graph, k=2)
 
@@ -155,10 +112,11 @@ def test_create_node_markers_counts_k_eq_2(pentagram_graph):
         columns=["A", "B", "C", "D", "E"],
     )
     expected = _create_df_with_expected_types(expected)
-    assert_frame_equal(result, expected)
+    assert_frame_equal(result.sort_index(), expected)
 
 
-def test_create_node_markers_counts_k_eq_2_with_mean(pentagram_graph):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_create_node_markers_counts_k_eq_2_with_mean(enable_backend, pentagram_graph):
     """Test build a node marker matrix with a neigbourhood of 2, mean values."""
     result = create_node_markers_counts(
         graph=pentagram_graph, k=2, normalization="mean"
@@ -175,10 +133,13 @@ def test_create_node_markers_counts_k_eq_2_with_mean(pentagram_graph):
         columns=["A", "B", "C", "D", "E"],
     )
     expected = _create_df_with_expected_types(expected)
-    assert_frame_equal(result, expected)
+    assert_frame_equal(result.sort_index(), expected)
 
 
-def test_create_node_markers_counts(random_graph_edgelist: pd.DataFrame):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_create_node_markers_counts(
+    enable_backend, random_graph_edgelist: pd.DataFrame
+):
     """Test build a node marker matrix with a neigbourhood of 0."""
     graph = Graph.from_edgelist(
         edgelist=random_graph_edgelist,
@@ -188,13 +149,16 @@ def test_create_node_markers_counts(random_graph_edgelist: pd.DataFrame):
     )
     counts = create_node_markers_counts(graph=graph, k=0)
     assert counts.shape == (graph.vcount(), 2)
-    # it is a fully connected graph so each antibody should cover all edges
-    assert counts["A"].sum() == graph.ecount() + 1
-    assert counts["B"].sum() == graph.ecount() + 1
+    # Since every edge transfers it's counts to both the A and the B node
+    # we get a doubling of the number of counts compared to the number of counts
+    # for each marker in the edgelist
+    assert counts["A"].sum() == random_graph_edgelist["marker"].value_counts()["A"] * 2
+    assert counts["B"].sum() == random_graph_edgelist["marker"].value_counts()["B"] * 2
 
 
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_create_node_markers_counts_with_neighbourhood_1_with_mean_normalization(
-    random_graph_edgelist: pd.DataFrame,
+    enable_backend, random_graph_edgelist: pd.DataFrame
 ):
     """Test build a node marker matrix with a neigbourhood of 1, with the mean value."""
     graph = Graph.from_edgelist(
@@ -209,8 +173,9 @@ def test_create_node_markers_counts_with_neighbourhood_1_with_mean_normalization
     assert counts["B"].sum() == pytest.approx(706.57, abs=0.01)
 
 
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_create_node_markers_counts_with_neighbourhood_2(
-    random_graph_edgelist: pd.DataFrame,
+    enable_backend, random_graph_edgelist: pd.DataFrame
 ):
     """Test build a node marker matrix with a neigbourhood of 2."""
     graph = Graph.from_edgelist(
@@ -225,8 +190,9 @@ def test_create_node_markers_counts_with_neighbourhood_2(
     assert counts["B"].sum() == 7870
 
 
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_create_node_markers_counts_column_order(
-    random_graph_edgelist: pd.DataFrame,
+    enable_backend, random_graph_edgelist: pd.DataFrame
 ):
     """Columns should always be returned in alphabetical sort order."""
     graph = Graph.from_edgelist(
@@ -239,7 +205,8 @@ def test_create_node_markers_counts_column_order(
     assert counts.columns.to_list() == ["A", "B"]
 
 
-def test_create_node_markers_counts_k_eq_1_with_mean(pentagram_graph):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_create_node_markers_counts_k_eq_1_with_mean(enable_backend, pentagram_graph):
     """Test build a node marker matrix with a neigbourhood of 1, with the mean value."""
     result = create_node_markers_counts(
         graph=pentagram_graph, k=1, normalization="mean"
@@ -256,11 +223,12 @@ def test_create_node_markers_counts_k_eq_1_with_mean(pentagram_graph):
         columns=["A", "B", "C", "D", "E"],
     )
     expected = _create_df_with_expected_types(expected)
-    assert_frame_equal(result, expected)
+    assert_frame_equal(result.sort_index(), expected)
 
 
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_create_node_markers_counts_with_neighbourhood_1(
-    random_graph_edgelist: pd.DataFrame,
+    enable_backend, random_graph_edgelist: pd.DataFrame
 ):
     """Test build a node marker matrix with a neigbourhood of 1."""
     graph = Graph.from_edgelist(
