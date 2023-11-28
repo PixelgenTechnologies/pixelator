@@ -4,13 +4,16 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import os
 import random
-
 from unittest.mock import MagicMock
+
+import numpy as np
 import pandas as pd
 import pytest
+from graspologic.match import graph_match
+from numpy.testing import assert_array_equal
 from pixelator.graph import Graph
 
-from tests.graph.test_graph_utils import random_sequence
+from tests.graph.igraph.test_tools import random_sequence
 from tests.test_tools import enforce_edgelist_types_for_tests
 
 
@@ -265,3 +268,41 @@ def test_connected_components_benchmark(benchmark, enable_backend, edgelist):
     graph_sizes = {len(g.vs) for g in subgraphs}
     assert len(subgraphs) == 5
     assert graph_sizes == {1996, 1995, 1998, 1996, 1995}
+
+
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_get_adjacency_sparse(enable_backend, pentagram_graph):
+    # This is a little bit involved. Since different network backends might
+    # use different internal indexing schemes, they are not guaranteed to generate
+    # the same order of nodes in the adjacency matrix
+    #
+    # What this test does is to generate the sparse adjacency matrix
+    # and then try to find a rotation (i.e. an ordering of the nodes)
+    # for that and the expected adjacency matrix under which they are identical.
+    #
+    # Finally it tests for the equality of these rotated matrices.
+
+    expected = np.array(
+        [
+            [0, 0, 1, 1, 0],
+            [0, 0, 0, 1, 1],
+            [1, 0, 0, 0, 1],
+            [1, 1, 0, 0, 0],
+            [0, 1, 1, 0, 0],
+        ]
+    )
+
+    result = pentagram_graph.get_adjacency_sparse()
+    results_dense = np.array(result.todense())
+    expected_idx_permutations, result_idx_permutations, *_ = graph_match(
+        expected, results_dense, rng=1
+    )
+
+    results_dense_permuted = results_dense[
+        np.ix_(result_idx_permutations, result_idx_permutations)
+    ]
+    expected_permuted = expected[
+        np.ix_(expected_idx_permutations, expected_idx_permutations)
+    ]
+
+    assert_array_equal(expected_permuted, results_dense_permuted)

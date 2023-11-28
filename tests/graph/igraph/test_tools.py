@@ -12,8 +12,6 @@ import igraph
 import numpy as np
 from pixelator.graph.utils import Graph
 
-from tests.graph.test_graph_utils import add_random_names_to_vertexes
-
 
 def create_random_graph(n_nodes: int, prob: float) -> Graph:
     """
@@ -56,3 +54,14 @@ def create_randomly_connected_bipartite_graph(
 
 def full_graph(n: int) -> Graph:
     return Graph.from_raw(igraph.Graph.Full(n=n))
+
+
+def add_random_names_to_vertexes(graph: Graph) -> None:
+    """Add some random names to vertices on the graph."""
+    for vertex in graph.vs:
+        vertex["name"] = random_sequence(21)
+
+
+def random_sequence(size: int) -> str:
+    """Create a random sequence of size (size)."""
+    return "".join(random.choices("CGTA", k=size))

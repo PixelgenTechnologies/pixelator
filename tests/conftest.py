@@ -2,6 +2,7 @@
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
+import os
 import random
 from pathlib import Path
 
@@ -187,3 +188,14 @@ def setup_basic_pixel_dataset(edgelist: pd.DataFrame, adata: AnnData):
         polarization_scores,
         colocalization_scores,
     )
+
+
+@pytest.fixture
+def enable_backend(request):
+    previous_environment = os.environ
+    if request.param == "networkx":
+        new_environment = previous_environment.copy()
+        new_environment["PIXELATOR_GRAPH_BACKEND"] = "NetworkXGraphBackend"
+        os.environ = new_environment
+    yield
+    os.environ = previous_environment
