@@ -174,9 +174,11 @@ def create_node_markers_counts(
 
     if "markers" not in graph.vs.attributes():
         raise AssertionError("Could not find 'markers' in vertex attributes")
-    markers = list(sorted(graph.vs.get_vertex(0)["markers"].keys()))
+    markers = list(sorted(next(iter(graph.vs))["markers"].keys()))
     node_marker_counts = pd.DataFrame.from_records(
-        graph.vs.attribute("markers"), columns=markers, index=graph.vs.attribute("name")
+        list(graph.vs.get_attribute("markers")),
+        columns=markers,
+        index=list(graph.vs.get_attribute("name")),
     )
     node_marker_counts = node_marker_counts.reindex(
         sorted(node_marker_counts.columns), axis=1
@@ -184,7 +186,7 @@ def create_node_markers_counts(
     node_marker_counts.columns.name = "markers"
     node_marker_counts.columns = node_marker_counts.columns.astype("string[pyarrow]")
     node_marker_counts.index = pd.Index(
-        graph.vs.attribute("name"), dtype="string[pyarrow]", name="node"
+        list(graph.vs.get_attribute("name")), dtype="string[pyarrow]", name="node"
     )
     if k == 0:
         return node_marker_counts
@@ -216,7 +218,7 @@ def create_node_markers_counts(
         data=neighbourhood_counts,
         columns=node_marker_counts.columns.copy(),
         index=pd.Index(
-            graph.vs.attribute("name"), dtype="string[pyarrow]", name="node"
+            list(graph.vs.get_attribute("name")), dtype="string[pyarrow]", name="node"
         ),
     )
     df.columns.name = "markers"

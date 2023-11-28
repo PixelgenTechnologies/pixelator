@@ -6,6 +6,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 import random
 
 import pandas as pd
+import pytest
 from pandas.testing import assert_frame_equal
 from pixelator.analysis.polarization import (
     polarization_scores,
@@ -15,7 +16,8 @@ from pixelator.analysis.polarization import (
 from tests.graph.igraph.test_tools import create_randomly_connected_bipartite_graph
 
 
-def test_polarization(full_graph_edgelist: pd.DataFrame):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
     # TODO we should test more scenarios here (sparse and clustered patterns)
     scores = polarization_scores(edgelist=full_graph_edgelist)
 
@@ -34,6 +36,7 @@ def test_polarization(full_graph_edgelist: pd.DataFrame):
     assert_frame_equal(scores, expected)
 
 
+# TODO Add test here that tests networkx backend
 def test_polarization_with_differentially_polarized_markers():
     # Set seed to get same graph every time
     graph = create_randomly_connected_bipartite_graph(

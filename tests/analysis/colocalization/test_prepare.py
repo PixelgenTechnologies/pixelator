@@ -6,9 +6,9 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 import functools
 
 import pandas as pd
+import pytest
 from numpy.random import default_rng
 from pandas.testing import assert_frame_equal
-
 from pixelator.analysis.colocalization.prepare import (
     filter_by_marker_counts,
     filter_by_region_counts,
@@ -27,7 +27,8 @@ def test_prepare_from_edgelist(edgelist):
     assert len(result.columns) == edgelist["marker"].nunique()
 
 
-def test_prepare_from_graph(edgelist):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_prepare_from_graph(enable_backend, edgelist):
     graph = Graph.from_edgelist(
         edgelist=edgelist,
         add_marker_counts=True,
@@ -47,7 +48,8 @@ def test_prepare_from_graph(edgelist):
         assert len(result.columns) == len(unique_markers_in_component)
 
 
-def test_prepare_from_graph_and_edgelist_eq_for_no_neigbours(edgelist):
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_prepare_from_graph_and_edgelist_eq_for_no_neigbours(enable_backend, edgelist):
     for _, component_df in edgelist.groupby("component"):
         graph = Graph.from_edgelist(
             edgelist=component_df,
