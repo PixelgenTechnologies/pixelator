@@ -457,10 +457,6 @@ class IgraphBasedVertexSequence(VertexSequence):
         """Set the given vertex attribute to the values in the attribute vector."""
         self._vertex_seq[attribute] = attribute_vector
 
-    def attribute(self, attr: str) -> Iterable[Any]:
-        """Get all attributes associated with the vertices."""
-        return self._vertex_seq[attr]
-
 
 class IgraphBasedEdgeSequence(EdgeSequence):
     """Proxy for a igraph.EdgeSeq."""
