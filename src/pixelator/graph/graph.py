@@ -11,6 +11,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 import pandas as pd
 import polars as pl
 from scipy.sparse import csr_matrix
+from functools import lru_cache
 
 from pixelator.graph.backends.implementations import (
     graph_backend,
@@ -165,6 +166,7 @@ class Graph:
         layout_algorithm: str = "fruchterman_reingold",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
+        cache: bool = False,
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
@@ -185,16 +187,31 @@ class Graph:
         :param only_keep_a_pixels: If true, only keep the a-pixels
         :param get_node_marker_matrix: Add a matrix of marker counts to each
                                        node if True.
+        :param cache: set to true in order to cache `cache_size` number of calls to
+                      this method. It will make subsequent calls to the layout method
+                      with the same settings much faster, at the cost of additional
+                      memory usage.
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid
         :raises: ValueError if the provided current graph instance is empty
         """
-        return self._backend.layout_coordinates(
-            layout_algorithm=layout_algorithm,
-            only_keep_a_pixels=only_keep_a_pixels,
-            get_node_marker_matrix=get_node_marker_matrix,
-        )
+        if cache:
+            return self._cached_layout_coordinates(
+                layout_algorithm=layout_algorithm,
+                only_keep_a_pixels=only_keep_a_pixels,
+                get_node_marker_matrix=get_node_marker_matrix,
+            )
+        else:
+            return self._backend.layout_coordinates(
+                layout_algorithm=layout_algorithm,
+                only_keep_a_pixels=only_keep_a_pixels,
+                get_node_marker_matrix=get_node_marker_matrix,
+            )
+
+    @lru_cache(maxsize=1)
+    def _cached_layout_coordinates(self, **kwargs):
+        return self._backend.layout_coordinates(**kwargs)
 
     def get_edge_dataframe(self):
         """Get the edges as a pandas DataFrame."""
