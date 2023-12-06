@@ -292,7 +292,7 @@ class IgraphGraphBackend(GraphBackend):
             # Added here to avoid circular imports
             from pixelator.graph.utils import create_node_markers_counts
 
-            node_marker_counts = create_node_markers_counts(self._raw)
+            node_marker_counts = create_node_markers_counts(self)  # type: ignore
             df = pd.concat([coordinates, node_marker_counts], axis=1)
         else:
             df = coordinates
