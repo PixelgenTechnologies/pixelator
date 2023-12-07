@@ -90,7 +90,9 @@ def pentagram_graph_fixture():
         (4, 1),
         (4, 2),
     ]
-    edgelist = pd.DataFrame(edges, columns=["upia", "upib"])
+    edgelist = pd.DataFrame(
+        edges, columns=["upia", "upib"], index=[str(i) for i in range(len(edges))]
+    )
     GraphBackend = graph_backend()
     g = Graph(
         backend=GraphBackend.from_edgelist(

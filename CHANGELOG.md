@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Finding connected components and doing Lieden based community detection using
   networkx/graspologic (experimental feature).
+* Experimental 3D heatmap plotting feature
+* Optional caching of layouts to speed up computations in some scenarios
+* `experimental` mark that can be added to functions that are not yet production ready
 
 ### Changed
 

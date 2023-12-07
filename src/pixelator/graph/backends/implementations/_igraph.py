@@ -278,6 +278,7 @@ class IgraphGraphBackend(GraphBackend):
             columns=["x", "y"] if layout_inst.dim == 2 else ["x", "y", "z"],
             index=raw.vs["name"],
         )
+        coordinates.index = coordinates.index.astype("str")
 
         # If we are doing a 3D layout we add the option of normalized
         # vectors where we scale the length of each point vector to be one, so that
@@ -292,7 +293,7 @@ class IgraphGraphBackend(GraphBackend):
             # Added here to avoid circular imports
             from pixelator.graph.utils import create_node_markers_counts
 
-            node_marker_counts = create_node_markers_counts(self._raw)
+            node_marker_counts = create_node_markers_counts(self)  # type: ignore
             df = pd.concat([coordinates, node_marker_counts], axis=1)
         else:
             df = coordinates
