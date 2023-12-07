@@ -381,7 +381,7 @@ def recover_technical_multiplets(
 
     logger.info(
         "Obtained %i components after removing %i edges",
-        edgelist.select(pl.col("component").n_unique()),
+        edgelist.select(pl.col("component")).collect().n_unique(),
         len(edges_to_remove),
     )
     return edgelist, info
