@@ -93,15 +93,18 @@ def plot_3d_heatmap(
 
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(1, 1, 1, projection="3d")
-    ax.plot_surface(
+    color_scale = cm.inferno(  # type: ignore
+        densities.reshape(horizontal_resolution, -1)
+    )
+    ax.plot_surface(  # type: ignore
         X,
         Y,
         Z,
         cstride=1,
         rstride=1,
-        facecolors=cm.inferno(densities.reshape(horizontal_resolution, -1)),
+        facecolors=color_scale,
         shade=False,
     )
     ax.set_axis_off()
-    ax.set_box_aspect([1.0, 1.0, 1.0])
+    ax.set_box_aspect([1.0, 1.0, 1.0])  # type: ignore
     return fig, ax
