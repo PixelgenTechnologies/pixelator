@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 from matplotlib import cm
-from typing import Literal
+from typing import Literal, Tuple
 
 from pixelator.graph import Graph
 from pixelator.marks import experimental
@@ -53,7 +53,7 @@ def plot_3d_heatmap(
         "fruchterman_reingold_3d", "kamada_kawai_3d"
     ] = "fruchterman_reingold_3d",
     cache_layout: bool = False,
-) -> plt.Figure:
+) -> Tuple[plt.Figure, plt.Axes]:
     """Plot a 3D heatmap for the marker in the provided component.
 
     :param component_graph: A component graph to plot for.
@@ -65,8 +65,8 @@ def plot_3d_heatmap(
     :param cache_layout: set this to `True` to cache the layout
                          or faster computations on subsequent calls. This comes at the
                          cost of additional memory usage.
-    :return: A matplotlib 3D heatmap figure
-    :rtype: plt.Figure
+    :return: A matplotlib 3D heatmap figure, and it's associated Axes instance
+    :rtype: Tuple[plt.Figure, plt.Axes]
     :raises: AssertionError if the provided `layout_algorithm` is not valid,
              or there are no with markers for the provided `marker`
     """
@@ -100,7 +100,8 @@ def plot_3d_heatmap(
         cstride=1,
         rstride=1,
         facecolors=cm.inferno(densities.reshape(horizontal_resolution, -1)),
+        shade=False,
     )
     ax.set_axis_off()
     ax.set_box_aspect([1.0, 1.0, 1.0])
-    return fig
+    return fig, ax
