@@ -13,13 +13,13 @@ from pixelator.graph import Graph
 from pixelator.marks import experimental
 
 
-def _unit_sphere_surface(m, n):
-    u = np.linspace(0, 2 * np.pi, m)
-    v = np.linspace(0, np.pi, n)
+def _unit_sphere_surface(horizontal_resolution, vertical_resolution):
+    horizontal_angles = np.linspace(0, 2 * np.pi, horizontal_resolution)
+    vertical_angles = np.linspace(0, np.pi, vertical_resolution)
 
-    X = np.outer(np.cos(u), np.sin(v))
-    Y = np.outer(np.sin(u), np.sin(v))
-    Z = np.outer(np.ones(np.size(u)), np.cos(v))
+    X = np.outer(np.cos(horizontal_angles), np.sin(vertical_angles))
+    Y = np.outer(np.sin(horizontal_angles), np.sin(vertical_angles))
+    Z = np.outer(np.ones(np.size(horizontal_angles)), np.cos(vertical_angles))
     return X, Y, Z
 
 
@@ -78,9 +78,12 @@ def plot_3d_heatmap(
     if len(coordinates) < 1:
         raise AssertionError(f"No nodes found with {marker}.")
 
-    m = 120
-    n = 80
-    X, Y, Z = _unit_sphere_surface(m=m, n=n)
+    horizontal_resolution = 120
+    vertical_resolution = 80
+    X, Y, Z = _unit_sphere_surface(
+        horizontal_resolution=horizontal_resolution,
+        vertical_resolution=vertical_resolution,
+    )
 
     densities = _calculate_densities(
         coordinates=coordinates,
@@ -91,7 +94,12 @@ def plot_3d_heatmap(
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(1, 1, 1, projection="3d")
     ax.plot_surface(
-        X, Y, Z, cstride=1, rstride=1, facecolors=cm.inferno(densities.reshape(m, -1))
+        X,
+        Y,
+        Z,
+        cstride=1,
+        rstride=1,
+        facecolors=cm.inferno(densities.reshape(horizontal_resolution, -1)),
     )
     ax.set_axis_off()
     ax.set_box_aspect([1.0, 1.0, 1.0])

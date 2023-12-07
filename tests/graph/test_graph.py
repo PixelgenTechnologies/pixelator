@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 from graspologic.match import graph_match
 from numpy.testing import assert_array_equal
+from pandas.testing import assert_frame_equal
 from pixelator.graph import Graph
 
 from tests.graph.igraph.test_tools import random_sequence
@@ -306,3 +307,172 @@ def test_get_adjacency_sparse(enable_backend, pentagram_graph):
     ]
 
     assert_array_equal(expected_permuted, results_dense_permuted)
+
+
+def test_layout_coordinates_2d(pentagram_graph):
+    random.seed(1234)
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="fruchterman_reingold",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+    )
+    assert_frame_equal(
+        result,
+        pd.DataFrame.from_dict(
+            data={
+                "0": {
+                    "x": 1.0386805270034798,
+                    "y": -0.8714331518342926,
+                    "A": 1,
+                    "B": 0,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                "1": {
+                    "x": -0.6929674687566002,
+                    "y": 0.20514131020866555,
+                    "A": 0,
+                    "B": 1,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                "2": {
+                    "x": 1.3407578800708435,
+                    "y": 0.3520377422098,
+                    "A": 0,
+                    "B": 0,
+                    "C": 1,
+                    "D": 0,
+                    "E": 0,
+                },
+                "3": {
+                    "x": -0.21775128911411396,
+                    "y": -0.9619001620817096,
+                    "A": 0,
+                    "B": 0,
+                    "C": 0,
+                    "D": 1,
+                    "E": 0,
+                },
+                "4": {
+                    "x": 0.2708160970300027,
+                    "y": 1.0168909370461712,
+                    "A": 0,
+                    "B": 0,
+                    "C": 0,
+                    "D": 0,
+                    "E": 1,
+                },
+            },
+            orient="index",
+        ),
+    )
+
+
+def test_layout_coordinates_3d(pentagram_graph):
+    random.seed(1234)
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="fruchterman_reingold_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+    )
+    assert_frame_equal(
+        result,
+        pd.DataFrame.from_dict(
+            {
+                "0": {
+                    "x": 0.5738758710773254,
+                    "y": -1.0727458675498922,
+                    "z": -0.35168283243211745,
+                    "x_norm": 0.4531511929438519,
+                    "y_norm": -0.8470752894580588,
+                    "z_norm": -0.2777002886622733,
+                    "A": 1,
+                    "B": 0,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                "1": {
+                    "x": -0.17233124504155853,
+                    "y": 0.7304969934987403,
+                    "z": 0.237340073908726,
+                    "x_norm": -0.21892195492737665,
+                    "y_norm": 0.9279909156737621,
+                    "z_norm": 0.30150628198720547,
+                    "A": 0,
+                    "B": 1,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                "2": {
+                    "x": 0.8330341860593845,
+                    "y": -0.9248279806107647,
+                    "z": 0.8725751224908745,
+                    "x_norm": 0.5480203326379913,
+                    "y_norm": -0.6084078493401747,
+                    "z_norm": 0.5740327550555008,
+                    "A": 0,
+                    "B": 0,
+                    "C": 1,
+                    "D": 0,
+                    "E": 0,
+                },
+                "3": {
+                    "x": -0.0474879467390837,
+                    "y": -0.04967603300792803,
+                    "z": -0.744288409897498,
+                    "x_norm": -0.0635329031421513,
+                    "y_norm": -0.0664602875108409,
+                    "z_norm": -0.9957643297499194,
+                    "A": 0,
+                    "B": 0,
+                    "C": 0,
+                    "D": 1,
+                    "E": 0,
+                },
+                "4": {
+                    "x": 0.3718753148065073,
+                    "y": 0.18975627014930505,
+                    "z": 1.2369132371447296,
+                    "x_norm": 0.28485923983876,
+                    "y_norm": 0.1453547055079321,
+                    "z_norm": 0.9474846822324814,
+                    "A": 0,
+                    "B": 0,
+                    "C": 0,
+                    "D": 0,
+                    "E": 1,
+                },
+            },
+            orient="index",
+        ),
+    )
+
+
+def test_layout_coordinates_caches(pentagram_graph):
+    mock_layout_method = MagicMock()
+    pentagram_graph._backend.layout_coordinates = mock_layout_method
+
+    _ = pentagram_graph.layout_coordinates(
+        layout_algorithm="fruchterman_reingold",
+        get_node_marker_matrix=True,
+        cache=True,
+        only_keep_a_pixels=False,
+    )
+
+    _ = pentagram_graph.layout_coordinates(
+        layout_algorithm="fruchterman_reingold",
+        get_node_marker_matrix=True,
+        cache=True,
+        only_keep_a_pixels=False,
+    )
+
+    # If caching works as intented the backend should only be
+    # hit once.
+    mock_layout_method.assert_called_once()
