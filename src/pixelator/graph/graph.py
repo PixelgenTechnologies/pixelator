@@ -187,10 +187,11 @@ class Graph:
         :param only_keep_a_pixels: If true, only keep the a-pixels
         :param get_node_marker_matrix: Add a matrix of marker counts to each
                                        node if True.
-        :param cache: set to true in order to cache `cache_size` number of calls to
-                      this method. It will make subsequent calls to the layout method
+        :param cache: set to `True` in order to cache one call of this this method.
+                      It will make subsequent calls to the layout method
                       with the same settings much faster, at the cost of additional
-                      memory usage.
+                      memory usage. This can speed things up a lot when plotting
+                      e.g. different markers across multiple markers.
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid

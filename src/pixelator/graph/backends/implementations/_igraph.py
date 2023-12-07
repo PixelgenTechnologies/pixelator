@@ -278,6 +278,7 @@ class IgraphGraphBackend(GraphBackend):
             columns=["x", "y"] if layout_inst.dim == 2 else ["x", "y", "z"],
             index=raw.vs["name"],
         )
+        coordinates.index = coordinates.index.astype("str")
 
         # If we are doing a 3D layout we add the option of normalized
         # vectors where we scale the length of each point vector to be one, so that

@@ -20,7 +20,7 @@ def test__calculate_distance_to_unit_sphere_zones():
     sphere_points = rng.standard_normal((10, 3))
     sphere_points = sphere_points / np.linalg.norm(sphere_points, axis=1)[:, None]
 
-    unit_sphere = _unit_sphere_surface(m=5, n=5)
+    unit_sphere = _unit_sphere_surface(horizontal_resolution=5, vertical_resolution=5)
     result = _calculate_distance_to_unit_sphere_zones(
         sphere_points, unit_sphere_surface=unit_sphere
     )
@@ -338,7 +338,7 @@ def test__calculate_densities():
     sphere_points = rng.standard_normal((100, 3))
     sphere_points = sphere_points / np.linalg.norm(sphere_points, axis=1)[:, None]
 
-    unit_sphere = _unit_sphere_surface(m=10, n=10)
+    unit_sphere = _unit_sphere_surface(horizontal_resolution=10, vertical_resolution=10)
 
     result = _calculate_densities(
         sphere_points, distance_cutoff=0.4, unit_sphere_surface=unit_sphere
