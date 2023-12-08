@@ -309,16 +309,17 @@ def test_get_adjacency_sparse(enable_backend, pentagram_graph):
     assert_array_equal(expected_permuted, results_dense_permuted)
 
 
-def test_layout_coordinates_2d(pentagram_graph):
-    random.seed(1234)
+@pytest.mark.parametrize("enable_backend", ["igraph"], indirect=True)
+def test_layout_coordinates_2d_igraph(enable_backend, pentagram_graph):
     result = pentagram_graph.layout_coordinates(
         layout_algorithm="fruchterman_reingold",
         get_node_marker_matrix=True,
         cache=False,
         only_keep_a_pixels=False,
+        random_seed=1234,
     )
     assert_frame_equal(
-        result,
+        result.sort_index(),
         pd.DataFrame.from_dict(
             data={
                 "0": {
@@ -372,16 +373,84 @@ def test_layout_coordinates_2d(pentagram_graph):
     )
 
 
-def test_layout_coordinates_3d(pentagram_graph):
-    random.seed(1234)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="fruchterman_reingold",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+        random_seed=1234,
+    )
+    assert_frame_equal(
+        result.sort_index(),
+        pd.DataFrame.from_dict(
+            data={
+                "0": {
+                    "x": -0.19130137780050335,
+                    "y": -0.995853333686976,
+                    "A": 1,
+                    "B": 0,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                "2": {
+                    "x": 0.8830198712248385,
+                    "y": -0.4852152436940987,
+                    "A": 0,
+                    "B": 0,
+                    "C": 1,
+                    "D": 0,
+                    "E": 0,
+                },
+                "3": {
+                    "x": -0.9999999999999999,
+                    "y": -0.12342422456086793,
+                    "A": 0,
+                    "B": 0,
+                    "C": 0,
+                    "D": 1,
+                    "E": 0,
+                },
+                "1": {
+                    "x": -0.42674182538070177,
+                    "y": 0.9138447918386549,
+                    "A": 0,
+                    "B": 1,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                "4": {
+                    "x": 0.7350233319563663,
+                    "y": 0.6906480101032882,
+                    "A": 0,
+                    "B": 0,
+                    "C": 0,
+                    "D": 0,
+                    "E": 1,
+                },
+            },
+            orient="index",
+        ).sort_index(),
+    )
+
+
+@pytest.mark.parametrize("enable_backend", ["igraph"], indirect=True)
+def test_layout_coordinates_3d_igraph(enable_backend, pentagram_graph):
+    # We need different tests for igraph and networkx here since
+    # they will not generate the same outputs for the same inputs
+    # due to the stochastic nature of the algorithm
     result = pentagram_graph.layout_coordinates(
         layout_algorithm="fruchterman_reingold_3d",
         get_node_marker_matrix=True,
         cache=False,
         only_keep_a_pixels=False,
+        random_seed=1234,
     )
     assert_frame_equal(
-        result,
+        result.sort_index(),
         pd.DataFrame.from_dict(
             {
                 "0": {
@@ -455,6 +524,121 @@ def test_layout_coordinates_3d(pentagram_graph):
     )
 
 
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
+    # We need different tests for igraph and networkx here since
+    # they will not generate the same outputs for the same inputs
+    # due to the stochastic nature of the algorithm
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="fruchterman_reingold_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+        random_seed=1234,
+    )
+    assert_frame_equal(
+        result.sort_index(),
+        pd.DataFrame.from_dict(
+            {
+                "0": {
+                    "x": -0.9648627593518555,
+                    "y": 0.6407664038966624,
+                    "z": -0.033615468664985694,
+                    "x_norm": -0.8326847714045886,
+                    "y_norm": 0.5529868588884579,
+                    "z_norm": -0.029010435494229957,
+                    "A": 1,
+                    "B": 0,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                "2": {
+                    "x": 0.06231005082947333,
+                    "y": 0.6879998987122531,
+                    "z": -0.9306229217434148,
+                    "x_norm": 0.05376181897086785,
+                    "y_norm": 0.5936141202608003,
+                    "z_norm": -0.8029520178989151,
+                    "A": 0,
+                    "B": 0,
+                    "C": 1,
+                    "D": 0,
+                    "E": 0,
+                },
+                "3": {
+                    "x": -0.6574427161103169,
+                    "y": -0.29032243099867855,
+                    "z": 0.9067564430700126,
+                    "x_norm": -0.5682143336015969,
+                    "y_norm": -0.25091975713946313,
+                    "z_norm": 0.7836911040497817,
+                    "A": 0,
+                    "B": 0,
+                    "C": 0,
+                    "D": 1,
+                    "E": 0,
+                },
+                "1": {
+                    "x": 0.5599954246326997,
+                    "y": -0.8243431466963642,
+                    "z": 0.5981413573809647,
+                    "x_norm": 0.4818050386972553,
+                    "y_norm": -0.7092427263211374,
+                    "z_norm": 0.5146247757798849,
+                    "A": 0,
+                    "B": 1,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                "4": {
+                    "x": 0.9999999999999999,
+                    "y": -0.21410072491387208,
+                    "z": -0.5406594100425767,
+                    "x_norm": 0.8644648158917496,
+                    "y_norm": -0.18508254374496058,
+                    "z_norm": -0.46738103736259806,
+                    "A": 0,
+                    "B": 0,
+                    "C": 0,
+                    "D": 0,
+                    "E": 1,
+                },
+            },
+            orient="index",
+        ).sort_index(),
+    )
+
+
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_layout_coordinates_3d_benchmark(enable_backend, benchmark, pentagram_graph):
+    benchmark(
+        pentagram_graph.layout_coordinates,
+        layout_algorithm="fruchterman_reingold_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+        random_seed=1234,
+    )
+
+
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_layout_coordinates_3d_networkx_only_a_pixels(enable_backend, pentagram_graph):
+    # We need different tests for igraph and networkx here since
+    # they will not generate the same outputs for the same inputs
+    # due to the stochastic nature of the algorithm
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="fruchterman_reingold_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=True,
+        random_seed=1234,
+    )
+    # there are 3 nodes with type A in the pentagram graph
+    assert len(result) == 3
+
+
 def test_layout_coordinates_caches(pentagram_graph):
     mock_layout_method = MagicMock()
     pentagram_graph._backend.layout_coordinates = mock_layout_method
@@ -473,6 +657,6 @@ def test_layout_coordinates_caches(pentagram_graph):
         only_keep_a_pixels=False,
     )
 
-    # If caching works as intented the backend should only be
+    # If caching works as intended the backend should only be
     # hit once.
     mock_layout_method.assert_called_once()

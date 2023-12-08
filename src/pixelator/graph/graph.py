@@ -167,6 +167,7 @@ class Graph:
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         cache: bool = False,
+        random_seed: Optional[int] = None,
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
@@ -192,6 +193,9 @@ class Graph:
                       with the same settings much faster, at the cost of additional
                       memory usage. This can speed things up a lot when plotting
                       e.g. different markers across multiple markers.
+        :param random_seed: used as the seed for graph layouts with a stochastic
+                            element. Useful to get deterministic layouts across
+                            method calls.
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid
@@ -202,12 +206,14 @@ class Graph:
                 layout_algorithm=layout_algorithm,
                 only_keep_a_pixels=only_keep_a_pixels,
                 get_node_marker_matrix=get_node_marker_matrix,
+                random_seed=random_seed,
             )
         else:
             return self._backend.layout_coordinates(
                 layout_algorithm=layout_algorithm,
                 only_keep_a_pixels=only_keep_a_pixels,
                 get_node_marker_matrix=get_node_marker_matrix,
+                random_seed=random_seed,
             )
 
     @lru_cache(maxsize=1)

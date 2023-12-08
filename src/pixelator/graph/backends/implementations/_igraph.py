@@ -6,6 +6,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import logging
+import random
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -28,10 +29,10 @@ from scipy.sparse import csr_matrix
 from pixelator.graph.backends.protocol import (
     Edge,
     EdgeSequence,
+    GraphBackend,
     Vertex,
     VertexClustering,
     VertexSequence,
-    GraphBackend,
 )
 
 if TYPE_CHECKING:
@@ -221,6 +222,7 @@ class IgraphGraphBackend(GraphBackend):
         layout_algorithm: str = "fruchterman_reingold",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
+        random_seed: Optional[int] = None,
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
@@ -241,6 +243,9 @@ class IgraphGraphBackend(GraphBackend):
         :param only_keep_a_pixels: If true, only keep the a-pixels
         :param get_node_marker_matrix: Add a matrix of marker counts to each
                                        node if True.
+        :param random_seed: used as the seed for graph layouts with a stochastic
+                            element. Useful to get deterministic layouts across
+                            method calls.
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid
@@ -259,6 +264,9 @@ class IgraphGraphBackend(GraphBackend):
                     f"Options are: {'/'.join(layout_options)}"
                 )
             )
+
+        if random_seed:
+            random.seed(random_seed)
 
         if not self._raw:
             raise ValueError("Trying to get layout for empty Graph instance.")
