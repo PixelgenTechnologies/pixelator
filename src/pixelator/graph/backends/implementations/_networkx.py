@@ -335,7 +335,7 @@ class NetworkXGraphBackend(GraphBackend):
             )
         if layout_algorithm == "kamada_kawai_3d":
             layout_inst = nx.kamada_kawai_layout(
-                raw, pos=nx.random_layout(raw, seed=random_seed), dim=3
+                raw, pos=nx.random_layout(raw, seed=random_seed, dim=3), dim=3
             )
         if layout_algorithm == "fruchterman_reingold":
             layout_inst = nx.spring_layout(raw, seed=random_seed)
