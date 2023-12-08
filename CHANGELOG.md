@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Experimental 3D heatmap plotting feature
 * Optional caching of layouts to speed up computations in some scenarios
 * `experimental` mark that can be added to functions that are not yet production ready
+* Graph layout computations using networkx as the graph backend (experimental feature).
 
 ### Changed
 
