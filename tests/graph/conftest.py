@@ -109,4 +109,10 @@ def pentagram_graph_fixture():
     g.vs.get_vertex(2)["markers"] = dict(default_marker, C=1)
     g.vs.get_vertex(3)["markers"] = dict(default_marker, D=1)
     g.vs.get_vertex(4)["markers"] = dict(default_marker, E=1)
+
+    g.vs.get_vertex(0)["pixel_type"] = "A"
+    g.vs.get_vertex(1)["pixel_type"] = "B"
+    g.vs.get_vertex(2)["pixel_type"] = "A"
+    g.vs.get_vertex(3)["pixel_type"] = "B"
+    g.vs.get_vertex(4)["pixel_type"] = "A"
     return g

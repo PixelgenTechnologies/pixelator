@@ -12,6 +12,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Optional,
     Protocol,
     Set,
     Tuple,
@@ -130,6 +131,7 @@ class GraphBackend(Protocol):
         layout_algorithm: str = "fruchterman_reingold",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
+        random_seed: Optional[int] = None,
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
@@ -150,6 +152,9 @@ class GraphBackend(Protocol):
         :param only_keep_a_pixels: If true, only keep the a-pixels
         :param get_node_marker_matrix: Add a matrix of marker counts to each
                                        node if True.
+        :param random_seed: used as the seed for graph layouts with a stochastic
+                            element. Useful to get deterministic layouts across
+                            method calls.
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid
