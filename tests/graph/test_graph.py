@@ -524,6 +524,26 @@ def test_layout_coordinates_3d_igraph(enable_backend, pentagram_graph):
     )
 
 
+@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
+    # Just making sure all existing algorithms get exercised
+
+    algorithms = [
+        "fruchterman_reingold",
+        "fruchterman_reingold_3d",
+        "kamada_kawai",
+        "kamada_kawai_3d",
+    ]
+    for algorithm in algorithms:
+        _ = pentagram_graph.layout_coordinates(
+            layout_algorithm=algorithm,
+            get_node_marker_matrix=False,
+            cache=False,
+            only_keep_a_pixels=False,
+            random_seed=1234,
+        )
+
+
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
     # We need different tests for igraph and networkx here since
