@@ -4,6 +4,7 @@ Tests for the colocalization modules
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import pandas as pd
+import numpy as np
 from pandas.testing import assert_frame_equal
 
 from pixelator.analysis.colocalization.statistics import (
@@ -59,19 +60,19 @@ def test_pearson_no_variation():
     )
     results = pearson(df)
     # Check that the data conforms to the expected shape, i.e. the upper-
-    # triagonal matrix of all vs all comparissons
+    # triagonal matrix of all vs all comparisons
     cols = ["marker1", "marker2", "pearson"]
     data = [
         ["marker1", "marker1", 1.000000],
         ["marker1", "marker2", 0.973223],
         ["marker2", "marker2", 1.000000],
-        ["marker1", "marker3", pd.NA],
-        ["marker2", "marker3", pd.NA],
-        ["marker3", "marker3", pd.NA],
-        ["marker1", "marker4", pd.NA],
-        ["marker2", "marker4", pd.NA],
-        ["marker3", "marker4", pd.NA],
-        ["marker4", "marker4", pd.NA],
+        ["marker1", "marker3", np.nan],
+        ["marker2", "marker3", np.nan],
+        ["marker3", "marker3", np.nan],
+        ["marker1", "marker4", np.nan],
+        ["marker2", "marker4", np.nan],
+        ["marker3", "marker4", np.nan],
+        ["marker4", "marker4", np.nan],
     ]
 
     expected = pd.DataFrame(data, columns=cols)

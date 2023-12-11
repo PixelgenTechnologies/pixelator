@@ -50,7 +50,7 @@ def test_prepare_from_graph(enable_backend, edgelist):
 
 @pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_prepare_from_graph_and_edgelist_eq_for_no_neigbours(enable_backend, edgelist):
-    for _, component_df in edgelist.groupby("component"):
+    for _, component_df in edgelist.groupby("component", observed=True):
         graph = Graph.from_edgelist(
             edgelist=component_df,
             add_marker_counts=True,

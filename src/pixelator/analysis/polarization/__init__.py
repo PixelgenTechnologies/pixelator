@@ -183,7 +183,7 @@ def polarization_scores(
     # we make the computation in parallel (for each component)
     with futures.ThreadPoolExecutor() as executor:
         tasks = []
-        for component_id, component_df in edgelist.groupby("component"):
+        for component_id, component_df in edgelist.groupby("component", observed=True):
             # build the graph from the component
             graph = Graph.from_edgelist(
                 edgelist=component_df,
