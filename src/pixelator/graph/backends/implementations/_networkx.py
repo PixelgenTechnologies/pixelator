@@ -22,6 +22,7 @@ from typing import (
 )
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 import polars as pl
 from graspologic.partition import leiden
@@ -305,11 +306,66 @@ class NetworkXGraphBackend(GraphBackend):
 
         return NetworkxBasedVertexClustering(graph, clusters(leiden_communities))
 
+    def _layout_coordinates(
+        self,
+        layout_algorithm: str = "fruchterman_reingold",
+        random_seed: Optional[int] = None,
+    ) -> pd.DataFrame:
+        layout_options = [
+            "fruchterman_reingold",
+            "fruchterman_reingold_3d",
+            "kamada_kawai",
+            "kamada_kawai_3d",
+        ]
+        if layout_algorithm not in layout_options:
+            raise AssertionError(
+                (
+                    f"{layout_algorithm} not allowed `layout_algorithm` option. "
+                    f"Options are: {'/'.join(layout_options)}"
+                )
+            )
+
+        if not self._raw:
+            raise ValueError("Trying to get layout for empty Graph instance.")
+        raw = self._raw  # type: nx.Graph
+
+        if layout_algorithm == "kamada_kawai":
+            layout_inst = nx.kamada_kawai_layout(
+                raw, pos=nx.random_layout(raw, seed=random_seed)
+            )
+        if layout_algorithm == "kamada_kawai_3d":
+            layout_inst = nx.kamada_kawai_layout(
+                raw, pos=nx.random_layout(raw, seed=random_seed, dim=3), dim=3
+            )
+        if layout_algorithm == "fruchterman_reingold":
+            layout_inst = nx.spring_layout(raw, seed=random_seed)
+        if layout_algorithm == "fruchterman_reingold_3d":
+            layout_inst = nx.spring_layout(raw, dim=3, seed=random_seed)
+
+        coordinates = pd.DataFrame.from_dict(
+            layout_inst,
+            orient="index",
+            columns=["x", "y"] if len(layout_inst[0]) == 2 else ["x", "y", "z"],
+        )
+        coordinates.index = [
+            str(raw.nodes[node_idx]["name"]) for node_idx in layout_inst.keys()
+        ]
+        return coordinates
+
+    @staticmethod
+    def _normalize_to_unit_sphere(coordinates):
+        coordinates[["x_norm", "y_norm", "z_norm"]] = (
+            coordinates[["x", "y", "z"]]
+            / (1 * np.linalg.norm(np.asarray(coordinates), axis=1))[:, None]
+        )
+        return coordinates
+
     def layout_coordinates(
         self,
         layout_algorithm: str = "fruchterman_reingold",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
+        random_seed: Optional[int] = None,
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
@@ -322,7 +378,6 @@ class NetworkXGraphBackend(GraphBackend):
           - kamada_kawai
           - kamada_kawai_3d
 
-
         The `fruchterman_reingold` options are in general faster, but less
         accurate than the `kamada_kawai` ones.
 
@@ -330,12 +385,38 @@ class NetworkXGraphBackend(GraphBackend):
         :param only_keep_a_pixels: If true, only keep the a-pixels
         :param get_node_marker_matrix: Add a matrix of marker counts to each
                                        node if True.
+        :param random_seed: used as the seed for graph layouts with a stochastic
+                            element. Useful to get deterministic layouts across
+                            method calls.
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid
         :raises: ValueError if the provided current graph instance is empty
         """
-        raise NotImplementedError()
+        coordinates = self._layout_coordinates(
+            layout_algorithm=layout_algorithm, random_seed=random_seed
+        )
+
+        # If we are doing a 3D layout we add the option of normalized
+        # vectors where we scale the length of each point vector to be one, so that
+        # we have the option of doing a spherical projection of the graph
+        if len(coordinates.columns) == 3:
+            coordinates = self._normalize_to_unit_sphere(coordinates)
+
+        if get_node_marker_matrix:
+            # Added here to avoid circular imports
+            from pixelator.graph.utils import create_node_markers_counts
+
+            node_marker_counts = create_node_markers_counts(self)  # type: ignore
+            df = pd.concat([coordinates, node_marker_counts], axis=1)
+        else:
+            df = coordinates
+
+        if only_keep_a_pixels:
+            a_node_idx = [v.index for v in self.vs.vertices() if v["pixel_type"] == "A"]
+            df = df.iloc[list(a_node_idx),]
+
+        return df
 
     def get_edge_dataframe(self):
         """Get the edges as a pandas DataFrame."""
