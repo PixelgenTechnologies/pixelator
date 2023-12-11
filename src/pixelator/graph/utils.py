@@ -71,7 +71,7 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
     cmetrics = []
     index = []
     # iterate the components to obtain the metrics of each component
-    for component_id, group_df in edgelist.groupby("component"):
+    for component_id, group_df in edgelist.groupby("component", observed=True):
         # compute metrics
         n_edges = group_df.shape[0]
         n_vertices = len(

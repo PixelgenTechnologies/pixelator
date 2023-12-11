@@ -34,7 +34,7 @@ def _wide_correlation_matrix_to_long_correlation_results(
     # in the stack operation above. It's not pretty, but it's the only
     # way I've figured out to solve this.
     dx = (df.isna() & lower_triangle).values
-    nn = pd.DataFrame(dx, index=df.index, columns=df.columns).stack()
+    nn = pd.DataFrame(dx, index=df.index, columns=df.columns, dtype="object").stack()
     nn = nn[nn]
     nn[:] = pd.NA
 
