@@ -3,11 +3,32 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import collections
 import dataclasses
+from functools import cache
 from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 
 from pixelator.config import RegionType, config, get_position_in_parent
+
+import numba as nb
+
+
+@nb.njit
+def _count_elem_in_array_where_greater_than(arr, value):
+    result = 0
+    for x in arr:
+        if x > value:
+            result += 1
+    return result
+
+
+@nb.njit
+def _count_elem_in_array_where_greater_or_equal_than(arr, value):
+    result = 0
+    for x in arr:
+        if x >= value:
+            result += 1
+    return result
 
 
 @dataclasses.dataclass(frozen=True)
@@ -37,6 +58,8 @@ class SequenceQualityStatsCollector:
         self._counter: collections.Counter[str] = collections.Counter()
         self._positions = {}
 
+        self._amplicon_len = len(design)
+
         amplicon = self.design.get_region_by_id("amplicon")
         if amplicon is None:
             raise ValueError("Assay does not contain an amplicon region")
@@ -57,6 +80,7 @@ class SequenceQualityStatsCollector:
         if not umi_regions:
             raise ValueError("Assay does not contain a UMI region")
 
+    @cache
     def get_position(self, region_id: str) -> Tuple[int, int]:
         r = self._positions.get(region_id)
         if r is None:
@@ -65,8 +89,8 @@ class SequenceQualityStatsCollector:
 
     @staticmethod
     def _read_stats(quali: np.ndarray) -> Tuple[int, int]:
-        bases_in_read = np.count_nonzero(quali > 2)
-        q30_bases_in_read = np.count_nonzero(quali >= 30)
+        bases_in_read = _count_elem_in_array_where_greater_than(quali, 2)
+        q30_bases_in_read = _count_elem_in_array_where_greater_or_equal_than(quali, 30)
         return bases_in_read, q30_bases_in_read
 
     def _umi_stats(self, quali: np.ndarray) -> Tuple[int, int]:
@@ -74,56 +98,39 @@ class SequenceQualityStatsCollector:
         umi_regions = self.design.get_regions_by_type(RegionType.UMI)
         umi_positions = [self.get_position(r.region_id) for r in umi_regions]
 
-        umi_quali = np.array([], dtype=np.uint8)
+        p = np.zeros(self._amplicon_len, dtype=np.uint8)
         for pos in umi_positions:
-            umi_slice = slice(*pos)
-            umi_quali = np.append(umi_quali, quali[umi_slice])
+            p[slice(*pos)] = 1
 
-        bases_in_umi = np.count_nonzero(umi_quali > 2)
-        q30_bases_in_umi = np.count_nonzero(umi_quali >= 30)
+        q = p * quali
+
+        bases_in_umi = _count_elem_in_array_where_greater_than(q, 2)
+        q30_bases_in_umi = _count_elem_in_array_where_greater_or_equal_than(q, 30)
 
         return bases_in_umi, q30_bases_in_umi
 
-    def _upia_stats(self, quali: np.ndarray) -> Tuple[int, int]:
-        upia_pos = self.get_position("upi-a")
+    def _get_stats_from_position(self, quali: np.ndarray, pos: str) -> Tuple[int, int]:
+        upia_pos = self.get_position(pos)
         slice_obj = slice(*upia_pos)
         quali_subset = quali[slice_obj]
-        bases = np.count_nonzero(quali_subset > 2)
-        q30 = np.count_nonzero(quali_subset >= 30)
+        bases = _count_elem_in_array_where_greater_than(quali_subset, 2)
+        q30 = _count_elem_in_array_where_greater_or_equal_than(quali_subset, 30)
         return bases, q30
+
+    def _upia_stats(self, quali: np.ndarray) -> Tuple[int, int]:
+        return self._get_stats_from_position(quali, "upi-a")
 
     def _upib_stats(self, quali: np.ndarray) -> Tuple[int, int]:
-        upib_pos = self.get_position("upi-b")
-        slice_obj = slice(*upib_pos)
-        quali_subset = quali[slice_obj]
-        bases = np.count_nonzero(quali_subset > 2)
-        q30 = np.count_nonzero(quali_subset >= 30)
-        return bases, q30
+        return self._get_stats_from_position(quali, "upi-b")
 
     def _pbs1_stats(self, quali: np.ndarray) -> Tuple[int, int]:
-        pbs1_pos = self.get_position("pbs-1")
-        slice_obj = slice(*pbs1_pos)
-        quali_subset = quali[slice_obj]
-        bases = np.count_nonzero(quali_subset > 2)
-        q30 = np.count_nonzero(quali_subset >= 30)
-        return bases, q30
+        return self._get_stats_from_position(quali, "pbs-1")
 
     def _pbs2_stats(self, quali: np.ndarray) -> Tuple[int, int]:
-        pbs2_pos = self.get_position("pbs-2")
-        slice_obj = slice(*pbs2_pos)
-        quali_subset = quali[slice_obj]
-        bases = np.count_nonzero(quali_subset > 2)
-        q30 = np.count_nonzero(quali_subset >= 30)
-        return bases, q30
+        return self._get_stats_from_position(quali, "pbs-2")
 
     def _bc_stats(self, quali: np.ndarray) -> Tuple[int, int]:
-        bc_pos = self.get_position("bc")
-        slice_obj = slice(*bc_pos)
-
-        quali_subset = quali[slice_obj]
-        bases = np.count_nonzero(quali_subset > 2)
-        q30 = np.count_nonzero(quali_subset >= 30)
-        return bases, q30
+        return self._get_stats_from_position(quali, "bc")
 
     @property
     def stats(self) -> SequenceQualityStats:
