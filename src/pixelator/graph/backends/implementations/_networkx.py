@@ -25,7 +25,13 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
-from graspologic.partition import leiden
+
+with warnings.catch_warnings():
+    # Graspologic raises a numba related warning here, that we can
+    # safely ignore.
+    warnings.filterwarnings("ignore", module="graspologic.models.edge_swaps")
+    from graspologic.partition import leiden
+
 from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
