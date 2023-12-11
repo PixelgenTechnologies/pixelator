@@ -232,7 +232,7 @@ def colocalization_scores(
     )
 
     def data():
-        grouped = edgelist.groupby("component")
+        grouped = edgelist.groupby("component", observed=True)
         unique_components = len(edgelist["component"].unique())
         for idx, (component_id, component_df) in enumerate(grouped):
             logger.debug(
