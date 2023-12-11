@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Refactoring of the graph backend implementations module.
 * Activating networkx as the backend is now done by setting `PIXELATOR_GRAPH_BACKEND="NetworkXGraphBackend"`
   (previously `PIXELATOR_GRAPH_BACKEND=True` was used).
+* Speeding up `amplicon` step by roughly 3x
 
 ### Fixed
 
