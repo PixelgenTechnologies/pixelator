@@ -7,6 +7,7 @@ Copyright (c) 2022 Pixelgen Technologies AB.
 import enum
 import json
 from typing import Any, List, Mapping, Optional, Set, Tuple
+from functools import cache
 
 from pydantic import BaseModel, validator
 
@@ -181,6 +182,10 @@ class Region:
             max_l = self.max_len
 
         return min_l, max_l
+
+    def get_max_length(self):
+        """Get the maximum length of this region."""
+        return self.get_len()[1]
 
     def update_attr(self):
         if self.regions:
@@ -417,6 +422,7 @@ class Assay:
 
         return None
 
+    @cache
     def get_regions_by_type(self, region_type: RegionType) -> List[Region]:
         """
         Retrieve all regions of a given type.
@@ -429,6 +435,10 @@ class Assay:
             regions.extend(r.get_regions_by_type(region_type))
 
         return regions
+
+    def __len__(self) -> int:
+        """Return the total length of the assay in bases."""
+        return sum([region.get_max_length() for region in self.assay_spec])
 
 
 def get_position_in_parent(assay: Assay, region_id: str) -> Tuple[int, int]:
