@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Nicer error messages when there are no components valid for computing colocalization.
 * Cleaned out remaining igraph remnants from `Graph` class
+* A bunch of warnings
 
 ### Removed
 
