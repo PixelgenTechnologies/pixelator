@@ -36,14 +36,14 @@ def test_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
     assert_frame_equal(scores, expected)
 
 
-# TODO Add test here that tests networkx backend
 def test_polarization_with_differentially_polarized_markers():
     # Set seed to get same graph every time
     graph = create_randomly_connected_bipartite_graph(
-        n1=50, n2=100, p=0.1, random_seed=1477
+        n1=50, n2=100, p=0.1, random_seed=2
     )
 
-    graph.vs["markers"] = [{"A": 0, "B": 1, "C": 0} for _ in range(graph.vcount())]
+    for v in graph.vs:
+        v["markers"] = {"A": 0, "B": 1, "C": 0}
     random_vertex = graph.vs.get_vertex(random.randint(0, graph.vcount()))
     random_vertex["markers"]["A"] = 5
     neighbors = random_vertex.neighbors()
@@ -59,9 +59,9 @@ def test_polarization_with_differentially_polarized_markers():
     # Hence it is filtered out.
     expected = pd.DataFrame.from_dict(
         {
-            "morans_i": {0: 0.41048695076280795, 1: -0.007230744646852031},
-            "morans_p_value": {0: 0.0, 1: 0.9231131857481375},
-            "morans_z": {0: 11.54324998113701, 1: -0.09651295450603938},
+            "morans_i": {0: 0.43226508763528637, 1: -0.008836689038031321},
+            "morans_p_value": {0: 3.0133748632157652e-33, 1: 0.6982377399841404},
+            "morans_z": {0: 12.01362576145691, 1: -0.3877004266942152},
             "marker": {0: "A", 1: "C"},
             "component": {0: "PXLCMP0000000", 1: "PXLCMP0000000"},
         }
