@@ -31,8 +31,8 @@ def estimate_observation_statistics(
                 ["marker_1", "marker_2"]
             ).agg(
                 **{
-                    f"{func_name}_mean": pd.NamedAgg(f"{func_name}_perm", np.nanmean),
-                    f"{func_name}_stdev": pd.NamedAgg(f"{func_name}_perm", np.nanstd),
+                    f"{func_name}_mean": pd.NamedAgg(f"{func_name}_perm", "mean"),
+                    f"{func_name}_stdev": pd.NamedAgg(f"{func_name}_perm", "std"),
                 }
             )
 

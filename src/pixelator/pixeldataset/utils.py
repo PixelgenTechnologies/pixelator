@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import os
+import warnings
 from typing import (
     TYPE_CHECKING,
     Optional,
@@ -13,7 +14,7 @@ from typing import (
 
 import numpy as np
 import pandas as pd
-from anndata import AnnData, read_h5ad
+from anndata import AnnData, read_h5ad, ImplicitModificationWarning
 
 from pixelator.graph import components_metrics
 from pixelator.statistics import (
@@ -55,7 +56,11 @@ def update_metrics_anndata(adata: AnnData, inplace: bool = True) -> Optional[Ann
     df = adata.to_df()
 
     # update the var layer (antibody metrics)
-    adata.var["antibody_count"] = df.sum().astype(int)
+    # we ignore the warning here, since we actually want to force and update of the
+    # `adata.var` data frame.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=ImplicitModificationWarning)
+        adata.var["antibody_count"] = df.sum().astype(int)
     adata.var["components"] = (df != 0).sum()
     adata.var["antibody_pct"] = (
         adata.var["antibody_count"] / adata.var["antibody_count"].sum()
@@ -129,7 +134,7 @@ def antibody_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
 
     # compute metrics
     antibody_metrics = (
-        edgelist.groupby("marker")
+        edgelist.groupby("marker", observed=True)
         .agg(
             {
                 "count": "sum",

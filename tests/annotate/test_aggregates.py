@@ -64,7 +64,7 @@ def mixed_data_fixture(aggregates, normals, unspecifics):
 
 
 def generate_anndata(x):
-    adata = AnnData(X=x, dtype=np.float32)
+    adata = AnnData(X=x)
     components = [f"CMP{idx}" for idx in range(len(x))]
     adata.obs = pd.DataFrame({"component": components})
     adata.obs_names = components

@@ -19,14 +19,18 @@ from typing import (
     Set,
     Tuple,
 )
+import warnings
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import pyfastx
 from annoy import AnnoyIndex
-from umi_tools._dedup_umi import edit_distance
-from umi_tools.network import breadth_first_search
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", module="umi_tools")
+    from umi_tools._dedup_umi import edit_distance
+    from umi_tools.network import breadth_first_search
 
 from pixelator.collapse.constants import SEED
 from pixelator.exception import FileFqGzEmpty

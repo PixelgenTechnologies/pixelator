@@ -181,16 +181,15 @@ class AntibodyPanel:
         :param df: DataFrame with data of the panel to validate
         :returns: The in-place modified input dataframe
         """
-        # update control and nuclear column to boolean
-        TR_TABLE = {
-            "(?i)yes": True,
-            "(?i)no": False,
-        }
+        df = df.copy()
 
-        df.replace({"control": TR_TABLE}, regex=True, inplace=True)
-        df["control"].fillna(False, inplace=True)
-        df.replace({"nuclear": TR_TABLE}, regex=True, inplace=True)
-        df["nuclear"].fillna(False, inplace=True)
+        # update control and nuclear column to boolean
+        TR_TABLE = {"(?i)yes": True, "(?i)no": False}
+
+        df["control"] = df["control"].replace(TR_TABLE, regex=True)
+        df["control"] = df["control"].fillna(False)
+        df["nuclear"] = df["nuclear"].replace(TR_TABLE, regex=True)
+        df["nuclear"] = df["nuclear"].fillna(False)
 
         return df
 
