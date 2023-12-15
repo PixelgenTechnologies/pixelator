@@ -9,12 +9,16 @@ from functools import reduce
 from typing import Dict, List, Literal, Optional, Union
 
 import igraph
+import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
 from scipy.sparse import identity
 
-from pixelator.graph.backends.implementations import IgraphGraphBackend
+from pixelator.graph.backends.implementations import (
+    IgraphGraphBackend,
+    NetworkXGraphBackend,
+)
 from pixelator.graph.constants import (
     DEFAULT_COMPONENT_PREFIX,
     DIGITS,
@@ -43,6 +47,16 @@ def union(graphs: List[Graph]) -> Graph:
         return Graph(
             backend=IgraphGraphBackend(
                 igraph.union([graph._backend.raw for graph in graphs])
+            )
+        )
+
+    if backends[0] == NetworkXGraphBackend:
+        return Graph(
+            backend=NetworkXGraphBackend.from_raw(
+                nx.union_all(
+                    [graph._backend.raw for graph in graphs],
+                    rename=[f"g{idx}-" for idx, _ in enumerate(graphs)],
+                )
             )
         )
 
