@@ -8,7 +8,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 import random
 from typing import Optional
 
-import igraph
+import networkx as nx
 import numpy as np
 from pixelator.graph.utils import Graph
 
@@ -25,11 +25,12 @@ def create_random_graph(n_nodes: int, prob: float) -> Graph:
         for j in range(i, n_nodes):
             if rng.uniform(0, 1) < prob:
                 edge_list.append((i, j))
-    g = igraph.Graph(directed=False)
-    g.add_vertices(n_nodes)
-    g.add_edges(edge_list)
+    g = nx.Graph()
+    g.add_nodes_from(range(0, n_nodes))
+    g.add_edges_from(edge_list)
+    g = Graph.from_raw(g)
     add_random_names_to_vertexes(g)
-    return Graph.from_raw(g)
+    return g
 
 
 def create_fully_connected_bipartite_graph(n_nodes: int) -> Graph:
@@ -37,23 +38,21 @@ def create_fully_connected_bipartite_graph(n_nodes: int) -> Graph:
     create a fully connected bipartite graph of
     size n_nodes * 2
     """
-    graph = igraph.Graph.Full_Bipartite(n1=n_nodes, n2=n_nodes, directed=False)
+    graph = Graph.from_raw(nx.complete_bipartite_graph(n1=n_nodes, n2=n_nodes))
     add_random_names_to_vertexes(graph)
-    return Graph.from_raw(graph)
+    return graph
 
 
 def create_randomly_connected_bipartite_graph(
     n1: int, n2: int, p: float, random_seed: Optional[int]
 ) -> Graph:
-    if random_seed:
-        random.seed(random_seed)
-    graph = igraph.Graph.Random_Bipartite(n1, n2, p)
+    graph = Graph.from_raw(nx.bipartite.random_graph(n1, n2, p, seed=random_seed))
     add_random_names_to_vertexes(graph)
-    return Graph.from_raw(graph)
+    return graph
 
 
 def full_graph(n: int) -> Graph:
-    return Graph.from_raw(igraph.Graph.Full(n=n))
+    return Graph.from_raw(nx.complete_graph(n))
 
 
 def add_random_names_to_vertexes(graph: Graph) -> None:

@@ -83,8 +83,9 @@ def ig_vertex(ig_graph):
 
 
 @pytest.fixture
-def nx_vertex():
-    yield NetworkxBasedVertex(index=0, data={"my_attr": "a"})
+def nx_vertex(nx_graph):
+    nx_graph.add_node(0, my_attr="a")
+    yield NetworkxBasedVertex(*list(nx_graph.nodes(data=True))[0], graph=nx_graph)
 
 
 @pytest.mark.parametrize("vertex", ["ig_vertex", "nx_vertex"])
@@ -137,12 +138,16 @@ def ig_vertex_seq(ig_graph):
 
 
 @pytest.fixture
-def nx_vertex_seq():
+def nx_vertex_seq(nx_graph):
+    nx_graph.add_node(0, my_attr="a")
+    nx_graph.add_node(0, my_attr="a", other_attr=1)
+    nx_graph.add_node(1, my_attr="b", other_attr=2)
+    nx_graph.add_node(2, my_attr="n", other_attr=2)
+
     yield NetworkxBasedVertexSequence(
         [
-            NetworkxBasedVertex(0, {"my_attr": "a", "other_attr": 1}),
-            NetworkxBasedVertex(1, {"my_attr": "b", "other_attr": 2}),
-            NetworkxBasedVertex(2, {"my_attr": "n", "other_attr": 2}),
+            NetworkxBasedVertex(node, data, graph=nx_graph)
+            for node, data in nx_graph.nodes(data=True)
         ]
     )
 
