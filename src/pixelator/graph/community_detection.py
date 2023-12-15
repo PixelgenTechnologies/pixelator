@@ -37,7 +37,7 @@ def connect_components(
 ) -> None:
     """Retrieve all connected components from an edgelist.
 
-    This function takes as input an edge list pd.Dataframe (csv) that has
+    This function takes as input an edge list in `parquet` format that has
     been generated with `pixelator collapse`. The function filters the
     edge list by count (`min_count`) and then adds a column to the edge list
     with the respective connected components ids obtained from the graph. The
@@ -45,14 +45,14 @@ def connect_components(
     big components (technical multiplets) into smaller components if only if
     `multiplet_recovery` is True. The recovery is done using community
     detection to detect and remove problematic edges using the Leiden [1]_ community
-    detection algorithm. Information about the recovered components is written
-    to a CSV file (recovered_components.csv) and the edge list containing only
-    the removed edge is written to a CSV file (removed_edges.csv.gz).
+    detection algorithm. Information about the recovered components is written to
+    a CSV file (`<sample_id>.components_recovered.csv`) and the filtered edge list
+    is written to a parquet file (`<sample_id>`.edgelist.parquet) alongside the
+    discarded edges (`<sample_id>`.discarded_edgelist.parquet).
 
     The following files are generated:
 
-    - raw edge list (csv) updated with components membership
-    - edge list (csv) after multiplets recovery (if any)
+    - edge list (parquet) after multiplets recovery (if any)
     - metrics (json) with information
 
 
@@ -381,7 +381,7 @@ def recover_technical_multiplets(
 
     logger.info(
         "Obtained %i components after removing %i edges",
-        edgelist.select(pl.col("component").n_unique()),
+        edgelist.select(pl.col("component")).collect().n_unique(),
         len(edges_to_remove),
     )
     return edgelist, info
