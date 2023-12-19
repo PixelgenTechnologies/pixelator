@@ -250,8 +250,8 @@ class NetworkXGraphBackend(GraphBackend):
         """Get a sequence of the vertices in the Graph instance."""
         return NetworkxBasedVertexSequence(
             vertices=[
-                NetworkxBasedVertex(v[0], v[1], self._raw)
-                for v in self._raw.nodes(data=True)
+                NetworkxBasedVertex(v[0], v[1], self.raw)
+                for v in self.raw.nodes(data=True)
             ]
         )
 
