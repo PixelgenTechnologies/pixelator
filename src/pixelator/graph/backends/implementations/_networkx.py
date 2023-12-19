@@ -250,7 +250,8 @@ class NetworkXGraphBackend(GraphBackend):
         """Get a sequence of the vertices in the Graph instance."""
         return NetworkxBasedVertexSequence(
             vertices=[
-                NetworkxBasedVertex(v[0], v[1]) for v in self._raw.nodes(data=True)
+                NetworkxBasedVertex(v[0], v[1], self.raw)
+                for v in self.raw.nodes(data=True)
             ]
         )
 
@@ -426,18 +427,18 @@ class NetworkXGraphBackend(GraphBackend):
 
     def get_edge_dataframe(self):
         """Get the edges as a pandas DataFrame."""
-        raise NotImplementedError()
+        return nx.to_pandas_edgelist(self.raw)
 
     def get_vertex_dataframe(self):
         """Get all vertices as a pandas DataFrame."""
-        raise NotImplementedError()
+        return pd.DataFrame(list(self.raw.nodes()), columns=["name"])
 
     def add_edges(self, edges: Iterable[Tuple[int]]) -> None:  # noqa: DOC501
         """Add edges to the graph instance.
 
         :param edges: Add the following edges to the graph instance.
         """
-        raise NotImplementedError()
+        self.raw.add_edges_from(edges)
 
     def add_vertices(self, n_vertices: int, attrs: Dict[str, List]) -> None:
         """Add some number of vertices to the graph instance.
@@ -465,10 +466,11 @@ class NetworkXGraphBackend(GraphBackend):
 class NetworkxBasedVertex(Vertex):
     """A Vertex instance that plays well with NetworkX."""
 
-    def __init__(self, index: int, data: Dict):
+    def __init__(self, index: int, data: Dict, graph: Union[nx.Graph, nx.MultiGraph]):
         """Create a new NetworkxBasedVertex instance."""
         self._index = index
         self._data = data
+        self._graph = graph
 
     @property
     def index(self):
@@ -487,6 +489,17 @@ class NetworkxBasedVertex(Vertex):
     def __setitem__(self, attr: str, value: Any) -> None:
         """Set the attr of the vertex."""
         self._data[attr] = value
+
+    def neighbors(self) -> VertexSequence:
+        """Get the neighbors of the vertex."""
+        neighbor_vertices = set(self._graph.neighbors(self._index))
+
+        def generate_neighbors():
+            for node_idx, data in self._graph.nodes(data=True):
+                if node_idx in neighbor_vertices:
+                    yield NetworkxBasedVertex(node_idx, data, self._graph)
+
+        return NetworkxBasedVertexSequence(generate_neighbors())
 
 
 class NetworkxBasedEdge(Edge):
@@ -521,8 +534,8 @@ class NetworkxBasedEdge(Edge):
         node_1_data = self._graph.nodes[v1_idx]
         node_2_data = self._graph.nodes[v2_idx]
         return (
-            NetworkxBasedVertex(v1_idx, node_1_data),
-            NetworkxBasedVertex(v2_idx, node_2_data),
+            NetworkxBasedVertex(v1_idx, node_1_data, graph=self._graph),
+            NetworkxBasedVertex(v2_idx, node_2_data, graph=self._graph),
         )
 
 
@@ -563,6 +576,16 @@ class NetworkxBasedVertexSequence(VertexSequence):
         """Get the values of the attribute."""
         for node in self._vertices.values():
             yield node.data[attr]
+
+    def select_where(self, key, value) -> VertexSequence:
+        """Select a subset of vertices."""
+        return NetworkxBasedVertexSequence(
+            [
+                NetworkxBasedVertex(idx, vertex.data, vertex._graph)
+                for idx, vertex in self._vertices.items()
+                if vertex.data[key] == value
+            ],
+        )
 
 
 class NetworkxBasedEdgeSequence(EdgeSequence):
@@ -625,7 +648,7 @@ class NetworkxBasedVertexClustering(VertexClustering):
         for cluster in self._clustering:
             yield NetworkxBasedVertexSequence(
                 [
-                    NetworkxBasedVertex(v[0], v[1])
+                    NetworkxBasedVertex(v[0], v[1], self._graph)
                     for v in self._graph.subgraph(cluster).nodes(data=True)
                 ]
             )
