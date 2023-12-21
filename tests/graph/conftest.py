@@ -12,7 +12,7 @@ import pytest
 from pixelator.graph import Graph
 from pixelator.graph.backends.implementations import graph_backend
 
-from tests.graph.igraph.test_tools import add_random_names_to_vertexes, full_graph
+from tests.graph.networkx.test_tools import add_random_names_to_vertexes, full_graph
 
 
 @pytest.fixture(name="output_dir")
