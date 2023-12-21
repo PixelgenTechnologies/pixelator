@@ -27,6 +27,8 @@ def test_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
             "morans_p_value": [0.0006289900162095327, 0.0006289959783166696],
             "morans_p_adjusted": [0.0006289959783166696, 0.0006289959783166696],
             "morans_z": [-3.41879540404497, -3.4187928246970136],
+            "morans_p_value_sim": {0: 0.001, 1: 0.336},
+            "morans_z_sim": {0: 11.242690771061561, 1: -0.052831436479260474},
             "marker": ["A", "B"],
             "component": ["PXLCMP0000000", "PXLCMP0000000"],
         },
@@ -62,6 +64,8 @@ def test_polarization_with_differentially_polarized_markers():
             "morans_i": {0: 0.43226508763528637, 1: -0.008836689038031321},
             "morans_p_value": {0: 3.0133748632157652e-33, 1: 0.6982377399841404},
             "morans_z": {0: 12.01362576145691, 1: -0.3877004266942152},
+            "morans_p_value_sim": {0: 0.001, 1: 0.336},
+            "morans_z_sim": {0: 11.242690771061561, 1: -0.052831436479260474},
             "marker": {0: "A", 1: "C"},
             "component": {0: "PXLCMP0000000", 1: "PXLCMP0000000"},
         }
