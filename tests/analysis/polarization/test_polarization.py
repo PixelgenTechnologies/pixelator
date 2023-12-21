@@ -13,7 +13,7 @@ from pixelator.analysis.polarization import (
     polarization_scores_component,
 )
 
-from tests.graph.igraph.test_tools import create_randomly_connected_bipartite_graph
+from tests.graph.networkx.test_tools import create_randomly_connected_bipartite_graph
 
 
 @pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)

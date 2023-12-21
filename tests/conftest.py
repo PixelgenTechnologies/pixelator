@@ -17,7 +17,7 @@ from pixelator.pixeldataset import (
 )
 from pixelator.pixeldataset.utils import edgelist_to_anndata
 
-from tests.graph.igraph.test_tools import (
+from tests.graph.networkx.test_tools import (
     create_fully_connected_bipartite_graph,
     create_random_graph,
 )
