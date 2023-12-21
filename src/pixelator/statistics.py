@@ -18,7 +18,7 @@ def binarize_counts(
     df: pd.DataFrame,
     quantile: float = 0.0,
 ) -> pd.DataFrame:
-    """Binarize a dataframe of antibody cstuffounts.
+    """Binarize a dataframe of antibody counts.
 
     The input antibody counts will be binarized (convert to 0-1) using
     a distribution cutoff based on the value of the `quantile` argument.

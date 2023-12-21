@@ -32,28 +32,30 @@ from pixelator.pixeldataset import (
 logger = logging.getLogger(__name__)
 
 
-def morans_autocorr(w: np.ndarray, y: np.ndarray) -> Any:
+def morans_autocorr(w: np.ndarray, y: np.ndarray, permutations: int) -> Any:
     """
-    A helper function that computes the Moran's I autocorrelation statistics
+    A function that computes the Moran's I autocorrelation statistics
     for the given spatial weights (w) and target variable (y). The target
     variable can be the counts of a specific antibody so the Moran's I value
     could indicate if the antibody has a localized spatial pattern. The function
     returns an object with the Moran's statistics (I, p_rand and z_rand).
     :param w: the weights matrix (connectivity matrix)
     :param y: the counts vector
+    :param permutations: the number of permutations for simulated Z-score (z_sim) 
+                         estimation (if permutations>0)
     :returns: the Moran's statistics
     """
     # Default Moran's transformation is row-standardized "r".
     # https://github.com/pysal/esda/blob/main/esda/moran.py
-    return Moran(y, w, permutations=None)
+    np.random.seed(1)
+    return Moran(y, w, permutations=permutations)
 
 
 def polarization_scores_component(
     graph: Graph,
     component_id: str,
-    normalization: Literal["raw", "clr", "denoise"] = "clr",
-    antibody_control: Optional[List[str]] = None,
-    binarization: bool = False,
+    normalization: Literal["raw", "clr"] = "clr",
+    permutations: int = None,
 ) -> pd.DataFrame:
     """
     A helper function that computes a matrix of polarization statistics
@@ -67,16 +69,16 @@ def polarization_scores_component(
       morans_i,morans_p_value,morans_z,marker,component
     :param graph: a graph (it must be a single connected component)
     :param component_id: the id of the component
-    :param normalization: the normalization method to use (raw or clr or denoise)
-    :param antibody_control: the antibodies to use as control for the denoise option
-    :param binarization: transform the counts to 0-1 (binarize)
+    :param normalization: the normalization method to use (raw or clr)
+    :param permutations: the number of permutations for simulated Z-score (z_sim) 
+                         estimation (if permutations>0)
     :returns: a pd.DataFrame with the polarization statistics for each antibody
     :raises: AssertionError when the input is not valid
     """
     if len(graph.connected_components()) > 1:
         raise AssertionError("The graph given as input is not a single component")
 
-    if normalization not in ["raw", "clr", "denoise"]:
+    if normalization not in ["raw", "clr"]:
         raise AssertionError(f"incorrect value for normalization {normalization}")
 
     logger.debug(
@@ -99,28 +101,14 @@ def polarization_scores_component(
     # create antibody node counts
     counts_df = create_node_markers_counts(graph=graph, k=0)
 
-    # remove the empty markers and any column where all values are the
-    # same, since Morans I is not defined when there is no variance
+    # remove markers with zero variance
     counts_df = counts_df.loc[
         :, (counts_df != 0).any(axis=0) & (counts_df.nunique() > 1)
     ]
 
     # clr transformation
-    if normalization != "raw":
+    if normalization == "clr":
         counts_df = clr_transformation(df=counts_df, non_negative=True, axis=0)
-
-    # denoise
-    if normalization == "denoise":
-        counts_df = denoise(
-            df=counts_df,
-            antibody_control=antibody_control,  # type: ignore[arg-type]
-            quantile=1.0,
-            axis=0,
-        )
-
-    # binarize
-    if binarization:
-        counts_df = binarize_counts(df=counts_df)
 
     # compute the spatial weights matrix (w) from the graph
     w = WSP(graph.get_adjacency_sparse()).to_W(silence_warnings=True)
@@ -129,20 +117,38 @@ def polarization_scores_component(
     # and the markers counts distribution (y) (Morans I autocorrelation)
     statistics = []
     for m in counts_df.columns:
-        mir = morans_autocorr(w, counts_df[m])
+        mir = morans_autocorr(w, counts_df[m], permutations)
         statistics.append(mir)
 
-    # create the dataframe
-    df = pd.DataFrame(
-        data={
-            "morans_i": [m.I for m in statistics],
-            "morans_p_value": [m.p_rand for m in statistics],
-            "morans_z": [m.z_rand for m in statistics],
-        },
-    ).fillna(0)
-    # the p-values are adjusted per-component
-    df["marker"] = counts_df.columns.tolist()
-    df["component"] = component_id
+    if permutations:
+
+        # create the dataframe
+        df = pd.DataFrame(
+            data={
+                "morans_i": [m.I for m in statistics],
+                "morans_p_value": [m.p_rand for m in statistics],
+                "morans_z": [m.z_rand for m in statistics],
+                "morans_p_value_sim": [m.p_sim for m in statistics],
+                "morans_z_sim": [m.z_sim for m in statistics],
+            },
+        ).fillna(0)
+        # the p-values are adjusted per-component
+        df["marker"] = counts_df.columns.tolist()
+        df["component"] = component_id
+
+    else:
+
+        # create the dataframe
+        df = pd.DataFrame(
+            data={
+                "morans_i": [m.I for m in statistics],
+                "morans_p_value": [m.p_rand for m in statistics],
+                "morans_z": [m.z_rand for m in statistics],
+            },
+        ).fillna(0)
+        # the p-values are adjusted per-component
+        df["marker"] = counts_df.columns.tolist()
+        df["component"] = component_id
 
     logger.debug("Polarization scores for components %s computed", component_id)
     return df
@@ -150,10 +156,9 @@ def polarization_scores_component(
 
 def polarization_scores(
     edgelist: pd.DataFrame,
-    use_full_bipartite: bool = True,
-    normalization: Literal["raw", "clr", "denoise"] = "clr",
-    antibody_control: Optional[List[str]] = None,
-    binarization: bool = False,
+    use_full_bipartite: bool = False,
+    normalization: Literal["raw", "clr"] = "clr",
+    permutations: int = None,
 ) -> pd.DataFrame:
     """
     A helper function that given an `edgelist` will compute polarization scores.
@@ -166,9 +171,9 @@ def polarization_scores(
       morans_i,morans_p_value,morans_z,morans_p_adjusted,marker,component
     :param edgelist: an edge list (pd.DataFrame) with a component column
     :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    :param normalization: the normalization method to use (raw or clr or denoise)
-    :param antibody_control: the antibodies to use as control for the denoise method
-    :param binarization: transform the counts to 0-1 (binarize)
+    :param normalization: the normalization method to use (raw or clr)
+    :param permutations: the number of permutations for simulated Z-score (z_sim) 
+                         estimation (if permutations>0)
     :returns: a pd.DataFrames with all the polarization scores
     :raises: AssertionError when the input is not valid
     """
@@ -183,7 +188,7 @@ def polarization_scores(
     # we make the computation in parallel (for each component)
     with futures.ThreadPoolExecutor() as executor:
         tasks = []
-        for component_id, component_df in edgelist.groupby("component", observed=True):
+        for component_id, component_df in edgelist.groupby("component"):
             # build the graph from the component
             graph = Graph.from_edgelist(
                 edgelist=component_df,
@@ -197,8 +202,7 @@ def polarization_scores(
                     graph=graph,
                     component_id=component_id,
                     normalization=normalization,
-                    antibody_control=antibody_control,
-                    binarization=binarization,
+                    permutations=permutations,
                 )
             )
         results = futures.wait(tasks)
