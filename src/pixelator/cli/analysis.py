@@ -97,7 +97,7 @@ from pixelator.utils import (
     type=click.IntRange(min=0),
     show_default=True,
     help=(
-        "Select the size of the neighborhood to use when computing"
+        "Select the size of the neighborhood to use when computing "
         "colocalization metrics on each component"
     ),
 )
@@ -108,7 +108,7 @@ from pixelator.utils import (
     type=click.IntRange(min=5),
     show_default=True,
     help=(
-        "Set the number of permutations use to compute the empirical"
+        "Set the number of permutations use to compute the empirical "
         "p-value for the colocalization score"
     ),
 )
@@ -119,7 +119,7 @@ from pixelator.utils import (
     type=click.IntRange(min=0),
     show_default=True,
     help=(
-        "The minimum number of counts in a region for it to be considered"
+        "The minimum number of counts in a region for it to be considered "
         "valid for computing colocalization"
     ),
 )
