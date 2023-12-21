@@ -134,6 +134,7 @@ def analysis(
     compute_colocalization,
     use_full_bipartite,
     polarization_normalization,
+    polarization_permutations,
     colocalization_transformation,
     colocalization_neighbourhood_size,
     colocalization_n_permutations,
@@ -151,6 +152,7 @@ def analysis(
         compute_polarization=compute_polarization,
         compute_colocalization=compute_colocalization,
         normalization=polarization_normalization,
+        polarization_permutations=polarization_permutations,
         colocalization_transformation=colocalization_transformation,
         colocalization_neighbourhood_size=colocalization_neighbourhood_size,
         colocalization_n_permutations=colocalization_n_permutations,
@@ -197,6 +199,7 @@ def analysis(
                     compute_colocalization=compute_colocalization,
                     use_full_bipartite=use_full_bipartite,
                     polarization_normalization=polarization_normalization,
+                    polarization_permutations=polarization_permutations
                     colocalization_transformation=colocalization_transformation,
                     colocalization_neighbourhood_size=colocalization_neighbourhood_size,
                     colocalization_n_permutations=colocalization_n_permutations,
