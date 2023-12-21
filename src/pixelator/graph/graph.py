@@ -101,7 +101,7 @@ class Graph:
         with other graph libraries that work e.g. with a
         networkx graph instance.
         """
-        return self._backend._raw
+        return self._backend.raw
 
     @property
     def vs(self):
