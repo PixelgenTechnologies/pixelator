@@ -93,8 +93,15 @@ class Graph:
         return Graph(backend=Backend(graph))
 
     @property
-    def _raw(self):
-        return self._backend._raw
+    def raw(self):
+        """Get the underlying raw graph implementation.
+
+        The type of this will depend on the underlying backend.
+        This property is useful when you need to inter-operate
+        with other graph libraries that work e.g. with a
+        networkx graph instance.
+        """
+        return self._backend.raw
 
     @property
     def vs(self):
