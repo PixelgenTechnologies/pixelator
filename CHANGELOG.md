@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `experimental` mark that can be added to functions that are not yet production ready.
 * Graph layout computations using networkx as the graph backend (experimental feature).
 * Monte Carlo permutation support for calculated Moran's I (`morans_z_sim`) in `polarization_scores`.
+* The underlying graph instance e.g. a igraph or networkx instance is exposed as a property called `raw` from the `Graph` class.
 
 ### Changed
 
