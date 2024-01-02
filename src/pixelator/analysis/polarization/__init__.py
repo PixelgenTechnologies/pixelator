@@ -8,10 +8,8 @@ from esda.moran import Moran
 
 from pixelator.graph.utils import Graph, create_node_markers_counts
 from pixelator.statistics import (
-    binarize_counts,
     clr_transformation,
     correct_pvalues,
-    denoise,
 )
 
 with warnings.catch_warnings():
