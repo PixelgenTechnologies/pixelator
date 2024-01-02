@@ -47,7 +47,6 @@ def morans_autocorr(w: np.ndarray, y: np.ndarray, permutations: int) -> Any:
     """
     # Default Moran's transformation is row-standardized "r".
     # https://github.com/pysal/esda/blob/main/esda/moran.py
-    np.random.seed(1)
     return Moran(y, w, permutations=permutations)
 
 
@@ -122,7 +121,7 @@ def polarization_scores_component(
 
     if permutations:
 
-        # create the dataframe
+        # create scores dataframe
         df = pd.DataFrame(
             data={
                 "morans_i": [m.I for m in statistics],
@@ -132,13 +131,12 @@ def polarization_scores_component(
                 "morans_z_sim": [m.z_sim for m in statistics],
             },
         ).fillna(0)
-        # the p-values are adjusted per-component
         df["marker"] = counts_df.columns.tolist()
         df["component"] = component_id
 
     else:
 
-        # create the dataframe
+        # create scores dataframe
         df = pd.DataFrame(
             data={
                 "morans_i": [m.I for m in statistics],
@@ -146,7 +144,6 @@ def polarization_scores_component(
                 "morans_z": [m.z_rand for m in statistics],
             },
         ).fillna(0)
-        # the p-values are adjusted per-component
         df["marker"] = counts_df.columns.tolist()
         df["component"] = component_id
 
@@ -227,3 +224,5 @@ def polarization_scores(
 
     logger.debug("Polarization scores for edge list computed")
     return scores
+
+
