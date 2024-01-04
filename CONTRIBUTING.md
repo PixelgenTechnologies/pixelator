@@ -123,4 +123,9 @@ You can find a full list of items we regularly ask for in PRs in our [PULL_REQUE
 
 ## Install pre-commit hooks
 
-We strongly recommend [installing the pre-commit hooks](https://github.com/PixelgenTechnologies/pixelator/tree/main#install-pre-commit-hooks) when contributing.
+We strongly recommend installing the pre-commit hooks when contributing. Run `pre-commit install` to set up the git hook scripts so pre-commit will run automatically on each `git commit`.
+
+```shell
+pre-commit install
+#pre-commit installed at .git/hooks/pre-commit
+```
