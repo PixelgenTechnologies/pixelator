@@ -86,7 +86,11 @@ You can also use the containers provided by the biocontainers project on [quay.i
 
 ## Usage
 
+Our recommendation is to use pixelator via the specific Nextflow pipeline, [nf-core/pixelator](https://github.com/nf-core/pixelator).
 
+It should take only a few seconds to download the pipeline and approx. 20 min to run the default test dataset in a normal commodity computer. 
+
+However, with MPX data, we recommend running pixelator in specialized hardware with at least 32GB RAM.
 
 ## Contributing
 
