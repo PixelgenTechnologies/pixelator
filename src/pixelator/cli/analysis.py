@@ -69,10 +69,10 @@ from pixelator.utils import (
     ),
 )
 @click.option(
-    "--polarization-permutations",
+    "--polarization-n-permutations",
     default=None,
     required=False,
-    type=click.IntRange(),
+    type=click.IntRange(min=5),
     show_default=True,
     help=(
         "Set the number of permutations use to compute the empirical"
@@ -134,7 +134,7 @@ def analysis(
     compute_colocalization,
     use_full_bipartite,
     polarization_normalization,
-    polarization_permutations,
+    polarization_n_permutations,
     colocalization_transformation,
     colocalization_neighbourhood_size,
     colocalization_n_permutations,
@@ -152,7 +152,7 @@ def analysis(
         compute_polarization=compute_polarization,
         compute_colocalization=compute_colocalization,
         normalization=polarization_normalization,
-        polarization_permutations=polarization_permutations,
+        polarization_n_permutations=polarization_n_permutations,
         colocalization_transformation=colocalization_transformation,
         colocalization_neighbourhood_size=colocalization_neighbourhood_size,
         colocalization_n_permutations=colocalization_n_permutations,
@@ -199,7 +199,7 @@ def analysis(
                     compute_colocalization=compute_colocalization,
                     use_full_bipartite=use_full_bipartite,
                     polarization_normalization=polarization_normalization,
-                    polarization_permutations=polarization_permutations,
+                    polarization_n_permutations=polarization_n_permutations,
                     colocalization_transformation=colocalization_transformation,
                     colocalization_neighbourhood_size=colocalization_neighbourhood_size,
                     colocalization_n_permutations=colocalization_n_permutations,
