@@ -1,9 +1,9 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
-"""
+"""Copyright (c) 2023 Pixelgen Technologies AB."""
+
 
 import warnings
 
+import esda.moran
 from esda.moran import Moran
 
 from pixelator.graph.utils import Graph, create_node_markers_counts
@@ -18,7 +18,7 @@ with warnings.catch_warnings():
 
 import logging
 from concurrent import futures
-from typing import Any, List, Literal, Optional
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -30,18 +30,23 @@ from pixelator.pixeldataset import (
 logger = logging.getLogger(__name__)
 
 
-def morans_autocorr(w: np.ndarray, y: np.ndarray, permutations: int) -> Any:
-    """
-    A function that computes the Moran's I autocorrelation statistics
-    for the given spatial weights (w) and target variable (y). The target
-    variable can be the counts of a specific antibody so the Moran's I value
-    could indicate if the antibody has a localized spatial pattern. The function
-    returns an object with the Moran's statistics (I, p_rand and z_rand).
+def morans_autocorr(
+    w: np.ndarray, y: np.ndarray, permutations: int
+) -> esda.moran.Moran:
+    """Calculate Moran's I statistics.
+
+    Computes the Moran's I autocorrelation statistics for the given spatial
+    weights (`w`) and target variable (`y`). The target variable can be the counts
+    of a specific antibody so the Moran's I value could indicate if the
+    antibody has a localized spatial pattern. The function returns an object
+    with the Moran's statistics: I, p_rand and z_rand (as well as p_sim and z_sim
+    if `permutations` > 0).
     :param w: the weights matrix (connectivity matrix)
     :param y: the counts vector
-    :param permutations: the number of permutations for simulated Z-score (z_sim) 
-                         estimation (if permutations>0)
+    :param permutations: the number of permutations for simulated Z-score (z_sim)
+                         estimation (if permutations > 0)
     :returns: the Moran's statistics
+    :rtype: esda.moran.Moran
     """
     # Default Moran's transformation is row-standardized "r".
     # https://github.com/pysal/esda/blob/main/esda/moran.py
@@ -52,24 +57,26 @@ def polarization_scores_component(
     graph: Graph,
     component_id: str,
     normalization: Literal["raw", "clr"] = "clr",
-    permutations: int = None,
+    permutations: int = 0,
 ) -> pd.DataFrame:
-    """
-    A helper function that computes a matrix of polarization statistics
-    (one for each antibody) for the `graph` given as input (it must be a
-    single connected component). The statistics are computed using Moran's I
-    autocorrelation to measure how clustered/localized the spatial
-    patterns of the antibody is in the graph. Spatial weights (w) are derived
+    """Calculate Moran's I statistics for a component.
+
+    Computes polarization statistics for all antibodies in the `graph` given
+    as input (a single connected component). The statistics are computed using
+    Moran's I autocorrelation to measure how clustered/localized the spatial
+    patterns of the antibody is in the graph. Spatial weights (`w`) are derived
     directly from the graph. The statistics contain the I value, the p-value,
     the adjusted p-value and the z-score under the randomization assumption.
     The function returns a pd.DataFrame with the following columns:
-      morans_i,morans_p_value,morans_z,marker,component
+      morans_i, morans_p_value, morans_z, marker, component (morans_p_value_sim
+      and morans_z_sim if `permutations` > 0)
     :param graph: a graph (it must be a single connected component)
     :param component_id: the id of the component
     :param normalization: the normalization method to use (raw or clr)
-    :param permutations: the number of permutations for simulated Z-score (z_sim) 
+    :param permutations: the number of permutations for simulated Z-score (z_sim)
                          estimation (if permutations>0)
     :returns: a pd.DataFrame with the polarization statistics for each antibody
+    :rtype: pd.DataFrame
     :raises: AssertionError when the input is not valid
     """
     if len(graph.connected_components()) > 1:
@@ -118,7 +125,6 @@ def polarization_scores_component(
         statistics.append(mir)
 
     if permutations:
-
         # create scores dataframe
         df = pd.DataFrame(
             data={
@@ -133,7 +139,6 @@ def polarization_scores_component(
         df["component"] = component_id
 
     else:
-
         # create scores dataframe
         df = pd.DataFrame(
             data={
@@ -153,23 +158,26 @@ def polarization_scores(
     edgelist: pd.DataFrame,
     use_full_bipartite: bool = False,
     normalization: Literal["raw", "clr"] = "clr",
-    permutations: int = None,
+    permutations: int = 0,
 ) -> pd.DataFrame:
-    """
-    A helper function that given an `edgelist` will compute polarization scores.
+    """Calculate Moran's I statistics for an edgelist.
+
+    Compute polarization scores from an `edgelist`.
     The function iterates all the components to compute polarization scores
     for each antibody in the component. The scores are computed using Moran's
     I autocorrelation to measure how clustered/localised the spatial patterns of
-    the antibody is in the component's graph. Spatial weights (w) are derived
+    the antibody is in the component's graph. Spatial weights (`w`) are derived
     directly from the graph. The function returns a pd.DataFrame with the following
     columns:
-      morans_i,morans_p_value,morans_z,morans_p_adjusted,marker,component
+      morans_i, morans_p_value, morans_z, morans_p_adjusted, marker, component
+      (morans_p_value_sim and morans_z_sim if `permutations` > 0)
     :param edgelist: an edge list (pd.DataFrame) with a component column
     :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
     :param normalization: the normalization method to use (raw or clr)
-    :param permutations: the number of permutations for simulated Z-score (z_sim) 
+    :param permutations: the number of permutations for simulated Z-score (z_sim)
                          estimation (if permutations>0)
     :returns: a pd.DataFrames with all the polarization scores
+    :rtype: pd.DataFrame
     :raises: AssertionError when the input is not valid
     """
     if "component" not in edgelist.columns:
@@ -222,5 +230,3 @@ def polarization_scores(
 
     logger.debug("Polarization scores for edge list computed")
     return scores
-
-

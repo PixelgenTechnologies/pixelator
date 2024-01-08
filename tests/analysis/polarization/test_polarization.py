@@ -20,8 +20,10 @@ from tests.graph.igraph.test_tools import create_randomly_connected_bipartite_gr
 @pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
 def test_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
     # TODO we should test more scenarios here (sparse and clustered patterns)
-    
-    scores = polarization_scores(edgelist=full_graph_edgelist, permutations=None, use_full_bipartite=True)
+
+    scores = polarization_scores(
+        edgelist=full_graph_edgelist, permutations=0, use_full_bipartite=True
+    )
 
     expected = pd.DataFrame(
         data={
@@ -37,13 +39,15 @@ def test_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
     # test polarization scores
     assert_frame_equal(scores, expected)
 
-    
+
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_permuted_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
     # TODO we should test more scenarios here (sparse and clustered patterns)
     np.random.seed(1)
 
-    scores = polarization_scores(edgelist=full_graph_edgelist, permutations=999, use_full_bipartite=True)
+    scores = polarization_scores(
+        edgelist=full_graph_edgelist, permutations=999, use_full_bipartite=True
+    )
 
     expected = pd.DataFrame(
         data={
@@ -116,7 +120,9 @@ def test_permuted_polarization_with_differentially_polarized_markers():
     random_vertex["markers"]["C"] = 10
 
     np.random.seed(1)
-    scores = polarization_scores_component(graph, component_id="PXLCMP0000000", permutations=999)
+    scores = polarization_scores_component(
+        graph, component_id="PXLCMP0000000", permutations=999
+    )
 
     # We don't expect to get a value for B, since it has only one value in it.
     # Hence it is filtered out.
@@ -133,5 +139,3 @@ def test_permuted_polarization_with_differentially_polarized_markers():
     )
     # test polarization scores
     assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
-
-
