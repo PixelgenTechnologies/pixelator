@@ -72,7 +72,7 @@ from pixelator.utils import (
     "--polarization-n-permutations",
     default=None,
     required=False,
-    type=click.IntRange(min=5),
+    type=click.IntRange(min=0),
     show_default=True,
     help=(
         "Set the number of permutations use to compute the empirical"
