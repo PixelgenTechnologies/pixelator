@@ -124,31 +124,33 @@ def polarization_scores_component(
         mir = morans_autocorr(w, counts_df[m], permutations)
         statistics.append(mir)
 
-    if permutations:
-        # create scores dataframe
-        df = pd.DataFrame(
-            data={
-                "morans_i": [m.I for m in statistics],
-                "morans_p_value": [m.p_rand for m in statistics],
-                "morans_z": [m.z_rand for m in statistics],
-                "morans_p_value_sim": [m.p_sim for m in statistics],
-                "morans_z_sim": [m.z_sim for m in statistics],
-            },
-        ).fillna(0)
-        df["marker"] = counts_df.columns.tolist()
-        df["component"] = component_id
+    def data():
+        for m in counts_df.columns:
+            yield morans_autocorr(w, counts_df[m], permutations)
 
-    else:
-        # create scores dataframe
+    if permutations:
         df = pd.DataFrame(
-            data={
-                "morans_i": [m.I for m in statistics],
-                "morans_p_value": [m.p_rand for m in statistics],
-                "morans_z": [m.z_rand for m in statistics],
-            },
+            ((m.I, m.p_rand, m.morans_z, m.p_sim, m.z_sim) for m in data()),
+            columns=[
+                "morans_i",
+                "morans_p_value",
+                "morans_z",
+                "morans_p_value_sim",
+                "morans_z_sim",
+            ],
         ).fillna(0)
-        df["marker"] = counts_df.columns.tolist()
-        df["component"] = component_id
+    else:
+        df = pd.DataFrame(
+            ((m.I, m.p_rand, m.morans_z) for m in data()),
+            columns=[
+                "morans_i",
+                "morans_p_value",
+                "morans_z",
+            ],
+        ).fillna(0)
+
+    df["marker"] = counts_df.columns.tolist()
+    df["component"] = component_id
 
     logger.debug("Polarization scores for components %s computed", component_id)
     return df
