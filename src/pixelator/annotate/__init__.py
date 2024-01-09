@@ -8,11 +8,14 @@ import logging
 from pathlib import Path
 from typing import Literal, Optional
 
+import networkx as nx
 import numba
 import numpy as np
+import pandas as pd
 import polars as pl
 import scanpy as sc
 from anndata import AnnData
+from graspologic.partition import leiden
 
 from pixelator import __version__
 from pixelator.annotate.aggregates import call_aggregates
@@ -229,6 +232,15 @@ def annotate_components(
         json.dump(edgelist_metrics(edgelist), outfile, default=np_encoder)
 
 
+def _cluster_components_using_leiden(adata: AnnData) -> None:
+    """Carry out a leiden clustering on the components."""
+    g = nx.from_scipy_sparse_array(adata.obsp["connectivities"])
+    partitions = leiden(g, resolution=1.0)
+    partitions_df = pd.DataFrame.from_dict(partitions, orient="index").sort_index()
+    adata.obs["leiden"] = partitions_df.values
+    adata.obs = adata.obs.astype({"leiden": "category"})
+
+
 def cluster_components(
     adata: AnnData,
     obsmkey: Optional[Literal["denoised", "clr", "log1p", "normalized_rel"]] = "clr",
@@ -264,10 +276,9 @@ def cluster_components(
         adata = adata.copy()
 
     # perform the clustering (using default values)
-    # TODO include the hyperparameters arguments in the functions
     sc.pp.neighbors(adata, use_rep=obsmkey, n_neighbors=15)
     sc.tl.umap(adata, min_dist=0.5)
-    sc.tl.leiden(adata, resolution=1.0)
+    _cluster_components_using_leiden(adata)
 
     logger.debug("Clustering computed %i clusters", adata.obs["leiden"].nunique())
     return None if inplace else adata
