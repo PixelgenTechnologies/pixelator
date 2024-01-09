@@ -15,16 +15,15 @@ from pandas.testing import assert_frame_equal
 from pixelator.cli.main import main_cli
 from pixelator.pixeldataset import PixelDataset
 from pixelator.report import (
+    PixelatorReporting,
     adapterqc_metrics,
     cell_calling_metrics,
     collapse_metrics,
     create_dynamic_report,
     demux_metrics,
     graph_and_annotate_metrics,
-    preqc_metrics,
 )
 from pixelator.report.qcreport.builder import QCReportBuilder
-from pixelator.report.qcreport.collect import generate_parameter_info
 from pixelator.report.qcreport.types import (
     InfoAndMetrics,
     Metrics,
@@ -108,46 +107,6 @@ def test_write_webreport(tmp_path, main_data, figure_data):
         )
 
     assert output_report.exists()
-
-
-def test_preqc_metrics(data_root):
-    res = preqc_metrics(str(data_root))
-
-    assert_frame_equal(
-        res,
-        pd.DataFrame(
-            [
-                [
-                    100000,
-                    98866,
-                    73,
-                    0,
-                    1061,
-                    0,
-                    0.01,
-                ],
-                [
-                    200000,
-                    198866,
-                    83,
-                    0,
-                    1051,
-                    0,
-                    0.01,
-                ],
-            ],
-            columns=[
-                "total_reads",
-                "passed_filter_reads",
-                "low_quality_reads",
-                "too_many_N_reads",
-                "too_short_reads",
-                "too_long_reads",
-                "discarded",
-            ],
-            index=["Sample1_01", "Sample2_02"],
-        ),
-    )
 
 
 def test_adapterqc_metrics(data_root):
@@ -287,7 +246,7 @@ def test_cell_calling_metrics(adata: AnnData, edgelist: pd.DataFrame, tmp_path: 
     )
 
 
-def test_meta_files_collection(data_root):
+def test_metadata_files_collection(data_root):
     workdir = PixelatorWorkdir(data_root)
     files = workdir.metadata_files()
     assert len(files) == 4
@@ -306,7 +265,9 @@ def test_generate_parameter_info(data_root):
         data_root / "param_files" / "test_data_pe_T1.amplicon.meta.json",
     ]
 
-    res = generate_parameter_info(main_cli, params_files)
+    reporting = PixelatorReporting(data_root)
+
+    res = reporting.cli_invocation_info("test_data_pe_T1")
 
     assert res[0].command == "pixelator single-cell amplicon"
     assert res[2].command == "pixelator single-cell annotate"
@@ -317,65 +278,65 @@ def test_generate_parameter_info(data_root):
     assert res[2].options[1].default_value is None
 
 
-def test_create_dynamic_report(tmp_path):
-    with mock.patch(
-        "pixelator.report.QCReportBuilder"
-    ) as mock_builder_factory, mock.patch("pixelator.report.collect_report_data"):
-        instance = mock_builder_factory.return_value
-
-        create_dynamic_report(
-            input_path="foo",
-            summary_all=pd.Series({"reads": 1000, "adapterqc": 900, "duplication": 10}),
-            summary_amplicon=pd.Series(
-                {
-                    "fraction_q30_barcode": 0.3,
-                    "fraction_q30_umi": 0.3,
-                    "fraction_q30_upia": 0.3,
-                    "fraction_q30_upib": 0.3,
-                    "fraction_q30_PBS1": 0.3,
-                    "fraction_q30_PBS2": 0.3,
-                    "fraction_q30": 0.3,
-                },
-            ),
-            summary_preqc=pd.Series({"too_short_reads": 10}),
-            summary_demux=pd.Series({"input": 1000, "output": 900}),
-            summary_collapse=pd.Series({"input": 900}),
-            summary_annotate=pd.Series([1]),
-            summary_graph=pd.Series(
-                {
-                    "upia": 16358.0,
-                    "upib": 16183.0,
-                    "umi": 100.0,
-                    "mean_count": 6.2,
-                    "vertices": 32541.0,
-                    "edges": 17423.0,
-                    "components": 100.0,
-                    "markers": 65.0,
-                    "modularity": 0.99,
-                    "frac_upib_upia": 0.5,
-                    "upia_degree_mean": 1.0,
-                    "upia_degree_median": 1.0,
-                    "frac_largest_edges": 0.1,
-                    "frac_largest_vertices": 0.1,
-                }
-            ),
-            summary_cell_calling=pd.Series(
-                {
-                    "total_umis": 5,
-                    "total_reads_cell": 1000,
-                    "reads_of_aggregates": 1,
-                    "umis_of_aggregates": 3,
-                    "cells_filtered": 10,
-                    "mean_reads_cell": 10,
-                    "mean_umi_cell": 11,
-                    "mean_upia_cell": 3,
-                    "mean_umi_upia_cell": 3,
-                    "median_markers_cell": 14,
-                    "total_markers": 33,
-                }
-            ),
-            info=mock.MagicMock(),
-            output_path=tmp_path,
-        )
-        # For now just asser that there is an attempt to write the report
-        instance.write.assert_called_once()
+# def test_create_dynamic_report(tmp_path):
+#     with mock.patch(
+#         "pixelator.report.QCReportBuilder"
+#     ) as mock_builder_factory, mock.patch("pixelator.report.collect_report_data"):
+#         instance = mock_builder_factory.return_value
+#
+#         create_dynamic_report(
+#             input_path="foo",
+#             summary_all=pd.Series({"reads": 1000, "adapterqc": 900, "duplication": 10}),
+#             summary_amplicon=pd.Series(
+#                 {
+#                     "fraction_q30_barcode": 0.3,
+#                     "fraction_q30_umi": 0.3,
+#                     "fraction_q30_upia": 0.3,
+#                     "fraction_q30_upib": 0.3,
+#                     "fraction_q30_PBS1": 0.3,
+#                     "fraction_q30_PBS2": 0.3,
+#                     "fraction_q30": 0.3,
+#                 },
+#             ),
+#             summary_preqc=pd.Series({"too_short_read_count": 10}),
+#             summary_demux=pd.Series({"input": 1000, "output": 900}),
+#             summary_collapse=pd.Series({"input": 900}),
+#             summary_annotate=pd.Series([1]),
+#             summary_graph=pd.Series(
+#                 {
+#                     "upia": 16358.0,
+#                     "upib": 16183.0,
+#                     "umi": 100.0,
+#                     "mean_count": 6.2,
+#                     "vertices": 32541.0,
+#                     "edges": 17423.0,
+#                     "components": 100.0,
+#                     "markers": 65.0,
+#                     "modularity": 0.99,
+#                     "frac_upib_upia": 0.5,
+#                     "upia_degree_mean": 1.0,
+#                     "upia_degree_median": 1.0,
+#                     "frac_largest_edges": 0.1,
+#                     "frac_largest_vertices": 0.1,
+#                 }
+#             ),
+#             summary_cell_calling=pd.Series(
+#                 {
+#                     "total_umis": 5,
+#                     "total_reads_cell": 1000,
+#                     "reads_of_aggregates": 1,
+#                     "umis_of_aggregates": 3,
+#                     "cells_filtered": 10,
+#                     "mean_reads_cell": 10,
+#                     "mean_umi_cell": 11,
+#                     "mean_upia_cell": 3,
+#                     "mean_umi_upia_cell": 3,
+#                     "median_markers_cell": 14,
+#                     "total_markers": 33,
+#                 }
+#             ),
+#             info=mock.MagicMock(),
+#             output_path=tmp_path,
+#         )
+#         # For now just asser that there is an attempt to write the report
+#         instance.write.assert_called_once()

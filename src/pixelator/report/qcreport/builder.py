@@ -17,6 +17,7 @@ import lxml.etree
 import semver
 from lxml.etree import _Element as LxmlElement
 from lxml.html import builder as E
+from pydantic import BaseModel
 
 from pixelator.report.qcreport.types import Metrics, SampleInfo, QCReportData
 from pixelator.types import PathType
@@ -24,6 +25,13 @@ from pixelator.types import PathType
 logger = logging.getLogger(__name__)
 
 DEFAULT_QC_REPORT_TEMPLATE = Path(__file__).parent / "template.html"
+
+
+class CustomPydanticJSONEncoder(json.JSONEncoder):
+    def default(self, obj: Any) -> Any:
+        if isinstance(obj, BaseModel):
+            return obj.model_dump(mode="json")
+        return super().default(obj)
 
 
 class QCReportBuilder:
@@ -213,7 +221,7 @@ class QCReportBuilder:
             "info": dataclasses.asdict(sample_info),
             "metrics": metrics,
         }
-        data = json.dumps(combined, **self._JSON_OPTIONS)
+        data = json.dumps(combined, **self._JSON_OPTIONS, cls=CustomPydanticJSONEncoder)
         metrics_el.text = self._compress_data(data)
         return metrics_el
 

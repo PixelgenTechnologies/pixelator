@@ -19,10 +19,12 @@ from pixelator.types import PathType
 from pixelator.utils import logger
 
 
-class AntibodyPanelMetadata(pydantic.BaseModel, extra=Extra.allow):  # type: ignore
-    version: Optional[str]
-    name: Optional[str]
-    description: Optional[str]
+class AntibodyPanelMetadata(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(extra="ignore")
+
+    version: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
 
 
 class AntibodyPanel:
@@ -218,7 +220,7 @@ class AntibodyPanel:
             return AntibodyPanelMetadata(version=None, name=None, description=None)
 
         frontmatter = raw_config[0]
-        return AntibodyPanelMetadata.parse_obj(frontmatter)
+        return AntibodyPanelMetadata.model_validate(frontmatter)
 
     @cached_property
     def markers_control(self) -> List[str]:

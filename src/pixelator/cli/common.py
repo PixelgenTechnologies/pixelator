@@ -85,11 +85,6 @@ class OrderedGroup(click.Group):
         super(OrderedGroup, self).__init__(name, commands, **kwargs)
         self.commands = commands or collections.OrderedDict()
 
-    def list_commands(  # type: ignore
-        self, ctx: click.Context
-    ) -> Mapping[str, click.Command]:
-        return self.commands
-
 
 def output_option(func):
     @click.option(

@@ -9,7 +9,13 @@ import json
 from typing import Any, List, Mapping, Optional, Set, Tuple
 from functools import cache
 
-from pydantic import BaseModel, validator
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
+import pydantic
+from pydantic import BaseModel, field_validator, ValidationInfo
 
 from pixelator.config.utils import load_yaml_file
 from pixelator.types import PathType
@@ -49,27 +55,24 @@ class RegionModel(BaseModel):
     region_type: RegionType
     name: str
     sequence_type: SequenceType
-    sequence: Optional[str]
-    min_len: Optional[int]
-    max_len: Optional[int]
-    data: Optional[Mapping[str, Any]]
-    regions: Optional[List["RegionModel"]]
+    sequence: Optional[str] = None
+    min_len: Optional[int] = None
+    max_len: Optional[int] = None
+    data: Optional[Mapping[str, Any]] = {}
+    regions: Optional[List["RegionModel"]] = []
 
-    @validator("sequence")
-    def check_valid_dna_string(cls, v: str, values: Mapping[str, Any]) -> str:
+    @pydantic.model_validator(mode="after")
+    def check_valid_dna_string(self) -> Self:
         """
         Validate DNA strings.
-
-        :param v: DNA string to validate
-        :param values: Pydantic fields
         :raises ValueError: if the string contains non DNA characters
         """
-        if values["region_type"] is RegionType.PBS:
-            is_valid = all(character in DNA_CHARS for character in v)
+        if self.region_type is RegionType.PBS:
+            is_valid = all(character in DNA_CHARS for character in self.sequence)
             if not is_valid:
                 raise ValueError("Not a valid DNA string: found non DNA characters")
 
-        return v
+        return self
 
 
 class AssayModel(BaseModel):
@@ -388,7 +391,7 @@ class Assay:
         :param filename: path to a design config file
         """
         yaml_obj = load_yaml_file(filename)
-        checked_obj = AssayModel.parse_obj(yaml_obj)
+        checked_obj = AssayModel.model_validate(yaml_obj)
         return cls._load_assay_model(checked_obj)
 
     def to_json(self):

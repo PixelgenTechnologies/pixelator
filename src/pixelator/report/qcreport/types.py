@@ -3,35 +3,15 @@
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
 import dataclasses
+import json
 import typing
 from typing import List, Optional, TypeVar, TypedDict
 
+import pydantic
+
+from pixelator.report.models.commands import CommandInfo
 
 CommandOptionValue = TypeVar("CommandOptionValue", str, int, float, bool)
-
-
-@dataclasses.dataclass
-class CommandOption(typing.Generic[CommandOptionValue]):
-    """Dataclass for passing command options/flags to qc report."""
-
-    #: The name of the option (e.g. `--min-reads`)
-    name: str
-    #: The value of the option.
-    value: CommandOptionValue
-    #: The default value for this option.
-    default_value: Optional[CommandOptionValue]
-    #: The help text for this option.
-    description: Optional[str]
-
-
-@dataclasses.dataclass
-class CommandInfo:
-    """Dataclass for passing all options of a command to qc report."""
-
-    #: The name of the parameter group.
-    command: str
-    #: A list of options for the parameter group.
-    options: List[CommandOption]
 
 
 @dataclasses.dataclass

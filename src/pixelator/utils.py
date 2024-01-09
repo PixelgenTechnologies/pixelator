@@ -15,7 +15,18 @@ import textwrap
 import time
 from functools import wraps
 from pathlib import Path, PurePath
-from typing import Any, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Union
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    TYPE_CHECKING,
+    Union,
+)
 
 import click
 import numpy as np
@@ -95,16 +106,6 @@ def create_output_stage_dir(root: PathType, name: str) -> Path:
     if not output.is_dir():
         output.mkdir(parents=True)
     return output
-
-
-def flatten(list_of_collections: List[Union[List, Set]]) -> List:
-    """
-    Flattens a list of lists or list of sets.
-
-    :param list_of_collections: list of lists or list of sets
-    :returns: list containing flattened items
-    """
-    return [item for sublist in list_of_collections for item in sublist]
 
 
 def get_extension(filename: PathType, len_ext: int = 2) -> str:
@@ -361,3 +362,21 @@ def write_parameters_file(
 
     with open(output_file, "w") as fh:
         json.dump(data, fh, indent=4)
+
+
+def flatten(iterable: Iterable[Iterable[Any] | Any]) -> Generator[Any, None, None]:
+    """
+    Flattens an iterable containing items or collection of items
+
+    Note: only list, set, tuple are flattened, strings and bytes are yielded as is
+
+    :param iterable: list of lists or list of sets
+    :returns: A generator yielding the flattened items
+    """
+    for item in iterable:
+        if isinstance(item, (str, bytes)):
+            yield item
+        elif isinstance(item, (list, set, tuple)):
+            yield from item
+        else:
+            yield item

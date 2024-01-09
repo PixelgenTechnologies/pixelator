@@ -5,6 +5,7 @@ Copyright (c) 2022 Pixelgen Technologies AB.
 
 import json
 import logging
+import typing
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -128,7 +129,7 @@ def annotate_components(
     When `aggregate_calling` is True aggregates will be called based on marker
     specificity. This will add to keys to the AnnDAta object's `obs`,
     `is_aggregate` and `tau`. The former gives an estimate of if the component
-    is an aggregate or not, and the later contains the computed tau specificity
+    is an aggregate or not, and the latter contains the computed tau specificity
     score.
 
     The following files and QC figures are generated after the filtering:
@@ -224,9 +225,13 @@ def annotate_components(
     dataset = PixelDataset.from_data(edgelist=edgelist, adata=adata, metadata=metadata)
     dataset.save(str(Path(output) / f"{output_prefix}.dataset.pxl"))
 
+    edgelist_metrics_dict = edgelist_metrics(edgelist)
+    adata_metrics_dict = anndata_metrics(adata)
+    annotate_metrics = {**edgelist_metrics_dict, **adata_metrics_dict}
+
     # save metrics (JSON)
     with open(metrics_file, "w") as outfile:
-        json.dump(edgelist_metrics(edgelist), outfile, default=np_encoder)
+        json.dump(annotate_metrics, outfile, default=np_encoder)
 
 
 def cluster_components(
@@ -271,3 +276,100 @@ def cluster_components(
 
     logger.debug("Clustering computed %i clusters", adata.obs["leiden"].nunique())
     return None if inplace else adata
+
+
+class AnnotateAnndataStatistics(typing.TypedDict):
+    cells_filtered: int
+    total_markers: int
+    total_umis: int
+    total_reads_cell: int
+    median_reads_cell: int
+    mean_reads_cell: float
+    median_upi_cell: int
+    mean_upi_cell: float
+    median_upia_cell: int
+    mean_upia_cell: float
+    median_umi_cell: int
+    mean_umi_cell: float
+    median_umi_upia_cell: float
+    mean_umi_upia_cell: float
+    median_upia_degree_cell: float
+    mean_upia_degree_cell: float
+    median_markers_cell: int
+    mean_markers_cell: float
+    upib_per_upia: float
+
+    # Aggregate calling metrics
+    number_of_aggregates: Optional[int]
+    fraction_of_aggregates: Optional[float]
+    reads_of_aggregates: Optional[float]
+    umis_of_aggregates: Optional[float]
+
+    min_size_threshold: Optional[int]
+    max_size_threshold: Optional[int]
+    doublet_size_threshold: Optional[int]
+
+
+def anndata_metrics(adata: AnnData) -> dict[str, float]:
+    """Collect metrics from an AnnData object.
+
+    A helper private function to collect metrics from an AnnData object.
+
+    :param adata: the AnnData object
+    :returns: a dictionary of different metrics
+    :rtype: Dict[str, float]
+    """
+    metrics: AnnotateAnndataStatistics = {
+        "cells_filtered": adata.n_obs,
+        "total_markers": adata.n_vars,
+        "total_umis": adata.obs["umi"].sum(),
+        "total_reads_cell": adata.obs["reads"].sum(),
+        "median_reads_cell": adata.obs["reads"].median(),
+        "mean_reads_cell": adata.obs["reads"].mean(),
+        "median_upi_cell": adata.obs["vertices"].median(),
+        "mean_upi_cell": adata.obs["vertices"].mean(),
+        "median_upia_cell": adata.obs["upia"].median(),
+        "mean_upia_cell": adata.obs["upia"].mean(),
+        "median_umi_cell": adata.obs["umi"].median(),
+        "mean_umi_cell": adata.obs["umi"].mean(),
+        "median_umi_upia_cell": adata.obs["median_umi_per_upia"].median(),
+        "mean_umi_upia_cell": adata.obs["mean_umi_per_upia"].mean(),
+        "median_upia_degree_cell": adata.obs["median_upia_degree"].median(),
+        "mean_upia_degree_cell": adata.obs["mean_upia_degree"].mean(),
+        "median_markers_cell": adata.obs["antibodies"].median(),
+        "mean_markers_cell": adata.obs["antibodies"].mean(),
+        "upib_per_upia": adata.obs["upib"].sum() / adata.obs["upia"].sum(),
+        "number_of_aggregates": None,
+        "fraction_of_aggregates": None,
+        "reads_of_aggregates": None,
+        "umis_of_aggregates": None,
+        "min_size_threshold": None,
+        "max_size_threshold": None,
+        "doublet_size_threshold": None,
+    }
+
+    # This metric needs to be initialized for the webreport
+    metrics["reads_of_aggregates"] = 0
+    metrics["umis_of_aggregates"] = 0
+
+    # Tau type will only be available if it has been added in the annotate step
+    if "tau_type" in adata.obs:
+        aggregates_mask = adata.obs["tau_type"] != "normal"
+        number_of_aggregates = np.sum(aggregates_mask)
+        metrics["number_of_aggregates"] = number_of_aggregates
+        metrics["fraction_of_aggregates"] = number_of_aggregates / len(
+            adata.obs["tau_type"]
+        )
+        metrics["reads_of_aggregates"] = adata[aggregates_mask].obs["reads"].sum()
+        metrics["umis_of_aggregates"] = adata[aggregates_mask].obs["umi"].sum()
+
+    if "min_size_threshold" in adata.uns:
+        metrics["minimum_size_threshold"] = adata.uns["min_size_threshold"]
+
+    if "max_size_threshold" in adata.uns:
+        metrics["max_size_threshold"] = adata.uns["max_size_threshold"]
+
+    if "doublet_size_threshold" in adata.uns:
+        metrics["doublet_size_threshold"] = adata.uns["doublet_size_threshold"]
+
+    return metrics
