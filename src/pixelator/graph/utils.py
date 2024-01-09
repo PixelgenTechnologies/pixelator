@@ -8,7 +8,6 @@ import warnings
 from functools import reduce
 from typing import Dict, List, Literal, Optional, Union
 
-import igraph
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -16,7 +15,6 @@ import polars as pl
 from scipy.sparse import identity
 
 from pixelator.graph.backends.implementations import (
-    IgraphGraphBackend,
     NetworkXGraphBackend,
 )
 from pixelator.graph.constants import (
@@ -42,13 +40,6 @@ def union(graphs: List[Graph]) -> Graph:
     backends = [type(g._backend) for g in graphs]
     if not all(map(lambda b: backends[0] == b, backends)):
         raise AssertionError("All graph objects must share the same backend")
-
-    if backends[0] == IgraphGraphBackend:
-        return Graph(
-            backend=IgraphGraphBackend(
-                igraph.union([graph._backend.raw for graph in graphs])
-            )
-        )
 
     if backends[0] == NetworkXGraphBackend:
         return Graph(

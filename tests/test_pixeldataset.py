@@ -819,7 +819,7 @@ def test_lazy_edgelist_should_warn_and_rm_on_index_column(setup_basic_pixel_data
     # which showed up as a column when reading the lazy frames. This
     # caused graph building to fail when working on concatenated
     # pixeldatasets, since then this column would be propagated to the
-    # edgelist - can this broke the igraph Graph construction since
+    # edgelist - this broke the Graph construction since
     # it assumes that the first two columns should be the vertices
     dataset, *_ = setup_basic_pixel_dataset
     dataset.edgelist["index"] = pd.Series(range(len(dataset.edgelist)))
