@@ -1,12 +1,20 @@
 """Copyright (c) 2023 Pixelgen Technologies AB."""
 
 
+import logging
 import warnings
+from concurrent import futures
+from typing import get_args
 
 import esda.moran
-from esda.moran import Moran
+import numpy as np
+import pandas as pd
 
+from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
 from pixelator.graph.utils import Graph, create_node_markers_counts
+from pixelator.pixeldataset import (
+    MIN_VERTICES_REQUIRED,
+)
 from pixelator.statistics import (
     clr_transformation,
     correct_pvalues,
@@ -16,16 +24,6 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", module="libpysal")
     from libpysal.weights import WSP
 
-import logging
-from concurrent import futures
-from typing import Literal
-
-import numpy as np
-import pandas as pd
-
-from pixelator.pixeldataset import (
-    MIN_VERTICES_REQUIRED,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -50,13 +48,13 @@ def morans_autocorr(
     """
     # Default Moran's transformation is row-standardized "r".
     # https://github.com/pysal/esda/blob/main/esda/moran.py
-    return Moran(y, w, permutations=permutations)
+    return esda.moran.Moran(y, w, permutations=permutations)
 
 
 def polarization_scores_component(
     graph: Graph,
     component_id: str,
-    normalization: Literal["raw", "clr"] = "clr",
+    normalization: PolarizationNormalizationTypes = "clr",
     permutations: int = 0,
 ) -> pd.DataFrame:
     """Calculate Moran's I statistics for a component.
@@ -82,7 +80,7 @@ def polarization_scores_component(
     if len(graph.connected_components()) > 1:
         raise AssertionError("The graph given as input is not a single component")
 
-    if normalization not in ["raw", "clr"]:
+    if normalization not in get_args(PolarizationNormalizationTypes):
         raise AssertionError(f"incorrect value for normalization {normalization}")
 
     logger.debug(
@@ -119,18 +117,13 @@ def polarization_scores_component(
 
     # compute polarization statistics for each marker using the spatial weights (w)
     # and the markers counts distribution (y) (Morans I autocorrelation)
-    statistics = []
-    for m in counts_df.columns:
-        mir = morans_autocorr(w, counts_df[m], permutations)
-        statistics.append(mir)
-
     def data():
         for m in counts_df.columns:
             yield morans_autocorr(w, counts_df[m], permutations)
 
-    if permutations:
+    if permutations > 0:
         df = pd.DataFrame(
-            ((m.I, m.p_rand, m.morans_z, m.p_sim, m.z_sim) for m in data()),
+            ((m.I, m.p_rand, m.z_rand, m.p_sim, m.z_sim) for m in data()),
             columns=[
                 "morans_i",
                 "morans_p_value",
@@ -141,7 +134,7 @@ def polarization_scores_component(
         ).fillna(0)
     else:
         df = pd.DataFrame(
-            ((m.I, m.p_rand, m.morans_z) for m in data()),
+            ((m.I, m.p_rand, m.z_rand) for m in data()),
             columns=[
                 "morans_i",
                 "morans_p_value",
@@ -159,7 +152,7 @@ def polarization_scores_component(
 def polarization_scores(
     edgelist: pd.DataFrame,
     use_full_bipartite: bool = False,
-    normalization: Literal["raw", "clr"] = "clr",
+    normalization: PolarizationNormalizationTypes = "clr",
     permutations: int = 0,
 ) -> pd.DataFrame:
     """Calculate Moran's I statistics for an edgelist.
