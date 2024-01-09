@@ -76,8 +76,8 @@ from pixelator.utils import (
     show_default=True,
     help=(
         "Set the number of permutations use to compute the empirical"
-        " z-score and p-value for the polarization score. If set to"
-        " None, only the analytical z-score estimation will be performed"
+        " z-score and p-value for the polarization score. If not set,"
+        " only the analytical z-score estimation will be performed"
     ),
 )
 @click.option(

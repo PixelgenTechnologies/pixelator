@@ -14,39 +14,6 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def binarize_counts(
-    df: pd.DataFrame,
-    quantile: float = 0.0,
-) -> pd.DataFrame:
-    """Binarize a dataframe of antibody counts.
-
-    The input antibody counts will be binarized (convert to 0-1) using
-    a distribution cutoff based on the value of the `quantile` argument.
-
-    :param df: the dataframe with the antibody counts
-    :param quantile: the quantile to use (0-1) to binarize
-    :raises AssertionError: when the input quantile is not valid
-    :return: a pd.DataFrame with the counts binarized (0 or 1)
-    :rtype: pd.DataFrame
-    """
-    if quantile < 0 or quantile > 1:
-        raise AssertionError("quantile value must be betwen 0-1")
-
-    logger.debug(
-        "Binarizing antibody counts with %i nodes and %i markers",
-        df.shape[0],
-        df.shape[1],
-    )
-
-    df = df.copy()
-    mask = df > df.quantile(quantile)
-    df[mask] = 1
-    df[~mask] = 0
-
-    logger.debug("Antibody counts binarized")
-    return df
-
-
 def clr_transformation(
     df: pd.DataFrame,
     axis: Literal[0, 1] = 0,
