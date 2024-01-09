@@ -11,6 +11,7 @@
 
 [**Documentation**](#documentation) |
 [**Installation**](#installation) |
+[**Usage**](#usage) |
 [**Contributing**](#contributing) |
 [**Contact**](#contact) |
 [**License**](#license) |
@@ -36,9 +37,13 @@ More information about pixelator is available on the [Pixelgen Technologies Soft
 
 ## Installation
 
+Pixelgen Technologies has developed and tested pixelator extensively in Ubuntu 20.04.6 LTS. However, pixelator should run on computers installed with any recent version of the major Linux distributions, even if installed in Windows WSL. 
+
+It should only take a few minutes to install pixelator on any modern computer using any of the following methods.
+
 ### Installation with pip
 
-Our software pixelator is available on pypi as `pixelgen-pixelator` and can be installed with pip.
+Our software pixelator is available on PyPi as `pixelgen-pixelator` and can be installed with pip.
 It is recommended to install pixelator in a separate virtual environment.
 
 ```shell
@@ -69,8 +74,6 @@ pip install .
 
 ### Using docker
 
-
-
 The `pixelator` command-line tool can be run with docker images available on
 the [GitHub container registry](https://github.com/PixelgenTechnologies/pixelator/pkgs/container/pixelator).
 
@@ -80,6 +83,14 @@ docker run ghcr.io/pixelgentechnologies/pixelator:latest pixelator --help
 ```
 
 You can also use the containers provided by the biocontainers project on [quay.io](https://quay.io/repository/biocontainers/pixelator).
+
+## Usage
+
+Our recommendation is to use pixelator via the specific Nextflow pipeline, [nf-core/pixelator](https://github.com/nf-core/pixelator).
+
+It should take only a few seconds to download the pipeline and approx. 20 min to run the default test dataset in a normal commodity computer. 
+
+However, with MPX data, we recommend running pixelator in specialized hardware with at least 32GB RAM.
 
 ## Contributing
 
