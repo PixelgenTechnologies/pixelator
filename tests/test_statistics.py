@@ -4,27 +4,16 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 
 import numpy as np
 import pandas as pd
-from numpy.testing import assert_allclose, assert_array_almost_equal, assert_array_equal
+from numpy.testing import assert_allclose, assert_array_almost_equal
 from pandas.testing import assert_frame_equal
 
 from pixelator.statistics import (
-    binarize_counts,
     clr_transformation,
     correct_pvalues,
     denoise,
     log1p_transformation,
     rel_normalization,
 )
-
-
-def test_binarize():
-    counts = pd.DataFrame(data=np.array([[1250, 1250], [100, 100]]))
-
-    counts = binarize_counts(df=counts, quantile=0.0)
-    assert_array_equal(
-        counts.to_numpy(),
-        np.array([[1, 1], [0, 0]]),
-    )
 
 
 def test_correct_p_values_basic():

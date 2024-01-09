@@ -6,19 +6,17 @@ import json
 import logging
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Literal
 
 from pixelator.analysis.colocalization import colocalization_scores
 from pixelator.analysis.colocalization.types import TransformationTypes
 from pixelator.analysis.polarization import polarization_scores
+from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
 from pixelator.pixeldataset import (
     PixelDataset,
 )
 from pixelator.utils import np_encoder
 
 logger = logging.getLogger(__name__)
-
-PolarizationNormalizationTypes = Literal["raw", "clr"]
 
 
 @dataclass(frozen=True)
@@ -44,7 +42,7 @@ def analyse_pixels(
     compute_polarization: bool,
     compute_colocalization: bool,
     use_full_bipartite: bool,
-    polarization_normalization: Literal["raw", "clr"],
+    polarization_normalization: PolarizationNormalizationTypes,
     polarization_n_permutations: int,
     colocalization_transformation: TransformationTypes,
     colocalization_neighbourhood_size: int,
