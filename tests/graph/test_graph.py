@@ -2,7 +2,6 @@
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
-import os
 import random
 from unittest.mock import MagicMock
 
@@ -61,7 +60,7 @@ def create_simple_edge_list_from_graph(
     return df
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_build_graph_full_bipartite(enable_backend, full_graph_edgelist: pd.DataFrame):
     graph = Graph.from_edgelist(
         edgelist=full_graph_edgelist,
@@ -76,7 +75,7 @@ def test_build_graph_full_bipartite(enable_backend, full_graph_edgelist: pd.Data
     assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_build_graph_full_bipartite_do_not_add_marker_counts(
     enable_backend,
     full_graph_edgelist: pd.DataFrame,
@@ -92,7 +91,7 @@ def test_build_graph_full_bipartite_do_not_add_marker_counts(
     assert graph.vs.attributes() == {"name", "type", "pixel_type"}
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_build_graph_full_bipartite_do_not_add_marker_counts_benchmark(
     benchmark,
     enable_backend,
@@ -110,7 +109,7 @@ def test_build_graph_full_bipartite_do_not_add_marker_counts_benchmark(
     assert graph.vs.attributes() == {"name", "type", "pixel_type"}
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_build_graph_full_bipartite_do_not_simplify(
     enable_backend,
     full_graph_edgelist: pd.DataFrame,
@@ -148,7 +147,7 @@ def test_build_graph_full_bipartite_do_not_simplify(
     assert graph.vs.attributes() == {"name", "type", "pixel_type"}
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_build_graph_a_node_projected(
     enable_backend, full_graph_edgelist: pd.DataFrame
 ):
@@ -166,7 +165,7 @@ def test_build_graph_a_node_projected(
     assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_build_graph_a_node_projected_benchmark(
     benchmark, enable_backend, full_graph_edgelist: pd.DataFrame
 ):
@@ -185,12 +184,12 @@ def test_build_graph_a_node_projected_benchmark(
     assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_build_graph_a_node_projected_without_simplifying(
     enable_backend,
     full_graph_edgelist: pd.DataFrame,
 ):
-    def _test():
+    with pytest.warns(UserWarning):
         # The A-node projection disregards any multiedges, so running it with
         # or with out simplification should yield the same result
         graph = Graph.from_edgelist(
@@ -205,15 +204,8 @@ def test_build_graph_a_node_projected_without_simplifying(
         assert sorted(list(graph.vs.get_vertex(0)["markers"].keys())) == ["A", "B"]
         assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
 
-    # We want to warn when a-node projection is requested without simplification.
-    if os.environ.get("PIXELATOR_GRAPH_BACKEND"):
-        with pytest.warns(UserWarning):
-            _test()
-    else:
-        _test()
 
-
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_connected_components(enable_backend, edgelist):
     graph = Graph.from_edgelist(
         edgelist, add_marker_counts=False, simplify=False, use_full_bipartite=True
@@ -251,7 +243,7 @@ def test_connected_components_caches_results(edgelist):
     mock_func.assert_called_once()
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_connected_components_benchmark(benchmark, enable_backend, edgelist):
     graph = benchmark(
         Graph.from_edgelist,
@@ -271,7 +263,7 @@ def test_connected_components_benchmark(benchmark, enable_backend, edgelist):
     assert graph_sizes == {1996, 1995, 1998, 1996, 1995}
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_get_adjacency_sparse(enable_backend, pentagram_graph):
     # This is a little bit involved. Since different network backends might
     # use different internal indexing schemes, they are not guaranteed to generate
@@ -307,70 +299,6 @@ def test_get_adjacency_sparse(enable_backend, pentagram_graph):
     ]
 
     assert_array_equal(expected_permuted, results_dense_permuted)
-
-
-@pytest.mark.parametrize("enable_backend", ["igraph"], indirect=True)
-def test_layout_coordinates_2d_igraph(enable_backend, pentagram_graph):
-    result = pentagram_graph.layout_coordinates(
-        layout_algorithm="fruchterman_reingold",
-        get_node_marker_matrix=True,
-        cache=False,
-        only_keep_a_pixels=False,
-        random_seed=1234,
-    )
-    assert_frame_equal(
-        result.sort_index(),
-        pd.DataFrame.from_dict(
-            data={
-                "0": {
-                    "x": 1.0386805270034798,
-                    "y": -0.8714331518342926,
-                    "A": 1,
-                    "B": 0,
-                    "C": 0,
-                    "D": 0,
-                    "E": 0,
-                },
-                "1": {
-                    "x": -0.6929674687566002,
-                    "y": 0.20514131020866555,
-                    "A": 0,
-                    "B": 1,
-                    "C": 0,
-                    "D": 0,
-                    "E": 0,
-                },
-                "2": {
-                    "x": 1.3407578800708435,
-                    "y": 0.3520377422098,
-                    "A": 0,
-                    "B": 0,
-                    "C": 1,
-                    "D": 0,
-                    "E": 0,
-                },
-                "3": {
-                    "x": -0.21775128911411396,
-                    "y": -0.9619001620817096,
-                    "A": 0,
-                    "B": 0,
-                    "C": 0,
-                    "D": 1,
-                    "E": 0,
-                },
-                "4": {
-                    "x": 0.2708160970300027,
-                    "y": 1.0168909370461712,
-                    "A": 0,
-                    "B": 0,
-                    "C": 0,
-                    "D": 0,
-                    "E": 1,
-                },
-            },
-            orient="index",
-        ),
-    )
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
@@ -437,94 +365,7 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
     )
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph"], indirect=True)
-def test_layout_coordinates_3d_igraph(enable_backend, pentagram_graph):
-    # We need different tests for igraph and networkx here since
-    # they will not generate the same outputs for the same inputs
-    # due to the stochastic nature of the algorithm
-    result = pentagram_graph.layout_coordinates(
-        layout_algorithm="fruchterman_reingold_3d",
-        get_node_marker_matrix=True,
-        cache=False,
-        only_keep_a_pixels=False,
-        random_seed=1234,
-    )
-    assert_frame_equal(
-        result.sort_index(),
-        pd.DataFrame.from_dict(
-            {
-                "0": {
-                    "x": 0.5738758710773254,
-                    "y": -1.0727458675498922,
-                    "z": -0.35168283243211745,
-                    "x_norm": 0.4531511929438519,
-                    "y_norm": -0.8470752894580588,
-                    "z_norm": -0.2777002886622733,
-                    "A": 1,
-                    "B": 0,
-                    "C": 0,
-                    "D": 0,
-                    "E": 0,
-                },
-                "1": {
-                    "x": -0.17233124504155853,
-                    "y": 0.7304969934987403,
-                    "z": 0.237340073908726,
-                    "x_norm": -0.21892195492737665,
-                    "y_norm": 0.9279909156737621,
-                    "z_norm": 0.30150628198720547,
-                    "A": 0,
-                    "B": 1,
-                    "C": 0,
-                    "D": 0,
-                    "E": 0,
-                },
-                "2": {
-                    "x": 0.8330341860593845,
-                    "y": -0.9248279806107647,
-                    "z": 0.8725751224908745,
-                    "x_norm": 0.5480203326379913,
-                    "y_norm": -0.6084078493401747,
-                    "z_norm": 0.5740327550555008,
-                    "A": 0,
-                    "B": 0,
-                    "C": 1,
-                    "D": 0,
-                    "E": 0,
-                },
-                "3": {
-                    "x": -0.0474879467390837,
-                    "y": -0.04967603300792803,
-                    "z": -0.744288409897498,
-                    "x_norm": -0.0635329031421513,
-                    "y_norm": -0.0664602875108409,
-                    "z_norm": -0.9957643297499194,
-                    "A": 0,
-                    "B": 0,
-                    "C": 0,
-                    "D": 1,
-                    "E": 0,
-                },
-                "4": {
-                    "x": 0.3718753148065073,
-                    "y": 0.18975627014930505,
-                    "z": 1.2369132371447296,
-                    "x_norm": 0.28485923983876,
-                    "y_norm": 0.1453547055079321,
-                    "z_norm": 0.9474846822324814,
-                    "A": 0,
-                    "B": 0,
-                    "C": 0,
-                    "D": 0,
-                    "E": 1,
-                },
-            },
-            orient="index",
-        ),
-    )
-
-
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
     # Just making sure all existing algorithms get exercised
 
@@ -546,9 +387,6 @@ def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
-    # We need different tests for igraph and networkx here since
-    # they will not generate the same outputs for the same inputs
-    # due to the stochastic nature of the algorithm
     result = pentagram_graph.layout_coordinates(
         layout_algorithm="fruchterman_reingold_3d",
         get_node_marker_matrix=True,
@@ -631,7 +469,7 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
     )
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_layout_coordinates_3d_benchmark(enable_backend, benchmark, pentagram_graph):
     benchmark(
         pentagram_graph.layout_coordinates,
@@ -645,9 +483,6 @@ def test_layout_coordinates_3d_benchmark(enable_backend, benchmark, pentagram_gr
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_layout_coordinates_3d_networkx_only_a_pixels(enable_backend, pentagram_graph):
-    # We need different tests for igraph and networkx here since
-    # they will not generate the same outputs for the same inputs
-    # due to the stochastic nature of the algorithm
     result = pentagram_graph.layout_coordinates(
         layout_algorithm="fruchterman_reingold_3d",
         get_node_marker_matrix=True,

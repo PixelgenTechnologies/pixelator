@@ -15,7 +15,7 @@ from pixelator.graph.community_detection import (
 import polars as pl
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_connect_components(enable_backend, input_edgelist, output_dir, metrics_file):
     """Test connect components function."""
     connect_components(
@@ -32,7 +32,7 @@ def test_connect_components(enable_backend, input_edgelist, output_dir, metrics_
     assert len(result["component"].unique()) == 2
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_connect_components_benchmark(
     benchmark, enable_backend, input_edgelist, output_dir, metrics_file
 ):
@@ -51,7 +51,7 @@ def test_connect_components_benchmark(
     assert len(result["component"].unique()) == 2
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_connect_components_no_recovery(
     enable_backend, input_edgelist, output_dir, metrics_file
 ):
@@ -70,7 +70,7 @@ def test_connect_components_no_recovery(
     assert len(result["component"].unique()) == 1
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_recovery_technical_multiplets(
     enable_backend, edgelist_with_communities: pd.DataFrame, graph_with_communities
 ):
@@ -86,7 +86,7 @@ def test_recovery_technical_multiplets(
     assert sorted(list(info.values())[0]) == ["RCVCMP0000000", "RCVCMP0000001"]
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_recovery_technical_multiplets_benchmark(
     benchmark,
     enable_backend,
@@ -105,7 +105,7 @@ def test_recovery_technical_multiplets_benchmark(
     assert sorted(list(info.values())[0]) == ["RCVCMP0000000", "RCVCMP0000001"]
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_community_detection_crossing_edges(enable_backend, graph_with_communities):
     """Test discovery of crossing edges from graph with communities."""
     result = community_detection_crossing_edges(
@@ -115,7 +115,7 @@ def test_community_detection_crossing_edges(enable_backend, graph_with_communiti
     assert result == [{"CTCGTACCTGGGACTGATACT", "TGTAAGTCAGTTGCAGGTTGG"}]
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_detect_edges_to_remove(enable_backend, graph_with_communities):
     """Test discovery of edges to remove from edgelist."""
     result = detect_edges_to_remove(graph_with_communities, leiden_iterations=2)
