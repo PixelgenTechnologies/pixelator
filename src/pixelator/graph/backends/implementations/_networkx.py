@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 
 class NetworkXGraphBackend(GraphBackend):
-    """`IGraphGraphBackend` represents a graph, using networkx."""
+    """`NetworkXGraphBackend` represents a graph, using networkx."""
 
     def __init__(
         self,

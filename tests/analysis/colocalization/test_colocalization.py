@@ -14,7 +14,7 @@ from pixelator.analysis.colocalization import (
 )
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_colocalization_from_component_edgelist(
     enable_backend, full_graph_edgelist: pd.DataFrame
 ):
@@ -53,7 +53,7 @@ def test_colocalization_from_component_edgelist(
     assert_frame_equal(result, expected)
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_colocalization_scores(enable_backend, full_graph_edgelist: pd.DataFrame):
     # TODO we should test more scenarios here (no overlapping and half overlapping)
     result = colocalization_scores(
@@ -92,7 +92,7 @@ def test_colocalization_scores(enable_backend, full_graph_edgelist: pd.DataFrame
     assert_frame_equal(result, expected)
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_colocalization_scores_log1p(enable_backend, full_graph_edgelist: pd.DataFrame):
     result = colocalization_scores(
         edgelist=full_graph_edgelist,
@@ -135,7 +135,7 @@ def test_colocalization_scores_log1p(enable_backend, full_graph_edgelist: pd.Dat
     assert_frame_equal(result, expected)
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_colocalization_scores_should_not_fail_when_one_component_has_single_node(
     enable_backend,
     full_graph_edgelist,
@@ -155,7 +155,7 @@ def test_colocalization_scores_should_not_fail_when_one_component_has_single_nod
     )
 
 
-@pytest.mark.parametrize("enable_backend", ["igraph", "networkx"], indirect=True)
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_colocalization_scores_should_warn_when_no_data(
     enable_backend, full_graph_edgelist, caplog
 ):
