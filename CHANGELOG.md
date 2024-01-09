@@ -9,13 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* Finding connected components and doing Lieden based community detection using
+* Finding connected components and doing Lieden based community detection using.
   networkx/graspologic (experimental feature).
-* Experimental 3D heatmap plotting feature
-* Optional caching of layouts to speed up computations in some scenarios
-* `experimental` mark that can be added to functions that are not yet production ready
+* Experimental 3D heatmap plotting feature.
+* Optional caching of layouts to speed up computations in some scenarios.
+* `experimental` mark that can be added to functions that are not yet production ready.
 * Graph layout computations using networkx as the graph backend (experimental feature).
 * The underlying graph instance e.g. a igraph or networkx instance is exposed as a property called `raw` from the `Graph` class.
+* Monte Carlo permutation support for calculated Moran's I (`morans_z_sim`) in `polarization_scores`.
 
 ### Changed
 

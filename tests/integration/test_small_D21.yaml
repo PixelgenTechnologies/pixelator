@@ -27,6 +27,8 @@ small-D21:
          "--compute-polarization",
          "--compute-colocalization",
          "--use-full-bipartite",
+         "--polarization-n-permutations",
+         "0",
          "--colocalization-min-region-count",
          "0",
          "--colocalization-n-permutations",

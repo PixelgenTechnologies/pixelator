@@ -60,23 +60,24 @@ from pixelator.utils import (
     "--polarization-normalization",
     default="clr",
     required=False,
-    type=click.Choice(["raw", "clr", "denoise"]),
+    type=click.Choice(["raw", "clr"]),
     show_default=True,
     help=(
         "Which approach to use to normalize the antibody counts:"
         " \n\traw will use the raw counts\n\tclr will use the"
-        " CLR transformed counts\n\tdenoise will use"
-        " CLR transformed counts and subtract the counts of the"
-        " control antibodies"
+        " CLR transformed counts"
     ),
 )
 @click.option(
-    "--polarization-binarization",
+    "--polarization-n-permutations",
+    default=None,
     required=False,
-    is_flag=True,
+    type=click.IntRange(min=0),
+    show_default=True,
     help=(
-        "Transform the antibody counts to 0-1 (binarized) when computing"
-        " polarization scores"
+        "Set the number of permutations use to compute the empirical"
+        " z-score and p-value for the polarization score. If not set,"
+        " only the analytical z-score estimation will be performed"
     ),
 )
 @click.option(
@@ -133,7 +134,7 @@ def analysis(
     compute_colocalization,
     use_full_bipartite,
     polarization_normalization,
-    polarization_binarization,
+    polarization_n_permutations,
     colocalization_transformation,
     colocalization_neighbourhood_size,
     colocalization_n_permutations,
@@ -151,7 +152,7 @@ def analysis(
         compute_polarization=compute_polarization,
         compute_colocalization=compute_colocalization,
         normalization=polarization_normalization,
-        binarization=polarization_binarization,
+        polarization_n_permutations=polarization_n_permutations,
         colocalization_transformation=colocalization_transformation,
         colocalization_neighbourhood_size=colocalization_neighbourhood_size,
         colocalization_n_permutations=colocalization_n_permutations,
@@ -198,7 +199,7 @@ def analysis(
                     compute_colocalization=compute_colocalization,
                     use_full_bipartite=use_full_bipartite,
                     polarization_normalization=polarization_normalization,
-                    polarization_binarization=polarization_binarization,
+                    polarization_n_permutations=polarization_n_permutations,
                     colocalization_transformation=colocalization_transformation,
                     colocalization_neighbourhood_size=colocalization_neighbourhood_size,
                     colocalization_n_permutations=colocalization_n_permutations,
