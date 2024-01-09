@@ -54,7 +54,7 @@ def analyse_pixels(
 ) -> None:
     """Calculate Moran's I statistics for a PixelDataset.
 
-    This function takes a `PixelDataset` (zip) that has been generated
+    This function takes a pxl file that has been generated
     with `pixelator annotate`. The function then uses the `edge list` and
     the `AnnData` to compute the scores (polarization, co-abundance and
     co-localization) which are then added to the `PixelDataset` (depending
