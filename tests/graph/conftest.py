@@ -4,7 +4,6 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
-import os
 
 import networkx as nx
 import pandas as pd
@@ -12,7 +11,7 @@ import pytest
 from pixelator.graph import Graph
 from pixelator.graph.backends.implementations import graph_backend
 
-from tests.graph.networkx.test_tools import add_random_names_to_vertexes, full_graph
+from tests.graph.networkx.test_tools import add_random_names_to_vertexes
 
 
 @pytest.fixture(name="output_dir")
@@ -58,17 +57,10 @@ def graph_with_communities_fixture(edgelist_with_communities: pd.DataFrame):
 def graph_without_communities_fixture():
     """Fix a full graph with random names in vertexes."""
 
-    # Somewhat hacky solution make sure this works with both
-    # the igraph and networkx tests
-
-    if os.environ.get("PIXELATOR_GRAPH_BACKEND"):
-        graph = Graph.from_raw(nx.fast_gnp_random_graph(100, p=0.1, seed=10))
-        # Remove any unattached nodes, since that messes up the community
-        # detection
-        graph = graph.connected_components().giant()
-        add_random_names_to_vertexes(graph)
-        return graph
-    graph = full_graph(n=100)
+    graph = Graph.from_raw(nx.fast_gnp_random_graph(100, p=0.1, seed=10))
+    # Remove any unattached nodes, since that messes up the community
+    # detection
+    graph = graph.connected_components().giant()
     add_random_names_to_vertexes(graph)
     return graph
 
