@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 * `graph` no longer outputs the raw edge list
-* igraph has been dropped at a graph backend for pixelator
+* igraph has been dropped as a graph backend for pixelator
 
 ## [0.15.2] - 2023-10-23
 

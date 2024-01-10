@@ -191,7 +191,7 @@ def test_build_graph_a_node_projected_without_simplifying(
 ):
     with pytest.warns(UserWarning):
         # The A-node projection disregards any multiedges, so running it with
-        # or with out simplification should yield the same result
+        # or without simplification should yield the same result
         graph = Graph.from_edgelist(
             edgelist=full_graph_edgelist,
             add_marker_counts=True,
