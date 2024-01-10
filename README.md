@@ -2,7 +2,7 @@
 
 
 ![python-version](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue)
-[![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue](https://opensource.org/licenses/MIT)
 [![DOI](https://img.shields.io/badge/DOI-10.1101/2023.06.05.543770-B31B1B.svg)](https://www.biorxiv.org/content/10.1101/2023.06.05.543770v1)
 ![conda](https://anaconda.org/bioconda/pixelator/badges/version.svg)
 ![pypi](https://img.shields.io/pypi/v/pixelgen-pixelator)
@@ -37,7 +37,7 @@ More information about pixelator is available on the [Pixelgen Technologies Soft
 
 ## Installation
 
-Pixelgen Technologies has developed and tested pixelator extensively in Ubuntu 20.04.6 LTS. However, pixelator should run on computers installed with any recent version of the major Linux distributions, even if installed in Windows WSL. 
+Pixelgen Technologies has developed and tested pixelator extensively in Ubuntu 20.04.6 LTS. However, pixelator should run on computers installed with any recent version of the major Linux distributions, even if installed in Windows WSL.
 
 It should only take a few minutes to install pixelator on any modern computer using any of the following methods.
 
@@ -88,7 +88,7 @@ You can also use the containers provided by the biocontainers project on [quay.i
 
 Our recommendation is to use pixelator via the specific Nextflow pipeline, [nf-core/pixelator](https://github.com/nf-core/pixelator).
 
-It should take only a few seconds to download the pipeline and approx. 20 min to run the default test dataset in a normal commodity computer. 
+It should take only a few seconds to download the pipeline and approx. 20 min to run the default test dataset in a normal commodity computer.
 
 However, with MPX data, we recommend running pixelator in specialized hardware with at least 32GB RAM.
 
@@ -106,7 +106,7 @@ You can also email the development team at [developers@pixelgen.com](mailto:deve
 
 ## License
 
-Pixelator is licensed under the [GPL-2.0](./LICENSE) license.
+Pixelator is licensed under the [MIT](./LICENSE) license.
 
 ## Credits
 
