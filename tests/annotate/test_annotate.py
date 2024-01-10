@@ -8,11 +8,12 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 from anndata import AnnData
-
-from pixelator.annotate import filter_components_sizes
+from pixelator.annotate import cluster_components, filter_components_sizes
 from pixelator.cli.annotate import annotate_components
 from pixelator.config import AntibodyPanel
+from pixelator.pixeldataset.utils import read_anndata
 
 
 def test_filter_components_no_filters(adata: AnnData):
@@ -80,6 +81,42 @@ def test_filter_components_all_active(adata: AnnData):
     )
     assert sum(result) == 2
     assert sorted(sizes[result]) == [1996, 1996]
+
+
+@pytest.mark.integration_test
+def test_cluster_components(data_root):
+    adata = read_anndata(
+        str(data_root / "Sample01_human_pbmcs_unstimulated.adata.h5ad")
+    )
+    # Clear the existing leiden annotation
+    del adata.obs["leiden"]
+
+    cluster_components(adata, "clr", random_seed=1)
+
+    assert not adata.obs["leiden"].empty
+
+    expected = pd.DataFrame.from_dict(
+        {
+            "leiden": {
+                "RCVCMP0000000": 0,
+                "RCVCMP0000002": 3,
+                "RCVCMP0000003": 1,
+                "RCVCMP0000005": 2,
+                "RCVCMP0000006": 0,
+                "RCVCMP0000007": 3,
+                "RCVCMP0000008": 3,
+                "RCVCMP0000010": 6,
+                "RCVCMP0000012": 3,
+                "RCVCMP0000013": 2,
+            }
+        }
+    )
+    expected = expected.astype({"leiden": "category"})
+    expected.index.name = "component"
+
+    assert_frame_equal(
+        pd.DataFrame(adata.obs["leiden"].iloc[:10]), expected, check_categorical=False
+    )
 
 
 @pytest.mark.integration_test
