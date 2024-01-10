@@ -232,10 +232,12 @@ def annotate_components(
         json.dump(edgelist_metrics(edgelist), outfile, default=np_encoder)
 
 
-def _cluster_components_using_leiden(adata: AnnData) -> None:
+def _cluster_components_using_leiden(
+    adata: AnnData, resolution: float = 1.0, random_seed: Optional[int] = None
+) -> None:
     """Carry out a leiden clustering on the components."""
     g = nx.from_scipy_sparse_array(adata.obsp["connectivities"])
-    partitions = leiden(g, resolution=1.0)
+    partitions = leiden(g, resolution=resolution, random_seed=random_seed)
     partitions_df = pd.DataFrame.from_dict(partitions, orient="index").sort_index()
     adata.obs["leiden"] = partitions_df.values
     adata.obs = adata.obs.astype({"leiden": "category"})
@@ -245,6 +247,7 @@ def cluster_components(
     adata: AnnData,
     obsmkey: Optional[Literal["denoised", "clr", "log1p", "normalized_rel"]] = "clr",
     inplace: bool = True,
+    random_seed: Optional[int] = None,
 ) -> Optional[AnnData]:
     """Cluster the components based on their antibody counts.
 
@@ -263,6 +266,9 @@ def cluster_components(
     :param adata: AnnData object to do the clustering on
     :param obsmkey: Key to access the values `obsm` layer of `adata`
     :param inplace: If `True` performs the operation inplace on `adata`
+    :param random_seed: If set this seed will be used to seed the random number
+                        generators used when calculating neighbors, building the umap
+                        and for the leiden clustering.
     :returns: a new Anndata object if `inplace` is `True` or None
     :rtype: Optional[AnnData]
     :raises: AssertionError if `obsmkey` is missing
@@ -276,9 +282,16 @@ def cluster_components(
         adata = adata.copy()
 
     # perform the clustering (using default values)
-    sc.pp.neighbors(adata, use_rep=obsmkey, n_neighbors=15)
-    sc.tl.umap(adata, min_dist=0.5)
-    _cluster_components_using_leiden(adata)
+    sc.pp.neighbors(
+        adata,
+        use_rep=obsmkey,
+        n_neighbors=15,
+        random_state=random_seed if random_seed else 0,
+    )
+    sc.tl.umap(adata, min_dist=0.5, random_state=random_seed if random_seed else 0)
+    _cluster_components_using_leiden(
+        adata, resolution=1.0, random_seed=random_seed if random_seed else None
+    )
 
     logger.debug("Clustering computed %i clusters", adata.obs["leiden"].nunique())
     return None if inplace else adata
