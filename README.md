@@ -2,11 +2,10 @@
 
 
 ![python-version](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue](https://opensource.org/licenses/MIT)
+[![MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 [![DOI](https://img.shields.io/badge/DOI-10.1101/2023.06.05.543770-B31B1B.svg)](https://www.biorxiv.org/content/10.1101/2023.06.05.543770v1)
-![conda](https://anaconda.org/bioconda/pixelator/badges/version.svg)
-![pypi](https://img.shields.io/pypi/v/pixelgen-pixelator)
-
+[![conda](https://anaconda.org/bioconda/pixelator/badges/version.svg)](https://bioconda.github.io/recipes/pixelator/README.html#package-pixelator)
+[![pypi](https://img.shields.io/pypi/v/pixelgen-pixelator)](https://pypi.org/project/pixelgen-pixelator/)
 [![Tests](https://github.com/PixelgenTechnologies/pixelator/actions/workflows/tests.yml/badge.svg)](https://github.com/PixelgenTechnologies/pixelator/actions/workflows/tests.yml)
 
 [**Documentation**](#documentation) |
