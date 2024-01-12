@@ -5,21 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - YYYY-MM-DD
+## [0.16.0] - 2024-01-12
+
+This release introduces two major change in pixelator:
+ 1) the Graph backend has been switched from using igraph to using networkx
+ 2) the license has been changed from GLP2.0 to MIT
 
 ### Added
 
-* Finding connected components and doing Lieden based community detection using.
-  networkx/graspologic (experimental feature).
 * Experimental 3D heatmap plotting feature.
 * Optional caching of layouts to speed up computations in some scenarios.
 * `experimental` mark that can be added to functions that are not yet production ready.
-* Graph layout computations using networkx as the graph backend (experimental feature).
-* The underlying graph instance e.g. a igraph or networkx instance is exposed as a property called `raw` from the `Graph` class.
-* Monte Carlo permutation support for calculated Moran's I (`morans_z_sim`) in `polarization_scores`.
+* The underlying graph instance e.g. a networkx  `Graph` instance is exposed as a property called `raw` from the pixelator `Graph` class.
+* Monte Carlo permutations supported when calculating Moran's I (`morans_z_sim`) in `polarization_scores`.
 
 ### Changed
 
+* The default (and only) graph backend in pixelator is now based on networkx.
 * `mean_reads` and `median_reads` in adata.obs to `mean_reads_per_molecule` and `median_reads_per_molecule` respectively.
 * Drop support for python 3.8 and 3.9.
 * Change output format of `collapse` from csv to parquet.
@@ -30,20 +32,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Remove placeholder warning of missing data for not yet implemented features.
 * Change "Median antibody molecules per cell" to "Average antibody molecules per cell" in the qc report.
 * Refactoring of the graph backend implementations module.
-* Activating networkx as the backend is now done by setting `PIXELATOR_GRAPH_BACKEND="NetworkXGraphBackend"`
-  (previously `PIXELATOR_GRAPH_BACKEND=True` was used).
-* Speeding up `amplicon` step by roughly 3x
+* Speeding up the `amplicon` step by roughly 3x.
 
 ### Fixed
 
 * Nicer error messages when there are no components valid for computing colocalization.
-* Cleaned out remaining igraph remnants from `Graph` class
-* A bunch of warnings
+* A bunch of warnings.
 
 ### Removed
 
-* `graph` no longer outputs the raw edge list
-* igraph has been dropped as a graph backend for pixelator
+* `graph` no longer outputs the raw edge list.
+* igraph has been dropped as a graph backend for pixelator.
 
 ## [0.15.2] - 2023-10-23
 
