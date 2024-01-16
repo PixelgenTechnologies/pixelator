@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
+
 from anndata import AnnData
 from pixelator.annotate import cluster_components, filter_components_sizes
 from pixelator.cli.annotate import annotate_components
@@ -95,28 +95,18 @@ def test_cluster_components(data_root):
 
     assert not adata.obs["leiden"].empty
 
-    expected = pd.DataFrame.from_dict(
-        {
-            "leiden": {
-                "RCVCMP0000000": 0,
-                "RCVCMP0000002": 3,
-                "RCVCMP0000003": 1,
-                "RCVCMP0000005": 2,
-                "RCVCMP0000006": 0,
-                "RCVCMP0000007": 3,
-                "RCVCMP0000008": 3,
-                "RCVCMP0000010": 6,
-                "RCVCMP0000012": 3,
-                "RCVCMP0000013": 2,
-            }
-        }
-    )
-    expected = expected.astype({"leiden": "category"})
-    expected.index.name = "component"
+    expected_groups = [
+        ["RCVCMP0000000", "RCVCMP0000006"],
+        ["RCVCMP0000007", "RCVCMP0000008", "RCVCMP0000012", "RCVCMP0000002"],
+        ["RCVCMP0000005", "RCVCMP0000013"],
+        ["RCVCMP0000003"],
+        ["RCVCMP0000010"],
+    ]
 
-    assert_frame_equal(
-        pd.DataFrame(adata.obs["leiden"].iloc[:10]), expected, check_categorical=False
-    )
+    # We check the groups to be the same here, because the integer name
+    # of the leiden groups are not the same across runs.
+    for group in expected_groups:
+        assert len(set(adata.obs["leiden"].loc[group])) == 1
 
 
 @pytest.mark.integration_test
