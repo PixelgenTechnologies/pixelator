@@ -35,15 +35,13 @@ def create_simple_edge_list_from_graph(
     # add attributes
     n_row = df.shape[0]
     df["count"] = 1
-    df["umi_unique_count"] = 1
-    df["upi_unique_count"] = 1
     if random_markers:
         df["marker"] = random.choices(
             ["A", "B", "C", "D", "E", "F", "G"], weights=[4, 2, 3, 1, 1, 1, 1], k=n_row
         )
     else:
         df["marker"] = "B"
-        df.iloc[0 : int(n_row / 2), 5] = "A"
+        df.iloc[0 : int(n_row / 2)]["marker"] = "A"
     df["umi"] = [random_sequence(6) for _ in range(len(df))]
     df["upib"] = df["upib"].astype(str)
     df["upia"] = df["upia"].astype(str)
