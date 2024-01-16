@@ -463,9 +463,6 @@ def create_edgelist(
         - `upib`, the upib of the fragment
         - `umi`, the umi of the fragment
         - `count`, the number of upib's associated with the fragment
-        - `umi_unique_count`, the number of unique molecules (based on upia+umi)
-           associated with the fragment
-        - `upi_unique_count`, the number of unique upib's associated with the fragment
         - `marker`, the marker associated with this fragment
         - `sequence`, the antibody DNA-oligo sequence of the marker associated
            with the fragment
@@ -508,21 +505,15 @@ def create_edgelist(
             upia = cluster_representative_fragment[umi_size:]
 
             # take the most common upib from the list
-            # this assumes that all other upib's are sequencing errors
-            # (the upib with the highest count is the correct one)
-            unique_upibs = Counter(upibs)
-            upib, _ = unique_upibs.most_common(1)[0]
-            associated_upibs_count = len(unique_upibs)
+            unique_upis = Counter(upis)
+            upib, _ = unique_upis.most_common(1)[0]
+
+            # count (number of molecules) is the number
+            # of upis in the umi-upia cluster
+            count = len(upis)
 
             # update data array
-            yield (
-                upia,
-                upib,
-                umi,
-                read_count,
-                unique_fragment_count,
-                associated_upibs_count,
-            )
+            yield (upia, upib, umi, count)
 
     # create an edge list (pd.DataFrame) with the collapsed sequences
     df = pd.DataFrame(
@@ -532,8 +523,6 @@ def create_edgelist(
             "upib",
             "umi",
             "count",
-            "umi_unique_count",
-            "upi_unique_count",
         ],
     )
     df.insert(3, "marker", marker)
@@ -579,7 +568,7 @@ def collapse_fastq(
     UPIB. The collapsed (error corrected) reads are saved as a
     `pd.DataFrame` to a temporary file with the following columns:
 
-    upia,upib,umi,marker,count,umi_unique_count,upi_unique_count
+    upia,upib,umi,marker,count
 
     The function returns the path to the file or None if the input
     fastq file is empty or corrupted.

@@ -142,11 +142,9 @@ def test_pixeldataset_can_save_and_load_with_empty_edgelist(
     dataset.edgelist = pd.DataFrame()
     dataset.save(str(file_target))
     dataset_new = PixelDataset.from_file(str(file_target))
-    assert dataset_new.edgelist.shape == (0, 9)
+    assert dataset_new.edgelist.shape == (0, 7)
     assert dataset_new.edgelist.columns.tolist() == [
         "count",
-        "umi_unique_count",
-        "upi_unique_count",
         "upia",
         "upib",
         "umi",
@@ -681,9 +679,7 @@ def test_lazy_edgelist_should_warn_and_rm_on_index_column(setup_basic_pixel_data
             "sequence",
             "upib",
             "upia",
-            "upi_unique_count",
             "umi",
-            "umi_unique_count",
             "component",
             "count",
             "marker",
@@ -845,8 +841,6 @@ def test__enforce_edgelist_types():
     data = pd.DataFrame(
         {
             "count": [1, 3, 1],
-            "umi_unique_count": [2, 4, 2],
-            "upi_unique_count": [3, 6, 3],
             "upia": ["AAA", "AAA", "ATT"],
             "upib": ["GGG", "GGG", "GCC"],
             "umi": ["TAT", "ATA", "TTC"],
@@ -859,8 +853,6 @@ def test__enforce_edgelist_types():
     result = _enforce_edgelist_types(data)
     expected = {
         "count": "uint16",
-        "umi_unique_count": "uint16",
-        "upi_unique_count": "uint16",
         "upia": "category",
         "upib": "category",
         "umi": "category",

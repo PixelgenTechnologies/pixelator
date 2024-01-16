@@ -80,8 +80,6 @@ def _enforce_edgelist_types(edgelist: pd.DataFrame) -> pd.DataFrame:
 
     required_types = {
         "count": "uint16",
-        "umi_unique_count": "uint16",
-        "upi_unique_count": "uint16",
         "upia": "category",
         "upib": "category",
         "umi": "category",

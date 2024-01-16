@@ -265,8 +265,6 @@ def collapse(
         metrics = {
             "total_pixels": int(df.shape[0]),
             "total_count": int(df["count"].sum()),
-            "total_unique_umi": int(df["umi_unique_count"].sum()),
-            "total_unique_upi": int(df["upi_unique_count"].sum()),
         }
         json_file = collapse_output / f"{sample}.report.json"
         with open(json_file, "w") as outfile:

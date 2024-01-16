@@ -105,9 +105,7 @@ def test_create_edgelist():
                     "umi": "HIJNO",
                     "marker": "CD4",
                     "sequence": "AAAAA",
-                    "count": 6,
-                    "umi_unique_count": 2,
-                    "upi_unique_count": 3,
+                    "count": 3,
                 },
                 {
                     "upia": "XXX",
@@ -116,8 +114,6 @@ def test_create_edgelist():
                     "marker": "CD4",
                     "sequence": "AAAAA",
                     "count": 2,
-                    "umi_unique_count": 1,
-                    "upi_unique_count": 2,
                 },
                 {
                     "upia": "ZZZ",
@@ -126,8 +122,6 @@ def test_create_edgelist():
                     "marker": "CD4",
                     "sequence": "AAAAA",
                     "count": 1,
-                    "umi_unique_count": 1,
-                    "upi_unique_count": 1,
                 },
             ]
         ),
@@ -315,8 +309,6 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
                     },
                     {
                         "upia": "TTT",
@@ -325,8 +317,6 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
                     },
                     {
                         "upia": "GGG",
@@ -335,8 +325,6 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
                     },
                 ]
             ),
@@ -381,8 +369,6 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
                     },
                     {
                         "upia": "TTT",
@@ -391,8 +377,6 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
                     },
                     {
                         "upia": "GGG",
@@ -401,8 +385,6 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
                     },
                 ]
             ),
@@ -457,9 +439,7 @@ def test_collapse_fastq_algorithm_adjacency_simulated_reads():
         assert data["upia"].nunique() == 1001
         assert data["upib"].nunique() == 1003
         assert data["umi"].nunique() == 9580
-        assert data["count"].describe()["mean"] == 9.897174906522642
-        assert data["umi_unique_count"].describe()["mean"] == 1.0378063980058163
-        assert data["upi_unique_count"].describe()["mean"] == 1.0250311591192356
+        assert data["count"].describe()["mean"] == 9.857187370170337
 
 
 def test_build_annoytree():
