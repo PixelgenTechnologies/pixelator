@@ -563,7 +563,16 @@ def test_simple_aggregate_ignore_edgelist(setup_basic_pixel_dataset):
     )
 
     # We want an empty edgelist, but wit all the correct columns
-    assert result.edgelist.shape == (0, 9)
+    assert result.edgelist.shape[0] == 0
+    assert set(result.edgelist.columns) == {
+        "sequence",
+        "upib",
+        "upia",
+        "umi",
+        "component",
+        "count",
+        "marker",
+    }
 
 
 def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_dataset):
