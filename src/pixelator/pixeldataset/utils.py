@@ -19,9 +19,7 @@ from anndata import AnnData, read_h5ad, ImplicitModificationWarning
 from pixelator.graph import components_metrics
 from pixelator.statistics import (
     clr_transformation,
-    denoise,
     log1p_transformation,
-    rel_normalization,
 )
 from pixelator.types import PathType
 
