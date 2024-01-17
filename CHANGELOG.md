@@ -42,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   values will always be undefined.
 
 
+### Removed
+
+* `umi_unique_count` and `upi_unique_count` from `edgelist`.
+* `normalized_rel` and `denoised` from `obsm` in `anndata`.
+* `umi`, `median_upia_degree`, `median_umi_degree` and `median_reads`  from `component` metrics.
+
 ## [0.16.1] - 2024-01-12
 
 ### Fixed
