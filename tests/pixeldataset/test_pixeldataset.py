@@ -291,20 +291,14 @@ def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
             "antibodies",
             "upia",
             "upib",
-            "umi",
             "reads",
             "mean_reads_per_molecule",
-            "median_reads_per_molecule",
             "mean_upia_degree",
-            "median_upia_degree",
             "mean_umi_per_upia",
-            "median_umi_per_upia",
             "upia_per_upib",
         ]
     )
-    assert "normalized_rel" in adata.obsm
     assert "clr" in adata.obsm
-    assert "denoised" in adata.obsm
     assert "log1p" in adata.obsm
 
 
@@ -319,16 +313,8 @@ def test_read_write_anndata(adata: AnnData):
         assert_frame_equal(adata.obs, adata2.obs)
         assert_frame_equal(adata.var, adata2.var)
         assert_array_equal(
-            adata.obsm["normalized_rel"],
-            adata2.obsm["normalized_rel"],
-        )
-        assert_array_equal(
             adata.obsm["clr"],
             adata2.obsm["clr"],
-        )
-        assert_array_equal(
-            adata.obsm["denoised"],
-            adata2.obsm["denoised"],
         )
         assert_array_equal(
             adata.obsm["log1p"],
@@ -355,24 +341,10 @@ def test_edgelist_to_anndata(
     counts_df = counts_df.reindex(columns=antibodies, fill_value=0)
     assert_array_equal(adata.X, counts_df.to_numpy())
 
-    counts_df_norm = rel_normalization(counts_df, axis=1)
-    assert_array_equal(
-        adata.obsm["normalized_rel"],
-        counts_df_norm.to_numpy(),
-    )
-
     counts_df_clr = clr_transformation(counts_df, axis=1)
     assert_array_equal(
         adata.obsm["clr"],
         counts_df_clr.to_numpy(),
-    )
-
-    counts_df_denoised = denoise(
-        counts_df_clr, quantile=1.0, antibody_control=panel.markers_control, axis=1
-    )
-    assert_array_equal(
-        adata.obsm["denoised"],
-        counts_df_denoised.to_numpy(),
     )
 
     counts_df_log1p = log1p_transformation(counts_df)

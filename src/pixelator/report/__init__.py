@@ -520,7 +520,6 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics = {}
         metrics["cells_filtered"] = adata.n_obs
         metrics["total_markers"] = adata.n_vars
-        metrics["total_umis"] = adata.obs["umi"].sum()
         metrics["total_edges"] = adata.obs["edges"].sum()
         metrics["total_reads_cell"] = adata.obs["reads"].sum()
         metrics["median_reads_cell"] = adata.obs["reads"].median()
@@ -529,11 +528,7 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics["mean_upi_cell"] = adata.obs["vertices"].mean()
         metrics["median_upia_cell"] = adata.obs["upia"].median()
         metrics["mean_upia_cell"] = adata.obs["upia"].mean()
-        metrics["median_umi_cell"] = adata.obs["umi"].median()
-        metrics["mean_umi_cell"] = adata.obs["umi"].mean()
-        metrics["median_umi_upia_cell"] = adata.obs["median_umi_per_upia"].median()
         metrics["mean_umi_upia_cell"] = adata.obs["mean_umi_per_upia"].mean()
-        metrics["median_upia_degree_cell"] = adata.obs["median_upia_degree"].median()
         metrics["mean_upia_degree_cell"] = adata.obs["mean_upia_degree"].mean()
         metrics["median_markers_cell"] = adata.obs["antibodies"].median()
         metrics["mean_markers_cell"] = adata.obs["antibodies"].mean()

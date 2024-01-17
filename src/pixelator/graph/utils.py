@@ -87,18 +87,14 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
         upib_count = group_df["upib"].nunique()
         tot_count = group_df["count"].sum()
         mean_count = group_df["count"].mean()
-        median_count = group_df["count"].median()
-        tot_umi = group_df["umi"].nunique()
         # Please note that we need to use observed=True
         # here upia is a categorical column, and since not
         # all values are present in all components, this is
         # required to get a correct value.
         upia_degree = group_df.groupby("upia", observed=True)["upib"].nunique()
         upia_mean_degree = upia_degree.mean()
-        upia_median_degree = upia_degree.median()
         # Same reasoning as above
         umi_degree = group_df.groupby("upia", observed=True)["umi"].count()
-        upi_umi_median = umi_degree.median()
         upi_umi_mean = umi_degree.mean()
         upia_per_upib = upia_count / upib_count
         cmetrics.append(
@@ -108,14 +104,10 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
                 n_markers,
                 upia_count,
                 upib_count,
-                tot_umi,
                 tot_count,
                 mean_count,
-                median_count,
                 upia_mean_degree,
-                upia_median_degree,
                 upi_umi_mean,
-                upi_umi_median,
                 upia_per_upib,
             )
         )
@@ -130,14 +122,10 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
             "antibodies",
             "upia",
             "upib",
-            "umi",
             "reads",
             "mean_reads_per_molecule",
-            "median_reads_per_molecule",
             "mean_upia_degree",
-            "median_upia_degree",
             "mean_umi_per_upia",
-            "median_umi_per_upia",
             "upia_per_upib",
         ],
         data=cmetrics,

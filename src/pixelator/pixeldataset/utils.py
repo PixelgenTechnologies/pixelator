@@ -236,10 +236,8 @@ def edgelist_to_anndata(
     .X = the component to antibody counts
     .var = the antibody metrics
     .obs = the component metrics
-    .obsm["normalized_rel"] = the normalized (REL) component to antibody counts
     .obsm["clr"] = the transformed (clr) component to antibody counts
     .obsm["log1p"] = the transformed (log1p) component to antibody counts
-    .obsm["denoised"] = the denoised (clr) counts if control antibodies are present
 
     :param edgelist: an edge list (pd.DataFrame)
     :param panel: the AntibodyPanel of the panel used to generate the data
@@ -290,20 +288,10 @@ def edgelist_to_anndata(
     adata.var["control"] = panel.df["control"].to_numpy()
 
     # add normalization layers
-    counts_df_norm = rel_normalization(df=counts_df, axis=1)
     counts_df_clr = clr_transformation(df=counts_df, axis=1)
     counts_df_log1p = log1p_transformation(df=counts_df)
-    adata.obsm["normalized_rel"] = counts_df_norm
     adata.obsm["clr"] = counts_df_clr
     adata.obsm["log1p"] = counts_df_log1p
-    antibody_control = panel.markers_control
-    if antibody_control is not None and len(antibody_control) > 0:
-        adata.obsm["denoised"] = denoise(
-            df=counts_df_clr,
-            antibody_control=antibody_control,
-            quantile=1.0,
-            axis=1,
-        )
 
     logger.debug("AnnData created")
     return adata
