@@ -41,7 +41,7 @@ def create_simple_edge_list_from_graph(
         )
     else:
         df["marker"] = "B"
-        df.iloc[0 : int(n_row / 2)]["marker"] = "A"
+        df["marker"].iloc[0 : int(n_row / 2)] = "A"
     df["umi"] = [random_sequence(6) for _ in range(len(df))]
     df["upib"] = df["upib"].astype(str)
     df["upia"] = df["upia"].astype(str)
