@@ -33,9 +33,7 @@ from pixelator.pixeldataset.utils import (
 )
 from pixelator.statistics import (
     clr_transformation,
-    denoise,
     log1p_transformation,
-    rel_normalization,
 )
 
 random.seed(42)
