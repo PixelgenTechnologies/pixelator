@@ -5,6 +5,7 @@ This module contains functions for the collapse and error correction of MPX data
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
+import dataclasses
 import logging
 import tempfile
 from collections import Counter, defaultdict
@@ -45,6 +46,27 @@ UniqueFragment = str
 UpiB = str
 UniqueFragmentToUpiB = Dict[UniqueFragment, List[UpiB]]
 UniqueFragmentAndCount = Tuple[str, int]
+
+
+@dataclasses.dataclass(frozen=True, slots=True, repr=True, order=True, eq=True)
+class CollapsedFragment:
+    """A collapsed fragment.
+
+    :attr sequence: the consensus sequence for a list of similar fragments
+    :attr unique_fragments_count: the number of unique fragments that are
+        represented by this collapsed fragment
+    :attr reads_count: the number of reads that are represented
+        by this collapsed fragment
+    """
+
+    sequence: str
+    unique_fragments_count: int
+    reads_count: int
+
+    def __iter__(self) -> Iterable:
+        """Iterate over the dataclass fields."""
+        # Used to support tuple unpacking
+        return iter(dataclasses.asdict(self).values())
 
 
 def build_annoytree(data: npt.NDArray[np.uint8], n_trees: int = 10) -> AnnoyIndex:
@@ -100,15 +122,16 @@ def build_binary_data(seqs: List[str]) -> npt.NDArray[np.uint8]:
     return data
 
 
-def get_representative_sequence_for_component(
+def get_collapsed_fragments_for_component(
     components: List[Set[UniqueFragment]], counts: Dict[UniqueFragment, int]
-) -> Generator[Tuple[UniqueFragment, int], None, None]:
+) -> Generator[CollapsedFragment, None, None]:
     """Take the representative sequence from a component based on its counts.
 
     Given a list of components (i.e. sequences that presumably belong to the
     same original molecule), and the counts of occurrences for each of these,
-    return an iterator of tuples with the representative sequence for that
-    component and the number of reads collapsed for that umi.
+    return an iterator of objects with the representative sequence for that
+    component the total number of reads associated with the cluster and
+    the number of collapsed fragments.
 
     The representative molecule is selected as the one with the most associated
     upib's, and if there is a tie the lexicographically smallest sequence is picked
@@ -116,18 +139,27 @@ def get_representative_sequence_for_component(
 
     :param components: a list of components as produced from `get_connected_components`
     :param counts: a dictionary of the counts of each unique fragment
-    :yields: the representative sequence and the size of the component as a tuple
-    :rtype: Generator[Tuple[UniqueFragment, int], None, None]
+    :rtype: Generator[CollapsedFragment, None, None]
+    :yields CollapsedFragment: a collapsed fragment
     """
     for component in components:
-        counts_and_sequences = defaultdict(list)
-        for seq in component:
-            counts_and_sequences[counts[seq]].append(seq)
-        max_count = max(counts_and_sequences.keys())
-        yield (
-            sorted(counts_and_sequences[max_count])[0],
-            len(component),
-        )
+        # get the most common sequence in the component and use
+        # this as the 'consensus sequence'
+        representative_frag, representative_frag_count = ["", 0]
+        total_reads = 0
+        for c in component:
+            total_reads += counts[c]
+            if (
+                representative_frag is None
+                or counts[c] > representative_frag_count
+                or counts[c] == representative_frag_count
+                and c < representative_frag
+            ):
+                representative_frag = c
+                representative_frag_count = counts[c]
+
+        collapsed_fragments = len(component)
+        yield CollapsedFragment(representative_frag, collapsed_fragments, total_reads)
 
 
 # This code snipped has been obtained from:
@@ -192,7 +224,7 @@ def identify_fragments_to_collapse(
               fragments as values
     :rtype: Dict[UniqueFragment, List[UniqueFragment]]
     """
-    logger.debug("Computing adjancency sequences from %i elements", len(seqs))
+    logger.debug("Computing adjacency sequences from %i elements", len(seqs))
 
     # use a nearest neighbours tree to reduce the search space
     # TODO this approach requires memory (n_ele * len(seq) * 2)
@@ -244,27 +276,26 @@ def identify_fragments_to_collapse(
 
 def collapse_sequences_unique(
     seq_dict: UniqueFragmentToUpiB,
-) -> Generator[UniqueFragmentAndCount, None, None]:
+) -> Generator[CollapsedFragment, None, None]:
     """Get all fragments.
 
     Let each key in `seq_dict` represent it's own sequence. This is equivalent
     to not collapsing the sequences.
 
     :param seq_dict: the fragment to upib dict
-    :yield UniqueFragmentAndCount: a unique fragment and the number of reads collapsed
-    :rtype: Generator[UniqueFragmentAndCount, None, None]
+    :yield a CollapsedFragment object
     """
     logger.debug("Picking all unique sequences (i.e. no collapsing is carried out)")
 
     for seq in seq_dict.keys():
-        yield (seq, len(seq_dict[seq]))
+        yield CollapsedFragment(seq, 1, len(seq_dict[seq]))
 
 
 def collapse_sequences_adjacency(
     seq_dict: UniqueFragmentToUpiB,
     max_neighbours: int,
     min_dist: int,
-) -> Iterator[UniqueFragmentAndCount]:
+) -> Iterator[CollapsedFragment]:
     """Collapse sequences based on their adjacency.
 
     Tries to identify all fragments that represent the same underlying
@@ -285,7 +316,7 @@ def collapse_sequences_adjacency(
     :param min_dist: the hamming distance threshold (i.e. the mismatches
                      between two sequences)
     :returns: An iterator of the of collapsed molecules, and their original counts
-    :rtype: Iterator[UniqueFragmentAndCount]
+    :rtype: Iterator[CollapsedFragment]
     """
     logger.debug("Collapsing %i sequences", len(seq_dict))
 
@@ -296,7 +327,7 @@ def collapse_sequences_adjacency(
         seqs=seqs, max_neighbours=max_neighbours, min_dist=min_dist
     )
     full_components = get_connected_components(adj_list, counts)
-    components = get_representative_sequence_for_component(full_components, counts)
+    components = get_collapsed_fragments_for_component(full_components, counts)
     return components
 
 
@@ -396,7 +427,7 @@ def filter_by_minimum_upib_count(
 
 
 def create_edgelist(
-    clustered_reads: Iterable[UniqueFragmentAndCount],
+    clustered_reads: Iterable[CollapsedFragment],
     unique_reads: UniqueFragmentToUpiB,
     umia_start: Optional[int],
     umia_end: Optional[int],
@@ -455,27 +486,34 @@ def create_edgelist(
     # iterate each collapsed umi+upia to get the upib
     # with the highest count and store in a list
     def data():
-        for cluster_representative_fragment, fragment_count in clustered_reads:
+        for (
+            cluster_representative_fragment,
+            unique_fragment_count,
+            read_count,
+        ) in clustered_reads:
             # get all the upis from the sequence in the cluster
-            upis = unique_reads[cluster_representative_fragment]
+            upibs = unique_reads[cluster_representative_fragment]
 
-            # take the most abundant umi-upi
-            umi_upia = cluster_representative_fragment
-            umi = umi_upia[:umi_size]
-            upia = umi_upia[umi_size:]
+            # The cluster_representative_fragment is the concatenation of UMI + UPIA
+            umi = cluster_representative_fragment[:umi_size]
+            upia = cluster_representative_fragment[umi_size:]
 
             # take the most common upib from the list
-            unique_upis = Counter(upis)
-            upib, _ = unique_upis.most_common(1)[0]
-
-            # count (number of molecules) is the number
-            # of upis in the umi-upia cluster
-            count = len(upis)
-            umi_unique_count = fragment_count
-            upi_unique_count = len(unique_upis)
+            # this assumes that all other upib's are sequencing errors
+            # (the upib with the highest count is the correct one)
+            unique_upibs = Counter(upibs)
+            upib, _ = unique_upibs.most_common(1)[0]
+            associated_upibs_count = len(unique_upibs)
 
             # update data array
-            yield (upia, upib, umi, count, umi_unique_count, upi_unique_count)
+            yield (
+                upia,
+                upib,
+                umi,
+                read_count,
+                unique_fragment_count,
+                associated_upibs_count,
+            )
 
     # create an edge list (pd.DataFrame) with the collapsed sequences
     df = pd.DataFrame(
@@ -631,7 +669,7 @@ def collapse_fastq(
             max_neighbours=max_neighbours,  # type: ignore
             min_dist=mismatches,  # type: ignore
         )
-    if algorithm == "unique":
+    elif algorithm == "unique":
         clustered_reads = collapse_sequences_unique(
             seq_dict=unique_reads,
         )
