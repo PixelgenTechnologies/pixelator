@@ -40,12 +40,12 @@ class QCReportBuilder:
     `data-dataset-id` is always set to '0'.
 
     >>> builder = QCReportBuilder("./path/to/template.html")
-    >>> with open("example.qc-report.html", "wb") as fp:
+    >>> with open("report.html", "wb") as fp:
     ...    builder.write(fp, sample_info, metrics, data)
     """
 
     _JSON_OPTIONS: ClassVar[Dict[str, Any]] = {"indent": None, "separators": (",", ":")}
-    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.10.0", ">=0.9.0"]
+    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.11.0", ">=0.10.0"]
 
     def __init__(self, template: Union[str, Path] = DEFAULT_QC_REPORT_TEMPLATE):
         """Construct a QC report builder given a html template.
@@ -273,12 +273,12 @@ class QCReportBuilder:
         """Create an HTML object injecting the antibody counts data."""
         antibody_counts_el = E.SCRIPT(
             **{
-                "type": "text/csv",
+                "type": "application/octet-stream;base64",
                 "data-type": "antibody-percentages",
                 "data-dataset-id": "0",
             }
         )
-        antibody_counts_el.text = data
+        antibody_counts_el.text = self._compress_data(data)
         return antibody_counts_el
 
     def _build_antibody_counts_element(self, data: str) -> LxmlElement:
