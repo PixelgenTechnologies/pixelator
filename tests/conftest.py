@@ -7,6 +7,7 @@ import random
 from pathlib import Path
 
 import pandas as pd
+import polars as pl
 import pytest
 from anndata import AnnData
 from pixelator.config import AntibodyPanel
@@ -59,7 +60,7 @@ def data_root_fixture():
 @pytest.fixture(name="edgelist", scope="module")
 def edgelist_fixture(data_root):
     """Load an example edgelist from disk."""
-    edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
+    edgelist = pl.read_csv(str(data_root / "test_edge_list.csv")).to_pandas()
     edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
     return enforce_edgelist_types_for_tests(edgelist)
 
@@ -118,7 +119,7 @@ def panel_fixture(data_root):
 
 
 @pytest.fixture(name="pixel_dataset_file")
-def pixel_dataset_file(setup_basic_pixel_dataset, tmp_path):
+def pixel_dataset_file(setup_basic_pixel_dataset, tmp_path) -> Path:
     """Create pxl file."""
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"

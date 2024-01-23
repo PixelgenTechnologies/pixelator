@@ -16,7 +16,7 @@ import pandas as pd
 import polars as pl
 from anndata import AnnData
 
-from pixelator.pixeldataset.file_formats import PixelFileFormatSpec
+from pixelator.pixeldataset.io.datastores import PixelDataStore
 from pixelator.pixeldataset.utils import (
     _enforce_edgelist_types,
 )
@@ -194,7 +194,9 @@ class FileBasedPixelDatasetBackend:
     in memory.
     """
 
-    def __init__(self, path: PathType) -> None:
+    def __init__(
+        self, path: PathType, datastore: Optional[PixelDataStore] = None
+    ) -> None:
         """Create a filebased backend instance.
 
         Create a backend, fetching information from the .pxl file
@@ -203,42 +205,36 @@ class FileBasedPixelDatasetBackend:
         :param path: Path to the .pxl file
         """
         self._path = path
-        self._file_format = PixelFileFormatSpec.guess_file_format(path)
+        if not datastore:
+            datastore = PixelDataStore.guess_datastore_from_path(path)
+        self._datastore = datastore
 
     @cached_property
     def adata(self) -> AnnData:
         """Get the AnnData object for the pixel dataset."""
-        return self._file_format.deserialize_anndata(self._path)
+        return self._datastore.read_anndata()
 
     @cached_property
     def edgelist(self) -> pd.DataFrame:
         """Get the edge list object for the pixel dataset."""
-        return self._file_format.deserialize_dataframe(
-            self._path, self._file_format.EDGELIST_KEY
-        )
+        return self._datastore.read_edgelist()
 
     @property
     def edgelist_lazy(self) -> Optional[pl.LazyFrame]:
         """Get a lazy frame representation of the edgelist."""
-        return self._file_format.deserialize_dataframe_lazy(
-            self._path, self._file_format.EDGELIST_KEY
-        )
+        return self._datastore.read_edgelist_lazy()
 
     @cached_property
     def polarization(self) -> Optional[pd.DataFrame]:
         """Get the polarization object for the pixel dataset."""
-        return self._file_format.deserialize_dataframe(
-            self._path, self._file_format.POLARIZATION_KEY
-        )
+        return self._datastore.read_polarization()
 
     @cached_property
     def colocalization(self) -> Optional[pd.DataFrame]:
         """Get the colocalization object for the pixel dataset."""
-        return self._file_format.deserialize_dataframe(
-            self._path, self._file_format.COLOCALIZATION_KEY
-        )
+        return self._datastore.read_colocalization()
 
     @cached_property
     def metadata(self) -> Optional[Dict]:
         """Get the metadata object for the pixel dataset."""
-        return self._file_format.deserialize_metadata(self._path)
+        return self._datastore.read_metadata()
