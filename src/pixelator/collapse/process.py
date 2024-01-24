@@ -5,9 +5,9 @@ This module contains functions for the collapse and error correction of MPX data
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
-import dataclasses
 import logging
 import tempfile
+import typing
 from collections import Counter, defaultdict
 from typing import (
     Dict,
@@ -48,8 +48,7 @@ UniqueFragmentToUpiB = Dict[UniqueFragment, List[UpiB]]
 UniqueFragmentAndCount = Tuple[str, int]
 
 
-@dataclasses.dataclass(frozen=True, slots=True, repr=True, order=True, eq=True)
-class CollapsedFragment:
+class CollapsedFragment(typing.NamedTuple):
     """A collapsed fragment.
 
     :attr sequence: the consensus sequence for a list of similar fragments
@@ -62,11 +61,6 @@ class CollapsedFragment:
     sequence: str
     unique_fragments_count: int
     reads_count: int
-
-    def __iter__(self) -> Iterable:
-        """Iterate over the dataclass fields."""
-        # Used to support tuple unpacking
-        return iter(dataclasses.asdict(self).values())
 
 
 def build_annoytree(data: npt.NDArray[np.uint8], n_trees: int = 10) -> AnnoyIndex:
