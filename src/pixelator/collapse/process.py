@@ -8,19 +8,15 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 import logging
 import tempfile
 import typing
+import warnings
 from collections import Counter, defaultdict
 from typing import (
-    Dict,
     Generator,
     Iterable,
     Iterator,
-    List,
     Literal,
     Optional,
-    Set,
-    Tuple,
 )
-import warnings
 
 import numpy as np
 import numpy.typing as npt
@@ -44,8 +40,7 @@ np.random.seed(SEED)
 
 UniqueFragment = str
 UpiB = str
-UniqueFragmentToUpiB = Dict[UniqueFragment, List[UpiB]]
-UniqueFragmentAndCount = Tuple[str, int]
+UniqueFragmentToUpiB = dict[UniqueFragment, list[UpiB]]
 
 
 class CollapsedFragment(typing.NamedTuple):
@@ -92,7 +87,7 @@ def build_annoytree(data: npt.NDArray[np.uint8], n_trees: int = 10) -> AnnoyInde
     return tree
 
 
-def build_binary_data(seqs: List[str]) -> npt.NDArray[np.uint8]:
+def build_binary_data(seqs: list[str]) -> npt.NDArray[np.uint8]:
     """Build a binary matrix from a list of sequences using two-bit encoding.
 
     Convert a list of DNA sequences (str) to binary sequences
@@ -117,7 +112,7 @@ def build_binary_data(seqs: List[str]) -> npt.NDArray[np.uint8]:
 
 
 def get_collapsed_fragments_for_component(
-    components: List[Set[UniqueFragment]], counts: Dict[UniqueFragment, int]
+    components: list[set[UniqueFragment]], counts: dict[UniqueFragment, int]
 ) -> Generator[CollapsedFragment, None, None]:
     """Take the representative sequence from a component based on its counts.
 
@@ -139,18 +134,26 @@ def get_collapsed_fragments_for_component(
     for component in components:
         # get the most common sequence in the component and use
         # this as the 'consensus sequence'
-        representative_frag, representative_frag_count = ["", 0]
-        total_reads = 0
-        for c in component:
-            total_reads += counts[c]
-            if (
-                representative_frag is None
-                or counts[c] > representative_frag_count
-                or counts[c] == representative_frag_count
-                and c < representative_frag
+
+        # get an iterator over the fragments
+        fragment_it = iter(component)
+
+        # Initialize variables for finding the representative with the first fragment
+        # of a component
+        representative_frag = next(fragment_it)
+        representative_frag_count = counts[representative_frag]
+        total_reads = representative_frag_count
+
+        # Loop over the other fragments to find the representative
+        for fragment in fragment_it:
+            fragment_read_counts = counts[fragment]
+            total_reads += fragment_read_counts
+            if fragment_read_counts > representative_frag_count or (
+                fragment_read_counts == representative_frag_count
+                and fragment < representative_frag
             ):
-                representative_frag = c
-                representative_frag_count = counts[c]
+                representative_frag = fragment
+                representative_frag_count = fragment_read_counts
 
         collapsed_fragments = len(component)
         yield CollapsedFragment(representative_frag, collapsed_fragments, total_reads)
@@ -159,8 +162,8 @@ def get_collapsed_fragments_for_component(
 # This code snipped has been obtained from:
 # https://github.com/CGATOxford/umi-tools
 def get_connected_components(
-    graph: Dict[UniqueFragment, List[UniqueFragment]], counts: Dict[UniqueFragment, int]
-) -> List[Set[UniqueFragment]]:
+    graph: dict[UniqueFragment, list[UniqueFragment]], counts: dict[UniqueFragment, int]
+) -> list[set[UniqueFragment]]:
     """Get connected components from a graph of sequences.
 
     Find the connected components from the sequence graph (represented by an adjacency
@@ -176,7 +179,7 @@ def get_connected_components(
     :param counts: a dictionary of counts (copies) for each sequence in `graph`
     :returns: a list of sets of sequences where each set represents a
               connected component
-    :rtype: List[Set[UniqueFragment]]
+    :rtype: list[set[UniqueFragment]]
     """
     found = set()
     components = []
@@ -189,10 +192,10 @@ def get_connected_components(
 
 
 def identify_fragments_to_collapse(
-    seqs: List[UniqueFragment],
+    seqs: list[UniqueFragment],
     min_dist: int,
     max_neighbours: int,
-) -> Dict[UniqueFragment, List[UniqueFragment]]:
+) -> dict[UniqueFragment, list[UniqueFragment]]:
     """Identify fragments to collapse by approximate nearest neighbourhood search.
 
     Tries to identify all sequences in the given list of sequences
@@ -216,7 +219,7 @@ def identify_fragments_to_collapse(
     :param max_neighbours: the number of neighbours to use in the Annoy index
     :returns: a dictionary with fragments as keys and a list of their adjoining
               fragments as values
-    :rtype: Dict[UniqueFragment, List[UniqueFragment]]
+    :rtype: dict[UniqueFragment, list[UniqueFragment]]
     """
     logger.debug("Computing adjacency sequences from %i elements", len(seqs))
 
@@ -232,7 +235,7 @@ def identify_fragments_to_collapse(
 
     # iterate the neighbours of each sequence to obtain
     # the adjacency list (dictionary of lists)
-    adj_list = {seq: [] for seq in seqs}  # type: Dict[str, List[str]]
+    adj_list: dict[str, list[str]] = {seq: [] for seq in seqs}
     for i, seq1 in enumerate(seqs):
         if i % 100000 == 0:
             logger.debug("Processed 100,000 reads...")
