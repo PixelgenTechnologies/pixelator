@@ -25,6 +25,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
+import scipy as sp
 
 with warnings.catch_warnings():
     # Graspologic raises a numba related warning here, that we can
@@ -317,12 +318,15 @@ class NetworkXGraphBackend(GraphBackend):
         self,
         layout_algorithm: str = "fruchterman_reingold",
         random_seed: Optional[int] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         layout_options = [
             "fruchterman_reingold",
             "fruchterman_reingold_3d",
             "kamada_kawai",
             "kamada_kawai_3d",
+            "pmds",
+            "pmds_3d",
         ]
         if layout_algorithm not in layout_options:
             raise AssertionError(
@@ -348,6 +352,10 @@ class NetworkXGraphBackend(GraphBackend):
             layout_inst = nx.spring_layout(raw, seed=random_seed)
         if layout_algorithm == "fruchterman_reingold_3d":
             layout_inst = nx.spring_layout(raw, dim=3, seed=random_seed)
+        if layout_algorithm == "pmds":
+            return pmds_layout(raw, seed=random_seed, **kwargs)
+        if layout_algorithm == "pmds_3d":
+            return pmds_layout(raw, dim=3, seed=random_seed, **kwargs)
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
@@ -373,6 +381,7 @@ class NetworkXGraphBackend(GraphBackend):
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
@@ -384,6 +393,8 @@ class NetworkXGraphBackend(GraphBackend):
           - fruchterman_reingold_3d
           - kamada_kawai
           - kamada_kawai_3d
+          - pmds
+          - pmds_3d
 
         The `fruchterman_reingold` options are in general faster, but less
         accurate than the `kamada_kawai` ones.
@@ -395,13 +406,14 @@ class NetworkXGraphBackend(GraphBackend):
         :param random_seed: used as the seed for graph layouts with a stochastic
                             element. Useful to get deterministic layouts across
                             method calls.
+        :param **kwargs: will be passed to the underlying layout implementation
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid
         :raises: ValueError if the provided current graph instance is empty
         """
         coordinates = self._layout_coordinates(
-            layout_algorithm=layout_algorithm, random_seed=random_seed
+            layout_algorithm=layout_algorithm, random_seed=random_seed, **kwargs
         )
 
         # If we are doing a 3D layout we add the option of normalized
@@ -693,3 +705,69 @@ class NetworkxBasedVertexClustering(VertexClustering):
             Graph(NetworkXGraphBackend(self._graph.subgraph(cluster).copy()))
             for cluster in self._clustering
         ]
+
+
+def pmds_layout(
+    g: nx.Graph, pivots: int = 50, dim: int = 2, seed: Optional[int] = None
+) -> pd.DataFrame:
+    """Add some number of vertices to the graph instance.
+
+    :param g: A networkx graph object
+    :param pivots: The number of pivot nodes to use
+    :param dim: The dimension of the layout
+    :param seed: Set seed for reproducibility
+
+    :return: A dataframe with layout coordinates
+    :rtype: pd.DataFrame
+    :raises: ValueError raises if conditions are not met
+    """
+    if not isinstance(g, nx.Graph):
+        raise ValueError("Not a graph object")
+
+    if not nx.is_connected(g):
+        raise ValueError("Only connected graphs are supported.")
+
+    if pivots >= len(g.nodes):
+        raise ValueError("'pivots' must be less than the number of nodes in the graph.")
+    if pivots < dim:
+        raise ValueError(
+            "'pivots' must be greater than or equal to the dimension of the layout."
+        )
+    if pivots < 0:
+        raise ValueError("'pivots' must be greater than 0.")
+
+    if dim not in [2, 3]:
+        raise ValueError("'dim' must be either 2 or 3.")
+
+    if seed is not None:
+        if not isinstance(seed, int):
+            raise ValueError("'seed' must be an integer.")
+        np.random.seed(seed)
+
+    # Select random pivot nodes
+    pivs = np.random.choice(g.nodes, pivots, replace=False)
+
+    # Calculate the shortest path length from the pivots to all other nodes
+    A = nx.to_numpy_array(g, weight=None)
+
+    # NOTE: Using to_scipy_sparse_array speeds up the shortest_path step,
+    # but currently fails with the following error:
+    # ValueError: Buffer dtype mismatch, expected 'int' but got 'long'
+    D = sp.sparse.csgraph.shortest_path(A, directed=False, unweighted=True)
+    D = D[:, np.where(np.isin(g.nodes, pivs))[0]]
+
+    cmean = np.mean(D**2, axis=0)
+    rmean = np.mean(D**2, axis=1)
+    Dmat = D**2 - np.add.outer(rmean, cmean) + np.mean(D**2)
+
+    _, _, Vh = np.linalg.svd(Dmat)
+    coordinates = Dmat @ np.transpose(Vh)[:, :dim]
+    coordinates = pd.DataFrame(
+        coordinates, columns=["x", "y"] if dim == 2 else ["x", "y", "z"]
+    )
+
+    coordinates.index = [
+        str(g.nodes[node_idx]["name"]) for node_idx in coordinates.index
+    ]
+
+    return coordinates

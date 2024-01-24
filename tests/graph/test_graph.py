@@ -366,6 +366,91 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="pmds_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+        random_seed=1234,
+        pivots=4,
+    )
+    assert_frame_equal(
+        result.sort_index(),
+        pd.DataFrame.from_dict(
+            {
+                "0": {
+                    "x": -2.176250899482822,
+                    "y": -2.0000000000000004,
+                    "z": 0.5137431483730066,
+                    "x_norm": -0.7254169664942739,
+                    "y_norm": -0.6666666666666667,
+                    "z_norm": 0.1712477161243355,
+                    "A": 1,
+                    "B": 0,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                "1": {
+                    "x": 2.176250899482823,
+                    "y": -2.0000000000000004,
+                    "z": -0.5137431483730084,
+                    "x_norm": 0.725416966494274,
+                    "y_norm": -0.6666666666666665,
+                    "z_norm": -0.17124771612433606,
+                    "A": 0,
+                    "B": 1,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                "2": {
+                    "x": -3.521247923410738,
+                    "y": 0.500000000000001,
+                    "z": -0.3175107271818993,
+                    "x_norm": -0.986146667615408,
+                    "y_norm": 0.1400280084028012,
+                    "z_norm": -0.08892078954761284,
+                    "A": 0,
+                    "B": 0,
+                    "C": 1,
+                    "D": 0,
+                    "E": 0,
+                },
+                "3": {
+                    "x": -7.771561172376096e-16,
+                    "y": 3.000000000000001,
+                    "z": 1.27675647831893e-15,
+                    "x_norm": -2.590520390792031e-16,
+                    "y_norm": 1.0,
+                    "z_norm": 4.2558549277297654e-16,
+                    "A": 0,
+                    "B": 0,
+                    "C": 0,
+                    "D": 1,
+                    "E": 0,
+                },
+                "4": {
+                    "x": 3.5212479234107374,
+                    "y": 0.4999999999999992,
+                    "z": 0.31751072718189965,
+                    "x_norm": 0.9861466676154081,
+                    "y_norm": 0.14002800840280072,
+                    "z_norm": 0.08892078954761296,
+                    "A": 0,
+                    "B": 0,
+                    "C": 0,
+                    "D": 0,
+                    "E": 1,
+                },
+            },
+            orient="index",
+        ).sort_index(),
+    )
+
+
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
     # Just making sure all existing algorithms get exercised
 
@@ -374,6 +459,8 @@ def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
         "fruchterman_reingold_3d",
         "kamada_kawai",
         "kamada_kawai_3d",
+        "pmds",
+        "pmds_3d",
     ]
     for algorithm in algorithms:
         _ = pentagram_graph.layout_coordinates(
@@ -382,6 +469,7 @@ def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
             cache=False,
             only_keep_a_pixels=False,
             random_seed=1234,
+            pivots=4,
         )
 
 
