@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Performance improvements and reduced bundle size in QC report.
+* Fix deflated counts in the edgelist after collapse.
 
 ## [0.16.1] - 2024-01-12
 
