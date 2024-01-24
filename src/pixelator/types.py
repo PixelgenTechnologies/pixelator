@@ -1,5 +1,4 @@
-"""
-This module contains helper typehints for the pixelator package.
+"""Helper typehints for the pixelator package.
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
