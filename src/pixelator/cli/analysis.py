@@ -13,8 +13,8 @@ from pixelator.analysis import analyse_pixels
 from pixelator.analysis.colocalization.types import TransformationTypes
 from pixelator.cli.common import logger, output_option
 from pixelator.utils import (
-    click_echo,
     create_output_stage_dir,
+    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -164,20 +164,16 @@ def analysis(
 
     # sanity check on the anlyses
     if not any([compute_polarization, compute_colocalization]):
-        msg = "All the analysis are disabled, no scores will be computed"
-        click_echo(msg)
-        logger.warning(msg)
+        logger.warning("All the analysis are disabled, no scores will be computed")
 
     # create output folder if it does not exist
     analysis_output = create_output_stage_dir(output, "analysis")
 
     # compute graph/clusters using parallel processing
-    with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
+    with get_process_pool_executor(ctx) as executor:
         jobs = []
         for zip_file in input_files:
-            msg = f"Computing analysis for file {zip_file}"
-            click_echo(msg)
-            logger.info(msg)
+            logger.info(f"Computing analysis for file {zip_file}")
 
             clean_name = get_sample_name(zip_file)
             metrics_file = analysis_output / f"{clean_name}.report.json"

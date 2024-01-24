@@ -4,13 +4,13 @@ Tests for utility functions for the pixelator package
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
 import logging
+import tempfile
 from gzip import BadGzipFile
-from tempfile import NamedTemporaryFile
 
 import pytest
 
 from pixelator import __version__
-from pixelator.cli.common import init_logger
+from pixelator.cli.logging import LoggingSetup
 from pixelator.utils import (
     gz_size,
     log_step_start,
@@ -96,11 +96,13 @@ def test_timer(caplog):
 
 
 def test_verbose_logging_is_activated():
-    with NamedTemporaryFile() as test_log_file:
-        init_logger(log_file=test_log_file.name, verbose=True)
-
-        root_logger = logging.getLogger("pixelator")
+    test_log_file = tempfile.TemporaryFile()
+    log_context = LoggingSetup(test_log_file, verbose=True)
+    with log_context:
+        root_logger = logging.getLogger()
         assert root_logger.getEffectiveLevel() == logging.DEBUG
 
-        init_logger(log_file=test_log_file.name, verbose=False)
+    log_context = LoggingSetup(test_log_file, verbose=True)
+    with log_context:
+        root_logger = logging.getLogger()
         assert root_logger.getEffectiveLevel() == logging.INFO

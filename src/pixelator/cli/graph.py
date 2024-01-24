@@ -10,8 +10,8 @@ import click
 from pixelator.cli.common import logger, output_option
 from pixelator.graph import connect_components
 from pixelator.utils import (
-    click_echo,
     create_output_stage_dir,
+    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -90,12 +90,10 @@ def graph(
     graph_output = create_output_stage_dir(output, "graph")
 
     # compute graph/components using parallel processing
-    with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
+    with get_process_pool_executor(ctx) as executor:
         jobs = []
         for pixelsf in input_files:
-            msg = f"Computing clusters for file {pixelsf}"
-            click_echo(msg)
-            logger.info(msg)
+            logger.info(f"Computing clusters for file {pixelsf}")
 
             clean_name = get_sample_name(pixelsf)
             metrics_file = graph_output / f"{clean_name}.report.json"

@@ -150,10 +150,11 @@ def amplicon_fastq(
     mode = "single-end" if len(inputs) == 1 else "paired-end"
     stats = SequenceQualityStatsCollector(design)
 
-    start1_log_msg = "Starting the concatenation of %s to %s"
-    start2_log_msg = "Starting the concatenation of %s and %s to %s"
-    end1_log_msg = "Finished the concatenation of %s to %s"
-    end2_log_msg = "Finished the concatenation of %s and %s to %s"
+    start1_log_msg = "Building amplicon of %s to %s"
+    start2_log_msg = "Building amplicon of %s and %s to %s"
+    end1_log_msg = "Finished building amplicon of %s to %s"
+    end2_log_msg = "Finished building amplicon of %s and %s to %s"
+    progress_log_msg = "Generating amplicon for %s: %s reads processed"
 
     amplicon = assay.get_region_by_id("amplicon")
     if amplicon is None:
@@ -173,14 +174,20 @@ def amplicon_fastq(
         logger.debug(start2_log_msg, inputs[0], inputs[1], output)
 
         with xopen(output, "wb") as f:
-            for record1, record2 in zip(
-                pyfastx.Fastq(str(inputs[0]), build_index=False),
-                pyfastx.Fastq(str(inputs[1]), build_index=False),
+            for idx, (record1, record2) in enumerate(
+                zip(
+                    pyfastx.Fastq(str(inputs[0]), build_index=False),
+                    pyfastx.Fastq(str(inputs[1]), build_index=False),
+                )
             ):
+                if idx % 100000 == 0:
+                    logger.debug(progress_log_msg, str(output), str(idx))
+
                 name, new_seq, new_qual = generate_amplicon(record1, record2, amplicon)
                 write_record(f, name, new_seq, new_qual)
                 stats.update(new_qual)
 
+    logger.info(progress_log_msg, str(output), stats.read_count)
     # add metrics to JSON file
     avg_stats = stats.stats
 

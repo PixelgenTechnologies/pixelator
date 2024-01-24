@@ -14,8 +14,8 @@ from pixelator.cli.common import design_option, logger, output_option
 from pixelator.collapse import collapse_fastq
 from pixelator.config import config, get_position_in_parent, load_antibody_panel
 from pixelator.utils import (
-    click_echo,
     create_output_stage_dir,
+    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -165,11 +165,11 @@ def collapse(
     if umib_start is None and umib_end is not None:
         click.ClickException("You must specify both the start and end position in UMIB")
     if umia_start is None and umia_end is None:
-        click_echo("UMIA will be ignored in the collapsing", multiline=False)
+        logger.info("UMIA will be ignored in the collapsing")
     elif umia_end <= umia_start:
         click.ClickException("UMIA end or start positions seems to be incorrect")
     if umib_start is None and umib_end is None:
-        click_echo("UMIB will be ignored in the collapsing", multiline=False)
+        logger.info("UMIB will be ignored in the collapsing")
     elif umib_end <= umib_start:
         click.ClickException("UMIB end or start positions seems to be incorrect")
 
@@ -198,7 +198,7 @@ def collapse(
         )
 
         # run cutadapt (demux mode) using parallel processing
-        with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
+        with get_process_pool_executor(ctx) as executor:
             jobs = []
             for fastq_file in files:
                 # get the marker from the file name

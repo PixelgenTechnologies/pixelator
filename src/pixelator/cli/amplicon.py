@@ -8,12 +8,16 @@ from typing import List
 
 import click
 
-from pixelator.cli.common import design_option, logger, output_option
 from pixelator.amplicon import amplicon_fastq
+from pixelator.cli.common import (
+    design_option,
+    logger,
+    output_option,
+)
 from pixelator.utils import (
-    click_echo,
     create_output_stage_dir,
     get_extension,
+    get_process_pool_executor,
     group_input_reads,
     log_step_start,
     sanity_check_inputs,
@@ -66,6 +70,7 @@ def amplicon(
     Process diverse raw pixel data (FASTQ) formats into common amplicon
     """
     # log input parameters
+
     log_step_start(
         "amplicon",
         input_files=input_files,
@@ -87,7 +92,7 @@ def amplicon(
     )
 
     # run amplicon using parallel processing
-    with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
+    with get_process_pool_executor(ctx) as executor:
         jobs = []
         for k, v in grouped_sorted_inputs.items():
             extension = get_extension(v[0])
@@ -101,12 +106,11 @@ def amplicon(
             )
 
             if len(v) > 2:
-                msg = "Found more files than needed for concatenating fastq files"
+                msg = "Found more files than needed for creating an amplicon"
                 logger.error(msg)
                 raise RuntimeError(msg)
 
-            msg = f"Concatenating {','.join(str(p) for p in v)}"
-            click_echo(msg, multiline=False)
+            msg = f"Creating amplicon for {','.join(str(p) for p in v)}"
             logger.info(msg)
 
             jobs.append(

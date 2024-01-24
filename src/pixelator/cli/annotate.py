@@ -11,8 +11,8 @@ from pixelator.annotate import annotate_components
 from pixelator.cli.common import logger, output_option
 from pixelator.config import config, load_antibody_panel
 from pixelator.utils import (
-    click_echo,
     create_output_stage_dir,
+    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -120,13 +120,14 @@ def annotate(
 
     # warn if both --dynamic-filter and hard-coded sizes are input
     if min_size is not None and dynamic_filter in ["min", "both"]:
-        msg = "--dynamic-filter will overrule the value introduced in --min-size"
-        click_echo(msg, multiline=False)
-        logger.warning(msg)
+        logger.warning(
+            "--dynamic-filter will overrule the value introduced in --min-size"
+        )
+
     if max_size is not None and dynamic_filter in ["max", "both"]:
-        msg = "--dynamic-filter will overrule the value introduced in --max-size"
-        click_echo(msg, multiline=False)
-        logger.warning(msg)
+        logger.warning(
+            "--dynamic-filter will overrule the value introduced in --max-size"
+        )
 
     # create output folder if it does not exist
     annotate_output = create_output_stage_dir(output, "annotate")
@@ -135,12 +136,10 @@ def annotate(
     panel = load_antibody_panel(config, panel)
 
     # compute graph/components using parallel processing
-    with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
+    with get_process_pool_executor(ctx) as executor:
         jobs = []
         for ann_file in input_files:
-            msg = f"Computing annotation for file {ann_file}"
-            click_echo(msg, multiline=False)
-            logger.info(msg)
+            logger.info(f"Computing annotation for file {ann_file}")
 
             clean_name = get_sample_name(ann_file)
             metrics_file = annotate_output / f"{clean_name}.report.json"

@@ -11,7 +11,7 @@ import click
 
 from pixelator.cli.common import output_option
 from pixelator.report import make_report
-from pixelator.utils import click_echo, create_output_stage_dir, log_step_start, timer
+from pixelator.utils import create_output_stage_dir, log_step_start, timer
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ def report(
     )
 
     # create html reports
-    click_echo(f"Creating report for data present in {input_folder}")
+    logger.info(f"Creating report for data present in {input_folder}")
 
     make_report(
         input_path=input_folder,

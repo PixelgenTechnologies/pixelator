@@ -16,9 +16,9 @@ from pixelator.cli.common import (
 from pixelator.config import config
 from pixelator.qc import qc_fastq
 from pixelator.utils import (
-    click_echo,
     create_output_stage_dir,
     get_extension,
+    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -170,12 +170,10 @@ def preqc(
     preqc_output = create_output_stage_dir(output, "preqc")
 
     # run fastq (pre QC and filtering) using parallel processing
-    with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
+    with get_process_pool_executor(ctx) as executor:
         jobs = []
         for fastq_file in input_files:
-            msg = f"Processing {fastq_file} with fastp"
-            click_echo(msg, multiline=False)
-            logger.info(msg)
+            logger.info(f"Processing {fastq_file} with fastp")
 
             clean_name = get_sample_name(fastq_file)
             extension = get_extension(fastq_file)
