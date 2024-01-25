@@ -8,6 +8,8 @@ import logging
 import logging.handlers
 import multiprocessing
 import sys
+import time
+import typing
 import warnings
 from pathlib import Path
 from typing import Callable
@@ -15,6 +17,7 @@ from typing import Callable
 import click
 from numba import NumbaDeprecationWarning
 
+from pixelator.types import PathType
 from pixelator.utils import click_echo
 
 root_logger = logging.getLogger()
@@ -44,16 +47,22 @@ LOGGER_KEY = __name__ + ".logger"
 DEFAULT_LEVEL = logging.INFO
 
 
+class StyleDict(typing.TypedDict):
+    """Style dictionary for kwargs to `click.style`."""
+
+    fg: str
+
+
 class ColorFormatter(logging.Formatter):
     """Click formatter with colored levels"""
 
-    colors = {
-        "debug": dict(fg="blue"),
-        "info": dict(fg="green"),
-        "warning": dict(fg="yellow"),
-        "error": dict(fg="orange"),
-        "exception": dict(fg="red"),
-        "critical": dict(fg="red"),
+    colors: dict[str, StyleDict] = {
+        "debug": StyleDict(fg="blue"),
+        "info": StyleDict(fg="green"),
+        "warning": StyleDict(fg="yellow"),
+        "error": StyleDict(fg="orange"),
+        "exception": StyleDict(fg="red"),
+        "critical": StyleDict(fg="red"),
     }
 
     def format(self, record: logging.LogRecord) -> str:
@@ -123,14 +132,14 @@ class LoggingSetup:
 
     """
 
-    def __init__(self, log_file: Path, verbose: bool, logger=None):
+    def __init__(self, log_file: PathType | None, verbose: bool, logger=None):
         """Initialize the logging setup.
 
         :param log_file: the filename of the log output
         :param verbose: enable verbose logging and console output
         :param logger: the logger to configure, default is the root logger
         """
-        self.log_file = log_file
+        self.log_file = Path(log_file) if log_file is not None else None
         self.verbose = verbose
         self._root_logger = logger or logging.getLogger()
         self._queue: multiprocessing.Queue = multiprocessing.Queue(-1)
@@ -145,17 +154,32 @@ class LoggingSetup:
                 ),
             ),
         )
-        atexit.register(self._shutdown_listener, self._queue, self._listener_process)
 
-    @staticmethod
-    def _shutdown_listener(queue, process):
-        """Send the stop token to the logging process and wait for it to finish."""
-        queue.put(None)
-        process.join()
+    def _shutdown_listener(self, timeout: int = 10) -> None:
+        """Send the stop token to the logging process and wait for it to finish.
+
+        :param timeout: The number of seconds to wait for the process to finish.
+        """
+        self._queue.put(None)
+
+        start = time.time()
+        while time.time() - start <= timeout:
+            if self._listener_process.is_alive():
+                time.sleep(0.1)
+            else:
+                # we cannot join a process that is not started
+                if self._listener_process.ident is not None:
+                    self._listener_process.join()
+                break
+        else:
+            # We only enter this if we didn't 'break' above during the while loop!
+            self._listener_process.terminate()
 
     def initialize(self):
         """Configure logging and start the listener process."""
-        self._listener_process.start()
+        # We do not need the listener process if there is no file to log to
+        if self.log_file:
+            self._listener_process.start()
 
         handler = logging.handlers.QueueHandler(self._queue)
         self._root_logger.handlers = [handler]
@@ -169,17 +193,38 @@ class LoggingSetup:
             console_handler.setFormatter(ColorFormatter(datefmt="%Y-%m-%d %H:%M:%S"))
             self._root_logger.addHandler(console_handler)
 
+        atexit.register(self._shutdown_listener)
+
+    def __enter__(self):
+        """Enter the context manager.
+
+        This will initialize the logging setup.
+        """
+        self.initialize()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Exit the context manager.
+
+        This will shut down the logging process if needed.
+        """
+        self._shutdown_listener()
+        atexit.unregister(self._shutdown_listener)
+        # Reraise exception higher up the stack
+        return False
+
     @staticmethod
-    def _listener_logging_setup(log_file: str, verbose: bool):
+    def _listener_logging_setup(log_file: Path | None, verbose: bool):
         """Initialize the logging in the listener process."""
         logger = logging.getLogger()
-        handler = logging.FileHandler(str(log_file), mode="w")
-        formatter = logging.Formatter(
-            "%(asctime)s %(processName)-10s %(name)s %(levelname)-8s %(message)s"
-        )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+
+        if log_file:
+            handler = logging.FileHandler(str(log_file), mode="w")
+            formatter = logging.Formatter(
+                "%(asctime)s %(processName)-10s %(name)s %(levelname)-8s %(message)s"
+            )
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+            logger.setLevel(logging.DEBUG if verbose else logging.INFO)
 
     @staticmethod
     def _listener_process_main(

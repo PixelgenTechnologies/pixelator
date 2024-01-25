@@ -5,7 +5,6 @@ Copyright (c) 2022 Pixelgen Technologies AB.
 import atexit
 import multiprocessing
 import sys
-from pathlib import Path
 
 import click
 import yappi
@@ -87,11 +86,11 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     # Pass arguments to other commands
     ctx.ensure_object(dict)
 
-    ctx.obj["LOGGER"] = LoggingSetup(Path(log_file), verbose=verbose)
+    ctx.obj["LOGGER"] = LoggingSetup(log_file, verbose=verbose)
     ctx.obj["VERBOSE"] = verbose
     ctx.obj["CORES"] = max(1, cores)
 
-    ctx.obj["LOGGER"].initialize_worker()
+    ctx.obj["LOGGER"].initialize()
     return 0
 
 

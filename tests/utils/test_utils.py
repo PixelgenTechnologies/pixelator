@@ -96,13 +96,14 @@ def test_timer(caplog):
 
 
 def test_verbose_logging_is_activated():
-    test_log_file = tempfile.TemporaryFile()
-    log_context = LoggingSetup(test_log_file, verbose=True)
-    with log_context:
+    test_log_file = tempfile.NamedTemporaryFile()
+    with LoggingSetup(test_log_file.name, verbose=True):
         root_logger = logging.getLogger()
         assert root_logger.getEffectiveLevel() == logging.DEBUG
 
-    log_context = LoggingSetup(test_log_file, verbose=True)
-    with log_context:
+
+def test_verbose_logging_is_deactivated():
+    test_log_file = tempfile.NamedTemporaryFile()
+    with LoggingSetup(test_log_file.name, verbose=False):
         root_logger = logging.getLogger()
         assert root_logger.getEffectiveLevel() == logging.INFO
