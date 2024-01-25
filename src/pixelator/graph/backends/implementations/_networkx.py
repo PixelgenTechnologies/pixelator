@@ -710,38 +710,43 @@ class NetworkxBasedVertexClustering(VertexClustering):
 def pmds_layout(
     g: nx.Graph, pivots: int = 50, dim: int = 2, seed: Optional[int] = None
 ) -> pd.DataFrame:
-    """Add some number of vertices to the graph instance.
+    """Calculate a pivot MDS layout for a graph as described in [1]_.
+
+    The algorithm is similar to classical multidimensional scaling (MDS), but uses only
+    a smalls set of random pivot nodes. The algorithm is considerably faster than MDS
+    and therefore scales better to large graphs.
+
+    .. [1] Brandes U, Pich C. Eigensolver Methods for Progressive Multidimensional
+        Scaling of Large Data. International Symposium on Graph Drawing, 2007.
+        Lecture Notes in Computer Science, vol 4372. doi: 10.1007/978-3-540-70904-6_6.
 
     :param g: A networkx graph object
     :param pivots: The number of pivot nodes to use
     :param dim: The dimension of the layout
     :param seed: Set seed for reproducibility
-
     :return: A dataframe with layout coordinates
     :rtype: pd.DataFrame
     :raises: ValueError raises if conditions are not met
     """
-    if not isinstance(g, nx.Graph):
-        raise ValueError("Not a graph object")
-
     if not nx.is_connected(g):
         raise ValueError("Only connected graphs are supported.")
 
     if pivots >= len(g.nodes):
         raise ValueError("'pivots' must be less than the number of nodes in the graph.")
-    if pivots < dim:
-        raise ValueError(
-            "'pivots' must be greater than or equal to the dimension of the layout."
-        )
-    if pivots < 0:
-        raise ValueError("'pivots' must be greater than 0.")
 
     if dim not in [2, 3]:
         raise ValueError("'dim' must be either 2 or 3.")
 
+    if pivots < dim:
+        raise ValueError("'pivots' must be greater than or equal to dim.")
+
+    pivot_lower_bound = np.min([np.floor(0.2 * len(g.nodes)), 50])
+    if pivots < pivot_lower_bound:
+        raise ValueError(
+            f"'pivots' must be greater than or equal to {pivot_lower_bound}"
+        )
+
     if seed is not None:
-        if not isinstance(seed, int):
-            raise ValueError("'seed' must be an integer.")
         np.random.seed(seed)
 
     # Select random pivot nodes
@@ -749,19 +754,18 @@ def pmds_layout(
 
     # Calculate the shortest path length from the pivots to all other nodes
     A = nx.to_numpy_array(g, weight=None)
-
-    # NOTE: Using to_scipy_sparse_array speeds up the shortest_path step,
-    # but currently fails with the following error:
-    # ValueError: Buffer dtype mismatch, expected 'int' but got 'long'
     D = sp.sparse.csgraph.shortest_path(A, directed=False, unweighted=True)
-    D = D[:, np.where(np.isin(g.nodes, pivs))[0]]
+    D_pivs = D[:, np.where(np.isin(g.nodes, pivs))[0]]
 
-    cmean = np.mean(D**2, axis=0)
-    rmean = np.mean(D**2, axis=1)
-    Dmat = D**2 - np.add.outer(rmean, cmean) + np.mean(D**2)
+    # Center values in rows and columns
+    cmean = np.mean(D_pivs**2, axis=0)
+    rmean = np.mean(D_pivs**2, axis=1)
+    D_pivs_centered = D_pivs**2 - np.add.outer(rmean, cmean) + np.mean(D_pivs**2)
 
-    _, _, Vh = np.linalg.svd(Dmat)
-    coordinates = Dmat @ np.transpose(Vh)[:, :dim]
+    # Compute SVD and use distances to compute coordinates for all nodes
+    # in an abstract cartesian space
+    _, _, Vh = np.linalg.svd(D_pivs_centered)
+    coordinates = D_pivs_centered @ np.transpose(Vh)[:, :dim]
     coordinates = pd.DataFrame(
         coordinates, columns=["x", "y"] if dim == 2 else ["x", "y", "z"]
     )
