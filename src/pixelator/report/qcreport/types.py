@@ -170,11 +170,12 @@ class Metrics(TypedDict, total=False):
     #: The number of cells annotated by the pipeline.
     number_of_cells: int
 
-    #: The average of confidently-decoded Molecular Pixelation reads associated to
-    #: cells.
+    #: Average reads per cell after performing the filtering stages of Pixelator to
+    #: retrieve only confidently decoded MPX reads.
     average_reads_usable_per_cell: int
 
-    #: The average of raw Molecular Pixelation reads associated to cells.
+    #: Average reads per cell after Illumina Passed Filter step, removal of phiX as
+    #: well as accounting for the actual number of cells.
     average_reads_per_cell: int
 
     #: The average number of molecules associated to antibodies on annotated cells.
