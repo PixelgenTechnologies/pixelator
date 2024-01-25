@@ -22,6 +22,7 @@ def test_sequence_quality_stats_collector_update():
     collector.update(rng.normal(30, 5, size=132))
     collector.update(rng.normal(30, 5, size=132))
 
+    assert collector.read_count == 2
     assert collector.stats == SequenceQualityStats(
         fraction_q30_upia=0.42,
         fraction_q30_upib=0.46,
