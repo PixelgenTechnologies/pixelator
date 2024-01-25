@@ -111,7 +111,7 @@ def build_binary_data(seqs: list[str]) -> npt.NDArray[np.uint8]:
     return data
 
 
-def get_collapsed_fragments_for_component(    # noqa: DOC402,DOC404
+def get_collapsed_fragments_for_component(  # noqa: DOC402,DOC404
     components: list[set[UniqueFragment]], counts: dict[UniqueFragment, int]
 ) -> Generator[CollapsedFragment, None, None]:
     """Take the representative sequence from a component based on its counts.
