@@ -15,6 +15,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 from pixelator.collapse.process import (
+    CollapsedFragment,
     build_annoytree,
     build_binary_data,
     collapse_fastq,
@@ -24,7 +25,7 @@ from pixelator.collapse.process import (
     create_fragment_to_upib_dict,
     filter_by_minimum_upib_count,
     get_connected_components,
-    get_representative_sequence_for_component,
+    get_collapsed_fragments_for_component,
     identify_fragments_to_collapse,
     write_tmp_feather_file,
 )
@@ -77,7 +78,11 @@ def test_create_edgelist():
         "HIJNOXXX": ["EF", "LL"],
         "HIJNOZZZ": ["EF"],
     }
-    clustered_sequences = [("HIJNOABC", 2), ("HIJNOXXX", 1), ("HIJNOZZZ", 1)]
+    clustered_sequences = [
+        CollapsedFragment("HIJNOABC", 2, 6),
+        CollapsedFragment("HIJNOXXX", 1, 2),
+        CollapsedFragment("HIJNOZZZ", 1, 1),
+    ]
 
     result = create_edgelist(
         clustered_reads=clustered_sequences,
@@ -100,7 +105,7 @@ def test_create_edgelist():
                     "umi": "HIJNO",
                     "marker": "CD4",
                     "sequence": "AAAAA",
-                    "count": 3,
+                    "count": 6,
                     "umi_unique_count": 2,
                     "upi_unique_count": 3,
                 },
@@ -145,14 +150,13 @@ def test_get_connected_components():
     assert result == [{"A", "B", "C"}, {"D", "E"}]
 
 
-def test_get_representative_sequence_for_component():
+def test_get_collapsed_fragments_for_component():
     """Test get representative sequence for a component."""
     counts = {"A": 10, "B": 1, "C": 1, "D": 2, "E": 6}
     components = [{"A", "B", "C"}, {"D", "E"}]
-    result = get_representative_sequence_for_component(
-        components=components, counts=counts
-    )
-    assert list(result) == [("A", 3), ("E", 2)]
+    result = get_collapsed_fragments_for_component(components=components, counts=counts)
+    result_list = list(result)
+    assert result_list == [CollapsedFragment("A", 3, 12), CollapsedFragment("E", 2, 8)]
 
 
 def test_identify_fragments_to_collapse():
@@ -188,7 +192,12 @@ def test_collapse_sequences_unique():
     }
 
     result = collapse_sequences_unique(fragments_to_upib)
-    assert list(result) == [("TATATA", 3), ("GCGCGC", 3), ("ATATAT", 2), ("GGGGGG", 1)]
+    assert list(result) == [
+        CollapsedFragment("TATATA", 1, 3),
+        CollapsedFragment("GCGCGC", 1, 3),
+        CollapsedFragment("ATATAT", 1, 2),
+        CollapsedFragment("GGGGGG", 1, 1),
+    ]
 
 
 def test_collapse_sequences_adjacency_no_errors():
@@ -203,7 +212,10 @@ def test_collapse_sequences_adjacency_no_errors():
     result = collapse_sequences_adjacency(
         fragments_to_upib, max_neighbours=10, min_dist=2
     )
-    assert list(result) == [(x, 1) for x in list(fragments_to_upib.keys())]
+    assert list(result) == [
+        CollapsedFragment(key, 1, len(values))
+        for key, values in fragments_to_upib.items()
+    ]
 
 
 def test_collapse_sequences_adjacency_with_errors():
@@ -229,10 +241,10 @@ def test_collapse_sequences_adjacency_with_errors():
     result = sorted(list(result))
 
     assert result == [
-        ("ATATAT", 1),
-        ("GCGCGC", 1),
-        ("GGGGGG", 1),
-        ("TATATA", 2),
+        CollapsedFragment("ATATAT", 1, 2),
+        CollapsedFragment("GCGCGC", 1, 3),
+        CollapsedFragment("GGGGGG", 1, 1),
+        CollapsedFragment("TATATA", 2, 6),
     ]
 
 
@@ -252,10 +264,10 @@ def test_collapse_sequences_adjacency_with_errors_picks_most_abundant():
         fragments_to_upib, max_neighbours=10, min_dist=2
     )
     assert sorted(list(result)) == [
-        ("ATATAT", 1),
-        ("GCGCGC", 1),
-        ("GGGGGG", 1),
-        ("TATATA", 2),  # Note that since "TATATA" has more upib's
+        CollapsedFragment("ATATAT", 1, 2),
+        CollapsedFragment("GCGCGC", 1, 3),
+        CollapsedFragment("GGGGGG", 1, 1),
+        CollapsedFragment("TATATA", 2, 5),  # Note that since "TATATA" has more upib's
         # associated it will be picked
     ]
 
@@ -445,7 +457,7 @@ def test_collapse_fastq_algorithm_adjacency_simulated_reads():
         assert data["upia"].nunique() == 1001
         assert data["upib"].nunique() == 1003
         assert data["umi"].nunique() == 9580
-        assert data["count"].describe()["mean"] == 9.857187370170337
+        assert data["count"].describe()["mean"] == 9.897174906522642
         assert data["umi_unique_count"].describe()["mean"] == 1.0378063980058163
         assert data["upi_unique_count"].describe()["mean"] == 1.0250311591192356
 
