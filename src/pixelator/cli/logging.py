@@ -60,7 +60,7 @@ class ColorFormatter(logging.Formatter):
         "debug": StyleDict(fg="blue"),
         "info": StyleDict(fg="green"),
         "warning": StyleDict(fg="yellow"),
-        "error": StyleDict(fg="orange"),
+        "error": StyleDict(fg="red"),
         "exception": StyleDict(fg="red"),
         "critical": StyleDict(fg="red"),
     }
@@ -85,10 +85,10 @@ class ColorFormatter(logging.Formatter):
         return logging.Formatter.format(self, record)
 
 
-class DefaultCliFormatter(ColorFormatter):
+class DefaultCliFormatter(logging.Formatter):
     """Click formatter with colored levels"""
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         """Format a record for CLI output."""
         if not record.exc_info:
             level = record.levelname.lower()
@@ -107,7 +107,7 @@ class ClickHandler(logging.Handler):
     Messages are forwarded to stdout using `click.echo`.
     """
 
-    _use_stderr = True
+    _use_stderr = False
 
     def emit(self, record):
         """
@@ -118,7 +118,7 @@ class ClickHandler(logging.Handler):
         """
         try:
             msg = self.format(record)
-            click.echo(msg, err=self._use_stderr)
+            click.echo(msg, file=sys.stdout, err=self._use_stderr)
         except Exception:
             self.handleError(record)
 
@@ -181,18 +181,18 @@ class LoggingSetup:
         if self.log_file:
             self._listener_process.start()
 
-        handler = logging.handlers.QueueHandler(self._queue)
-        self._root_logger.handlers = [handler]
+        handlers = []
+        handlers.append(logging.handlers.QueueHandler(self._queue))
         self._root_logger.setLevel(logging.DEBUG if self.verbose else logging.INFO)
 
         console_handler = ClickHandler()
-        if not self.verbose:
-            console_handler.setFormatter(DefaultCliFormatter())
-            self._root_logger.addHandler(console_handler)
-        else:
+        if self.verbose:
             console_handler.setFormatter(ColorFormatter(datefmt="%Y-%m-%d %H:%M:%S"))
-            self._root_logger.addHandler(console_handler)
+        else:
+            console_handler.setFormatter(DefaultCliFormatter())
 
+        handlers.append(console_handler)
+        self._root_logger.handlers = handlers
         atexit.register(self._shutdown_listener)
 
     def __enter__(self):
