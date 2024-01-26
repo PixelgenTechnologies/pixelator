@@ -104,12 +104,16 @@ class ClickHandler(logging.Handler):
     """Click logging handler.
 
     Messages are forwarded to stdout using `click.echo`.
-
-    :param use_stderr: Log to sys.stderr instead of sys.stdout.
     """
 
-    def __init__(self, use_stderr: bool = True):
-        """Initialize the click handler."""
+    def __init__(self, *args, use_stderr: bool = True, **kwargs):
+        """Initialize the click handler.
+
+        :param use_stderr: Log to sys.stderr instead of sys.stdout.
+        :param args: The arguments to pass to the base class.
+        :param kwargs: The keyword arguments to pass to base class.
+        """
+        super().__init__(*args, **kwargs)
         self._use_stderr = use_stderr
 
     def emit(self, record: logging.LogRecord) -> None:
