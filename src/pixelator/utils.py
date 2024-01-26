@@ -380,7 +380,7 @@ def get_read_sample_name(read: str) -> str:
         raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
 
     read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
-    matches = re.findall(R"(.[Rr][12]|(_[Rr]?[12]))$", read_stem)
+    matches = re.findall(R"(.[Rr][12]|(_[Rr]?[12]))", read_stem)
     if len(matches) != 1:
         raise ValueError("Invalid R1/R2 suffix.")
 

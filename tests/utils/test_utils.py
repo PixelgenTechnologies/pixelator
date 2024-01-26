@@ -167,3 +167,6 @@ def test_get_read_sample_name():
     assert get_read_sample_name("sample1.r2.fq.gz") == "sample1"
     assert get_read_sample_name("sample1.R1.fq.gz") == "sample1"
     assert get_read_sample_name("sample1.R2.fq.gz") == "sample1"
+
+    assert get_read_sample_name("sample1_R1_L001.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1_R2_L001.fq.gz") == "sample1"

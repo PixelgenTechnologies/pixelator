@@ -3,8 +3,7 @@ Console script for pixelator (amplicon)
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
-from concurrent import futures
-from typing import List
+from __future__ import annotations
 
 import click
 
@@ -17,8 +16,7 @@ from pixelator.cli.common import (
 from pixelator.utils import (
     create_output_stage_dir,
     get_extension,
-    get_process_pool_executor,
-    group_input_reads,
+    get_read_sample_name,
     log_step_start,
     sanity_check_inputs,
     timer,
@@ -32,27 +30,29 @@ from pixelator.utils import (
     options_metavar="<options>",
 )
 @click.argument(
-    "input_files",
-    nargs=-1,
+    "fastq_1",
+    nargs=1,
     required=True,
     type=click.Path(exists=True),
-    metavar="FASTQ_FILES",
+    metavar="FASTQ_1",
+)
+@click.argument(
+    "fastq_2",
+    nargs=1,
+    required=False,
+    type=click.Path(exists=True),
+    metavar="FASTQ_2",
 )
 @click.option(
-    "--input1-pattern",
-    default="_R1",
-    required=False,
+    "--sample_name",
+    default=None,
+    show_default=False,
     type=click.STRING,
-    show_default=True,
-    help="The string pattern to use to identify forward (R1) files",
-)
-@click.option(
-    "--input2-pattern",
-    default="_R2",
-    required=False,
-    type=click.STRING,
-    show_default=True,
-    help="The string pattern to use to identify reverse (R2) files",
+    help=(
+        "Override the basename of the output fastq file. "
+        "Default is the basename of the first input file "
+        "without extension and read 1 identifier."
+    ),
 )
 @output_option
 @design_option
@@ -60,9 +60,9 @@ from pixelator.utils import (
 @timer
 def amplicon(
     ctx,
-    input_files: List[str],
-    input1_pattern: str,
-    input2_pattern: str,
+    fastq_1: str,
+    fastq_2: str | None,
+    sample_name: str | None,
     output: str,
     design: str,
 ):
@@ -73,57 +73,36 @@ def amplicon(
 
     log_step_start(
         "amplicon",
-        input_files=input_files,
+        fastq1=fastq_1,
+        fastq_2=fastq_2,
         output=output,
-        input1_pattern=input1_pattern,
-        input2_pattern=input2_pattern,
         design=design,
     )
 
     # some basic sanity check on the input files
-    sanity_check_inputs(input_files, allowed_extensions=("fastq.gz", "fq.gz"))
+    fastq_inputs = [fastq_1] + [fastq_2] if fastq_2 else []
+    sanity_check_inputs(fastq_inputs, allowed_extensions=("fastq.gz", "fq.gz"))
 
     # create output folder if it does not exist
     amplicon_output = create_output_stage_dir(output, "amplicon")
 
-    # group input file by sample id and order reads by R1 and R2
-    grouped_sorted_inputs = group_input_reads(
-        input_files, input1_pattern, input2_pattern
+    sample_name = sample_name or get_read_sample_name(fastq_1)
+    extension = get_extension(fastq_1)
+    output_file = amplicon_output / f"{sample_name}.merged.{extension}"
+    json_file = amplicon_output / f"{sample_name}.report.json"
+
+    write_parameters_file(
+        ctx,
+        amplicon_output / f"{sample_name}.meta.json",
+        command_path="pixelator single-cell amplicon",
     )
 
-    # run amplicon using parallel processing
-    with get_process_pool_executor(ctx) as executor:
-        jobs = []
-        for k, v in grouped_sorted_inputs.items():
-            extension = get_extension(v[0])
-            output_file = amplicon_output / f"{k}.merged.{extension}"
-            json_file = amplicon_output / f"{k}.report.json"
+    msg = f"Creating amplicon for {','.join(str(p) for p in fastq_inputs)}"
+    logger.info(msg)
 
-            write_parameters_file(
-                ctx,
-                amplicon_output / f"{k}.meta.json",
-                command_path="pixelator single-cell amplicon",
-            )
-
-            if len(v) > 2:
-                msg = "Found more files than needed for creating an amplicon"
-                logger.error(msg)
-                raise RuntimeError(msg)
-
-            msg = f"Creating amplicon for {','.join(str(p) for p in v)}"
-            logger.info(msg)
-
-            jobs.append(
-                executor.submit(
-                    amplicon_fastq,
-                    inputs=v,
-                    design=design,
-                    metrics=json_file,
-                    output=str(output_file),
-                )
-            )
-
-        for job in futures.as_completed(jobs):
-            exc = job.exception()
-            if exc is not None:
-                raise exc
+    amplicon_fastq(
+        inputs=fastq_inputs,
+        design=design,
+        metrics=json_file,
+        output=str(output_file),
+    )
