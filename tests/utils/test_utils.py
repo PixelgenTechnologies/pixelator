@@ -13,6 +13,7 @@ import pytest
 from pixelator import __version__
 from pixelator.cli.logging import LoggingSetup
 from pixelator.utils import (
+    get_read_sample_name,
     gz_size,
     log_step_start,
     sanity_check_inputs,
@@ -146,3 +147,23 @@ def test_multiprocess_logging(verbose):
         assert "This is a warning message" in log_content
         assert "This is an error message" in log_content
         assert "This is a critical message" in log_content
+
+
+def test_get_read_sample_name():
+    with pytest.raises(ValueError, match="Invalid file extension.*"):
+        get_read_sample_name("qwdwqwdqwd")
+
+    with pytest.raises(ValueError, match="Invalid R1/R2 suffix."):
+        get_read_sample_name("qwdwqwdqwd.fq.gz")
+
+    assert get_read_sample_name("sample1_1.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1_2.fq.gz") == "sample1"
+
+    assert get_read_sample_name("sample1_R1.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1_R2.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1_r1.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1_r2.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1.r1.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1.r2.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1.R1.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1.R2.fq.gz") == "sample1"
