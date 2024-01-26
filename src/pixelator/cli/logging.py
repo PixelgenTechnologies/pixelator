@@ -69,7 +69,7 @@ class ColorFormatter(logging.Formatter):
         """Format a record with colored level.
 
         :param record: The record to format.
-        :returns: A formatted log record.
+        :returns str: A formatted log record.
         """
         if not record.exc_info:
             level = record.levelname.lower()
@@ -105,17 +105,16 @@ class ClickHandler(logging.Handler):
     """Click logging handler.
 
     Messages are forwarded to stdout using `click.echo`.
+
+    :param use_stderr: Log to sys.stderr instead of sys.stdout.
     """
 
-    _use_stderr = False
+    def __init__(self, use_stderr: bool = True):
+        """Initialize the click handler."""
+        self._use_stderr = use_stderr
 
-    def emit(self, record):
-        """
-        Do whatever it takes to actually log the specified logging record.
-
-        This version is intended to be implemented by subclasses and so
-        raises a NotImplementedError.
-        """
+    def emit(self, record: logging.LogRecord) -> None:
+        """Do whatever it takes to actually log the specified logging record."""
         try:
             msg = self.format(record)
             click.echo(msg, file=sys.stdout, err=self._use_stderr)
@@ -128,8 +127,6 @@ class LoggingSetup:
 
     This class is used to set up logging for multiprocessing.
     All messages are passed to a separate process that handles the logging to a file.
-
-
     """
 
     def __init__(self, log_file: PathType | None, verbose: bool, logger=None):
