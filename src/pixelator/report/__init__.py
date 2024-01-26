@@ -674,8 +674,15 @@ def create_dynamic_report(
         "fraction_predicted_cell_type_unknown": None,
     }
 
+    umi_counts = {
+        "after_collapse": summary_collapse["output_umi"],
+        "after_graph": summary_graph["umi"],
+        "after_annotate": summary_annotate["umi"],
+        "after_cell_calling": summary_cell_calling["total_umis"],
+    }
+
     fraction_discarded_umis = round(
-        summary_cell_calling["umis_of_aggregates"] / summary_cell_calling["total_umis"],
+        1 - (umi_counts["after_cell_calling"] / umi_counts["after_collapse"]),
         2,
     )
 
