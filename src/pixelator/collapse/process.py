@@ -505,15 +505,11 @@ def create_edgelist(
             upia = cluster_representative_fragment[umi_size:]
 
             # take the most common upib from the list
-            unique_upis = Counter(upis)
-            upib, _ = unique_upis.most_common(1)[0]
-
-            # count (number of molecules) is the number
-            # of upis in the umi-upia cluster
-            count = len(upis)
+            unique_upibs = Counter(upibs)
+            upib, _ = unique_upibs.most_common(1)[0]
 
             # update data array
-            yield (upia, upib, umi, count)
+            yield (upia, upib, umi, read_count)
 
     # create an edge list (pd.DataFrame) with the collapsed sequences
     df = pd.DataFrame(

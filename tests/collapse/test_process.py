@@ -105,7 +105,7 @@ def test_create_edgelist():
                     "umi": "HIJNO",
                     "marker": "CD4",
                     "sequence": "AAAAA",
-                    "count": 3,
+                    "count": 6,
                 },
                 {
                     "upia": "XXX",
@@ -439,7 +439,7 @@ def test_collapse_fastq_algorithm_adjacency_simulated_reads():
         assert data["upia"].nunique() == 1001
         assert data["upib"].nunique() == 1003
         assert data["umi"].nunique() == 9580
-        assert data["count"].describe()["mean"] == 9.857187370170337
+        assert data["count"].describe()["mean"] == 9.897174906522642
 
 
 def test_build_annoytree():
