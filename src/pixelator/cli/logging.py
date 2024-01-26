@@ -18,7 +18,6 @@ import click
 from numba import NumbaDeprecationWarning
 
 from pixelator.types import PathType
-from pixelator.utils import click_echo
 
 root_logger = logging.getLogger()
 pixelator_root_logger = logging.getLogger("pixelator")
@@ -231,6 +230,8 @@ class LoggingSetup:
 
         :param queue: the queue to read log messages from
         :param configure: the function to call to configure the logging
+        :raises Exception: if an unexpected error occurs
+            when handling log messages
         """
         configure()
 
@@ -247,8 +248,9 @@ class LoggingSetup:
             except Exception:
                 import traceback
 
-                click_echo("An unexpected error occurred in the log handler")
-                click_echo(traceback.format_exc())
+                print("An unexpected error occurred in the log handler")
+                print(traceback.format_exc())
+                raise
 
         logging.info("Logging process stopped.")
 
