@@ -339,8 +339,8 @@ def test_create_dynamic_report(tmp_path):
             ),
             summary_preqc=pd.Series({"too_short_reads": 10}),
             summary_demux=pd.Series({"input": 1000, "output": 900}),
-            summary_collapse=pd.Series({"input": 900}),
-            summary_annotate=pd.Series([1]),
+            summary_collapse=pd.Series({"input": 900, "output_umi": 200}),
+            summary_annotate=pd.Series({"umi": 50}),
             summary_graph=pd.Series(
                 {
                     "upia": 16358.0,
