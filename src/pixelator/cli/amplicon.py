@@ -5,6 +5,8 @@ Copyright (c) 2022 Pixelgen Technologies AB.
 """
 from __future__ import annotations
 
+import logging
+
 import click
 
 from pixelator.amplicon import amplicon_fastq
@@ -55,6 +57,13 @@ from pixelator.utils import (
         "without extension and read 1 identifier."
     ),
 )
+@click.option(
+    "--skip-input-checks",
+    default=False,
+    is_flag=True,
+    type=click.BOOL,
+    help="Skip all check on the filename of input fastq files.",
+)
 @output_option
 @design_option
 @click.pass_context
@@ -64,6 +73,7 @@ def amplicon(
     fastq_1: str,
     fastq_2: str | None,
     sample_name: str | None,
+    skip_input_checks: bool,
     output: str,
     design: str,
 ):
@@ -71,6 +81,8 @@ def amplicon(
     Process diverse raw pixel data (FASTQ) formats into common amplicon
     """
     # log input parameters
+
+    error_level = logging.WARNING if skip_input_checks else logging.ERROR
 
     log_step_start(
         "amplicon",
@@ -91,19 +103,29 @@ def amplicon(
     # - check if there are read 1 and read2 identifiers in the filename
     # - check if the sample name is the same for read1 and read2
     if not is_read_file(fastq_1, "r1"):
-        logger.warning("Read 1 file does not contain a recognised read 1 suffix.")
+        msg = "Read 1 file does not contain a recognised read 1 suffix."
+        logger.log(level=error_level, msg=msg)
+        if not skip_input_checks:
+            ctx.exit(1)
+
     if fastq_2 and not is_read_file(fastq_2, "r2"):
-        logger.warning("Read 2 file does not contain a recognised read 2 suffix.")
+        msg = "Read 2 file does not contain a recognised read 2 suffix."
+        logger.log(level=error_level, msg=msg)
+        if not skip_input_checks:
+            ctx.exit(1)
 
     r1_sample_name = get_read_sample_name(fastq_1)
     r2_sample_name = get_read_sample_name(fastq_2) if fastq_2 else None
 
     if fastq_2 and r1_sample_name != r2_sample_name:
-        logger.warning(
+        msg = (
             f"The sample name for read1 and read2 is different:\n"
             f'"{r1_sample_name}" vs "{r2_sample_name}"\n'
             "Did you pass the correct files?"
         )
+        logger.log(level=error_level, msg=msg)
+        if not skip_input_checks:
+            ctx.exit(1)
 
     sample_name = sample_name or r1_sample_name
     extension = get_extension(fastq_1)
