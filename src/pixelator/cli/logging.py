@@ -19,9 +19,6 @@ from numba import NumbaDeprecationWarning
 
 from pixelator.types import PathType
 
-root_logger = logging.getLogger()
-pixelator_root_logger = logging.getLogger("pixelator")
-
 
 # Silence deprecation warnings
 warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
@@ -41,9 +38,6 @@ logging.getLogger("numba").setLevel(logging.ERROR)
 # ------------------------------------------------------------
 # Click logging
 # ------------------------------------------------------------
-
-LOGGER_KEY = __name__ + ".logger"
-DEFAULT_LEVEL = logging.INFO
 
 
 class StyleDict(typing.TypedDict):
@@ -106,21 +100,23 @@ class ClickHandler(logging.Handler):
     Messages are forwarded to stdout using `click.echo`.
     """
 
-    def __init__(self, *args, use_stderr: bool = True, **kwargs):
+    def __init__(self, level: int = 0, use_stderr: bool = True):
         """Initialize the click handler.
 
+        :param level: The logging level.
         :param use_stderr: Log to sys.stderr instead of sys.stdout.
-        :param args: The arguments to pass to the base class.
-        :param kwargs: The keyword arguments to pass to base class.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(level=level)
         self._use_stderr = use_stderr
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Do whatever it takes to actually log the specified logging record."""
+        """Do whatever it takes to actually log the specified logging record.
+
+        :param record: The record to log.
+        """
         try:
             msg = self.format(record)
-            click.echo(msg, file=sys.stdout, err=self._use_stderr)
+            click.echo(msg, err=self._use_stderr)
         except Exception:
             self.handleError(record)
 
@@ -261,6 +257,8 @@ class LoggingSetup:
 
 def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
     """Handle "unhandled" exceptions."""
+    pixelator_root_logger = logging.getLogger("pixelator")
+
     if issubclass(exc_type, KeyboardInterrupt):
         # Will call default excepthook
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
