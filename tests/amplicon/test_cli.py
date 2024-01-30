@@ -3,7 +3,7 @@ Test the pixelator single-cell amplicon CLI.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
-
+import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -39,8 +39,10 @@ def test_fastq_valid_inputs(mocker, uropod_reads):
     runner = CliRunner()
 
     mocker.patch("pixelator.cli.amplicon.amplicon_fastq")
+    pwd = Path.cwd()
 
     with tempfile.TemporaryDirectory() as d:
+        os.chdir(d)
         cmd = runner.invoke(
             cli.main_cli,
             [
@@ -58,8 +60,10 @@ def test_fastq_valid_inputs(mocker, uropod_reads):
     assert cmd.exit_code == 0
     assert pixelator.cli.amplicon.amplicon_fastq.called
 
+    os.chdir(pwd)
 
-def test_fastq_swapped_read_input(mocker, uropod_reads):
+
+def test_fastq_swapped_read_input(mocker, uropod_reads, tmp_path):
     runner = CliRunner()
 
     mocker.patch("pixelator.cli.amplicon.amplicon_fastq")
