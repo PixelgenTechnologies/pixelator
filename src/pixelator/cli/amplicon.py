@@ -45,7 +45,7 @@ from pixelator.utils import (
     metavar="FASTQ_2",
 )
 @click.option(
-    "--sample_name",
+    "--sample-name",
     default=None,
     show_default=False,
     type=click.STRING,
