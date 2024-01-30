@@ -183,18 +183,23 @@ class AntibodyPanel:
         :param df: DataFrame with data of the panel to validate
         :returns pd.DataFrame: The in-place modified input dataframe
         """
-        df = df.copy()
+        new_df = df.copy()
 
         # update control and nuclear column to boolean
-        TR_TABLE = {"(?i)yes": "True", "(?i)no": "False"}
+        TR_TABLE = {"(?i)no": "False", "(?i)yes": "True"}
 
-        df["control"] = (
-            df["control"].replace(TR_TABLE, regex=True).fillna("False").astype(bool)
+        new_df.replace(
+            {
+                "control": TR_TABLE,
+                "nuclear": TR_TABLE,
+            },
+            regex=True,
+            inplace=True,
         )
-        df["nuclear"] = (
-            df["nuclear"].replace(TR_TABLE, regex=True).fillna("False").astype(bool)
-        )
-        return df
+        new_df.fillna({"control": "False", "nuclear": "False"}, inplace=True)
+        new_df["control"] = new_df["control"].map({"True": True, "False": False})
+        new_df["nuclear"] = new_df["nuclear"].map({"True": True, "False": False})
+        return new_df
 
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
