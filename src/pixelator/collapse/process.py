@@ -34,7 +34,7 @@ from pixelator.exception import FileFqGzEmpty
 from pixelator.types import PathType
 from pixelator.utils import gz_size
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("pixelator.collapse")
 
 np.random.seed(SEED)
 
@@ -111,7 +111,7 @@ def build_binary_data(seqs: list[str]) -> npt.NDArray[np.uint8]:
     return data
 
 
-def get_collapsed_fragments_for_component(
+def get_collapsed_fragments_for_component(  # noqa: DOC402,DOC404
     components: list[set[UniqueFragment]], counts: dict[UniqueFragment, int]
 ) -> Generator[CollapsedFragment, None, None]:
     """Take the representative sequence from a component based on its counts.
@@ -411,15 +411,6 @@ def filter_by_minimum_upib_count(
     """
     unique_reads = {k: v for k, v in unique_reads.items() if len(v) >= min_count}
     # in case there are no reads after filtering
-    if not unique_reads:
-        logger.warning(
-            (
-                "The input file %s does not any contain"
-                "reads after filtering by count >= %i"
-            ),
-            input,
-            min_count,
-        )
     return unique_reads
 
 
@@ -658,6 +649,14 @@ def collapse_fastq(
     if min_count and min_count > 1:
         unique_reads = filter_by_minimum_upib_count(unique_reads, min_count)
         if not unique_reads:
+            logger.warning(
+                (
+                    "The input file %s does not any contain"
+                    "reads after filtering by count >= %i"
+                ),
+                input_file,
+                min_count,
+            )
             return None
 
     if algorithm == "adjacency":

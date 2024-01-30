@@ -1,5 +1,4 @@
-"""
-Common functions and utilities for Pixelator
+"""Common functions and utilities for Pixelator.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -13,6 +12,8 @@ import logging
 import tempfile
 import textwrap
 import time
+import typing
+from concurrent import futures
 from functools import wraps
 from pathlib import Path, PurePath
 from typing import Any, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Union
@@ -37,9 +38,9 @@ _TRTABLE = str.maketrans("GTACN", "CATGN")
 def build_barcodes_file(
     panel: AntibodyPanel, anchored: bool, rev_complement: bool
 ) -> str:
-    """
-    Utility function to create a FASTA file of barcodes from a
-    panel dataframe. The FASTA file will have the marker id as
+    """Create a FASTA file of barcodes from a panel dataframe.
+
+    The FASTA file will have the marker id as
     name and the barcode sequence as sequence. The parameter
     rev_complement control if sequence needs to be in reverse
     complement form or not. When anchored is true a dollar sign
@@ -71,9 +72,7 @@ def build_barcodes_file(
 
 
 def click_echo(msg: str, multiline: bool = False):
-    """
-    Helper function that print a line to the console
-    with long-line wrapping.
+    """Print a line to the console with optional long-line wrapping.
 
     :param msg: the message to print
     :param multiline: True to use text wrapping or False otherwise (default)
@@ -85,10 +84,10 @@ def click_echo(msg: str, multiline: bool = False):
 
 
 def create_output_stage_dir(root: PathType, name: str) -> Path:
-    """
-    Create a new subfolder with `name` under the given `root` directory.
+    """Create a new subfolder with `name` under the given `root` directory.
 
-    :param root: the root directory
+    :param root: the parent directory
+    :param name: the name of the directory to create
     :returns: the created folder (Path)
     """
     output = Path(root) / name
@@ -98,8 +97,7 @@ def create_output_stage_dir(root: PathType, name: str) -> Path:
 
 
 def flatten(list_of_collections: List[Union[List, Set]]) -> List:
-    """
-    Flattens a list of lists or list of sets.
+    """Flattens a list of lists or list of sets.
 
     :param list_of_collections: list of lists or list of sets
     :returns: list containing flattened items
@@ -108,19 +106,19 @@ def flatten(list_of_collections: List[Union[List, Set]]) -> List:
 
 
 def get_extension(filename: PathType, len_ext: int = 2) -> str:
-    """
-    Utility function to extract file extensions.
+    """Extract file extensions from a filename.
 
     :param filename: the file name
-    :param len: the extension length
+    :param len_ext: the number of expected extensions parts
+        e.g.: fq.gz gives len_ext=2
     :returns: the file extension (str)
     """
     return "".join(PurePath(filename).suffixes[-len_ext:]).lstrip(".")
 
 
 def get_sample_name(filename: PathType) -> str:
-    """
-    Extract the sample name from a sample's filename.
+    """Extract the sample name from a sample's filename.
+
     The sample name is expected to be from the start of the filename until
     the first dot.
 
@@ -133,8 +131,7 @@ def get_sample_name(filename: PathType) -> str:
 def group_input_reads(
     inputs: Sequence[PathType], input1_pattern: str, input2_pattern: str
 ) -> Dict[str, List[Path]]:
-    """
-    Group input files by read pairs and sample id
+    """Group input files by read pairs and sample id.
 
     :param inputs: list of input files
     :param input1_pattern: pattern to match read1 files
@@ -181,10 +178,9 @@ def group_input_reads(
 
 
 def gz_size(filename: str) -> int:
-    """
-    Extract the size of a gzip compressed file.
+    """Extract the size of a gzip compressed file.
 
-    :param fname: file name
+    :param filename: file name
     :returns: size of the file uncompressed (in bits)
     """
     with gzip.open(filename, "rb") as f:
@@ -197,15 +193,13 @@ def log_step_start(
     output: Optional[str] = None,
     **kwargs,
 ) -> None:
-    """
-    Utility function to add information about the start of a
-    pixelator step to the logs
+    """Add information about the start of a pixelator step to the logs.
 
     :param step_name: name of the step that is starting
-    :param input_files: optional collection of input file paths
+    :param input_files: collection of input file paths
     :param output: optional path to output
-    :param kwargs: any additional parameters that you wish to log
-    :returns: None
+    :param **kwargs: any additional parameters that you wish to log
+    :rtype: None
     """
     logger.info("Start pixelator %s %s", step_name, __version__)
 
@@ -221,19 +215,13 @@ def log_step_start(
 
 
 def np_encoder(object: Any):
-    """
-    A very simple encoder to allow JSON serialization
-    of numpy data types
-    """
+    """Encoder for JSON serialization of numpy data types."""  # noqa: D401
     if isinstance(object, np.generic):
         return object.item()
 
 
 def remove_csv_whitespaces(df: pd.DataFrame) -> None:
-    """
-    Utility function to remove leading and trailing
-    blank spaces from csv files slurped by pandas
-    """
+    """Remove leading and trailing blank spaces from csv files slurped by pandas."""
     # fill NaNs as empty strings to be able to do `.str`
     df.fillna("", inplace=True)
     df.columns = df.columns.str.strip()
@@ -242,11 +230,11 @@ def remove_csv_whitespaces(df: pd.DataFrame) -> None:
 
 
 def reverse_complement(seq: str) -> str:
-    """
-    Helper function to compute the reverse complement of a DNA seq
+    """Compute the reverse complement of a DNA seq.
 
     :param seq: the DNA sequence
-    :returns: the reverse complement of the input sequence
+    :return: the reverse complement of the input sequence
+    :rtype: str
     """
     return seq.translate(_TRTABLE)[::-1]
 
@@ -255,14 +243,13 @@ def sanity_check_inputs(
     input_files: Sequence[PathType],
     allowed_extensions: Union[Sequence[str], Optional[str]] = None,
 ) -> None:
-    """
-    Perform basic sanity checking of input files
+    """Perform basic sanity checking of input files.
 
     :param input_files: the files to sanity check
     :param allowed_extensions: the expected file extension of the files, e.g. 'fastq.gz'
                                or a tuple of allowed types eg. ('fastq.gz', 'fq.gz')
-    :returns: None
     :raises AssertionError: when any of validation fails
+    :returns None:
     """
     for input_file in input_files:
         input_file = Path(input_file)
@@ -290,13 +277,14 @@ def sanity_check_inputs(
             )
 
 
-def single_value(xs: Union[List, Set]) -> Any:
-    """
-    Extract the first value in a List or Set if the
-    collection has a single value.
+T = typing.TypeVar("T")
+
+
+def single_value(xs: Union[List[T], Set[T]]) -> T:
+    """Extract the first value in a List or Set if the collection has a single value.
 
     :param xs: a collection of values
-    :returns: the first value in the collection
+    :returns T: the first value in the collection
     :raises AssertionError: if the collection is empty or has more than one value
     """
     if len(xs) == 0:
@@ -307,9 +295,7 @@ def single_value(xs: Union[List, Set]) -> Any:
 
 
 def timer(func):
-    """
-    Function decorator used to time the different steps
-    """
+    """Time the different steps of a function."""
 
     @wraps(func)
     def wrapper(*args, **kwds):
@@ -324,14 +310,12 @@ def timer(func):
 
 def write_parameters_file(
     click_context: click.Context, output_file: Path, command_path: Optional[str] = None
-):
-    """
-    Write the parameters used in for a command to a JSON file
+) -> None:
+    """Write the parameters used in for a command to a JSON file.
 
     :param click_context: the click context object
     :param output_file: the output file
     :param command_path: the command to use as command name
-    :returns: None
     """
     command_path_fixed = command_path or click_context.command_path
     parameters = click_context.command.params
@@ -361,3 +345,18 @@ def write_parameters_file(
 
     with open(output_file, "w") as fh:
         json.dump(data, fh, indent=4)
+
+
+def get_process_pool_executor(ctx, **kwargs):
+    """Return a process pool with some default settings.
+
+    The number of cores will be set to the number of cores available from the click ctx.
+    The multiprocess logger will be initialized in each worker process.
+
+    :args ctx: click context object
+    :kwargs: additional kwargs to pass to the ProcessPoolExecutor constructor
+    """
+    return futures.ProcessPoolExecutor(
+        max_workers=ctx.obj["CORES"],
+        **kwargs,
+    )

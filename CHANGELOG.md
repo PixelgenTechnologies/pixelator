@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
 * Fix a bug in how discarded UMIs are calculated and reported.
 * Fix deflated counts in the edgelist after collapse.
+* Improved console output in verbose mode.
+* Improved logging from multiprocessing jobs.
 
 ## [0.16.1] - 2024-01-12
 

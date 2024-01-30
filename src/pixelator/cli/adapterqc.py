@@ -10,9 +10,9 @@ import click
 from pixelator.cli.common import design_option, logger, output_option
 from pixelator.qc import adapter_qc_fastq
 from pixelator.utils import (
-    click_echo,
     create_output_stage_dir,
     get_extension,
+    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -81,11 +81,10 @@ def adapterqc(
     adapterqc_output = create_output_stage_dir(output, "adapterqc")
 
     # run cutadapt (adapter mode) using parallel processing
-    with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
+    with get_process_pool_executor(ctx) as executor:
         jobs = []
         for fastq_file in input_files:
             msg = f"Processing {fastq_file} with cutadapt (adapter mode)"
-            click_echo(msg, multiline=False)
             logger.info(msg)
 
             clean_name = get_sample_name(fastq_file)

@@ -4,13 +4,14 @@ Tests for utility functions for the pixelator package
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
 import logging
+import tempfile
+from concurrent.futures import ProcessPoolExecutor
 from gzip import BadGzipFile
-from tempfile import NamedTemporaryFile
 
 import pytest
 
 from pixelator import __version__
-from pixelator.cli.common import init_logger
+from pixelator.cli.logging import LoggingSetup
 from pixelator.utils import (
     gz_size,
     log_step_start,
@@ -96,11 +97,52 @@ def test_timer(caplog):
 
 
 def test_verbose_logging_is_activated():
-    with NamedTemporaryFile() as test_log_file:
-        init_logger(log_file=test_log_file.name, verbose=True)
-
-        root_logger = logging.getLogger("pixelator")
+    test_log_file = tempfile.NamedTemporaryFile()
+    with LoggingSetup(test_log_file.name, verbose=True):
+        root_logger = logging.getLogger()
         assert root_logger.getEffectiveLevel() == logging.DEBUG
 
-        init_logger(log_file=test_log_file.name, verbose=False)
+
+def test_verbose_logging_is_deactivated():
+    test_log_file = tempfile.NamedTemporaryFile()
+    with LoggingSetup(test_log_file.name, verbose=False):
+        root_logger = logging.getLogger()
         assert root_logger.getEffectiveLevel() == logging.INFO
+
+
+def helper_log_fn(args):
+    import logging
+
+    root_logger = logging.getLogger()
+    root_logger.log(*args)
+
+
+@pytest.mark.parametrize("verbose", [True, False])
+def test_multiprocess_logging(verbose):
+    """Test that logging works in a multiprocess environment."""
+    test_log_file = tempfile.NamedTemporaryFile()
+
+    with LoggingSetup(test_log_file.name, verbose=verbose):
+        tasks = [
+            (logging.DEBUG, "This is a debug message"),
+            (logging.INFO, "This is an info message"),
+            (logging.WARNING, "This is a warning message"),
+            (logging.ERROR, "This is an error message"),
+            (logging.CRITICAL, "This is a critical message"),
+        ]
+
+        with ProcessPoolExecutor(max_workers=4) as executor:
+            for r in executor.map(helper_log_fn, tasks):
+                pass
+
+    # Test that the console output has the expected messages
+    with open(test_log_file.name, "r") as f:
+        log_content = f.read()
+
+        if verbose:
+            assert "This is a debug message" in log_content
+
+        assert "This is an info message" in log_content
+        assert "This is a warning message" in log_content
+        assert "This is an error message" in log_content
+        assert "This is a critical message" in log_content

@@ -8,15 +8,19 @@ from concurrent import futures
 
 import click
 
-from pixelator.cli.common import design_option, logger, output_option
+from pixelator.cli.common import (
+    design_option,
+    logger,
+    output_option,
+)
 from pixelator.config import config
 from pixelator.config.panel import load_antibody_panel
 from pixelator.demux import demux_fastq
 from pixelator.utils import (
     build_barcodes_file,
-    click_echo,
     create_output_stage_dir,
     get_extension,
+    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -145,12 +149,10 @@ def demux(
     )
 
     # run cutadapt (demux mode) using parallel processing
-    with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
+    with get_process_pool_executor(ctx) as executor:
         jobs = []
         for fastq_file in input_files:
-            msg = f"Processing {fastq_file} with cutadapt (demux mode)"
-            click_echo(msg, multiline=False)
-            logger.info(msg)
+            logger.info(f"Processing {fastq_file} with cutadapt (demux mode)")
 
             name = get_sample_name(fastq_file)
             extension = get_extension(fastq_file)
