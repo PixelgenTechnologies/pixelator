@@ -4,8 +4,6 @@ Console script for pixelator (demux)
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
 
-from concurrent import futures
-
 import click
 
 from pixelator.cli.common import (
@@ -20,7 +18,6 @@ from pixelator.utils import (
     build_barcodes_file,
     create_output_stage_dir,
     get_extension,
-    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -35,11 +32,11 @@ from pixelator.utils import (
     options_metavar="<options>",
 )
 @click.argument(
-    "input_files",
-    nargs=-1,
+    "fastq_file",
+    nargs=1,
     required=True,
     type=click.Path(exists=True),
-    metavar="FASTQ_FILES",
+    metavar="FASTQ",
 )
 @click.option(
     "--mismatches",
@@ -93,7 +90,7 @@ from pixelator.utils import (
 @timer
 def demux(
     ctx,
-    input_files,
+    fastq_file,
     mismatches,
     min_length,
     panel,
@@ -106,6 +103,7 @@ def demux(
     Demultiplex Molecular Pixelation data (FASTQ) to generate one file per antibody
     """
     # log input parameters
+    input_files = [fastq_file]
     log_step_start(
         "demux",
         input_files=input_files,
@@ -149,39 +147,29 @@ def demux(
     )
 
     # run cutadapt (demux mode) using parallel processing
-    with get_process_pool_executor(ctx) as executor:
-        jobs = []
-        for fastq_file in input_files:
-            logger.info(f"Processing {fastq_file} with cutadapt (demux mode)")
+    logger.info(f"Processing {fastq_file} with cutadapt (demux mode)")
 
-            name = get_sample_name(fastq_file)
-            extension = get_extension(fastq_file)
-            output_file = demux_output / f"{name}.processed-{{name}}.{extension}"
-            failed_file = demux_output / f"{name}.failed.{extension}"
-            json_file = demux_output / f"{name}.report.json"
+    name = get_sample_name(fastq_file)
+    extension = get_extension(fastq_file)
+    output_file = demux_output / f"{name}.processed-{{name}}.{extension}"
+    failed_file = demux_output / f"{name}.failed.{extension}"
+    json_file = demux_output / f"{name}.report.json"
 
-            write_parameters_file(
-                ctx,
-                demux_output / f"{name}.meta.json",
-                command_path="pixelator single-cell demux",
-            )
+    write_parameters_file(
+        ctx,
+        demux_output / f"{name}.meta.json",
+        command_path="pixelator single-cell demux",
+    )
 
-            jobs.append(
-                executor.submit(
-                    demux_fastq,
-                    input=str(fastq_file),
-                    output=str(output_file),
-                    failed=str(failed_file),
-                    report=str(json_file),
-                    panel=panel,
-                    mismatches=mismatches,
-                    barcodes=barcodes,
-                    min_length=min_length,
-                    cores=0,  # cutadapt will choose the optimal number
-                    verbose=ctx.obj["VERBOSE"],
-                )
-            )
-
-        for job in futures.as_completed(jobs):
-            if job.exception() is not None:
-                raise job.exception()
+    demux_fastq(
+        input=str(fastq_file),
+        output=str(output_file),
+        failed=str(failed_file),
+        report=str(json_file),
+        panel=panel,
+        mismatches=mismatches,
+        barcodes=barcodes,
+        min_length=min_length,
+        cores=0,  # cutadapt will choose the optimal number
+        verbose=ctx.obj["VERBOSE"],
+    )

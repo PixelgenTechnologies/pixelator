@@ -379,7 +379,8 @@ def get_read_sample_name(read: str) -> str:
     if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
         raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
 
-    read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
+    read_stem = Path(read).name
+    read_stem = read_stem.removesuffix(get_extension(read_stem, 2)).rstrip(".")
     matches = re.findall(R"(.[Rr][12]|(_[Rr]?[12]))", read_stem)
     if len(matches) != 1:
         raise ValueError("Invalid R1/R2 suffix.")
@@ -387,3 +388,41 @@ def get_read_sample_name(read: str) -> str:
     pattern, pos = matches[0]
     sample_name = read_stem.replace(pattern, "")
     return sample_name
+
+
+def is_r1_read_file(read: str) -> bool:
+    """Check if a read file is a read 1 file.
+
+    :param read: filename of a fastq read file
+    :return bool: True if the read file is a read 1 file
+    :raise ValueError: if the read file does not have a valid extension
+    """
+    if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
+        raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
+
+    read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
+    matches = re.findall(R"(.[Rr]1|(_[Rr]?1))", read_stem)
+
+    if len(matches) != 1:
+        return False
+
+    return True
+
+
+def is_r2_read_file(read: str) -> bool:
+    """Check if a read file is a read 2 file.
+
+    :param read: filename of a fastq read file
+    :return bool: True if the read file is a read 1 file
+    :raise ValueError: if the read file does not have a valid extension
+    """
+    if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
+        raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
+
+    read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
+    matches = re.findall(R"(.[Rr]2|(_[Rr]?2))", read_stem)
+
+    if len(matches) != 1:
+        return False
+
+    return True

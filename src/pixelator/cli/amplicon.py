@@ -17,6 +17,8 @@ from pixelator.utils import (
     create_output_stage_dir,
     get_extension,
     get_read_sample_name,
+    is_r1_read_file,
+    is_r2_read_file,
     log_step_start,
     sanity_check_inputs,
     timer,
@@ -86,7 +88,25 @@ def amplicon(
     # create output folder if it does not exist
     amplicon_output = create_output_stage_dir(output, "amplicon")
 
-    sample_name = sample_name or get_read_sample_name(fastq_1)
+    # Some checks on the input files
+    # - check if there are read 1 and read2 identifiers in the filename
+    # - check if the sample name is the same for read1 and read2
+    if not is_r1_read_file(fastq_1):
+        logger.warning("Read 1 file does not contain a recognised read 1 suffix.")
+    if fastq_2 and not is_r2_read_file(fastq_2):
+        logger.warning("Read 2 file does not contain a recognised read 2 suffix.")
+
+    r1_sample_name = get_read_sample_name(fastq_1)
+    r2_sample_name = get_read_sample_name(fastq_2) if fastq_2 else None
+
+    if fastq_2 and r1_sample_name != r2_sample_name:
+        logger.warning(
+            f"The sample name for read1 and read2 is different:\n"
+            f'"{r1_sample_name}" vs "{r2_sample_name}"\n'
+            "Did you pass the correct files?"
+        )
+
+    sample_name = sample_name or r1_sample_name
     extension = get_extension(fastq_1)
     output_file = amplicon_output / f"{sample_name}.merged.{extension}"
     json_file = amplicon_output / f"{sample_name}.report.json"
