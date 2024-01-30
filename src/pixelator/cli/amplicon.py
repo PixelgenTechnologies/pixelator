@@ -17,8 +17,7 @@ from pixelator.utils import (
     create_output_stage_dir,
     get_extension,
     get_read_sample_name,
-    is_r1_read_file,
-    is_r2_read_file,
+    is_read_file,
     log_step_start,
     sanity_check_inputs,
     timer,
@@ -91,9 +90,9 @@ def amplicon(
     # Some checks on the input files
     # - check if there are read 1 and read2 identifiers in the filename
     # - check if the sample name is the same for read1 and read2
-    if not is_r1_read_file(fastq_1):
+    if not is_read_file(fastq_1, "r1"):
         logger.warning("Read 1 file does not contain a recognised read 1 suffix.")
-    if fastq_2 and not is_r2_read_file(fastq_2):
+    if fastq_2 and not is_read_file(fastq_2, "r2"):
         logger.warning("Read 2 file does not contain a recognised read 2 suffix.")
 
     r1_sample_name = get_read_sample_name(fastq_1)

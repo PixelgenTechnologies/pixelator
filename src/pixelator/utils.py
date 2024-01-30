@@ -17,7 +17,17 @@ import typing
 from concurrent import futures
 from functools import wraps
 from pathlib import Path, PurePath
-from typing import Any, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    TYPE_CHECKING,
+    Union,
+    Literal,
+)
 
 import click
 import numpy as np
@@ -390,37 +400,29 @@ def get_read_sample_name(read: str) -> str:
     return sample_name
 
 
-def is_r1_read_file(read: str) -> bool:
-    """Check if a read file is a read 1 file.
+def is_read_file(read: str, read_type: Literal["r1"] | Literal["r2"]) -> bool:
+    """Check if a read filename matches the specified read_type.
+
+    Detects the presence of a common read 1 or read 2 suffix in the filename.
 
     :param read: filename of a fastq read file
-    :return bool: True if the read file is a read 1 file
+    :param read_type: the read type to check for (r1 or r2)
+    :return bool: True if the read file is a read 1 or 2 file
     :raise ValueError: if the read file does not have a valid extension
+    :raise AssertionError: if the read_type is not 'r1' or 'r2'
     """
     if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
         raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
 
-    read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
-    matches = re.findall(R"(.[Rr]1|(_[Rr]?1))", read_stem)
-
-    if len(matches) != 1:
-        return False
-
-    return True
-
-
-def is_r2_read_file(read: str) -> bool:
-    """Check if a read file is a read 2 file.
-
-    :param read: filename of a fastq read file
-    :return bool: True if the read file is a read 1 file
-    :raise ValueError: if the read file does not have a valid extension
-    """
-    if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
-        raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
-
-    read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
-    matches = re.findall(R"(.[Rr]2|(_[Rr]?2))", read_stem)
+    matches = []
+    if read_type == "r1":
+        read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
+        matches = re.findall(R"(.[Rr]1|(_[Rr]?1))", read_stem)
+    elif read_type == "r2":
+        read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
+        matches = re.findall(R"(.[Rr]2|(_[Rr]?2))", read_stem)
+    else:
+        raise AssertionError("Invalid read type: expected 'r1' or 'r2'")
 
     if len(matches) != 1:
         return False
