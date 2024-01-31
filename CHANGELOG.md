@@ -10,9 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Performance improvements and reduced bundle size in QC report.
-* Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
-* Fix a bug in how discarded UMIs are calculated and reported.
-* Fix deflated counts in the edgelist after collapse.
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.
 * Improved runtime for graph synthesis.
@@ -23,12 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Pixeldatasets are now written to disk without creating intermediate files on-disk.
 * A nice string representation for the `Graph` class, to let you know how many nodes and edges there are in the
   current graph object instance.
+* Metric to collect molecules (edges) in cells with outlier distributions of antibodies (aggregates).
 
 ### Changed
 
 * The output name of the `.pxl` file from the `annotate` step is now `*.annotated.dataset.pxl`
 * The output name of the `.pxl` file from the `analysis` step is now `*.analysis.dataset.pxl`
-
 
 ### Removed
 
@@ -40,6 +37,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Fix bug where an `r1` or `r2` in the directory part of a read file would break file
   name sanity checks.
+
+### Changed
+
+* Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
+
+### Fixed
+
+* Fix a bug in how discarded UMIs are calculated and reported.
+* Fix deflated counts in the edgelist after collapse.
+
 
 ## [0.16.1] - 2024-01-12
 
@@ -86,6 +93,7 @@ This release introduces two major change in pixelator:
 
 * `graph` no longer outputs the raw edge list.
 * igraph has been dropped as a graph backend for pixelator.
+
 
 ## [0.15.2] - 2023-10-23
 
