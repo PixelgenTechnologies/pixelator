@@ -68,7 +68,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     @staticmethod
     def _build_plain_graph_from_edgelist(
-        df: pl.LazyFrame,
+        df: pl.DataFrame,
         create_using: Union[nx.Graph, nx.MultiGraph],
     ) -> Union[nx.Graph, nx.MultiGraph]:
         g = nx.empty_graph(0, create_using)
@@ -77,29 +77,25 @@ class NetworkXGraphBackend(GraphBackend):
         # here. If it is needed or not seems to depend on the
         # exact call context, so it might be that we can actually
         # enable it again here and improve the memory usage.
-        for idx, row in enumerate(
-            df.collect(streaming=True, projection_pushdown=False).iter_rows(
-                named=False, buffer_size=1000
-            )
-        ):
+        for idx, row in enumerate(df.iter_rows(named=False, buffer_size=1000)):
             g.add_edge(row[0], row[1], index=idx)
         return g
 
     @staticmethod
     def _build_graph_with_node_counts_from_edgelist(
-        df: pl.LazyFrame,
+        df: pl.DataFrame,
         create_using: Union[nx.Graph, nx.MultiGraph],
     ) -> Union[nx.Graph, nx.MultiGraph]:
-        unique_markers = set(df.unique("marker").collect()["marker"].to_list())
+        unique_markers = set(df.select("marker").unique()["marker"].to_list())
         initial_marker_dict = {marker: 0 for marker in unique_markers}
 
         g: nx.Graph = nx.empty_graph(0, create_using)
 
         for idx, row in enumerate(
             (
-                df.select(["upia", "upib", "marker"])
-                .collect(streaming=True)
-                .iter_rows(named=False, buffer_size=1000)
+                df.select(["upia", "upib", "marker"]).iter_rows(
+                    named=False, buffer_size=1000
+                )
             )
         ):
             # We are duplicating code here, since it gives
@@ -159,11 +155,12 @@ class NetworkXGraphBackend(GraphBackend):
     def _build_graph_with_marker_counts(
         edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
     ) -> Union[nx.Graph, nx.MultiGraph]:
+        edgelist_cl = edgelist.select(["upia", "upib", "marker"]).collect()
         graph = NetworkXGraphBackend._build_graph_with_node_counts_from_edgelist(
-            edgelist,
+            edgelist_cl,
             create_using=nx.Graph if simplify else nx.MultiGraph,
         )
-        a_nodes = set(edgelist.select(["upia"]).unique().collect()["upia"].to_list())
+        a_nodes = set(edgelist_cl.select(["upia"]).unique()["upia"].to_list())
         NetworkXGraphBackend._add_node_attributes(graph, a_nodes)
         if use_full_bipartite:
             return graph
@@ -173,11 +170,12 @@ class NetworkXGraphBackend(GraphBackend):
     def _build_plain_graph(
         edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
     ) -> Union[nx.Graph, nx.MultiGraph]:
+        edgelist_cl = edgelist.select(["upia", "upib"]).collect()
         graph = NetworkXGraphBackend._build_plain_graph_from_edgelist(
-            edgelist.select(pl.col("upia"), pl.col("upib")),
+            edgelist_cl,
             create_using=nx.Graph if simplify else nx.MultiGraph,
         )
-        a_nodes = set(edgelist.select(["upia"]).unique().collect()["upia"].to_list())
+        a_nodes = set(edgelist_cl.select(["upia"]).unique()["upia"].to_list())
         NetworkXGraphBackend._add_node_attributes(graph, a_nodes)
         if use_full_bipartite:
             return graph
