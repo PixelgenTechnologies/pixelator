@@ -10,17 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Performance improvements and reduced bundle size in QC report.
-* Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
-* Fix a bug in how discarded UMIs are calculated and reported.
-* Fix deflated counts in the edgelist after collapse.
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.
+* Metric to collet molecules (edges) in cells with outlier distributions of antibodies (aggregates).
+
+### Changed
+
+* Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
+
+### Fixed
+
+* Fix a bug in how discarded UMIs are calculated and reported.
+* Fix deflated counts in the edgelist after collapse.
+
 
 ## [0.16.1] - 2024-01-12
 
 ### Fixed
 
 * Bug in README shield formatting
+
 
 ## [0.16.0] - 2024-01-12
 
@@ -60,6 +69,7 @@ This release introduces two major change in pixelator:
 
 * `graph` no longer outputs the raw edge list.
 * igraph has been dropped as a graph backend for pixelator.
+
 
 ## [0.15.2] - 2023-10-23
 
