@@ -10,26 +10,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Performance improvements and reduced bundle size in QC report.
-* Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
-* Fix a bug in how discarded UMIs are calculated and reported.
-* Fix deflated counts in the edgelist after collapse.
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.
 * Improved runtime for graph synthesis.
 * Added PMDS layout algorithm.
-* Remove multi-sample processing from all `single-cell` subcommands
 * Add `--sample_name` option to `single-cell amplicon` to overwrite the name derived from the input filename.
 * Add `--skip-input-checks` option to `single-cell amplicon` to make input filename checks warnings instead of errors.
+* Metric to collect molecules (edges) in cells with outlier distributions of antibodies (aggregates).
 
 ### Removed
 
+* Remove multi-sample processing from all `single-cell` subcommands
 * Remove `--input1_pattern` and `--input2_pattern` from `single-cell amplicon` command.
+
+### Changed
+
+* Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
+
+### Fixed
+
+* Fix a bug in how discarded UMIs are calculated and reported.
+* Fix deflated counts in the edgelist after collapse.
 
 ## [0.16.1] - 2024-01-12
 
 ### Fixed
 
 * Bug in README shield formatting
+
 
 ## [0.16.0] - 2024-01-12
 
@@ -69,6 +77,7 @@ This release introduces two major change in pixelator:
 
 * `graph` no longer outputs the raw edge list.
 * igraph has been dropped as a graph backend for pixelator.
+
 
 ## [0.15.2] - 2023-10-23
 
