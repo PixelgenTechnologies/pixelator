@@ -521,6 +521,7 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics["cells_filtered"] = adata.n_obs
         metrics["total_markers"] = adata.n_vars
         metrics["total_umis"] = adata.obs["umi"].sum()
+        metrics["total_edges"] = adata.obs["edges"].sum()
         metrics["total_reads_cell"] = adata.obs["reads"].sum()
         metrics["median_reads_cell"] = adata.obs["reads"].median()
         metrics["mean_reads_cell"] = adata.obs["reads"].mean()
@@ -551,7 +552,10 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
                 adata.obs["tau_type"]
             )
             metrics["reads_of_aggregates"] = adata[aggregates_mask].obs["reads"].sum()
-            metrics["umis_of_aggregates"] = adata[aggregates_mask].obs["umi"].sum()
+            metrics["edges_of_aggregates"] = adata[aggregates_mask].obs["edges"].sum()
+            metrics["edges_fraction_of_aggregates"] = round(
+                metrics["edges_of_aggregates"] / metrics["total_edges"], 2
+            )
 
         if "min_size_threshold" in adata.uns:
             metrics["minimum_size_threshold"] = adata.uns["min_size_threshold"]
