@@ -366,8 +366,8 @@ def test_create_dynamic_report(tmp_path):
                 {
                     "total_umis": 5,
                     "total_reads_cell": 1000,
-                    "reads_of_aggregates": 1,
-                    "umis_of_aggregates": 3,
+                    "reads_in_aggregates": 1,
+                    "umis_in_aggregates": 3,
                     "cells_filtered": 10,
                     "mean_reads_cell": 10,
                     "mean_umi_cell": 11,
