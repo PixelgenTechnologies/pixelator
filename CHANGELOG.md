@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fix deflated counts in the edgelist after collapse.
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.
+* Improved runtime for graph synthesis.
 * Added PMDS layout algorithm.
 * Remove multi-sample processing from all `single-cell` subcommands
 * Add `--sample_name` option to `single-cell amplicon` to overwrite the name derived from the input filename.
