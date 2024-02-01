@@ -1,5 +1,4 @@
-"""
-Marker panel management for different Molecular Pixelation assays
+"""Marker panel management for different Molecular Pixelation assays.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -8,7 +7,7 @@ from __future__ import annotations
 import warnings
 from functools import cached_property
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 import pandas as pd
 import pydantic
@@ -19,16 +18,20 @@ from pixelator.types import PathType
 from pixelator.utils import logger
 
 
+if TYPE_CHECKING:
+    from pixelator.config import Config
+
+
 class AntibodyPanelMetadata(pydantic.BaseModel, extra=Extra.allow):  # type: ignore
+    """Class representing the metadata of a Molecular Pixelation antibody panel."""
+
     version: Optional[str]
     name: Optional[str]
     description: Optional[str]
 
 
 class AntibodyPanel:
-    """
-    Class representing a Molecular Pixelation antibody panel.
-    """
+    """Class representing a Molecular Pixelation antibody panel."""
 
     # required columns
     _REQUIRED_COLUMNS = [
@@ -51,8 +54,7 @@ class AntibodyPanel:
         metadata: AntibodyPanelMetadata,
         file_name: Optional[str] = None,
     ) -> None:
-        """
-        Load a panel from a dataframe and metadata.
+        """Load a panel from a dataframe and metadata.
 
         :param df: The dataframe containing the panel information.
         :param metadata: The metadata for the panel.
@@ -77,8 +79,12 @@ class AntibodyPanel:
 
     @classmethod
     def from_csv(cls, filename: PathType) -> "AntibodyPanel":
-        """
-        Create a AntibodyPanel from a csv panel file
+        """Create an AntibodyPanel from a csv panel file.
+
+        :param filename: The path to the panel file.
+        :returns: The AntibodyPanel object.
+        :raises AssertionError: exception if panel file is missing,
+        :rtype: AntibodyPanel
         """
         panel_file = Path(filename)
 
@@ -98,26 +104,24 @@ class AntibodyPanel:
 
     @property
     def name(self) -> Optional[str]:
-        """
-        The name defined in the panel metadata
-        """
+        """The name defined in the panel metadata."""
         return self._metadata.name
 
     @property
     def version(self) -> Optional[str]:
-        """Return the panel file version"""
+        """Return the panel file version."""
         return self._metadata.version
 
     @property
     def description(self) -> Optional[str]:
-        """Return the panel file description"""
+        """Return the panel file description."""
         return self._metadata.description
 
     @classmethod
-    def validate_antibody_panel(self, panel_df: pd.DataFrame) -> List[str]:
-        """
-        Will perform validation on a antibody panel file, trying to find
-        as many issues as possible.
+    def validate_antibody_panel(self, panel_df: pd.DataFrame) -> list[str]:
+        """Perform validation on an antibody panel file.
+
+        Will try to find as many issues as possible.
 
         This will not directly raise the issue (since that makes it difficult
         to find multiple problems at once) instead it will return a list of str
@@ -131,7 +135,7 @@ class AntibodyPanel:
         ````
 
         :param panel_df: DataFrame with data of the panel to validate
-        :returns: a list of errors (str)
+        :returns list[str]: a list of errors (str)
         """
         errors = []
 
@@ -154,7 +158,6 @@ class AntibodyPanel:
 
     @classmethod
     def _parse_panel(cls, panel_file: Path) -> pd.DataFrame:
-        """"""
         panel = pd.read_csv(str(panel_file), comment="#")
 
         # validate the panel
@@ -174,30 +177,35 @@ class AntibodyPanel:
         return panel.copy()
 
     @classmethod
-    def _transform_legacy_panels(cls, df):
-        """
-        Transform legacy panels to the new format
+    def _transform_legacy_panels(cls, df: pd.DataFrame) -> pd.DataFrame:
+        """Transform legacy panels to the new format.
 
         :param df: DataFrame with data of the panel to validate
-        :returns: The in-place modified input dataframe
+        :returns pd.DataFrame: The in-place modified input dataframe
         """
-        df = df.copy()
+        new_df = df.copy()
 
         # update control and nuclear column to boolean
-        TR_TABLE = {"(?i)yes": True, "(?i)no": False}
+        TR_TABLE = {"(?i)no": "False", "(?i)yes": "True"}
 
-        df["control"] = df["control"].replace(TR_TABLE, regex=True)
-        df["control"] = df["control"].fillna(False)
-        df["nuclear"] = df["nuclear"].replace(TR_TABLE, regex=True)
-        df["nuclear"] = df["nuclear"].fillna(False)
-
-        return df
+        new_df.replace(
+            {
+                "control": TR_TABLE,
+                "nuclear": TR_TABLE,
+            },
+            regex=True,
+            inplace=True,
+        )
+        new_df.fillna({"control": "False", "nuclear": "False"}, inplace=True)
+        new_df["control"] = new_df["control"].map({"True": True, "False": False})
+        new_df["nuclear"] = new_df["nuclear"].map({"True": True, "False": False})
+        return new_df
 
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
-        """
-        Parse front-matter YAML from a file.
+        """Parse front-matter YAML from a file.
 
+        :param file: the file to parse
         :return AntibodyPanelMetadata: a pydantic model with the metadata
         """
         yaml_loader = yaml.YAML(typ="safe")
@@ -222,55 +230,43 @@ class AntibodyPanel:
 
     @cached_property
     def markers_control(self) -> List[str]:
-        """
-        List[str]: list of marker control (names)
-        """
+        """Return a list of marker control (names)."""
         return list(self._df[self._df["control"]].marker_id.unique())
 
     @cached_property
     def markers(self) -> List[str]:
-        """
-        List[str]: list of unique markers
-        """
+        """Return the list of unique markers in the panel."""
         return list(self._df.marker_id.unique())
 
     @property
     def df(self) -> pd.DataFrame:
-        """
-        pd.DataFrame: the panel dataframe
-        """
+        """Return the panel dataframe."""
         return self._df
 
     @property
     def filename(self) -> Optional[str]:
-        """
-        str: filename of the marker panel
-        """
+        """Return the filename of the marker panel."""
         return self._filename
 
     @cached_property
     def size(self) -> int:
-        """
-        int: size of the marker panel
-        """
+        """Return the size of the marker panel."""
         return self._df.shape[0]
 
     def get_marker_id(self, seq: str) -> str:
-        """
-        str: the marker name
-        """
+        """Return the marker name."""
         return self._df.loc[seq].marker_id
 
 
-def load_antibody_panel(config, panel: PathType) -> AntibodyPanel:
-    """
-    Utility function to load an antibody panel from a file or from the config file.
+def load_antibody_panel(config: Config, panel: PathType) -> AntibodyPanel:
+    """Load an antibody panel from a file or from the config file.
 
     :param config: the config object
     :param panel: the path to the panel file or the name of the
         panel in the config file
 
     :returns: the antibody panel
+    :rtype: AntibodyPanel
     """
     panel_str = str(panel)
     panel_from_config = config.get_panel(panel_str)

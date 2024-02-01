@@ -4,7 +4,6 @@ Console script for pixelator (analysis)
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
 
-from concurrent import futures
 from typing import get_args
 
 import click
@@ -14,7 +13,6 @@ from pixelator.analysis.colocalization.types import TransformationTypes
 from pixelator.cli.common import logger, output_option
 from pixelator.utils import (
     create_output_stage_dir,
-    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -29,8 +27,8 @@ from pixelator.utils import (
     options_metavar="<options>",
 )
 @click.argument(
-    "input_files",
-    nargs=-1,
+    "pxl_file",
+    nargs=1,
     required=True,
     type=click.Path(exists=True),
     metavar="PXL",
@@ -129,7 +127,7 @@ from pixelator.utils import (
 @timer
 def analysis(
     ctx,
-    input_files,
+    pxl_file,
     compute_polarization,
     compute_colocalization,
     use_full_bipartite,
@@ -145,6 +143,8 @@ def analysis(
     Perform different analyses on a PixelDataset from pixelator annotate
     """
     # log input parameters
+    input_files = [pxl_file]
+
     log_step_start(
         "analysis",
         input_files=input_files,
@@ -170,40 +170,30 @@ def analysis(
     analysis_output = create_output_stage_dir(output, "analysis")
 
     # compute graph/clusters using parallel processing
-    with get_process_pool_executor(ctx) as executor:
-        jobs = []
-        for zip_file in input_files:
-            logger.info(f"Computing analysis for file {zip_file}")
+    logger.info(f"Computing analysis for file {pxl_file}")
 
-            clean_name = get_sample_name(zip_file)
-            metrics_file = analysis_output / f"{clean_name}.report.json"
+    clean_name = get_sample_name(pxl_file)
+    metrics_file = analysis_output / f"{clean_name}.report.json"
 
-            write_parameters_file(
-                ctx,
-                analysis_output / f"{clean_name}.meta.json",
-                command_path="pixelator single-cell analysis",
-            )
+    write_parameters_file(
+        ctx,
+        analysis_output / f"{clean_name}.meta.json",
+        command_path="pixelator single-cell analysis",
+    )
 
-            jobs.append(
-                executor.submit(
-                    analyse_pixels,
-                    input=zip_file,
-                    output=str(analysis_output),
-                    output_prefix=clean_name,
-                    metrics_file=str(metrics_file),
-                    compute_polarization=compute_polarization,
-                    compute_colocalization=compute_colocalization,
-                    use_full_bipartite=use_full_bipartite,
-                    polarization_normalization=polarization_normalization,
-                    polarization_n_permutations=polarization_n_permutations,
-                    colocalization_transformation=colocalization_transformation,
-                    colocalization_neighbourhood_size=colocalization_neighbourhood_size,
-                    colocalization_n_permutations=colocalization_n_permutations,
-                    colocalization_min_region_count=colocalization_min_region_count,
-                    verbose=ctx.obj["VERBOSE"],
-                )
-            )
-
-        for job in futures.as_completed(jobs):
-            if job.exception() is not None:
-                raise job.exception()
+    analyse_pixels(
+        input=pxl_file,
+        output=str(analysis_output),
+        output_prefix=clean_name,
+        metrics_file=str(metrics_file),
+        compute_polarization=compute_polarization,
+        compute_colocalization=compute_colocalization,
+        use_full_bipartite=use_full_bipartite,
+        polarization_normalization=polarization_normalization,
+        polarization_n_permutations=polarization_n_permutations,
+        colocalization_transformation=colocalization_transformation,
+        colocalization_neighbourhood_size=colocalization_neighbourhood_size,
+        colocalization_n_permutations=colocalization_n_permutations,
+        colocalization_min_region_count=colocalization_min_region_count,
+        verbose=ctx.obj["VERBOSE"],
+    )

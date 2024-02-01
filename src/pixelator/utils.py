@@ -9,6 +9,7 @@ import gzip
 import itertools
 import json
 import logging
+import re
 import tempfile
 import textwrap
 import time
@@ -16,7 +17,17 @@ import typing
 from concurrent import futures
 from functools import wraps
 from pathlib import Path, PurePath
-from typing import Any, Dict, List, Optional, Sequence, Set, TYPE_CHECKING, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Set,
+    TYPE_CHECKING,
+    Union,
+)
 
 import click
 import numpy as np
@@ -51,7 +62,7 @@ def build_barcodes_file(
     :param anchored: make the sequences anchored if True
     :param rev_complement: reverse complement the sequence column
                            if True
-    :returns: a path to the barcodes file
+    :returns str: a path to the barcodes file
     """
     logger.debug("Creating barcodes file from antibody panel")
 
@@ -88,7 +99,7 @@ def create_output_stage_dir(root: PathType, name: str) -> Path:
 
     :param root: the parent directory
     :param name: the name of the directory to create
-    :returns: the created folder (Path)
+    :returns Path: the created folder (Path)
     """
     output = Path(root) / name
     if not output.is_dir():
@@ -100,7 +111,7 @@ def flatten(list_of_collections: List[Union[List, Set]]) -> List:
     """Flattens a list of lists or list of sets.
 
     :param list_of_collections: list of lists or list of sets
-    :returns: list containing flattened items
+    :returns List: list containing flattened items
     """
     return [item for sublist in list_of_collections for item in sublist]
 
@@ -111,7 +122,7 @@ def get_extension(filename: PathType, len_ext: int = 2) -> str:
     :param filename: the file name
     :param len_ext: the number of expected extensions parts
         e.g.: fq.gz gives len_ext=2
-    :returns: the file extension (str)
+    :returns str: the file extension (str)
     """
     return "".join(PurePath(filename).suffixes[-len_ext:]).lstrip(".")
 
@@ -123,7 +134,7 @@ def get_sample_name(filename: PathType) -> str:
     the first dot.
 
     :param filename: path to the file
-    :returns: the sample name
+    :returns str: the sample name
     """
     return Path(filename).stem.split(".")[0]
 
@@ -137,7 +148,7 @@ def group_input_reads(
     :param input1_pattern: pattern to match read1 files
     :param input2_pattern: pattern to match read2 files
     :raises ValueError: if the number of reads for a sample is more than 2
-    :returns: a dictionary with the grouped reads
+    :returns Dict[str, List[Path]]: a dictionary with the grouped reads
     """
 
     def group_fn(s):
@@ -181,7 +192,7 @@ def gz_size(filename: str) -> int:
     """Extract the size of a gzip compressed file.
 
     :param filename: file name
-    :returns: size of the file uncompressed (in bits)
+    :returns int: size of the file uncompressed (in bits)
     """
     with gzip.open(filename, "rb") as f:
         return f.seek(0, whence=2)
@@ -360,3 +371,60 @@ def get_process_pool_executor(ctx, **kwargs):
         max_workers=ctx.obj["CORES"],
         **kwargs,
     )
+
+
+def get_read_sample_name(read: str) -> str:
+    """Extract the sample name from a read file.
+
+    Strip fq.gz or fastq.gz extension and remove R1/R2 suffixes.
+    Supported R1 R2 identifieds are:
+
+    _R1,_R2 | _r1, _r2 | _1, _2 | .R1, .R2 | .r1, .r2
+
+    :param read: filename of a fastq read file
+    :return str: sample name
+    :raise ValueError: if the read file does not have a valid extension
+    """
+    # group input file by sample id and order reads by R1 and R2
+    if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
+        raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
+
+    read_stem = Path(read).name
+    read_stem = read_stem.removesuffix(get_extension(read_stem, 2)).rstrip(".")
+    matches = re.findall(R"(.[Rr][12]|(_[Rr]?[12]))", read_stem)
+    if len(matches) != 1:
+        raise ValueError("Invalid R1/R2 suffix.")
+
+    pattern, pos = matches[0]
+    sample_name = read_stem.replace(pattern, "")
+    return sample_name
+
+
+def is_read_file(read: str, read_type: Literal["r1"] | Literal["r2"]) -> bool:
+    """Check if a read filename matches the specified read_type.
+
+    Detects the presence of a common read 1 or read 2 suffix in the filename.
+
+    :param read: filename of a fastq read file
+    :param read_type: the read type to check for (r1 or r2)
+    :return bool: True if the read file is a read 1 or 2 file
+    :raise ValueError: if the read file does not have a valid extension
+    :raise AssertionError: if the read_type is not 'r1' or 'r2'
+    """
+    if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
+        raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
+
+    matches = []
+    if read_type == "r1":
+        read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
+        matches = re.findall(R"(.[Rr]1|(_[Rr]?1))", read_stem)
+    elif read_type == "r2":
+        read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
+        matches = re.findall(R"(.[Rr]2|(_[Rr]?2))", read_stem)
+    else:
+        raise AssertionError("Invalid read type: expected 'r1' or 'r2'")
+
+    if len(matches) != 1:
+        return False
+
+    return True
