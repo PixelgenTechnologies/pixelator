@@ -3,6 +3,7 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
+import sys
 import numpy as np
 import pytest
 from numpy.testing import assert_almost_equal
@@ -13,6 +14,9 @@ from pixelator.plot import (
     _unit_sphere_surface,
     plot_3d_heatmap,
 )
+
+def test_import_plot_module():
+    assert 'matplotlib.pyplot' in sys.modules
 
 
 def test__calculate_distance_to_unit_sphere_zones():
