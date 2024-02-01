@@ -21,12 +21,12 @@ from typing import (
     Any,
     Dict,
     List,
+    Literal,
     Optional,
     Sequence,
     Set,
     TYPE_CHECKING,
     Union,
-    Literal,
 )
 
 import click
