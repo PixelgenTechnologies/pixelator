@@ -641,7 +641,7 @@ def create_dynamic_report(
     antibodies_data_values = {
         "antibody_reads": summary_demux["output"],
         "antibody_reads_usable_per_cell": summary_cell_calling["total_reads_cell"],
-        "antibody_reads_in_outliers": summary_cell_calling["reads_of_aggregates"],
+        "antibody_reads_in_outliers": summary_cell_calling["reads_in_aggregates"],
         "unrecognized_antibodies": summary_demux["input"] - summary_demux["output"],
     }
 
