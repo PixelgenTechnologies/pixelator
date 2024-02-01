@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fix deflated counts in the edgelist after collapse.
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.
+* Improved runtime for graph synthesis.
 
 ## [0.16.1] - 2024-01-12
 
