@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.
 * Improved runtime for graph synthesis.
+* Added PMDS layout algorithm.
 
 ## [0.16.1] - 2024-01-12
 
