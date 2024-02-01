@@ -175,6 +175,7 @@ class Graph:
         get_node_marker_matrix: bool = True,
         cache: bool = False,
         random_seed: Optional[int] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
@@ -186,6 +187,8 @@ class Graph:
           - fruchterman_reingold_3d
           - kamada_kawai
           - kamada_kawai_3d
+          - pmds
+          - pmds_3d
 
 
         The `fruchterman_reingold` options are in general faster, but less
@@ -203,6 +206,7 @@ class Graph:
         :param random_seed: used as the seed for graph layouts with a stochastic
                             element. Useful to get deterministic layouts across
                             method calls.
+        :param **kwargs: will be passed to the underlying layout implementation
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid
@@ -214,6 +218,7 @@ class Graph:
                 only_keep_a_pixels=only_keep_a_pixels,
                 get_node_marker_matrix=get_node_marker_matrix,
                 random_seed=random_seed,
+                **kwargs,
             )
         else:
             return self._backend.layout_coordinates(
@@ -221,6 +226,7 @@ class Graph:
                 only_keep_a_pixels=only_keep_a_pixels,
                 get_node_marker_matrix=get_node_marker_matrix,
                 random_seed=random_seed,
+                **kwargs,
             )
 
     @lru_cache(maxsize=1)

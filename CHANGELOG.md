@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Performance improvements and reduced bundle size in QC report.
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.
-* Metric to collet molecules (edges) in cells with outlier distributions of antibodies (aggregates).
+* PMDS layout algorithm for components.
+* Metric to collect molecules (edges) in cells with outlier distributions of antibodies (aggregates).
 
 ### Changed
 
