@@ -24,7 +24,7 @@ def _wide_correlation_matrix_to_long_correlation_results(
     df_lower_tri = df.mask(~lower_triangle)
     df_lower_tri.index.set_names(["marker_cols"], inplace=True)
     df_lower_tri.columns.set_names(["marker_rows"], inplace=True)
-    correlation_values = df_lower_tri.stack(dropna=True).reset_index()
+    correlation_values = df_lower_tri.stack(future_stack=True).dropna().reset_index()
     correlation_values.columns = ["marker_1", "marker_2", stat_name]
     correlation_values.set_index(["marker_1", "marker_2"], inplace=True)
     correlation_values.index.rename(["marker_1", "marker_2"])
