@@ -540,8 +540,7 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics["upib_per_upia"] = adata.obs["upib"].sum() / adata.obs["upia"].sum()
 
         # This metric needs to be initialized for the webreport
-        metrics["reads_of_aggregates"] = 0
-        metrics["umis_of_aggregates"] = 0
+        metrics["reads_in_aggregates"] = 0
 
         # Tau type will only be available if it has been added in the annotate step
         if "tau_type" in adata.obs:
@@ -551,10 +550,10 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
             metrics["fraction_of_aggregates"] = number_of_aggregates / len(
                 adata.obs["tau_type"]
             )
-            metrics["reads_of_aggregates"] = adata[aggregates_mask].obs["reads"].sum()
-            metrics["edges_of_aggregates"] = adata[aggregates_mask].obs["edges"].sum()
-            metrics["edges_fraction_of_aggregates"] = round(
-                metrics["edges_of_aggregates"] / metrics["total_edges"], 2
+            metrics["reads_in_aggregates"] = adata[aggregates_mask].obs["reads"].sum()
+            metrics["edges_in_aggregates"] = adata[aggregates_mask].obs["edges"].sum()
+            metrics["edges_pct_in_aggregates"] = round(
+                metrics["edges_in_aggregates"] / metrics["total_edges"], 2
             )
 
         if "min_size_threshold" in adata.uns:
