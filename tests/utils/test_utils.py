@@ -13,6 +13,8 @@ import pytest
 from pixelator import __version__
 from pixelator.cli.logging import LoggingSetup
 from pixelator.utils import (
+    get_read_sample_name,
+    is_read_file,
     gz_size,
     log_step_start,
     sanity_check_inputs,
@@ -146,3 +148,56 @@ def test_multiprocess_logging(verbose):
         assert "This is a warning message" in log_content
         assert "This is an error message" in log_content
         assert "This is a critical message" in log_content
+
+
+def test_get_read_sample_name():
+    with pytest.raises(ValueError, match="Invalid file extension.*"):
+        get_read_sample_name("qwdwqwdqwd")
+
+    with pytest.raises(ValueError, match="Invalid R1/R2 suffix."):
+        get_read_sample_name("qwdwqwdqwd.fq.gz")
+
+    assert get_read_sample_name("sample1_1.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1_2.fq.gz") == "sample1"
+
+    assert get_read_sample_name("sample1_R1.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1_R2.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1_r1.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1_r2.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1.r1.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1.r2.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1.R1.fq.gz") == "sample1"
+    assert get_read_sample_name("sample1.R2.fq.gz") == "sample1"
+
+    assert get_read_sample_name("sample1_R1_L001.fq.gz") == "sample1_L001"
+    assert get_read_sample_name("sample1_R2_L001.fq.gz") == "sample1_L001"
+
+
+def test_is_read_file():
+    with pytest.raises(ValueError, match="Invalid file extension.*"):
+        is_read_file("qwdwqwdqwd", read_type="r1")
+
+    with pytest.raises(
+        AssertionError, match="Invalid read type: expected 'r1' or 'r2'"
+    ):
+        is_read_file("sample1.r1.fq.gz", read_type="qdqwdqw")
+
+    for r1_check in [
+        "sample1_1.fq.gz",
+        "sample1_R1.fq.gz",
+        "sample1_r1.fq.gz",
+        "sample1.r1.fq.gz",
+        "sample1.R1.fq.gz",
+    ]:
+        assert is_read_file(r1_check, read_type="r1")
+        assert not is_read_file(r1_check, read_type="r2")
+
+    for r2_check in [
+        "sample1_2.fq.gz",
+        "sample1_R2.fq.gz",
+        "sample1_r2.fq.gz",
+        "sample1.r2.fq.gz",
+        "sample1.R2.fq.gz",
+    ]:
+        assert is_read_file(r2_check, read_type="r2")
+        assert not is_read_file(r2_check, read_type="r1")

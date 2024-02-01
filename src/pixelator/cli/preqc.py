@@ -3,7 +3,6 @@
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
 
-from concurrent import futures
 from shutil import which
 
 import click
@@ -18,7 +17,6 @@ from pixelator.qc import qc_fastq
 from pixelator.utils import (
     create_output_stage_dir,
     get_extension,
-    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -36,11 +34,11 @@ from pixelator.utils import (
     options_metavar="<options>",
 )
 @click.argument(
-    "input_files",
-    nargs=-1,
+    "fastq_file",
+    nargs=1,
     required=True,
     type=click.Path(exists=True),
-    metavar="FASTQ_FILES",
+    metavar="FASTQ",
 )
 @click.option(
     "--trim-front",
@@ -117,7 +115,7 @@ from pixelator.utils import (
 @timer
 def preqc(
     ctx,
-    input_files,
+    fastq_file,
     trim_front,
     trim_tail,
     max_length,
@@ -133,6 +131,8 @@ def preqc(
     trimming and removal of duplicates.
     """  # noqa: D205,D400,D415
     # log input parameters
+    input_files = [fastq_file]
+
     log_step_start(
         "fastp",
         input_files=input_files,
@@ -170,47 +170,37 @@ def preqc(
     preqc_output = create_output_stage_dir(output, "preqc")
 
     # run fastq (pre QC and filtering) using parallel processing
-    with get_process_pool_executor(ctx) as executor:
-        jobs = []
-        for fastq_file in input_files:
-            logger.info(f"Processing {fastq_file} with fastp")
+    logger.info(f"Processing {fastq_file} with fastp")
 
-            clean_name = get_sample_name(fastq_file)
-            extension = get_extension(fastq_file)
-            output_file = preqc_output / f"{clean_name}.processed.{extension}"
-            failed_file = preqc_output / f"{clean_name}.failed.{extension}"
-            html_file = preqc_output / f"{clean_name}.qc-report.html"
-            json_file = preqc_output / f"{clean_name}.report.json"
+    clean_name = get_sample_name(fastq_file)
+    extension = get_extension(fastq_file)
+    output_file = preqc_output / f"{clean_name}.processed.{extension}"
+    failed_file = preqc_output / f"{clean_name}.failed.{extension}"
+    html_file = preqc_output / f"{clean_name}.qc-report.html"
+    json_file = preqc_output / f"{clean_name}.report.json"
 
-            write_parameters_file(
-                ctx,
-                preqc_output / f"{clean_name}.meta.json",
-                command_path="pixelator single-cell preqc",
-            )
+    write_parameters_file(
+        ctx,
+        preqc_output / f"{clean_name}.meta.json",
+        command_path="pixelator single-cell preqc",
+    )
 
-            jobs.append(
-                executor.submit(
-                    qc_fastq,
-                    input=str(fastq_file),
-                    output=str(output_file),
-                    failed=str(failed_file),
-                    report=str(html_file),
-                    metrics=str(json_file),
-                    design=design,
-                    n_limit=max_n_bases,
-                    trim_front=trim_front,
-                    trim_tail=trim_tail,
-                    min_length=min_length,
-                    max_length=max_length,
-                    # fastp developers recommend to keep this low to avoid I/O overhead
-                    threads=2,
-                    avg_qual=avg_qual,
-                    dedup=dedup,
-                    remove_polyg=remove_polyg,
-                    verbose=ctx.obj["VERBOSE"],
-                )
-            )
-
-        for job in futures.as_completed(jobs):
-            if job.exception() is not None:
-                raise job.exception()
+    qc_fastq(
+        input=str(fastq_file),
+        output=str(output_file),
+        failed=str(failed_file),
+        report=str(html_file),
+        metrics=str(json_file),
+        design=design,
+        n_limit=max_n_bases,
+        trim_front=trim_front,
+        trim_tail=trim_tail,
+        min_length=min_length,
+        max_length=max_length,
+        # fastp developers recommend to keep this low to avoid I/O overhead
+        threads=2,
+        avg_qual=avg_qual,
+        dedup=dedup,
+        remove_polyg=remove_polyg,
+        verbose=ctx.obj["VERBOSE"],
+    )

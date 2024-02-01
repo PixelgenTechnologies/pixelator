@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Performance improvements and reduced bundle size in QC report.
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.
+* Improved runtime for graph synthesis.
 * PMDS layout algorithm for components.
+* Add `--sample_name` option to `single-cell amplicon` to overwrite the name derived from the input filename.
+* Add `--skip-input-checks` option to `single-cell amplicon` to make input filename checks warnings instead of errors.
 * Metric to collect molecules (edges) in cells with outlier distributions of antibodies (aggregates).
 
 ### Changed
@@ -23,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Fix a bug in how discarded UMIs are calculated and reported.
 * Fix deflated counts in the edgelist after collapse.
+
+### Removed
+
+* Remove multi-sample processing from all `single-cell` subcommands
+* Remove `--input1_pattern` and `--input2_pattern` from `single-cell amplicon` command.
 
 
 ## [0.16.1] - 2024-01-12

@@ -3,8 +3,6 @@
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
 
-from concurrent import futures
-
 import click
 
 from pixelator.cli.common import design_option, logger, output_option
@@ -12,7 +10,6 @@ from pixelator.qc import adapter_qc_fastq
 from pixelator.utils import (
     create_output_stage_dir,
     get_extension,
-    get_process_pool_executor,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -29,11 +26,11 @@ from pixelator.utils import (
     options_metavar="<options>",
 )
 @click.argument(
-    "input_files",
-    nargs=-1,
+    "fastq_file",
+    nargs=1,
     required=True,
     type=click.Path(exists=True),
-    metavar="FASTQ_FILES",
+    metavar="FASTQ",
 )
 @click.option(
     "--mismatches",
@@ -49,7 +46,7 @@ from pixelator.utils import (
 @timer
 def adapterqc(
     ctx,
-    input_files,
+    fastq_file,
     mismatches,
     output,
     design,
@@ -57,6 +54,7 @@ def adapterqc(
     """Check for the presence of PBS1/2 sequences in FASTQ input files."""
     from pixelator.config import config
 
+    input_files = [fastq_file]
     # log input parameters
     log_step_start(
         "adapterqc",
@@ -81,39 +79,29 @@ def adapterqc(
     adapterqc_output = create_output_stage_dir(output, "adapterqc")
 
     # run cutadapt (adapter mode) using parallel processing
-    with get_process_pool_executor(ctx) as executor:
-        jobs = []
-        for fastq_file in input_files:
-            msg = f"Processing {fastq_file} with cutadapt (adapter mode)"
-            logger.info(msg)
+    msg = f"Processing {fastq_file} with cutadapt (adapter mode)"
+    logger.info(msg)
 
-            clean_name = get_sample_name(fastq_file)
-            extension = get_extension(fastq_file)
-            output_file = adapterqc_output / f"{clean_name}.processed.{extension}"
-            failed_file = adapterqc_output / f"{clean_name}.failed.{extension}"
-            json_file = adapterqc_output / f"{clean_name}.report.json"
+    clean_name = get_sample_name(fastq_file)
+    extension = get_extension(fastq_file)
+    output_file = adapterqc_output / f"{clean_name}.processed.{extension}"
+    failed_file = adapterqc_output / f"{clean_name}.failed.{extension}"
+    json_file = adapterqc_output / f"{clean_name}.report.json"
 
-            write_parameters_file(
-                ctx,
-                adapterqc_output / f"{clean_name}.meta.json",
-                command_path="pixelator single-cell adapterqc",
-            )
+    write_parameters_file(
+        ctx,
+        adapterqc_output / f"{clean_name}.meta.json",
+        command_path="pixelator single-cell adapterqc",
+    )
 
-            jobs.append(
-                executor.submit(
-                    adapter_qc_fastq,
-                    input=fastq_file,
-                    output=str(output_file),
-                    failed=str(failed_file),
-                    report=str(json_file),
-                    mismatches=mismatches,
-                    pbs1=pbs1,
-                    pbs2=pbs2,
-                    cores=0,  # cutadapt will choose the optimal number
-                    verbose=ctx.obj["VERBOSE"],
-                )
-            )
-
-        for job in futures.as_completed(jobs):
-            if job.exception() is not None:
-                raise job.exception()
+    adapter_qc_fastq(
+        input=fastq_file,
+        output=str(output_file),
+        failed=str(failed_file),
+        report=str(json_file),
+        mismatches=mismatches,
+        pbs1=pbs1,
+        pbs2=pbs2,
+        cores=0,  # cutadapt will choose the optimal number
+        verbose=ctx.obj["VERBOSE"],
+    )
