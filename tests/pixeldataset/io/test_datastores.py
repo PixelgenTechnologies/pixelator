@@ -123,27 +123,6 @@ class TestPixelDataStore:
             result = datastore.read_metadata()
             assert result == {}
 
-    # TODO Move to other test class
-    @pytest.mark.test_this
-    def test_pixelfile_datastore_can_write_with_partitioning(
-        self,
-        setup_basic_pixel_dataset: tuple[
-            PixelDataset, DataFrame, AnnData, dict[str, int], DataFrame, DataFrame
-        ],
-        tmp_path: Path,
-    ):
-        dataset, *_ = setup_basic_pixel_dataset
-        file_target = tmp_path / "dataset.pxl"
-        datastore = ZipBasedPixelFileWithParquet(file_target)
-        datastore.write_edgelist(dataset.edgelist)
-
-        # partitioning = (
-        #    ds.partitioning(pa.schema([("component", pa.string())]), flavor="hive"),
-        # )
-        partitioning = ["component"]
-        datastore.write_edgelist(dataset.edgelist, partitioning=partitioning)
-        # TODO Add asserts
-
 
 class TestZipBasedPixelFile:
     def test_zip_based_pixel_file_from_file(self, pixel_dataset_file: Path):
@@ -161,6 +140,27 @@ class TestZipBasedPixelFile:
             mock.EDGELIST_KEY = "non_existent_key"
             with pytest.raises(FileFormatNotRecognizedError):
                 _ = ZipBasedPixelFile.guess_file_format(pixel_dataset_file)
+
+    @pytest.mark.test_this
+    def test_pixelfile_datastore_can_write_with_partitioning(
+        self,
+        setup_basic_pixel_dataset: tuple[
+            PixelDataset, DataFrame, AnnData, dict[str, int], DataFrame, DataFrame
+        ],
+        tmp_path: Path,
+    ):
+        dataset, *_ = setup_basic_pixel_dataset
+        file_target = tmp_path / "dataset.pxl"
+        datastore = ZipBasedPixelFileWithParquet(file_target)
+        # datastore.write_edgelist(dataset.edgelist)
+
+        # partitioning = (
+        #    ds.partitioning(pa.schema([("component", pa.string())]), flavor="hive"),
+        # )
+        partitioning = ["component"]
+        datastore._current_mode
+        datastore.write_edgelist(dataset.edgelist, partitioning=partitioning)
+        # TODO Add asserts
 
 
 class TestZipBasedPixelFileWithParquet:

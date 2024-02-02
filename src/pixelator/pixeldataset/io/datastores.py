@@ -462,18 +462,17 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         :param partitioning: The partitioning to use when writing the dataframe.
         """
         if partitioning:
-            self._set_to_read_mode()
-            # self._set_to_write_mode()
-            ds.write_dataset(
-                pa.Table.from_pandas(dataframe),
-                f"key/",
-                filesystem=self._file_system,
-                format="parquet",
-                partitioning_flavor="hive",
-                partitioning=partitioning,
-                use_threads=False,
-                existing_data_behavior="overwrite_or_ignore",
-            )
+            for _, data in dataframe.groupby(partitioning):
+                ds.write_dataset(
+                    pa.Table.from_pandas(data),
+                    f"{key}/",
+                    filesystem=self._file_system,
+                    format="parquet",
+                    partitioning_flavor="hive",
+                    partitioning=partitioning,
+                    use_threads=False,
+                    existing_data_behavior="overwrite_or_ignore",
+                )
             return
 
         pq.write_table(
