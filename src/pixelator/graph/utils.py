@@ -249,8 +249,6 @@ def _edgelist_metrics_pandas_data_frame(
     metrics: Dict[str, Union[int, float]] = {}
     metrics["total_upia"] = edgelist["upia"].nunique()
     metrics["total_upib"] = edgelist["upib"].nunique()
-    metrics["total_umi"] = edgelist["umi"].nunique()
-    metrics["total_upi"] = metrics["total_upia"] + metrics["total_upib"]
     metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
     metrics["markers"] = edgelist["marker"].nunique()
     metrics["edges"] = edgelist.shape[0]
@@ -274,8 +272,6 @@ def _edgelist_metrics_lazy_frame(
     metrics: Dict[str, Union[int, float]] = {}
     metrics["total_upia"] = edgelist.select(pl.col("upia")).collect().n_unique()
     metrics["total_upib"] = edgelist.select(pl.col("upib")).collect().n_unique()
-    metrics["total_umi"] = edgelist.select(pl.col("umi")).collect().n_unique()
-    metrics["total_upi"] = metrics["total_upia"] + metrics["total_upib"]
     metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
     metrics["markers"] = edgelist.select(pl.col("marker")).collect().n_unique()
     # Note that we get upi here and count that, because otherwise just calling count

@@ -449,7 +449,6 @@ def graph_and_annotate_metrics(
                 {
                     "upia": data["total_upia"],
                     "upib": data["total_upib"],
-                    "umi": data["total_umi"],
                     "mean_count": data["mean_count"],
                     "vertices": data["vertices"],
                     "edges": data["edges"],
@@ -674,7 +673,7 @@ def create_dynamic_report(
 
     umi_counts = {
         "after_collapse": summary_collapse["output_umi"],
-        "after_cell_calling": summary_cell_calling["total_umis"],
+        "after_cell_calling": summary_cell_calling["edges"],
     }
 
     fraction_discarded_umis = round(

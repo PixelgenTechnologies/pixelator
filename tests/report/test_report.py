@@ -218,7 +218,6 @@ def test_graph_and_annotate_metrics(data_root):
             data={
                 "upia": [16358, 6550],
                 "upib": [16183, 6484],
-                "umi": [100, 100],
                 "mean_count": [6.2, 6.9],
                 "vertices": [32541, 13034],
                 "edges": [17423, 6786],
@@ -359,7 +358,7 @@ def test_create_dynamic_report(tmp_path):
             ),
             summary_cell_calling=pd.Series(
                 {
-                    "total_umis": 5,
+                    "edges": 5,
                     "total_reads_cell": 1000,
                     "reads_in_aggregates": 1,
                     "umis_in_aggregates": 3,
