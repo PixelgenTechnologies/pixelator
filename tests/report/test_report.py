@@ -380,5 +380,5 @@ def test_create_dynamic_report(tmp_path):
             info=mock.MagicMock(),
             output_path=tmp_path,
         )
-        # For now just asser that there is an attempt to write the report
+        # For now just assert that there is an attempt to write the report
         instance.write.assert_called_once()
