@@ -124,7 +124,7 @@ class PixelDataStore(Protocol):
         self,
         dataframe: pd.DataFrame,
         key: str,
-        partitioning: Optional[ds.Partitioning] = None,
+        partitioning: Optional[list[str]] = None,
     ) -> None:
         """Write the given dataframe to the pixel data store.
 
@@ -172,7 +172,7 @@ class PixelDataStore(Protocol):
         ...
 
     def write_edgelist(
-        self, edgelist: pd.DataFrame, partitioning: Optional[ds.Partitioning] = None
+        self, edgelist: pd.DataFrame, partitioning: Optional[list[str]] = None
     ) -> None:
         """Write the given edgelist to the pixel data store.
 
@@ -358,7 +358,7 @@ class ZipBasedPixelFile(PixelDataStore):
             f.write(json.dumps(metadata))
 
     def write_edgelist(
-        self, edgelist: pd.DataFrame, partitioning: Optional[ds.Partitioning] = None
+        self, edgelist: pd.DataFrame, partitioning: Optional[list[str]] = None
     ) -> None:
         """Write the given edgelist to the .pxl file."""
         self._set_to_write_mode()
@@ -411,7 +411,7 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         self,
         dataframe: pd.DataFrame,
         key: str,
-        partitioning: Optional[ds.Partitioning] = None,
+        partitioning: Optional[list[str]] = None,
     ) -> None:
         """Write the given dataframe to the .pxl file."""
         # Note that partitioning will be ignored here
@@ -456,18 +456,17 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         self,
         dataframe: pd.DataFrame,
         key: str,
-        partitioning: Optional[ds.Partitioning] = None,
+        partitioning: Optional[list[str]] = None,
     ) -> None:
         """Write the given dataframe to the .pxl file.
 
-        TODO Write docs about how to deal with partitioning vs non partitioning
+        Optionally provided a partitioning to create a hive partitioned parquet file.
+        I.e. with a separate file for each level of partitioning provided.
 
         :param dataframe: The dataframe to write.
         :param key: The key of the dataframe to write.
         :param partitioning: The partitioning to use when writing the dataframe.
         """
-        # TODO Possibly change the type of the partitioning to string?
-
         if partitioning:
             for _, data in dataframe.groupby(partitioning):
                 ds.write_dataset(

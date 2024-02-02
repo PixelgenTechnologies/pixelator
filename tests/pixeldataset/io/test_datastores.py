@@ -166,6 +166,36 @@ class TestZipBasedPixelFile:
             "component=PXLCMP0000004",
         }
 
+    def test_pixelfile_datastore_can_write_with_partitioning_with_multiple_partitions(
+        self,
+        setup_basic_pixel_dataset: tuple[
+            PixelDataset, DataFrame, AnnData, dict[str, int], DataFrame, DataFrame
+        ],
+        tmp_path: Path,
+    ):
+        dataset, *_ = setup_basic_pixel_dataset
+        file_target = tmp_path / "dataset.pxl"
+        datastore = ZipBasedPixelFileWithParquet(file_target)
+
+        # Just adding marker here as it is available in practice this
+        # is not how we want to partition the files
+        partitioning = ["component", "marker"]
+        datastore.write_edgelist(dataset.edgelist, partitioning=partitioning)
+
+        assert (
+            list(datastore._file_system.walk("/edgelist.parquet/"))[1][0]
+            == "edgelist.parquet/component=PXLCMP0000000"
+        )
+        assert set(list(datastore._file_system.walk("/edgelist.parquet/"))[1][1]) == {
+            "marker=CD20",
+            "marker=CD3",
+            "marker=CD45",
+            "marker=CD45RA",
+            "marker=CD72",
+            "marker=IsoT_ctrl",
+            "marker=hashtag",
+        }
+
 
 class TestZipBasedPixelFileWithParquet:
     def test_pixel_file_parquet_format_spec_can_save(
