@@ -263,7 +263,7 @@ def collapse(
 
         # write metrics
         metrics = {
-            "total_pixels": int(df.shape[0]),
+            "total_molecules": int(df.shape[0]),
             "total_count": int(df["count"].sum()),
         }
         json_file = collapse_output / f"{sample}.report.json"

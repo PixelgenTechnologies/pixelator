@@ -130,10 +130,6 @@ def connect_components(
         prefix=DEFAULT_COMPONENT_PREFIX,
     )
 
-    # get raw metrics before multiplets recovery
-    logger.debug("Calculating raw edgelist metrics")
-    raw_metrics = edgelist_metrics(edgelist, graph)
-
     if multiplet_recovery:
         edgelist, info = recover_technical_multiplets(
             edgelist=edgelist,
@@ -158,10 +154,13 @@ def connect_components(
         compression="zstd",
     )
 
-    # save metrics raw (JSON)
+    # get metrics after multiplets recovery
+    logger.debug("Calculating edgelist metrics")
+    result_metrics = edgelist_metrics(edgelist)
+
+    # save result metrics (JSON)
     with open(metrics_file, "w") as outfile:
-        # we want the metrics to be computed before recovery
-        json.dump(raw_metrics, outfile, default=np_encoder)
+        json.dump(result_metrics, outfile, default=np_encoder)
 
 
 def community_detection_crossing_edges(

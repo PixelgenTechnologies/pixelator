@@ -373,9 +373,7 @@ def collapse_metrics(path: str) -> pd.DataFrame:
             metrics.append(
                 {
                     "input": data["total_count"],
-                    "output_edges": data["total_pixels"],
-                    "output_umi": data["total_unique_umi"],
-                    "output_upi": data["total_unique_upi"],
+                    "output_edges": data["total_molecules"],
                 }
             )
         except KeyError as error:
@@ -388,7 +386,7 @@ def collapse_metrics(path: str) -> pd.DataFrame:
         index=samples_processed,
         data=metrics,
     )
-    df["duplication"] = round(1 - (df["output_umi"] / df["input"]), 2)
+    df["duplication"] = round(1 - (df["output_edges"] / df["input"]), 2)
 
     logger.debug("Finish collecting collapse metrics")
     return df.sort_index()
@@ -672,7 +670,7 @@ def create_dynamic_report(
     }
 
     umi_counts = {
-        "after_collapse": summary_collapse["output_umi"],
+        "after_collapse": summary_collapse["output_edges"],
         "after_cell_calling": summary_cell_calling["edges"],
     }
 
