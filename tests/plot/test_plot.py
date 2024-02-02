@@ -3,8 +3,8 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
-
 import numpy as np
+import pytest
 from numpy.testing import assert_almost_equal
 from pixelator.graph import Graph
 from pixelator.plot import (
@@ -460,10 +460,17 @@ def test_plot_3d_heatmap(edgelist):
         simplify=True,
         use_full_bipartite=False,
     )
-    # For now, just making sure that this doesn't crash when running.
-    _ = plot_3d_heatmap(
-        graph,
-        layout_algorithm="fruchterman_reingold_3d",
-        marker="CD3",
-        distance_cutoff=0.4,
-    )
+    with pytest.warns(
+        UserWarning,
+        match=(
+            "The function `plot_3d_heatmap` is experimental, "
+            "it might be removed or the API might change without notice."
+        ),
+    ):
+        # For now, just making sure that this doesn't crash when running.
+        _ = plot_3d_heatmap(
+            graph,
+            layout_algorithm="fruchterman_reingold_3d",
+            marker="CD3",
+            distance_cutoff=0.4,
+        )

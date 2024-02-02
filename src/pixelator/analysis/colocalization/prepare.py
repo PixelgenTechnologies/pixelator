@@ -41,7 +41,9 @@ def prepare_from_edgelist(
         .groupby(by=group_by)["marker"]
         .value_counts()
         .reset_index()
-    ).pivot_table(index=group_by, columns="marker", values="count", fill_value=0)
+    ).pivot_table(
+        index=group_by, columns="marker", values="count", fill_value=0, observed=False
+    )
     markers_per_pixel.columns.name = "markers"
     markers_per_pixel.index.name = "node"
     markers_per_pixel.index = markers_per_pixel.index.astype("string[pyarrow]")

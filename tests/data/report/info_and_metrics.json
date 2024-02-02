@@ -365,18 +365,6 @@
         "command": "pixelator single-cell amplicon",
         "options": [
           {
-            "name": "--input1-pattern",
-            "value": "_R1",
-            "default_value": "_R1",
-            "description": "The string pattern to use to identify forward (R1) files"
-          },
-          {
-            "name": "--input2-pattern",
-            "value": "_R2",
-            "default_value": "_R2",
-            "description": "The string pattern to use to identify reverse (R2) files"
-          },
-          {
             "name": "--output",
             "value": ".",
             "default_value": null,
