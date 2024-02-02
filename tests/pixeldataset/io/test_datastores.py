@@ -1,9 +1,12 @@
+"""Tests for the pixeldataset.io.datastores module.
+
+Copyright (c) 2024 Pixelgen Technologies AB.
+"""
+
 from unittest.mock import patch
 from anndata import AnnData
 from pandas.core.frame import DataFrame
 from pathlib import Path
-import pyarrow as pa
-import pyarrow.dataset as ds
 
 import pytest
 from pandas.testing import assert_frame_equal
@@ -87,28 +90,28 @@ class TestPixelDataStore:
             else "parquet",
         )
 
-        datastore = datastore(file_target)
+        datastore_inst = datastore(file_target)
 
         # Reading something / write something / read something
-        adata = datastore.read_anndata()
-        datastore.write_anndata(adata)
-        _ = datastore.read_anndata()
+        adata = datastore_inst.read_anndata()
+        datastore_inst.write_anndata(adata)
+        _ = datastore_inst.read_anndata()
 
-        edgelists = datastore.read_edgelist()
-        datastore.write_edgelist(edgelists)
-        _ = datastore.read_edgelist()
+        edgelists = datastore_inst.read_edgelist()
+        datastore_inst.write_edgelist(edgelists)
+        _ = datastore_inst.read_edgelist()
 
-        metadata = datastore.read_metadata()
-        datastore.write_metadata(metadata)
-        _ = datastore.read_metadata()
+        metadata = datastore_inst.read_metadata()
+        datastore_inst.write_metadata(metadata)
+        _ = datastore_inst.read_metadata()
 
-        polarization = datastore.read_polarization()
-        datastore.write_polarization(polarization)
-        _ = datastore.read_polarization()
+        polarization = datastore_inst.read_polarization()
+        datastore_inst.write_polarization(polarization)
+        _ = datastore_inst.read_polarization()
 
-        colocalization = datastore.read_colocalization()
-        datastore.write_colocalization(colocalization)
-        _ = datastore.read_colocalization()
+        colocalization = datastore_inst.read_colocalization()
+        datastore_inst.write_colocalization(colocalization)
+        _ = datastore_inst.read_colocalization()
 
     def test_read_metadata(self, pixel_dataset_file: Path):
         datastore = PixelDataStore.guess_datastore_from_path(pixel_dataset_file)
@@ -141,7 +144,6 @@ class TestZipBasedPixelFile:
             with pytest.raises(FileFormatNotRecognizedError):
                 _ = ZipBasedPixelFile.guess_file_format(pixel_dataset_file)
 
-    @pytest.mark.test_this
     def test_pixelfile_datastore_can_write_with_partitioning(
         self,
         setup_basic_pixel_dataset: tuple[
@@ -152,15 +154,17 @@ class TestZipBasedPixelFile:
         dataset, *_ = setup_basic_pixel_dataset
         file_target = tmp_path / "dataset.pxl"
         datastore = ZipBasedPixelFileWithParquet(file_target)
-        # datastore.write_edgelist(dataset.edgelist)
 
-        # partitioning = (
-        #    ds.partitioning(pa.schema([("component", pa.string())]), flavor="hive"),
-        # )
         partitioning = ["component"]
-        datastore._current_mode
         datastore.write_edgelist(dataset.edgelist, partitioning=partitioning)
-        # TODO Add asserts
+
+        assert set(list(datastore._file_system.walk("/edgelist.parquet/"))[0][1]) == {
+            "component=PXLCMP0000000",
+            "component=PXLCMP0000001",
+            "component=PXLCMP0000002",
+            "component=PXLCMP0000003",
+            "component=PXLCMP0000004",
+        }
 
 
 class TestZipBasedPixelFileWithParquet:

@@ -1,6 +1,6 @@
 """Module for PixelDataset data stores, e.g. pxl files and similar.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright (c) 2024 Pixelgen Technologies AB.
 """
 from __future__ import annotations
 
@@ -47,6 +47,7 @@ class PixelDataStore(Protocol):
     @staticmethod
     def from_path(path: PathType) -> PixelDataStore:
         """Get a PixelDataStore from the provided path.
+
         :param path: The path to the pixel data store.
         :return: A pixel data store.
         :rtype: PixelDataStore
@@ -66,6 +67,10 @@ class PixelDataStore(Protocol):
         if str(path).endswith(".pxl"):
             return ZipBasedPixelFile.guess_file_format(path)
         raise ValueError(f"Could not guess datastore from path {path}")
+
+    def file_format_version(self) -> Optional[int]:
+        """Return the file format version of the pixel data store."""
+        ...
 
     def read_anndata(self) -> AnnData:
         """Read the pixel data as an AnnData object.
@@ -461,6 +466,8 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         :param key: The key of the dataframe to write.
         :param partitioning: The partitioning to use when writing the dataframe.
         """
+        # TODO Possibly change the type of the partitioning to string?
+
         if partitioning:
             for _, data in dataframe.groupby(partitioning):
                 ds.write_dataset(
