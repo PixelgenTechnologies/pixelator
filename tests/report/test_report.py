@@ -362,7 +362,6 @@ def test_create_dynamic_report(tmp_path):
                     "umis_in_aggregates": 3,
                     "cells_filtered": 10,
                     "mean_reads_cell": 10,
-                    "mean_umi_cell": 11,
                     "mean_upia_cell": 3,
                     "mean_umi_upia_cell": 3,
                     "median_markers_cell": 14,

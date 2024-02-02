@@ -685,7 +685,6 @@ def create_dynamic_report(
         average_reads_per_cell=(
             summary_all["reads"] / summary_cell_calling["cells_filtered"]
         ),
-        average_antibody_molecules_per_cell=summary_cell_calling["mean_umi_cell"],
         average_upias_per_cell=summary_cell_calling["mean_upia_cell"],
         average_umis_per_upia=summary_cell_calling["mean_umi_upia_cell"],
         fraction_reads_in_cells=(

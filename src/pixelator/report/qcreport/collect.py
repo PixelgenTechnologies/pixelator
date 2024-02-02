@@ -50,7 +50,7 @@ def components_umap_data(adata: AnnData) -> str:
     else:
         umap_df["cluster_cell_class"] = np.full(adata.n_obs, "unknown")
 
-    umap_df["umis"] = adata.obs["edges"].to_numpy()
+    umap_df["edges"] = adata.obs["edges"].to_numpy()
 
     return umap_df.to_csv(index=True, index_label="component")
 
