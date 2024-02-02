@@ -9,11 +9,9 @@ import random
 import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest import mock
 
 import numpy as np
 import pandas as pd
-import polars as pl
 import pytest
 from anndata import AnnData
 from numpy.testing import assert_array_equal
@@ -21,12 +19,7 @@ from pandas.testing import assert_frame_equal
 from pixelator.config import AntibodyPanel
 from pixelator.graph import Graph, write_recovered_components
 from pixelator.pixeldataset import (
-    FileBasedPixelDatasetBackend,
-    ObjectBasedPixelDatasetBackend,
     PixelDataset,
-    ZipBasedPixelFileWithCSV,
-    PixelDataStore,
-    ZipBasedPixelFileWithParquet,
     read,
 )
 from pixelator.pixeldataset.aggregation import simple_aggregate
