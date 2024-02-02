@@ -66,7 +66,9 @@ def colocalization_from_component_edgelist(
     graph = Graph.from_edgelist(
         edgelist=edgelist,
         add_marker_counts=True,
-        simplify=False,
+        # If we do A-node projection, we will simplify anyway.
+        # This just removes the warning.
+        simplify=False if use_full_bipartite else True,
         use_full_bipartite=use_full_bipartite,
     )
     return colocalization_from_component_graph(
@@ -244,7 +246,9 @@ def colocalization_scores(
             graph = Graph.from_edgelist(
                 edgelist=component_df,
                 add_marker_counts=True,
-                simplify=False,
+                # If we do A-node projection, we will simplify anyway.
+                # This just removes the warning.
+                simplify=False if use_full_bipartite else True,
                 use_full_bipartite=use_full_bipartite,
             )
             if len(graph.vs) < 2:

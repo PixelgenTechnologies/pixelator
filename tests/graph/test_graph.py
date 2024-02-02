@@ -25,8 +25,8 @@ def create_simple_edge_list_from_graph(
 
     df = graph.get_edge_dataframe()
     df_vert = graph.get_vertex_dataframe()
-    df["source"].replace(df_vert["name"], inplace=True)
-    df["target"].replace(df_vert["name"], inplace=True)
+    df["source"] = df["source"].replace(df_vert["name"])
+    df["target"] = df["target"].replace(df_vert["name"])
 
     # rename source/target columns
     df = df.rename(columns={"source": "upib", "target": "upia"})
