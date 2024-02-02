@@ -183,8 +183,6 @@ class AntibodyPanel:
         :param df: DataFrame with data of the panel to validate
         :returns pd.DataFrame: The in-place modified input dataframe
         """
-        new_df = df.copy()
-
         # update control and nuclear column to boolean
         TR_TABLE = {"(?i)yes": "True", "(?i)no": "False"}
 
