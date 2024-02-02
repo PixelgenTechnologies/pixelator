@@ -39,7 +39,7 @@ class TestPixelDataStore:
         res = PixelDataStore.guess_datastore_from_path(file_target)
         assert isinstance(res, ZipBasedPixelFileWithCSV)
 
-    def test_pixel_data_store_from_file_provides_correct_datastore(
+    def test_pixel_data_store_from_file_provides_correct_datastore_parquet(
         self,
         setup_basic_pixel_dataset: tuple[
             PixelDataset, DataFrame, AnnData, dict[str, int], DataFrame, DataFrame
@@ -52,6 +52,13 @@ class TestPixelDataStore:
         res = PixelDataStore.from_path(file_target)
         assert isinstance(res, ZipBasedPixelFileWithParquet)
 
+    def test_pixel_data_store_from_file_provides_correct_datastore_csv(
+        self,
+        setup_basic_pixel_dataset: tuple[
+            PixelDataset, DataFrame, AnnData, dict[str, int], DataFrame, DataFrame
+        ],
+        tmp_path: Path,
+    ):
         dataset, *_ = setup_basic_pixel_dataset
         file_target = tmp_path / "dataset.pxl"
         dataset.save(str(file_target), file_format="csv")
@@ -92,26 +99,27 @@ class TestPixelDataStore:
 
         datastore_inst = datastore(file_target)
 
-        # Reading something / write something / read something
-        adata = datastore_inst.read_anndata()
-        datastore_inst.write_anndata(adata)
-        _ = datastore_inst.read_anndata()
+        with pytest.warns(UserWarning, match="Duplicate name: "):
+            # Reading something / write something / read something
+            adata = datastore_inst.read_anndata()
+            datastore_inst.write_anndata(adata)
+            _ = datastore_inst.read_anndata()
 
-        edgelists = datastore_inst.read_edgelist()
-        datastore_inst.write_edgelist(edgelists)
-        _ = datastore_inst.read_edgelist()
+            edgelists = datastore_inst.read_edgelist()
+            datastore_inst.write_edgelist(edgelists)
+            _ = datastore_inst.read_edgelist()
 
-        metadata = datastore_inst.read_metadata()
-        datastore_inst.write_metadata(metadata)
-        _ = datastore_inst.read_metadata()
+            metadata = datastore_inst.read_metadata()
+            datastore_inst.write_metadata(metadata)
+            _ = datastore_inst.read_metadata()
 
-        polarization = datastore_inst.read_polarization()
-        datastore_inst.write_polarization(polarization)
-        _ = datastore_inst.read_polarization()
+            polarization = datastore_inst.read_polarization()
+            datastore_inst.write_polarization(polarization)
+            _ = datastore_inst.read_polarization()
 
-        colocalization = datastore_inst.read_colocalization()
-        datastore_inst.write_colocalization(colocalization)
-        _ = datastore_inst.read_colocalization()
+            colocalization = datastore_inst.read_colocalization()
+            datastore_inst.write_colocalization(colocalization)
+            _ = datastore_inst.read_colocalization()
 
     def test_read_metadata(self, pixel_dataset_file: Path):
         datastore = PixelDataStore.guess_datastore_from_path(pixel_dataset_file)
