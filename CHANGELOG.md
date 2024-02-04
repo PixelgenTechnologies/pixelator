@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
+* Make matplotlib not dependant on $HOME
 
 ### Fixed
 
