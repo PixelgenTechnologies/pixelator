@@ -3,8 +3,10 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
+import os
 import sys
 import numpy as np
+from pathlib import Path
 import pytest
 from numpy.testing import assert_almost_equal
 from pixelator.graph import Graph
@@ -16,6 +18,11 @@ from pixelator.plot import (
 )
 
 def test_import_plot_module():
+    p = Path(os.environ['MPLCONFIGDIR'])
+    assert p.exists()
+    assert p.is_dir()
+    assert str(p.parent) == "/tmp"
+    assert "tmp" in str(p.stem)
     assert 'matplotlib.pyplot' in sys.modules
 
 
