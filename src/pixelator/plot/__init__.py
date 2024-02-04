@@ -2,17 +2,19 @@
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
-import os    
+import os
 import tempfile
-os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy
-from matplotlib import cm
-from typing import Literal, Tuple
 
-from pixelator.graph import Graph
-from pixelator.marks import experimental
+os.environ["MPLCONFIGDIR"] = tempfile.mkdtemp()
+if True:  # noqa: E402
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import scipy
+    from matplotlib import cm
+    from typing import Literal, Tuple
+
+    from pixelator.graph import Graph
+    from pixelator.marks import experimental
 
 
 def _unit_sphere_surface(horizontal_resolution, vertical_resolution):

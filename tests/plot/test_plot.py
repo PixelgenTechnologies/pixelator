@@ -17,13 +17,14 @@ from pixelator.plot import (
     plot_3d_heatmap,
 )
 
+
 def test_import_plot_module():
-    p = Path(os.environ['MPLCONFIGDIR'])
+    p = Path(os.environ["MPLCONFIGDIR"])
     assert p.exists()
     assert p.is_dir()
     assert str(p.parent) == "/tmp"
     assert "tmp" in str(p.stem)
-    assert 'matplotlib.pyplot' in sys.modules
+    assert "matplotlib.pyplot" in sys.modules
 
 
 def test__calculate_distance_to_unit_sphere_zones():
