@@ -16,7 +16,7 @@ import pandas as pd
 import polars as pl
 from anndata import AnnData
 
-from pixelator.pixeldataset.io.datastores import PixelDataStore
+from pixelator.pixeldataset.datastores import PixelDataStore
 from pixelator.pixeldataset.utils import (
     _enforce_edgelist_types,
 )

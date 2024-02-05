@@ -12,7 +12,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 from pixelator.pixeldataset import PixelDataset
 
-from pixelator.pixeldataset.io.datastores import (
+from pixelator.pixeldataset.datastores import (
     FileFormatNotRecognizedError,
     PixelDataStore,
     ZipBasedPixelFile,
@@ -146,7 +146,7 @@ class TestZipBasedPixelFile:
 
     def test_zip_based_pixel_guess_file_format_raises(self, pixel_dataset_file: Path):
         with patch(
-            "pixelator.pixeldataset.io.datastores.ZipBasedPixelFileWithParquet"
+            "pixelator.pixeldataset.datastores.ZipBasedPixelFileWithParquet"
         ) as mock:
             mock.EDGELIST_KEY = "non_existent_key"
             with pytest.raises(FileFormatNotRecognizedError):

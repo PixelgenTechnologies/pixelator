@@ -28,7 +28,7 @@ from pixelator.pixeldataset.backends import (
     FileBasedPixelDatasetBackend,
     ObjectBasedPixelDatasetBackend,
 )
-from pixelator.pixeldataset.io.datastores import (
+from pixelator.pixeldataset.datastores import (
     PixelDataStore,
     ZipBasedPixelFileWithParquet,
     ZipBasedPixelFileWithCSV,
