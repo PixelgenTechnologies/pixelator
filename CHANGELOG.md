@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Remove `--input1_pattern` and `--input2_pattern` from `single-cell amplicon` command.
 
+### Fixed
+
+* Fix bug where an `r1` or `r2` in the directory part of a read file would break file
+  name sanity checks.
+
 ## [0.16.1] - 2024-01-12
 
 ### Fixed
