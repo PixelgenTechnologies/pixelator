@@ -201,3 +201,13 @@ def test_is_read_file():
     ]:
         assert is_read_file(r2_check, read_type="r2")
         assert not is_read_file(r2_check, read_type="r1")
+
+
+def test_is_read_file_should_be_ok_when_r1_or_r2_in_dir_name():
+    # not the r1 in the directory name
+    file_name = "/tmp/tmp5r1eg53r/uropod_control_R1.fastq.gz"
+    assert is_read_file(file_name, "r1")
+
+    # not the r2 in the directory name
+    file_name = "/tmp/tmp5r2eg53r/uropod_control_R1.fastq.gz"
+    assert is_read_file(file_name, "r1")

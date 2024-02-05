@@ -415,11 +415,10 @@ def is_read_file(read: str, read_type: Literal["r1"] | Literal["r2"]) -> bool:
         raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
 
     matches = []
+    read_stem = Path(read.removesuffix(get_extension(read, 2)).rstrip(".")).name
     if read_type == "r1":
-        read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
         matches = re.findall(R"(.[Rr]1|(_[Rr]?1))", read_stem)
     elif read_type == "r2":
-        read_stem = read.removesuffix(get_extension(read, 2)).rstrip(".")
         matches = re.findall(R"(.[Rr]2|(_[Rr]?2))", read_stem)
     else:
         raise AssertionError("Invalid read type: expected 'r1' or 'r2'")
