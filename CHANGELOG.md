@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 * Remove `--input1_pattern` and `--input2_pattern` from `single-cell amplicon` command.
+* Self-correlations, e.g. CD8 vs CD8 are not longer part of the colocalization results, as these
+  values will always be undefined.
 
 ### Fixed
 

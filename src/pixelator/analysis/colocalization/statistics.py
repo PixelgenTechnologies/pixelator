@@ -1,4 +1,5 @@
-"""
+"""Module for computing colocalization statistics.
+
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
@@ -49,27 +50,38 @@ def _wide_correlation_matrix_to_long_correlation_results(
 def _alphanumeric_sort_marker_columns(
     data: MarkerColocalizationResults,
 ) -> MarkerColocalizationResults:
-    """
-    Make sure that the markers are always sorted in the same order
-    """
+    """Make sure that the markers are always sorted in the same order."""
     data.index = pd.MultiIndex.from_tuples(
         map(sorted, data.index.values), names=data.index.names
     )
     return data
 
 
+def _drop_self_correlation(
+    data: MarkerColocalizationResults,
+) -> MarkerColocalizationResults:
+    """Drop the self-correlation values from the data."""
+    return data[data.index.get_level_values(0) != data.index.get_level_values(1)]
+
+
 def pearson(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
-    """
+    """Calculate the Pearson correlation between all vs all markers.
+
     Calculate the Pearson correlation between all vs all markers
-    in the RegionByCountsDataFrame. Since these values are symetrical only
+    in the RegionByCountsDataFrame. Since these values are symmetrical only
     one of the combination of each marker pair is returned
 
     :param df: the RegionByCountsDataFrame to compute Pearson correlation on
+    :rtype: MarkerColocalizationResults
     :return: MarkerColocalizationResults with Pearson correlations
     """
     pearson_matrix = df.corr(method="pearson")
     pearson_values = _alphanumeric_sort_marker_columns(
-        _wide_correlation_matrix_to_long_correlation_results(pearson_matrix, "pearson")
+        _drop_self_correlation(
+            _wide_correlation_matrix_to_long_correlation_results(
+                pearson_matrix, "pearson"
+            )
+        )
     )
     return pearson_values
 
@@ -78,12 +90,14 @@ Pearson = CoLocalizationFunction(name="pearson", func=pearson)
 
 
 def jaccard(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
-    """
+    """Calculate the Jaccard index between all vs all markers.
+
     Calculate the Jaccard index between all vs all markers
-    in the RegionByCountsDataFrame. Since these values are symetrical only
+    in the RegionByCountsDataFrame. Since these values are symmetrical only
     one of the combination of each marker pair is returned
 
     :param df: the RegionByCountsDataFrame to compute Jaccard indexes on
+    :rtype: MarkerColocalizationResults
     :return: MarkerColocalizationResults with Jaccard indexes
     """
     jaccard_matrix = pd.DataFrame(
@@ -92,7 +106,11 @@ def jaccard(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
         columns=df.columns.copy(),
     )
     jaccard_values = _alphanumeric_sort_marker_columns(
-        _wide_correlation_matrix_to_long_correlation_results(jaccard_matrix, "jaccard")
+        _drop_self_correlation(
+            _wide_correlation_matrix_to_long_correlation_results(
+                jaccard_matrix, "jaccard"
+            )
+        )
     )
     return jaccard_values
 
@@ -102,13 +120,13 @@ Jaccard = CoLocalizationFunction(name="jaccard", func=jaccard)
 
 def apply_multiple_stats(
     df: RegionByCountsDataFrame, funcs: Tuple[CoLocalizationFunction, ...]
-):
-    """
-    Compute multiple statistics on the same dataframe
+) -> pd.DataFrame:
+    """Compute multiple statistics on the same dataframe.
 
     :param df: data to compute statistics on
     :param funcs: a list of functions to use to compute the
                   statistics
     :return: a dataframe with all the statistics computed for the dataframe
+    :rtype: pd.DataFrame
     """
     return pd.concat([func.func(df) for func in funcs], axis=1)

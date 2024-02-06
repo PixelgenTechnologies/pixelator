@@ -3,6 +3,7 @@ Tests for the colocalization modules
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
+
 import pandas as pd
 import numpy as np
 from pandas.testing import assert_frame_equal
@@ -36,16 +37,12 @@ def test_pearson():
     # triagonal matrix of all vs all comparissons
     cols = ["marker1", "marker2", "pearson"]
     data = [
-        ["marker1", "marker1", 1.000000],
         ["marker1", "marker2", 0.973223],
-        ["marker2", "marker2", 1.000000],
         ["marker1", "marker3", -0.409644],
         ["marker2", "marker3", -0.188982],
-        ["marker3", "marker3", 1.000000],
         ["marker1", "marker4", 0.912245],
         ["marker2", "marker4", 0.981981],
         ["marker3", "marker4", 0.000000],
-        ["marker4", "marker4", 1.000000],
     ]
     expected = pd.DataFrame(data, columns=cols)
     _assert_df_equal(results, expected)
@@ -63,16 +60,12 @@ def test_pearson_no_variation():
     # triagonal matrix of all vs all comparisons
     cols = ["marker1", "marker2", "pearson"]
     data = [
-        ["marker1", "marker1", 1.000000],
         ["marker1", "marker2", 0.973223],
-        ["marker2", "marker2", 1.000000],
         ["marker1", "marker3", np.nan],
         ["marker2", "marker3", np.nan],
-        ["marker3", "marker3", np.nan],
         ["marker1", "marker4", np.nan],
         ["marker2", "marker4", np.nan],
         ["marker3", "marker4", np.nan],
-        ["marker4", "marker4", np.nan],
     ]
 
     expected = pd.DataFrame(data, columns=cols)
@@ -88,16 +81,12 @@ def test_jaccard():
 
     cols = ["marker1", "marker2", "jaccard"]
     data = [
-        ["marker1", "marker1", 1.000000],
         ["marker1", "marker2", 0.500000],
-        ["marker2", "marker2", 1.000000],
         ["marker1", "marker3", 0.000000],
         ["marker2", "marker3", 0.333333],
-        ["marker3", "marker3", 1.000000],
         ["marker1", "marker4", 0.333333],
         ["marker2", "marker4", 0.666667],
         ["marker3", "marker4", 0.666667],
-        ["marker4", "marker4", 1.000000],
     ]
 
     _assert_df_equal(results, pd.DataFrame(data, columns=cols))

@@ -3,6 +3,7 @@ Tests for the colocalization modules
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
+
 import numpy as np
 import pandas as pd
 from numpy.random import default_rng
@@ -41,20 +42,6 @@ def test_estimate_observation_statistics():
         [
             {
                 "marker_1": "marker1",
-                "marker_2": "marker1",
-                "pearson": 1.0,
-                "pearson_mean": 1.0,
-                "pearson_stdev": 0.0,
-                "pearson_z": np.nan,
-                "pearson_p_value": np.nan,
-                "jaccard": 1.0,
-                "jaccard_mean": 1.0,
-                "jaccard_stdev": 0.0,
-                "jaccard_z": np.nan,
-                "jaccard_p_value": np.nan,
-            },
-            {
-                "marker_1": "marker1",
                 "marker_2": "marker2",
                 "pearson": -0.3146459267857001,
                 "pearson_mean": 0.21041134618906188,
@@ -66,20 +53,6 @@ def test_estimate_observation_statistics():
                 "jaccard_stdev": 0.0757614408414158,
                 "jaccard_z": 0.3299831645537225,
                 "jaccard_p_value": 0.3707063415200079,
-            },
-            {
-                "marker_1": "marker2",
-                "marker_2": "marker2",
-                "pearson": 1.0,
-                "pearson_mean": 1.0,
-                "pearson_stdev": 0.0,
-                "pearson_z": np.nan,
-                "pearson_p_value": np.nan,
-                "jaccard": 1.0,
-                "jaccard_mean": 1.0,
-                "jaccard_stdev": 0.0,
-                "jaccard_z": np.nan,
-                "jaccard_p_value": np.nan,
             },
             {
                 "marker_1": "marker1",
@@ -108,20 +81,6 @@ def test_estimate_observation_statistics():
                 "jaccard_stdev": 0.06851187890446743,
                 "jaccard_z": 0.2919201796799049,
                 "jaccard_p_value": 0.3851738270115038,
-            },
-            {
-                "marker_1": "marker3",
-                "marker_2": "marker3",
-                "pearson": 1.0,
-                "pearson_mean": 1.0,
-                "pearson_stdev": 0.0,
-                "pearson_z": np.nan,
-                "pearson_p_value": np.nan,
-                "jaccard": 1.0,
-                "jaccard_mean": 1.0,
-                "jaccard_stdev": 0.0,
-                "jaccard_z": np.nan,
-                "jaccard_p_value": np.nan,
             },
             {
                 "marker_1": "marker1",
@@ -165,20 +124,6 @@ def test_estimate_observation_statistics():
                 "jaccard_z": -6.929646455628165,
                 "jaccard_p_value": 2.10946826200288e-12,
             },
-            {
-                "marker_1": "marker4",
-                "marker_2": "marker4",
-                "pearson": 1.0,
-                "pearson_mean": 1.0,
-                "pearson_stdev": 0.0,
-                "pearson_z": np.nan,
-                "pearson_p_value": np.nan,
-                "jaccard": 1.0,
-                "jaccard_mean": 1.0,
-                "jaccard_stdev": 0.0,
-                "jaccard_z": np.nan,
-                "jaccard_p_value": np.nan,
-            },
         ]
     )
     assert_frame_equal(result, expected, check_exact=False, atol=0.01)
@@ -199,7 +144,10 @@ def test_permutation_analysis_results():
 
         assert result.index.names == ["marker_1", "marker_2", "permutation"]
         assert result.columns.to_list() == ["pearson_perm"]
-        assert result.shape[0] == 10 * 50
+        assert (
+            result.shape[0] == 6 * 50
+        )  # 6 is the number of non-self combinations for 4 markers, 50 the number
+        # of permutations
 
 
 def test_permutation_analysis_results_example():
@@ -214,7 +162,7 @@ def test_permutation_analysis_results_example():
 
     assert result.index.names == ["marker_1", "marker_2", "permutation"]
     assert result.columns.to_list() == ["pearson_perm"]
-    assert result.shape[0] == 10 * perm_n
+    assert result.shape[0] == 6 * perm_n
 
 
 def test_permutation_analysis_results_multiple_functions():
@@ -234,4 +182,7 @@ def test_permutation_analysis_results_multiple_functions():
 
         assert result.index.names == ["marker_1", "marker_2", "permutation"]
         assert result.columns.to_list() == ["pearson_perm", "jaccard_perm"]
-        assert result.shape[0] == 10 * 50
+        assert (
+            result.shape[0] == 6 * 50
+        )  # 6 is the number of non-self combinations for 4 markers, 50 the number
+        # of permutations
