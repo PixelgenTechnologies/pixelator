@@ -1,4 +1,4 @@
-"""This module contains functions for finding aggregates
+"""This module contains functions for finding aggregates.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """

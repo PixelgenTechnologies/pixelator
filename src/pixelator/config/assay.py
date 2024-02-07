@@ -1,8 +1,8 @@
-"""This module contains classes and functions related to
-the different assay/designs used by pixelator.
+"""Module containing classes and functions related to the different assay/designs used by pixelator.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
+
 import enum
 import json
 from typing import Any, List, Mapping, Optional, Set, Tuple
@@ -15,7 +15,7 @@ from pixelator.types import PathType
 
 
 class RegionType(str, enum.Enum):
-    """Enum class representing different sequence types"""
+    """Enum class representing different sequence types."""
 
     UMI = "umi"
     UPI = "upi"
@@ -44,6 +44,8 @@ DNA_CHARS = {"A", "C", "G", "T"}
 
 
 class RegionModel(BaseModel):
+    """Validation model for region configuration."""
+
     region_id: str
     region_type: RegionType
     name: str
@@ -108,6 +110,7 @@ class Region:
         regions: Optional[List["Region"]] = None,
         data: Optional[Mapping[str, Any]] = None,
     ) -> None:
+        """Initialize a Region."""
         self.parent_id = None
         self.region_id = region_id
         self.region_type = region_type
