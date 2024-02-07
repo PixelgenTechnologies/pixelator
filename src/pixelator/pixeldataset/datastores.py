@@ -328,10 +328,13 @@ class ZipBasedPixelFile(PixelDataStore):
             raise EdgelistNotFoundError("Edgelist not found in pxl file")
         return df
 
-    def read_edgelist_lazy(self) -> Optional[pl.LazyFrame]:
+    def read_edgelist_lazy(self) -> pl.LazyFrame:
         """Read the edgelist lazily from the .pxl file."""
         self._set_to_read_mode()
-        return self.read_dataframe_lazy(self.EDGELIST_KEY)
+        lazy_data_frame = self.read_dataframe_lazy(self.EDGELIST_KEY)
+        if lazy_data_frame is None:
+            raise EdgelistNotFoundError("Edgelist not found in pxl file")
+        return lazy_data_frame
 
     def read_polarization(self) -> Optional[pd.DataFrame]:
         """Read the polarization data from the .pxl file."""
