@@ -1,5 +1,4 @@
-"""This module contains constants used as part of the annotation
-modules.
+"""Constants used as part of the annotation modules.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
