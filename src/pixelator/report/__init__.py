@@ -373,7 +373,7 @@ def collapse_metrics(path: str) -> pd.DataFrame:
             metrics.append(
                 {
                     "input": data["total_count"],
-                    "output_edges": data["total_molecules"],
+                    "output_molecules": data["total_molecules"],
                 }
             )
         except KeyError as error:
@@ -386,7 +386,7 @@ def collapse_metrics(path: str) -> pd.DataFrame:
         index=samples_processed,
         data=metrics,
     )
-    df["duplication"] = round(1 - (df["output_edges"] / df["input"]), 2)
+    df["duplication"] = round(1 - (df["output_molecules"] / df["input"]), 2)
 
     logger.debug("Finish collecting collapse metrics")
     return df.sort_index()
@@ -671,7 +671,7 @@ def create_dynamic_report(
     }
 
     umi_counts = {
-        "after_collapse": summary_collapse["output_edges"],
+        "after_collapse": summary_collapse["output_molecules"],
         "after_cell_calling": summary_cell_calling["molecules"],
     }
 
@@ -801,7 +801,7 @@ def make_report(
 
     # add discarded column to summary_graph
     summary_graph["discarded"] = round(
-        1 - (summary_graph["molecules"] / summary_collapse["output_edges"]), 2
+        1 - (summary_graph["molecules"] / summary_collapse["output_molecules"]), 2
     )
 
     # add discarded column to summary_annotate
@@ -811,7 +811,7 @@ def make_report(
 
     # add discarded column to summary_annotate
     summary_cell_calling["discarded"] = round(
-        1 - (summary_annotate["molecules"] / summary_collapse["output_edges"]), 2
+        1 - (summary_annotate["molecules"] / summary_collapse["output_molecules"]), 2
     )
 
     # create a global summary table for all the main metrics in each stage
@@ -822,7 +822,7 @@ def make_report(
             "adapterqc": summary_adapterqc["output"].to_numpy(),
             "demux": summary_demux["output"].to_numpy(),
             "discarded": 0,
-            "molecules": summary_collapse["output_edges"].to_numpy(),
+            "molecules": summary_collapse["output_molecules"].to_numpy(),
             "duplication": summary_collapse["duplication"].to_numpy(),
         },
         index=summary_preqc.index,

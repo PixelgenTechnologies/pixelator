@@ -199,7 +199,7 @@ def test_collapse_metrics(data_root):
             ],
             columns=[
                 "input",
-                "output_edges",
+                "output_molecules",
                 "duplication",
             ],
             index=["Sample1_01", "Sample2_02"],
@@ -335,7 +335,7 @@ def test_create_dynamic_report(tmp_path):
             ),
             summary_preqc=pd.Series({"too_short_reads": 10}),
             summary_demux=pd.Series({"input": 1000, "output": 900}),
-            summary_collapse=pd.Series({"input": 900, "output_edges": 200}),
+            summary_collapse=pd.Series({"input": 900, "output_molecules": 200}),
             summary_annotate=pd.Series({"umi": 50}),
             summary_graph=pd.Series(
                 {
