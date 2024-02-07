@@ -2,6 +2,7 @@
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
+
 # pylint: disable=redefined-outer-name
 
 import logging
@@ -285,7 +286,7 @@ def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
     assert sorted(adata.obs) == sorted(
         [
             "vertices",
-            "edges",
+            "molecules",
             "antibodies",
             "upia",
             "upib",

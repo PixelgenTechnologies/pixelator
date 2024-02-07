@@ -118,7 +118,7 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
         index=pd.Index(index, name="component"),
         columns=[
             "vertices",
-            "edges",
+            "molecules",
             "antibodies",
             "upia",
             "upib",
@@ -238,7 +238,7 @@ def _calculate_graph_metrics(
     metrics["components"] = len(components)
     metrics["components_modularity"] = round(components.modularity, 2)
     biggest = components.giant()
-    metrics["frac_largest_edges"] = round(biggest.ecount() / metrics["edges"], 2)
+    metrics["frac_largest_edges"] = round(biggest.ecount() / metrics["molecules"], 2)
     metrics["frac_largest_vertices"] = round(biggest.vcount() / metrics["vertices"], 2)
     return metrics
 
@@ -251,7 +251,7 @@ def _edgelist_metrics_pandas_data_frame(
     metrics["total_upib"] = edgelist["upib"].nunique()
     metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
     metrics["markers"] = edgelist["marker"].nunique()
-    metrics["edges"] = edgelist.shape[0]
+    metrics["molecules"] = edgelist.shape[0]
     metrics["mean_count"] = round(edgelist["count"].mean(), 2)
 
     # Please note that we need to use observed=True
@@ -276,7 +276,7 @@ def _edgelist_metrics_lazy_frame(
     metrics["markers"] = edgelist.select(pl.col("marker")).collect().n_unique()
     # Note that we get upi here and count that, because otherwise just calling count
     # here confuses polars since there is a column with that name.
-    metrics["edges"] = (
+    metrics["molecules"] = (
         edgelist.select(pl.col("upia")).select(pl.count()).collect()[0, 0]
     )
     metrics["mean_count"] = round(

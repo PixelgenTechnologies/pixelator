@@ -218,7 +218,7 @@ def test_graph_and_annotate_metrics(data_root):
                 "upib": [16183, 6484],
                 "mean_count": [6.2, 6.9],
                 "vertices": [32541, 13034],
-                "edges": [17423, 6786],
+                "molecules": [17423, 6786],
                 "components": [100, 150],
                 "markers": [65, 59],
                 "modularity": [0.99, 0.99],
@@ -256,7 +256,7 @@ def test_cell_calling_metrics(adata: AnnData, edgelist: pd.DataFrame, tmp_path: 
             data={
                 "cells_filtered": [5, 5],
                 "total_markers": [22, 22],
-                "total_edges": np.array([30000, 30000], dtype=np.int64),
+                "total_modelules": [30000, 30000],
                 "total_reads_cell": np.array([30000, 30000], dtype=np.uint64),
                 "median_reads_cell": [6000.0, 6000.0],
                 "mean_edges_cell": [6000.0, 6000.0],
@@ -344,7 +344,7 @@ def test_create_dynamic_report(tmp_path):
                     "umi": 100.0,
                     "mean_count": 6.2,
                     "vertices": 32541.0,
-                    "edges": 17423.0,
+                    "molecules": 17423.0,
                     "components": 100.0,
                     "markers": 65.0,
                     "modularity": 0.99,
@@ -357,7 +357,7 @@ def test_create_dynamic_report(tmp_path):
             ),
             summary_cell_calling=pd.Series(
                 {
-                    "edges": 5,
+                    "molecules": 5,
                     "total_reads_cell": 1000,
                     "reads_in_aggregates": 1,
                     "umis_in_aggregates": 3,

@@ -5,7 +5,7 @@
     "umis_of_aggregates": 50,
     "mean_count": 6.9,
     "markers": 59,
-    "edges": 6786,
+    "molecules": 6786,
     "vertices": 13034,
     "components": 150,
     "components_modularity": 0.99,

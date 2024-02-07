@@ -2,6 +2,7 @@
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import logging
@@ -41,7 +42,7 @@ with warnings.catch_warnings():
 
 logger = logging.getLogger(__name__)
 
-SIZE_DEFINITION = "edges"
+SIZE_DEFINITION = "molecules"
 # minimum number of vertices (nodes) required for polarization/co-localization
 MIN_VERTICES_REQUIRED = 100
 
@@ -284,12 +285,12 @@ class PixelDataset:
         return PixelDataset.from_data(
             adata=self.adata.copy(),
             edgelist=self.edgelist.copy(),
-            polarization=self.polarization.copy()
-            if self.polarization is not None
-            else None,
-            colocalization=self.colocalization.copy()
-            if self.colocalization is not None
-            else None,
+            polarization=(
+                self.polarization.copy() if self.polarization is not None else None
+            ),
+            colocalization=(
+                self.colocalization.copy() if self.colocalization is not None else None
+            ),
             metadata=self.metadata.copy() if self.metadata is not None else None,
         )
 

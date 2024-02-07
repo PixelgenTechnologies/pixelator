@@ -449,7 +449,7 @@ def graph_and_annotate_metrics(
                     "upib": data["total_upib"],
                     "mean_count": data["mean_count"],
                     "vertices": data["vertices"],
-                    "edges": data["edges"],
+                    "molecules": data["molecules"],
                     cell_column: data["components"],
                     "markers": data["markers"],
                     "modularity": data["components_modularity"],
@@ -517,10 +517,10 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics = {}
         metrics["cells_filtered"] = adata.n_obs
         metrics["total_markers"] = adata.n_vars
-        metrics["total_edges"] = adata.obs["edges"].sum()
+        metrics["total_molecules"] = adata.obs["molecules"].sum()
         metrics["total_reads_cell"] = adata.obs["reads"].sum()
         metrics["median_reads_cell"] = adata.obs["reads"].median()
-        metrics["mean_edges_cell"] = adata.obs["edges"].mean()
+        metrics["mean_edges_cell"] = adata.obs["molecules"].mean()
         metrics["mean_reads_cell"] = adata.obs["reads"].mean()
         metrics["median_upi_cell"] = adata.obs["vertices"].median()
         metrics["mean_upi_cell"] = adata.obs["vertices"].mean()
@@ -672,7 +672,7 @@ def create_dynamic_report(
 
     umi_counts = {
         "after_collapse": summary_collapse["output_edges"],
-        "after_cell_calling": summary_cell_calling["edges"],
+        "after_cell_calling": summary_cell_calling["molecules"],
     }
 
     fraction_discarded_umis = round(
@@ -801,17 +801,17 @@ def make_report(
 
     # add discarded column to summary_graph
     summary_graph["discarded"] = round(
-        1 - (summary_graph["edges"] / summary_collapse["output_edges"]), 2
+        1 - (summary_graph["molecules"] / summary_collapse["output_edges"]), 2
     )
 
     # add discarded column to summary_annotate
     summary_annotate["discarded"] = round(
-        1 - (summary_annotate["edges"] / summary_graph["edges"]), 2
+        1 - (summary_annotate["molecules"] / summary_graph["molecules"]), 2
     )
 
     # add discarded column to summary_annotate
     summary_cell_calling["discarded"] = round(
-        1 - (summary_annotate["edges"] / summary_collapse["output_edges"]), 2
+        1 - (summary_annotate["molecules"] / summary_collapse["output_edges"]), 2
     )
 
     # create a global summary table for all the main metrics in each stage
@@ -822,7 +822,7 @@ def make_report(
             "adapterqc": summary_adapterqc["output"].to_numpy(),
             "demux": summary_demux["output"].to_numpy(),
             "discarded": 0,
-            "edges": summary_collapse["output_edges"].to_numpy(),
+            "molecules": summary_collapse["output_edges"].to_numpy(),
             "duplication": summary_collapse["duplication"].to_numpy(),
         },
         index=summary_preqc.index,
@@ -830,7 +830,9 @@ def make_report(
     summary_all["discarded"] = round(
         1 - (summary_all["demux"] / summary_all["reads"]), 2
     )
-    summary_all["avg_reads_umi"] = round(summary_all["demux"] / summary_all["edges"], 2)
+    summary_all["avg_reads_umi"] = round(
+        summary_all["demux"] / summary_all["molecules"], 2
+    )
 
     if metadata is not None:
         logger.debug("Parsing metadata from %s", metadata)
