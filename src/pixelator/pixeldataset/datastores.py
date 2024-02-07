@@ -2,6 +2,7 @@
 
 Copyright (c) 2024 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import io
@@ -111,12 +112,12 @@ class PixelDataStore(Protocol):
         """
         ...
 
-    def read_dataframe_lazy(self, key: str) -> pd.DataFrame:
+    def read_dataframe_lazy(self, key: str) -> Optional[pl.LazyFrame]:
         """Read a lazy dataframe from the pixel data store.
 
         :param key: The key of the dataframe to read.
         :return: The lazy dataframe.
-        :rtype: pd.DataFrame
+        :rtype: Optional[pl.LazyFrame]
         """
         ...
 
@@ -147,11 +148,11 @@ class PixelDataStore(Protocol):
         """
         ...
 
-    def read_edgelist_lazy(self) -> pd.DataFrame:
+    def read_edgelist_lazy(self) -> pl.LazyFrame:
         """Read a lazy edgelist from the pixel data store.
 
         :return: The lazy edgelist.
-        :rtype: pd.DataFrame
+        :rtype: pl.LazyFrame
         """
         ...
 
@@ -460,8 +461,9 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
     ) -> None:
         """Write the given dataframe to the .pxl file.
 
-        Optionally provided a partitioning to create a hive partitioned parquet file.
-        I.e. with a separate file for each level of partitioning provided.
+        Optionally provided a `partitioning` to create a hive partitioned parquet file,
+        i.e. a directory structure with one level per partitioning provided, and parquet
+        files as leaves.
 
         :param dataframe: The dataframe to write.
         :param key: The key of the dataframe to write.

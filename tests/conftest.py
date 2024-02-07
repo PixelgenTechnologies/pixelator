@@ -2,6 +2,7 @@
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
+
 import os
 import random
 from pathlib import Path
