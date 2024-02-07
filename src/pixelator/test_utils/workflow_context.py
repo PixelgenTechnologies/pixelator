@@ -1,5 +1,4 @@
-"""Copyright (c) 2023 Pixelgen Technologies AB.
-"""
+"""Copyright (c) 2023 Pixelgen Technologies AB."""
 import logging
 import shutil
 from pathlib import Path

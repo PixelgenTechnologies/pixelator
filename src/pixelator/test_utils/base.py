@@ -1,5 +1,4 @@
-"""Copyright (c) 2023 Pixelgen Technologies AB.
-"""
+"""Copyright (c) 2023 Pixelgen Technologies AB."""
 from typing import Any, ClassVar, List
 
 from click.testing import Result as CliRunnerResult
