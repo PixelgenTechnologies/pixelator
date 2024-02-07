@@ -1,6 +1,4 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
-"""
+"""Copyright (c) 2023 Pixelgen Technologies AB."""
 import logging
 from pathlib import Path
 
@@ -12,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseCollapseTestsMixin(BaseWorkflowTestMixin):
-    """
-    Base class for collapse command tests.
+    """Base class for collapse command tests.
 
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:

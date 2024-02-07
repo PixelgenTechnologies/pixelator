@@ -1,6 +1,4 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
-"""
+"""Copyright (c) 2023 Pixelgen Technologies AB."""
 from pathlib import Path
 from typing import Any, Dict
 
@@ -10,9 +8,7 @@ from pixelator.types import PathType
 
 
 class WorkflowConfig:
-    """
-    Class used to load and query the workflow tests configuration file.
-    """
+    """Class used to load and query the workflow tests configuration file."""
 
     def __init__(self, config_file: PathType):
         self.config_file = config_file
@@ -21,8 +17,7 @@ class WorkflowConfig:
         self._validate()
 
     def get_test_config(self, test_name: str) -> Any:
-        """
-        Retrieve config data for a specific test case.
+        """Retrieve config data for a specific test case.
 
         Currently only "small", "single-cell" and "tissue" are implemented.
         You can use arbitrary names for your own tests, and then link your
@@ -39,8 +34,7 @@ class WorkflowConfig:
 
     @classmethod
     def _parse(cls, config_file: PathType) -> Dict[str, Any]:
-        """
-        Load and resolve relative paths in the config file.
+        """Load and resolve relative paths in the config file.
 
         :param config_file: path to the config file
         :returns: the config object parsed from the `config_file`
@@ -54,8 +48,7 @@ class WorkflowConfig:
 
     @classmethod
     def _resolve_relative_paths(cls, config_file: Path, config: Dict[str, Any]):
-        """
-        Resolve relative paths in the config file.
+        """Resolve relative paths in the config file.
 
         All relative paths in the config file are resolved relative to the parent
         directory of the config file.

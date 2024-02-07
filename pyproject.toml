@@ -57,12 +57,11 @@ fastparquet = "^2023.8.0"
 graspologic = "^3.3.0"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.0.244"
+ruff = "*"
 pre-commit = "^3.2.2"
 bumpversion = "*"
 coverage = "*"
 flake8 = "*"
-flake8-docstrings = "^1.7.0"
 invoke = "*"
 isort = "*"
 pylint = "*"
@@ -103,8 +102,26 @@ filterwarnings = ["ignore::DeprecationWarning",]
 
 [tool.ruff]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # pydocstyle
+    "D",
+]
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+ignore = ["E501","E402","E203","D213","D203"]
+exclude = ["docs/conf.py"]
+
+[tool.ruff.lint.per-file-ignores]
 "pixelator/report/__init__.py" = ["E501"]
+"**/tests/**" = ["D101", "D102", "D103", "D200", "D202", "D205", "D212" , "D400", "D401", "D403", "D404", "D415"]
+# Since click uses a different layout for the docs strings to generate the
+# cli docs, we ignore these rules here.
+"src/pixelator/cli/**" = ["D200", "D212", "D400", "D415"]
+"src/pixelator/test_utils/**" = ["D"]
 
 [tool.poetry-dynamic-versioning]
 enable = true

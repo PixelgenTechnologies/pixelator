@@ -1,9 +1,8 @@
-"""
-This module contains classes and functions related to
-the different assay/designs used by pixelator.
+"""Module containing classes and functions related to the different assay/designs used by pixelator.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
+
 import enum
 import json
 from typing import Any, List, Mapping, Optional, Set, Tuple
@@ -16,7 +15,7 @@ from pixelator.types import PathType
 
 
 class RegionType(str, enum.Enum):
-    """Enum class representing different sequence types"""
+    """Enum class representing different sequence types."""
 
     UMI = "umi"
     UPI = "upi"
@@ -45,6 +44,8 @@ DNA_CHARS = {"A", "C", "G", "T"}
 
 
 class RegionModel(BaseModel):
+    """Validation model for region configuration."""
+
     region_id: str
     region_type: RegionType
     name: str
@@ -57,8 +58,7 @@ class RegionModel(BaseModel):
 
     @validator("sequence")
     def check_valid_dna_string(cls, v: str, values: Mapping[str, Any]) -> str:
-        """
-        Validate DNA strings.
+        """Validate DNA strings.
 
         :param v: DNA string to validate
         :param values: Pydantic fields
@@ -73,8 +73,7 @@ class RegionModel(BaseModel):
 
 
 class AssayModel(BaseModel):
-    """
-    Validation model for assay configuration.
+    """Validation model for assay configuration.
 
     :ivar name: Name of the assay
     :ivar assay_spec: List of assay regions
@@ -86,8 +85,7 @@ class AssayModel(BaseModel):
 
 
 class Region:
-    """
-    Class representing a region in an assay.
+    """Class representing a region in an assay.
 
     :ivar region_id: unique ID of the region
     :ivar region_type: type of the region
@@ -112,6 +110,7 @@ class Region:
         regions: Optional[List["Region"]] = None,
         data: Optional[Mapping[str, Any]] = None,
     ) -> None:
+        """Initialize a Region."""
         self.parent_id = None
         self.region_id = region_id
         self.region_type = region_type
@@ -144,8 +143,7 @@ class Region:
             self.sequence = self.get_sequence()
 
     def set_parent_id(self, parent_id):
-        """
-        Set the parent id of this region.
+        """Set the parent id of this region.
 
         :param parent_id: parent id to set
         :param recursive: if True, set the parent id of all sub-regions
@@ -153,9 +151,7 @@ class Region:
         self.parent_id = parent_id
 
     def get_sequence(self) -> str:
-        """
-        Return the sequence representation of this region.
-        """
+        """Return the sequence representation of this region."""
         s = ""
         if self.regions:
             for r in self.regions:
@@ -168,9 +164,7 @@ class Region:
         return s
 
     def get_len(self) -> Tuple[int, int]:
-        """
-        Return the minimum and maximum length of this region.
-        """
+        """Return the minimum and maximum length of this region."""
         min_l, max_l = 0, 0
         if self.regions:
             for r in self.regions:
@@ -188,6 +182,7 @@ class Region:
         return self.get_len()[1]
 
     def update_attr(self):
+        """Update the attributes of the region."""
         if self.regions:
             for idx, r in enumerate(self.regions):
                 r.update_attr()
@@ -197,6 +192,7 @@ class Region:
         return
 
     def __repr__(self) -> str:
+        """Return str representation of the instance."""
         d = {
             "region_id": self.region_id,
             "region_type": self.region_type,
@@ -210,6 +206,7 @@ class Region:
         return f"{d}"
 
     def to_dict(self):
+        """Return a dictionary representation of the region."""
         d = {
             "region_id": self.region_id,
             "region_type": self.region_type,
@@ -223,9 +220,7 @@ class Region:
         return d
 
     def get_region_by_id(self, region_id: str) -> Optional["Region"]:
-        """
-        Lookup a region by the region_id field.
-        """
+        """Lookup a region by the region_id field."""
         if self.region_id == region_id:
             return self
 
@@ -237,9 +232,7 @@ class Region:
         return None
 
     def get_regions_by_type(self, region_type: str) -> List["Region"]:
-        """
-        Return all regions with specified region_type
-        """
+        """Return all regions with specified region_type."""
         found = []
 
         if self.region_type == region_type:
@@ -252,9 +245,7 @@ class Region:
         return found
 
     def get_leaves(self) -> List["Region"]:
-        """
-        Return a depth-first list of all leaf regions
-        """
+        """Return a depth-first list of all leaf regions."""
         leaves = []
 
         if not self.regions:
@@ -266,9 +257,7 @@ class Region:
         return leaves
 
     def get_leaf_region_types(self) -> Set[RegionType]:
-        """
-        Return a set of all leaf region types
-        """
+        """Return a set of all leaf region types."""
         leaves = self.get_leaves()
         rtypes = set()
 
@@ -278,9 +267,7 @@ class Region:
         return rtypes
 
     def get_subregion_ids(self) -> Set[str]:
-        """
-        Return a set of the region_ids of all subregions
-        """
+        """Return a set of the region_ids of all subregions."""
         ids: Set[str] = set()
 
         if not self.regions:
@@ -294,8 +281,7 @@ class Region:
 
 
 class Assay:
-    """
-    Class representing a specific assay design.
+    """Class representing a specific assay design.
 
     An assay contains metadata and a list of (possible nested regions) defining
     the structure of the assay reads.
@@ -305,6 +291,7 @@ class Assay:
     """
 
     def __init__(self, name: str, assay_spec: Optional[List[Region]] = None):
+        """Initialize an assay."""
         self.name = name
         self.assay_spec: List[Region] = assay_spec or []
 
@@ -370,9 +357,7 @@ class Assay:
 
     @property
     def region_ids(self) -> Set[str]:
-        """
-        Return a set with all regions ids in this assay.
-        """
+        """Return a set with all regions ids in this assay."""
         ids = set()
         for r in self.assay_spec:
             ids.add(r.region_id)
@@ -382,8 +367,7 @@ class Assay:
 
     @classmethod
     def from_yaml(cls, filename: PathType) -> "Assay":
-        """
-        Parse an assay from a yaml file.
+        """Parse an assay from a yaml file.
 
         :param filename: path to a design config file
         """
@@ -392,25 +376,19 @@ class Assay:
         return cls._load_assay_model(checked_obj)
 
     def to_json(self):
+        """Return a json representation of the assay."""
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
 
     def get_sequence(self) -> str:
-        """
-        Return a sequence representing this region.
-        """
+        """Return a sequence representing this region."""
         s = []
         for region in self.assay_spec:
             s.append(region.get_sequence())
 
         return "".join(s)
 
-    def update_spec(self):
-        for r in self.assay_spec:
-            r.update_attr()
-
     def get_region_by_id(self, region_id: str) -> Optional[Region]:
-        """
-        Retrieve a region by its id.
+        """Retrieve a region by its id.
 
         :param region_id: id of the region to retrieve
         :return: region with the given id or None if not found
@@ -424,8 +402,7 @@ class Assay:
 
     @cache
     def get_regions_by_type(self, region_type: RegionType) -> List[Region]:
-        """
-        Retrieve all regions of a given type.
+        """Retrieve all regions of a given type.
 
         :param region_type: region type to retrieve
         :return: list of regions with the given type
@@ -442,8 +419,7 @@ class Assay:
 
 
 def get_position_in_parent(assay: Assay, region_id: str) -> Tuple[int, int]:
-    """
-    Return the start and end position of a region relative to its parent region.
+    """Return the start and end position of a region relative to its parent region.
 
     This assumes the amplicon consists of only fixed length regions in the path
     from the start of the amplicon up until the region of interest.

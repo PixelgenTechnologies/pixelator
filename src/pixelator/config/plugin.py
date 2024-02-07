@@ -1,8 +1,8 @@
-"""
-Helpers for configuration plugin entrypoints
+"""Helpers for configuration plugin entrypoints.
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 import logging
 from typing import Generator, List, TYPE_CHECKING, Union
@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def fetch_config_plugins() -> Generator[importlib.metadata.EntryPoint, None, None]:
-    """
-    Find plugins and return them as in a generator
+    """Find plugins and return them as in a generator.
 
     :returns: A generator of the loaded plugins
     """
@@ -47,6 +46,7 @@ def fetch_config_plugins() -> Generator[importlib.metadata.EntryPoint, None, Non
 
 
 def load_config_plugins(config: Config) -> Config:
+    """Load all config plugins."""
     new_config = config
 
     for entry_point in fetch_config_plugins():

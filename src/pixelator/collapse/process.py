@@ -5,6 +5,7 @@ This module contains functions for the collapse and error correction of MPX data
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
+
 import logging
 import tempfile
 import typing
@@ -29,8 +30,10 @@ with warnings.catch_warnings():
     from umi_tools._dedup_umi import edit_distance
     from umi_tools.network import breadth_first_search
 
+from pathlib import Path
+from typing import Union
+
 from pixelator.collapse.constants import SEED
-from pixelator.exception import FileFqGzEmpty
 from pixelator.types import PathType
 from pixelator.utils import gz_size
 
@@ -41,6 +44,24 @@ np.random.seed(SEED)
 UniqueFragment = str
 UpiB = str
 UniqueFragmentToUpiB = dict[UniqueFragment, list[UpiB]]
+
+
+class FileFqGzEmpty(Exception):
+    """Class to manage empty fastq.gz file exceptions.
+
+    Attributes
+    ----------
+        msg: the error message to output
+        fname: the name of the file
+        size: the size of the file uncompressed (should be 0)
+
+    """
+
+    def __init__(self, msg: str, fname: Union[str, Path], size: int):
+        """Initialize the exception."""
+        self.msg = msg
+        self.fname = fname
+        self.size = size
 
 
 class CollapsedFragment(typing.NamedTuple):

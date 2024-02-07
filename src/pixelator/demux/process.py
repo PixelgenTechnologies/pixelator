@@ -1,5 +1,4 @@
-"""
-This module contains functions for demultiplex reads belonging to antibody panels
+"""Module that contains functions for demultiplex reads belonging to antibody panels.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -30,7 +29,8 @@ def demux_fastq(
     cores: int,
     verbose: bool,
 ) -> None:
-    """
+    """Demultiplex the input fastq file into separate files based on the barcodes.
+
     This function is a wrapper around `cutadapt` to process a `fastq`
     file with molecular pixelation data. A `fasta` file with the barcodes
     to use to demultiplex must be provided (antibody name and its sequence).
