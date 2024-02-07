@@ -1,5 +1,5 @@
 """This module contains all the extra exception classes and handling
-defined by pixelator
+defined by pixelator.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """

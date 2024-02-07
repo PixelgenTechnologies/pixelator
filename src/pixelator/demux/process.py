@@ -1,4 +1,4 @@
-"""This module contains functions for demultiplex reads belonging to antibody panels
+"""This module contains functions for demultiplex reads belonging to antibody panels.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """

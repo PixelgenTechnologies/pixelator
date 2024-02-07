@@ -1,4 +1,4 @@
-"""Helpers for configuration plugin entrypoints
+"""Helpers for configuration plugin entrypoints.
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def fetch_config_plugins() -> Generator[importlib.metadata.EntryPoint, None, None]:
-    """Find plugins and return them as in a generator
+    """Find plugins and return them as in a generator.
 
     :returns: A generator of the loaded plugins
     """

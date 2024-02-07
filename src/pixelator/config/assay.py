@@ -229,7 +229,7 @@ class Region:
         return None
 
     def get_regions_by_type(self, region_type: str) -> List["Region"]:
-        """Return all regions with specified region_type"""
+        """Return all regions with specified region_type."""
         found = []
 
         if self.region_type == region_type:
@@ -242,7 +242,7 @@ class Region:
         return found
 
     def get_leaves(self) -> List["Region"]:
-        """Return a depth-first list of all leaf regions"""
+        """Return a depth-first list of all leaf regions."""
         leaves = []
 
         if not self.regions:
@@ -254,7 +254,7 @@ class Region:
         return leaves
 
     def get_leaf_region_types(self) -> Set[RegionType]:
-        """Return a set of all leaf region types"""
+        """Return a set of all leaf region types."""
         leaves = self.get_leaves()
         rtypes = set()
 
@@ -264,7 +264,7 @@ class Region:
         return rtypes
 
     def get_subregion_ids(self) -> Set[str]:
-        """Return a set of the region_ids of all subregions"""
+        """Return a set of the region_ids of all subregions."""
         ids: Set[str] = set()
 
         if not self.regions:

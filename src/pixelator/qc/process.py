@@ -1,4 +1,4 @@
-"""This module contains functions for processing and QC any MPX amplicon design
+"""This module contains functions for processing and QC any MPX amplicon design.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """

@@ -1,4 +1,4 @@
-"""This module contains functions for doing size-based cell calling
+"""This module contains functions for doing size-based cell calling.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """

@@ -26,7 +26,7 @@ RangeType = typing.TypeVar(
 
 
 class Config:
-    """Class containing the pixelator configuration (assay settings)"""
+    """Class containing the pixelator configuration (assay settings)."""
 
     def __init__(
         self,
