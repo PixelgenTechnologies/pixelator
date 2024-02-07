@@ -28,10 +28,10 @@ from pixelator.pixeldataset.backends import (
     FileBasedPixelDatasetBackend,
     ObjectBasedPixelDatasetBackend,
 )
-from pixelator.pixeldataset.file_formats import (
-    PixelFileFormatSpec,
-    PixelFileParquetFormatSpec,
-    PixelFileCSVFormatSpec,
+from pixelator.pixeldataset.datastores import (
+    PixelDataStore,
+    ZipBasedPixelFileWithParquet,
+    ZipBasedPixelFileWithCSV,
 )
 from pixelator.types import PathType
 
@@ -296,7 +296,7 @@ class PixelDataset:
     def save(
         self,
         path: PathType,
-        file_format: Literal["csv", "parquet"] | PixelFileFormatSpec = "parquet",
+        file_format: Literal["csv", "parquet"] | PixelDataStore = "parquet",
     ) -> None:
         """Save the PixelDataset to a .pxl file in the location provided in `path`.
 
@@ -310,16 +310,16 @@ class PixelDataset:
         """
         logger.debug("Saving PixelDataset to %s", path)
 
-        if isinstance(file_format, PixelFileFormatSpec):
+        if isinstance(file_format, PixelDataStore):
             format_spec = file_format
         elif file_format not in ["csv", "parquet"]:
             raise AssertionError("`file_format` must be `csv` or `parquet`")
         if file_format == "csv":
-            format_spec = PixelFileCSVFormatSpec()
+            format_spec = ZipBasedPixelFileWithCSV(path)
         if file_format == "parquet":
-            format_spec = PixelFileParquetFormatSpec()
+            format_spec = ZipBasedPixelFileWithParquet(path)
 
-        format_spec.save(self, path)
+        format_spec.save(self)
 
     def filter(
         self,

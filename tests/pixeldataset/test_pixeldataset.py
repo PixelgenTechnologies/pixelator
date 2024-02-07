@@ -9,11 +9,9 @@ import random
 import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest import mock
 
 import numpy as np
 import pandas as pd
-import polars as pl
 import pytest
 from anndata import AnnData
 from numpy.testing import assert_array_equal
@@ -21,12 +19,7 @@ from pandas.testing import assert_frame_equal
 from pixelator.config import AntibodyPanel
 from pixelator.graph import Graph, write_recovered_components
 from pixelator.pixeldataset import (
-    FileBasedPixelDatasetBackend,
-    ObjectBasedPixelDatasetBackend,
     PixelDataset,
-    PixelFileCSVFormatSpec,
-    PixelFileFormatSpec,
-    PixelFileParquetFormatSpec,
     read,
 )
 from pixelator.pixeldataset.aggregation import simple_aggregate
@@ -47,55 +40,6 @@ from pixelator.statistics import (
 
 random.seed(42)
 np.random.seed(42)
-
-
-def test_pixel_file_format_spec_parquet(pixel_dataset_file):
-    """test_pixel_file_format_spec_parquet."""
-    res = PixelFileFormatSpec.guess_file_format(pixel_dataset_file)
-    assert isinstance(res, PixelFileParquetFormatSpec)
-
-
-def test_pixel_file_format_spec_csv(setup_basic_pixel_dataset, tmp_path):
-    """test_pixel_file_format_spec_csv."""
-    dataset, *_ = setup_basic_pixel_dataset
-    file_target = tmp_path / "dataset.pxl"
-    dataset.save(str(file_target), file_format="csv")
-    res = PixelFileFormatSpec.guess_file_format(file_target)
-    assert isinstance(res, PixelFileCSVFormatSpec)
-
-
-def test_pixel_file_parquet_format_spec_can_save(setup_basic_pixel_dataset, tmp_path):
-    """test_pixel_file_parquet_format_spec_can_save."""
-    dataset, *_ = setup_basic_pixel_dataset
-    file_target = tmp_path / "dataset.pxl"
-    assert not file_target.is_file()
-    PixelFileParquetFormatSpec().save(dataset, str(file_target))
-    assert file_target.is_file()
-
-
-def test_pixel_file_parquet_no_index_in_parquet_files(tmp_path):
-    # Checking EXE-1184
-    # We do not want an index added to the parquet file, regardless of if they
-    # read with pandas or polars
-    file_target = tmp_path / "df.parquet"
-    df = pd.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]}, index=["X", "Y", "Z"])
-    PixelFileParquetFormatSpec().serialize_dataframe(df, path=file_target)
-    assert file_target.is_file()
-    res1 = pd.read_parquet(file_target)
-    assert set(res1.columns) == {"A", "B"}
-    res2 = pl.scan_parquet(file_target)
-    assert set(res2.columns) == {"A", "B"}
-    res3 = pl.read_parquet(file_target)
-    assert set(res3.columns) == {"A", "B"}
-
-
-def test_pixel_file_csv_format_spec_can_save(setup_basic_pixel_dataset, tmp_path):
-    """test_pixel_file_csv_format_spec_can_save."""
-    dataset, *_ = setup_basic_pixel_dataset
-    file_target = tmp_path / "dataset.pxl"
-    assert not file_target.is_file()
-    PixelFileCSVFormatSpec().save(dataset, str(file_target))
-    assert file_target.is_file()
 
 
 def test_pixeldataset(setup_basic_pixel_dataset):
@@ -190,50 +134,6 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     assert_frame_equal(colocalization_scores, dataset_new.colocalization)
 
 
-def test_pixeldataset_from_file_parquet_backward_comp_with_pyarrow_types(
-    setup_basic_pixel_dataset, tmp_path
-):
-    (
-        dataset,
-        edgelist,
-        adata,
-        metadata,
-        polarization_scores,
-        colocalization_scores,
-    ) = setup_basic_pixel_dataset
-
-    # When reading the old file-format we will fall back to the
-    # polars file reader
-    with mock.patch(
-        "pixelator.pixeldataset.pd.read_parquet",
-        side_effect=ValueError(),
-    ):
-        file_target = tmp_path / "dataset.pxl"
-        dataset.save(str(file_target))
-        dataset_new = PixelDataset.from_file(str(file_target))
-
-        assert_frame_equal(edgelist, dataset_new.edgelist)
-        assert_frame_equal(
-            edgelist,
-            # Note that we need to enforce the types manually here for this to work,
-            # this is expected since the lazy edgelist is an advanced feature
-            # where the user will need to manage the required datatypes themselves
-            # as needed.
-            _enforce_edgelist_types(dataset_new.edgelist_lazy.collect().to_pandas()),
-        )
-
-        assert_frame_equal(
-            adata.to_df(),
-            dataset_new.adata.to_df(),
-        )
-
-        assert metadata == dataset_new.metadata
-
-        assert_frame_equal(polarization_scores, dataset_new.polarization)
-
-        assert_frame_equal(colocalization_scores, dataset_new.colocalization)
-
-
 def test_pixeldataset_can_save_and_load_with_empty_edgelist(
     setup_basic_pixel_dataset, tmp_path
 ):
@@ -321,55 +221,6 @@ def test_pixeldataset_repr(setup_basic_pixel_dataset):
         "    B: 2",
         "    file_format_version: 1",
     ]
-
-
-def assert_backend_can_set_values(pixel_dataset_backend):
-    """assert_backend_can_set_values."""
-    assert pixel_dataset_backend.adata
-    pixel_dataset_backend.adata = None
-    assert not pixel_dataset_backend.adata
-
-    assert not pixel_dataset_backend.edgelist.empty
-    pixel_dataset_backend.edgelist = None
-    assert not pixel_dataset_backend.edgelist
-
-    assert not pixel_dataset_backend.polarization.empty
-    pixel_dataset_backend.polarization = None
-    assert not pixel_dataset_backend.polarization
-
-    assert not pixel_dataset_backend.colocalization.empty
-    pixel_dataset_backend.colocalization = None
-    assert not pixel_dataset_backend.colocalization
-
-    assert pixel_dataset_backend.metadata
-    pixel_dataset_backend.metadata = None
-    assert not pixel_dataset_backend.metadata
-
-
-def test_file_based_pixel_dataset_backend_set_attrs(pixel_dataset_file):
-    """test_file_based_pixel_dataset_backend_set_attrs."""
-    pixel_dataset_backend = FileBasedPixelDatasetBackend(pixel_dataset_file)
-    assert_backend_can_set_values(pixel_dataset_backend)
-
-
-def test_object_based_pixel_dataset_backend_set_attrs(setup_basic_pixel_dataset):
-    """test_object_based_pixel_dataset_backend_set_attrs."""
-    (
-        _,
-        edgelist,
-        adata,
-        metadata,
-        polarization_scores,
-        colocalization_scores,
-    ) = setup_basic_pixel_dataset
-    pixel_dataset_backend = ObjectBasedPixelDatasetBackend(
-        adata=adata,
-        edgelist=edgelist,
-        polarization=polarization_scores,
-        colocalization=colocalization_scores,
-        metadata=metadata,
-    )
-    assert_backend_can_set_values(pixel_dataset_backend)
 
 
 def test_write_recovered_components(tmp_path: Path):

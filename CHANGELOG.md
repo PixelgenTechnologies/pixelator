@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Remove multi-sample processing from all `single-cell` subcommands
 * Add `--sample_name` option to `single-cell amplicon` to overwrite the name derived from the input filename.
 * Add `--skip-input-checks` option to `single-cell amplicon` to make input filename checks warnings instead of errors.
+* Pixeldatasets are now written to disk without creating intermediate files on-disk.
 
 ### Removed
 
@@ -37,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * Bug in README shield formatting
+
 
 ## [0.16.0] - 2024-01-12
 
