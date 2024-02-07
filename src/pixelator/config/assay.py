@@ -382,10 +382,6 @@ class Assay:
 
         return "".join(s)
 
-    def update_spec(self):
-        for r in self.assay_spec:
-            r.update_attr()
-
     def get_region_by_id(self, region_id: str) -> Optional[Region]:
         """Retrieve a region by its id.
 
