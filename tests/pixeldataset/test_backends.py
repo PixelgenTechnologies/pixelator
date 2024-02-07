@@ -1,3 +1,8 @@
+"""Tests for the pixeldataset.backends module.
+
+Copyright (c) 2024 Pixelgen Technologies AB.
+"""
+
 from pixelator.pixeldataset.backends import (
     FileBasedPixelDatasetBackend,
     ObjectBasedPixelDatasetBackend,
