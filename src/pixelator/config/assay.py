@@ -182,6 +182,7 @@ class Region:
         return self.get_len()[1]
 
     def update_attr(self):
+        """Update the attributes of the region."""
         if self.regions:
             for idx, r in enumerate(self.regions):
                 r.update_attr()
@@ -191,6 +192,7 @@ class Region:
         return
 
     def __repr__(self) -> str:
+        """Return str representation of the instance."""
         d = {
             "region_id": self.region_id,
             "region_type": self.region_type,
@@ -204,6 +206,7 @@ class Region:
         return f"{d}"
 
     def to_dict(self):
+        """Return a dictionary representation of the region."""
         d = {
             "region_id": self.region_id,
             "region_type": self.region_type,
@@ -288,6 +291,7 @@ class Assay:
     """
 
     def __init__(self, name: str, assay_spec: Optional[List[Region]] = None):
+        """Initialize an assay."""
         self.name = name
         self.assay_spec: List[Region] = assay_spec or []
 
@@ -372,6 +376,7 @@ class Assay:
         return cls._load_assay_model(checked_obj)
 
     def to_json(self):
+        """Return a json representation of the assay."""
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=False, indent=4)
 
     def get_sequence(self) -> str:
