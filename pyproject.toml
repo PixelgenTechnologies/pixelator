@@ -121,6 +121,7 @@ exclude = ["docs/conf.py"]
 # Since click uses a different layout for the docs strings to generate the
 # cli docs, we ignore these rules here.
 "src/pixelator/cli/**" = ["D200", "D212", "D400", "D415"]
+"src/pixelator/test_utils/**" = ["D"]
 
 [tool.poetry-dynamic-versioning]
 enable = true
