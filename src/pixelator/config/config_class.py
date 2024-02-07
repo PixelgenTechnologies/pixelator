@@ -1,8 +1,8 @@
-"""This module contains classes and functions related to
-the configuration file for pixelator (assay settings).
+"""Module contains classes and functions related to the configuration file for pixelator (assay settings).
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import itertools
@@ -33,6 +33,7 @@ class Config:
         assays: Optional[List[Assay]] = None,
         panels: Optional[List[AntibodyPanel]] = None,
     ) -> None:
+        """Initialize the config object."""
         self.assays: Dict[str, Assay] = {}
         self.panels: typing.MutableMapping[str, List[AntibodyPanel]] = defaultdict(list)
 
@@ -50,6 +51,7 @@ class Config:
         self.assays[assay.name] = assay
 
     def load_panel_file(self, path: PathType) -> None:
+        """Load the panel file."""
         panel = AntibodyPanel.from_csv(path)
         key = panel.name if panel.name is not None else str(panel.filename)
         self.panels[key].append(panel)

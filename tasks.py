@@ -165,7 +165,7 @@ def clean_tests(c):
 
 @task(pre=[clean_build, clean_python, clean_tests, clean_docs])
 def clean(c):
-    """Runs all clean sub-tasks."""
+    """Run all clean sub-tasks."""
     pass
 
 

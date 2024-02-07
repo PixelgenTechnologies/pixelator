@@ -1,4 +1,4 @@
-"""This module contains functions for processing and QC any MPX amplicon design.
+"""Module that contains functions for processing and QC any MPX amplicon design.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -32,7 +32,9 @@ def qc_fastq(
     remove_polyg: bool,
     verbose: bool,
 ) -> None:
-    """This function is a wrapper around `fastp` to pre-process a `fastq`
+    """Filter reads from fastq files on the provided quality criteria.
+
+    This function is a wrapper around `fastp` to pre-process a `fastq`
     file. Duplicated sequences are removed, polyG sequences of length >= 5
     are trimmed. Some filters are used to discard reads (maximum and minimum
     read length and the maximum number of Ns in a read).
@@ -146,7 +148,9 @@ def adapter_qc_fastq(
     cores: int,
     verbose: bool,
 ) -> None:
-    """This function is a wrapper around `cutadapt` to process a `fastq`
+    """Filter reads from fastq files that do not have PBS1/2 sequences.
+
+    This function is a wrapper around `cutadapt` to process a `fastq`
     file with molecular pixelation data. The provided PBS1/2 sequences
     will be searched in the reads and only the reads that contain both
     sequences will be kept.

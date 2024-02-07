@@ -1,4 +1,5 @@
 """Copyright (c) 2023 Pixelgen Technologies AB."""
+
 import itertools
 import logging
 from collections import defaultdict
@@ -17,6 +18,7 @@ class PixelatorWorkdir:
     }
 
     def __init__(self, basedir: PathType):
+        """Initialize the workdir object."""
         self.basedir = Path(basedir)
         self._metadata = self._collect_metadata_files()
 
@@ -74,6 +76,7 @@ class PixelatorWorkdir:
         return {**metadata_files_index}
 
     def metadata_files(self, sample: Optional[str] = None) -> List[Path]:
+        """Get a list of metadata files."""
         if sample:
             return self._metadata[sample]
 

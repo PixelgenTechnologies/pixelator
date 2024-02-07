@@ -2,6 +2,7 @@
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 import logging
 from typing import Generator, List, TYPE_CHECKING, Union
@@ -45,6 +46,7 @@ def fetch_config_plugins() -> Generator[importlib.metadata.EntryPoint, None, Non
 
 
 def load_config_plugins(config: Config) -> Config:
+    """Load all config plugins."""
     new_config = config
 
     for entry_point in fetch_config_plugins():
