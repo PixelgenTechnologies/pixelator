@@ -1,5 +1,4 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
+"""Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
 from pathlib import Path
@@ -11,8 +10,7 @@ from pixelator.types import PathType
 
 
 def load_yaml_file(path: PathType) -> Any:
-    """
-    Load an arbitrary yaml file.
+    """Load an arbitrary yaml file.
 
     :param path: path to the yaml file
     :raises FileExistsError: If the path does not exist

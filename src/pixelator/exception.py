@@ -1,5 +1,4 @@
-"""
-This module contains all the extra exception classes and handling
+"""This module contains all the extra exception classes and handling
 defined by pixelator
 
 Copyright (c) 2022 Pixelgen Technologies AB.
@@ -10,13 +9,14 @@ from typing import Union
 
 
 class FileFqGzEmpty(Exception):
-    """
-    Class to manage empty fastq.gz file exceptions.
+    """Class to manage empty fastq.gz file exceptions.
 
-    Attributes:
+    Attributes
+    ----------
         msg: the error message to output
         fname: the name of the file
         size: the size of the file uncompressed (should be 0)
+
     """
 
     def __init__(self, msg: str, fname: Union[str, Path], size: int):

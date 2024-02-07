@@ -1,5 +1,4 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
+"""Copyright (c) 2023 Pixelgen Technologies AB.
 """
 from typing import Any, ClassVar, List
 
@@ -7,8 +6,7 @@ from click.testing import Result as CliRunnerResult
 
 
 class BaseWorkflowTestMixin:
-    """
-    Base class for WorkflowTestMixin classes.
+    """Base class for WorkflowTestMixin classes.
 
     These mixin classes are always used in conjunction with the PixlatorWorkflowTest.
     """
@@ -17,8 +15,7 @@ class BaseWorkflowTestMixin:
 
     # Type hints for these methods that are injected through __init_subclass__.
     def __get_data(self, key: str) -> Any:
-        """
-        Try to retrieve a key from various data sources.
+        """Try to retrieve a key from various data sources.
 
         Following sources are tried in order:
 
@@ -56,9 +53,7 @@ class BaseWorkflowTestMixin:
         ...
 
     def __init_subclass__(cls, **kwargs):
-        """
-        Some hackery to bind data access functions.
-        """
+        """Some hackery to bind data access functions."""
         super().__init_subclass__(**kwargs)
         thisclass = BaseWorkflowTestMixin
         clsname = cls.__name__
@@ -102,9 +97,7 @@ class BaseWorkflowTestMixin:
         return getattr(self, name, None)
 
     def __base_get_options(self, key: str):
-        """
-        Retrieve test config data from the class variables defined in the test class.
-        """
+        """Retrieve test config data from the class variables defined in the test class."""
         if not hasattr(self, "options"):
             raise ValueError("No options section found in test config.")
 

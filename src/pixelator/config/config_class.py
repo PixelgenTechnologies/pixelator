@@ -1,5 +1,4 @@
-"""
-This module contains classes and functions related to
+"""This module contains classes and functions related to
 the configuration file for pixelator (assay settings).
 
 Copyright (c) 2022 Pixelgen Technologies AB.
@@ -27,9 +26,7 @@ RangeType = typing.TypeVar(
 
 
 class Config:
-    """
-    Class containing the pixelator configuration (assay settings)
-    """
+    """Class containing the pixelator configuration (assay settings)"""
 
     def __init__(
         self,
@@ -48,9 +45,7 @@ class Config:
                 self.panels[key].append(p)
 
     def load_assay(self, path: PathType) -> None:
-        """
-        Load an assay from a yaml file.
-        """
+        """Load an assay from a yaml file."""
         assay = Assay.from_yaml(path)
         self.assays[assay.name] = assay
 
@@ -60,9 +55,7 @@ class Config:
         self.panels[key].append(panel)
 
     def load_assays(self, path: PathType):
-        """
-        Load all assays from a directory containing yaml files.
-        """
+        """Load all assays from a directory containing yaml files."""
         search_path = Path(path)
 
         yaml_files = list(
@@ -76,9 +69,7 @@ class Config:
             self.load_assay(f)
 
     def load_panels(self, path: PathType):
-        """
-        Load all panel files from a directory containing csv files.
-        """
+        """Load all panel files from a directory containing csv files."""
         search_path = Path(path)
 
         csv_files = list(search_path.glob("*.csv"))
@@ -87,17 +78,13 @@ class Config:
             self.load_panel_file(f)
 
     def get_assay(self, assay_name: str) -> Optional[Assay]:
-        """
-        Get an assay by name.
-        """
+        """Get an assay by name."""
         return self.assays.get(assay_name)
 
     def get_panel(
         self, panel_name: str, version: Optional[str] = None
     ) -> Optional[AntibodyPanel]:
-        """
-        Get a panel by name.
-        """
+        """Get a panel by name."""
         panels_with_key = self.panels.get(panel_name)
         if panels_with_key is None:
             return None
@@ -121,8 +108,7 @@ class Config:
 
 
 def load_assays_package(config: Config, package_name: str) -> Config:
-    """
-    Load default assays from a resources package.
+    """Load default assays from a resources package.
 
     :param config: The config object to load assays into
     :param package_name: The name of the package to load assays from
@@ -138,8 +124,7 @@ def load_assays_package(config: Config, package_name: str) -> Config:
 
 
 def load_panels_package(config: Config, package_name: str) -> Config:
-    """
-    Load default panels from a resources package.
+    """Load default panels from a resources package.
 
     :param config: The config object to load panel files into
     :param package_name: The name of the package to load panels from

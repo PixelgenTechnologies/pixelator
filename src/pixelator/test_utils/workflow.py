@@ -1,5 +1,4 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
+"""Copyright (c) 2023 Pixelgen Technologies AB.
 """
 from pathlib import Path
 
@@ -32,8 +31,7 @@ class PixelatorWorkflowTest(
     BasePreQCTestsMixin,
     BaseAmpliconTestsMixin,
 ):
-    """
-    Pixelator workflow test base class.
+    """Pixelator workflow test base class.
 
     This class bundles all the basic tests for each command in the pixelator workflow.
     It is intended to be used as a base class for new workflow tests.
@@ -66,7 +64,5 @@ class PixelatorWorkflowTest(
 
     @property
     def workdir(self) -> Path:
-        """
-        Return the workdir from the workflow context.
-        """
+        """Return the workdir from the workflow context."""
         return self.context.workdir

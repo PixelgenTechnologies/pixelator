@@ -1,4 +1,5 @@
-"""
+"""Module with functions for created permuted data.
+
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
@@ -25,8 +26,7 @@ def _get_random_number_generator(
 def permutations(
     df: RegionByCountsDataFrame, n=50, random_seed: Optional[int] = None
 ) -> Generator[RegionByCountsDataFrame, None, None]:
-    """
-    Generate `n` permutatinos of the data provided in `df`
+    """Generate `n` permutatinos of the data provided in `df`.
 
     :param df: dataframe to use as basis of permutations
     :param n: number of permutations to generate, defaults to 50
@@ -43,7 +43,8 @@ def permute(
     df: RegionByCountsDataFrame,
     random_number_generator: Optional[RandomNumberGenerator] = None,
 ) -> RegionByCountsDataFrame:
-    """
+    """Generate permutations of data frame.
+
     Permute the given dataframe in a way that preserves the number of
     counts in each region. The proportions of each marker is kept
     approximately by sampling from a multinomial distribution of the

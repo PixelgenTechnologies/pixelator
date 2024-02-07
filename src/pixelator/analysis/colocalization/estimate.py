@@ -1,4 +1,5 @@
-"""
+"""Module for estimating colocalization statistics.
+
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
@@ -22,6 +23,15 @@ def estimate_observation_statistics(
     permutation_results: pd.DataFrame,
     funcs: Tuple[CoLocalizationFunction, ...],
 ):
+    """Estimates the observation statistics for colocalization analysis.
+
+    :param observations: The observed data.
+    :param permutation_results: The permutation results.
+    :param funcs: Tuple of colocalization functions.
+    :return: The estimated observation statistics.
+    :rtype: pd.DataFrame
+    """
+
     def estimates():
         for func in funcs:
             func_name = func.name
@@ -61,6 +71,18 @@ def permutation_analysis_results(
     n=50,
     random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
+    """Perform permutation analysis on colocalization data.
+
+    :param data: The input data for colocalization analysis.
+    :param funcs: A tuple of colocalization functions to apply.
+    :param permuter: A function that generates permuted data for analysis.
+    :param transformer: A function to transform the permuted data before analysis. (optional)
+    :param n: The number of permutations to perform. Default is 50.
+    :param random_seed: The random seed for reproducibility. Default is None.
+    :return: The results of the permutation analysis.
+    :rtype: pd.DataFrame
+    """
+
     def constuct_permutation_data(data, n):
         for idx, permuted_df in enumerate(permuter(data, n=n, random_seed=random_seed)):
             df_for_comp = transformer(permuted_df) if transformer else permuted_df

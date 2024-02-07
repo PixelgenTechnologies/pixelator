@@ -1,5 +1,4 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
+"""Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import itertools
 import logging
@@ -12,9 +11,7 @@ from pixelator.utils import get_sample_name
 
 
 class PixelatorWorkdir:
-    """
-    Tools to collect files from the workdir folder.
-    """
+    """Tools to collect files from the workdir folder."""
 
     _SEARCH_PATTERNS = {
         "metadata": "**/*.meta.json",
@@ -53,8 +50,7 @@ class PixelatorWorkdir:
         return grouped_files
 
     def _collect_metadata_files(self) -> Dict[str, List[Path]]:
-        """
-        Collect all metadata files.
+        """Collect all metadata files.
 
         Metadata files are those that end with `.meta.json`.
         The files will be returned as a flat list
@@ -62,7 +58,6 @@ class PixelatorWorkdir:
         :raises AssertionError: If no metadata files are found
         :return: A list of metadata files
         """
-
         files = self._collect_files("metadata")
         if files is None or len(files) == 0:
             logging.warning(f"No metadata files found in {self.basedir}")

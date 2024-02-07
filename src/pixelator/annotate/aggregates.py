@@ -1,5 +1,4 @@
-"""
-This module contains functions for finding aggregates
+"""This module contains functions for finding aggregates
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -21,8 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def specificity_tau(matrix: np.ndarray) -> np.ndarray:
-    """
-    Tau specificity score computed as described in [1]_.
+    """Tau specificity score computed as described in [1]_.
 
     Essentially it gives us a score between 0 and 1, where a component that
     expresses a single marker would have a tau score of 1, and one where all
@@ -48,8 +46,7 @@ def specificity_tau(matrix: np.ndarray) -> np.ndarray:
 
 
 def call_aggregates(adata: AnnData, inplace: bool = True) -> Optional[AnnData]:
-    """
-    We defined aggregates as components where either:
+    """We defined aggregates as components where either:
      - A single or a handful of markers account for almost all of the count data.
        These can likely be attributed to single antibodies forming aggregates
      - Low tau scores, meaning a an even number of counts for multiple markers.

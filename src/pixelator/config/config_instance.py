@@ -1,5 +1,4 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
+"""Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
 from pixelator.config.config_class import (

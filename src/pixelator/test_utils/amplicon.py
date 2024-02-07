@@ -1,5 +1,4 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
+"""Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import logging
 from pathlib import Path
@@ -12,8 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAmpliconTestsMixin(BaseWorkflowTestMixin):
-    """
-    Base class for amplicon command tests.
+    """Base class for amplicon command tests.
 
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:

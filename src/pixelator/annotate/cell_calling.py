@@ -1,5 +1,4 @@
-"""
-This module contains functions for doing size-based cell calling
+"""This module contains functions for doing size-based cell calling
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -26,8 +25,7 @@ def find_component_size_limits(
     component_sizes: np.ndarray,
     direction: Literal["lower", "upper"],
 ) -> Optional[int]:
-    """
-    This function will attempt to find a cutoff for a distribution of component sizes.
+    """This function will attempt to find a cutoff for a distribution of component sizes.
     The direction of the cut-off is determined by the `direction` parameter (lower for
     min size and upper for max size).
 
@@ -66,8 +64,7 @@ def find_component_size_limits(
     """
 
     def log_size_and_rank(df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Rank component sizes by size, sort by their rank, and compute the
+        """Rank component sizes by size, sort by their rank, and compute the
         log10 of both the sizes and ranks. The input dataframe must contain
         a `size` column with the component sizes. A new dataframe is
         returned with two new columns `log10_size` and `log10_rank`.
@@ -79,8 +76,7 @@ def find_component_size_limits(
         return df
 
     def smooth(df: pd.DataFrame, x_var: str, y_var: str) -> pd.DataFrame:
-        """
-        Calculate a smoothing spline of df[x_var] ~ df[y_var]
+        """Calculate a smoothing spline of df[x_var] ~ df[y_var]
         to make it possible to calculate a less unstable derivate.
         The input dataframe must contain the `x_var` and `y_var`
         columns, a new column `smooth` is added to the returned
@@ -96,8 +92,7 @@ def find_component_size_limits(
         return df
 
     def derivatives(df: pd.DataFrame, x_var: str) -> pd.DataFrame:
-        """
-        Calculate the first and second derivatives of the smoothed
+        """Calculate the first and second derivatives of the smoothed
         `x_var` variable. The input dataframe must contain the
         `x_var` and `smooth` columns. The returned dataframe
         contains two new columns `der1` and `der2` with the
@@ -108,8 +103,7 @@ def find_component_size_limits(
         return df
 
     def find_der1_vs_der2_outliers(df: pd.DataFrame) -> pd.Series:
-        """
-        Find the distance from origo to each component in
+        """Find the distance from origo to each component in
         the space df[der1] ~ df[der2], then try to find
         outliers in the upper part of component ranks, by
         looking at the standard deviation of the distances.
@@ -128,8 +122,7 @@ def find_component_size_limits(
         return df["rank"] == rank - 1
 
     def minimum_der2(df: pd.DataFrame) -> pd.Series:
-        """
-        Find argmin element. The function returns
+        """Find argmin element. The function returns
         a boolean Series where the global minimum
         of `der2` evaluates to True. The input dataframe
         must contain the `der2` column.

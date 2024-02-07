@@ -1,5 +1,4 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
+"""Copyright (c) 2023 Pixelgen Technologies AB.
 """
 import logging
 
@@ -11,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAnalysisTestsMixin(BaseWorkflowTestMixin):
-    """
-    Base class for analysis command tests.
+    """Base class for analysis command tests.
 
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
