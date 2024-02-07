@@ -1,4 +1,4 @@
-"""This module contains functions for finding aggregates.
+"""Functions for finding aggregates.
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
@@ -46,7 +46,9 @@ def specificity_tau(matrix: np.ndarray) -> np.ndarray:
 
 
 def call_aggregates(adata: AnnData, inplace: bool = True) -> Optional[AnnData]:
-    """We defined aggregates as components where either:
+    """Call aggregates on the adata instance.
+
+    We defined aggregates as components where either:
      - A single or a handful of markers account for almost all of the count data.
        These can likely be attributed to single antibodies forming aggregates
      - Low tau scores, meaning a an even number of counts for multiple markers.
