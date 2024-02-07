@@ -2,6 +2,7 @@
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
+
 import random
 from unittest.mock import MagicMock
 
@@ -603,3 +604,7 @@ def test_layout_coordinates_caches(pentagram_graph):
     # If caching works as intended the backend should only be
     # hit once.
     mock_layout_method.assert_called_once()
+
+
+def test__repr__(pentagram_graph):
+    assert repr(pentagram_graph) == "Graph with 5 vertices and 5 edges"

@@ -271,3 +271,7 @@ class Graph:
                             of different length
         """
         self._backend.add_names_to_vertexes(vs_names=vs_names)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the graph."""
+        return f"Graph with {self.vcount()} vertices and {self.ecount()} edges"

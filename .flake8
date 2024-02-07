@@ -9,4 +9,4 @@ arg-type-hints-in-signature = True
 arg-type-hints-in-docstring = False
 # Ignore documentation linting in tests
 per-file-ignores =
-    tests/**: DOC
+    tests/**: DOC, D
