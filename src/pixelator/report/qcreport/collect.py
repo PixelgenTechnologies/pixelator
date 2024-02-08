@@ -2,6 +2,7 @@
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
+
 import json
 import logging
 import typing
@@ -307,7 +308,7 @@ def collect_report_data(input_path: str, sample_id: str) -> QCReportData:
         raise NotADirectoryError(f"annotate folder missing in {source_path}")
 
     # parse filtered dataset
-    dataset_file = source_path / f"{sample_id}.dataset.pxl"
+    dataset_file = source_path / f"{sample_id}.annotate.dataset.pxl"
     if not dataset_file.is_file():
         raise FileExistsError(f"dataset file {dataset_file} not found")
 
