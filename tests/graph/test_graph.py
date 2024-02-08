@@ -316,7 +316,7 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
         result.sort_index(),
         pd.DataFrame.from_dict(
             data={
-                "0": {
+                0: {
                     "x": -0.19130137780050335,
                     "y": -0.995853333686976,
                     "A": 1,
@@ -325,7 +325,7 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "2": {
+                2: {
                     "x": 0.8830198712248385,
                     "y": -0.4852152436940987,
                     "A": 0,
@@ -334,7 +334,7 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "3": {
+                3: {
                     "x": -0.9999999999999999,
                     "y": -0.12342422456086793,
                     "A": 0,
@@ -343,7 +343,7 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "D": 1,
                     "E": 0,
                 },
-                "1": {
+                1: {
                     "x": -0.42674182538070177,
                     "y": 0.9138447918386549,
                     "A": 0,
@@ -352,7 +352,7 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "4": {
+                4: {
                     "x": 0.7350233319563663,
                     "y": 0.6906480101032882,
                     "A": 0,
@@ -381,7 +381,7 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
         result.sort_index(),
         pd.DataFrame.from_dict(
             {
-                "0": {
+                0: {
                     "x": -2.176250899482822,
                     "y": -2.0000000000000004,
                     "z": 0.5137431483730066,
@@ -394,7 +394,20 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "1": {
+                1: {
+                    "x": -7.771561172376096e-16,
+                    "y": 3.000000000000001,
+                    "z": 1.27675647831893e-15,
+                    "x_norm": -2.590520390792031e-16,
+                    "y_norm": 1.0,
+                    "z_norm": 4.2558549277297654e-16,
+                    "A": 0,
+                    "B": 1,
+                    "C": 0,
+                    "D": 0,
+                    "E": 0,
+                },
+                2: {
                     "x": 2.176250899482823,
                     "y": -2.0000000000000004,
                     "z": -0.5137431483730084,
@@ -402,12 +415,12 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
                     "y_norm": -0.6666666666666665,
                     "z_norm": -0.17124771612433606,
                     "A": 0,
-                    "B": 1,
-                    "C": 0,
+                    "B": 0,
+                    "C": 1,
                     "D": 0,
                     "E": 0,
                 },
-                "2": {
+                3: {
                     "x": -3.521247923410738,
                     "y": 0.500000000000001,
                     "z": -0.3175107271818993,
@@ -416,24 +429,11 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
                     "z_norm": -0.08892078954761284,
                     "A": 0,
                     "B": 0,
-                    "C": 1,
-                    "D": 0,
-                    "E": 0,
-                },
-                "3": {
-                    "x": -7.771561172376096e-16,
-                    "y": 3.000000000000001,
-                    "z": 1.27675647831893e-15,
-                    "x_norm": -2.590520390792031e-16,
-                    "y_norm": 1.0,
-                    "z_norm": 4.2558549277297654e-16,
-                    "A": 0,
-                    "B": 0,
                     "C": 0,
                     "D": 1,
                     "E": 0,
                 },
-                "4": {
+                4: {
                     "x": 3.5212479234107374,
                     "y": 0.4999999999999992,
                     "z": 0.31751072718189965,
@@ -488,7 +488,7 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
         result.sort_index(),
         pd.DataFrame.from_dict(
             {
-                "0": {
+                0: {
                     "x": -0.9648627593518555,
                     "y": 0.6407664038966624,
                     "z": -0.033615468664985694,
@@ -501,7 +501,7 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "2": {
+                2: {
                     "x": 0.06231005082947333,
                     "y": 0.6879998987122531,
                     "z": -0.9306229217434148,
@@ -514,7 +514,7 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "3": {
+                3: {
                     "x": -0.6574427161103169,
                     "y": -0.29032243099867855,
                     "z": 0.9067564430700126,
@@ -527,7 +527,7 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "D": 1,
                     "E": 0,
                 },
-                "1": {
+                1: {
                     "x": 0.5599954246326997,
                     "y": -0.8243431466963642,
                     "z": 0.5981413573809647,
@@ -540,7 +540,7 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "4": {
+                4: {
                     "x": 0.9999999999999999,
                     "y": -0.21410072491387208,
                     "z": -0.5406594100425767,

@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 from matplotlib import cm
+import networkx as nx
+import pandas as pd
 from typing import Literal, Tuple
 
 from pixelator.graph import Graph
@@ -42,6 +44,91 @@ def _calculate_densities(coordinates, distance_cutoff, unit_sphere_surface):
     densities = np.log(raw_sums, out=raw_sums, where=(raw_sums > 1))
     densities = densities / np.max(densities)
     return densities
+
+
+def plot_2d_graph(
+    component_graph: Graph,
+    marker: str = None,
+    layout_algorithm: Literal[
+        "fruchterman_reingold", "kamada_kawai", "pmds"
+    ] = "fruchterman_reingold",
+    colors=Literal["lightgrey", "mistyrose", "red", "darkred"],
+    plot_nodes=True,
+    plot_edges=False,
+    log_scale=True,
+    node_size=0.5,
+    edge_width=0.3,
+    show_Bnodes=False,
+    collect_scales=False,
+    return_plot_list=False,
+    cache_layout: bool = False,
+) -> Tuple[plt.Figure, plt.Axes]:
+    """Plot a 2D graph for the marker in the provided component.
+
+    :param component_graph: A component graph to plot for.
+    :type component_graph: Graph
+    :param marker: marker to plot this for.
+    :type marker: str
+    :param layout_algorithm: Layout algorithm to use. Options are:
+                            "fruchterman_reingold" and "kamada_kawai"
+    :type layout_algorithm: Literal["fruchterman_reingold", "kamada_kawai", "pmds"], optional
+    :param colors: Colors to use for the plot, defaults to ["lightgrey", "mistyrose", "red", "darkred"]
+    :type colors: Literal["lightgrey", "mistyrose", "red", "darkred"], optional
+    :param plot_nodes: Whether to plot nodes, defaults to True
+    :type plot_nodes: bool, optional
+    :param plot_edges: Whether to plot edges, defaults to False
+    :type plot_edges: bool, optional
+    :param log_scale: Whether to use log scale for node size, defaults to True
+    :type log_scale: bool, optional
+    :param node_size: Size of the nodes, defaults to 0.5
+    :type node_size: float, optional
+    :param edge_width: Width of the edges, defaults to 0.3
+    :type edge_width: float, optional
+    :param show_Bnodes: Whether to show B-nodes, defaults to False
+    :type show_Bnodes: bool, optional
+    :param collect_scales: Whether to collect scales, defaults to False
+    :type collect_scales: bool, optional
+    :param return_plot_list: Whether to return a list of plots, defaults to False
+    :type return_plot_list: bool, optional
+    :param cache_layout: Whether to cache the layout for faster computations on subsequent calls, defaults to False
+    :type cache_layout: bool, optional
+    :return: A matplotlib 2D graph figure, and its associated Axes instance
+    :rtype: Tuple[plt.Figure, plt.Axes]
+    :raises AssertionError: If the provided `layout_algorithm` is not valid, or there are no nodes with the provided `marker`
+    """
+    coordinates = component_graph.layout_coordinates(
+        layout_algorithm=layout_algorithm,
+        cache=cache_layout,
+        only_keep_a_pixels=not show_Bnodes,
+    )
+    filtered_coordinates = coordinates
+    if marker is not None:
+        filtered_coordinates = filtered_coordinates.filter(
+            items=np.nonzero(filtered_coordinates[marker] > 0)[0]
+        )
+        if len(filtered_coordinates) == 0:
+            raise AssertionError(f"No nodes found with {marker}.")
+
+    fig, ax = plt.subplots(figsize=(6, 6))
+    if not plot_edges or not show_Bnodes:
+        edgelist = []
+    else:
+        edgelist = pd.DataFrame(component_graph.es)
+        edgelist = edgelist[edgelist[0].isin(filtered_coordinates.index)]
+        edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
+        edgelist = edgelist.loc[:, [0, 1]].to_numpy()
+
+    nx.draw_networkx(
+        component_graph.raw,
+        nodelist=filtered_coordinates.index,
+        pos=coordinates.loc[:, ["x", "y"]].T.to_dict("list"),
+        ax=ax,
+        node_size=node_size,
+        with_labels=False,
+        edgelist=edgelist,
+    )
+
+    return fig, ax
 
 
 @experimental
