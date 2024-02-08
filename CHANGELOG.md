@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add `--skip-input-checks` option to `single-cell amplicon` to make input filename checks warnings instead of errors.
 * Pixeldatasets are now written to disk without creating intermediate files on-disk.
 
+### Changed
+
+* The output name of the `.pxl` file from the `annotate` step is now `*.annotated.dataset.pxl`
+* The output name of the `.pxl` file from the `analysis` step is now `*.analysis.dataset.pxl`
+
+
 ### Removed
 
 * Remove `--input1_pattern` and `--input2_pattern` from `single-cell amplicon` command.
