@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * A nice string representation for the `Graph` class, to let you know how many nodes and edges there are in the
   current graph object instance.
 
+### Changed
+
+* The output name of the `.pxl` file from the `annotate` step is now `*.annotated.dataset.pxl`
+* The output name of the `.pxl` file from the `analysis` step is now `*.analysis.dataset.pxl`
+
+
 ### Removed
 
 * Remove `--input1_pattern` and `--input2_pattern` from `single-cell amplicon` command.

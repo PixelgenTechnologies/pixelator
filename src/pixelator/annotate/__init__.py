@@ -225,7 +225,7 @@ def annotate_components(
     adata.uns["version"] = __version__
     metadata = {"version": __version__, "sample": output_prefix}
     dataset = PixelDataset.from_data(edgelist=edgelist, adata=adata, metadata=metadata)
-    dataset.save(str(Path(output) / f"{output_prefix}.dataset.pxl"))
+    dataset.save(str(Path(output) / f"{output_prefix}.annotate.dataset.pxl"))
 
     # save metrics (JSON)
     with open(metrics_file, "w") as outfile:

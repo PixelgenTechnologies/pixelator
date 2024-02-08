@@ -2,6 +2,7 @@
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
+
 import json
 import logging
 from dataclasses import asdict, dataclass
@@ -136,7 +137,7 @@ def analyse_pixels(
         )
     }
     # save dataset
-    dataset.save(str(Path(output) / f"{output_prefix}.dataset.pxl"))
+    dataset.save(str(Path(output) / f"{output_prefix}.analysis.dataset.pxl"))
 
     # save metrics (JSON)
     with open(metrics_file, "w") as outfile:

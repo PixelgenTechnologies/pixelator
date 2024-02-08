@@ -3,6 +3,7 @@ Tests for the report.py module
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
+
 import json
 from pathlib import Path
 from unittest import mock
@@ -247,8 +248,8 @@ def test_cell_calling_metrics(adata: AnnData, edgelist: pd.DataFrame, tmp_path: 
 
     input_path = tmp_path / "annotate"
     input_path.mkdir(parents=True, exist_ok=True)
-    dataset.save(str(input_path / "Sample1_01.dataset.pxl"))
-    dataset.save(str(input_path / "Sample2_02.dataset.pxl"))
+    dataset.save(str(input_path / "Sample1_01.annotate.dataset.pxl"))
+    dataset.save(str(input_path / "Sample2_02.annotate.dataset.pxl"))
 
     res = cell_calling_metrics(str(tmp_path))
 

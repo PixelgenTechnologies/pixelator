@@ -133,5 +133,5 @@ def test_annotate_adata(edgelist: pd.DataFrame, tmp_path: Path, panel: AntibodyP
         aggregate_calling=True,
     )
     assert (tmp_path / f"{output_prefix}.raw_components_metrics.csv.gz").is_file()
-    assert (tmp_path / f"{output_prefix}.dataset.pxl").is_file()
+    assert (tmp_path / f"{output_prefix}.annotate.dataset.pxl").is_file()
     assert metrics_file.is_file()

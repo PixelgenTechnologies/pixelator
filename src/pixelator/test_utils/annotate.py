@@ -2,6 +2,7 @@
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
+
 import logging
 from pathlib import Path
 
@@ -68,7 +69,7 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
     @pytest.mark.dependency(depends=["test_annotate_run"])
     def test_annotate_dataset_exists(self):
         """Check that the pixel file is created."""
-        dataset_files = (self.workdir / "annotate").glob("*.dataset.pxl")
+        dataset_files = (self.workdir / "annotate").glob("*.annotate.dataset.pxl")
         for f in dataset_files:
             assert f.is_file()
 

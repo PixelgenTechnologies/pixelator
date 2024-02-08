@@ -502,7 +502,7 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         raise AssertionError(f"annotate folder missing in {path}")
 
     # collect the dataset files (filtered)
-    files = list(source_path.glob("*.dataset.pxl"))
+    files = list(source_path.glob("*.annotate.dataset.pxl"))
     if files is None or len(files) == 0:
         raise AssertionError(
             f"No dataset files found in {source_path}. Did you run annotate?"
