@@ -674,7 +674,7 @@ def create_dynamic_report(
 
     umi_counts = {
         "after_collapse": summary_collapse["output_molecules"],
-        "after_cell_calling": summary_cell_calling["molecules"],
+        "after_cell_calling": summary_cell_calling["total_molecules"],
     }
 
     fraction_discarded_umis = round(

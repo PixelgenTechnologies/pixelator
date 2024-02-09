@@ -357,7 +357,7 @@ def test_create_dynamic_report(tmp_path):
             ),
             summary_cell_calling=pd.Series(
                 {
-                    "molecules": 5,
+                    "total_molecules": 5,
                     "total_reads_cell": 1000,
                     "reads_in_aggregates": 1,
                     "umis_in_aggregates": 3,
