@@ -3,14 +3,16 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
+from typing import Literal, Tuple
+
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
 import scipy
 from matplotlib import cm
 from matplotlib.colors import Normalize
-import networkx as nx
-import pandas as pd
-from typing import Literal, Tuple
 
 from pixelator.graph import Graph
 from pixelator.marks import experimental
@@ -112,7 +114,6 @@ def plot_2d_graph(
         edgelist = pd.DataFrame().to_numpy()
     else:
         edgelist = pd.DataFrame(component_graph.es)
-        assert isinstance(edgelist, pd.DataFrame)
         edgelist = edgelist[edgelist[0].isin(filtered_coordinates.index)]
         edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
         edgelist = edgelist.loc[:, [0, 1]].to_numpy()
@@ -183,6 +184,92 @@ def plot_2d_graph(
 
     ax.axis("off")
     return fig, ax
+
+
+def plot_3d_graph(
+    component_graph: Graph,
+    marker=None,
+    layout_algorithm: Literal[
+        "fruchterman_reingold_3d", "kamada_kawai_3d", "pmds_3d"
+    ] = "fruchterman_reingold_3d",
+    log_scale=True,
+    normalize=False,
+    node_size=3.0,
+    opacity=0.4,
+    show_Bnodes=False,
+    cmap="Inferno",
+    cache_layout: bool = False,
+):
+    """Plot a 3D graph of the component graph.
+
+    Args:
+    ----
+        component_graph (Graph): The component graph to be plotted.
+        marker (str, optional): The attribute to use as a marker for the graph nodes. Defaults to "pixel_type".
+        layout_algorithm (Literal["fruchterman_reingold_3d", "kamada_kawai_3d", "pmds_3d"], optional): The layout algorithm to use for positioning the nodes. Defaults to "fruchterman_reingold_3d".
+        log_scale (bool, optional): Whether to use a logarithmic scale for the node size. Defaults to True.
+        normalize (bool, optional): Whether to normalize the node coordinates. Defaults to False.
+        node_size (float, optional): The size of the graph nodes. Defaults to 3.0.
+        opacity (float, optional): The opacity of the graph nodes. Defaults to 0.4.
+        show_Bnodes (bool, optional): Whether to show B-nodes in the graph. Defaults to False.
+        cmap (str, optional): The colormap to use for coloring the graph nodes. Defaults to "cool".
+        cache_layout (bool, optional): Whether to cache the layout coordinates. Defaults to False.
+
+    """
+    coordinates = component_graph.layout_coordinates(
+        layout_algorithm=layout_algorithm,
+        cache=cache_layout,
+        only_keep_a_pixels=not show_Bnodes,
+    )
+    filtered_coordinates = coordinates
+    filtered_coordinates["pixel_type"] = [
+        component_graph.raw.nodes[ind]["pixel_type"]
+        for ind in filtered_coordinates.index
+    ]
+
+    if not show_Bnodes:
+        filtered_coordinates = filtered_coordinates[
+            filtered_coordinates["pixel_type"] == "A"
+        ]
+
+    if marker is not None and log_scale:
+        filtered_coordinates[marker] = np.log1p(filtered_coordinates[marker])
+
+    fig = go.Figure(
+        data=[
+            go.Scatter3d(
+                x=(
+                    filtered_coordinates["x_norm"]
+                    if normalize
+                    else filtered_coordinates["x"]
+                ),
+                y=(
+                    filtered_coordinates["y_norm"]
+                    if normalize
+                    else filtered_coordinates["y"]
+                ),
+                z=(
+                    filtered_coordinates["z_norm"]
+                    if normalize
+                    else filtered_coordinates["z"]
+                ),
+                mode="markers",
+                marker=dict(
+                    size=node_size,
+                    color=filtered_coordinates[marker] if marker is not None else None,
+                    colorscale=cmap,
+                    opacity=opacity,
+                    colorbar=(
+                        dict(thickness=20, title=marker) if marker is not None else None
+                    ),
+                ),
+            )
+        ]
+    )
+
+    fig.update_layout(title="component")
+    fig.show()
+    return fig
 
 
 @experimental
