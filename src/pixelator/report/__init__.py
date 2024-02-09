@@ -520,7 +520,7 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics["total_molecules"] = adata.obs["molecules"].sum()
         metrics["total_reads_cell"] = adata.obs["reads"].sum()
         metrics["median_reads_cell"] = adata.obs["reads"].median()
-        metrics["mean_edges_cell"] = adata.obs["molecules"].mean()
+        metrics["mean_molecules_cell"] = adata.obs["molecules"].mean()
         metrics["mean_reads_cell"] = adata.obs["reads"].mean()
         metrics["median_upi_cell"] = adata.obs["vertices"].median()
         metrics["mean_upi_cell"] = adata.obs["vertices"].mean()
@@ -544,9 +544,11 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
                 adata.obs["tau_type"]
             )
             metrics["reads_in_aggregates"] = adata[aggregates_mask].obs["reads"].sum()
-            metrics["edges_in_aggregates"] = adata[aggregates_mask].obs["edges"].sum()
-            metrics["edges_pct_in_aggregates"] = round(
-                metrics["edges_in_aggregates"] / metrics["total_edges"], 2
+            metrics["molecules_in_aggregates"] = (
+                adata[aggregates_mask].obs["molecules"].sum()
+            )
+            metrics["molecules_pct_in_aggregates"] = round(
+                metrics["molecules_in_aggregates"] / metrics["total_molecules"], 2
             )
 
         if "min_size_threshold" in adata.uns:
@@ -686,7 +688,7 @@ def create_dynamic_report(
         average_reads_per_cell=(
             summary_all["reads"] / summary_cell_calling["cells_filtered"]
         ),
-        average_antibody_molecules_per_cell=summary_cell_calling["mean_edges_cell"],
+        average_antibody_molecules_per_cell=summary_cell_calling["mean_molecules_cell"],
         average_upias_per_cell=summary_cell_calling["mean_upia_cell"],
         average_umis_per_upia=summary_cell_calling["mean_umi_upia_cell"],
         fraction_reads_in_cells=(
