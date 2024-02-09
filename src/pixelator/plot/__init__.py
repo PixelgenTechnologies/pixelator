@@ -109,9 +109,10 @@ def plot_2d_graph(
         ]
 
     if not show_edges or not show_Bnodes:
-        edgelist = []
+        edgelist = pd.DataFrame().to_numpy()
     else:
         edgelist = pd.DataFrame(component_graph.es)
+        assert isinstance(edgelist, pd.DataFrame)
         edgelist = edgelist[edgelist[0].isin(filtered_coordinates.index)]
         edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
         edgelist = edgelist.loc[:, [0, 1]].to_numpy()
