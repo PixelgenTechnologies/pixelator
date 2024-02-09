@@ -24,28 +24,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
 * The output name of the `.pxl` file from the `annotate` step is now `*.annotated.dataset.pxl`
 * The output name of the `.pxl` file from the `analysis` step is now `*.analysis.dataset.pxl`
+
+### Fixed
+
+* Fix a bug in how discarded UMIs are calculated and reported.
+* Fix deflated counts in the edgelist after collapse.
+* Fix bug where an `r1` or `r2` in the directory part of a read file would break file
+  name sanity checks.
 
 ### Removed
 
 * Remove `--input1_pattern` and `--input2_pattern` from `single-cell amplicon` command.
 * Self-correlations, e.g. CD8 vs CD8 are not longer part of the colocalization results, as these
   values will always be undefined.
-
-### Fixed
-
-* Fix bug where an `r1` or `r2` in the directory part of a read file would break file
-  name sanity checks.
-
-### Changed
-
-* Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
-
-### Fixed
-
-* Fix a bug in how discarded UMIs are calculated and reported.
-* Fix deflated counts in the edgelist after collapse.
 
 
 ## [0.16.1] - 2024-01-12
