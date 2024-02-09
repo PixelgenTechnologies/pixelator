@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 from matplotlib import cm
+from matplotlib.colors import Normalize
 import networkx as nx
 import pandas as pd
 from typing import Literal, Tuple
@@ -48,53 +49,38 @@ def _calculate_densities(coordinates, distance_cutoff, unit_sphere_surface):
 
 def plot_2d_graph(
     component_graph: Graph,
-    marker: str = None,
+    marker: str = "pixel_type",
     layout_algorithm: Literal[
         "fruchterman_reingold", "kamada_kawai", "pmds"
     ] = "fruchterman_reingold",
-    colors=Literal["lightgrey", "mistyrose", "red", "darkred"],
-    plot_nodes=True,
-    plot_edges=False,
+    show_edges=False,
     log_scale=True,
-    node_size=0.5,
-    edge_width=0.3,
+    node_size=10.0,
+    edge_width=1.0,
     show_Bnodes=False,
-    collect_scales=False,
-    return_plot_list=False,
+    cmap="cool",
     cache_layout: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes]:
-    """Plot a 2D graph for the marker in the provided component.
+    """Plot a 2D graph representation of a component graph.
 
-    :param component_graph: A component graph to plot for.
-    :type component_graph: Graph
-    :param marker: marker to plot this for.
-    :type marker: str
-    :param layout_algorithm: Layout algorithm to use. Options are:
-                            "fruchterman_reingold" and "kamada_kawai"
-    :type layout_algorithm: Literal["fruchterman_reingold", "kamada_kawai", "pmds"], optional
-    :param colors: Colors to use for the plot, defaults to ["lightgrey", "mistyrose", "red", "darkred"]
-    :type colors: Literal["lightgrey", "mistyrose", "red", "darkred"], optional
-    :param plot_nodes: Whether to plot nodes, defaults to True
-    :type plot_nodes: bool, optional
-    :param plot_edges: Whether to plot edges, defaults to False
-    :type plot_edges: bool, optional
-    :param log_scale: Whether to use log scale for node size, defaults to True
-    :type log_scale: bool, optional
-    :param node_size: Size of the nodes, defaults to 0.5
-    :type node_size: float, optional
-    :param edge_width: Width of the edges, defaults to 0.3
-    :type edge_width: float, optional
-    :param show_Bnodes: Whether to show B-nodes, defaults to False
-    :type show_Bnodes: bool, optional
-    :param collect_scales: Whether to collect scales, defaults to False
-    :type collect_scales: bool, optional
-    :param return_plot_list: Whether to return a list of plots, defaults to False
-    :type return_plot_list: bool, optional
-    :param cache_layout: Whether to cache the layout for faster computations on subsequent calls, defaults to False
-    :type cache_layout: bool, optional
-    :return: A matplotlib 2D graph figure, and its associated Axes instance
-    :rtype: Tuple[plt.Figure, plt.Axes]
-    :raises AssertionError: If the provided `layout_algorithm` is not valid, or there are no nodes with the provided `marker`
+    Args:
+    ----
+        component_graph (Graph): The component graph to be plotted.
+        marker (str, optional): The marker used to color the nodes. Defaults to pixel_type.
+        layout_algorithm (Literal["fruchterman_reingold", "kamada_kawai", "pmds"], optional):
+            The layout algorithm used to position the nodes. Defaults to "fruchterman_reingold".
+        show_edges (bool, optional): Whether to show the edges in the plot. Defaults to False.
+        log_scale (bool, optional): Whether to use a logarithmic scale for the marker values. Defaults to True.
+        node_size (float, optional): The size of the nodes. Defaults to 10.0.
+        edge_width (float, optional): The width of the edges. Defaults to 1.0.
+        show_Bnodes (bool, optional): Whether to show the B-nodes in the plot. Defaults to False.
+        cmap (str, optional): The colormap used for coloring the nodes. Defaults to "cool".
+        cache_layout (bool, optional): Whether to cache the layout coordinates. Defaults to False.
+
+    Returns:
+    -------
+        Tuple[plt.Figure, plt.Axes]: The matplotlib figure and axes objects.
+
     """
     coordinates = component_graph.layout_coordinates(
         layout_algorithm=layout_algorithm,
@@ -102,15 +88,27 @@ def plot_2d_graph(
         only_keep_a_pixels=not show_Bnodes,
     )
     filtered_coordinates = coordinates
-    if marker is not None:
+    filtered_coordinates["pixel_type"] = [
+        component_graph.raw.nodes[ind]["pixel_type"]
+        for ind in filtered_coordinates.index
+    ]
+
+    if marker is not None and marker != "pixel_type":
+        if marker not in filtered_coordinates.columns:
+            raise AssertionError(f"Marker {marker} not found in the component graph.")
+
         filtered_coordinates = filtered_coordinates.filter(
-            items=np.nonzero(filtered_coordinates[marker] > 0)[0]
+            items=np.nonzero(filtered_coordinates[marker] > 0)[0], axis=0
         )
         if len(filtered_coordinates) == 0:
             raise AssertionError(f"No nodes found with {marker}.")
 
-    fig, ax = plt.subplots(figsize=(6, 6))
-    if not plot_edges or not show_Bnodes:
+    if not show_Bnodes:
+        filtered_coordinates = filtered_coordinates[
+            filtered_coordinates["pixel_type"] == "A"
+        ]
+
+    if not show_edges or not show_Bnodes:
         edgelist = []
     else:
         edgelist = pd.DataFrame(component_graph.es)
@@ -118,16 +116,71 @@ def plot_2d_graph(
         edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
         edgelist = edgelist.loc[:, [0, 1]].to_numpy()
 
+    color_val = "#1f78b4"  # networkx default color
+    if marker is not None:
+        if marker == "pixel_type":
+            color_val = filtered_coordinates["pixel_type"] == "B"
+        else:
+            if log_scale:
+                color_val = np.log1p(filtered_coordinates.loc[:, marker])
+            else:
+                color_val = filtered_coordinates.loc[:, marker]
+
+    fig, ax = plt.subplots(figsize=(6, 6))
     nx.draw_networkx(
         component_graph.raw,
         nodelist=filtered_coordinates.index,
-        pos=coordinates.loc[:, ["x", "y"]].T.to_dict("list"),
+        pos=filtered_coordinates.loc[:, ["x", "y"]].T.to_dict("list"),
         ax=ax,
         node_size=node_size,
+        node_color=color_val,
+        width=edge_width,
         with_labels=False,
         edgelist=edgelist,
+        cmap=cmap,
+        label="_nolegend_",
     )
 
+    # Plotting a single additional node to add a legend (Is there a better way?)
+    if marker == "pixel_type":
+        a_node_example = filtered_coordinates[
+            filtered_coordinates["pixel_type"] == "A"
+        ].iloc[0, :]
+        ax.scatter(
+            a_node_example["x"],
+            a_node_example["y"],
+            c=0,
+            cmap=cmap,
+            vmin=0,
+            s=node_size,
+            zorder=-9,
+            label="A-nodes",
+        )
+        if show_Bnodes:
+            b_node_example = filtered_coordinates[
+                filtered_coordinates["pixel_type"] == "B"
+            ].iloc[0, :]
+            ax.scatter(
+                b_node_example["x"],
+                b_node_example["y"],
+                c=1,
+                cmap=cmap,
+                vmin=0,
+                s=node_size,
+                zorder=-10,
+                label="B-nodes",
+            )
+        ax.legend()
+    elif marker is not None:
+        plt.colorbar(
+            cm.ScalarMappable(
+                cmap=cmap, norm=Normalize(vmin=0, vmax=np.max(color_val))
+            ),
+            ax=ax,
+            label=marker,
+        )
+
+    ax.axis("off")
     return fig, ax
 
 
