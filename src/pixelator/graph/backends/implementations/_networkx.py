@@ -27,12 +27,6 @@ import pandas as pd
 import polars as pl
 import scipy as sp
 
-with warnings.catch_warnings():
-    # Graspologic raises a numba related warning here, that we can
-    # safely ignore.
-    warnings.filterwarnings("ignore", module="graspologic.models.edge_swaps")
-    from graspologic.partition import leiden
-
 from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
@@ -284,6 +278,13 @@ class NetworkXGraphBackend(GraphBackend):
         **kwargs,
     ) -> VertexClustering:
         """Run community detection using the Leiden algorithm."""
+        # Only importing leiden at runtime since it is very slow to import
+        with warnings.catch_warnings():
+            # Graspologic raises a numba related warning here, that we can
+            # safely ignore.
+            warnings.filterwarnings("ignore", module="graspologic.models.edge_swaps")
+            from graspologic.partition import leiden
+
         graph = self._raw
 
         # TODO This is probably not sufficient for

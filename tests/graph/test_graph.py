@@ -9,9 +9,9 @@ from unittest.mock import MagicMock
 import numpy as np
 import pandas as pd
 import pytest
-from graspologic.match import graph_match
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
+
 from pixelator.graph import Graph
 
 from tests.graph.networkx.test_tools import random_sequence
@@ -275,6 +275,9 @@ def test_get_adjacency_sparse(enable_backend, pentagram_graph):
     # for that and the expected adjacency matrix under which they are identical.
     #
     # Finally it tests for the equality of these rotated matrices.
+
+    # This import is very slow, so take it here
+    from graspologic.match import graph_match
 
     expected = np.array(
         [

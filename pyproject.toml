@@ -93,6 +93,7 @@ build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.pytest.ini_options]
 pythonpath = [ "src" ]
+testpaths = [ "tests" ]
 markers = [
     "integration_test: Marks a test as an integration test, which is often slow (deselect with '-m \"not integration_test\"')",
     "workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow (deselect with '-m \"not workflow_test\"')"]
