@@ -33,7 +33,7 @@
             "name": "--normalization",
             "value": "clr",
             "default_value": "clr",
-            "description": "Which approach to use to normalize the antibody counts: \nraw will use the raw counts\nclr will use the CLR transformed counts\ndenoise will use CLR transformed counts and subtract the counts of the control antibodies"
+            "description": "Which approach to use to normalize the antibody counts: \nraw will use the raw counts\nclr will use the CLR transformed counts"
           },
           {
             "name": "--binarization",
