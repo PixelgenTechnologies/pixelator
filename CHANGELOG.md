@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* QC plot showing UMIs per UPIA vs Tau
 * Performance improvements and reduced bundle size in QC report.
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.

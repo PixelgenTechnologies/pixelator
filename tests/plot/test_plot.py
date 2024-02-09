@@ -4,6 +4,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
 import numpy as np
+import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from pixelator.graph import Graph
@@ -12,7 +13,21 @@ from pixelator.plot import (
     _calculate_distance_to_unit_sphere_zones,
     _unit_sphere_surface,
     plot_3d_heatmap,
+    pxContent_vs_Tau,
 )
+
+
+def test_pxContent_vs_Tau():
+    data = pd.DataFrame(
+        {
+            "umi_per_upia": np.random.uniform(1, 10, 100),
+            "tau": np.random.uniform(0.9, 1, 100),
+            "tau_type": np.random.choice(["high", "low", "normal"], 100),
+            "group": np.random.choice(["A", "B"], 100),
+        }
+    )
+    plot = pxContent_vs_Tau(data, group_by="group")
+    assert plot
 
 
 def test__calculate_distance_to_unit_sphere_zones():

@@ -15,6 +15,19 @@ import scipy
 import seaborn as sns
 from matplotlib import cm
 from matplotlib.colors import Normalize
+import networkx as nx
+import pandas as pd
+from typing import Literal, Tuple, Optional
+from plotnine import (
+    ggplot,
+    aes,
+    geom_point,
+    facet_grid,
+    scale_y_log10,
+    scale_color_manual,
+    theme_minimal,
+    labs,
+)
 
 from pixelator.graph import Graph
 from pixelator.analysis.colocalization import get_differential_colocalization
@@ -53,6 +66,56 @@ def _calculate_densities(coordinates, distance_cutoff, unit_sphere_surface):
     densities = np.log(raw_sums, out=raw_sums, where=(raw_sums > 1))
     densities = densities / np.max(densities)
     return densities
+
+
+def pxContent_vs_Tau(data: pd.DataFrame, group_by: Optional[str] = None) -> ggplot:
+    """Create a scatter plot of pixel content vs marker specificity (Tau).
+
+    :param data: a pandas DataFrame with the columns 'umi_per_upia', 'tau', and 'tau_type'.
+    :param group_by: a column in the DataFrame to group the plot by.
+
+    :return: a scatter plot of pixel content vs marker specificity (Tau).
+    :rtype: ggplot
+    :raises: ValueError if the required columns are not present in the DataFrame
+    :raises: AssertionError if the data types are invalid
+    """
+    # Validate data
+    required_columns = ["umi_per_upia", "tau", "tau_type"]
+    if not all(col in data.columns for col in required_columns):
+        raise ValueError(
+            "'umi_per_upia', 'tau' and 'tau_type' must be available in the DataFrame"
+        )
+
+    assert all(
+        [
+            data["umi_per_upia"].dtype == "float64",
+            data["tau"].dtype == "float64",
+            data["tau_type"].dtype in ["object", "category"],
+        ]
+    ), "Invalid data types"
+
+    if group_by is not None:
+        if group_by not in data.columns:
+            raise ValueError(f"'{group_by}' is missing")
+        assert data[group_by].dtype in [
+            "object",
+            "category",
+        ], "'group_by' must be a character or factor"
+
+    # Create plot
+    plot = (
+        ggplot(data, aes(x="tau", y="umi_per_upia", color="tau_type"))
+        + geom_point()
+        + (facet_grid("~" + group_by) if group_by is not None else "")
+        + scale_y_log10()
+        + scale_color_manual(
+            values={"high": "#ee4000", "low": "#6ca6cd", "normal": "#bebebe"}
+        )
+        + theme_minimal()
+        + labs(x="Marker specificity (Tau)", y="Pixel content (UMI/UPIA)")
+    )
+
+    return plot
 
 
 def plot_2d_graph(
