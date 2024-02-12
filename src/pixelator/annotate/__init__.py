@@ -13,9 +13,7 @@ import numba
 import numpy as np
 import pandas as pd
 import polars as pl
-import scanpy as sc
 from anndata import AnnData
-from graspologic.partition import leiden
 
 from pixelator import __version__
 from pixelator.annotate.aggregates import call_aggregates
@@ -236,6 +234,9 @@ def _cluster_components_using_leiden(
     adata: AnnData, resolution: float = 1.0, random_seed: Optional[int] = None
 ) -> None:
     """Carry out a leiden clustering on the components."""
+    # Import here since the import is very slow and expensive
+    from graspologic.partition import leiden
+
     g = nx.from_scipy_sparse_array(adata.obsp["connectivities"])
     partitions = leiden(g, resolution=resolution, random_seed=random_seed)
     partitions_df = pd.DataFrame.from_dict(partitions, orient="index").sort_index()
@@ -273,6 +274,9 @@ def cluster_components(
     :rtype: Optional[AnnData]
     :raises: AssertionError if `obsmkey` is missing
     """
+    # Import here as it is a slow import
+    import scanpy as sc
+
     if obsmkey not in adata.obsm:
         raise AssertionError(f"Input AnnData is missing '{obsmkey}'")
 
