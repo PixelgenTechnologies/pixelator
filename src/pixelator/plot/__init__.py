@@ -3,11 +3,12 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
-from typing import Literal, Tuple
+from typing import Literal, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
+import polars as pl
 import pandas as pd
 import plotly.graph_objects as go
 import scipy
@@ -16,6 +17,7 @@ from matplotlib.colors import Normalize
 
 from pixelator.graph import Graph
 from pixelator.marks import experimental
+from pixelator.pixeldataset import PixelDataset
 
 
 def _unit_sphere_surface(horizontal_resolution, vertical_resolution):
@@ -50,7 +52,8 @@ def _calculate_densities(coordinates, distance_cutoff, unit_sphere_surface):
 
 
 def plot_2d_graph(
-    component_graph: Graph,
+    pxl_data: PixelDataset,
+    component=Union["str", list],
     marker: str = "pixel_type",
     layout_algorithm: Literal[
         "fruchterman_reingold", "kamada_kawai", "pmds"
@@ -59,35 +62,46 @@ def plot_2d_graph(
     log_scale=True,
     node_size=10.0,
     edge_width=1.0,
-    show_Bnodes=False,
+    show_b_nodes=False,
     cmap="cool",
     cache_layout: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes]:
-    """Plot a 2D graph representation of a component graph.
+    """Plot a 2D graph based on the given pixel data.
 
     Args:
     ----
-        component_graph (Graph): The component graph to be plotted.
-        marker (str, optional): The marker used to color the nodes. Defaults to pixel_type.
-        layout_algorithm (Literal["fruchterman_reingold", "kamada_kawai", "pmds"], optional):
-            The layout algorithm used to position the nodes. Defaults to "fruchterman_reingold".
-        show_edges (bool, optional): Whether to show the edges in the plot. Defaults to False.
-        log_scale (bool, optional): Whether to use a logarithmic scale for the marker values. Defaults to True.
+        pxl_data (PixelDataset): The pixel dataset to plot.
+        component (Union[str, list], optional): The component(s) to plot. Defaults to None.
+        marker (str, optional): The marker attribute to use for coloring the nodes. Defaults to "pixel_type".
+        layout_algorithm (Literal["fruchterman_reingold", "kamada_kawai", "pmds"], optional): The layout algorithm to use. Defaults to "fruchterman_reingold".
+        show_edges (bool, optional): Whether to show the edges in the graph. Defaults to False.
+        log_scale (bool, optional): Whether to use a logarithmic scale for the marker attribute. Defaults to True.
         node_size (float, optional): The size of the nodes. Defaults to 10.0.
         edge_width (float, optional): The width of the edges. Defaults to 1.0.
-        show_Bnodes (bool, optional): Whether to show the B-nodes in the plot. Defaults to False.
-        cmap (str, optional): The colormap used for coloring the nodes. Defaults to "cool".
+        show_b_nodes (bool, optional): Whether to show the B-nodes. Defaults to False.
+        cmap (str, optional): The colormap to use for coloring the nodes. Defaults to "cool".
         cache_layout (bool, optional): Whether to cache the layout coordinates. Defaults to False.
 
     Returns:
     -------
-        Tuple[plt.Figure, plt.Axes]: The matplotlib figure and axes objects.
+        Tuple[plt.Figure, plt.Axes]: The figure and axes objects of the plot.
 
     """
+    if isinstance(component, str):
+        component_edges = pxl_data.edgelist_lazy.filter(
+            pl.col("component") == component
+        )
+        component_graph = Graph.from_edgelist(
+            component_edges,
+            add_marker_counts=True,
+            simplify=True,
+            use_full_bipartite=True,
+        )
+
     coordinates = component_graph.layout_coordinates(
         layout_algorithm=layout_algorithm,
         cache=cache_layout,
-        only_keep_a_pixels=not show_Bnodes,
+        only_keep_a_pixels=not show_b_nodes,
     )
     filtered_coordinates = coordinates
     filtered_coordinates["pixel_type"] = [
@@ -105,14 +119,12 @@ def plot_2d_graph(
         if len(filtered_coordinates) == 0:
             raise AssertionError(f"No nodes found with {marker}.")
 
-    if not show_Bnodes:
+    if not show_b_nodes:
         filtered_coordinates = filtered_coordinates[
             filtered_coordinates["pixel_type"] == "A"
         ]
 
-    if not show_edges or not show_Bnodes:
-        edgelist = pd.DataFrame().to_numpy()
-    else:
+    if show_edges:
         edgelist = pd.DataFrame(component_graph.es)
         edgelist = edgelist[edgelist[0].isin(filtered_coordinates.index)]
         edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
@@ -138,7 +150,7 @@ def plot_2d_graph(
         node_color=color_val,
         width=edge_width,
         with_labels=False,
-        edgelist=edgelist,
+        edgelist=edgelist if show_edges else [],
         cmap=cmap,
         label="_nolegend_",
     )
@@ -158,7 +170,7 @@ def plot_2d_graph(
             zorder=-9,
             label="A-nodes",
         )
-        if show_Bnodes:
+        if show_b_nodes:
             b_node_example = filtered_coordinates[
                 filtered_coordinates["pixel_type"] == "B"
             ].iloc[0, :]
@@ -187,7 +199,8 @@ def plot_2d_graph(
 
 
 def plot_3d_graph(
-    component_graph: Graph,
+    pxl_data: PixelDataset,
+    component: str,
     marker=None,
     layout_algorithm: Literal[
         "fruchterman_reingold_3d", "kamada_kawai_3d", "pmds_3d"
@@ -196,30 +209,43 @@ def plot_3d_graph(
     normalize=False,
     node_size=3.0,
     opacity=0.4,
-    show_Bnodes=False,
+    show_b_nodes=False,
     cmap="Inferno",
     cache_layout: bool = False,
 ):
-    """Plot a 3D graph of the component graph.
+    """Plot a 3D graph of the specified component in the given PixelDataset.
 
     Args:
     ----
-        component_graph (Graph): The component graph to be plotted.
-        marker (str, optional): The attribute to use as a marker for the graph nodes. Defaults to "pixel_type".
-        layout_algorithm (Literal["fruchterman_reingold_3d", "kamada_kawai_3d", "pmds_3d"], optional): The layout algorithm to use for positioning the nodes. Defaults to "fruchterman_reingold_3d".
-        log_scale (bool, optional): Whether to use a logarithmic scale for the node size. Defaults to True.
-        normalize (bool, optional): Whether to normalize the node coordinates. Defaults to False.
-        node_size (float, optional): The size of the graph nodes. Defaults to 3.0.
-        opacity (float, optional): The opacity of the graph nodes. Defaults to 0.4.
-        show_Bnodes (bool, optional): Whether to show B-nodes in the graph. Defaults to False.
-        cmap (str, optional): The colormap to use for coloring the graph nodes. Defaults to "cool".
-        cache_layout (bool, optional): Whether to cache the layout coordinates. Defaults to False.
+        pxl_data (PixelDataset): The PixelDataset containing the data.
+        component (str): The component to plot.
+        marker (optional): The marker to use for coloring the nodes. Defaults to None.
+        layout_algorithm (optional): The layout algorithm to use for positioning the nodes.
+            Defaults to "fruchterman_reingold_3d".
+        log_scale (bool): Whether to apply logarithmic scaling to the marker values. Defaults to True.
+        normalize (bool): Whether to normalize the coordinates. Defaults to False.
+        node_size (float): The size of the nodes. Defaults to 3.0.
+        opacity (float): The opacity of the nodes. Defaults to 0.4.
+        show_b_nodes (bool): Whether to show nodes of type B. Defaults to False.
+        cmap (str): The colormap to use for coloring the nodes. Defaults to "Inferno".
+        cache_layout (bool): Whether to cache the layout coordinates. Defaults to False.
+
+    Returns:
+    -------
+        fig (go.Figure): The plotted 3D graph.
 
     """
+    component_edges = pxl_data.edgelist_lazy.filter(pl.col("component") == component)
+    component_graph = Graph.from_edgelist(
+        component_edges,
+        add_marker_counts=True,
+        simplify=True,
+        use_full_bipartite=True,
+    )
     coordinates = component_graph.layout_coordinates(
         layout_algorithm=layout_algorithm,
         cache=cache_layout,
-        only_keep_a_pixels=not show_Bnodes,
+        only_keep_a_pixels=not show_b_nodes,
     )
     filtered_coordinates = coordinates
     filtered_coordinates["pixel_type"] = [
@@ -227,7 +253,7 @@ def plot_3d_graph(
         for ind in filtered_coordinates.index
     ]
 
-    if not show_Bnodes:
+    if not show_b_nodes:
         filtered_coordinates = filtered_coordinates[
             filtered_coordinates["pixel_type"] == "A"
         ]
