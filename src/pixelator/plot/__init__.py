@@ -8,10 +8,11 @@ from typing import Literal, Tuple, Union
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import polars as pl
 import pandas as pd
 import plotly.graph_objects as go
+import polars as pl
 import scipy
+import seaborn as sns
 from matplotlib import cm
 from matplotlib.colors import Normalize
 
@@ -296,6 +297,69 @@ def plot_3d_graph(
     fig.update_layout(title="component")
     fig.show()
     return fig
+
+
+def plot_colocalization_heatmap(
+    colocalization_data: pd.DataFrame,
+    component: Union[str, None] = None,
+    markers: Union[list, None] = None,
+    cmap="vlag",
+):
+    """Plot a colocalization heatmap based on the provided colocalization data.
+
+    Args:
+    ----
+        colocalization_data (pd.DataFrame): The colocalization data to plot.
+        component (Union[str, None], optional): The component to filter the colocalization data by. Defaults to None.
+        markers (Union[list, None], optional): The markers to include in the heatmap. Defaults to None.
+        cmap (str, optional): The colormap to use for the heatmap. Defaults to "vlag".
+
+    """
+    if component is not None:
+        colocalization_data = colocalization_data.set_index("component").filter(
+            like=component, axis=0
+        )
+        colocalization_data = colocalization_data.reset_index()[
+            ["marker_1", "marker_2", "pearson"]
+        ]
+    else:
+        colocalization_data = colocalization_data.groupby(["marker_1", "marker_2"])[
+            ["pearson"]
+        ].apply(lambda x: np.mean(x))
+        colocalization_data = colocalization_data.reset_index()
+
+    colocalization_data.columns = [
+        "marker_1",
+        "marker_2",
+        "pearson",
+    ]
+
+    colocalization_data_pivot = pd.pivot_table(
+        colocalization_data,
+        index=["marker_1"],
+        columns=["marker_2"],
+        values=["pearson"],
+        fill_value=0,
+    )
+    colocalization_data_pivot.columns = [
+        col[1] for col in colocalization_data_pivot.columns
+    ]  # Remove the term "pearson" from column indices
+
+    if markers is not None:
+        colocalization_data_pivot = colocalization_data_pivot.loc[markers, markers]
+
+    for m in colocalization_data_pivot.index:
+        colocalization_data_pivot.loc[m, m] = 0  # remove autocorrelations
+
+    sns.clustermap(
+        colocalization_data_pivot,
+        yticklabels=True,
+        xticklabels=True,
+        method="complete",
+        cmap="vlag",
+    )
+
+    return plt.gcf(), plt.gca()
 
 
 @experimental
