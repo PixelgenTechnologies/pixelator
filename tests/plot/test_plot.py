@@ -13,11 +13,15 @@ from pixelator.plot import (
     _calculate_distance_to_unit_sphere_zones,
     _unit_sphere_surface,
     plot_3d_heatmap,
-    pxContent_vs_Tau,
+    scatter_umi_per_upia_vs_tau,
 )
 
 
-def test_pxContent_vs_Tau():
+@pytest.mark.mpl_image_compare(
+    hash_library="../snapshots/test_plot/test_scatter_umi_per_upia_vs_tau/scatter_umi_per_upia_vs_tau.json"
+)
+def test_scatter_umi_per_upia_vs_tau():
+    np.random.seed(0)
     data = pd.DataFrame(
         {
             "umi_per_upia": np.random.uniform(1, 10, 100),
@@ -26,8 +30,8 @@ def test_pxContent_vs_Tau():
             "group": np.random.choice(["A", "B"], 100),
         }
     )
-    plot = pxContent_vs_Tau(data, group_by="group")
-    assert plot
+    plot, _ = scatter_umi_per_upia_vs_tau(data, group_by="group")
+    return plot
 
 
 def test__calculate_distance_to_unit_sphere_zones():
