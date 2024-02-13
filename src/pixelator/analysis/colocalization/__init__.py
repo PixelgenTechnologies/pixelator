@@ -4,6 +4,7 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
 import logging
+import numpy as np
 from functools import partial
 from typing import Optional, get_args
 
@@ -288,3 +289,40 @@ def colocalization_scores(
 
     logger.debug("Colocalization scores for dataset computed")
     return scores
+
+
+def differential_colocalization(
+    colocalization_scores_source: pd.DataFrame,
+    colocalization_scores_target: pd.DataFrame,
+) -> pd.DataFrame:
+    """Compute the differential colocalization scores between two datasets.
+
+    :param colocalization_scores_source: colocalization scores for the source dataset
+    :param colocalization_scores_target: colocalization scores for the target dataset
+    :return: a dataframe with the differential colocalization scores
+    :rtype: pd.DataFrame
+    """
+    common_markers = set(colocalization_scores_source["marker_1"]).intersection(
+        set(colocalization_scores_target["marker_1"])
+    )
+    colocalization_scores_source = colocalization_scores_source.filter(
+        lambda x: x["marker_1"] in common_markers
+    ).filter(lambda x: x["marker_2"] in common_markers)
+
+    colocalization_scores_target = colocalization_scores_target.filter(
+        lambda x: x["marker_1"] in common_markers
+    ).filter(lambda x: x["marker_2"] in common_markers)
+
+    colocalization_scores_source = (
+        colocalization_scores_source.groupby(["marker_1", "marker_2"])[["pearson_z"]]
+        .apply(lambda x: np.mean(x))
+        .reset_index()
+    )
+
+    colocalization_scores_target = (
+        colocalization_scores_target.groupby(["marker_1", "marker_2"])[["pearson_z"]]
+        .apply(lambda x: np.mean(x))
+        .reset_index()
+    )
+
+    return colocalization_scores_target
