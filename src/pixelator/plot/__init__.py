@@ -18,16 +18,7 @@ from matplotlib.colors import Normalize
 import networkx as nx
 import pandas as pd
 from typing import Literal, Tuple, Optional
-from plotnine import (
-    ggplot,
-    aes,
-    geom_point,
-    facet_grid,
-    scale_y_log10,
-    scale_color_manual,
-    theme_minimal,
-    labs,
-)
+import seaborn as sns
 
 from pixelator.graph import Graph
 from pixelator.analysis.colocalization import get_differential_colocalization
@@ -35,6 +26,12 @@ from pixelator.marks import experimental
 from pixelator.pixeldataset import PixelDataset
 
 sns.set_style("whitegrid")
+
+from pixelator.plot.constants import (
+    LIGHTGREY,
+    ORANGERED2,
+    SKYBLUE3,
+)
 
 
 def _unit_sphere_surface(horizontal_resolution, vertical_resolution):
@@ -68,14 +65,16 @@ def _calculate_densities(coordinates, distance_cutoff, unit_sphere_surface):
     return densities
 
 
-def pxContent_vs_Tau(data: pd.DataFrame, group_by: Optional[str] = None) -> ggplot:
+def scatter_umi_per_upia_vs_tau(
+    data: pd.DataFrame, group_by: Optional[str] = None
+) -> Tuple[plt.Figure, plt.Axes]:
     """Create a scatter plot of pixel content vs marker specificity (Tau).
 
     :param data: a pandas DataFrame with the columns 'umi_per_upia', 'tau', and 'tau_type'.
     :param group_by: a column in the DataFrame to group the plot by.
 
     :return: a scatter plot of pixel content vs marker specificity (Tau).
-    :rtype: ggplot
+    :rtype: Tuple[plt.Figure, plt.Axes]
     :raises: ValueError if the required columns are not present in the DataFrame
     :raises: AssertionError if the data types are invalid
     """
@@ -102,20 +101,27 @@ def pxContent_vs_Tau(data: pd.DataFrame, group_by: Optional[str] = None) -> ggpl
             "category",
         ], "'group_by' must be a character or factor"
 
-    # Create plot
-    plot = (
-        ggplot(data, aes(x="tau", y="umi_per_upia", color="tau_type"))
-        + geom_point()
-        + (facet_grid("~" + group_by) if group_by is not None else "")
-        + scale_y_log10()
-        + scale_color_manual(
-            values={"high": "#ee4000", "low": "#6ca6cd", "normal": "#bebebe"}
-        )
-        + theme_minimal()
-        + labs(x="Marker specificity (Tau)", y="Pixel content (UMI/UPIA)")
-    )
+    # Define palette
+    palette = {"high": ORANGERED2, "low": SKYBLUE3, "normal": LIGHTGREY}
 
-    return plot
+    # create plot
+    grid = (
+        sns.FacetGrid(
+            data,
+            col=group_by,
+            hue="tau_type",
+            palette=palette,
+            height=4,
+        )
+        if group_by is not None
+        else sns.FacetGrid(data, hue="tau_type", palette=palette, height=4)
+    )
+    grid.map(sns.scatterplot, "tau", "umi_per_upia")
+    grid.set(yscale="log")
+    grid.set_axis_labels("Marker specificity (Tau)", "Pixel content (UMI/UPIA)")
+    grid.add_legend(title="Tau Type")
+
+    return plt.gcf(), plt.gca()
 
 
 def plot_2d_graph(
