@@ -356,7 +356,71 @@ def plot_colocalization_heatmap(
         yticklabels=True,
         xticklabels=True,
         method="complete",
-        cmap="vlag",
+        cmap=cmap,
+    )
+
+    return plt.gcf(), plt.gca()
+
+
+def plot_colocalization_z_heatmap(
+    colocalization_data: pd.DataFrame,
+    component: Union[str, None] = None,
+    markers: Union[list, None] = None,
+    cmap="vlag",
+):
+    """Plot a colocalization heatmap based on the provided colocalization data.
+
+    Args:
+    ----
+        colocalization_data (pd.DataFrame): The colocalization data to plot.
+        component (Union[str, None], optional): The component to filter the colocalization data by. Defaults to None.
+        markers (Union[list, None], optional): The markers to include in the heatmap. Defaults to None.
+        cmap (str, optional): The colormap to use for the heatmap. Defaults to "vlag".
+
+    """
+    if component is not None:
+        colocalization_data = colocalization_data.set_index("component").filter(
+            like=component, axis=0
+        )
+        colocalization_data = colocalization_data.reset_index()[
+            ["marker_1", "marker_2", "pearson_z"]
+        ]
+    else:
+        colocalization_data = colocalization_data.groupby(["marker_1", "marker_2"])[
+            ["pearson_z"]
+        ].apply(lambda x: np.mean(x))
+        colocalization_data = colocalization_data.reset_index()
+
+    colocalization_data.columns = [
+        "marker_1",
+        "marker_2",
+        "pearson_z",
+    ]
+
+    colocalization_data_pivot = pd.pivot_table(
+        colocalization_data,
+        index=["marker_1"],
+        columns=["marker_2"],
+        values=["pearson_z"],
+        fill_value=0,
+    )
+    colocalization_data_pivot.columns = [
+        col[1] for col in colocalization_data_pivot.columns
+    ]  # Remove the term "pearson" from column indices
+
+    if markers is not None:
+        colocalization_data_pivot = colocalization_data_pivot.loc[markers, markers]
+
+    for m in colocalization_data_pivot.index:
+        colocalization_data_pivot.loc[m, m] = 0  # remove autocorrelations
+
+    colocalization_data_pivot = colocalization_data_pivot.fillna(0)
+    sns.clustermap(
+        colocalization_data_pivot,
+        yticklabels=True,
+        xticklabels=True,
+        method="complete",
+        cmap=cmap,
     )
 
     return plt.gcf(), plt.gca()
