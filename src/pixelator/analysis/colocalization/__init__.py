@@ -4,7 +4,6 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
 import logging
-import numpy as np
 from functools import partial
 from typing import Optional, get_args
 
@@ -30,10 +29,7 @@ from pixelator.analysis.colocalization.types import (
     TransformationTypes,
 )
 from pixelator.graph.utils import Graph
-from pixelator.statistics import (
-    correct_pvalues,
-    log1p_transformation,
-)
+from pixelator.statistics import correct_pvalues, log1p_transformation
 
 logger = logging.getLogger(__name__)
 
@@ -291,38 +287,44 @@ def colocalization_scores(
     return scores
 
 
-def differential_colocalization(
-    colocalization_scores_source: pd.DataFrame,
-    colocalization_scores_target: pd.DataFrame,
+def get_differential_colocalization(
+    colocalization_data_frame: pd.DataFrame,
+    source_mask: pd.Series,
+    use_z_score: bool = True,
 ) -> pd.DataFrame:
-    """Compute the differential colocalization scores between two datasets.
+    """Calculate the differential colocalization.
 
-    :param colocalization_scores_source: colocalization scores for the source dataset
-    :param colocalization_scores_target: colocalization scores for the target dataset
-    :return: a dataframe with the differential colocalization scores
-    :rtype: pd.DataFrame
+    Args:
+    ----
+        colocalization_data_frame (pd.DataFrame): The colocalization data frame.
+        source_mask (pd.Series): A boolean series marking the rows that correspond the source data. False values correspond to the target data.
+        use_z_score (bool, optional): Whether to use the z-score. Defaults to True.
+
+    Returns:
+    -------
+        pd.DataFrame: The differential colocalization.
+
     """
-    common_markers = set(colocalization_scores_source["marker_1"]).intersection(
-        set(colocalization_scores_target["marker_1"])
+    if use_z_score:
+        value_col = "pearson_z"
+    else:
+        value_col = "pearson"
+
+    same_marker_mask = (
+        colocalization_data_frame["marker_1"] == colocalization_data_frame["marker_2"]
     )
-    colocalization_scores_source = colocalization_scores_source.filter(
-        lambda x: x["marker_1"] in common_markers
-    ).filter(lambda x: x["marker_2"] in common_markers)
-
-    colocalization_scores_target = colocalization_scores_target.filter(
-        lambda x: x["marker_1"] in common_markers
-    ).filter(lambda x: x["marker_2"] in common_markers)
-
-    colocalization_scores_source = (
-        colocalization_scores_source.groupby(["marker_1", "marker_2"])[["pearson_z"]]
-        .apply(lambda x: np.mean(x))
-        .reset_index()
+    data_frame = colocalization_data_frame[~same_marker_mask]
+    source_mask = source_mask[~same_marker_mask]
+    colocalization_scores_source = data_frame[source_mask]
+    colocalization_scores_target = data_frame[~source_mask]
+    differential_colocalization = (
+        colocalization_scores_source.groupby(["marker_1", "marker_2"])[
+            [value_col]
+        ].median()
+        - colocalization_scores_target.groupby(["marker_1", "marker_2"])[
+            [value_col]
+        ].median()
     )
+    differential_colocalization = differential_colocalization.reset_index()
 
-    colocalization_scores_target = (
-        colocalization_scores_target.groupby(["marker_1", "marker_2"])[["pearson_z"]]
-        .apply(lambda x: np.mean(x))
-        .reset_index()
-    )
-
-    return colocalization_scores_target
+    return differential_colocalization
