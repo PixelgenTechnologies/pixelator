@@ -1,0 +1,8 @@
+"""Contains constants used as part of plotting modules.
+
+Copyright (c) 2023 Pixelgen Technologies AB.
+"""
+
+LIGHTGREY = "#bebebe"
+ORANGERED2 = "#ee4000"
+SKYBLUE3 = "#6ca6cd"
