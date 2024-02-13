@@ -17,7 +17,7 @@ from matplotlib import cm
 from matplotlib.colors import Normalize
 import networkx as nx
 import pandas as pd
-from typing import Literal, Tuple, Optional
+from typing import Literal, Optional, Tuple
 import seaborn as sns
 
 from pixelator.graph import Graph
