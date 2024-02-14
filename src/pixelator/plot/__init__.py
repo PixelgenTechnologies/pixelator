@@ -3,7 +3,7 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
-from typing import Literal, Tuple, Union
+from typing import Literal, Tuple, Union, Optional
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -15,15 +15,12 @@ import scipy
 import seaborn as sns
 from matplotlib import cm
 from matplotlib.colors import Normalize
-import networkx as nx
-import pandas as pd
-from typing import Literal, Optional, Tuple
-import seaborn as sns
 
 from pixelator.graph import Graph
 from pixelator.analysis.colocalization import get_differential_colocalization
 from pixelator.marks import experimental
 from pixelator.pixeldataset import PixelDataset
+from pixelator.plot.constants import NETWORKX_NODE_COLOR
 
 sns.set_style("whitegrid")
 
@@ -126,38 +123,38 @@ def scatter_umi_per_upia_vs_tau(
 
 def plot_2d_graph(
     pxl_data: PixelDataset,
-    component=Union["str", list],
+    component: Union["str", list],
     marker: str = "pixel_type",
     layout_algorithm: Literal[
         "fruchterman_reingold", "kamada_kawai", "pmds"
     ] = "fruchterman_reingold",
-    show_edges=False,
-    log_scale=True,
-    node_size=10.0,
-    edge_width=1.0,
-    show_b_nodes=False,
-    cmap="cool",
+    show_edges: bool = False,
+    log_scale: bool = True,
+    node_size: float = 10.0,
+    edge_width: float = 1.0,
+    show_b_nodes: bool = False,
+    cmap: str = "cool",
     cache_layout: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot a 2D graph based on the given pixel data.
 
-    Args:
-    ----
-        pxl_data (PixelDataset): The pixel dataset to plot.
-        component (Union[str, list], optional): The component(s) to plot. Defaults to None.
-        marker (str, optional): The marker attribute to use for coloring the nodes. Defaults to "pixel_type".
-        layout_algorithm (Literal["fruchterman_reingold", "kamada_kawai", "pmds"], optional): The layout algorithm to use. Defaults to "fruchterman_reingold".
-        show_edges (bool, optional): Whether to show the edges in the graph. Defaults to False.
-        log_scale (bool, optional): Whether to use a logarithmic scale for the marker attribute. Defaults to True.
-        node_size (float, optional): The size of the nodes. Defaults to 10.0.
-        edge_width (float, optional): The width of the edges. Defaults to 1.0.
-        show_b_nodes (bool, optional): Whether to show the B-nodes. Defaults to False.
-        cmap (str, optional): The colormap to use for coloring the nodes. Defaults to "cool".
-        cache_layout (bool, optional): Whether to cache the layout coordinates. Defaults to False.
+    :param pxl_data: The pixel dataset to plot.
+    :param component: The component(s) to plot. Defaults to None.
+    :param marker: The marker attribute to use for coloring the nodes. Defaults to "pixel_type".
+    :param layout_algorithm: The layout algorithm to use. Defaults to "fruchterman_reingold".
+    :param show_edges: Whether to show the edges in the graph. Defaults to False.
+    :param log_scale: Whether to use a logarithmic scale for the marker attribute. Defaults to True.
+    :param node_size: The size of the nodes. Defaults to 10.0.
+    :param edge_width: The width of the edges. Defaults to 1.0.
+    :param show_b_nodes: Whether to show the B-nodes. Defaults to False.
+    :param cmap: The colormap to use for coloring the nodes. Defaults to "cool".
+    :param cache_layout: Whether to cache the layout coordinates. Defaults to False.
 
-    Returns:
-    -------
-        Tuple[plt.Figure, plt.Axes]: The figure and axes objects of the plot.
+    :return: The figure and axes objects of the plot.
+    :rtype: Tuple[plt.Figure, plt.Axes]
+
+    :raises: AssertionError if the marker is not found in the component graph.
+    :raises: AssertionError if no nodes are found with the specified marker.
 
     """
     if isinstance(component, str):
@@ -203,7 +200,7 @@ def plot_2d_graph(
         edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
         edgelist = edgelist.loc[:, [0, 1]].to_numpy()
 
-    color_val = "#1f78b4"  # networkx default color
+    color_val = NETWORKX_NODE_COLOR
     if marker is not None:
         if marker == "pixel_type":
             color_val = filtered_coordinates["pixel_type"] == "B"
@@ -274,38 +271,33 @@ def plot_2d_graph(
 def plot_3d_graph(
     pxl_data: PixelDataset,
     component: str,
-    marker=None,
+    marker: Union[list, None] = None,
     layout_algorithm: Literal[
         "fruchterman_reingold_3d", "kamada_kawai_3d", "pmds_3d"
     ] = "fruchterman_reingold_3d",
-    log_scale=True,
-    normalize=False,
-    node_size=3.0,
-    opacity=0.4,
-    show_b_nodes=False,
-    cmap="Inferno",
+    log_scale: bool = True,
+    normalize: bool = False,
+    node_size: float = 3.0,
+    opacity: float = 0.4,
+    show_b_nodes: bool = False,
+    cmap: str = "Inferno",
     cache_layout: bool = False,
-):
+) -> go.Figure:
     """Plot a 3D graph of the specified component in the given PixelDataset.
 
-    Args:
-    ----
-        pxl_data (PixelDataset): The PixelDataset containing the data.
-        component (str): The component to plot.
-        marker (optional): The marker to use for coloring the nodes. Defaults to None.
-        layout_algorithm (optional): The layout algorithm to use for positioning the nodes.
-            Defaults to "fruchterman_reingold_3d".
-        log_scale (bool): Whether to apply logarithmic scaling to the marker values. Defaults to True.
-        normalize (bool): Whether to normalize the coordinates. Defaults to False.
-        node_size (float): The size of the nodes. Defaults to 3.0.
-        opacity (float): The opacity of the nodes. Defaults to 0.4.
-        show_b_nodes (bool): Whether to show nodes of type B. Defaults to False.
-        cmap (str): The colormap to use for coloring the nodes. Defaults to "Inferno".
-        cache_layout (bool): Whether to cache the layout coordinates. Defaults to False.
-
-    Returns:
-    -------
-        fig (go.Figure): The plotted 3D graph.
+    :param pxl_data: The PixelDataset containing the data.
+    :param component: The component to plot.
+    :param marker: The marker to use for coloring the nodes. Defaults to None.
+    :param layout_algorithm: The layout algorithm to use for positioning the nodes. Defaults to "fruchterman_reingold_3d".
+    :param log_scale: Whether to apply logarithmic scaling to the marker values. Defaults to True.
+    :param normalize: Whether to normalize the coordinates. Defaults to False.
+    :param node_size: The size of the nodes. Defaults to 3.0.
+    :param opacity: The opacity of the nodes. Defaults to 0.4.
+    :param show_b_nodes: Whether to show nodes of type B. Defaults to False.
+    :param cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
+    :param cache_layout: Whether to cache the layout coordinates. Defaults to False.
+    :return: The plotted 3D graph.
+    :rtype: go.Figure
 
     """
     component_edges = pxl_data.edgelist_lazy.filter(pl.col("component") == component)
@@ -375,18 +367,19 @@ def plot_colocalization_heatmap(
     colocalization_data: pd.DataFrame,
     component: Union[str, None] = None,
     markers: Union[list, None] = None,
-    cmap="vlag",
-    use_z_scores=False,
-):
+    cmap: str = "vlag",
+    use_z_scores: bool = False,
+) -> Tuple[plt.Figure, plt.Axes]:
     """Plot a colocalization heatmap based on the provided colocalization data.
 
-    Args:
-    ----
-        colocalization_data (pd.DataFrame): The colocalization data to plot.
-        component (Union[str, None], optional): The component to filter the colocalization data by. Defaults to None.
-        markers (Union[list, None], optional): The markers to include in the heatmap. Defaults to None.
-        cmap (str, optional): The colormap to use for the heatmap. Defaults to "vlag".
-        use_z_scores (bool, optional): Whether to use z-scores. Defaults to False.
+    :param colocalization_data: The colocalization data to plot.
+    :param component: The component to filter the colocalization data by. Defaults to None.
+    :param markers: The markers to include in the heatmap. Defaults to None.
+    :param cmap: The colormap to use for the heatmap. Defaults to "vlag".
+    :param use_z_scores: Whether to use z-scores. Defaults to False.
+
+    :return: The figure and axes objects of the plot.
+    :rtype: Tuple[plt.Figure, plt.Axes]
 
     """
     if use_z_scores:
@@ -444,27 +437,27 @@ def plot_colocalization_heatmap(
 
 def plot_colocalization_diff_heatmap(
     colocalization_data: pd.DataFrame,
-    source_mask: pd.Series,
+    target: str,
+    reference: str,
+    contrast_column: str = "sample",
     markers: Union[list, None] = None,
     n_top_marker_pairs: Union[int, None] = None,
-    cmap="vlag",
-    use_z_score=True,
-):
-    """Plot a colocalization differential heatmap.
+    cmap: str = "vlag",
+    use_z_score: bool = True,
+) -> Tuple[plt.Figure, plt.Axes]:
+    """Plot the differential colocalization between reference and target components.
 
-    Args:
-    ----
-        colocalization_data (pd.DataFrame): The colocalization data.
-        source_mask (pd.Series): A boolean series marking the rows that correspond the source data. False values correspond to the target data.
-        markers (Union[list, None], optional): List of markers to include. Defaults to None.
-        n_top_marker_pairs (Union[int, None], optional): Number of top marker pairs to include. Defaults to None.
-        cmap (str, optional): The colormap to use. Defaults to "vlag".
-        use_z_score (bool, optional): Whether to use z-scores. Defaults to True.
+    :param colocalization_data: The colocalization data frame.
+    :param target: The label for target components in the contrast_column.
+    :param reference: The label for reference components in the contrast_column.
+    :param contrast_column: The column to use for the contrast. Defaults to "sample".
+    :param markers: The markers to include in the heatmap. Defaults to None. At most only one of n_top_marker_pairs or markers should be provided.
+    :param n_top_marker_pairs: The number of top marker pairs to include in the heatmap. Defaults to None. At most only one of n_top_marker_pairs or markers should be provided.
+    :param cmap: The colormap to use for the heatmap. Defaults to "vlag".
+    :param use_z_score: Whether to use the z-score. Defaults to True.
 
-    Returns:
-    -------
-        Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]: The figure and axes objects.
-
+    :return: The figure and axes objects of the plot.
+    :rtype: Tuple[plt.Figure, plt.Axes]
     """
     assert (
         markers is None or n_top_marker_pairs is None
@@ -476,26 +469,21 @@ def plot_colocalization_diff_heatmap(
         value_col = "pearson"
 
     if markers is not None:
-        colocalization_data = colocalization_data[
-            (colocalization_data["marker_1"].isin(markers))
-            & (colocalization_data["marker_2"].isin(markers))
-        ]
+        filter_mask = (colocalization_data["marker_1"].isin(markers)) & (
+            colocalization_data["marker_2"].isin(markers)
+        )
+        colocalization_data = colocalization_data[filter_mask]
 
     differential_colocalization = get_differential_colocalization(
-        colocalization_data, source_mask, use_z_score=use_z_score
+        colocalization_data,
+        target=target,
+        reference=reference,
+        contrast_column=contrast_column,
+        use_z_score=use_z_score,
     )
 
-    differential_colocalization = differential_colocalization.fillna(0)
+    differential_colocalization = differential_colocalization.fillna(0).reset_index()
 
-    pivoted_differential_colocalization = pd.pivot_table(
-        differential_colocalization,
-        index="marker_1",
-        columns="marker_2",
-        values=value_col,
-        fill_value=0,
-    )
-    print(pivoted_differential_colocalization.columns)
-    print(pivoted_differential_colocalization.index)
     if n_top_marker_pairs is not None:
         differential_colocalization["abs_val"] = differential_colocalization[
             value_col
@@ -507,10 +495,35 @@ def plot_colocalization_diff_heatmap(
             set(top_marker_pairs["marker_1"]).union(set(top_marker_pairs["marker_2"]))
         )
 
+    # Making the differential colocalization symmetric
+    differential_colocalization = pd.DataFrame(
+        np.concatenate(
+            [
+                differential_colocalization[
+                    ["marker_1", "marker_2", value_col]
+                ].to_numpy(),
+                differential_colocalization[
+                    ["marker_2", "marker_1", value_col]
+                ].to_numpy(),
+            ],
+        ),
+        columns=["marker_1", "marker_2", value_col],
+    )
+
+    pivoted_differential_colocalization = pd.pivot_table(
+        differential_colocalization,
+        index="marker_1",
+        columns="marker_2",
+        values=value_col,
+    )
+    pivoted_differential_colocalization = (
+        pivoted_differential_colocalization.infer_objects(copy=False).fillna(0)
+    )
+
+    if n_top_marker_pairs is not None:
         pivoted_differential_colocalization = pivoted_differential_colocalization.loc[
             top_markers, top_markers
         ]
-
     sns.clustermap(
         pivoted_differential_colocalization,
         yticklabels=True,

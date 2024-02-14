@@ -289,7 +289,9 @@ def colocalization_scores(
 
 def get_differential_colocalization(
     colocalization_data_frame: pd.DataFrame,
-    source_mask: pd.Series,
+    target: str,
+    reference: str,
+    contrast_column: str = "sample",
     use_z_score: bool = True,
 ) -> pd.DataFrame:
     """Calculate the differential colocalization.
@@ -297,7 +299,9 @@ def get_differential_colocalization(
     Args:
     ----
         colocalization_data_frame (pd.DataFrame): The colocalization data frame.
-        source_mask (pd.Series): A boolean series marking the rows that correspond the source data. False values correspond to the target data.
+        target (str): The label for target components in the contrast_column.
+        reference (str): The label for reference components in the contrast_column.
+        contrast_column (str, optional): The column to use for the contrast. Defaults to "sample".
         use_z_score (bool, optional): Whether to use the z-score. Defaults to True.
 
     Returns:
@@ -314,9 +318,8 @@ def get_differential_colocalization(
         colocalization_data_frame["marker_1"] == colocalization_data_frame["marker_2"]
     )
     data_frame = colocalization_data_frame[~same_marker_mask]
-    source_mask = source_mask[~same_marker_mask]
-    colocalization_scores_source = data_frame[source_mask]
-    colocalization_scores_target = data_frame[~source_mask]
+    colocalization_scores_source = data_frame[data_frame[contrast_column] == reference]
+    colocalization_scores_target = data_frame[data_frame[contrast_column] == target]
     differential_colocalization = (
         colocalization_scores_source.groupby(["marker_1", "marker_2"])[
             [value_col]
