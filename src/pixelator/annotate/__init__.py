@@ -246,7 +246,7 @@ def _cluster_components_using_leiden(
 
 def cluster_components(
     adata: AnnData,
-    obsmkey: Optional[Literal["denoised", "clr", "log1p", "normalized_rel"]] = "clr",
+    obsmkey: Optional[Literal["clr", "log1p"]] = "clr",
     inplace: bool = True,
     random_seed: Optional[int] = None,
 ) -> Optional[AnnData]:

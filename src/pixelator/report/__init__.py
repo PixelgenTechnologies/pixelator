@@ -373,9 +373,7 @@ def collapse_metrics(path: str) -> pd.DataFrame:
             metrics.append(
                 {
                     "input": data["total_count"],
-                    "output_edges": data["total_pixels"],
-                    "output_umi": data["total_unique_umi"],
-                    "output_upi": data["total_unique_upi"],
+                    "output_molecules": data["total_molecules"],
                 }
             )
         except KeyError as error:
@@ -388,7 +386,7 @@ def collapse_metrics(path: str) -> pd.DataFrame:
         index=samples_processed,
         data=metrics,
     )
-    df["duplication"] = round(1 - (df["output_umi"] / df["input"]), 2)
+    df["duplication"] = round(1 - (df["output_molecules"] / df["input"]), 2)
 
     logger.debug("Finish collecting collapse metrics")
     return df.sort_index()
@@ -449,10 +447,9 @@ def graph_and_annotate_metrics(
                 {
                     "upia": data["total_upia"],
                     "upib": data["total_upib"],
-                    "umi": data["total_umi"],
                     "mean_count": data["mean_count"],
                     "vertices": data["vertices"],
-                    "edges": data["edges"],
+                    "molecules": data["molecules"],
                     cell_column: data["components"],
                     "markers": data["markers"],
                     "modularity": data["components_modularity"],
@@ -520,17 +517,15 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
         metrics = {}
         metrics["cells_filtered"] = adata.n_obs
         metrics["total_markers"] = adata.n_vars
-        metrics["total_umis"] = adata.obs["umi"].sum()
-        metrics["total_edges"] = adata.obs["edges"].sum()
+        metrics["total_molecules"] = adata.obs["molecules"].sum()
         metrics["total_reads_cell"] = adata.obs["reads"].sum()
         metrics["median_reads_cell"] = adata.obs["reads"].median()
+        metrics["mean_molecules_cell"] = adata.obs["molecules"].mean()
         metrics["mean_reads_cell"] = adata.obs["reads"].mean()
         metrics["median_upi_cell"] = adata.obs["vertices"].median()
         metrics["mean_upi_cell"] = adata.obs["vertices"].mean()
         metrics["median_upia_cell"] = adata.obs["upia"].median()
         metrics["mean_upia_cell"] = adata.obs["upia"].mean()
-        metrics["median_umi_cell"] = adata.obs["umi"].median()
-        metrics["mean_umi_cell"] = adata.obs["umi"].mean()
         metrics["median_umi_upia_cell"] = adata.obs["median_umi_per_upia"].median()
         metrics["mean_umi_upia_cell"] = adata.obs["mean_umi_per_upia"].mean()
         metrics["median_upia_degree_cell"] = adata.obs["median_upia_degree"].median()
@@ -551,9 +546,11 @@ def cell_calling_metrics(path: str) -> pd.DataFrame:
                 adata.obs["tau_type"]
             )
             metrics["reads_in_aggregates"] = adata[aggregates_mask].obs["reads"].sum()
-            metrics["edges_in_aggregates"] = adata[aggregates_mask].obs["edges"].sum()
-            metrics["edges_pct_in_aggregates"] = round(
-                metrics["edges_in_aggregates"] / metrics["total_edges"], 2
+            metrics["molecules_in_aggregates"] = (
+                adata[aggregates_mask].obs["molecules"].sum()
+            )
+            metrics["molecules_pct_in_aggregates"] = round(
+                metrics["molecules_in_aggregates"] / metrics["total_molecules"], 2
             )
 
         if "min_size_threshold" in adata.uns:
@@ -678,8 +675,8 @@ def create_dynamic_report(
     }
 
     umi_counts = {
-        "after_collapse": summary_collapse["output_umi"],
-        "after_cell_calling": summary_cell_calling["total_umis"],
+        "after_collapse": summary_collapse["output_molecules"],
+        "after_cell_calling": summary_cell_calling["total_molecules"],
     }
 
     fraction_discarded_umis = round(
@@ -693,7 +690,7 @@ def create_dynamic_report(
         average_reads_per_cell=(
             summary_all["reads"] / summary_cell_calling["cells_filtered"]
         ),
-        average_antibody_molecules_per_cell=summary_cell_calling["mean_umi_cell"],
+        average_antibody_molecules_per_cell=summary_cell_calling["mean_molecules_cell"],
         average_upias_per_cell=summary_cell_calling["mean_upia_cell"],
         average_umis_per_upia=summary_cell_calling["mean_umi_upia_cell"],
         fraction_reads_in_cells=(
@@ -808,17 +805,17 @@ def make_report(
 
     # add discarded column to summary_graph
     summary_graph["discarded"] = round(
-        1 - (summary_graph["edges"] / summary_collapse["output_edges"]), 2
+        1 - (summary_graph["molecules"] / summary_collapse["output_molecules"]), 2
     )
 
     # add discarded column to summary_annotate
     summary_annotate["discarded"] = round(
-        1 - (summary_annotate["edges"] / summary_graph["edges"]), 2
+        1 - (summary_annotate["molecules"] / summary_graph["molecules"]), 2
     )
 
     # add discarded column to summary_annotate
     summary_cell_calling["discarded"] = round(
-        1 - (summary_annotate["edges"] / summary_collapse["output_edges"]), 2
+        1 - (summary_annotate["molecules"] / summary_collapse["output_molecules"]), 2
     )
 
     # create a global summary table for all the main metrics in each stage
@@ -829,7 +826,7 @@ def make_report(
             "adapterqc": summary_adapterqc["output"].to_numpy(),
             "demux": summary_demux["output"].to_numpy(),
             "discarded": 0,
-            "edges": summary_collapse["output_edges"].to_numpy(),
+            "molecules": summary_collapse["output_molecules"].to_numpy(),
             "duplication": summary_collapse["duplication"].to_numpy(),
         },
         index=summary_preqc.index,
@@ -837,7 +834,9 @@ def make_report(
     summary_all["discarded"] = round(
         1 - (summary_all["demux"] / summary_all["reads"]), 2
     )
-    summary_all["avg_reads_umi"] = round(summary_all["demux"] / summary_all["edges"], 2)
+    summary_all["avg_reads_umi"] = round(
+        summary_all["demux"] / summary_all["molecules"], 2
+    )
 
     if metadata is not None:
         logger.debug("Parsing metadata from %s", metadata)

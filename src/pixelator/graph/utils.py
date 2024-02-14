@@ -88,7 +88,6 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
         tot_count = group_df["count"].sum()
         mean_count = group_df["count"].mean()
         median_count = group_df["count"].median()
-        tot_umi = group_df["umi"].nunique()
         # Please note that we need to use observed=True
         # here upia is a categorical column, and since not
         # all values are present in all components, this is
@@ -98,8 +97,8 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
         upia_median_degree = upia_degree.median()
         # Same reasoning as above
         umi_degree = group_df.groupby("upia", observed=True)["umi"].count()
-        upi_umi_median = umi_degree.median()
         upi_umi_mean = umi_degree.mean()
+        upi_umi_median = umi_degree.median()
         upia_per_upib = upia_count / upib_count
         cmetrics.append(
             (
@@ -108,7 +107,6 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
                 n_markers,
                 upia_count,
                 upib_count,
-                tot_umi,
                 tot_count,
                 mean_count,
                 median_count,
@@ -126,11 +124,10 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
         index=pd.Index(index, name="component"),
         columns=[
             "vertices",
-            "edges",
+            "molecules",
             "antibodies",
             "upia",
             "upib",
-            "umi",
             "reads",
             "mean_reads_per_molecule",
             "median_reads_per_molecule",
@@ -250,7 +247,7 @@ def _calculate_graph_metrics(
     metrics["components"] = len(components)
     metrics["components_modularity"] = round(components.modularity, 2)
     biggest = components.giant()
-    metrics["frac_largest_edges"] = round(biggest.ecount() / metrics["edges"], 2)
+    metrics["frac_largest_edges"] = round(biggest.ecount() / metrics["molecules"], 2)
     metrics["frac_largest_vertices"] = round(biggest.vcount() / metrics["vertices"], 2)
     return metrics
 
@@ -261,11 +258,9 @@ def _edgelist_metrics_pandas_data_frame(
     metrics: Dict[str, Union[int, float]] = {}
     metrics["total_upia"] = edgelist["upia"].nunique()
     metrics["total_upib"] = edgelist["upib"].nunique()
-    metrics["total_umi"] = edgelist["umi"].nunique()
-    metrics["total_upi"] = metrics["total_upia"] + metrics["total_upib"]
     metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
     metrics["markers"] = edgelist["marker"].nunique()
-    metrics["edges"] = edgelist.shape[0]
+    metrics["molecules"] = edgelist.shape[0]
     metrics["mean_count"] = round(edgelist["count"].mean(), 2)
 
     # Please note that we need to use observed=True
@@ -286,13 +281,11 @@ def _edgelist_metrics_lazy_frame(
     metrics: Dict[str, Union[int, float]] = {}
     metrics["total_upia"] = edgelist.select(pl.col("upia")).collect().n_unique()
     metrics["total_upib"] = edgelist.select(pl.col("upib")).collect().n_unique()
-    metrics["total_umi"] = edgelist.select(pl.col("umi")).collect().n_unique()
-    metrics["total_upi"] = metrics["total_upia"] + metrics["total_upib"]
     metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
     metrics["markers"] = edgelist.select(pl.col("marker")).collect().n_unique()
     # Note that we get upi here and count that, because otherwise just calling count
     # here confuses polars since there is a column with that name.
-    metrics["edges"] = (
+    metrics["molecules"] = (
         edgelist.select(pl.col("upia")).select(pl.count()).collect()[0, 0]
     )
     metrics["mean_count"] = round(

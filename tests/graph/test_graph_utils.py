@@ -27,11 +27,10 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
             [
                 {
                     "vertices": 100,
-                    "edges": 2500,
+                    "molecules": 2500,
                     "antibodies": 2,
                     "upia": 50,
                     "upib": 50,
-                    "umi": 1908,
                     "reads": np.uint64(2500),
                     "mean_reads_per_molecule": 1.0,
                     "median_reads_per_molecule": 1.0,
@@ -249,7 +248,7 @@ def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
     assert metrics == {
         "components": 1,
         "components_modularity": 0.0,
-        "edges": 2500,
+        "molecules": 2500,
         "frac_largest_edges": 1.0,
         "frac_largest_vertices": 1.0,
         "markers": 2,
@@ -257,8 +256,6 @@ def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
         "total_upia": 50,
         "total_upib": 50,
         "mean_count": 1.0,
-        "total_umi": 1908,
-        "total_upi": 100,
         "frac_upib_upia": 1.0,
         "upia_degree_mean": 50.0,
         "upia_degree_median": 50.0,
@@ -271,7 +268,7 @@ def test_edgelist_metrics_on_lazy_dataframe(full_graph_edgelist: pd.DataFrame):
     assert metrics == {
         "components": 1,
         "components_modularity": 0.0,
-        "edges": 2500,
+        "molecules": 2500,
         "frac_largest_edges": 1.0,
         "frac_largest_vertices": 1.0,
         "markers": 2,
@@ -279,8 +276,6 @@ def test_edgelist_metrics_on_lazy_dataframe(full_graph_edgelist: pd.DataFrame):
         "total_upia": 50,
         "total_upib": 50,
         "mean_count": 1.0,
-        "total_umi": 1908,
-        "total_upi": 100,
         "frac_upib_upia": 1.0,
         "upia_degree_mean": 50.0,
         "upia_degree_median": 50.0,

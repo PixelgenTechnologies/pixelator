@@ -105,5 +105,11 @@ ENV/
 .vscode/
 .idea/
 
+# MacOS files
+## file that stores custom attributes of its containing folder
+.DS_Store
+
+
 pytest-results
+# pixelator file
 tests/data/ten_of_each.h5ad

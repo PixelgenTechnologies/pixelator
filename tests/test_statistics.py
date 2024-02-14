@@ -10,7 +10,6 @@ from pandas.testing import assert_frame_equal
 from pixelator.statistics import (
     clr_transformation,
     correct_pvalues,
-    denoise,
     log1p_transformation,
     rel_normalization,
 )
@@ -145,34 +144,6 @@ def test_rel_normalization():
         pd.DataFrame(
             [[0.350000, 0.150000, 0.500000], [0.588235, 0.117647, 0.294118]],
             columns=["A", "B", "C"],
-            index=["0000000", "0000001"],
-        ),
-    )
-
-
-def test_denoise():
-    antibody_counts = pd.DataFrame(
-        [[7.0, 3.0], [10.0, 2.0]], columns=["A", "B"], index=["0000000", "0000001"]
-    )
-
-    denoised = denoise(
-        df=antibody_counts, antibody_control=["B", "C"], quantile=0.99, axis=0
-    )
-    assert_frame_equal(
-        denoised,
-        pd.DataFrame(
-            [[4.01, 0.01], [7.01, -0.99]],
-            columns=["A", "B"],
-            index=["0000000", "0000001"],
-        ),
-    )
-
-    denoised = denoise(antibody_counts, antibody_control=["A"], quantile=0.99, axis=1)
-    assert_frame_equal(
-        denoised,
-        pd.DataFrame(
-            [[0.0, -4.0], [0.0, -8.0]],
-            columns=["A", "B"],
             index=["0000000", "0000001"],
         ),
     )

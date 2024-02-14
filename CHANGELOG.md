@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
 * The output name of the `.pxl` file from the `annotate` step is now `*.annotated.dataset.pxl`
 * The output name of the `.pxl` file from the `analysis` step is now `*.analysis.dataset.pxl`
+* The term `edges` in `metrics` and `adata` is now replaced with `molecules`.
 
 ### Fixed
 
@@ -40,7 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Remove `--input1_pattern` and `--input2_pattern` from `single-cell amplicon` command.
 * Self-correlations, e.g. CD8 vs CD8 are not longer part of the colocalization results, as these
   values will always be undefined.
-
+* Remove `umi_unique_count` and `upi_unique_count` from `edgelist`.
+* Remove `umi` and `median_umi_degree` from `component` metrics.
+* Remove `normalized_rel` and `denoised` from `obsm` in `anndata`.
+* Remove `denoise` function.
 
 ## [0.16.1] - 2024-01-12
 

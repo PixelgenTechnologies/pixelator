@@ -2,6 +2,7 @@
 
 Copyright (c) 2022 Pixelgen Technologies AB.
 """
+
 # pylint: disable=redefined-outer-name
 
 import logging
@@ -33,9 +34,7 @@ from pixelator.pixeldataset.utils import (
 )
 from pixelator.statistics import (
     clr_transformation,
-    denoise,
     log1p_transformation,
-    rel_normalization,
 )
 
 random.seed(42)
@@ -142,11 +141,9 @@ def test_pixeldataset_can_save_and_load_with_empty_edgelist(
     dataset.edgelist = pd.DataFrame()
     dataset.save(str(file_target))
     dataset_new = PixelDataset.from_file(str(file_target))
-    assert dataset_new.edgelist.shape == (0, 9)
+    assert dataset_new.edgelist.shape == (0, 7)
     assert dataset_new.edgelist.columns.tolist() == [
         "count",
-        "umi_unique_count",
-        "upi_unique_count",
         "upia",
         "upib",
         "umi",
@@ -289,11 +286,10 @@ def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
     assert sorted(adata.obs) == sorted(
         [
             "vertices",
-            "edges",
+            "molecules",
             "antibodies",
             "upia",
             "upib",
-            "umi",
             "reads",
             "mean_reads_per_molecule",
             "median_reads_per_molecule",
@@ -304,9 +300,7 @@ def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
             "upia_per_upib",
         ]
     )
-    assert "normalized_rel" in adata.obsm
     assert "clr" in adata.obsm
-    assert "denoised" in adata.obsm
     assert "log1p" in adata.obsm
 
 
@@ -321,16 +315,8 @@ def test_read_write_anndata(adata: AnnData):
         assert_frame_equal(adata.obs, adata2.obs)
         assert_frame_equal(adata.var, adata2.var)
         assert_array_equal(
-            adata.obsm["normalized_rel"],
-            adata2.obsm["normalized_rel"],
-        )
-        assert_array_equal(
             adata.obsm["clr"],
             adata2.obsm["clr"],
-        )
-        assert_array_equal(
-            adata.obsm["denoised"],
-            adata2.obsm["denoised"],
         )
         assert_array_equal(
             adata.obsm["log1p"],
@@ -357,24 +343,10 @@ def test_edgelist_to_anndata(
     counts_df = counts_df.reindex(columns=antibodies, fill_value=0)
     assert_array_equal(adata.X, counts_df.to_numpy())
 
-    counts_df_norm = rel_normalization(counts_df, axis=1)
-    assert_array_equal(
-        adata.obsm["normalized_rel"],
-        counts_df_norm.to_numpy(),
-    )
-
     counts_df_clr = clr_transformation(counts_df, axis=1)
     assert_array_equal(
         adata.obsm["clr"],
         counts_df_clr.to_numpy(),
-    )
-
-    counts_df_denoised = denoise(
-        counts_df_clr, quantile=1.0, antibody_control=panel.markers_control, axis=1
-    )
-    assert_array_equal(
-        adata.obsm["denoised"],
-        counts_df_denoised.to_numpy(),
     )
 
     counts_df_log1p = log1p_transformation(counts_df)
@@ -565,7 +537,16 @@ def test_simple_aggregate_ignore_edgelist(setup_basic_pixel_dataset):
     )
 
     # We want an empty edgelist, but wit all the correct columns
-    assert result.edgelist.shape == (0, 9)
+    assert result.edgelist.shape[0] == 0
+    assert set(result.edgelist.columns) == {
+        "sequence",
+        "upib",
+        "upia",
+        "umi",
+        "component",
+        "count",
+        "marker",
+    }
 
 
 def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_dataset):
@@ -681,9 +662,7 @@ def test_lazy_edgelist_should_warn_and_rm_on_index_column(setup_basic_pixel_data
             "sequence",
             "upib",
             "upia",
-            "upi_unique_count",
             "umi",
-            "umi_unique_count",
             "component",
             "count",
             "marker",
@@ -845,8 +824,6 @@ def test__enforce_edgelist_types():
     data = pd.DataFrame(
         {
             "count": [1, 3, 1],
-            "umi_unique_count": [2, 4, 2],
-            "upi_unique_count": [3, 6, 3],
             "upia": ["AAA", "AAA", "ATT"],
             "upib": ["GGG", "GGG", "GCC"],
             "umi": ["TAT", "ATA", "TTC"],
@@ -859,8 +836,6 @@ def test__enforce_edgelist_types():
     result = _enforce_edgelist_types(data)
     expected = {
         "count": "uint16",
-        "umi_unique_count": "uint16",
-        "upi_unique_count": "uint16",
         "upia": "category",
         "upib": "category",
         "umi": "category",

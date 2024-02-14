@@ -94,8 +94,6 @@ def edgelist_with_communities_fixture():
     edgelist["marker"] = "A"
     edgelist["sequence"] = "ATCG"
     edgelist["count"] = 1
-    edgelist["umi_unique_count"] = 1
-    edgelist["upi_unique_count"] = 1
 
     edgelist = enforce_edgelist_types_for_tests(edgelist)
     return edgelist
