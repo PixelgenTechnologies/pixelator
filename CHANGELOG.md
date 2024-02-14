@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Self-correlations, e.g. CD8 vs CD8 are not longer part of the colocalization results, as these
   values will always be undefined.
 * Remove `umi_unique_count` and `upi_unique_count` from `edgelist`.
-* Remove `umi`, `median_upia_degree`, `median_umi_degree` and `median_reads` from `component` metrics.
+* Remove `umi` and `median_umi_degree` from `component` metrics.
 * Remove `normalized_rel` and `denoised` from `obsm` in `anndata`.
 * Remove `denoise` function.
 

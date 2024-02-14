@@ -292,8 +292,11 @@ def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
             "upib",
             "reads",
             "mean_reads_per_molecule",
+            "median_reads_per_molecule",
             "mean_upia_degree",
+            "median_upia_degree",
             "mean_umi_per_upia",
+            "median_umi_per_upia",
             "upia_per_upib",
         ]
     )
