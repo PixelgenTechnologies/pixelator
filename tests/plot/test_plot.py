@@ -12,6 +12,7 @@ from pixelator.plot import (
     _calculate_densities,
     _calculate_distance_to_unit_sphere_zones,
     _unit_sphere_surface,
+    plot_2d_graph,
     plot_3d_heatmap,
     scatter_umi_per_upia_vs_tau,
     cell_count_plot,
@@ -20,7 +21,30 @@ from pixelator.plot import (
 
 
 @pytest.mark.mpl_image_compare(
-    hash_library="../snapshots/test_plot/test_scatter_umi_per_upia_vs_tau/scatter_umi_per_upia_vs_tau.json"
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_2d_graph",
+)
+@pytest.mark.parametrize(
+    "component, marker, show_b_nodes",
+    [
+        ("PXLCMP0000000", "CD45RA", False),
+        ((["PXLCMP0000001", "PXLCMP0000002"], ["CD20", "CD45", "CD45RA"], False)),
+        (("PXLCMP0000000", "pixel_type", True)),
+    ],
+)
+def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_nodes):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    print(pxl_data.edgelist_lazy.select("marker").unique().collect())
+    fig, _ = plot_2d_graph(
+        pxl_data, component=component, marker=marker, show_b_nodes=show_b_nodes
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=False,
+    hash_library="../snapshots/test_plot/test_scatter_umi_per_upia_vs_tau/scatter_umi_per_upia_vs_tau.json",
 )
 def test_scatter_umi_per_upia_vs_tau():
     np.random.seed(0)
@@ -37,7 +61,8 @@ def test_scatter_umi_per_upia_vs_tau():
 
 
 @pytest.mark.mpl_image_compare(
-    hash_library="../snapshots/test_plot/test_cell_count_plot/cell_count_plot.json"
+    deterministic=False,
+    hash_library="../snapshots/test_plot/test_cell_count_plot/cell_count_plot.json",
 )
 def test_cell_count_plot():
     np.random.seed(0)
@@ -52,7 +77,8 @@ def test_cell_count_plot():
 
 
 @pytest.mark.mpl_image_compare(
-    hash_library="../snapshots/test_plot/test_edge_rank_plot/edge_rank_plot.json"
+    deterministic=False,
+    hash_library="../snapshots/test_plot/test_edge_rank_plot/edge_rank_plot.json",
 )
 def test_edge_rank_plot():
     np.random.seed(0)
