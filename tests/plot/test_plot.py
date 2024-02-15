@@ -15,6 +15,7 @@ from pixelator.plot import (
     plot_3d_heatmap,
     scatter_umi_per_upia_vs_tau,
     cell_count_plot,
+    edge_rank_plot,
 )
 
 
@@ -47,6 +48,21 @@ def test_cell_count_plot():
         }
     )
     plot, _ = cell_count_plot(data, color_by="group1", group_by="group2")
+    return plot
+
+
+@pytest.mark.mpl_image_compare(
+    hash_library="../snapshots/test_plot/test_edge_rank_plot/edge_rank_plot.json"
+)
+def test_edge_rank_plot():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {
+            "edges": np.round(10 ** np.random.normal(4, 0.3, 500)).astype(int),
+            "group": np.random.choice(["A", "B"], 500),
+        }
+    )
+    plot, _ = edge_rank_plot(data, group_by="group")
     return plot
 
 
