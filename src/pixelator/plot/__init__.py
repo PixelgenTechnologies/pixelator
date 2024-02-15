@@ -205,15 +205,14 @@ def plot_2d_graph(
     pxl_data: PixelDataset,
     component: Union["str", list],
     marker: str = "pixel_type",
-    layout_algorithm: Literal[
-        "fruchterman_reingold", "kamada_kawai", "pmds"
-    ] = "fruchterman_reingold",
+    layout_algorithm: Literal["fruchterman_reingold", "kamada_kawai", "pmds"] = "pmds",
     show_edges: bool = False,
     log_scale: bool = True,
     node_size: float = 10.0,
     edge_width: float = 1.0,
     show_b_nodes: bool = False,
     cmap: str = "cool",
+    alpha: float = 0.5,
     cache_layout: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot a 2D graph based on the given pixel data.
@@ -221,13 +220,14 @@ def plot_2d_graph(
     :param pxl_data: The pixel dataset to plot.
     :param component: The component(s) to plot. Defaults to None.
     :param marker: The marker attribute to use for coloring the nodes. Defaults to "pixel_type".
-    :param layout_algorithm: The layout algorithm to use. Defaults to "fruchterman_reingold".
+    :param layout_algorithm: The layout algorithm to use. Defaults to "pmds".
     :param show_edges: Whether to show the edges in the graph. Defaults to False.
     :param log_scale: Whether to use a logarithmic scale for the marker attribute. Defaults to True.
     :param node_size: The size of the nodes. Defaults to 10.0.
     :param edge_width: The width of the edges. Defaults to 1.0.
     :param show_b_nodes: Whether to show the B-nodes. Defaults to False.
     :param cmap: The colormap to use for coloring the nodes. Defaults to "cool".
+    :param alpha: The alpha value for the nodes. Defaults to 0.7.
     :param cache_layout: Whether to cache the layout coordinates. Defaults to False.
 
     :return: The figure and axes objects of the plot.
@@ -238,9 +238,18 @@ def plot_2d_graph(
 
     """
     if isinstance(component, str):
-        component_edges = pxl_data.edgelist_lazy.filter(
-            pl.col("component") == component
-        )
+        component = [component]
+
+    if isinstance(marker, str):
+        marker_list = [marker]
+    else:
+        marker_list = marker
+
+    fig, ax = plt.subplots(nrows=len(marker_list), ncols=len(component))
+
+    include_colorbar = False
+    for i_c, comp in enumerate(component):
+        component_edges = pxl_data.edgelist_lazy.filter(pl.col("component") == comp)
         component_graph = Graph.from_edgelist(
             component_edges,
             add_marker_counts=True,
@@ -248,103 +257,121 @@ def plot_2d_graph(
             use_full_bipartite=True,
         )
 
-    coordinates = component_graph.layout_coordinates(
-        layout_algorithm=layout_algorithm,
-        cache=cache_layout,
-        only_keep_a_pixels=not show_b_nodes,
-    )
-    filtered_coordinates = coordinates
-    filtered_coordinates["pixel_type"] = [
-        component_graph.raw.nodes[ind]["pixel_type"]
-        for ind in filtered_coordinates.index
-    ]
-
-    if marker is not None and marker != "pixel_type":
-        if marker not in filtered_coordinates.columns:
-            raise AssertionError(f"Marker {marker} not found in the component graph.")
-
-        filtered_coordinates = filtered_coordinates.filter(
-            items=np.nonzero(filtered_coordinates[marker] > 0)[0], axis=0
+        coordinates = component_graph.layout_coordinates(
+            layout_algorithm=layout_algorithm,
+            cache=cache_layout,
+            only_keep_a_pixels=not show_b_nodes,
         )
-        if len(filtered_coordinates) == 0:
-            raise AssertionError(f"No nodes found with {marker}.")
 
-    if not show_b_nodes:
-        filtered_coordinates = filtered_coordinates[
-            filtered_coordinates["pixel_type"] == "A"
+        filtered_coordinates = coordinates
+        filtered_coordinates["pixel_type"] = [
+            component_graph.raw.nodes[ind]["pixel_type"]
+            for ind in filtered_coordinates.index
         ]
+        if not show_b_nodes:
+            filtered_coordinates = filtered_coordinates[
+                filtered_coordinates["pixel_type"] == "A"
+            ]
+        if show_edges:
+            edgelist = pd.DataFrame(component_graph.es)
+            edgelist = edgelist[edgelist[0].isin(filtered_coordinates.index)]
+            edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
+            edgelist = edgelist.loc[:, [0, 1]].to_numpy()
 
-    if show_edges:
-        edgelist = pd.DataFrame(component_graph.es)
-        edgelist = edgelist[edgelist[0].isin(filtered_coordinates.index)]
-        edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
-        edgelist = edgelist.loc[:, [0, 1]].to_numpy()
-
-    color_val = NETWORKX_NODE_COLOR
-    if marker is not None:
-        if marker == "pixel_type":
-            color_val = filtered_coordinates["pixel_type"] == "B"
-        else:
-            if log_scale:
-                color_val = np.log1p(filtered_coordinates.loc[:, marker])
+        vmax = 0
+        for i_m, mark in enumerate(marker_list):
+            # Get the current axis handle
+            if len(marker_list) == 1:
+                if len(component) == 1:
+                    crnt_ax = ax
+                else:
+                    crnt_ax = ax[i_c]
             else:
-                color_val = filtered_coordinates.loc[:, marker]
+                if len(component) == 1:
+                    crnt_ax = ax[i_m]
+                else:
+                    crnt_ax = ax[i_m, i_c]
 
-    fig, ax = plt.subplots(figsize=(6, 6))
-    nx.draw_networkx(
-        component_graph.raw,
-        nodelist=filtered_coordinates.index,
-        pos=filtered_coordinates.loc[:, ["x", "y"]].T.to_dict("list"),
-        ax=ax,
-        node_size=node_size,
-        node_color=color_val,
-        width=edge_width,
-        with_labels=False,
-        edgelist=edgelist if show_edges else [],
-        cmap=cmap,
-        label="_nolegend_",
-    )
+            if i_c == 0:
+                crnt_ax.set_ylabel(mark, rotation=90, size="large")
+            if i_m == 0:
+                crnt_ax.set_title(comp)
 
-    # Plotting a single additional node to add a legend (Is there a better way?)
-    if marker == "pixel_type":
-        a_node_example = filtered_coordinates[
-            filtered_coordinates["pixel_type"] == "A"
-        ].iloc[0, :]
-        ax.scatter(
-            a_node_example["x"],
-            a_node_example["y"],
-            c=0,
-            cmap=cmap,
-            vmin=0,
-            s=node_size,
-            zorder=-9,
-            label="A-nodes",
-        )
-        if show_b_nodes:
-            b_node_example = filtered_coordinates[
-                filtered_coordinates["pixel_type"] == "B"
-            ].iloc[0, :]
-            ax.scatter(
-                b_node_example["x"],
-                b_node_example["y"],
-                c=1,
+            if mark is None:
+                color_val = NETWORKX_NODE_COLOR
+            elif mark == "pixel_type":
+                color_val = filtered_coordinates["pixel_type"] == "B"
+            elif mark not in filtered_coordinates.columns:
+                raise AssertionError(f"Marker {mark} not found in the component graph.")
+            else:
+                if log_scale:
+                    color_val = np.log1p(filtered_coordinates.loc[:, mark])
+                else:
+                    color_val = filtered_coordinates.loc[:, mark]
+                include_colorbar = True
+                vmax = max(vmax, np.max(color_val))
+
+            im = nx.draw_networkx(
+                component_graph.raw,
+                nodelist=filtered_coordinates.index,
+                pos=filtered_coordinates.loc[:, ["x", "y"]].T.to_dict("list"),
+                ax=crnt_ax,
+                node_size=node_size,
+                node_color=color_val,
                 cmap=cmap,
-                vmin=0,
-                s=node_size,
-                zorder=-10,
-                label="B-nodes",
+                width=edge_width,
+                with_labels=False,
+                edgelist=edgelist if show_edges else [],
+                label="_nolegend_",
+                alpha=alpha,
             )
-        ax.legend()
-    elif marker is not None:
-        plt.colorbar(
-            cm.ScalarMappable(
-                cmap=cmap, norm=Normalize(vmin=0, vmax=np.max(color_val))
-            ),
-            ax=ax,
-            label=marker,
-        )
 
-    ax.axis("off")
+            if mark == "pixel_type":
+                a_node_example = filtered_coordinates[
+                    filtered_coordinates["pixel_type"] == "A"
+                ].iloc[0, :]
+                crnt_ax.scatter(
+                    a_node_example["x"],
+                    a_node_example["y"],
+                    c=0,
+                    cmap=cmap,
+                    vmin=0,
+                    s=node_size,
+                    label="A-nodes",
+                )
+                if show_b_nodes:
+                    b_node_example = filtered_coordinates[
+                        filtered_coordinates["pixel_type"] == "B"
+                    ].iloc[0, :]
+                    crnt_ax.scatter(
+                        b_node_example["x"],
+                        b_node_example["y"],
+                        c=1,
+                        cmap=cmap,
+                        vmin=0,
+                        s=node_size,
+                        label="B-nodes",
+                    )
+                legend_ax = crnt_ax
+
+            crnt_ax.grid(False)
+            crnt_ax.spines[:].set_visible(False)
+            crnt_ax.set_xticks([])
+            crnt_ax.set_yticks([])
+    if include_colorbar:
+        if isinstance(ax, np.ndarray):
+            fig.colorbar(
+                im,
+                ax=ax.ravel().tolist(),
+                cmap=cmap,
+                norm=Normalize(vmin=0, vmax=vmax),
+            )
+        else:
+            fig.colorbar(im, ax=ax, cmap=cmap, norm=Normalize(vmin=0, vmax=vmax))
+    elif "pixel_type" in marker:
+        handles, labels = legend_ax.get_legend_handles_labels()
+        fig.legend(handles, labels, loc="right")
+
     return fig, ax
 
 
