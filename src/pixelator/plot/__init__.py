@@ -286,6 +286,7 @@ def plot_2d_graph(
 
     :raises: AssertionError if the marker is not found in the component graph.
     :raises: AssertionError if no nodes are found with the specified marker.
+    :raises: AssertionError if "pixel_type" is in the markers together with other markers.
 
     """
     if isinstance(component, str):
@@ -299,6 +300,7 @@ def plot_2d_graph(
     fig, ax = plt.subplots(nrows=len(marker_list), ncols=len(component))
 
     include_colorbar = False
+    vmax = 0  # maximum value for colorbar
     for i_c, comp in enumerate(component):
         component_edges = pxl_data.edgelist_lazy.filter(pl.col("component") == comp)
         component_graph = Graph.from_edgelist(
@@ -329,7 +331,6 @@ def plot_2d_graph(
             edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
             edgelist = edgelist.loc[:, [0, 1]].to_numpy()
 
-        vmax = 0
         for i_m, mark in enumerate(marker_list):
             # Get the current axis handle
             if len(marker_list) == 1:
@@ -343,9 +344,9 @@ def plot_2d_graph(
                 else:
                     crnt_ax = ax[i_m, i_c]
 
-            if i_c == 0:
+            if i_c == 0:  # Set the y-label only for the first column
                 crnt_ax.set_ylabel(mark, rotation=90, size="large")
-            if i_m == 0:
+            if i_m == 0:  # Set the title only for the first row
                 crnt_ax.set_title(comp)
 
             if mark is None:
@@ -377,6 +378,7 @@ def plot_2d_graph(
                 alpha=alpha,
             )
 
+            # Re-plot one point from each pixel type to add a legend
             if mark == "pixel_type":
                 a_node_example = filtered_coordinates[
                     filtered_coordinates["pixel_type"] == "A"
@@ -418,10 +420,21 @@ def plot_2d_graph(
                 norm=Normalize(vmin=0, vmax=vmax),
             )
         else:
-            fig.colorbar(im, ax=ax, cmap=cmap, norm=Normalize(vmin=0, vmax=vmax))
-    elif "pixel_type" in marker:
-        handles, labels = legend_ax.get_legend_handles_labels()
-        fig.legend(handles, labels, loc="right")
+            fig.colorbar(
+                im,
+                ax=ax,
+                cmap=cmap,
+                norm=Normalize(vmin=0, vmax=vmax),
+            )
+    if "pixel_type" in marker_list:
+        if not include_colorbar:
+            handles, labels = legend_ax.get_legend_handles_labels()
+            fig.legend(handles, labels, loc="right")
+            plt.subplots_adjust(right=0.80)
+        else:
+            raise AssertionError(
+                "Plotting pixel_type together with other markers is not supported."
+            )
 
     return fig, ax
 
