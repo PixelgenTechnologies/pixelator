@@ -3,7 +3,7 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
-from typing import Literal, Tuple, Union, Optional
+from typing import Literal, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -15,6 +15,7 @@ import scipy
 import seaborn as sns
 from matplotlib import cm
 from matplotlib.colors import Normalize
+import warnings
 
 from pixelator.graph import Graph
 from pixelator.analysis.colocalization import get_differential_colocalization
@@ -63,7 +64,7 @@ def _calculate_densities(coordinates, distance_cutoff, unit_sphere_surface):
 
 
 def scatter_umi_per_upia_vs_tau(
-    data: pd.DataFrame, group_by: Optional[str] = None
+    data: pd.DataFrame, group_by: str | None
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Create a scatter plot of pixel content vs marker specificity (Tau).
 
@@ -117,6 +118,85 @@ def scatter_umi_per_upia_vs_tau(
     grid.set(yscale="log")
     grid.set_axis_labels("Marker specificity (Tau)", "Pixel content (UMI/UPIA)")
     grid.add_legend(title="Tau Type")
+
+    return plt.gcf(), plt.gca()
+
+
+def cell_count_plot(
+    data: pd.DataFrame,
+    color_by: str,
+    group_by: str | None,
+    flip_axes: bool = False,
+) -> Tuple[plt.Figure, plt.Axes]:
+    """Create a bar plot showing the component counts by group(s).
+
+    :param data: a pandas DataFrame with group variable(s).
+    :param color_by: a column in the DataFrame to color the bars by. This will be used as
+    the group variable if `group_by` is not provided.
+    :param: group_by: a column in the DataFrame to group the bars by.
+
+    :return: a bar plot with component counts by group(s).
+    :rtype: Tuple[plt.Figure, plt.Axes]
+    :raises: ValueError if the required grouping variables are missing in the DataFrame
+    :raises: AssertionError if the data types are invalid
+    """
+    # Validate inputs
+    if group_by is not None:
+        if group_by not in data.columns:
+            raise ValueError(f"'{group_by}' is missing from DataFrame")
+
+        if not pd.api.types.is_categorical_dtype(
+            data[group_by]
+        ) and not pd.api.types.is_string_dtype(data[group_by]):
+            raise ValueError("'group_by' must be a character or categorical")
+
+        if group_by == color_by:
+            raise ValueError("'group_by' and 'color_by' cannot be identical")
+
+    if color_by not in data.columns:
+        raise ValueError(f"'{color_by}' is missing from DataFrame")
+
+    if not pd.api.types.is_categorical_dtype(
+        data[color_by]
+    ) and not pd.api.types.is_string_dtype(data[color_by]):
+        raise ValueError("'color_by' must be a character or categorical")
+
+    # Create plot
+    if group_by is not None:
+        grouped_data = data.groupby([group_by, color_by]).size().reset_index(name="n")
+        if flip_axes:
+            with warnings.catch_warnings():
+                warnings.simplefilter(action="ignore", category=FutureWarning)
+                p = sns.barplot(
+                    x="n", y=group_by, hue=color_by, data=grouped_data, dodge=True
+                )
+            p.set_xlabel("Count")
+            p.set_ylabel(group_by)
+        else:
+            with warnings.catch_warnings():
+                warnings.simplefilter(action="ignore", category=FutureWarning)
+                p = sns.barplot(
+                    x=group_by, y="n", hue=color_by, data=grouped_data, dodge=True
+                )
+            p.set_ylabel("Count")
+            p.set_xlabel(group_by)
+
+        p.set_title(f"Cell counts per {color_by} split by {group_by}")
+    else:
+        grouped_data = data.groupby(color_by).size().reset_index(name="n")
+        if flip_axes:
+            with warnings.catch_warnings():
+                warnings.simplefilter(action="ignore", category=FutureWarning)
+                p = sns.barplot(x="n", y=color_by, hue=color_by, data=grouped_data)
+            p.set_xlabel("Count")
+            p.set_ylabel(color_by)
+        else:
+            with warnings.catch_warnings():
+                warnings.simplefilter(action="ignore", category=FutureWarning)
+                p = sns.barplot(x=color_by, y="n", hue=color_by, data=grouped_data)
+            p.set_ylabel("Count")
+            p.set_xlabel(color_by)
+        p.set_title(f"Cell counts per {color_by}")
 
     return plt.gcf(), plt.gca()
 

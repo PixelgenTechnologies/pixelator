@@ -14,6 +14,7 @@ from pixelator.plot import (
     _unit_sphere_surface,
     plot_3d_heatmap,
     scatter_umi_per_upia_vs_tau,
+    cell_count_plot,
 )
 
 
@@ -31,6 +32,21 @@ def test_scatter_umi_per_upia_vs_tau():
         }
     )
     plot, _ = scatter_umi_per_upia_vs_tau(data, group_by="group")
+    return plot
+
+
+@pytest.mark.mpl_image_compare(
+    hash_library="../snapshots/test_plot/test_cell_count_plot/cell_count_plot.json"
+)
+def test_cell_count_plot():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {
+            "group1": np.random.choice(["A", "B"], 100),
+            "group2": np.random.choice(["C", "D"], 100),
+        }
+    )
+    plot, _ = cell_count_plot(data, color_by="group1", group_by="group2")
     return plot
 
 
