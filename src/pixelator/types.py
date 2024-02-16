@@ -1,7 +1,8 @@
 """Helper typehints for the pixelator package.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import os

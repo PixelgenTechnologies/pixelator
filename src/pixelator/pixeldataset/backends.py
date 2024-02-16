@@ -1,7 +1,8 @@
 """Module for PixelDataset backends.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 from functools import cached_property

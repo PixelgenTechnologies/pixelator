@@ -1,13 +1,14 @@
 """Functions for creating plots that are useful with MPX data.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
+from typing import Literal, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 from matplotlib import cm
-from typing import Literal, Tuple
 
 from pixelator.graph import Graph
 from pixelator.marks import experimental

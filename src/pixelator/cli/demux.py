@@ -1,7 +1,7 @@
 """
 Console script for pixelator (demux)
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import click
@@ -172,4 +172,5 @@ def demux(
         min_length=min_length,
         cores=0,  # cutadapt will choose the optimal number
         verbose=ctx.obj["VERBOSE"],
+        sample_id=name,
     )

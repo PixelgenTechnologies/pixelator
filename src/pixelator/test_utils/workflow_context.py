@@ -1,4 +1,5 @@
-"""Copyright (c) 2023 Pixelgen Technologies AB."""
+"""Copyright © 2023 Pixelgen Technologies AB."""
+
 import logging
 import shutil
 from pathlib import Path
@@ -9,7 +10,7 @@ from click.testing import CliRunner, Result as CliRunnerResult
 
 import pixelator.cli as pixelator_cli
 
-# Do not propogate to parent logger since
+# Do not propagate to parent logger since
 logger = logging.getLogger("pixelator.test_utils")
 
 
@@ -81,6 +82,7 @@ class PixelatorWorkflowContext:
         :param files: list of files to link
         :param suffix: path relative to the workflow working directory to link
             the files in.
+        :raises ValueError: if a file is not absolute
         """
         for f in files:
             f_path = Path(f)

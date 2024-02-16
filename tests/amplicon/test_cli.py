@@ -1,8 +1,9 @@
 """
 Test the pixelator single-cell amplicon CLI.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 import os
 import shutil
 import tempfile

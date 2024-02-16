@@ -1,6 +1,6 @@
 """Tests for the graph utils module.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import numpy as np
@@ -8,6 +8,7 @@ import pandas as pd
 import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
+
 from pixelator.graph import Graph
 from pixelator.graph.utils import (
     components_metrics,
@@ -15,6 +16,7 @@ from pixelator.graph.utils import (
     edgelist_metrics,
     update_edgelist_membership,
 )
+from pixelator.report.models import SummaryStatistics
 
 
 def test_components_metrics(full_graph_edgelist: pd.DataFrame):
@@ -245,20 +247,47 @@ def test_create_node_markers_counts_with_neighbourhood_1(
 def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
     """Test generating edgelist metrics."""
     metrics = edgelist_metrics(full_graph_edgelist)
+
     assert metrics == {
-        "components": 1,
+        "a_pixel_count": 50,
+        "b_pixel_count": 50,
+        "b_pixel_count_per_a_pixel_stats": SummaryStatistics(
+            mean=50.0,
+            std=0.0,
+            min=50.0,
+            q1=50.0,
+            q2=50.0,
+            q3=50.0,
+            max=50.0,
+            count=50,
+        ),
+        "component_count": 1,
         "components_modularity": 0.0,
-        "molecules": 2500,
-        "frac_largest_edges": 1.0,
-        "frac_largest_vertices": 1.0,
-        "markers": 2,
-        "vertices": 100,
-        "total_upia": 50,
-        "total_upib": 50,
-        "mean_count": 1.0,
-        "frac_upib_upia": 1.0,
-        "upia_degree_mean": 50.0,
-        "upia_degree_median": 50.0,
+        "fraction_molecules_in_largest_component": 1.0,
+        "fraction_pixels_in_largest_component": 1.0,
+        "marker_count": 2,
+        "molecule_count": 2500,
+        "molecule_count_per_a_pixel_stats": SummaryStatistics(
+            mean=50.0,
+            std=0.0,
+            min=50.0,
+            q1=50.0,
+            q2=50.0,
+            q3=50.0,
+            max=50.0,
+            count=50,
+        ),
+        "read_count": 2500,
+        "read_count_per_molecule_stats": SummaryStatistics(
+            mean=1.0,
+            std=0.0,
+            min=1.0,
+            q1=1.0,
+            q2=1.0,
+            q3=1.0,
+            max=1.0,
+            count=2500,
+        ),
     }
 
 
@@ -266,19 +295,45 @@ def test_edgelist_metrics_on_lazy_dataframe(full_graph_edgelist: pd.DataFrame):
     full_graph_edgelist = pl.DataFrame(full_graph_edgelist).lazy()
     metrics = edgelist_metrics(full_graph_edgelist)
     assert metrics == {
-        "components": 1,
+        "a_pixel_count": 50,
+        "b_pixel_count": 50,
+        "b_pixel_count_per_a_pixel_stats": SummaryStatistics(
+            mean=50.0,
+            std=0.0,
+            min=50.0,
+            q1=50.0,
+            q2=50.0,
+            q3=50.0,
+            max=50.0,
+            count=50,
+        ),
+        "component_count": 1,
         "components_modularity": 0.0,
-        "molecules": 2500,
-        "frac_largest_edges": 1.0,
-        "frac_largest_vertices": 1.0,
-        "markers": 2,
-        "vertices": 100,
-        "total_upia": 50,
-        "total_upib": 50,
-        "mean_count": 1.0,
-        "frac_upib_upia": 1.0,
-        "upia_degree_mean": 50.0,
-        "upia_degree_median": 50.0,
+        "fraction_molecules_in_largest_component": 1.0,
+        "fraction_pixels_in_largest_component": 1.0,
+        "marker_count": 2,
+        "molecule_count": 2500,
+        "molecule_count_per_a_pixel_stats": SummaryStatistics(
+            mean=50.0,
+            std=0.0,
+            min=50.0,
+            q1=50.0,
+            q2=50.0,
+            q3=50.0,
+            max=50.0,
+            count=50,
+        ),
+        "read_count": 2500,
+        "read_count_per_molecule_stats": SummaryStatistics(
+            mean=1.0,
+            std=0.0,
+            min=1.0,
+            q1=1.0,
+            q2=1.0,
+            q3=1.0,
+            max=1.0,
+            count=2500,
+        ),
     }
 
 

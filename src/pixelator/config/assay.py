@@ -1,14 +1,20 @@
 """Module containing classes and functions related to the different assay/designs used by pixelator.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import enum
 import json
-from typing import Any, List, Mapping, Optional, Set, Tuple
 from functools import cache
+from typing import Any, List, Mapping, Optional, Set, Tuple
 
-from pydantic import BaseModel, validator
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
+import pydantic
+from pydantic import BaseModel
 
 from pixelator.config.utils import load_yaml_file
 from pixelator.types import PathType
@@ -50,26 +56,26 @@ class RegionModel(BaseModel):
     region_type: RegionType
     name: str
     sequence_type: SequenceType
-    sequence: Optional[str]
-    min_len: Optional[int]
-    max_len: Optional[int]
-    data: Optional[Mapping[str, Any]]
-    regions: Optional[List["RegionModel"]]
+    sequence: Optional[str] = None
+    min_len: Optional[int] = None
+    max_len: Optional[int] = None
+    data: Optional[Mapping[str, Any]] = {}
+    regions: Optional[List["RegionModel"]] = []
 
-    @validator("sequence")
-    def check_valid_dna_string(cls, v: str, values: Mapping[str, Any]) -> str:
+    @pydantic.model_validator(mode="after")
+    def check_valid_dna_string(self) -> Self:
         """Validate DNA strings.
 
-        :param v: DNA string to validate
-        :param values: Pydantic fields
         :raises ValueError: if the string contains non DNA characters
         """
-        if values["region_type"] is RegionType.PBS:
-            is_valid = all(character in DNA_CHARS for character in v)
+        if self.region_type is RegionType.PBS:
+            is_valid = True
+            if self.sequence:
+                is_valid = all(character in DNA_CHARS for character in self.sequence)
             if not is_valid:
                 raise ValueError("Not a valid DNA string: found non DNA characters")
 
-        return v
+        return self
 
 
 class AssayModel(BaseModel):
@@ -111,7 +117,7 @@ class Region:
         data: Optional[Mapping[str, Any]] = None,
     ) -> None:
         """Initialize a Region."""
-        self.parent_id = None
+        self.parent_id: str | None = None
         self.region_id = region_id
         self.region_type = region_type
         self.name = name
@@ -142,11 +148,10 @@ class Region:
             self.min_len, self.max_len = self.get_len()
             self.sequence = self.get_sequence()
 
-    def set_parent_id(self, parent_id):
+    def set_parent_id(self, parent_id: str) -> None:
         """Set the parent id of this region.
 
         :param parent_id: parent id to set
-        :param recursive: if True, set the parent id of all sub-regions
         """
         self.parent_id = parent_id
 
@@ -349,7 +354,8 @@ class Assay:
 
         while len(stack) > 0:
             region, parent_id = stack.pop()
-            region.set_parent_id(parent_id)
+            if parent_id:
+                region.set_parent_id(parent_id)
 
             if region.regions:
                 for r in region.regions:
@@ -372,7 +378,7 @@ class Assay:
         :param filename: path to a design config file
         """
         yaml_obj = load_yaml_file(filename)
-        checked_obj = AssayModel.parse_obj(yaml_obj)
+        checked_obj = AssayModel.model_validate(yaml_obj)
         return cls._load_assay_model(checked_obj)
 
     def to_json(self):
@@ -426,6 +432,9 @@ def get_position_in_parent(assay: Assay, region_id: str) -> Tuple[int, int]:
 
     :param assay: assay design
     :param region_id: region id of the amplicon
+    :raises ValueError: if the region_id is not found in the assay
+    :raises ValueError: if the region has no parent
+    :raises ValueError: if the parent_region is not found in the assay
     """
     region = assay.get_region_by_id(region_id)
     if region is None:

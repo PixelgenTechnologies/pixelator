@@ -1,8 +1,9 @@
 """
 Test utility functions
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 import copy
 import random
 from typing import List

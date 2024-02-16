@@ -1,8 +1,8 @@
 """Collection of functions for the concatenation of raw fastq reads.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
-import json
+
 import logging
 
 # List is used as type hint in comment
@@ -13,6 +13,7 @@ from xopen import xopen
 
 from pixelator.amplicon.statistics import SequenceQualityStatsCollector
 from pixelator.config import Region, config
+from pixelator.report.models import AmpliconSampleReport
 from pixelator.types import PathType
 from pixelator.utils import reverse_complement
 
@@ -121,6 +122,7 @@ def amplicon_fastq(
     inputs: Sequence[PathType],
     design: str,
     metrics: PathType,
+    sample_id: str,
     output: PathType,
 ) -> None:
     """Build MPX amplicons and save them to fastq files.
@@ -133,6 +135,7 @@ def amplicon_fastq(
     :param inputs: a list of path to the fastq reads
     :param design: the design used in the config file
     :param metrics: the path to the json metrics file
+    :param sample_id: the sample id
     :param output: the path to the output file (processed)
     :returns: None
     :rtype: None
@@ -193,9 +196,8 @@ def amplicon_fastq(
     # add metrics to JSON file
     avg_stats = stats.stats
 
-    data = {"phred_result": avg_stats.asdict()}
-    with open(str(metrics), "w") as json_file:
-        json.dump(data, json_file, sort_keys=True, indent=4)
+    report = AmpliconSampleReport(sample_id=sample_id, **avg_stats.asdict())
+    report.write_json_file(metrics)
 
     if mode == "single-end":
         logger.debug("Finished building amplicon of %s to %s", inputs[0], output)

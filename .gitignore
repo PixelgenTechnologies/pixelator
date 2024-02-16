@@ -109,7 +109,12 @@ ENV/
 ## file that stores custom attributes of its containing folder
 .DS_Store
 
+# Taskfile runner cache
+.task
 
 pytest-results
 # pixelator file
 tests/data/ten_of_each.h5ad
+
+# Exclude test data run for report integration testing
+tests/report/assets/full_run

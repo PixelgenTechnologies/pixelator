@@ -1,7 +1,8 @@
 """Tests for amplicon module.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 # pylint: disable=redefined-outer-name
 # noqa: D103,D415,D400
 

@@ -1,6 +1,6 @@
 """Module contains classes and functions related to the configuration file for pixelator (assay settings).
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations

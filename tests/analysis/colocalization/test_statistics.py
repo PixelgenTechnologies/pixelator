@@ -1,7 +1,6 @@
-"""
-Tests for the colocalization modules
+"""Tests for the colocalization modules
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import pandas as pd

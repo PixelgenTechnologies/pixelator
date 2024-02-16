@@ -1,21 +1,22 @@
 """Tests verifying that the graph protocols are implemented.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import networkx as nx
 import pytest
+
 from pixelator.graph.backends.implementations import (
     graph_backend,
     graph_backend_from_graph_type,
 )
 from pixelator.graph.backends.implementations._networkx import (
+    NetworkXGraphBackend,
     NetworkxBasedEdge,
     NetworkxBasedEdgeSequence,
     NetworkxBasedVertex,
     NetworkxBasedVertexClustering,
     NetworkxBasedVertexSequence,
-    NetworkXGraphBackend,
 )
 
 

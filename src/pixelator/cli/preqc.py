@@ -1,6 +1,6 @@
 """Console script for pixelator (preqc).
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 from shutil import which

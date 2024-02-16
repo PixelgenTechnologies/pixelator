@@ -1,7 +1,7 @@
 """Module containing utilities for simulating data.
 
 Module containing utilities for simulating data. in testing, and in-silico experiments.
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from typing import Generator, Iterable, Iterator, List, Optional
@@ -66,10 +66,10 @@ class ReadSimulator:
         return "".join([self.rng.choice(["A", "T", "C", "G"]) for _ in range(length)])
 
     def build_molecule(self, nbr_of_molecules: int) -> Generator[str, None, None]:
-        """Create an strings representing molecules, that can then be "sequenced".
+        """Create strings representing molecules, that can then be "sequenced".
 
         :param nbr_of_molecules: number of molecules to generate
-        :yields: An iterator of DNA sequences
+        :yields str: An iterator of DNA sequences
         :rtype: Generator[str, None, None]
         """
 
@@ -108,8 +108,7 @@ class ReadSimulator:
                                                molecule
         :param std_nbr_of_reads_per_molecule: the standard deviation in the number of
                                               reads generated per molecule
-
-        :yields: an iterator of "sequenced" reads
+        :yields str: an iterator of "sequenced" reads
         :rtype: Generator[str, None, None]
         """
         for molecule in molecules:
@@ -131,7 +130,7 @@ class ReadSimulator:
 
         :param reads: reads to add errors to
         :param error_prob_per_base: probability of adding an error, range: [0,1)
-        :yields: an iterator of DNA sequences with errors added to it
+        :yields str: an iterator of DNA sequences with errors added to it
         :raises: Assertion error if `error_prob_per_base` is invalid
         :rtype: Generator[str, None, None]
         """

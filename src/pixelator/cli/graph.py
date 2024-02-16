@@ -1,6 +1,6 @@
 """Graph console script for pixelator.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import click
@@ -102,7 +102,7 @@ def graph(
     connect_components(
         input=str(parquet_file),
         output=str(graph_output),
-        output_prefix=clean_name,
+        sample_id=clean_name,
         metrics_file=str(metrics_file),
         multiplet_recovery=multiplet_recovery,
         leiden_iterations=leiden_iterations,

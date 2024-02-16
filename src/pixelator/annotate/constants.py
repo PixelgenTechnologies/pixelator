@@ -1,6 +1,6 @@
 """Constants used as part of the annotation modules.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION = 20

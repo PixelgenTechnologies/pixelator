@@ -1,7 +1,8 @@
 """Tests for collapse.py module.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 # pylint: disable=redefined-outer-name
 
 
@@ -14,6 +15,7 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
+
 from pixelator.collapse.process import (
     CollapsedFragment,
     build_annoytree,
@@ -24,8 +26,8 @@ from pixelator.collapse.process import (
     create_edgelist,
     create_fragment_to_upib_dict,
     filter_by_minimum_upib_count,
-    get_connected_components,
     get_collapsed_fragments_for_component,
+    get_connected_components,
     identify_fragments_to_collapse,
     write_tmp_feather_file,
 )
@@ -44,7 +46,7 @@ def test_create_fragment_to_upib_dict():
 
         mock_fastq_reader.Fastq.return_value = mock_reads()
 
-        result = create_fragment_to_upib_dict(
+        seq_dict, input_reads_count = create_fragment_to_upib_dict(
             input_file="/foo/bar",
             upia_start=0,
             upia_end=3,
@@ -53,7 +55,8 @@ def test_create_fragment_to_upib_dict():
             umia_start=7,
             umia_end=10,
         )
-        assert result == {"HIJABC": ["EF"], "HIJXXX": ["EF"], "HIJZZZ": ["EF"]}
+        assert input_reads_count == 3
+        assert seq_dict == {"HIJABC": ["EF"], "HIJXXX": ["EF"], "HIJZZZ": ["EF"]}
 
 
 def test_filter_by_minimum_upib_count():
@@ -106,6 +109,7 @@ def test_create_edgelist():
                     "marker": "CD4",
                     "sequence": "AAAAA",
                     "count": 6,
+                    "unique_fragment_count": 2,
                 },
                 {
                     "upia": "XXX",
@@ -114,6 +118,7 @@ def test_create_edgelist():
                     "marker": "CD4",
                     "sequence": "AAAAA",
                     "count": 2,
+                    "unique_fragment_count": 1,
                 },
                 {
                     "upia": "ZZZ",
@@ -122,6 +127,7 @@ def test_create_edgelist():
                     "marker": "CD4",
                     "sequence": "AAAAA",
                     "count": 1,
+                    "unique_fragment_count": 1,
                 },
             ]
         ),
@@ -283,7 +289,7 @@ def test_collapse_fastq_algorithm_unique():
 
         mock_fastq_reader.Fastq.return_value = mock_reads()
 
-        result_file = collapse_fastq(
+        result_file, input_read_count = collapse_fastq(
             input_file="/foo/bar",
             algorithm="unique",
             marker="CD4",
@@ -309,6 +315,7 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
+                        "unique_fragment_count": 1,
                     },
                     {
                         "upia": "TTT",
@@ -317,6 +324,7 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
+                        "unique_fragment_count": 1,
                     },
                     {
                         "upia": "GGG",
@@ -325,6 +333,7 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
+                        "unique_fragment_count": 1,
                     },
                 ]
             ),
@@ -341,7 +350,7 @@ def test_collapse_fastq_algorithm_adjacency():
 
         mock_fastq_reader.Fastq.return_value = mock_reads()
 
-        result_file = collapse_fastq(
+        result_file, input_read_count = collapse_fastq(
             input_file="/foo/bar",
             algorithm="adjacency",
             marker="CD4",
@@ -369,6 +378,7 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
+                        "unique_fragment_count": 1,
                     },
                     {
                         "upia": "TTT",
@@ -377,6 +387,7 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
+                        "unique_fragment_count": 1,
                     },
                     {
                         "upia": "GGG",
@@ -385,6 +396,7 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
+                        "unique_fragment_count": 1,
                     },
                 ]
             ),
@@ -418,7 +430,7 @@ def test_collapse_fastq_algorithm_adjacency_simulated_reads():
 
         mock_fastq_reader.Fastq.return_value = mock_reads()
 
-        result_file = collapse_fastq(
+        result_file, input_read_count = collapse_fastq(
             input_file="/foo/bar",
             algorithm="adjacency",
             marker="CD4",

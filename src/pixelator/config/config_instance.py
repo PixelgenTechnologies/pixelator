@@ -1,4 +1,4 @@
-"""Copyright (c) 2023 Pixelgen Technologies AB."""
+"""Copyright © 2023 Pixelgen Technologies AB."""
 
 from pixelator.config.config_class import (
     Config,

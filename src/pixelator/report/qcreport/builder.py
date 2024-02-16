@@ -3,8 +3,9 @@
 The QCReportBuilder is used to inject all QC report data into the
 template and write the final QC report to a file.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 import base64
 import dataclasses
 import gzip
@@ -17,13 +18,31 @@ import lxml.etree
 import semver
 from lxml.etree import _Element as LxmlElement
 from lxml.html import builder as E
+from pydantic import BaseModel
 
-from pixelator.report.qcreport.types import Metrics, SampleInfo, QCReportData
+from pixelator.report.qcreport.types import Metrics, QCReportData, SampleInfo
 from pixelator.types import PathType
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_QC_REPORT_TEMPLATE = Path(__file__).parent / "template.html"
+
+
+class CustomPydanticJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder for pydantic models."""
+
+    def default(self, obj: Any) -> Any:
+        """Return a serializable object for ``obj``.
+
+        Dump pydantic models to json or calls the base class implementation
+        for other types.
+
+        :param obj: object to serialize
+        :returns: a serializable object
+        """
+        if isinstance(obj, BaseModel):
+            return obj.model_dump(mode="json")
+        return super().default(obj)
 
 
 class QCReportBuilder:
@@ -213,7 +232,7 @@ class QCReportBuilder:
             "info": dataclasses.asdict(sample_info),
             "metrics": metrics,
         }
-        data = json.dumps(combined, **self._JSON_OPTIONS)
+        data = json.dumps(combined, **self._JSON_OPTIONS, cls=CustomPydanticJSONEncoder)
         metrics_el.text = self._compress_data(data)
         return metrics_el
 

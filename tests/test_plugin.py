@@ -1,8 +1,9 @@
 """
 Tests for the plugin system is working
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 from importlib.metadata import EntryPoint
 from unittest import mock
 

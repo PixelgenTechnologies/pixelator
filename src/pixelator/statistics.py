@@ -2,7 +2,7 @@
 
 This module contains functions related to various useful statistics/math
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import logging

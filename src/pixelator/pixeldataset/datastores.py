@@ -1,6 +1,6 @@
 """Module for PixelDataset data stores, e.g. pxl files and similar.
 
-Copyright (c) 2024 Pixelgen Technologies AB.
+Copyright © 2024 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations

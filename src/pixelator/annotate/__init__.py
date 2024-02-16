@@ -1,10 +1,10 @@
 """Functions for filtering and annotating of pixel data in edge list format.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
-import json
 import logging
+import typing
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -23,12 +23,10 @@ from pixelator.annotate.constants import (
 )
 from pixelator.config import AntibodyPanel
 from pixelator.graph.utils import components_metrics, edgelist_metrics
-from pixelator.pixeldataset import (
-    SIZE_DEFINITION,
-    PixelDataset,
-)
+from pixelator.pixeldataset import PixelDataset, SIZE_DEFINITION
 from pixelator.pixeldataset.utils import edgelist_to_anndata
-from pixelator.utils import np_encoder
+from pixelator.report.models.annotate import AnnotateSampleReport
+from pixelator.report.models import SummaryStatistics
 
 # TODO
 # Work around for issue with numba and multithreading
@@ -129,7 +127,7 @@ def annotate_components(
     When `aggregate_calling` is True aggregates will be called based on marker
     specificity. This will add to keys to the AnnDAta object's `obs`,
     `is_aggregate` and `tau`. The former gives an estimate of if the component
-    is an aggregate or not, and the later contains the computed tau specificity
+    is an aggregate or not, and the latter contains the computed tau specificity
     score.
 
     The following files and QC figures are generated after the filtering:
@@ -188,6 +186,18 @@ def annotate_components(
     )
     component_metrics["is_filtered"] = is_filtered_arr
 
+    # Calculate some metrics on the components that fail the size filter
+    input_cell_count = component_metrics.shape[0]
+    input_read_count = component_metrics.loc[:, "reads"].sum()
+    size_filter_fail_mask = ~is_filtered_arr
+    size_filter_fail_cell_count = np.sum(size_filter_fail_mask, dtype=int)
+    size_filter_fail_molecule_count = component_metrics.loc[
+        size_filter_fail_mask, "molecules"
+    ].sum()
+    size_filter_fail_read_count = component_metrics.loc[
+        size_filter_fail_mask, "reads"
+    ].sum()
+
     # save the components metrics (raw)
     component_metrics.to_csv(
         Path(output) / f"{output_prefix}.raw_components_metrics.csv.gz",
@@ -201,10 +211,10 @@ def annotate_components(
     component_metrics = component_metrics[is_filtered_arr]
 
     # filter the edge list
-    edgelist = edgelist[edgelist["component"].isin(component_metrics.index)]
+    filtered_edgelist = edgelist[edgelist["component"].isin(component_metrics.index)]
 
     # convert the filtered edge list to AnnData
-    adata = edgelist_to_anndata(edgelist=edgelist, panel=panel)
+    adata = edgelist_to_anndata(edgelist=filtered_edgelist, panel=panel)
 
     # components clustering
     if adata.n_obs > MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION:
@@ -222,12 +232,42 @@ def annotate_components(
     # create filtered PixelDataset and save it
     adata.uns["version"] = __version__
     metadata = {"version": __version__, "sample": output_prefix}
-    dataset = PixelDataset.from_data(edgelist=edgelist, adata=adata, metadata=metadata)
+    dataset = PixelDataset.from_data(
+        edgelist=filtered_edgelist, adata=adata, metadata=metadata
+    )
     dataset.save(str(Path(output) / f"{output_prefix}.annotate.dataset.pxl"))
 
+    edgelist_metrics_dict = edgelist_metrics(filtered_edgelist)
+    adata_metrics_dict = anndata_metrics(adata)
+
+    report = AnnotateSampleReport(
+        sample_id=output_prefix,
+        marker_count=edgelist_metrics_dict["marker_count"],
+        a_pixel_count=edgelist_metrics_dict["a_pixel_count"],
+        b_pixel_count=edgelist_metrics_dict["b_pixel_count"],
+        molecule_count_per_a_pixel_per_cell_stats=edgelist_metrics_dict[
+            "b_pixel_count_per_a_pixel_stats"
+        ],
+        b_pixel_count_per_a_pixel_per_cell_stats=edgelist_metrics_dict[
+            "b_pixel_count_per_a_pixel_stats"
+        ],
+        fraction_molecules_in_largest_component=edgelist_metrics_dict[
+            "fraction_molecules_in_largest_component"
+        ],
+        fraction_pixels_in_largest_component=edgelist_metrics_dict[
+            "fraction_pixels_in_largest_component"
+        ],
+        components_modularity=edgelist_metrics_dict["components_modularity"],
+        **adata_metrics_dict,
+        input_cell_count=input_cell_count,
+        input_read_count=input_read_count,
+        size_filter_fail_cell_count=size_filter_fail_cell_count,
+        size_filter_fail_molecule_count=size_filter_fail_molecule_count,
+        size_filter_fail_read_count=size_filter_fail_read_count,
+    )
+
     # save metrics (JSON)
-    with open(metrics_file, "w") as outfile:
-        json.dump(edgelist_metrics(edgelist), outfile, default=np_encoder)
+    report.write_json_file(Path(metrics_file))
 
 
 def _cluster_components_using_leiden(
@@ -299,3 +339,94 @@ def cluster_components(
 
     logger.debug("Clustering computed %i clusters", adata.obs["leiden"].nunique())
     return None if inplace else adata
+
+
+class AnnotateAnndataStatistics(typing.TypedDict):
+    """Typed dict for the statistics of an AnnData object."""
+
+    cell_count: int
+
+    total_marker_count: int
+
+    molecule_count: int
+
+    read_count: int
+
+    molecule_count_per_cell_stats: SummaryStatistics
+    read_count_per_cell_stats: SummaryStatistics
+    a_pixel_count_per_cell_stats: SummaryStatistics
+    b_pixel_count_per_cell_stats: SummaryStatistics
+    marker_count_per_cell_stats: SummaryStatistics
+    a_pixel_b_pixel_ratio_per_cell_stats: SummaryStatistics
+
+    # Aggregate calling metrics
+    aggregate_count: Optional[int]
+
+    #: The number of reads in aggregates
+    reads_in_aggregates_count: Optional[int]
+
+    #: The number of molecules in aggregates
+    molecules_in_aggregates_count: Optional[int]
+
+    min_size_threshold: Optional[int]
+    max_size_threshold: Optional[int]
+    doublet_size_threshold: Optional[int]
+
+
+def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
+    """Collect metrics from an AnnData object.
+
+    :param adata: the AnnData object
+    :returns: a dictionary of different metrics
+    :rtype: Dict[str, float]
+    """
+    molecule_count = adata.obs["molecules"].sum()
+    read_count = adata.obs["reads"].sum()
+    molecules_per_cell_stats = SummaryStatistics.from_series(adata.obs["molecules"])
+    reads_per_cell_stats = SummaryStatistics.from_series(adata.obs["reads"])
+    a_pixels_per_cell_stats = SummaryStatistics.from_series(adata.obs["upia"])
+    b_pixels_per_cell_stats = SummaryStatistics.from_series(adata.obs["upib"])
+    markers_per_cell_stats = SummaryStatistics.from_series(adata.obs["antibodies"])
+    a_pixel_b_pixel_ratio_per_cell_stats = SummaryStatistics.from_series(
+        adata.obs["upia_per_upib"]
+    )
+
+    metrics: AnnotateAnndataStatistics = {
+        "cell_count": adata.n_obs,
+        "total_marker_count": adata.n_vars,
+        "molecule_count": molecule_count,
+        "read_count": read_count,
+        "molecule_count_per_cell_stats": molecules_per_cell_stats,
+        "read_count_per_cell_stats": reads_per_cell_stats,
+        "a_pixel_count_per_cell_stats": a_pixels_per_cell_stats,
+        "b_pixel_count_per_cell_stats": b_pixels_per_cell_stats,
+        "marker_count_per_cell_stats": markers_per_cell_stats,
+        "a_pixel_b_pixel_ratio_per_cell_stats": a_pixel_b_pixel_ratio_per_cell_stats,
+        "aggregate_count": None,
+        "reads_in_aggregates_count": None,
+        "molecules_in_aggregates_count": None,
+        "min_size_threshold": None,
+        "max_size_threshold": None,
+        "doublet_size_threshold": None,
+    }
+
+    # Tau type will only be available if it has been added in the annotate step
+    if "tau_type" in adata.obs:
+        aggregates_mask = adata.obs["tau_type"] != "normal"
+        number_of_aggregates = np.sum(aggregates_mask)
+        metrics["aggregate_count"] = number_of_aggregates
+        metrics["reads_in_aggregates_count"] = adata[aggregates_mask].obs["reads"].sum()
+        metrics["molecules_in_aggregates_count"] = (
+            adata[aggregates_mask].obs["molecules"].sum()
+        )
+
+    if "min_size_threshold" in adata.uns:
+        metrics["min_size_threshold"] = adata.uns["min_size_threshold"]
+
+    if "max_size_threshold" in adata.uns:
+        metrics["max_size_threshold"] = adata.uns["max_size_threshold"]
+
+    if "doublet_size_threshold" in adata.uns:
+        metrics["doublet_size_threshold"] = adata.uns["doublet_size_threshold"]
+
+    return metrics

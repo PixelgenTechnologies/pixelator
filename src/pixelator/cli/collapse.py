@@ -1,18 +1,20 @@
 """Console script for pixelator (collapse).
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
-import json
+
 from collections import defaultdict
 from concurrent import futures
 from pathlib import Path
 
 import click
-import pandas as pd
+import polars as pl
 
 from pixelator.cli.common import design_option, logger, output_option
 from pixelator.collapse import collapse_fastq
 from pixelator.config import config, get_position_in_parent, load_antibody_panel
+from pixelator.report.models import CollapseSampleReport
+from pixelator.report.models import SummaryStatistics
 from pixelator.utils import (
     create_output_stage_dir,
     get_process_pool_executor,
@@ -236,36 +238,47 @@ def collapse(
                         )
                     )
 
+        total_input_reads = 0
         tmp_files = []
         for job in futures.as_completed(jobs):
             if job.exception() is not None:
                 raise job.exception()
             # the worker returns a path to a file (temp antibody edge list)
-            tmp_file = job.result()
+            tmp_file, input_reads_count = job.result()
             if tmp_file is not None:
                 tmp_files.append(tmp_file)
+            if input_reads_count is not None:
+                total_input_reads += input_reads_count
 
         # create the final edge list from all the temporary ones (antibodies)
         logger.debug("Creating edge list for sample %s", sample)
-        df = pd.concat(
-            (pd.read_feather(f, use_threads=True) for f in tmp_files), axis=0
+        df = pl.concat(
+            (pl.read_ipc(f, memory_map=False) for f in tmp_files), how="vertical"
         )
 
-        output_file = collapse_output / f"{sample}.collapsed.parquet"
-        df.to_parquet(
-            output_file, engine="fastparquet", compression="zstd", index=False
+        # Collect some stats for reporting
+        collapsed_fragments_stats = SummaryStatistics.from_series(
+            df["unique_fragment_count"]
         )
+        output_read_count = int(df["count"].sum())
+        molecule_count = int(df.shape[0])
+
+        output_file = collapse_output / f"{sample}.collapsed.parquet"
+        # Remove the unique_fragment_count column before saving
+        df.drop("unique_fragment_count")
+        df.write_parquet(output_file, compression="zstd")
 
         # remove temporary edge list files
         for f in tmp_files:
             logger.debug("Removing temporary edge list %s", f)
             Path(f).unlink(missing_ok=True)
 
-        # write metrics
-        metrics = {
-            "total_molecules": int(df.shape[0]),
-            "total_count": int(df["count"].sum()),
-        }
-        json_file = collapse_output / f"{sample}.report.json"
-        with open(json_file, "w") as outfile:
-            json.dump(metrics, outfile)
+        report = CollapseSampleReport(
+            sample_id=sample,
+            input_read_count=total_input_reads,
+            output_read_count=output_read_count,
+            molecule_count=molecule_count,
+            collapsed_molecule_count_stats=collapsed_fragments_stats,
+        )
+
+        report.write_json_file(collapse_output / f"{sample}.report.json")

@@ -1,6 +1,6 @@
 """Module for estimating colocalization statistics.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import logging
@@ -68,7 +68,7 @@ def permutation_analysis_results(
     transformer: Optional[
         Callable[[RegionByCountsDataFrame], RegionByCountsDataFrame]
     ] = None,
-    n=50,
+    n: int = 50,
     random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """Perform permutation analysis on colocalization data.

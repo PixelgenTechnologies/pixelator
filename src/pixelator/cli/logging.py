@@ -1,7 +1,8 @@
 """Logging setup for pixelator.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 import atexit
 import functools
 import logging
@@ -18,7 +19,6 @@ import click
 from numba import NumbaDeprecationWarning
 
 from pixelator.types import PathType
-
 
 # Silence deprecation warnings
 warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
@@ -79,7 +79,7 @@ class ColorFormatter(logging.Formatter):
 
 
 class DefaultCliFormatter(logging.Formatter):
-    """Click formatter with colored levels"""
+    """Click formatter with colored levels."""
 
     def format(self, record: logging.LogRecord) -> str:
         """Format a record for CLI output."""

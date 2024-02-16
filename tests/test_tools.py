@@ -1,6 +1,6 @@
 """Tools useful in testing.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import pandas as pd

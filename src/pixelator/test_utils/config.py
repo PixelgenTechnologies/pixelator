@@ -1,4 +1,5 @@
-"""Copyright (c) 2023 Pixelgen Technologies AB."""
+"""Copyright © 2023 Pixelgen Technologies AB."""
+
 from pathlib import Path
 from typing import Any, Dict
 
@@ -33,11 +34,11 @@ class WorkflowConfig:
         return self._config.keys()
 
     @classmethod
-    def _parse(cls, config_file: PathType) -> Dict[str, Any]:
+    def _parse(cls, config_file: PathType) -> dict[str, Any]:
         """Load and resolve relative paths in the config file.
 
         :param config_file: path to the config file
-        :returns: the config object parsed from the `config_file`
+        :return dict[str, Any]: the config object parsed from the `config_file`
         """
         yaml_loader = yaml.YAML(typ="safe")
         with open(str(config_file), "r") as f:
