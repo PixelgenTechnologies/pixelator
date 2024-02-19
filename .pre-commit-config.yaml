@@ -1,4 +1,4 @@
-exclude: ^(tests/snapshots/.*)$
+exclude: ^((tests/snapshots/.*)|(tests/report/snapshots/.*))$
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
