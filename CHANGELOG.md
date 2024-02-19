@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * A nice string representation for the `Graph` class, to let you know how many nodes and edges there are in the
   current graph object instance.
 * Metric to collect molecules (edges) in cells with outlier distributions of antibodies (aggregates).
+* Provide typed interfaces for all per-stage report files using pydantic.
+* Centralize pixelator intermediate file lookup and access.
 
 ### Changed
 
@@ -28,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * The output name of the `.pxl` file from the `annotate` step is now `*.annotated.dataset.pxl`
 * The output name of the `.pxl` file from the `analysis` step is now `*.analysis.dataset.pxl`
 * The term `edges` in `metrics` and `adata` is now replaced with `molecules`.
+* Renaming of variables in per-stage JSON reports.
 
 ### Fixed
 
