@@ -18,31 +18,13 @@ import lxml.etree
 import semver
 from lxml.etree import _Element as LxmlElement
 from lxml.html import builder as E
-from pydantic import BaseModel
 
+from pixelator.report.common.json_encoder import PixelatorJSONEncoder
 from pixelator.report.qcreport.types import Metrics, QCReportData, SampleInfo
-from pixelator.types import PathType
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_QC_REPORT_TEMPLATE = Path(__file__).parent / "template.html"
-
-
-class CustomPydanticJSONEncoder(json.JSONEncoder):
-    """Custom JSON encoder for pydantic models."""
-
-    def default(self, obj: Any) -> Any:
-        """Return a serializable object for ``obj``.
-
-        Dump pydantic models to json or calls the base class implementation
-        for other types.
-
-        :param obj: object to serialize
-        :returns: a serializable object
-        """
-        if isinstance(obj, BaseModel):
-            return obj.model_dump(mode="json")
-        return super().default(obj)
 
 
 class QCReportBuilder:
@@ -64,7 +46,7 @@ class QCReportBuilder:
     """
 
     _JSON_OPTIONS: ClassVar[Dict[str, Any]] = {"indent": None, "separators": (",", ":")}
-    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.11.0", ">=0.10.0"]
+    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.12.0", ">=0.10.0"]
 
     def __init__(self, template: Union[str, Path] = DEFAULT_QC_REPORT_TEMPLATE):
         """Construct a QC report builder given a html template.
@@ -125,7 +107,7 @@ class QCReportBuilder:
         sample_info: SampleInfo,
         metrics: Metrics,
         data: QCReportData,
-        metrics_definition_file: Optional[PathType] = None,
+        metrics_definition_file: Optional[Path] = None,
     ) -> None:
         """Inject given data into the QC report and write the results to a stream.
 
@@ -176,10 +158,10 @@ class QCReportBuilder:
         if data.antibody_counts is not None:
             elements.append(self._build_antibody_counts_element(data.antibody_counts))
 
-        if data.reads_per_umi_frequency is not None:
+        if data.reads_per_molecule_frequency is not None:
             elements.append(
-                self._build_reads_per_umi_frequency_element(
-                    data.reads_per_umi_frequency
+                self._build_reads_per_molecule_frequency_element(
+                    data.reads_per_molecule_frequency
                 )
             )
 
@@ -193,7 +175,7 @@ class QCReportBuilder:
         logger.debug("Data injected in QC report template %s", self.template)
 
     def _build_metric_definition_file_element(
-        self, metrics_definition_file: PathType, template_body: LxmlElement
+        self, metrics_definition_file: Path, template_body: LxmlElement
     ) -> LxmlElement:
         """Create a lxml HTML object to inject the metrics definition file."""
         template_body.cssselect('script[data-type="metric-definitions"]')
@@ -232,7 +214,7 @@ class QCReportBuilder:
             "info": dataclasses.asdict(sample_info),
             "metrics": metrics,
         }
-        data = json.dumps(combined, **self._JSON_OPTIONS, cls=CustomPydanticJSONEncoder)
+        data = json.dumps(combined, **self._JSON_OPTIONS, cls=PixelatorJSONEncoder)
         metrics_el.text = self._compress_data(data)
         return metrics_el
 
@@ -312,17 +294,17 @@ class QCReportBuilder:
         antibody_distribution_el.text = self._compress_data(data)
         return antibody_distribution_el
 
-    def _build_reads_per_umi_frequency_element(self, data: str) -> LxmlElement:
+    def _build_reads_per_molecule_frequency_element(self, data: str) -> LxmlElement:
         """Create an HTML object injecting the data for the reads per umi histogram."""
-        reads_per_umi_frequency_el = E.SCRIPT(
+        reads_per_molecule_frequency_el = E.SCRIPT(
             **{
                 "type": "application/octet-stream;base64",
-                "data-type": "reads-per-umi-frequency",
+                "data-type": "reads-per-molecule-frequency",
                 "data-dataset-id": "0",
             }
         )
-        reads_per_umi_frequency_el.text = self._compress_data(data)
-        return reads_per_umi_frequency_el
+        reads_per_molecule_frequency_el.text = self._compress_data(data)
+        return reads_per_molecule_frequency_el
 
     @staticmethod
     def _compress_data(data: str):
