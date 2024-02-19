@@ -6,18 +6,44 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 import numpy as np
 import pandas as pd
 import pytest
+from pytest_snapshot.plugin import Snapshot
 from numpy.testing import assert_almost_equal
+from pixelator.analysis.colocalization import get_differential_colocalization
 from pixelator.graph import Graph
 from pixelator.plot import (
     _calculate_densities,
     _calculate_distance_to_unit_sphere_zones,
     _unit_sphere_surface,
     plot_2d_graph,
+    plot_3d_graph,
+    plot_colocalization_heatmap,
     plot_3d_heatmap,
     scatter_umi_per_upia_vs_tau,
     cell_count_plot,
     edge_rank_plot,
 )
+
+
+@pytest.mark.parametrize(
+    "component, marker",
+    [
+        ("PXLCMP0000000", "CD45RA"),
+    ],
+)
+def test_plot_3d_graph(
+    snapshot: Snapshot, component, marker, setup_basic_pixel_dataset
+):
+    """Test `plot_3d_graph` function.
+
+    :param snapshot: testing snapshot directory
+    """
+    np.random.seed(0)
+    snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"
+    pxl_data, *_ = setup_basic_pixel_dataset
+    result = plot_3d_graph(
+        pxl_data, component=component, marker=marker, suppress_fig=True
+    )
+    snapshot.assert_match(result.to_json(), "plot_3d_graph_fig.json")
 
 
 @pytest.mark.mpl_image_compare(
@@ -35,10 +61,43 @@ from pixelator.plot import (
 def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_nodes):
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
-    print(pxl_data.edgelist_lazy.select("marker").unique().collect())
     fig, _ = plot_2d_graph(
         pxl_data, component=component, marker=marker, show_b_nodes=show_b_nodes
     )
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_colocalization_heatmap",
+)
+def test_plot_colocalization_heatmap(setup_basic_pixel_dataset):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    fig, _ = plot_colocalization_heatmap(pxl_data.colocalization)
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_colocalization_heatmap",
+)
+def test_plot_differential_colocalization_heatmap(setup_basic_pixel_dataset):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    differential_colocalization = get_differential_colocalization(
+        pxl_data.colocalization,
+        reference="PXLCMP0000002",
+        target="PXLCMP0000003",
+        contrast_column="component",
+        use_z_score=False,
+    )
+    differential_colocalization.loc[1] = [
+        "CD3",
+        "CD19",
+        0,
+    ]  # Add a second row as the heatmap needs at least 2 rows
+    fig, _ = plot_colocalization_heatmap(differential_colocalization)
     return fig
 
 

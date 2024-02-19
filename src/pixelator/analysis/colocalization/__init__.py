@@ -296,23 +296,19 @@ def get_differential_colocalization(
 ) -> pd.DataFrame:
     """Calculate the differential colocalization.
 
-    Args:
-    ----
-        colocalization_data_frame (pd.DataFrame): The colocalization data frame.
-        target (str): The label for target components in the contrast_column.
-        reference (str): The label for reference components in the contrast_column.
-        contrast_column (str, optional): The column to use for the contrast. Defaults to "sample".
-        use_z_score (bool, optional): Whether to use the z-score. Defaults to True.
+    :param colocalization_data_frame: The colocalization data frame.
+    :param target: The label for target components in the contrast_column.
+    :param reference: The label for reference components in the contrast_column.
+    :param contrast_column: The column to use for the contrast. Defaults to "sample".
+    :param use_z_score: Whether to use the z-score. Defaults to True.
 
-    Returns:
-    -------
-        pd.DataFrame: The differential colocalization.
-
+    :return: The differential colocalization.
+    :rtype: pd.DataFrame
     """
     if use_z_score:
-        value_col = "pearson_z"
+        value_column = "pearson_z"
     else:
-        value_col = "pearson"
+        value_column = "pearson"
 
     same_marker_mask = (
         colocalization_data_frame["marker_1"] == colocalization_data_frame["marker_2"]
@@ -320,13 +316,14 @@ def get_differential_colocalization(
     data_frame = colocalization_data_frame[~same_marker_mask]
     colocalization_scores_source = data_frame[data_frame[contrast_column] == reference]
     colocalization_scores_target = data_frame[data_frame[contrast_column] == target]
-    differential_colocalization = (
-        colocalization_scores_source.groupby(["marker_1", "marker_2"])[
-            [value_col]
-        ].median()
-        - colocalization_scores_target.groupby(["marker_1", "marker_2"])[
-            [value_col]
-        ].median()
+    differential_colocalization = colocalization_scores_source.groupby(
+        ["marker_1", "marker_2"]
+    )[[value_column]].median().astype(float) - colocalization_scores_target.groupby(
+        ["marker_1", "marker_2"]
+    )[
+        [value_column]
+    ].median().astype(
+        float
     )
     differential_colocalization = differential_colocalization.reset_index()
 

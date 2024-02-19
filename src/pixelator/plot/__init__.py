@@ -453,6 +453,7 @@ def plot_3d_graph(
     show_b_nodes: bool = False,
     cmap: str = "Inferno",
     cache_layout: bool = False,
+    suppress_fig: bool = False,
 ) -> go.Figure:
     """Plot a 3D graph of the specified component in the given PixelDataset.
 
@@ -467,6 +468,7 @@ def plot_3d_graph(
     :param show_b_nodes: Whether to show nodes of type B. Defaults to False.
     :param cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
     :param cache_layout: Whether to cache the layout coordinates. Defaults to False.
+    :param suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
     :return: The plotted 3D graph.
     :rtype: go.Figure
 
@@ -530,7 +532,8 @@ def plot_3d_graph(
     )
 
     fig.update_layout(title="component")
-    fig.show()
+    if not suppress_fig:
+        fig.show()
     return fig
 
 

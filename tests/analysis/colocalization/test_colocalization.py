@@ -11,7 +11,24 @@ from pandas.testing import assert_frame_equal
 from pixelator.analysis.colocalization import (
     colocalization_from_component_edgelist,
     colocalization_scores,
+    get_differential_colocalization,
 )
+
+
+def test_get_differential_colocalization(setup_basic_pixel_dataset):
+    pxl_data, *_ = setup_basic_pixel_dataset
+    result = get_differential_colocalization(
+        colocalization_data_frame=pxl_data.colocalization,
+        target="PXLCMP0000002",
+        reference="PXLCMP0000003",
+        contrast_column="component",
+        use_z_score=False,
+    )
+    expected = pd.DataFrame.from_dict(
+        {0: {"marker_1": "CD19", "marker_2": "CD45", "pearson": -0.1}},
+        orient="index",
+    )
+    assert_frame_equal(result, expected, check_exact=False, atol=0.01)
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
