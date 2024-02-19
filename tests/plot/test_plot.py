@@ -8,7 +8,6 @@ import pandas as pd
 import pytest
 from pytest_snapshot.plugin import Snapshot
 from numpy.testing import assert_almost_equal
-from pixelator.analysis.colocalization import get_differential_colocalization
 from pixelator.graph import Graph
 from pixelator.plot import (
     _calculate_densities,
@@ -17,6 +16,7 @@ from pixelator.plot import (
     plot_2d_graph,
     plot_3d_graph,
     plot_colocalization_heatmap,
+    plot_colocalization_diff_heatmap,
     plot_3d_heatmap,
     scatter_umi_per_upia_vs_tau,
     cell_count_plot,
@@ -80,24 +80,26 @@ def test_plot_colocalization_heatmap(setup_basic_pixel_dataset):
 
 @pytest.mark.mpl_image_compare(
     deterministic=True,
-    baseline_dir="../snapshots/test_plot/test_plot_colocalization_heatmap",
+    baseline_dir="../snapshots/test_plot/test_plot_colocalization_diff_heatmap",
 )
-def test_plot_differential_colocalization_heatmap(setup_basic_pixel_dataset):
+def test_plot_colocalization_diff_heatmap(setup_basic_pixel_dataset):
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
-    differential_colocalization = get_differential_colocalization(
-        pxl_data.colocalization,
-        reference="PXLCMP0000002",
+    colocalization_data = pxl_data.colocalization
+    colocalization_data.loc[5] = [
+        "CD3",
+        "CD19",
+        0.5,
+        "PXLCMP0000002",
+    ]  # Adding a new pair of colocalization data as the heatmap needs at least 2 rows
+    colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "PXLCMP0000003"]
+    fig, _ = plot_colocalization_diff_heatmap(
+        colocalization_data,
         target="PXLCMP0000003",
+        reference="PXLCMP0000002",
         contrast_column="component",
         use_z_score=False,
     )
-    differential_colocalization.loc[1] = [
-        "CD3",
-        "CD19",
-        0,
-    ]  # Add a second row as the heatmap needs at least 2 rows
-    fig, _ = plot_colocalization_heatmap(differential_colocalization)
     return fig
 
 
