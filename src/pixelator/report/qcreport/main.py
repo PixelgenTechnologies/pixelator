@@ -170,9 +170,6 @@ def make_report(
 
     logger.info("Generating QC reports from %s", input_path)
 
-    # TODO: Move file collection and workdir scanning
-    #       logic of *_metrics functions to PixelatorWorkdir
-
     # collect and save metrics
     if panel is not None:
         panel_obj = load_antibody_panel(config, panel)
