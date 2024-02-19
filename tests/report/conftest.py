@@ -5,15 +5,18 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 import itertools
 import shutil
+import subprocess
 import uuid
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
+from pixelator import PixelDataset
 from pixelator.report.common import PixelatorWorkdir
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def local_assets_dir() -> Path:
     return Path(__file__).parent / "assets"
 
@@ -278,7 +281,8 @@ def all_stages_all_reports_and_meta(local_assets_dir_reports_only, pixelator_wor
 
 
 @pytest.fixture()
-def filtered_datasets(local_assets_dir, pixelator_workdir):
+def filtered_dataset_pxl_workdir(local_assets_dir, pixelator_workdir):
+    pixelator_workdir.stage_dir("annotate")
     shutil.copy(
         str(local_assets_dir / "uropod_control_300k_S1_001.annotate.dataset.pxl"),
         pixelator_workdir.basedir / "annotate",
@@ -287,7 +291,7 @@ def filtered_datasets(local_assets_dir, pixelator_workdir):
 
 
 @pytest.fixture()
-def raw_component_metrics(local_assets_dir, pixelator_workdir):
+def raw_component_metrics_workdir(local_assets_dir, pixelator_workdir):
     shutil.copy(
         str(
             local_assets_dir
@@ -296,3 +300,37 @@ def raw_component_metrics(local_assets_dir, pixelator_workdir):
         pixelator_workdir.basedir / "annotate",
     )
     return pixelator_workdir
+
+
+@pytest.fixture(scope="module")
+def raw_component_metrics_data():
+    test_file = (
+        Path(__file__).parent
+        / "assets/uropod_control_300k_S1_001.raw_components_metrics.csv.gz"
+    )
+    df = pd.read_csv(test_file, compression="gzip")
+    return df
+
+
+@pytest.fixture()
+def filtered_dataset_pxl_data(filtered_dataset_pxl_workdir) -> PixelDataset:
+    dataset_path = filtered_dataset_pxl_workdir.filtered_dataset()[0]
+    dataset = PixelDataset.from_file(dataset_path)
+    return dataset
+
+
+@pytest.fixture(scope="session")
+def full_run_assets_dir(request) -> Path:
+    subprocess.run(
+        "task tests:update-web-test-data",
+        shell=True,
+        cwd=str(request.config.rootdir),
+        capture_output=True,
+        check=True,
+    )
+    return Path(__file__).parent / "assets/full_run"
+
+
+@pytest.fixture(scope="session")
+def qc_report_assets_dir(request) -> Path:
+    return Path(request.config.rootdir) / "tests/report/assets/qc_report_data"
