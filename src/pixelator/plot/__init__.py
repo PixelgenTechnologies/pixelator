@@ -76,14 +76,14 @@ def scatter_umi_per_upia_vs_tau(
         raise ValueError(
             "'umi_per_upia', 'tau' and 'tau_type' must be available in the DataFrame"
         )
-
-    assert all(
+    if not all(
         [
             data["umi_per_upia"].dtype == "float64",
             data["tau"].dtype == "float64",
             data["tau_type"].dtype in ["object", "category"],
         ]
-    ), "Invalid data types"
+    ):
+        raise AssertionError("Invalid data types")
 
     if group_by is not None:
         if group_by not in data.columns:
