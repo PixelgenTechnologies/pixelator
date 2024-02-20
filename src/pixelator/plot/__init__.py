@@ -570,19 +570,63 @@ def plot_3d_graph(
     return fig
 
 
+def _pivot_colocalization_data(
+    colocalization_data: pd.DataFrame,
+    value_col: str = "pearson",
+    markers: Union[list, None] = None,
+):
+    colocalization_data_pivot = pd.pivot_table(
+        colocalization_data,
+        index="marker_1",
+        columns="marker_2",
+        values=value_col,
+        fill_value=0,
+    )
+
+    if markers is not None:
+        colocalization_data_pivot = colocalization_data_pivot.loc[markers, markers]
+
+    for m in colocalization_data_pivot.index:
+        colocalization_data_pivot.loc[m, m] = 0  # remove autocorrelations
+
+    colocalization_data_pivot = colocalization_data_pivot.fillna(0)
+
+    return colocalization_data_pivot
+
+
+def _make_colocalization_symmetric(
+    colocalization_data: pd.DataFrame,
+    value_col: str = "pearson",
+):
+    colocalization_data = pd.DataFrame(
+        np.concatenate(
+            [
+                colocalization_data[["marker_1", "marker_2", value_col]].to_numpy(),
+                colocalization_data[["marker_2", "marker_1", value_col]].to_numpy(),
+            ],
+        ),
+        columns=["marker_1", "marker_2", value_col],
+    )
+    colocalization_data = (
+        colocalization_data.groupby(["marker_1", "marker_2"])[value_col]
+        .apply(lambda x: np.mean(x))
+        .reset_index()
+    )
+
+    return colocalization_data
+
+
 def plot_colocalization_heatmap(
     colocalization_data: pd.DataFrame,
-    component: Union[str, None] = None,
     markers: Union[list, None] = None,
     cmap: str = "vlag",
     use_z_scores: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes]:
-    """Plot a colocalization heatmap based on the provided colocalization data.
+    """Plot a colocalization heatmap based on the provided colocalization data. The colocalization_data DataFrame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z".
 
     Example usage: plot_colocalization_heatmap(pxl.colocalization).
 
-    :param colocalization_data: The colocalization data to plot.
-    :param component: The component to filter the colocalization data by. Defaults to None.
+    :param colocalization_data: The colocalization data to plot. The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z", and "component".
     :param markers: The markers to include in the heatmap. Defaults to None.
     :param cmap: The colormap to use for the heatmap. Defaults to "vlag".
     :param use_z_scores: Whether to use z-scores. Defaults to False.
@@ -596,43 +640,11 @@ def plot_colocalization_heatmap(
     else:
         value_col = "pearson"
 
-    if component is not None:
-        colocalization_data = colocalization_data.set_index("component").filter(
-            like=component, axis=0
-        )
-        colocalization_data = colocalization_data.reset_index()[
-            ["marker_1", "marker_2", value_col]
-        ]
-    else:
-        colocalization_data = colocalization_data.groupby(["marker_1", "marker_2"])[
-            [value_col]
-        ].apply(lambda x: np.mean(x))
-        colocalization_data = colocalization_data.reset_index()
+    colocalization_data = _make_colocalization_symmetric(colocalization_data, value_col)
 
-    colocalization_data.columns = [
-        "marker_1",
-        "marker_2",
-        "pearson",
-    ]
-
-    colocalization_data_pivot = pd.pivot_table(
-        colocalization_data,
-        index=["marker_1"],
-        columns=["marker_2"],
-        values=[value_col],
-        fill_value=0,
+    colocalization_data_pivot = _pivot_colocalization_data(
+        colocalization_data, value_col, markers=markers
     )
-    colocalization_data_pivot.columns = [
-        col[1] for col in colocalization_data_pivot.columns
-    ]  # Remove the term "pearson" from column indices
-
-    if markers is not None:
-        colocalization_data_pivot = colocalization_data_pivot.loc[markers, markers]
-
-    for m in colocalization_data_pivot.index:
-        colocalization_data_pivot.loc[m, m] = 0  # remove autocorrelations
-
-    colocalization_data_pivot = colocalization_data_pivot.fillna(0)
     sns.clustermap(
         colocalization_data_pivot,
         yticklabels=True,
@@ -642,6 +654,20 @@ def plot_colocalization_heatmap(
     )
 
     return plt.gcf(), plt.gca()
+
+
+def _get_top_marker_pairs(
+    colocalization_data: pd.DataFrame,
+    n_top_marker_pairs: int,
+    value_col: str = "pearson",
+) -> list:
+    colocalization_data["abs_val"] = colocalization_data[value_col].abs()
+    top_marker_pairs = colocalization_data.nlargest(10, "abs_val")
+    top_markers = list(
+        set(top_marker_pairs["marker_1"]).union(set(top_marker_pairs["marker_2"]))
+    )
+
+    return top_markers
 
 
 def plot_colocalization_diff_heatmap(
@@ -696,45 +722,23 @@ def plot_colocalization_diff_heatmap(
     differential_colocalization = differential_colocalization.fillna(0).reset_index()
 
     if n_top_marker_pairs is not None:
-        differential_colocalization["abs_val"] = differential_colocalization[
-            value_col
-        ].abs()
-        top_marker_pairs = differential_colocalization.nlargest(
-            n_top_marker_pairs, "abs_val"
+        top_markers = _get_top_marker_pairs(
+            differential_colocalization, n_top_marker_pairs, value_col
         )
-        top_markers = list(
-            set(top_marker_pairs["marker_1"]).union(set(top_marker_pairs["marker_2"]))
-        )
+    else:
+        top_markers = None
 
     # Making the differential colocalization symmetric
-    differential_colocalization = pd.DataFrame(
-        np.concatenate(
-            [
-                differential_colocalization[
-                    ["marker_1", "marker_2", value_col]
-                ].to_numpy(),
-                differential_colocalization[
-                    ["marker_2", "marker_1", value_col]
-                ].to_numpy(),
-            ],
-        ),
-        columns=["marker_1", "marker_2", value_col],
+    differential_colocalization = _make_colocalization_symmetric(
+        differential_colocalization, value_col
     )
 
-    pivoted_differential_colocalization = pd.pivot_table(
+    pivoted_differential_colocalization = _pivot_colocalization_data(
         differential_colocalization,
-        index="marker_1",
-        columns="marker_2",
-        values=value_col,
-    )
-    pivoted_differential_colocalization = (
-        pivoted_differential_colocalization.infer_objects(copy=False).fillna(0)
+        value_col,
+        markers=top_markers,
     )
 
-    if n_top_marker_pairs is not None:
-        pivoted_differential_colocalization = pivoted_differential_colocalization.loc[
-            top_markers, top_markers
-        ]
     sns.clustermap(
         pivoted_differential_colocalization,
         yticklabels=True,
