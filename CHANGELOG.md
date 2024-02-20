@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * A nice string representation for the `Graph` class, to let you know how many nodes and edges there are in the
   current graph object instance.
 * Metric to collect molecules (edges) in cells with outlier distributions of antibodies (aggregates).
+* Added plot functions: scatter_umi_per_upia_vs_tau, edge_rank_plot, cell_count_plot, plot_2d_graph, plot_3d_graph, plot_colocalization_heatmap and plot_colocalization_diff_heatmap.
 
 ### Changed
 
