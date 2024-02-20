@@ -38,8 +38,11 @@ jobs:
                 - 'pyproject.toml'
                 - 'poetry.lock'
                 - 'src/pixelator/**'
+                - '**/Taskfile.yml'
+                - '.github/**'
               paths_ignore:
                 - 'tests/**'
+
 
   test:
     name: Test default profile
