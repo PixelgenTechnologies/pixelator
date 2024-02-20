@@ -1,2 +1,2 @@
 src/pixelator/report/webreport/template.html linguist-vendored
-*.png filter=lfs diff=lfs merge=lfs -text
+tests/snapshots/test_plot/*.png filter=lfs diff=lfs merge=lfs -text
