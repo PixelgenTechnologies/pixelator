@@ -252,6 +252,71 @@ def cell_count_plot(
     return plt.gcf(), plt.gca()
 
 
+def _get_component_graph(pxl_data: PixelDataset, component: str):
+    component_edges = pxl_data.edgelist_lazy.filter(pl.col("component") == component)
+    component_graph = Graph.from_edgelist(
+        component_edges,
+        add_marker_counts=True,
+        simplify=True,
+        use_full_bipartite=True,
+    )
+    return component_graph
+
+
+def _get_coordinates(
+    component_graph: Graph,
+    layout_algorithm: str,
+    cache_layout: bool = False,
+    show_b_nodes: bool = False,
+) -> pd.DataFrame:
+    coordinates = component_graph.layout_coordinates(
+        layout_algorithm=layout_algorithm,
+        cache=cache_layout,
+        only_keep_a_pixels=not show_b_nodes,
+    )
+    filtered_coordinates = coordinates
+    filtered_coordinates["pixel_type"] = [
+        component_graph.raw.nodes[ind]["pixel_type"]
+        for ind in filtered_coordinates.index
+    ]
+
+    if not show_b_nodes:
+        filtered_coordinates = filtered_coordinates[
+            filtered_coordinates["pixel_type"] == "A"
+        ]
+
+    edgelist = pd.DataFrame(component_graph.es)
+    edgelist = edgelist[edgelist[0].isin(filtered_coordinates.index)]
+    edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
+    edgelist = edgelist.loc[:, [0, 1]].to_numpy()
+
+    return filtered_coordinates, edgelist
+
+
+def _plot_for_legend(coordinates: pd.DataFrame, axis, show_b_nodes, cmap, node_size):
+    a_node_example = coordinates[coordinates["pixel_type"] == "A"].iloc[0, :]
+    axis.scatter(
+        a_node_example["x"],
+        a_node_example["y"],
+        c=0,
+        cmap=cmap,
+        vmin=0,
+        s=node_size,
+        label="A-nodes",
+    )
+    if show_b_nodes:
+        b_node_example = coordinates[coordinates["pixel_type"] == "B"].iloc[0, :]
+        axis.scatter(
+            b_node_example["x"],
+            b_node_example["y"],
+            c=1,
+            cmap=cmap,
+            vmin=0,
+            s=node_size,
+            label="B-nodes",
+        )
+
+
 def plot_2d_graph(
     pxl_data: PixelDataset,
     component: Union["str", list],
@@ -266,7 +331,7 @@ def plot_2d_graph(
     alpha: float = 0.5,
     cache_layout: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes]:
-    """Plot a 2D graph based on the given pixel data.
+    """Plot a (collection of) 2D graph(s) based on the given pixel data. The graph can be plotted for one or a list of components. The graph nodes can be colored by a marker. The marker can be a (list of) marker(s) or "pixel_type".
 
     :param pxl_data: The pixel dataset to plot.
     :param component: The component(s) to plot. Defaults to None.
@@ -302,34 +367,13 @@ def plot_2d_graph(
     include_colorbar = False
     vmax = 0  # maximum value for colorbar
     for i_c, comp in enumerate(component):
-        component_edges = pxl_data.edgelist_lazy.filter(pl.col("component") == comp)
-        component_graph = Graph.from_edgelist(
-            component_edges,
-            add_marker_counts=True,
-            simplify=True,
-            use_full_bipartite=True,
-        )
-
-        coordinates = component_graph.layout_coordinates(
+        component_graph = _get_component_graph(pxl_data=pxl_data, component=comp)
+        filtered_coordinates, edgelist = _get_coordinates(
+            component_graph=component_graph,
             layout_algorithm=layout_algorithm,
-            cache=cache_layout,
-            only_keep_a_pixels=not show_b_nodes,
+            cache_layout=cache_layout,
+            show_b_nodes=show_b_nodes,
         )
-
-        filtered_coordinates = coordinates
-        filtered_coordinates["pixel_type"] = [
-            component_graph.raw.nodes[ind]["pixel_type"]
-            for ind in filtered_coordinates.index
-        ]
-        if not show_b_nodes:
-            filtered_coordinates = filtered_coordinates[
-                filtered_coordinates["pixel_type"] == "A"
-            ]
-        if show_edges:
-            edgelist = pd.DataFrame(component_graph.es)
-            edgelist = edgelist[edgelist[0].isin(filtered_coordinates.index)]
-            edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
-            edgelist = edgelist.loc[:, [0, 1]].to_numpy()
 
         for i_m, mark in enumerate(marker_list):
             # Get the current axis handle
@@ -378,39 +422,18 @@ def plot_2d_graph(
                 alpha=alpha,
             )
 
-            # Re-plot one point from each pixel type to add a legend
             if mark == "pixel_type":
-                a_node_example = filtered_coordinates[
-                    filtered_coordinates["pixel_type"] == "A"
-                ].iloc[0, :]
-                crnt_ax.scatter(
-                    a_node_example["x"],
-                    a_node_example["y"],
-                    c=0,
-                    cmap=cmap,
-                    vmin=0,
-                    s=node_size,
-                    label="A-nodes",
+                # Re-plot one point from each pixel type to add a legend
+                _plot_for_legend(
+                    filtered_coordinates, crnt_ax, show_b_nodes, cmap, node_size
                 )
-                if show_b_nodes:
-                    b_node_example = filtered_coordinates[
-                        filtered_coordinates["pixel_type"] == "B"
-                    ].iloc[0, :]
-                    crnt_ax.scatter(
-                        b_node_example["x"],
-                        b_node_example["y"],
-                        c=1,
-                        cmap=cmap,
-                        vmin=0,
-                        s=node_size,
-                        label="B-nodes",
-                    )
                 legend_ax = crnt_ax
 
             crnt_ax.grid(False)
             crnt_ax.spines[:].set_visible(False)
             crnt_ax.set_xticks([])
             crnt_ax.set_yticks([])
+
     if include_colorbar:
         if isinstance(ax, np.ndarray):
             fig.colorbar(
@@ -473,29 +496,13 @@ def plot_3d_graph(
     :rtype: go.Figure
 
     """
-    component_edges = pxl_data.edgelist_lazy.filter(pl.col("component") == component)
-    component_graph = Graph.from_edgelist(
-        component_edges,
-        add_marker_counts=True,
-        simplify=True,
-        use_full_bipartite=True,
-    )
-    coordinates = component_graph.layout_coordinates(
+    component_graph = _get_component_graph(pxl_data=pxl_data, component=component)
+    filtered_coordinates, _ = _get_coordinates(
+        component_graph=component_graph,
         layout_algorithm=layout_algorithm,
-        cache=cache_layout,
-        only_keep_a_pixels=not show_b_nodes,
+        cache_layout=cache_layout,
+        show_b_nodes=show_b_nodes,
     )
-    filtered_coordinates = coordinates
-    filtered_coordinates["pixel_type"] = [
-        component_graph.raw.nodes[ind]["pixel_type"]
-        for ind in filtered_coordinates.index
-    ]
-
-    if not show_b_nodes:
-        filtered_coordinates = filtered_coordinates[
-            filtered_coordinates["pixel_type"] == "A"
-        ]
-
     if marker is not None and log_scale:
         filtered_coordinates[marker] = np.log1p(filtered_coordinates[marker])
 
@@ -531,7 +538,7 @@ def plot_3d_graph(
         ]
     )
 
-    fig.update_layout(title="component")
+    fig.update_layout(title=component)
     if not suppress_fig:
         fig.show()
     return fig
@@ -545,6 +552,8 @@ def plot_colocalization_heatmap(
     use_z_scores: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot a colocalization heatmap based on the provided colocalization data.
+
+    Example usage: plot_colocalization_heatmap(pxl.colocalization).
 
     :param colocalization_data: The colocalization data to plot.
     :param component: The component to filter the colocalization data by. Defaults to None.
@@ -621,7 +630,9 @@ def plot_colocalization_diff_heatmap(
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot the differential colocalization between reference and target components.
 
-    :param colocalization_data: The colocalization data frame.
+    Example usage: plot_colocalization_diff_heatmap(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample").
+
+    :param colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z", and the contrast_column.
     :param target: The label for target components in the contrast_column.
     :param reference: The label for reference components in the contrast_column.
     :param contrast_column: The column to use for the contrast. Defaults to "sample".
