@@ -129,3 +129,18 @@ We strongly recommend installing the pre-commit hooks when contributing. Run `pr
 pre-commit install
 #pre-commit installed at .git/hooks/pre-commit
 ```
+
+
+## Run nf-core/pixelator integration tests
+
+Locally:
+
+```shell
+task test-nf-core-pixelator
+```
+
+On Github Actions:
+
+```
+gh workflow run --ref <your-branch-name> nf-core-pixelator-tests.yml
+```
