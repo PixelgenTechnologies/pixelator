@@ -3,15 +3,6 @@ name: "nf-core/pixelator integration tests"
 
 on:
   workflow_dispatch:
-  pull_request:
-
-
-permissions:
-  id-token: write
-  actions: write
-  contents: read
-  packages: write
-
 
 env:
   ANNOY_COMPILER_ARGS: "-DANNOYLIB_MULTITHREADED_BUILD,-mno-avx512f"
@@ -27,7 +18,7 @@ jobs:
     steps:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@v5
-        if: ${{ !github.event.act }}
+        if: ${{ !env.ACT }}
         with:
           concurrent_skipping: "same_content_newer"
           skip_after_successful_duplicate: "true"
@@ -46,47 +37,62 @@ jobs:
 
   test:
     name: Test default profile
-    if: needs.pre_job.outputs.should_skip == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
+    if: env.ACT || needs.pre_job.outputs.should_skip == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
     runs-on: ubuntu-latest
     needs: [pre_job]
+    defaults:
+      run:
+        shell: bash -el {0}
     steps:
       - name: Checkout pixelator
         uses: actions/checkout@v4
-        with:
-          path: pixelator
 
       - name: Checkout nf-core-pixelator
         uses: actions/checkout@v4
         with:
-          repository: pixelgentechnologies/nf-core-pixelator
+          repository: PixelgenTechnologies/nf-core-pixelator
+          ref: pixelator-next
           path: nf-core-pixelator
 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'microsoft'
+          java-version: '21'
+
       - uses: nf-core/setup-nextflow@v1
-      - uses: zendesk/setup-task@v2
-
-      - name: Set up Python environment
-        uses: ./.github/actions/setup-python
         with:
-          python-version: 3.11
+          version: "latest-stable"
 
-      - uses: supplypike/setup-bin@v3
+      - name: Get Date
+        id: get-date
+        run: echo "today=$(/bin/date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Cache Conda env
+        uses: actions/cache@v3
         with:
-          uri: 'https://opengene.org/fastp/fastp'
-          name: 'fastp'
-          version: '0.23.4'
+          path: ${{ env.CONDA }}/envs
+          key:
+            conda-${{ runner.os }}--${{ runner.arch }}--${{ env.CACHE_NUMBER }}--${{ hashFiles('environment.yml') }}
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 0
+        id: cache-conda
 
-      - name: Install poetry
-        run: |
-          python -m pip install --user pipx
-          python -m pipx ensurepath
-          pipx install poetry
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: pixelator
+          miniforge-version: latest
+          channels: conda-forge,bioconda,defaults
+          use-mamba: true
+          environment-file: environment.yml
 
       - name: Install pixelator
-        working-directory: pixelator
-        run: |
-          poetry config virtualenvs.create false
-          poetry install
+        run: pip install -e --ignore-installed .
 
-      - name: Run nf-core default profile using Task
+      - name: Run nf-core/pixelator default profile with current pixelator
+        env:
+          PIPELINE_BRANCH: pixelator-next
+          PIPELINE_SOURCE_DIR: ./nf-core-pixelator
         run: |
-          PIPELINE_BRANCH=pixelator-next PIPELINE_SOURCE_DIR=nf-core-pixelator task test-nf-core-pixelator
+          task test-nf-core-pixelator
