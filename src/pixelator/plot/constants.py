@@ -3,7 +3,13 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
-LIGHTGREY = "#bebebe"
-ORANGERED2 = "#ee4000"
-SKYBLUE3 = "#6ca6cd"
-NETWORKX_NODE_COLOR = "#1f78b4"
+from enum import Enum
+
+
+class Color(Enum):
+    """Enum class for color constants."""
+
+    LIGHTGREY = "#bebebe"
+    ORANGERED2 = "#ee4000"
+    SKYBLUE3 = "#6ca6cd"
+    NETWORKX_NODE_COLOR = "#1f78b4"

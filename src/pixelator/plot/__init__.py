@@ -21,15 +21,9 @@ from pixelator.graph import Graph
 from pixelator.analysis.colocalization import get_differential_colocalization
 from pixelator.marks import experimental
 from pixelator.pixeldataset import PixelDataset
-from pixelator.plot.constants import NETWORKX_NODE_COLOR
+from pixelator.plot.constants import Color
 
 sns.set_style("whitegrid")
-
-from pixelator.plot.constants import (
-    LIGHTGREY,
-    ORANGERED2,
-    SKYBLUE3,
-)
 
 
 def _unit_sphere_surface(horizontal_resolution, vertical_resolution):
@@ -100,7 +94,11 @@ def scatter_umi_per_upia_vs_tau(
         ], "'group_by' must be a character or factor"
 
     # Define palette
-    palette = {"high": ORANGERED2, "low": SKYBLUE3, "normal": LIGHTGREY}
+    palette = {
+        "high": Color.ORANGERED2.value,
+        "low": Color.SKYBLUE3.value,
+        "normal": Color.LIGHTGREY.value,
+    }
 
     # create plot
     grid = (
@@ -394,7 +392,7 @@ def plot_2d_graph(
                 crnt_ax.set_title(comp)
 
             if mark is None:
-                color_val = NETWORKX_NODE_COLOR
+                color_val = Color.NETWORKX_NODE_COLOR.value
             elif mark == "pixel_type":
                 color_val = filtered_coordinates["pixel_type"] == "B"
             elif mark not in filtered_coordinates.columns:
