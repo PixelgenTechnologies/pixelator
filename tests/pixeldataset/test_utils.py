@@ -17,7 +17,6 @@ from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 from pixelator.config import AntibodyPanel
 from pixelator.graph import write_recovered_components
-
 from pixelator.pixeldataset.utils import (
     antibody_metrics,
     component_antibody_counts,
@@ -29,6 +28,7 @@ from pixelator.statistics import (
     clr_transformation,
     log1p_transformation,
 )
+from pixelator.utils import batched
 
 random.seed(42)
 np.random.seed(42)
@@ -170,3 +170,47 @@ def test_edgelist_to_anndata(
     )
 
     assert set(adata.obs_names) == set(edgelist["component"].unique())
+
+
+def test_batched_empty_iterable():
+    """Test batched with an empty iterable."""
+    iterable = []
+    n = 3
+    batches = list(batched(iterable, n))
+    assert batches == []
+
+
+def test_batched_single_batch():
+    """Test batched with a single batch."""
+    iterable = [1, 2, 3]
+    n = 3
+    batches = list(batched(iterable, n))
+    assert batches == [(1, 2, 3)]
+
+
+def test_batched_multiple_batches():
+    """Test batched with multiple batches."""
+    iterable = [1, 2, 3, 4, 5, 6]
+    n = 2
+    batches = list(batched(iterable, n))
+    assert batches == [(1, 2), (3, 4), (5, 6)]
+
+
+def test_batched_last_batch_shorter():
+    """Test batched with the last batch being shorter."""
+    iterable = [1, 2, 3, 4, 5]
+    n = 3
+    batches = list(batched(iterable, n))
+    assert batches == [(1, 2, 3), (4, 5)]
+
+
+def test_batched_n_less_than_one():
+    """Test batched with n less than one."""
+    iterable = [1, 2, 3]
+    n = 0
+    try:
+        _ = list(batched(iterable, n))
+    except ValueError as e:
+        assert str(e) == "n must be at least one"
+    else:
+        assert False, "Expected ValueError"
