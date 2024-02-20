@@ -51,7 +51,7 @@ jobs:
     needs: [pre_job]
     steps:
       - name: Checkout pixelator
-        uses: actions/checkout@4
+        uses: actions/checkout@v4
         with:
           path: pixelator
 
