@@ -120,6 +120,32 @@ tasks:
         {{end}}'
       - coverage report
 
+  test-nf-core-pixelator:
+    desc: >-
+      Run nf-core/pixelator and the test profile with this version of pixelator.
+    summary: |
+      Run nf-core/pixelator  nf-core/pixelator and the test profile with this version of pixelator.
+
+      This will clone and launch the nf-core/pixelator pipeline using the `test` profile.
+      Note that the current dev version of pixelator must be installed and available in the PATH.
+
+      By default the "pixelator-next" branch of nf-core/pixelator will be used from the pixelgentechnologies fork.
+
+    dir: "{{ .USER_WORKING_DIR }}"
+    vars:
+      RESUME: '{{ .RESUME | default "false" }}'
+      PIPELINE_BRANCH: '{{ .PIPELINE_BRANCH | default "pixelator-next" }}'
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default ".nf-core-pixelator-{{ .BRANCH }}" }}'
+    cmds:
+      - task: tests:pull-nf-core-pixelator
+        vars:
+          {
+            PIPELINE_BRANCH: "{{ .PIPELINE_BRANCH }}",
+            PIPELINE_SOURCE_DIR: "{{ .PIPELINE_SOURCE_DIR }}",
+          }
+      - task: tests:run-nf-core-pixelator-test-profile
+        vars: { PIPELINE_ROOT: ".nf-core-pixelator-{{ .BRANCH }}" }
+
 
 includes:
   tests:

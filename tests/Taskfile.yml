@@ -34,6 +34,9 @@ tasks:
       Variables:
         - `PIPELINE_ROOT`: The root directory of the nf-core/pixelator repository. Default is "../nf-core-pixelator".
         - `RESUME`: Whether to use the `-resume` option. Default is "false".
+        - `PIPELINE_RESULTS_DIR`: The directory to store the pipeline results in.
+          Default is "results" inside the PIPELINE_ROOT.
+
     dir: "{{ .USER_WORKING_DIR }}"
     vars:
       PIPELINE_ROOT: '{{ .PIPELINE_ROOT | default "../nf-core-pixelator" }}'
@@ -109,29 +112,6 @@ tasks:
           PIPELINE_ROOT: "{{ .PIPELINE_ROOT }}"
           PIPELINE_RESULTS_DIR: "{{ .PIPELINE_RESULTS_DIR }}"
           TEST_ASSETS_DIR: "{{ .TASKFILE_DIR }}/report/assets/reports_only"
-
-  test-nf-core-pixelator:
-    desc: >-
-      Run nf-core/pixelator and the test profile with this version of pixelator.
-    summary: |
-      Run the "pixelator-next" branch of nf-core/pixelator and the test profile with this version of pixelator.
-
-      This will clone and launch the nf-core/pixelator pipeline using the `test` profile.
-      Note that the current dev version of pixelator must be installed and available in the PATH.
-
-    dir: "{{ .USER_WORKING_DIR }}"
-    vars:
-      RESUME: '{{ .RESUME | default "false" }}'
-      BRANCH: '{{ .BRANCH | default "pixelator-next" }}'
-    cmds:
-      - task: pull-nf-core-pixelator
-        vars:
-          {
-            PIPELINE_BRANCH: "{{ .BRANCH }}",
-            PIPELINE_SOURCE_DIR: ".nf-core-pixelator-{{ .BRANCH }}",
-          }
-      - task: run-nf-core-pixelator-test-profile
-        vars: { PIPELINE_ROOT: ".nf-core-pixelator-{{ .BRANCH }}" }
 
   update-web-test-data:
     desc: >-
