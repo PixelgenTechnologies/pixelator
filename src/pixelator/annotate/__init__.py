@@ -246,7 +246,7 @@ def annotate_components(
         a_pixel_count=edgelist_metrics_dict["a_pixel_count"],
         b_pixel_count=edgelist_metrics_dict["b_pixel_count"],
         molecule_count_per_a_pixel_per_cell_stats=edgelist_metrics_dict[
-            "b_pixel_count_per_a_pixel_stats"
+            "molecule_count_per_a_pixel_stats"
         ],
         b_pixel_count_per_a_pixel_per_cell_stats=edgelist_metrics_dict[
             "b_pixel_count_per_a_pixel_stats"
