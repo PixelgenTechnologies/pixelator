@@ -12,3 +12,4 @@ dependencies:
   - virtualenv
   - fastp
   - go-task
+  - pyyaml
