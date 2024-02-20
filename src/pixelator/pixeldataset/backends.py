@@ -18,6 +18,7 @@ import polars as pl
 from anndata import AnnData
 
 from pixelator.pixeldataset.datastores import PixelDataStore
+from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pixeldataset.utils import (
     _enforce_edgelist_types,
 )
@@ -80,6 +81,20 @@ class PixelDatasetBackend(Protocol):
     def metadata(self, value: Dict) -> Optional[Dict]:
         """Set the metadata object."""
 
+    @property
+    def precomputed_layouts(self) -> Optional[PreComputedLayouts]:
+        """Get the precomputed layouts for the component graphs.
+
+        Please note that since these have been pre-computed, if you have made
+        changes to the underlying data, the layout might not be valid anymore.
+        """
+        ...
+
+    @precomputed_layouts.setter
+    def precomputed_layouts(self, value: PreComputedLayouts) -> None:
+        """Set the precomputed layouts for the component graphs."""
+        ...
+
 
 class ObjectBasedPixelDatasetBackend:
     """A backend for PixelDataset that is backed by in memory objects.
@@ -98,6 +113,7 @@ class ObjectBasedPixelDatasetBackend:
         metadata: Optional[Dict[str, Any]] = None,
         polarization: Optional[pd.DataFrame] = None,
         colocalization: Optional[pd.DataFrame] = None,
+        precomputed_layouts: Optional[PreComputedLayouts] = None,
         copy: bool = True,
         allow_edgelist_to_be_empty: bool = False,
     ) -> None:
@@ -124,12 +140,18 @@ class ObjectBasedPixelDatasetBackend:
         self._edgelist = _enforce_edgelist_types(edgelist.copy() if copy else edgelist)
         self._adata = adata.copy() if copy else adata
         self._metadata = metadata
+
         self._polarization = None
         if polarization is not None:
             self._polarization = polarization.copy() if copy else polarization
+
         self._colocalization = None
         if colocalization is not None:
             self._colocalization = colocalization.copy() if copy else colocalization
+
+        self._precomputed_layouts = PreComputedLayouts.create_empty()
+        if precomputed_layouts is not None:
+            self._precomputed_layouts = precomputed_layouts
 
     @property
     def adata(self) -> AnnData:
@@ -186,6 +208,22 @@ class ObjectBasedPixelDatasetBackend:
         """Set the co-localization scores for the pixel dataset."""
         self._colocalization = value
 
+    @property
+    def precomputed_layouts(self) -> PreComputedLayouts | None:
+        """Get the precomputed layouts."""
+        if self._precomputed_layouts is None:
+            return None
+        if self._precomputed_layouts.is_empty:
+            return None
+        return self._precomputed_layouts
+
+    @precomputed_layouts.setter
+    def precomputed_layouts(self, value: PreComputedLayouts | None) -> None:
+        """Set the precomputed layouts."""
+        if value is None:
+            self._precomputed_layouts = PreComputedLayouts.create_empty()
+        self._precomputed_layouts = value
+
 
 class FileBasedPixelDatasetBackend:
     """A file based backend for PixelDataset.
@@ -209,6 +247,7 @@ class FileBasedPixelDatasetBackend:
         if not datastore:
             datastore = PixelDataStore.guess_datastore_from_path(path)
         self._datastore = datastore
+        self._precomputed_layouts: PreComputedLayouts | None = None
 
     @cached_property
     def adata(self) -> AnnData:
@@ -239,3 +278,27 @@ class FileBasedPixelDatasetBackend:
     def metadata(self) -> Optional[Dict]:
         """Get the metadata object for the pixel dataset."""
         return self._datastore.read_metadata()
+
+    @property
+    def precomputed_layouts(self) -> PreComputedLayouts | None:
+        """Get the precomputed layouts."""
+        # If it is None it means it is uninitialized, and we should
+        # attempt to read it lazily
+        if self._precomputed_layouts is None:
+            return self._datastore.read_precomputed_layouts()
+
+        # It can also be empty, in which case it has been read and
+        # found to be empty. Or it has been initialized to be empty,
+        # which means that it should be cleared.
+        if self._precomputed_layouts.is_empty:
+            return None
+
+        return self._precomputed_layouts
+
+    @precomputed_layouts.setter
+    def precomputed_layouts(self, value: PreComputedLayouts | None) -> None:
+        """Set the precomputed layouts."""
+        if value is None:
+            self._precomputed_layouts = PreComputedLayouts.create_empty()
+            return
+        self._precomputed_layouts = value

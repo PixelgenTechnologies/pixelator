@@ -110,6 +110,27 @@ def create_output_stage_dir(root: PathType, name: str) -> Path:
     return output
 
 
+def flatten(list_of_collections: List[Union[List, Set]]) -> List:
+    """Flattens a list of lists or list of sets.
+
+    :param list_of_collections: list of lists or list of sets
+    :returns List: list containing flattened items
+    """
+    return [item for sublist in list_of_collections for item in sublist]
+
+
+def batched(iterable, n):
+    """Batch data into tuples of length n. The last batch may be shorter.
+
+    Taken from python itertools recipes.
+    """
+    if n < 1:
+        raise ValueError("n must be at least one")
+    it = iter(iterable)
+    while batch := tuple(itertools.islice(it, n)):
+        yield batch
+
+
 def get_extension(filename: PathType, len_ext: int = 2) -> str:
     """Extract file extensions from a filename.
 
