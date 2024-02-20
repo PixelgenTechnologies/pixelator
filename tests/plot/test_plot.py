@@ -27,9 +27,7 @@ from pixelator.plot import (
 
 @pytest.mark.parametrize(
     "component, marker",
-    [
-        ("PXLCMP0000000", "CD45RA"),
-    ],
+    [("PXLCMP0000000", "CD45RA")],
 )
 def test_plot_3d_graph(
     snapshot: Snapshot, component, marker, setup_basic_pixel_dataset
@@ -42,7 +40,10 @@ def test_plot_3d_graph(
     snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"
     pxl_data, *_ = setup_basic_pixel_dataset
     result = plot_3d_graph(
-        pxl_data, component=component, marker=marker, suppress_fig=True
+        pxl_data,
+        component=component,
+        marker=marker,
+        suppress_fig=True,
     )
     assert isinstance(result, go.Figure)
     # snapshot.assert_match(result.to_json(), "plot_3d_graph_fig.json")
@@ -108,7 +109,7 @@ def test_plot_colocalization_diff_heatmap(setup_basic_pixel_dataset):
 
 @pytest.mark.mpl_image_compare(
     deterministic=False,
-    hash_library="../snapshots/test_plot/test_scatter_umi_per_upia_vs_tau/scatter_umi_per_upia_vs_tau.json",
+    baseline_dir="../snapshots/test_plot/test_scatter_umi_per_upia_vs_tau",
 )
 def test_scatter_umi_per_upia_vs_tau():
     np.random.seed(0)
@@ -126,7 +127,7 @@ def test_scatter_umi_per_upia_vs_tau():
 
 @pytest.mark.mpl_image_compare(
     deterministic=False,
-    hash_library="../snapshots/test_plot/test_cell_count_plot/cell_count_plot.json",
+    baseline_dir="../snapshots/test_plot/test_cell_count_plot",
 )
 def test_cell_count_plot():
     np.random.seed(0)
@@ -142,7 +143,7 @@ def test_cell_count_plot():
 
 @pytest.mark.mpl_image_compare(
     deterministic=False,
-    hash_library="../snapshots/test_plot/test_edge_rank_plot/edge_rank_plot.json",
+    baseline_dir="../snapshots/test_plot/test_edge_rank_plot",
 )
 def test_edge_rank_plot():
     np.random.seed(0)

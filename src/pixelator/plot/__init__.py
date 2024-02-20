@@ -462,6 +462,47 @@ def plot_2d_graph(
     return fig, ax
 
 
+def plot_3d_from_coordinates(
+    coordinates: pd.DataFrame,
+    node_size: float = 3.0,
+    opacity: float = 0.4,
+    cmap: str = "Inferno",
+    suppress_fig: bool = False,
+) -> go.Figure:
+    """Plot a 3D graph from the given coordinates.
+
+    :param coordinates: The coordinates to plot.
+    :param node_size: The size of the nodes. Defaults to 3.0.
+    :param opacity: The opacity of the nodes. Defaults to 0.4.
+    :param cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
+    :param suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
+    :return: The plotted 3D graph.
+    :rtype: go.Figure
+
+    """
+    fig = go.Figure(
+        data=[
+            go.Scatter3d(
+                x=coordinates["x"],
+                y=coordinates["y"],
+                z=coordinates["z"],
+                mode="markers",
+                marker=dict(
+                    size=node_size,
+                    color=coordinates["color"],
+                    colorscale=cmap,
+                    opacity=opacity,
+                    colorbar=dict(thickness=20, title="color"),
+                ),
+            )
+        ]
+    )
+
+    if not suppress_fig:
+        fig.show()
+    return fig
+
+
 def plot_3d_graph(
     pxl_data: PixelDataset,
     component: str,
@@ -504,43 +545,28 @@ def plot_3d_graph(
         show_b_nodes=show_b_nodes,
     )
     if marker is not None and log_scale:
-        filtered_coordinates[marker] = np.log1p(filtered_coordinates[marker])
+        filtered_coordinates["color"] = np.log1p(filtered_coordinates[marker])
+    else:
+        filtered_coordinates["color"] = filtered_coordinates[marker]
 
-    fig = go.Figure(
-        data=[
-            go.Scatter3d(
-                x=(
-                    filtered_coordinates["x_norm"]
-                    if normalize
-                    else filtered_coordinates["x"]
-                ),
-                y=(
-                    filtered_coordinates["y_norm"]
-                    if normalize
-                    else filtered_coordinates["y"]
-                ),
-                z=(
-                    filtered_coordinates["z_norm"]
-                    if normalize
-                    else filtered_coordinates["z"]
-                ),
-                mode="markers",
-                marker=dict(
-                    size=node_size,
-                    color=filtered_coordinates[marker] if marker is not None else None,
-                    colorscale=cmap,
-                    opacity=opacity,
-                    colorbar=(
-                        dict(thickness=20, title=marker) if marker is not None else None
-                    ),
-                ),
-            )
+    if normalize:
+        filtered_coordinates[["x", "y", "z"]] = filtered_coordinates[
+            ["x_norm", "y_norm", "z_norm"]
         ]
+
+    fig = plot_3d_from_coordinates(
+        coordinates=filtered_coordinates,
+        node_size=node_size,
+        opacity=opacity,
+        cmap=cmap,
+        suppress_fig=True,
     )
 
     fig.update_layout(title=component)
+
     if not suppress_fig:
         fig.show()
+
     return fig
 
 
