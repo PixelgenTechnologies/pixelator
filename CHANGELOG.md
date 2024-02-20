@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Metric to collect molecules (edges) in cells with outlier distributions of antibodies (aggregates).
 * Provide typed interfaces for all per-stage report files using pydantic.
 * Centralize pixelator intermediate file lookup and access.
+* Add a `precomputed_layouts` property to `pixeldataset` to allow for loading precomputed layouts.
 
 ### Changed
 
