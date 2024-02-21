@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "pixelgen-pixelator"
-version = "0.16.1.post138.dev0+606294b.dirty"
+version = "0.0.0"
 homepage = "https://github.com/PixelgenTechnologies/pixelator"
 repository = "https://github.com/PixelgenTechnologies/pixelator"
 documentation = "https://software.pixelgen.com"
