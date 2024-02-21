@@ -112,7 +112,7 @@ def create_dynamic_report(
         number_of_reads=reads_flow.input_read_count,
         number_of_short_reads_skipped=preqc_metrics.too_short_read_count,
         fraction_valid_pbs=reads_flow.fraction_valid_pbs_reads,
-        fraction_valid_umis=reads_flow.fraction_raw_molecule_reads,
+        fraction_valid_umis=reads_flow.fraction_reads_in_molecules,
         average_reads_per_molecule=graph_metrics.read_count_per_molecule_stats.mean,
         sequencing_saturation=collapse_metrics.fraction_duplicate_reads,
         fraction_q30_bases_in_antibody_barcode=amplicon_metrics.fraction_q30_bc,

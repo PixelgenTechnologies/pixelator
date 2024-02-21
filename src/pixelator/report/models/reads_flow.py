@@ -40,7 +40,7 @@ class ReadsDataflowReport(SampleReport):
         ...,
         description=(
             "The number of reads that are attributed to a unique molecule in the sample "
-            "after deduplication of reads with close UPIA UPIA and UMI sequences. "
+            "after deduplication of reads with close UPIA and UMI sequences. "
             "Note that this should be equal to valid_antibody_read_count."
         ),
     )
@@ -64,7 +64,7 @@ class ReadsDataflowReport(SampleReport):
 
     @pydantic.computed_field(return_type=float)  # type: ignore
     @property
-    def fraction_raw_molecule_reads(self):
+    def fraction_reads_in_molecules(self):
         """Return the fraction of raw input reads in unique molecules."""
         return self.raw_molecule_read_count / self.input_read_count
 
