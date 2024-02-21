@@ -260,8 +260,6 @@ def collapse(
         collapsed_molecule_count_stats = SummaryStatistics.from_series(
             df["unique_molecules_count"]
         )
-        output_read_count = int(df["count"].sum())
-        molecule_count = int(df.shape[0])
 
         output_file = collapse_output / f"{sample}.collapsed.parquet"
         # Remove the unique_molecules_count column before saving
@@ -272,6 +270,9 @@ def collapse(
         for f in tmp_files:
             logger.debug("Removing temporary edge list %s", f)
             Path(f).unlink(missing_ok=True)
+
+        output_read_count = int(df["count"].sum())
+        molecule_count = int(df.shape[0])
 
         report = CollapseSampleReport(
             sample_id=sample,
