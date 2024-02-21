@@ -59,6 +59,6 @@ class MoleculesDataflowReport(SampleReport):
     def fraction_molecules_discarded(self) -> float:
         """Return the fraction of raw molecules that were discarded.
 
-        This is 1 - `fraction_molecules_in_cell`.
+        This is 1 - `fraction_molecules_in_cells`.
         """
         return 1 - self.cell_molecule_count / self.raw_molecule_count
