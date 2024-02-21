@@ -1,6 +1,7 @@
-"""Copyright © 2023 Pixelgen Technologies AB."""
+"""Tests for PixelatorReporting related to the demux stage.
 
-import dataclasses
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 
 import pytest
 
@@ -10,11 +11,6 @@ from pixelator.report import PixelatorReporting, PixelatorWorkdir
 @pytest.fixture()
 def demux_summary_input(pixelator_workdir, demux_stage_all_reports) -> PixelatorWorkdir:
     return pixelator_workdir
-
-
-@dataclasses.dataclass
-class Test:
-    sample_id: str
 
 
 @pytest.mark.parametrize("sample_name", ["pbmcs_unstimulated", "uropod_control"])

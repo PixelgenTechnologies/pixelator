@@ -1,4 +1,7 @@
-"""Copyright © 2023 Pixelgen Technologies AB."""
+"""Tests for PixelatorReporting related to the amplicon stage.
+
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 
 import pandas as pd
 import pytest

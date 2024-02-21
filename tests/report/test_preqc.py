@@ -1,6 +1,7 @@
-"""Copyright © 2023 Pixelgen Technologies AB."""
+"""Tests for PixelatorReporting related to the preqc stage.
 
-import dataclasses
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 
 import pandas as pd
 import pytest
@@ -13,11 +14,6 @@ from pixelator.report.models.preqc import PreQCSampleReport
 @pytest.fixture()
 def preqc_summary_input(pixelator_workdir, preqc_stage_all_reports) -> PixelatorWorkdir:
     return pixelator_workdir
-
-
-@dataclasses.dataclass
-class Test:
-    sample_id: str
 
 
 expected = [

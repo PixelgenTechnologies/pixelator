@@ -1,4 +1,7 @@
-"""Copyright © 2023 Pixelgen Technologies AB."""
+"""Tests for PixelatorReporting related to the analysis stage.
+
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 
 import pytest
 
