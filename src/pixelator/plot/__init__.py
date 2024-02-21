@@ -315,6 +315,78 @@ def _plot_for_legend(coordinates: pd.DataFrame, axis, show_b_nodes, cmap, node_s
         )
 
 
+def _decorate_plot(
+    im=None,
+    include_colorbar: bool = False,
+    vmax: float = 0,
+    cmap: str = "cool",
+    ax=None,
+    fig=None,
+    legend_ax=None,
+):
+    if include_colorbar:
+        if isinstance(ax, np.ndarray):
+            fig.colorbar(
+                im,
+                ax=ax.ravel().tolist(),
+                cmap=cmap,
+                norm=Normalize(vmin=0, vmax=vmax),
+            )
+        else:
+            fig.colorbar(
+                im,
+                ax=ax,
+                cmap=cmap,
+                norm=Normalize(vmin=0, vmax=vmax),
+            )
+    if legend_ax is not None:
+        if not include_colorbar:
+            handles, labels = legend_ax.get_legend_handles_labels()
+            fig.legend(handles, labels, loc="right")
+            plt.subplots_adjust(right=0.80)
+        else:
+            raise AssertionError(
+                "Plotting pixel_type together with other markers is not supported."
+            )
+
+
+def _get_current_axis(ax, i_m, i_c, marker_list, component):
+    if len(marker_list) == 1:
+        if len(component) == 1:
+            crnt_ax = ax
+        else:
+            crnt_ax = ax[i_c]
+    else:
+        if len(component) == 1:
+            crnt_ax = ax[i_m]
+        else:
+            crnt_ax = ax[i_m, i_c]
+
+    if i_c == 0:  # Set the y-label only for the first column
+        crnt_ax.set_ylabel(marker_list[i_m], rotation=90, size="large")
+    if i_m == 0:  # Set the title only for the first row
+        crnt_ax.set_title(component[i_c])
+
+    return crnt_ax
+
+
+def _get_color_values(mark, filtered_coordinates, log_scale, vmax):
+    if mark is None:
+        color_val = Color.NETWORKX_NODE_COLOR
+    elif mark == "pixel_type":
+        color_val = filtered_coordinates["pixel_type"] == "B"
+    elif mark not in filtered_coordinates.columns:
+        raise AssertionError(f"Marker {mark} not found in the component graph.")
+    else:
+        if log_scale:
+            color_val = np.log1p(filtered_coordinates.loc[:, mark])
+        else:
+            color_val = filtered_coordinates.loc[:, mark]
+        vmax = max(vmax, np.max(color_val))
+
+    return color_val, vmax
+
+
 def plot_2d_graph(
     pxl_data: PixelDataset,
     component: Union["str", list],
@@ -329,7 +401,11 @@ def plot_2d_graph(
     alpha: float = 0.5,
     cache_layout: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes]:
-    """Plot a (collection of) 2D graph(s) based on the given pixel data. The graph can be plotted for one or a list of components. The graph nodes can be colored by a marker. The marker can be a (list of) marker(s) or "pixel_type".
+    """Plot a (collection of) 2D graph(s) based on the given pixel data.
+
+    The graph can be plotted for one or a list of components.
+    The graph nodes can be colored by a marker. The marker can be a (list of) marker(s) or "pixel_type".
+    Example usage: plot_2d_graph(pxl, component=["PXLCMP0000000"], marker=["HLA-ABC", "HLA-RA"]).
 
     :param pxl_data: The pixel dataset to plot.
     :param component: The component(s) to plot. Defaults to None.
@@ -366,7 +442,7 @@ def plot_2d_graph(
     vmax = 0  # maximum value for colorbar
     for i_c, comp in enumerate(component):
         component_graph = _get_component_graph(pxl_data=pxl_data, component=comp)
-        filtered_coordinates, edgelist = _get_coordinates(
+        coordinates, edgelist = _get_coordinates(
             component_graph=component_graph,
             layout_algorithm=layout_algorithm,
             cache_layout=cache_layout,
@@ -374,41 +450,15 @@ def plot_2d_graph(
         )
 
         for i_m, mark in enumerate(marker_list):
-            # Get the current axis handle
-            if len(marker_list) == 1:
-                if len(component) == 1:
-                    crnt_ax = ax
-                else:
-                    crnt_ax = ax[i_c]
-            else:
-                if len(component) == 1:
-                    crnt_ax = ax[i_m]
-                else:
-                    crnt_ax = ax[i_m, i_c]
-
-            if i_c == 0:  # Set the y-label only for the first column
-                crnt_ax.set_ylabel(mark, rotation=90, size="large")
-            if i_m == 0:  # Set the title only for the first row
-                crnt_ax.set_title(comp)
-
-            if mark is None:
-                color_val = Color.NETWORKX_NODE_COLOR
-            elif mark == "pixel_type":
-                color_val = filtered_coordinates["pixel_type"] == "B"
-            elif mark not in filtered_coordinates.columns:
-                raise AssertionError(f"Marker {mark} not found in the component graph.")
-            else:
-                if log_scale:
-                    color_val = np.log1p(filtered_coordinates.loc[:, mark])
-                else:
-                    color_val = filtered_coordinates.loc[:, mark]
+            crnt_ax = _get_current_axis(ax, i_m, i_c, marker_list, component)
+            color_val, vmax = _get_color_values(mark, coordinates, log_scale, vmax)
+            if mark != "pixel_type":
                 include_colorbar = True
-                vmax = max(vmax, np.max(color_val))
 
             im = nx.draw_networkx(
                 component_graph.raw,
-                nodelist=filtered_coordinates.index,
-                pos=filtered_coordinates.loc[:, ["x", "y"]].T.to_dict("list"),
+                nodelist=coordinates.index,
+                pos=coordinates.loc[:, ["x", "y"]].T.to_dict("list"),
                 ax=crnt_ax,
                 node_size=node_size,
                 node_color=color_val,
@@ -422,40 +472,25 @@ def plot_2d_graph(
 
             if mark == "pixel_type":
                 # Re-plot one point from each pixel type to add a legend
-                _plot_for_legend(
-                    filtered_coordinates, crnt_ax, show_b_nodes, cmap, node_size
-                )
+                _plot_for_legend(coordinates, crnt_ax, show_b_nodes, cmap, node_size)
                 legend_ax = crnt_ax
+            else:
+                legend_ax = None
 
             crnt_ax.grid(False)
             crnt_ax.spines[:].set_visible(False)
             crnt_ax.set_xticks([])
             crnt_ax.set_yticks([])
 
-    if include_colorbar:
-        if isinstance(ax, np.ndarray):
-            fig.colorbar(
-                im,
-                ax=ax.ravel().tolist(),
-                cmap=cmap,
-                norm=Normalize(vmin=0, vmax=vmax),
-            )
-        else:
-            fig.colorbar(
-                im,
-                ax=ax,
-                cmap=cmap,
-                norm=Normalize(vmin=0, vmax=vmax),
-            )
-    if "pixel_type" in marker_list:
-        if not include_colorbar:
-            handles, labels = legend_ax.get_legend_handles_labels()
-            fig.legend(handles, labels, loc="right")
-            plt.subplots_adjust(right=0.80)
-        else:
-            raise AssertionError(
-                "Plotting pixel_type together with other markers is not supported."
-            )
+    _decorate_plot(
+        im=im,
+        include_colorbar=include_colorbar,
+        vmax=vmax,
+        cmap=cmap,
+        ax=ax,
+        fig=fig,
+        legend_ax=legend_ax,
+    )
 
     return fig, ax
 
@@ -536,24 +571,22 @@ def plot_3d_graph(
 
     """
     component_graph = _get_component_graph(pxl_data=pxl_data, component=component)
-    filtered_coordinates, _ = _get_coordinates(
+    coordinates, _ = _get_coordinates(
         component_graph=component_graph,
         layout_algorithm=layout_algorithm,
         cache_layout=cache_layout,
         show_b_nodes=show_b_nodes,
     )
     if marker is not None and log_scale:
-        filtered_coordinates["color"] = np.log1p(filtered_coordinates[marker])
+        coordinates["color"] = np.log1p(coordinates[marker])
     else:
-        filtered_coordinates["color"] = filtered_coordinates[marker]
+        coordinates["color"] = coordinates[marker]
 
     if normalize:
-        filtered_coordinates[["x", "y", "z"]] = filtered_coordinates[
-            ["x_norm", "y_norm", "z_norm"]
-        ]
+        coordinates[["x", "y", "z"]] = coordinates[["x_norm", "y_norm", "z_norm"]]
 
     fig = plot_3d_from_coordinates(
-        coordinates=filtered_coordinates,
+        coordinates=coordinates,
         node_size=node_size,
         opacity=opacity,
         cmap=cmap,
@@ -620,8 +653,9 @@ def plot_colocalization_heatmap(
     cmap: str = "vlag",
     use_z_scores: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes]:
-    """Plot a colocalization heatmap based on the provided colocalization data. The colocalization_data DataFrame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z".
+    """Plot a colocalization heatmap based on the provided colocalization data.
 
+    The colocalization_data DataFrame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z".
     Example usage: plot_colocalization_heatmap(pxl.colocalization).
 
     :param colocalization_data: The colocalization data to plot. The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z", and "component".
