@@ -359,13 +359,8 @@ class AnnotateAnndataStatistics(typing.TypedDict):
     marker_count_per_cell_stats: SummaryStatistics
     a_pixel_b_pixel_ratio_per_cell_stats: SummaryStatistics
 
-    # Aggregate calling metrics
     aggregate_count: Optional[int]
-
-    #: The number of reads in aggregates
     reads_in_aggregates_count: Optional[int]
-
-    #: The number of molecules in aggregates
     molecules_in_aggregates_count: Optional[int]
 
     min_size_threshold: Optional[int]
