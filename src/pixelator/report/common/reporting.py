@@ -1,4 +1,7 @@
-"""Copyright © 2023 Pixelgen Technologies AB."""
+"""Collect files and transform data for reporting from a :py:class:`PixelatorWorkdir`.
+
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 
 from __future__ import annotations
 
@@ -36,7 +39,7 @@ ModelT = typing.TypeVar("ModelT", bound=type[SampleReport])
 class PixelatorReporting:
     """Collect files for reporting from a :py:class:`PixelatorWorkdir`.
 
-    :param workdir: The pixelator output folder or a :py:class:`PixelatorWorkdir`
+    :ivar workdir: The pixelator output folder or a :py:class:`PixelatorWorkdir`
         instance
     """
 
@@ -295,7 +298,8 @@ class PixelatorReporting:
         """Return a summary with the flow of molecules counts through the pipeline.
 
         :param sample_name: The sample to return the dataflow for
-        :return ReadsAndMoleculesDataflowReport: A class:`ReadsAndMoleculesDataflowReport` instance
+        :return MoleculesDataflowReport:
+            A class:`MoleculesDataflowReport` instance
         """
         collapse_metrics = self.collapse_metrics(sample_name)
         annotate_metrics = self.annotate_metrics(sample_name)
