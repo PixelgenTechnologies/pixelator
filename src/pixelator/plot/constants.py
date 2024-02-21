@@ -6,8 +6,8 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 from enum import Enum
 
 
-class Color(Enum):
-    """Enum class for color constants."""
+class Color():
+    """Class for color constants."""
 
     LIGHTGREY = "#bebebe"
     ORANGERED2 = "#ee4000"
