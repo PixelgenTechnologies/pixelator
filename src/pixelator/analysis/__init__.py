@@ -137,7 +137,7 @@ def analyse_pixels(
         )
     }
     # save dataset
-    dataset.save(str(Path(output) / f"{output_prefix}.dataset.pxl"))
+    dataset.save(Path(output) / f"{output_prefix}.analysis.dataset.pxl")
 
     polarization_report = PolarizationReport()
     colocalization_report = ColocalizationReport()
