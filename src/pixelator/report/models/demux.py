@@ -22,7 +22,6 @@ class DemuxSampleReport(SampleReport):
         description="The total number of input reads in the demux stage.",
     )
 
-    #: The total number of reads that passed the demux stage
     output_read_count: int = pydantic.Field(
         ...,
         description="The total number of reads that passed the demux stage.",

@@ -115,12 +115,10 @@ class AnnotateSampleReport(SampleReport):
         description="The number of components identified as aggregates and removed from results."
     )
 
-    #: The total number of molecules in aggregates
     molecules_in_aggregates_count: int | None = pydantic.Field(
         description="The total number of unique molecules in aggregates."
     )
 
-    #: The total number of reads for unique molecules in aggregates
     reads_in_aggregates_count: int | None = pydantic.Field(
         description="The total number of reads for unique molecules in aggregates."
     )

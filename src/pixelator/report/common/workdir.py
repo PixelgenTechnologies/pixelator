@@ -113,8 +113,8 @@ class WorkdirOutputNotFound(Exception):
 class PixelatorWorkdir:
     """Tools to manage and collect files from a pixelator workdir folder."""
 
-    #: A dict that maps a key (usually a key per subcommand) to a glob pattern
-    #: that will be used to search for report files in the workdir folder.
+    # A dict that maps a key (usually a key per subcommand) to a glob pattern
+    # that will be used to search for report files in the workdir folder.
     _SEARCH_PATTERNS: Dict[WorkdirCacheKey, str] = {
         "metadata": "**/*.meta.json",
         "single-cell amplicon": "amplicon/*.report.json",

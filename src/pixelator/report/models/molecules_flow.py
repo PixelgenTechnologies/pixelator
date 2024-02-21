@@ -25,7 +25,6 @@ class MoleculesDataflowReport(SampleReport):
         ),
     )
 
-    #: The number of molecules in components that do NOT pass the component size filters.
     size_filter_fail_molecule_count: int = pydantic.Field(
         ...,
         description=(
@@ -34,7 +33,6 @@ class MoleculesDataflowReport(SampleReport):
         ),
     )
 
-    #: The number of molecules in components that are aggregates.
     aggregate_molecule_count: int | None = pydantic.Field(
         ...,
         description="The number of molecules in components identified as aggregates.",

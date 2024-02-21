@@ -9,7 +9,7 @@ import json
 import logging
 import typing
 from pathlib import Path
-from typing import Any, Mapping, TypeVar
+from typing import Any, Mapping, TypeVar, Optional
 
 import click
 import pydantic
@@ -109,24 +109,27 @@ def _process_meta_json_data(data: Mapping[str, Any]) -> CommandInfo:
 class CommandOption(pydantic.BaseModel, typing.Generic[CommandOptionValue]):
     """Dataclass for passing command options/flags to qc report."""
 
-    #: The name of the option (e.g. `--min-reads`)
-    name: str
-    #: The value of the option.
-    value: CommandOptionValue
-    #: The default value for this option.
-    default_value: CommandOptionValue | None
-    #: The help text for this option.
-    description: str | None
+    name: str = pydantic.Field(
+        description="The name of the option. (e.g. `--min-reads`)"
+    )
+
+    value: CommandOptionValue = pydantic.Field(description="The value of the option.")
+    default_value: Optional[CommandOptionValue] = pydantic.Field(
+        description="The default value for this option."
+    )
+    description: str | None = pydantic.Field(
+        description="The description of the option."
+    )
 
 
 class CommandInfo(pydantic.BaseModel):
     """Dataclass for passing all options of a command to qc report."""
 
-    #: The name of the parameter group.
-    command: str
+    command: str = pydantic.Field(description="The name of the command.")
 
-    #: A list of options for the parameter group.
-    options: list[CommandOption]
+    options: list[CommandOption] = pydantic.Field(
+        description="The list of options for the command."
+    )
 
     @classmethod
     def from_json(cls, p: Path) -> CommandInfo:
