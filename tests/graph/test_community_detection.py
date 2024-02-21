@@ -40,7 +40,7 @@ def test_connect_components_benchmark(
         connect_components,
         input=input_edgelist,
         output=output_dir,
-        sample_id="test",
+        sample_name="test",
         metrics_file=metrics_file,
         multiplet_recovery=True,
         min_count=1,
