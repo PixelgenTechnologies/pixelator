@@ -54,7 +54,8 @@ polars = "^0.20"
 importlib-resources = "^5.12.0"
 fsspec = "^2023.12.2"
 fastparquet = "^2023.8.0"
-graspologic = "3.3.0"
+graspologic = "^3.3.0"
+plotly = "*"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
@@ -66,6 +67,7 @@ invoke = "*"
 isort = "*"
 pylint = "*"
 pytest = "^7.0.0"
+pytest-mpl = "^0.17.0"
 sphinx = "*"
 tox = "*"
 tox-current-env = "^0.0.11"
@@ -100,7 +102,9 @@ markers = [
     "workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow (deselect with '-m \"not workflow_test\"')",
     "external_workflow_test: Marks a test as a complete pixelator workflow that requires external data, which is extremely slow and requires additional setup before running (deselect with '-m \"not external_workflow_test\"')",
     "web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed (deselect with '-m \"not web_tests\"')"]
-addopts = ["-p no:pytest-workflow", "-m not workflow_test and not web_test", "--benchmark-disable"]
+mpl-results-path = "tests/reports_mpl"
+mpl-generate-summary = "html"
+addopts = ["-p no:pytest-workflow", "-m not workflow_test and not web_test", "--benchmark-disable", "--mpl"]
 filterwarnings = ["ignore::DeprecationWarning",]
 
 [tool.ruff]
@@ -127,7 +131,7 @@ exclude = ["docs/conf.py"]
 "src/pixelator/test_utils/**" = ["D"]
 
 [tool.poetry-dynamic-versioning]
-enable = false
+enable = true
 vcs = "git"
 # Metadata is unset, only add sha when not on a version tag
 dirty = true
