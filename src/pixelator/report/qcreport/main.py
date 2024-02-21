@@ -28,7 +28,7 @@ def create_dynamic_report(
     info: SampleInfo,
     output_path: Path,
 ) -> None:
-    """Create a dynamics qc report of a single sample.
+    """Create a dynamic customer QC report for a single sample.
 
     A helper function to create a dynamic web report of a single sample.
     The function uses a template stored in 'report/qcreport/template.html'
