@@ -6,18 +6,16 @@ Copyright © 2022 Pixelgen Technologies AB.
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional  # noqa: F401
+from typing import Optional
 
 import pandas as pd
 
 from pixelator import __version__
 from pixelator.report.common import PixelatorReporting
 from pixelator.report.models.report_metadata import SampleMetadata
-from pixelator.report.qcreport.types import Metrics, SampleInfo
 from pixelator.report.qcreport.builder import QCReportBuilder
 from pixelator.report.qcreport.collect import collect_report_data
-
-# Any is used by type hint comment
+from pixelator.report.qcreport.types import Metrics, SampleInfo
 
 logger = logging.getLogger("pixelator.report")
 
