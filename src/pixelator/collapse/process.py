@@ -377,8 +377,8 @@ def create_fragment_to_upib_dict(
     :param umib_start: the 0-based start position of UMIB
     :param umib_end: the 1-based end position of UMIB
     :returns: a tuple with:
-        - a dictionary of with the sequence of umi+upia
-          as keys and the list of associated upibs as values.
+        - a dictionary with the sequence of umi+upia as keys
+          and the list of associated upibs as values.
         - the number of input reads
     :rtype: tuple[UniqueFragmentToUpiB, int]
     :raises FileFqGzEmpty: when the file is empty
