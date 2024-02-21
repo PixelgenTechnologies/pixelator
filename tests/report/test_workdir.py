@@ -1,4 +1,6 @@
 """Copyright © 2023 Pixelgen Technologies AB."""
+import os
+import shutil
 
 import pytest
 
@@ -13,6 +15,9 @@ def test_workdir_samples(pixelator_workdir: PixelatorWorkdir, all_stages_all_rep
         "pbmcs_unstimulated",
         "uropod_control",
     }
+
+    # Check that the cache is used and that the workdir is not re-read
+    shutil.rmtree(os.fspath(pixelator_workdir.basedir))
     assert set(pixelator_workdir.samples(cache=True)) == {
         "pbmcs_unstimulated",
         "uropod_control",
