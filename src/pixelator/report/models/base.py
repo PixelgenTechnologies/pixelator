@@ -18,7 +18,7 @@ except ImportError:
 
 
 class SampleReport(pydantic.BaseModel):
-    """Base class for all pixelator reports off `single-cell` subcommands.
+    """Base class for all pixelator reports of `single-cell` subcommands.
 
     :ivar sample_id: The sample id for which the report is generated.
     """
