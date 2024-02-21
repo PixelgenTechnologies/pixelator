@@ -136,7 +136,7 @@ def create_dynamic_report(
     with open(report_path, "wb") as f:
         builder.write(f, sample_info=info, metrics=metrics, data=data)
 
-    logger.debug("Dynamic webreport created in %s", output_path)
+    logger.debug("QC report created in %s", output_path)
 
 
 def make_report(
