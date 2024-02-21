@@ -237,8 +237,38 @@ panel_file: null
 
 ## Pixelator benchmark tests
 
-Pixelator uses `pytest-benchmark` to enable running micro-benchmarks. Normally when running the tests these are disabled.
-You can enabled them by running `pytest --benchmark-enable tests/`.
+Pixelator uses `pytest-benchmark` to enable running micro-benchmarks. Normally, when running the tests these are disabled.
+You can enable them by running `pytest --benchmark-enable tests/`.
+
+## Pytest markers
+
+Pixelator defines several additional markers for tests.
+These are usually disabled by default and can be enabled by running `pytest -m <marker> tests/`
+
+- integration_test: Marks a test as an integration test, which is often slow
+- workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow
+- external_workflow_test: Marks a test as a complete pixelator workflow that requires external data, which is extremely slow and requires additional setup before running
+- web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed.
+            Additionally, the full pipeline is run on the micro testdata to generate reports.
+
+
+All `external_workflow_test` tests are also `workflow_tests`.
+
+The default configuration that is applied when just running `pytest`,
+is to run all unmarked tests and `integration_tests`.
+
+You can use the pytest `-m` flag to select tests based on these markers.
+eg.
+
+
+```shell
+# Only internal workflow_tests
+pytest -m "workflow_test and not external_workflow_test"
+
+# All test except external workflow tests
+pytest -m "not external_workflow_test"
+```
+
 
 
 ## Utility scripts
