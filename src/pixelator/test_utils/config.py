@@ -5,13 +5,11 @@ from typing import Any, Dict
 
 import ruamel.yaml as yaml
 
-from pixelator.types import PathType
-
 
 class WorkflowConfig:
     """Class used to load and query the workflow tests configuration file."""
 
-    def __init__(self, config_file: PathType):
+    def __init__(self, config_file: Path):
         self.config_file = config_file
         self._config = self._parse(self.config_file)
 
@@ -34,7 +32,7 @@ class WorkflowConfig:
         return self._config.keys()
 
     @classmethod
-    def _parse(cls, config_file: PathType) -> dict[str, Any]:
+    def _parse(cls, config_file: Path) -> dict[str, Any]:
         """Load and resolve relative paths in the config file.
 
         :param config_file: path to the config file
