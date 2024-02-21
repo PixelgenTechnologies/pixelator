@@ -66,6 +66,7 @@ class RegionModel(BaseModel):
     def check_valid_dna_string(self) -> Self:
         """Validate DNA strings.
 
+        :return: the validated model
         :raises ValueError: if the string contains non DNA characters
         """
         if self.region_type is RegionType.PBS:
@@ -375,6 +376,7 @@ class Assay:
     def from_yaml(cls, filename: PathType) -> "Assay":
         """Parse an assay from a yaml file.
 
+        :return: an Assay instance loaded from the design config
         :param filename: path to a design config file
         """
         yaml_obj = load_yaml_file(filename)
@@ -432,6 +434,7 @@ def get_position_in_parent(assay: Assay, region_id: str) -> Tuple[int, int]:
 
     :param assay: assay design
     :param region_id: region id of the amplicon
+    :return: tuple with start and end position of the region in the parent region
     :raises ValueError: if the region_id is not found in the assay
     :raises ValueError: if the region has no parent
     :raises ValueError: if the parent_region is not found in the assay

@@ -198,6 +198,7 @@ class PixelatorWorkdir:
 
         :param pattern: A glob pattern to search for.
         :param prefix: A prefix path to search in relative to the workdir
+        :return: A list of tuples with sample name and a list of report files
         """
         # collect the metrics files
         search_dir = self.basedir / prefix if prefix else self.basedir
@@ -223,6 +224,7 @@ class PixelatorWorkdir:
 
         :param search_key: The key of an entry in the `ivar:_SEARCH_PATTERNS` dict
         :param prefix: A prefix path to search in relative to the workdir
+        :return: A list of tuples with sample name and a list of report files
         """
         # collect the metrics files
         pattern = self._SEARCH_PATTERNS[search_key]
@@ -262,6 +264,7 @@ class PixelatorWorkdir:
         this glob is relative to the workdir folder.
 
         :param pattern_id: The pattern id to use for searching
+        :return: A dictionary with sample names as keys and the output file as value
         :raises AssertionError: If there is more than 1 match with the pattern
         """
         self._check_pattern_basedir(pattern_id)
@@ -408,6 +411,7 @@ class PixelatorWorkdir:
 
         :param sample: The sample name to retrieve the filtered dataset for
         :param cache: Whether to return cached result if available
+        :return: The path to the filtered dataset if a sample is given, otherwise a list of all datasets
         """
         cache_key: WorkdirCacheKey = "single-cell annotate dataset"
         func = functools.partial(self._collect_output_files, cache_key)
@@ -438,6 +442,7 @@ class PixelatorWorkdir:
 
         :param sample: The sample name to retrieve the filtered dataset for
         :param cache: Whether to return cached results if available
+        :return: The path to a raw_component_metrics file if a sample is given, otherwise a list of all files
         """
         cache_key: WorkdirCacheKey = "single-cell annotate raw_components_metrics"
         func = functools.partial(self._collect_output_files, cache_key)

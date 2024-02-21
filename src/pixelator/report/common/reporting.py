@@ -313,6 +313,7 @@ class PixelatorReporting:
 
         :param sample: The sample to return the commandline for
         :param cache: Use cached data if available
+        :return: A `CLIInvocationInfo` to query commandline invocations.
         :raises WorkdirOutputNotFound: If no commandline metadata is found for the sample
         """
         # Function scope import to avoid circular dependencies

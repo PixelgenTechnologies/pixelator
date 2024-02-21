@@ -2,13 +2,16 @@
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
-
 from __future__ import annotations
-
 from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
 import pydantic
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 
 if TYPE_CHECKING:
@@ -40,10 +43,11 @@ class SummaryStatistics(pydantic.BaseModel):
         return self.q3 - self.q1
 
     @classmethod
-    def from_series(cls, distribution: pd.Series | pl.Series) -> SummaryStatistics:
+    def from_series(cls, distribution: pd.Series | pl.Series) -> Self:
         """Create a SummaryStatistics from a pandas or polars Series.
 
         :param distribution: The series to summarize.
+        :return: A SummaryStatistics object from given series.
         """
         distribution = distribution.to_numpy()
 

@@ -10,6 +10,11 @@ from typing import Iterable
 import pandas as pd
 import pydantic
 
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,10 +64,11 @@ class SampleMetadata:
                     )
 
     @classmethod
-    def from_csv(cls, p: Path | str) -> SampleMetadata:
+    def from_csv(cls, p: Path | str) -> Self:
         """Create a SampleMetadata object from a csv file.
 
         :arg p: The path to the csv file.
+        :returns: A SampleMetadata object.
         """
         logger.debug("Parsing metadata from %s", str(p))
         data = pd.read_csv(
