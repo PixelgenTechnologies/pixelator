@@ -1,4 +1,8 @@
-"""Copyright © 2023 Pixelgen Technologies AB."""
+"""Tests for the PixelatorWorkdir class.
+
+
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 import os
 import shutil
 
