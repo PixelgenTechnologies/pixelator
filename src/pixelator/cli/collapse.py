@@ -257,15 +257,15 @@ def collapse(
         )
 
         # Collect some stats for reporting
-        collapsed_fragments_stats = SummaryStatistics.from_series(
-            df["unique_fragment_count"]
+        collapsed_molecule_count_stats = SummaryStatistics.from_series(
+            df["unique_molecules_count"]
         )
         output_read_count = int(df["count"].sum())
         molecule_count = int(df.shape[0])
 
         output_file = collapse_output / f"{sample}.collapsed.parquet"
-        # Remove the unique_fragment_count column before saving
-        df.drop("unique_fragment_count")
+        # Remove the unique_molecules_count column before saving
+        df.drop("unique_molecules_count")
         df.write_parquet(output_file, compression="zstd")
 
         # remove temporary edge list files
@@ -278,7 +278,7 @@ def collapse(
             input_read_count=total_input_reads,
             output_read_count=output_read_count,
             molecule_count=molecule_count,
-            collapsed_molecule_count_stats=collapsed_fragments_stats,
+            collapsed_molecule_count_stats=collapsed_molecule_count_stats,
         )
 
         report.write_json_file(collapse_output / f"{sample}.report.json")

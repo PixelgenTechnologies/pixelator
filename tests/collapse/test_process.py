@@ -109,7 +109,7 @@ def test_create_edgelist():
                     "marker": "CD4",
                     "sequence": "AAAAA",
                     "count": 6,
-                    "unique_fragment_count": 2,
+                    "unique_molecules_count": 2,
                 },
                 {
                     "upia": "XXX",
@@ -118,7 +118,7 @@ def test_create_edgelist():
                     "marker": "CD4",
                     "sequence": "AAAAA",
                     "count": 2,
-                    "unique_fragment_count": 1,
+                    "unique_molecules_count": 1,
                 },
                 {
                     "upia": "ZZZ",
@@ -127,7 +127,7 @@ def test_create_edgelist():
                     "marker": "CD4",
                     "sequence": "AAAAA",
                     "count": 1,
-                    "unique_fragment_count": 1,
+                    "unique_molecules_count": 1,
                 },
             ]
         ),
@@ -315,7 +315,7 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "unique_fragment_count": 1,
+                        "unique_molecules_count": 1,
                     },
                     {
                         "upia": "TTT",
@@ -324,7 +324,7 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "unique_fragment_count": 1,
+                        "unique_molecules_count": 1,
                     },
                     {
                         "upia": "GGG",
@@ -333,7 +333,7 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "unique_fragment_count": 1,
+                        "unique_molecules_count": 1,
                     },
                 ]
             ),
@@ -378,7 +378,7 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "unique_fragment_count": 1,
+                        "unique_molecules_count": 1,
                     },
                     {
                         "upia": "TTT",
@@ -387,7 +387,7 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "unique_fragment_count": 1,
+                        "unique_molecules_count": 1,
                     },
                     {
                         "upia": "GGG",
@@ -396,7 +396,7 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "unique_fragment_count": 1,
+                        "unique_molecules_count": 1,
                     },
                 ]
             ),

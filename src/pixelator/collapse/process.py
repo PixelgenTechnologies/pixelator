@@ -67,14 +67,14 @@ class CollapsedFragment(typing.NamedTuple):
     """A collapsed fragment.
 
     :attr sequence: the consensus sequence for a list of similar fragments
-    :attr unique_fragment_count: the number of unique fragments that are
+    :attr unique_molecules_count: the number of unique fragments that are
         represented by this collapsed fragment.
     :attr read_count: the number of reads that are represented
         by this collapsed fragment
     """
 
     sequence: str
-    unique_fragment_count: int
+    unique_molecules_count: int
     reads_count: int
 
 
@@ -466,8 +466,8 @@ def create_edgelist(
         - `upib`, the upib of the fragment
         - `umi`, the umi of the fragment
         - `count`, the number of upib's associated with the fragment
-        - `unique_fragment_count`, the number of unique molecules (based on upia+umi)
-           associated with the fragment
+        - `unique_molecules_count`, the number of unique molecules (based on upia+umi)
+           associated with the collapsed molecule
         - `marker`, the marker associated with this fragment
         - `sequence`, the antibody DNA-oligo sequence of the marker associated
            with the fragment
@@ -499,7 +499,7 @@ def create_edgelist(
     def data():
         for (
             cluster_representative_fragment,
-            unique_fragment_count,
+            unique_molecules_count,
             read_count,
         ) in clustered_reads:
             # get all the upis from the sequence in the cluster
@@ -514,12 +514,12 @@ def create_edgelist(
             upib, _ = unique_upibs.most_common(1)[0]
 
             # update data array
-            yield (upia, upib, umi, read_count, unique_fragment_count)
+            yield (upia, upib, umi, read_count, unique_molecules_count)
 
     # create an edge list (pd.DataFrame) with the collapsed sequences
     df = pd.DataFrame(
         data=data(),
-        columns=["upia", "upib", "umi", "count", "unique_fragment_count"],
+        columns=["upia", "upib", "umi", "count", "unique_molecules_count"],
     )
     df.insert(3, "marker", marker)
     df.insert(4, "sequence", sequence)
