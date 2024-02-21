@@ -7,8 +7,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-
-from polars.dependencies import pydantic
+import pydantic
 
 from pixelator.report.models.base import SampleReport
 from pixelator.utils import get_sample_name
