@@ -352,18 +352,16 @@ class NetworkXGraphBackend(GraphBackend):
         if layout_algorithm == "fruchterman_reingold_3d":
             layout_inst = nx.spring_layout(raw, dim=3, seed=random_seed)
         if layout_algorithm == "pmds":
-            return pmds_layout(raw, seed=random_seed, **kwargs)
+            layout_inst = pmds_layout(raw, seed=random_seed, **kwargs)
         if layout_algorithm == "pmds_3d":
-            return pmds_layout(raw, dim=3, seed=random_seed, **kwargs)
+            layout_inst = pmds_layout(raw, dim=3, seed=random_seed, **kwargs)
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
             orient="index",
             columns=["x", "y"] if len(layout_inst[0]) == 2 else ["x", "y", "z"],
         )
-        coordinates.index = [
-            str(raw.nodes[node_idx]["name"]) for node_idx in layout_inst.keys()
-        ]
+
         return coordinates
 
     @staticmethod
@@ -425,7 +423,7 @@ class NetworkXGraphBackend(GraphBackend):
             # Added here to avoid circular imports
             from pixelator.graph.utils import create_node_markers_counts
 
-            node_marker_counts = create_node_markers_counts(self)  # type: ignore
+            node_marker_counts = create_node_markers_counts(self, name_as_index=False)  # type: ignore
             df = pd.concat([coordinates, node_marker_counts], axis=1)
         else:
             df = coordinates
@@ -752,7 +750,8 @@ def pmds_layout(
     pivs = np.random.choice(g.nodes, pivots, replace=False)
 
     # Calculate the shortest path length from the pivots to all other nodes
-    A = nx.to_numpy_array(g, weight=None)
+    nodelist = list(g.nodes)
+    A = nx.to_numpy_array(g, weight=None, nodelist=nodelist)
     D = sp.sparse.csgraph.shortest_path(A, directed=False, unweighted=True)
     D_pivs = D[:, np.where(np.isin(g.nodes, pivs))[0]]
 
@@ -765,12 +764,7 @@ def pmds_layout(
     # in an abstract cartesian space
     _, _, Vh = np.linalg.svd(D_pivs_centered)
     coordinates = D_pivs_centered @ np.transpose(Vh)[:, :dim]
-    coordinates = pd.DataFrame(
-        coordinates, columns=["x", "y"] if dim == 2 else ["x", "y", "z"]
-    )
 
-    coordinates.index = [
-        str(g.nodes[node_idx]["name"]) for node_idx in coordinates.index
-    ]
+    coordinates = {nodelist[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
 
     return coordinates

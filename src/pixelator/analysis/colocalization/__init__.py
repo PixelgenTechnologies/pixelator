@@ -29,10 +29,7 @@ from pixelator.analysis.colocalization.types import (
     TransformationTypes,
 )
 from pixelator.graph.utils import Graph
-from pixelator.statistics import (
-    correct_pvalues,
-    log1p_transformation,
-)
+from pixelator.statistics import correct_pvalues, log1p_transformation
 
 logger = logging.getLogger(__name__)
 
@@ -288,3 +285,46 @@ def colocalization_scores(
 
     logger.debug("Colocalization scores for dataset computed")
     return scores
+
+
+def get_differential_colocalization(
+    colocalization_data_frame: pd.DataFrame,
+    target: str,
+    reference: str,
+    contrast_column: str = "sample",
+    use_z_score: bool = True,
+) -> pd.DataFrame:
+    """Calculate the differential colocalization.
+
+    :param colocalization_data_frame: The colocalization data frame.
+    :param target: The label for target components in the contrast_column.
+    :param reference: The label for reference components in the contrast_column.
+    :param contrast_column: The column to use for the contrast. Defaults to "sample".
+    :param use_z_score: Whether to use the z-score. Defaults to True.
+
+    :return: The differential colocalization.
+    :rtype: pd.DataFrame
+    """
+    if use_z_score:
+        value_column = "pearson_z"
+    else:
+        value_column = "pearson"
+
+    same_marker_mask = (
+        colocalization_data_frame["marker_1"] == colocalization_data_frame["marker_2"]
+    )
+    data_frame = colocalization_data_frame[~same_marker_mask]
+    colocalization_scores_source = data_frame[data_frame[contrast_column] == reference]
+    colocalization_scores_target = data_frame[data_frame[contrast_column] == target]
+    differential_colocalization = colocalization_scores_source.groupby(
+        ["marker_1", "marker_2"]
+    )[[value_column]].median().astype(float) - colocalization_scores_target.groupby(
+        ["marker_1", "marker_2"]
+    )[
+        [value_column]
+    ].median().astype(
+        float
+    )
+    differential_colocalization = differential_colocalization.reset_index()
+
+    return differential_colocalization

@@ -55,6 +55,7 @@ importlib-resources = "^5.12.0"
 fsspec = "^2023.12.2"
 fastparquet = "^2023.8.0"
 graspologic = "^3.3.0"
+plotly = "*"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
@@ -66,6 +67,7 @@ invoke = "*"
 isort = "*"
 pylint = "*"
 pytest = "^7.0.0"
+pytest-mpl = "^0.17.0"
 sphinx = "*"
 tox = "*"
 tox-current-env = "^0.0.11"
@@ -98,7 +100,9 @@ markers = [
     "integration_test: Marks a test as an integration test, which is often slow (deselect with '-m \"not integration_test\"')",
     "workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow (deselect with '-m \"not workflow_test\"')"]
 
-addopts = ["-p no:pytest-workflow", "-m not workflow_test", "--benchmark-disable"]
+mpl-results-path = "tests/reports_mpl"
+mpl-generate-summary = "html"
+addopts = ["-p no:pytest-workflow", "-m not workflow_test", "--benchmark-disable", "--mpl"]
 filterwarnings = ["ignore::DeprecationWarning",]
 
 [tool.ruff]

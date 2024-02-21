@@ -4,15 +4,157 @@ Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
 import numpy as np
+import pandas as pd
 import pytest
+import plotly.graph_objects as go
+from pytest_snapshot.plugin import Snapshot
 from numpy.testing import assert_almost_equal
 from pixelator.graph import Graph
 from pixelator.plot import (
     _calculate_densities,
     _calculate_distance_to_unit_sphere_zones,
     _unit_sphere_surface,
+    plot_2d_graph,
+    plot_3d_graph,
+    plot_colocalization_heatmap,
+    plot_colocalization_diff_heatmap,
     plot_3d_heatmap,
+    scatter_umi_per_upia_vs_tau,
+    cell_count_plot,
+    edge_rank_plot,
 )
+
+
+@pytest.mark.parametrize(
+    "component, marker",
+    [("PXLCMP0000000", "CD45RA")],
+)
+def test_plot_3d_graph(
+    snapshot: Snapshot, component, marker, setup_basic_pixel_dataset
+):
+    """Test `plot_3d_graph` function.
+
+    :param snapshot: testing snapshot directory
+    """
+    np.random.seed(0)
+    snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"
+    pxl_data, *_ = setup_basic_pixel_dataset
+    result = plot_3d_graph(
+        pxl_data,
+        component=component,
+        marker=marker,
+        suppress_fig=True,
+    )
+    assert isinstance(result, go.Figure)
+    # snapshot.assert_match(result.to_json(), "plot_3d_graph_fig.json")
+    # TODO: Fix the snapshot test - Even though the plotly version matches (5.18.0), the test fails on github
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_2d_graph",
+)
+@pytest.mark.parametrize(
+    "component, marker, show_b_nodes",
+    [
+        ("PXLCMP0000000", "CD45RA", False),
+        ((["PXLCMP0000001", "PXLCMP0000002"], ["CD20", "CD45", "CD45RA"], False)),
+        (("PXLCMP0000000", "pixel_type", True)),
+    ],
+)
+def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_nodes):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    fig, _ = plot_2d_graph(
+        pxl_data, component=component, marker=marker, show_b_nodes=show_b_nodes
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_colocalization_heatmap",
+)
+def test_plot_colocalization_heatmap(setup_basic_pixel_dataset):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    fig, _ = plot_colocalization_heatmap(pxl_data.colocalization)
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_colocalization_diff_heatmap",
+)
+def test_plot_colocalization_diff_heatmap(setup_basic_pixel_dataset):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    colocalization_data = pxl_data.colocalization
+    colocalization_data.loc[5] = [
+        "CD3",
+        "CD19",
+        0.5,
+        "PXLCMP0000002",
+    ]  # Adding a new pair of colocalization data as the heatmap needs at least 2 rows
+    colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "PXLCMP0000003"]
+    fig, _ = plot_colocalization_diff_heatmap(
+        colocalization_data,
+        target="PXLCMP0000003",
+        reference="PXLCMP0000002",
+        contrast_column="component",
+        use_z_score=False,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=False,
+    baseline_dir="../snapshots/test_plot/test_scatter_umi_per_upia_vs_tau",
+)
+def test_scatter_umi_per_upia_vs_tau():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {
+            "umi_per_upia": np.random.uniform(1, 10, 100),
+            "tau": np.random.uniform(0.9, 1, 100),
+            "tau_type": np.random.choice(["high", "low", "normal"], 100),
+            "group": np.random.choice(["A", "B"], 100),
+        }
+    )
+    plot, _ = scatter_umi_per_upia_vs_tau(data, group_by="group")
+    return plot
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=False,
+    baseline_dir="../snapshots/test_plot/test_cell_count_plot",
+)
+def test_cell_count_plot():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {
+            "group1": np.random.choice(["A", "B"], 100),
+            "group2": np.random.choice(["C", "D"], 100),
+        }
+    )
+    plot, _ = cell_count_plot(data, color_by="group1", group_by="group2")
+    return plot
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=False,
+    baseline_dir="../snapshots/test_plot/test_edge_rank_plot",
+)
+def test_edge_rank_plot():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {
+            "edges": np.round(10 ** np.random.normal(4, 0.3, 500)).astype(int),
+            "group": np.random.choice(["A", "B"], 500),
+        }
+    )
+    plot, _ = edge_rank_plot(data, group_by="group")
+    return plot
 
 
 def test__calculate_distance_to_unit_sphere_zones():

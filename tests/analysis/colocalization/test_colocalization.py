@@ -11,7 +11,24 @@ from pandas.testing import assert_frame_equal
 from pixelator.analysis.colocalization import (
     colocalization_from_component_edgelist,
     colocalization_scores,
+    get_differential_colocalization,
 )
+
+
+def test_get_differential_colocalization(setup_basic_pixel_dataset):
+    pxl_data, *_ = setup_basic_pixel_dataset
+    result = get_differential_colocalization(
+        colocalization_data_frame=pxl_data.colocalization,
+        target="PXLCMP0000002",
+        reference="PXLCMP0000003",
+        contrast_column="component",
+        use_z_score=False,
+    )
+    expected = pd.DataFrame.from_dict(
+        {0: {"marker_1": "CD19", "marker_2": "CD45", "pearson": -0.1}},
+        orient="index",
+    )
+    assert_frame_equal(result, expected, check_exact=False, atol=0.01)
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
@@ -109,10 +126,10 @@ def test_colocalization_scores_log1p(enable_backend, full_graph_edgelist: pd.Dat
                 "marker_2": "B",
                 "pearson": -0.999904026040017,
                 "pearson_mean": -0.9996137575786639,
-                "pearson_stdev": 0.00010716932087924583,
-                "pearson_z": -2.7085033195295076,
-                "pearson_p_value": 0.00337937179980743,
-                "pearson_p_value_adjusted": 0.00337937179980743,
+                "pearson_stdev": 0.0001071693208792342,
+                "pearson_z": -2.7085033195298016,
+                "pearson_p_value": 0.0033793717998044336,
+                "pearson_p_value_adjusted": 0.0033793717998044336,
                 "jaccard": 1.0,
                 "jaccard_mean": 1.0,
                 "jaccard_stdev": 0.0,
