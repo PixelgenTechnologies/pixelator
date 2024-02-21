@@ -1,4 +1,7 @@
-"""Copyright © 2023 Pixelgen Technologies AB."""
+"""Tests for the PixelatorReporting class not related to any specific pixelator stage.
+
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 import pytest
 
 from pixelator.report import PixelatorReporting, PixelatorWorkdir
