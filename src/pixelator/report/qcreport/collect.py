@@ -163,4 +163,5 @@ def collect_report_data(workdir: PixelatorWorkdir, sample_id: str) -> QCReportDa
         reads_per_umi_frequency=reads_per_umi_frequency_data,
     )
 
+    logger.debug("QC report data collected for %s in %s", sample_id, workdir.basedir)
     return data
