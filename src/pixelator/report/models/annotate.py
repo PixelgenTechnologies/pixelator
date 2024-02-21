@@ -1,4 +1,7 @@
-"""Copyright © 2023 Pixelgen Technologies AB."""
+"""Model for report data returned by the annotate stage.
+
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 
 from __future__ import annotations
 
@@ -13,50 +16,51 @@ from pixelator.report.models.summary_statistics import SummaryStatistics
 class AnnotateSampleReport(SampleReport):
     """Model for report data returned by the annotate stage."""
 
-    components_modularity: float
-    fraction_molecules_in_largest_component: float
-    fraction_pixels_in_largest_component: float
+    components_modularity: float = pydantic.Field(
+        description="The modularity of the graph components.",
+    )
+
+    fraction_molecules_in_largest_component: float = pydantic.Field(
+        description="The fraction of molecules in the largest component.",
+    )
+
+    fraction_pixels_in_largest_component: float = pydantic.Field(
+        description="The fraction of pixels (A and B pixels) in the largest component.",
+    )
 
     # ------------------------------------------------------------------------------- #
     #   Annotate metrics
     # ------------------------------------------------------------------------------- #
     input_cell_count: int = pydantic.Field(
-        ...,
         description="The total number of cell components in the input before filtering.",
     )
 
     input_read_count: int = pydantic.Field(
-        ...,
         description="The total number of reads in the input before filtering.",
     )
 
     # cells_filtered: int
     cell_count: int = pydantic.Field(
-        ..., description="The total number of cells after filtering for component size."
+        description="The total number of cells after filtering for component size."
     )
 
     marker_count: int = pydantic.Field(
-        ...,
         description="The total number of detected antibodies after filtering for component size.",
     )
 
     total_marker_count: int = pydantic.Field(
-        ...,
         description="The total number of antibodies defined by the panel.",
     )
 
     molecule_count: int = pydantic.Field(
-        ...,
         description="The total number of unique molecules in cell or aggregate components.",
     )
 
     a_pixel_count: int = pydantic.Field(
-        ...,
         description="The number of unique A-pixels in the graph.",
     )
 
     b_pixel_count: int = pydantic.Field(
-        ...,
         description="The number of unique B-pixels in the graph.",
     )
 
@@ -68,47 +72,38 @@ class AnnotateSampleReport(SampleReport):
         return self.a_pixel_count + self.b_pixel_count
 
     read_count: int = pydantic.Field(
-        ...,
         description="The total number of reads for all unique molecules in cell or aggregate components.",
     )
 
     molecule_count_per_cell_stats: SummaryStatistics = pydantic.Field(
-        ...,
         description="Summary statistics for the number of molecules per cell component.",
     )
 
     read_count_per_cell_stats: SummaryStatistics = pydantic.Field(
-        ...,
         description="Summary statistics for the number of reads per cell component.",
     )
 
     a_pixel_count_per_cell_stats: SummaryStatistics = pydantic.Field(
-        ...,
         description="Summary statistics for the number of A-pixels per cell component.",
     )
 
     b_pixel_count_per_cell_stats: SummaryStatistics = pydantic.Field(
-        ...,
         description="Summary statistics for the number of B-pixels per cell component.",
     )
 
     marker_count_per_cell_stats: SummaryStatistics = pydantic.Field(
-        ...,
         description="Summary statistics for the number of markers per cell component.",
     )
 
     a_pixel_b_pixel_ratio_per_cell_stats: SummaryStatistics = pydantic.Field(
-        ...,
         description="Summary statistics for the number of B-pixels per A-pixel in cell components.",
     )
 
     molecule_count_per_a_pixel_per_cell_stats: SummaryStatistics = pydantic.Field(
-        ...,
         description="Summary statistics for the number of molecules per A-pixel in cell components.",
     )
 
     b_pixel_count_per_a_pixel_per_cell_stats: SummaryStatistics = pydantic.Field(
-        ...,
         description="Summary statistics for the number of B-pixels per A-pixel in cell components.",
     )
 
@@ -116,16 +111,19 @@ class AnnotateSampleReport(SampleReport):
     #   Aggregate filtering
     # ------------------------------------------------------------------------------- #
 
-    #: The number of aggregates called
     aggregate_count: int | None = pydantic.Field(
         description="The number of components identified as aggregates and removed from results."
     )
 
     #: The total number of molecules in aggregates
-    molecules_in_aggregates_count: Optional[int]
+    molecules_in_aggregates_count: int | None = pydantic.Field(
+        description="The total number of unique molecules in aggregates."
+    )
 
     #: The total number of reads for unique molecules in aggregates
-    reads_in_aggregates_count: Optional[int]
+    reads_in_aggregates_count: int | None = pydantic.Field(
+        description="The total number of reads for unique molecules in aggregates."
+    )
 
     @pydantic.computed_field(return_type=float)
     def fraction_reads_in_aggregates(self) -> float | None:
@@ -151,9 +149,17 @@ class AnnotateSampleReport(SampleReport):
     #   Component size filtering
     # ------------------------------------------------------------------------------- #
 
-    min_size_threshold: Optional[int]
-    max_size_threshold: Optional[int]
-    doublet_size_threshold: Optional[int]
+    min_size_threshold: Optional[int] = pydantic.Field(
+        description="The minimum size threshold used for filtering components."
+    )
+
+    max_size_threshold: Optional[int] = pydantic.Field(
+        description="The maximum size threshold used for filtering components."
+    )
+
+    doublet_size_threshold: Optional[int] = pydantic.Field(
+        description="The doublet size threshold used for filtering components."
+    )
 
     size_filter_fail_cell_count: int
     size_filter_fail_molecule_count: int

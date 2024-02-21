@@ -1,4 +1,4 @@
-"""Model for flow of input/output counts through processing stages.
+"""Model for flow of input/output of molecule counts through processing stages.
 
 Copyright © 2023 Pixelgen Technologies AB.
 """

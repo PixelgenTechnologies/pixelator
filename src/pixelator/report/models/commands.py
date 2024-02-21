@@ -1,4 +1,7 @@
-"""Copyright © 2023 Pixelgen Technologies AB."""
+"""Module for handling commandline metadata.
+
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 
 from __future__ import annotations
 

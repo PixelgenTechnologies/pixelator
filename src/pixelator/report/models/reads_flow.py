@@ -1,4 +1,7 @@
-"""Copyright © 2023 Pixelgen Technologies AB."""
+"""Model for flow of input/output of read counts through processing stages.
+
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 
 from __future__ import annotations
 

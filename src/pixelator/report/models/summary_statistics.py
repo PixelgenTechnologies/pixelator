@@ -1,4 +1,4 @@
-"""A collection of summary statistics for a distribution.
+"""Model for a collection of summary statistics of a distribution.
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
