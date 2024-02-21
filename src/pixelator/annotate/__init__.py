@@ -378,7 +378,6 @@ def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
 
     :param adata: the AnnData object
     :returns: a dictionary of different metrics
-    :rtype: Dict[str, float]
     """
     molecule_count = adata.obs["molecules"].sum()
     read_count = adata.obs["reads"].sum()
