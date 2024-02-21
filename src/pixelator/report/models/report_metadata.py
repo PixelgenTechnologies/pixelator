@@ -24,15 +24,21 @@ logger = logging.getLogger(__name__)
 class SampleMetadataRecord(pydantic.BaseModel):
     """Model for sample metadata.
 
+    :ivar sample_id: The sample id
     :ivar description: A description of the sample
     :ivar panel_version: Semantic version string of a panel file
     :ivar panel_name: The name of the panel
     """
 
-    sample_id: str
-    description: str
-    panel_version: str = pydantic.Field()
-    panel_name: str
+    sample_id: str = pydantic.Field(description="The sample id")
+
+    description: str = pydantic.Field(description="A description of the sample")
+
+    panel_version: str = pydantic.Field(
+        description="Semantic version string of a panel file"
+    )
+
+    panel_name: str = pydantic.Field(description="The name of the panel")
 
 
 class SampleMetadata:
@@ -41,7 +47,7 @@ class SampleMetadata:
     def __init__(self, metadata: Iterable[SampleMetadataRecord] = ()):
         """Create a SampleMetadata object.
 
-        :param metadata: An iterable of :class:`SampleMetadata` objects.
+        :param metadata: An iterable of :class:`SampleMetadataRecord` objects.
         """
         self._data = list(metadata)
         self._lookup = {v.sample_id: v for v in self._data}
