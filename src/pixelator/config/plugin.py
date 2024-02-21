@@ -22,10 +22,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def fetch_config_plugins() -> Generator[importlib.metadata.EntryPoint, None, None]:
+def fetch_config_plugins() -> Generator[EntryPoint, None, None]:
     """Find plugins and return them as in a generator.
 
-    :yields importlib.metadata.EntryPoint: The entrypoint object
+    :yields EntryPoint: The entrypoint object
     :returns: A generator of the loaded plugins
     """
     eps = importlib.metadata.entry_points()
