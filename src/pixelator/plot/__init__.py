@@ -95,9 +95,9 @@ def scatter_umi_per_upia_vs_tau(
 
     # Define palette
     palette = {
-        "high": Color.ORANGERED2.value,
-        "low": Color.SKYBLUE3.value,
-        "normal": Color.LIGHTGREY.value,
+        "high": Color.ORANGERED2,
+        "low": Color.SKYBLUE3,
+        "normal": Color.LIGHTGREY,
     }
 
     # create plot
@@ -392,7 +392,7 @@ def plot_2d_graph(
                 crnt_ax.set_title(comp)
 
             if mark is None:
-                color_val = Color.NETWORKX_NODE_COLOR.value
+                color_val = Color.NETWORKX_NODE_COLOR
             elif mark == "pixel_type":
                 color_val = filtered_coordinates["pixel_type"] == "B"
             elif mark not in filtered_coordinates.columns:
