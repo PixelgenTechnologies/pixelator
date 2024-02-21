@@ -247,9 +247,9 @@ def test_antibody_metrics(full_graph_edgelist: pd.DataFrame):
         antibody_metrics(edgelist=full_graph_edgelist),
         pd.DataFrame(
             data={
-                "antibody_count": [1250, 1250],
+                "antibody_count": [1251, 1249],
                 "components": [1, 1],
-                "antibody_pct": [0.5, 0.5],
+                "antibody_pct": [0.5004, 0.4996],
             },
             index=pd.CategoricalIndex(
                 ["A", "B"],
@@ -264,7 +264,7 @@ def test_antibody_counts(full_graph_edgelist: pd.DataFrame):
     counts = component_antibody_counts(edgelist=full_graph_edgelist)
     assert_array_equal(
         counts.to_numpy(),
-        np.array([[1250, 1250]]),
+        np.array([[1251, 1249]]),
     )
     assert sorted(counts.columns) == sorted(["A", "B"])
 

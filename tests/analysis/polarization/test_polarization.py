@@ -3,6 +3,7 @@ Tests for the polarization modules
 
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
+
 import random
 
 import pandas as pd
@@ -27,10 +28,10 @@ def test_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
 
     expected = pd.DataFrame(
         data={
-            "morans_i": [-0.05841822339465653, -0.05841818713383407],
-            "morans_p_value": [0.0006289900162095327, 0.0006289959783166696],
-            "morans_p_adjusted": [0.0006289959783166696, 0.0006289959783166696],
-            "morans_z": [-3.41879540404497, -3.4187928246970136],
+            "morans_i": [-0.057901599737577816, -0.05840524191067242],
+            "morans_p_value": [0.0007189388965430386, 0.0006311197019152904],
+            "morans_p_adjusted": [0.0007189388965430386, 0.0007189388965430386],
+            "morans_z": [-3.382253033381628, -3.417875495725142],
             "marker": ["A", "B"],
             "component": ["PXLCMP0000000", "PXLCMP0000000"],
         },
@@ -51,12 +52,12 @@ def test_permuted_polarization(enable_backend, full_graph_edgelist: pd.DataFrame
 
     expected = pd.DataFrame(
         data={
-            "morans_i": [-0.05841822339465653, -0.05841818713383407],
-            "morans_p_value": [0.0006289900162095327, 0.0006289959783166696],
-            "morans_p_adjusted": [0.0006289959783166696, 0.0006289959783166696],
-            "morans_z": [-3.41879540404497, -3.4187928246970136],
+            "morans_i": [-0.057901599737577816, -0.05840524191067242],
+            "morans_p_value": [0.0007189388965430386, 0.0006311197019152904],
+            "morans_p_adjusted": [0.0007189388965430386, 0.0007189388965430386],
+            "morans_z": [-3.382253033381628, -3.417875495725142],
             "morans_p_value_sim": {0: 0.02, 1: 0.01},
-            "morans_z_sim": {0: -3.2672829000275208, 1: -3.973415289418734},
+            "morans_z_sim": {0: -3.230459041258403, 1: -3.973112435543935},
             "marker": ["A", "B"],
             "component": ["PXLCMP0000000", "PXLCMP0000000"],
         },
