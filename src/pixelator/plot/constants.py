@@ -3,10 +3,8 @@
 Copyright (c) 2023 Pixelgen Technologies AB.
 """
 
-from enum import Enum
 
-
-class Color():
+class Color:
     """Class for color constants."""
 
     LIGHTGREY = "#bebebe"
