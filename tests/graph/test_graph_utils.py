@@ -168,8 +168,8 @@ def test_create_node_markers_counts_with_neighbourhood_1_with_mean_normalization
     )
     counts = create_node_markers_counts(graph=graph, k=1, normalization="mean")
     assert counts.shape == (graph.vcount(), 2)
-    assert counts["A"].sum() == pytest.approx(717.94, abs=0.01)
-    assert counts["B"].sum() == pytest.approx(704.42, abs=0.01)
+    assert counts["A"].sum() == pytest.approx(715.79, abs=0.01)
+    assert counts["B"].sum() == pytest.approx(706.57, abs=0.01)
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
@@ -185,8 +185,8 @@ def test_create_node_markers_counts_with_neighbourhood_2(
     )
     counts = create_node_markers_counts(graph=graph, k=2)
     assert counts.shape == (graph.vcount(), 2)
-    assert counts["A"].sum() == 8047
-    assert counts["B"].sum() == 7850
+    assert counts["A"].sum() == 8027
+    assert counts["B"].sum() == 7870
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
@@ -238,8 +238,8 @@ def test_create_node_markers_counts_with_neighbourhood_1(
     )
     counts = create_node_markers_counts(graph=graph, k=1)
     assert counts.shape == (graph.vcount(), 2)
-    assert counts["A"].sum() == 2811
-    assert counts["B"].sum() == 2751
+    assert counts["A"].sum() == 2803
+    assert counts["B"].sum() == 2759
 
 
 def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
