@@ -102,7 +102,7 @@ def graph(
     connect_components(
         input=str(parquet_file),
         output=str(graph_output),
-        sample_id=clean_name,
+        sample_name=clean_name,
         metrics_file=str(metrics_file),
         multiplet_recovery=multiplet_recovery,
         leiden_iterations=leiden_iterations,

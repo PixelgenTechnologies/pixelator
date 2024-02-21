@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 def connect_components(
     input: str,
     output: str,
-    sample_id: str,
+    sample_name: str,
     metrics_file: str,
     multiplet_recovery: bool,
     leiden_iterations: int = 10,
@@ -62,7 +62,7 @@ def connect_components(
 
     :param input: the path to the edge list dataframe (parquet)
     :param output: the path to the output folder
-    :param sample_id: the prefix to prepend to the files (sample name)
+    :param sample_name: the prefix to prepend to the files (sample name)
     :param metrics_file: the path to a JSON file to write metrics
     :param multiplet_recovery: set to true to activate multiplet recovery
     :param leiden_iterations: the number of iterations for the leiden algorithm
@@ -139,7 +139,7 @@ def connect_components(
             graph=graph,
             leiden_iterations=leiden_iterations,
             removed_edges_edgelist_file=Path(output)
-            / f"{sample_id}.discarded_edgelist.parquet",
+            / f"{sample_name}.discarded_edgelist.parquet",
         )
 
         # Update the graph with the new edgelist after multiplet recovery
@@ -153,7 +153,7 @@ def connect_components(
         # save the recovered components info to a file
         write_recovered_components(
             info,
-            filename=Path(output) / f"{sample_id}.components_recovered.csv",
+            filename=Path(output) / f"{sample_name}.components_recovered.csv",
         )
 
     result_metrics = edgelist_metrics(edgelist, graph)
@@ -162,12 +162,12 @@ def connect_components(
     # save the edge list (recovered)
     logger.debug("Save the edgelist")
     edgelist.collect(streaming=True, no_optimization=True).write_parquet(
-        Path(output) / f"{sample_id}.edgelist.parquet",
+        Path(output) / f"{sample_name}.edgelist.parquet",
         compression="zstd",
     )
 
     report = GraphSampleReport(
-        sample_id=sample_id,
+        sample_id=sample_name,
         **result_metrics,
     )
     report.write_json_file(Path(metrics_file))

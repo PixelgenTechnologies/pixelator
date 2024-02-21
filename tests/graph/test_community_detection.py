@@ -21,7 +21,7 @@ def test_connect_components(enable_backend, input_edgelist, output_dir, metrics_
     connect_components(
         input=input_edgelist,
         output=output_dir,
-        sample_id="test",
+        sample_name="test",
         metrics_file=metrics_file,
         multiplet_recovery=True,
         min_count=1,
@@ -59,7 +59,7 @@ def test_connect_components_no_recovery(
     connect_components(
         input=input_edgelist,
         output=output_dir,
-        sample_id="test",
+        sample_name="test",
         metrics_file=metrics_file,
         multiplet_recovery=False,
         min_count=1,
