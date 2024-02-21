@@ -104,7 +104,7 @@ def analyse_pixels(
             edgelist=edgelist,
             use_full_bipartite=use_full_bipartite,
             normalization=polarization_normalization,
-            permutations=polarization_n_permutations,
+            n_permutations=polarization_n_permutations,
         )
         dataset.polarization = scores
 
