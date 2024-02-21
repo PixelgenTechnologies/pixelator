@@ -32,9 +32,9 @@ def create_dynamic_report(
 ) -> None:
     """Create a dynamics qc report of a single sample.
 
-    A helper function to create a dynamic web report of a single sample. The
-    function uses a template stored in 'webreport/template.html' as a base
-    template which is filled with the different metrics and stats.
+    A helper function to create a dynamic web report of a single sample.
+    The function uses a template stored in 'report/qcreport/template.html'
+    as a base template which is filled with the different metrics and stats.
 
     :param reporting: A PixelatorReporting object
     :param sample_name: the name of the sample
