@@ -8,10 +8,21 @@ tasks:
     summary: |
       Pull the nf-core/pixelator pipeline from github.
 
-      This will clone the nf-core/pixelator repository into the parent directory.
-      The branch to clone will be pixelator-next.
+      This task will clone the nf-core/pixelator repository from github.
 
-      If the "../nf-core-pixelator" directory already exists, this task do nothing.
+      The GitHub repo can be configured using `PIPELINE_REPO`.
+      By default the Pixelgen Technologies fork is used (PixelgenTechnologies/nf-core-pixelator).
+
+      The branch to checkout can be configured using `PIPELINE_BRANCH`.
+      By default the "pixelator-next" branch is used.
+
+      The code will be cloned to `PIPELINE_SOURCE_DIR`.
+      The default is to clone it to "../nf-core-pixelator".
+
+      If the `PIPELINE_SOURCE_DIR` directory already exists, this task will do nothing.
+      This also means that the `PIPELINE_BRANCH` will be ignored if the pipeline directory
+      is manually checked out into a different branch.
+
     dir: "{{ .USER_WORKING_DIR }}"
     vars:
       PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
