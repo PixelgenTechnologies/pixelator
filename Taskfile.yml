@@ -5,7 +5,7 @@ dotenv: [".env"]
 tasks:
   format-check:
     desc: >-
-      Check code formatting using black.
+      Check code formatting using ruff.
     cmds:
       - ruff format --diff --check .
 
