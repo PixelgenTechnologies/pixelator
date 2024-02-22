@@ -7,13 +7,13 @@ tasks:
     desc: >-
       Check code formatting using black.
     cmds:
-      - ruff format --diff --check src tests
+      - ruff format --diff --check .
 
   format:
     desc: >-
       Format code using black.
     cmds:
-      - ruff format src tests
+      - ruff format .
 
   lint-ruff:
     desc: >-
