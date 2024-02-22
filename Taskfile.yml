@@ -140,7 +140,7 @@ tasks:
         }
       - task: tests:run-nf-core-pixelator-test-profile
         vars: {
-          PIPELINE_ROOT: '{{ .PIPELINE_SOURCE_DIR }}'
+          PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR }}'
         }
 
 

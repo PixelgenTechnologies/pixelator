@@ -32,22 +32,22 @@ tasks:
       Run the nf-core/pixelator pipeline using the test profile.
 
       Variables:
-        - `PIPELINE_ROOT`: The root directory of the nf-core/pixelator repository. Default is "../nf-core-pixelator".
+        - `PIPELINE_SOURCE_DIR`: The root directory of the nf-core/pixelator repository. Default is "../nf-core-pixelator".
         - `RESUME`: Whether to use the `-resume` option. Default is "false".
         - `PIPELINE_RESULTS_DIR`: The directory to store the pipeline results in.
-          Default is "results" inside the PIPELINE_ROOT.
+          Default is "results" inside the PIPELINE_SOURCE_DIR.
 
     dir: "{{ .USER_WORKING_DIR }}"
     vars:
-      PIPELINE_ROOT: '{{ .PIPELINE_ROOT | default "../nf-core-pixelator" }}'
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
       PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "results" }}'
       RESUME: '{{ .RESUME | default "false" }}'
     requires:
-      vars: ["PIPELINE_ROOT"]
+      vars: ["PIPELINE_SOURCE_DIR"]
     cmds:
       - nf_options=();
         [[ {{ .RESUME }} == 'true' ]] && nf_options+=('-resume ');
-        cd "{{ .PIPELINE_ROOT }}";
+        cd "{{ .PIPELINE_SOURCE_DIR }}";
         nextflow run . -profile test --outdir {{ .PIPELINE_RESULTS_DIR }} ${nf_options[@]};
 
   remove-pipeline-run:
@@ -62,14 +62,14 @@ tasks:
   copy-nf-core-pixelator-test-profile-results:
     internal: true
     vars:
-      PIPELINE_ROOT: '{{ .PIPELINE_ROOT | default "../nf-core-pixelator" }}'
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
       PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "tmp" }}'
       TEST_ASSETS_DIR: '{{ .TEST_ASSETS_DIR }}'
     requires:
       vars: ["TEST_ASSETS_DIR"]
     dir: "{{ .USER_WORKING_DIR }}"
     cmds:
-      - cd {{ .PIPELINE_ROOT }};
+      - cd {{ .PIPELINE_SOURCE_DIR }};
         nf_core_pixelator_dir="$(realpath $PWD)";
         for f in {{ .PIPELINE_RESULTS_DIR }}/pixelator/{adapterqc,amplicon,analysis,annotate,collapse,demux,graph,preqc}/*.json; do
           relative_f=$(realpath --relative-to={{ .PIPELINE_RESULTS_DIR }}/pixelator "$f");
@@ -77,7 +77,7 @@ tasks:
           cp "$f" "{{ .TEST_ASSETS_DIR }}/${relative_f}";
         done
 #      - task: remove-pipeline-run
-#        vars: { PIPELINE_RESULTS_DIR: "{{ .PIPELINE_ROOT }}/tmp" }
+#        vars: { PIPELINE_RESULTS_DIR: "{{ .PIPELINE_SOURCE_DIR }}/tmp" }
 
   update-report-test-data:
     desc: >-
@@ -90,7 +90,7 @@ tasks:
       into the test/report/assets folder. The remaining results are removed.
       Note that the pipeline is run inside the pipeline source directory to allow -resume to work.
 
-      The pipeline root directory can be set using the `PIPELINE_ROOT` environment variable.
+      The pipeline root directory can be set using the `PIPELINE_SOURCE_DIR` environment variable.
       The default is to use the `../nf-core-pixelator` directory.
       If this directory does not exist, it will be cloned from the nf-core/pixelator repository.
 
@@ -98,18 +98,18 @@ tasks:
     dir: "{{ .USER_WORKING_DIR }}"
     vars:
       RESUME: "{{ .RESUME | default false }}"
-      PIPELINE_ROOT: '{{ .PIPELINE_ROOT | default "../nf-core-pixelator" }}'
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
       PIPELINE_BRANCH: '{{ .PIPELINE_BRANCH | default "pixelator-next" }}'
       PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "results" }}'
     requires:
       vars:
-        - PIPELINE_ROOT
+        - PIPELINE_SOURCE_DIR
     cmds:
       - task: pull-nf-core-pixelator
       - task: run-nf-core-pixelator-test-profile
       - task: copy-nf-core-pixelator-test-profile-results
         vars:
-          PIPELINE_ROOT: "{{ .PIPELINE_ROOT }}"
+          PIPELINE_SOURCE_DIR: "{{ .PIPELINE_SOURCE_DIR }}"
           PIPELINE_RESULTS_DIR: "{{ .PIPELINE_RESULTS_DIR }}"
           TEST_ASSETS_DIR: "{{ .TASKFILE_DIR }}/report/assets/reports_only"
 
