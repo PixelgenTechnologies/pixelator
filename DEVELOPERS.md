@@ -292,9 +292,7 @@ task: Available tasks for this project:
 * coverage:                      Run tests using pytest and generate a coverage report.
 * format:                        Format code using black.
 * format-check:                  Check code formatting using black.
-* lint:                          Run linting using flake8 and ruff.
-* lint-flake8:                   Run linting using flake8.
-* lint-ruff:                     Run linting using ruff.
+* lint:                          Run linting using ruff.
 * test:                          Run tests using pytest.
 * test-all:                      Run all tests using pytest.
 * test-nf-core-pixelator:        Run nf-core/pixelator and the test profile with this version of pixelator.

@@ -15,7 +15,7 @@ tasks:
     cmds:
       - ruff format .
 
-  lint-ruff:
+  lint:
     desc: >-
       Run linting using ruff.
 
@@ -29,21 +29,13 @@ tasks:
       FIX: '{{ .FIX | default "false" }}'
       UNSAFE_FIXES: '{{ .UNSAFE_FIXES | default "false" }}'
     cmds:
-      - ruff check src tests {{ if eq .FIX "true" }}--fix{{end}} {{ if eq .UNSAFE_FIXES "true" }}--unsafe-fixes{{end}}
-
-  lint-flake8:
-    desc: >-
-      Run linting using flake8.
-    cmds:
-      - flake8 src tests
-
-  lint:
-    desc: >-
-      Run linting using flake8 and ruff.
-
-    deps:
-      - lint-ruff
-      - lint-flake8
+      - ruff check src tests
+        {{ if eq .FIX "true" }}
+          --fix
+        {{end}}
+        {{ if eq .UNSAFE_FIXES "true" }}
+          --unsafe-fixes
+        {{end}}
 
   typecheck:
     desc: >-

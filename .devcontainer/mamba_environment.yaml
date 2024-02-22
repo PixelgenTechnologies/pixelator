@@ -4,9 +4,14 @@ channels:
   - bioconda
 dependencies:
   # TODO lock versions?
-  - python=3.10
+  - python=3.11
   - mamba
-  - fastp
   - python-annoy
   - tox
   - poetry
+  - poetry-plugin-export
+  - poetry-dynamic-versioning[plugin]
+  - virtualenv
+  - fastp
+  - go-task
+  - pyyaml

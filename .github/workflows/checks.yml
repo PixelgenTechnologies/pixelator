@@ -58,9 +58,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: flake8 linter
-        uses: py-actions/flake8@v2
-
       - name: ruff linter
         uses: chartboost/ruff-action@v1
 
