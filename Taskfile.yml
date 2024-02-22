@@ -122,14 +122,20 @@ tasks:
 
   test-nf-core-pixelator:
     desc: >-
-      Run nf-core/pixelator and the test profile with this version of pixelator.
+      Run the default nf-core/pixelator test profile with this version of pixelator.
     summary: |
-      Run nf-core/pixelator  nf-core/pixelator and the test profile with this version of pixelator.
+      Run the default nf-core/pixelator test profile with this version of pixelator.
 
-      This will clone and launch the nf-core/pixelator pipeline using the `test` profile.
+      If the pipeline is not found in the directory `PIPELINE_SOURCE_DIR`, it will be cloned
+      from the PixelgenTechnologies/nf-core-pixelator repository using the `PIPELINE_BRANCH` branch.
+      By default the "pixelator-next" branch of nf-core-pixelator will be used.
+
+      If the `PIPELINE_SOURCE_DIR` exists this task will assume that the pipeline is already present and checked out
+      in the right branch.
+
       Note that the current dev version of pixelator must be installed and available in the PATH.
 
-      By default the "pixelator-next" branch of nf-core/pixelator will be used from the pixelgentechnologies fork.
+      If the `RESUME` environment variable is set to "true", the pipeline will be resumed if it was previously run.
 
     dir: "{{ .USER_WORKING_DIR }}"
     vars:
