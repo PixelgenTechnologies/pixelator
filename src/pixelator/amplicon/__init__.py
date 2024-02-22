@@ -1,6 +1,6 @@
 """Top-level module for amplicon.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from pixelator.amplicon.process import amplicon_fastq

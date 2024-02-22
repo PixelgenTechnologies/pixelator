@@ -1,7 +1,8 @@
 """Marker panel management for different Molecular Pixelation assays.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -12,22 +13,22 @@ from typing import List, Optional, TYPE_CHECKING
 import pandas as pd
 import pydantic
 import ruamel.yaml as yaml
-from pydantic import Extra
 
 from pixelator.types import PathType
 from pixelator.utils import logger
-
 
 if TYPE_CHECKING:
     from pixelator.config import Config
 
 
-class AntibodyPanelMetadata(pydantic.BaseModel, extra=Extra.allow):  # type: ignore
+class AntibodyPanelMetadata(pydantic.BaseModel):
     """Class representing the metadata of a Molecular Pixelation antibody panel."""
 
-    version: Optional[str]
-    name: Optional[str]
-    description: Optional[str]
+    model_config = pydantic.ConfigDict(extra="ignore")
+
+    version: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
 
 
 class AntibodyPanel:
@@ -228,7 +229,7 @@ class AntibodyPanel:
             return AntibodyPanelMetadata(version=None, name=None, description=None)
 
         frontmatter = raw_config[0]
-        return AntibodyPanelMetadata.parse_obj(frontmatter)
+        return AntibodyPanelMetadata.model_validate(frontmatter)
 
     @cached_property
     def markers_control(self) -> List[str]:

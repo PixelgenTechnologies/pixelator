@@ -1,8 +1,9 @@
 """
 Tests for utility functions for the pixelator package
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 import logging
 import tempfile
 from concurrent.futures import ProcessPoolExecutor
@@ -14,8 +15,8 @@ from pixelator import __version__
 from pixelator.cli.logging import LoggingSetup
 from pixelator.utils import (
     get_read_sample_name,
-    is_read_file,
     gz_size,
+    is_read_file,
     log_step_start,
     sanity_check_inputs,
     timer,

@@ -1,14 +1,13 @@
 """Module with functions for created permuted data.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import time
 from typing import Generator, Optional
 
 import pandas as pd
-from numpy.random import Generator as RandomNumberGenerator
-from numpy.random import default_rng
+from numpy.random import Generator as RandomNumberGenerator, default_rng
 
 from pixelator.analysis.colocalization.types import (
     RegionByCountsDataFrame,
@@ -24,15 +23,17 @@ def _get_random_number_generator(
 
 
 def permutations(
-    df: RegionByCountsDataFrame, n=50, random_seed: Optional[int] = None
+    df: RegionByCountsDataFrame, n: int = 50, random_seed: Optional[int] = None
 ) -> Generator[RegionByCountsDataFrame, None, None]:
-    """Generate `n` permutatinos of the data provided in `df`.
+    """Generate `n` permutations of the data provided in `df`.
 
     :param df: dataframe to use as basis of permutations
     :param n: number of permutations to generate, defaults to 50
     :param random_seed: set a seed to the random number generator
                         needed to make results deterministic, defaults to None
-    :yield: n RegionByCountsDataFrames
+    :yields RegionByCountsDataFrame: a RegionByCountsDataFrame object
+    :return: a generator that yields `n` permutations of the input dataframe
+    :rtype: Generator[RegionByCountsDataFrame, None, None]
     """
     random_number_generator = _get_random_number_generator(random_seed)
     for _ in range(n):

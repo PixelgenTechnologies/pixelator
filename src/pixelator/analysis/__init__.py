@@ -1,9 +1,8 @@
 """Functions for the analysis of PixelDataset.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
-import json
 import logging
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -15,7 +14,8 @@ from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
 from pixelator.pixeldataset import (
     PixelDataset,
 )
-from pixelator.utils import np_encoder
+from pixelator.report.models import AnalysisSampleReport
+from pixelator.report.models.analysis import ColocalizationReport, PolarizationReport
 
 logger = logging.getLogger(__name__)
 
@@ -137,8 +137,14 @@ def analyse_pixels(
         )
     }
     # save dataset
-    dataset.save(str(Path(output) / f"{output_prefix}.analysis.dataset.pxl"))
+    dataset.save(Path(output) / f"{output_prefix}.analysis.dataset.pxl")
 
-    # save metrics (JSON)
-    with open(metrics_file, "w") as outfile:
-        json.dump(metrics, outfile, default=np_encoder)
+    polarization_report = PolarizationReport()
+    colocalization_report = ColocalizationReport()
+
+    report = AnalysisSampleReport(
+        sample_id=output_prefix,
+        polarization=polarization_report if compute_polarization else None,
+        colocalization=colocalization_report if compute_colocalization else None,
+    )
+    report.write_json_file(metrics_file)

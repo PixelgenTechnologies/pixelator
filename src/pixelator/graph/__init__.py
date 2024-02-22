@@ -1,11 +1,11 @@
 """Graph operations and graph data structures on pixelator.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from pixelator.graph.community_detection import (
-    connect_components,
     community_detection_crossing_edges,
+    connect_components,
     detect_edges_to_remove,
     recover_technical_multiplets,
     write_recovered_components,

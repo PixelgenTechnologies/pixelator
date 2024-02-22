@@ -1,7 +1,7 @@
 """
 Plugin helpers for the cli.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import importlib.metadata
@@ -25,6 +25,7 @@ def fetch_cli_plugins() -> Generator[EntryPoint, None, None]:
     """
     Find plugins and return them as in a generator.
 
+    :yields EntryPoint: The entrypoint object
     :returns: A generator of the EntryPoint objects
     """
     eps = importlib.metadata.entry_points()

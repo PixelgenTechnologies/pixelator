@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copyright (c) 2023 Pixelgen Technologies AB.
+"""Copyright © 2023 Pixelgen Technologies AB.
 
 This is a general copyright checker for python files committed to pixelator
 
@@ -47,7 +47,7 @@ def check_file_for_copyright(py_file: Path) -> Optional[CopyrightNoticeMissing]:
     module_docstring = ast.get_docstring(tree, clean=True)
     if not module_docstring:
         return CopyrightNoticeMissing("Module docstring missing", py_file.resolve())
-    if "Copyright (c)" not in module_docstring:
+    if "Copyright ©" not in module_docstring:
         return CopyrightNoticeMissing(
             "Copyright notice missing from module docstring", py_file.resolve()
         )

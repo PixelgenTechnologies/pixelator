@@ -1,12 +1,27 @@
 """Test functions related to data collection for the QC report.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+import io
+from pathlib import Path
 
 import pandas as pd
-import io
+import pytest
 
-from pixelator.report.qcreport.collect import collect_reads_per_umi_frequency
+from pixelator.report.qcreport.collect import (
+    collect_reads_per_umi_frequency,
+    component_ranked_component_size_data,
+)
+
+
+@pytest.fixture(scope="module")
+def raw_component_metrics():
+    test_file = (
+        Path(__file__).parent
+        / "assets/uropod_control_300k_S1_001.raw_components_metrics.csv.gz"
+    )
+    df = pd.read_csv(test_file, compression="gzip")
+    return df
 
 
 def test_collect_reads_per_umi_frequency(setup_basic_pixel_dataset):
@@ -18,3 +33,13 @@ def test_collect_reads_per_umi_frequency(setup_basic_pixel_dataset):
     data = pd.read_csv(stringbuf)
 
     assert list(data.columns) == ["reads_per_umi", "count", "frequency"]
+
+
+def test_component_ranked_component_size_data(raw_component_metrics):
+    """Test if component_ranked_component_size_data returns the correct headers."""
+    csv_data = component_ranked_component_size_data(raw_component_metrics)
+
+    stringbuf = io.StringIO(csv_data)
+    data = pd.read_csv(stringbuf)
+
+    assert list(data.columns) == ["rank", "component_size", "selected", "markers"]

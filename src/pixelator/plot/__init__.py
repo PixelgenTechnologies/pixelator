@@ -1,6 +1,6 @@
 """Functions for creating plots that are useful with MPX data.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from typing import Literal, Optional, Tuple, Union

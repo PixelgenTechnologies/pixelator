@@ -1,13 +1,14 @@
 """
 Tests for the colocalization modules
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
+
 from pixelator.analysis.colocalization import (
     colocalization_from_component_edgelist,
     colocalization_scores,

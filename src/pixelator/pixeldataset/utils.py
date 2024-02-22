@@ -1,20 +1,18 @@
 """Module for utilities for working with pixeldatasets.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import logging
 import os
 import warnings
-from typing import (
-    TYPE_CHECKING,
-    Optional,
-)
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-from anndata import AnnData, read_h5ad, ImplicitModificationWarning
+from anndata import AnnData, ImplicitModificationWarning, read_h5ad
 
 from pixelator.graph import components_metrics
 from pixelator.statistics import (

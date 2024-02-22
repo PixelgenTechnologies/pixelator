@@ -1,6 +1,6 @@
 """Implementation of the pixelator Graph protocol based on networkx.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
@@ -9,7 +9,6 @@ import logging
 import warnings
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     Iterable,
@@ -17,6 +16,7 @@ from typing import (
     List,
     Optional,
     Set,
+    TYPE_CHECKING,
     Tuple,
     Union,
 )

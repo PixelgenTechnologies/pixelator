@@ -1,6 +1,6 @@
 """Graph backend implementations used by pixelator.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import logging
@@ -8,8 +8,8 @@ from typing import Literal, Optional, Union
 
 import networkx as nx
 
-from pixelator.graph.backends.protocol import GraphBackend
 from pixelator.graph.backends.implementations._networkx import NetworkXGraphBackend
+from pixelator.graph.backends.protocol import GraphBackend
 
 __all__ = ["NetworkXGraphBackend"]
 

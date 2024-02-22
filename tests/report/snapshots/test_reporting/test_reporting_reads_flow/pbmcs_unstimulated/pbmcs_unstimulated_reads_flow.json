@@ -1,0 +1,15 @@
+{
+    "sample_id": "pbmcs_unstimulated",
+    "input_read_count": 200000,
+    "qc_filtered_read_count": 199390,
+    "valid_pbs_read_count": 171097,
+    "valid_antibody_read_count": 168776,
+    "raw_molecule_read_count": 6237,
+    "size_filter_fail_molecule_read_count": 0,
+    "aggregate_molecule_read_count": 6237,
+    "cell_molecule_read_count": 6237,
+    "fraction_reads_in_molecules": 0.031185,
+    "fraction_reads_in_cells": 0.031185,
+    "fraction_valid_pbs_reads": 0.855485,
+    "fraction_valid_antibody_reads": 0.84388
+}

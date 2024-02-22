@@ -1,6 +1,6 @@
 """Module contains classes and functions related to the configuration file for pixelator (assay settings).
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
@@ -114,6 +114,7 @@ def load_assays_package(config: Config, package_name: str) -> Config:
 
     :param config: The config object to load assays into
     :param package_name: The name of the package to load assays from
+    :return: The updated config object
     """
     # TODO: Consider switching to base importlib.resources after
     #       dropping python3.8 support.
@@ -130,6 +131,7 @@ def load_panels_package(config: Config, package_name: str) -> Config:
 
     :param config: The config object to load panel files into
     :param package_name: The name of the package to load panels from
+    :return: The updated config object
     """
     # TODO: Consider switching to base importlib.resources after
     #       dropping python3.8 support.

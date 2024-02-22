@@ -1,9 +1,9 @@
 """Functions related to perform community detection on the pixelator graph step.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 import itertools
-import json
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
@@ -20,8 +20,8 @@ from pixelator.graph.utils import (
     edgelist_metrics,
     update_edgelist_membership,
 )
+from pixelator.report.models.graph import GraphSampleReport
 from pixelator.types import PathType
-from pixelator.utils import np_encoder
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 def connect_components(
     input: str,
     output: str,
-    output_prefix: str,
+    sample_name: str,
     metrics_file: str,
     multiplet_recovery: bool,
     leiden_iterations: int = 10,
@@ -62,7 +62,7 @@ def connect_components(
 
     :param input: the path to the edge list dataframe (parquet)
     :param output: the path to the output folder
-    :param output_prefix: the prefix to prepend to the files (sample name)
+    :param sample_name: the prefix to prepend to the files (sample name)
     :param metrics_file: the path to a JSON file to write metrics
     :param multiplet_recovery: set to true to activate multiplet recovery
     :param leiden_iterations: the number of iterations for the leiden algorithm
@@ -130,37 +130,47 @@ def connect_components(
         prefix=DEFAULT_COMPONENT_PREFIX,
     )
 
+    # get raw metrics before multiplets recovery
+    logger.debug("Calculating raw edgelist metrics")
+
     if multiplet_recovery:
         edgelist, info = recover_technical_multiplets(
             edgelist=edgelist,
             graph=graph,
             leiden_iterations=leiden_iterations,
             removed_edges_edgelist_file=Path(output)
-            / f"{output_prefix}.discarded_edgelist.parquet",
+            / f"{sample_name}.discarded_edgelist.parquet",
+        )
+
+        # Update the graph with the new edgelist after multiplet recovery
+        graph = Graph.from_edgelist(
+            edgelist=edgelist,
+            add_marker_counts=False,
+            simplify=False,
+            use_full_bipartite=True,
         )
 
         # save the recovered components info to a file
         write_recovered_components(
             info,
-            filename=Path(output) / f"{output_prefix}.components_recovered.csv",
+            filename=Path(output) / f"{sample_name}.components_recovered.csv",
         )
 
+    result_metrics = edgelist_metrics(edgelist, graph)
     del graph
 
     # save the edge list (recovered)
     logger.debug("Save the edgelist")
     edgelist.collect(streaming=True, no_optimization=True).write_parquet(
-        Path(output) / f"{output_prefix}.edgelist.parquet",
+        Path(output) / f"{sample_name}.edgelist.parquet",
         compression="zstd",
     )
 
-    # get metrics after multiplets recovery
-    logger.debug("Calculating edgelist metrics")
-    result_metrics = edgelist_metrics(edgelist)
-
-    # save result metrics (JSON)
-    with open(metrics_file, "w") as outfile:
-        json.dump(result_metrics, outfile, default=np_encoder)
+    report = GraphSampleReport(
+        sample_id=sample_name,
+        **result_metrics,
+    )
+    report.write_json_file(Path(metrics_file))
 
 
 def community_detection_crossing_edges(

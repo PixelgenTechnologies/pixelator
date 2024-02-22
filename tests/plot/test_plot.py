@@ -1,6 +1,6 @@
 """Tests for the plot module.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import numpy as np
@@ -9,6 +9,7 @@ import pytest
 import plotly.graph_objects as go
 from pytest_snapshot.plugin import Snapshot
 from numpy.testing import assert_almost_equal
+
 from pixelator.graph import Graph
 from pixelator.plot import (
     _calculate_densities,

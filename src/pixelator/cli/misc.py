@@ -1,7 +1,8 @@
 """Helper commands for pixelator.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 from typing import Any
 
 import click

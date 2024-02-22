@@ -1,7 +1,8 @@
 """Common functions and utilities for Pixelator.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import collections.abc
@@ -20,6 +21,8 @@ from pathlib import Path, PurePath
 from typing import (
     Any,
     Dict,
+    Generator,
+    Iterable,
     List,
     Literal,
     Optional,
@@ -105,15 +108,6 @@ def create_output_stage_dir(root: PathType, name: str) -> Path:
     if not output.is_dir():
         output.mkdir(parents=True)
     return output
-
-
-def flatten(list_of_collections: List[Union[List, Set]]) -> List:
-    """Flattens a list of lists or list of sets.
-
-    :param list_of_collections: list of lists or list of sets
-    :returns List: list containing flattened items
-    """
-    return [item for sublist in list_of_collections for item in sublist]
 
 
 def get_extension(filename: PathType, len_ext: int = 2) -> str:
@@ -427,3 +421,21 @@ def is_read_file(read: str, read_type: Literal["r1"] | Literal["r2"]) -> bool:
         return False
 
     return True
+
+
+def flatten(iterable: Iterable[Iterable[Any] | Any]) -> Generator[Any, None, None]:
+    """Flatten an Iterable containing items or collection of items.
+
+    Note: only list, set, tuple are flattened, strings and bytes are yielded as is
+
+    :param iterable: list of lists or list of sets
+    :return Generator[Any, None, None]: A generator yielding the flattened items
+    :yield Any: the flattened items
+    """
+    for item in iterable:
+        if isinstance(item, (str, bytes)):
+            yield item
+        elif isinstance(item, (list, set, tuple)):
+            yield from item
+        else:
+            yield item

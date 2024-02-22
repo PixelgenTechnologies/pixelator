@@ -1,6 +1,6 @@
 """Functions for doing size-based cell calling.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import logging
@@ -11,9 +11,9 @@ import pandas as pd
 from scipy.interpolate import UnivariateSpline
 
 from pixelator.annotate.constants import (
+    CELL_MAX_SIZE_SMOOTHING_FACTOR,
     CELL_MIN_SIZE_SMOOTHING_FACTOR,
     DISTANCE_DEVIATION_FACTOR,
-    CELL_MAX_SIZE_SMOOTHING_FACTOR,
     MINIMUM_NBR_OF_CELLS_FOR_SIZE_LIMIT,
     PRE_FILTER_LIMIT,
 )
@@ -60,6 +60,7 @@ def find_component_size_limits(
         cells from empty droplets in droplet-based single-cell RNA sequencing
 
     :param component_sizes: a numpy array of component sizes
+    :param direction: the direction of the cutoff, either "lower" or "upper"
     :return: the lower or upper bound cutoff
     :raises AssertionError: if the direction is not lower or upper
     :raises AssertionError: if component_sizes contain NaNs or zeros

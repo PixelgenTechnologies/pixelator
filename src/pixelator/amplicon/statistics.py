@@ -1,17 +1,17 @@
 """Collect statistics for amplicon.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 import collections
 import dataclasses
 from functools import cache
 from typing import Any, Union
 
+import numba as nb
 import numpy as np
 
 from pixelator.config import RegionType, config, get_position_in_parent
-
-import numba as nb
 
 
 @nb.njit

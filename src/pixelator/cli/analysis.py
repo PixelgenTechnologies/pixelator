@@ -1,7 +1,7 @@
 """
 Console script for pixelator (analysis)
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 from typing import get_args

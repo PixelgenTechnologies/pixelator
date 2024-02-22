@@ -1,6 +1,6 @@
 """Functions for finding aggregates.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import logging
@@ -62,7 +62,7 @@ def call_aggregates(adata: AnnData, inplace: bool = True) -> Optional[AnnData]:
 
     We mark components as "high" if they that have a tau score above
     `annotation.constants.TAU_HARD_THRESHOLD`, or have a tau score above
-    `annotation.contants.TAU_IQR_UPPER_THRESHOLD` * inter-quartile range
+    `annotation.constants.TAU_IQR_UPPER_THRESHOLD` * inter-quartile range
     from the median.
 
     We mark components as "low" if they that have a tau score below

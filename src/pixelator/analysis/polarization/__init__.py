@@ -1,5 +1,4 @@
-"""Copyright (c) 2023 Pixelgen Technologies AB."""
-
+"""Copyright © 2023 Pixelgen Technologies AB."""
 
 import logging
 import warnings

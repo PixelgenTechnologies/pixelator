@@ -1,8 +1,9 @@
 """
 Console script for pixelator (common functions)
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 import collections
 import functools
 import logging.handlers

@@ -1,8 +1,8 @@
-"""
-Console script for pixelator (amplicon)
+"""Console script for pixelator (amplicon)
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import logging
@@ -145,5 +145,6 @@ def amplicon(
         inputs=fastq_inputs,
         design=design,
         metrics=json_file,
+        sample_id=sample_name,
         output=str(output_file),
     )

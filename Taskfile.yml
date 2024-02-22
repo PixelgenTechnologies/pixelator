@@ -1,0 +1,127 @@
+version: "3"
+
+dotenv: [".env"]
+
+tasks:
+  format-check:
+    desc: >-
+      Check code formatting using black.
+    cmds:
+      - ruff format --diff --check src tests
+
+  format:
+    desc: >-
+      Format code using black.
+    cmds:
+      - ruff format src tests
+
+  lint-ruff:
+    desc: >-
+      Run linting using ruff.
+
+    summary: |
+      Run linting using ruff.
+
+      This will check the code using the ruff linter.
+      If the `FIX` environment variable is set to "true", the linter will attempt to fix the issues.
+      If the `UNSAFE_FIXES` environment variable is set to "true", the linter will attempt to fix the issues using unsafe fixes.
+    vars:
+      FIX: '{{ .FIX | default "false" }}'
+      UNSAFE_FIXES: '{{ .UNSAFE_FIXES | default "false" }}'
+    cmds:
+      - ruff check src tests {{ if eq .FIX "true" }}--fix{{end}} {{ if eq .UNSAFE_FIXES "true" }}--unsafe-fixes{{end}}
+
+  lint-flake8:
+    desc: >-
+      Run linting using flake8.
+    cmds:
+      - flake8 src tests
+
+  lint:
+    desc: >-
+      Run linting using flake8 and ruff.
+
+    deps:
+      - lint-ruff
+      - lint-flake8
+
+  typecheck:
+    desc: >-
+      Run type checking using mypy.
+    cmds:
+      - mypy --ignore-missing-imports --install-types --non-interactive src tests
+
+  test:
+    desc: >-
+      Run tests using pytest.
+
+      This runs using the default defined in pyproject.toml.
+    cmds:
+      - pytest tests
+
+  test-workflow:
+    desc: >-
+      Run workflow tests using pytest.
+    cmds:
+      - pytest tests -m "workflow_test and not external_workflow_test"
+
+  test-workflow-external:
+    desc: >-
+      Run external workflow tests using pytest.
+    summary: |
+      Run external workflow tests using pytest.
+
+      This will run the tests marked with the `external_workflow_test` marker using pytest.
+      These tests can take a very long time to run and require input data to be available in a fixed location.
+      External workflow test are not included in the `test-all` task.
+    cmds:
+      - pytest tests -m external_workflow_test
+
+  test-web:
+    desc: >-
+      Run web tests using pytest.
+    cmds:
+      - pytest tests -m web_test
+
+  test-all:
+    desc: >-
+      Run all tests using pytest.
+    deps:
+      - test
+      - test-workflow
+      - test-web
+
+  coverage:
+    desc: >-
+      Run tests using pytest and generate a coverage report.
+    summary: |
+      Run tests using pytest and generate a coverage report.
+
+      This will run the tests using pytest and generate a coverage report.
+      The coverage report will be output to the terminal.
+
+      The `WORKFLOW_TEST` environment variable can be set to "true" to run
+      the workflow tests as well. This will include the tests marked with the
+      `workflow_test` marker (but not the `external_workflow_test` marker).
+      This is disabled by default to reduce the runtime.
+    sources:
+      - src/**
+      - tests/**
+      - pyproject.toml
+      - poetry.lock
+    vars:
+      WORKFLOW_TEST: '{{ .WORKFLOW_TEST | default "false" }}'
+    cmds:
+      - 'coverage run --source src -m pytest
+        {{ if eq .WORKFLOW_TEST "true" }}
+          -m "not external_workflow_test and not web_test"
+        {{else}}
+          -m "not workflow_test and not web_test"
+        {{end}}'
+      - coverage report
+
+
+includes:
+  tests:
+    taskfile: ./tests/Taskfile.yml
+    dir: ./tests

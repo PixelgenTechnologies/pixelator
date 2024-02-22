@@ -3,10 +3,11 @@
 This module contains functions for the collapse and error correction of MPX data
 (from FASTQ)
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import logging
+import os
 import tempfile
 import typing
 import warnings
@@ -31,10 +32,8 @@ with warnings.catch_warnings():
     from umi_tools.network import breadth_first_search
 
 from pathlib import Path
-from typing import Union
 
 from pixelator.collapse.constants import SEED
-from pixelator.types import PathType
 from pixelator.utils import gz_size
 
 logger = logging.getLogger("pixelator.collapse")
@@ -57,10 +56,10 @@ class FileFqGzEmpty(Exception):
 
     """
 
-    def __init__(self, msg: str, fname: Union[str, Path], size: int):
+    def __init__(self, msg: str, fname: str | Path, size: int):
         """Initialize the exception."""
         self.msg = msg
-        self.fname = fname
+        self.fname = os.fspath(fname)
         self.size = size
 
 
@@ -68,14 +67,14 @@ class CollapsedFragment(typing.NamedTuple):
     """A collapsed fragment.
 
     :attr sequence: the consensus sequence for a list of similar fragments
-    :attr unique_fragments_count: the number of unique fragments that are
-        represented by this collapsed fragment
-    :attr reads_count: the number of reads that are represented
+    :attr unique_molecules_count: the number of unique fragments that are
+        represented by this collapsed fragment.
+    :attr read_count: the number of reads that are represented
         by this collapsed fragment
     """
 
     sequence: str
-    unique_fragments_count: int
+    unique_molecules_count: int
     reads_count: int
 
 
@@ -359,7 +358,7 @@ def create_fragment_to_upib_dict(
     umia_end: Optional[int] = None,
     umib_start: Optional[int] = None,
     umib_end: Optional[int] = None,
-) -> UniqueFragmentToUpiB:
+) -> tuple[UniqueFragmentToUpiB, int]:
     """Create a dict mapping fragments to upib's.
 
     Parses a fastq file with pixel data and extracts the UPIA, UPIB,
@@ -377,9 +376,11 @@ def create_fragment_to_upib_dict(
     :param umia_end: the 1-based end position of UMIA
     :param umib_start: the 0-based start position of UMIB
     :param umib_end: the 1-based end position of UMIB
-    :returns: a dictionary of with the sequence of umi+upia
-              as keys and the list of associated upibs as values
-    :rtype: UniqueFragmentToUpiB
+    :returns: a tuple with:
+        - a dictionary with the sequence of umi+upia as keys
+          and the list of associated upibs as values.
+        - the number of input reads
+    :rtype: tuple[UniqueFragmentToUpiB, int]
     :raises FileFqGzEmpty: when the file is empty
     :raises RuntimeError: when there is a error parsing the file
     """
@@ -387,8 +388,9 @@ def create_fragment_to_upib_dict(
 
     has_umia = umia_start is not None and umia_end is not None
     has_umib = umib_start is not None and umib_end is not None
-
     seqs_dict = defaultdict(list)
+    input_reads_count = 0
+
     try:
         for _, seq, _ in pyfastx.Fastq(input_file, build_index=False):
             upia = seq[upia_start:upia_end]
@@ -403,6 +405,7 @@ def create_fragment_to_upib_dict(
                 umi = ""
             seq = umi + upia
             seqs_dict[seq].append(upib)
+            input_reads_count += 1
     except Exception as exc:
         gzlen = gz_size(input_file)
         if gzlen == 0:
@@ -414,7 +417,7 @@ def create_fragment_to_upib_dict(
         ) from exc
 
     logger.debug("umi-upi sequences were extracted from %s", input_file)
-    return seqs_dict
+    return seqs_dict, input_reads_count
 
 
 def filter_by_minimum_upib_count(
@@ -463,6 +466,8 @@ def create_edgelist(
         - `upib`, the upib of the fragment
         - `umi`, the umi of the fragment
         - `count`, the number of upib's associated with the fragment
+        - `unique_molecules_count`, the number of unique molecules (based on upia+umi)
+           associated with the collapsed molecule
         - `marker`, the marker associated with this fragment
         - `sequence`, the antibody DNA-oligo sequence of the marker associated
            with the fragment
@@ -494,7 +499,7 @@ def create_edgelist(
     def data():
         for (
             cluster_representative_fragment,
-            unique_fragment_count,
+            unique_molecules_count,
             read_count,
         ) in clustered_reads:
             # get all the upis from the sequence in the cluster
@@ -509,17 +514,12 @@ def create_edgelist(
             upib, _ = unique_upibs.most_common(1)[0]
 
             # update data array
-            yield (upia, upib, umi, read_count)
+            yield (upia, upib, umi, read_count, unique_molecules_count)
 
     # create an edge list (pd.DataFrame) with the collapsed sequences
     df = pd.DataFrame(
         data=data(),
-        columns=[
-            "upia",
-            "upib",
-            "umi",
-            "count",
-        ],
+        columns=["upia", "upib", "umi", "count", "unique_molecules_count"],
     )
     df.insert(3, "marker", marker)
     df.insert(4, "sequence", sequence)
@@ -527,7 +527,7 @@ def create_edgelist(
     return df
 
 
-def write_tmp_feather_file(df: pd.DataFrame) -> PathType:
+def write_tmp_feather_file(df: pd.DataFrame) -> Path:
     """Write the dataframe to a feather file in the OS tmpdir.
 
     :param df: the data frame to write
@@ -537,7 +537,7 @@ def write_tmp_feather_file(df: pd.DataFrame) -> PathType:
     # create a temporary edge list and save it to a temp file
     tmp_file = tempfile.mkstemp(suffix=".feather")[1]
     df.to_feather(tmp_file)
-    return tmp_file
+    return Path(tmp_file)
 
 
 def collapse_fastq(
@@ -556,7 +556,7 @@ def collapse_fastq(
     max_neighbours: Optional[int] = None,
     mismatches: Optional[int] = None,
     min_count: Optional[int] = None,
-) -> Optional[PathType]:
+) -> tuple[Path | None, int]:
     """Collapses reads from a fastq file.
 
     Takes a fastq file as input and collapses its
@@ -606,7 +606,7 @@ def collapse_fastq(
     :param mismatches: the number of mismatches allowed between sequences
     :param min_count: discard reads with a count lower than this
     :returns: a str containing the path to the edge list file
-    :rtype: Optional[PathType]
+    :rtype: tuple[Path | None, int]
     :raises AssertionError: invalid input
     :raises RuntimeError: raises an exception
     """
@@ -630,7 +630,7 @@ def collapse_fastq(
     # the running time. Another approach would be to create a class with
     # a look up table and store the sequences in a list of tuples
     try:
-        unique_reads = create_fragment_to_upib_dict(
+        unique_reads, input_reads_count = create_fragment_to_upib_dict(
             input_file,
             upia_start,
             upia_end,
@@ -644,13 +644,13 @@ def collapse_fastq(
     except FileFqGzEmpty as err:
         # we want to allow empty files
         logger.warning(str(err.msg))
-        return None
+        return (None, 0)
 
     # In case there are no reads in the input file
     if not unique_reads:
         # we want to allow empty files
         logger.warning("The input file %s does not contain data", input_file)
-        return None
+        return (None, 0)
 
     if min_count and min_count > 1:
         unique_reads = filter_by_minimum_upib_count(unique_reads, min_count)
@@ -663,7 +663,7 @@ def collapse_fastq(
                 input_file,
                 min_count,
             )
-            return None
+            return (None, input_reads_count)
 
     if algorithm == "adjacency":
         clustered_reads = collapse_sequences_adjacency(
@@ -694,4 +694,4 @@ def collapse_fastq(
         len(edgelist),
         tmp_file,
     )
-    return tmp_file
+    return tmp_file, input_reads_count

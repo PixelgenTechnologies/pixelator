@@ -1,4 +1,7 @@
-"""Copyright (c) 2023 Pixelgen Technologies AB."""
+"""Copyright © 2023 Pixelgen Technologies AB."""
+
+from __future__ import annotations
+import typing
 from pathlib import Path
 
 from . import (
@@ -12,7 +15,9 @@ from . import (
     BasePreQCTestsMixin,
     BaseReportTestsMixin,
 )
-from .workflow_context import PixelatorWorkflowContext
+
+if typing.TYPE_CHECKING:
+    from .workflow_context import PixelatorWorkflowContext
 
 
 # IMPORTANT: Note the order of the base classes.

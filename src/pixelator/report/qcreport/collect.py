@@ -1,27 +1,26 @@
 """Helper functions to collect data for report generation.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
-import json
+from __future__ import annotations
+
 import logging
 import typing
-import warnings
-from collections import defaultdict
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
 
-import click
 import numpy as np
 import pandas as pd
 import polars as pl
-from anndata import AnnData
 
-from pixelator.pixeldataset import SIZE_DEFINITION, PixelDataset
-from pixelator.report.qcreport.types import CommandInfo, CommandOption, QCReportData
-from pixelator.report.workdir import PixelatorWorkdir
+from pixelator.pixeldataset import PixelDataset, SIZE_DEFINITION
+from pixelator.report.qcreport.types import QCReportData
 
 logger = logging.getLogger(__name__)
+
+
+if typing.TYPE_CHECKING:
+    from anndata import AnnData
+    from pixelator.report import PixelatorWorkdir
 
 
 def components_umap_data(adata: AnnData) -> str:
@@ -124,206 +123,30 @@ def collect_reads_per_umi_frequency(dataset: PixelDataset) -> str:
     return pd_freq.to_csv(index=False)
 
 
-def collect_parameter_info(
-    input_path: str, sample_name: Optional[str] = None
-) -> List[CommandInfo]:
-    """Collect all metainfo files from the workdir and generate parameter info.
-
-    :param input_path: Path to the workdir
-    :param sample_name: The sample name to filter on
-    :returns: A list of CommandInfo objects
-    :rtype: List[CommandInfo]
-    """
-    # Function scope import to avoid circular dependencies
-    from pixelator.cli import main_cli
-
-    workdir = PixelatorWorkdir(input_path)
-    param_files = workdir.metadata_files(sample_name)
-    return generate_parameter_info(main_cli, param_files)  # type: ignore
-
-
-def _clean_commmand_path(click_context: click.Group, data: Dict[str, Any]) -> str:
-    """Remove `pipeline CSV` from the command list."""
-    command_path = data["cli"]["command"].split(" ")
-
-    # This is a hack to rewrite the weird command_path when using ctx.invoke
-    # with the pipeline command
-    rnd_pipeline_path = ("rnd", "pipeline", "CSV")
-    pipeline_path = ("pipeline", "CSV")
-
-    runs_from_pipeline_ctx = pipeline_path in zip(command_path, command_path[1:])
-    runs_from_rnd_pipeline_ctx = rnd_pipeline_path in zip(
-        command_path, command_path[1:], command_path[2:]
-    )
-
-    if runs_from_pipeline_ctx or runs_from_rnd_pipeline_ctx:
-        path_to_remove = (
-            rnd_pipeline_path if runs_from_rnd_pipeline_ctx else pipeline_path
-        )
-        command_path = [part for part in command_path if part not in path_to_remove]
-        if runs_from_rnd_pipeline_ctx:
-            command_path.insert(1, "single-cell")
-
-    return " ".join(command_path)
-
-
-def _find_click_command(
-    click_context: click.Group, data: Dict[str, Any]
-) -> click.Command:
-    """Find the click command for a given parsed meta.json file."""
-    command_path = data["cli"]["command"].split(" ")
-    command_group: click.Group = click_context
-
-    clean_command_path = _clean_commmand_path(click_context, data).split(" ")
-
-    if len(command_path) <= 1:
-        raise ValueError("Expected at least one subcommand")
-
-    for subcommand in clean_command_path[1:-1]:
-        if subcommand in command_group.commands:
-            command_group = typing.cast(click.Group, command_group.commands[subcommand])
-        else:
-            raise ValueError(f"Unknown command {subcommand}")
-
-    leaf_command = command_group.commands[clean_command_path[-1]]
-    return leaf_command
-
-
-def _process_meta_json_data(
-    click_context: click.Group, data: Dict[str, Any]
-) -> CommandInfo:
-    """Process a single metadata file and generate the parameter info object.
-
-    :param click_context: The click context of the main pixelator command
-    :param data: The parsed meta.json file
-    :returns: A CommandInfo object
-    :rtype: CommandInfo
-    """
-    leaf_command = _find_click_command(click_context, data)
-    param_data: List[CommandOption] = []
-    opt_lookup = {p.opts[0]: p for p in leaf_command.params}
-    clean_command_name = _clean_commmand_path(click_context, data)
-
-    for param_name, param_value in data["cli"]["options"].items():
-        option_info = opt_lookup.get(param_name)
-
-        if option_info is None:
-            warnings.warn(
-                f'Unknown parameter "{param_name}" for command: "{clean_command_name}"'
-            )
-            param_data.append(
-                CommandOption(
-                    name=param_name,
-                    value=param_value,
-                    default_value=None,
-                    description=None,
-                )
-            )
-            continue
-
-        help_text = None
-        if isinstance(option_info, click.Option):
-            help_text = option_info.help
-
-        param_data.append(
-            CommandOption(
-                name=param_name,
-                value=param_value,
-                default_value=option_info.default,
-                description=help_text,
-            )
-        )
-
-    command = CommandInfo(
-        command=clean_command_name,
-        options=param_data,
-    )
-
-    return command
-
-
-def generate_parameter_info(  # noqa: DOC502
-    click_context: click.Group, param_files: List[Path]
-) -> List[CommandInfo]:
-    """Combine and enrich commmand parameters for use in the webreport.
-
-    :param click_context: The click context of the main pixelator command
-    :param param_files: A list with paths of meta.json files
-    :raises ValueError: If the command parsed from meta files is not found
-        in the click context.
-    :returns: A list of CommandInfo objects
-    :rtype: List[CommandInfo]
-    """
-    data_flat: List[CommandInfo] = []
-    order = list(click_context.commands["single-cell"].commands.keys())  # type: ignore
-
-    for f in param_files:
-        with open(f, "r") as fh:
-            file_data = json.load(fh)
-
-        command_info_flat = _process_meta_json_data(click_context, file_data)
-        data_flat.append(command_info_flat)
-
-    data_flat.sort(key=lambda x: order.index(x.command.split(" ")[-1]))
-    return data_flat
-
-
-def index_parameter_info(
-    data: List[CommandInfo],
-) -> Tuple[Dict[str, CommandInfo], Dict[str, Dict[str, CommandOption]]]:
-    """Create two lookup tables for finding parameter info.
-
-    :param data: the result from `generate_parameter_info`
-    :returns: A tuple with two lookup tables
-    :rtype: Tuple[Dict[str, CommandInfo], Dict[str, Dict[str, CommandOption]]]
-    """
-    command_index = {}
-    comand_option_index: Dict[str, Dict[str, CommandOption]] = defaultdict(dict)
-
-    for command_info in data:
-        command_index[command_info.command] = command_info
-        for option in command_info.options:
-            comand_option_index[command_info.command][option.name] = option
-
-    return command_index, comand_option_index
-
-
-def collect_report_data(input_path: str, sample_id: str) -> QCReportData:
+def collect_report_data(workdir: PixelatorWorkdir, sample_id: str) -> QCReportData:
     """Collect the data needed to generate figures in the webreport.
 
     The `annotate` folder must be present in `input_path`.
 
-    :param input_path: The path to the input folder
+    :param workdir: The PixelatorWorkdir object
     :param sample_id: The sample id
-    :returns: A WebreportData object
-    :rtype: QCReportData
+    :returns QCReportData: A QCReportData object
     :raises NotADirectoryError: If the input folder is missing the annotate folder
     :raises FileNotFoundError: If the annotate folder is missing the datasets
     """
-    logger.debug("Collecting QC report data for %s in %s", sample_id, input_path)
-
-    # check that the annotate folder is present
-    source_path = Path(input_path) / "annotate"
-    if not source_path.is_dir():
-        raise NotADirectoryError(f"annotate folder missing in {source_path}")
+    logger.debug("Collecting QC report data for %s in %s", sample_id, workdir.basedir)
 
     # parse filtered dataset
-    dataset_file = source_path / f"{sample_id}.annotate.dataset.pxl"
-    if not dataset_file.is_file():
-        raise FileExistsError(f"dataset file {dataset_file} not found")
-
-    dataset = PixelDataset.from_file(str(dataset_file))
+    dataset_file = workdir.filtered_dataset(sample_id)
+    dataset = PixelDataset.from_file(dataset_file)
     adata = dataset.adata
     component_data = components_umap_data(adata)
     antibody_percentages = antibody_percentages_data(adata)
     antibody_counts = antibody_counts_data(adata)
 
     # parse raw components metrics
-    metrics_file = source_path / f"{sample_id}.raw_components_metrics.csv.gz"
-    if not metrics_file.is_file():
-        raise FileExistsError(f"components metrics file {metrics_file} not found")
-
-    raw_components_metrics = pd.read_csv(str(metrics_file))
+    metrics_file = workdir.raw_component_metrics(sample_id)
+    raw_components_metrics = pd.read_csv(metrics_file)
     ranked_component_size_data = component_ranked_component_size_data(
         raw_components_metrics
     )
@@ -340,5 +163,5 @@ def collect_report_data(input_path: str, sample_id: str) -> QCReportData:
         reads_per_umi_frequency=reads_per_umi_frequency_data,
     )
 
-    logger.debug("QC report data collected for %s in %s", sample_id, input_path)
+    logger.debug("QC report data collected for %s in %s", sample_id, workdir.basedir)
     return data

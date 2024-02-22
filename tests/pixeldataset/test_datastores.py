@@ -1,6 +1,6 @@
 """Tests for the pixeldataset.io.datastores module.
 
-Copyright (c) 2024 Pixelgen Technologies AB.
+Copyright © 2024 Pixelgen Technologies AB.
 """
 
 from unittest.mock import patch
@@ -92,9 +92,9 @@ class TestPixelDataStore:
         file_target = tmp_path / "dataset.pxl"
         dataset.save(
             str(file_target),
-            file_format="csv"
-            if datastore.EDGELIST_KEY.endswith(".csv.gz")
-            else "parquet",
+            file_format=(
+                "csv" if datastore.EDGELIST_KEY.endswith(".csv.gz") else "parquet"
+            ),
         )
 
         datastore_inst = datastore(file_target)

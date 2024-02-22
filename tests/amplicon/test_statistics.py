@@ -1,12 +1,13 @@
 """Tests for amplicon statistics module.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import numpy as np
+
 from pixelator.amplicon.statistics import (
-    SequenceQualityStatsCollector,
     SequenceQualityStats,
+    SequenceQualityStatsCollector,
 )
 
 

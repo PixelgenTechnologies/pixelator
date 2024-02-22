@@ -1,7 +1,7 @@
 """
 Console script for pixelator
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import logging
@@ -10,7 +10,7 @@ from pathlib import Path
 import click
 
 from pixelator.cli.common import output_option
-from pixelator.report import make_report
+from pixelator.report.qcreport import make_report
 from pixelator.utils import create_output_stage_dir, log_step_start, timer
 
 logger = logging.getLogger(__name__)

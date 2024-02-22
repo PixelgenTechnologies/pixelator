@@ -1,10 +1,12 @@
 """Custom pytest collector utilities to generate tests from yaml files.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 import pytest
 
-from pixelator.test_utils import PixelatorWorkflowTest, WorkflowConfig
+from .workflow import PixelatorWorkflowTest
+from .config import WorkflowConfig
 
 
 class NoModuleClass(pytest.Class):  # noqa

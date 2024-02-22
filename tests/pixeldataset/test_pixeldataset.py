@@ -1,6 +1,6 @@
 """Tests for pixeldataset.py module.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 # pylint: disable=redefined-outer-name
@@ -17,6 +17,7 @@ import pytest
 from anndata import AnnData
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
+
 from pixelator.config import AntibodyPanel
 from pixelator.graph import Graph, write_recovered_components
 from pixelator.pixeldataset import (

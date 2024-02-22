@@ -1,7 +1,8 @@
 """Top-level package for Pixelator.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 from importlib import metadata
 
 __version__ = "0.0.0"

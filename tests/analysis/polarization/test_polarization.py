@@ -1,20 +1,20 @@
 """
 Tests for the polarization modules
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import random
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
+
 from pixelator.analysis.polarization import (
     polarization_scores,
     polarization_scores_component,
 )
-
 from tests.graph.networkx.test_tools import create_randomly_connected_bipartite_graph
 
 

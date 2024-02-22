@@ -237,5 +237,99 @@ panel_file: null
 
 ## Pixelator benchmark tests
 
-Pixelator uses `pytest-benchmark` to enable running micro-benchmarks. Normally when running the tests these are disabled.
-You can enabled them by running `pytest --benchmark-enable tests/`.
+Pixelator uses `pytest-benchmark` to enable running micro-benchmarks. Normally, when running the tests these are disabled.
+You can enable them by running `pytest --benchmark-enable tests/`.
+
+## Pytest markers
+
+Pixelator defines several additional markers for tests.
+These are usually disabled by default and can be enabled by running `pytest -m <marker> tests/`
+
+- integration_test: Marks a test as an integration test, which is often slow
+- workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow
+- external_workflow_test: Marks a test as a complete pixelator workflow that requires external data, which is extremely slow and requires additional setup before running
+- web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed.
+            Additionally, the full pipeline is run on the micro testdata to generate reports.
+
+
+All `external_workflow_test` tests are also `workflow_tests`.
+
+The default configuration that is applied when just running `pytest`,
+is to run all unmarked tests and `integration_tests`.
+
+You can use the pytest `-m` flag to select tests based on these markers.
+eg.
+
+
+```shell
+# Only internal workflow_tests
+pytest -m "workflow_test and not external_workflow_test"
+
+# All test except external workflow tests
+pytest -m "not external_workflow_test"
+```
+
+
+
+## Utility scripts
+
+Pixelator provides a number of utility scripts to help with development and testing using [Task](https://taskfile.dev/).
+
+Installation instruction for can be found [here](https://taskfile.dev/#/installation).
+
+> [!TIP]
+> Depending on the installation method the task executable might be named `task` or `go-task`.
+
+### Viewing the taskfile
+
+Run the following command to view the available tasks:
+
+```shell
+task --list
+```
+```console
+task: Available tasks for this project:
+* coverage:                      Run tests using pytest and generate a coverage report.
+* format:                        Format code using black.
+* format-check:                  Check code formatting using black.
+* lint:                          Run linting using flake8 and ruff.
+* lint-flake8:                   Run linting using flake8.
+* lint-ruff:                     Run linting using ruff.
+* test:                          Run tests using pytest.
+* test-all:                      Run all tests using pytest.
+* test-nf-core-pixelator:        Run nf-core/pixelator and the test profile with this version of pixelator.
+* test-web:                      Run web tests using pytest.
+* test-workflow:                 Run workflow tests using pytest.
+* typecheck:                     Run type checking using mypy.
+* update-report-test-data:       Update the report test data using the nf-core/pixelator test profile.
+```
+
+View more detailed documentation for a specific task:
+
+```shell
+task test-nf-core-pixelator --summary
+```
+```console
+task: test-nf-core-pixelator
+
+Run the "pixelator-next" branch of nf-core/pixelator and the test profile with this version of pixelator.
+
+This will clone and launch the nf-core/pixelator pipeline using the `test` profile.
+Note that the current dev version of pixelator must be installed and available in the PATH.
+
+commands:
+ - Task: pull-nf-core-pixelator
+ - Task: run-nf-core-pixelator-test-profile
+```
+
+Some commands have confirmation prompts for potentially dangerous actions such as deleting files.
+These prompts can be skipped by adding `--yes` to the command.
+
+Some commands have variables that can be set to change the behavior of the command.
+These variables are passed as environment variables to the command.
+
+eg.
+
+```shell
+RESUME=true task test-nf-core-pixelator
+```

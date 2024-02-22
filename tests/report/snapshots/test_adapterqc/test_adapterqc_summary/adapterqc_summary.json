@@ -1,0 +1,14 @@
+{
+    "total_read_count":{
+        "pbmcs_unstimulated":199390,
+        "uropod_control":298988
+    },
+    "passed_filter_read_count":{
+        "pbmcs_unstimulated":171097,
+        "uropod_control":255274
+    },
+    "discarded":{
+        "pbmcs_unstimulated":0.1418977883,
+        "uropod_control":0.1462065367
+    }
+}

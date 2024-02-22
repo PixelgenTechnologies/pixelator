@@ -1,6 +1,6 @@
 """Module that contains functions for processing and QC any MPX amplicon design.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import logging
@@ -160,7 +160,6 @@ def adapter_qc_fastq(
     :param failed: the path to the failed file (discarded)
     :param report: the path to the json report
     :param mismatches: the number of mismatches allowed (0.1 - 0.9)
-    :param min_length: the minimum length allowed in the PBS1/2 (match)
     :param pbs1: the PBS1 sequence
     :param pbs2: the PBS2 sequence
     :param cores: the number of threads to use

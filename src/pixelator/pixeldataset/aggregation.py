@@ -1,7 +1,8 @@
 """Module for aggregating pixeldatasets.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import logging
@@ -11,12 +12,10 @@ from typing import (
 
 import pandas as pd
 import polars as pl
-from anndata import AnnData
-from anndata import concat as concatenate_anndata
+from anndata import AnnData, concat as concatenate_anndata
 
 from pixelator.pixeldataset import PixelDataset
-from pixelator.pixeldataset.utils import update_metrics_anndata, _enforce_edgelist_types
-
+from pixelator.pixeldataset.utils import _enforce_edgelist_types, update_metrics_anndata
 
 logger = logging.getLogger(__name__)
 

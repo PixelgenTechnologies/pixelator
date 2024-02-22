@@ -1,17 +1,17 @@
 """Functions related to the graph dataclass used in pixelator graph operations.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
 import polars as pl
 from scipy.sparse import csr_matrix
-from functools import lru_cache
 
 from pixelator.graph.backends.implementations import (
     graph_backend,
