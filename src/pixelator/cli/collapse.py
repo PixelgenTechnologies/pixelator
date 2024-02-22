@@ -200,7 +200,9 @@ def collapse(
         )
 
         # run cutadapt (demux mode) using parallel processing
-        with get_process_pool_executor(ctx) as executor:
+        with get_process_pool_executor(
+            nbr_cores=ctx["CORES"], logging_setup=ctx.obj["LOGGER"]
+        ) as executor:
             jobs = []
             for fastq_file in files:
                 # get the marker from the file name
