@@ -52,10 +52,8 @@ tasks:
       - mypy --ignore-missing-imports --install-types --non-interactive src tests
 
   test:
-    desc: >-
-      Run tests using pytest.
-
-      This runs using the default defined in pyproject.toml.
+    desc: |-
+      Run tests using pytest with the default flags defined in pyproject.toml.
     cmds:
       - pytest tests
 
