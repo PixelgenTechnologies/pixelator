@@ -54,16 +54,18 @@ jobs:
           ref: pixelator-next
           path: nf-core-pixelator
 
-      - uses: actions/setup-java@v4
+      - name: Install Java
+        uses: actions/setup-java@v4
         with:
           distribution: 'microsoft'
           java-version: '21'
 
-      - uses: nf-core/setup-nextflow@v1
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v1
         with:
           version: "latest-stable"
 
-      - name: Cache Conda env
+      - name: Setup conda environment caching
         uses: actions/cache@v3
         with:
           path: ${{ env.CONDA }}/envs
@@ -74,7 +76,8 @@ jobs:
           CACHE_NUMBER: 0
         id: cache-conda
 
-      - uses: conda-incubator/setup-miniconda@v3
+      - name: Setup conda environment
+        uses: conda-incubator/setup-miniconda@v3
         with:
           activate-environment: pixelator
           miniforge-version: latest
@@ -87,7 +90,6 @@ jobs:
 
       - name: Run nf-core/pixelator default profile with current pixelator
         env:
-          PIPELINE_BRANCH: pixelator-next
           PIPELINE_SOURCE_DIR: ./nf-core-pixelator
         run: |
           task test-nf-core-pixelator
