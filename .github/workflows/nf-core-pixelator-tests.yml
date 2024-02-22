@@ -18,13 +18,13 @@ jobs:
     steps:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@v5
-        if: ${{ !github.inputs.act }}
+        if: ${{ !github.event.act }}
         with:
           concurrent_skipping: "same_content_newer"
           skip_after_successful_duplicate: "true"
           do_not_skip: '["workflow_dispatch"]'
           paths_filter: |
-            python:
+            pixelator:
               paths:
                 - 'pyproject.toml'
                 - 'poetry.lock'
@@ -37,7 +37,7 @@ jobs:
 
   test:
     name: Test default profile
-    if: github.event.act || needs.pre_job.outputs.should_skip == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
+    if: github.event.act || needs.pre_job.outputs.should_skip == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).pixelator.should_skip
     runs-on: ubuntu-latest
     needs: [pre_job]
     defaults:
