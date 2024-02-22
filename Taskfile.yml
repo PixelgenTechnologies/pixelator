@@ -11,7 +11,7 @@ tasks:
 
   format:
     desc: >-
-      Format code using black.
+      Format code using ruff.
     cmds:
       - ruff format .
 
