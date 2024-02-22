@@ -58,9 +58,6 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: flake8 linter
-        uses: py-actions/flake8@v2
-
       - name: ruff linter
         uses: chartboost/ruff-action@v1
 
@@ -72,10 +69,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Check code lints with Black
-        uses: psf/black@stable
+      - name: ruff formatter
+        uses: chartboost/ruff-action@v1
         with:
-          version: 23.12.0
+          args: "format --check"
 
       # If the above check failed, post a comment on the PR explaining the failure
       - name: Post PR comment
@@ -83,17 +80,14 @@ jobs:
         uses: mshick/add-pr-comment@v1
         with:
           message: |
-            ## Python linting (`black`) is failing
+            ## Python linting (`ruff format`) is failing
 
             To keep the code consistent with lots of contributors, we run automated code consistency checks.
             To fix this CI test, please run:
 
-            * Install [`black`](https://black.readthedocs.io/en/stable/): `pip install black`
-            * Fix formatting errors in your pipeline: `black .`
+            * `task format`
 
             Once you push these changes the test should pass, and you can hide this comment :+1:
-
-            We highly recommend setting up Black in your code editor so that this formatting is done automatically on save. Ask about it on Slack for help!
 
             Thanks again for your contribution!
           repo-token: ${{ secrets.GITHUB_TOKEN }}

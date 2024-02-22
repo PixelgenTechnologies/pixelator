@@ -5,17 +5,17 @@ dotenv: [".env"]
 tasks:
   format-check:
     desc: >-
-      Check code formatting using black.
+      Check code formatting using ruff.
     cmds:
-      - ruff format --diff --check src tests
+      - ruff format --diff --check .
 
   format:
     desc: >-
-      Format code using black.
+      Format code using ruff.
     cmds:
-      - ruff format src tests
+      - ruff format .
 
-  lint-ruff:
+  lint:
     desc: >-
       Run linting using ruff.
 
@@ -29,21 +29,13 @@ tasks:
       FIX: '{{ .FIX | default "false" }}'
       UNSAFE_FIXES: '{{ .UNSAFE_FIXES | default "false" }}'
     cmds:
-      - ruff check src tests {{ if eq .FIX "true" }}--fix{{end}} {{ if eq .UNSAFE_FIXES "true" }}--unsafe-fixes{{end}}
-
-  lint-flake8:
-    desc: >-
-      Run linting using flake8.
-    cmds:
-      - flake8 src tests
-
-  lint:
-    desc: >-
-      Run linting using flake8 and ruff.
-
-    deps:
-      - lint-ruff
-      - lint-flake8
+      - ruff check src tests
+        {{ if eq .FIX "true" }}
+          --fix
+        {{end}}
+        {{ if eq .UNSAFE_FIXES "true" }}
+          --unsafe-fixes
+        {{end}}
 
   typecheck:
     desc: >-
@@ -52,10 +44,8 @@ tasks:
       - mypy --ignore-missing-imports --install-types --non-interactive src tests
 
   test:
-    desc: >-
-      Run tests using pytest.
-
-      This runs using the default defined in pyproject.toml.
+    desc: |-
+      Run tests using pytest with the default flags defined in pyproject.toml.
     cmds:
       - pytest tests
 
@@ -119,6 +109,39 @@ tasks:
           -m "not workflow_test and not web_test"
         {{end}}'
       - coverage report
+
+  test-nf-core-pixelator:
+    desc: >-
+      Run the default nf-core/pixelator test profile with this version of pixelator.
+    summary: |
+      Run the default nf-core/pixelator test profile with this version of pixelator.
+
+      If the pipeline is not found in the directory `PIPELINE_SOURCE_DIR`, it will be cloned
+      from the PixelgenTechnologies/nf-core-pixelator repository using the `PIPELINE_BRANCH` branch.
+      By default the "pixelator-next" branch of nf-core-pixelator will be used.
+
+      If the `PIPELINE_SOURCE_DIR` exists this task will assume that the pipeline is already present and checked out
+      in the right branch.
+
+      Note that the current dev version of pixelator must be installed and available in the PATH.
+
+      If the `RESUME` environment variable is set to "true", the pipeline will be resumed if it was previously run.
+
+    dir: "{{ .USER_WORKING_DIR }}"
+    vars:
+      RESUME: '{{ .RESUME | default "false" }}'
+      PIPELINE_BRANCH: '{{ .PIPELINE_BRANCH | default "pixelator-next" }}'
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default ".nf-core-pixelator-{{ .BRANCH }}" }}'
+    cmds:
+      - task: tests:pull-nf-core-pixelator
+        vars: {
+          PIPELINE_BRANCH: '{{ .PIPELINE_BRANCH }}',
+          PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR }}'
+        }
+      - task: tests:run-nf-core-pixelator-test-profile
+        vars: {
+          PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR }}'
+        }
 
 
 includes:

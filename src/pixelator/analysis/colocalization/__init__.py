@@ -320,11 +320,7 @@ def get_differential_colocalization(
         ["marker_1", "marker_2"]
     )[[value_column]].median().astype(float) - colocalization_scores_target.groupby(
         ["marker_1", "marker_2"]
-    )[
-        [value_column]
-    ].median().astype(
-        float
-    )
+    )[[value_column]].median().astype(float)
     differential_colocalization = differential_colocalization.reset_index()
 
     return differential_colocalization

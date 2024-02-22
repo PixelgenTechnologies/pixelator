@@ -8,10 +8,21 @@ tasks:
     summary: |
       Pull the nf-core/pixelator pipeline from github.
 
-      This will clone the nf-core/pixelator repository into the parent directory.
-      The branch to clone will be pixelator-next.
+      This task will clone the nf-core/pixelator repository from github.
 
-      If the "../nf-core-pixelator" directory already exists, this task do nothing.
+      The GitHub repo can be configured using `PIPELINE_REPO`.
+      By default the Pixelgen Technologies fork is used (PixelgenTechnologies/nf-core-pixelator).
+
+      The branch to checkout can be configured using `PIPELINE_BRANCH`.
+      By default the "pixelator-next" branch is used.
+
+      The code will be cloned to `PIPELINE_SOURCE_DIR`.
+      The default is to clone it to "../nf-core-pixelator".
+
+      If the `PIPELINE_SOURCE_DIR` directory already exists, this task will do nothing.
+      This also means that the `PIPELINE_BRANCH` will be ignored if the pipeline directory
+      is manually checked out into a different branch.
+
     dir: "{{ .USER_WORKING_DIR }}"
     vars:
       PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
@@ -32,19 +43,22 @@ tasks:
       Run the nf-core/pixelator pipeline using the test profile.
 
       Variables:
-        - `PIPELINE_ROOT`: The root directory of the nf-core/pixelator repository. Default is "../nf-core-pixelator".
+        - `PIPELINE_SOURCE_DIR`: The root directory of the nf-core/pixelator repository. Default is "../nf-core-pixelator".
         - `RESUME`: Whether to use the `-resume` option. Default is "false".
+        - `PIPELINE_RESULTS_DIR`: The directory to store the pipeline results in.
+          Default is "results" inside the PIPELINE_SOURCE_DIR.
+
     dir: "{{ .USER_WORKING_DIR }}"
     vars:
-      PIPELINE_ROOT: '{{ .PIPELINE_ROOT | default "../nf-core-pixelator" }}'
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
       PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "results" }}'
       RESUME: '{{ .RESUME | default "false" }}'
     requires:
-      vars: ["PIPELINE_ROOT"]
+      vars: ["PIPELINE_SOURCE_DIR"]
     cmds:
       - nf_options=();
         [[ {{ .RESUME }} == 'true' ]] && nf_options+=('-resume ');
-        cd "{{ .PIPELINE_ROOT }}";
+        cd "{{ .PIPELINE_SOURCE_DIR }}";
         nextflow run . -profile test --outdir {{ .PIPELINE_RESULTS_DIR }} ${nf_options[@]};
 
   remove-pipeline-run:
@@ -59,14 +73,14 @@ tasks:
   copy-nf-core-pixelator-test-profile-results:
     internal: true
     vars:
-      PIPELINE_ROOT: '{{ .PIPELINE_ROOT | default "../nf-core-pixelator" }}'
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
       PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "tmp" }}'
       TEST_ASSETS_DIR: '{{ .TEST_ASSETS_DIR }}'
     requires:
       vars: ["TEST_ASSETS_DIR"]
     dir: "{{ .USER_WORKING_DIR }}"
     cmds:
-      - cd {{ .PIPELINE_ROOT }};
+      - cd {{ .PIPELINE_SOURCE_DIR }};
         nf_core_pixelator_dir="$(realpath $PWD)";
         for f in {{ .PIPELINE_RESULTS_DIR }}/pixelator/{adapterqc,amplicon,analysis,annotate,collapse,demux,graph,preqc}/*.json; do
           relative_f=$(realpath --relative-to={{ .PIPELINE_RESULTS_DIR }}/pixelator "$f");
@@ -74,7 +88,7 @@ tasks:
           cp "$f" "{{ .TEST_ASSETS_DIR }}/${relative_f}";
         done
 #      - task: remove-pipeline-run
-#        vars: { PIPELINE_RESULTS_DIR: "{{ .PIPELINE_ROOT }}/tmp" }
+#        vars: { PIPELINE_RESULTS_DIR: "{{ .PIPELINE_SOURCE_DIR }}/tmp" }
 
   update-report-test-data:
     desc: >-
@@ -87,7 +101,7 @@ tasks:
       into the test/report/assets folder. The remaining results are removed.
       Note that the pipeline is run inside the pipeline source directory to allow -resume to work.
 
-      The pipeline root directory can be set using the `PIPELINE_ROOT` environment variable.
+      The pipeline root directory can be set using the `PIPELINE_SOURCE_DIR` environment variable.
       The default is to use the `../nf-core-pixelator` directory.
       If this directory does not exist, it will be cloned from the nf-core/pixelator repository.
 
@@ -95,43 +109,20 @@ tasks:
     dir: "{{ .USER_WORKING_DIR }}"
     vars:
       RESUME: "{{ .RESUME | default false }}"
-      PIPELINE_ROOT: '{{ .PIPELINE_ROOT | default "../nf-core-pixelator" }}'
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
       PIPELINE_BRANCH: '{{ .PIPELINE_BRANCH | default "pixelator-next" }}'
       PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "results" }}'
     requires:
       vars:
-        - PIPELINE_ROOT
+        - PIPELINE_SOURCE_DIR
     cmds:
       - task: pull-nf-core-pixelator
       - task: run-nf-core-pixelator-test-profile
       - task: copy-nf-core-pixelator-test-profile-results
         vars:
-          PIPELINE_ROOT: "{{ .PIPELINE_ROOT }}"
+          PIPELINE_SOURCE_DIR: "{{ .PIPELINE_SOURCE_DIR }}"
           PIPELINE_RESULTS_DIR: "{{ .PIPELINE_RESULTS_DIR }}"
           TEST_ASSETS_DIR: "{{ .TASKFILE_DIR }}/report/assets/reports_only"
-
-  test-nf-core-pixelator:
-    desc: >-
-      Run nf-core/pixelator and the test profile with this version of pixelator.
-    summary: |
-      Run the "pixelator-next" branch of nf-core/pixelator and the test profile with this version of pixelator.
-
-      This will clone and launch the nf-core/pixelator pipeline using the `test` profile.
-      Note that the current dev version of pixelator must be installed and available in the PATH.
-
-    dir: "{{ .USER_WORKING_DIR }}"
-    vars:
-      RESUME: '{{ .RESUME | default "false" }}'
-      BRANCH: '{{ .BRANCH | default "pixelator-next" }}'
-    cmds:
-      - task: pull-nf-core-pixelator
-        vars:
-          {
-            PIPELINE_BRANCH: "{{ .BRANCH }}",
-            PIPELINE_SOURCE_DIR: ".nf-core-pixelator-{{ .BRANCH }}",
-          }
-      - task: run-nf-core-pixelator-test-profile
-        vars: { PIPELINE_ROOT: ".nf-core-pixelator-{{ .BRANCH }}" }
 
   update-web-test-data:
     desc: >-

@@ -288,20 +288,19 @@ Run the following command to view the available tasks:
 task --list
 ```
 ```console
-task: Available tasks for this project:
-* coverage:                      Run tests using pytest and generate a coverage report.
-* format:                        Format code using black.
-* format-check:                  Check code formatting using black.
-* lint:                          Run linting using flake8 and ruff.
-* lint-flake8:                   Run linting using flake8.
-* lint-ruff:                     Run linting using ruff.
-* test:                          Run tests using pytest.
-* test-all:                      Run all tests using pytest.
-* test-nf-core-pixelator:        Run nf-core/pixelator and the test profile with this version of pixelator.
-* test-web:                      Run web tests using pytest.
-* test-workflow:                 Run workflow tests using pytest.
-* typecheck:                     Run type checking using mypy.
-* update-report-test-data:       Update the report test data using the nf-core/pixelator test profile.
+* coverage:                            Run tests using pytest and generate a coverage report.
+* format:                              Format code using black.
+* format-check:                        Check code formatting using ruff.
+* lint:                                Run linting using ruff.
+* test:                                Run tests using pytest with the default flags defined in pyproject.toml.
+* test-all:                            Run all tests using pytest.
+* test-nf-core-pixelator:              Run the default nf-core/pixelator test profile with this version of pixelator.
+* test-web:                            Run web tests using pytest.
+* test-workflow:                       Run workflow tests using pytest.
+* test-workflow-external:              Run external workflow tests using pytest.
+* typecheck:                           Run type checking using mypy.
+* tests:update-report-test-data:       Update the report test data using the nf-core/pixelator test profile.
+* tests:update-web-test-data:          Create web test data.
 ```
 
 View more detailed documentation for a specific task:
@@ -312,14 +311,22 @@ task test-nf-core-pixelator --summary
 ```console
 task: test-nf-core-pixelator
 
-Run the "pixelator-next" branch of nf-core/pixelator and the test profile with this version of pixelator.
+Run the default nf-core/pixelator test profile with this version of pixelator.
 
-This will clone and launch the nf-core/pixelator pipeline using the `test` profile.
+If the pipeline is not found in the directory `PIPELINE_SOURCE_DIR`, it will be cloned
+from the PixelgenTechnologies/nf-core-pixelator repository using the `PIPELINE_BRANCH` branch.
+By default the "pixelator-next" branch of nf-core-pixelator will be used.
+
+If the `PIPELINE_SOURCE_DIR` exists this task will assume that the pipeline is already present and checked out
+in the right branch.
+
 Note that the current dev version of pixelator must be installed and available in the PATH.
 
+If the `RESUME` environment variable is set to "true", the pipeline will be resumed if it was previously run.
+
 commands:
- - Task: pull-nf-core-pixelator
- - Task: run-nf-core-pixelator-test-profile
+ - Task: tests:pull-nf-core-pixelator
+ - Task: tests:run-nf-core-pixelator-test-profile
 ```
 
 Some commands have confirmation prompts for potentially dangerous actions such as deleting files.

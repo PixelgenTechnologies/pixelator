@@ -2,8 +2,8 @@
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
-import json
 
+import json
 import pytest
 
 from pixelator.report.common.json_encoder import PixelatorJSONEncoder
