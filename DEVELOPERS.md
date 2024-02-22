@@ -290,7 +290,7 @@ task --list
 ```console
 * coverage:                            Run tests using pytest and generate a coverage report.
 * format:                              Format code using black.
-* format-check:                        Check code formatting using black.
+* format-check:                        Check code formatting using ruff.
 * lint:                                Run linting using ruff.
 * test:                                Run tests using pytest with the default flags defined in pyproject.toml.
 * test-all:                            Run all tests using pytest.
