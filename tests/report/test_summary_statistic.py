@@ -2,6 +2,7 @@
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
+
 from pixelator.report.models import SummaryStatistics
 
 
