@@ -23,8 +23,8 @@ if typing.TYPE_CHECKING:
     from pixelator.report import PixelatorWorkdir
 
 
-def components_umap_data(adata: AnnData) -> str:
-    """Create a csv formatted string with the components umap data for the webreport.
+def collect_components_umap_data(adata: AnnData) -> str:
+    """Create a csv formatted string with the components umap data for the qc report.
 
     :param adata: an AnnData object with the umap data (obs)
     :return: a csv formatted string with umap data
@@ -54,8 +54,8 @@ def components_umap_data(adata: AnnData) -> str:
     return umap_df.to_csv(index=True, index_label="component")
 
 
-def antibody_percentages_data(adata: AnnData) -> str:
-    """Create the antibody percentages histogram data for the webreport.
+def collect_antibody_percentages_data(adata: AnnData) -> str:
+    """Create the antibody percentages histogram data for the qc report.
 
     This function created a csv formatted string with the antibody name and the
     percentage of the antibody aggregated over all components.
@@ -69,8 +69,8 @@ def antibody_percentages_data(adata: AnnData) -> str:
     return df.to_csv()
 
 
-def antibody_counts_data(adata: AnnData) -> str:
-    """Create the antibody counts data for the webreport.
+def collect_antibody_counts_data(adata: AnnData) -> str:
+    """Create the antibody counts data for the qc report.
 
     :param adata: an AnnData object with the antibody counts data
     :return: a csv formatted string with the antibody counts data
@@ -79,7 +79,9 @@ def antibody_counts_data(adata: AnnData) -> str:
     return adata.to_df().to_csv(index=True, index_label="component")
 
 
-def component_ranked_component_size_data(components_metrics: pd.DataFrame) -> str:
+def collect_component_ranked_component_size_data(
+    components_metrics: pd.DataFrame,
+) -> str:
     """Create data for the `cell calling` and `component size distribution` plot.
 
     This collects the component size and the number of antibodies per component.
@@ -99,7 +101,7 @@ def component_ranked_component_size_data(components_metrics: pd.DataFrame) -> st
     return df.to_csv(index=True)
 
 
-def collect_reads_per_umi_frequency(dataset: PixelDataset) -> str:
+def collect_reads_per_molecule_frequency(dataset: PixelDataset) -> str:
     """Create a frequency table for the edge list "count" column.
 
     :param dataset: The PixelDataset object
@@ -108,23 +110,23 @@ def collect_reads_per_umi_frequency(dataset: PixelDataset) -> str:
     """
     freq = (
         dataset.edgelist_lazy.select(
-            pl.col("count").alias("reads_per_umi").value_counts(sort=True)
+            pl.col("count").alias("reads_per_molecule").value_counts(sort=True)
         )
-        .unnest("reads_per_umi")
+        .unnest("reads_per_molecule")
         .collect()
     )
 
     freq = freq.with_columns(
-        pl.col("reads_per_umi"),
+        pl.col("reads_per_molecule"),
         frequency=pl.col("count") / pl.col("count").sum(),
     )
-    pd_freq = freq.sort(by="reads_per_umi").to_pandas()
+    pd_freq = freq.sort(by="reads_per_molecule").to_pandas()
 
     return pd_freq.to_csv(index=False)
 
 
 def collect_report_data(workdir: PixelatorWorkdir, sample_id: str) -> QCReportData:
-    """Collect the data needed to generate figures in the webreport.
+    """Collect the data needed to generate figures in the qc report.
 
     The `annotate` folder must be present in `input_path`.
 
@@ -140,17 +142,17 @@ def collect_report_data(workdir: PixelatorWorkdir, sample_id: str) -> QCReportDa
     dataset_file = workdir.filtered_dataset(sample_id)
     dataset = PixelDataset.from_file(dataset_file)
     adata = dataset.adata
-    component_data = components_umap_data(adata)
-    antibody_percentages = antibody_percentages_data(adata)
-    antibody_counts = antibody_counts_data(adata)
+    component_data = collect_components_umap_data(adata)
+    antibody_percentages = collect_antibody_percentages_data(adata)
+    antibody_counts = collect_antibody_counts_data(adata)
 
     # parse raw components metrics
     metrics_file = workdir.raw_component_metrics(sample_id)
     raw_components_metrics = pd.read_csv(metrics_file)
-    ranked_component_size_data = component_ranked_component_size_data(
+    ranked_component_size_data = collect_component_ranked_component_size_data(
         raw_components_metrics
     )
-    reads_per_umi_frequency_data = collect_reads_per_umi_frequency(dataset)
+    reads_per_molecule_frequency_data = collect_reads_per_molecule_frequency(dataset)
 
     # build the report data
     data = QCReportData(
@@ -160,7 +162,7 @@ def collect_report_data(workdir: PixelatorWorkdir, sample_id: str) -> QCReportDa
         sequencing_saturation=None,
         antibody_percentages=antibody_percentages,
         antibody_counts=antibody_counts,
-        reads_per_umi_frequency=reads_per_umi_frequency_data,
+        reads_per_molecule_frequency=reads_per_molecule_frequency_data,
     )
 
     logger.debug("QC report data collected for %s in %s", sample_id, workdir.basedir)

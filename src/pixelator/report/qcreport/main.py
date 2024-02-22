@@ -19,8 +19,6 @@ from pixelator.report.qcreport.types import Metrics, SampleInfo
 
 logger = logging.getLogger("pixelator.report")
 
-DEFAULT_METRICS_DEFINITION_FILE = Path(__file__).parent / "webreport/metrics.json"
-
 
 def create_dynamic_report(
     reporting: PixelatorReporting,

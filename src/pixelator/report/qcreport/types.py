@@ -325,6 +325,7 @@ class QCReportData:
     #: It consists of a frequency table with absolute and relative counts for the
     #: "count" field of the edgelist
     #: ```
+    #: reads_per_molecule,count,frequency
     #: 2, 667338, 0.143356
     #: 3, 675999, 0.145216
     #: 4, 645161, 0.138592
@@ -336,4 +337,4 @@ class QCReportData:
     #: 10, 176052, 0.037819
     #: 11, 130251, 0.02798
     #: ```
-    reads_per_umi_frequency: Optional[str]
+    reads_per_molecule_frequency: Optional[str]
