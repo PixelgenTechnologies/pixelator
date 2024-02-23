@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * The output name of the `.pxl` file from the `analysis` step is now `*.analysis.dataset.pxl`
 * The term `edges` in `metrics` and `adata` is now replaced with `molecules`.
 * Renaming of variables in per-stage JSON reports.
+* Changed name of TCRb to TCRVb5 antibody in human-immunology-panel file and bumped to version 0.5.0.
 
 ### Fixed
 
