@@ -10,7 +10,7 @@
         "-e",
         "0.1",
         "--adapter",
-        "file:/tmp/tmpc2v8_h6q.fa",
+        "file:/tmp/tmp1so5hbr_.fa",
         "--cores",
         "0",
         "--action=none",
@@ -800,7 +800,7 @@
             }
         },
         {
-            "name": "TCRb",
+            "name": "TCRVb5",
             "total_matches": 339,
             "on_reverse_complement": null,
             "linked": false,

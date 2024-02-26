@@ -30,7 +30,7 @@
     },
     "molecule_count_per_a_pixel_stats": {
         "mean": 1.002924926876828,
-        "std": 0.05400344136805809,
+        "std": 0.05400344136805808,
         "min": 1.0,
         "q1": 1.0,
         "q2": 1.0,
@@ -39,7 +39,7 @@
         "count": 3077,
         "iqr": 0.0
     },
-    "components_modularity": 0.999668815620027,
+    "components_modularity": 0.9996688156200269,
     "fraction_molecules_in_largest_component": 0.0006480881399870382,
     "fraction_pixels_in_largest_component": 0.0004888381945576015,
     "a_pixel_b_pixel_ratio": 1.0055555555555555,

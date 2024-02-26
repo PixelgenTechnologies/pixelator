@@ -315,7 +315,7 @@
         "pbmcs_unstimulated":3881,
         "uropod_control":8231
     },
-    "read_counts_TCRb":{
+    "read_counts_TCRVb5":{
         "pbmcs_unstimulated":387,
         "uropod_control":339
     },
@@ -635,7 +635,7 @@
         "pbmcs_unstimulated":0.0229949756,
         "uropod_control":0.0327294561
     },
-    "read_count_fraction_TCRb":{
+    "read_count_fraction_TCRVb5":{
         "pbmcs_unstimulated":0.00229298,
         "uropod_control":0.0013479876
     },

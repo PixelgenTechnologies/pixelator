@@ -14,5 +14,41 @@
     "fraction_duplicate_reads":{
         "pbmcs_unstimulated":0.5052108385,
         "uropod_control":0.5040039423
+    },
+    "collapsed_molecule_count_mean":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "collapsed_molecule_count_std":{
+        "pbmcs_unstimulated":0.0,
+        "uropod_control":0.0
+    },
+    "collapsed_molecule_count_min":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "collapsed_molecule_count_q1":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "collapsed_molecule_count_q2":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "collapsed_molecule_count_q3":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "collapsed_molecule_count_max":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "collapsed_molecule_count_count":{
+        "pbmcs_unstimulated":3086,
+        "uropod_control":4026
+    },
+    "collapsed_molecule_count_iqr":{
+        "pbmcs_unstimulated":0.0,
+        "uropod_control":0.0
     }
 }

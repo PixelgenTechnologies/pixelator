@@ -162,6 +162,9 @@ class PixelatorReporting:
         reports = self.workdir.single_cell_report(SingleCellStage.DEMUX)
         df = self._combine_data(reports, DemuxSampleReport)
 
+        # We do not use _explode_json_columns here because the
+        # keys naming is different here
+
         # Extract the dict column from the dataframe and expand each key
         # into a new column
         read_dict = pd.json_normalize(df["per_antibody_read_counts"])
@@ -197,8 +200,8 @@ class PixelatorReporting:
         reports = self.workdir.single_cell_report(SingleCellStage.COLLAPSE)
         df = self._combine_data(reports, CollapseSampleReport)
 
-        keys_to_explode = {"collapsed_molecule_count_stats"}
-        new_df = self._explode_json_columns(df, keys_to_explode)
+        keys_to_explode = ["collapsed_molecule_count_stats"]
+        df = self._explode_json_columns(df, keys_to_explode)
         return df
 
     def graph_metrics(self, sample_name: str) -> GraphSampleReport:
@@ -215,13 +218,13 @@ class PixelatorReporting:
 
         # Extract the dict column from the dataframe and expand each key
         # into a new column
-        keys_to_explode = {
+        keys_to_explode = [
             "read_count_per_molecule_stats",
             "molecule_count_per_a_pixel_stats",
             "b_pixel_count_per_a_pixel_stats",
-        }
+        ]
 
-        new_df = self._explode_json_columns(df, keys_to_explode)
+        df = self._explode_json_columns(df, keys_to_explode)
         return df
 
     def annotate_metrics(self, sample_name: str) -> AnnotateSampleReport:
@@ -236,7 +239,7 @@ class PixelatorReporting:
         reports = self.workdir.single_cell_report(SingleCellStage.ANNOTATE)
         df = self._combine_data(reports, AnnotateSampleReport)
 
-        keys_to_explode = {
+        keys_to_explode = [
             "molecule_count_per_cell_stats",
             "read_count_per_cell_stats",
             "a_pixel_count_per_cell_stats",
@@ -246,10 +249,10 @@ class PixelatorReporting:
             "molecule_count_per_a_pixel_stats",
             "b_pixel_count_per_a_pixel_stats",
             "a_pixel_count_per_b_pixel_stats",
-        }
+        ]
 
-        new_df = self._explode_json_columns(df, keys_to_explode)
-        return new_df
+        df = self._explode_json_columns(df, keys_to_explode)
+        return df
 
     def analysis_metrics(self, sample_name: str) -> AnalysisSampleReport:
         """Return the analysis metrics for a sample."""
@@ -262,22 +265,8 @@ class PixelatorReporting:
         """Combine graph metrics for all samples into a single dataframe."""
         reports = self.workdir.single_cell_report(SingleCellStage.ANALYSIS)
         df = self._combine_data(reports, AnalysisSampleReport)
-
-        # Extract the dict column from the dataframe and expand each key
-        # into a new column
-        polarization_dict = pd.json_normalize(df["polarization"])
-        polarization_dict.set_index(df.index, inplace=True)
-
-        colocalization_dict = pd.json_normalize(df["colocalization"])
-        polarization_dict.set_index(df.index, inplace=True)
-
-        # Merge the exploded dict into the original dataframe and drop the dict column
-        df.drop("polarization", axis="columns", inplace=True)
-        df.drop("colocalization", axis="columns", inplace=True)
-
-        df = pd.concat(
-            (df, polarization_dict, colocalization_dict), join="inner", axis="columns"
-        )
+        keys_to_explode = ["polarization", "colocalization"]
+        df = self._explode_json_columns(df, keys_to_explode)
         return df
 
     def reads_flow(self, sample_name: str) -> ReadsDataflowReport:

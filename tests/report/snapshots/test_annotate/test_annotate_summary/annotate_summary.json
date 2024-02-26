@@ -95,111 +95,39 @@
         "pbmcs_unstimulated":1.0,
         "uropod_control":1.0
     },
-    "marker_count_per_cell_mean":{
-        "pbmcs_unstimulated":1.0075360419,
-        "uropod_control":1.0136260409
+    "molecule_count_per_cell_mean":{
+        "pbmcs_unstimulated":1.0111402359,
+        "uropod_control":1.0158970477
     },
-    "marker_count_per_cell_std":{
-        "pbmcs_unstimulated":0.0864826573,
-        "uropod_control":0.1180891192
+    "molecule_count_per_cell_std":{
+        "pbmcs_unstimulated":0.1049577584,
+        "uropod_control":0.1309898321
     },
-    "marker_count_per_cell_min":{
+    "molecule_count_per_cell_min":{
         "pbmcs_unstimulated":1.0,
         "uropod_control":1.0
     },
-    "marker_count_per_cell_q1":{
+    "molecule_count_per_cell_q1":{
         "pbmcs_unstimulated":1.0,
         "uropod_control":1.0
     },
-    "marker_count_per_cell_q2":{
+    "molecule_count_per_cell_q2":{
         "pbmcs_unstimulated":1.0,
         "uropod_control":1.0
     },
-    "marker_count_per_cell_q3":{
+    "molecule_count_per_cell_q3":{
         "pbmcs_unstimulated":1.0,
         "uropod_control":1.0
     },
-    "marker_count_per_cell_max":{
+    "molecule_count_per_cell_max":{
         "pbmcs_unstimulated":2.0,
         "uropod_control":3.0
     },
-    "marker_count_per_cell_count":{
+    "molecule_count_per_cell_count":{
         "pbmcs_unstimulated":3052,
         "uropod_control":3963
     },
-    "marker_count_per_cell_iqr":{
-        "pbmcs_unstimulated":0.0,
-        "uropod_control":0.0
-    },
-    "a_pixel_count_per_b_pixel_mean":{
-        "pbmcs_unstimulated":1.0081699346,
-        "uropod_control":1.0082872928
-    },
-    "a_pixel_count_per_b_pixel_std":{
-        "pbmcs_unstimulated":0.0900177028,
-        "uropod_control":0.0933856186
-    },
-    "a_pixel_count_per_b_pixel_min":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "a_pixel_count_per_b_pixel_q1":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "a_pixel_count_per_b_pixel_q2":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "a_pixel_count_per_b_pixel_q3":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "a_pixel_count_per_b_pixel_max":{
-        "pbmcs_unstimulated":2.0,
-        "uropod_control":3.0
-    },
-    "a_pixel_count_per_b_pixel_count":{
-        "pbmcs_unstimulated":3060,
-        "uropod_control":3982
-    },
-    "a_pixel_count_per_b_pixel_iqr":{
-        "pbmcs_unstimulated":0.0,
-        "uropod_control":0.0
-    },
-    "b_pixel_count_per_cell_mean":{
-        "pbmcs_unstimulated":1.002621232,
-        "uropod_control":1.0047943477
-    },
-    "b_pixel_count_per_cell_std":{
-        "pbmcs_unstimulated":0.0511308236,
-        "uropod_control":0.0690750458
-    },
-    "b_pixel_count_per_cell_min":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "b_pixel_count_per_cell_q1":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "b_pixel_count_per_cell_q2":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "b_pixel_count_per_cell_q3":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "b_pixel_count_per_cell_max":{
-        "pbmcs_unstimulated":2.0,
-        "uropod_control":2.0
-    },
-    "b_pixel_count_per_cell_count":{
-        "pbmcs_unstimulated":3052,
-        "uropod_control":3963
-    },
-    "b_pixel_count_per_cell_iqr":{
+    "molecule_count_per_cell_iqr":{
         "pbmcs_unstimulated":0.0,
         "uropod_control":0.0
     },
@@ -239,42 +167,6 @@
         "pbmcs_unstimulated":0.0,
         "uropod_control":0.0
     },
-    "a_pixel_b_pixel_ratio_per_cell_mean":{
-        "pbmcs_unstimulated":1.0068807339,
-        "uropod_control":1.0058036841
-    },
-    "a_pixel_b_pixel_ratio_per_cell_std":{
-        "pbmcs_unstimulated":0.0938046557,
-        "uropod_control":0.0983929862
-    },
-    "a_pixel_b_pixel_ratio_per_cell_min":{
-        "pbmcs_unstimulated":0.5,
-        "uropod_control":0.5
-    },
-    "a_pixel_b_pixel_ratio_per_cell_q1":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "a_pixel_b_pixel_ratio_per_cell_q2":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "a_pixel_b_pixel_ratio_per_cell_q3":{
-        "pbmcs_unstimulated":1.0,
-        "uropod_control":1.0
-    },
-    "a_pixel_b_pixel_ratio_per_cell_max":{
-        "pbmcs_unstimulated":2.0,
-        "uropod_control":3.0
-    },
-    "a_pixel_b_pixel_ratio_per_cell_count":{
-        "pbmcs_unstimulated":3052,
-        "uropod_control":3963
-    },
-    "a_pixel_b_pixel_ratio_per_cell_iqr":{
-        "pbmcs_unstimulated":0.0,
-        "uropod_control":0.0
-    },
     "a_pixel_count_per_cell_mean":{
         "pbmcs_unstimulated":1.0081913499,
         "uropod_control":1.008327025
@@ -311,39 +203,147 @@
         "pbmcs_unstimulated":0.0,
         "uropod_control":0.0
     },
-    "molecule_count_per_cell_mean":{
-        "pbmcs_unstimulated":1.0111402359,
-        "uropod_control":1.0158970477
+    "b_pixel_count_per_cell_mean":{
+        "pbmcs_unstimulated":1.002621232,
+        "uropod_control":1.0047943477
     },
-    "molecule_count_per_cell_std":{
-        "pbmcs_unstimulated":0.1049577584,
-        "uropod_control":0.1309898321
+    "b_pixel_count_per_cell_std":{
+        "pbmcs_unstimulated":0.0511308236,
+        "uropod_control":0.0690750458
     },
-    "molecule_count_per_cell_min":{
+    "b_pixel_count_per_cell_min":{
         "pbmcs_unstimulated":1.0,
         "uropod_control":1.0
     },
-    "molecule_count_per_cell_q1":{
+    "b_pixel_count_per_cell_q1":{
         "pbmcs_unstimulated":1.0,
         "uropod_control":1.0
     },
-    "molecule_count_per_cell_q2":{
+    "b_pixel_count_per_cell_q2":{
         "pbmcs_unstimulated":1.0,
         "uropod_control":1.0
     },
-    "molecule_count_per_cell_q3":{
+    "b_pixel_count_per_cell_q3":{
         "pbmcs_unstimulated":1.0,
         "uropod_control":1.0
     },
-    "molecule_count_per_cell_max":{
+    "b_pixel_count_per_cell_max":{
         "pbmcs_unstimulated":2.0,
-        "uropod_control":3.0
+        "uropod_control":2.0
     },
-    "molecule_count_per_cell_count":{
+    "b_pixel_count_per_cell_count":{
         "pbmcs_unstimulated":3052,
         "uropod_control":3963
     },
-    "molecule_count_per_cell_iqr":{
+    "b_pixel_count_per_cell_iqr":{
+        "pbmcs_unstimulated":0.0,
+        "uropod_control":0.0
+    },
+    "marker_count_per_cell_mean":{
+        "pbmcs_unstimulated":1.0075360419,
+        "uropod_control":1.0136260409
+    },
+    "marker_count_per_cell_std":{
+        "pbmcs_unstimulated":0.0864826573,
+        "uropod_control":0.1180891192
+    },
+    "marker_count_per_cell_min":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "marker_count_per_cell_q1":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "marker_count_per_cell_q2":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "marker_count_per_cell_q3":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "marker_count_per_cell_max":{
+        "pbmcs_unstimulated":2.0,
+        "uropod_control":3.0
+    },
+    "marker_count_per_cell_count":{
+        "pbmcs_unstimulated":3052,
+        "uropod_control":3963
+    },
+    "marker_count_per_cell_iqr":{
+        "pbmcs_unstimulated":0.0,
+        "uropod_control":0.0
+    },
+    "a_pixel_b_pixel_ratio_per_cell_mean":{
+        "pbmcs_unstimulated":1.0068807339,
+        "uropod_control":1.0058036841
+    },
+    "a_pixel_b_pixel_ratio_per_cell_std":{
+        "pbmcs_unstimulated":0.0938046557,
+        "uropod_control":0.0983929862
+    },
+    "a_pixel_b_pixel_ratio_per_cell_min":{
+        "pbmcs_unstimulated":0.5,
+        "uropod_control":0.5
+    },
+    "a_pixel_b_pixel_ratio_per_cell_q1":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "a_pixel_b_pixel_ratio_per_cell_q2":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "a_pixel_b_pixel_ratio_per_cell_q3":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "a_pixel_b_pixel_ratio_per_cell_max":{
+        "pbmcs_unstimulated":2.0,
+        "uropod_control":3.0
+    },
+    "a_pixel_b_pixel_ratio_per_cell_count":{
+        "pbmcs_unstimulated":3052,
+        "uropod_control":3963
+    },
+    "a_pixel_b_pixel_ratio_per_cell_iqr":{
+        "pbmcs_unstimulated":0.0,
+        "uropod_control":0.0
+    },
+    "molecule_count_per_a_pixel_mean":{
+        "pbmcs_unstimulated":2.0269743256,
+        "uropod_control":2.0312812813
+    },
+    "molecule_count_per_a_pixel_std":{
+        "pbmcs_unstimulated":0.1809600754,
+        "uropod_control":0.2254401988
+    },
+    "molecule_count_per_a_pixel_min":{
+        "pbmcs_unstimulated":2.0,
+        "uropod_control":2.0
+    },
+    "molecule_count_per_a_pixel_q1":{
+        "pbmcs_unstimulated":2.0,
+        "uropod_control":2.0
+    },
+    "molecule_count_per_a_pixel_q2":{
+        "pbmcs_unstimulated":2.0,
+        "uropod_control":2.0
+    },
+    "molecule_count_per_a_pixel_q3":{
+        "pbmcs_unstimulated":2.0,
+        "uropod_control":2.0
+    },
+    "molecule_count_per_a_pixel_max":{
+        "pbmcs_unstimulated":4.0,
+        "uropod_control":7.0
+    },
+    "molecule_count_per_a_pixel_count":{
+        "pbmcs_unstimulated":3077,
+        "uropod_control":3996
+    },
+    "molecule_count_per_a_pixel_iqr":{
         "pbmcs_unstimulated":0.0,
         "uropod_control":0.0
     },
@@ -383,39 +383,39 @@
         "pbmcs_unstimulated":0.0,
         "uropod_control":0.0
     },
-    "molecule_count_per_a_pixel_mean":{
-        "pbmcs_unstimulated":2.0269743256,
-        "uropod_control":2.0312812813
+    "a_pixel_count_per_b_pixel_mean":{
+        "pbmcs_unstimulated":1.0081699346,
+        "uropod_control":1.0082872928
     },
-    "molecule_count_per_a_pixel_std":{
-        "pbmcs_unstimulated":0.1809600754,
-        "uropod_control":0.2254401988
+    "a_pixel_count_per_b_pixel_std":{
+        "pbmcs_unstimulated":0.0900177028,
+        "uropod_control":0.0933856186
     },
-    "molecule_count_per_a_pixel_min":{
+    "a_pixel_count_per_b_pixel_min":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "a_pixel_count_per_b_pixel_q1":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "a_pixel_count_per_b_pixel_q2":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "a_pixel_count_per_b_pixel_q3":{
+        "pbmcs_unstimulated":1.0,
+        "uropod_control":1.0
+    },
+    "a_pixel_count_per_b_pixel_max":{
         "pbmcs_unstimulated":2.0,
-        "uropod_control":2.0
+        "uropod_control":3.0
     },
-    "molecule_count_per_a_pixel_q1":{
-        "pbmcs_unstimulated":2.0,
-        "uropod_control":2.0
+    "a_pixel_count_per_b_pixel_count":{
+        "pbmcs_unstimulated":3060,
+        "uropod_control":3982
     },
-    "molecule_count_per_a_pixel_q2":{
-        "pbmcs_unstimulated":2.0,
-        "uropod_control":2.0
-    },
-    "molecule_count_per_a_pixel_q3":{
-        "pbmcs_unstimulated":2.0,
-        "uropod_control":2.0
-    },
-    "molecule_count_per_a_pixel_max":{
-        "pbmcs_unstimulated":4.0,
-        "uropod_control":7.0
-    },
-    "molecule_count_per_a_pixel_count":{
-        "pbmcs_unstimulated":3077,
-        "uropod_control":3996
-    },
-    "molecule_count_per_a_pixel_iqr":{
+    "a_pixel_count_per_b_pixel_iqr":{
         "pbmcs_unstimulated":0.0,
         "uropod_control":0.0
     }
