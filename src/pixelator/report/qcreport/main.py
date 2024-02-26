@@ -100,7 +100,7 @@ def create_dynamic_report(
             annotate_metrics.a_pixel_count_per_cell_stats.mean
         ),
         average_umis_per_upia=round(
-            annotate_metrics.molecule_count_per_a_pixel_per_cell_stats.mean
+            annotate_metrics.molecule_count_per_a_pixel_stats.mean
         ),
         fraction_reads_in_cells=reads_flow.fraction_reads_in_cells,
         fraction_discarded_umis=molecules_flow.fraction_molecules_discarded,

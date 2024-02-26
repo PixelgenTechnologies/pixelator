@@ -49,8 +49,20 @@ def collect_components_umap_data(adata: AnnData) -> str:
     else:
         umap_df["cluster_cell_class"] = np.full(adata.n_obs, "unknown")
 
-    umap_df["molecules"] = adata.obs["molecules"].to_numpy()
-
+    umap_df = pd.concat(
+        [
+            umap_df,
+            adata.obs[["reads", "molecules", "mean_upia_degree", "mean_umi_per_upia"]],
+        ],
+        axis=1,
+    )
+    umap_df.rename(
+        columns={
+            "mean_upia_degree": "mean_b_pixel_count_per_a_pixel",
+            "mean_umi_per_upia": "mean_read_count_per_a_pixel",
+        },
+        inplace=True,
+    )
     return umap_df.to_csv(index=True, index_label="component")
 
 
@@ -65,7 +77,10 @@ def collect_antibody_percentages_data(adata: AnnData) -> str:
     :rtype: str
     """
     index = adata.var.index.set_names("antibody", inplace=False)
-    df = pd.DataFrame({"percentage": adata.var["antibody_pct"]}, index=index)
+    df = pd.DataFrame(
+        {"count": adata.var["antibody_count"], "percentage": adata.var["antibody_pct"]},
+        index=index,
+    )
     return df.to_csv()
 
 

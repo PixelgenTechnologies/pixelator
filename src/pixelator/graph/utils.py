@@ -246,6 +246,7 @@ class EdgelistMetrics(typing.TypedDict, total=True):
 
     read_count_per_molecule_stats: SummaryStatistics
     b_pixel_count_per_a_pixel_stats: SummaryStatistics
+    a_pixel_count_per_b_pixel_stats: SummaryStatistics
     molecule_count_per_a_pixel_stats: SummaryStatistics
 
     components_modularity: float
@@ -303,6 +304,9 @@ def _edgelist_metrics_pandas_data_frame(
     metrics["b_pixel_count_per_a_pixel_stats"] = SummaryStatistics.from_series(
         edgelist.groupby("upia", observed=True)["upib"].nunique()
     )
+    metrics["a_pixel_count_per_b_pixel_stats"] = SummaryStatistics.from_series(
+        edgelist.groupby("upib", observed=True)["upia"].nunique()
+    )
     metrics["molecule_count_per_a_pixel_stats"] = SummaryStatistics.from_series(
         edgelist.groupby("upia", observed=True)["count"].sum()
     )
@@ -337,14 +341,24 @@ def _edgelist_metrics_lazy_frame(
         counts_per_molecule
     )
 
-    upia_degree = (
+    upia_to_b_degree = (
         edgelist.group_by(pl.col("upia"))
         .agg(pl.n_unique("upib"))
         .drop("upia")
         .collect()["upib"]
     )
     metrics["b_pixel_count_per_a_pixel_stats"] = SummaryStatistics.from_series(
-        upia_degree
+        upia_to_b_degree
+    )
+
+    upib_to_a_degree = (
+        edgelist.group_by(pl.col("upib"))
+        .agg(pl.n_unique("upia"))
+        .drop("upib")
+        .collect()["upia"]
+    )
+    metrics["a_pixel_count_per_b_pixel_stats"] = SummaryStatistics.from_series(
+        upib_to_a_degree
     )
 
     umi_degree = (

@@ -6,7 +6,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 from __future__ import annotations
 
 from typing import Optional
-
+import textwrap
 import pydantic
 
 from pixelator.report.models.base import SampleReport
@@ -99,11 +99,15 @@ class AnnotateSampleReport(SampleReport):
         description="Summary statistics for the number of B-pixels per A-pixel in cell components.",
     )
 
-    molecule_count_per_a_pixel_per_cell_stats: SummaryStatistics = pydantic.Field(
+    molecule_count_per_a_pixel_stats: SummaryStatistics = pydantic.Field(
         description="Summary statistics for the number of molecules per A-pixel in cell components.",
     )
 
-    b_pixel_count_per_a_pixel_per_cell_stats: SummaryStatistics = pydantic.Field(
+    a_pixel_count_per_b_pixel_stats: SummaryStatistics = pydantic.Field(
+        description="Summary statistics for the number of A-pixels per B-pixel in cell components.",
+    )
+
+    b_pixel_count_per_a_pixel_stats: SummaryStatistics = pydantic.Field(
         description="Summary statistics for the number of B-pixels per A-pixel in cell components.",
     )
 
@@ -123,9 +127,16 @@ class AnnotateSampleReport(SampleReport):
         description="The total number of reads for unique molecules in aggregates."
     )
 
-    @pydantic.computed_field(return_type=float)
+    @pydantic.computed_field(
+        return_type=float,
+        description=textwrap.dedent(
+            """The fraction of reads in the aggregate or
+            None if aggregate recovery was disabled.
+            """
+        ),
+    )
     def fraction_reads_in_aggregates(self) -> float | None:
-        """Return the fraction of molecules (edges) in the aggregate.
+        """Return the fraction of reads in the aggregate.
 
         Returns None if no aggregate recovery was disabled during analysis.
         """
@@ -133,7 +144,14 @@ class AnnotateSampleReport(SampleReport):
             return self.reads_in_aggregates_count / self.read_count
         return None
 
-    @pydantic.computed_field(return_type=float)
+    @pydantic.computed_field(
+        return_type=float,
+        description=textwrap.dedent(
+            """The fraction of molecules in the aggregate or
+            None if aggregate recovery was disabled.
+            """
+        ),
+    )
     def fraction_molecules_in_aggregates(self) -> float | None:
         """Return the fraction of molecules (edges) in the aggregate.
 
@@ -159,6 +177,14 @@ class AnnotateSampleReport(SampleReport):
         description="The doublet size threshold used for filtering components."
     )
 
-    size_filter_fail_cell_count: int
-    size_filter_fail_molecule_count: int
-    size_filter_fail_read_count: int
+    size_filter_fail_cell_count: int = pydantic.Field(
+        description="The number of cells that do NOT pass the component size filters."
+    )
+
+    size_filter_fail_molecule_count: int = pydantic.Field(
+        description="The number of molecules in components that do NOT pass the component size filters."
+    )
+
+    size_filter_fail_read_count: int = pydantic.Field(
+        description="The number of reads in components that do NOT pass the component size filters."
+    )

@@ -245,10 +245,13 @@ def annotate_components(
         marker_count=edgelist_metrics_dict["marker_count"],
         a_pixel_count=edgelist_metrics_dict["a_pixel_count"],
         b_pixel_count=edgelist_metrics_dict["b_pixel_count"],
-        molecule_count_per_a_pixel_per_cell_stats=edgelist_metrics_dict[
+        molecule_count_per_a_pixel_stats=edgelist_metrics_dict[
             "molecule_count_per_a_pixel_stats"
         ],
-        b_pixel_count_per_a_pixel_per_cell_stats=edgelist_metrics_dict[
+        a_pixel_count_per_b_pixel_stats=edgelist_metrics_dict[
+            "a_pixel_count_per_b_pixel_stats"
+        ],
+        b_pixel_count_per_a_pixel_stats=edgelist_metrics_dict[
             "b_pixel_count_per_a_pixel_stats"
         ],
         fraction_molecules_in_largest_component=edgelist_metrics_dict[

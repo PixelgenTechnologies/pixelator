@@ -10,7 +10,7 @@
         "-e",
         "0.1",
         "--adapter",
-        "file:/tmp/tmppmw2p47o.fa",
+        "file:/tmp/tmp03cnaobl.fa",
         "--cores",
         "0",
         "--action=none",

@@ -19,7 +19,6 @@ class MoleculesDataflowReport(SampleReport):
         ...,
         description=textwrap.dedent(
             """The number of raw unique molecules in the sample.
-
             This is the number of unique molecules after deduplication of reads with
             close UPIA UPIA and UMI sequences by the collapse stage.
             """
@@ -49,13 +48,23 @@ class MoleculesDataflowReport(SampleReport):
         ),
     )
 
-    @pydantic.computed_field(return_type=float)  # type: ignore
+    @pydantic.computed_field(  # type: ignore
+        return_type=float,
+        description="Return the fraction of raw input reads in unique molecules.",
+    )
     @property
     def fraction_molecules_in_cells(self) -> float:
         """Return the fraction of raw input reads in unique molecules."""
         return self.cell_molecule_count / self.raw_molecule_count
 
-    @pydantic.computed_field(return_type=float)  # type: ignore
+    @pydantic.computed_field(  # type: ignore
+        return_type=float,
+        description=textwrap.dedent(
+            """Return the fraction of raw molecules that were discarded.
+            This is equal to: 1 - `fraction_molecules_in_cells`.
+            """
+        ),
+    )
     @property
     def fraction_molecules_discarded(self) -> float:
         """Return the fraction of raw molecules that were discarded.

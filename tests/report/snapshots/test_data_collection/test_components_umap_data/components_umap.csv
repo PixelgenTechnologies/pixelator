@@ -1,6 +1,6 @@
-component,umap1,umap2,cluster,cluster_cell_class,molecules
-PXLCMP0000412,,,,unknown,3
-PXLCMP0001232,,,,unknown,3
-PXLCMP0001264,,,,unknown,3
-PXLCMP0001790,,,,unknown,3
-PXLCMP0001902,,,,unknown,3
+component,umap1,umap2,cluster,cluster_cell_class,reads,molecules,mean_a_pixel_count_per_b_pixel,mean_read_count_per_a_pixel
+PXLCMP0000412,,,,unknown,7,3,2.0,3.0
+PXLCMP0001232,,,,unknown,6,3,1.0,1.0
+PXLCMP0001264,,,,unknown,6,3,1.0,1.0
+PXLCMP0001790,,,,unknown,6,3,1.0,1.5
+PXLCMP0001902,,,,unknown,6,3,1.5,1.5

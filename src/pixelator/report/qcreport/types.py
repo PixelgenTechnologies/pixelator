@@ -262,7 +262,7 @@ class QCReportData:
     #:  component,umap1,umap2,umis,cluster,cluster_cell_class
     #: For example:
     #: ```
-    #: component,umap1,umap2,umis,cluster,cluster_cell_class
+    #: component,umap1,umap2,umis,cluster,cluster_cell_class,reads,molecules,mean_upia_degree,mean_umi_per_upia
     #: 0,11.891996,12.216717,4793,2,other
     #: 1,11.02211,12.486254,6708,2,other
     #: 2,7.8869944,7.5836325,5031,5,predict_B-cells
