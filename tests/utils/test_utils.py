@@ -16,6 +16,9 @@ from pixelator.utils import (
     log_step_start,
     sanity_check_inputs,
 )
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
+from pixelator.utils import get_process_pool_executor
 
 
 def test_gzfile_is_empty(data_root):
@@ -144,3 +147,23 @@ def test_is_read_file_should_be_ok_when_r1_or_r2_in_dir_name():
     # not the r2 in the directory name
     file_name = "/tmp/tmp5r2eg53r/uropod_control_R1.fastq.gz"
     assert is_read_file(file_name, "r1")
+
+
+def test_get_process_pool_executor():
+    # Test with default parameters
+    executor = get_process_pool_executor()
+    assert isinstance(executor, ProcessPoolExecutor)
+    assert executor._max_workers == multiprocessing.cpu_count()
+    assert executor._mp_context == multiprocessing.get_context("spawn")
+
+    # Test with specified number of cores
+    executor = get_process_pool_executor(nbr_cores=4)
+    assert isinstance(executor, ProcessPoolExecutor)
+    assert executor._max_workers == 4
+    assert executor._mp_context == multiprocessing.get_context("spawn")
+
+    # Test set context
+    executor = get_process_pool_executor(nbr_cores=2, context="fork")
+    assert isinstance(executor, ProcessPoolExecutor)
+    assert executor._max_workers == 2
+    assert executor._mp_context == multiprocessing.get_context("fork")
