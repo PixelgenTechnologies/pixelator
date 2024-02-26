@@ -292,7 +292,7 @@ def _edgelist_metrics_pandas_data_frame(
     metrics["b_pixel_count"] = edgelist["upib"].nunique()
     metrics["marker_count"] = edgelist["marker"].nunique()
     metrics["molecule_count"] = edgelist.shape[0]
-    metrics["read_count"] = edgelist["count"].sum()
+    metrics["read_count"] = int(edgelist["count"].sum())
     metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
         edgelist["count"]
     )
@@ -326,9 +326,9 @@ def _edgelist_metrics_lazy_frame(
         pl.col("marker").n_unique(),
     ).collect()
 
-    metrics["a_pixel_count"] = unique_counts["upia"][0]
-    metrics["b_pixel_count"] = unique_counts["upib"][0]
-    metrics["marker_count"] = unique_counts["marker"][0]
+    metrics["a_pixel_count"] = int(unique_counts["upia"][0])
+    metrics["b_pixel_count"] = int(unique_counts["upib"][0])
+    metrics["marker_count"] = int(unique_counts["marker"][0])
     # Note that we get upi here and count that, because otherwise just calling count
     # here confuses polars since there is a column with that name.
     metrics["molecule_count"] = int(
