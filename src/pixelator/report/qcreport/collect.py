@@ -59,7 +59,7 @@ def collect_components_umap_data(adata: AnnData) -> str:
     umap_df.rename(
         columns={
             "mean_upia_degree": "mean_b_pixel_count_per_a_pixel",
-            "mean_umi_per_upia": "mean_read_count_per_a_pixel",
+            "mean_umi_per_upia": "mean_molecule_count_per_a_pixel",
         },
         inplace=True,
     )
