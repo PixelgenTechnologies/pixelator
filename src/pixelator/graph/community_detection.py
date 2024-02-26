@@ -170,7 +170,7 @@ def connect_components(
         sample_id=sample_name,
         **result_metrics,
     )
-    report.write_json_file(Path(metrics_file))
+    report.write_json_file(Path(metrics_file), indent=4)
 
 
 def community_detection_crossing_edges(

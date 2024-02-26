@@ -270,7 +270,7 @@ def annotate_components(
     )
 
     # save metrics (JSON)
-    report.write_json_file(Path(metrics_file))
+    report.write_json_file(Path(metrics_file), indent=4)
 
 
 def _cluster_components_using_leiden(

@@ -23,6 +23,30 @@
         "pbmcs_unstimulated":3060,
         "uropod_control":3982
     },
+    "a_pixel_count_per_b_pixel_stats":{
+        "pbmcs_unstimulated":{
+            "mean":1.0081699346,
+            "std":0.0900177028,
+            "min":1.0,
+            "q1":1.0,
+            "q2":1.0,
+            "q3":1.0,
+            "max":2.0,
+            "count":3060,
+            "iqr":0.0
+        },
+        "uropod_control":{
+            "mean":1.0082872928,
+            "std":0.0933856186,
+            "min":1.0,
+            "q1":1.0,
+            "q2":1.0,
+            "q3":1.0,
+            "max":3.0,
+            "count":3982,
+            "iqr":0.0
+        }
+    },
     "components_modularity":{
         "pbmcs_unstimulated":0.9996688156,
         "uropod_control":0.9997434707

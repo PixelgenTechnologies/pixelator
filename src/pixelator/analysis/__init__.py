@@ -147,4 +147,4 @@ def analyse_pixels(
         polarization=polarization_report if compute_polarization else None,
         colocalization=colocalization_report if compute_colocalization else None,
     )
-    report.write_json_file(metrics_file)
+    report.write_json_file(metrics_file, indent=4)
