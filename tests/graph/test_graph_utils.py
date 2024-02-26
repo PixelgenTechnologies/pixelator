@@ -2,6 +2,7 @@
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
+import json
 
 import numpy as np
 import pandas as pd
@@ -16,6 +17,7 @@ from pixelator.graph.utils import (
     edgelist_metrics,
     update_edgelist_membership,
 )
+from pixelator.report.common.json_encoder import PixelatorJSONEncoder
 from pixelator.report.models import SummaryStatistics
 
 
@@ -244,97 +246,25 @@ def test_create_node_markers_counts_with_neighbourhood_1(
     assert counts["B"].sum() == 2759
 
 
-def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
+def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame, snapshot):
     """Test generating edgelist metrics."""
     metrics = edgelist_metrics(full_graph_edgelist)
 
-    assert metrics == {
-        "a_pixel_count": 50,
-        "b_pixel_count": 50,
-        "b_pixel_count_per_a_pixel_stats": SummaryStatistics(
-            mean=50.0,
-            std=0.0,
-            min=50.0,
-            q1=50.0,
-            q2=50.0,
-            q3=50.0,
-            max=50.0,
-            count=50,
-        ),
-        "component_count": 1,
-        "components_modularity": 0.0,
-        "fraction_molecules_in_largest_component": 1.0,
-        "fraction_pixels_in_largest_component": 1.0,
-        "marker_count": 2,
-        "molecule_count": 2500,
-        "molecule_count_per_a_pixel_stats": SummaryStatistics(
-            mean=50.0,
-            std=0.0,
-            min=50.0,
-            q1=50.0,
-            q2=50.0,
-            q3=50.0,
-            max=50.0,
-            count=50,
-        ),
-        "read_count": 2500,
-        "read_count_per_molecule_stats": SummaryStatistics(
-            mean=1.0,
-            std=0.0,
-            min=1.0,
-            q1=1.0,
-            q2=1.0,
-            q3=1.0,
-            max=1.0,
-            count=2500,
-        ),
-    }
+    snapshot.assert_match(
+        json.dumps(metrics, indent=4, cls=PixelatorJSONEncoder), "edgelist_metrics.json"
+    )
 
 
-def test_edgelist_metrics_on_lazy_dataframe(full_graph_edgelist: pd.DataFrame):
+def test_edgelist_metrics_on_lazy_dataframe(
+    full_graph_edgelist: pd.DataFrame, snapshot
+):
     full_graph_edgelist = pl.DataFrame(full_graph_edgelist).lazy()
     metrics = edgelist_metrics(full_graph_edgelist)
-    assert metrics == {
-        "a_pixel_count": 50,
-        "b_pixel_count": 50,
-        "b_pixel_count_per_a_pixel_stats": SummaryStatistics(
-            mean=50.0,
-            std=0.0,
-            min=50.0,
-            q1=50.0,
-            q2=50.0,
-            q3=50.0,
-            max=50.0,
-            count=50,
-        ),
-        "component_count": 1,
-        "components_modularity": 0.0,
-        "fraction_molecules_in_largest_component": 1.0,
-        "fraction_pixels_in_largest_component": 1.0,
-        "marker_count": 2,
-        "molecule_count": 2500,
-        "molecule_count_per_a_pixel_stats": SummaryStatistics(
-            mean=50.0,
-            std=0.0,
-            min=50.0,
-            q1=50.0,
-            q2=50.0,
-            q3=50.0,
-            max=50.0,
-            count=50,
-        ),
-        "read_count": 2500,
-        "read_count_per_molecule_stats": SummaryStatistics(
-            mean=1.0,
-            std=0.0,
-            min=1.0,
-            q1=1.0,
-            q2=1.0,
-            q3=1.0,
-            max=1.0,
-            count=2500,
-        ),
-    }
+
+    snapshot.assert_match(
+        json.dumps(metrics, indent=4, cls=PixelatorJSONEncoder),
+        "edgelist_metrics_lazy.json",
+    )
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
