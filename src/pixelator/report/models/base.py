@@ -43,7 +43,7 @@ class SampleReport(pydantic.BaseModel):
         :param kwargs: Additional arguments to pass to `json.dumps`.
         :return: The report serialized to JSON as a string.
         """
-        return json.dumps(self.model_dump(mode="json"), **kwargs)
+        return json.dumps(self.model_dump(mode="json"), indent=4, **kwargs)
 
     def write_json_file(self, p: str | os.PathLike) -> None:
         """Write a JSON serialized SampleReport to a file.
