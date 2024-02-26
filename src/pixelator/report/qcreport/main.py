@@ -97,7 +97,7 @@ def create_dynamic_report(
         average_reads_per_cell=int(average_input_read_per_cell),
         average_antibody_molecules_per_cell=annotate_metrics.molecule_count_per_cell_stats.mean,
         average_upias_per_cell=round(
-            annotate_metrics.b_pixel_count_per_cell_stats.mean
+            annotate_metrics.a_pixel_count_per_cell_stats.mean
         ),
         average_umis_per_upia=round(
             annotate_metrics.molecule_count_per_a_pixel_per_cell_stats.mean
