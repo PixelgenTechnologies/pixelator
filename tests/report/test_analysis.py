@@ -44,4 +44,4 @@ def test_analysis_metrics_lookup(analysis_summary_input, sample_name, expected):
 def test_analysis_summary(analysis_summary_input, snapshot):
     reporting = PixelatorReporting(analysis_summary_input)
     result = reporting.analysis_summary()
-    snapshot.assert_match(result.to_json(indent=4), "analysis_summary.json")
+    snapshot.assert_match(result.to_csv(), "analysis_summary.csv")

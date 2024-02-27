@@ -24,4 +24,4 @@ def test_graph_metrics_lookup(graph_summary_input, sample_name, snapshot):
 def test_graph_summary(graph_summary_input, snapshot):
     reporting = PixelatorReporting(graph_summary_input)
     result = reporting.graph_summary()
-    snapshot.assert_match(result.to_json(indent=4), "graph_summary.json")
+    snapshot.assert_match(result.to_csv(), "graph_summary.csv")

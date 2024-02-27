@@ -31,13 +31,15 @@ def test_annotate_summary(annotate_summary_input, snapshot):
     reporting = PixelatorReporting(annotate_summary_input)
     result = reporting.annotate_summary()
 
-    snapshot.assert_match(result.to_json(indent=4), "annotate_summary.json")
+    snapshot.assert_match(result.to_csv(), "annotate_summary.csv")
 
 
 @pytest.mark.parametrize("sample_name", ["pbmcs_unstimulated", "uropod_control"])
 def test_annotate_no_aggregate_recovery_computed_fields(
     annotate_summary_input, sample_name
 ):
+    """Test that computed fields return None when aggregate recovery is disabled."""
+
     reporting = PixelatorReporting(annotate_summary_input)
     result = reporting.annotate_metrics(sample_name)
     result = result.model_copy(

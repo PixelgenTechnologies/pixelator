@@ -221,6 +221,7 @@ class PixelatorReporting:
         keys_to_explode = [
             "read_count_per_molecule_stats",
             "molecule_count_per_a_pixel_stats",
+            "a_pixel_count_per_b_pixel_stats",
             "b_pixel_count_per_a_pixel_stats",
         ]
 
