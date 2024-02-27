@@ -130,13 +130,13 @@ class AnnotateSampleReport(SampleReport):
     @pydantic.computed_field(
         return_type=float,
         description=textwrap.dedent(
-            """The fraction of reads in the aggregate or
+            """The fraction of reads in the aggregate outliers or
             None if aggregate recovery was disabled.
             """
         ),
     )
     def fraction_reads_in_aggregates(self) -> float | None:
-        """Return the fraction of reads in the aggregate.
+        """Return the fraction of reads in the aggregate outliers.
 
         Returns None if no aggregate recovery was disabled during analysis.
         """
@@ -147,7 +147,7 @@ class AnnotateSampleReport(SampleReport):
     @pydantic.computed_field(
         return_type=float,
         description=textwrap.dedent(
-            """The fraction of molecules in the aggregate or
+            """The fraction of molecules in the aggregate outliers or
             None if aggregate recovery was disabled.
             """
         ),
