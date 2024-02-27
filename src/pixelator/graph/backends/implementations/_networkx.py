@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import warnings
 from collections import defaultdict
+from timeit import default_timer as timer
 from typing import (
     Any,
     Dict,
@@ -26,7 +27,6 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import scipy as sp
-
 from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
@@ -409,6 +409,7 @@ class NetworkXGraphBackend(GraphBackend):
         :raises: AssertionError if the provided `layout_algorithm` is not valid
         :raises: ValueError if the provided current graph instance is empty
         """
+        start_time = timer()
         coordinates = self._layout_coordinates(
             layout_algorithm=layout_algorithm, random_seed=random_seed, **kwargs
         )
@@ -432,6 +433,11 @@ class NetworkXGraphBackend(GraphBackend):
             a_node_idx = [v.index for v in self.vs.vertices() if v["pixel_type"] == "A"]
             df = df.iloc[list(a_node_idx),]
 
+        logger.debug(
+            "Layout computation using %s took %.2f seconds",
+            layout_algorithm,
+            timer() - start_time,
+        )
         return df
 
     def get_edge_dataframe(self):
@@ -746,13 +752,21 @@ def pmds_layout(
     if seed is not None:
         np.random.seed(seed)
 
+    node_list = list(g.nodes)
+
     # Select random pivot nodes
-    pivs = np.random.choice(g.nodes, pivots, replace=False)
+    pivs = np.random.choice(node_list, pivots, replace=False)
 
     # Calculate the shortest path length from the pivots to all other nodes
-    nodelist = list(g.nodes)
-    A = nx.to_numpy_array(g, weight=None, nodelist=nodelist)
+    A = nx.to_scipy_sparse_array(g, weight=None, nodelist=node_list)
+
+    # This is a workaround for what seems to be a bug in the type of
+    # the indices of the sparse array created above
+    A.indices = A.indices.astype(np.intc, copy=False)
+    A.indptr = A.indptr.astype(np.intc, copy=False)
+
     D = sp.sparse.csgraph.shortest_path(A, directed=False, unweighted=True)
+
     D_pivs = D[:, np.where(np.isin(g.nodes, pivs))[0]]
 
     # Center values in rows and columns
@@ -765,6 +779,6 @@ def pmds_layout(
     _, _, Vh = np.linalg.svd(D_pivs_centered)
     coordinates = D_pivs_centered @ np.transpose(Vh)[:, :dim]
 
-    coordinates = {nodelist[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
+    coordinates = {node_list[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
 
     return coordinates

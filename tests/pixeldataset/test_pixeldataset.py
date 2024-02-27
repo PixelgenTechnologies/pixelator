@@ -1,41 +1,25 @@
-"""Tests for pixeldataset.py module.
+"""Tests for pixeldataset module.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """
 
 # pylint: disable=redefined-outer-name
 
-import logging
 import random
-import re
-from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import numpy as np
 import pandas as pd
 import pytest
-from anndata import AnnData
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
-
-from pixelator.config import AntibodyPanel
-from pixelator.graph import Graph, write_recovered_components
+from pixelator.graph import Graph
 from pixelator.pixeldataset import (
     PixelDataset,
     read,
 )
-from pixelator.pixeldataset.aggregation import simple_aggregate
+from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pixeldataset.utils import (
     _enforce_edgelist_types,
-    antibody_metrics,
-    component_antibody_counts,
-    edgelist_to_anndata,
-    read_anndata,
-    write_anndata,
-)
-from pixelator.statistics import (
-    clr_transformation,
-    log1p_transformation,
 )
 
 random.seed(42)
@@ -51,6 +35,7 @@ def test_pixeldataset(setup_basic_pixel_dataset):
         metadata,
         polarization_scores,
         colocalization_scores,
+        precomputed_layouts,
     ) = setup_basic_pixel_dataset
 
     assert_frame_equal(
@@ -80,6 +65,8 @@ def test_pixeldataset(setup_basic_pixel_dataset):
         dataset.colocalization,
     )
 
+    assert_array_equal(precomputed_layouts.to_df(), dataset.precomputed_layouts.to_df())
+
 
 def test_pixeldataset_save(setup_basic_pixel_dataset, tmp_path):
     """test_pixeldataset_save."""
@@ -107,6 +94,7 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
         metadata,
         polarization_scores,
         colocalization_scores,
+        precomputed_layouts,
     ) = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
     dataset.save(str(file_target))
@@ -132,6 +120,17 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     assert_frame_equal(polarization_scores, dataset_new.polarization)
 
     assert_frame_equal(colocalization_scores, dataset_new.colocalization)
+
+    assert_frame_equal(
+        precomputed_layouts.to_df()
+        .sort_index(axis=1)
+        .sort_values(by=precomputed_layouts.to_df().columns.to_list())
+        .reset_index(drop=True),
+        dataset_new.precomputed_layouts.to_df()
+        .sort_index(axis=1)
+        .sort_values(by=precomputed_layouts.to_df().columns.to_list())
+        .reset_index(drop=True),
+    )
 
 
 def test_pixeldataset_can_save_and_load_with_empty_edgelist(
@@ -174,6 +173,13 @@ def test_pixeldataset_graph_finds_component(setup_basic_pixel_dataset):
     assert len(component_graph.connected_components()) == 1
 
 
+def test_pixeldataset_precomputed_layouts(setup_basic_pixel_dataset):
+    dataset, *_ = setup_basic_pixel_dataset
+
+    precomputed_layouts = dataset.precomputed_layouts
+    assert isinstance(precomputed_layouts, PreComputedLayouts)
+
+
 def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
     """test_pixeldataset_from_file_csv."""
     (
@@ -183,6 +189,7 @@ def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
         metadata,
         polarization_scores,
         colocalization_scores,
+        precomputed_layouts,
     ) = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
     dataset.save(str(file_target), file_format="csv")
@@ -203,6 +210,12 @@ def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
 
     assert_frame_equal(colocalization_scores, dataset_new.colocalization)
 
+    # Layouts are not supported by csv backed files
+    with pytest.raises(NotImplementedError):
+        assert_frame_equal(
+            precomputed_layouts.to_df(), dataset_new.precomputed_layouts.to_df()
+        )
+
 
 def test_pixeldataset_repr(setup_basic_pixel_dataset):
     """test_pixeldataset_repr."""
@@ -214,436 +227,12 @@ def test_pixeldataset_repr(setup_basic_pixel_dataset):
         "  Edge list with 30000 edges",
         "  Polarization scores with 6 elements",
         "  Colocalization scores with 5 elements",
+        "  Contains precomputed layouts",
         "  Metadata:",
         "    A: 1",
         "    B: 2",
         "    file_format_version: 1",
     ]
-
-
-def test_write_recovered_components(tmp_path: Path):
-    """test_write_recovered_components."""
-    file_target = tmp_path / "components_recovered.csv"
-    write_recovered_components(
-        {"PXLCMP0000000": ["PXLCMP0000000", "PXLCMP0000001"]},
-        filename=file_target,
-    )
-
-    result = pd.read_csv(file_target)
-    assert list(result.columns) == ["cell_id", "recovered_from"]
-    assert_frame_equal(
-        result,
-        pd.DataFrame(
-            {
-                "cell_id": ["PXLCMP0000000", "PXLCMP0000001"],
-                "recovered_from": ["PXLCMP0000000", "PXLCMP0000000"],
-            }
-        ),
-    )
-
-
-def test_antibody_metrics(full_graph_edgelist: pd.DataFrame):
-    """test_antibody_metrics."""
-    assert_frame_equal(
-        antibody_metrics(edgelist=full_graph_edgelist),
-        pd.DataFrame(
-            data={
-                "antibody_count": [1250, 1250],
-                "components": [1, 1],
-                "antibody_pct": [0.5, 0.5],
-            },
-            index=pd.CategoricalIndex(
-                ["A", "B"],
-                name="marker",
-            ),
-        ),
-    )
-
-
-def test_antibody_counts(full_graph_edgelist: pd.DataFrame):
-    """test_antibody_counts."""
-    counts = component_antibody_counts(edgelist=full_graph_edgelist)
-    assert_array_equal(
-        counts.to_numpy(),
-        np.array([[1250, 1250]]),
-    )
-    assert sorted(counts.columns) == sorted(["A", "B"])
-
-
-def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
-    """test_adata_creation."""
-    adata = edgelist_to_anndata(edgelist=edgelist, panel=panel)
-    assert adata.n_vars == panel.size
-    assert adata.n_obs == edgelist["component"].nunique()
-    assert sorted(adata.var) == sorted(
-        [
-            "antibody_count",
-            "components",
-            "antibody_pct",
-            "control",
-            "nuclear",
-        ]
-    )
-    assert sorted(adata.obs) == sorted(
-        [
-            "vertices",
-            "molecules",
-            "antibodies",
-            "upia",
-            "upib",
-            "reads",
-            "mean_reads_per_molecule",
-            "median_reads_per_molecule",
-            "mean_upia_degree",
-            "median_upia_degree",
-            "mean_umi_per_upia",
-            "median_umi_per_upia",
-            "upia_per_upib",
-        ]
-    )
-    assert "clr" in adata.obsm
-    assert "log1p" in adata.obsm
-
-
-def test_read_write_anndata(adata: AnnData):
-    """test_read_write_anndata."""
-    with TemporaryDirectory() as tmp_dir:
-        output_path = Path(tmp_dir) / "example.h5ad"
-        write_anndata(adata, output_path)
-        assert output_path.is_file()
-        adata2 = read_anndata(str(output_path))
-        assert_frame_equal(adata.to_df(), adata2.to_df())
-        assert_frame_equal(adata.obs, adata2.obs)
-        assert_frame_equal(adata.var, adata2.var)
-        assert_array_equal(
-            adata.obsm["clr"],
-            adata2.obsm["clr"],
-        )
-        assert_array_equal(
-            adata.obsm["log1p"],
-            adata2.obsm["log1p"],
-        )
-
-
-def test_edgelist_to_anndata_missing_markers(
-    panel: AntibodyPanel, edgelist: pd.DataFrame, caplog
-):
-    """test_edgelist_to_anndata_missing_markers."""
-    with caplog.at_level(logging.WARN):
-        edgelist_to_anndata(edgelist, panel)
-
-    assert "The given 'panel' is missing markers" in caplog.text
-
-
-def test_edgelist_to_anndata(
-    adata: AnnData, panel: AntibodyPanel, edgelist: pd.DataFrame
-):
-    """test_edgelist_to_anndata."""
-    antibodies = panel.markers
-    counts_df = component_antibody_counts(edgelist=edgelist)
-    counts_df = counts_df.reindex(columns=antibodies, fill_value=0)
-    assert_array_equal(adata.X, counts_df.to_numpy())
-
-    counts_df_clr = clr_transformation(counts_df, axis=1)
-    assert_array_equal(
-        adata.obsm["clr"],
-        counts_df_clr.to_numpy(),
-    )
-
-    counts_df_log1p = log1p_transformation(counts_df)
-    assert_array_equal(
-        adata.obsm["log1p"],
-        counts_df_log1p.to_numpy(),
-    )
-
-    assert set(adata.obs_names) == set(edgelist["component"].unique())
-
-
-def test_simple_aggregate(setup_basic_pixel_dataset):
-    """test_simple_aggregate."""
-    dataset_1, *_ = setup_basic_pixel_dataset
-    dataset_2 = dataset_1.copy()
-
-    result = simple_aggregate(
-        sample_names=["sample1", "sample2"], datasets=[dataset_1, dataset_2]
-    )
-
-    assert not (
-        set(result.adata.obs.index.unique()).difference(
-            result.edgelist["component"].unique()
-        )
-        and set(result.adata.obs.index.unique()).difference(
-            set(result.colocalization["component"].unique())
-        )
-        and set(result.adata.obs.index.unique()).difference(
-            set(result.polarization["component"].unique())
-        )
-    )
-
-    assert len(result.edgelist) == 2 * len(dataset_1.edgelist)
-    assert "sample" in result.edgelist.columns
-    row = result.edgelist.iloc[0]
-    assert re.match(r"PXLCMP(\d+)_sample\d", row["component"])
-    assert result.edgelist["sample"].dtype == pd.CategoricalDtype(
-        categories=["sample1", "sample2"], ordered=False
-    )
-    assert isinstance(result.edgelist["component"].dtype, pd.CategoricalDtype)
-
-    assert len(result.adata) == 2 * len(dataset_1.adata)
-    assert len(result.adata.var) == len(dataset_1.adata.var)
-    assert result.adata.var_keys() == dataset_1.adata.var_keys()
-    expected_var = pd.DataFrame.from_dict(
-        {
-            "antibody_count": {
-                "CD45": 18150,
-                "CD3": 9218,
-                "CD19": 0,
-                "IgG1ctrl": 0,
-                "CD20": 4816,
-                "CD69": 0,
-                "HLA-DR": 0,
-                "CD8": 0,
-                "CD14": 0,
-                "IsoT_ctrl": 13940,
-                "CD45RA": 4534,
-                "CD45RO": 0,
-                "CD62L": 0,
-                "CD82": 0,
-                "CD7": 0,
-                "CD70": 0,
-                "CD72": 4730,
-                "CD162": 0,
-                "CD26": 0,
-                "CD63": 0,
-                "CD4": 0,
-                "hashtag": 4612,
-            },
-            "components": {
-                "CD45": 10,
-                "CD3": 10,
-                "CD19": 0,
-                "IgG1ctrl": 0,
-                "CD20": 10,
-                "CD69": 0,
-                "HLA-DR": 0,
-                "CD8": 0,
-                "CD14": 0,
-                "IsoT_ctrl": 10,
-                "CD45RA": 10,
-                "CD45RO": 0,
-                "CD62L": 0,
-                "CD82": 0,
-                "CD7": 0,
-                "CD70": 0,
-                "CD72": 10,
-                "CD162": 0,
-                "CD26": 0,
-                "CD63": 0,
-                "CD4": 0,
-                "hashtag": 10,
-            },
-            "antibody_pct": {
-                "CD45": 0.3025,
-                "CD3": 0.15363333333333334,
-                "CD19": 0.0,
-                "IgG1ctrl": 0.0,
-                "CD20": 0.08026666666666667,
-                "CD69": 0.0,
-                "HLA-DR": 0.0,
-                "CD8": 0.0,
-                "CD14": 0.0,
-                "IsoT_ctrl": 0.23233333333333334,
-                "CD45RA": 0.07556666666666667,
-                "CD45RO": 0.0,
-                "CD62L": 0.0,
-                "CD82": 0.0,
-                "CD7": 0.0,
-                "CD70": 0.0,
-                "CD72": 0.07883333333333334,
-                "CD162": 0.0,
-                "CD26": 0.0,
-                "CD63": 0.0,
-                "CD4": 0.0,
-                "hashtag": 0.07686666666666667,
-            },
-            "nuclear": {
-                "CD45": False,
-                "CD3": False,
-                "CD19": False,
-                "IgG1ctrl": False,
-                "CD20": False,
-                "CD69": False,
-                "HLA-DR": False,
-                "CD8": False,
-                "CD14": False,
-                "IsoT_ctrl": False,
-                "CD45RA": False,
-                "CD45RO": False,
-                "CD62L": False,
-                "CD82": False,
-                "CD7": False,
-                "CD70": False,
-                "CD72": False,
-                "CD162": False,
-                "CD26": False,
-                "CD63": False,
-                "CD4": False,
-                "hashtag": False,
-            },
-            "control": {
-                "CD45": False,
-                "CD3": False,
-                "CD19": False,
-                "IgG1ctrl": True,
-                "CD20": False,
-                "CD69": False,
-                "HLA-DR": False,
-                "CD8": False,
-                "CD14": False,
-                "IsoT_ctrl": True,
-                "CD45RA": False,
-                "CD45RO": False,
-                "CD62L": False,
-                "CD82": False,
-                "CD7": False,
-                "CD70": False,
-                "CD72": False,
-                "CD162": False,
-                "CD26": False,
-                "CD63": False,
-                "CD4": False,
-                "hashtag": False,
-            },
-        }
-    )
-    expected_var.index.name = "marker"
-    assert_frame_equal(result.adata.var, expected_var)
-
-    assert len(result.polarization) == 2 * len(dataset_1.polarization)
-    assert len(result.colocalization) == 2 * len(dataset_1.colocalization)
-
-    assert list(result.metadata.keys()) == ["samples"]
-    assert result.metadata["samples"]["sample1"] == dataset_1.metadata
-
-
-def test_simple_aggregate_ignore_edgelist(setup_basic_pixel_dataset):
-    """test_simple_aggregate."""
-    dataset_1, *_ = setup_basic_pixel_dataset
-    dataset_2 = dataset_1.copy()
-
-    result = simple_aggregate(
-        sample_names=["sample1", "sample2"],
-        datasets=[dataset_1, dataset_2],
-        ignore_edgelists=True,
-    )
-
-    # We want an empty edgelist, but wit all the correct columns
-    assert result.edgelist.shape[0] == 0
-    assert set(result.edgelist.columns) == {
-        "sequence",
-        "upib",
-        "upia",
-        "umi",
-        "component",
-        "count",
-        "marker",
-    }
-
-
-def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_dataset):
-    # Test to check for bug EXE-1177
-    # This bug was caused by filtering returning an incorrectly typed
-    # edgelist, which in turn caused getting the graph to fail
-    dataset_1, *_ = setup_basic_pixel_dataset
-    dataset_2 = dataset_1.copy()
-
-    aggregated_data = simple_aggregate(
-        sample_names=["sample1", "sample2"], datasets=[dataset_1, dataset_2]
-    )
-
-    result = aggregated_data.filter(components=aggregated_data.adata.obs.index[:2])
-    assert isinstance(result.edgelist["component"].dtype, pd.CategoricalDtype)
-    # Running graph here to make sure it does not raise an exception
-    result.graph(result.adata.obs.index[0])
-
-
-def test_on_aggregation_not_passing_unique_sample_names_should_raise(
-    tmp_path,
-    setup_basic_pixel_dataset,
-):
-    dataset_1, *_ = setup_basic_pixel_dataset
-    dataset_2 = dataset_1.copy()
-
-    file_target_1 = tmp_path / "dataset_1.pxl"
-    dataset_1.save(str(file_target_1))
-    file_target_2 = tmp_path / "dataset_2.pxl"
-    dataset_2.save(str(file_target_2))
-
-    with pytest.raises(AssertionError):
-        simple_aggregate(
-            sample_names=["sample1", "sample1"],
-            datasets=[
-                read(file_target_1),
-                read(file_target_2),
-            ],
-        )
-
-
-def test_aggregation_all_samples_show_up(
-    tmp_path,
-    setup_basic_pixel_dataset,
-):
-    # There used to be a bug (EXE-1186) where only the first two samples
-    # were actually aggregated. This test is here to catch that potential
-    # problem in the future.
-
-    dataset_1, *_ = setup_basic_pixel_dataset
-    dataset_2 = dataset_1.copy()
-    dataset_3 = dataset_1.copy()
-    dataset_4 = dataset_1.copy()
-
-    file_target_1 = tmp_path / "dataset_1.pxl"
-    dataset_1.save(str(file_target_1))
-    file_target_2 = tmp_path / "dataset_2.pxl"
-    dataset_2.save(str(file_target_2))
-    file_target_3 = tmp_path / "dataset_3.pxl"
-    dataset_3.save(str(file_target_3))
-    file_target_4 = tmp_path / "dataset_4.pxl"
-    dataset_4.save(str(file_target_4))
-
-    result = simple_aggregate(
-        sample_names=["sample1", "sample2", "sample3", "sample4"],
-        datasets=[
-            read(file_target_1),
-            read(file_target_2),
-            read(file_target_3),
-            read(file_target_4),
-        ],
-    )
-    assert set(result.edgelist["sample"].unique()) == {
-        "sample1",
-        "sample2",
-        "sample3",
-        "sample4",
-    }
-    assert set(result.polarization["sample"].unique()) == {
-        "sample1",
-        "sample2",
-        "sample3",
-        "sample4",
-    }
-    assert set(result.colocalization["sample"].unique()) == {
-        "sample1",
-        "sample2",
-        "sample3",
-        "sample4",
-    }
-    assert set(result.adata.obs["sample"].unique()) == {
-        "sample1",
-        "sample2",
-        "sample3",
-        "sample4",
-    }
 
 
 def test_lazy_edgelist_should_warn_and_rm_on_index_column(setup_basic_pixel_dataset):
@@ -684,6 +273,7 @@ def _assert_has_components(dataset, comp_set):
     assert set(dataset.edgelist["component"]) == comp_set
     assert set(dataset.polarization["component"]) == comp_set
     assert set(dataset.colocalization["component"]) == comp_set
+    assert set(dataset.precomputed_layouts.to_df()["component"]) == comp_set
 
 
 def test_filter_by_component(setup_basic_pixel_dataset):
@@ -739,6 +329,9 @@ def test_filter_by_marker(setup_basic_pixel_dataset):
     original_coloc_markers = set(dataset_1.colocalization["marker_1"]).union(
         set(dataset_1.colocalization["marker_2"])
     )
+    original_precomputed_layouts_columns = set(
+        dataset_1.precomputed_layouts.to_df().columns
+    )
 
     # Try filtering
     result = dataset_1.filter(markers=["CD3", "CD45"])
@@ -764,9 +357,12 @@ def test_filter_by_marker(setup_basic_pixel_dataset):
     assert_array_equal(
         result.adata.obs["antibodies"], np.repeat(2, len(result.adata.obs))
     )
-    # The edgelist should contain all the original markers since it should
+    # The edgelist/precomputed layouts should contain all the original markers since it should
     # not be filtered
     assert set(result.edgelist["marker"]) == original_edgelist_markers
+    assert set(result.precomputed_layouts.to_df().columns).issuperset(
+        original_precomputed_layouts_columns
+    )
 
 
 def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
@@ -778,6 +374,9 @@ def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
     original_pol_markers = set(dataset_1.polarization["marker"])
     original_coloc_markers = set(dataset_1.colocalization["marker_1"]).union(
         set(dataset_1.colocalization["marker_2"])
+    )
+    original_precomputed_layouts_columns = set(
+        dataset_1.precomputed_layouts.to_df().columns
     )
 
     # Try filtering
@@ -810,9 +409,12 @@ def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
     assert_array_equal(
         result.adata.obs["antibodies"], np.repeat(2, len(result.adata.obs))
     )
-    # The edgelist should contain all the original markers since it should
+    # The edgelist/precomputed layouts should contain all the original markers since it should
     # not be filtered
     assert set(result.edgelist["marker"]) == original_edgelist_markers
+    assert set(result.precomputed_layouts.to_df().columns).issuperset(
+        original_precomputed_layouts_columns
+    )
 
 
 def test__enforce_edgelist_types():

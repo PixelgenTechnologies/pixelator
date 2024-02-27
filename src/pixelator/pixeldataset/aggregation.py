@@ -15,7 +15,9 @@ import polars as pl
 from anndata import AnnData, concat as concatenate_anndata
 
 from pixelator.pixeldataset import PixelDataset
-from pixelator.pixeldataset.utils import _enforce_edgelist_types, update_metrics_anndata
+from pixelator.pixeldataset.utils import update_metrics_anndata, _enforce_edgelist_types
+from pixelator.pixeldataset.precomputed_layouts import aggregate_precomputed_layouts
+
 
 logger = logging.getLogger(__name__)
 
@@ -145,12 +147,21 @@ def simple_aggregate(
         }
     }
 
+    precomputed_layouts = aggregate_precomputed_layouts(
+        [
+            (name, dataset.precomputed_layouts)
+            for name, dataset in zip(sample_names, datasets)
+        ],
+        all_markers=set(datasets[0].adata.var.index),
+    )
+
     return PixelDataset.from_data(
         adata=adata,
         edgelist=edgelists,
         polarization=polarizations,
         colocalization=colocalizations,
         metadata=metadata,
+        precomputed_layouts=precomputed_layouts,
         copy=False,
         allow_empty_edgelist=ignore_edgelists,
     )

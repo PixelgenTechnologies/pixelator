@@ -113,8 +113,7 @@ select = [
     # pycodestyle
     "E",
     # pydocstyle
-    "D",
-]
+    "D",]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []

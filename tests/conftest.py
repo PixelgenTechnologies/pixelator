@@ -7,6 +7,7 @@ import os
 import random
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
@@ -18,6 +19,7 @@ from pixelator.graph.utils import union as graph_union
 from pixelator.pixeldataset import (
     PixelDataset,
 )
+from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pixeldataset.utils import edgelist_to_anndata
 from tests.graph.networkx.test_tools import (
     create_fully_connected_bipartite_graph,
@@ -136,8 +138,47 @@ def random_graph_edgelist_fixture():
     return edgelist
 
 
+@pytest.fixture(name="layout_df")
+def layout_df_fixture() -> pd.DataFrame:
+    nbr_of_rows = 300
+    components = [
+        "PXLCMP0000000",
+        "PXLCMP0000000",
+        "PXLCMP0000001",
+        "PXLCMP0000002",
+        "PXLCMP0000003",
+        "PXLCMP0000004",
+    ]
+    graph_projections = ["bipartite", "a-node"]
+    layout_methods = ["pmds", "fr"]
+    rgn = np.random.default_rng(1)
+    layout_df = pd.DataFrame(
+        {
+            "x": rgn.random(nbr_of_rows),
+            "y": rgn.random(nbr_of_rows),
+            "z": rgn.random(nbr_of_rows),
+            "graph_projection": rgn.choice(graph_projections, nbr_of_rows),
+            "layout": rgn.choice(layout_methods, nbr_of_rows),
+            "component": rgn.choice(components, nbr_of_rows),
+        }
+        | {
+            marker: rgn.integers(0, 10, nbr_of_rows)
+            for marker in ["CD45", "CD3", "CD3", "CD19", "CD19", "CD3"]
+        }
+    )
+
+    yield layout_df
+
+
+@pytest.fixture(name="precomputed_layouts")
+def precomputed_layouts_fixture(layout_df) -> pd.DataFrame:
+    yield PreComputedLayouts(pl.DataFrame(layout_df).lazy())
+
+
 @pytest.fixture(name="setup_basic_pixel_dataset")
-def setup_basic_pixel_dataset(edgelist: pd.DataFrame, adata: AnnData):
+def setup_basic_pixel_dataset(
+    edgelist: pd.DataFrame, adata: AnnData, precomputed_layouts: PreComputedLayouts
+):
     """Create basic pixel dataset, with some dummy data."""
     # TODO make these dataframes more realistic
     # Right now the edgelist does line up with the polarization
@@ -181,6 +222,7 @@ def setup_basic_pixel_dataset(edgelist: pd.DataFrame, adata: AnnData):
         metadata=metadata,
         polarization=polarization_scores,
         colocalization=colocalization_scores,
+        precomputed_layouts=precomputed_layouts,
     )
     return (
         dataset,
@@ -189,6 +231,7 @@ def setup_basic_pixel_dataset(edgelist: pd.DataFrame, adata: AnnData):
         metadata,
         polarization_scores,
         colocalization_scores,
+        precomputed_layouts,
     )
 
 

@@ -31,6 +31,10 @@ def assert_backend_can_set_values(pixel_dataset_backend):
     pixel_dataset_backend.metadata = None
     assert not pixel_dataset_backend.metadata
 
+    assert pixel_dataset_backend.precomputed_layouts
+    pixel_dataset_backend.precomputed_layouts = None
+    assert not pixel_dataset_backend.precomputed_layouts
+
 
 def test_file_based_pixel_dataset_backend_set_attrs(pixel_dataset_file):
     """test_file_based_pixel_dataset_backend_set_attrs."""
@@ -47,6 +51,7 @@ def test_object_based_pixel_dataset_backend_set_attrs(setup_basic_pixel_dataset)
         metadata,
         polarization_scores,
         colocalization_scores,
+        precomputed_layouts,
     ) = setup_basic_pixel_dataset
     pixel_dataset_backend = ObjectBasedPixelDatasetBackend(
         adata=adata,
@@ -54,5 +59,6 @@ def test_object_based_pixel_dataset_backend_set_attrs(setup_basic_pixel_dataset)
         polarization=polarization_scores,
         colocalization=colocalization_scores,
         metadata=metadata,
+        precomputed_layouts=precomputed_layouts,
     )
     assert_backend_can_set_values(pixel_dataset_backend)
