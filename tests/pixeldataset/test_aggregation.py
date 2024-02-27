@@ -186,8 +186,8 @@ def test_simple_aggregate(setup_basic_pixel_dataset):
     assert list(result.metadata.keys()) == ["samples"]
     assert result.metadata["samples"]["sample1"] == dataset_1.metadata
 
-    assert len(result.precomputed_layouts.df) == 2 * len(
-        dataset_1.precomputed_layouts.df
+    assert len(result.precomputed_layouts.to_df()) == 2 * len(
+        dataset_1.precomputed_layouts.to_df()
     )
 
 

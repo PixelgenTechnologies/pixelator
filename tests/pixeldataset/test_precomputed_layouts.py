@@ -66,8 +66,8 @@ class TestPreComputedLayouts:
             "component",
         ]
 
-    def test_df_returns_pandas_dataframe(self, precomputed_layouts):
-        df = precomputed_layouts.df
+    def test_to_df_returns_pandas_dataframe(self, precomputed_layouts):
+        df = precomputed_layouts.to_df()
         assert isinstance(df, pd.DataFrame)
         assert set(df["component"]) == {
             "PXLCMP0000000",
@@ -118,7 +118,7 @@ class TestPreComputedLayouts:
                 "layout": ["pmds"],
             }
         )
-        assert_frame_equal(filtered.df, expected_df)
+        assert_frame_equal(filtered.to_df(), expected_df)
 
     def test_iterator_returns_filtered_dataframes(self):
         layouts_lazy = pl.DataFrame(
@@ -211,4 +211,4 @@ class TestPreComputedLayouts:
                 ],
             }
         )
-        pd.testing.assert_frame_equal(aggregated_layouts.df, expected_df)
+        pd.testing.assert_frame_equal(aggregated_layouts.to_df(), expected_df)

@@ -87,8 +87,7 @@ class PreComputedLayouts:
         """
         return self._partitioning
 
-    @property
-    def df(self) -> pd.DataFrame:
+    def to_df(self) -> pd.DataFrame:
         """Return the layouts as a pandas DataFrame."""
         return self.lazy.collect().to_pandas()
 

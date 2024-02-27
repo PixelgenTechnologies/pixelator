@@ -65,7 +65,7 @@ def test_pixeldataset(setup_basic_pixel_dataset):
         dataset.colocalization,
     )
 
-    assert_array_equal(precomputed_layouts.df, dataset.precomputed_layouts.df)
+    assert_array_equal(precomputed_layouts.to_df(), dataset.precomputed_layouts.to_df())
 
 
 def test_pixeldataset_save(setup_basic_pixel_dataset, tmp_path):
@@ -122,11 +122,13 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     assert_frame_equal(colocalization_scores, dataset_new.colocalization)
 
     assert_frame_equal(
-        precomputed_layouts.df.sort_index(axis=1)
-        .sort_values(by=precomputed_layouts.df.columns.to_list())
+        precomputed_layouts.to_df()
+        .sort_index(axis=1)
+        .sort_values(by=precomputed_layouts.to_df().columns.to_list())
         .reset_index(drop=True),
-        dataset_new.precomputed_layouts.df.sort_index(axis=1)
-        .sort_values(by=precomputed_layouts.df.columns.to_list())
+        dataset_new.precomputed_layouts.to_df()
+        .sort_index(axis=1)
+        .sort_values(by=precomputed_layouts.to_df().columns.to_list())
         .reset_index(drop=True),
     )
 
@@ -210,7 +212,9 @@ def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
 
     # Layouts are not supported by csv backed files
     with pytest.raises(NotImplementedError):
-        assert_frame_equal(precomputed_layouts.df, dataset_new.precomputed_layouts.df)
+        assert_frame_equal(
+            precomputed_layouts.to_df(), dataset_new.precomputed_layouts.to_df()
+        )
 
 
 def test_pixeldataset_repr(setup_basic_pixel_dataset):
@@ -269,7 +273,7 @@ def _assert_has_components(dataset, comp_set):
     assert set(dataset.edgelist["component"]) == comp_set
     assert set(dataset.polarization["component"]) == comp_set
     assert set(dataset.colocalization["component"]) == comp_set
-    assert set(dataset.precomputed_layouts.df["component"]) == comp_set
+    assert set(dataset.precomputed_layouts.to_df()["component"]) == comp_set
 
 
 def test_filter_by_component(setup_basic_pixel_dataset):
@@ -325,7 +329,9 @@ def test_filter_by_marker(setup_basic_pixel_dataset):
     original_coloc_markers = set(dataset_1.colocalization["marker_1"]).union(
         set(dataset_1.colocalization["marker_2"])
     )
-    original_precomputed_layouts_columns = set(dataset_1.precomputed_layouts.df.columns)
+    original_precomputed_layouts_columns = set(
+        dataset_1.precomputed_layouts.to_df().columns
+    )
 
     # Try filtering
     result = dataset_1.filter(markers=["CD3", "CD45"])
@@ -354,7 +360,7 @@ def test_filter_by_marker(setup_basic_pixel_dataset):
     # The edgelist/precomputed layouts should contain all the original markers since it should
     # not be filtered
     assert set(result.edgelist["marker"]) == original_edgelist_markers
-    assert set(result.precomputed_layouts.df.columns).issuperset(
+    assert set(result.precomputed_layouts.to_df().columns).issuperset(
         original_precomputed_layouts_columns
     )
 
@@ -369,7 +375,9 @@ def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
     original_coloc_markers = set(dataset_1.colocalization["marker_1"]).union(
         set(dataset_1.colocalization["marker_2"])
     )
-    original_precomputed_layouts_columns = set(dataset_1.precomputed_layouts.df.columns)
+    original_precomputed_layouts_columns = set(
+        dataset_1.precomputed_layouts.to_df().columns
+    )
 
     # Try filtering
     result = dataset_1.filter(components=["PXLCMP0000000"], markers=["CD3", "CD45"])
@@ -404,7 +412,7 @@ def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
     # The edgelist/precomputed layouts should contain all the original markers since it should
     # not be filtered
     assert set(result.edgelist["marker"]) == original_edgelist_markers
-    assert set(result.precomputed_layouts.df.columns).issuperset(
+    assert set(result.precomputed_layouts.to_df().columns).issuperset(
         original_precomputed_layouts_columns
     )
 
