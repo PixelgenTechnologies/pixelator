@@ -5,7 +5,7 @@ graph layouts. The primary purpose of this is to allow components to be
 visualized quickly in downstream analysis, since layout computation
 is a relatively computationally expensive operation.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
@@ -16,8 +16,8 @@ from typing import TYPE_CHECKING, Iterable, Optional
 import pandas as pd
 import polars as pl
 
-from pixelator.graph import Graph
 from pixelator.exceptions import PixelatorBaseException
+from pixelator.graph import Graph
 from pixelator.marks import experimental
 from pixelator.utils import batched
 
@@ -167,9 +167,13 @@ class PreComputedLayouts:
             unique_components = self._convert_to_set(component_ids)  # type: ignore
 
         for component in unique_components:
-            yield self._filter_layouts(
-                self.lazy, component, graph_projections, layout_methods
-            ).collect().to_pandas()
+            yield (
+                self._filter_layouts(
+                    self.lazy, component, graph_projections, layout_methods
+                )
+                .collect()
+                .to_pandas()
+            )
 
     @staticmethod
     def _convert_to_set(

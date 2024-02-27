@@ -110,15 +110,6 @@ def create_output_stage_dir(root: PathType, name: str) -> Path:
     return output
 
 
-def flatten(list_of_collections: List[Union[List, Set]]) -> List:
-    """Flattens a list of lists or list of sets.
-
-    :param list_of_collections: list of lists or list of sets
-    :returns List: list containing flattened items
-    """
-    return [item for sublist in list_of_collections for item in sublist]
-
-
 def batched(iterable, n):
     """Batch data into tuples of length n. The last batch may be shorter.
 
