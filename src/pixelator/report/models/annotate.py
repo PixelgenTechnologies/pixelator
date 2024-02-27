@@ -153,7 +153,7 @@ class AnnotateSampleReport(SampleReport):
         ),
     )
     def fraction_molecules_in_aggregates(self) -> float | None:
-        """Return the fraction of molecules (edges) in the aggregate.
+        """Return the fraction of molecules (edges) in the aggregate outliers.
 
         Returns None if no aggregate recovery was disabled during analysis.
         """
