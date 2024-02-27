@@ -10,16 +10,18 @@ import gzip
 import itertools
 import json
 import logging
+import multiprocessing
 import re
 import tempfile
 import textwrap
 import time
 import typing
-import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 from functools import wraps
+from logging.handlers import SocketHandler
 from pathlib import Path, PurePath
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Generator,
@@ -29,7 +31,6 @@ from typing import (
     Optional,
     Sequence,
     Set,
-    TYPE_CHECKING,
     Union,
 )
 
@@ -358,7 +359,7 @@ def _add_handlers_to_root_logger(port):
     # to figure out how to deal with the console logging
     # here as well.
     root_logger = logging.getLogger()
-    socket_handler = logging.handlers.SocketHandler("localhost", port)
+    socket_handler = SocketHandler("localhost", port)
     root_logger.addHandler(socket_handler)
 
 

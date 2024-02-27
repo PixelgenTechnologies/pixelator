@@ -4,7 +4,6 @@ Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import logging
-import logging.handlers
 import pickle
 import socketserver
 import struct
@@ -13,6 +12,7 @@ import threading
 import time
 import typing
 import warnings
+from logging.handlers import SocketHandler, DEFAULT_TCP_LOGGING_PORT
 from pathlib import Path
 
 import click
@@ -176,7 +176,7 @@ class LoggingSetup:
         self._server_thread.daemon = True
         self._server_thread.start()
 
-        socker_handler = logging.handlers.SocketHandler(LOCALHOST, port)
+        socker_handler = SocketHandler(LOCALHOST, port)
         self._root_logger.addHandler(socker_handler)
         self._root_logger.setLevel(logging.DEBUG if self.verbose else logging.INFO)
 
@@ -277,7 +277,7 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
     def __init__(
         self,
         host=LOCALHOST,
-        port=logging.handlers.DEFAULT_TCP_LOGGING_PORT,
+        port=DEFAULT_TCP_LOGGING_PORT,
         handler=LogRecordStreamHandler,
         log_file=None,
         console_log_formatter=DefaultCliFormatter(),
