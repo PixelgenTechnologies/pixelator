@@ -19,7 +19,7 @@ from pixelator.cli.collapse import collapse
 from pixelator.cli.common import OrderedGroup, logger
 from pixelator.cli.demux import demux
 from pixelator.cli.graph import graph
-from pixelator.cli.logging import LoggingSetup
+from pixelator.logging import LoggingSetup
 from pixelator.cli.misc import list_single_cell_designs, list_single_cell_panels
 from pixelator.cli.plugin import add_cli_plugins
 from pixelator.cli.preqc import preqc
@@ -87,11 +87,11 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     # Pass arguments to other commands
     ctx.ensure_object(dict)
 
-    ctx.obj["LOGGER"] = LoggingSetup(log_file, verbose=verbose)
+    # This registers the logger with it's context manager,
+    # so that it is clean-up properly when the command is done.
+    ctx.obj["LOGGER"] = ctx.with_resource(LoggingSetup(log_file, verbose=verbose))
     ctx.obj["VERBOSE"] = verbose
     ctx.obj["CORES"] = max(1, cores)
-
-    ctx.obj["LOGGER"].initialize()
     return 0
 
 

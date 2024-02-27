@@ -10,15 +10,18 @@ import gzip
 import itertools
 import json
 import logging
+import multiprocessing
 import re
 import tempfile
 import textwrap
 import time
 import typing
-from concurrent import futures
+from concurrent.futures import ProcessPoolExecutor
 from functools import wraps
+from logging.handlers import SocketHandler
 from pathlib import Path, PurePath
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Generator,
@@ -28,7 +31,6 @@ from typing import (
     Optional,
     Sequence,
     Set,
-    TYPE_CHECKING,
     Union,
 )
 
@@ -364,19 +366,31 @@ def write_parameters_file(
         json.dump(data, fh, indent=4)
 
 
-def get_process_pool_executor(ctx, **kwargs):
-    """Return a process pool with some default settings.
+def _add_handlers_to_root_logger(port):
+    # TODO Note this only logs to the socket now. We need
+    # to figure out how to deal with the console logging
+    # here as well.
+    root_logger = logging.getLogger()
+    socket_handler = SocketHandler("localhost", port)
+    root_logger.addHandler(socket_handler)
 
-    The number of cores will be set to the number of cores available from the click ctx.
-    The multiprocess logger will be initialized in each worker process.
 
-    :args ctx: click context object
-    :kwargs: additional kwargs to pass to the ProcessPoolExecutor constructor
-    """
-    return futures.ProcessPoolExecutor(
-        max_workers=ctx.obj["CORES"],
-        **kwargs,
-    )
+def get_process_pool_executor(
+    nbr_cores=None, logging_setup=None, context="spawn", **kwargs
+):
+    """Return a process pool with some default settings."""
+    nbr_cores = nbr_cores if nbr_cores else multiprocessing.cpu_count()
+    args_dict = {
+        "max_workers": nbr_cores,
+        "mp_context": multiprocessing.get_context(context),
+    }
+
+    if logging_setup:
+        args_dict = args_dict | dict(
+            initializer=_add_handlers_to_root_logger, initargs=(logging_setup.port,)
+        )
+    args_dict = args_dict | kwargs
+    return ProcessPoolExecutor(**args_dict)
 
 
 def get_read_sample_name(read: str) -> str:
