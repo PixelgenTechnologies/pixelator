@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import typing
+from typing import Iterable
 from pathlib import Path
 
 import pandas as pd
@@ -72,6 +73,38 @@ class PixelatorReporting:
         df.sort_index(inplace=True)
         return df
 
+    @staticmethod
+    def _explode_json_columns(
+        df: pd.DataFrame, keys_to_explode: Iterable[str]
+    ) -> pd.DataFrame:
+        """Explode json columns of a dataframe.
+
+        :param df: The dataframe to explode
+        :param keys_to_explode: The keys of the json columns to explode
+        """
+        series_to_concat = []
+        for key in keys_to_explode:
+            dict_column = pd.json_normalize(df[key])
+            cleaned_key = key.replace("_stats", "")
+            dict_column.columns = [
+                f"{cleaned_key}_{col}" for col in dict_column.columns
+            ]
+            dict_column.set_index(df.index, inplace=True)
+            series_to_concat.append(dict_column)
+
+        # Merge the exploded dict into the original dataframe and drop the dict column
+        df.drop(
+            labels=list(keys_to_explode),
+            axis="columns",
+            inplace=True,
+        )
+        df = pd.concat(
+            (df, *series_to_concat),
+            join="inner",
+            axis="columns",
+        )
+        return df
+
     def amplicon_metrics(self, sample_name: str) -> AmpliconSampleReport:
         """Return the amplicon metrics for a sample."""
         sample_file = self.workdir.single_cell_report(
@@ -129,6 +162,9 @@ class PixelatorReporting:
         reports = self.workdir.single_cell_report(SingleCellStage.DEMUX)
         df = self._combine_data(reports, DemuxSampleReport)
 
+        # We do not use _explode_json_columns here because the
+        # keys naming is different here
+
         # Extract the dict column from the dataframe and expand each key
         # into a new column
         read_dict = pd.json_normalize(df["per_antibody_read_counts"])
@@ -163,6 +199,9 @@ class PixelatorReporting:
         """Combine all collapse sumaries into a single dataframe."""
         reports = self.workdir.single_cell_report(SingleCellStage.COLLAPSE)
         df = self._combine_data(reports, CollapseSampleReport)
+
+        keys_to_explode = ["collapsed_molecule_count_stats"]
+        df = self._explode_json_columns(df, keys_to_explode)
         return df
 
     def graph_metrics(self, sample_name: str) -> GraphSampleReport:
@@ -179,53 +218,11 @@ class PixelatorReporting:
 
         # Extract the dict column from the dataframe and expand each key
         # into a new column
-        read_count_per_molecule_dict = pd.json_normalize(
-            df["read_count_per_molecule_stats"]
-        )
-        read_count_per_molecule_dict.columns = [
-            f"read_count_per_molecule_{col}"
-            for col in read_count_per_molecule_dict.columns
+        keys_to_explode = [
+            "read_count_per_molecule_stats",
         ]
-        read_count_per_molecule_dict.set_index(df.index, inplace=True)
 
-        molecule_count_per_a_pixel_dict = pd.json_normalize(
-            df["molecule_count_per_a_pixel_stats"]
-        )
-        molecule_count_per_a_pixel_dict.columns = [
-            f"molecule_count_per_a_pixel_{col}"
-            for col in molecule_count_per_a_pixel_dict.columns
-        ]
-        molecule_count_per_a_pixel_dict.set_index(df.index, inplace=True)
-
-        b_pixel_count_per_a_pixel_dict = pd.json_normalize(
-            df["b_pixel_count_per_a_pixel_stats"]
-        )
-        b_pixel_count_per_a_pixel_dict.columns = [
-            f"b_pixel_count_per_a_pixel_{col}"
-            for col in b_pixel_count_per_a_pixel_dict.columns
-        ]
-        b_pixel_count_per_a_pixel_dict.set_index(df.index, inplace=True)
-
-        # Merge the exploded dict into the original dataframe and drop the dict column
-        df.drop(
-            labels=[
-                "read_count_per_molecule_stats",
-                "molecule_count_per_a_pixel_stats",
-                "b_pixel_count_per_a_pixel_stats",
-            ],
-            axis="columns",
-            inplace=True,
-        )
-        df = pd.concat(
-            (
-                df,
-                read_count_per_molecule_dict,
-                molecule_count_per_a_pixel_dict,
-                b_pixel_count_per_a_pixel_dict,
-            ),
-            join="inner",
-            axis="columns",
-        )
+        df = self._explode_json_columns(df, keys_to_explode)
         return df
 
     def annotate_metrics(self, sample_name: str) -> AnnotateSampleReport:
@@ -239,6 +236,20 @@ class PixelatorReporting:
         """Combine graph metrics for all samples into a single dataframe."""
         reports = self.workdir.single_cell_report(SingleCellStage.ANNOTATE)
         df = self._combine_data(reports, AnnotateSampleReport)
+
+        keys_to_explode = [
+            "molecule_count_per_cell_stats",
+            "read_count_per_cell_stats",
+            "a_pixel_count_per_cell_stats",
+            "b_pixel_count_per_cell_stats",
+            "marker_count_per_cell_stats",
+            "a_pixel_b_pixel_ratio_per_cell_stats",
+            "molecule_count_per_a_pixel_per_cell_stats",
+            "b_pixel_count_per_a_pixel_per_cell_stats",
+            "a_pixel_count_per_b_pixel_per_cell_stats",
+        ]
+
+        df = self._explode_json_columns(df, keys_to_explode)
         return df
 
     def analysis_metrics(self, sample_name: str) -> AnalysisSampleReport:
@@ -252,22 +263,8 @@ class PixelatorReporting:
         """Combine graph metrics for all samples into a single dataframe."""
         reports = self.workdir.single_cell_report(SingleCellStage.ANALYSIS)
         df = self._combine_data(reports, AnalysisSampleReport)
-
-        # Extract the dict column from the dataframe and expand each key
-        # into a new column
-        polarization_dict = pd.json_normalize(df["polarization"])
-        polarization_dict.set_index(df.index, inplace=True)
-
-        colocalization_dict = pd.json_normalize(df["colocalization"])
-        polarization_dict.set_index(df.index, inplace=True)
-
-        # Merge the exploded dict into the original dataframe and drop the dict column
-        df.drop("polarization", axis="columns", inplace=True)
-        df.drop("colocalization", axis="columns", inplace=True)
-
-        df = pd.concat(
-            (df, polarization_dict, colocalization_dict), join="inner", axis="columns"
-        )
+        keys_to_explode = ["polarization", "colocalization"]
+        df = self._explode_json_columns(df, keys_to_explode)
         return df
 
     def reads_flow(self, sample_name: str) -> ReadsDataflowReport:
@@ -294,6 +291,17 @@ class PixelatorReporting:
             cell_molecule_read_count=annotate_metrics.read_count,
         )
 
+    def reads_flow_summary(self):
+        """Combine reads flow metrics for all samples into a single dataframe."""
+        data = [self.reads_flow(sample).model_dump() for sample in self.samples()]
+
+        df = pd.DataFrame(data)
+        df.astype({"sample_id": "string"})
+        df.set_index("sample_id", inplace=True)
+        df.sort_index(inplace=True)
+
+        return df
+
     def molecules_flow(self, sample_name: str) -> MoleculesDataflowReport:
         """Return a summary with the flow of molecules counts through the pipeline.
 
@@ -311,6 +319,16 @@ class PixelatorReporting:
             aggregate_molecule_count=annotate_metrics.molecules_in_aggregates_count,
             cell_molecule_count=annotate_metrics.molecule_count,
         )
+
+    def molecules_flow_summary(self):
+        """Combine molecule flow metrics for all samples into a single dataframe."""
+        data = [self.molecules_flow(sample).model_dump() for sample in self.samples()]
+
+        df = pd.DataFrame(data)
+        df.astype({"sample_id": "string"})
+        df.set_index("sample_id", inplace=True)
+        df.sort_index(inplace=True)
+        return df
 
     def cli_invocation_info(self, sample: str, cache: bool = True) -> CLIInvocationInfo:
         """Return the commandline options used to invoke multiple pixelator commands on a sample.

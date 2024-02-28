@@ -23,4 +23,4 @@ def test_collapse_metrics_lookup(demux_summary_input, sample_name, snapshot):
 def test_demux_summary(demux_summary_input, snapshot):
     reporting = PixelatorReporting(demux_summary_input)
     result = reporting.demux_summary()
-    snapshot.assert_match(result.to_json(indent=4), "demux_summary.json")
+    snapshot.assert_match(result.to_csv(), "demux_summary.csv")

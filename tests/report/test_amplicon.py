@@ -49,14 +49,8 @@ def test_adapterqc_metrics_lookup(amplicon_summary_input, sample_name, expected)
     assert r == expected
 
 
-def test_amplicon_summary(amplicon_summary_input):
+def test_amplicon_summary(amplicon_summary_input, snapshot):
     reporting = PixelatorReporting(amplicon_summary_input)
     result = reporting.amplicon_summary()
 
-    assert_frame_equal(
-        result,
-        pd.DataFrame.from_records(
-            data=[report.model_dump(exclude="sample_id") for report in expected],
-            index=pd.Index([r.sample_id for r in expected], name="sample_id"),
-        ),
-    )
+    snapshot.assert_match(result.to_csv(), "amplicon_summary.csv")

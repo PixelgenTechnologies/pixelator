@@ -1,0 +1,22 @@
+{
+    "a_pixel_count": 50,
+    "b_pixel_count": 50,
+    "marker_count": 2,
+    "molecule_count": 2500,
+    "read_count": 2500,
+    "read_count_per_molecule_stats": {
+        "mean": 1.0,
+        "std": 0.0,
+        "min": 1.0,
+        "q1": 1.0,
+        "q2": 1.0,
+        "q3": 1.0,
+        "max": 1.0,
+        "count": 2500,
+        "iqr": 0.0
+    },
+    "component_count": 1,
+    "components_modularity": 0.0,
+    "fraction_molecules_in_largest_component": 1.0,
+    "fraction_pixels_in_largest_component": 1.0
+}

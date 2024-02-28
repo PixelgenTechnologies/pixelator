@@ -26,4 +26,4 @@ def test_collapse_summary(collapse_summary_input, snapshot):
     reporting = PixelatorReporting(collapse_summary_input)
     result = reporting.collapse_summary()
 
-    snapshot.assert_match(result.to_json(indent=4), "collapse_summary.json")
+    snapshot.assert_match(result.to_csv(), "collapse_summary.json")

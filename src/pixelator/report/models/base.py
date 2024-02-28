@@ -45,14 +45,16 @@ class SampleReport(pydantic.BaseModel):
         """
         return json.dumps(self.model_dump(mode="json"), **kwargs)
 
-    def write_json_file(self, p: str | os.PathLike) -> None:
+    def write_json_file(self, p: str | os.PathLike, **kwargs: Any) -> None:
         """Write a JSON serialized SampleReport to a file.
 
         Non-existing intermediate directories in the path will be created.
 
         :param p: The path to the file to write.
+        :param kwargs: Additional arguments to pass to pydantics `model_dump_json`.
         """
         Path(p).resolve().parent.mkdir(parents=True, exist_ok=True)
 
         with open(p, "w") as fp:
-            json.dump(self.model_dump(mode="json"), fp)
+            r = self.model_dump_json(**kwargs)
+            fp.write(r)

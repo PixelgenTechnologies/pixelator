@@ -197,7 +197,7 @@ def amplicon_fastq(
     avg_stats = stats.stats
 
     report = AmpliconSampleReport(sample_id=sample_id, **avg_stats.asdict())
-    report.write_json_file(metrics)
+    report.write_json_file(metrics, indent=4)
 
     if mode == "single-end":
         logger.debug("Finished building amplicon of %s to %s", inputs[0], output)

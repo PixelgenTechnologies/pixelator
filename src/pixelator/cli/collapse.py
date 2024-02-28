@@ -284,4 +284,4 @@ def collapse(
             collapsed_molecule_count_stats=collapsed_molecule_count_stats,
         )
 
-        report.write_json_file(collapse_output / f"{sample}.report.json")
+        report.write_json_file(collapse_output / f"{sample}.report.json", indent=4)

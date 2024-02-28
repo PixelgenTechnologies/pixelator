@@ -27,4 +27,4 @@ def test_adapterqc_summary(adapterqc_summary_input, snapshot):
     reporting = PixelatorReporting(adapterqc_summary_input)
     result = reporting.adapterqc_summary()
 
-    snapshot.assert_match(result.to_json(indent=4), "adapterqc_summary.json")
+    snapshot.assert_match(result.to_csv(), "adapterqc_summary.csv")

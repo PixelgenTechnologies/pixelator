@@ -80,43 +80,56 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
     # iterate the components to obtain the metrics of each component
     for component_id, group_df in edgelist.groupby("component", observed=True):
         # compute metrics
-        n_edges = group_df.shape[0]
-        n_vertices = len(
-            set(group_df["upia"].unique().tolist() + group_df["upib"].unique().tolist())
-        )
-        n_markers = group_df["marker"].nunique()
-        upia_count = group_df["upia"].nunique()
-        upib_count = group_df["upib"].nunique()
-        tot_count = group_df["count"].sum()
-        mean_count = group_df["count"].mean()
-        median_count = group_df["count"].median()
+        a_pixels = group_df["upia"].nunique()
+        b_pixels = group_df["upib"].nunique()
+        pixels = a_pixels + b_pixels
+        antibodies = group_df["marker"].nunique()
+        molecules = group_df.shape[0]
+
+        reads = group_df["count"].sum()
+        mean_reads_per_molecule = group_df["count"].mean()
+        median_reads_per_molecule = group_df["count"].median()
+
         # Please note that we need to use observed=True
         # here upia is a categorical column, and since not
         # all values are present in all components, this is
         # required to get a correct value.
-        upia_degree = group_df.groupby("upia", observed=True)["upib"].nunique()
-        upia_mean_degree = upia_degree.mean()
-        upia_median_degree = upia_degree.median()
+        b_pixels_per_a_pixel_series = group_df.groupby("upia", observed=True)[
+            "upib"
+        ].nunique()
+        mean_b_pixels_per_a_pixel = b_pixels_per_a_pixel_series.mean()
+        median_b_pixels_per_a_pixel = b_pixels_per_a_pixel_series.median()
+
+        a_pixels_per_b_pixel = group_df.groupby("upib", observed=True)["upia"].nunique()
+        mean_a_pixels_per_b_pixel = b_pixels_per_a_pixel_series.mean()
+        median_a_pixels_per_b_pixel = b_pixels_per_a_pixel_series.median()
+
         # Same reasoning as above
-        umi_degree = group_df.groupby("upia", observed=True)["umi"].count()
-        upi_umi_mean = umi_degree.mean()
-        upi_umi_median = umi_degree.median()
-        upia_per_upib = upia_count / upib_count
+        molecule_count_per_a_pixel_series = group_df.groupby("upia", observed=True)[
+            "umi"
+        ].count()
+        mean_molecules_per_a_pixel = molecule_count_per_a_pixel_series.mean()
+        median_molecules_per_a_pixel = molecule_count_per_a_pixel_series.median()
+
+        a_pixel_b_pixel_ratio = a_pixels / b_pixels
+
         cmetrics.append(
             (
-                n_vertices,
-                n_edges,
-                n_markers,
-                upia_count,
-                upib_count,
-                tot_count,
-                mean_count,
-                median_count,
-                upia_mean_degree,
-                upia_median_degree,
-                upi_umi_mean,
-                upi_umi_median,
-                upia_per_upib,
+                pixels,
+                a_pixels,
+                b_pixels,
+                antibodies,
+                molecules,
+                reads,
+                mean_reads_per_molecule,
+                median_reads_per_molecule,
+                mean_b_pixels_per_a_pixel,
+                median_b_pixels_per_a_pixel,
+                mean_a_pixels_per_b_pixel,
+                median_a_pixels_per_b_pixel,
+                a_pixel_b_pixel_ratio,
+                mean_molecules_per_a_pixel,
+                median_molecules_per_a_pixel,
             )
         )
         index.append(component_id)
@@ -125,19 +138,21 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
     components_metrics = pd.DataFrame(
         index=pd.Index(index, name="component"),
         columns=[
-            "vertices",
-            "molecules",
+            "pixels",
+            "a_pixels",
+            "b_pixels",
             "antibodies",
-            "upia",
-            "upib",
+            "molecules",
             "reads",
             "mean_reads_per_molecule",
             "median_reads_per_molecule",
-            "mean_upia_degree",
-            "median_upia_degree",
-            "mean_umi_per_upia",
-            "median_umi_per_upia",
-            "upia_per_upib",
+            "mean_b_pixels_per_a_pixel",
+            "median_b_pixels_per_a_pixel",
+            "mean_a_pixels_per_b_pixel",
+            "median_a_pixels_per_b_pixel",
+            "a_pixel_b_pixel_ratio",
+            "mean_molecules_per_a_pixel",
+            "median_molecules_per_a_pixel",
         ],
         data=cmetrics,
     )
@@ -245,8 +260,6 @@ class EdgelistMetrics(typing.TypedDict, total=True):
     b_pixel_count: int
 
     read_count_per_molecule_stats: SummaryStatistics
-    b_pixel_count_per_a_pixel_stats: SummaryStatistics
-    molecule_count_per_a_pixel_stats: SummaryStatistics
 
     components_modularity: float
     fraction_molecules_in_largest_component: float
@@ -291,20 +304,9 @@ def _edgelist_metrics_pandas_data_frame(
     metrics["b_pixel_count"] = edgelist["upib"].nunique()
     metrics["marker_count"] = edgelist["marker"].nunique()
     metrics["molecule_count"] = edgelist.shape[0]
-    metrics["read_count"] = edgelist["count"].sum()
+    metrics["read_count"] = int(edgelist["count"].sum())
     metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
         edgelist["count"]
-    )
-
-    # Please note that we need to use observed=True
-    # here upia is a categorical column, and since not
-    # all values are present in all components, this is
-    # required to get a correct value.
-    metrics["b_pixel_count_per_a_pixel_stats"] = SummaryStatistics.from_series(
-        edgelist.groupby("upia", observed=True)["upib"].nunique()
-    )
-    metrics["molecule_count_per_a_pixel_stats"] = SummaryStatistics.from_series(
-        edgelist.groupby("upia", observed=True)["count"].sum()
     )
 
     metrics = _calculate_graph_metrics(metrics=metrics, graph=graph, edgelist=edgelist)
@@ -322,9 +324,9 @@ def _edgelist_metrics_lazy_frame(
         pl.col("marker").n_unique(),
     ).collect()
 
-    metrics["a_pixel_count"] = unique_counts["upia"][0]
-    metrics["b_pixel_count"] = unique_counts["upib"][0]
-    metrics["marker_count"] = unique_counts["marker"][0]
+    metrics["a_pixel_count"] = int(unique_counts["upia"][0])
+    metrics["b_pixel_count"] = int(unique_counts["upib"][0])
+    metrics["marker_count"] = int(unique_counts["marker"][0])
     # Note that we get upi here and count that, because otherwise just calling count
     # here confuses polars since there is a column with that name.
     metrics["molecule_count"] = int(
@@ -336,28 +338,6 @@ def _edgelist_metrics_lazy_frame(
     metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
         counts_per_molecule
     )
-
-    upia_degree = (
-        edgelist.group_by(pl.col("upia"))
-        .agg(pl.n_unique("upib"))
-        .drop("upia")
-        .collect()["upib"]
-    )
-    metrics["b_pixel_count_per_a_pixel_stats"] = SummaryStatistics.from_series(
-        upia_degree
-    )
-
-    umi_degree = (
-        edgelist.group_by(pl.col("upia"))
-        .agg(pl.col("umi").count())
-        .drop("upia")
-        .collect()["umi"]
-    )
-
-    metrics["molecule_count_per_a_pixel_stats"] = SummaryStatistics.from_series(
-        umi_degree
-    )
-
     combined_metrics: EdgelistMetrics = _calculate_graph_metrics(
         metrics=metrics, graph=graph, edgelist=edgelist
     )

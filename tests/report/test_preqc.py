@@ -49,10 +49,4 @@ def test_preqc_summary(preqc_summary_input, snapshot):
     reporting = PixelatorReporting(preqc_summary_input)
     result = reporting.preqc_summary()
 
-    assert_frame_equal(
-        result,
-        pd.DataFrame.from_records(
-            data=[report.model_dump(exclude="sample_id") for report in expected],
-            index=pd.Index([r.sample_id for r in expected], name="sample_id"),
-        ),
-    )
+    snapshot.assert_match(result.to_csv(), "preqc_summary.csv")

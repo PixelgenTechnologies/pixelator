@@ -14,7 +14,7 @@
     "read_count": 8117,
     "molecule_count_per_cell_stats": {
         "mean": 1.015897047691143,
-        "std": 0.1309898320781511,
+        "std": 0.13098983207815107,
         "min": 1.0,
         "q1": 1.0,
         "q2": 1.0,
@@ -79,25 +79,36 @@
         "iqr": 0.0
     },
     "molecule_count_per_a_pixel_per_cell_stats": {
-        "mean": 2.0312812812812813,
-        "std": 0.22544019881823021,
-        "min": 2.0,
-        "q1": 2.0,
-        "q2": 2.0,
-        "q3": 2.0,
-        "max": 7.0,
-        "count": 3996,
+        "mean": 1.0074438556649004,
+        "std": 0.08848745298531181,
+        "min": 1.0,
+        "q1": 1.0,
+        "q2": 1.0,
+        "q3": 1.0,
+        "max": 3.0,
+        "count": 3963,
         "iqr": 0.0
     },
-    "b_pixel_count_per_a_pixel_per_cell_stats": {
-        "mean": 1.0047547547547548,
-        "std": 0.06879060300634739,
+    "a_pixel_count_per_b_pixel_per_cell_stats": {
+        "mean": 1.0046681806712088,
+        "std": 0.0677001125393875,
         "min": 1.0,
         "q1": 1.0,
         "q2": 1.0,
         "q3": 1.0,
         "max": 2.0,
-        "count": 3996,
+        "count": 3963,
+        "iqr": 0.0
+    },
+    "b_pixel_count_per_a_pixel_per_cell_stats": {
+        "mean": 1.0046681806712088,
+        "std": 0.0677001125393875,
+        "min": 1.0,
+        "q1": 1.0,
+        "q2": 1.0,
+        "q3": 1.0,
+        "max": 2.0,
+        "count": 3963,
         "iqr": 0.0
     },
     "aggregate_count": 3963,

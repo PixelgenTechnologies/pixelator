@@ -33,7 +33,7 @@ class DemuxSampleReport(SampleReport):
     )
 
     @pydantic.computed_field(  # type: ignore
-        return_type=float,
+        return_type=dict[str, float],
         description="The fraction of reads per antibody after demultiplexing.",
     )
     @property

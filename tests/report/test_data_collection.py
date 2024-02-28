@@ -49,7 +49,7 @@ def collect_report_data_workdir(
     return pixelator_workdir
 
 
-@pytest.mark.parametrize("sample_id", ["uropod_control_300k_S1_001"])
+@pytest.mark.parametrize("sample_id", ["uropod_control"])
 def test_collect_report_data(collect_report_data_workdir, sample_id, snapshot):
     data = collect_report_data(collect_report_data_workdir, sample_id)
     serialized_data = json.dumps(data, cls=PixelatorJSONEncoder, indent=2)
