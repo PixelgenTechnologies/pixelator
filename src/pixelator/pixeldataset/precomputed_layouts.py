@@ -239,10 +239,13 @@ def aggregate_precomputed_layouts(
             ).pipe(zero_fill_missing_markers, all_markers=all_markers)
             yield layout_with_name
 
-    return PreComputedLayouts(
-        pl.concat(data(), rechunk=False),
-        partitioning=["sample"] + PreComputedLayouts.DEFAULT_PARTITIONING,
-    )
+    try:
+        return PreComputedLayouts(
+            pl.concat(data(), rechunk=False),
+            partitioning=["sample"] + PreComputedLayouts.DEFAULT_PARTITIONING,
+        )
+    except ValueError:
+        return PreComputedLayouts.create_empty()
 
 
 # TODO The code below this point is not yet tested, and should be considered

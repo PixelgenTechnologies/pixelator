@@ -214,7 +214,7 @@ class TestPreComputedLayouts:
         )
         pd.testing.assert_frame_equal(aggregated_layouts.to_df(), expected_df)
 
-    def test_aggregate_precomputed_layouts_empty_data_frames(self):
+    def test_aggregate_precomputed_layouts_one_empty_data_frame(self):
         # Create some sample PreComputedLayouts
         layout1 = PreComputedLayouts(None)
         layout2 = PreComputedLayouts(
@@ -248,3 +248,16 @@ class TestPreComputedLayouts:
             }
         )
         pd.testing.assert_frame_equal(aggregated_layouts.to_df(), expected_df)
+
+    def test_aggregate_precomputed_layouts_no_layouts_in_data(self):
+        # Create some sample PreComputedLayouts
+        layout1 = PreComputedLayouts(None)
+        layout2 = PreComputedLayouts(None)
+
+        # Aggregate the layouts
+        aggregated_layouts = aggregate_precomputed_layouts(
+            [("sample1", layout1), ("sample2", layout2)],
+            all_markers={"x", "y", "component", "sample"},
+        )
+
+        assert aggregated_layouts.is_empty
