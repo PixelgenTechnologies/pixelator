@@ -29,11 +29,13 @@ import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 from anndata import AnnData
 from fsspec.implementations.zip import ZipFileSystem
-from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
+
 from pixelator.exceptions import PixelatorBaseException
+from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 
 if TYPE_CHECKING:
     from pixelator.pixeldataset import PixelDataset
+
 from pixelator.types import PathType
 
 logger = logging.getLogger(__name__)
@@ -293,7 +295,9 @@ class ZipBasedPixelFile(PixelDataStore):
         self.close()
 
     def _setup_file_system(self, mode):
-        self._file_system_handle = ZipFileSystem(fo=self.path, mode=mode)
+        self._file_system_handle = ZipFileSystem(
+            fo=self.path, mode=mode, allowZip64=True
+        )
         self._current_mode = mode
 
     @property
@@ -579,8 +583,11 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         :param key: The key of the dataframe to write.
         :param partitioning: The partitioning to use when writing the dataframe.
         """
+        DEFAULT_COMPRESSION = "zstd"
+
         self._set_to_write_mode()
         if partitioning:
+            file_options = ds.FileWriteOptions().with_compression(DEFAULT_COMPRESSION)
             for _, data in dataframe.groupby(partitioning, observed=True):
                 ds.write_dataset(
                     pa.Table.from_pandas(data, preserve_index=False),
@@ -590,13 +597,18 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
                     partitioning_flavor="hive",
                     partitioning=partitioning,
                     use_threads=False,
+                    file_options=file_options,
                     existing_data_behavior="overwrite_or_ignore",
                 )
             return
 
         self._check_if_writeable(key)
         pq.write_table(
-            pa.Table.from_pandas(dataframe), where=key, filesystem=self._file_system
+            pa.Table.from_pandas(dataframe, preserve_index=False),
+            where=key,
+            filesystem=self._file_system,
+            compression=DEFAULT_COMPRESSION,
+            row_group_size=len(dataframe),
         )
 
     def read_dataframe(self, key: str) -> Optional[pd.DataFrame]:
@@ -622,4 +634,5 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
             dataset = ds.dataset(key, filesystem=self._file_system, partitioning="hive")
             return pl.scan_pyarrow_dataset(dataset)
         except FileNotFoundError:
+            return None
             return None
