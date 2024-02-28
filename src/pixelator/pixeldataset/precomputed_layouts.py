@@ -232,6 +232,8 @@ def aggregate_precomputed_layouts(
         for sample_name, layout in precomputed_layouts:
             if layout is None:
                 continue
+            if layout.is_empty:
+                continue
             layout_with_name = layout.lazy.with_columns(
                 sample=pl.lit(sample_name)
             ).pipe(zero_fill_missing_markers, all_markers=all_markers)

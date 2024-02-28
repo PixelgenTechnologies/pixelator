@@ -1,4 +1,4 @@
-"""Copyright (c) 2024 Pixelgen Technologies AB."""
+"""Copyright © 2024 Pixelgen Technologies AB."""
 
 from typing import Iterable
 
@@ -7,6 +7,7 @@ import pandas as pd
 import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
+
 from pixelator.pixeldataset.precomputed_layouts import (
     PreComputedLayouts,
     aggregate_precomputed_layouts,
@@ -205,6 +206,41 @@ class TestPreComputedLayouts:
                     "sample1",
                     "sample1",
                     "sample1",
+                    "sample2",
+                    "sample2",
+                    "sample2",
+                ],
+            }
+        )
+        pd.testing.assert_frame_equal(aggregated_layouts.to_df(), expected_df)
+
+    def test_aggregate_precomputed_layouts_empty_data_frames(self):
+        # Create some sample PreComputedLayouts
+        layout1 = PreComputedLayouts(None)
+        layout2 = PreComputedLayouts(
+            pl.DataFrame(
+                {
+                    "x": [7, 8, 9],
+                    "y": [10, 11, 12],
+                    "component": ["A", "B", "C"],
+                    "sample": ["sample2", "sample2", "sample2"],
+                }
+            ).lazy()
+        )
+
+        # Aggregate the layouts
+        aggregated_layouts = aggregate_precomputed_layouts(
+            [("sample1", layout1), ("sample2", layout2)],
+            all_markers={"x", "y", "component", "sample"},
+        )
+
+        # Check the aggregated layout DataFrame
+        expected_df = pd.DataFrame(
+            {
+                "x": [7, 8, 9],
+                "y": [10, 11, 12],
+                "component": ["A", "B", "C"],
+                "sample": [
                     "sample2",
                     "sample2",
                     "sample2",
