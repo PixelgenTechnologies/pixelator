@@ -30,7 +30,10 @@ import pyarrow.parquet as pq
 from anndata import AnnData
 from fsspec.implementations.zip import ZipFileSystem
 
+from functools import partial
+
 from pixelator.exceptions import PixelatorBaseException
+
 from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 
 if TYPE_CHECKING:
@@ -295,9 +298,15 @@ class ZipBasedPixelFile(PixelDataStore):
         self.close()
 
     def _setup_file_system(self, mode):
-        self._file_system_handle = ZipFileSystem(
-            fo=self.path, mode=mode, allowZip64=True
-        )
+        files_system = ZipFileSystem(fo=self.path, mode=mode, allowZip64=True)
+
+        # For now we are overwriting the zip open method to force it to
+        # always have force_zip=True, otherwise it won't work for large files
+        def custom_open(f):
+            return partial(f, force_zip64=True)
+
+        files_system.zip.open = custom_open(files_system.zip.open)
+        self._file_system_handle = files_system
         self._current_mode = mode
 
     @property
@@ -587,7 +596,9 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
 
         self._set_to_write_mode()
         if partitioning:
-            file_options = ds.FileWriteOptions().with_compression(DEFAULT_COMPRESSION)
+            file_options = ds.ParquetFileFormat().make_write_options(
+                compression=DEFAULT_COMPRESSION
+            )
             for _, data in dataframe.groupby(partitioning, observed=True):
                 ds.write_dataset(
                     pa.Table.from_pandas(data, preserve_index=False),
@@ -608,7 +619,7 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
             where=key,
             filesystem=self._file_system,
             compression=DEFAULT_COMPRESSION,
-            row_group_size=len(dataframe),
+            row_group_size=len(dataframe) or 1,
         )
 
     def read_dataframe(self, key: str) -> Optional[pd.DataFrame]:
@@ -634,5 +645,4 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
             dataset = ds.dataset(key, filesystem=self._file_system, partitioning="hive")
             return pl.scan_pyarrow_dataset(dataset)
         except FileNotFoundError:
-            return None
             return None
