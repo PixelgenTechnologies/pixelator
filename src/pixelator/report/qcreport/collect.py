@@ -52,16 +52,16 @@ def collect_components_umap_data(adata: AnnData) -> str:
     umap_df = pd.concat(
         [
             umap_df,
-            adata.obs[["reads", "molecules", "mean_upia_degree", "mean_umi_per_upia"]],
+            adata.obs[
+                [
+                    "reads",
+                    "molecules",
+                    "mean_b_pixels_per_a_pixel",
+                    "mean_molecules_per_a_pixel",
+                ]
+            ],
         ],
         axis=1,
-    )
-    umap_df.rename(
-        columns={
-            "mean_upia_degree": "mean_b_pixel_count_per_a_pixel",
-            "mean_umi_per_upia": "mean_molecule_count_per_a_pixel",
-        },
-        inplace=True,
     )
     return umap_df.to_csv(index=True, index_label="component")
 

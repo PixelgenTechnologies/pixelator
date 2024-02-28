@@ -96,19 +96,19 @@ class AnnotateSampleReport(SampleReport):
     )
 
     a_pixel_b_pixel_ratio_per_cell_stats: SummaryStatistics = pydantic.Field(
-        description="Summary statistics for the number of B-pixels per A-pixel in cell components.",
+        description="Summary statistics for the ratio of A-pixels to B-pixel in cell components.",
     )
 
-    molecule_count_per_a_pixel_stats: SummaryStatistics = pydantic.Field(
+    molecule_count_per_a_pixel_per_cell_stats: SummaryStatistics = pydantic.Field(
         description="Summary statistics for the number of molecules per A-pixel in cell components.",
     )
 
-    a_pixel_count_per_b_pixel_stats: SummaryStatistics = pydantic.Field(
-        description="Summary statistics for the number of A-pixels per B-pixel in cell components.",
+    a_pixel_count_per_b_pixel_per_cell_stats: SummaryStatistics = pydantic.Field(
+        description="Summary statistics for the mean number of A-pixels per B-pixel in cell components.",
     )
 
-    b_pixel_count_per_a_pixel_stats: SummaryStatistics = pydantic.Field(
-        description="Summary statistics for the number of B-pixels per A-pixel in cell components.",
+    b_pixel_count_per_a_pixel_per_cell_stats: SummaryStatistics = pydantic.Field(
+        description="Summary statistics for the mean number of B-pixels per A-pixel in cell components.",
     )
 
     # ------------------------------------------------------------------------------- #

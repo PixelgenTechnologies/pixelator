@@ -208,10 +208,12 @@ def annotate_components(
     )
 
     # filter the components metrics using the is_filtered flag
-    component_metrics = component_metrics[is_filtered_arr]
+    filtered_component_metrics = component_metrics[is_filtered_arr]
 
     # filter the edge list
-    filtered_edgelist = edgelist[edgelist["component"].isin(component_metrics.index)]
+    filtered_edgelist = edgelist[
+        edgelist["component"].isin(filtered_component_metrics.index)
+    ]
 
     # convert the filtered edge list to AnnData
     adata = edgelist_to_anndata(edgelist=filtered_edgelist, panel=panel)
@@ -240,20 +242,24 @@ def annotate_components(
     edgelist_metrics_dict = edgelist_metrics(filtered_edgelist)
     adata_metrics_dict = anndata_metrics(adata)
 
+    molecules_per_a_pixel_per_cell_stats = SummaryStatistics.from_series(
+        filtered_component_metrics["mean_molecules_per_a_pixel"]
+    )
+    a_pixel_count_per_b_pixel_per_cell_stats = SummaryStatistics.from_series(
+        filtered_component_metrics["mean_a_pixels_per_b_pixel"]
+    )
+    b_pixel_count_per_a_pixel_per_cell_stats = SummaryStatistics.from_series(
+        filtered_component_metrics["mean_b_pixels_per_a_pixel"]
+    )
+
     report = AnnotateSampleReport(
         sample_id=output_prefix,
         marker_count=edgelist_metrics_dict["marker_count"],
         a_pixel_count=edgelist_metrics_dict["a_pixel_count"],
         b_pixel_count=edgelist_metrics_dict["b_pixel_count"],
-        molecule_count_per_a_pixel_stats=edgelist_metrics_dict[
-            "molecule_count_per_a_pixel_stats"
-        ],
-        a_pixel_count_per_b_pixel_stats=edgelist_metrics_dict[
-            "a_pixel_count_per_b_pixel_stats"
-        ],
-        b_pixel_count_per_a_pixel_stats=edgelist_metrics_dict[
-            "b_pixel_count_per_a_pixel_stats"
-        ],
+        molecule_count_per_a_pixel_per_cell_stats=molecules_per_a_pixel_per_cell_stats,
+        a_pixel_count_per_b_pixel_per_cell_stats=a_pixel_count_per_b_pixel_per_cell_stats,
+        b_pixel_count_per_a_pixel_per_cell_stats=b_pixel_count_per_a_pixel_per_cell_stats,
         fraction_molecules_in_largest_component=edgelist_metrics_dict[
             "fraction_molecules_in_largest_component"
         ],
@@ -381,11 +387,11 @@ def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
     read_count = adata.obs["reads"].sum()
     molecules_per_cell_stats = SummaryStatistics.from_series(adata.obs["molecules"])
     reads_per_cell_stats = SummaryStatistics.from_series(adata.obs["reads"])
-    a_pixels_per_cell_stats = SummaryStatistics.from_series(adata.obs["upia"])
-    b_pixels_per_cell_stats = SummaryStatistics.from_series(adata.obs["upib"])
+    a_pixels_per_cell_stats = SummaryStatistics.from_series(adata.obs["a_pixels"])
+    b_pixels_per_cell_stats = SummaryStatistics.from_series(adata.obs["b_pixels"])
     markers_per_cell_stats = SummaryStatistics.from_series(adata.obs["antibodies"])
     a_pixel_b_pixel_ratio_per_cell_stats = SummaryStatistics.from_series(
-        adata.obs["upia_per_upib"]
+        adata.obs["a_pixel_b_pixel_ratio"]
     )
 
     metrics: AnnotateAnndataStatistics = {

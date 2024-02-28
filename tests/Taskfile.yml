@@ -72,22 +72,41 @@ tasks:
 
   copy-nf-core-pixelator-test-profile-results:
     internal: true
+    desc: >-
+      Copy selected files from an nf-core/pixelator pipeline to use as test data for pixelator.
+    summary: |
+      Copy selected files from an nf-core/pixelator pipeline to use as test data for pixelator.
+
+      Variables:
+        - `PIPELINE_SOURCE_DIR`: The root directory of the nf-core/pixelator repository. Default is "../nf-core-pixelator".
+        - `PIPELINE_RESULTS_DIR`: The directory to store the pipeline results in.
+          Default is "results" inside the PIPELINE_SOURCE_DIR.
+        - REPORTS_ASSETS_DIR: Where to save the report.json files in the pixelator tests
+        - DATA_ASSETS_DIR: Where to save other test files
     vars:
       PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
       PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "tmp" }}'
-      TEST_ASSETS_DIR: '{{ .TEST_ASSETS_DIR }}'
+      REPORTS_ASSETS_DIR: '{{ .REPORTS_ASSETS_DIR }}'
+      DATA_ASSETS_DIR: '{{ .DATA_ASSETS_DIR }}'
     requires:
-      vars: ["TEST_ASSETS_DIR"]
+      vars: ["REPORTS_ASSETS_DIR", "DATA_ASSETS_DIR"]
     dir: "{{ .USER_WORKING_DIR }}"
     cmds:
       - cd {{ .PIPELINE_SOURCE_DIR }};
         nf_core_pixelator_dir="$(realpath $PWD)";
+        echo "Copying json reports from $nf_core_pixelator_dir to {{ .REPORTS_ASSETS_DIR }}";
         for f in {{ .PIPELINE_RESULTS_DIR }}/pixelator/{adapterqc,amplicon,analysis,annotate,collapse,demux,graph,preqc}/*.json; do
           relative_f=$(realpath --relative-to={{ .PIPELINE_RESULTS_DIR }}/pixelator "$f");
-          mkdir --parents $(dirname "{{ .TEST_ASSETS_DIR }}/${relative_f}");
-          cp "$f" "{{ .TEST_ASSETS_DIR }}/${relative_f}";
+          mkdir --parents $(dirname "{{ .REPORTS_ASSETS_DIR }}/${relative_f}");
+          cp "$f" "{{ .REPORTS_ASSETS_DIR }}/${relative_f}";
         done
-#      - task: remove-pipeline-run
+      - cd {{ .PIPELINE_SOURCE_DIR }};
+        nf_core_pixelator_dir="$(realpath $PWD)";
+        echo "Copying other report test data from {{ .PIPELINE_RESULTS_DIR }} to {{ .REPORTS_ASSETS_DIR }}";
+        find {{ .PIPELINE_RESULTS_DIR }}/pixelator/annotate/ -name "uropod_control*annotate.dataset.pxl" -exec cp {} {{ .DATA_ASSETS_DIR }} \; ;
+        find {{ .PIPELINE_RESULTS_DIR }}/pixelator/annotate/ -name "uropod_control*raw_components_metrics.csv.gz" -exec cp {} {{ .DATA_ASSETS_DIR }} \; ;
+
+  #      - task: remove-pipeline-run
 #        vars: { PIPELINE_RESULTS_DIR: "{{ .PIPELINE_SOURCE_DIR }}/tmp" }
 
   update-report-test-data:
@@ -122,7 +141,8 @@ tasks:
         vars:
           PIPELINE_SOURCE_DIR: "{{ .PIPELINE_SOURCE_DIR }}"
           PIPELINE_RESULTS_DIR: "{{ .PIPELINE_RESULTS_DIR }}"
-          TEST_ASSETS_DIR: "{{ .TASKFILE_DIR }}/report/assets/reports_only"
+          REPORTS_ASSETS_DIR: "{{ .TASKFILE_DIR }}/report/assets/reports_only"
+          DATA_ASSETS_DIR: "{{ .TASKFILE_DIR }}/report/assets"
 
   update-web-test-data:
     desc: >-

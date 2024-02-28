@@ -83,7 +83,7 @@ def qc_report_data(
 
 @pytest.fixture(scope="module")
 def qc_report_metrics(local_assets_dir):
-    with open(local_assets_dir / "uropod_control_300k_S1_001.metrics.json") as f:
+    with open(local_assets_dir / "uropod_control.metrics.json") as f:
         metrics = json.load(f)
         return metrics
 
@@ -109,7 +109,7 @@ def test_report_builder_custom_metric_definitions(
     sample_info = SampleInfo(
         pixelator_version=__version__,
         generation_date=generation_time.isoformat(),
-        sample_id="uropod_control_300k_S1_001",
+        sample_id="uropod_control",
         sample_description="just a test",
         pixel_version="1.0.0",
         panel_name="human-sc-immunology-spatial-proteomics",
@@ -155,7 +155,7 @@ def test_report_builder(qc_report_metrics, qc_report_data, tmp_path):
     sample_info = SampleInfo(
         pixelator_version=__version__,
         generation_date=generation_time.isoformat(),
-        sample_id="uropod_control_300k_S1_001",
+        sample_id="uropod_control",
         sample_description="just a test",
         pixel_version="1.0.0",
         panel_name="human-sc-immunology-spatial-proteomics",
@@ -221,7 +221,7 @@ def test_report_builder(qc_report_metrics, qc_report_data, tmp_path):
 
 
 @pytest.mark.web_test
-@pytest.mark.parametrize("report_file", ("uropod_control_300k_S1_001.qc-report.html",))
+@pytest.mark.parametrize("report_file", ("uropod_control.qc-report.html",))
 def test_make_report(full_run_assets_dir, tmp_path, page: Page, report_file: str):
     """Use playwright to render the QC report and check if all sections are present."""
     make_report(

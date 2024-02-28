@@ -6,7 +6,7 @@
     "marker_count": 68,
     "read_count_per_molecule_stats": {
         "mean": 2.016145057128664,
-        "std": 0.12798892626922903,
+        "std": 0.127988926269229,
         "min": 2.0,
         "q1": 2.0,
         "q2": 2.0,
@@ -17,39 +17,6 @@
     },
     "a_pixel_count": 3996,
     "b_pixel_count": 3982,
-    "a_pixel_count_per_b_pixel_stats": {
-        "mean": 1.0082872928176796,
-        "std": 0.09338561862622131,
-        "min": 1.0,
-        "q1": 1.0,
-        "q2": 1.0,
-        "q3": 1.0,
-        "max": 3.0,
-        "count": 3982,
-        "iqr": 0.0
-    },
-    "b_pixel_count_per_a_pixel_stats": {
-        "mean": 1.0047547547547548,
-        "std": 0.0687906030063474,
-        "min": 1.0,
-        "q1": 1.0,
-        "q2": 1.0,
-        "q3": 1.0,
-        "max": 2.0,
-        "count": 3996,
-        "iqr": 0.0
-    },
-    "molecule_count_per_a_pixel_stats": {
-        "mean": 1.0075075075075075,
-        "std": 0.08917199862643387,
-        "min": 1.0,
-        "q1": 1.0,
-        "q2": 1.0,
-        "q3": 1.0,
-        "max": 3.0,
-        "count": 3996,
-        "iqr": 0.0
-    },
     "components_modularity": 0.9997434707190047,
     "fraction_molecules_in_largest_component": 0.0007451564828614009,
     "fraction_pixels_in_largest_component": 0.000501378791677112,

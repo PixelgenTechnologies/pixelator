@@ -1,6 +1,6 @@
 """Tests for pixeldataset.utils module.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 # pylint: disable=redefined-outer-name
@@ -99,19 +99,21 @@ def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
     )
     assert sorted(adata.obs) == sorted(
         [
-            "vertices",
-            "molecules",
+            "a_pixel_b_pixel_ratio",
+            "a_pixels",
             "antibodies",
-            "upia",
-            "upib",
-            "reads",
+            "b_pixels",
+            "mean_a_pixels_per_b_pixel",
+            "mean_b_pixels_per_a_pixel",
+            "mean_molecules_per_a_pixel",
             "mean_reads_per_molecule",
+            "median_a_pixels_per_b_pixel",
+            "median_b_pixels_per_a_pixel",
+            "median_molecules_per_a_pixel",
             "median_reads_per_molecule",
-            "mean_upia_degree",
-            "median_upia_degree",
-            "mean_umi_per_upia",
-            "median_umi_per_upia",
-            "upia_per_upib",
+            "molecules",
+            "pixels",
+            "reads",
         ]
     )
     assert "clr" in adata.obsm

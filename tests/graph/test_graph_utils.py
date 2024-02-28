@@ -2,6 +2,7 @@
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
+
 import json
 
 import numpy as np
@@ -30,19 +31,21 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
         pd.DataFrame.from_records(
             [
                 {
-                    "vertices": 100,
-                    "molecules": 2500,
+                    "pixels": 100,
+                    "a_pixels": 50,
+                    "b_pixels": 50,
                     "antibodies": 2,
-                    "upia": 50,
-                    "upib": 50,
+                    "molecules": 2500,
                     "reads": np.uint64(2500),
                     "mean_reads_per_molecule": 1.0,
                     "median_reads_per_molecule": 1.0,
-                    "mean_upia_degree": 50.0,
-                    "median_upia_degree": 50.0,
-                    "mean_umi_per_upia": 50.0,
-                    "median_umi_per_upia": 50.0,
-                    "upia_per_upib": 1.0,
+                    "mean_b_pixels_per_a_pixel": 50.0,
+                    "median_b_pixels_per_a_pixel": 50.0,
+                    "mean_a_pixels_per_b_pixel": 50.0,
+                    "median_a_pixels_per_b_pixel": 50.0,
+                    "a_pixel_b_pixel_ratio": 1.0,
+                    "mean_molecules_per_a_pixel": 50.0,
+                    "median_molecules_per_a_pixel": 50.0,
                 }
             ],
             index=pd.Index(["PXLCMP0000000"], name="component"),

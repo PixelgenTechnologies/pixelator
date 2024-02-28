@@ -49,19 +49,6 @@ class GraphSampleReport(SampleReport):
         description="The number of unique B-pixels in the graph.",
     )
 
-    a_pixel_count_per_b_pixel_stats: SummaryStatistics = pydantic.Field(
-        description="Summary statistics for the number of A-pixels per B-pixel in cell components.",
-    )
-
-    b_pixel_count_per_a_pixel_stats: SummaryStatistics = pydantic.Field(
-        description="Summary statistics for the number of B-pixels per A-pixel in cell components.",
-    )
-
-    molecule_count_per_a_pixel_stats: SummaryStatistics = pydantic.Field(
-        ...,
-        description="Summary statistics for the number of molecules per A-pixel over all component.",
-    )
-
     components_modularity: float = pydantic.Field(
         ..., description="The modularity of the components."
     )

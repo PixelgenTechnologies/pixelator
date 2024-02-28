@@ -40,8 +40,8 @@ def test_workdir_metadata(
 def test_workdir_filtered_dataset(
     pixelator_workdir, all_stages_all_reports_and_meta, filtered_dataset_pxl_workdir
 ):
-    res = pixelator_workdir.filtered_dataset("uropod_control_300k_S1_001", cache=False)
-    assert res.name == "uropod_control_300k_S1_001.annotate.dataset.pxl"
+    res = pixelator_workdir.filtered_dataset("uropod_control", cache=False)
+    assert res.name == "uropod_control.annotate.dataset.pxl"
 
     with pytest.raises(WorkdirOutputNotFound):
         pixelator_workdir.filtered_dataset("blah", cache=False)
@@ -50,10 +50,8 @@ def test_workdir_filtered_dataset(
 def test_workdir_raw_component_metrics(
     pixelator_workdir, all_stages_all_reports_and_meta, raw_component_metrics_workdir
 ):
-    res = pixelator_workdir.raw_component_metrics(
-        "uropod_control_300k_S1_001", cache=False
-    )
-    assert res.name == "uropod_control_300k_S1_001.raw_components_metrics.csv.gz"
+    res = pixelator_workdir.raw_component_metrics("uropod_control", cache=False)
+    assert res.name == "uropod_control.raw_components_metrics.csv.gz"
 
     with pytest.raises(WorkdirOutputNotFound):
         pixelator_workdir.raw_component_metrics("blah", cache=False)

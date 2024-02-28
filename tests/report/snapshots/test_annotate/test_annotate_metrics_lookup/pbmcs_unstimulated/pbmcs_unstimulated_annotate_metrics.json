@@ -1,6 +1,6 @@
 {
     "sample_id": "pbmcs_unstimulated",
-    "components_modularity": 0.9996688156200271,
+    "components_modularity": 0.9996688156200269,
     "fraction_molecules_in_largest_component": 0.0006480881399870382,
     "fraction_pixels_in_largest_component": 0.0004888381945576015,
     "input_cell_count": 3052,
@@ -47,7 +47,7 @@
     },
     "b_pixel_count_per_cell_stats": {
         "mean": 1.0026212319790302,
-        "std": 0.0511308235992953,
+        "std": 0.05113082359929529,
         "min": 1.0,
         "q1": 1.0,
         "q2": 1.0,
@@ -78,37 +78,37 @@
         "count": 3052,
         "iqr": 0.0
     },
-    "molecule_count_per_a_pixel_stats": {
-        "mean": 2.026974325641859,
-        "std": 0.18096007543678883,
-        "min": 2.0,
-        "q1": 2.0,
-        "q2": 2.0,
-        "q3": 2.0,
-        "max": 4.0,
-        "count": 3077,
-        "iqr": 0.0
-    },
-    "a_pixel_count_per_b_pixel_stats": {
-        "mean": 1.0081699346405228,
-        "std": 0.0900177027505838,
+    "molecule_count_per_a_pixel_per_cell_stats": {
+        "mean": 1.0029488859764089,
+        "std": 0.05422351932424758,
         "min": 1.0,
         "q1": 1.0,
         "q2": 1.0,
         "q3": 1.0,
         "max": 2.0,
-        "count": 3060,
+        "count": 3052,
         "iqr": 0.0
     },
-    "b_pixel_count_per_a_pixel_stats": {
-        "mean": 1.002599935001625,
-        "std": 0.050923229862335766,
+    "a_pixel_count_per_b_pixel_per_cell_stats": {
+        "mean": 1.0026212319790302,
+        "std": 0.05113082359929529,
         "min": 1.0,
         "q1": 1.0,
         "q2": 1.0,
         "q3": 1.0,
         "max": 2.0,
-        "count": 3077,
+        "count": 3052,
+        "iqr": 0.0
+    },
+    "b_pixel_count_per_a_pixel_per_cell_stats": {
+        "mean": 1.0026212319790302,
+        "std": 0.05113082359929529,
+        "min": 1.0,
+        "q1": 1.0,
+        "q2": 1.0,
+        "q3": 1.0,
+        "max": 2.0,
+        "count": 3052,
         "iqr": 0.0
     },
     "aggregate_count": 3052,
