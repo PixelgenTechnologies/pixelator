@@ -8,6 +8,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+from functools import partial
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -30,10 +31,7 @@ import pyarrow.parquet as pq
 from anndata import AnnData
 from fsspec.implementations.zip import ZipFileSystem
 
-from functools import partial
-
 from pixelator.exceptions import PixelatorBaseException
-
 from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 
 if TYPE_CHECKING:
