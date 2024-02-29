@@ -301,7 +301,9 @@ class ZipBasedPixelFile(PixelDataStore):
         files_system = ZipFileSystem(fo=self.path, mode=mode, allowZip64=True)
 
         # For now we are overwriting the zip open method to force it to
-        # always have force_zip=True, otherwise it won't work for large files
+        # always have force_zip=True, otherwise it won't work for large file
+        # This is related to this issue in fsspec:
+        # https://github.com/fsspec/filesystem_spec/issues/1474
         def custom_open(f):
             return partial(f, force_zip64=True)
 
