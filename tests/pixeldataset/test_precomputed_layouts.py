@@ -87,6 +87,22 @@ class TestPreComputedLayouts:
             "sample",
         }
 
+    def test_to_df_filters_columns(self, precomputed_layouts):
+        df = precomputed_layouts.to_df(columns=["x", "y", "component"])
+        assert isinstance(df, pd.DataFrame)
+        assert set(df["component"]) == {
+            "PXLCMP0000000",
+            "PXLCMP0000001",
+            "PXLCMP0000002",
+            "PXLCMP0000003",
+            "PXLCMP0000004",
+        }
+        assert set(df.columns) == {
+            "x",
+            "y",
+            "component",
+        }
+
     def test_lazy_returns_polars_lazy_frame(self):
         layouts_lazy = pl.DataFrame({"component": ["PXLCMP0000000"]}).lazy()
         precomputed_layouts = PreComputedLayouts(layouts_lazy)
@@ -166,6 +182,42 @@ class TestPreComputedLayouts:
         except AssertionError:
             assert_frame_equal(result[1], expected_df1)
             assert_frame_equal(result[0], expected_df2)
+
+    def test_iterator_returns_filtered_dataframes_and_requested_columns(self):
+        layouts_lazy = pl.DataFrame(
+            {
+                "component": [
+                    "PXLCMP0000000",
+                    "PXLCMP0000000",
+                    "PXLCMP0000001",
+                    "PXLCMP0000001",
+                ],
+                "graph_projection": ["a-node", "a-node", "a-node", "a-node"],
+                "layout": ["pmds", "pmds", "fr", "pmds"],
+                "x": [0.5, 0.9, 0.6, 0.3],
+                "y": [0.4, 0.1, 0.7, 0.2],
+            }
+        ).lazy()
+        precomputed_layouts = PreComputedLayouts(layouts_lazy)
+
+        result = list(
+            precomputed_layouts.component_iterator(
+                component_ids=["PXLCMP0000000"],
+                graph_projections="a-node",
+                layout_methods="pmds",
+                columns=["component", "x", "y"],
+            )
+        )
+
+        expected_df1 = pd.DataFrame(
+            {
+                "component": ["PXLCMP0000000", "PXLCMP0000000"],
+                "x": [0.5, 0.9],
+                "y": [0.4, 0.1],
+            }
+        )
+
+        assert_frame_equal(result[0], expected_df1)
 
     def test_aggregate_precomputed_layouts(self):
         # Create some sample PreComputedLayouts
