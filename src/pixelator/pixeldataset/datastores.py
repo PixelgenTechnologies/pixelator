@@ -8,6 +8,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+from functools import partial
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -29,11 +30,13 @@ import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 from anndata import AnnData
 from fsspec.implementations.zip import ZipFileSystem
-from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
+
 from pixelator.exceptions import PixelatorBaseException
+from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 
 if TYPE_CHECKING:
     from pixelator.pixeldataset import PixelDataset
+
 from pixelator.types import PathType
 
 logger = logging.getLogger(__name__)
@@ -293,7 +296,17 @@ class ZipBasedPixelFile(PixelDataStore):
         self.close()
 
     def _setup_file_system(self, mode):
-        self._file_system_handle = ZipFileSystem(fo=self.path, mode=mode)
+        files_system = ZipFileSystem(fo=self.path, mode=mode, allowZip64=True)
+
+        # For now we are overwriting the zip open method to force it to
+        # always have force_zip=True, otherwise it won't work for large file
+        # This is related to this issue in fsspec:
+        # https://github.com/fsspec/filesystem_spec/issues/1474
+        def custom_open(f):
+            return partial(f, force_zip64=True)
+
+        files_system.zip.open = custom_open(files_system.zip.open)
+        self._file_system_handle = files_system
         self._current_mode = mode
 
     @property
@@ -579,8 +592,13 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         :param key: The key of the dataframe to write.
         :param partitioning: The partitioning to use when writing the dataframe.
         """
+        DEFAULT_COMPRESSION = "zstd"
+
         self._set_to_write_mode()
         if partitioning:
+            file_options = ds.ParquetFileFormat().make_write_options(
+                compression=DEFAULT_COMPRESSION
+            )
             for _, data in dataframe.groupby(partitioning, observed=True):
                 ds.write_dataset(
                     pa.Table.from_pandas(data, preserve_index=False),
@@ -590,13 +608,23 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
                     partitioning_flavor="hive",
                     partitioning=partitioning,
                     use_threads=False,
+                    file_options=file_options,
                     existing_data_behavior="overwrite_or_ignore",
                 )
             return
 
         self._check_if_writeable(key)
         pq.write_table(
-            pa.Table.from_pandas(dataframe), where=key, filesystem=self._file_system
+            pa.Table.from_pandas(dataframe, preserve_index=False),
+            where=key,
+            filesystem=self._file_system,
+            compression=DEFAULT_COMPRESSION,
+            # We want all the data to go into one
+            # parquet row group to allow for maximum compression
+            # when we write the data here.
+            # the `or 1` ensures that it does not raise if
+            # the dataframe is empty.
+            row_group_size=len(dataframe) or 1,
         )
 
     def read_dataframe(self, key: str) -> Optional[pd.DataFrame]:
