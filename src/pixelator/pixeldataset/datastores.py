@@ -619,6 +619,11 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
             where=key,
             filesystem=self._file_system,
             compression=DEFAULT_COMPRESSION,
+            # We want all the data to go into one
+            # parquet row group to allow for maximum compression
+            # when we write the data here.
+            # the `or 1` ensures that it does not raise if
+            # the dataframe is empty.
             row_group_size=len(dataframe) or 1,
         )
 
