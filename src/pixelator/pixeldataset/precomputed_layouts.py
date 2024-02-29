@@ -87,9 +87,16 @@ class PreComputedLayouts:
         """
         return self._partitioning
 
-    def to_df(self) -> pd.DataFrame:
-        """Return the layouts as a pandas DataFrame."""
-        return self.lazy.collect().to_pandas()
+    def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
+        """Return the layouts as a pandas DataFrame.
+
+        :param columns: the columns to return, if `None` all columns will be returned
+        :return: A pandas DataFrame with the layout(s)
+        """
+        if columns is None:
+            return self.lazy.collect().to_pandas()
+
+        return self.lazy.select(columns).collect().to_pandas()
 
     @property
     def lazy(self) -> pl.LazyFrame:
@@ -142,6 +149,7 @@ class PreComputedLayouts:
         component_ids: Optional[set[str] | str] = None,
         graph_projections: Optional[set[str] | str] = None,
         layout_methods: Optional[set[str] | str] = None,
+        columns: Optional[list[str]] = None,
     ) -> Iterable[pd.DataFrame]:
         """Get an iterator over the components provided.
 
@@ -154,6 +162,7 @@ class PreComputedLayouts:
                               will be returned.
         :param graph_projections: the graph projections to filter on
         :param layout_methods: the layout methods to filter on
+        :param columns: the columns to return, if `None` all columns will be returned
         :yields pd.DataFrame: A generator over the components where each dataframe contains the layout(s)
                   for that component
         """
@@ -167,12 +176,8 @@ class PreComputedLayouts:
             unique_components = self._convert_to_set(component_ids)  # type: ignore
 
         for component in unique_components:
-            yield (
-                self._filter_layouts(
-                    self.lazy, component, graph_projections, layout_methods
-                )
-                .collect()
-                .to_pandas()
+            yield self.filter(component, graph_projections, layout_methods).to_df(
+                columns
             )
 
     @staticmethod
