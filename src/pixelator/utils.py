@@ -418,7 +418,7 @@ def get_read_sample_name(read: str) -> str:
     r1_match = re.search(R1_REGEX, read_stem)
     r2_match = re.search(R2_REGEX, read_stem)
 
-    # Check if the r1 and r2 suffixes are not "exclusive or"
+    # Check if the r1 and r2 suffixes are "exclusive or"
     if r1_match and r2_match or (not r1_match and not r2_match):
         raise ValueError("Invalid R1/R2 suffix.")
 
