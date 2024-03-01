@@ -10,9 +10,10 @@ import struct
 import sys
 import threading
 import time
+import traceback
 import typing
 import warnings
-from logging.handlers import SocketHandler, DEFAULT_TCP_LOGGING_PORT
+from logging.handlers import DEFAULT_TCP_LOGGING_PORT, SocketHandler
 from pathlib import Path
 
 import click
@@ -133,7 +134,9 @@ class LoggingSetup:
     All messages are passed to a separate process that handles the logging to a file.
     """
 
-    def __init__(self, log_file: PathType | None, verbose: bool, logger=None):
+    def __init__(
+        self, log_file: PathType | None = None, verbose: bool = False, logger=None
+    ):
         """Initialize the logging setup.
 
         :param log_file: the filename of the log output
@@ -192,33 +195,43 @@ class LoggingSetup:
         """Close down the logging setup."""
         self._shutdown_listener()
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback_obj):
         """Exit the context manager.
 
         This will shut down the logging process if needed.
         """
-        self.close()
+
+        def log_exception(exc_type, exc_value, traceback_obj):
+            if issubclass(exc_type, click.exceptions.Exit):
+                # click will raise a click.exceptions.Exit exception
+                # when exiting the application, and we don't want to
+                # put that as an error in the log.
+                return
+
+            self._root_logger.critical(
+                "Unhandled exception of type: {}".format(exc_type.__name__)
+            )
+            self._root_logger.critical("Exception message was: {}".format(exc_value))
+            for item in traceback.format_exception(exc_type, exc_value, traceback_obj):
+                for line in item.splitlines():
+                    self._root_logger.critical(line)
+
+        try:
+            # It seems that sometimes the current exception is not passed
+            # to the __exit__ method. This allows us to check if there
+            # is any raised exception and make sure this gets added to
+            # the log.
+            if exc_type is None:
+                exc_type, exc_value, traceback_obj = sys.exc_info()
+                if exc_type is not None:
+                    log_exception(exc_type, exc_value, traceback_obj)
+            else:
+                log_exception(exc_type, exc_value, traceback_obj)
+        finally:
+            self.close()
+
         # Reraise exception higher up the stack
         return False
-
-
-def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
-    """Handle "unhandled" exceptions."""
-    pixelator_root_logger = logging.getLogger()
-
-    if issubclass(exc_type, KeyboardInterrupt):
-        # Will call default excepthook
-        sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return
-
-    # Create a critical level log message with info from the except hook.
-    pixelator_root_logger.critical(
-        "Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback)
-    )
-
-
-# Assign the excepthook to the handler
-sys.excepthook = handle_unhandled_exception
 
 
 class LogRecordStreamHandler(socketserver.StreamRequestHandler):

@@ -1,7 +1,6 @@
 """Tests for the pixelator logging module.
 
-
-Copyright (c) 2024 Pixelgen Technologies AB.
+Copyright © 2024 Pixelgen Technologies AB.
 """
 
 import logging
@@ -9,8 +8,8 @@ import tempfile
 import time
 from pathlib import Path
 
+from concurrent.futures import ThreadPoolExecutor
 import pytest
-
 from pixelator.logging import LoggingSetup
 from pixelator.utils import (
     get_process_pool_executor,
@@ -172,3 +171,47 @@ def test_multiprocess_logging(verbose):
     assert_messages_eventually_in_file(messages, test_log_file)
     if not verbose:
         assert "This is a debug message" not in Path(test_log_file.name).read_text()
+
+
+def raise_unhandled_exception():
+    raise ValueError("This is an unhandled exception")
+
+
+def test_unhandled_exception(caplog):
+    """Test that raising an unexpected exception gets added to the log"""
+
+    with pytest.raises(ValueError, match="This is an unhandled exception"):
+        with LoggingSetup():
+            raise ValueError("This is an unhandled exception")
+
+    assert "Unhandled exception of type: ValueError" in caplog.messages
+    assert "Exception message was: This is an unhandled exception" in caplog.messages
+    assert "Traceback" in caplog.text
+
+
+def test_unhandled_exception_multiprocess_logging(caplog):
+    """Test that raising an unexpected exception gets added to the log when multiprocessing"""
+
+    with pytest.raises(ValueError, match="This is an unhandled exception"):
+        with LoggingSetup() as logging_setup:
+            with get_process_pool_executor(
+                nbr_cores=4, logging_setup=logging_setup, context="fork"
+            ) as executor:
+                executor.submit(raise_unhandled_exception).result()
+
+    assert "Unhandled exception of type: ValueError" in caplog.messages
+    assert "Exception message was: This is an unhandled exception" in caplog.messages
+    assert "Traceback" in caplog.text
+
+
+def test_unhandled_exception_multithreading_logging(caplog):
+    """Test that raising an unexpected exception gets added to the log when multithreading"""
+
+    with pytest.raises(ValueError, match="This is an unhandled exception"):
+        with LoggingSetup():
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                executor.submit(raise_unhandled_exception).result()
+
+    assert "Unhandled exception of type: ValueError" in caplog.messages
+    assert "Exception message was: This is an unhandled exception" in caplog.messages
+    assert "Traceback" in caplog.text
