@@ -681,6 +681,7 @@ def plot_colocalization_heatmap(
         colocalization_data_pivot,
         yticklabels=True,
         xticklabels=True,
+        linewidths=0.1,
         method="complete",
         cmap=cmap,
     )
@@ -771,11 +772,15 @@ def plot_colocalization_diff_heatmap(
         markers=top_markers,
     )
 
+    max_value = np.max(np.abs(pivoted_differential_colocalization.to_numpy().flatten()))
     sns.clustermap(
         pivoted_differential_colocalization,
         yticklabels=True,
         xticklabels=True,
         method="complete",
+        linewidths=0.1,
+        vmin=-max_value,
+        vmax=max_value,
         cmap=cmap,
     )
 
