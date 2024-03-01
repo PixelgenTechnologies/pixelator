@@ -312,8 +312,7 @@ class PixelatorWorkdir:
         fn: typing.Callable[[], dict[str, list[Path]]],
         sample: Optional[str] = None,
         cache: bool = True,
-    ) -> list[Path]:
-        ...
+    ) -> list[Path]: ...
 
     @typing.overload
     def _cached_reports_implementation(
@@ -322,8 +321,7 @@ class PixelatorWorkdir:
         fn: typing.Callable[[], dict[str, Path]],
         sample: Optional[str] = None,
         cache: bool = True,
-    ) -> Path:
-        ...
+    ) -> Path: ...
 
     def _cached_reports_implementation(
         self,
@@ -354,8 +352,7 @@ class PixelatorWorkdir:
         sample: None = None,
         *,
         cache: bool = True,
-    ) -> List[Path]:
-        ...
+    ) -> List[Path]: ...
 
     @typing.overload
     def single_cell_report(
@@ -364,8 +361,7 @@ class PixelatorWorkdir:
         sample: str,
         *,
         cache: bool = True,
-    ) -> Path:
-        ...
+    ) -> Path: ...
 
     def single_cell_report(
         self,
@@ -391,16 +387,14 @@ class PixelatorWorkdir:
         self,
         sample: None = None,
         cache: bool = True,
-    ) -> list[Path]:
-        ...
+    ) -> list[Path]: ...
 
     @typing.overload
     def filtered_dataset(
         self,
         sample: str,
         cache: bool = True,
-    ) -> Path:
-        ...
+    ) -> Path: ...
 
     def filtered_dataset(
         self, sample: str | None = None, cache: bool = True
@@ -422,16 +416,14 @@ class PixelatorWorkdir:
         self,
         sample: None = None,
         cache: bool = True,
-    ) -> list[Path]:
-        ...
+    ) -> list[Path]: ...
 
     @typing.overload
     def raw_component_metrics(
         self,
         sample: str,
         cache: bool = True,
-    ) -> Path:
-        ...
+    ) -> Path: ...
 
     def raw_component_metrics(
         self, sample: Optional[str] = None, cache: bool = True

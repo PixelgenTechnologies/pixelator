@@ -1,4 +1,4 @@
-""""Tests for PixelatorReporting related to the collapse stage.
+"""Tests for PixelatorReporting related to the collapse stage.
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
