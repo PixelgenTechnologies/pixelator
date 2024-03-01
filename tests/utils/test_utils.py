@@ -105,8 +105,13 @@ def test_get_read_sample_name():
     assert get_read_sample_name("sample1.R1.fq.gz") == "sample1"
     assert get_read_sample_name("sample1.R2.fq.gz") == "sample1"
 
-    assert get_read_sample_name("sample1_R1_L001.fq.gz") == "sample1_L001"
-    assert get_read_sample_name("sample1_R2_L001.fq.gz") == "sample1_L001"
+    assert get_read_sample_name("sample1_L001_R1.fq.gz") == "sample1_L001"
+    assert get_read_sample_name("sample1_L001_R2.fq.gz") == "sample1_L001"
+
+    # Check that illumina numbered suffixes are recognised and remain
+    # in the sample name
+    assert get_read_sample_name("sample1_L001_R1_001.fq.gz") == "sample1_L001_001"
+    assert get_read_sample_name("sample1_L001_R2_001.fq.gz") == "sample1_L001_001"
 
 
 def test_is_read_file():
