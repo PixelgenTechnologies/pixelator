@@ -393,6 +393,10 @@ def get_process_pool_executor(
     return ProcessPoolExecutor(**args_dict)
 
 
+R1_REGEX = R"(.[Rr]1$)|(_[Rr]?1$)|(_[Rr]?1)(?P<suffix>_[0-9]{3})$"
+R2_REGEX = R"(.[Rr]2$)|(_[Rr]?2$)|(_[Rr]?2)(?P<suffix>_[0-9]{3})$"
+
+
 def get_read_sample_name(read: str) -> str:
     """Extract the sample name from a read file.
 
@@ -411,12 +415,22 @@ def get_read_sample_name(read: str) -> str:
 
     read_stem = Path(read).name
     read_stem = read_stem.removesuffix(get_extension(read_stem, 2)).rstrip(".")
-    matches = re.findall(R"(.[Rr][12]|(_[Rr]?[12]))", read_stem)
-    if len(matches) != 1:
+    r1_match = re.search(R1_REGEX, read_stem)
+    r2_match = re.search(R2_REGEX, read_stem)
+
+    # Check if the r1 and r2 suffixes are not "exclusive or"
+    if r1_match and r2_match or (not r1_match and not r2_match):
         raise ValueError("Invalid R1/R2 suffix.")
 
-    pattern, pos = matches[0]
+    # We need to cast away the optional here r1 or r2 will always
+    # return a match object since we checked for both being None above
+    match = typing.cast(re.Match[str], r1_match or r2_match)
+    pattern = match.group()
     sample_name = read_stem.replace(pattern, "")
+
+    if match.groupdict().get("suffix"):
+        sample_name += match.group("suffix")
+
     return sample_name
 
 
@@ -439,18 +453,18 @@ def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> 
     if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
         raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
 
-    matches = []
+    match: re.Match[str] | None = None
     read_stem = Path(read.removesuffix(get_extension(read, 2)).rstrip(".")).name
     if read_type == "r1":
-        matches = re.findall(R"(.[Rr]1$)|(_[Rr]?1$)|(_[Rr]?1_[0-9]{3}$)", read_stem)
+        match = re.search(R1_REGEX, read_stem)
     elif read_type == "r2":
-        matches = re.findall(R"(.[Rr]2$)|(_[Rr]?2$)|(_[Rr]?2_[0-9]{3}$)", read_stem)
+        match = re.search(R2_REGEX, read_stem)
     else:
         raise AssertionError(
             "Invalid read type: could not find a read suffix in filename."
         )
 
-    if not matches:
+    if not match:
         return False
 
     return True
