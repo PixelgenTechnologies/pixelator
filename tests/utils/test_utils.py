@@ -129,6 +129,7 @@ def test_is_read_file():
         "sample1_r1.fq.gz",
         "sample1.r1.fq.gz",
         "sample1.R1.fq.gz",
+        "sample_1_R2_R1.fq.gz",
     ]:
         assert is_read_file(r1_check, read_type="r1")
         assert not is_read_file(r1_check, read_type="r2")
@@ -139,6 +140,7 @@ def test_is_read_file():
         "sample1_r2.fq.gz",
         "sample1.r2.fq.gz",
         "sample1.R2.fq.gz",
+        "sample_R1_2_R2.fq.gz",
     ]:
         assert is_read_file(r2_check, read_type="r2")
         assert not is_read_file(r2_check, read_type="r1")
