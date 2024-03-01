@@ -138,6 +138,20 @@ def test_is_read_file():
         assert is_read_file(r2_check, read_type="r2")
         assert not is_read_file(r2_check, read_type="r1")
 
+    # Check that read suffixes are only tested at the end of the file name
+    assert is_read_file("sample_1_dwwdwdw_R1.fq.gz", read_type="r1")
+
+    # Check that read suffixes are not checked in path components
+    assert is_read_file("sample_R2/sample_1_dwwdwdw_R1.fq.gz", read_type="r1")
+    assert is_read_file("sample_R1/sample_1_dwwdwdw_R2.fq.gz", read_type="r2")
+
+    # Check that illumina numbered suffixes are recognised
+    assert is_read_file("sample_1_dwwdwdw_R1_001.fq.gz", read_type="r1")
+    assert not is_read_file("sample_1_dwwdwdw_R1_001.fq.gz", read_type="r2")
+
+    assert is_read_file("sample_1_dwwdwdw_R2_003.fq.gz", read_type="r2")
+    assert not is_read_file("sample_1_dwwdwdw_R2_003.fq.gz", read_type="r1")
+
 
 def test_is_read_file_should_be_ok_when_r1_or_r2_in_dir_name():
     # not the r1 in the directory name

@@ -5,6 +5,7 @@ This is a general copyright checker for python files committed to pixelator
 
 Do not delete the shebang on top of the file or it will stop working
 """
+
 import ast
 import sys
 from itertools import chain

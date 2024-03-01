@@ -263,13 +263,13 @@ bump2version = "*"
 
 [[package]]
 name = "cachetools"
-version = "5.3.2"
+version = "5.3.3"
 description = "Extensible memoizing collections and decorators"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "cachetools-5.3.2-py3-none-any.whl", hash = "sha256:861f35a13a451f94e301ce2bec7cac63e881232ccce7ed67fab9b5df4d3beaa1"},
-    {file = "cachetools-5.3.2.tar.gz", hash = "sha256:086ee420196f7b2ab9ca2db2520aca326318b68fe5ba8bc4d49cca91add450f2"},
+    {file = "cachetools-5.3.3-py3-none-any.whl", hash = "sha256:0abad1021d3f8325b2fc1d2e9c8b9c9d57b04c3932657a72465447332c24d945"},
+    {file = "cachetools-5.3.3.tar.gz", hash = "sha256:ba29e2dfa0b8b556606f097407ed1aa62080ee108ab0dc5ec9d6a723a007d105"},
 ]
 
 [[package]]
@@ -2422,17 +2422,17 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "polars"
-version = "0.20.10"
+version = "0.20.13"
 description = "Blazingly fast DataFrame library"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "polars-0.20.10-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:14b126dbe626c8df34a9cc1449dea270dbafd64deff88fc3620046e69e06f84c"},
-    {file = "polars-0.20.10-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:6d5f485dba006aa1ce443980b351a5cb8ff481cbbc51343debfbf66fb9594269"},
-    {file = "polars-0.20.10-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ff934fe816856db7b72565b35abf1656db485772cd3bc5631071cef7ec1d10c7"},
-    {file = "polars-0.20.10-cp38-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:f5b7222ca39a4cbd286d9927d4924d2bc2ce6d7fc83a256bfd20b4199482722f"},
-    {file = "polars-0.20.10-cp38-abi3-win_amd64.whl", hash = "sha256:082a22c0c1bfa1fe0c24198e646ffb19478b893f594ecf8e330c7cdc136f6e6b"},
-    {file = "polars-0.20.10.tar.gz", hash = "sha256:ab32a232916df61c9377edcb5893d0b1624d810444d8fa627f9885d33819a8b7"},
+    {file = "polars-0.20.13-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:63bb00eb32b151a949666f8ae050bd09159bca572c0eab17a17abe6ac50fc8e0"},
+    {file = "polars-0.20.13-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:4ed694808252968dcda486dcd6009b8230bada83924d4f5d3359dbe3db6ab8e5"},
+    {file = "polars-0.20.13-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1557e8947a263cefc1937cd047800678fbae8c9a475e6dada5b7dc6557180a4f"},
+    {file = "polars-0.20.13-cp38-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:8694d6fc307256e9e36b03975ccc89ce89290d6d661f75eb60e14e304d1e0968"},
+    {file = "polars-0.20.13-cp38-abi3-win_amd64.whl", hash = "sha256:3917868d0a0331436a426f7acda24b2806e7f2458ee91f581d44765c9e87abe8"},
+    {file = "polars-0.20.13.tar.gz", hash = "sha256:b3115c7499705d8f1a790add5806747a2eb3f19660d277e8e823199dcb66aeaf"},
 ]
 
 [package.extras]
@@ -2749,74 +2749,85 @@ dev = ["black", "flake8", "flake8-black", "isort", "jupyter-console", "mkdocs", 
 
 [[package]]
 name = "pyfastx"
-version = "2.0.2"
+version = "2.1.0"
 description = "pyfastx is a python module for fast random access to sequences from plain and gzipped FASTA/Q file"
 optional = false
 python-versions = "*"
 files = [
-    {file = "pyfastx-2.0.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:f969f27e8178f8fe4c47a531076fb930a8f3f563719bf6c446db56d321270d8a"},
-    {file = "pyfastx-2.0.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:cf9a04d56c4745d33f36c5f09d41809c97e1451e0e0c817be07981ed34b31c54"},
-    {file = "pyfastx-2.0.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:ebe187d704e9667af4abe7df69a2506a37bd3d601e403600419b0aae3918c6ff"},
-    {file = "pyfastx-2.0.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7111ca63c0552fb7134b44798a6f8c876c58ad00133decbd984b35719b91e08e"},
-    {file = "pyfastx-2.0.2-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:485dc9ebf93e8dcb41b9e864530f6a21f13cd338473641e4dac501921f1c19cc"},
-    {file = "pyfastx-2.0.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5c465be51f5fe21b23aae8722520b5772fbdbdff4e78ac2dedb7216fa95b0905"},
-    {file = "pyfastx-2.0.2-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:b09b98710cec17b3d3a6c8658c4564790eae4be5c423aa7bb7de22e7b4b8ce7f"},
-    {file = "pyfastx-2.0.2-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:27f3e6db8803205a79d3c18c8307c82b5e5b48a53669613ec8672a6728475344"},
-    {file = "pyfastx-2.0.2-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:a8e0c72646620ffd2d17d40673e371113569b274b535dc63fe640bde92995695"},
-    {file = "pyfastx-2.0.2-cp310-cp310-win32.whl", hash = "sha256:51860fc10a55fe2a905a2fd708bc04631ae1027564591bfdb7fc85cd0ff0df17"},
-    {file = "pyfastx-2.0.2-cp310-cp310-win_amd64.whl", hash = "sha256:be85795a06e33b16b174d2e9641e4c8ba45a4a92248bf179c371675f993e3bd9"},
-    {file = "pyfastx-2.0.2-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:517f0967ee7ed32371ada8efbdb215bc8619c857464414f3a655e901e2d99bb1"},
-    {file = "pyfastx-2.0.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:5101cfff70e38a088d57141f6ac56486d2d41f8de4584867ca8bd1cfd2b487df"},
-    {file = "pyfastx-2.0.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:32e7f38a98f9df8ca32dcf15aba2f5a15b998482a8d81cf0b4461f9f34cb6a6c"},
-    {file = "pyfastx-2.0.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c7ec0851e040bcdce0601eb719fc1146f2591d6cfb2449f6aeb2fa1c2efccad7"},
-    {file = "pyfastx-2.0.2-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:b00d8d86c739321a0807f38e6557f61d8ab8e26e4c3842cae9b50b3ffaebd406"},
-    {file = "pyfastx-2.0.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4e41c3fe8cf6e5834d912eea282d7e46e53a56c8b935b34e24d9a199c1bb7a91"},
-    {file = "pyfastx-2.0.2-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:6ea908d0fa2bf23a970567a50c84d088a49e0dab0d5bb5712612078c81532171"},
-    {file = "pyfastx-2.0.2-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:6c8451b5037ea592449d12c0f6e88803009968326b88b45a4d0906467c4867d7"},
-    {file = "pyfastx-2.0.2-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:b60b99fd77494b04275eeeb4055946bffb824c7dc3a43695e3f835c3ff654dca"},
-    {file = "pyfastx-2.0.2-cp311-cp311-win32.whl", hash = "sha256:b4fffb944f1ff897acff590fc3b75acc448e0c87497ed4859cc178cf5aac4f20"},
-    {file = "pyfastx-2.0.2-cp311-cp311-win_amd64.whl", hash = "sha256:a24f79a4b16fc1f42cf49315be9e76811c421392796fd53fec3a82e6eca36874"},
-    {file = "pyfastx-2.0.2-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:11dc3fbfb5d9dac37d9a57a163407ac90fe7b8b520954642f78b5427db902a69"},
-    {file = "pyfastx-2.0.2-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:81b25b5ad9ddbe9d00a23d1e86217f27497e7bbab4e7f48f41295f74abbe7f71"},
-    {file = "pyfastx-2.0.2-cp36-cp36m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:f9047d97b9351d2ec899bf63cc1cd64288c9b0e02c3062c9fde5a06e68937981"},
-    {file = "pyfastx-2.0.2-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:47bbd9044027dc913717a040c8e9704763e3fb501d8cfd740e4030216b08f052"},
-    {file = "pyfastx-2.0.2-cp36-cp36m-musllinux_1_1_aarch64.whl", hash = "sha256:f46cdf858960c1abedf47eafea02ddfd5f786b841c82627c91fc8e4e88cba14e"},
-    {file = "pyfastx-2.0.2-cp36-cp36m-musllinux_1_1_i686.whl", hash = "sha256:21f7d200a8c770aa361755e785bcd0dab61074334388f94ff129dbf243a53d7f"},
-    {file = "pyfastx-2.0.2-cp36-cp36m-musllinux_1_1_x86_64.whl", hash = "sha256:d4b005e8683a460f516a15653787ac6222f08bf2fa90b685e9ad3374dd22a21f"},
-    {file = "pyfastx-2.0.2-cp36-cp36m-win32.whl", hash = "sha256:faec41c61433413ab023b93ec437c4fbd0171e0bd9b3dea78c0030b06e21993b"},
-    {file = "pyfastx-2.0.2-cp36-cp36m-win_amd64.whl", hash = "sha256:ffe8da487003b427585e8ac7a749c1113ef1e15c6dbd7668e19dff39d218ffd4"},
-    {file = "pyfastx-2.0.2-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:98d8f258777e4e12dd6fab87b8c714541ec82be78c9f79d370ce4a6f1ec91cbc"},
-    {file = "pyfastx-2.0.2-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:04905486be5f4f1627ff2726b3bcb0ab39db3496e66bd4106b90ab2b467a6fda"},
-    {file = "pyfastx-2.0.2-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:f18fd56cff857504fb774fca06e48150cc7daadf67e01cc8fd333fa64d19443a"},
-    {file = "pyfastx-2.0.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4371dc2e0ae0544bc6c51a680e6e2d09624698480b89cd5b656064a0a98c03c7"},
-    {file = "pyfastx-2.0.2-cp37-cp37m-musllinux_1_1_aarch64.whl", hash = "sha256:6caad889c404fcee986069bbc7d5176cff9c145c1c6eaef1ea37cb8907819f39"},
-    {file = "pyfastx-2.0.2-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:e355ff69abc56744f102bbacad3ba80c0ff3664dd1f992afbb435ae6c9757041"},
-    {file = "pyfastx-2.0.2-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:3af8c4a77d5da6925d79d1d9cb5ee99006bb0d6583e1e19d3d0823aca51a308f"},
-    {file = "pyfastx-2.0.2-cp37-cp37m-win32.whl", hash = "sha256:34b0e2cd6bea0e690f4a4013ee0b5caae77599a2e7fa6dd66bc99ad883e7deb9"},
-    {file = "pyfastx-2.0.2-cp37-cp37m-win_amd64.whl", hash = "sha256:513338c88fc77503773d534bb86f87803e54101b8f62dd9e6b9df6c2e3d3c59e"},
-    {file = "pyfastx-2.0.2-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:2237f3b719e85ef7c46f40850bf22f5b0247ba6b5652b407e917973d1497c371"},
-    {file = "pyfastx-2.0.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:b2de5fc7f042d8a959dc68f7c43a788ded3db20e2831fdb1751d4a469145c4cf"},
-    {file = "pyfastx-2.0.2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:82092a06b9ba9b3ad1dac53e3f4d2988db337079255f9bdf919d78cfeb631a61"},
-    {file = "pyfastx-2.0.2-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d43d9fc921ea4055abb15ce582c8b059fb5ab0540edf03251095a2ac72610763"},
-    {file = "pyfastx-2.0.2-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a4cc9ddc085139c63e9789469f8a52cfe3e7a7405f2104f3f753eecaf933f788"},
-    {file = "pyfastx-2.0.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:40bf2bf875ad3efeab377b738797ea0be5404e5f9afca6faa4abb7a48e7e0a62"},
-    {file = "pyfastx-2.0.2-cp38-cp38-musllinux_1_1_aarch64.whl", hash = "sha256:d1a66de92610001826fd559c3c19f048a9e645c07f437e3aafb73c010e4d4f0d"},
-    {file = "pyfastx-2.0.2-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:fe31d8c967498592551ee8755f3cedd8b28ad97af459620da16ddaa520d035db"},
-    {file = "pyfastx-2.0.2-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:9e9686c269a4bb877f69904e747a8febc549b45057e5f31d91f84b7337b14b89"},
-    {file = "pyfastx-2.0.2-cp38-cp38-win32.whl", hash = "sha256:c21c6a33ec3ea75eda201ede3f4934ef0cbfd4904664a59a0b6e0e1e0b476861"},
-    {file = "pyfastx-2.0.2-cp38-cp38-win_amd64.whl", hash = "sha256:b55b9b34e7c7da9c79e6ff429bfef5f36852f0cb64e2d85c2bd4629a546d046d"},
-    {file = "pyfastx-2.0.2-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:48f94704794c2400113505191efe3255c93c6cc82e95e69afb39d018547e2887"},
-    {file = "pyfastx-2.0.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:9308565db7d7bba601b3ee28da12dae703773565775deb98a6abae75df698056"},
-    {file = "pyfastx-2.0.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:1270c176bd9c6b32457bc81d91fe7d45467ee8cb74c3975526e511487b72805b"},
-    {file = "pyfastx-2.0.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1c603f3d8f739afa1b01712f18debbcc65ba1b1c119b362e712f22462bf1ed8b"},
-    {file = "pyfastx-2.0.2-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:0d96a71b6184f76322691ba876dcafdd6dc724decca0ba11f1119b39996cebe0"},
-    {file = "pyfastx-2.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7e73601a2ea8030531f59a604fc2048d904d69169fadd9056cbc4a4ecbd5d1b4"},
-    {file = "pyfastx-2.0.2-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:b226cdac75d10934e97c57c73ed44659cfbe0500adafaad0d5ae4dcaab06a942"},
-    {file = "pyfastx-2.0.2-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:37930397d59294002a0e73648dcddc78c0370f75cead8b0d70f8f7e5f85710b4"},
-    {file = "pyfastx-2.0.2-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:f1c9012f4c2fdcb12d45fb2357ae528849ad942cb58abd3ba0544acc7c9da1db"},
-    {file = "pyfastx-2.0.2-cp39-cp39-win32.whl", hash = "sha256:38562c7a4841196e770c08771f3e74eebd07aaaf3290b317f113b0bb8bf16d99"},
-    {file = "pyfastx-2.0.2-cp39-cp39-win_amd64.whl", hash = "sha256:dddc7a51105580a0b4fae37ef9575feac12eef1d4abb0cd2a562fcd4b3cf991b"},
-    {file = "pyfastx-2.0.2.tar.gz", hash = "sha256:94e2e33a601972492ef7fdcd24cf85fcbf9f6fa2020881aede5be505cd26cde8"},
+    {file = "pyfastx-2.1.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:163bd917be0dae20f23cd2f0c7a567e50a0214d818bf92b496eab23ddc5c33a6"},
+    {file = "pyfastx-2.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:5218e386488b4d610657c6beecd88f6ff9c65e9312c3fae1dc938eb20448b122"},
+    {file = "pyfastx-2.1.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:bd5a7a73fd2ce85c5d6ef6f9930821102c59c1db8e98fd4507e3e47ab2df2a61"},
+    {file = "pyfastx-2.1.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:eac021a51ccd5e44c826a5c350a0e8278335b5590afc300cc869225f0d97116c"},
+    {file = "pyfastx-2.1.0-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:1c1bfc04dd8791d4f9862bcebf82f2022b8c294af09a57413613256e6c6c8b08"},
+    {file = "pyfastx-2.1.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bc247801764f2eacece322d79066bd5f7e0c91fd041782d1cdde9a83d34bce48"},
+    {file = "pyfastx-2.1.0-cp310-cp310-musllinux_1_1_aarch64.whl", hash = "sha256:87fc5c4678bec27d2bfb725b1b2371f40431edf02931731bb8120e27e6f27ec0"},
+    {file = "pyfastx-2.1.0-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:78ee4676aa81cb2e4740ea33284d663897dab6c814259a102f39b885f570018d"},
+    {file = "pyfastx-2.1.0-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:64b2c4e7989796ce037ed33bcfbb18a959d6eebd2538db7ed5ef332deedc95df"},
+    {file = "pyfastx-2.1.0-cp310-cp310-win32.whl", hash = "sha256:32ca9490858f84de264e470f0b7d15309ff5d1571bcd6dea9486fba2cf93f33f"},
+    {file = "pyfastx-2.1.0-cp310-cp310-win_amd64.whl", hash = "sha256:7115eb217400ff523e54d7ad5370184ce82024533ddd65e11250af057ba83067"},
+    {file = "pyfastx-2.1.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:0984116eccf7d4a64957bc832f5299a19fa1e5a9e955c6319cf47f3d6bc3e56b"},
+    {file = "pyfastx-2.1.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:484cd008da6edb40ba0e69cbfd8ed9a90a8bc96f8b3f53e7586f98a8a5e35015"},
+    {file = "pyfastx-2.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:709fe8b47cec32d3ffc02d88e01b8c332bff9a4a277755b98adaca215c7747ee"},
+    {file = "pyfastx-2.1.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d846bc8ff595b9981637a8d8aa52d7f5e5583194246d118473fdf11dc442baf7"},
+    {file = "pyfastx-2.1.0-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:1445e4ed637c29284aaa7e49e32052c9e8235b86e8c74e3d34d7d5ba5358ec64"},
+    {file = "pyfastx-2.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:dc3085ae7f13b6acce5d63f016c46badcdcc49329fe4ca8651f009015f8ee2a3"},
+    {file = "pyfastx-2.1.0-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:f04646fedbf633ca955ab0ba8ca1ef47dd78a9fa0c05f2f82225210ff7a4a6ec"},
+    {file = "pyfastx-2.1.0-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:fa0a2924c70c3bf953d5dcbe13470e27c0f0da32ad4718a4acedfb60917ba1af"},
+    {file = "pyfastx-2.1.0-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:3018d70dc7fc12d858c05b6fdfcc87f10f2566e19728e44e2c048bb1bf41bb75"},
+    {file = "pyfastx-2.1.0-cp311-cp311-win32.whl", hash = "sha256:8286992e984153ff2198b1e9b186ec636d7aec732ad171892dfddb2d8662fc51"},
+    {file = "pyfastx-2.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:33c4fa5677de7d85478246ac2ee1f3498cf56118d150470e8bc562e534bf5da8"},
+    {file = "pyfastx-2.1.0-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:cd587aa5ab00993f6b564ee1e5f6b5b21d443a559a4ab1cb0e92fd7397ebabe8"},
+    {file = "pyfastx-2.1.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:5cc89377fd56dbd08f561e4dc3a2fc088ec1b18385145e664fc596e54bbc173a"},
+    {file = "pyfastx-2.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:07160a216ba3429e5a9a99bfc151b880231624ce1efb413cded1fa041c92096d"},
+    {file = "pyfastx-2.1.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:96f35a86fadbf50635134f2cc0e405f6b511ba25d85be3521d37824e4fd2feb5"},
+    {file = "pyfastx-2.1.0-cp312-cp312-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:806086a7f6f669a20b4ae28e4bfecfad282e27040c3542910efe28b497d93db5"},
+    {file = "pyfastx-2.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bca5d9f56cb616d2933ca3e4bd5960278ff02461a7d835c4c1dca2fde4237e73"},
+    {file = "pyfastx-2.1.0-cp312-cp312-musllinux_1_1_aarch64.whl", hash = "sha256:fad29abc15270718be4ce8ff73f376b38c635c2bfcafea5fde62a40cb7d63341"},
+    {file = "pyfastx-2.1.0-cp312-cp312-musllinux_1_1_i686.whl", hash = "sha256:9f0431374a62ee6b294db6ce02dec9dc7d969bdaaad110f4c75e8981e4074894"},
+    {file = "pyfastx-2.1.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:08669a0878a0022ada299c2cf5e9478f6c839b992cc5ebf7467042b9df9451d1"},
+    {file = "pyfastx-2.1.0-cp312-cp312-win32.whl", hash = "sha256:de06f8b8d4c5090d2bbef92db666f788c29a753005d5ec00afc12527520821c7"},
+    {file = "pyfastx-2.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:9fdc419021f511f8fbfa99a5ebeb584af7cf9a30321b0d889ffbb04cd1635b0b"},
+    {file = "pyfastx-2.1.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:a86c85ac0e4644908e39a7df6aa7725ce09fdb0bbe2a344d1e315c23d538653e"},
+    {file = "pyfastx-2.1.0-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ff2e94a2e060a470bba2907f84fa8567f9a560a053a788bb33185ead65094c99"},
+    {file = "pyfastx-2.1.0-cp36-cp36m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:fed774bc005e111d042f8b67a448e4436a8c5f670755afa325d16204bf9fe79a"},
+    {file = "pyfastx-2.1.0-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e36f6a76cc0a13617c52526f08d9942d31cd2fc6383339313eab1e7e0ccce467"},
+    {file = "pyfastx-2.1.0-cp36-cp36m-musllinux_1_1_aarch64.whl", hash = "sha256:4802e94dea2c4fed8551d11271d5d77900bf2cda12fd2eeb32aec4d5f3f098c6"},
+    {file = "pyfastx-2.1.0-cp36-cp36m-musllinux_1_1_i686.whl", hash = "sha256:50acff5ca38602a0d3eb07ba59ed365fccbf652ec1a55bb811398d374f00afa0"},
+    {file = "pyfastx-2.1.0-cp36-cp36m-musllinux_1_1_x86_64.whl", hash = "sha256:67ed8c1a6e898d388acfb3f14810829e3c6614720dfe2324b562a8ae97a584fb"},
+    {file = "pyfastx-2.1.0-cp36-cp36m-win32.whl", hash = "sha256:5dd3bb5108eaa9af7cc40e69a030bf3751f7e855824bd3cb387e94080b00a5e0"},
+    {file = "pyfastx-2.1.0-cp36-cp36m-win_amd64.whl", hash = "sha256:9cd13aecaf5dc36450dc57dd3b5847cf725903643f2bb56a8f1e8978d7d2f626"},
+    {file = "pyfastx-2.1.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:ca55df380b1145c1cef877d910dfe4ce8ab34d61d65b52b8bd386f902148df76"},
+    {file = "pyfastx-2.1.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e928372ef5908d9b627522fe68b4702edc95f59125fae77161a497245a7cfc39"},
+    {file = "pyfastx-2.1.0-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a4e0584fa4e917c678f19c1dc6c748390ddc1696d2cc9b2b1cf887997db65388"},
+    {file = "pyfastx-2.1.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:da5e2053237e9884b5f3200389bb01f2e29390c3ed1ef89264c1f288b89f23bb"},
+    {file = "pyfastx-2.1.0-cp37-cp37m-musllinux_1_1_aarch64.whl", hash = "sha256:19ea90676459fbd7aeeb5406a4187bb85870414f26ee932223789a670daf0b7c"},
+    {file = "pyfastx-2.1.0-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:9ef8dcfc6cc0706ee79da17b84aa74c552f42bf7f44ba13a80c4218f509e5b78"},
+    {file = "pyfastx-2.1.0-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:f980005f240e3bf65201303c8facd6323c3741f2bbed5ab1cf7d7512e926c966"},
+    {file = "pyfastx-2.1.0-cp37-cp37m-win32.whl", hash = "sha256:e612a6c920c8827f0edd1ae117f531d8e8a91fab6f27ff4547061fb3dd360eeb"},
+    {file = "pyfastx-2.1.0-cp37-cp37m-win_amd64.whl", hash = "sha256:1697d1ef9efa9beea9045ba1d9a1d491ac32560a9c47d47cad7afa472277730b"},
+    {file = "pyfastx-2.1.0-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:bb94d91d7bbb4f3dcc34cd5dfbd15eb5d13af13b50b1dbf474ba133da4bbd30a"},
+    {file = "pyfastx-2.1.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:4149679c8ca27ea20b250555fbf760e08f62f67ffd4d40f14ecce53075a7392c"},
+    {file = "pyfastx-2.1.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:37d7ad5581530960c281e6f01ab6d5e4d5796d7b1957f72d73cf4868aa73206f"},
+    {file = "pyfastx-2.1.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:51fea4dfef2b220274966fb1db460f4d1403babee6e85531e69c068de951a73c"},
+    {file = "pyfastx-2.1.0-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:d2255ab37bb1c8dfa5c3fc46ab8aa97eb1ec826c8d283bfe118f11e7addc85c3"},
+    {file = "pyfastx-2.1.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:28fa81a154cf454c4cfff6189db1765d57974fe271e67afd725251db84c1bc8a"},
+    {file = "pyfastx-2.1.0-cp38-cp38-musllinux_1_1_aarch64.whl", hash = "sha256:de5c7ed83df8d6a1e3b333097861f4ce1c8fe624156be8bbbe275cd4f0d8e1ff"},
+    {file = "pyfastx-2.1.0-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:d1e48f9bb739b72cf903699dfe111354bbf697c072f6080fc54e535bb34e9c78"},
+    {file = "pyfastx-2.1.0-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:cf5a657cc796259db4e7cac5ac282741430eee528cf45da1cbe3eed7b077fb73"},
+    {file = "pyfastx-2.1.0-cp38-cp38-win32.whl", hash = "sha256:c9605b942228dca91a8cbc01539cb1d845ded9045f3938792d66c0829b7819ad"},
+    {file = "pyfastx-2.1.0-cp38-cp38-win_amd64.whl", hash = "sha256:49767649b42b4b5bc43cdb7341610e8df9382ee646557ad701065dd213141caa"},
+    {file = "pyfastx-2.1.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:7cfa57d9deb15061f4a11c8a301d17850c0b6f820d810c07d26c3a94b2510c96"},
+    {file = "pyfastx-2.1.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:8da4defe7adcbed4e2069de961a3a662c53be86e857c1fc55098f0400793ead3"},
+    {file = "pyfastx-2.1.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:67261a8cb44ff455b8058d0114bb72a703d6c5b881336acd94e1210c9f849581"},
+    {file = "pyfastx-2.1.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:244f9f5c254094a055d21ac1c10a0a62c13fee91e768270d0225b2cd2810c3b6"},
+    {file = "pyfastx-2.1.0-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8a47e613f39ab1e47a17d45ae25e8cfb0063234521933cfe8f5e107584f42459"},
+    {file = "pyfastx-2.1.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:add69a3135522dc18277de4e64aae57691603e5e2624f2e355a4f98bd18310fa"},
+    {file = "pyfastx-2.1.0-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:5797212bed58a7fad287afeb3bc6cedd8d6fff8f8a05fa2dc13760b81af3d8c0"},
+    {file = "pyfastx-2.1.0-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:181f337a21f33b444bbedd47c5cfc35f17dd6fb116b9893f63a36780548b48d5"},
+    {file = "pyfastx-2.1.0-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:25479fa90dc64360c11b98529bebde6002762710313e5fe13694c525d6809eba"},
+    {file = "pyfastx-2.1.0-cp39-cp39-win32.whl", hash = "sha256:77dcaa88d26586fce775cd7766db574428d6a16dd66a1fcf729c29ef78d6f756"},
+    {file = "pyfastx-2.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:dd26cfe3bc1b0aa48075b54d95a92fb9e7785d89418de534248ae1e4c0b7cad5"},
+    {file = "pyfastx-2.1.0.tar.gz", hash = "sha256:24d5e17921ac372ebba6b9e144689a322c01163d03ab33c45214bb07f5224129"},
 ]
 
 [[package]]
@@ -3132,13 +3143,13 @@ watchdog = ">=0.6.0"
 
 [[package]]
 name = "python-dateutil"
-version = "2.8.2"
+version = "2.9.0"
 description = "Extensions to the standard Python datetime module"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 files = [
-    {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
-    {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
+    {file = "python-dateutil-2.9.0.tar.gz", hash = "sha256:78e73e19c63f5b20ffa567001531680d939dc042bf7850431877645523c66709"},
+    {file = "python_dateutil-2.9.0-py2.py3-none-any.whl", hash = "sha256:cbf2f1da5e6083ac2fbfd4da39a25f34312230110440f424a14c7558bb85d82e"},
 ]
 
 [package.dependencies]
@@ -3433,28 +3444,28 @@ files = [
 
 [[package]]
 name = "ruff"
-version = "0.2.2"
+version = "0.3.0"
 description = "An extremely fast Python linter and code formatter, written in Rust."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "ruff-0.2.2-py3-none-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:0a9efb032855ffb3c21f6405751d5e147b0c6b631e3ca3f6b20f917572b97eb6"},
-    {file = "ruff-0.2.2-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:d450b7fbff85913f866a5384d8912710936e2b96da74541c82c1b458472ddb39"},
-    {file = "ruff-0.2.2-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ecd46e3106850a5c26aee114e562c329f9a1fbe9e4821b008c4404f64ff9ce73"},
-    {file = "ruff-0.2.2-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:5e22676a5b875bd72acd3d11d5fa9075d3a5f53b877fe7b4793e4673499318ba"},
-    {file = "ruff-0.2.2-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:1695700d1e25a99d28f7a1636d85bafcc5030bba9d0578c0781ba1790dbcf51c"},
-    {file = "ruff-0.2.2-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:b0c232af3d0bd8f521806223723456ffebf8e323bd1e4e82b0befb20ba18388e"},
-    {file = "ruff-0.2.2-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:f63d96494eeec2fc70d909393bcd76c69f35334cdbd9e20d089fb3f0640216ca"},
-    {file = "ruff-0.2.2-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:6a61ea0ff048e06de273b2e45bd72629f470f5da8f71daf09fe481278b175001"},
-    {file = "ruff-0.2.2-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5e1439c8f407e4f356470e54cdecdca1bd5439a0673792dbe34a2b0a551a2fe3"},
-    {file = "ruff-0.2.2-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:940de32dc8853eba0f67f7198b3e79bc6ba95c2edbfdfac2144c8235114d6726"},
-    {file = "ruff-0.2.2-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:0c126da55c38dd917621552ab430213bdb3273bb10ddb67bc4b761989210eb6e"},
-    {file = "ruff-0.2.2-py3-none-musllinux_1_2_i686.whl", hash = "sha256:3b65494f7e4bed2e74110dac1f0d17dc8e1f42faaa784e7c58a98e335ec83d7e"},
-    {file = "ruff-0.2.2-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:1ec49be4fe6ddac0503833f3ed8930528e26d1e60ad35c2446da372d16651ce9"},
-    {file = "ruff-0.2.2-py3-none-win32.whl", hash = "sha256:d920499b576f6c68295bc04e7b17b6544d9d05f196bb3aac4358792ef6f34325"},
-    {file = "ruff-0.2.2-py3-none-win_amd64.whl", hash = "sha256:cc9a91ae137d687f43a44c900e5d95e9617cb37d4c989e462980ba27039d239d"},
-    {file = "ruff-0.2.2-py3-none-win_arm64.whl", hash = "sha256:c9d15fc41e6054bfc7200478720570078f0b41c9ae4f010bcc16bd6f4d1aacdd"},
-    {file = "ruff-0.2.2.tar.gz", hash = "sha256:e62ed7f36b3068a30ba39193a14274cd706bc486fad521276458022f7bccb31d"},
+    {file = "ruff-0.3.0-py3-none-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:7deb528029bacf845bdbb3dbb2927d8ef9b4356a5e731b10eef171e3f0a85944"},
+    {file = "ruff-0.3.0-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:e1e0d4381ca88fb2b73ea0766008e703f33f460295de658f5467f6f229658c19"},
+    {file = "ruff-0.3.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2f7dbba46e2827dfcb0f0cc55fba8e96ba7c8700e0a866eb8cef7d1d66c25dcb"},
+    {file = "ruff-0.3.0-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:23dbb808e2f1d68eeadd5f655485e235c102ac6f12ad31505804edced2a5ae77"},
+    {file = "ruff-0.3.0-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:3ef655c51f41d5fa879f98e40c90072b567c666a7114fa2d9fe004dffba00932"},
+    {file = "ruff-0.3.0-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:d0d3d7ef3d4f06433d592e5f7d813314a34601e6c5be8481cccb7fa760aa243e"},
+    {file = "ruff-0.3.0-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:b08b356d06a792e49a12074b62222f9d4ea2a11dca9da9f68163b28c71bf1dd4"},
+    {file = "ruff-0.3.0-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:9343690f95710f8cf251bee1013bf43030072b9f8d012fbed6ad702ef70d360a"},
+    {file = "ruff-0.3.0-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a1f3ed501a42f60f4dedb7805fa8d4534e78b4e196f536bac926f805f0743d49"},
+    {file = "ruff-0.3.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:cc30a9053ff2f1ffb505a585797c23434d5f6c838bacfe206c0e6cf38c921a1e"},
+    {file = "ruff-0.3.0-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:5da894a29ec018a8293d3d17c797e73b374773943e8369cfc50495573d396933"},
+    {file = "ruff-0.3.0-py3-none-musllinux_1_2_i686.whl", hash = "sha256:755c22536d7f1889be25f2baf6fedd019d0c51d079e8417d4441159f3bcd30c2"},
+    {file = "ruff-0.3.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:dd73fe7f4c28d317855da6a7bc4aa29a1500320818dd8f27df95f70a01b8171f"},
+    {file = "ruff-0.3.0-py3-none-win32.whl", hash = "sha256:19eacceb4c9406f6c41af806418a26fdb23120dfe53583df76d1401c92b7c14b"},
+    {file = "ruff-0.3.0-py3-none-win_amd64.whl", hash = "sha256:128265876c1d703e5f5e5a4543bd8be47c73a9ba223fd3989d4aa87dd06f312f"},
+    {file = "ruff-0.3.0-py3-none-win_arm64.whl", hash = "sha256:e3a4a6d46aef0a84b74fcd201a4401ea9a6cd85614f6a9435f2d33dd8cefbf83"},
+    {file = "ruff-0.3.0.tar.gz", hash = "sha256:0886184ba2618d815067cf43e005388967b67ab9c80df52b32ec1152ab49f53a"},
 ]
 
 [[package]]
@@ -4090,13 +4101,13 @@ files = [
 
 [[package]]
 name = "tomlkit"
-version = "0.12.3"
+version = "0.12.4"
 description = "Style preserving TOML library"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "tomlkit-0.12.3-py3-none-any.whl", hash = "sha256:b0a645a9156dc7cb5d3a1f0d4bab66db287fcb8e0430bdd4664a095ea16414ba"},
-    {file = "tomlkit-0.12.3.tar.gz", hash = "sha256:75baf5012d06501f07bee5bf8e801b9f343e7aac5a92581f20f80ce632e6b5a4"},
+    {file = "tomlkit-0.12.4-py3-none-any.whl", hash = "sha256:5cd82d48a3dd89dee1f9d64420aa20ae65cfbd00668d6f094d7578a78efbb77b"},
+    {file = "tomlkit-0.12.4.tar.gz", hash = "sha256:7ca1cfc12232806517a8515047ba66a19369e71edf2439d0f5824f91032b6cc3"},
 ]
 
 [[package]]

@@ -420,7 +420,7 @@ def get_read_sample_name(read: str) -> str:
     return sample_name
 
 
-def is_read_file(read: str, read_type: Literal["r1"] | Literal["r2"]) -> bool:
+def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> bool:
     """Check if a read filename matches the specified read_type.
 
     Detects the presence of a common read 1 or read 2 suffix in the filename.
@@ -431,19 +431,26 @@ def is_read_file(read: str, read_type: Literal["r1"] | Literal["r2"]) -> bool:
     :raise ValueError: if the read file does not have a valid extension
     :raise AssertionError: if the read_type is not 'r1' or 'r2'
     """
+    read = Path(read).name
+
+    if read_type not in ("r1", "r2"):
+        raise AssertionError("Invalid read type: expected 'r1' or 'r2'")
+
     if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
         raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
 
     matches = []
     read_stem = Path(read.removesuffix(get_extension(read, 2)).rstrip(".")).name
     if read_type == "r1":
-        matches = re.findall(R"(.[Rr]1|(_[Rr]?1))", read_stem)
+        matches = re.findall(R"(.[Rr]1$)|(_[Rr]?1$)|(_[Rr]?1_[0-9]{3}$)", read_stem)
     elif read_type == "r2":
-        matches = re.findall(R"(.[Rr]2|(_[Rr]?2))", read_stem)
+        matches = re.findall(R"(.[Rr]2$)|(_[Rr]?2$)|(_[Rr]?2_[0-9]{3}$)", read_stem)
     else:
-        raise AssertionError("Invalid read type: expected 'r1' or 'r2'")
+        raise AssertionError(
+            "Invalid read type: could not find a read suffix in filename."
+        )
 
-    if len(matches) != 1:
+    if not matches:
         return False
 
     return True

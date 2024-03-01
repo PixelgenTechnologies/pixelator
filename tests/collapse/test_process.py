@@ -5,7 +5,6 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 # pylint: disable=redefined-outer-name
 
-
 from functools import partial
 from pathlib import Path
 from unittest import mock

@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   name sanity checks.
 * Logging would cause deadlocks in multiprocessing scenarios, this has been resolved
   by switching to a server/client-based logging system.
+* Fix a bug in the amplicon stage where read suffixes were not correctly recognised.
 
 ### Removed
 
