@@ -16,10 +16,10 @@ This document covers how to get up and running with developing pixelator.
 ## Setup the developer environment
 
 We recommend that you develop pixelator in a separate python virtual environment. There are
-many ways to setup a virtual environment, we recommend using conda. If you have a different
+many ways to setup a virtual environment, we recommend using mamba. If you have a different
 way that you prefer, you can use that as well.
 
-Below we outline the steps you need to take to setup your development environment using conda.
+Below we outline the steps you need to take to setup your development environment using mamba.
 
 ### 1. Prepare and checkout the pixelator repository for Github
 
@@ -40,25 +40,30 @@ You are now ready to setup your development environment.
 
 ### 2. Setup a virtual environment for pixelator
 
-You will need to [install conda](https://docs.anaconda.com/free/anaconda/install/) to use this method.
-We also recommend to install mamba in your base conda environment and use that command instead of conda.
-This will make the installation of the dependencies much faster.
+You will need to [install mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) to use this method.
+
+If you are on a Mac or Linux you can use the following commands to install mamba:
 
 ```shell
-conda activate base
-conda install mamba -c conda-forge
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+bash Miniforge3-$(uname)-$(uname -m).sh
 ```
+
+If you are one Windows refer to these instructions: https://github.com/conda-forge/miniforge?tab=readme-ov-file#windows
+
+For more information on how to install mamba see the [mamba documentation](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html).
+
 
 All base dependencies are included in the `environment.yml` file provided in the repo root.
 You can now run the following commands to create your pixelator environment:
 
 ```shell
-conda env create -f environment.yml
+mamba env create -f environment.yml
 ```
 
 Activate the conda environment:
 ```shell
-conda activate pixelator
+mamba activate pixelator
 ```
 
 ### 3. Install pixelator
@@ -77,6 +82,8 @@ You are now ready to start developing pixelator. Congrats!
 ## Pixelator developer tools
 
 Pixelator provides a number of utility scripts (you have already used one above) to help with development and testing using [Task](https://taskfile.dev/).
+We are using `tasks` to make it easier to run common development tasks such as running tests, and formatting code.
+It allows us to make these commands them self-documenting and easy to discover, and
 
 > [!NOTE]
 > If you have followed the installation instructions above you should have `task` installed
@@ -163,7 +170,15 @@ these file should be committed to the repository to record new dependency.
 
 ## Testing pixelator
 
+Pixelator uses `pytest` to run tests. We have a number of different types of tests that can be run.
+The section below outline how to run these tests, and in what situations they are useful.
+
+
 ### Pixelator unit tests
+
+The pixelator unit tests suite is focused on testing the individual classes, functions, etc
+in pixelator in isolation. They are intended to be fast to run and provide quick
+feedback during development.
 
 You can run the pixelator unit tests by using:
 
@@ -218,7 +233,7 @@ panel_file: null
 
 #### Pixelator nf-core/pixelator integration tests
 
-Pixelator is build to be orchestrated by the nextflow pipeline nf-core/pixelator.
+Pixelator is built to be orchestrated by the nextflow pipeline nf-core/pixelator.
 This means that is is useful to have a simple way to test the integration between the two.
 
 You can do this using tasks:
@@ -239,7 +254,7 @@ gh workflow run --ref <your-branch-name> nf-core-pixelator-tests.yml
 Sometimes it is useful to be able to run micro-benchmarks to see how changes affect performance.
 Pixelator uses `pytest-benchmark` to enable running micro-benchmarks. Normally, when running the tests these are disabled.
 
-To run these test use:
+To run these tests use:
 
 ```shell
 task test-benchmark
