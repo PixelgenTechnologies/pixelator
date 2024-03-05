@@ -345,18 +345,18 @@ def get_differential_colocalization(
             )
         )
     )
-    differntial_colocalization = colocalization_test_results.rename(
+    differential_colocalization = colocalization_test_results.rename(
         columns={"estimate": value_column}
     )
 
     # If a marker appears only in one of the datasets, it's differential value will be NAN
-    nan_values = differntial_colocalization[
-        differntial_colocalization[value_column].isna()
+    nan_values = differential_colocalization[
+        differential_colocalization[value_column].isna()
     ].index
-    differntial_colocalization.drop(
+    differential_colocalization.drop(
         nan_values,
         axis="index",
         inplace=True,
     )
 
-    return differntial_colocalization[["marker_1", "marker_2", value_column]]
+    return differential_colocalization[["marker_1", "marker_2", value_column]]
