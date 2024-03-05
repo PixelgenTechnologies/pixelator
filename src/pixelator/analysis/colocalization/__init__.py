@@ -6,6 +6,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 import logging
 from functools import partial
 from typing import Optional, get_args
+import numpy as np
 
 import pandas as pd
 
@@ -287,6 +288,23 @@ def colocalization_scores(
     return scores
 
 
+def _colocalization_wilcoxon(
+    markers, df, reference, target, contrast_column, value_column
+):
+    reference_df = df[df[contrast_column] == reference]
+    target_df = df[df[contrast_column] == target]
+    estimate = np.median(
+        target_df[value_column].to_numpy()[:, None]
+        - reference_df[value_column].to_numpy()
+    )
+    return {
+        "marker_1": markers[0],
+        "marker_2": markers[1],
+        "markers": "/".join(markers),
+        "estimate": estimate,
+    }
+
+
 def get_differential_colocalization(
     colocalization_data_frame: pd.DataFrame,
     target: str,
@@ -314,13 +332,31 @@ def get_differential_colocalization(
         colocalization_data_frame["marker_1"] == colocalization_data_frame["marker_2"]
     )
     data_frame = colocalization_data_frame[~same_marker_mask]
-    colocalization_scores_source = data_frame[data_frame[contrast_column] == reference]
-    colocalization_scores_target = data_frame[data_frame[contrast_column] == target]
-    differential_colocalization = colocalization_scores_source.groupby(
-        ["marker_1", "marker_2"]
-    )[[value_column]].median().astype(float) - colocalization_scores_target.groupby(
-        ["marker_1", "marker_2"]
-    )[[value_column]].median().astype(float)
-    differential_colocalization = differential_colocalization.reset_index()
 
-    return differential_colocalization
+    colocalization_test_results = pd.DataFrame.from_records(
+        data_frame.groupby(["marker_1", "marker_2"]).apply(
+            lambda marker_data: _colocalization_wilcoxon(
+                marker_data.name,
+                marker_data,
+                reference=reference,
+                target=target,
+                contrast_column=contrast_column,
+                value_column=value_column,
+            )
+        )
+    )
+    differential_colocalization = colocalization_test_results.rename(
+        columns={"estimate": value_column}
+    )
+
+    # If a marker appears only in one of the datasets, it's differential value will be NAN
+    nan_values = differential_colocalization[
+        differential_colocalization[value_column].isna()
+    ].index
+    differential_colocalization.drop(
+        nan_values,
+        axis="index",
+        inplace=True,
+    )
+
+    return differential_colocalization[["marker_1", "marker_2", value_column]]
