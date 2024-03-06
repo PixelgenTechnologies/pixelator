@@ -11,7 +11,7 @@ import pandas as pd
 RegionByCountsDataFrame = pd.DataFrame
 MarkerColocalizationResults = pd.DataFrame
 
-TransformationTypes = Literal["raw", "log1p"]
+TransformationTypes = Literal["raw", "log1p", "rate-diff"]
 
 
 @dataclass
