@@ -758,26 +758,29 @@ def pmds_layout(
     pivs = np.random.choice(node_list, pivots, replace=False)
 
     # Calculate the shortest path length from the pivots to all other nodes
-    A = nx.to_scipy_sparse_array(g, weight=None, nodelist=node_list)
+    A = nx.to_scipy_sparse_array(g, weight=None, nodelist=node_list, format="csr")
 
     # This is a workaround for what seems to be a bug in the type of
     # the indices of the sparse array created above
     A.indices = A.indices.astype(np.intc, copy=False)
     A.indptr = A.indptr.astype(np.intc, copy=False)
-
-    D = sp.sparse.csgraph.shortest_path(A, directed=False, unweighted=True)
-
-    D_pivs = D[:, np.where(np.isin(g.nodes, pivs))[0]]
+    D = sp.sparse.csgraph.shortest_path(
+        A,
+        directed=False,
+        unweighted=True,
+        method="D",
+        indices=np.where(np.isin(g.nodes, pivs))[0],
+    ).T
 
     # Center values in rows and columns
-    cmean = np.mean(D_pivs**2, axis=0)
-    rmean = np.mean(D_pivs**2, axis=1)
-    D_pivs_centered = D_pivs**2 - np.add.outer(rmean, cmean) + np.mean(D_pivs**2)
+    cmean = np.mean(D**2, axis=0)
+    rmean = np.mean(D**2, axis=1)
+    D_pivs_centered = D**2 - np.add.outer(rmean, cmean) + np.mean(D**2)
 
     # Compute SVD and use distances to compute coordinates for all nodes
     # in an abstract cartesian space
-    _, _, Vh = np.linalg.svd(D_pivs_centered)
-    coordinates = D_pivs_centered @ np.transpose(Vh)[:, :dim]
+    _, _, Vh = sp.sparse.linalg.svds(D_pivs_centered, k=dim)
+    coordinates = D_pivs_centered @ np.transpose(Vh)
 
     coordinates = {node_list[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
 
