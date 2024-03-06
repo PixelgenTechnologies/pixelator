@@ -577,10 +577,14 @@ def plot_3d_graph(
         cache_layout=cache_layout,
         show_b_nodes=show_b_nodes,
     )
-    if marker is not None and log_scale:
-        coordinates["color"] = np.log1p(coordinates[marker])
+
+    if marker is not None:
+        if log_scale:
+            coordinates["color"] = np.log1p(coordinates[marker])
+        else:
+            coordinates["color"] = coordinates[marker]
     else:
-        coordinates["color"] = coordinates[marker]
+        coordinates["color"] = Color.SKYBLUE3
 
     if normalize:
         coordinates[["x", "y", "z"]] = coordinates[["x_norm", "y_norm", "z_norm"]]
