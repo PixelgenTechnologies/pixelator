@@ -61,8 +61,6 @@ runs:
           bakeSetCommands.push(...cacheToArray)
           bakeSetCommands.push(...platformArray)
 
-          const gitSHAtag = tagsArray.find((tag) => tag.includes('ghcr') && tag.includes('sha'))
-
           bakeSetCommandsText = bakeSetCommands.join('\n')
           core.setOutput('set', bakeSetCommandsText)
 
