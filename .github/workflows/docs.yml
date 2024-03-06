@@ -51,7 +51,7 @@ jobs:
     if: needs.pre_job.outputs.should_skip == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).main.should_skip
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python environment
         uses: ./.github/actions/setup-python

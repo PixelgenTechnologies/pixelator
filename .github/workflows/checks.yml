@@ -51,7 +51,7 @@ jobs:
     if: needs.pre_job.outputs.paths_result == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
@@ -67,7 +67,7 @@ jobs:
     if: needs.pre_job.outputs.should_skip != 'true' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: ruff formatter
         uses: chartboost/ruff-action@v1
@@ -100,7 +100,7 @@ jobs:
     if: needs.pre_job.outputs.should_skip != 'true' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
