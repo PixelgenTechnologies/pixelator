@@ -67,3 +67,10 @@ target pixelator-prod {
         BUILD_VERSION = BUILD_VERSION
     }
 }
+
+
+target "docker-metadata-action" {}
+
+target pixelator-prod-ci {
+    inherits = ["docker-metadata-action", "pixelator-prod"]
+}

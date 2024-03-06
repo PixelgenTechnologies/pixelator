@@ -70,8 +70,8 @@ runs:
         files: |
           ./docker-bake.hcl
           ${{ steps.meta.outputs.bake-file }}
+
         push: true
-        targets: pixelator-prod
+        targets: pixelator-prod-ci
         provenance: false
-        entrypoint: /bin
         set: ${{ steps.build_input_options.outputs.set }}
