@@ -28,7 +28,10 @@ from pixelator.plot import (
 
 @pytest.mark.parametrize(
     "component, marker",
-    [("PXLCMP0000000", "CD45RA")],
+    [
+        ("PXLCMP0000000", "CD45RA"),
+        ("PXLCMP0000000", None),
+    ],
 )
 def test_plot_3d_graph(
     snapshot: Snapshot, component, marker, setup_basic_pixel_dataset
