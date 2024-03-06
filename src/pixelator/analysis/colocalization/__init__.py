@@ -1,4 +1,3 @@
-# pylint: disable=too-many-arguments
 """Functions for the colocalization analysis in pixelator.
 
 Copyright © 2023 Pixelgen Technologies AB.
@@ -98,7 +97,6 @@ def _transform_data(
         return log1p_transformation(data)
     if transform == "rate-diff":
         return rate_diff_transformation(data)
-
     raise ValueError(
         f"`transform`must be one of: {'/'.join(get_args(TransformationTypes))}"
     )
