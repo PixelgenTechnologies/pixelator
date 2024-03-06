@@ -12,7 +12,7 @@ from pixelator.analysis.types import RegionByCountsDataFrame
 
 MarkerColocalizationResults = pd.DataFrame
 
-TransformationTypes = Literal["raw", "log1p"]
+TransformationTypes = Literal["raw", "log1p", "rate-diff"]
 
 
 @dataclass

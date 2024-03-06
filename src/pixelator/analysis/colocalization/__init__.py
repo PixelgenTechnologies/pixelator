@@ -1,3 +1,4 @@
+# pylint: disable=too-many-arguments
 """Functions for the colocalization analysis in pixelator.
 
 Copyright © 2023 Pixelgen Technologies AB.
@@ -34,7 +35,11 @@ from pixelator.analysis.colocalization.types import (
 from pixelator.analysis.permute import permutations
 from pixelator.graph.utils import Graph
 from pixelator.pixeldataset import PixelDataset
-from pixelator.statistics import correct_pvalues, log1p_transformation
+from pixelator.statistics import (
+    correct_pvalues,
+    log1p_transformation,
+    rate_diff_transformation,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +96,9 @@ def _transform_data(
         return data
     if transform == "log1p":
         return log1p_transformation(data)
+    if transform == "rate-diff":
+        return rate_diff_transformation(data)
+
     raise ValueError(
         f"`transform`must be one of: {'/'.join(get_args(TransformationTypes))}"
     )
