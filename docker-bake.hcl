@@ -72,5 +72,5 @@ target pixelator-prod {
 target "docker-metadata-action" {}
 
 target pixelator-prod-ci {
-    inherits = ["docker-metadata-action", "pixelator-prod"]
+    inherits = ["pixelator-prod", "docker-metadata-action"]
 }
