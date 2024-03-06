@@ -144,7 +144,7 @@ def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
     antibody_rates = df.sum(axis=0)
     antibody_rates = antibody_rates / antibody_rates.sum()
 
-    expected_counts = antibody_counts_per_node.to_frame() @ antibody_rates.to_frame()
+    expected_counts = antibody_counts_per_node.to_frame() @ antibody_rates.to_frame().T
     return df - expected_counts
 
 
