@@ -4,6 +4,11 @@ ARG USE_ENTRYPOINT=false
 ARG MAKEJOBS=4
 
 FROM pixelator-base
+
 WORKDIR /pixelator
+COPY ./ /pixelator
+COPY .git /pixelator/.git
+
 RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi --with dev
+
 RUN pip3.11 install -r requirements.txt && rm requirements.txt

@@ -4,7 +4,7 @@ ARG USE_ENTRYPOINT=false
 ARG MAKEJOBS=4
 
 # Install pixelator dependencies in a separate stage to improve caching
-FROM registry.fedoraproject.org/fedora-minimal:38 as runtime-base
+FROM registry.fedoraproject.org/fedora-minimal:39 as runtime-base
 RUN microdnf install -y \
         python3.11 \
         git \
@@ -20,6 +20,8 @@ RUN python3.11 -m ensurepip
 RUN pip3.11 install --upgrade pip
 RUN pip3.11 install pipx
 RUN pipx install poetry
+RUN poetry self add poetry-plugin-export
+RUN poetry self add "poetry-dynamic-versioning[plugin]"
 
 # This is needed to easily run other python scripts inside the pixelator container
 # eg. samplesheet checking in nf-core/pixelator
@@ -68,6 +70,7 @@ FROM builder-base as poetry-deps-install-amd64
 
 WORKDIR /pixelator
 COPY poetry.lock pyproject.toml ./
+COPY .git .git
 RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi
 
 ## We need to define the ARG we will be using in each build stage
@@ -94,9 +97,30 @@ RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
 FROM runtime-base as  poetry-deps-install-arm64
 
 WORKDIR /pixelator
-COPY poetry.lock pyproject.toml ./
+COPY poetry.lock pyproject.toml /pixelator/
+COPY .git /pixelator/.git
+
 RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi
 RUN pip3.11 install --prefix=/runtime -r requirements.txt && rm requirements.txt
+
+# ------------------------------------------
+# -- Build the pixelator package
+# ------------------------------------------
+FROM runtime-base as build-pixelator
+
+WORKDIR /pixelator
+COPY . /pixelator
+COPY .git /pixelator/.git
+
+RUN poetry config virtualenvs.create false && \
+    poetry dynamic-versioning && \
+    poetry build -f sdist && \
+    cp -r /pixelator/dist/ /dist/ && \
+    rm -rf /pixelator
+
+# ------------------------------------------
+# -- Build the runtime environment for amd64
+# ------------------------------------------
 
 FROM runtime-base as runtime-amd64
 
@@ -104,11 +128,19 @@ FROM runtime-base as runtime-amd64
 COPY --from=build-fastp /usr/local/ /usr/local/
 COPY --from=poetry-deps-install-amd64 /runtime/ /usr/local/
 
+# ------------------------------------------
+# -- Build the runtime environment for arm64
+# ------------------------------------------
+
 FROM runtime-base as runtime-arm64
 
 # Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
 COPY --from=poetry-deps-install-arm64 /runtime/ /usr/local/
+
+# ------------------------------------------
+# -- Build the final image
+# ------------------------------------------
 
 FROM runtime-${TARGETARCH} as runtime-final
 
@@ -119,8 +151,9 @@ FROM runtime-${TARGETARCH} as runtime-final
 ENV PYTHONPATH="$PYTHONPATH:/usr/local/lib/python3.11/site-packages:/usr/local/lib64/python3.11/site-packages"
 RUN ldconfig /usr/local/lib64
 
-COPY . /pixelator
-RUN pip3.11 install /pixelator
-RUN rm -rf /pixelator
+COPY --from=build-pixelator /dist /dist
+RUN ls -alh /dist/
+RUN pip3.11 install /dist/*.tar.gz
+RUN rm -rf /dist
 
 RUN pip3.11 cache purge

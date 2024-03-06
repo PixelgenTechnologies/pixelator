@@ -5,6 +5,10 @@ ARG MAKEJOBS=4
 
 FROM pixelator-base as runtime
 
+LABEL version=$BUILD_VERSION
+LABEL licence="MIT"
+LABEL vendor="Pixelgen Technologies AB"
+
 
 # Install pixelator dependencies in a separate stage to improve caching
 FROM runtime AS entrypoint-true
