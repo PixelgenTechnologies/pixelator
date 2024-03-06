@@ -11,6 +11,7 @@ import pandas as pd
 
 from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
 from pixelator.graph.utils import Graph, create_node_markers_counts
+from pixelator.statistics import rate_diff_transformation
 from pixelator.pixeldataset import (
     MIN_VERTICES_REQUIRED,
 )
@@ -110,6 +111,8 @@ def polarization_scores_component(
     # clr transformation
     if normalization == "clr":
         counts_df = clr_transformation(df=counts_df, non_negative=True, axis=0)
+    elif normalization == "rate-diff":
+        counts_df = rate_diff_transformation(counts_df)
 
     # compute the spatial weights matrix (w) from the graph
     w = WSP(graph.get_adjacency_sparse()).to_W(silence_warnings=True)
@@ -190,7 +193,7 @@ def polarization_scores(
             graph = Graph.from_edgelist(
                 edgelist=component_df,
                 add_marker_counts=True,
-                simplify=False,
+                simplify=not use_full_bipartite,
                 use_full_bipartite=use_full_bipartite,
             )
             tasks.append(
