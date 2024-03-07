@@ -18,16 +18,13 @@ outputs:
   tags:
     description: "All tags that were pushed"
     value: ${{ steps.meta.outputs.tags }}
-  dev-tag:
-    description: "The dev tag that was pushed"
-    value: ${{ steps.build_input_options.outputs.dev-tag }}
 
 runs:
   using: "composite"
   steps:
     - name: Docker meta
       id: meta
-      uses: docker/metadata-action@v4
+      uses: docker/metadata-action@v5
       with:
         images: |
           ghcr.io/pixelgentechnologies/pixelator
@@ -41,13 +38,11 @@ runs:
 
     - name: Build input options
       id: build_input_options
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           const shaShort = context.sha.substring(0, 7)
           const inputParams = ${{ toJSON(inputs) }}
-          const meta = ${{ steps.meta.outputs.json }}
-          const tags = meta["tags"]
 
           const cacheFromArray = inputParams["cache-from"].split('\n').map((line) => line.trim())
             .filter((line) => line !== "")
@@ -57,29 +52,26 @@ runs:
             .filter((line) => line !== "")
             .map((line) => "*.cache-to=" + line)
 
-          const tagsArray = tags.map((tag) => "*.tags=" + tag)
-
           const platformArray = inputParams["platforms"].split(',').map((line) => line.trim())
             .filter((line) => line !== "")
             .map((line) => "*.platform=" + line)
 
           let bakeSetCommands = []
-          bakeSetCommands.push(...tagsArray)
           bakeSetCommands.push(...cacheFromArray)
           bakeSetCommands.push(...cacheToArray)
           bakeSetCommands.push(...platformArray)
 
-          const gitSHAtag = tagsArray.find((tag) => tag.includes('ghcr') && tag.includes('sha'))
-
           bakeSetCommandsText = bakeSetCommands.join('\n')
           core.setOutput('set', bakeSetCommandsText)
-          core.setOutput('dev-tag', gitSHAtag)
-
 
     - name: Build and push to ghcr and ecr
-      uses: docker/bake-action@v3
+      uses: docker/bake-action@v4
       with:
+        files: |
+          ./docker-bake.hcl
+          ${{ steps.meta.outputs.bake-file }}
+
         push: true
-        targets: pixelator-prod
+        targets: pixelator-prod-ci
         provenance: false
         set: ${{ steps.build_input_options.outputs.set }}

@@ -9,6 +9,7 @@ conda-recipe
 
 # Dockerfiles
 *.Dockerfile
+containers/*.Dockerfile
 
 # Editors
 .idea
