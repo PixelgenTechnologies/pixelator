@@ -108,14 +108,20 @@ RUN pip3.11 install --prefix=/runtime -r requirements.txt && rm requirements.txt
 # ------------------------------------------
 FROM runtime-base as build-pixelator
 
+ARG VERSION_OVERRIDE
+
 WORKDIR /pixelator
 COPY . /pixelator
 COPY .git /pixelator/.git
 
-RUN poetry config virtualenvs.create false && \
-    poetry dynamic-versioning && \
-    poetry build -f sdist && \
-    cp -r /pixelator/dist/ /dist/ && \
+RUN poetry config virtualenvs.create false
+RUN if [ ! -z "${VERSION_OVERRIDE}" ]; then \
+        echo "Overriding version to ${VERSION_OVERRIDE}"; \
+        POETRY_DYNAMIC_VERSIONING_OVERRIDE="pixelgen-pixelator=${VERSION_OVERRIDE}" poetry build -f sdist; \
+    else poetry build -f sdist; \
+    fi
+
+RUN cp -r /pixelator/dist/ /dist/ && \
     rm -rf /pixelator
 
 # ------------------------------------------
