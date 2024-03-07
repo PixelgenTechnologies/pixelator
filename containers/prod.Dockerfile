@@ -5,10 +5,9 @@ ARG MAKEJOBS=4
 
 FROM pixelator-base as runtime
 
-LABEL name = "pixelator"
-LABEL license = "MIT"
-LABEL vendor = "Pixelgen Technologies AB"
-
+LABEL org.opencontainers.image.vendor = "Pixelgen Technologies AB"
+LABEL org.opencontainers.image.base.name = "registry.fedoraproject.org/fedora-minimal:39"
+LABEL org.opencontainers.image.licenses = "MIT"
 
 # Install pixelator dependencies in a separate stage to improve caching
 FROM runtime AS entrypoint-true
