@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Remove `umi` and `median_umi_degree` from `component` metrics.
 * Remove `normalized_rel` and `denoised` from `obsm` in `anndata`.
 * Remove `denoise` function.
+* Remove cell type selector in QC report for UMAP colored by molecule count plots.
 
 ## [0.16.1] - 2024-01-12
 
