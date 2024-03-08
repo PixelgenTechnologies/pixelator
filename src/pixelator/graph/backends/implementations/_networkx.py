@@ -380,17 +380,15 @@ class NetworkXGraphBackend(GraphBackend):
         counts to use that can be used for plotting.
 
         The layout options are:
+          - pmds
+          - pmds_3d
           - fruchterman_reingold
           - fruchterman_reingold_3d
           - kamada_kawai
           - kamada_kawai_3d
-          - pmds
-          - pmds_3d
 
-        The `fruchterman_reingold` options are in general faster, but less
-        accurate than the `kamada_kawai` ones.
-
-        TODO Update these docs!
+        The `pmds` options are much faster than the `fruchterman_reingold` and
+        the `kamada_kawai`.
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
         :param only_keep_a_pixels: If true, only keep the a-pixels
