@@ -1,21 +1,22 @@
 """Copyright © 2024 Pixelgen Technologies AB."""
 
 from typing import Iterable
+from unittest import mock
+
 
 import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
-
 from pixelator.pixeldataset.precomputed_layouts import (
     PreComputedLayouts,
     aggregate_precomputed_layouts,
+    generate_precomputed_layouts_for_components,
 )
 
 
-@pytest.fixture(name="layout_df")
-def layout_df_fixture() -> pd.DataFrame:
+def layout_df() -> pl.DataFrame:
     nbr_of_rows = 300
     components = [
         "PXLCMP0000000",
@@ -28,7 +29,7 @@ def layout_df_fixture() -> pd.DataFrame:
     graph_projections = ["bipartite", "a-node"]
     layout_methods = ["pmds", "fr"]
     rgn = np.random.default_rng(1)
-    layout_df = pd.DataFrame(
+    layout_df = pl.DataFrame(
         {
             "x": rgn.random(nbr_of_rows),
             "y": rgn.random(nbr_of_rows),
@@ -38,13 +39,46 @@ def layout_df_fixture() -> pd.DataFrame:
             "component": rgn.choice(components, nbr_of_rows),
             "sample": rgn.choice(sample, nbr_of_rows),
         }
-    )
-    yield layout_df
+    ).lazy()
+    return layout_df
 
 
-@pytest.fixture(name="precomputed_layouts")
-def precomputed_layouts_fixture(layout_df) -> pd.DataFrame:
-    yield PreComputedLayouts(pl.DataFrame(layout_df).lazy())
+def layout_df_generator() -> Iterable[pl.LazyFrame]:
+    for component in [
+        "PXLCMP0000000",
+        "PXLCMP0000001",
+        "PXLCMP0000002",
+        "PXLCMP0000003",
+        "PXLCMP0000004",
+    ]:
+        nbr_of_rows = 300
+        sample = ["sample_1", "sample_2"]
+        graph_projections = ["bipartite", "a-node"]
+        layout_methods = ["pmds", "fr"]
+        rgn = np.random.default_rng(1)
+        layout_df = pl.DataFrame(
+            {
+                "x": rgn.random(nbr_of_rows),
+                "y": rgn.random(nbr_of_rows),
+                "z": rgn.random(nbr_of_rows),
+                "graph_projection": rgn.choice(graph_projections, nbr_of_rows),
+                "layout": rgn.choice(layout_methods, nbr_of_rows),
+                "component": component,
+                "sample": rgn.choice(sample, nbr_of_rows),
+            }
+        ).lazy()
+        yield layout_df
+
+
+# We are using this to make sure we cover both cases of the PreComputedLayouts
+# one there we have a DataFrame and one where we have a generator of data frames
+@pytest.fixture(name="precomputed_layouts", params=["layout_df", "layout_df_generator"])
+def precomputed_layouts_fixture(request) -> pd.DataFrame:
+    if request.param == "layout_df":
+        return PreComputedLayouts(layout_df())
+    if request.param == "layout_df_generator":
+        return PreComputedLayouts(layout_df_generator())
+    raise Exception("We should never get here!")
 
 
 class TestPreComputedLayouts:
@@ -101,6 +135,16 @@ class TestPreComputedLayouts:
             "x",
             "y",
             "component",
+        }
+
+    def test_get_unique_components(self, precomputed_layouts):
+        unique_componentens = precomputed_layouts.unique_components()
+        assert unique_componentens == {
+            "PXLCMP0000000",
+            "PXLCMP0000001",
+            "PXLCMP0000002",
+            "PXLCMP0000003",
+            "PXLCMP0000004",
         }
 
     def test_lazy_returns_polars_lazy_frame(self):
@@ -313,3 +357,165 @@ class TestPreComputedLayouts:
         )
 
         assert aggregated_layouts.is_empty
+
+
+class TestGeneratePrecomputedLayoutsForComponents:
+    @pytest.fixture(autouse=True)
+    def mock_pool_executor(self):
+        """Mock the pool executor to avoid running tests in parallel.
+
+        The overhead of running in separate processes is not worth it here.
+        """
+
+        class MockPoolExecutor:
+            def __init__(self):
+                pass
+
+            def imap(self, func, *args, **kwargs):
+                yield from map(func, *args)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                pass
+
+        with mock.patch(
+            "pixelator.pixeldataset.precomputed_layouts.get_pool_executor",
+        ) as mock_pool_executor:
+            mock_pool_executor.return_value = MockPoolExecutor()
+            yield mock_pool_executor
+
+    @pytest.fixture(name="pixel_dataset")
+    def pixel_dataset_fixture(self, setup_basic_pixel_dataset):
+        (dataset, *_) = setup_basic_pixel_dataset
+        yield dataset
+
+    def test_generate_precomputed_layouts_for_components_with_all_components(
+        self, pixel_dataset
+    ):
+        precomputed_layouts = generate_precomputed_layouts_for_components(pixel_dataset)
+
+        assert isinstance(precomputed_layouts, PreComputedLayouts)
+        assert not precomputed_layouts.is_empty
+        df = precomputed_layouts.to_df()
+
+        assert set(df.columns) == {
+            "x",
+            "y",
+            "z",
+            "x_norm",
+            "y_norm",
+            "z_norm",
+            "graph_projection",
+            "layout",
+            "component",
+        } | set(pixel_dataset.adata.var.index)
+
+        assert set(df["component"]) == set(pixel_dataset.adata.obs.index)
+        assert set(df["layout"]) == {"pmds_3d"}
+
+    def test_generate_precomputed_layouts_for_components_with_specific_components(
+        self, pixel_dataset
+    ):
+        components = {"PXLCMP0000000", "PXLCMP0000001"}
+        precomputed_layouts = generate_precomputed_layouts_for_components(
+            pixel_dataset, components=components
+        )
+
+        assert isinstance(precomputed_layouts, PreComputedLayouts)
+        assert not precomputed_layouts.is_empty
+        df = precomputed_layouts.to_df()
+        assert set(df["component"]) == components
+
+    def test_generate_precomputed_layouts_for_components_without_node_marker_counts(
+        self, pixel_dataset
+    ):
+        precomputed_layouts = generate_precomputed_layouts_for_components(
+            pixel_dataset, add_node_marker_counts=False
+        )
+
+        assert isinstance(precomputed_layouts, PreComputedLayouts)
+        assert not precomputed_layouts.is_empty
+        df = precomputed_layouts.to_df()
+        assert set(df.columns) == {
+            "x",
+            "y",
+            "z",
+            "x_norm",
+            "y_norm",
+            "z_norm",
+            "graph_projection",
+            "layout",
+            "component",
+        }
+
+    def test_generate_precomputed_layouts_for_components_with_multiple_layout_algorithms(
+        self, pixel_dataset
+    ):
+        layout_algorithms = ["pmds_3d", "pmds"]
+        precomputed_layouts = generate_precomputed_layouts_for_components(
+            pixel_dataset, layout_algorithms=layout_algorithms
+        )
+
+        assert isinstance(precomputed_layouts, PreComputedLayouts)
+        assert not precomputed_layouts.is_empty
+
+        df = precomputed_layouts.to_df()
+        assert set(df["layout"]) == {"pmds", "pmds_3d"}
+
+        # When we mix 2d and 3d layouts the z-dimension should be NaN
+        assert np.all(df[df["layout"] == "pmds"]["z"].isna())
+        assert np.all(df[df["layout"] == "pmds"]["z_norm"].isna())
+
+    def test_generate_precomputed_layouts_for_components_with_single_layout_algorithm(
+        self, pixel_dataset
+    ):
+        layout_algorithm = "pmds_3d"
+        precomputed_layouts = generate_precomputed_layouts_for_components(
+            pixel_dataset, layout_algorithms=layout_algorithm
+        )
+
+        assert isinstance(precomputed_layouts, PreComputedLayouts)
+        assert not precomputed_layouts.is_empty
+
+        df = precomputed_layouts.to_df()
+        assert set(df["layout"]) == {"pmds_3d"}
+
+
+@pytest.mark.integration_test
+class TestGeneratePrecomputedLayoutsForComponentsIntegrationTest:
+    """These tests will include multiprocessing, but cover less than the tests above."""
+
+    @pytest.fixture(name="pixel_dataset")
+    def pixel_dataset_fixture(self, setup_basic_pixel_dataset):
+        (dataset, *_) = setup_basic_pixel_dataset
+        yield dataset
+
+    def test_generate_precomputed_layouts_for_components_with_all_components(
+        self, pixel_dataset
+    ):
+        precomputed_layouts = generate_precomputed_layouts_for_components(
+            pixel_dataset,
+            add_node_marker_counts=True,
+            layout_algorithms=["pmds", "pmds_3d"],
+        )
+
+        assert isinstance(precomputed_layouts, PreComputedLayouts)
+        assert not precomputed_layouts.is_empty
+        df = precomputed_layouts.to_df()
+
+        assert set(df.columns) == {
+            "x",
+            "y",
+            "z",
+            "x_norm",
+            "y_norm",
+            "z_norm",
+            "graph_projection",
+            "layout",
+            "component",
+        } | set(pixel_dataset.adata.var.index)
+
+        assert set(df["component"]) == set(pixel_dataset.adata.obs.index)
+        assert set(df["layout"]) == {"pmds_3d", "pmds"}

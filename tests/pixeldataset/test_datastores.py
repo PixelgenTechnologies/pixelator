@@ -39,6 +39,8 @@ class TestPixelDataStore:
     ):
         dataset, *_ = setup_basic_pixel_dataset
         file_target = tmp_path / "dataset.pxl"
+        # Writing pre-computed layouts is not supported for csv files
+        dataset.precomputed_layouts = None
         dataset.save(str(file_target), file_format="csv")
         res = PixelDataStore.guess_datastore_from_path(file_target)
         assert isinstance(res, ZipBasedPixelFileWithCSV)
@@ -64,6 +66,8 @@ class TestPixelDataStore:
         tmp_path: Path,
     ):
         dataset, *_ = setup_basic_pixel_dataset
+        # Writing pre-computed layouts is not supported for csv files
+        dataset.precomputed_layouts = None
         file_target = tmp_path / "dataset.pxl"
         dataset.save(str(file_target), file_format="csv")
         res = PixelDataStore.from_path(file_target)
@@ -136,6 +140,8 @@ class TestPixelDataStore:
         tmp_path: Path,
     ):
         dataset, *_ = setup_basic_pixel_dataset
+        # CSV files for not support writing precomputed layouts
+        dataset.precomputed_layouts = None
         file_target = tmp_path / "dataset.pxl"
         dataset.save(
             str(file_target),
@@ -331,5 +337,8 @@ class TestZipBasedPixelFileWithCSV:
         dataset, *_ = setup_basic_pixel_dataset
         file_target = tmp_path / "dataset.pxl"
         assert not file_target.is_file()
+        # We do not support writing precomputed layouts to csv files
+        # so we remove them here.
+        dataset.precomputed_layouts = None
         ZipBasedPixelFileWithCSV(file_target).save(dataset)
         assert file_target.is_file()

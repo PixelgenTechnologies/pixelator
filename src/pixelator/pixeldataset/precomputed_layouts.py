@@ -10,16 +10,16 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-from multiprocessing import get_context
-from typing import TYPE_CHECKING, Iterable, Optional
+from typing import TYPE_CHECKING, Iterable, Optional, Protocol
 
 import pandas as pd
 import polars as pl
 
 from pixelator.exceptions import PixelatorBaseException
 from pixelator.graph import Graph
+from pixelator.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.marks import experimental
-from pixelator.utils import batched
+from pixelator.utils import batched, flatten, get_pool_executor
 
 if TYPE_CHECKING:
     from pixelator.pixeldataset import PixelDataset
@@ -33,8 +33,169 @@ class PreComputedLayoutsEmpty(PixelatorBaseException):
     """Raised when trying to access an empty PreComputedLayouts instance."""
 
 
+class RequestedLayoutsHaveMultipleDimensionalities(PixelatorBaseException):
+    """Raised when trying to materialize PreComputedLayouts with multiple dimensionalities."""
+
+
+class _DataProvider(Protocol):
+    def is_empty(self) -> bool: ...
+
+    def to_df(self, columns: list[str] | None = None) -> pd.DataFrame: ...
+
+    def lazy(self): ...
+
+    def unique_components(self): ...
+
+    def filter(
+        self,
+        component_ids: str | set[str] | None = None,
+        graph_projections: str | set[str] | None = None,
+        layout_methods: str | set[str] | None = None,
+    ) -> list[pl.LazyFrame]: ...
+
+
+class _EmptyDataProvider(_DataProvider):
+    def __init__(self) -> None:
+        # This class needs no parameters
+        pass
+
+    def is_empty(self) -> bool:
+        return True
+
+    def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
+        raise PreComputedLayoutsEmpty("No layouts available")
+
+    def lazy(self):
+        raise PreComputedLayoutsEmpty("No layouts available")
+
+    def unique_components(self):
+        return {}
+
+    def filter(
+        self,
+        component_ids: str | set[str] | None = None,
+        graph_projections: str | set[str] | None = None,
+        layout_methods: str | set[str] | None = None,
+    ) -> list[pl.LazyFrame]:
+        raise PreComputedLayoutsEmpty("No layouts available")
+
+
+class _SingleFrameDataProvider(_DataProvider):
+    def __init__(self, lazy_frame: pl.LazyFrame) -> None:
+        self._lazy_frame = lazy_frame
+
+    def is_empty(self) -> bool:
+        return self.lazy().select(pl.col("component")).first().collect().is_empty()
+
+    def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
+        if columns:
+            return self._lazy_frame.select(columns).collect().to_pandas()
+        return self._lazy_frame.collect().to_pandas()
+
+    def lazy(self):
+        return self._lazy_frame
+
+    def unique_components(self):
+        return set(
+            self.lazy()
+            .select(pl.col("component").unique())
+            .collect()
+            .get_column("component")
+        )
+
+    def filter(
+        self,
+        component_ids: str | set[str] | None = None,
+        graph_projections: str | set[str] | None = None,
+        layout_methods: str | set[str] | None = None,
+    ) -> pl.LazyFrame:
+        component_ids = PreComputedLayouts._convert_to_set(component_ids)
+        graph_projections = PreComputedLayouts._convert_to_set(graph_projections)
+        layout_methods = PreComputedLayouts._convert_to_set(layout_methods)
+
+        layouts_lazy_filtered = self.lazy()
+
+        if component_ids:
+            layouts_lazy_filtered = layouts_lazy_filtered.filter(
+                pl.col("component").is_in(component_ids)
+            )
+
+        if graph_projections:
+            layouts_lazy_filtered = layouts_lazy_filtered.filter(
+                pl.col("graph_projection").is_in(graph_projections)
+            )
+
+        if layout_methods:
+            layouts_lazy_filtered = layouts_lazy_filtered.filter(
+                pl.col("layout").is_in(layout_methods)
+            )
+
+        return layouts_lazy_filtered
+
+
+class _MultiFrameDataProvider(_DataProvider):
+    def __init__(self, lazy_frames: Iterable[pl.LazyFrame]) -> None:
+        self._lazy_frames = list(lazy_frames)
+
+    def is_empty(self) -> bool:
+        return all(
+            frame.select(pl.col("component")).first().collect().is_empty()
+            for frame in self._lazy_frames
+        )
+
+    def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
+        if columns:
+            return self.lazy().select(columns).collect().to_pandas()
+        return self.lazy().collect().to_pandas()
+
+    def lazy(self):
+        try:
+            return pl.concat(self._lazy_frames, how="diagonal")
+        except ValueError:
+            raise PreComputedLayoutsEmpty(f"No layouts available: {self._lazy_frames}")
+
+    def unique_components(self):
+        return set(
+            flatten(
+                frame.select(pl.col("component").unique())
+                .collect()
+                .get_column("component")
+                .to_list()
+                for frame in self._lazy_frames
+            )
+        )
+
+    def filter(
+        self,
+        component_ids: str | set[str] | None = None,
+        graph_projections: str | set[str] | None = None,
+        layout_methods: str | set[str] | None = None,
+    ) -> list[pl.LazyFrame]:
+        component_ids = PreComputedLayouts._convert_to_set(component_ids)
+        graph_projections = PreComputedLayouts._convert_to_set(graph_projections)
+        layout_methods = PreComputedLayouts._convert_to_set(layout_methods)
+
+        def data():
+            for frame in self._lazy_frames:
+                if component_ids:
+                    frame = frame.filter(pl.col("component").is_in(component_ids))
+
+                if graph_projections:
+                    frame = frame.filter(
+                        pl.col("graph_projection").is_in(graph_projections)
+                    )
+
+                if layout_methods:
+                    frame = frame.filter(pl.col("layout").is_in(layout_methods))
+
+                if not frame.select(pl.col("component")).first().collect().is_empty():
+                    yield frame
+
+        return list(data())
+
+
 class PreComputedLayouts:
-    """Pre-computed layouts for a set of graphs, typically per component."""
+    """Pre-computed layouts for a set of graphs, per component."""
 
     DEFAULT_PARTITIONING = [
         "graph_projection",
@@ -48,7 +209,15 @@ class PreComputedLayouts:
         partitioning: Optional[list[str]] = None,
     ) -> None:
         """Initialize the PreComputedLayouts instance."""
-        self._layouts_lazy = layouts_lazy
+        if layouts_lazy is None:
+            self._data_provider: _DataProvider = _EmptyDataProvider()
+        elif isinstance(layouts_lazy, pl.LazyFrame):
+            self._data_provider = _SingleFrameDataProvider(layouts_lazy)
+        elif isinstance(layouts_lazy, Iterable):
+            self._data_provider = _MultiFrameDataProvider(layouts_lazy)
+        else:
+            raise ValueError("Must be lazy frame or iterable of lazy frames")
+
         if not partitioning:
             partitioning = PreComputedLayouts.DEFAULT_PARTITIONING
         self._partitioning = partitioning
@@ -70,12 +239,7 @@ class PreComputedLayouts:
     @property
     def is_empty(self) -> bool:
         """Return True if the layout is empty."""
-        try:
-            if self.lazy is None:
-                return True
-            return self.lazy.select(pl.col("component")).first().collect().is_empty()
-        except PreComputedLayoutsEmpty:
-            return True
+        return self._data_provider.is_empty()
 
     @property
     def partitioning(self) -> list[str]:
@@ -87,41 +251,38 @@ class PreComputedLayouts:
         """
         return self._partitioning
 
+    def unique_components(self) -> set[str]:
+        """Return the unique components in the layouts."""
+        return self._data_provider.unique_components()
+
     def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
         """Return the layouts as a pandas DataFrame.
 
         :param columns: the columns to return, if `None` all columns will be returned
         :return: A pandas DataFrame with the layout(s)
         """
-        if columns is None:
-            return self.lazy.collect().to_pandas()
-
-        return self.lazy.select(columns).collect().to_pandas()
+        try:
+            return self._data_provider.to_df(columns)
+        except pl.exceptions.ShapeError:
+            raise RequestedLayoutsHaveMultipleDimensionalities(
+                "Requested layouts have multiple dimensionalities, e.g. "
+                "you might be requesting 3D and 2D layouts at the same time. "
+                "To fix this, you can filter the layouts using `filter` prior to "
+                "calling `to_df` to only contain layouts with the same dimensionality."
+            )
 
     @property
     def lazy(self) -> pl.LazyFrame:
         """Return the layouts as a polars LazyFrame."""
-        if self._layouts_lazy is None:
-            raise PreComputedLayoutsEmpty("No layouts available")
-        if isinstance(self._layouts_lazy, Iterable):
-            return pl.concat(self._layouts_lazy, rechunk=False)
-        return self._layouts_lazy
-
-    @property
-    def raw_iterator(self) -> Iterable[pl.LazyFrame]:
-        """Return the raw iterator of the layouts.
-
-        Please note that the raw iterator does not necessarily return
-        one component per lazy frame. Instead if will return the lazy frames
-        as they were provided to the PreComputedLayouts instance.
-
-        This is useful e.g. to write the data lazily and efficiently to disk
-        but in many end-user scenarios it is probably better to work either
-        with `filter` or `component_iterator`.
-        """
-        if not isinstance(self._layouts_lazy, Iterable):
-            return [self._layouts_lazy]  # type: ignore
-        return self._layouts_lazy
+        try:
+            return self._data_provider.lazy()
+        except pl.exceptions.ShapeError:
+            raise RequestedLayoutsHaveMultipleDimensionalities(
+                "Requested layouts have multiple dimensionalities, e.g. "
+                "you might be requesting 3D and 2D layouts at the same time. "
+                "To fix this, you can filter the layouts using `filter` prior to "
+                "calling `to_df` to only contain layouts with the same dimensionality."
+            )
 
     def filter(
         self,
@@ -138,9 +299,7 @@ class PreComputedLayouts:
         :rtype: PreComputedLayouts
         """
         return PreComputedLayouts(
-            self._filter_layouts(
-                self.lazy, component_ids, graph_projection, layout_method
-            ),
+            self._data_provider.filter(component_ids, graph_projection, layout_method),
             partitioning=self.partitioning,
         )
 
@@ -167,18 +326,17 @@ class PreComputedLayouts:
                   for that component
         """
         if not component_ids:
-            unique_components = set(
-                self.lazy.select(pl.col("component").unique())
-                .collect()
-                .get_column("component")
-            )
+            unique_components = self._data_provider.unique_components()
         else:
             unique_components = self._convert_to_set(component_ids)  # type: ignore
 
-        for component in unique_components:
-            yield self.filter(component, graph_projections, layout_methods).to_df(
-                columns
+        for component_id in unique_components:
+            data = self.filter(
+                component_ids=component_id,
+                graph_projection=graph_projections,
+                layout_method=layout_methods,
             )
+            yield data.to_df(columns)
 
     @staticmethod
     def _convert_to_set(
@@ -187,30 +345,6 @@ class PreComputedLayouts:
         if value is not None:
             value = set([value]) if isinstance(value, str) else set(value)
         return value
-
-    @staticmethod
-    def _filter_layouts(
-        layouts_lazy: pl.LazyFrame,
-        component_ids: str | set[str] | None = None,
-        graph_projections: str | set[str] | None = None,
-        layout_methods: str | set[str] | None = None,
-    ) -> pl.LazyFrame:
-        component_ids = PreComputedLayouts._convert_to_set(component_ids)
-        graph_projections = PreComputedLayouts._convert_to_set(graph_projections)
-        layout_methods = PreComputedLayouts._convert_to_set(layout_methods)
-
-        if component_ids:
-            layouts_lazy = layouts_lazy.filter(pl.col("component").is_in(component_ids))
-
-        if graph_projections:
-            layouts_lazy = layouts_lazy.filter(
-                pl.col("graph_projection").is_in(graph_projections)
-            )
-
-        if layout_methods:
-            layouts_lazy = layouts_lazy.filter(pl.col("layout").is_in(layout_methods))
-
-        return layouts_lazy
 
     def copy(self) -> PreComputedLayouts:
         """Copy the PreComputedLayouts instance."""
@@ -253,11 +387,6 @@ def aggregate_precomputed_layouts(
         return PreComputedLayouts.create_empty()
 
 
-# TODO The code below this point is not yet tested, and should be considered
-# experimental. It is likely to change in the future. It will be exposed as
-# public to this method in the future.
-
-
 def _zero_fill_missing_markers(dataframe: pd.DataFrame, all_markers) -> pd.DataFrame:
     missing_markers = all_markers - set(dataframe.columns.to_list())
     for marker in missing_markers:
@@ -265,69 +394,87 @@ def _zero_fill_missing_markers(dataframe: pd.DataFrame, all_markers) -> pd.DataF
     return dataframe
 
 
-def _get_layout(
+def _compute_layouts(
     edgelist: pl.DataFrame,
-    add_node_marker_counts,
-    layout_algorithm,
-    all_markers,
+    add_node_marker_counts: bool,
+    layout_algorithms: list[SupportedLayoutAlgorithm] | SupportedLayoutAlgorithm,
+    all_markers: list[str],
 ):
+    if isinstance(layout_algorithms, str):
+        layout_algorithms = [layout_algorithms]
+
     def data():
         for component, df in edgelist.group_by("component"):
             logger.debug("Computing for component %s", component)
-            yield (
-                pl.DataFrame(
-                    Graph.from_edgelist(
-                        df.lazy(),
-                        add_marker_counts=add_node_marker_counts,
-                        simplify=True,
-                        use_full_bipartite=True,
-                    )
-                    .layout_coordinates(
-                        layout_algorithm=layout_algorithm,
-                        get_node_marker_matrix=add_node_marker_counts,
-                        cache=False,
-                    )
-                    .pipe(_zero_fill_missing_markers, all_markers=all_markers)
-                    .sort_index(axis=1)
-                ).with_columns(
-                    component=pl.lit(component),
-                    graph_projection=pl.lit("bipartite"),
-                    layout=pl.lit(layout_algorithm),
-                )
+            graph = Graph.from_edgelist(
+                df.lazy(),
+                add_marker_counts=add_node_marker_counts,
+                simplify=True,
+                use_full_bipartite=True,
             )
+            for layout_algorithm in layout_algorithms:
+                yield (
+                    pl.DataFrame(
+                        graph.layout_coordinates(
+                            layout_algorithm=layout_algorithm,
+                            get_node_marker_matrix=add_node_marker_counts,
+                            cache=False,
+                        )
+                        .pipe(
+                            _zero_fill_missing_markers
+                            # If we don't want to add the marker counts
+                            # we just pass this through an identity function
+                            if add_node_marker_counts
+                            else lambda df, all_markers: df,
+                            all_markers=all_markers,
+                        )
+                        .sort_index(axis=1)
+                    )
+                    .with_columns(
+                        component=pl.lit(component),
+                        graph_projection=pl.lit("bipartite"),
+                        layout=pl.lit(layout_algorithm),
+                    )
+                    .lazy()
+                )
 
-    result = pl.concat(data())
+    result = pl.concat(data(), how="diagonal")
     return result
 
 
-def _fn(d):
-    (edgelist, add_node_marker_counts, layout_algorithm, all_markers) = d
-    return _get_layout(edgelist, add_node_marker_counts, layout_algorithm, all_markers)
+def _wrap_get_layouts(d):
+    """Deconstruct a tuple of args to their corresponding argument.
+
+    This is only necessary since imap does not support multiple arguments
+    """
+    (edgelist, add_node_marker_counts, layout_algorithms, all_markers) = d
+    return _compute_layouts(
+        edgelist, add_node_marker_counts, layout_algorithms, all_markers
+    )
 
 
 def _data(
     pixel_dataset: PixelDataset,
     components,
     add_node_marker_counts,
-    layout_algorithm,
+    layout_algorithms,
     all_markers,
 ):
-    processes = 10
-
-    # with ProcessPoolExecutor(max_workers=processes) as executor:
-    with get_context("spawn").Pool(processes=processes) as executor:
-        # Batch over the component groups to speed up the computation
-        # fine tune this later
-        component_group = map(set, batched(components, 10))
+    with get_pool_executor() as executor:
+        # Batching over the component groups and setting a higher chunksize
+        # to speeds up the computation here. I have not extensively
+        # benchmarked the exact values here, but they seem to work well
+        # enough
+        component_group = map(set, batched(components, 20))
         yield from executor.imap(
-            _fn,
+            _wrap_get_layouts,
             (
                 (
                     pixel_dataset.edgelist_lazy.filter(
                         pl.col("component").is_in(components)
                     ).collect(),
                     add_node_marker_counts,
-                    layout_algorithm,
+                    layout_algorithms,
                     all_markers,
                 )
                 for components in component_group
@@ -337,12 +484,21 @@ def _data(
 
 
 @experimental
-def _generate_precomputed_layouts_for_components(
+def generate_precomputed_layouts_for_components(
     pixel_dataset: PixelDataset,
     components: set[str] | None = None,
-    add_node_marker_counts: bool = False,
-    layout_algorithm="pmds_3d",
+    add_node_marker_counts: bool = True,
+    layout_algorithms: SupportedLayoutAlgorithm
+    | list[SupportedLayoutAlgorithm] = "pmds_3d",
 ) -> PreComputedLayouts:
+    """Generate precomputed layouts for the components in the PixelDataset.
+
+    :param pixel_dataset: the PixelDataset to generate the layouts for
+    :param components: the components to generate the layouts for, if `None` all components will be used
+    :param add_node_marker_counts: whether to add the marker counts to the layout. If you don't need them
+                                   you can set this to false and speed up the computations.
+    :param layout_algorithm: the layout algorithm to use
+    """
     if components is None:
         components = set(pixel_dataset.adata.obs.index)
 
@@ -357,7 +513,7 @@ def _generate_precomputed_layouts_for_components(
             pixel_dataset=pixel_dataset,
             components=components,
             add_node_marker_counts=add_node_marker_counts,
-            layout_algorithm=layout_algorithm,
+            layout_algorithms=layout_algorithms,
             all_markers=all_markers,
         )
     )

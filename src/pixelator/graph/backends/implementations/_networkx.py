@@ -20,6 +20,7 @@ from typing import (
     TYPE_CHECKING,
     Tuple,
     Union,
+    get_args,
 )
 
 import networkx as nx
@@ -37,6 +38,7 @@ from pixelator.graph.backends.protocol import (
     Vertex,
     VertexClustering,
     VertexSequence,
+    SupportedLayoutAlgorithm,
 )
 
 if TYPE_CHECKING:
@@ -315,23 +317,15 @@ class NetworkXGraphBackend(GraphBackend):
 
     def _layout_coordinates(
         self,
-        layout_algorithm: str = "fruchterman_reingold",
+        layout_algorithm: SupportedLayoutAlgorithm = "fruchterman_reingold",
         random_seed: Optional[int] = None,
         **kwargs,
     ) -> pd.DataFrame:
-        layout_options = [
-            "fruchterman_reingold",
-            "fruchterman_reingold_3d",
-            "kamada_kawai",
-            "kamada_kawai_3d",
-            "pmds",
-            "pmds_3d",
-        ]
-        if layout_algorithm not in layout_options:
+        if layout_algorithm not in get_args(SupportedLayoutAlgorithm):
             raise AssertionError(
                 (
                     f"{layout_algorithm} not allowed `layout_algorithm` option. "
-                    f"Options are: {'/'.join(layout_options)}"
+                    f"Options are: {'/'.join(get_args(SupportedLayoutAlgorithm))}"
                 )
             )
 
@@ -374,7 +368,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def layout_coordinates(
         self,
-        layout_algorithm: str = "fruchterman_reingold",
+        layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
@@ -395,6 +389,8 @@ class NetworkXGraphBackend(GraphBackend):
 
         The `fruchterman_reingold` options are in general faster, but less
         accurate than the `kamada_kawai` ones.
+
+        TODO Update these docs!
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
         :param only_keep_a_pixels: If true, only keep the a-pixels
