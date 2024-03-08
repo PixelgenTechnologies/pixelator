@@ -68,6 +68,13 @@ def test_sanity_check_inputs_all_ok(data_root):
     )
 
 
+def test_sanity_check_inputs_single_file_ok(data_root):
+    sanity_check_inputs(
+        input_files=data_root / "test_data_R1.fastq.gz",
+        allowed_extensions="fastq.gz",
+    )
+
+
 def test_sanity_check_inputs_failed_criteria(data_root):
     with pytest.raises(AssertionError):
         sanity_check_inputs(

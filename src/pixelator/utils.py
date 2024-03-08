@@ -208,7 +208,7 @@ def gz_size(filename: str) -> int:
 
 def log_step_start(
     step_name: str,
-    input_files: Optional[List[str]] = None,
+    input_files: Optional[List[str] | str] = None,
     output: Optional[str] = None,
     **kwargs,
 ) -> None:
@@ -222,8 +222,11 @@ def log_step_start(
     """
     logger.info("Start pixelator %s %s", step_name, __version__)
 
-    if input_files is not None:
+    if isinstance(input_files, list):
         logger.info("Input file(s) %s", ",".join(input_files))
+
+    if isinstance(input_files, str):
+        logger.info("Input file %s", input_files)
 
     if output is not None:
         logger.info("Output %s", output)
@@ -259,7 +262,7 @@ def reverse_complement(seq: str) -> str:
 
 
 def sanity_check_inputs(
-    input_files: Sequence[PathType],
+    input_files: Sequence[PathType] | PathType,
     allowed_extensions: Union[Sequence[str], Optional[str]] = None,
 ) -> None:
     """Perform basic sanity checking of input files.
@@ -270,7 +273,11 @@ def sanity_check_inputs(
     :raises AssertionError: when any of validation fails
     :returns None:
     """
-    for input_file in input_files:
+    input_files_: list[PathType] = (
+        input_files if not isinstance(input_files, PathType) else [input_files]  # type: ignore
+    )
+
+    for input_file in input_files_:
         input_file = Path(input_file)
         logger.debug("Sanity checking %s", input_file)
 
@@ -366,31 +373,59 @@ def write_parameters_file(
         json.dump(data, fh, indent=4)
 
 
-def _add_handlers_to_root_logger(port):
-    # TODO Note this only logs to the socket now. We need
-    # to figure out how to deal with the console logging
-    # here as well.
+def _add_handlers_to_root_logger(port, log_level):
     root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
     socket_handler = SocketHandler("localhost", port)
     root_logger.addHandler(socket_handler)
 
 
-def get_process_pool_executor(
+def _pre_multiprocessing_args(
     nbr_cores=None, logging_setup=None, context="spawn", **kwargs
 ):
-    """Return a process pool with some default settings."""
-    nbr_cores = nbr_cores if nbr_cores else multiprocessing.cpu_count()
+    # If these variable are not set we will try to pick them
+    # up from the click context
+    current_click_context = click.get_current_context(silent=True)
+    click_logging_setup = None
+    click_nbr_cores = None
+    if current_click_context:
+        click_logging_setup = current_click_context.obj.get("LOGGER")
+        click_nbr_cores = current_click_context.obj.get("CORES")
+
+    nbr_cores = (
+        nbr_cores if nbr_cores else click_nbr_cores or multiprocessing.cpu_count()
+    )
     args_dict = {
         "max_workers": nbr_cores,
         "mp_context": multiprocessing.get_context(context),
     }
 
-    if logging_setup:
+    if logging_setup or click_logging_setup:
         args_dict = args_dict | dict(
-            initializer=_add_handlers_to_root_logger, initargs=(logging_setup.port,)
+            initializer=_add_handlers_to_root_logger,
+            initargs=(
+                (logging_setup or click_logging_setup).port,
+                (logging_setup or click_logging_setup).log_level,
+            ),
         )
     args_dict = args_dict | kwargs
+    return args_dict
+
+
+def get_process_pool_executor(
+    nbr_cores=None, logging_setup=None, context="spawn", **kwargs
+):
+    """Return a ProcessPool with some default settings."""
+    args_dict = _pre_multiprocessing_args(nbr_cores, logging_setup, context, **kwargs)
     return ProcessPoolExecutor(**args_dict)
+
+
+def get_pool_executor(nbr_cores=None, logging_setup=None, context="spawn", **kwargs):
+    """Return a Pool with some default settings."""
+    args_dict = _pre_multiprocessing_args(nbr_cores, logging_setup, context, **kwargs)
+    args_dict.pop("max_workers")
+    args_dict.pop("mp_context")
+    return multiprocessing.get_context(context).Pool(nbr_cores, **args_dict)
 
 
 R1_REGEX = R"(.[Rr]1$)|(_[Rr]?1$)|(_[Rr]?1)(?P<suffix>_[0-9]{3})$"

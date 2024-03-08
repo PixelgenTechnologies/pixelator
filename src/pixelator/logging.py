@@ -183,6 +183,11 @@ class LoggingSetup:
         self._root_logger.addHandler(socker_handler)
         self._root_logger.setLevel(logging.DEBUG if self.verbose else logging.INFO)
 
+    @property
+    def log_level(self):
+        """Return the current log level."""
+        return self._root_logger.level
+
     def __enter__(self):
         """Enter the context manager.
 
@@ -202,11 +207,12 @@ class LoggingSetup:
         """
 
         def log_exception(exc_type, exc_value, traceback_obj):
-            if issubclass(exc_type, click.exceptions.Exit):
-                # click will raise a click.exceptions.Exit exception
-                # when exiting the application, and we don't want to
-                # put that as an error in the log.
-                return
+            if issubclass(exc_type, click.exceptions.UsageError) or issubclass(
+                exc_type, click.exceptions.Exit
+            ):
+                # Click exceptions are dealt with separately
+                # and thus we ignore them here.
+                return False
 
             self._root_logger.critical(
                 "Unhandled exception of type: {}".format(exc_type.__name__)
