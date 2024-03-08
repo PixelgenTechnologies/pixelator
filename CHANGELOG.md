@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Provide typed interfaces for all per-stage report files using pydantic.
 * Centralize pixelator intermediate file lookup and access.
 * Add a `precomputed_layouts` property to `pixeldataset` to allow for loading precomputed layouts.
+* Add `pixelator single-cell layout` stage to pixelator, which allows users to compute layouts
+  for a PXL file that can then be used to visualize the graph in 2D or 3D downstream.
 
 ### Changed
 
