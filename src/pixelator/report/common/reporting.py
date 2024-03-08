@@ -32,6 +32,7 @@ from pixelator.report.models import (
     MoleculesDataflowReport,
 )
 from pixelator.report.models.base import SampleReport
+from pixelator.report.models.layout import LayoutSampleReport
 
 logger = logging.getLogger("pixelator.report")
 ModelT = typing.TypeVar("ModelT", bound=type[SampleReport])
@@ -250,6 +251,19 @@ class PixelatorReporting:
         ]
 
         df = self._explode_json_columns(df, keys_to_explode)
+        return df
+
+    def layout_metrics(self, sample_name: str) -> LayoutSampleReport:
+        """Return the layout metrics for a sample."""
+        sample_file = self.workdir.single_cell_report(
+            SingleCellStage.LAYOUT, sample_name
+        )
+        return LayoutSampleReport.from_json(sample_file)
+
+    def layout_summary(self) -> pd.DataFrame:
+        """Combine graph metrics for all samples into a single dataframe."""
+        reports = self.workdir.single_cell_report(SingleCellStage.LAYOUT)
+        df = self._combine_data(reports, LayoutSampleReport)
         return df
 
     def analysis_metrics(self, sample_name: str) -> AnalysisSampleReport:

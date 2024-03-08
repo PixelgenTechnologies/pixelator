@@ -15,7 +15,9 @@ import click
 import pydantic
 
 logger = logging.getLogger(__name__)
-CommandOptionValue = TypeVar("CommandOptionValue", None, str, int, float, bool)
+CommandOptionValue = TypeVar(
+    "CommandOptionValue", None, str, int, float, bool, list[str]
+)
 
 
 # -----------------------------------------------------------------------

@@ -33,8 +33,8 @@ def test_workdir_metadata(
 ):
     f = pixelator_workdir.metadata_files()
 
-    # 8 stages with 2 samples each
-    assert len(f) == 16
+    # 9 stages with 2 samples each
+    assert len(f) == 18
 
 
 def test_workdir_filtered_dataset(

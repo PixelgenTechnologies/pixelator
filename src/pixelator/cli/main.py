@@ -19,11 +19,12 @@ from pixelator.cli.collapse import collapse
 from pixelator.cli.common import OrderedGroup, logger
 from pixelator.cli.demux import demux
 from pixelator.cli.graph import graph
-from pixelator.logging import LoggingSetup
+from pixelator.cli.layout import layout
 from pixelator.cli.misc import list_single_cell_designs, list_single_cell_panels
 from pixelator.cli.plugin import add_cli_plugins
 from pixelator.cli.preqc import preqc
 from pixelator.cli.report import report
+from pixelator.logging import LoggingSetup
 from pixelator.utils import click_echo
 
 
@@ -131,6 +132,7 @@ single_cell.add_command(demux)
 single_cell.add_command(collapse)
 single_cell.add_command(graph)
 single_cell.add_command(annotate)
+single_cell.add_command(layout)
 single_cell.add_command(analysis)
 single_cell.add_command(report)
 
