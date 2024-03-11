@@ -78,8 +78,8 @@ def layout(
     sanity_check_inputs(pxl_file, allowed_extensions="pxl")
 
     # create output folder if it does not exist
-    output_path = Path(output)
-    layout_output_dir = create_output_stage_dir(output_path, "layout")
+    workdir = PixelatorWorkdir(output)
+    layout_output_dir = workdir.stage_dir("layout")
 
     logger.info(f"Computing layout(s) for file {pxl_file}")
 
