@@ -18,7 +18,7 @@ small-D21:
     layout:
       # Overriding the default pmds here since pmds requires at least
       # 50 nodes to work.
-      params: ["--layout", "fruchterman_reingold"]
+      params: ["--layout-algorithm", "fruchterman_reingold"]
 
     analysis:
       params:

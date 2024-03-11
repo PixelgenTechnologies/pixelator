@@ -4,7 +4,6 @@ Console script for pixelator (layout)
 Copyright © 2024 Pixelgen Technologies AB.
 """
 
-from pathlib import Path
 from typing import get_args
 
 import click
@@ -15,9 +14,9 @@ from pixelator.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.pixeldataset.precomputed_layouts import (
     generate_precomputed_layouts_for_components,
 )
+from pixelator.report.common import PixelatorWorkdir
 from pixelator.report.models.layout import LayoutSampleReport
 from pixelator.utils import (
-    create_output_stage_dir,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -39,14 +38,14 @@ from pixelator.utils import (
     metavar="PXL",
 )
 @click.option(
-    "--add-node-marker-counts",
+    "--no-node-marker-counts",
     required=False,
     is_flag=True,
-    default=True,
-    help="Add marker counts to the layout. Default: True",
+    default=False,
+    help="Skip adding marker counts to the layout. This makes things a little less resource intensive. Default: False.",
 )
 @click.option(
-    "--layout",
+    "--layout-algorithm",
     required=False,
     multiple=True,
     default=["pmds_3d"],
@@ -59,8 +58,8 @@ from pixelator.utils import (
 def layout(
     ctx,
     pxl_file,
-    add_node_marker_counts,
-    layout,
+    no_node_marker_counts,
+    layout_algorithm,
     output,
 ):
     """
@@ -69,8 +68,8 @@ def layout(
     log_step_start(
         "layout",
         input_files=pxl_file,
-        add_node_marker_counts=add_node_marker_counts,
-        layout=layout,
+        no_node_marker_counts=no_node_marker_counts,
+        layout_algorithm=layout_algorithm,
         output=output,
     )
 
@@ -93,8 +92,8 @@ def layout(
     pxl_dataset = read(pxl_file)
     pxl_dataset.precomputed_layouts = generate_precomputed_layouts_for_components(
         pxl_dataset,
-        add_node_marker_counts=add_node_marker_counts,
-        layout_algorithms=layout,
+        add_node_marker_counts=not no_node_marker_counts,
+        layout_algorithms=layout_algorithm,
     )
     pxl_dataset.save(
         layout_output_dir / f"{clean_name}.layout.dataset.pxl", force_overwrite=True
