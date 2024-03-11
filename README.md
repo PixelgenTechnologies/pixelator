@@ -129,3 +129,5 @@ A non-exhaustive list of contributors follows:
 
 - Filip Karlsson ([@fika-pixelgen](https://github.com/fika-pixelgen))
 - Max Karlsson ([@maxkarlsson](https://github.com/maxkarlsson))
+- Pouria Tajvar ([@ptajvar](https://github.com/ptajvar))
+- Ludvig Larsson ([@ludvidla](https://github.com/ludvigla))
