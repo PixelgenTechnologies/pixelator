@@ -51,7 +51,7 @@ class _DataProvider(Protocol):
         component_ids: str | set[str] | None = None,
         graph_projections: str | set[str] | None = None,
         layout_methods: str | set[str] | None = None,
-    ) -> list[pl.LazyFrame]: ...
+    ) -> pl.LazyFrame | list[pl.LazyFrame]: ...
 
 
 class _EmptyDataProvider(_DataProvider):
