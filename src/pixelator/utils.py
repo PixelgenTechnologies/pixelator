@@ -19,6 +19,7 @@ import typing
 from concurrent.futures import ProcessPoolExecutor
 from functools import wraps
 from logging.handlers import SocketHandler
+from multiprocessing.pool import Pool
 from pathlib import Path, PurePath
 from typing import (
     TYPE_CHECKING,
@@ -414,18 +415,22 @@ def _pre_multiprocessing_args(
 
 def get_process_pool_executor(
     nbr_cores=None, logging_setup=None, context="spawn", **kwargs
-):
+) -> ProcessPoolExecutor:
     """Return a ProcessPool with some default settings."""
     args_dict = _pre_multiprocessing_args(nbr_cores, logging_setup, context, **kwargs)
     return ProcessPoolExecutor(**args_dict)
 
 
-def get_pool_executor(nbr_cores=None, logging_setup=None, context="spawn", **kwargs):
+def get_pool_executor(
+    nbr_cores=None, logging_setup=None, context="spawn", **kwargs
+) -> Pool:
     """Return a Pool with some default settings."""
     args_dict = _pre_multiprocessing_args(nbr_cores, logging_setup, context, **kwargs)
-    args_dict.pop("max_workers")
+    nbr_of_processes = args_dict.pop("max_workers")
     args_dict.pop("mp_context")
-    return multiprocessing.get_context(context).Pool(nbr_cores, **args_dict)
+    return multiprocessing.get_context(context).Pool(
+        processes=nbr_of_processes, **args_dict
+    )
 
 
 R1_REGEX = R"(.[Rr]1$)|(_[Rr]?1$)|(_[Rr]?1)(?P<suffix>_[0-9]{3})$"
