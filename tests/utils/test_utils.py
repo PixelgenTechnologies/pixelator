@@ -5,20 +5,23 @@ Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import logging
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
 from gzip import BadGzipFile
+from multiprocessing.pool import Pool
+from unittest.mock import patch
 
 import pytest
 from pixelator import __version__
 from pixelator.utils import (
+    get_pool_executor,
+    get_process_pool_executor,
     get_read_sample_name,
     gz_size,
     is_read_file,
     log_step_start,
     sanity_check_inputs,
 )
-import multiprocessing
-from concurrent.futures import ProcessPoolExecutor
-from pixelator.utils import get_process_pool_executor
 
 
 def test_gzfile_is_empty(data_root):
@@ -65,6 +68,13 @@ def test_sanity_check_inputs_all_ok(data_root):
     sanity_check_inputs(
         input_files=[data_root / "test_data.merged.fastq.gz"],
         allowed_extensions=("fq.gz", "fastq.gz"),
+    )
+
+
+def test_sanity_check_inputs_single_file_ok(data_root):
+    sanity_check_inputs(
+        input_files=data_root / "test_data_R1.fastq.gz",
+        allowed_extensions="fastq.gz",
     )
 
 
@@ -188,3 +198,37 @@ def test_get_process_pool_executor():
     assert isinstance(executor, ProcessPoolExecutor)
     assert executor._max_workers == 2
     assert executor._mp_context == multiprocessing.get_context("fork")
+
+
+def test_get_pool_executor():
+    # Test with default parameters
+    pool = get_pool_executor()
+    assert isinstance(pool, Pool)
+    assert pool._processes == multiprocessing.cpu_count()
+    assert pool._ctx == multiprocessing.get_context("spawn")
+
+    # Test with specified number of cores
+    pool = get_pool_executor(nbr_cores=4)
+    assert isinstance(pool, Pool)
+    assert pool._processes == 4
+    assert pool._ctx == multiprocessing.get_context("spawn")
+
+    # Test set context
+    pool = get_pool_executor(nbr_cores=4, context="fork")
+    assert isinstance(pool, Pool)
+    assert pool._processes == 4
+    assert pool._ctx == multiprocessing.get_context("fork")
+
+
+def test_get_pool_executor_with_click_context():
+    class MockContext:
+        @property
+        def obj(self):
+            return {"CORES": 3}
+
+    with patch("pixelator.utils.click") as click:
+        click.get_current_context.return_value = MockContext()
+        pool = get_pool_executor()
+        assert isinstance(pool, Pool)
+        assert pool._processes == 3
+        assert pool._ctx == multiprocessing.get_context("spawn")
