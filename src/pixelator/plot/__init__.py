@@ -268,7 +268,7 @@ def _get_coordinates(
     show_b_nodes: bool = False,
 ) -> pd.DataFrame:
     coordinates = component_graph.layout_coordinates(
-        layout_algorithm=layout_algorithm,
+        layout_algorithm=layout_algorithm,  # type: ignore
         cache=cache_layout,
         only_keep_a_pixels=not show_b_nodes,
     )
