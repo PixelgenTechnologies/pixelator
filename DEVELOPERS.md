@@ -83,7 +83,7 @@ You are now ready to start developing pixelator. Congrats!
 
 Pixelator provides a number of utility scripts (you have already used one above) to help with development and testing using [Task](https://taskfile.dev/).
 We are using `tasks` to make it easier to run common development tasks such as running tests, and formatting code.
-It allows us to make these commands them self-documenting and easy to discover, and
+`tasks` allows us to make these commands self-documenting and easy to discover.
 
 > [!NOTE]
 > If you have followed the installation instructions above you should have `task` installed
@@ -151,14 +151,14 @@ These prompts can be skipped by adding `--yes` to the command.
 Some commands have variables that can be set to change the behavior of the command.
 These variables are passed as environment variables to the command.
 
-eg.
+For example:
 
 ```shell
 RESUME=true task test-nf-core-pixelator
 ```
 ## Adding new dependencies
 
-If you need to add a new dependency to pixelator this should be managed through poetry.
+If you need to add a new dependency to pixelator this should be managed through `poetry`.
 You do this by running:
 
 ```shell
@@ -166,7 +166,7 @@ poetry add <package>
 ```
 
 This will update `pyproject.toml` and `poetry.lock` with the new dependency. Both
-these file should be committed to the repository to record new dependency.
+these files should be committed to the repository to record the new dependency.
 
 ## Testing pixelator
 
@@ -176,8 +176,8 @@ The section below outline how to run these tests, and in what situations they ar
 
 ### Pixelator unit tests
 
-The pixelator unit tests suite is focused on testing the individual classes, functions, etc
-in pixelator in isolation. They are intended to be fast to run and provide quick
+The pixelator unit tests suite is focused on testing the individual classes, functions, etc.
+Unit tests are run in pixelator in isolation. They are intended to be fast to run and provide quick
 feedback during development.
 
 You can run the pixelator unit tests by using:
@@ -193,10 +193,23 @@ If you want to run all tests you can do so by using:
 task test-all
 ```
 
-You can also initiate a test loop that runs everything you save your files by:
+This can be useful to run before pushing changes to the repository to make sure that
+everything is working as expected.
+
+You can also initiate a test loop that runs every time you save your files by:
 
 ```shell
 task test-watch
+```
+
+This can be useful when you are working on the code and want to get immediate feedback.
+
+Since it can be a little bit slow to run all the tests during development you might want
+to start a test loop that only runs the tests that are affected by the files you are working on
+by using something like below:
+
+```shell
+TEST_PATH="tests/pixeldataset" task test-watch
 ```
 
 
@@ -214,7 +227,7 @@ task test-workflow
 ```
 
 The code necessary to run these tests are defined in `src/pixelator/test_utils`, and it allows you
-to run a pipeline of all commands using pytest.
+to run a pipeline of all commands using `pytest`.
 
 Tests can be easily defined in YAML files.
 See `tests/integration/test_small_D21.yaml` for an example.
@@ -233,7 +246,7 @@ panel_file: null
 
 #### Pixelator nf-core/pixelator integration tests
 
-Pixelator is built to be orchestrated by the nextflow pipeline nf-core/pixelator.
+Pixelator is built to be orchestrated by the nextflow pipeline [nf-core/pixelator](https://github.com/nf-core/pixelator).
 This means that is is useful to have a simple way to test the integration between the two.
 
 You can do this using tasks:
@@ -278,7 +291,7 @@ The default configuration that is applied when just running `pytest`,
 is to run all unmarked tests and `integration_tests`.
 
 You can use the pytest `-m` flag to select tests based on these markers.
-eg.
+e.g.
 
 ```shell
 # Only internal workflow_tests
@@ -288,6 +301,12 @@ pytest -m "workflow_test and not external_workflow_test"
 pytest -m "not external_workflow_test"
 ```
 
+You can list all available markers using:
+
+```shell
+pytest --markers
+```
+
 ## Understanding the pixelator plugin system
 Pixelator has a plugin system that allows you to extend the functionality of pixelator.
 This section outlines how to create new plugins and make sure these are picked-up
@@ -295,12 +314,12 @@ by pixelator at runtime.
 
 ### CLI plugins
 
-Pixelator has a simple plugin system that allows you as a developer to add groups
-of commands to the pixelator command-line interface.
+One part of the pixelator plugin system allows you to add groups of commands to the
+pixelator command-line interface.
 
-This uses the ability of the python package `Click https://click.palletsprojects.com/en/8.1.x/`_
+This uses the ability of the python package [Click](https://click.palletsprojects.com/en/8.1.x/)
 to add groups of commands to the command line interface. To write a plugin you need to define a
-group, below is an example of a new group `my_plugin` with a single command `my_command`:
+group, below is an example of a new group `my_cli_plugin` with a single command `my_command`:
 
 ```python
 import sys
@@ -327,27 +346,23 @@ if __name__ == "__main__":
     sys.exit(my_cli_plugin())
 ```
 
-For pixelator to find this you need to define an `entrypoint https://setuptools.pypa.io/en/latest/userguide/entry_point.html#entry-points-for-plugins`_.
-Exactly how to do this depends on which packaging method you use to build your python package. In the link above you can find
-instructions for some common scenarios. The name you need use for your entry point is: `pixelator.cli_plugin`, so if you are using,
-`pyproject.toml` to configure your project it could look something like this:
+For pixelator to find this you need to define an [entrypoint](https://setuptools.pypa.io/en/latest/userguide/entry_point.html#entry-points-for-plugins).
 
-```{code-block} toml
-:caption: pyproject.toml
+Exactly how to do this depends on which packaging method you use to build your python package. In this [link](https://setuptools.pypa.io/en/latest/userguide/entry_point.html#entry-points-for-plugins) you can find
+instructions for some common scenarios. The name you need to use for your entry point is: `pixelator.cli_plugin`, so if you are using, `pyproject.toml` to configure your project it could look something like this:
 
+```toml
 [project.entry-points."pixelator.cli_plugin"]
 my_plugin = "my_plugin:my_cli_plugin"
 ```
 
 ### Pixelator config plugins
 
-Pixelator has a config object that contains information about assays loaded from pixelator.assays.
+Pixelator has a config object that contains information about assays loaded from `pixelator.assays`.
 Additional assays can be loaded by creating a plugin that defines the `pixelator.config_plugin` entrypoint.
 This entrypoint accepts a function with the current config as a parameter:
 
-```{code-block} python
-:caption: myplugin.py
-
+```python
 def extend_config(config: "Config"):
     """
     Plugin entrypoint for extending config
@@ -357,7 +372,7 @@ def extend_config(config: "Config"):
 
     :param config: The config object to extend
     """
-    assay_basedir = Path(__file__).parent / "assays"
+    assay_basedir = Path(__file__).parent / "resources" / "assays"
     config.load_assays(assay_basedir)
 ```
 
