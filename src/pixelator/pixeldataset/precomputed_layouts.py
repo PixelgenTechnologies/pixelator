@@ -86,7 +86,7 @@ class _SingleFrameDataProvider(_DataProvider):
     def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
         if columns:
             return self._lazy_frame.select(columns).collect().to_pandas()
-        return self._lazy_frame.collect().to_pandas()
+        return self.lazy().collect().to_pandas()
 
     def lazy(self):
         return self._lazy_frame
@@ -136,6 +136,9 @@ class _MultiFrameDataProvider(_DataProvider):
     def is_empty(self) -> bool:
         return all(
             frame.select(pl.col("component")).first().collect().is_empty()
+            # We don't want to use `lazy()` here to skip
+            # concatenating which is an unnecessary operation
+            # for this
             for frame in self._lazy_frames
         )
 
