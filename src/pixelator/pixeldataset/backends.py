@@ -284,7 +284,6 @@ class FileBasedPixelDatasetBackend:
         """Get the precomputed layouts."""
         # If it is None it means it is uninitialized, and we should
         # attempt to read it lazily
-
         if self._precomputed_layouts is None:
             return self._datastore.read_precomputed_layouts()
 

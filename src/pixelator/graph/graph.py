@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Literal
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
 import polars as pl

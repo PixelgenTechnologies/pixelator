@@ -157,11 +157,10 @@ class GraphBackend(Protocol):
           - pmds
           - pmds_3d
 
-
-        TODO Rewrite the docs here to indicate that we use pmds
-             as the default layout method.
-        The `fruchterman_reingold` options are in general faster, but less
-        accurate than the `kamada_kawai` ones.
+        For most cases the `pmds` options should be about 10-100x faster
+        than the force directed layout methods, i.e. `fruchterman_reingold`
+        and `kamada_kawai`. Among the force directed layout methods,
+        `fruchterman_reingold` is generally faster than `kamada_kawai`.
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
         :param only_keep_a_pixels: If true, only keep the a-pixels

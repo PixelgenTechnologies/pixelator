@@ -42,7 +42,7 @@ from pixelator.utils import (
     required=False,
     is_flag=True,
     default=False,
-    help="Skip adding marker counts to the layout. This makes things a little less resource intensive. Default: False.",
+    help="Skip adding marker counts to the layout. Default: False.",
 )
 @click.option(
     "--layout-algorithm",

@@ -33,10 +33,6 @@ class PreComputedLayoutsEmpty(PixelatorBaseException):
     """Raised when trying to access an empty PreComputedLayouts instance."""
 
 
-class RequestedLayoutsHaveMultipleDimensionalities(PixelatorBaseException):
-    """Raised when trying to materialize PreComputedLayouts with multiple dimensionalities."""
-
-
 class _DataProvider(Protocol):
     def is_empty(self) -> bool: ...
 
@@ -261,28 +257,12 @@ class PreComputedLayouts:
         :param columns: the columns to return, if `None` all columns will be returned
         :return: A pandas DataFrame with the layout(s)
         """
-        try:
-            return self._data_provider.to_df(columns)
-        except pl.exceptions.ShapeError:
-            raise RequestedLayoutsHaveMultipleDimensionalities(
-                "Requested layouts have multiple dimensionalities, e.g. "
-                "you might be requesting 3D and 2D layouts at the same time. "
-                "To fix this, you can filter the layouts using `filter` prior to "
-                "calling `to_df` to only contain layouts with the same dimensionality."
-            )
+        return self._data_provider.to_df(columns)
 
     @property
     def lazy(self) -> pl.LazyFrame:
         """Return the layouts as a polars LazyFrame."""
-        try:
-            return self._data_provider.lazy()
-        except pl.exceptions.ShapeError:
-            raise RequestedLayoutsHaveMultipleDimensionalities(
-                "Requested layouts have multiple dimensionalities, e.g. "
-                "you might be requesting 3D and 2D layouts at the same time. "
-                "To fix this, you can filter the layouts using `filter` prior to "
-                "calling `to_df` to only contain layouts with the same dimensionality."
-            )
+        return self._data_provider.lazy()
 
     def filter(
         self,

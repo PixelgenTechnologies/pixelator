@@ -3,7 +3,6 @@
 from typing import Iterable
 from unittest import mock
 
-
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -73,7 +72,7 @@ def layout_df_generator() -> Iterable[pl.LazyFrame]:
 # We are using this to make sure we cover both cases of the PreComputedLayouts
 # one where we have a DataFrame and one where we have a generator of data frames
 @pytest.fixture(name="precomputed_layouts", params=["layout_df", "layout_df_generator"])
-def precomputed_layouts_fixture(request) -> pd.DataFrame:
+def precomputed_layouts_fixture(request) -> PreComputedLayouts:
     if request.param == "layout_df":
         return PreComputedLayouts(layout_df())
     if request.param == "layout_df_generator":

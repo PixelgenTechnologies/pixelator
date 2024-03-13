@@ -10,6 +10,7 @@ import warnings
 from collections import defaultdict
 from timeit import default_timer as timer
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Iterable,
@@ -17,7 +18,6 @@ from typing import (
     List,
     Optional,
     Set,
-    TYPE_CHECKING,
     Tuple,
     Union,
     get_args,
@@ -35,10 +35,10 @@ from pixelator.graph.backends.protocol import (
     Edge,
     EdgeSequence,
     GraphBackend,
+    SupportedLayoutAlgorithm,
     Vertex,
     VertexClustering,
     VertexSequence,
-    SupportedLayoutAlgorithm,
 )
 
 if TYPE_CHECKING:
@@ -317,7 +317,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def _layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "fruchterman_reingold",
+        layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
         random_seed: Optional[int] = None,
         **kwargs,
     ) -> pd.DataFrame:
@@ -387,7 +387,7 @@ class NetworkXGraphBackend(GraphBackend):
           - kamada_kawai
           - kamada_kawai_3d
 
-        The `pmds` options are much faster than the `fruchterman_reingold` and
+        The `pmds` options are much (~10-100x) faster than the `fruchterman_reingold` and
         the `kamada_kawai`.
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
