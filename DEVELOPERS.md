@@ -358,7 +358,7 @@ my_plugin = "my_plugin:my_cli_plugin"
 
 ### Pixelator config plugins
 
-Pixelator has a config object that contains information about assays loaded from `pixelator.assays`.
+Pixelator has a config object that contains information about assays loaded from `pixelator.resources.assays`.
 Additional assays can be loaded by creating a plugin that defines the `pixelator.config_plugin` entrypoint.
 This entrypoint accepts a function with the current config as a parameter:
 
