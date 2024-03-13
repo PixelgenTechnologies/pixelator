@@ -71,7 +71,7 @@ def layout_df_generator() -> Iterable[pl.LazyFrame]:
 
 
 # We are using this to make sure we cover both cases of the PreComputedLayouts
-# one there we have a DataFrame and one where we have a generator of data frames
+# one where we have a DataFrame and one where we have a generator of data frames
 @pytest.fixture(name="precomputed_layouts", params=["layout_df", "layout_df_generator"])
 def precomputed_layouts_fixture(request) -> pd.DataFrame:
     if request.param == "layout_df":

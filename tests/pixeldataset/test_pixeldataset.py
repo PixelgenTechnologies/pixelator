@@ -192,7 +192,7 @@ def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
         precomputed_layouts,
     ) = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
-    # We need to remove the precomputed layouts since they are not supported by csv
+    # Writing pre-computed layouts is not supported for csv files
     dataset.precomputed_layouts = None
     dataset.save(str(file_target), file_format="csv")
     dataset_new = PixelDataset.from_file(str(file_target))
