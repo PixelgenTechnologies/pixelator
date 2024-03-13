@@ -83,7 +83,7 @@ You are now ready to start developing pixelator. Congrats!
 
 Pixelator provides a number of utility scripts (you have already used one above) to help with development and testing using [Task](https://taskfile.dev/).
 We are using `tasks` to make it easier to run common development tasks such as running tests, and formatting code.
-`tasks` allows us to make these commands self-documenting and easy to discover.
+The `tasks` scripts allow us to self-document these commands and make them easy to discover.
 
 > [!NOTE]
 > If you have followed the installation instructions above you should have `task` installed
@@ -349,7 +349,7 @@ if __name__ == "__main__":
 For pixelator to find this you need to define an [entrypoint](https://setuptools.pypa.io/en/latest/userguide/entry_point.html#entry-points-for-plugins).
 
 Exactly how to do this depends on which packaging method you use to build your python package. In this [link](https://setuptools.pypa.io/en/latest/userguide/entry_point.html#entry-points-for-plugins) you can find
-instructions for some common scenarios. The name you need to use for your entry point is: `pixelator.cli_plugin`, so if you are using, `pyproject.toml` to configure your project it could look something like this:
+instructions for some common scenarios. The name you need to use for your entry point is: `pixelator.cli_plugin`, so if you are using `pyproject.toml` to configure your project, it could look something like this:
 
 ```toml
 [project.entry-points."pixelator.cli_plugin"]
