@@ -462,12 +462,18 @@ class ZipBasedPixelFile(PixelDataStore):
 
         self._check_if_writeable(self.LAYOUTS_KEY)
 
-        for layouts_to_write in layouts.component_iterator():
+        logger.debug("Starting to write layouts...")
+
+        for idx, layouts_to_write in enumerate(layouts.component_iterator()):
+            if idx % 100 == 0:
+                logger.debug("Writing layouts...")
             self.write_dataframe(
                 layouts_to_write,
                 self.LAYOUTS_KEY,
                 partitioning=PreComputedLayouts.DEFAULT_PARTITIONING,
             )
+
+        logger.debug("Completed writing layouts...")
 
     def save(self, dataset: PixelDataset, force_overwrite: bool = False) -> None:
         """Save the given PixelDataset to the .pxl file."""
