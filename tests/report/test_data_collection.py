@@ -4,8 +4,8 @@ Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import json
-import pytest
 
+import pytest
 from pixelator.report.common.json_encoder import PixelatorJSONEncoder
 from pixelator.report.qcreport.collect import (
     collect_antibody_counts_data,

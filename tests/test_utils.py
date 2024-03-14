@@ -1,7 +1,6 @@
 """Copyright © 2023 Pixelgen Technologies AB."""
 
 import pytest
-
 from pixelator.utils import flatten
 
 

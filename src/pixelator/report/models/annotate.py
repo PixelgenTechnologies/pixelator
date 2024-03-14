@@ -5,8 +5,9 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-from typing import Optional
 import textwrap
+from typing import Optional
+
 import pydantic
 
 from pixelator.report.models.base import SampleReport

@@ -6,8 +6,8 @@ Copyright © 2023 Pixelgen Technologies AB.
 import logging
 from functools import partial
 from typing import Optional, get_args
-import numpy as np
 
+import numpy as np
 import pandas as pd
 
 from pixelator.analysis.colocalization.estimate import (

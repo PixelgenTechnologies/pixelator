@@ -4,7 +4,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import dataclasses
-from typing import List, Optional, TypeVar, TypedDict
+from typing import List, Optional, TypedDict, TypeVar
 
 from pixelator.report.models.commands import CommandInfo
 

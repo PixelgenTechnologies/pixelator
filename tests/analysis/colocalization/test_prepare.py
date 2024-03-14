@@ -10,7 +10,6 @@ import pandas as pd
 import pytest
 from numpy.random import default_rng
 from pandas.testing import assert_frame_equal
-
 from pixelator.analysis.colocalization.prepare import (
     filter_by_marker_counts,
     filter_by_region_counts,

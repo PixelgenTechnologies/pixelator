@@ -9,7 +9,7 @@ import json
 import logging
 import typing
 from pathlib import Path
-from typing import Any, Mapping, TypeVar, Optional
+from typing import Any, Mapping, Optional, TypeVar
 
 import click
 import pydantic

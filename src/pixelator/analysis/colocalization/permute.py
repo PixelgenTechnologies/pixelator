@@ -7,7 +7,8 @@ import time
 from typing import Generator, Optional
 
 import pandas as pd
-from numpy.random import Generator as RandomNumberGenerator, default_rng
+from numpy.random import Generator as RandomNumberGenerator
+from numpy.random import default_rng
 
 from pixelator.analysis.colocalization.types import (
     RegionByCountsDataFrame,

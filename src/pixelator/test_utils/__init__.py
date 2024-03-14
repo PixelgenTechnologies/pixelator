@@ -14,8 +14,10 @@ from .report import BaseReportTestsMixin
 from .workflow import PixelatorWorkflowTest
 from .workflow_context import PixelatorWorkflowContext, use_workflow_context
 
+# isort: off
 # Unsorted import to avoid circular dependencies
 from .collector import YamlIntegrationTestsCollector
+# isort: on
 
 __all__ = [
     "BaseAmpliconTestsMixin",

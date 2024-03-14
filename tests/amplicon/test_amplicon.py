@@ -11,7 +11,6 @@ import itertools
 import numpy as np
 import pyfastx
 import pytest
-
 from pixelator.amplicon.process import generate_amplicon
 from pixelator.config import config, get_position_in_parent
 

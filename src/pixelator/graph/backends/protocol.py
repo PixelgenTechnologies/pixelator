@@ -6,6 +6,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 from __future__ import annotations
 
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Iterable,
@@ -15,7 +16,6 @@ from typing import (
     Optional,
     Protocol,
     Set,
-    TYPE_CHECKING,
     Tuple,
     Union,
 )

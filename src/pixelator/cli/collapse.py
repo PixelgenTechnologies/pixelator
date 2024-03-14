@@ -13,8 +13,7 @@ import polars as pl
 from pixelator.cli.common import design_option, logger, output_option
 from pixelator.collapse import collapse_fastq
 from pixelator.config import config, get_position_in_parent, load_antibody_panel
-from pixelator.report.models import CollapseSampleReport
-from pixelator.report.models import SummaryStatistics
+from pixelator.report.models import CollapseSampleReport, SummaryStatistics
 from pixelator.utils import (
     create_output_stage_dir,
     get_process_pool_executor,

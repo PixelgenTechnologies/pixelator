@@ -5,25 +5,24 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 import numpy as np
 import pandas as pd
-import pytest
 import plotly.graph_objects as go
-from pytest_snapshot.plugin import Snapshot
+import pytest
 from numpy.testing import assert_almost_equal
-
 from pixelator.graph import Graph
 from pixelator.plot import (
     _calculate_densities,
     _calculate_distance_to_unit_sphere_zones,
     _unit_sphere_surface,
-    plot_2d_graph,
-    plot_3d_graph,
-    plot_colocalization_heatmap,
-    plot_colocalization_diff_heatmap,
-    plot_3d_heatmap,
-    scatter_umi_per_upia_vs_tau,
     cell_count_plot,
     edge_rank_plot,
+    plot_2d_graph,
+    plot_3d_graph,
+    plot_3d_heatmap,
+    plot_colocalization_diff_heatmap,
+    plot_colocalization_heatmap,
+    scatter_umi_per_upia_vs_tau,
 )
+from pytest_snapshot.plugin import Snapshot
 
 
 @pytest.mark.parametrize(

@@ -8,7 +8,7 @@ from __future__ import annotations
 import importlib.metadata
 import logging
 from importlib.metadata import EntryPoint
-from typing import Generator, List, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Generator, List, Union
 
 try:
     from importlib.metadata import EntryPoints

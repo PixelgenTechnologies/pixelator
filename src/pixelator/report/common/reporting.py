@@ -7,16 +7,16 @@ from __future__ import annotations
 
 import logging
 import typing
-from typing import Iterable
 from pathlib import Path
+from typing import Iterable
 
 import pandas as pd
 
 from pixelator.report.common.cli_info import CLIInvocationInfo
 from pixelator.report.common.workdir import (
-    WorkdirOutputNotFound,
     PixelatorWorkdir,
     SingleCellStage,
+    WorkdirOutputNotFound,
 )
 from pixelator.report.models import (
     AdapterQCSampleReport,
@@ -27,9 +27,9 @@ from pixelator.report.models import (
     CommandInfo,
     DemuxSampleReport,
     GraphSampleReport,
+    MoleculesDataflowReport,
     PreQCSampleReport,
     ReadsDataflowReport,
-    MoleculesDataflowReport,
 )
 from pixelator.report.models.base import SampleReport
 from pixelator.report.models.layout import LayoutSampleReport
