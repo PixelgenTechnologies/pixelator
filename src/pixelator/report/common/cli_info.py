@@ -24,6 +24,7 @@ _SINGLE_CELL_STAGES_TO_CACHE_KEY_MAPPING: dict[SingleCellStageLiteral, str] = {
     "collapse": "pixelator single-cell collapse",
     "graph": "pixelator single-cell graph",
     "annotate": "pixelator single-cell annotate",
+    "layout": "pixelator single-cell layout",
     "analysis": "pixelator single-cell analysis",
     "report": "pixelator single-cell report",
 }

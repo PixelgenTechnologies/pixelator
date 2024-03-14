@@ -11,28 +11,27 @@ small-D21:
     common:
       verbose: true
     graph:
-      params: [
-        "--multiplet-recovery"
-      ]
+      params: ["--multiplet-recovery"]
     annotate:
-      params: [
-        "--min-size",
-        "2",
-        "--max-size",
-        "100000",
-      ]
+      params: ["--min-size", "2", "--max-size", "100000"]
+
+    layout:
+      # Overriding the default pmds here since pmds requires at least
+      # 50 nodes to work.
+      params: ["--layout-algorithm", "fruchterman_reingold"]
 
     analysis:
-      params: [
-         "--compute-polarization",
-         "--compute-colocalization",
-         "--use-full-bipartite",
-         "--polarization-n-permutations",
-         "0",
-         "--colocalization-min-region-count",
-         "0",
-         "--colocalization-n-permutations",
-         "10",
-         "--colocalization-neighbourhood-size",
-         "1",
-      ]
+      params:
+        [
+          "--compute-polarization",
+          "--compute-colocalization",
+          "--use-full-bipartite",
+          "--polarization-n-permutations",
+          "0",
+          "--colocalization-min-region-count",
+          "0",
+          "--colocalization-n-permutations",
+          "10",
+          "--colocalization-neighbourhood-size",
+          "1",
+        ]

@@ -244,6 +244,31 @@ def analysis_stage_all_reports(
 
 
 @pytest.fixture()
+def layout_stage_report_pbmcs(local_assets_dir_reports_only, pixelator_workdir) -> Path:
+    dir = pixelator_workdir.stage_dir("layout")
+    filename = local_assets_dir_reports_only / "layout/pbmcs_unstimulated.report.json"
+    dst = shutil.copyfile(filename, dir / filename.name)
+    return Path(dst)
+
+
+@pytest.fixture()
+def layout_stage_report_uropod(
+    local_assets_dir_reports_only, pixelator_workdir
+) -> Path:
+    dir = pixelator_workdir.stage_dir("layout")
+    filename = local_assets_dir_reports_only / "layout/uropod_control.report.json"
+    dst = shutil.copyfile(filename, dir / filename.name)
+    return Path(dst)
+
+
+@pytest.fixture()
+def layout_stage_all_reports(
+    layout_stage_report_pbmcs, layout_stage_report_uropod
+) -> list[Path]:
+    return [layout_stage_report_pbmcs, layout_stage_report_uropod]
+
+
+@pytest.fixture()
 def all_stages_all_reports(
     amplicon_stage_all_reports,
     preqc_stage_all_reports,

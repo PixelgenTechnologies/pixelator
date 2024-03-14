@@ -9,6 +9,7 @@ from . import (
     BaseAmpliconTestsMixin,
     BaseAnalysisTestsMixin,
     BaseAnnotateTestsMixin,
+    BaseLayoutTestsMixin,
     BaseCollapseTestsMixin,
     BaseDemuxTestsMixin,
     BaseGraphTestsMixin,
@@ -27,6 +28,7 @@ if typing.TYPE_CHECKING:
 class PixelatorWorkflowTest(
     BaseReportTestsMixin,
     BaseAnalysisTestsMixin,
+    BaseLayoutTestsMixin,
     BaseAnnotateTestsMixin,
     BaseGraphTestsMixin,
     BaseCollapseTestsMixin,

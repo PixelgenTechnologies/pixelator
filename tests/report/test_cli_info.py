@@ -43,7 +43,7 @@ def uropod_cli_invocation_data_no_amplicon(
 def test_cli_info_init(uropod_cli_invocation_data):
     data = uropod_cli_invocation_data
     assert data.sample_id == "uropod_control"
-    assert len(data) == 8
+    assert len(data) == 9
 
 
 def test_cli_info_bad_sample(pixelator_workdir, all_stages_all_reports_and_meta):
@@ -82,6 +82,8 @@ def test_cli_info_missing_stage(uropod_cli_invocation_data_no_amplicon):
         ("annotate", "pixelator single-cell annotate"),
         (SingleCellStage.ANALYSIS, "pixelator single-cell analysis"),
         ("analysis", "pixelator single-cell analysis"),
+        (SingleCellStage.LAYOUT, "pixelator single-cell layout"),
+        ("layout", "pixelator single-cell layout"),
         (SingleCellStage.AMPLICON, "pixelator single-cell amplicon"),
         ("amplicon", "pixelator single-cell amplicon"),
     ],

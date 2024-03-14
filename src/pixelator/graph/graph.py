@@ -17,7 +17,11 @@ from pixelator.graph.backends.implementations import (
     graph_backend,
     graph_backend_from_graph_type,
 )
-from pixelator.graph.backends.protocol import GraphBackend, VertexClustering
+from pixelator.graph.backends.protocol import (
+    GraphBackend,
+    VertexClustering,
+    SupportedLayoutAlgorithm,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +174,7 @@ class Graph:
 
     def layout_coordinates(
         self,
-        layout_algorithm: str = "fruchterman_reingold",
+        layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         cache: bool = False,

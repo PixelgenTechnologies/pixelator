@@ -8,6 +8,7 @@ from .collapse import BaseCollapseTestsMixin
 from .config import WorkflowConfig
 from .demux import BaseDemuxTestsMixin
 from .graph import BaseGraphTestsMixin
+from .layout import BaseLayoutTestsMixin
 from .preqc import BasePreQCTestsMixin
 from .report import BaseReportTestsMixin
 from .workflow import PixelatorWorkflowTest
@@ -24,6 +25,7 @@ __all__ = [
     "BaseCollapseTestsMixin",
     "BaseGraphTestsMixin",
     "BaseAnnotateTestsMixin",
+    "BaseLayoutTestsMixin",
     "BaseAnalysisTestsMixin",
     "BaseReportTestsMixin",
     "PixelatorWorkflowContext",

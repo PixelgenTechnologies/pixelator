@@ -11,6 +11,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Optional,
     Protocol,
     Set,
@@ -25,6 +26,15 @@ from scipy.sparse import csr_matrix
 
 if TYPE_CHECKING:
     from pixelator.graph import Graph
+
+SupportedLayoutAlgorithm = Literal[
+    "fruchterman_reingold",
+    "fruchterman_reingold_3d",
+    "kamada_kawai",
+    "kamada_kawai_3d",
+    "pmds",
+    "pmds_3d",
+]
 
 
 class GraphBackend(Protocol):
@@ -128,7 +138,7 @@ class GraphBackend(Protocol):
 
     def layout_coordinates(
         self,
-        layout_algorithm: str = "fruchterman_reingold",
+        layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
@@ -147,9 +157,10 @@ class GraphBackend(Protocol):
           - pmds
           - pmds_3d
 
-
-        The `fruchterman_reingold` options are in general faster, but less
-        accurate than the `kamada_kawai` ones.
+        For most cases the `pmds` options should be about 10-100x faster
+        than the force directed layout methods, i.e. `fruchterman_reingold`
+        and `kamada_kawai`. Among the force directed layout methods,
+        `fruchterman_reingold` is generally faster than `kamada_kawai`.
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
         :param only_keep_a_pixels: If true, only keep the a-pixels

@@ -33,6 +33,7 @@ from fsspec.implementations.zip import ZipFileSystem
 
 from pixelator.exceptions import PixelatorBaseException
 from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
+from pixelator.utils import batched
 
 if TYPE_CHECKING:
     from pixelator.pixeldataset import PixelDataset
@@ -461,16 +462,18 @@ class ZipBasedPixelFile(PixelDataStore):
 
         self._check_if_writeable(self.LAYOUTS_KEY)
 
-        # Note that the raw_iterator may contain multiple partitions
-        # that will depend on how the objects were initiated. But, this
-        # will be handled by the write_dataframe method.
-        for layouts_to_write in layouts.raw_iterator:
-            logger.debug("Writing layout...")
+        logger.debug("Starting to write layouts...")
+
+        for idx, layouts_to_write in enumerate(layouts.component_iterator()):
+            if idx % 100 == 0:
+                logger.debug("Writing layouts...")
             self.write_dataframe(
-                layouts_to_write.collect().to_pandas(),
+                layouts_to_write,
                 self.LAYOUTS_KEY,
                 partitioning=PreComputedLayouts.DEFAULT_PARTITIONING,
             )
+
+        logger.debug("Completed writing layouts...")
 
     def save(self, dataset: PixelDataset, force_overwrite: bool = False) -> None:
         """Save the given PixelDataset to the .pxl file."""
@@ -552,6 +555,17 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
             "This is currently not supported. "
             "You can fix this issue by converting your pxl file by saving it "
             "as a parquet based pxl file."
+        )
+
+    def write_precomputed_layouts(
+        self,
+        layouts: Optional[PreComputedLayouts],
+    ) -> None:
+        """Write pre-computed layouts to the data store (NB: Not implemented!)."""
+        raise NotImplementedError(
+            "You are trying to write precomputed layouts to a csv-based pxl file. "
+            "This is not supported. Please save your pxl file as a parquet based pxl file "
+            "instead."
         )
 
     def _read_dataframe_from_zip(self, key: str) -> Optional[pd.DataFrame]:

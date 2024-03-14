@@ -27,6 +27,7 @@ class SingleCellStage(enum.Enum):
     COLLAPSE = "collapse"
     GRAPH = "graph"
     ANNOTATE = "annotate"
+    LAYOUT = "layout"
     ANALYSIS = "analysis"
     REPORT = "report"
 
@@ -39,6 +40,7 @@ SingleCellStageLiteral = typing.Literal[
     "collapse",
     "graph",
     "annotate",
+    "layout",
     "analysis",
     "report",
 ]
@@ -55,6 +57,7 @@ WorkdirCacheKey: typing.TypeAlias = typing.Literal[
     "single-cell annotate",
     "single-cell annotate dataset",
     "single-cell annotate raw_components_metrics",
+    "single-cell layout",
     "single-cell analysis",
     "single-cell report",
 ]
@@ -69,6 +72,7 @@ SINGLE_CELL_STAGES_TO_CACHE_KEY_MAPPING: dict[
     "collapse": "single-cell collapse",
     "graph": "single-cell graph",
     "annotate": "single-cell annotate",
+    "layout": "single-cell layout",
     "analysis": "single-cell analysis",
     "report": "single-cell report",
 }
@@ -126,6 +130,7 @@ class PixelatorWorkdir:
         "single-cell annotate": "annotate/*.report.json",
         "single-cell annotate dataset": "annotate/*.dataset.pxl",
         "single-cell annotate raw_components_metrics": "annotate/*.raw_components_metrics.csv.gz",
+        "single-cell layout": "layout/*.report.json",
         "single-cell analysis": "analysis/*.report.json",
         "single-cell report": "report/*.report.json",
     }
