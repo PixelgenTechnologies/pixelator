@@ -19,6 +19,7 @@ from pixelator.analysis.colocalization.estimate import (
 )
 from pixelator.analysis.colocalization.prepare import (
     filter_by_region_counts,
+    filter_by_marker_counts,
     filter_by_unique_values,
     prepare_from_graph,
 )
@@ -109,6 +110,7 @@ def colocalization_from_component_graph(
     neighbourhood_size: int = 1,
     n_permutations: int = 50,
     min_region_count: int = 5,
+    min_marker_count: int = 10,
     random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """Compute the colocalization scores for this component graph.
@@ -129,8 +131,12 @@ def colocalization_from_component_graph(
     logger.debug("Prepare the graph data for computing colocalization")
     marker_counts_by_region = prepare_from_graph(graph, n_neighbours=neighbourhood_size)
 
-    marker_counts_by_region = filter_by_region_counts(
-        marker_counts_by_region, min_region_counts=min_region_count
+    # marker_counts_by_region = filter_by_region_counts(
+    #     marker_counts_by_region, min_region_counts=min_region_count
+    # )
+
+    marker_counts_by_region = filter_by_marker_counts(
+        marker_counts_by_region, min_marker_counts=min_marker_count
     )
     marker_counts_by_region = filter_by_unique_values(
         marker_counts_by_region, at_least_n_unique=2
