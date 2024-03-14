@@ -8,9 +8,9 @@ from .collapse import CollapseSampleReport
 from .commands import CommandInfo, CommandOption
 from .demux import DemuxSampleReport
 from .graph import GraphSampleReport
+from .molecules_flow import MoleculesDataflowReport
 from .preqc import PreQCSampleReport
 from .reads_flow import ReadsDataflowReport
-from .molecules_flow import MoleculesDataflowReport
 from .summary_statistics import SummaryStatistics
 
 __all__ = [

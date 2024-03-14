@@ -1,6 +1,7 @@
 """Copyright © 2023 Pixelgen Technologies AB."""
 
 from __future__ import annotations
+
 import typing
 from pathlib import Path
 
@@ -9,10 +10,10 @@ from . import (
     BaseAmpliconTestsMixin,
     BaseAnalysisTestsMixin,
     BaseAnnotateTestsMixin,
-    BaseLayoutTestsMixin,
     BaseCollapseTestsMixin,
     BaseDemuxTestsMixin,
     BaseGraphTestsMixin,
+    BaseLayoutTestsMixin,
     BasePreQCTestsMixin,
     BaseReportTestsMixin,
 )

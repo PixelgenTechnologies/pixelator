@@ -3,10 +3,9 @@
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from pandas.testing import assert_frame_equal
-
 from pixelator.analysis.colocalization.statistics import (
     Jaccard,
     Pearson,

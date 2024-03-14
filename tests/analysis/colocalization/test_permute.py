@@ -7,7 +7,6 @@ Copyright © 2023 Pixelgen Technologies AB.
 import pandas as pd
 from numpy.random import default_rng
 from pandas.testing import assert_series_equal
-
 from pixelator.analysis.colocalization.permute import (
     permutations,
     permute,

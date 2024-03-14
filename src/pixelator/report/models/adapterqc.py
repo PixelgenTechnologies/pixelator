@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+
 import pydantic
 
 from pixelator.report.models.base import SampleReport

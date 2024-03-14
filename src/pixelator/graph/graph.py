@@ -19,8 +19,8 @@ from pixelator.graph.backends.implementations import (
 )
 from pixelator.graph.backends.protocol import (
     GraphBackend,
-    VertexClustering,
     SupportedLayoutAlgorithm,
+    VertexClustering,
 )
 
 logger = logging.getLogger(__name__)

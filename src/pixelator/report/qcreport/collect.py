@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from pixelator.pixeldataset import PixelDataset, SIZE_DEFINITION
+from pixelator.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.report.qcreport.types import QCReportData
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
     from anndata import AnnData
+
     from pixelator.report import PixelatorWorkdir
 
 

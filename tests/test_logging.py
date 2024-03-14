@@ -6,9 +6,9 @@ Copyright © 2024 Pixelgen Technologies AB.
 import logging
 import tempfile
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from concurrent.futures import ThreadPoolExecutor
 import pytest
 from pixelator.logging import LoggingSetup
 from pixelator.utils import (

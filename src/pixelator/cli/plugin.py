@@ -12,8 +12,8 @@ except ImportError:
     # Python 3.8 and 3.9
     pass
 
-from importlib.metadata import EntryPoint
 import logging
+from importlib.metadata import EntryPoint
 from typing import Generator, List, Union
 
 from click import Group

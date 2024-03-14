@@ -20,25 +20,22 @@ import polars as pl
 from anndata import AnnData
 
 from pixelator.graph import Graph
+from pixelator.pixeldataset.backends import (
+    FileBasedPixelDatasetBackend,
+    ObjectBasedPixelDatasetBackend,
+    PixelDatasetBackend,
+)
+from pixelator.pixeldataset.datastores import (
+    PixelDataStore,
+    ZipBasedPixelFileWithCSV,
+    ZipBasedPixelFileWithParquet,
+)
+from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pixeldataset.utils import (
     _enforce_edgelist_types,
     update_metrics_anndata,
 )
-
-from pixelator.pixeldataset.backends import (
-    PixelDatasetBackend,
-    FileBasedPixelDatasetBackend,
-    ObjectBasedPixelDatasetBackend,
-)
-from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
-
-from pixelator.pixeldataset.datastores import (
-    PixelDataStore,
-    ZipBasedPixelFileWithParquet,
-    ZipBasedPixelFileWithCSV,
-)
 from pixelator.types import PathType
-
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", module="libpysal")

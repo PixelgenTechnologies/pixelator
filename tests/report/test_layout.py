@@ -4,7 +4,6 @@ Copyright © 2024 Pixelgen Technologies AB.
 """
 
 import pytest
-
 from pixelator.report import PixelatorReporting, PixelatorWorkdir
 from pixelator.report.models.layout import LayoutSampleReport
 

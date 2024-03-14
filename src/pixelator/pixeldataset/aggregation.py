@@ -12,12 +12,12 @@ from typing import (
 
 import pandas as pd
 import polars as pl
-from anndata import AnnData, concat as concatenate_anndata
+from anndata import AnnData
+from anndata import concat as concatenate_anndata
 
 from pixelator.pixeldataset import PixelDataset
-from pixelator.pixeldataset.utils import update_metrics_anndata, _enforce_edgelist_types
 from pixelator.pixeldataset.precomputed_layouts import aggregate_precomputed_layouts
-
+from pixelator.pixeldataset.utils import _enforce_edgelist_types, update_metrics_anndata
 
 logger = logging.getLogger(__name__)
 

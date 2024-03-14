@@ -11,7 +11,6 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-
 from pixelator import PixelDataset
 from pixelator.report.common import PixelatorWorkdir
 

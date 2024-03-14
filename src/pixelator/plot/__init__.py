@@ -3,6 +3,7 @@
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
+import warnings
 from typing import Literal, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -15,10 +16,9 @@ import scipy
 import seaborn as sns
 from matplotlib import cm
 from matplotlib.colors import Normalize
-import warnings
 
-from pixelator.graph import Graph
 from pixelator.analysis.colocalization import get_differential_colocalization
+from pixelator.graph import Graph
 from pixelator.marks import experimental
 from pixelator.pixeldataset import PixelDataset
 from pixelator.plot.constants import Color

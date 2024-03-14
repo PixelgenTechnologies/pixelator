@@ -4,6 +4,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np

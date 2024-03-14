@@ -23,10 +23,10 @@ from pixelator.annotate.constants import (
 )
 from pixelator.config import AntibodyPanel
 from pixelator.graph.utils import components_metrics, edgelist_metrics
-from pixelator.pixeldataset import PixelDataset, SIZE_DEFINITION
+from pixelator.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.pixeldataset.utils import edgelist_to_anndata
-from pixelator.report.models.annotate import AnnotateSampleReport
 from pixelator.report.models import SummaryStatistics
+from pixelator.report.models.annotate import AnnotateSampleReport
 
 # TODO
 # Work around for issue with numba and multithreading

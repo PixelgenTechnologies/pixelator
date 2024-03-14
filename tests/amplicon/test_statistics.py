@@ -4,7 +4,6 @@ Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import numpy as np
-
 from pixelator.amplicon.statistics import (
     SequenceQualityStats,
     SequenceQualityStatsCollector,

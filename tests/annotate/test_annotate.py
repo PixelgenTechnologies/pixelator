@@ -9,7 +9,6 @@ from pathlib import Path
 import pandas as pd
 import pytest
 from anndata import AnnData
-
 from pixelator.annotate import cluster_components, filter_components_sizes
 from pixelator.cli.annotate import annotate_components
 from pixelator.config import AntibodyPanel

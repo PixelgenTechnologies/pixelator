@@ -5,7 +5,6 @@ Copyright © 2024 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-
 from pixelator.report.models.base import SampleReport
 
 

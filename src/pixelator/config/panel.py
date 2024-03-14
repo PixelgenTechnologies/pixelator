@@ -8,7 +8,7 @@ from __future__ import annotations
 import warnings
 from functools import cached_property
 from pathlib import Path
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 import pandas as pd
 import pydantic

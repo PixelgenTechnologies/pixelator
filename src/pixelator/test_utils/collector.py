@@ -5,8 +5,8 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 import pytest
 
-from .workflow import PixelatorWorkflowTest
 from .config import WorkflowConfig
+from .workflow import PixelatorWorkflowTest
 
 
 class NoModuleClass(pytest.Class):  # noqa

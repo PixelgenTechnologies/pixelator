@@ -8,7 +8,6 @@ from importlib.metadata import EntryPoint
 from unittest import mock
 
 import click
-
 from pixelator.cli.main import main_cli
 from pixelator.cli.plugin import add_cli_plugins, fetch_cli_plugins
 from pixelator.config import Config, config

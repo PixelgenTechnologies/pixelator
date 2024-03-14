@@ -10,7 +10,6 @@ from types import TracebackType
 from typing import Optional, Type
 
 import pytest
-
 from pixelator.test_utils import (  # noqa: F401
     YamlIntegrationTestsCollector,
     use_workflow_context,

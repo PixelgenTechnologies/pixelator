@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pytest
-from click.testing import CliRunner, Result as CliRunnerResult
+from click.testing import CliRunner
+from click.testing import Result as CliRunnerResult
 
 import pixelator.cli as pixelator_cli
 
