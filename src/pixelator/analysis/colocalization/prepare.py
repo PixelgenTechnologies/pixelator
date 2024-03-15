@@ -23,38 +23,6 @@ def prepare_from_graph(graph: Graph, n_neighbours: int = 1) -> RegionByCountsDat
     return counts_df
 
 
-def prepare_from_edgelist(
-    edgelist: pd.DataFrame, group_by: Literal["upia", "upib"] = "upia"
-) -> RegionByCountsDataFrame:
-    """Prepare a RegionByCountsDataFrame from an edgelist.
-
-    Prepare a RegionByCountsDataFrame from an edgelist, using
-    either upia or upib as regions
-
-    :param edgelist: edgelist to prepare from
-    :param group_by: value to create regions from, defaults to "upia"
-    :return: a RegionByCountsDataFrame
-    :rtype: RegionByCountsDataFrame
-    """
-    markers_per_pixel = (
-        edgelist.astype({"upia": "string[pyarrow]", "upib": "string[pyarrow]"})
-        .groupby(by=group_by)["marker"]
-        .value_counts()
-        .reset_index()
-    ).pivot_table(
-        index=group_by, columns="marker", values="count", fill_value=0, observed=False
-    )
-    markers_per_pixel.columns.name = "markers"
-    markers_per_pixel.index.name = "node"
-    markers_per_pixel.index = markers_per_pixel.index.astype("string[pyarrow]")
-    markers_per_pixel = markers_per_pixel.reindex(
-        sorted(markers_per_pixel.columns), axis=1
-    )
-    markers_per_pixel.columns = markers_per_pixel.columns.astype("string[pyarrow]")
-    markers_per_pixel = markers_per_pixel.astype("int64", copy=False)
-    return markers_per_pixel
-
-
 def filter_by_region_counts(
     df: RegionByCountsDataFrame, min_region_counts: int = 5
 ) -> RegionByCountsDataFrame:

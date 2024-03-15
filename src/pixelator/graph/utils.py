@@ -223,11 +223,10 @@ def create_node_markers_counts(
     df = pd.DataFrame(
         data=neighbourhood_counts,
         columns=node_marker_counts.columns.copy(),
-        index=pd.Index(
-            list(graph.vs.get_attribute("name")), dtype="string[pyarrow]", name="node"
-        ),
+        index=node_marker_counts.index.copy(),
     )
     df.columns.name = "markers"
+    df.index.name = "node"
     return df
 
 

@@ -120,7 +120,7 @@ class Graph:
     @cached_property
     def node_marker_counts(self):
         """Get the node marker counts as a dataframe."""
-        return self._backend.node_marker_counts
+        return self._backend.node_marker_counts()
 
     def vcount(self):
         """Get the total number of vertices in the Graph instance."""

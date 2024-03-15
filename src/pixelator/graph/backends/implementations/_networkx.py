@@ -8,7 +8,6 @@ from __future__ import annotations
 import logging
 import warnings
 from collections import defaultdict
-from functools import cached_property
 from timeit import default_timer as timer
 from typing import (
     TYPE_CHECKING,
@@ -367,7 +366,6 @@ class NetworkXGraphBackend(GraphBackend):
         )
         return coordinates
 
-    @cached_property
     def node_marker_counts(self) -> pd.DataFrame:
         """Get the marker counts of each node as a dataframe.
 
@@ -390,12 +388,7 @@ class NetworkXGraphBackend(GraphBackend):
         node_marker_counts.columns = node_marker_counts.columns.astype(
             "string[pyarrow]"
         )
-
-        node_marker_counts.index = pd.Index(
-            list(self.vs.get_attribute("name")),
-            dtype="string[pyarrow]",
-            name="node",
-        )
+        node_marker_counts.index.name = "node"
         return node_marker_counts
 
     def layout_coordinates(
@@ -447,7 +440,7 @@ class NetworkXGraphBackend(GraphBackend):
             coordinates = self._normalize_to_unit_sphere(coordinates)
 
         if get_node_marker_matrix:
-            node_marker_counts = self.node_marker_counts  # type: ignore
+            node_marker_counts = self.node_marker_counts()  # type: ignore
             df = pd.concat([coordinates, node_marker_counts], axis=1)
         else:
             df = coordinates

@@ -5,7 +5,6 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-from functools import cached_property
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -137,7 +136,6 @@ class GraphBackend(Protocol):
         """
         ...
 
-    @cached_property
     def node_marker_counts(self) -> pd.DataFrame:
         """Get the marker counts of each node as a dataframe.
 
