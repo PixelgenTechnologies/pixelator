@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import warnings
 from collections import defaultdict
+from functools import cached_property
 from timeit import default_timer as timer
 from typing import (
     TYPE_CHECKING,
@@ -366,6 +367,37 @@ class NetworkXGraphBackend(GraphBackend):
         )
         return coordinates
 
+    @cached_property
+    def node_marker_counts(self) -> pd.DataFrame:
+        """Get the marker counts of each node as a dataframe.
+
+        :return: node markers as a dataframe
+        :rtype: pd.DataFrame
+        :raises: AssertionError if graph nodes don't include markers
+        """
+        if "markers" not in self.vs.attributes():
+            raise AssertionError("Could not find 'markers' in vertex attributes")
+        markers = list(sorted(next(iter(self.vs))["markers"].keys()))
+        node_marker_counts = pd.DataFrame.from_records(
+            list(self.vs.get_attribute("markers")),
+            columns=markers,
+            index=list(self.raw.nodes),
+        )
+        node_marker_counts = node_marker_counts.reindex(
+            sorted(node_marker_counts.columns), axis=1
+        )
+        node_marker_counts.columns.name = "markers"
+        node_marker_counts.columns = node_marker_counts.columns.astype(
+            "string[pyarrow]"
+        )
+
+        node_marker_counts.index = pd.Index(
+            list(self.vs.get_attribute("name")),
+            dtype="string[pyarrow]",
+            name="node",
+        )
+        return node_marker_counts
+
     def layout_coordinates(
         self,
         layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
@@ -415,10 +447,7 @@ class NetworkXGraphBackend(GraphBackend):
             coordinates = self._normalize_to_unit_sphere(coordinates)
 
         if get_node_marker_matrix:
-            # Added here to avoid circular imports
-            from pixelator.graph.utils import create_node_markers_counts
-
-            node_marker_counts = create_node_markers_counts(self, name_as_index=False)  # type: ignore
+            node_marker_counts = self.node_marker_counts  # type: ignore
             df = pd.concat([coordinates, node_marker_counts], axis=1)
         else:
             df = coordinates

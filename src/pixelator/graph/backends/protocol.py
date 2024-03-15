@@ -5,6 +5,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+from functools import cached_property
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -133,6 +134,16 @@ class GraphBackend(Protocol):
                  the Leiden algorithm. Must be a positive, non-zero float.
         :param **kwargs: will be passed to the underlying Leiden implementation
         :rtype: VertexClustering
+        """
+        ...
+
+    @cached_property
+    def node_marker_counts(self) -> pd.DataFrame:
+        """Get the marker counts of each node as a dataframe.
+
+        :return: node markers as a dataframe
+        :rtype: pd.DataFrame
+        :raises: AssertionError if graph nodes don't include markers
         """
         ...
 

@@ -165,7 +165,6 @@ def create_node_markers_counts(
     graph: Graph,
     k: int = 0,
     normalization: Optional[Literal["mean"]] = None,
-    name_as_index: bool = True,
 ) -> pd.DataFrame:
     """Create a matrix of marker counts for each in the graph.
 
@@ -181,11 +180,9 @@ def create_node_markers_counts(
               1 first level, ...)
     :param normalization: selects a normalization method to apply when
                           building neighborhoods
-    :param name_as_index:  whether to set the name column as the dataframe index
 
     :returns: a pd.DataFrame with the antibody counts per node
     :rtype: pd.DataFrame
-    :raises AssertionError: if no 'markers' attribute is found on the vertices
     """
     if k == 0 and normalization:
         warnings.warn(
@@ -195,23 +192,8 @@ def create_node_markers_counts(
             )
         )
 
-    if "markers" not in graph.vs.attributes():
-        raise AssertionError("Could not find 'markers' in vertex attributes")
-    markers = list(sorted(next(iter(graph.vs))["markers"].keys()))
-    node_marker_counts = pd.DataFrame.from_records(
-        list(graph.vs.get_attribute("markers")),
-        columns=markers,
-        index=list(graph.raw.nodes),
-    )
-    node_marker_counts = node_marker_counts.reindex(
-        sorted(node_marker_counts.columns), axis=1
-    )
-    node_marker_counts.columns.name = "markers"
-    node_marker_counts.columns = node_marker_counts.columns.astype("string[pyarrow]")
-    if name_as_index:
-        node_marker_counts.index = pd.Index(
-            list(graph.vs.get_attribute("name")), dtype="string[pyarrow]", name="node"
-        )
+    node_marker_counts = graph.node_marker_counts
+
     if k == 0:
         return node_marker_counts
 
