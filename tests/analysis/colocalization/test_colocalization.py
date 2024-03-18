@@ -25,7 +25,17 @@ def test_get_differential_colocalization(setup_basic_pixel_dataset):
         use_z_score=False,
     )
     expected = pd.DataFrame.from_dict(
-        {0: {"marker_1": "CD19", "marker_2": "CD45", "pearson": 0.1}},
+        {
+            0: {
+                "marker_1": "CD19",
+                "marker_2": "CD45",
+                "markers": "CD19/CD45",
+                "stat": 0.0,
+                "p_value": 1.0,
+                "median_difference": 0.09999999999999998,
+                "p_adj": 1.0,
+            }
+        },
         orient="index",
     )
     assert_frame_equal(result, expected, check_exact=False, atol=0.01)
