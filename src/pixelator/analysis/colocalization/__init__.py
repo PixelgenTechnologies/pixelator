@@ -365,7 +365,6 @@ def get_differential_colocalization(
             )
         )
     )
-    print(differential_colocalization.columns)
     # If a marker appears only in one of the datasets, it's differential value will be NAN
     nan_values = differential_colocalization[
         differential_colocalization["median_difference"].isna()
