@@ -161,11 +161,49 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
     return components_metrics
 
 
+def _get_extended_adjacency(graph: Graph, k: int = 0):
+    def sparse_mat_power(x, n):
+        if n == 0:
+            return identity(x.shape[0])
+        return reduce(lambda x, y: x @ y, (x for _ in range(0, n)))
+
+    A = graph.get_adjacency_sparse()
+    An = (
+        reduce(lambda x, y: x + y, [sparse_mat_power(A, n) for n in range(0, k + 1)])
+        > 0
+    ).astype(int)
+    return An
+
+
+def _get_neighborhood_counts(
+    node_marker_counts,
+    graph,
+    k: int = 0,
+    normalization: Optional[Literal["mean"]] = None,
+):
+    An = _get_extended_adjacency(graph, k=k)
+    neighbourhood_counts = An * node_marker_counts
+
+    # TODO Optionally add more methods here
+    if normalization == "mean":
+        nbr_of_neighbors_per_node = An.sum(axis=1)
+        neighbourhood_counts = neighbourhood_counts / nbr_of_neighbors_per_node
+
+    df = pd.DataFrame(
+        data=neighbourhood_counts,
+        columns=node_marker_counts.columns.copy(),
+        index=node_marker_counts.index.copy(),
+    )
+    df.columns.name = "markers"
+    df.index.name = "node"
+
+    return df
+
+
 def create_node_markers_counts(
     graph: Graph,
     k: int = 0,
     normalization: Optional[Literal["mean"]] = None,
-    name_as_index: bool = True,
 ) -> pd.DataFrame:
     """Create a matrix of marker counts for each in the graph.
 
@@ -181,11 +219,9 @@ def create_node_markers_counts(
               1 first level, ...)
     :param normalization: selects a normalization method to apply when
                           building neighborhoods
-    :param name_as_index:  whether to set the name column as the dataframe index
 
     :returns: a pd.DataFrame with the antibody counts per node
     :rtype: pd.DataFrame
-    :raises AssertionError: if no 'markers' attribute is found on the vertices
     """
     if k == 0 and normalization:
         warnings.warn(
@@ -195,58 +231,18 @@ def create_node_markers_counts(
             )
         )
 
-    if "markers" not in graph.vs.attributes():
-        raise AssertionError("Could not find 'markers' in vertex attributes")
-    markers = list(sorted(next(iter(graph.vs))["markers"].keys()))
-    node_marker_counts = pd.DataFrame.from_records(
-        list(graph.vs.get_attribute("markers")),
-        columns=markers,
-        index=list(graph.raw.nodes),
-    )
-    node_marker_counts = node_marker_counts.reindex(
-        sorted(node_marker_counts.columns), axis=1
-    )
-    node_marker_counts.columns.name = "markers"
-    node_marker_counts.columns = node_marker_counts.columns.astype("string[pyarrow]")
-    if name_as_index:
-        node_marker_counts.index = pd.Index(
-            list(graph.vs.get_attribute("name")), dtype="string[pyarrow]", name="node"
-        )
+    node_marker_counts = graph.node_marker_counts
+
     if k == 0:
         return node_marker_counts
 
-    # This method first finds all nodes that are connected by a path
-    # with the a shortest path of k or shorter, encoded in a new
-    # adjacency matrix An.
-    # We then find the marker counts for those neighbourhoods
-    # by matrix multiplication.
-
-    def sparse_mat_power(x, n):
-        if n == 0:
-            return identity(x.shape[0])
-        return reduce(lambda x, y: x @ y, (x for _ in range(0, n)))
-
-    A = graph.get_adjacency_sparse()
-    An = (
-        reduce(lambda x, y: x + y, [sparse_mat_power(A, n) for n in range(0, k + 1)])
-        > 0
-    ).astype(int)
-    neighbourhood_counts = An * node_marker_counts
-
-    # TODO Optionally add more methods here
-    if normalization == "mean":
-        nbr_of_neighbors_per_node = An.sum(axis=1)
-        neighbourhood_counts = neighbourhood_counts / nbr_of_neighbors_per_node
-
-    df = pd.DataFrame(
-        data=neighbourhood_counts,
-        columns=node_marker_counts.columns.copy(),
-        index=pd.Index(
-            list(graph.vs.get_attribute("name")), dtype="string[pyarrow]", name="node"
-        ),
+    neighborhood_counts = _get_neighborhood_counts(
+        node_marker_counts=node_marker_counts,
+        graph=graph,
+        k=k,
+        normalization=normalization,
     )
-    df.columns.name = "markers"
-    return df
+    return neighborhood_counts
 
 
 class EdgelistMetrics(typing.TypedDict, total=True):

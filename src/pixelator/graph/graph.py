@@ -6,7 +6,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import logging
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pandas as pd
@@ -116,6 +116,11 @@ class Graph:
     def es(self):
         """A sequence of the edges in the Graph instance."""
         return self._backend.es
+
+    @cached_property
+    def node_marker_counts(self):
+        """Get the node marker counts as a dataframe."""
+        return self._backend.node_marker_counts()
 
     def vcount(self):
         """Get the total number of vertices in the Graph instance."""

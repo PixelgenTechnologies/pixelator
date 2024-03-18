@@ -56,7 +56,6 @@ def _create_df_with_expected_types(df):
     """Make sure that the dataframe gets the correct types and names."""
     df.columns.name = "markers"
     df.columns = df.columns.astype("string[pyarrow]")
-    df.index = df.index.astype("string[pyarrow]")
     df.index.name = "node"
     return df
 

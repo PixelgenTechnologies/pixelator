@@ -14,18 +14,11 @@ from pixelator.analysis.colocalization.prepare import (
     filter_by_marker_counts,
     filter_by_region_counts,
     filter_by_unique_values,
-    prepare_from_edgelist,
     prepare_from_graph,
 )
 from pixelator.graph.utils import Graph
 
 random_number_generator = default_rng(seed=433)
-
-
-def test_prepare_from_edgelist(edgelist):
-    result = prepare_from_edgelist(edgelist=edgelist, group_by="upia")
-    assert len(result) == edgelist["upia"].nunique()
-    assert len(result.columns) == edgelist["marker"].nunique()
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
@@ -47,25 +40,6 @@ def test_prepare_from_graph(enable_backend, edgelist):
             ],
         )
         assert len(result.columns) == len(unique_markers_in_component)
-
-
-@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
-def test_prepare_from_graph_and_edgelist_eq_for_no_neigbours(enable_backend, edgelist):
-    for _, component_df in edgelist.groupby("component", observed=True):
-        graph = Graph.from_edgelist(
-            edgelist=component_df,
-            add_marker_counts=True,
-            simplify=True,
-            use_full_bipartite=False,
-        )
-        graph_result = prepare_from_graph(graph, n_neighbours=0)
-        edgelist_result = prepare_from_edgelist(edgelist=component_df, group_by="upia")
-        # We drop the indexes since whey will be named differently depending on the
-        # method.
-        assert_frame_equal(
-            graph_result.sort_index(),
-            edgelist_result.sort_index(),
-        )
 
 
 def test_filter_by_region_counts():

@@ -136,6 +136,15 @@ class GraphBackend(Protocol):
         """
         ...
 
+    def node_marker_counts(self) -> pd.DataFrame:
+        """Get the marker counts of each node as a dataframe.
+
+        :return: node markers as a dataframe
+        :rtype: pd.DataFrame
+        :raises: AssertionError if graph nodes don't include markers
+        """
+        ...
+
     def layout_coordinates(
         self,
         layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
