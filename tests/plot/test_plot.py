@@ -132,6 +132,7 @@ def test_plot_colocalization_diff_volcano(setup_basic_pixel_dataset):
         reference="PXLCMP0000002",
         contrast_column="component",
         use_z_score=False,
+        min_log_p=-1,
     )
     return fig
 

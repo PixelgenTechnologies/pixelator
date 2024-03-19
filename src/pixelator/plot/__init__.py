@@ -808,7 +808,7 @@ def _add_top_marker_labels(
         if x > 0:
             continue
         label = plt.text(
-            x + 0.05, y, row["markers"], horizontalalignment="left", fontsize="xx-small"
+            x, y, row["markers"], horizontalalignment="left", fontsize="xx-small"
         )
 
     ## Labels for marker pair with highest positive differential colocalization scores
@@ -818,7 +818,7 @@ def _add_top_marker_labels(
         if x < 0:
             continue
         label = plt.text(
-            x + 0.05, y, row["markers"], horizontalalignment="left", fontsize="xx-small"
+            x, y, row["markers"], horizontalalignment="left", fontsize="xx-small"
         )
 
 
