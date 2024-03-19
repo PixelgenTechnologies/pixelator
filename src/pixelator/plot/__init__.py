@@ -855,7 +855,7 @@ def plot_colocalization_diff_volcano(
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Generate the volcano plot of differential colocalization between reference and target components.
 
-    Example usage: plot_colocalization_diff_volcano(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample").
+    Example usage: `plot_colocalization_diff_volcano(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample")`.
 
     :param colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z", and the contrast_column.
     :param target: The label for target components in the contrast_column.
