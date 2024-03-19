@@ -792,7 +792,10 @@ def plot_colocalization_diff_heatmap(
 
 
 def _add_top_marker_labels(
-    differential_colocalization, n_top_pairs: int = 5, min_log_p: float = 5.0
+    differential_colocalization,
+    ax,
+    n_top_pairs: int = 5,
+    min_log_p: float = 5.0,
 ):
     differential_colocalization = differential_colocalization.sort_values(
         "median_difference"
@@ -807,19 +810,15 @@ def _add_top_marker_labels(
         y = -np.log10(y)
         if x > 0:
             continue
-        label = plt.text(
-            x, y, row["markers"], horizontalalignment="left", fontsize="xx-small"
-        )
+        ax.text(x, y, row["markers"], horizontalalignment="left", fontsize="xx-small")
 
     ## Labels for marker pair with highest positive differential colocalization scores
-    for text, row in differential_colocalization.tail(n_top_pairs).iterrows():
+    for _, row in differential_colocalization.tail(n_top_pairs).iterrows():
         x, y = row[["median_difference", "p_adj"]]
         y = -np.log10(y)
         if x < 0:
             continue
-        label = plt.text(
-            x, y, row["markers"], horizontalalignment="left", fontsize="xx-small"
-        )
+        ax.text(x, y, row["markers"], horizontalalignment="left", fontsize="xx-small")
 
 
 def _add_target_mean_colocalizations(
@@ -858,15 +857,16 @@ def plot_colocalization_diff_volcano(
     Example usage: `plot_colocalization_diff_volcano(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample")`.
 
     :param colocalization_data: The colocalization data frame that can be found in a pixel variable
-                                                "pxl" through pxl.colocalization. The data frame should contain the 
-                                                columns "marker_1", "marker_2", "pearson", "pearson_z", and the contrast_column.
+                                "pxl" through pxl.colocalization. The data frame should contain the
+                                columns "marker_1", "marker_2", "pearson", "pearson_z", and the contrast_column.
     :param target: The label for target components in the contrast_column.
     :param reference: The label for reference components in the contrast_column.
     :param contrast_column: The column to use for the contrast. Defaults to "sample".
     :param cmap: The colormap to use for the heatmap. Defaults to "vlag".
     :param use_z_score: Whether to use the z-score. Defaults to True.
     :param n_top_pairs: Number of high value marker-pairs to label from positive and negative sides.
-    :param min_log_p: marker-pairs only receive a label if -log10 of their p-value is higher than this parameter.
+    :param min_log_p: marker-pairs only receive a label if -log10 of their p-value is higher than
+                      this parameter.
 
     :return: The figure and axes objects of the plot.
     :rtype: Tuple[plt.Figure, plt.Axes]
@@ -884,7 +884,7 @@ def plot_colocalization_diff_volcano(
         use_z_score=use_z_score,
     )
 
-    differential_colocalization = __add_target_mean_colocalizations(
+    differential_colocalization = _add_target_mean_colocalizations(
         differential_colocalization,
         target_coloc=colocalization_data.loc[
             colocalization_data[contrast_column] == target, :
@@ -911,6 +911,7 @@ def plot_colocalization_diff_volcano(
         differential_colocalization,
         n_top_pairs=n_top_pairs,
         min_log_p=min_log_p,
+        ax=ax,
     )
 
     return fig, ax
