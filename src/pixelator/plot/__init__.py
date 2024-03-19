@@ -791,26 +791,55 @@ def plot_colocalization_diff_heatmap(
     return plt.gcf(), plt.gca()
 
 
-def _add_top_marker_labels(differential_colocalization, n_top_pairs: int = 5):
-    differential_colocalization.sort_values("median_difference", inplace=True)
+def _add_top_marker_labels(
+    differential_colocalization, n_top_pairs: int = 5, min_log_p: float = 5.0
+):
+    differential_colocalization = differential_colocalization.sort_values(
+        "median_difference"
+    )
+    differential_colocalization = differential_colocalization.loc[
+        -np.log10(differential_colocalization["p_adj"]) > min_log_p, :
+    ]
 
+    ## Labels for marker pair withs highest negative differential colocalization scores
     for _, row in differential_colocalization.head(n_top_pairs).iterrows():
         x, y = row[["median_difference", "p_adj"]]
         y = -np.log10(y)
-        if y < 5 or x > 0:
+        if x > 0:
             continue
         label = plt.text(
             x + 0.05, y, row["markers"], horizontalalignment="left", fontsize="xx-small"
         )
 
+    ## Labels for marker pair with highest positive differential colocalization scores
     for text, row in differential_colocalization.tail(n_top_pairs).iterrows():
         x, y = row[["median_difference", "p_adj"]]
         y = -np.log10(y)
-        if y < 5 or x < 0:
+        if x < 0:
             continue
         label = plt.text(
             x + 0.05, y, row["markers"], horizontalalignment="left", fontsize="xx-small"
         )
+
+
+def __add_target_mean_colocalizations(
+    differential_colocalization,
+    target_coloc,
+    value_col,
+):
+    differential_colocalization = differential_colocalization.fillna(0).reset_index()
+
+    target_values = (
+        target_coloc.groupby(["marker_1", "marker_2"])[value_col].mean().reset_index()
+    )
+    differential_colocalization = pd.merge(
+        target_values,
+        differential_colocalization,
+        on=["marker_1", "marker_2"],
+        how="inner",
+    )
+
+    return differential_colocalization
 
 
 def plot_colocalization_diff_volcano(
@@ -821,6 +850,7 @@ def plot_colocalization_diff_volcano(
     cmap: str = "vlag",
     use_z_score: bool = True,
     n_top_pairs: int = 5,
+    min_log_p: float = 5.0,
     ax: Optional[plt.Axes] = None,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Generate the volcano plot of differential colocalization between reference and target components.
@@ -833,7 +863,8 @@ def plot_colocalization_diff_volcano(
     :param contrast_column: The column to use for the contrast. Defaults to "sample".
     :param cmap: The colormap to use for the heatmap. Defaults to "vlag".
     :param use_z_score: Whether to use the z-score. Defaults to True.
-    :param n_top_pairs: Number of high value pairs to label from positive and negative sides.
+    :param n_top_pairs: Number of high value marker-pairs to label from positive and negative sides.
+    :param min_log_p: marker-pairs only receive a label if -log10 of their p-value is higher than this parameter.
 
     :return: The figure and axes objects of the plot.
     :rtype: Tuple[plt.Figure, plt.Axes]
@@ -851,23 +882,16 @@ def plot_colocalization_diff_volcano(
         use_z_score=use_z_score,
     )
 
-    differential_colocalization = differential_colocalization.fillna(0).reset_index()
-
-    target_coloc = colocalization_data[colocalization_data[contrast_column] == target]
-    target_values = (
-        target_coloc.groupby(["marker_1", "marker_2"])[value_col].mean().reset_index()
-    )
-    differential_colocalization = pd.merge(
-        target_values,
+    differential_colocalization = __add_target_mean_colocalizations(
         differential_colocalization,
-        on=["marker_1", "marker_2"],
-        how="inner",
+        target_coloc=colocalization_data.loc[
+            colocalization_data[contrast_column] == target, :
+        ],
+        value_col=value_col,
     )
 
     if ax is None:
         fig, ax = plt.subplots()
-    else:
-        fig = plt.gcf()
 
     p = ax.scatter(
         x=differential_colocalization["median_difference"],
@@ -878,9 +902,14 @@ def plot_colocalization_diff_volcano(
         cmap=cmap,
     )
 
-    axlabs = ax.set(xlabel="Median difference", ylabel=r"$-\log_{10}$(adj. p-value)")
-    cbar = fig.colorbar(p, label="Mean target colocalization score", cmap=cmap)
-    _add_top_marker_labels(differential_colocalization, n_top_pairs=n_top_pairs)
+    ax.set(xlabel="Median difference", ylabel=r"$-\log_{10}$(adj. p-value)")
+    fig = plt.gcf()
+    fig.colorbar(p, label="Mean target colocalization score", cmap=cmap)
+    _add_top_marker_labels(
+        differential_colocalization,
+        n_top_pairs=n_top_pairs,
+        min_log_p=min_log_p,
+    )
 
     return fig, ax
 
