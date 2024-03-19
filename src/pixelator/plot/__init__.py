@@ -822,7 +822,7 @@ def _add_top_marker_labels(
         )
 
 
-def __add_target_mean_colocalizations(
+def _add_target_mean_colocalizations(
     differential_colocalization,
     target_coloc,
     value_col,
