@@ -857,7 +857,9 @@ def plot_colocalization_diff_volcano(
 
     Example usage: `plot_colocalization_diff_volcano(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample")`.
 
-    :param colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z", and the contrast_column.
+    :param colocalization_data: The colocalization data frame that can be found in a pixel variable
+                                                "pxl" through pxl.colocalization. The data frame should contain the 
+                                                columns "marker_1", "marker_2", "pearson", "pearson_z", and the contrast_column.
     :param target: The label for target components in the contrast_column.
     :param reference: The label for reference components in the contrast_column.
     :param contrast_column: The column to use for the contrast. Defaults to "sample".
