@@ -70,7 +70,7 @@ from pixelator.utils import (
 )
 @click.option(
     "--polarization-n-permutations",
-    default=None,
+    default=0,
     required=False,
     type=click.IntRange(min=0),
     show_default=True,
