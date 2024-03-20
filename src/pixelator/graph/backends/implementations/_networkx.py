@@ -266,9 +266,9 @@ class NetworkXGraphBackend(GraphBackend):
         """Get the total number of edges in the Graph instance."""
         return self._raw.number_of_edges()
 
-    def get_adjacency_sparse(self) -> csr_matrix:
+    def get_adjacency_sparse(self, nodelist=None) -> csr_matrix:
         """Get the sparse adjacency matrix."""
-        return nx.to_scipy_sparse_array(self._raw)
+        return nx.to_scipy_sparse_array(self._raw, nodelist=nodelist)
 
     def connected_components(self) -> NetworkxBasedVertexClustering:
         """Get the connected components in the Graph instance."""

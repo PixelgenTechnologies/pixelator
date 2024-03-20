@@ -110,7 +110,7 @@ class GraphBackend(Protocol):
         """Get the total number of edges in the Graph instance."""
         ...
 
-    def get_adjacency_sparse(self) -> csr_matrix:
+    def get_adjacency_sparse(self, nodelist=None) -> csr_matrix:
         """Get the sparse adjacency matrix."""
         ...
 

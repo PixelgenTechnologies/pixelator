@@ -134,9 +134,9 @@ class Graph:
         """Get the total number of edges in the Graph instance."""
         return self._backend.ecount()
 
-    def get_adjacency_sparse(self) -> csr_matrix:
+    def get_adjacency_sparse(self, nodelist=None) -> csr_matrix:
         """Get the sparse adjacency matrix."""
-        return self._backend.get_adjacency_sparse()
+        return self._backend.get_adjacency_sparse(nodelist)
 
     def connected_components(self) -> VertexClustering:
         """Get the connected components in the Graph instance."""

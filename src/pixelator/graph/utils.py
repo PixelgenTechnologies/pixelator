@@ -161,13 +161,13 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
     return components_metrics
 
 
-def _get_extended_adjacency(graph: Graph, k: int = 0):
+def _get_extended_adjacency(graph: Graph, k: int = 0, nodelist=None):
     def sparse_mat_power(x, n):
         if n == 0:
             return identity(x.shape[0])
         return reduce(lambda x, y: x @ y, (x for _ in range(0, n)))
 
-    A = graph.get_adjacency_sparse()
+    A = graph.get_adjacency_sparse(nodelist=nodelist)
     An = (
         reduce(lambda x, y: x + y, [sparse_mat_power(A, n) for n in range(0, k + 1)])
         > 0
@@ -175,13 +175,28 @@ def _get_extended_adjacency(graph: Graph, k: int = 0):
     return An
 
 
-def _get_neighborhood_counts(
-    node_marker_counts,
-    graph,
+def get_neighborhood_counts(
+    node_marker_counts: pd.DataFrame,
+    graph: Graph,
     k: int = 0,
     normalization: Optional[Literal["mean"]] = None,
 ):
-    An = _get_extended_adjacency(graph, k=k)
+    """Calculate the accumulate antibodies in each node's neighborhood.
+
+    A helper function that for each node in a graph computes the accumulate antibodies
+      that exist within it's distance k neighborhood.
+
+    :param node_marker_counts: marker counts dataframe where rows are graph nodes and columns are marker types.
+    :param graph: a graph (preferably a connected component)
+    :param k: number of neighbors to include per node (0 no neighbors,
+              1 first level, ...)
+    :param normalization: selects a normalization method to apply when
+                          building neighborhoods
+
+    :returns: a pd.DataFrame with the neighborhood antibody counts per node
+    :rtype: pd.DataFrame
+    """
+    An = _get_extended_adjacency(graph, k=k, nodelist=node_marker_counts.index)
     neighbourhood_counts = An * node_marker_counts
 
     # TODO Optionally add more methods here
@@ -236,7 +251,7 @@ def create_node_markers_counts(
     if k == 0:
         return node_marker_counts
 
-    neighborhood_counts = _get_neighborhood_counts(
+    neighborhood_counts = get_neighborhood_counts(
         node_marker_counts=node_marker_counts,
         graph=graph,
         k=k,

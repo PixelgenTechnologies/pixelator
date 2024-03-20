@@ -18,10 +18,9 @@ from pixelator.analysis.colocalization.estimate import (
     permutation_analysis_results,
 )
 from pixelator.analysis.colocalization.prepare import (
-    filter_by_region_counts,
     filter_by_marker_counts,
+    filter_by_region_counts,
     filter_by_unique_values,
-    prepare_from_graph,
 )
 from pixelator.analysis.colocalization.statistics import (
     Jaccard,
@@ -33,7 +32,10 @@ from pixelator.analysis.colocalization.types import (
     TransformationTypes,
 )
 from pixelator.analysis.permute import permutations
-from pixelator.graph.utils import Graph
+from pixelator.graph.utils import (
+    Graph,
+    get_neighborhood_counts,
+)
 from pixelator.pixeldataset import PixelDataset
 from pixelator.statistics import (
     correct_pvalues,
@@ -109,7 +111,7 @@ def colocalization_from_component_graph(
     transformation: TransformationTypes = "raw",
     neighbourhood_size: int = 1,
     n_permutations: int = 50,
-    min_region_count: int = 5,
+    min_node_count: int = 1,
     min_marker_count: int = 10,
     random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
@@ -121,27 +123,34 @@ def colocalization_from_component_graph(
     :param neighbourhood_size: size of the neighbourhood to consider, defaults to 0
     :param n_permutations: number of permutations used to calculate the
                            p-values and z-scores, defaults to 50
-    :param min_region_count: minimum number of counts in region to consider, defaults
-                             to 5
+    :param min_region_count: minimum number of counts in node to consider, defaults
+                             to 1
     :param random_seed: Set the random seed for the permutation tests, defaults to None
     :return: a dataframe containing colocalization scores for this component
     :rtype: pd.DataFrame
     """
     logger.debug("Computing colocalization for component: %s", component_id)
     logger.debug("Prepare the graph data for computing colocalization")
-    marker_counts_by_region = prepare_from_graph(graph, n_neighbours=neighbourhood_size)
+    node_marker_counts = graph.node_marker_counts
 
-    # marker_counts_by_region = filter_by_region_counts(
-    #     marker_counts_by_region, min_region_counts=min_region_count
-    # )
-
-    marker_counts_by_region = filter_by_marker_counts(
-        marker_counts_by_region, min_marker_counts=min_marker_count
-    )
-    marker_counts_by_region = filter_by_unique_values(
-        marker_counts_by_region, at_least_n_unique=2
+    node_marker_counts = filter_by_marker_counts(
+        node_marker_counts,
+        min_marker_counts=min_marker_count,
     )
 
+    node_marker_counts = filter_by_region_counts(
+        node_marker_counts,
+        min_region_counts=min_node_count,
+    )
+
+    node_marker_counts = filter_by_unique_values(
+        node_marker_counts,
+        at_least_n_unique=2,
+    )
+
+    marker_counts_by_region = get_neighborhood_counts(
+        node_marker_counts, graph, k=neighbourhood_size
+    )
     nrow, ncols = marker_counts_by_region.shape
     if nrow == 0:
         logger.warning(
