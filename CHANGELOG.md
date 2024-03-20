@@ -12,7 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add QC plot showing UMIs per UPIA vs Tau.
 * Add plot functions showing edge rank and cell counts.
 * Add 2D and 3D graph plot functions.
-* Add plot functions showing colocalization and differential colocalization.
+* Add heatmap plot functions showing colocalization and differential colocalization.
+* Add volcano plot (value difference vs log p-value) function for differential colocalization.
+* Add a function to calculate the differential colocalization between two conditions.
 * Performance improvements and reduced bundle size in QC report.
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.
