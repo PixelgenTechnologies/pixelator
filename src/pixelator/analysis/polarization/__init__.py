@@ -12,16 +12,16 @@ import pandas as pd
 from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
 from pixelator.graph.utils import (
     Graph,
+    _get_extended_adjacency,
     create_node_markers_counts,
-    calculate_extended_adjacency,
 )
-from pixelator.statistics import rate_diff_transformation
 from pixelator.pixeldataset import (
     MIN_VERTICES_REQUIRED,
 )
 from pixelator.statistics import (
     clr_transformation,
     correct_pvalues,
+    rate_diff_transformation,
 )
 
 with warnings.catch_warnings():
@@ -120,9 +120,7 @@ def polarization_scores_component(
         counts_df = rate_diff_transformation(counts_df)
 
     # compute the spatial weights matrix (w) from the graph
-    adj_mat = calculate_extended_adjacency(
-        graph.get_adjacency_sparse(), k=neighborhood_size
-    )
+    adj_mat = _get_extended_adjacency(graph, k=neighborhood_size)
     adj_mat.setdiag(0)
     w = WSP(adj_mat).to_W(silence_warnings=True)
 
