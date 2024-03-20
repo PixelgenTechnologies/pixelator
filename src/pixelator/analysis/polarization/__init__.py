@@ -10,13 +10,18 @@ import numpy as np
 import pandas as pd
 
 from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
-from pixelator.graph.utils import Graph, create_node_markers_counts
+from pixelator.graph.utils import (
+    Graph,
+    _get_extended_adjacency,
+    create_node_markers_counts,
+)
 from pixelator.pixeldataset import (
     MIN_VERTICES_REQUIRED,
 )
 from pixelator.statistics import (
     clr_transformation,
     correct_pvalues,
+    rate_diff_transformation,
 )
 
 with warnings.catch_warnings():
@@ -55,6 +60,7 @@ def polarization_scores_component(
     component_id: str,
     normalization: PolarizationNormalizationTypes = "clr",
     permutations: int = 0,
+    neighborhood_size: int = 0,
 ) -> pd.DataFrame:
     """Calculate Moran's I statistics for a component.
 
@@ -110,9 +116,13 @@ def polarization_scores_component(
     # clr transformation
     if normalization == "clr":
         counts_df = clr_transformation(df=counts_df, non_negative=True, axis=0)
+    elif normalization == "rate-diff":
+        counts_df = rate_diff_transformation(counts_df)
 
     # compute the spatial weights matrix (w) from the graph
-    w = WSP(graph.get_adjacency_sparse()).to_W(silence_warnings=True)
+    adj_mat = _get_extended_adjacency(graph, k=neighborhood_size)
+    adj_mat.setdiag(0)
+    w = WSP(adj_mat).to_W(silence_warnings=True)
 
     # compute polarization statistics for each marker using the spatial weights (w)
     # and the markers counts distribution (y) (Morans I autocorrelation)
@@ -153,6 +163,7 @@ def polarization_scores(
     use_full_bipartite: bool = False,
     normalization: PolarizationNormalizationTypes = "clr",
     permutations: int = 0,
+    neighborhood_size=0,
 ) -> pd.DataFrame:
     """Calculate Moran's I statistics for an edgelist.
 
@@ -190,7 +201,7 @@ def polarization_scores(
             graph = Graph.from_edgelist(
                 edgelist=component_df,
                 add_marker_counts=True,
-                simplify=False,
+                simplify=not use_full_bipartite,
                 use_full_bipartite=use_full_bipartite,
             )
             tasks.append(
@@ -200,6 +211,7 @@ def polarization_scores(
                     component_id=component_id,
                     normalization=normalization,
                     permutations=permutations,
+                    neighborhood_size=neighborhood_size,
                 )
             )
         results = futures.wait(tasks)
