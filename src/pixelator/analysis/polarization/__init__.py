@@ -10,10 +10,11 @@ import pandas as pd
 from scipy.sparse import csr_matrix
 from scipy.stats import norm
 
+from pixelator.analysis.analysis_engine import PerComponentAnalysis
 from pixelator.analysis.permute import permutations
 from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
 from pixelator.graph.utils import Graph
-from pixelator.pixeldataset import MIN_VERTICES_REQUIRED
+from pixelator.pixeldataset import MIN_VERTICES_REQUIRED, PixelDataset
 from pixelator.statistics import clr_transformation, correct_pvalues
 from pixelator.utils import get_pool_executor
 
@@ -308,3 +309,61 @@ def polarization_scores(
 
     logger.debug("Polarization scores for edge list computed")
     return scores
+
+
+class PolarizationAnalysis(PerComponentAnalysis):
+    """Run polarization analysis on each component."""
+
+    ANALYSIS_NAME = "polarization"
+
+    def __init__(
+        self,
+        normalization: PolarizationNormalizationTypes,
+        n_permutations: int,
+        min_marker_count: int,
+    ):
+        """Initialize polarization analysis.
+
+        :param normalization: the normalization method to use (raw, log1p, or clr)
+        :param n_permutations: the number of permutations to use to estimate the
+                               null-hypothesis for the Moran's I statistic
+        :param min_marker_count: the minimum number of counts of a marker to calculate
+                                 the Moran's I statistic
+        """
+        self.normalization = normalization
+        self.permutations = n_permutations
+        self.min_marker_count = min_marker_count
+
+    def run_on_component(self, component: Graph, component_id: str) -> pd.DataFrame:
+        """Run polarization analysis on component."""
+        logger.debug("Running polarization analysis on component %s", component_id)
+        return polarization_scores_component_graph(
+            graph=component,
+            component_id=component_id,
+            normalization=self.normalization,
+            n_permutations=self.permutations,
+            min_marker_count=self.min_marker_count,
+        )
+
+    def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Post process polarization analysis data.
+
+        This will adjust the calculated p-values for the calculate Moran's I statistics.
+        """
+        logger.debug("Post processing polarization analysis data")
+        if data.empty:
+            return data
+        data.insert(
+            data.columns.get_loc("morans_p_value") + 1,
+            "morans_p_adjusted",
+            correct_pvalues(data["morans_p_value"].to_numpy()),
+        )
+        return data
+
+    def add_to_pixel_dataset(
+        self, data: pd.DataFrame, pxl_dataset: PixelDataset
+    ) -> PixelDataset:
+        """Add data to the polarization field of the PixelDataset."""
+        logger.debug("Adding polarization analysis data to PixelDataset")
+        pxl_dataset.polarization = data
+        return pxl_dataset
