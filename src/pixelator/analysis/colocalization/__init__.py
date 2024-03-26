@@ -16,7 +16,6 @@ from pixelator.analysis.colocalization.estimate import (
     estimate_observation_statistics,
     permutation_analysis_results,
 )
-from pixelator.analysis.colocalization.permute import permutations
 from pixelator.analysis.colocalization.prepare import (
     filter_by_region_counts,
     filter_by_unique_values,
@@ -31,6 +30,7 @@ from pixelator.analysis.colocalization.types import (
     MarkerColocalizationResults,
     TransformationTypes,
 )
+from pixelator.analysis.permute import permutations
 from pixelator.graph.utils import Graph
 from pixelator.statistics import correct_pvalues, log1p_transformation
 

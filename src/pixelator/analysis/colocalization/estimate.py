@@ -12,8 +12,8 @@ from scipy.stats import norm
 
 from pixelator.analysis.colocalization.types import (
     CoLocalizationFunction,
-    RegionByCountsDataFrame,
 )
+from pixelator.analysis.types import RegionByCountsDataFrame
 
 logger = logging.getLogger(__name__)
 

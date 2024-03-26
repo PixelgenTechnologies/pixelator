@@ -7,7 +7,7 @@ from typing import Literal
 
 import pandas as pd
 
-from pixelator.analysis.colocalization.types import RegionByCountsDataFrame
+from pixelator.analysis.types import RegionByCountsDataFrame
 from pixelator.graph.utils import Graph, create_node_markers_counts
 
 

@@ -10,8 +10,7 @@ import pandas as pd
 from scipy.sparse import csr_matrix
 from scipy.stats import norm
 
-# TODO Move permutations to common module
-from pixelator.analysis.colocalization.permute import permutations
+from pixelator.analysis.permute import permutations
 from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
 from pixelator.graph.utils import Graph, create_node_markers_counts
 from pixelator.pixeldataset import MIN_VERTICES_REQUIRED
