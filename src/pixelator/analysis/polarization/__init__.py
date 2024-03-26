@@ -25,8 +25,6 @@ def _compute_for_marker(
     marker, marker_count_matrix, weight_matrix, normalization_factor
 ):
     try:
-        if np.all(marker_count_matrix[marker] == 0):
-            return 0
         x_centered = np.array(
             marker_count_matrix[marker] - marker_count_matrix[marker].mean()
         )
@@ -49,10 +47,13 @@ def _compute_morans_i(
     r = _compute_for_marker(
         marker, marker_count_matrix, weight_matrix, normalization_factor
     )
-    perm_rs = [
-        _compute_for_marker(marker, perm, weight_matrix, normalization_factor)
-        for perm in marker_count_matrix_permuted
-    ]
+    perm_rs = np.fromiter(
+        (
+            _compute_for_marker(marker, perm, weight_matrix, normalization_factor)
+            for perm in marker_count_matrix_permuted
+        ),
+        dtype=np.float64,
+    )
     perm_rs_mean = np.nanmean(perm_rs)
     perm_rs_std_dev = np.nanstd(perm_rs)
     perm_rs_z_score = (r - perm_rs_mean) / perm_rs_std_dev
@@ -155,7 +156,9 @@ def polarization_scores_component_graph(
 
     run_time = time.perf_counter() - start_time
     logger.info(
-        "Finished computing Moran's I for component: %s in %2fs", component_id, run_time
+        "Finished computing Moran's I for component: %s in %.2fs",
+        component_id,
+        run_time,
     )
     results = results.drop(columns=["perm_mean", "perm_std"])
     return results
@@ -246,8 +249,6 @@ def polarization_scores(
         edgelist.shape[0],
     )
 
-    logger.info("Activating alternative polarization implementation")
-
     def data():
         with get_pool_executor() as pool:
             polarization_function = partial(
@@ -265,6 +266,7 @@ def polarization_scores(
                         "component", observed=True
                     )
                 ),
+                chunksize=10,
             )
 
     # create dataframe with all the scores
