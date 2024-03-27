@@ -65,6 +65,7 @@ def polarization_scores_component_graph(
     component_id: str,
     normalization: PolarizationNormalizationTypes = "clr",
     n_permutations: int = 50,
+    min_marker_count: int = 2,
     random_seed: int | None = None,
 ) -> pd.DataFrame:
     """Calculate Moran's I statistics for a component graph.
@@ -86,6 +87,8 @@ def polarization_scores_component_graph(
     :param normalization: the normalization method to use (raw or clr)
     :param n_permutations: the number of permutations to use to estimate the
                            null-hypothesis for the Moran's I statistic
+    :param min_marker_count: the minimum number of counts of a marker to calculate
+                             the Moran's I statistic
     :param random_seed: the random seed to use to ensure that the permutations
                         are reproducible across runs
     :returns: a pd.DataFrame with the polarization statistics for each antibody
@@ -111,8 +114,10 @@ def polarization_scores_component_graph(
         W = W / W.sum(axis=0)
         X = graph.node_marker_counts
 
-        # remove markers with zero variance
-        X = X.loc[:, (X != 0).any(axis=0) & (X.nunique() > 1)]
+        # Remove markers with zero variance and markers below minimum marker count
+        X = X.loc[
+            :, (X != 0).any(axis=0) & (X.nunique() > 1) & (X.sum() > min_marker_count)
+        ]
 
         # Calculate normalization factor
         C = N / W.sum()
@@ -169,6 +174,7 @@ def polarization_scores_component_df(
     use_full_bipartite: bool,
     normalization: PolarizationNormalizationTypes = "clr",
     n_permutations: int = 50,
+    min_marker_count: int,
     random_seed: int | None = None,
 ):
     """Calculate Moran's I statistics for a component.
@@ -181,6 +187,8 @@ def polarization_scores_component_df(
     :param normalization: the normalization method to use (raw or clr)
     :param n_permutations: the number of permutations to use to estimate the
                            null-hypothesis for the Moran's I statistic
+    :param min_marker_count: the minimum number of counts of a marker to calculate
+                             the Moran's I statistic
     :param random_seed: the random seed to use to ensure that the permutations
                         are reproducible across runs
     :returns: a pd.DataFrame with the polarization statistics for each antibody
@@ -199,6 +207,7 @@ def polarization_scores_component_df(
         component_id=component_id,
         normalization=normalization,
         n_permutations=n_permutations,
+        min_marker_count=min_marker_count,
         random_seed=random_seed,
     )
     return component_result
@@ -209,6 +218,7 @@ def polarization_scores(
     use_full_bipartite: bool = False,
     normalization: PolarizationNormalizationTypes = "clr",
     n_permutations: int = 0,
+    min_marker_count: int = 2,
     random_seed: int | None = None,
 ) -> pd.DataFrame:
     """Calculate Moran's I statistics for an edgelist.
@@ -227,6 +237,8 @@ def polarization_scores(
     :param normalization: the normalization method to use (raw or clr)
     :param n_permutations: the number of permutations for simulated Z-score (z_sim)
                            estimation (if n_permutations>0)
+    :param min_marker_count: the minimum number of counts of a marker to calculate
+                             the Moran's I statistic
     :param random_seed: the random seed to use for reproducibility
     :returns: a pd.DataFrames with all the polarization scores
     :rtype: pd.DataFrame
@@ -255,6 +267,7 @@ def polarization_scores(
                 use_full_bipartite=use_full_bipartite,
                 normalization=normalization,
                 n_permutations=n_permutations,
+                min_marker_count=min_marker_count,
                 random_seed=random_seed,
             )
             yield from pool.starmap(

@@ -138,6 +138,61 @@ def test_polarization_with_differentially_polarized_markers():
     assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
 
 
+def test_polarization_with_min_marker_count():
+    # Set seed to get same graph every time
+    graph = create_randomly_connected_bipartite_graph(
+        n1=50, n2=100, p=0.1, random_seed=2
+    )
+
+    random.seed(1)
+    for v in graph.vs:
+        v["markers"] = {"A": 0, "B": 1, "C": 0, "D": 0}
+    random_vertex = graph.vs.get_vertex(random.randint(0, graph.vcount()))
+    random_vertex["markers"]["A"] = 5
+    neighbors = random_vertex.neighbors()
+    for n in neighbors:
+        n["markers"]["A"] = 2
+
+    random_vertex = graph.vs.get_vertex(random.randint(0, graph.vcount()))
+    random_vertex["markers"]["C"] = 10
+
+    random_vertex = graph.vs.get_vertex(random.randint(0, graph.vcount()))
+    random_vertex["markers"]["D"] = 4
+
+    scores = polarization_scores_component_graph(
+        graph,
+        component_id="PXLCMP0000000",
+        n_permutations=10,
+        random_seed=1,
+        min_marker_count=5,
+    )
+    print(scores)
+    # We don't expect to get a value for B, since it has only one value in it.
+    # We don't expect to get a value for D, since the marker is filtered due to
+    # low counts
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "A",
+                "morans_i": 0.37307837882553935,
+                "morans_z": 4.095594525493692,
+                "morans_p_value": 2.1054318495343033e-05,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "C",
+                "morans_i": -0.0037658463832960483,
+                "morans_z": -2.1799059127756326,
+                "morans_p_value": 0.014632218279985308,
+                "component": "PXLCMP0000000",
+            },
+        },
+        orient="index",
+    )
+    # test polarization scores
+    assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
+
+
 def test_permuted_polarization_with_differentially_polarized_markers():
     # Set seed to get same graph every time
     graph = create_randomly_connected_bipartite_graph(

@@ -29,6 +29,7 @@ class AnalysisParameters:
     use_full_bipartite: bool
     polarization_normalization: PolarizationNormalizationTypes
     polarization_n_permutations: int
+    polarization_min_marker_count: int
     colocalization_transformation: TransformationTypes
     colocalization_neighbourhood_size: int
     colocalization_n_permutations: int
@@ -45,6 +46,7 @@ def analyse_pixels(
     use_full_bipartite: bool,
     polarization_normalization: PolarizationNormalizationTypes,
     polarization_n_permutations: int,
+    polarization_min_marker_count: int,
     colocalization_transformation: TransformationTypes,
     colocalization_neighbourhood_size: int,
     colocalization_n_permutations: int,
@@ -72,6 +74,8 @@ def analyse_pixels(
     :param polarization_n_permutations: Select number of permutations used to
                                         calculate empirical p-values of the
                                         polarization scores
+    :param polarization_min_marker_count: the minimum number of counts of a marker to calculate
+                                          the Moran's I statistic
     :param colocalization_transformation: Select a transformation method to use
                                           for the colocalization
     :param colocalization_neighbourhood_size: Set the size of the neighbourhood to
@@ -105,6 +109,7 @@ def analyse_pixels(
             use_full_bipartite=use_full_bipartite,
             normalization=polarization_normalization,
             n_permutations=polarization_n_permutations,
+            min_marker_count=polarization_min_marker_count,
         )
         dataset.polarization = scores
 
@@ -129,6 +134,7 @@ def analyse_pixels(
                 use_full_bipartite=use_full_bipartite,
                 polarization_normalization=polarization_normalization,
                 polarization_n_permutations=polarization_n_permutations,
+                polarization_min_marker_count=polarization_min_marker_count,
                 colocalization_transformation=colocalization_transformation,
                 colocalization_neighbourhood_size=colocalization_neighbourhood_size,
                 colocalization_n_permutations=colocalization_n_permutations,
