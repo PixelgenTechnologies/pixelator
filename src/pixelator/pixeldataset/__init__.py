@@ -37,10 +37,6 @@ from pixelator.pixeldataset.utils import (
 )
 from pixelator.types import PathType
 
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", module="libpysal")
-
-
 logger = logging.getLogger(__name__)
 
 SIZE_DEFINITION = "molecules"

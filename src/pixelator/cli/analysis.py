@@ -68,14 +68,13 @@ from pixelator.utils import (
 )
 @click.option(
     "--polarization-n-permutations",
-    default=0,
+    default=50,
     required=False,
-    type=click.IntRange(min=0),
+    type=click.IntRange(min=5),
     show_default=True,
     help=(
         "Set the number of permutations use to compute the empirical"
-        " z-score and p-value for the polarization score. If not set,"
-        " only the analytical z-score estimation will be performed"
+        " z-score and p-value for the polarization score."
     ),
 )
 @click.option(

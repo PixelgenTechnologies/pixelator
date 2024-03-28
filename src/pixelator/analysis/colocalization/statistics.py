@@ -12,8 +12,8 @@ from sklearn.metrics.pairwise import pairwise_distances
 from pixelator.analysis.colocalization.types import (
     CoLocalizationFunction,
     MarkerColocalizationResults,
-    RegionByCountsDataFrame,
 )
+from pixelator.analysis.types import RegionByCountsDataFrame
 
 
 def _wide_correlation_matrix_to_long_correlation_results(

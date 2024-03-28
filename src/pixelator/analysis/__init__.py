@@ -104,7 +104,7 @@ def analyse_pixels(
             edgelist=edgelist,
             use_full_bipartite=use_full_bipartite,
             normalization=polarization_normalization,
-            permutations=polarization_n_permutations,
+            n_permutations=polarization_n_permutations,
         )
         dataset.polarization = scores
 
@@ -137,7 +137,9 @@ def analyse_pixels(
         )
     }
     # save dataset
-    dataset.save(Path(output) / f"{output_prefix}.analysis.dataset.pxl")
+    dataset.save(
+        Path(output) / f"{output_prefix}.analysis.dataset.pxl", force_overwrite=True
+    )
 
     polarization_report = PolarizationReport()
     colocalization_report = ColocalizationReport()

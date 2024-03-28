@@ -237,7 +237,9 @@ def annotate_components(
     dataset = PixelDataset.from_data(
         edgelist=filtered_edgelist, adata=adata, metadata=metadata
     )
-    dataset.save(Path(output) / f"{output_prefix}.annotate.dataset.pxl")
+    dataset.save(
+        Path(output) / f"{output_prefix}.annotate.dataset.pxl", force_overwrite=True
+    )
 
     edgelist_metrics_dict = edgelist_metrics(filtered_edgelist)
     adata_metrics_dict = anndata_metrics(adata)

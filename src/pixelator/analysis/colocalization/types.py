@@ -8,7 +8,8 @@ from typing import Callable, Literal
 
 import pandas as pd
 
-RegionByCountsDataFrame = pd.DataFrame
+from pixelator.analysis.types import RegionByCountsDataFrame
+
 MarkerColocalizationResults = pd.DataFrame
 
 TransformationTypes = Literal["raw", "log1p"]
