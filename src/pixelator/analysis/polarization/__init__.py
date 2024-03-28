@@ -12,7 +12,7 @@ from scipy.stats import norm
 
 from pixelator.analysis.permute import permutations
 from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
-from pixelator.graph.utils import Graph, create_node_markers_counts
+from pixelator.graph.utils import Graph
 from pixelator.pixeldataset import MIN_VERTICES_REQUIRED
 from pixelator.statistics import clr_transformation, correct_pvalues
 from pixelator.utils import get_pool_executor
@@ -64,7 +64,7 @@ def polarization_scores_component_graph(
     graph: Graph,
     component_id: str,
     normalization: PolarizationNormalizationTypes = "clr",
-    n_permutations: int = 0,
+    n_permutations: int = 50,
     random_seed: int | None = None,
 ) -> pd.DataFrame:
     """Calculate Moran's I statistics for a component graph.
@@ -103,13 +103,13 @@ def polarization_scores_component_graph(
         )
         return pd.DataFrame()
 
-    def morans(graph: Graph, n_permutations):
+    def _compute_morans_on_current_graph():
         N = float(graph.vcount())
 
         W = graph.get_adjacency_sparse()
         # Normalize the weights by the degree of the node
         W = W / W.sum(axis=0)
-        X = create_node_markers_counts(graph)
+        X = graph.node_marker_counts
 
         # remove markers with zero variance
         X = X.loc[:, (X != 0).any(axis=0) & (X.nunique() > 1)]
@@ -150,7 +150,7 @@ def polarization_scores_component_graph(
     start_time = time.perf_counter()
     logger.info("Computing Moran's I for component: %s", component_id)
 
-    results = morans(graph, n_permutations)
+    results = _compute_morans_on_current_graph()
     results["component"] = component_id
 
     run_time = time.perf_counter() - start_time
@@ -167,9 +167,9 @@ def polarization_scores_component_df(
     component_id: str,
     component_df: pd.DataFrame,
     use_full_bipartite: bool,
-    normalization: PolarizationNormalizationTypes,
-    n_permutations: int,
-    random_seed: int | None,
+    normalization: PolarizationNormalizationTypes = "clr",
+    n_permutations: int = 50,
+    random_seed: int | None = None,
 ):
     """Calculate Moran's I statistics for a component.
 
