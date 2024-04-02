@@ -116,7 +116,7 @@ def polarization_scores_component_graph(
 
         # Remove markers with zero variance and markers below minimum marker count
         X = X.loc[
-            :, (X != 0).any(axis=0) & (X.nunique() > 1) & (X.sum() > min_marker_count)
+            :, (X != 0).any(axis=0) & (X.nunique() > 1) & (X.sum() >= min_marker_count)
         ]
 
         # Calculate normalization factor
@@ -174,7 +174,7 @@ def polarization_scores_component_df(
     use_full_bipartite: bool,
     normalization: PolarizationNormalizationTypes = "clr",
     n_permutations: int = 50,
-    min_marker_count: int,
+    min_marker_count: int = 2,
     random_seed: int | None = None,
 ):
     """Calculate Moran's I statistics for a component.
