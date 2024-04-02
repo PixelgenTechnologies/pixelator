@@ -30,6 +30,7 @@ import polars as pl
 import scipy as sp
 from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
+from sklearn.utils.extmath import svd_flip
 
 from pixelator.graph.backends.protocol import (
     Edge,
@@ -795,7 +796,8 @@ def pmds_layout(
 
     # Compute SVD and use distances to compute coordinates for all nodes
     # in an abstract cartesian space
-    _, _, Vh = sp.sparse.linalg.svds(D_pivs_centered, k=dim, random_state=seed)
+    u, _, Vh = sp.sparse.linalg.svds(D_pivs_centered, k=dim, random_state=seed)
+    _, Vh = svd_flip(u=u, v=Vh, u_based_decision=False)
     coordinates = D_pivs_centered @ np.transpose(Vh)
 
     coordinates = {node_list[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
