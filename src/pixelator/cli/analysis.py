@@ -78,6 +78,17 @@ from pixelator.utils import (
     ),
 )
 @click.option(
+    "--polarization-min-marker-count",
+    default=5,
+    required=False,
+    type=click.IntRange(min=2),
+    show_default=True,
+    help=(
+        "Set the minimum number of counts of a marker to calculate"
+        " the polarization score in a component."
+    ),
+)
+@click.option(
     "--colocalization-transformation",
     default="log1p",
     required=False,
