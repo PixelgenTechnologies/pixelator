@@ -122,19 +122,20 @@ def polarization_scores_component_graph(
         # Calculate normalization factor
         C = N / W.sum()
 
+        def pick_transformation():
+            if normalization == "log1p":
+                return np.log1p
+            if normalization == "clr":
+                return clr_transformation
+            # This is the same as no transformation
+            return lambda x: x
+
+        transformation = pick_transformation()
         X_perm = [
-            np.log1p(x)
-            if normalization == "log1p"
-            else clr_transformation(x)
-            if normalization == "clr"
-            else x
+            transformation(x)
             for x in permutations(X, n=n_permutations, random_seed=random_seed)
         ]
-
-        if normalization == "log1p":
-            X = np.log1p(X)
-        if normalization == "clr":
-            X = clr_transformation(X, non_negative=True, axis=0)
+        X = transformation(X)
 
         _compute_morans_i_per_marker = partial(
             _compute_morans_i,
