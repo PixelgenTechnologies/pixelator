@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add a `precomputed_layouts` property to `pixeldataset` to allow for loading precomputed layouts.
 * Add `pixelator single-cell layout` stage to pixelator, which allows users to compute layouts
   for a PXL file that can then be used to visualize the graph in 2D or 3D downstream.
+* Added minimum marker count `polarization_min_marker_count` parameter to calculate Polarity Score.
 
 ### Changed
 
@@ -53,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Logging would cause deadlocks in multiprocessing scenarios, this has been resolved
   by switching to a server/client-based logging system.
 * Fix a bug in the amplicon stage where read suffixes were not correctly recognised.
+* Ensure deterministic results from `pmds_layout` (given a set seed).
 
 ### Removed
 

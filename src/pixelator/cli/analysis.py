@@ -78,6 +78,17 @@ from pixelator.utils import (
     ),
 )
 @click.option(
+    "--polarization-min-marker-count",
+    default=5,
+    required=False,
+    type=click.IntRange(min=2),
+    show_default=True,
+    help=(
+        "Set the minimum number of counts of a marker to calculate"
+        " the polarization score in a component."
+    ),
+)
+@click.option(
     "--colocalization-transformation",
     default="log1p",
     required=False,
@@ -132,6 +143,7 @@ def analysis(
     use_full_bipartite,
     polarization_normalization,
     polarization_n_permutations,
+    polarization_min_marker_count,
     colocalization_transformation,
     colocalization_neighbourhood_size,
     colocalization_n_permutations,
@@ -152,6 +164,7 @@ def analysis(
         compute_colocalization=compute_colocalization,
         normalization=polarization_normalization,
         polarization_n_permutations=polarization_n_permutations,
+        polarization_min_marker_count=polarization_min_marker_count,
         colocalization_transformation=colocalization_transformation,
         colocalization_neighbourhood_size=colocalization_neighbourhood_size,
         colocalization_n_permutations=colocalization_n_permutations,
@@ -190,6 +203,7 @@ def analysis(
         use_full_bipartite=use_full_bipartite,
         polarization_normalization=polarization_normalization,
         polarization_n_permutations=polarization_n_permutations,
+        polarization_min_marker_count=polarization_min_marker_count,
         colocalization_transformation=colocalization_transformation,
         colocalization_neighbourhood_size=colocalization_neighbourhood_size,
         colocalization_n_permutations=colocalization_n_permutations,
