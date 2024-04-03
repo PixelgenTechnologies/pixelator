@@ -114,11 +114,6 @@ def polarization_scores_component_graph(
         W = W / W.sum(axis=0)
         X = graph.node_marker_counts
 
-        # Remove markers with zero variance and markers below minimum marker count
-        X = X.loc[
-            :, (X != 0).any(axis=0) & (X.nunique() > 1) & (X.sum() >= min_marker_count)
-        ]
-
         # Calculate normalization factor
         C = N / W.sum()
 
@@ -130,12 +125,22 @@ def polarization_scores_component_graph(
             # This is the same as no transformation
             return lambda x: x
 
+        # Record markers to keep
+        # Remove markers with zero variance and markers below minimum marker count
+        markers_to_keep = X.columns[
+            (X != 0).any(axis=0) & (X.nunique() > 1) & (X.sum() >= min_marker_count)
+        ]
+
         transformation = pick_transformation()
         X_perm = [
             transformation(x)
             for x in permutations(X, n=n_permutations, random_seed=random_seed)
         ]
         X = transformation(X)
+
+        # Apply marker filter after transformation
+        X = X.loc[:, markers_to_keep]
+        X_perm = [x.loc[:, markers_to_keep] for x in X_perm]
 
         _compute_morans_i_per_marker = partial(
             _compute_morans_i,
