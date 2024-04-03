@@ -58,12 +58,13 @@ from pixelator.utils import (
     "--polarization-normalization",
     default="clr",
     required=False,
-    type=click.Choice(["raw", "clr"]),
+    type=click.Choice(["raw", "log1p", "clr"]),
     show_default=True,
     help=(
         "Which approach to use to normalize the antibody counts:"
-        " \n\traw will use the raw counts\n\tclr will use the"
-        " CLR transformed counts"
+        " \n\traw will use the raw counts"
+        " \n\tlog1p will use the log(x+1) transformed counts"
+        " \n\tclr will use the CLR transformed counts"
     ),
 )
 @click.option(

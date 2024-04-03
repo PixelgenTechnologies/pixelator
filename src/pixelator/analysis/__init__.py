@@ -70,7 +70,7 @@ def analyse_pixels(
     :param use_full_bipartite: use the bipartite graph instead of the
                                one-node-projection (UPIA)
     :param polarization_normalization: the method to use to normalize the
-                                       antibody counts (raw or clr)
+                                       antibody counts (raw, log1p, or clr)
     :param polarization_n_permutations: Select number of permutations used to
                                         calculate empirical p-values of the
                                         polarization scores

@@ -84,7 +84,7 @@ def polarization_scores_component_graph(
 
     :param graph: a graph (it must be a single connected component)
     :param component_id: the id of the component
-    :param normalization: the normalization method to use (raw or clr)
+    :param normalization: the normalization method to use (raw, log1p, or clr)
     :param n_permutations: the number of permutations to use to estimate the
                            null-hypothesis for the Moran's I statistic
     :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -190,7 +190,7 @@ def polarization_scores_component_df(
     :param component_id: the id of the component
     :param component_df: A data frame with an edgelist for a single connected component
     :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    :param normalization: the normalization method to use (raw or clr)
+    :param normalization: the normalization method to use (raw, log1p, or clr)
     :param n_permutations: the number of permutations to use to estimate the
                            null-hypothesis for the Moran's I statistic
     :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -240,7 +240,7 @@ def polarization_scores(
       (morans_p_value_sim and morans_z_sim if `permutations` > 0)
     :param edgelist: an edge list (pd.DataFrame) with a component column
     :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    :param normalization: the normalization method to use (raw or clr)
+    :param normalization: the normalization method to use (raw, log1p, or clr)
     :param n_permutations: the number of permutations for simulated Z-score (z_sim)
                            estimation (if n_permutations>0)
     :param min_marker_count: the minimum number of counts of a marker to calculate
