@@ -89,6 +89,44 @@ def test_permuted_polarization(enable_backend, full_graph_edgelist: pd.DataFrame
     assert_frame_equal(scores, expected)
 
 
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_polarization_log1p(enable_backend, full_graph_edgelist: pd.DataFrame):
+    # TODO we should test more scenarios here (sparse and clustered patterns)
+
+    scores = polarization_scores(
+        edgelist=full_graph_edgelist,
+        n_permutations=10,
+        normalization="log1p",
+        use_full_bipartite=True,
+        random_seed=1,
+    )
+
+    # test polarization scores
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "A",
+                "morans_i": -0.1776437812217308,
+                "morans_z": -25.810281029712225,
+                "morans_p_value": 3.3990578613561664e-147,
+                "morans_p_adjusted": 6.798115722712333e-147,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "B",
+                "morans_i": -0.17764378122173088,
+                "morans_z": -25.399463214025243,
+                "morans_p_value": 1.2782689040520306e-142,
+                "morans_p_adjusted": 1.2782689040520306e-142,
+                "component": "PXLCMP0000000",
+            },
+        },
+        orient="index",
+    )
+    # test polarization scores
+    assert_frame_equal(scores, expected)
+
+
 def test_polarization_with_differentially_polarized_markers():
     # Set seed to get same graph every time
     graph = create_randomly_connected_bipartite_graph(

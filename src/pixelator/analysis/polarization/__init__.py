@@ -84,7 +84,7 @@ def polarization_scores_component_graph(
 
     :param graph: a graph (it must be a single connected component)
     :param component_id: the id of the component
-    :param normalization: the normalization method to use (raw or clr)
+    :param normalization: the normalization method to use (raw, log1p, or clr)
     :param n_permutations: the number of permutations to use to estimate the
                            null-hypothesis for the Moran's I statistic
     :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -122,13 +122,20 @@ def polarization_scores_component_graph(
         # Calculate normalization factor
         C = N / W.sum()
 
+        def pick_transformation():
+            if normalization == "log1p":
+                return np.log1p
+            if normalization == "clr":
+                return clr_transformation
+            # This is the same as no transformation
+            return lambda x: x
+
+        transformation = pick_transformation()
         X_perm = [
-            clr_transformation(x) if normalization == "clr" else x
+            transformation(x)
             for x in permutations(X, n=n_permutations, random_seed=random_seed)
         ]
-
-        if normalization == "clr":
-            X = clr_transformation(X, non_negative=True, axis=0)
+        X = transformation(X)
 
         _compute_morans_i_per_marker = partial(
             _compute_morans_i,
@@ -184,7 +191,7 @@ def polarization_scores_component_df(
     :param component_id: the id of the component
     :param component_df: A data frame with an edgelist for a single connected component
     :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    :param normalization: the normalization method to use (raw or clr)
+    :param normalization: the normalization method to use (raw, log1p, or clr)
     :param n_permutations: the number of permutations to use to estimate the
                            null-hypothesis for the Moran's I statistic
     :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -234,7 +241,7 @@ def polarization_scores(
       (morans_p_value_sim and morans_z_sim if `permutations` > 0)
     :param edgelist: an edge list (pd.DataFrame) with a component column
     :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    :param normalization: the normalization method to use (raw or clr)
+    :param normalization: the normalization method to use (raw, log1p, or clr)
     :param n_permutations: the number of permutations for simulated Z-score (z_sim)
                            estimation (if n_permutations>0)
     :param min_marker_count: the minimum number of counts of a marker to calculate
