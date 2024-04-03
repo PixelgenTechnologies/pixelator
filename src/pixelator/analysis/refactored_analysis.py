@@ -95,12 +95,12 @@ class ColocalizationAnalysisSweep(PerComponentAnalysis):
         transformation_type: list[TransformationTypes],
         neighbourhood_size: list[int],
         n_permutations: int,
-        min_region_count: int,
+        min_marker_count: int,
     ):
         self.transformation_type = transformation_type
         self.neighbourhood_size = neighbourhood_size
         self.n_permutations = n_permutations
-        self.min_region_count = min_region_count
+        self.min_marker_count = min_marker_count
 
     def run_on_component(self, component: Graph, component_id: str) -> pd.DataFrame:
         logger.debug(
@@ -116,7 +116,7 @@ class ColocalizationAnalysisSweep(PerComponentAnalysis):
                         transformation=tf,
                         neighbourhood_size=ns,
                         n_permutations=self.n_permutations,
-                        min_region_count=self.min_region_count,
+                        min_marker_count=self.min_marker_count,
                     )
                     coloc_df["neighbourhood_size"] = ns
                     coloc_df["transformation"] = tf

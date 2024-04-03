@@ -112,7 +112,7 @@ def colocalization_from_component_graph(
     neighbourhood_size: int = 1,
     n_permutations: int = 50,
     min_node_count: int = 1,
-    min_marker_count: int = 10,
+    min_marker_count: int = 5,
     random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """Compute the colocalization scores for this component graph.
