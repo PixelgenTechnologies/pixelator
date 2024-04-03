@@ -127,8 +127,6 @@ def polarization_scores_component_graph(
             if normalization == "log1p"
             else clr_transformation(x)
             if normalization == "clr"
-            else clr_transformation(x, non_negative=False)
-            if normalization == "clr_neg"
             else x
             for x in permutations(X, n=n_permutations, random_seed=random_seed)
         ]
@@ -137,8 +135,6 @@ def polarization_scores_component_graph(
             X = np.log1p(X)
         if normalization == "clr":
             X = clr_transformation(X, non_negative=True, axis=0)
-        if normalization == "clr_neg":
-            X = clr_transformation(X, non_negative=False, axis=0)
 
         _compute_morans_i_per_marker = partial(
             _compute_morans_i,
