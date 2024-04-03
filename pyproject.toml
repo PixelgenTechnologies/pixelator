@@ -54,7 +54,6 @@ fsspec = "^2023.12.2"
 fastparquet = "^2023.8.0"
 graspologic = "^3.3.0"
 plotly = "*"
-scikit-learn = "^1.4.1.post1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"

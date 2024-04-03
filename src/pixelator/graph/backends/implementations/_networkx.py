@@ -30,7 +30,6 @@ import polars as pl
 import scipy as sp
 from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
-from sklearn.utils.extmath import svd_flip
 
 from pixelator.graph.backends.protocol import (
     Edge,
@@ -734,7 +733,9 @@ def pmds_layout(
 
     The algorithm is similar to classical multidimensional scaling (MDS), but uses only
     a smalls set of random pivot nodes. The algorithm is considerably faster than MDS
-    and therefore scales better to large graphs.
+    and therefore scales better to large graphs. The topology of resulting layouts are
+    deterministic for a given seed, but may be mirrored across different systems due to
+    variations in floating-point precision.
 
     .. [1] Brandes U, Pich C. Eigensolver Methods for Progressive Multidimensional
         Scaling of Large Data. International Symposium on Graph Drawing, 2007.
@@ -797,7 +798,6 @@ def pmds_layout(
     # Compute SVD and use distances to compute coordinates for all nodes
     # in an abstract cartesian space
     u, _, Vh = sp.sparse.linalg.svds(D_pivs_centered, k=dim, random_state=seed)
-    _, Vh = svd_flip(u=u, v=Vh, u_based_decision=True)
     coordinates = D_pivs_centered @ np.transpose(Vh)
 
     coordinates = {node_list[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
