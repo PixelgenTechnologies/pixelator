@@ -399,3 +399,55 @@ def test_polarization_transformation():
 
     # we also expect the scores to be the same for A and B
     assert_frame_equal(scores_1, scores_2.head(2), check_exact=False, atol=1e-3)
+
+
+def test_polarization_backward_compatibility():
+    # This tests that we get the same polarity score as the original
+    # polarization score where markers were filtered prior to CLR
+    # transformation.
+
+    # Set seed to get same graph every time
+    graph = create_randomly_connected_bipartite_graph(
+        n1=50, n2=100, p=0.1, random_seed=2
+    )
+    rng = np.random.default_rng(1)
+
+    for v in graph.vs:
+        v["markers"] = {"A": 0, "B": 0, "C": 0}
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
+    random_vertex["markers"]["A"] = 5
+    neighbors = random_vertex.neighbors()
+    for n in neighbors:
+        n["markers"]["A"] = 2
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
+    random_vertex["markers"]["C"] = 10
+    scores = polarization_scores_component_graph(
+        graph, component_id="PXLCMP0000000", n_permutations=10, random_seed=1
+    )
+    # We don't expect to get a value for B, since it has only one value in it.
+    # Hence it is filtered out.
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "A",
+                "morans_i": 0.3009109262187527,
+                "morans_z": 3.6409882113983114,
+                "morans_p_value": 0.00013579678673041425,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "C",
+                "morans_i": -0.001864280387770322,
+                "morans_z": -2.558088675046134,
+                "morans_p_value": 0.005262462500942811,
+                "component": "PXLCMP0000000",
+            },
+        },
+        orient="index",
+    )
+    # test polarization scores
+    assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
