@@ -149,10 +149,10 @@ class _AnalysisManager:
                     ),
                 )
 
-    def _gather(self):
+    def _execute_computations_in_parallel(self, prepared_computations):
         futures = Queue()
         with get_process_pool_executor(logging_setup=self.logging_setup) as executor:
-            for analysis_name, func in self._prepare_computation():
+            for analysis_name, func in prepared_computations:
                 logger.debug("Putting %s in the queue for analysis", analysis_name)
                 future = executor.submit(func)
                 futures.put((analysis_name, future))
@@ -165,9 +165,9 @@ class _AnalysisManager:
                 else:
                     futures.put((key, future))
 
-    def _post_process(self):
+    def _post_process(self, per_component_results):
         concatenated_data = defaultdict(list)
-        for key, data in self._gather():
+        for key, data in per_component_results:
             concatenated_data[key].append(data)
 
         for key, data_list in concatenated_data.items():
@@ -178,15 +178,23 @@ class _AnalysisManager:
                 ),
             )
 
-    def _add_to_pixel_dataset(self, pxl_dataset: PixelDataset):
-        for key, data in self._post_process():
+    def _add_to_pixel_dataset(self, post_processed_data, pxl_dataset: PixelDataset):
+        for key, data in post_processed_data:
             pxl_dataset = self.analysis_to_run[key].add_to_pixel_dataset(
                 data, pxl_dataset
             )
         return pxl_dataset
 
     def execute(self, pixel_dataset) -> PixelDataset:
-        return self._add_to_pixel_dataset(pixel_dataset)
+        prepared_computations = self._prepare_computation()
+        per_component_results = self._execute_computations_in_parallel(
+            prepared_computations
+        )
+        post_processed_data = self._post_process(per_component_results)
+        pxl_dataset_with_results = self._add_to_pixel_dataset(
+            post_processed_data, pixel_dataset
+        )
+        return pxl_dataset_with_results
 
 
 def edgelist_to_component_stream(dataset: PixelDataset) -> Iterable[tuple[str, Graph]]:
