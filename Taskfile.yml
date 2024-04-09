@@ -54,13 +54,13 @@ tasks:
     desc: |-
       Run tests using pytest with the default flags defined in pyproject.toml.
     cmds:
-      - pytest tests
+      - pytest tests {{ .CLI_ARGS }}
 
   test-workflow:
     desc: >-
       Run workflow tests using pytest.
     cmds:
-      - pytest tests -m "workflow_test and not external_workflow_test"
+      - pytest tests -m "workflow_test and not external_workflow_test" {{ .CLI_ARGS }}
 
   test-workflow-external:
     desc: >-
@@ -78,7 +78,7 @@ tasks:
     desc: >-
       Run web tests using pytest.
     cmds:
-      - pytest tests -m web_test
+      - pytest tests -m web_test {{ .CLI_ARGS }}
 
   test-all:
     desc: >-
@@ -110,7 +110,7 @@ tasks:
     desc: >-
       Run only the benchmark tests using pytest.
     cmds:
-      - pytest --benchmark-enable --benchmark-only tests/
+      - pytest --benchmark-enable --benchmark-only tests/ {{ .CLI_ARGS }}
 
   coverage:
     desc: >-
