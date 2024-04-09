@@ -248,7 +248,7 @@ class QCReportData:
     injected into the dynamic report.
     """
 
-    #: CSV formatted string containing a DataFrame  for the
+    #: CSV formatted string containing a DataFrame for the
     #: "component_size_distribution" figure
     #: component_size, rank, selected, markers
     #: 18463, 1, True, 32

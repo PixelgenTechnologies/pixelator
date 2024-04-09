@@ -46,7 +46,7 @@ class QCReportBuilder:
     """
 
     _JSON_OPTIONS: ClassVar[Dict[str, Any]] = {"indent": None, "separators": (",", ":")}
-    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.13.0", ">=0.10.0"]
+    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.14.0", ">=0.10.0"]
 
     def __init__(self, template: Union[str, Path] = DEFAULT_QC_REPORT_TEMPLATE):
         """Construct a QC report builder given a html template.

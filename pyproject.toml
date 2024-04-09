@@ -54,6 +54,7 @@ fsspec = "^2023.12.2"
 fastparquet = "^2023.8.0"
 graspologic = "^3.3.0"
 plotly = "*"
+simplification = "^0.7.10"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
