@@ -23,8 +23,22 @@ def test_collect_reads_per_molecule_frequency(filtered_dataset_pxl_data, snapsho
 
 
 def test_component_ranked_component_size_data(raw_component_metrics_data, snapshot):
-    csv_data = collect_component_ranked_component_size_data(raw_component_metrics_data)
+    csv_data = collect_component_ranked_component_size_data(
+        raw_component_metrics_data, subsample_non_cell_components=False
+    )
     snapshot.assert_match(csv_data, "ranked_component_size.csv")
+
+
+def test_component_ranked_component_size_data_subsampled(
+    raw_component_metrics_data, snapshot
+):
+    raw_component_metrics_data.loc[
+        raw_component_metrics_data["molecules"] <= 1, "is_filtered"
+    ] = False
+    csv_data = collect_component_ranked_component_size_data(
+        raw_component_metrics_data, subsample_non_cell_components=True
+    )
+    snapshot.assert_match(csv_data, "ranked_component_size_subsampled.csv")
 
 
 def test_components_umap_data(filtered_dataset_pxl_data, snapshot):
@@ -52,5 +66,5 @@ def collect_report_data_workdir(
 @pytest.mark.parametrize("sample_id", ["uropod_control"])
 def test_collect_report_data(collect_report_data_workdir, sample_id, snapshot):
     data = collect_report_data(collect_report_data_workdir, sample_id)
-    serialized_data = json.dumps(data, cls=PixelatorJSONEncoder, indent=2)
+    serialized_data = json.dumps(data, cls=PixelatorJSONEncoder)
     snapshot.assert_match(serialized_data, f"{sample_id}/combined_report_data.json")

@@ -14,6 +14,7 @@ import polars as pl
 
 from pixelator.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.report.qcreport.types import QCReportData
+from pixelator.utils.simplification import simplify_line_rdp
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +98,8 @@ def collect_antibody_counts_data(adata: AnnData) -> str:
 
 def collect_component_ranked_component_size_data(
     components_metrics: pd.DataFrame,
+    subsample_non_cell_components: bool = False,
+    subsample_epsilon: float = 1e-3,
 ) -> str:
     """Create data for the `cell calling` and `component size distribution` plot.
 
@@ -104,6 +107,9 @@ def collect_component_ranked_component_size_data(
     Components that pass the filters (is_filtered) are marked as selected.
 
     :param components_metrics: a pd.DataFrame with the components metrics
+    :param subsample_non_cell_comoponents: if True, subsample non-cell components
+    :param subsample_epsilon: the epsilon value for the subsampling.
+        Ignored if subsample_non_cell_comoponents is False
     :return: a csv formatted string with the plotting data
     :rtype: str
     """
@@ -113,6 +119,32 @@ def collect_component_ranked_component_size_data(
     df["selected"] = components_metrics["is_filtered"].to_numpy()
     df["markers"] = components_metrics["antibodies"].to_numpy()
     df.sort_values(by="rank", inplace=True)
+
+    if subsample_non_cell_components:
+        cell_mask = df["selected"].to_numpy()
+        coords = np.ascontiguousarray(df[["rank", "component_size"]].to_numpy())
+        cell_idx = np.flatnonzero(cell_mask)
+        other_coords_mask = ~cell_mask
+        other_coords_idx = np.flatnonzero(other_coords_mask)
+        other_coords = coords[other_coords_mask]
+
+        if len(other_coords) != 0:
+            simplified_coords_idx = simplify_line_rdp(
+                other_coords, subsample_epsilon, return_mask=True
+            )
+
+            # Check for non empty here since zero length simplified_coords_idx
+            # has shape conflicts when concatenating
+            global_coords = np.concatenate(
+                [cell_idx, other_coords_idx[simplified_coords_idx]]
+            )
+            global_coords.sort()
+
+            df = df.iloc[global_coords]
+            # These should still be sorted since we used sorted indices
+            # but lets sort them again by rank just to make sure
+            df.sort_values(by="rank", inplace=True)
+
     df.set_index("rank", inplace=True)
     return df.to_csv(index=True)
 
@@ -166,7 +198,7 @@ def collect_report_data(workdir: PixelatorWorkdir, sample_id: str) -> QCReportDa
     metrics_file = workdir.raw_component_metrics(sample_id)
     raw_components_metrics = pd.read_csv(metrics_file)
     ranked_component_size_data = collect_component_ranked_component_size_data(
-        raw_components_metrics
+        raw_components_metrics, subsample_non_cell_components=True
     )
     reads_per_molecule_frequency_data = collect_reads_per_molecule_frequency(dataset)
 

@@ -220,7 +220,7 @@ def test_report_builder(qc_report_metrics, qc_report_data, tmp_path):
 
 
 @pytest.mark.web_test
-@pytest.mark.parametrize("report_file", ("uropod_control_300k_S1_001.qc-report.html",))
+@pytest.mark.parametrize("report_file", ["uropod_control_300k_S1_001.qc-report.html"])
 def test_make_report(full_run_assets_dir, tmp_path, page: Page, report_file: str):
     """Use playwright to render the QC report and check if all sections are present."""
     make_report(

@@ -6,7 +6,7 @@
     "marker_count": 68,
     "read_count_per_molecule_stats": {
         "mean": 2.016145057128664,
-        "std": 0.127988926269229,
+        "std": 0.12798892626922903,
         "min": 2.0,
         "q1": 2.0,
         "q2": 2.0,

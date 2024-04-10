@@ -195,6 +195,7 @@ tasks:
     requires:
       vars: [ R1, R2 ]
     cmds:
+      - rm -r "{{ .RESULTS_DIR }}"
       - pixelator single-cell amplicon {{ .R1 }} {{ .R2 }} --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
       - pixelator single-cell preqc {{ .RESULTS_DIR }}/amplicon/*.fastq.gz --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
       - pixelator single-cell adapterqc {{ .RESULTS_DIR }}/preqc/*processed*fastq.gz --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
