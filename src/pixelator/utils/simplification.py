@@ -1,8 +1,9 @@
 """Implementation of the Ramer–Douglas–Peucker line simplification algorithm.
 
-Based on https://github.com/fhirschmann/rdp.
+Based on https://github.com/fhirschmann/rdp, see license statement below.
 
 Copyright © 2024 Pixelgen Technologies AB.
+Copyright (c) 2014 Fabian Hirschmann <fabian@hirschmann.email>
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
