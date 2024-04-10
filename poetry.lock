@@ -3034,6 +3034,19 @@ files = [
 ]
 
 [[package]]
+name = "rdp"
+version = "0.8"
+description = "Pure Python implementation of the Ramer-Douglas-Peucker algorithm"
+optional = false
+python-versions = "*"
+files = [
+    {file = "rdp-0.8.tar.gz", hash = "sha256:19ec92f0803587891a00b439441e5e23fc9410500983f02941e4cf9ac3113e4b"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "regex"
 version = "2023.12.25"
 description = "Alternative regular expression module, to replace re."
@@ -3452,47 +3465,6 @@ files = [
 docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "rst.linker (>=1.9)", "sphinx (<7.2.5)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier"]
 testing = ["build[virtualenv]", "filelock (>=3.4.0)", "flake8-2020", "ini2toml[lite] (>=0.9)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "packaging (>=23.2)", "pip (>=19.1)", "pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-home (>=0.5)", "pytest-mypy (>=0.9.1)", "pytest-perf", "pytest-ruff (>=0.2.1)", "pytest-timeout", "pytest-xdist", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel"]
 testing-integration = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "packaging (>=23.2)", "pytest", "pytest-enabler", "pytest-xdist", "tomli", "virtualenv (>=13.0.0)", "wheel"]
-
-[[package]]
-name = "simplification"
-version = "0.7.10"
-description = "Fast linestring simplification using RDP or Visvalingam-Whyatt and a Rust binary"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "simplification-0.7.10-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:373a388262fcf82785f8f5f32bfd1ce71c4887acce354a024ae029bfa966f1eb"},
-    {file = "simplification-0.7.10-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:6888710062b58d1a21c85c37a139a1a97233de15fe06f9125ce55419338e0d26"},
-    {file = "simplification-0.7.10-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a9e1870c3f3e2c4fe83a7807f3e3d53cc503841b307de42eb296e283be24a386"},
-    {file = "simplification-0.7.10-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cbb477d30f622d1b66759df17178a2680c72bb5f39e5694491da02a472eeb8f1"},
-    {file = "simplification-0.7.10-cp310-cp310-win_amd64.whl", hash = "sha256:39972dbfa890dc4cc65d8d0667b93d9dee6b46c140a0ed5da810fce18c4bbebc"},
-    {file = "simplification-0.7.10-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:518aead8f2acd65d842b8e3d03415ca55b462e34ff8df85df2b56f42210ebd64"},
-    {file = "simplification-0.7.10-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:56479dcf9fe3a61f0edf709323f6bbd50ce5f50c9118962817944cf10db4d62f"},
-    {file = "simplification-0.7.10-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a1fc812eb7c9ff353f7103d46407eb37ce272cfffbe05f81326b1dcae61c503b"},
-    {file = "simplification-0.7.10-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:789b37557c3326f8c82688d3f266c1e2055bb6d9ae26bacbbfacdc64aa3dbb63"},
-    {file = "simplification-0.7.10-cp311-cp311-win_amd64.whl", hash = "sha256:aa4932acfa648be3506310bf6861a1f3c95881ac36ff6158ea8f449b3fc2fd28"},
-    {file = "simplification-0.7.10-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:2265cf4dcfd633b792c54404f63af794e71aab5333f1125ce88f7f5431978b24"},
-    {file = "simplification-0.7.10-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:69f9ac8cf80780fd095f60751bb8339f490fb85006a05e0fc23c6b62d0277225"},
-    {file = "simplification-0.7.10-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c652ffaed94c57273c827df10abb4f7914927979c603a2bd786c4c574a3c60ef"},
-    {file = "simplification-0.7.10-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2d06bcc40a32ecc90ff20caed425eabff6507818bd91096e4dbdffc554f8ad57"},
-    {file = "simplification-0.7.10-cp312-cp312-win_amd64.whl", hash = "sha256:a416c4b2759e3e118a2dd691dee7031fb6a2590ff280de1daf363a0b73354611"},
-    {file = "simplification-0.7.10-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:900c68fb25848f641ce64b14d798dc648ca252c0ea9a246d73d56d1d2cf20abd"},
-    {file = "simplification-0.7.10-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:88020725cf725307f7b2e62f02bee0ebdde8d2e56dbaa65867c3047cfb4f202b"},
-    {file = "simplification-0.7.10-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cfa19e7f0fca6780c48de370f8577cdb0dc15c9038a48feb998520786a77ad17"},
-    {file = "simplification-0.7.10-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a9baf5ceeb966b461a387b868cf3e01a31be97e6814954e662503a01a3755537"},
-    {file = "simplification-0.7.10-cp38-cp38-win_amd64.whl", hash = "sha256:83744b5fcbe9a196cc1bcd985b8e2aa388882551b95b5ae5693ca55a492d1276"},
-    {file = "simplification-0.7.10-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:a961aee101085232279e4a6d13bf907fe0edc824dedb6907a6fb85a367565ed8"},
-    {file = "simplification-0.7.10-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:eb35d1936536c994f68ca843f60851115defb1573e654658831a41652d030c1c"},
-    {file = "simplification-0.7.10-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c62d6b0d670bb50f4eb90ea703b6b28b613d4e0f5cf933d9f740207da7ae1f12"},
-    {file = "simplification-0.7.10-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ec96e8867e8d71837726fe2b378957032ffab8b657d191dfa67fd99576022e0b"},
-    {file = "simplification-0.7.10-cp39-cp39-win_amd64.whl", hash = "sha256:805689616f3fcbd71f9fc89fc2d431e76c64b2c5337e4ae992f8e732aa416d21"},
-    {file = "simplification-0.7.10.tar.gz", hash = "sha256:4fbecf738eb36b6fe27c62824eb1c4d4f2700b56375e492fe67c1095747d07d3"},
-]
-
-[package.dependencies]
-numpy = ">=1.11.0"
-
-[package.extras]
-test = ["pytest (>=7.4.2)"]
 
 [[package]]
 name = "six"
@@ -4338,4 +4310,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "a243f5a56821bbae0a1a7cf4bedafad8c8c365697c7ca429e2b0ccc1963103b7"
+content-hash = "4fa9b0308da867e5df8f52978aafee021cfaff911af339b4ce346ce84eec00a7"

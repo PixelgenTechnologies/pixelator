@@ -11,10 +11,10 @@ import typing
 import numpy as np
 import pandas as pd
 import polars as pl
-from simplification.cutil import simplify_coords_idx
 
 from pixelator.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.report.qcreport.types import QCReportData
+from pixelator.utils.simplification import simplify_line_rdp
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,9 @@ def collect_component_ranked_component_size_data(
         other_coords = coords[other_coords_mask]
 
         if len(other_coords) != 0:
-            simplified_coords_idx = simplify_coords_idx(other_coords, subsample_epsilon)
+            simplified_coords_idx = simplify_line_rdp(
+                other_coords, subsample_epsilon, return_mask=True
+            )
 
             # Check for non empty here since zero length simplified_coords_idx
             # has shape conflicts when concatenating
