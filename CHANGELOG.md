@@ -53,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fix deflated counts in the edgelist after collapse.
 * Fix bug where an `r1` or `r2` in the directory part of a read file would break file
   name sanity checks.
+* Fix a bug where the wrong `r1` or `r2` in the filename would be removed when multiple
+  matches are present.
 * Logging would cause deadlocks in multiprocessing scenarios, this has been resolved
   by switching to a server/client-based logging system.
 * Fix a bug in the amplicon stage where read suffixes were not correctly recognised.
