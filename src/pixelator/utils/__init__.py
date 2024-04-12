@@ -465,8 +465,10 @@ def get_read_sample_name(read: str) -> str:
     # We need to cast away the optional here r1 or r2 will always
     # return a match object since we checked for both being None above
     match = typing.cast(re.Match[str], r1_match or r2_match)
-    pattern = match.group()
-    sample_name = read_stem.replace(pattern, "")
+
+    # Remove the R1 or R2 suffix by using the indices returned by the match
+    s, e = match.span()
+    sample_name = read_stem[0:s] + read_stem[e:-1]
 
     if match.groupdict().get("suffix"):
         sample_name += match.group("suffix")

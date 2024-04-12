@@ -123,6 +123,14 @@ def test_get_read_sample_name():
     assert get_read_sample_name("sample1_L001_R1_001.fq.gz") == "sample1_L001_001"
     assert get_read_sample_name("sample1_L001_R2_001.fq.gz") == "sample1_L001_001"
 
+    # Check that the right `_1` is removed when there are multiple matches
+    assert get_read_sample_name("sample_ABCD_12345_1.fastq.gz") == "sample_ABCD_12345"
+    # Check that the right `_2` is removed when there are multiple matches
+    assert (
+        get_read_sample_name("sample_ABCD_2234_2___2_66_2.fastq.gz")
+        == "sample_ABCD_2234_2___2_66"
+    )
+
 
 def test_is_read_file():
     with pytest.raises(ValueError, match="Invalid file extension.*"):
