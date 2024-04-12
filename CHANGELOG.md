@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Renaming of component metrics in adata
 * Use MPX graph compatible permutation strategy when calculating Moran's I.
 * Marker filtering is now done after count transformation in polarization score calculation.
+* Use common analysis engine to orchestrate running different "per component" analysis, like
+  polarization and colocalization analysis (yielding a roughly 3x speed-up over previous approach).
 
 ### Fixed
 
