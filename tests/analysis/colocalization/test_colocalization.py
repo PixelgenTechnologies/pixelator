@@ -4,7 +4,7 @@ Tests for the colocalization modules
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
-from unittest.mock import MagicMock, create_autospec
+from unittest.mock import create_autospec
 
 import numpy as np
 import pandas as pd

@@ -321,6 +321,7 @@ class PolarizationAnalysis(PerComponentAnalysis):
         normalization: PolarizationNormalizationTypes,
         n_permutations: int,
         min_marker_count: int,
+        random_seed: int | None = None,
     ):
         """Initialize polarization analysis.
 
@@ -329,10 +330,13 @@ class PolarizationAnalysis(PerComponentAnalysis):
                                null-hypothesis for the Moran's I statistic
         :param min_marker_count: the minimum number of counts of a marker to calculate
                                  the Moran's I statistic
+        :param random_seed: set a random seed to ensure reproducibility when calculating z-scores
+                            and p-values.
         """
         self.normalization = normalization
         self.permutations = n_permutations
         self.min_marker_count = min_marker_count
+        self.random_seed = random_seed
 
     def run_on_component(self, component: Graph, component_id: str) -> pd.DataFrame:
         """Run polarization analysis on component."""
@@ -343,6 +347,7 @@ class PolarizationAnalysis(PerComponentAnalysis):
             normalization=self.normalization,
             n_permutations=self.permutations,
             min_marker_count=self.min_marker_count,
+            random_seed=self.random_seed,
         )
 
     def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:
