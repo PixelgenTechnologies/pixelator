@@ -4,15 +4,20 @@ Tests for the colocalization modules
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
+from unittest.mock import MagicMock, create_autospec
+
 import numpy as np
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 from pixelator.analysis.colocalization import (
+    ColocalizationAnalysis,
     colocalization_from_component_edgelist,
     colocalization_scores,
     get_differential_colocalization,
 )
+from pixelator.graph import Graph
+from pixelator.pixeldataset import PixelDataset
 
 
 def test_get_differential_colocalization(setup_basic_pixel_dataset):
@@ -195,3 +200,79 @@ def test_colocalization_scores_should_warn_when_no_data(
         "No data was found to compute colocalization, probably "
         "because all components only had a single node."
     ) in caplog.text
+
+
+class TestColocalizationAnalysis:
+    analysis = ColocalizationAnalysis(
+        transformation_type="raw",
+        n_permutations=50,
+        min_region_count=0,
+        neighbourhood_size=1,
+    )
+
+    def test_run_on_component(self, full_graph_edgelist):
+        component_id = "PXLCMP0000000"
+        component = Graph.from_edgelist(
+            full_graph_edgelist[full_graph_edgelist["component"] == component_id],
+            add_marker_counts=True,
+            simplify=True,
+            use_full_bipartite=True,
+        )
+
+        result = self.analysis.run_on_component(component, component_id)
+
+        expected = pd.DataFrame.from_dict(
+            {
+                0: {
+                    "marker_1": "A",
+                    "marker_2": "B",
+                    "pearson": -1.0,
+                    "pearson_mean": -1.0,
+                    "pearson_stdev": 0.0,
+                    "pearson_z": np.nan,
+                    "pearson_p_value": np.nan,
+                    "jaccard": 1.0,
+                    "jaccard_mean": 1.0,
+                    "jaccard_stdev": 0.0,
+                    "jaccard_z": np.nan,
+                    "jaccard_p_value": np.nan,
+                    "component": "PXLCMP0000000",
+                }
+            },
+            orient="index",
+        )
+
+        assert_frame_equal(result, expected)
+
+    def test_post_process_data(self):
+        data = pd.DataFrame.from_dict(
+            {
+                "pearson_p": [0.01, 0.02, 0.03],
+                "jaccard_p": [0.01, 0.02, 0.03],
+                "component": ["PXLCMP0000000"] * 3,
+            }
+        )
+
+        result = self.analysis.post_process_data(data)
+
+        assert_series_equal(
+            result["pearson_p_adjusted"],
+            pd.Series([0.03, 0.03, 0.03], name="pearson_p_adjusted"),
+        )
+        assert_series_equal(
+            result["jaccard_p_adjusted"],
+            pd.Series([0.03, 0.03, 0.03], name="jaccard_p_adjusted"),
+        )
+
+    def test_add_to_pixel_dataset(self):
+        pxl_dataset = create_autospec(PixelDataset, instance=True)
+        mock_data = pd.DataFrame(
+            {
+                "pearson_p": [0.01, 0.02, 0.03],
+                "jaccard_p": [0.01, 0.02, 0.03],
+                "component": ["PXLCMP0000000"] * 3,
+            }
+        )
+
+        pxl_dataset = self.analysis.add_to_pixel_dataset(mock_data, pxl_dataset)
+        assert_frame_equal(pxl_dataset.colocalization, mock_data)
