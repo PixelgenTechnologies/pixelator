@@ -1,23 +1,24 @@
-from functools import partial
-from typing import Iterable
-from typing import Any
-from types import GeneratorType
-from unittest.mock import MagicMock
-from collections import defaultdict
+"""Tests for the analysis engine.
 
-from pandas.testing import assert_frame_equal
+Copyright © 2024 Pixelgen Technologies AB.
+"""
+
+from types import GeneratorType
+from typing import Any, Iterable
+from unittest.mock import MagicMock
 
 import pandas as pd
+from pandas.testing import assert_frame_equal
 from pixelator.analysis.analysis_engine import (
     PerComponentAnalysis,
     _AnalysisManager,
     edgelist_to_component_stream,
     run_analysis,
 )
+from pixelator.analysis.colocalization import ColocalizationAnalysis
+from pixelator.analysis.polarization import PolarizationAnalysis
 from pixelator.graph import Graph
 from pixelator.pixeldataset import PixelDataset
-from pixelator.analysis.polarization import PolarizationAnalysis
-from pixelator.analysis.colocalization import ColocalizationAnalysis
 
 
 class MockAnalysis(PerComponentAnalysis):
@@ -45,7 +46,7 @@ class MockAnalysis(PerComponentAnalysis):
 
 class MockPixelDataset:
     def __init__(self) -> None:
-        self.data_slots = dict()
+        self.data_slots = dict()  # type: ignore
 
 
 class MockGraph(MagicMock):
