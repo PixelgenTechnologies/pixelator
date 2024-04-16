@@ -160,6 +160,8 @@ def layout_df_fixture() -> pd.DataFrame:
             "graph_projection": rgn.choice(graph_projections, nbr_of_rows),
             "layout": rgn.choice(layout_methods, nbr_of_rows),
             "component": rgn.choice(components, nbr_of_rows),
+            "name": "TTTT",
+            "pixel_type": "A",
         }
         | {
             marker: rgn.integers(0, 10, nbr_of_rows)

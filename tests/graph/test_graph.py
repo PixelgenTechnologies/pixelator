@@ -316,6 +316,8 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
         pd.DataFrame.from_dict(
             data={
                 0: {
+                    "name": "AAAA",
+                    "pixel_type": "A",
                     "x": -0.19130137780050335,
                     "y": -0.995853333686976,
                     "A": 1,
@@ -325,6 +327,8 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "E": 0,
                 },
                 2: {
+                    "name": "CCCC",
+                    "pixel_type": "A",
                     "x": 0.8830198712248385,
                     "y": -0.4852152436940987,
                     "A": 0,
@@ -334,6 +338,8 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "E": 0,
                 },
                 3: {
+                    "name": "GGGG",
+                    "pixel_type": "B",
                     "x": -0.9999999999999999,
                     "y": -0.12342422456086793,
                     "A": 0,
@@ -343,6 +349,8 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "E": 0,
                 },
                 1: {
+                    "name": "TTTT",
+                    "pixel_type": "B",
                     "x": -0.42674182538070177,
                     "y": 0.9138447918386549,
                     "A": 0,
@@ -352,6 +360,8 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "E": 0,
                 },
                 4: {
+                    "name": "AATT",
+                    "pixel_type": "A",
                     "x": 0.7350233319563663,
                     "y": 0.6906480101032882,
                     "A": 0,
@@ -379,6 +389,8 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
     expected = pd.DataFrame.from_dict(
         {
             0: {
+                "name": "AAAA",
+                "pixel_type": "A",
                 "x": -0.5137431483730075,
                 "y": -1.9999999999999996,
                 "z": -2.1762508994828216,
@@ -392,6 +404,8 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
                 "E": 0,
             },
             2: {
+                "name": "CCCC",
+                "pixel_type": "A",
                 "x": 0.5137431483730077,
                 "y": -1.9999999999999996,
                 "z": 2.1762508994828216,
@@ -405,6 +419,8 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
                 "E": 0,
             },
             3: {
+                "name": "GGGG",
+                "pixel_type": "B",
                 "x": 0.3175107271818992,
                 "y": 0.5,
                 "z": -3.521247923410736,
@@ -418,6 +434,8 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
                 "E": 0,
             },
             1: {
+                "name": "TTTT",
+                "pixel_type": "B",
                 "x": -1.6653345369377348e-16,
                 "y": 2.9999999999999996,
                 "z": 0.0,
@@ -431,6 +449,8 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
                 "E": 0,
             },
             4: {
+                "name": "AATT",
+                "pixel_type": "A",
                 "x": -0.3175107271818993,
                 "y": 0.4999999999999998,
                 "z": 3.521247923410736,
@@ -447,10 +467,15 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
         orient="index",
     ).sort_index()
 
+    # Check the numeric and string columns separately
     assert_frame_equal(
-        result.sort_index().abs(),
-        expected.abs(),
+        result.sort_index().drop(["name", "pixel_type"], axis=1).abs(),
+        expected.drop(["name", "pixel_type"], axis=1).abs(),
         check_exact=False,
+    )
+
+    assert_frame_equal(
+        result.sort_index()[["name", "pixel_type"]], expected[["name", "pixel_type"]]
     )
 
 
@@ -491,6 +516,8 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
         pd.DataFrame.from_dict(
             {
                 0: {
+                    "name": "AAAA",
+                    "pixel_type": "A",
                     "x": -0.9648627593518555,
                     "y": 0.6407664038966624,
                     "z": -0.033615468664985694,
@@ -504,6 +531,8 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "E": 0,
                 },
                 2: {
+                    "name": "CCCC",
+                    "pixel_type": "A",
                     "x": 0.06231005082947333,
                     "y": 0.6879998987122531,
                     "z": -0.9306229217434148,
@@ -517,6 +546,8 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "E": 0,
                 },
                 3: {
+                    "name": "GGGG",
+                    "pixel_type": "B",
                     "x": -0.6574427161103169,
                     "y": -0.29032243099867855,
                     "z": 0.9067564430700126,
@@ -530,6 +561,8 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "E": 0,
                 },
                 1: {
+                    "name": "TTTT",
+                    "pixel_type": "B",
                     "x": 0.5599954246326997,
                     "y": -0.8243431466963642,
                     "z": 0.5981413573809647,
@@ -543,6 +576,8 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "E": 0,
                 },
                 4: {
+                    "name": "AATT",
+                    "pixel_type": "A",
                     "x": 0.9999999999999999,
                     "y": -0.21410072491387208,
                     "z": -0.5406594100425767,

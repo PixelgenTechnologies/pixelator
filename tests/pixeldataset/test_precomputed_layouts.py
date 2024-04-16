@@ -14,6 +14,8 @@ from pixelator.pixeldataset.precomputed_layouts import (
     generate_precomputed_layouts_for_components,
 )
 
+from tests.utils import dna_seqs
+
 
 def layout_df() -> pl.DataFrame:
     nbr_of_rows = 300
@@ -27,6 +29,8 @@ def layout_df() -> pl.DataFrame:
     sample = ["sample_1", "sample_2"]
     graph_projections = ["bipartite", "a-node"]
     layout_methods = ["pmds", "fr"]
+    pixel_type = ["A", "B"]
+    sequences = dna_seqs(length=10, min_dist=0, n_sequences=1000)
     rgn = np.random.default_rng(1)
     layout_df = pl.DataFrame(
         {
@@ -37,6 +41,8 @@ def layout_df() -> pl.DataFrame:
             "layout": rgn.choice(layout_methods, nbr_of_rows),
             "component": rgn.choice(components, nbr_of_rows),
             "sample": rgn.choice(sample, nbr_of_rows),
+            "name": rgn.choice(sequences, nbr_of_rows),
+            "pixel_type": rgn.choice(pixel_type, nbr_of_rows),
         }
     ).lazy()
     return layout_df
@@ -55,6 +61,8 @@ def layout_df_generator() -> Iterable[pl.LazyFrame]:
         graph_projections = ["bipartite", "a-node"]
         layout_methods = ["pmds", "fr"]
         rgn = np.random.default_rng(1)
+        pixel_type = ["A", "B"]
+        sequences = dna_seqs(length=10, min_dist=0, n_sequences=1000)
         layout_df = pl.DataFrame(
             {
                 "x": rgn.random(nbr_of_rows),
@@ -64,6 +72,8 @@ def layout_df_generator() -> Iterable[pl.LazyFrame]:
                 "layout": rgn.choice(layout_methods, nbr_of_rows),
                 "component": component,
                 "sample": rgn.choice(sample, nbr_of_rows),
+                "name": rgn.choice(sequences, nbr_of_rows),
+                "pixel_type": rgn.choice(pixel_type, nbr_of_rows),
             }
         ).lazy()
         yield layout_df
@@ -118,6 +128,8 @@ class TestPreComputedLayouts:
             "layout",
             "component",
             "sample",
+            "name",
+            "pixel_type",
         }
 
     def test_to_df_filters_columns(self, precomputed_layouts):
@@ -409,6 +421,8 @@ class TestGeneratePrecomputedLayoutsForComponents:
             "graph_projection",
             "layout",
             "component",
+            "name",
+            "pixel_type",
         } | set(pixel_dataset.adata.var.index)
 
         assert set(df["component"]) == set(pixel_dataset.adata.obs.index)
@@ -447,6 +461,8 @@ class TestGeneratePrecomputedLayoutsForComponents:
             "graph_projection",
             "layout",
             "component",
+            "name",
+            "pixel_type",
         }
 
     def test_generate_precomputed_layouts_for_components_with_multiple_layout_algorithms(
@@ -514,6 +530,8 @@ class TestGeneratePrecomputedLayoutsForComponentsIntegrationTest:
             "graph_projection",
             "layout",
             "component",
+            "name",
+            "pixel_type",
         } | set(pixel_dataset.adata.var.index)
 
         assert set(df["component"]) == set(pixel_dataset.adata.obs.index)

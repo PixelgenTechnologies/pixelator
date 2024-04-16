@@ -70,7 +70,11 @@ def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_node
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
     fig, _ = plot_2d_graph(
-        pxl_data, component=component, marker=marker, show_b_nodes=show_b_nodes
+        pxl_data,
+        component=component,
+        marker=marker,
+        show_b_nodes=show_b_nodes,
+        random_seed=0,
     )
     return fig
 
