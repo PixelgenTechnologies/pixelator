@@ -266,11 +266,13 @@ def _get_coordinates(
     layout_algorithm: str,
     cache_layout: bool = False,
     show_b_nodes: bool = False,
+    random_seed: int | None = None,
 ) -> pd.DataFrame:
     coordinates = component_graph.layout_coordinates(
         layout_algorithm=layout_algorithm,  # type: ignore
         cache=cache_layout,
         only_keep_a_pixels=not show_b_nodes,
+        random_seed=random_seed,
     )
     filtered_coordinates = coordinates
     filtered_coordinates["pixel_type"] = [
@@ -400,6 +402,7 @@ def plot_2d_graph(
     cmap: str = "cool",
     alpha: float = 0.5,
     cache_layout: bool = False,
+    random_seed: int | None = None,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot a (collection of) 2D graph(s) based on the given pixel data.
 
@@ -419,6 +422,7 @@ def plot_2d_graph(
     :param cmap: The colormap to use for coloring the nodes. Defaults to "cool".
     :param alpha: The alpha value for the nodes. Defaults to 0.7.
     :param cache_layout: Whether to cache the layout coordinates. Defaults to False.
+    :param random_seed: The random seed to use for the layout algorithm. Defaults to None.
 
     :return: The figure and axes objects of the plot.
     :rtype: Tuple[plt.Figure, plt.Axes]
@@ -447,6 +451,7 @@ def plot_2d_graph(
             layout_algorithm=layout_algorithm,
             cache_layout=cache_layout,
             show_b_nodes=show_b_nodes,
+            random_seed=random_seed,
         )
 
         for i_m, mark in enumerate(marker_list):

@@ -402,6 +402,7 @@ def _compute_layouts(
                             layout_algorithm=layout_algorithm,
                             get_node_marker_matrix=add_node_marker_counts,
                             cache=False,
+                            only_keep_a_pixels=False,
                         )
                         .pipe(
                             _zero_fill_missing_markers

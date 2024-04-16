@@ -444,10 +444,15 @@ class NetworkXGraphBackend(GraphBackend):
             df = pd.concat([coordinates, node_marker_counts], axis=1)
         else:
             df = coordinates
+        pixel_name_and_type = pd.DataFrame.from_records(
+            [(v.index, v["name"], v["pixel_type"]) for v in self.vs.vertices()],
+            columns=["index", "name", "pixel_type"],
+        )
+        pixel_name_and_type = pixel_name_and_type.set_index("index")
+        df = pd.concat([pixel_name_and_type, df], axis=1)
 
         if only_keep_a_pixels:
-            a_node_idx = [v.index for v in self.vs.vertices() if v["pixel_type"] == "A"]
-            df = df.iloc[list(a_node_idx),]
+            df = df[df["pixel_type"] == "A"]
 
         logger.debug(
             "Layout computation using %s took %.2f seconds",
