@@ -391,12 +391,12 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
             0: {
                 "name": "AAAA",
                 "pixel_type": "A",
-                "x": -0.5137431483730075,
-                "y": -1.9999999999999996,
-                "z": -2.1762508994828216,
-                "x_norm": -0.17124771612433587,
-                "y_norm": -0.6666666666666666,
-                "z_norm": -0.725416966494274,
+                "x": 2.176250899482823,
+                "y": 1.9999999999999993,
+                "z": -0.5137431483730073,
+                "x_norm": 0.7254169664942742,
+                "y_norm": 0.6666666666666663,
+                "z_norm": -0.17124771612433573,
                 "A": 1,
                 "B": 0,
                 "C": 0,
@@ -406,12 +406,12 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
             2: {
                 "name": "CCCC",
                 "pixel_type": "A",
-                "x": 0.5137431483730077,
-                "y": -1.9999999999999996,
-                "z": 2.1762508994828216,
-                "x_norm": 0.17124771612433592,
-                "y_norm": -0.6666666666666666,
-                "z_norm": 0.725416966494274,
+                "x": -2.1762508994828202,
+                "y": 2.000000000000001,
+                "z": 0.5137431483730074,
+                "x_norm": -0.7254169664942736,
+                "y_norm": 0.6666666666666671,
+                "z_norm": 0.1712477161243358,
                 "A": 0,
                 "B": 0,
                 "C": 1,
@@ -421,12 +421,12 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
             3: {
                 "name": "GGGG",
                 "pixel_type": "B",
-                "x": 0.3175107271818992,
-                "y": 0.5,
-                "z": -3.521247923410736,
-                "x_norm": 0.08892078954761286,
-                "y_norm": 0.14002800840280097,
-                "z_norm": -0.986146667615408,
+                "x": 3.5212479234107357,
+                "y": -0.5000000000000013,
+                "z": 0.31751072718189965,
+                "x_norm": 0.986146667615408,
+                "y_norm": -0.14002800840280136,
+                "z_norm": 0.088920789547613,
                 "A": 0,
                 "B": 0,
                 "C": 0,
@@ -436,12 +436,12 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
             1: {
                 "name": "TTTT",
                 "pixel_type": "B",
-                "x": -1.6653345369377348e-16,
-                "y": 2.9999999999999996,
-                "z": 0.0,
-                "x_norm": -5.551115123125784e-17,
-                "y_norm": 1.0,
-                "z_norm": 0.0,
+                "x": -1.9984014443252818e-15,
+                "y": -3.0000000000000004,
+                "z": -1.3877787807814457e-16,
+                "x_norm": -6.661338147750938e-16,
+                "y_norm": -1.0,
+                "z_norm": -4.625929269271485e-17,
                 "A": 0,
                 "B": 1,
                 "C": 0,
@@ -451,12 +451,12 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
             4: {
                 "name": "AATT",
                 "pixel_type": "A",
-                "x": -0.3175107271818993,
-                "y": 0.4999999999999998,
-                "z": 3.521247923410736,
-                "x_norm": -0.08892078954761289,
-                "y_norm": 0.1400280084028009,
-                "z_norm": 0.986146667615408,
+                "x": -3.521247923410737,
+                "y": -0.49999999999999867,
+                "z": -0.31751072718189965,
+                "x_norm": -0.9861466676154081,
+                "y_norm": -0.14002800840280058,
+                "z_norm": -0.08892078954761297,
                 "A": 0,
                 "B": 0,
                 "C": 0,
@@ -477,6 +477,27 @@ def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
     assert_frame_equal(
         result.sort_index()[["name", "pixel_type"]], expected[["name", "pixel_type"]]
     )
+
+
+def test_layout_coordinates_3d_pmds_should_have_descending_order_iqr(pentagram_graph):
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="pmds_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+        random_seed=1234,
+        pivots=4,
+    )
+
+    def calc_iqr(x):
+        return np.percentile(x, 75) - np.percentile(x, 25)
+
+    iqr_x = calc_iqr(result["x"])
+    iqr_y = calc_iqr(result["y"])
+    iqr_z = calc_iqr(result["z"])
+
+    assert iqr_x > iqr_y
+    assert iqr_y > iqr_z
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
