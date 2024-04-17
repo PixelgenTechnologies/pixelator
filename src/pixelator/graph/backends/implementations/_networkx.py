@@ -802,8 +802,11 @@ def pmds_layout(
 
     # Compute SVD and use distances to compute coordinates for all nodes
     # in an abstract cartesian space
-    u, _, Vh = sp.sparse.linalg.svds(D_pivs_centered, k=dim, random_state=seed)
+    _, _, Vh = sp.sparse.linalg.svds(D_pivs_centered, k=dim, random_state=seed)
     coordinates = D_pivs_centered @ np.transpose(Vh)
+    # Flip the coordinates here to make sure that we get the correct coordinate ordering
+    # i.e. iqr(x) > iqr(y) > iqr(z)
+    coordinates = np.flip(coordinates, axis=1)
 
     coordinates = {node_list[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
 
