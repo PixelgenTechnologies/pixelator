@@ -17,7 +17,7 @@ from pixelator.pixeldataset.precomputed_layouts import (
 from tests.utils import dna_seqs
 
 
-def layout_df() -> pl.DataFrame:
+def layout_df() -> pl.LazyFrame:
     nbr_of_rows = 300
     components = [
         "PXLCMP0000000",
