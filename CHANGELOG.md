@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Renaming of component metrics in adata
 * Use MPX graph compatible permutation strategy when calculating Moran's I.
 * Marker filtering is now done after count transformation in polarization score calculation.
+* Use the input read count at the annotate stage for the `fraction_antibody_reads_in_outliers` metric denominator
+  instead of the total raw input reads.
 
 ### Fixed
 
@@ -59,6 +61,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by switching to a server/client-based logging system.
 * Fix a bug in the amplicon stage where read suffixes were not correctly recognised.
 * Ensure deterministic results from `pmds_layout` (given a set seed).
+* Fix an issue with the `fraction_antibody_reads_usable_per_cell` metric where the denominator
+  read count was not correctly averaged with the cell count.
 
 ### Removed
 
