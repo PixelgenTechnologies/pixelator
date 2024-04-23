@@ -67,7 +67,7 @@ class _AnalysisManager:
 
     def __init__(
         self,
-        analysis_to_run: list[PerComponentAnalysis],
+        analysis_to_run: Iterable[PerComponentAnalysis],
         component_stream: Iterable[tuple[str, Graph]],
     ):
         self.analysis_to_run = {
