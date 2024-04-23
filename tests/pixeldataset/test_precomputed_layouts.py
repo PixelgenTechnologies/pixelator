@@ -84,7 +84,7 @@ def layout_df_generator() -> Iterable[pl.LazyFrame]:
 @pytest.fixture(name="precomputed_layouts", params=["layout_df", "layout_df_generator"])
 def precomputed_layouts_fixture(request) -> PreComputedLayouts:
     if request.param == "layout_df":
-        return PreComputedLayouts(layout_df())
+        return PreComputedLayouts(layout_df())  # type: ignore
     if request.param == "layout_df_generator":
         return PreComputedLayouts(layout_df_generator())
     raise Exception("We should never get here!")

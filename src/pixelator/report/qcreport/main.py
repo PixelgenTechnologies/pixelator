@@ -60,8 +60,9 @@ def create_dynamic_report(
     total_reads_per_cell = reads_flow.input_read_count / annotate_metrics.cell_count
     antibodies_data_fractions = {
         "fraction_antibody_reads": reads_flow.fraction_valid_antibody_reads,
-        "fraction_antibody_reads_usable_per_cell": annotate_metrics.read_count_per_cell_stats.mean
-        / total_reads_per_cell,
+        "fraction_antibody_reads_usable_per_cell": (
+            annotate_metrics.read_count_per_cell_stats.mean / total_reads_per_cell
+        ),
         "fraction_antibody_reads_in_outliers": annotate_metrics.fraction_reads_in_aggregates,
         "fraction_unrecognized_antibodies": demux_metrics.fraction_unrecognised_antibody_reads,
     }
