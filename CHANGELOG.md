@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Marker filtering is now done after count transformation in polarization score calculation.
 * Use the input read count at the annotate stage for the `fraction_antibody_reads_in_outliers` metric denominator
   instead of the total raw input reads.
+* Use common analysis engine to orchestrate running different "per component" analysis, like
+  polarization and colocalization analysis (yielding a roughly 3x speed-up over previous approach).
 
 ### Fixed
 

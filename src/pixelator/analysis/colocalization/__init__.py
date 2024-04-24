@@ -12,6 +12,7 @@ import pandas as pd
 from scipy.stats import mannwhitneyu
 from statsmodels.stats.multitest import multipletests
 
+from pixelator.analysis.analysis_engine import PerComponentAnalysis
 from pixelator.analysis.colocalization.estimate import (
     estimate_observation_statistics,
     permutation_analysis_results,
@@ -32,6 +33,7 @@ from pixelator.analysis.colocalization.types import (
 )
 from pixelator.analysis.permute import permutations
 from pixelator.graph.utils import Graph
+from pixelator.pixeldataset import PixelDataset
 from pixelator.statistics import correct_pvalues, log1p_transformation
 
 logger = logging.getLogger(__name__)
@@ -381,3 +383,69 @@ def get_differential_colocalization(
     differential_colocalization["p_adj"] = pvals_corrected
 
     return differential_colocalization
+
+
+class ColocalizationAnalysis(PerComponentAnalysis):
+    """Run colocalization analysis on each component."""
+
+    ANALYSIS_NAME = "colocalization"
+
+    def __init__(
+        self,
+        transformation_type: TransformationTypes,
+        neighbourhood_size: int,
+        n_permutations: int,
+        min_region_count: int,
+    ):
+        """Initialize the ColocalizationAnalysis.
+
+        :param transformation_type: transformation method to use
+        :param neighbourhood_size: size of the neighbourhood to consider
+        :param n_permutations: Select number of permutations used to
+                               calculate empirical z-scores and p-values of the
+                               colocalization values
+        :param min_region_count: The minimum size of the region (e.g. number
+                             of counts in the neighbourhood) required
+                             for it to be considered for colocalization analysis
+        """
+        self.transformation_type = transformation_type
+        self.neighbourhood_size = neighbourhood_size
+        self.n_permutations = n_permutations
+        self.min_region_count = min_region_count
+
+    def run_on_component(self, component: Graph, component_id: str) -> pd.DataFrame:
+        """Run colocalization analysis on the component."""
+        logger.debug("Running colocalization analysis on component %s", component_id)
+        return colocalization_from_component_graph(
+            graph=component,
+            component_id=component_id,
+            transformation=self.transformation_type,
+            neighbourhood_size=self.neighbourhood_size,
+            n_permutations=self.n_permutations,
+            min_region_count=self.min_region_count,
+        )
+
+    def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Post process the colocalization data.
+
+        This will adjust the p-values using the Benjamini-Hochberg method.
+        """
+        logger.debug("Post processing colocalization analysis data")
+        if data.empty:
+            return data
+        p_value_columns = filter(lambda x: "_p" in x, data.columns)
+        for p_value_col in p_value_columns:
+            data.insert(
+                data.columns.get_loc(p_value_col) + 1,
+                f"{p_value_col}_adjusted",
+                correct_pvalues(data[p_value_col].to_numpy()),
+            )
+        return data
+
+    def add_to_pixel_dataset(
+        self, data: pd.DataFrame, pxl_dataset: PixelDataset
+    ) -> PixelDataset:
+        """Add the colocalization data to the PixelDataset."""
+        logger.debug("Adding colocalization analysis data to PixelDataset")
+        pxl_dataset.colocalization = data
+        return pxl_dataset
