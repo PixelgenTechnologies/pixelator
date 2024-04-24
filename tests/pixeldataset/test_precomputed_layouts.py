@@ -17,7 +17,7 @@ from pixelator.pixeldataset.precomputed_layouts import (
 from tests.utils import dna_seqs
 
 
-def layout_df() -> pl.DataFrame:
+def layout_df() -> pl.LazyFrame:
     nbr_of_rows = 300
     components = [
         "PXLCMP0000000",
@@ -84,7 +84,7 @@ def layout_df_generator() -> Iterable[pl.LazyFrame]:
 @pytest.fixture(name="precomputed_layouts", params=["layout_df", "layout_df_generator"])
 def precomputed_layouts_fixture(request) -> PreComputedLayouts:
     if request.param == "layout_df":
-        return PreComputedLayouts(layout_df())
+        return PreComputedLayouts(layout_df())  # type: ignore
     if request.param == "layout_df_generator":
         return PreComputedLayouts(layout_df_generator())
     raise Exception("We should never get here!")

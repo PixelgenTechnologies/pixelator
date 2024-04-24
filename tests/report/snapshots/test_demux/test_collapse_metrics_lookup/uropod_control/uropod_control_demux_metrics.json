@@ -166,5 +166,6 @@
         "mIgG2a": 0.00048114010322642217,
         "mIgG2b": 0.00041751827139482916
     },
-    "unrecognised_antibody_read_count": 3788
+    "unrecognised_antibody_read_count": 3788,
+    "fraction_unrecognised_antibody_reads": 0.01483895735562572
 }

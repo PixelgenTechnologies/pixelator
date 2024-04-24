@@ -51,6 +51,14 @@ class DemuxSampleReport(SampleReport):
     def unrecognised_antibody_read_count(self) -> int:  # noqa: D102
         return self.input_read_count - self.output_read_count
 
+    @pydantic.computed_field(  # type: ignore
+        return_type=int,
+        description="Fraction of reads without a recognized antibody barcode.",
+    )
+    @property
+    def fraction_unrecognised_antibody_reads(self) -> float:  # noqa: D102
+        return self.unrecognised_antibody_read_count / self.input_read_count
+
     @classmethod
     def from_json(cls, p: Path) -> DemuxSampleReport:
         """Initialize an :class:`DemuxSampleReport` from a cutadapt report file."""
