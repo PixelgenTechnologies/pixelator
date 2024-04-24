@@ -47,6 +47,7 @@ class Graph:
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
+        convert_indices_to_integers: bool = True,
     ) -> Graph:
         """Build a graph from an edgelist.
 
@@ -67,6 +68,7 @@ class Graph:
         :param simplify: simplifies the graph (remove redundant edges)
         :param use_full_bipartite: use the bipartite graph instead of the projection
                                   (UPIA)
+        :param convert_indices_to_integers: convert the indices to integers (this in the default)
         :returns: a Graph instance
         :rtype: Graph
         :raises: AssertionError when the input edge list is not valid
@@ -76,6 +78,7 @@ class Graph:
             add_marker_counts=add_marker_counts,
             simplify=simplify,
             use_full_bipartite=use_full_bipartite,
+            convert_indices_to_integers=convert_indices_to_integers,
         )
 
         return Graph(backend=backend)

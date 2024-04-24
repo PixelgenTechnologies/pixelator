@@ -184,6 +184,7 @@ class NetworkXGraphBackend(GraphBackend):
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
+        convert_indices_to_integers: bool = True,
     ) -> NetworkXGraphBackend:
         """Build a graph from an edgelist.
 
@@ -202,6 +203,7 @@ class NetworkXGraphBackend(GraphBackend):
         :param simplify: simplifies the graph (remove redundant edges)
         :param use_full_bipartite: use the bipartite graph instead of the projection
                                   (UPIA)
+        :param convert_indices_to_integers: convert the indices to integers (this in the default)
         :returns: a GraphBackend instance
         :rtype: NetworkXGraphBackend
         :raises: AssertionError when the input edge list is not valid
@@ -221,7 +223,8 @@ class NetworkXGraphBackend(GraphBackend):
         # TODO igraph uses integer indexing. This converts the networkx graph to using
         # the same-ish schema. We probably evaluate if this is really necessary later,
         # or potentially only do it on request.
-        graph = nx.convert_node_labels_to_integers(graph, ordering="sorted")
+        if convert_indices_to_integers:
+            graph = nx.convert_node_labels_to_integers(graph, ordering="sorted")
 
         return NetworkXGraphBackend(raw=graph)
 
@@ -353,7 +356,7 @@ class NetworkXGraphBackend(GraphBackend):
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
             orient="index",
-            columns=["x", "y"] if len(layout_inst[0]) == 2 else ["x", "y", "z"],
+            columns=["x", "y", "z"] if "3d" in layout_algorithm else ["x", "y"],
         )
 
         return coordinates
@@ -448,7 +451,7 @@ class NetworkXGraphBackend(GraphBackend):
             [(v.index, v["name"], v["pixel_type"]) for v in self.vs.vertices()],
             columns=["index", "name", "pixel_type"],
         )
-        pixel_name_and_type = pixel_name_and_type.set_index("index")
+        pixel_name_and_type = pixel_name_and_type.set_index("index", drop=False)
         df = pd.concat([pixel_name_and_type, df], axis=1)
 
         if only_keep_a_pixels:
@@ -502,7 +505,9 @@ class NetworkXGraphBackend(GraphBackend):
 class NetworkxBasedVertex(Vertex):
     """A Vertex instance that plays well with NetworkX."""
 
-    def __init__(self, index: int, data: Dict, graph: Union[nx.Graph, nx.MultiGraph]):
+    def __init__(
+        self, index: int | str, data: Dict, graph: Union[nx.Graph, nx.MultiGraph]
+    ):
         """Create a new NetworkxBasedVertex instance."""
         self._index = index
         self._data = data
@@ -542,7 +547,9 @@ class NetworkxBasedEdge(Edge):
     """An Edge instance backed by a Networkx Edge."""
 
     def __init__(
-        self, edge_tuple: Tuple[int, int, Any], graph: Union[nx.Graph, nx.MultiGraph]
+        self,
+        edge_tuple: Tuple[int | str, int | str, Any],
+        graph: Union[nx.Graph, nx.MultiGraph],
     ):
         """Create a NetworkxBasedEdge instance."""
         self.edge_tuple = edge_tuple

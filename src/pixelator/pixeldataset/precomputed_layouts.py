@@ -394,6 +394,7 @@ def _compute_layouts(
                 add_marker_counts=add_node_marker_counts,
                 simplify=True,
                 use_full_bipartite=True,
+                convert_indices_to_integers=False,
             )
             for layout_algorithm in layout_algorithms:
                 yield (
