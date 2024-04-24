@@ -9,7 +9,9 @@ from typing import get_args
 import click
 
 from pixelator.analysis import analyse_pixels
+from pixelator.analysis.colocalization import ColocalizationAnalysis
 from pixelator.analysis.colocalization.types import TransformationTypes
+from pixelator.analysis.polarization import PolarizationAnalysis
 from pixelator.cli.common import logger, output_option
 from pixelator.utils import (
     create_output_stage_dir,
@@ -194,20 +196,33 @@ def analysis(
         command_path="pixelator single-cell analysis",
     )
 
+    analysis_to_run = []
+    if compute_polarization:
+        logger.info("Polarization score computation is activated")
+        analysis_to_run.append(
+            PolarizationAnalysis(
+                normalization=polarization_normalization,
+                n_permutations=polarization_n_permutations,
+                min_marker_count=polarization_min_marker_count,
+            )
+        )
+
+    if compute_colocalization:
+        logger.info("Colocalization score computation is activated")
+        analysis_to_run.append(
+            ColocalizationAnalysis(
+                transformation_type=colocalization_transformation,
+                neighbourhood_size=colocalization_neighbourhood_size,
+                n_permutations=colocalization_n_permutations,
+                min_region_count=colocalization_min_region_count,
+            )
+        )
+
     analyse_pixels(
         input=pxl_file,
         output=str(analysis_output),
         output_prefix=clean_name,
         metrics_file=str(metrics_file),
-        compute_polarization=compute_polarization,
-        compute_colocalization=compute_colocalization,
         use_full_bipartite=use_full_bipartite,
-        polarization_normalization=polarization_normalization,
-        polarization_n_permutations=polarization_n_permutations,
-        polarization_min_marker_count=polarization_min_marker_count,
-        colocalization_transformation=colocalization_transformation,
-        colocalization_neighbourhood_size=colocalization_neighbourhood_size,
-        colocalization_n_permutations=colocalization_n_permutations,
-        colocalization_min_region_count=colocalization_min_region_count,
-        verbose=ctx.obj["VERBOSE"],
+        analysis_to_run=analysis_to_run,
     )

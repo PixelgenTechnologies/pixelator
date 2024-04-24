@@ -4,15 +4,19 @@ Tests for the polarization modules
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
+from unittest.mock import create_autospec
+
 import numpy as np
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 from pixelator.analysis.polarization import (
+    PolarizationAnalysis,
     polarization_scores,
-    polarization_scores_component_df,
     polarization_scores_component_graph,
 )
+from pixelator.graph import Graph
+from pixelator.pixeldataset import PixelDataset
 
 from tests.graph.networkx.test_tools import create_randomly_connected_bipartite_graph
 
@@ -451,3 +455,69 @@ def test_polarization_backward_compatibility():
     )
     # test polarization scores
     assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
+
+
+class TestPolarizationAnalysis:
+    analysis = PolarizationAnalysis(
+        normalization="clr", n_permutations=10, min_marker_count=2, random_seed=1
+    )
+
+    def test_run_on_component(self, full_graph_edgelist):
+        component_id = "PXLCMP0000000"
+        component = Graph.from_edgelist(
+            full_graph_edgelist[full_graph_edgelist["component"] == component_id],
+            add_marker_counts=True,
+            simplify=True,
+            use_full_bipartite=True,
+        )
+
+        result = self.analysis.run_on_component(component, component_id)
+
+        expected = pd.DataFrame.from_dict(
+            {
+                0: {
+                    "marker": "A",
+                    "morans_i": -0.058418204066991254,
+                    "morans_z": -7.844216486178604,
+                    "morans_p_value": 2.1783248596911517e-15,
+                    "component": "PXLCMP0000000",
+                },
+                1: {
+                    "marker": "B",
+                    "morans_i": -0.05841820406699129,
+                    "morans_z": -7.747319374160002,
+                    "morans_p_value": 4.692634773999269e-15,
+                    "component": "PXLCMP0000000",
+                },
+            },
+            orient="index",
+        )
+
+        assert_frame_equal(result, expected)
+
+    def test_post_process_data(self):
+        data = pd.DataFrame.from_dict(
+            {
+                "morans_p_value": [0.01, 0.02, 0.03],
+                "component": ["PXLCMP0000000"] * 3,
+            }
+        )
+
+        result = self.analysis.post_process_data(data)
+
+        assert_series_equal(
+            result["morans_p_adjusted"],
+            pd.Series([0.03, 0.03, 0.03], name="morans_p_adjusted"),
+        )
+
+    def test_add_to_pixel_dataset(self):
+        pxl_dataset = create_autospec(PixelDataset, instance=True)
+        mock_data = pd.DataFrame(
+            {
+                "data": [0.01, 0.02, 0.03],
+                "component": ["PXLCMP0000000"] * 3,
+            }
+        )
+
+        pxl_dataset = self.analysis.add_to_pixel_dataset(mock_data, pxl_dataset)
+        assert_frame_equal(pxl_dataset.polarization, mock_data)
