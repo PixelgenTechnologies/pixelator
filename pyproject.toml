@@ -47,7 +47,7 @@ scipy = "<1.13.0"
 pyarrow = ">=14,<16"
 semver = "^3.0.0"
 ruamel-yaml = "^0.17.21"
-pydantic = "~2.0.0"
+pydantic = ">=2.0,<2.5"
 # Pin to 0.20.19 to fix a bug in lazy collect projection_pushdown optimzation
 polars = "0.20.19"
 importlib-resources = "^5.12.0"
