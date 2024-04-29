@@ -65,7 +65,7 @@ class GraphBackend(Protocol):
         :param simplify: simplifies the graph (remove redundant edges)
         :param use_full_bipartite: use the bipartite graph instead of the projection
                                   (UPIA)
-        :param convert_indices_to_integers: convert the indices to integers (this in the default)
+        :param convert_indices_to_integers: convert the indices to integers (this is the default)
         :returns: a Graph instance
         :rtype: GraphBackend
         :raises: AssertionError when the input edge list is not valid
