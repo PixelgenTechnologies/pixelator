@@ -162,6 +162,7 @@ def layout_df_fixture() -> pd.DataFrame:
             "component": rgn.choice(components, nbr_of_rows),
             "name": "TTTT",
             "pixel_type": "A",
+            "index": range(0, nbr_of_rows),
         }
         | {
             marker: rgn.integers(0, 10, nbr_of_rows)

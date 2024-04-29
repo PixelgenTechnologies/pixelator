@@ -32,8 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add a `precomputed_layouts` property to `pixeldataset` to allow for loading precomputed layouts.
 * Add `pixelator single-cell layout` stage to pixelator, which allows users to compute layouts
   for a PXL file that can then be used to visualize the graph in 2D or 3D downstream.
-* Added minimum marker count `polarization_min_marker_count` parameter to calculate Polarity Score.
-* Added "log1p" as alternative for `PolarizationNormalizationTypes`.
+* Add minimum marker count `polarization_min_marker_count` parameter to calculate Polarity Score.
+* Add "log1p" as alternative for `PolarizationNormalizationTypes`.
+* Add `convert_indices_to_integers` option when creating graphs.
+
 
 ### Changed
 

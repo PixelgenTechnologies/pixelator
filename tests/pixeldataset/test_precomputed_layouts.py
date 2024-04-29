@@ -32,19 +32,23 @@ def layout_df() -> pl.LazyFrame:
     pixel_type = ["A", "B"]
     sequences = dna_seqs(length=10, min_dist=0, n_sequences=1000)
     rgn = np.random.default_rng(1)
-    layout_df = pl.DataFrame(
-        {
-            "x": rgn.random(nbr_of_rows),
-            "y": rgn.random(nbr_of_rows),
-            "z": rgn.random(nbr_of_rows),
-            "graph_projection": rgn.choice(graph_projections, nbr_of_rows),
-            "layout": rgn.choice(layout_methods, nbr_of_rows),
-            "component": rgn.choice(components, nbr_of_rows),
-            "sample": rgn.choice(sample, nbr_of_rows),
-            "name": rgn.choice(sequences, nbr_of_rows),
-            "pixel_type": rgn.choice(pixel_type, nbr_of_rows),
-        }
-    ).lazy()
+    layout_df = (
+        pl.DataFrame(
+            {
+                "x": rgn.random(nbr_of_rows),
+                "y": rgn.random(nbr_of_rows),
+                "z": rgn.random(nbr_of_rows),
+                "graph_projection": rgn.choice(graph_projections, nbr_of_rows),
+                "layout": rgn.choice(layout_methods, nbr_of_rows),
+                "component": rgn.choice(components, nbr_of_rows),
+                "sample": rgn.choice(sample, nbr_of_rows),
+                "name": rgn.choice(sequences, nbr_of_rows),
+                "pixel_type": rgn.choice(pixel_type, nbr_of_rows),
+            }
+        )
+        .with_columns(index=pl.col("name"))
+        .lazy()
+    )
     return layout_df
 
 
@@ -63,19 +67,23 @@ def layout_df_generator() -> Iterable[pl.LazyFrame]:
         rgn = np.random.default_rng(1)
         pixel_type = ["A", "B"]
         sequences = dna_seqs(length=10, min_dist=0, n_sequences=1000)
-        layout_df = pl.DataFrame(
-            {
-                "x": rgn.random(nbr_of_rows),
-                "y": rgn.random(nbr_of_rows),
-                "z": rgn.random(nbr_of_rows),
-                "graph_projection": rgn.choice(graph_projections, nbr_of_rows),
-                "layout": rgn.choice(layout_methods, nbr_of_rows),
-                "component": component,
-                "sample": rgn.choice(sample, nbr_of_rows),
-                "name": rgn.choice(sequences, nbr_of_rows),
-                "pixel_type": rgn.choice(pixel_type, nbr_of_rows),
-            }
-        ).lazy()
+        layout_df = (
+            pl.DataFrame(
+                {
+                    "x": rgn.random(nbr_of_rows),
+                    "y": rgn.random(nbr_of_rows),
+                    "z": rgn.random(nbr_of_rows),
+                    "graph_projection": rgn.choice(graph_projections, nbr_of_rows),
+                    "layout": rgn.choice(layout_methods, nbr_of_rows),
+                    "component": component,
+                    "sample": rgn.choice(sample, nbr_of_rows),
+                    "name": rgn.choice(sequences, nbr_of_rows),
+                    "pixel_type": rgn.choice(pixel_type, nbr_of_rows),
+                }
+            )
+            .with_columns(index=pl.col("name"))
+            .lazy()
+        )
         yield layout_df
 
 
@@ -130,6 +138,7 @@ class TestPreComputedLayouts:
             "sample",
             "name",
             "pixel_type",
+            "index",
         }
 
     def test_to_df_filters_columns(self, precomputed_layouts):
@@ -423,6 +432,7 @@ class TestGeneratePrecomputedLayoutsForComponents:
             "component",
             "name",
             "pixel_type",
+            "index",
         } | set(pixel_dataset.adata.var.index)
 
         assert set(df["component"]) == set(pixel_dataset.adata.obs.index)
@@ -463,6 +473,7 @@ class TestGeneratePrecomputedLayoutsForComponents:
             "component",
             "name",
             "pixel_type",
+            "index",
         }
 
     def test_generate_precomputed_layouts_for_components_with_multiple_layout_algorithms(
@@ -532,6 +543,7 @@ class TestGeneratePrecomputedLayoutsForComponentsIntegrationTest:
             "component",
             "name",
             "pixel_type",
+            "index",
         } | set(pixel_dataset.adata.var.index)
 
         assert set(df["component"]) == set(pixel_dataset.adata.obs.index)
