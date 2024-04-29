@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pixelator.analysis.analysis_engine import PerComponentAnalysis, run_analysis
 from pixelator.analysis.colocalization.types import TransformationTypes
-from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
+from pixelator.analysis.polarization.types import PolarizationTransformationTypes
 from pixelator.pixeldataset import (
     PixelDataset,
 )
@@ -26,7 +26,7 @@ class AnalysisParameters:
     compute_polarization: bool
     compute_colocalization: bool
     use_full_bipartite: bool
-    polarization_normalization: PolarizationNormalizationTypes
+    polarization_normalization: PolarizationTransformationTypes
     polarization_n_permutations: int
     polarization_min_marker_count: int
     colocalization_transformation: TransformationTypes

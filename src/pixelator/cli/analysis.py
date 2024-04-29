@@ -57,16 +57,15 @@ from pixelator.utils import (
     ),
 )
 @click.option(
-    "--polarization-normalization",
-    default="clr",
+    "--polarization-transformation",
+    default="log1p",
     required=False,
-    type=click.Choice(["raw", "log1p", "clr"]),
+    type=click.Choice(["raw", "log1p"]),
     show_default=True,
     help=(
         "Which approach to use to normalize the antibody counts:"
         " \n\traw will use the raw counts"
         " \n\tlog1p will use the log(x+1) transformed counts"
-        " \n\tclr will use the CLR transformed counts"
     ),
 )
 @click.option(
@@ -144,7 +143,7 @@ def analysis(
     compute_polarization,
     compute_colocalization,
     use_full_bipartite,
-    polarization_normalization,
+    polarization_transformation,
     polarization_n_permutations,
     polarization_min_marker_count,
     colocalization_transformation,
@@ -165,7 +164,7 @@ def analysis(
         output=output,
         compute_polarization=compute_polarization,
         compute_colocalization=compute_colocalization,
-        normalization=polarization_normalization,
+        polarization_transformation=polarization_transformation,
         polarization_n_permutations=polarization_n_permutations,
         polarization_min_marker_count=polarization_min_marker_count,
         colocalization_transformation=colocalization_transformation,
@@ -201,7 +200,7 @@ def analysis(
         logger.info("Polarization score computation is activated")
         analysis_to_run.append(
             PolarizationAnalysis(
-                normalization=polarization_normalization,
+                transformation_type=polarization_transformation,
                 n_permutations=polarization_n_permutations,
                 min_marker_count=polarization_min_marker_count,
             )
