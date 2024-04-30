@@ -85,7 +85,7 @@ def polarization_scores_component_graph(
 
     :param graph: a graph (it must be a single connected component)
     :param component_id: the id of the component
-    :param transformation: the normalization method to use (raw, log1p)
+    :param transformation: the count transformation method to use (raw, log1p)
     :param n_permutations: the number of permutations to use to estimate the
                            null-hypothesis for the Moran's I statistic
     :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -177,7 +177,7 @@ def polarization_scores_component_df(
     component_id: str,
     component_df: pd.DataFrame,
     use_full_bipartite: bool,
-    normalization: PolarizationTransformationTypes = "log1p",
+    transformation: PolarizationTransformationTypes = "log1p",
     n_permutations: int = 50,
     min_marker_count: int = 2,
     random_seed: int | None = None,
@@ -189,7 +189,7 @@ def polarization_scores_component_df(
     :param component_id: the id of the component
     :param component_df: A data frame with an edgelist for a single connected component
     :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    :param normalization: the normalization method to use (raw, log1p)
+    :param transformation: the count transformation method to use (raw, log1p)
     :param n_permutations: the number of permutations to use to estimate the
                            null-hypothesis for the Moran's I statistic
     :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -210,7 +210,7 @@ def polarization_scores_component_df(
     component_result = polarization_scores_component_graph(
         graph=graph,
         component_id=component_id,
-        transformation=normalization,
+        transformation=transformation,
         n_permutations=n_permutations,
         min_marker_count=min_marker_count,
         random_seed=random_seed,
@@ -239,7 +239,7 @@ def polarization_scores(
       (morans_p_value_sim and morans_z_sim if `permutations` > 0)
     :param edgelist: an edge list (pd.DataFrame) with a component column
     :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    :param transformation: the normalization method to use (raw, log1p)
+    :param transformation: the count transformation method to use (raw, log1p)
     :param n_permutations: the number of permutations for simulated Z-score (z_sim)
                            estimation (if n_permutations>0)
     :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -250,7 +250,7 @@ def polarization_scores(
     :raises: AssertionError when the input is not valid
     """
     if transformation not in get_args(PolarizationTransformationTypes):
-        raise AssertionError(f"incorrect value for normalization {transformation}")
+        raise AssertionError(f"incorrect value for count transformation {transformation}")
 
     if "component" not in edgelist.columns:
         raise AssertionError("Edge list is missing the component column")
@@ -270,7 +270,7 @@ def polarization_scores(
             polarization_function = partial(
                 polarization_scores_component_df,
                 use_full_bipartite=use_full_bipartite,
-                normalization=transformation,
+                transformation=transformation,
                 n_permutations=n_permutations,
                 min_marker_count=min_marker_count,
                 random_seed=random_seed,
@@ -317,7 +317,7 @@ class PolarizationAnalysis(PerComponentAnalysis):
     ):
         """Initialize polarization analysis.
 
-        :param transformation: the normalization method to use (raw, log1p)
+        :param transformation: the count transformation method to use (raw, log1p)
         :param n_permutations: the number of permutations to use to estimate the
                                null-hypothesis for the Moran's I statistic
         :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -327,7 +327,7 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """
         if transformation_type not in get_args(PolarizationTransformationTypes):
             raise AssertionError(
-                f"incorrect value for normalization {transformation_type}"
+                f"incorrect value for count transformation {transformation_type}"
             )
         self.transformation = transformation_type
         self.permutations = n_permutations
