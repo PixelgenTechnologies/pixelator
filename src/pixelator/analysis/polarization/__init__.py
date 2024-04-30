@@ -250,7 +250,9 @@ def polarization_scores(
     :raises: AssertionError when the input is not valid
     """
     if transformation not in get_args(PolarizationTransformationTypes):
-        raise AssertionError(f"incorrect value for count transformation {transformation}")
+        raise AssertionError(
+            f"incorrect value for count transformation {transformation}"
+        )
 
     if "component" not in edgelist.columns:
         raise AssertionError("Edge list is missing the component column")
