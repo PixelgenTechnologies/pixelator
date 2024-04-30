@@ -12,10 +12,10 @@ from scipy.stats import norm
 
 from pixelator.analysis.analysis_engine import PerComponentAnalysis
 from pixelator.analysis.permute import permutations
-from pixelator.analysis.polarization.types import PolarizationNormalizationTypes
+from pixelator.analysis.polarization.types import PolarizationTransformationTypes
 from pixelator.graph.utils import Graph
 from pixelator.pixeldataset import MIN_VERTICES_REQUIRED, PixelDataset
-from pixelator.statistics import clr_transformation, correct_pvalues
+from pixelator.statistics import correct_pvalues
 from pixelator.utils import get_pool_executor
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ def _compute_morans_i(
 def polarization_scores_component_graph(
     graph: Graph,
     component_id: str,
-    normalization: PolarizationNormalizationTypes = "clr",
+    transformation: PolarizationTransformationTypes = "log1p",
     n_permutations: int = 50,
     min_marker_count: int = 2,
     random_seed: int | None = None,
@@ -85,7 +85,7 @@ def polarization_scores_component_graph(
 
     :param graph: a graph (it must be a single connected component)
     :param component_id: the id of the component
-    :param normalization: the normalization method to use (raw, log1p, or clr)
+    :param transformation: the count transformation method to use (raw, log1p)
     :param n_permutations: the number of permutations to use to estimate the
                            null-hypothesis for the Moran's I statistic
     :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -118,26 +118,18 @@ def polarization_scores_component_graph(
         # Calculate normalization factor
         C = N / W.sum()
 
-        def pick_transformation():
-            if normalization == "log1p":
-                return np.log1p
-            if normalization == "clr":
-                return clr_transformation
-            # This is the same as no transformation
-            return lambda x: x
-
         # Record markers to keep
         # Remove markers with zero variance and markers below minimum marker count
         markers_to_keep = X.columns[
             (X != 0).any(axis=0) & (X.nunique() > 1) & (X.sum() >= min_marker_count)
         ]
 
-        transformation = pick_transformation()
+        transform_func = np.log1p if transformation == "log1p" else lambda x: x
         X_perm = [
-            transformation(x)
+            transform_func(x)
             for x in permutations(X, n=n_permutations, random_seed=random_seed)
         ]
-        X = transformation(X)
+        X = transform_func(X)
 
         # Apply marker filter after transformation
         X = X.loc[:, markers_to_keep]
@@ -185,7 +177,7 @@ def polarization_scores_component_df(
     component_id: str,
     component_df: pd.DataFrame,
     use_full_bipartite: bool,
-    normalization: PolarizationNormalizationTypes = "clr",
+    transformation: PolarizationTransformationTypes = "log1p",
     n_permutations: int = 50,
     min_marker_count: int = 2,
     random_seed: int | None = None,
@@ -197,7 +189,7 @@ def polarization_scores_component_df(
     :param component_id: the id of the component
     :param component_df: A data frame with an edgelist for a single connected component
     :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    :param normalization: the normalization method to use (raw, log1p, or clr)
+    :param transformation: the count transformation method to use (raw, log1p)
     :param n_permutations: the number of permutations to use to estimate the
                            null-hypothesis for the Moran's I statistic
     :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -218,7 +210,7 @@ def polarization_scores_component_df(
     component_result = polarization_scores_component_graph(
         graph=graph,
         component_id=component_id,
-        normalization=normalization,
+        transformation=transformation,
         n_permutations=n_permutations,
         min_marker_count=min_marker_count,
         random_seed=random_seed,
@@ -229,7 +221,7 @@ def polarization_scores_component_df(
 def polarization_scores(
     edgelist: pd.DataFrame,
     use_full_bipartite: bool = False,
-    normalization: PolarizationNormalizationTypes = "clr",
+    transformation: PolarizationTransformationTypes = "log1p",
     n_permutations: int = 0,
     min_marker_count: int = 2,
     random_seed: int | None = None,
@@ -247,7 +239,7 @@ def polarization_scores(
       (morans_p_value_sim and morans_z_sim if `permutations` > 0)
     :param edgelist: an edge list (pd.DataFrame) with a component column
     :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    :param normalization: the normalization method to use (raw, log1p, or clr)
+    :param transformation: the count transformation method to use (raw, log1p)
     :param n_permutations: the number of permutations for simulated Z-score (z_sim)
                            estimation (if n_permutations>0)
     :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -257,8 +249,10 @@ def polarization_scores(
     :rtype: pd.DataFrame
     :raises: AssertionError when the input is not valid
     """
-    if normalization not in get_args(PolarizationNormalizationTypes):
-        raise AssertionError(f"incorrect value for normalization {normalization}")
+    if transformation not in get_args(PolarizationTransformationTypes):
+        raise AssertionError(
+            f"incorrect value for count transformation {transformation}"
+        )
 
     if "component" not in edgelist.columns:
         raise AssertionError("Edge list is missing the component column")
@@ -278,7 +272,7 @@ def polarization_scores(
             polarization_function = partial(
                 polarization_scores_component_df,
                 use_full_bipartite=use_full_bipartite,
-                normalization=normalization,
+                transformation=transformation,
                 n_permutations=n_permutations,
                 min_marker_count=min_marker_count,
                 random_seed=random_seed,
@@ -318,14 +312,14 @@ class PolarizationAnalysis(PerComponentAnalysis):
 
     def __init__(
         self,
-        normalization: PolarizationNormalizationTypes,
+        transformation_type: PolarizationTransformationTypes,
         n_permutations: int,
         min_marker_count: int,
         random_seed: int | None = None,
     ):
         """Initialize polarization analysis.
 
-        :param normalization: the normalization method to use (raw, log1p, or clr)
+        :param transformation: the count transformation method to use (raw, log1p)
         :param n_permutations: the number of permutations to use to estimate the
                                null-hypothesis for the Moran's I statistic
         :param min_marker_count: the minimum number of counts of a marker to calculate
@@ -333,7 +327,11 @@ class PolarizationAnalysis(PerComponentAnalysis):
         :param random_seed: set a random seed to ensure reproducibility when calculating z-scores
                             and p-values.
         """
-        self.normalization = normalization
+        if transformation_type not in get_args(PolarizationTransformationTypes):
+            raise AssertionError(
+                f"incorrect value for count transformation {transformation_type}"
+            )
+        self.transformation = transformation_type
         self.permutations = n_permutations
         self.min_marker_count = min_marker_count
         self.random_seed = random_seed
@@ -344,7 +342,7 @@ class PolarizationAnalysis(PerComponentAnalysis):
         return polarization_scores_component_graph(
             graph=component,
             component_id=component_id,
-            normalization=self.normalization,
+            transformation=self.transformation,
             n_permutations=self.permutations,
             min_marker_count=self.min_marker_count,
             random_seed=self.random_seed,

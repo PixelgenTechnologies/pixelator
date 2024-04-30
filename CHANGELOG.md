@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of the total raw input reads.
 * Use common analysis engine to orchestrate running different "per component" analysis, like
   polarization and colocalization analysis (yielding a roughly 3x speed-up over previous approach).
+* The default transformation for the calculation of the polarity score is now `log1p` instead of `clr`.
 
 ### Fixed
 
@@ -78,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Remove `normalized_rel` and `denoised` from `obsm` in `anndata`.
 * Remove `denoise` function.
 * Remove cell type selector in QC report for UMAP colored by molecule count plots.
+* Remove `clr` as a transformation option in `pixalator analysis`
 
 ## [0.16.2] - 2024-03-19
 

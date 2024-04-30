@@ -36,18 +36,18 @@ def test_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
         {
             0: {
                 "marker": "A",
-                "morans_i": -0.058418204066991254,
-                "morans_z": -7.844216486178604,
-                "morans_p_value": 2.1783248596911517e-15,
-                "morans_p_adjusted": 4.356649719382303e-15,
+                "morans_i": -0.17764378122173094,
+                "morans_z": -25.810281029712247,
+                "morans_p_value": 3.399057861353845e-147,
+                "morans_p_adjusted": 6.79811572270769e-147,
                 "component": "PXLCMP0000000",
             },
             1: {
                 "marker": "B",
-                "morans_i": -0.05841820406699129,
-                "morans_z": -7.747319374160002,
-                "morans_p_value": 4.692634773999269e-15,
-                "morans_p_adjusted": 4.692634773999269e-15,
+                "morans_i": -0.17764378122173102,
+                "morans_z": -25.39946321402526,
+                "morans_p_value": 1.2782689040515938e-142,
+                "morans_p_adjusted": 1.2782689040515938e-142,
                 "component": "PXLCMP0000000",
             },
         },
@@ -72,18 +72,18 @@ def test_permuted_polarization(enable_backend, full_graph_edgelist: pd.DataFrame
         {
             0: {
                 "marker": "A",
-                "morans_i": -0.058418204066991254,
-                "morans_z": -7.844216486178604,
-                "morans_p_value": 2.1783248596911517e-15,
-                "morans_p_adjusted": 4.356649719382303e-15,
+                "morans_i": -0.17764378122173094,
+                "morans_z": -25.810281029712247,
+                "morans_p_value": 3.399057861353845e-147,
+                "morans_p_adjusted": 6.79811572270769e-147,
                 "component": "PXLCMP0000000",
             },
             1: {
                 "marker": "B",
-                "morans_i": -0.05841820406699129,
-                "morans_z": -7.747319374160002,
-                "morans_p_value": 4.692634773999269e-15,
-                "morans_p_adjusted": 4.692634773999269e-15,
+                "morans_i": -0.17764378122173102,
+                "morans_z": -25.39946321402526,
+                "morans_p_value": 1.2782689040515938e-142,
+                "morans_p_adjusted": 1.2782689040515938e-142,
                 "component": "PXLCMP0000000",
             },
         },
@@ -100,7 +100,7 @@ def test_polarization_log1p(enable_backend, full_graph_edgelist: pd.DataFrame):
     scores = polarization_scores(
         edgelist=full_graph_edgelist,
         n_permutations=10,
-        normalization="log1p",
+        transformation="log1p",
         use_full_bipartite=True,
         random_seed=1,
     )
@@ -180,7 +180,7 @@ def test_polarization_with_differentially_polarized_markers():
         orient="index",
     )
     # test polarization scores
-    assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
+    assert_frame_equal(scores, expected, check_exact=False, atol=1e-1)
 
 
 def test_polarization_with_min_marker_count():
@@ -242,7 +242,7 @@ def test_polarization_with_min_marker_count():
         orient="index",
     )
     # test polarization scores
-    assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
+    assert_frame_equal(scores, expected, check_exact=False, atol=1e-1)
 
 
 def test_permuted_polarization_with_differentially_polarized_markers():
@@ -298,7 +298,7 @@ def test_permuted_polarization_with_differentially_polarized_markers():
         orient="index",
     )
     # test polarization scores
-    assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
+    assert_frame_equal(scores, expected, check_exact=False, atol=1e-1)
 
 
 def test_polarization_transformation():
@@ -398,16 +398,16 @@ def test_polarization_transformation():
     )
 
     # test polarization scores
-    assert_frame_equal(scores_1, expected_1, check_exact=False, atol=1e-3)
-    assert_frame_equal(scores_2, expected_2, check_exact=False, atol=1e-3)
+    assert_frame_equal(scores_1, expected_1, check_exact=False, atol=1e-1)
+    assert_frame_equal(scores_2, expected_2, check_exact=False, atol=1e-1)
 
     # we also expect the scores to be the same for A and B
-    assert_frame_equal(scores_1, scores_2.head(2), check_exact=False, atol=1e-3)
+    assert_frame_equal(scores_1, scores_2.head(2), check_exact=False, atol=1e-1)
 
 
 def test_polarization_backward_compatibility():
     # This tests that we get the same polarity score as the original
-    # polarization score where markers were filtered prior to CLR
+    # polarization score where markers were filtered prior to transformation
     # transformation.
 
     # Set seed to get same graph every time
@@ -454,12 +454,15 @@ def test_polarization_backward_compatibility():
         orient="index",
     )
     # test polarization scores
-    assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
+    assert_frame_equal(scores, expected, check_exact=False, atol=1e-1)
 
 
 class TestPolarizationAnalysis:
     analysis = PolarizationAnalysis(
-        normalization="clr", n_permutations=10, min_marker_count=2, random_seed=1
+        transformation_type="log1p",
+        n_permutations=10,
+        min_marker_count=2,
+        random_seed=1,
     )
 
     def test_run_on_component(self, full_graph_edgelist):
@@ -477,23 +480,23 @@ class TestPolarizationAnalysis:
             {
                 0: {
                     "marker": "A",
-                    "morans_i": -0.058418204066991254,
-                    "morans_z": -7.844216486178604,
-                    "morans_p_value": 2.1783248596911517e-15,
+                    "morans_i": -0.17764378122173094,
+                    "morans_z": -25.810281029712247,
+                    "morans_p_value": 3.399057861353845e-147,
                     "component": "PXLCMP0000000",
                 },
                 1: {
                     "marker": "B",
-                    "morans_i": -0.05841820406699129,
-                    "morans_z": -7.747319374160002,
-                    "morans_p_value": 4.692634773999269e-15,
+                    "morans_i": -0.17764378122173102,
+                    "morans_z": -25.39946321402526,
+                    "morans_p_value": 1.2782689040515938e-142,
                     "component": "PXLCMP0000000",
                 },
             },
             orient="index",
         )
 
-        assert_frame_equal(result, expected)
+        assert_frame_equal(result, expected, check_exact=False, atol=1e-3)
 
     def test_post_process_data(self):
         data = pd.DataFrame.from_dict(

@@ -5,4 +5,4 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 from typing import Literal
 
-PolarizationNormalizationTypes = Literal["raw", "clr", "log1p"]
+PolarizationTransformationTypes = Literal["raw", "log1p"]
