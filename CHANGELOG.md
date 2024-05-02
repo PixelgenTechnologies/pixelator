@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* Add `local_g` function to compute spatial autocorrelation of marker counts per node.
+* Add `compute_transition_probabilities` function to compute transition probabilities for k-step random walks for node pairs in a graph.
 * Add QC plot showing UMIs per UPIA vs Tau.
 * Add plot functions showing edge rank and cell counts.
 * Add 2D and 3D graph plot functions.

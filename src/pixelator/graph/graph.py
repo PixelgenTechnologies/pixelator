@@ -7,11 +7,11 @@ from __future__ import annotations
 
 import logging
 from functools import cached_property, lru_cache
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 import pandas as pd
 import polars as pl
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_array, csr_matrix
 
 from pixelator.graph.backends.implementations import (
     graph_backend,
@@ -22,6 +22,7 @@ from pixelator.graph.backends.protocol import (
     SupportedLayoutAlgorithm,
     VertexClustering,
 )
+from pixelator.graph.node_metrics import local_g
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +211,7 @@ class Graph:
         :param only_keep_a_pixels: If true, only keep the a-pixels
         :param get_node_marker_matrix: Add a matrix of marker counts to each
                                        node if True.
-        :param cache: set to `True` in order to cache one call of this this method.
+        :param cache: set to `True` in k to cache one call of this this method.
                       It will make subsequent calls to the layout method
                       with the same settings much faster, at the cost of additional
                       memory usage. This can speed things up a lot when plotting
@@ -287,3 +288,25 @@ class Graph:
     def __repr__(self) -> str:
         """Return a string representation of the graph."""
         return f"Graph with {self.vcount()} vertices and {self.ecount()} edges"
+
+    def local_g(
+        self,
+        k: int = 1,
+        use_weights: bool = True,
+        normalize_counts: bool = True,
+        W: csr_array | None = None,
+        method: Literal["gi", "gistar"] = "gi",
+    ) -> pd.DataFrame:
+        """Compute the local G metric for each node in the graph.
+
+        The local G metric is a measure of the local clustering of a node in the graph.
+        """
+        return local_g(
+            A=self.get_adjacency_sparse(),
+            counts=self.node_marker_counts,
+            k=k,
+            use_weights=use_weights,
+            normalize_counts=normalize_counts,
+            W=W,
+            method=method,
+        )

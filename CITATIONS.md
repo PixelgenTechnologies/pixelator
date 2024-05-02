@@ -21,3 +21,7 @@
 - [graspologic](https://microsoft.github.io/graspologic/latest/index.html)
 
   > Chung, J., Pedigo, B. D., Bridgeford, E. W., Varjavand, B. K., Helm, H. S., & Vogelstein, J. T. (2019). GraSPy: Graph Statistics in Python. Journal of Machine Learning Research, 20(158), 1-7.
+
+- [local G](https://doi.org/10.1007/s11749-018-0599-x)
+
+  > Bivand, R.S., Wong, D.W.S. Comparing implementations of global and local indicators of spatial association. TEST 27, 716–748 (2018). https://doi.org/10.1007/s11749-018-0599-x
