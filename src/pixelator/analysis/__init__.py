@@ -26,7 +26,7 @@ class AnalysisParameters:
     compute_polarization: bool
     compute_colocalization: bool
     use_full_bipartite: bool
-    polarization_normalization: PolarizationTransformationTypes
+    polarization_transformation: PolarizationTransformationTypes
     polarization_n_permutations: int
     polarization_min_marker_count: int
     colocalization_transformation: TransformationTypes
