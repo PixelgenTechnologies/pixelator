@@ -75,7 +75,7 @@ class GraphSampleReport(SampleReport):
         return self.a_pixel_count / self.b_pixel_count
 
     @pydantic.computed_field(  # type: ignore
-        return_type=float,
+        return_type=int,
         description="The total number of unique pixels in the graph.",
     )
     @property
