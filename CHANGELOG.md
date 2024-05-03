@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add minimum marker count `polarization_min_marker_count` parameter to calculate Polarity Score.
 * Add "log1p" as alternative for `PolarizationNormalizationTypes`.
 * Add `convert_indices_to_integers` option when creating graphs.
+* Add a feature flag module to aid in development of new features.
 
 
 ### Changed
