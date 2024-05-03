@@ -299,7 +299,7 @@ class Graph:
     ) -> pd.DataFrame:
         """Compute the local G metric for each node in the graph.
 
-                The local G metric is a measure of the local clustering of a node in the graph.
+        The local G metric is a measure of the local clustering of a node in the graph.
 
         :param k: The number of steps in the k-step random walk. Default is 1.
         :param use_weights: Whether to use weights in the computation. When turned off, all
