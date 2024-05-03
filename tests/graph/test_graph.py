@@ -311,7 +311,7 @@ def test_connected_components_benchmark(benchmark, enable_backend, edgelist):
 def test_get_adjacency_sparse(enable_backend, pentagram_graph):
     # This is a little bit involved. Since different network backends might
     # use different internal indexing schemes, they are not guaranteed to generate
-    # the same k of nodes in the adjacency matrix
+    # the same order of nodes in the adjacency matrix
     #
     # What this test does is to generate the sparse adjacency matrix
     # and then try to find a rotation (i.e. an ordering of the nodes)

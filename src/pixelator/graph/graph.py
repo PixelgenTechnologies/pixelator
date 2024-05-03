@@ -211,7 +211,7 @@ class Graph:
         :param only_keep_a_pixels: If true, only keep the a-pixels
         :param get_node_marker_matrix: Add a matrix of marker counts to each
                                        node if True.
-        :param cache: set to `True` in k to cache one call of this this method.
+        :param cache: set to `True` in order to cache one call of this this method.
                       It will make subsequent calls to the layout method
                       with the same settings much faster, at the cost of additional
                       memory usage. This can speed things up a lot when plotting
@@ -299,7 +299,22 @@ class Graph:
     ) -> pd.DataFrame:
         """Compute the local G metric for each node in the graph.
 
-        The local G metric is a measure of the local clustering of a node in the graph.
+                The local G metric is a measure of the local clustering of a node in the graph.
+
+        :param k: The number of steps in the k-step random walk. Default is 1.
+        :param use_weights: Whether to use weights in the computation. When turned off, all
+        edge weights will be equal to 1. Default is True.
+        :param normalize_counts: Whether to normalize counts to proportions. Default is True.
+        :param W: A sparse matrix of custom edge weights. This will override the automated
+        computation of edge weights. `W` must have the same dimensions as A. Note that weights can
+        be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
+        :param method: The method to use for computing local G. Must be one of 'gi' or 'gistar'.
+        'gi' is the original local G metric, which does not consider self-loops, meaning that the
+        local marker expression for a node is computed by aggregating the weighted expression of
+        its neighbors. 'gistar' is a simplified version of local G that does consider self-loops.
+        In other words, the local marker expression of a node also includes the weighted marker
+        expression of the node itself. Default is 'gi'.
+        :return: A DataFrame of local G-scores for each node and marker.
         """
         return local_g(
             A=self.get_adjacency_sparse(),
