@@ -66,7 +66,7 @@ class AnnotateSampleReport(SampleReport):
     )
 
     @pydantic.computed_field(
-        return_type=float,
+        return_type=int,
         description="The total number of unique pixels in the graph.",
     )
     def pixel_count(self) -> int:  # noqa: D102
