@@ -728,3 +728,30 @@ def test_layout_coordinates_caches(pentagram_graph):
 
 def test__repr__(pentagram_graph):
     assert repr(pentagram_graph) == "Graph with 5 vertices and 5 edges"
+
+
+def test_local_g(pentagram_graph):
+    # Compute local g-scores
+    gi_scores = pentagram_graph.local_g(
+        k=1, use_weights=True, normalize_counts=True, method="gi"
+    )
+
+    # Expected local g-scores
+    expected_gi_scores = pd.DataFrame.from_dict(
+        {
+            0: {"A": 0.0, "B": -1.0, "C": 1.0, "D": 1.0, "E": -1.0},
+            2: {"A": 1.0, "B": -1.0, "C": 0.0, "D": -1.0, "E": 1.0},
+            3: {"A": 1.0, "B": 1.0, "C": -1.0, "D": 0.0, "E": -1.0},
+            1: {"A": -1.0, "B": 0.0, "C": -1.0, "D": 1.0, "E": 1.0},
+            4: {"A": -1.0, "B": 1.0, "C": 1.0, "D": -1.0, "E": 0.0},
+        },
+        orient="index",
+    )
+    expected_gi_scores.index.name = "node"
+    expected_gi_scores.columns.name = "markers"
+
+    # Compare the computed and expected local g-scores
+    assert isinstance(gi_scores, pd.DataFrame)
+    assert_frame_equal(
+        gi_scores.sort_index(), expected_gi_scores.sort_index(), check_column_type=False
+    )

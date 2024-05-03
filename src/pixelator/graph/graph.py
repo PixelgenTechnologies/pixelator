@@ -7,11 +7,11 @@ from __future__ import annotations
 
 import logging
 from functools import cached_property, lru_cache
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 import pandas as pd
 import polars as pl
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_array, csr_matrix
 
 from pixelator.graph.backends.implementations import (
     graph_backend,
@@ -22,6 +22,7 @@ from pixelator.graph.backends.protocol import (
     SupportedLayoutAlgorithm,
     VertexClustering,
 )
+from pixelator.graph.node_metrics import local_g
 
 logger = logging.getLogger(__name__)
 
@@ -287,3 +288,40 @@ class Graph:
     def __repr__(self) -> str:
         """Return a string representation of the graph."""
         return f"Graph with {self.vcount()} vertices and {self.ecount()} edges"
+
+    def local_g(
+        self,
+        k: int = 1,
+        use_weights: bool = True,
+        normalize_counts: bool = True,
+        W: csr_array | None = None,
+        method: Literal["gi", "gistar"] = "gi",
+    ) -> pd.DataFrame:
+        """Compute the local G metric for each node in the graph.
+
+        The local G metric is a measure of the local clustering of a node in the graph.
+
+        :param k: The number of steps in the k-step random walk. Default is 1.
+        :param use_weights: Whether to use weights in the computation. When turned off, all
+        edge weights will be equal to 1. Default is True.
+        :param normalize_counts: Whether to normalize counts to proportions. Default is True.
+        :param W: A sparse matrix of custom edge weights. This will override the automated
+        computation of edge weights. `W` must have the same dimensions as A. Note that weights can
+        be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
+        :param method: The method to use for computing local G. Must be one of 'gi' or 'gistar'.
+        'gi' is the original local G metric, which does not consider self-loops, meaning that the
+        local marker expression for a node is computed by aggregating the weighted expression of
+        its neighbors. 'gistar' is a simplified version of local G that does consider self-loops.
+        In other words, the local marker expression of a node also includes the weighted marker
+        expression of the node itself. Default is 'gi'.
+        :return: A DataFrame of local G-scores for each node and marker.
+        """
+        return local_g(
+            A=self.get_adjacency_sparse(),
+            counts=self.node_marker_counts,
+            k=k,
+            use_weights=use_weights,
+            normalize_counts=normalize_counts,
+            W=W,
+            method=method,
+        )
