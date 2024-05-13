@@ -86,7 +86,7 @@ def colocalization_from_component_edgelist(
         transformation=transformation,
         neighbourhood_size=neighbourhood_size,
         n_permutations=n_permutations,
-        min_region_count=min_region_count,
+        min_node_count=min_region_count,
         random_seed=random_seed,
     )
 

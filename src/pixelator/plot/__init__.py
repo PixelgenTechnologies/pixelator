@@ -856,6 +856,7 @@ def plot_colocalization_diff_volcano(
     n_top_pairs: int = 5,
     min_log_p: float = 5.0,
     ax: Optional[plt.Axes] = None,
+    remove_insignificant=False,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Generate the volcano plot of differential colocalization between reference and target components.
 
@@ -900,6 +901,12 @@ def plot_colocalization_diff_volcano(
     if ax is None:
         fig, ax = plt.subplots()
 
+    if remove_insignificant:
+        differential_colocalization = differential_colocalization.loc[
+            differential_colocalization["p_adj"] < 1, :
+        ]
+
+    max_val = np.max(np.abs(differential_colocalization[value_col]))
     p = ax.scatter(
         x=differential_colocalization["median_difference"],
         y=-np.log10(differential_colocalization["p_adj"]),
@@ -907,11 +914,13 @@ def plot_colocalization_diff_volcano(
         s=20,
         marker="o",
         cmap=cmap,
+        vmin=-max_val,
+        vmax=max_val,
     )
 
     ax.set(xlabel="Median difference", ylabel=r"$-\log_{10}$(adj. p-value)")
     fig = plt.gcf()
-    fig.colorbar(p, label="Mean target colocalization score", cmap=cmap)
+    fig.colorbar(p, label="Mean target colocalization score")
     _add_top_marker_labels(
         differential_colocalization,
         n_top_pairs=n_top_pairs,
