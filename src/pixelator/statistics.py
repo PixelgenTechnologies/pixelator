@@ -131,6 +131,22 @@ def log1p_transformation(df: pd.DataFrame) -> pd.DataFrame:
     return log1p_df
 
 
+def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
+    """Transform antibody counts based on deviation from an expected baseline distribution.
+
+    In this function we refer to baseline distribution as fixed ratio of different antibody types in each node. For example, if in total 10% of antibodies are HLA-ABC, in a node with 120 antibodies we expect to see 12 HLA-ABC counts. If we actually see 8 counts in this node, the rate_diff_transformation for HLA-ABC in this node will be -4.
+    :param df: the dataframe of raw antibody counts (antibodies as columns)
+    :returns: a dataframe with the counts difference from expected values
+    :rtype: pd.DataFrame
+    """
+    antibody_counts_per_node = df.sum(axis=1)
+    antibody_rates = df.sum(axis=0)
+    antibody_rates = antibody_rates / antibody_rates.sum()
+
+    expected_counts = antibody_counts_per_node.to_frame() @ antibody_rates.to_frame().T
+    return df - expected_counts
+
+
 def rel_normalization(df: pd.DataFrame, axis: Literal[0, 1] = 0) -> pd.DataFrame:
     """Normalize antibody counts to the relative amount per marker or component.
 
