@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* Add `rate_diff_transformation` function with `rate-diff` alias as an alternative option for transforming marker counts before colocalization calculation.
 * Add `local_g` function to compute spatial autocorrelation of marker counts per node.
 * Add `compute_transition_probabilities` function to compute transition probabilities for k-step random walks for node pairs in a graph.
 * Add QC plot showing UMIs per UPIA vs Tau.
