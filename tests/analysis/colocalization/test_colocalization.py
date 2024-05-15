@@ -161,6 +161,46 @@ def test_colocalization_scores_log1p(enable_backend, full_graph_edgelist: pd.Dat
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_colocalization_scores_ratediff(
+    enable_backend, full_graph_edgelist: pd.DataFrame
+):
+    result = colocalization_scores(
+        edgelist=full_graph_edgelist,
+        use_full_bipartite=True,
+        transformation="rate-diff",
+        neighbourhood_size=1,
+        n_permutations=50,
+        min_region_count=0,
+        random_seed=1477,
+    )
+
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker_1": "A",
+                "marker_2": "B",
+                "pearson": -1.0,
+                "pearson_mean": -1.0,
+                "pearson_stdev": 0.0,
+                "pearson_z": np.nan,
+                "pearson_p_value": np.nan,
+                "pearson_p_value_adjusted": np.nan,
+                "jaccard": 1.0,
+                "jaccard_mean": 1.0,
+                "jaccard_stdev": 0.0,
+                "jaccard_z": np.nan,
+                "jaccard_p_value": np.nan,
+                "jaccard_p_value_adjusted": np.nan,
+                "component": "PXLCMP0000000",
+            }
+        },
+        orient="index",
+    )
+
+    assert_frame_equal(result, expected)
+
+
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_colocalization_scores_should_not_fail_when_one_component_has_single_node(
     enable_backend,
     full_graph_edgelist,
