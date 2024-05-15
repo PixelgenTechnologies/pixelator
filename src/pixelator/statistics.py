@@ -132,9 +132,14 @@ def log1p_transformation(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
-    """Transform antibody counts based on deviation from an expected baseline distribution.
+    """Transform antibody counts as deviation from an expected baseline distribution.
 
-    In this function we refer to baseline distribution as fixed ratio of different antibody types in each node. For example, if in total 10% of antibodies are HLA-ABC, in a node with 120 antibodies we expect to see 12 HLA-ABC counts. If we actually see 8 counts in this node, the rate_diff_transformation for HLA-ABC in this node will be -4.
+    In this function we refer to baseline distribution as fixed ratio of different
+    antibody types in each node. For example, if in total 10% of antibodies are
+    HLA-ABC, in a node with 120 antibodies we expect to see 12 HLA-ABC counts.
+    If we actually see 8 counts in this node, the rate_diff_transformation for
+    HLA-ABC in this node will be -4.
+
     :param df: the dataframe of raw antibody counts (antibodies as columns)
     :returns: a dataframe with the counts difference from expected values
     :rtype: pd.DataFrame
