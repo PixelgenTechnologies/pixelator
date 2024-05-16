@@ -166,9 +166,10 @@ def collect_reads_per_molecule_frequency(dataset: PixelDataset) -> str:
 
     freq = freq.with_columns(
         pl.col("reads_per_molecule"),
-        frequency=pl.col("count") / pl.col("count").sum(),
+        frequency=pl.col("counts") / pl.col("counts").sum(),
     )
     pd_freq = freq.sort(by="reads_per_molecule").to_pandas()
+    pd_freq = pd_freq.rename({"counts": "count"}, axis="columns")
 
     return pd_freq.to_csv(index=False)
 

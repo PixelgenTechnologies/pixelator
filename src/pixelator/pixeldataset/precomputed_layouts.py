@@ -451,21 +451,22 @@ def _data(
         # benchmarked the exact values here, but they seem to work well
         # enough
         component_group = map(set, batched(components, 20))
-        yield from executor.imap(
-            _wrap_get_layouts,
-            (
+        with pl.StringCache():
+            yield from executor.imap(
+                _wrap_get_layouts,
                 (
-                    pixel_dataset.edgelist_lazy.filter(
-                        pl.col("component").is_in(components)
-                    ).collect(),
-                    add_node_marker_counts,
-                    layout_algorithms,
-                    all_markers,
-                )
-                for components in component_group
-            ),
-            chunksize=1,
-        )
+                    (
+                        pixel_dataset.edgelist_lazy.filter(
+                            pl.col("component").is_in(components)
+                        ).collect(),
+                        add_node_marker_counts,
+                        layout_algorithms,
+                        all_markers,
+                    )
+                    for components in component_group
+                ),
+                chunksize=1,
+            )
 
 
 @experimental
