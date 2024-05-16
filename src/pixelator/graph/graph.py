@@ -295,7 +295,7 @@ class Graph:
         use_weights: bool = True,
         normalize_counts: bool = True,
         W: csr_array | None = None,
-        method: Literal["gi", "gistar"] = "gi",
+        method: Literal["gi", "gstari"] = "gi",
     ) -> pd.DataFrame:
         """Compute the local G metric for each node in the graph.
 
@@ -308,10 +308,10 @@ class Graph:
         :param W: A sparse matrix of custom edge weights. This will override the automated
         computation of edge weights. `W` must have the same dimensions as A. Note that weights can
         be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
-        :param method: The method to use for computing local G. Must be one of 'gi' or 'gistar'.
+        :param method: The method to use for computing local G. Must be one of 'gi' or 'gstari'.
         'gi' is the original local G metric, which does not consider self-loops, meaning that the
         local marker expression for a node is computed by aggregating the weighted expression of
-        its neighbors. 'gistar' is a simplified version of local G that does consider self-loops.
+        its neighbors. 'gstari' is a simplified version of local G that does consider self-loops.
         In other words, the local marker expression of a node also includes the weighted marker
         expression of the node itself. Default is 'gi'.
         :return: A DataFrame of local G-scores for each node and marker.
