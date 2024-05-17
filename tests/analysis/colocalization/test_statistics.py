@@ -72,7 +72,7 @@ def test_pearson_no_variation():
 
 def test_jaccard():
     df = pd.DataFrame(
-        [[0, 0, 3, 4], [2, 3, 0, 6], [0, 5, 3, 8]],
+        [[0, -1, 3, 4], [2, 3, 0, 6], [0, 5, 3, 8]],
         columns=["marker1", "marker2", "marker3", "marker4"],
     )
     results = jaccard(df)
