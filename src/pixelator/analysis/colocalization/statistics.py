@@ -101,7 +101,7 @@ def jaccard(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
     :return: MarkerColocalizationResults with Jaccard indexes
     """
     jaccard_matrix = pd.DataFrame(
-        1 - pairwise_distances(df.T.to_numpy(dtype=bool), metric="jaccard"),
+        1 - pairwise_distances((df.T > 0).to_numpy(dtype=bool), metric="jaccard"),
         index=df.columns.copy(),
         columns=df.columns.copy(),
     )
