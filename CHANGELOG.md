@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [UNRELEASED] - 2024-??-??
+## [0.17.0] - 2024-05-23
 
 ### Added
 
@@ -20,69 +20,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Performance improvements and reduced bundle size in QC report.
 * Improved console output in verbose mode.
 * Improved logging from multiprocessing jobs.
-* Improved runtime for graph synthesis.
+* Improved runtime for graph creation.
 * Added PMDS layout algorithm.
-* Remove multi-sample processing from all `single-cell` subcommands
 * Add `--sample_name` option to `single-cell amplicon` to overwrite the name derived from the input filename.
 * Add `--skip-input-checks` option to `single-cell amplicon` to make input filename checks warnings instead of errors.
-* Pixeldatasets are now written to disk without creating intermediate files on-disk.
-* A nice string representation for the `Graph` class, to let you know how many nodes and edges there are in the
-  current graph object instance.
+* `PixelDataset` instances are now written to disk without creating intermediate files on-disk.
+* A nice string representation for the `Graph` class, to let you know how many nodes and edges there are in the current graph object instance.
 * Metric to collect molecules (edges) in cells with outlier distributions of antibodies (aggregates).
 * Provide typed interfaces for all per-stage report files using pydantic.
 * Centralize pixelator intermediate file lookup and access.
-* Add a `precomputed_layouts` property to `pixeldataset` to allow for loading precomputed layouts.
-* Add `pixelator single-cell layout` stage to pixelator, which allows users to compute layouts
-  for a PXL file that can then be used to visualize the graph in 2D or 3D downstream.
+* Add a `precomputed_layouts` property to `PixelDataset` to allow for loading precomputed layouts.
+* Add `pixelator single-cell layout` stage to pixelator, which allows users to compute layouts for a PXL file that can then be used to visualize the graph in 2D or 3D downstream.
 * Add minimum marker count `polarization_min_marker_count` parameter to calculate Polarity Score.
-* Add "log1p" as alternative for `PolarizationNormalizationTypes`.
+* Add "log1p" as an alternative for `PolarizationNormalizationTypes`.
 * Add `convert_indices_to_integers` option when creating graphs.
-* Add a feature flag module to aid in development of new features.
-
+* Add a feature flag module to aid in the development of new features.
 
 ### Changed
 
 * Change name and description of `Avg. Reads per Cell` and `Avg. Reads Usable per Cell` in QC report.
-* The output name of the `.pxl` file from the `annotate` step is now `*.annotated.dataset.pxl`
-* The output name of the `.pxl` file from the `analysis` step is now `*.analysis.dataset.pxl`
+* The output name of the `.pxl` file from the `annotate` step is now `*.annotated.dataset.pxl`.
+* The output name of the `.pxl` file from the `analysis` step is now `*.analysis.dataset.pxl`.
 * The term `edges` in `metrics` and `adata` is now replaced with `molecules`.
 * Renaming of variables in per-stage JSON reports.
 * Changed name of TCRb to TCRVb5 antibody in human-immunology-panel file and bumped to version 0.5.0.
-* Renaming of component metrics in adata
-* Use MPX graph compatible permutation strategy when calculating Moran's I.
+* Renaming of component metrics in adata.
+* Use MPX graph compatible permutation strategy when calculating Moran's I related statistics.
 * Marker filtering is now done after count transformation in polarization score calculation.
-* Use the input read count at the annotate stage for the `fraction_antibody_reads_in_outliers` metric denominator
-  instead of the total raw input reads.
-* Use common analysis engine to orchestrate running different "per component" analysis, like
-  polarization and colocalization analysis (yielding a roughly 3x speed-up over previous approach).
+* Use the input read count at the annotate stage for the `fraction_antibody_reads_in_outliers` metric denominator instead of the total raw input reads.
+* Use common analysis engine to orchestrate running different "per component" analyses, like polarization and colocalization analysis (yielding a roughly 3x speed-up over the previous approach).
 * The default transformation for the calculation of the polarity score is now `log1p` instead of `clr`.
 
 ### Fixed
 
 * Fix a bug in how discarded UMIs are calculated and reported.
 * Fix deflated counts in the edgelist after collapse.
-* Fix bug where an `r1` or `r2` in the directory part of a read file would break file
-  name sanity checks.
-* Fix a bug where the wrong `r1` or `r2` in the filename would be removed when multiple
-  matches are present.
-* Logging would cause deadlocks in multiprocessing scenarios, this has been resolved
-  by switching to a server/client-based logging system.
-* Fix a bug in the amplicon stage where read suffixes were not correctly recognised.
+* Fix a bug where an `r1` or `r2` in the directory part of a read file would break file name sanity checks.
+* Fix a bug where the wrong `r1` or `r2` in the filename would be removed when multiple matches are present.
+* Logging would cause deadlocks in multiprocessing scenarios, this has been resolved by switching to a server/client-based logging system.
+* Fix a bug in the amplicon stage where read suffixes were not correctly recognized.
 * Ensure deterministic results from `pmds_layout` (given a set seed).
-* Fix an issue with the `fraction_antibody_reads_usable_per_cell` metric where the denominator
-  read count was not correctly averaged with the cell count.
+* Fix an issue with the `fraction_antibody_reads_usable_per_cell` metric where the denominator read count was not correctly averaged with the cell count.
 
 ### Removed
 
+* Remove multi-sample processing from all `single-cell` subcommands.
 * Remove `--input1_pattern` and `--input2_pattern` from `single-cell amplicon` command.
-* Self-correlations, e.g. CD8 vs CD8 are not longer part of the colocalization results, as these
-  values will always be undefined.
+* Self-correlations, e.g. CD8 vs CD8 are no longer part of the colocalization results, as these values will always be undefined.
 * Remove `umi_unique_count` and `upi_unique_count` from `edgelist`.
 * Remove `umi` and `median_umi_degree` from `component` metrics.
 * Remove `normalized_rel` and `denoised` from `obsm` in `anndata`.
-* Remove `denoise` function.
+* Remove the `denoise` function.
 * Remove cell type selector in QC report for UMAP colored by molecule count plots.
-* Remove `clr` as a transformation option in `pixalator analysis`
+* Remove `clr` as a transformation option in `pixelator analysis`.
 
 ## [0.16.2] - 2024-03-19
 
