@@ -1,20 +1,25 @@
-"""
-Console script for pixelator (amplicon)
+"""Console script for pixelator (amplicon)
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
-from concurrent import futures
-from typing import List
+
+from __future__ import annotations
+
+import logging
 
 import click
 
-from pixelator.cli.common import design_option, logger, output_option
 from pixelator.amplicon import amplicon_fastq
+from pixelator.cli.common import (
+    design_option,
+    logger,
+    output_option,
+)
 from pixelator.utils import (
-    click_echo,
     create_output_stage_dir,
     get_extension,
-    group_input_reads,
+    get_read_sample_name,
+    is_read_file,
     log_step_start,
     sanity_check_inputs,
     timer,
@@ -28,27 +33,36 @@ from pixelator.utils import (
     options_metavar="<options>",
 )
 @click.argument(
-    "input_files",
-    nargs=-1,
+    "fastq_1",
+    nargs=1,
     required=True,
     type=click.Path(exists=True),
-    metavar="FASTQ_FILES",
+    metavar="FASTQ_1",
+)
+@click.argument(
+    "fastq_2",
+    nargs=1,
+    required=False,
+    type=click.Path(exists=True),
+    metavar="FASTQ_2",
 )
 @click.option(
-    "--input1-pattern",
-    default="_R1",
-    required=False,
+    "--sample-name",
+    default=None,
+    show_default=False,
     type=click.STRING,
-    show_default=True,
-    help="The string pattern to use to identify forward (R1) files",
+    help=(
+        "Override the basename of the output fastq file. "
+        "Default is the basename of the first input file "
+        "without extension and read 1 identifier."
+    ),
 )
 @click.option(
-    "--input2-pattern",
-    default="_R2",
-    required=False,
-    type=click.STRING,
-    show_default=True,
-    help="The string pattern to use to identify reverse (R2) files",
+    "--skip-input-checks",
+    default=False,
+    is_flag=True,
+    type=click.BOOL,
+    help="Skip all check on the filename of input fastq files.",
 )
 @output_option
 @design_option
@@ -56,9 +70,10 @@ from pixelator.utils import (
 @timer
 def amplicon(
     ctx,
-    input_files: List[str],
-    input1_pattern: str,
-    input2_pattern: str,
+    fastq_1: str,
+    fastq_2: str | None,
+    sample_name: str | None,
+    skip_input_checks: bool,
     output: str,
     design: str,
 ):
@@ -66,60 +81,70 @@ def amplicon(
     Process diverse raw pixel data (FASTQ) formats into common amplicon
     """
     # log input parameters
+
+    error_level = logging.WARNING if skip_input_checks else logging.ERROR
+
     log_step_start(
         "amplicon",
-        input_files=input_files,
+        fastq1=fastq_1,
+        fastq_2=fastq_2,
         output=output,
-        input1_pattern=input1_pattern,
-        input2_pattern=input2_pattern,
         design=design,
     )
 
     # some basic sanity check on the input files
-    sanity_check_inputs(input_files, allowed_extensions=("fastq.gz", "fq.gz"))
+    fastq_inputs = [fastq_1] + [fastq_2] if fastq_2 else []
+    sanity_check_inputs(fastq_inputs, allowed_extensions=("fastq.gz", "fq.gz"))
 
     # create output folder if it does not exist
     amplicon_output = create_output_stage_dir(output, "amplicon")
 
-    # group input file by sample id and order reads by R1 and R2
-    grouped_sorted_inputs = group_input_reads(
-        input_files, input1_pattern, input2_pattern
+    # Some checks on the input files
+    # - check if there are read 1 and read2 identifiers in the filename
+    # - check if the sample name is the same for read1 and read2
+    if not is_read_file(fastq_1, "r1"):
+        msg = "Read 1 file does not contain a recognised read 1 suffix."
+        logger.log(level=error_level, msg=msg)
+        if not skip_input_checks:
+            ctx.exit(1)
+
+    if fastq_2 and not is_read_file(fastq_2, "r2"):
+        msg = "Read 2 file does not contain a recognised read 2 suffix."
+        logger.log(level=error_level, msg=msg)
+        if not skip_input_checks:
+            ctx.exit(1)
+
+    r1_sample_name = get_read_sample_name(fastq_1)
+    r2_sample_name = get_read_sample_name(fastq_2) if fastq_2 else None
+
+    if fastq_2 and r1_sample_name != r2_sample_name:
+        msg = (
+            f"The sample name for read1 and read2 is different:\n"
+            f'"{r1_sample_name}" vs "{r2_sample_name}"\n'
+            "Did you pass the correct files?"
+        )
+        logger.log(level=error_level, msg=msg)
+        if not skip_input_checks:
+            ctx.exit(1)
+
+    sample_name = sample_name or r1_sample_name
+    extension = get_extension(fastq_1)
+    output_file = amplicon_output / f"{sample_name}.merged.{extension}"
+    json_file = amplicon_output / f"{sample_name}.report.json"
+
+    write_parameters_file(
+        ctx,
+        amplicon_output / f"{sample_name}.meta.json",
+        command_path="pixelator single-cell amplicon",
     )
 
-    # run amplicon using parallel processing
-    with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
-        jobs = []
-        for k, v in grouped_sorted_inputs.items():
-            extension = get_extension(v[0])
-            output_file = amplicon_output / f"{k}.merged.{extension}"
-            json_file = amplicon_output / f"{k}.report.json"
+    msg = f"Creating amplicon for {','.join(str(p) for p in fastq_inputs)}"
+    logger.info(msg)
 
-            write_parameters_file(
-                ctx,
-                amplicon_output / f"{k}.meta.json",
-                command_path="pixelator single-cell amplicon",
-            )
-
-            if len(v) > 2:
-                msg = "Found more files than needed for concatenating fastq files"
-                logger.error(msg)
-                raise RuntimeError(msg)
-
-            msg = f"Concatenating {','.join(str(p) for p in v)}"
-            click_echo(msg, multiline=False)
-            logger.info(msg)
-
-            jobs.append(
-                executor.submit(
-                    amplicon_fastq,
-                    inputs=v,
-                    design=design,
-                    metrics=json_file,
-                    output=str(output_file),
-                )
-            )
-
-        for job in futures.as_completed(jobs):
-            exc = job.exception()
-            if exc is not None:
-                raise exc
+    amplicon_fastq(
+        inputs=fastq_inputs,
+        design=design,
+        metrics=json_file,
+        sample_id=sample_name,
+        output=str(output_file),
+    )

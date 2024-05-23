@@ -1,9 +1,10 @@
 """Module contains various useful graph functions.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import logging
+import typing
 import warnings
 from functools import reduce
 from typing import Dict, List, Literal, Optional, Union
@@ -22,6 +23,7 @@ from pixelator.graph.constants import (
     DIGITS,
 )
 from pixelator.graph.graph import Graph
+from pixelator.report.models import SummaryStatistics
 
 logger = logging.getLogger(__name__)
 
@@ -78,45 +80,56 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
     # iterate the components to obtain the metrics of each component
     for component_id, group_df in edgelist.groupby("component", observed=True):
         # compute metrics
-        n_edges = group_df.shape[0]
-        n_vertices = len(
-            set(group_df["upia"].unique().tolist() + group_df["upib"].unique().tolist())
-        )
-        n_markers = group_df["marker"].nunique()
-        upia_count = group_df["upia"].nunique()
-        upib_count = group_df["upib"].nunique()
-        tot_count = group_df["count"].sum()
-        mean_count = group_df["count"].mean()
-        median_count = group_df["count"].median()
-        tot_umi = group_df["umi"].nunique()
+        a_pixels = group_df["upia"].nunique()
+        b_pixels = group_df["upib"].nunique()
+        pixels = a_pixels + b_pixels
+        antibodies = group_df["marker"].nunique()
+        molecules = group_df.shape[0]
+
+        reads = group_df["count"].sum()
+        mean_reads_per_molecule = group_df["count"].mean()
+        median_reads_per_molecule = group_df["count"].median()
+
         # Please note that we need to use observed=True
         # here upia is a categorical column, and since not
         # all values are present in all components, this is
         # required to get a correct value.
-        upia_degree = group_df.groupby("upia", observed=True)["upib"].nunique()
-        upia_mean_degree = upia_degree.mean()
-        upia_median_degree = upia_degree.median()
+        b_pixels_per_a_pixel_series = group_df.groupby("upia", observed=True)[
+            "upib"
+        ].nunique()
+        mean_b_pixels_per_a_pixel = b_pixels_per_a_pixel_series.mean()
+        median_b_pixels_per_a_pixel = b_pixels_per_a_pixel_series.median()
+
+        a_pixels_per_b_pixel = group_df.groupby("upib", observed=True)["upia"].nunique()
+        mean_a_pixels_per_b_pixel = b_pixels_per_a_pixel_series.mean()
+        median_a_pixels_per_b_pixel = b_pixels_per_a_pixel_series.median()
+
         # Same reasoning as above
-        umi_degree = group_df.groupby("upia", observed=True)["umi"].count()
-        upi_umi_median = umi_degree.median()
-        upi_umi_mean = umi_degree.mean()
-        upia_per_upib = upia_count / upib_count
+        molecule_count_per_a_pixel_series = group_df.groupby("upia", observed=True)[
+            "umi"
+        ].count()
+        mean_molecules_per_a_pixel = molecule_count_per_a_pixel_series.mean()
+        median_molecules_per_a_pixel = molecule_count_per_a_pixel_series.median()
+
+        a_pixel_b_pixel_ratio = a_pixels / b_pixels
+
         cmetrics.append(
             (
-                n_vertices,
-                n_edges,
-                n_markers,
-                upia_count,
-                upib_count,
-                tot_umi,
-                tot_count,
-                mean_count,
-                median_count,
-                upia_mean_degree,
-                upia_median_degree,
-                upi_umi_mean,
-                upi_umi_median,
-                upia_per_upib,
+                pixels,
+                a_pixels,
+                b_pixels,
+                antibodies,
+                molecules,
+                reads,
+                mean_reads_per_molecule,
+                median_reads_per_molecule,
+                mean_b_pixels_per_a_pixel,
+                median_b_pixels_per_a_pixel,
+                mean_a_pixels_per_b_pixel,
+                median_a_pixels_per_b_pixel,
+                a_pixel_b_pixel_ratio,
+                mean_molecules_per_a_pixel,
+                median_molecules_per_a_pixel,
             )
         )
         index.append(component_id)
@@ -125,26 +138,66 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
     components_metrics = pd.DataFrame(
         index=pd.Index(index, name="component"),
         columns=[
-            "vertices",
-            "edges",
+            "pixels",
+            "a_pixels",
+            "b_pixels",
             "antibodies",
-            "upia",
-            "upib",
-            "umi",
+            "molecules",
             "reads",
             "mean_reads_per_molecule",
             "median_reads_per_molecule",
-            "mean_upia_degree",
-            "median_upia_degree",
-            "mean_umi_per_upia",
-            "median_umi_per_upia",
-            "upia_per_upib",
+            "mean_b_pixels_per_a_pixel",
+            "median_b_pixels_per_a_pixel",
+            "mean_a_pixels_per_b_pixel",
+            "median_a_pixels_per_b_pixel",
+            "a_pixel_b_pixel_ratio",
+            "mean_molecules_per_a_pixel",
+            "median_molecules_per_a_pixel",
         ],
         data=cmetrics,
     )
 
     logger.debug("Component metrics computed")
     return components_metrics
+
+
+def _get_extended_adjacency(graph: Graph, k: int = 0):
+    def sparse_mat_power(x, n):
+        if n == 0:
+            return identity(x.shape[0])
+        return reduce(lambda x, y: x @ y, (x for _ in range(0, n)))
+
+    A = graph.get_adjacency_sparse()
+    An = (
+        reduce(lambda x, y: x + y, [sparse_mat_power(A, n) for n in range(0, k + 1)])
+        > 0
+    ).astype(int)
+    return An
+
+
+def _get_neighborhood_counts(
+    node_marker_counts,
+    graph,
+    k: int = 0,
+    normalization: Optional[Literal["mean"]] = None,
+):
+    An = _get_extended_adjacency(graph, k=k)
+    neighbourhood_counts = An * node_marker_counts
+
+    # TODO Optionally add more methods here
+    if normalization == "mean":
+        nbr_of_neighbors_per_node = An.sum(axis=1)
+        neighbourhood_counts = neighbourhood_counts / nbr_of_neighbors_per_node
+
+    df = pd.DataFrame(
+        data=neighbourhood_counts,
+        columns=node_marker_counts.columns.copy(),
+        index=node_marker_counts.index.copy(),
+    )
+    df.columns.name = "markers"
+    df.index.name = "node"
+
+    return df
 
 
 def create_node_markers_counts(
@@ -160,14 +213,15 @@ def create_node_markers_counts(
     counts (using `agg_func` to aggregate the counts). K defines the number of levels
     when searching neighbors. The graph must contain a vertex attribute called 'markers'
     which is dictionary of marker counts per vertex.
+
     :param graph: a graph (preferably a connected component)
     :param k: number of neighbors to include per node (0 no neighbors,
               1 first level, ...)
     :param normalization: selects a normalization method to apply when
                           building neighborhoods
+
     :returns: a pd.DataFrame with the antibody counts per node
     :rtype: pd.DataFrame
-    :raises AssertionError: if no 'markers' attribute is found on the vertices
     """
     if k == 0 and normalization:
         warnings.warn(
@@ -177,60 +231,40 @@ def create_node_markers_counts(
             )
         )
 
-    if "markers" not in graph.vs.attributes():
-        raise AssertionError("Could not find 'markers' in vertex attributes")
-    markers = list(sorted(next(iter(graph.vs))["markers"].keys()))
-    node_marker_counts = pd.DataFrame.from_records(
-        list(graph.vs.get_attribute("markers")),
-        columns=markers,
-        index=list(graph.vs.get_attribute("name")),
-    )
-    node_marker_counts = node_marker_counts.reindex(
-        sorted(node_marker_counts.columns), axis=1
-    )
-    node_marker_counts.columns.name = "markers"
-    node_marker_counts.columns = node_marker_counts.columns.astype("string[pyarrow]")
-    node_marker_counts.index = pd.Index(
-        list(graph.vs.get_attribute("name")), dtype="string[pyarrow]", name="node"
-    )
+    node_marker_counts = graph.node_marker_counts
+
     if k == 0:
         return node_marker_counts
 
-    # This method first finds all nodes that are connected by a path
-    # with the a shortest path of k or shorter, encoded in a new
-    # adjacency matrix An.
-    # We then find the marker counts for those neighbourhoods
-    # by matrix multiplication.
-
-    def sparse_mat_power(x, n):
-        if n == 0:
-            return identity(x.shape[0])
-        return reduce(lambda x, y: x @ y, (x for _ in range(0, n)))
-
-    A = graph.get_adjacency_sparse()
-    An = (
-        reduce(lambda x, y: x + y, [sparse_mat_power(A, n) for n in range(0, k + 1)])
-        > 0
-    ).astype(int)
-    neighbourhood_counts = An * node_marker_counts
-
-    # TODO Optionally add more methods here
-    if normalization == "mean":
-        nbr_of_neighbors_per_node = An.sum(axis=1)
-        neighbourhood_counts = neighbourhood_counts / nbr_of_neighbors_per_node
-
-    df = pd.DataFrame(
-        data=neighbourhood_counts,
-        columns=node_marker_counts.columns.copy(),
-        index=pd.Index(
-            list(graph.vs.get_attribute("name")), dtype="string[pyarrow]", name="node"
-        ),
+    neighborhood_counts = _get_neighborhood_counts(
+        node_marker_counts=node_marker_counts,
+        graph=graph,
+        k=k,
+        normalization=normalization,
     )
-    df.columns.name = "markers"
-    return df
+    return neighborhood_counts
 
 
-MetricsDict = Dict[str, Union[int, float]]
+class EdgelistMetrics(typing.TypedDict, total=True):
+    """TypedDict for edgelist metrics."""
+
+    component_count: int
+    molecule_count: int
+    marker_count: int
+    read_count: int
+    a_pixel_count: int
+    b_pixel_count: int
+
+    read_count_per_molecule_stats: SummaryStatistics
+
+    components_modularity: float
+    fraction_molecules_in_largest_component: float
+    fraction_pixels_in_largest_component: float
+
+
+MetricsDict = typing.TypeVar(
+    "MetricsDict", Dict[str, Union[int, float]], EdgelistMetrics
+)
 
 
 def _calculate_graph_metrics(
@@ -246,35 +280,30 @@ def _calculate_graph_metrics(
             use_full_bipartite=True,
         )
     components = graph.connected_components()
-    metrics["vertices"] = graph.vcount()
-    metrics["components"] = len(components)
-    metrics["components_modularity"] = round(components.modularity, 2)
+    pixel_count = graph.vcount()
+
+    metrics["component_count"] = len(components)
+    metrics["components_modularity"] = components.modularity
     biggest = components.giant()
-    metrics["frac_largest_edges"] = round(biggest.ecount() / metrics["edges"], 2)
-    metrics["frac_largest_vertices"] = round(biggest.vcount() / metrics["vertices"], 2)
+    metrics["fraction_molecules_in_largest_component"] = (
+        biggest.ecount() / metrics["molecule_count"]
+    )
+    metrics["fraction_pixels_in_largest_component"] = biggest.vcount() / pixel_count
     return metrics
 
 
 def _edgelist_metrics_pandas_data_frame(
     edgelist: pd.DataFrame, graph: Optional[Graph] = None
-) -> MetricsDict:
-    metrics: Dict[str, Union[int, float]] = {}
-    metrics["total_upia"] = edgelist["upia"].nunique()
-    metrics["total_upib"] = edgelist["upib"].nunique()
-    metrics["total_umi"] = edgelist["umi"].nunique()
-    metrics["total_upi"] = metrics["total_upia"] + metrics["total_upib"]
-    metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
-    metrics["markers"] = edgelist["marker"].nunique()
-    metrics["edges"] = edgelist.shape[0]
-    metrics["mean_count"] = round(edgelist["count"].mean(), 2)
-
-    # Please note that we need to use observed=True
-    # here upia is a categorical column, and since not
-    # all values are present in all components, this is
-    # required to get a correct value.
-    upia_degree = edgelist.groupby("upia", observed=True)["upib"].nunique()
-    metrics["upia_degree_mean"] = round(upia_degree.mean(), 2)
-    metrics["upia_degree_median"] = round(upia_degree.median(), 2)
+) -> EdgelistMetrics:
+    metrics: EdgelistMetrics = {}  # type: ignore
+    metrics["a_pixel_count"] = edgelist["upia"].nunique()
+    metrics["b_pixel_count"] = edgelist["upib"].nunique()
+    metrics["marker_count"] = edgelist["marker"].nunique()
+    metrics["molecule_count"] = edgelist.shape[0]
+    metrics["read_count"] = int(edgelist["count"].sum())
+    metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
+        edgelist["count"]
+    )
 
     metrics = _calculate_graph_metrics(metrics=metrics, graph=graph, edgelist=edgelist)
     return metrics
@@ -282,35 +311,38 @@ def _edgelist_metrics_pandas_data_frame(
 
 def _edgelist_metrics_lazy_frame(
     edgelist: pl.LazyFrame, graph: Optional[Graph] = None
-) -> MetricsDict:
-    metrics: Dict[str, Union[int, float]] = {}
-    metrics["total_upia"] = edgelist.select(pl.col("upia")).collect().n_unique()
-    metrics["total_upib"] = edgelist.select(pl.col("upib")).collect().n_unique()
-    metrics["total_umi"] = edgelist.select(pl.col("umi")).collect().n_unique()
-    metrics["total_upi"] = metrics["total_upia"] + metrics["total_upib"]
-    metrics["frac_upib_upia"] = round(metrics["total_upib"] / metrics["total_upia"], 2)
-    metrics["markers"] = edgelist.select(pl.col("marker")).collect().n_unique()
+) -> EdgelistMetrics:
+    metrics: EdgelistMetrics = {}  # type: ignore
+
+    unique_counts = edgelist.select(
+        pl.col("upia").n_unique(),
+        pl.col("upib").n_unique(),
+        pl.col("marker").n_unique(),
+    ).collect()
+
+    metrics["a_pixel_count"] = int(unique_counts["upia"][0])
+    metrics["b_pixel_count"] = int(unique_counts["upib"][0])
+    metrics["marker_count"] = int(unique_counts["marker"][0])
     # Note that we get upi here and count that, because otherwise just calling count
     # here confuses polars since there is a column with that name.
-    metrics["edges"] = (
-        edgelist.select(pl.col("upia")).select(pl.count()).collect()[0, 0]
-    )
-    metrics["mean_count"] = round(
-        edgelist.select(pl.col("count")).mean().collect()[0, 0], 2
+    metrics["molecule_count"] = int(
+        edgelist.select(pl.col("upia").count()).collect()["upia"][0]
     )
 
-    upia_degree = edgelist.group_by(pl.col("upia")).agg(pl.n_unique("upib"))
-    metrics["upia_degree_mean"] = round(upia_degree.mean().collect()[0, 1], 2)
-    metrics["upia_degree_median"] = round(upia_degree.median().collect()[0, 1], 2)
-
-    metrics = _calculate_graph_metrics(metrics=metrics, graph=graph, edgelist=edgelist)
-
-    return metrics
+    counts_per_molecule = edgelist.select(pl.col("count")).collect()["count"]
+    metrics["read_count"] = int(counts_per_molecule.sum())
+    metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
+        counts_per_molecule
+    )
+    combined_metrics: EdgelistMetrics = _calculate_graph_metrics(
+        metrics=metrics, graph=graph, edgelist=edgelist
+    )
+    return combined_metrics
 
 
 def edgelist_metrics(
     edgelist: Union[pd.DataFrame, pl.LazyFrame], graph: Optional[Graph] = None
-) -> Dict[str, Union[int, float]]:
+) -> EdgelistMetrics:
     """Compute edgelist metrics.
 
     A simple function that computes a dictionary of basic metrics
@@ -319,12 +351,12 @@ def edgelist_metrics(
     :param edgelist: the edge list (pd.DataFrame)
     :param graph: optionally add the graph instance that corresponds to the
                   edgelist (to not have to re-compute it)
-    :returns: a dictionary of metrics
-    :rtype: Dict[str, Union[int, float]]
+    :returns: a dataclass of metrics
+    :rtype: EdgelistMetrics
     :raises TypeError: if edgelist is not either pd.DataFrame or pl.LazyFrame
     """
     if isinstance(edgelist, pd.DataFrame):
-        logger.debug("Compputing edgelist metrics where edgelist type is pd.DataFrame")
+        logger.debug("Computing edgelist metrics where edgelist type is pd.DataFrame")
         return _edgelist_metrics_pandas_data_frame(edgelist=edgelist, graph=graph)
 
     if isinstance(edgelist, pl.LazyFrame):

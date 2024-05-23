@@ -1,8 +1,9 @@
 """
 Plugin helpers for the cli.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 import importlib.metadata
 
 try:
@@ -11,8 +12,8 @@ except ImportError:
     # Python 3.8 and 3.9
     pass
 
-from importlib.metadata import EntryPoint
 import logging
+from importlib.metadata import EntryPoint
 from typing import Generator, List, Union
 
 from click import Group
@@ -24,6 +25,7 @@ def fetch_cli_plugins() -> Generator[EntryPoint, None, None]:
     """
     Find plugins and return them as in a generator.
 
+    :yields EntryPoint: The entrypoint object
     :returns: A generator of the EntryPoint objects
     """
     eps = importlib.metadata.entry_points()
@@ -45,10 +47,9 @@ def fetch_cli_plugins() -> Generator[EntryPoint, None, None]:
 
 
 def add_cli_plugins(group: Group) -> None:
-    """
-    Add all cli plugins we can find to the provided group
-    :param group: An instance of `click.Group` to add sub commands to
+    """Add all cli plugins we can find to the provided group.
 
+    :param group: An instance of `click.Group` to add sub commands to
     :returns: None
     """
     for entrypoint in fetch_cli_plugins():

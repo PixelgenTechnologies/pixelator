@@ -1,5 +1,5 @@
 """
 Tests for config module
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """

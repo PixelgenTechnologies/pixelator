@@ -1,9 +1,10 @@
 """Tests relating to community detection.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import pandas as pd
+import polars as pl
 import pytest
 from pixelator.graph.community_detection import (
     community_detection_crossing_edges,
@@ -12,8 +13,6 @@ from pixelator.graph.community_detection import (
     recover_technical_multiplets,
 )
 
-import polars as pl
-
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_connect_components(enable_backend, input_edgelist, output_dir, metrics_file):
@@ -21,7 +20,7 @@ def test_connect_components(enable_backend, input_edgelist, output_dir, metrics_
     connect_components(
         input=input_edgelist,
         output=output_dir,
-        output_prefix="test",
+        sample_name="test",
         metrics_file=metrics_file,
         multiplet_recovery=True,
         min_count=1,
@@ -40,7 +39,7 @@ def test_connect_components_benchmark(
         connect_components,
         input=input_edgelist,
         output=output_dir,
-        output_prefix="test",
+        sample_name="test",
         metrics_file=metrics_file,
         multiplet_recovery=True,
         min_count=1,
@@ -59,7 +58,7 @@ def test_connect_components_no_recovery(
     connect_components(
         input=input_edgelist,
         output=output_dir,
-        output_prefix="test",
+        sample_name="test",
         metrics_file=metrics_file,
         multiplet_recovery=False,
         min_count=1,

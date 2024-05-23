@@ -1,0 +1,3 @@
+sample_id,input_read_count,output_read_count,molecule_count,fraction_duplicate_reads,collapsed_molecule_count_mean,collapsed_molecule_count_std,collapsed_molecule_count_min,collapsed_molecule_count_q1,collapsed_molecule_count_q2,collapsed_molecule_count_q3,collapsed_molecule_count_max,collapsed_molecule_count_count,collapsed_molecule_count_iqr
+pbmcs_unstimulated,168776,6237,3086,0.5052108385441718,1.0,0.0,1.0,1.0,1.0,1.0,1.0,3086,0.0
+uropod_control,251486,8117,4026,0.5040039423432303,1.0,0.0,1.0,1.0,1.0,1.0,1.0,4026,0.0

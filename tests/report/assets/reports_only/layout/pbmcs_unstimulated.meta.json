@@ -1,0 +1,12 @@
+{
+    "cli": {
+        "command": "pixelator single-cell layout",
+        "options": {
+            "--add-node-marker-counts": true,
+            "--layout": [
+                "pmds_3d"
+            ],
+            "--output": "./"
+        }
+    }
+}

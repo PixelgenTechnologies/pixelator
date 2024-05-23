@@ -1,6 +1,6 @@
 """Implementation of the pixelator Graph protocol based on networkx.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import warnings
 from collections import defaultdict
+from timeit import default_timer as timer
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -19,19 +20,14 @@ from typing import (
     Set,
     Tuple,
     Union,
+    get_args,
 )
 
 import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
-
-with warnings.catch_warnings():
-    # Graspologic raises a numba related warning here, that we can
-    # safely ignore.
-    warnings.filterwarnings("ignore", module="graspologic.models.edge_swaps")
-    from graspologic.partition import leiden
-
+import scipy as sp
 from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
@@ -39,6 +35,7 @@ from pixelator.graph.backends.protocol import (
     Edge,
     EdgeSequence,
     GraphBackend,
+    SupportedLayoutAlgorithm,
     Vertex,
     VertexClustering,
     VertexSequence,
@@ -68,7 +65,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     @staticmethod
     def _build_plain_graph_from_edgelist(
-        df: pl.LazyFrame,
+        df: pl.DataFrame,
         create_using: Union[nx.Graph, nx.MultiGraph],
     ) -> Union[nx.Graph, nx.MultiGraph]:
         g = nx.empty_graph(0, create_using)
@@ -77,29 +74,25 @@ class NetworkXGraphBackend(GraphBackend):
         # here. If it is needed or not seems to depend on the
         # exact call context, so it might be that we can actually
         # enable it again here and improve the memory usage.
-        for idx, row in enumerate(
-            df.collect(streaming=True, projection_pushdown=False).iter_rows(
-                named=False, buffer_size=1000
-            )
-        ):
+        for idx, row in enumerate(df.iter_rows(named=False, buffer_size=1000)):
             g.add_edge(row[0], row[1], index=idx)
         return g
 
     @staticmethod
     def _build_graph_with_node_counts_from_edgelist(
-        df: pl.LazyFrame,
+        df: pl.DataFrame,
         create_using: Union[nx.Graph, nx.MultiGraph],
     ) -> Union[nx.Graph, nx.MultiGraph]:
-        unique_markers = set(df.unique("marker").collect()["marker"].to_list())
+        unique_markers = set(df.select("marker").unique()["marker"].to_list())
         initial_marker_dict = {marker: 0 for marker in unique_markers}
 
         g: nx.Graph = nx.empty_graph(0, create_using)
 
         for idx, row in enumerate(
             (
-                df.select(["upia", "upib", "marker"])
-                .collect(streaming=True)
-                .iter_rows(named=False, buffer_size=1000)
+                df.select(["upia", "upib", "marker"]).iter_rows(
+                    named=False, buffer_size=1000
+                )
             )
         ):
             # We are duplicating code here, since it gives
@@ -159,11 +152,12 @@ class NetworkXGraphBackend(GraphBackend):
     def _build_graph_with_marker_counts(
         edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
     ) -> Union[nx.Graph, nx.MultiGraph]:
+        edgelist_cl = edgelist.select(["upia", "upib", "marker"]).collect()
         graph = NetworkXGraphBackend._build_graph_with_node_counts_from_edgelist(
-            edgelist,
+            edgelist_cl,
             create_using=nx.Graph if simplify else nx.MultiGraph,
         )
-        a_nodes = set(edgelist.select(["upia"]).unique().collect()["upia"].to_list())
+        a_nodes = set(edgelist_cl.select(["upia"]).unique()["upia"].to_list())
         NetworkXGraphBackend._add_node_attributes(graph, a_nodes)
         if use_full_bipartite:
             return graph
@@ -173,11 +167,12 @@ class NetworkXGraphBackend(GraphBackend):
     def _build_plain_graph(
         edgelist: pl.LazyFrame, simplify: bool, use_full_bipartite: bool
     ) -> Union[nx.Graph, nx.MultiGraph]:
+        edgelist_cl = edgelist.select(["upia", "upib"]).collect()
         graph = NetworkXGraphBackend._build_plain_graph_from_edgelist(
-            edgelist.select(pl.col("upia"), pl.col("upib")),
+            edgelist_cl,
             create_using=nx.Graph if simplify else nx.MultiGraph,
         )
-        a_nodes = set(edgelist.select(["upia"]).unique().collect()["upia"].to_list())
+        a_nodes = set(edgelist_cl.select(["upia"]).unique()["upia"].to_list())
         NetworkXGraphBackend._add_node_attributes(graph, a_nodes)
         if use_full_bipartite:
             return graph
@@ -189,6 +184,7 @@ class NetworkXGraphBackend(GraphBackend):
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
+        convert_indices_to_integers: bool = True,
     ) -> NetworkXGraphBackend:
         """Build a graph from an edgelist.
 
@@ -207,6 +203,7 @@ class NetworkXGraphBackend(GraphBackend):
         :param simplify: simplifies the graph (remove redundant edges)
         :param use_full_bipartite: use the bipartite graph instead of the projection
                                   (UPIA)
+        :param convert_indices_to_integers: convert the indices to integers (this is the default)
         :returns: a GraphBackend instance
         :rtype: NetworkXGraphBackend
         :raises: AssertionError when the input edge list is not valid
@@ -226,7 +223,8 @@ class NetworkXGraphBackend(GraphBackend):
         # TODO igraph uses integer indexing. This converts the networkx graph to using
         # the same-ish schema. We probably evaluate if this is really necessary later,
         # or potentially only do it on request.
-        graph = nx.convert_node_labels_to_integers(graph, ordering="sorted")
+        if convert_indices_to_integers:
+            graph = nx.convert_node_labels_to_integers(graph, ordering="sorted")
 
         return NetworkXGraphBackend(raw=graph)
 
@@ -285,6 +283,13 @@ class NetworkXGraphBackend(GraphBackend):
         **kwargs,
     ) -> VertexClustering:
         """Run community detection using the Leiden algorithm."""
+        # Only importing leiden at runtime since it is very slow to import
+        with warnings.catch_warnings():
+            # Graspologic raises a numba related warning here, that we can
+            # safely ignore.
+            warnings.filterwarnings("ignore", module="graspologic.models.edge_swaps")
+            from graspologic.partition import leiden
+
         graph = self._raw
 
         # TODO This is probably not sufficient for
@@ -315,20 +320,15 @@ class NetworkXGraphBackend(GraphBackend):
 
     def _layout_coordinates(
         self,
-        layout_algorithm: str = "fruchterman_reingold",
+        layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
         random_seed: Optional[int] = None,
+        **kwargs,
     ) -> pd.DataFrame:
-        layout_options = [
-            "fruchterman_reingold",
-            "fruchterman_reingold_3d",
-            "kamada_kawai",
-            "kamada_kawai_3d",
-        ]
-        if layout_algorithm not in layout_options:
+        if layout_algorithm not in get_args(SupportedLayoutAlgorithm):
             raise AssertionError(
                 (
                     f"{layout_algorithm} not allowed `layout_algorithm` option. "
-                    f"Options are: {'/'.join(layout_options)}"
+                    f"Options are: {'/'.join(get_args(SupportedLayoutAlgorithm))}"
                 )
             )
 
@@ -348,15 +348,17 @@ class NetworkXGraphBackend(GraphBackend):
             layout_inst = nx.spring_layout(raw, seed=random_seed)
         if layout_algorithm == "fruchterman_reingold_3d":
             layout_inst = nx.spring_layout(raw, dim=3, seed=random_seed)
+        if layout_algorithm == "pmds":
+            layout_inst = pmds_layout(raw, seed=random_seed, **kwargs)
+        if layout_algorithm == "pmds_3d":
+            layout_inst = pmds_layout(raw, dim=3, seed=random_seed, **kwargs)
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
             orient="index",
-            columns=["x", "y"] if len(layout_inst[0]) == 2 else ["x", "y", "z"],
+            columns=["x", "y", "z"] if "3d" in layout_algorithm else ["x", "y"],
         )
-        coordinates.index = [
-            str(raw.nodes[node_idx]["name"]) for node_idx in layout_inst.keys()
-        ]
+
         return coordinates
 
     @staticmethod
@@ -367,12 +369,38 @@ class NetworkXGraphBackend(GraphBackend):
         )
         return coordinates
 
+    def node_marker_counts(self) -> pd.DataFrame:
+        """Get the marker counts of each node as a dataframe.
+
+        :return: node markers as a dataframe
+        :rtype: pd.DataFrame
+        :raises: AssertionError if graph nodes don't include markers
+        """
+        if "markers" not in self.vs.attributes():
+            raise AssertionError("Could not find 'markers' in vertex attributes")
+        markers = list(sorted(next(iter(self.vs))["markers"].keys()))
+        node_marker_counts = pd.DataFrame.from_records(
+            list(self.vs.get_attribute("markers")),
+            columns=markers,
+            index=list(self.raw.nodes),
+        )
+        node_marker_counts = node_marker_counts.reindex(
+            sorted(node_marker_counts.columns), axis=1
+        )
+        node_marker_counts.columns.name = "markers"
+        node_marker_counts.columns = node_marker_counts.columns.astype(
+            "string[pyarrow]"
+        )
+        node_marker_counts.index.name = "node"
+        return node_marker_counts
+
     def layout_coordinates(
         self,
-        layout_algorithm: str = "fruchterman_reingold",
+        layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
@@ -380,13 +408,15 @@ class NetworkXGraphBackend(GraphBackend):
         counts to use that can be used for plotting.
 
         The layout options are:
+          - pmds
+          - pmds_3d
           - fruchterman_reingold
           - fruchterman_reingold_3d
           - kamada_kawai
           - kamada_kawai_3d
 
-        The `fruchterman_reingold` options are in general faster, but less
-        accurate than the `kamada_kawai` ones.
+        The `pmds` options are much (~10-100x) faster than the `fruchterman_reingold` and
+        the `kamada_kawai`.
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
         :param only_keep_a_pixels: If true, only keep the a-pixels
@@ -395,13 +425,15 @@ class NetworkXGraphBackend(GraphBackend):
         :param random_seed: used as the seed for graph layouts with a stochastic
                             element. Useful to get deterministic layouts across
                             method calls.
+        :param **kwargs: will be passed to the underlying layout implementation
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid
         :raises: ValueError if the provided current graph instance is empty
         """
+        start_time = timer()
         coordinates = self._layout_coordinates(
-            layout_algorithm=layout_algorithm, random_seed=random_seed
+            layout_algorithm=layout_algorithm, random_seed=random_seed, **kwargs
         )
 
         # If we are doing a 3D layout we add the option of normalized
@@ -411,18 +443,25 @@ class NetworkXGraphBackend(GraphBackend):
             coordinates = self._normalize_to_unit_sphere(coordinates)
 
         if get_node_marker_matrix:
-            # Added here to avoid circular imports
-            from pixelator.graph.utils import create_node_markers_counts
-
-            node_marker_counts = create_node_markers_counts(self)  # type: ignore
+            node_marker_counts = self.node_marker_counts()  # type: ignore
             df = pd.concat([coordinates, node_marker_counts], axis=1)
         else:
             df = coordinates
+        pixel_name_and_type = pd.DataFrame.from_records(
+            [(v.index, v["name"], v["pixel_type"]) for v in self.vs.vertices()],
+            columns=["index", "name", "pixel_type"],
+        )
+        pixel_name_and_type = pixel_name_and_type.set_index("index", drop=False)
+        df = pd.concat([pixel_name_and_type, df], axis=1)
 
         if only_keep_a_pixels:
-            a_node_idx = [v.index for v in self.vs.vertices() if v["pixel_type"] == "A"]
-            df = df.iloc[list(a_node_idx),]
+            df = df[df["pixel_type"] == "A"]
 
+        logger.debug(
+            "Layout computation using %s took %.2f seconds",
+            layout_algorithm,
+            timer() - start_time,
+        )
         return df
 
     def get_edge_dataframe(self):
@@ -466,7 +505,9 @@ class NetworkXGraphBackend(GraphBackend):
 class NetworkxBasedVertex(Vertex):
     """A Vertex instance that plays well with NetworkX."""
 
-    def __init__(self, index: int, data: Dict, graph: Union[nx.Graph, nx.MultiGraph]):
+    def __init__(
+        self, index: int | str, data: Dict, graph: Union[nx.Graph, nx.MultiGraph]
+    ):
         """Create a new NetworkxBasedVertex instance."""
         self._index = index
         self._data = data
@@ -506,7 +547,9 @@ class NetworkxBasedEdge(Edge):
     """An Edge instance backed by a Networkx Edge."""
 
     def __init__(
-        self, edge_tuple: Tuple[int, int, Any], graph: Union[nx.Graph, nx.MultiGraph]
+        self,
+        edge_tuple: Tuple[int | str, int | str, Any],
+        graph: Union[nx.Graph, nx.MultiGraph],
     ):
         """Create a NetworkxBasedEdge instance."""
         self.edge_tuple = edge_tuple
@@ -693,3 +736,85 @@ class NetworkxBasedVertexClustering(VertexClustering):
             Graph(NetworkXGraphBackend(self._graph.subgraph(cluster).copy()))
             for cluster in self._clustering
         ]
+
+
+def pmds_layout(
+    g: nx.Graph, pivots: int = 50, dim: int = 2, seed: Optional[int] = None
+) -> pd.DataFrame:
+    """Calculate a pivot MDS layout for a graph as described in [1]_.
+
+    The algorithm is similar to classical multidimensional scaling (MDS), but uses only
+    a smalls set of random pivot nodes. The algorithm is considerably faster than MDS
+    and therefore scales better to large graphs. The topology of resulting layouts are
+    deterministic for a given seed, but may be mirrored across different systems due to
+    variations in floating-point precision.
+
+    .. [1] Brandes U, Pich C. Eigensolver Methods for Progressive Multidimensional
+        Scaling of Large Data. International Symposium on Graph Drawing, 2007.
+        Lecture Notes in Computer Science, vol 4372. doi: 10.1007/978-3-540-70904-6_6.
+
+    :param g: A networkx graph object
+    :param pivots: The number of pivot nodes to use
+    :param dim: The dimension of the layout
+    :param seed: Set seed for reproducibility
+    :return: A dataframe with layout coordinates
+    :rtype: pd.DataFrame
+    :raises: ValueError raises if conditions are not met
+    """
+    if not nx.is_connected(g):
+        raise ValueError("Only connected graphs are supported.")
+
+    if pivots >= len(g.nodes):
+        raise ValueError("'pivots' must be less than the number of nodes in the graph.")
+
+    if dim not in [2, 3]:
+        raise ValueError("'dim' must be either 2 or 3.")
+
+    if pivots < dim:
+        raise ValueError("'pivots' must be greater than or equal to dim.")
+
+    pivot_lower_bound = np.min([np.floor(0.2 * len(g.nodes)), 50])
+    if pivots < pivot_lower_bound:
+        raise ValueError(
+            f"'pivots' must be greater than or equal to {pivot_lower_bound}"
+        )
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    node_list = list(g.nodes)
+
+    # Select random pivot nodes
+    pivs = np.random.choice(node_list, pivots, replace=False)
+
+    # Calculate the shortest path length from the pivots to all other nodes
+    A = nx.to_scipy_sparse_array(g, weight=None, nodelist=node_list, format="csr")
+
+    # This is a workaround for what seems to be a bug in the type of
+    # the indices of the sparse array created above
+    A.indices = A.indices.astype(np.intc, copy=False)
+    A.indptr = A.indptr.astype(np.intc, copy=False)
+    D = sp.sparse.csgraph.shortest_path(
+        A,
+        directed=False,
+        unweighted=True,
+        method="D",
+        indices=np.where(np.isin(g.nodes, pivs))[0],
+    ).T
+
+    # Center values in rows and columns
+    cmean = np.mean(D**2, axis=0)
+    rmean = np.mean(D**2, axis=1)
+    D_pivs_centered = D**2 - np.add.outer(rmean, cmean) + np.mean(D**2)
+
+    # Compute SVD and use distances to compute coordinates for all nodes
+    # in an abstract cartesian space
+    _, _, Vh = sp.sparse.linalg.svds(D_pivs_centered, k=dim, random_state=seed)
+    coordinates = D_pivs_centered @ np.transpose(Vh)
+    # Flip the coordinates here to make sure that we get the correct coordinate ordering
+    # i.e. iqr(x) > iqr(y) > iqr(z)
+    coordinates = np.flip(coordinates, axis=1)
+
+    coordinates = {node_list[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
+
+    return coordinates

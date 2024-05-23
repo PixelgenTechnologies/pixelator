@@ -2,11 +2,11 @@
 
 This module contains functions related to various useful statistics/math
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import logging
-from typing import List, Literal
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -105,59 +105,6 @@ def correct_pvalues(pvalues: np.ndarray) -> np.ndarray:
     return q[original_order_idx]
 
 
-def denoise(
-    df: pd.DataFrame,
-    antibody_control: List[str],
-    quantile: float,
-    axis: Literal[0, 1] = 0,
-) -> pd.DataFrame:
-    """Denoise antibody counts using the controls supplied as parameter.
-
-    A helper function that denoises dataframe of antibody counts using
-    the `antibody_control` given as input. The denoising is performed by
-    simply substracting the counts of the control antibodies (max count
-    over the given `quantile`). Use `axis=0` to compute one denoise factor
-    per column (antibody) taking the maximum value and `axis=1` to compute
-    the denoise factors per row (component).
-
-    :param df: the dataframe with the antibody counts
-    :param antibody_control: the antibodies to use as control
-    :param quantile: the quantile (0-1) value to use to substract
-    :param axis: on which axis to apply the denoising
-    :raises AssertionError: the input arguments are incorrect
-    :return: a dataframe of denoised antibody counts
-    :rtype: pd.DataFrame
-    """
-    if quantile < 0 or quantile > 1:
-        raise AssertionError("quantile must be between 0 and 1")
-
-    if antibody_control is None or len(antibody_control) == 0:
-        raise AssertionError("The antibody control list is empty")
-
-    if axis not in [0, 1]:
-        raise AssertionError(f"Invalid axis value {axis}")
-
-    shared = np.intersect1d(df.columns, antibody_control)
-    if len(shared) == 0:
-        raise AssertionError("None of the control antibodies are present in the data")
-
-    logger.debug(
-        "Denoising antibody counts with %i nodes and %i marker using %s as control",
-        df.shape[0],
-        df.shape[1],
-        ",".join(shared),
-    )
-
-    diff = df[shared].quantile(q=quantile, axis=axis)
-    if axis == 0:
-        denoised = df.sub(diff.max(), axis=1)
-    else:
-        denoised = df.sub(diff, axis=0)
-
-    logger.debug("Antibody counts denoised")
-    return denoised
-
-
 def log1p_transformation(df: pd.DataFrame) -> pd.DataFrame:
     """Transform a antibody counts using the log1p function.
 
@@ -182,6 +129,27 @@ def log1p_transformation(df: pd.DataFrame) -> pd.DataFrame:
 
     logger.debug("LOG1P transformation computed")
     return log1p_df
+
+
+def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
+    """Transform antibody counts as deviation from an expected baseline distribution.
+
+    In this function we refer to baseline distribution as fixed ratio of different
+    antibody types in each node. For example, if in total 10% of antibodies are
+    HLA-ABC, in a node with 120 antibodies we expect to see 12 HLA-ABC counts.
+    If we actually see 8 counts in this node, the rate_diff_transformation for
+    HLA-ABC in this node will be -4.
+
+    :param df: the dataframe of raw antibody counts (antibodies as columns)
+    :returns: a dataframe with the counts difference from expected values
+    :rtype: pd.DataFrame
+    """
+    antibody_counts_per_node = df.sum(axis=1)
+    antibody_rates = df.sum(axis=0)
+    antibody_rates = antibody_rates / antibody_rates.sum()
+
+    expected_counts = antibody_counts_per_node.to_frame() @ antibody_rates.to_frame().T
+    return df - expected_counts
 
 
 def rel_normalization(df: pd.DataFrame, axis: Literal[0, 1] = 0) -> pd.DataFrame:

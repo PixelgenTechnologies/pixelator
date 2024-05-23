@@ -1,16 +1,13 @@
 """Graph console script for pixelator.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
-
-from concurrent import futures
 
 import click
 
 from pixelator.cli.common import logger, output_option
 from pixelator.graph import connect_components
 from pixelator.utils import (
-    click_echo,
     create_output_stage_dir,
     get_sample_name,
     log_step_start,
@@ -26,8 +23,8 @@ from pixelator.utils import (
     options_metavar="<options>",
 )
 @click.argument(
-    "input_files",
-    nargs=-1,
+    "parquet_file",
+    nargs=1,
     required=True,
     type=click.Path(exists=True),
     metavar="parquet",
@@ -66,7 +63,7 @@ from pixelator.utils import (
 @timer
 def graph(
     ctx,
-    input_files,
+    parquet_file,
     multiplet_recovery,
     leiden_iterations,
     min_count,
@@ -74,6 +71,7 @@ def graph(
 ):
     """Compute graph, components and other metrics from an edge list."""
     # log input parameters
+    input_files = [parquet_file]
     log_step_start(
         "graph",
         input_files=input_files,
@@ -90,35 +88,23 @@ def graph(
     graph_output = create_output_stage_dir(output, "graph")
 
     # compute graph/components using parallel processing
-    with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
-        jobs = []
-        for pixelsf in input_files:
-            msg = f"Computing clusters for file {pixelsf}"
-            click_echo(msg)
-            logger.info(msg)
+    logger.info(f"Computing clusters for file {parquet_file}")
 
-            clean_name = get_sample_name(pixelsf)
-            metrics_file = graph_output / f"{clean_name}.report.json"
+    clean_name = get_sample_name(parquet_file)
+    metrics_file = graph_output / f"{clean_name}.report.json"
 
-            write_parameters_file(
-                ctx,
-                graph_output / f"{clean_name}.meta.json",
-                command_path="pixelator single-cell graph",
-            )
+    write_parameters_file(
+        ctx,
+        graph_output / f"{clean_name}.meta.json",
+        command_path="pixelator single-cell graph",
+    )
 
-            jobs.append(
-                executor.submit(
-                    connect_components,
-                    input=pixelsf,
-                    output=str(graph_output),
-                    output_prefix=clean_name,
-                    metrics_file=str(metrics_file),
-                    multiplet_recovery=multiplet_recovery,
-                    leiden_iterations=leiden_iterations,
-                    min_count=min_count,
-                )
-            )
-
-        for job in futures.as_completed(jobs):
-            if job.exception() is not None:
-                raise job.exception()
+    connect_components(
+        input=str(parquet_file),
+        output=str(graph_output),
+        sample_name=clean_name,
+        metrics_file=str(metrics_file),
+        multiplet_recovery=multiplet_recovery,
+        leiden_iterations=leiden_iterations,
+        min_count=min_count,
+    )

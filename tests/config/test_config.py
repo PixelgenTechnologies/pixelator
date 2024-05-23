@@ -1,12 +1,12 @@
 """
 Tests for config module
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 import copy
 
 import pytest
-
 from pixelator.config import (
     Config,
     RegionType,
@@ -95,7 +95,7 @@ def test_loading_panel_from_config(config_with_multiple_versions):
         "human-sc-immunology-spatial-proteomics"
     )
     assert panel.name == "human-sc-immunology-spatial-proteomics"
-    assert panel.version == "0.3.0"
+    assert panel.version == "0.5.0"
 
 
 def test_loading_panel_from_config_specific_version(config_with_multiple_versions):
@@ -104,6 +104,12 @@ def test_loading_panel_from_config_specific_version(config_with_multiple_version
     )
     assert panel.name == "human-sc-immunology-spatial-proteomics"
     assert panel.version == "0.2.0"
+
+    panel = config_with_multiple_versions.get_panel(
+        "human-sc-immunology-spatial-proteomics", version="0.3.0"
+    )
+    assert panel.name == "human-sc-immunology-spatial-proteomics"
+    assert panel.version == "0.3.0"
 
 
 def test_load_antibody_panel_util(data_root):

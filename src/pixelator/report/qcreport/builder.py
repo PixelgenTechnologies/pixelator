@@ -3,8 +3,9 @@
 The QCReportBuilder is used to inject all QC report data into the
 template and write the final QC report to a file.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 import base64
 import dataclasses
 import gzip
@@ -18,8 +19,8 @@ import semver
 from lxml.etree import _Element as LxmlElement
 from lxml.html import builder as E
 
-from pixelator.report.qcreport.types import Metrics, SampleInfo, QCReportData
-from pixelator.types import PathType
+from pixelator.report.common.json_encoder import PixelatorJSONEncoder
+from pixelator.report.qcreport.types import Metrics, QCReportData, SampleInfo
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +41,12 @@ class QCReportBuilder:
     `data-dataset-id` is always set to '0'.
 
     >>> builder = QCReportBuilder("./path/to/template.html")
-    >>> with open("example.qc-report.html", "wb") as fp:
+    >>> with open("report.html", "wb") as fp:
     ...    builder.write(fp, sample_info, metrics, data)
     """
 
     _JSON_OPTIONS: ClassVar[Dict[str, Any]] = {"indent": None, "separators": (",", ":")}
-    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.10.0", ">=0.9.0"]
+    VERSIONS_CONSTRAINTS: ClassVar[List[str]] = ["<0.14.0", ">=0.10.0"]
 
     def __init__(self, template: Union[str, Path] = DEFAULT_QC_REPORT_TEMPLATE):
         """Construct a QC report builder given a html template.
@@ -106,7 +107,7 @@ class QCReportBuilder:
         sample_info: SampleInfo,
         metrics: Metrics,
         data: QCReportData,
-        metrics_definition_file: Optional[PathType] = None,
+        metrics_definition_file: Optional[Path] = None,
     ) -> None:
         """Inject given data into the QC report and write the results to a stream.
 
@@ -157,10 +158,10 @@ class QCReportBuilder:
         if data.antibody_counts is not None:
             elements.append(self._build_antibody_counts_element(data.antibody_counts))
 
-        if data.reads_per_umi_frequency is not None:
+        if data.reads_per_molecule_frequency is not None:
             elements.append(
-                self._build_reads_per_umi_frequency_element(
-                    data.reads_per_umi_frequency
+                self._build_reads_per_molecule_frequency_element(
+                    data.reads_per_molecule_frequency
                 )
             )
 
@@ -174,7 +175,7 @@ class QCReportBuilder:
         logger.debug("Data injected in QC report template %s", self.template)
 
     def _build_metric_definition_file_element(
-        self, metrics_definition_file: PathType, template_body: LxmlElement
+        self, metrics_definition_file: Path, template_body: LxmlElement
     ) -> LxmlElement:
         """Create a lxml HTML object to inject the metrics definition file."""
         template_body.cssselect('script[data-type="metric-definitions"]')
@@ -213,7 +214,7 @@ class QCReportBuilder:
             "info": dataclasses.asdict(sample_info),
             "metrics": metrics,
         }
-        data = json.dumps(combined, **self._JSON_OPTIONS)
+        data = json.dumps(combined, **self._JSON_OPTIONS, cls=PixelatorJSONEncoder)
         metrics_el.text = self._compress_data(data)
         return metrics_el
 
@@ -273,12 +274,12 @@ class QCReportBuilder:
         """Create an HTML object injecting the antibody counts data."""
         antibody_counts_el = E.SCRIPT(
             **{
-                "type": "text/csv",
+                "type": "application/octet-stream;base64",
                 "data-type": "antibody-percentages",
                 "data-dataset-id": "0",
             }
         )
-        antibody_counts_el.text = data
+        antibody_counts_el.text = self._compress_data(data)
         return antibody_counts_el
 
     def _build_antibody_counts_element(self, data: str) -> LxmlElement:
@@ -293,17 +294,17 @@ class QCReportBuilder:
         antibody_distribution_el.text = self._compress_data(data)
         return antibody_distribution_el
 
-    def _build_reads_per_umi_frequency_element(self, data: str) -> LxmlElement:
+    def _build_reads_per_molecule_frequency_element(self, data: str) -> LxmlElement:
         """Create an HTML object injecting the data for the reads per umi histogram."""
-        reads_per_umi_frequency_el = E.SCRIPT(
+        reads_per_molecule_frequency_el = E.SCRIPT(
             **{
                 "type": "application/octet-stream;base64",
-                "data-type": "reads-per-umi-frequency",
+                "data-type": "reads-per-molecule-frequency",
                 "data-dataset-id": "0",
             }
         )
-        reads_per_umi_frequency_el.text = self._compress_data(data)
-        return reads_per_umi_frequency_el
+        reads_per_molecule_frequency_el.text = self._compress_data(data)
+        return reads_per_molecule_frequency_el
 
     @staticmethod
     def _compress_data(data: str):

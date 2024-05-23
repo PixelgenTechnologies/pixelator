@@ -1,0 +1,207 @@
+version: "3"
+
+tasks:
+  pull-nf-core-pixelator:
+    internal: true
+    desc: >-
+      Pull the nf-core/pixelator pipeline from github.
+    summary: |
+      Pull the nf-core/pixelator pipeline from github.
+
+      This task will clone the nf-core/pixelator repository from github.
+
+      The GitHub repo can be configured using `PIPELINE_REPO`.
+      By default the Pixelgen Technologies fork is used (PixelgenTechnologies/nf-core-pixelator).
+
+      The branch to checkout can be configured using `PIPELINE_BRANCH`.
+      By default the "pixelator-next" branch is used.
+
+      The code will be cloned to `PIPELINE_SOURCE_DIR`.
+      The default is to clone it to "../nf-core-pixelator".
+
+      If the `PIPELINE_SOURCE_DIR` directory already exists, this task will do nothing.
+      This also means that the `PIPELINE_BRANCH` will be ignored if the pipeline directory
+      is manually checked out into a different branch.
+
+    dir: "{{ .USER_WORKING_DIR }}"
+    vars:
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
+      PIPELINE_REPO: '{{ .PIPELINE_REPO | default "git@github.com:PixelgenTechnologies/nf-core-pixelator.git" }}'
+      PIPELINE_BRANCH: '{{ .PIPELINE_BRANCH | default "pixelator-next" }}'
+    cmds:
+      - '[[ ! -d "{{ .PIPELINE_SOURCE_DIR }}" ]]
+        && git clone {{ .PIPELINE_REPO }}
+        --branch {{ .PIPELINE_BRANCH }}
+        --single-branch --depth 1 {{ .PIPELINE_SOURCE_DIR }}
+        || echo "Skipping clone: nf-core-pixelator already exists in {{ .PIPELINE_SOURCE_DIR }} ."'
+
+  run-nf-core-pixelator-test-profile:
+    internal: true
+    desc: >-
+      Run the nf-core/pixelator pipeline using the test profile.
+    summary: |
+      Run the nf-core/pixelator pipeline using the test profile.
+
+      Variables:
+        - `PIPELINE_SOURCE_DIR`: The root directory of the nf-core/pixelator repository. Default is "../nf-core-pixelator".
+        - `RESUME`: Whether to use the `-resume` option. Default is "false".
+        - `PIPELINE_RESULTS_DIR`: The directory to store the pipeline results in.
+          Default is "results" inside the PIPELINE_SOURCE_DIR.
+
+    dir: "{{ .USER_WORKING_DIR }}"
+    vars:
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
+      PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "results" }}'
+      RESUME: '{{ .RESUME | default "false" }}'
+    requires:
+      vars: ["PIPELINE_SOURCE_DIR"]
+    cmds:
+      - nf_options=();
+        [[ {{ .RESUME }} == 'true' ]] && nf_options+=('-resume ');
+        cd "{{ .PIPELINE_SOURCE_DIR }}";
+        nextflow run . -profile test --outdir {{ .PIPELINE_RESULTS_DIR }} ${nf_options[@]};
+
+  remove-pipeline-run:
+    internal: true
+    prompt: "Cleanup the pipeline run in {{ .PIPELINE_RESULTS_DIR }}?"
+    dir: "{{ .USER_WORKING_DIR }}"
+    vars:
+      PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "../nf-core-pixelator/tmp" }}'
+    cmds:
+      - rm -r "{{ .PIPELINE_RESULTS_DIR }}"
+
+  copy-nf-core-pixelator-test-profile-results:
+    internal: true
+    desc: >-
+      Copy selected files from an nf-core/pixelator pipeline to use as test data for pixelator.
+    summary: |
+      Copy selected files from an nf-core/pixelator pipeline to use as test data for pixelator.
+
+      Variables:
+        - `PIPELINE_SOURCE_DIR`: The root directory of the nf-core/pixelator repository. Default is "../nf-core-pixelator".
+        - `PIPELINE_RESULTS_DIR`: The directory to store the pipeline results in.
+          Default is "results" inside the PIPELINE_SOURCE_DIR.
+        - REPORTS_ASSETS_DIR: Where to save the report.json files in the pixelator tests
+        - DATA_ASSETS_DIR: Where to save other test files
+    vars:
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
+      PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "tmp" }}'
+      REPORTS_ASSETS_DIR: '{{ .REPORTS_ASSETS_DIR }}'
+      DATA_ASSETS_DIR: '{{ .DATA_ASSETS_DIR }}'
+    requires:
+      vars: ["REPORTS_ASSETS_DIR", "DATA_ASSETS_DIR"]
+    dir: "{{ .USER_WORKING_DIR }}"
+    cmds:
+      - cd {{ .PIPELINE_SOURCE_DIR }};
+        nf_core_pixelator_dir="$(realpath $PWD)";
+        echo "Copying json reports from $nf_core_pixelator_dir to {{ .REPORTS_ASSETS_DIR }}";
+        for f in {{ .PIPELINE_RESULTS_DIR }}/pixelator/{adapterqc,amplicon,analysis,annotate,collapse,demux,graph,preqc}/*.json; do
+          relative_f=$(realpath --relative-to={{ .PIPELINE_RESULTS_DIR }}/pixelator "$f");
+          mkdir --parents $(dirname "{{ .REPORTS_ASSETS_DIR }}/${relative_f}");
+          cp "$f" "{{ .REPORTS_ASSETS_DIR }}/${relative_f}";
+        done
+      - cd {{ .PIPELINE_SOURCE_DIR }};
+        nf_core_pixelator_dir="$(realpath $PWD)";
+        echo "Copying other report test data from {{ .PIPELINE_RESULTS_DIR }} to {{ .REPORTS_ASSETS_DIR }}";
+        find {{ .PIPELINE_RESULTS_DIR }}/pixelator/annotate/ -name "uropod_control*annotate.dataset.pxl" -exec cp {} {{ .DATA_ASSETS_DIR }} \; ;
+        find {{ .PIPELINE_RESULTS_DIR }}/pixelator/annotate/ -name "uropod_control*raw_components_metrics.csv.gz" -exec cp {} {{ .DATA_ASSETS_DIR }} \; ;
+
+  #      - task: remove-pipeline-run
+#        vars: { PIPELINE_RESULTS_DIR: "{{ .PIPELINE_SOURCE_DIR }}/tmp" }
+
+  update-report-test-data:
+    desc: >-
+      Update the report test data using the nf-core/pixelator test profile.
+    summary: |
+      Update the report test data using the nf-core/pixelator test profile.
+
+      This will launch nf-core/pixelator pipeline using the `test` profile.
+      The pipeline will generate the report.json files and move the *report.json output files
+      into the test/report/assets folder. The remaining results are removed.
+      Note that the pipeline is run inside the pipeline source directory to allow -resume to work.
+
+      The pipeline root directory can be set using the `PIPELINE_SOURCE_DIR` environment variable.
+      The default is to use the `../nf-core-pixelator` directory.
+      If this directory does not exist, it will be cloned from the nf-core/pixelator repository.
+
+      The pipeline will run with `-resume` by default. This can be changed by setting the `RESUME` variable to `false`.
+    dir: "{{ .USER_WORKING_DIR }}"
+    vars:
+      RESUME: "{{ .RESUME | default false }}"
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
+      PIPELINE_BRANCH: '{{ .PIPELINE_BRANCH | default "pixelator-next" }}'
+      PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "results" }}'
+    requires:
+      vars:
+        - PIPELINE_SOURCE_DIR
+    cmds:
+      - task: pull-nf-core-pixelator
+      - task: run-nf-core-pixelator-test-profile
+      - task: copy-nf-core-pixelator-test-profile-results
+        vars:
+          PIPELINE_SOURCE_DIR: "{{ .PIPELINE_SOURCE_DIR }}"
+          PIPELINE_RESULTS_DIR: "{{ .PIPELINE_RESULTS_DIR }}"
+          REPORTS_ASSETS_DIR: "{{ .TASKFILE_DIR }}/report/assets/reports_only"
+          DATA_ASSETS_DIR: "{{ .TASKFILE_DIR }}/report/assets"
+
+  update-web-test-data:
+    desc: >-
+      Create web test data.
+
+    sources:
+      - '{{ .USER_WORKING_DIR }}/src/pixelator/**/*.py'
+      - '{{ .USER_WORKING_DIR }}/src/pixelator/resources/**'
+      - '{{ .R1 }}'
+      - '{{ .R2 }}'
+    summary: |
+      Create web test data.
+
+      This will create test data for the report integration tests.
+      This data is generated by running the all pixelator single-cell commands on a small dataset.
+
+      Variables:
+        - RESULTS_DIR: The directory to store the results in.
+        - R1: The path to the R1 fastq file.
+        - R2: The path to the R2 fastq file.
+        - DESIGN: The design file to use.
+        - PANEL: The panel file to use.
+        - ANNOTATE_PARAMS: The parameters to use for the annotate command.
+        - ANALYSIS_PARAMS: The parameters to use for the analysis command.
+
+      All variables are optional.
+    vars:
+      RESULTS_DIR: '{{ .RESULTS_DIR | default "./report/assets/full_run" }}'
+      R1: '{{ .R1 | default "./data/uropod_control_300k_S1_R1_001.fastq.gz"}}'
+      R2: '{{ .R2 | default "./data/uropod_control_300k_S1_R2_001.fastq.gz"}}'
+      DESIGN: '{{ .DESIGN | default "D21" }}'
+      PANEL: '{{ .PANEL | default "human-sc-immunology-spatial-proteomics" }}'
+      ANNOTATE_PARAMS: |
+        --min-size
+        2
+        --max-size
+        100000
+      ANALYSIS_PARAMS: |
+        --compute-polarization
+        --compute-colocalization
+        --use-full-bipartite
+        --polarization-n-permutations
+        0
+        --colocalization-min-region-count
+        0
+        --colocalization-n-permutations
+        10
+        --colocalization-neighbourhood-size
+        1
+    requires:
+      vars: [ R1, R2 ]
+    cmds:
+      - rm -r "{{ .RESULTS_DIR }}"
+      - pixelator single-cell amplicon {{ .R1 }} {{ .R2 }} --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
+      - pixelator single-cell preqc {{ .RESULTS_DIR }}/amplicon/*.fastq.gz --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
+      - pixelator single-cell adapterqc {{ .RESULTS_DIR }}/preqc/*processed*fastq.gz --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
+      - pixelator single-cell demux {{ .RESULTS_DIR }}/adapterqc/*processed*fastq.gz --design {{ .DESIGN }} --panel {{ .PANEL }} --output {{ .RESULTS_DIR }}
+      - pixelator single-cell collapse {{ .RESULTS_DIR }}/demux/*processed*fastq.gz --design {{ .DESIGN }} --panel {{ .PANEL }} --output {{ .RESULTS_DIR }}
+      - pixelator single-cell graph {{ .RESULTS_DIR }}/collapse/*.parquet --output {{ .RESULTS_DIR }}
+      - pixelator single-cell annotate {{ .RESULTS_DIR }}/graph/*.parquet --panel {{ .PANEL }} --output {{ .RESULTS_DIR }} {{ .ANNOTATE_PARAMS | catLines }}
+      - pixelator single-cell analysis {{ .RESULTS_DIR }}/annotate/*.dataset.pxl --output {{ .RESULTS_DIR }} {{ .ANALYSIS_PARAMS | catLines }}
+      - pixelator single-cell report {{ .RESULTS_DIR }} --output {{ .RESULTS_DIR }}

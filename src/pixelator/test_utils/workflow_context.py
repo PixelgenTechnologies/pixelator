@@ -1,23 +1,22 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
-"""
+"""Copyright © 2023 Pixelgen Technologies AB."""
+
 import logging
 import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pytest
-from click.testing import CliRunner, Result as CliRunnerResult
+from click.testing import CliRunner
+from click.testing import Result as CliRunnerResult
 
 import pixelator.cli as pixelator_cli
 
-# Do not propogate to parent logger since
+# Do not propagate to parent logger since
 logger = logging.getLogger("pixelator.test_utils")
 
 
 class PixelatorWorkflowContext:
-    """
-    Helper class for workflow tests.
+    """Helper class for workflow tests.
 
     This class is used to run the pixelator CLI and store the results.
     It also provides access to the test configuration in yaml or as class variables
@@ -77,14 +76,14 @@ class PixelatorWorkflowContext:
         return result
 
     def _link_files(self, files: List[str], suffix: str = ""):
-        """
-        Symlink test files into the temporary working directory.
+        """Symlink test files into the temporary working directory.
 
         If no suffix is given files will be linked directly into the working directory.
 
         :param files: list of files to link
         :param suffix: path relative to the workflow working directory to link
             the files in.
+        :raises ValueError: if a file is not absolute
         """
         for f in files:
             f_path = Path(f)
@@ -105,8 +104,7 @@ class PixelatorWorkflowContext:
 
 @pytest.fixture(scope="class")
 def use_workflow_context(request, tmp_path_factory):
-    """
-    Fixture to set up a working directory and WorkflowContext helper.
+    """Fixture to set up a working directory and WorkflowContext helper.
 
     This fixture is class scoped so that the working directory is reused across
     individual pixelator commands in a single BasePixelatorWorkflow subclass.

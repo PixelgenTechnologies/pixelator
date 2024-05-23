@@ -1,14 +1,13 @@
 """
 Tests for the annotate module
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from pathlib import Path
 
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
 from anndata import AnnData
 from pixelator.annotate import cluster_components, filter_components_sizes
 from pixelator.cli.annotate import annotate_components
@@ -17,7 +16,7 @@ from pixelator.pixeldataset.utils import read_anndata
 
 
 def test_filter_components_no_filters(adata: AnnData):
-    sizes = adata.obs["vertices"].to_numpy()
+    sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
         component_sizes=sizes,
         min_size=None,
@@ -35,7 +34,7 @@ def test_filter_components_min_size(adata: AnnData):
     # 0000002        1996   6000        7  ...         1.0          6.018054  6.018054
     # 0000003        1995   6000        7  ...         1.0          6.024096  6.024096
     # 0000004        1996   6000        7  ...         1.0          6.000000  6.000000
-    sizes = adata.obs["vertices"].to_numpy()
+    sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
         component_sizes=sizes,
         min_size=1995,
@@ -54,7 +53,7 @@ def test_filter_components_max_size(adata: AnnData):
     # 0000002        1996   6000        7  ...         1.0          6.018054  6.018054
     # 0000003        1995   6000        7  ...         1.0          6.024096  6.024096
     # 0000004        1996   6000        7  ...         1.0          6.000000  6.000000
-    sizes = adata.obs["vertices"].to_numpy()
+    sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
         component_sizes=sizes,
         min_size=None,
@@ -66,14 +65,14 @@ def test_filter_components_max_size(adata: AnnData):
 
 def test_filter_components_all_active(adata: AnnData):
     # This is the basic shape of the anndata object used here
-    #            vertices  edges  markerS  ...  mean_count  degree_mean_upia       umi
-    # component                            ...
-    # 0000000        1995   6000        7  ...         1.0          6.018054  6.018054
-    # 0000001        1998   6000        7  ...         1.0          6.006006  6.006006
-    # 0000002        1996   6000        7  ...         1.0          6.018054  6.018054
-    # 0000003        1995   6000        7  ...         1.0          6.024096  6.024096
-    # 0000004        1996   6000        7  ...         1.0          6.000000  6.000000
-    sizes = adata.obs["vertices"].to_numpy()
+    # component pixels a_pixels b_pixels antibodies molecules reads mean_reads_per_molecule median_reads_per_molecule mean_b_pixels_per_a_pixel median_b_pixels_per_a_pixel mean_a_pixels_per_b_pixel median_a_pixels_per_b_pixel a_pixel_b_pixel_ratio mean_molecules_per_a_pixel median_molecules_per_a_pixel
+    # PXLCMP0000000 1996    997 999 7   6000    6000    1.0 1.0 6.018054    6.0 6.018054    6.0 0.997998    6.018054    6.0
+    # PXLCMP0000001 1995    996 999 7   6000    6000    1.0 1.0 6.024096    6.0 6.024096    6.0 0.996997    6.024096    6.0
+    # PXLCMP0000002 1998    999 999 7   6000    6000    1.0 1.0 6.006006    6.0 6.006006    6.0 1.000000    6.006006    6.0
+    # PXLCMP0000003 1996    1000    996 7   6000    6000    1.0 1.0 6.000000    6.0 6.000000    6.0 1.004016    6.000000    6.0
+    # PXLCMP0000004 1995    997 998 7   6000    6000    1.0 1.0 6.018054    6.0 6.018054    6.0 0.998998    6.018054    6.0
+
+    sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
         component_sizes=sizes,
         min_size=1995,
@@ -95,28 +94,18 @@ def test_cluster_components(data_root):
 
     assert not adata.obs["leiden"].empty
 
-    expected = pd.DataFrame.from_dict(
-        {
-            "leiden": {
-                "RCVCMP0000000": 0,
-                "RCVCMP0000002": 3,
-                "RCVCMP0000003": 1,
-                "RCVCMP0000005": 2,
-                "RCVCMP0000006": 0,
-                "RCVCMP0000007": 3,
-                "RCVCMP0000008": 3,
-                "RCVCMP0000010": 6,
-                "RCVCMP0000012": 3,
-                "RCVCMP0000013": 2,
-            }
-        }
-    )
-    expected = expected.astype({"leiden": "category"})
-    expected.index.name = "component"
+    expected_groups = [
+        ["RCVCMP0000000", "RCVCMP0000006"],
+        ["RCVCMP0000007", "RCVCMP0000008", "RCVCMP0000012", "RCVCMP0000002"],
+        ["RCVCMP0000005", "RCVCMP0000013"],
+        ["RCVCMP0000003"],
+        ["RCVCMP0000010"],
+    ]
 
-    assert_frame_equal(
-        pd.DataFrame(adata.obs["leiden"].iloc[:10]), expected, check_categorical=False
-    )
+    # We check the groups to be the same here, because the integer name
+    # of the leiden groups are not the same across runs.
+    for group in expected_groups:
+        assert len(set(adata.obs["leiden"].loc[group])) == 1
 
 
 @pytest.mark.integration_test
@@ -143,5 +132,5 @@ def test_annotate_adata(edgelist: pd.DataFrame, tmp_path: Path, panel: AntibodyP
         aggregate_calling=True,
     )
     assert (tmp_path / f"{output_prefix}.raw_components_metrics.csv.gz").is_file()
-    assert (tmp_path / f"{output_prefix}.dataset.pxl").is_file()
+    assert (tmp_path / f"{output_prefix}.annotate.dataset.pxl").is_file()
     assert metrics_file.is_file()

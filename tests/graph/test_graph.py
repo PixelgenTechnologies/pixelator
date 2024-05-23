@@ -1,14 +1,14 @@
 """Test the graph module.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 import random
 from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
 import pytest
-from graspologic.match import graph_match
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 from pixelator.graph import Graph
@@ -25,8 +25,8 @@ def create_simple_edge_list_from_graph(
 
     df = graph.get_edge_dataframe()
     df_vert = graph.get_vertex_dataframe()
-    df["source"].replace(df_vert["name"], inplace=True)
-    df["target"].replace(df_vert["name"], inplace=True)
+    df["source"] = df["source"].replace(df_vert["name"])
+    df["target"] = df["target"].replace(df_vert["name"])
 
     # rename source/target columns
     df = df.rename(columns={"source": "upib", "target": "upia"})
@@ -34,15 +34,13 @@ def create_simple_edge_list_from_graph(
     # add attributes
     n_row = df.shape[0]
     df["count"] = 1
-    df["umi_unique_count"] = 1
-    df["upi_unique_count"] = 1
     if random_markers:
         df["marker"] = random.choices(
             ["A", "B", "C", "D", "E", "F", "G"], weights=[4, 2, 3, 1, 1, 1, 1], k=n_row
         )
     else:
         df["marker"] = "B"
-        df.iloc[0 : int(n_row / 2), 5] = "A"
+        df.loc[0 : int(n_row / 2) - 1, "marker"] = "A"
     df["umi"] = [random_sequence(6) for _ in range(len(df))]
     df["upib"] = df["upib"].astype(str)
     df["upia"] = df["upia"].astype(str)
@@ -73,6 +71,52 @@ def test_build_graph_full_bipartite(enable_backend, full_graph_edgelist: pd.Data
     assert "markers" in graph.vs.attributes()
     assert sorted(list(graph.vs.get_vertex(0)["markers"].keys())) == ["A", "B"]
     assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
+
+
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_build_graph_convert_indices_to_integers(
+    enable_backend, edgelist: pd.DataFrame
+):
+    graph = Graph.from_edgelist(
+        edgelist=edgelist,
+        add_marker_counts=True,
+        simplify=True,
+        use_full_bipartite=True,
+        convert_indices_to_integers=True,
+    )
+    assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
+    # We want the indices to be converted to integers
+    # when convert_indices_to_integers=True
+    assert graph.vs.get_vertex(0)
+    with pytest.raises(KeyError):
+        graph.vs.get_vertex("ACCGTAGATGCATCATAGACT")
+
+    edge = list(graph.es)[0]
+    assert isinstance(edge[0], int)
+    assert isinstance(edge[1], int)
+
+
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_build_graph_do_not_convert_indices_to_integers(
+    enable_backend, edgelist: pd.DataFrame
+):
+    graph = Graph.from_edgelist(
+        edgelist=edgelist,
+        add_marker_counts=True,
+        simplify=True,
+        use_full_bipartite=True,
+        convert_indices_to_integers=False,
+    )
+    assert graph.vs.attributes() == {"name", "markers", "type", "pixel_type"}
+    # We want the indices to be kept as strings when
+    # convert_indices_to_integers=False
+    assert graph.vs.get_vertex("ACCGTAGATGCATCATAGACT")
+    with pytest.raises(KeyError):
+        graph.vs.get_vertex(0)
+
+    edge = list(graph.es)[0]
+    assert isinstance(edge[0], str)
+    assert isinstance(edge[1], str)
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
@@ -275,6 +319,9 @@ def test_get_adjacency_sparse(enable_backend, pentagram_graph):
     #
     # Finally it tests for the equality of these rotated matrices.
 
+    # This import is very slow, so take it here
+    from graspologic.match import graph_match
+
     expected = np.array(
         [
             [0, 0, 1, 1, 0],
@@ -314,7 +361,10 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
         result.sort_index(),
         pd.DataFrame.from_dict(
             data={
-                "0": {
+                0: {
+                    "index": 0,
+                    "name": "AAAA",
+                    "pixel_type": "A",
                     "x": -0.19130137780050335,
                     "y": -0.995853333686976,
                     "A": 1,
@@ -323,7 +373,10 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "2": {
+                2: {
+                    "index": 2,
+                    "name": "CCCC",
+                    "pixel_type": "A",
                     "x": 0.8830198712248385,
                     "y": -0.4852152436940987,
                     "A": 0,
@@ -332,7 +385,10 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "3": {
+                3: {
+                    "index": 3,
+                    "name": "GGGG",
+                    "pixel_type": "B",
                     "x": -0.9999999999999999,
                     "y": -0.12342422456086793,
                     "A": 0,
@@ -341,7 +397,10 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "D": 1,
                     "E": 0,
                 },
-                "1": {
+                1: {
+                    "index": 1,
+                    "name": "TTTT",
+                    "pixel_type": "B",
                     "x": -0.42674182538070177,
                     "y": 0.9138447918386549,
                     "A": 0,
@@ -350,7 +409,10 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "4": {
+                4: {
+                    "index": 4,
+                    "name": "AATT",
+                    "pixel_type": "A",
                     "x": 0.7350233319563663,
                     "y": 0.6906480101032882,
                     "A": 0,
@@ -366,6 +428,135 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_layout_coordinates_3d_pmds_networkx(enable_backend, pentagram_graph):
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="pmds_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+        random_seed=1234,
+        pivots=4,
+    )
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "index": 0,
+                "name": "AAAA",
+                "pixel_type": "A",
+                "x": 2.176250899482823,
+                "y": 1.9999999999999993,
+                "z": -0.5137431483730073,
+                "x_norm": 0.7254169664942742,
+                "y_norm": 0.6666666666666663,
+                "z_norm": -0.17124771612433573,
+                "A": 1,
+                "B": 0,
+                "C": 0,
+                "D": 0,
+                "E": 0,
+            },
+            2: {
+                "index": 2,
+                "name": "CCCC",
+                "pixel_type": "A",
+                "x": -2.1762508994828202,
+                "y": 2.000000000000001,
+                "z": 0.5137431483730074,
+                "x_norm": -0.7254169664942736,
+                "y_norm": 0.6666666666666671,
+                "z_norm": 0.1712477161243358,
+                "A": 0,
+                "B": 0,
+                "C": 1,
+                "D": 0,
+                "E": 0,
+            },
+            3: {
+                "index": 3,
+                "name": "GGGG",
+                "pixel_type": "B",
+                "x": 3.5212479234107357,
+                "y": -0.5000000000000013,
+                "z": 0.31751072718189965,
+                "x_norm": 0.986146667615408,
+                "y_norm": -0.14002800840280136,
+                "z_norm": 0.088920789547613,
+                "A": 0,
+                "B": 0,
+                "C": 0,
+                "D": 1,
+                "E": 0,
+            },
+            1: {
+                "index": 1,
+                "name": "TTTT",
+                "pixel_type": "B",
+                "x": -1.9984014443252818e-15,
+                "y": -3.0000000000000004,
+                "z": -1.3877787807814457e-16,
+                "x_norm": -6.661338147750938e-16,
+                "y_norm": -1.0,
+                "z_norm": -4.625929269271485e-17,
+                "A": 0,
+                "B": 1,
+                "C": 0,
+                "D": 0,
+                "E": 0,
+            },
+            4: {
+                "index": 4,
+                "name": "AATT",
+                "pixel_type": "A",
+                "x": -3.521247923410737,
+                "y": -0.49999999999999867,
+                "z": -0.31751072718189965,
+                "x_norm": -0.9861466676154081,
+                "y_norm": -0.14002800840280058,
+                "z_norm": -0.08892078954761297,
+                "A": 0,
+                "B": 0,
+                "C": 0,
+                "D": 0,
+                "E": 1,
+            },
+        },
+        orient="index",
+    ).sort_index()
+
+    # Check the numeric and string columns separately
+    assert_frame_equal(
+        result.sort_index().drop(["name", "pixel_type"], axis=1).abs(),
+        expected.drop(["name", "pixel_type"], axis=1).abs(),
+        check_exact=False,
+    )
+
+    assert_frame_equal(
+        result.sort_index()[["name", "pixel_type"]], expected[["name", "pixel_type"]]
+    )
+
+
+def test_layout_coordinates_3d_pmds_should_have_descending_order_iqr(pentagram_graph):
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="pmds_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+        random_seed=1234,
+        pivots=4,
+    )
+
+    def calc_iqr(x):
+        return np.percentile(x, 75) - np.percentile(x, 25)
+
+    iqr_x = calc_iqr(result["x"])
+    iqr_y = calc_iqr(result["y"])
+    iqr_z = calc_iqr(result["z"])
+
+    assert iqr_x > iqr_y
+    assert iqr_y > iqr_z
+
+
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
     # Just making sure all existing algorithms get exercised
 
@@ -374,6 +565,8 @@ def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
         "fruchterman_reingold_3d",
         "kamada_kawai",
         "kamada_kawai_3d",
+        "pmds",
+        "pmds_3d",
     ]
     for algorithm in algorithms:
         _ = pentagram_graph.layout_coordinates(
@@ -382,6 +575,7 @@ def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
             cache=False,
             only_keep_a_pixels=False,
             random_seed=1234,
+            pivots=4,
         )
 
 
@@ -398,7 +592,10 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
         result.sort_index(),
         pd.DataFrame.from_dict(
             {
-                "0": {
+                0: {
+                    "index": 0,
+                    "name": "AAAA",
+                    "pixel_type": "A",
                     "x": -0.9648627593518555,
                     "y": 0.6407664038966624,
                     "z": -0.033615468664985694,
@@ -411,7 +608,10 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "2": {
+                2: {
+                    "index": 2,
+                    "name": "CCCC",
+                    "pixel_type": "A",
                     "x": 0.06231005082947333,
                     "y": 0.6879998987122531,
                     "z": -0.9306229217434148,
@@ -424,7 +624,10 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "3": {
+                3: {
+                    "index": 3,
+                    "name": "GGGG",
+                    "pixel_type": "B",
                     "x": -0.6574427161103169,
                     "y": -0.29032243099867855,
                     "z": 0.9067564430700126,
@@ -437,7 +640,10 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "D": 1,
                     "E": 0,
                 },
-                "1": {
+                1: {
+                    "index": 1,
+                    "name": "TTTT",
+                    "pixel_type": "B",
                     "x": 0.5599954246326997,
                     "y": -0.8243431466963642,
                     "z": 0.5981413573809647,
@@ -450,7 +656,10 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
                     "D": 0,
                     "E": 0,
                 },
-                "4": {
+                4: {
+                    "index": 4,
+                    "name": "AATT",
+                    "pixel_type": "A",
                     "x": 0.9999999999999999,
                     "y": -0.21410072491387208,
                     "z": -0.5406594100425767,
@@ -515,3 +724,34 @@ def test_layout_coordinates_caches(pentagram_graph):
     # If caching works as intended the backend should only be
     # hit once.
     mock_layout_method.assert_called_once()
+
+
+def test__repr__(pentagram_graph):
+    assert repr(pentagram_graph) == "Graph with 5 vertices and 5 edges"
+
+
+def test_local_g(pentagram_graph):
+    # Compute local g-scores
+    gi_scores = pentagram_graph.local_g(
+        k=1, use_weights=True, normalize_counts=True, method="gi"
+    )
+
+    # Expected local g-scores
+    expected_gi_scores = pd.DataFrame.from_dict(
+        {
+            0: {"A": 0.0, "B": -1.0, "C": 1.0, "D": 1.0, "E": -1.0},
+            2: {"A": 1.0, "B": -1.0, "C": 0.0, "D": -1.0, "E": 1.0},
+            3: {"A": 1.0, "B": 1.0, "C": -1.0, "D": 0.0, "E": -1.0},
+            1: {"A": -1.0, "B": 0.0, "C": -1.0, "D": 1.0, "E": 1.0},
+            4: {"A": -1.0, "B": 1.0, "C": 1.0, "D": -1.0, "E": 0.0},
+        },
+        orient="index",
+    )
+    expected_gi_scores.index.name = "node"
+    expected_gi_scores.columns.name = "markers"
+
+    # Compare the computed and expected local g-scores
+    assert isinstance(gi_scores, pd.DataFrame)
+    assert_frame_equal(
+        gi_scores.sort_index(), expected_gi_scores.sort_index(), check_column_type=False
+    )

@@ -1,0 +1,13 @@
+{
+    "cli": {
+        "command": "pixelator single-cell annotate",
+        "options": {
+            "--panel": "human-sc-immunology-spatial-proteomics",
+            "--min-size": 2,
+            "--max-size": 100000,
+            "--dynamic-filter": "min",
+            "--aggregate-calling": true,
+            "--output": "."
+        }
+    }
+}

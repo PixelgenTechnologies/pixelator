@@ -1,5 +1,6 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
+"""Module for computing colocalization statistics.
+
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from typing import Tuple
@@ -11,8 +12,8 @@ from sklearn.metrics.pairwise import pairwise_distances
 from pixelator.analysis.colocalization.types import (
     CoLocalizationFunction,
     MarkerColocalizationResults,
-    RegionByCountsDataFrame,
 )
+from pixelator.analysis.types import RegionByCountsDataFrame
 
 
 def _wide_correlation_matrix_to_long_correlation_results(
@@ -24,7 +25,7 @@ def _wide_correlation_matrix_to_long_correlation_results(
     df_lower_tri = df.mask(~lower_triangle)
     df_lower_tri.index.set_names(["marker_cols"], inplace=True)
     df_lower_tri.columns.set_names(["marker_rows"], inplace=True)
-    correlation_values = df_lower_tri.stack(dropna=True).reset_index()
+    correlation_values = df_lower_tri.stack(future_stack=True).dropna().reset_index()
     correlation_values.columns = ["marker_1", "marker_2", stat_name]
     correlation_values.set_index(["marker_1", "marker_2"], inplace=True)
     correlation_values.index.rename(["marker_1", "marker_2"])
@@ -49,27 +50,38 @@ def _wide_correlation_matrix_to_long_correlation_results(
 def _alphanumeric_sort_marker_columns(
     data: MarkerColocalizationResults,
 ) -> MarkerColocalizationResults:
-    """
-    Make sure that the markers are always sorted in the same order
-    """
+    """Make sure that the markers are always sorted in the same order."""
     data.index = pd.MultiIndex.from_tuples(
         map(sorted, data.index.values), names=data.index.names
     )
     return data
 
 
+def _drop_self_correlation(
+    data: MarkerColocalizationResults,
+) -> MarkerColocalizationResults:
+    """Drop the self-correlation values from the data."""
+    return data[data.index.get_level_values(0) != data.index.get_level_values(1)]
+
+
 def pearson(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
-    """
+    """Calculate the Pearson correlation between all vs all markers.
+
     Calculate the Pearson correlation between all vs all markers
-    in the RegionByCountsDataFrame. Since these values are symetrical only
+    in the RegionByCountsDataFrame. Since these values are symmetrical only
     one of the combination of each marker pair is returned
 
     :param df: the RegionByCountsDataFrame to compute Pearson correlation on
+    :rtype: MarkerColocalizationResults
     :return: MarkerColocalizationResults with Pearson correlations
     """
     pearson_matrix = df.corr(method="pearson")
     pearson_values = _alphanumeric_sort_marker_columns(
-        _wide_correlation_matrix_to_long_correlation_results(pearson_matrix, "pearson")
+        _drop_self_correlation(
+            _wide_correlation_matrix_to_long_correlation_results(
+                pearson_matrix, "pearson"
+            )
+        )
     )
     return pearson_values
 
@@ -78,21 +90,27 @@ Pearson = CoLocalizationFunction(name="pearson", func=pearson)
 
 
 def jaccard(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
-    """
+    """Calculate the Jaccard index between all vs all markers.
+
     Calculate the Jaccard index between all vs all markers
-    in the RegionByCountsDataFrame. Since these values are symetrical only
+    in the RegionByCountsDataFrame. Since these values are symmetrical only
     one of the combination of each marker pair is returned
 
     :param df: the RegionByCountsDataFrame to compute Jaccard indexes on
+    :rtype: MarkerColocalizationResults
     :return: MarkerColocalizationResults with Jaccard indexes
     """
     jaccard_matrix = pd.DataFrame(
-        1 - pairwise_distances(df.T.to_numpy(dtype=bool), metric="jaccard"),
+        1 - pairwise_distances((df.T > 0).to_numpy(dtype=bool), metric="jaccard"),
         index=df.columns.copy(),
         columns=df.columns.copy(),
     )
     jaccard_values = _alphanumeric_sort_marker_columns(
-        _wide_correlation_matrix_to_long_correlation_results(jaccard_matrix, "jaccard")
+        _drop_self_correlation(
+            _wide_correlation_matrix_to_long_correlation_results(
+                jaccard_matrix, "jaccard"
+            )
+        )
     )
     return jaccard_values
 
@@ -102,13 +120,13 @@ Jaccard = CoLocalizationFunction(name="jaccard", func=jaccard)
 
 def apply_multiple_stats(
     df: RegionByCountsDataFrame, funcs: Tuple[CoLocalizationFunction, ...]
-):
-    """
-    Compute multiple statistics on the same dataframe
+) -> pd.DataFrame:
+    """Compute multiple statistics on the same dataframe.
 
     :param df: data to compute statistics on
     :param funcs: a list of functions to use to compute the
                   statistics
     :return: a dataframe with all the statistics computed for the dataframe
+    :rtype: pd.DataFrame
     """
     return pd.concat([func.func(df) for func in funcs], axis=1)

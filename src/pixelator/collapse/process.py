@@ -3,23 +3,22 @@
 This module contains functions for the collapse and error correction of MPX data
 (from FASTQ)
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 import logging
+import os
 import tempfile
+import typing
+import warnings
 from collections import Counter, defaultdict
 from typing import (
-    Dict,
     Generator,
     Iterable,
     Iterator,
-    List,
     Literal,
     Optional,
-    Set,
-    Tuple,
 )
-import warnings
 
 import numpy as np
 import numpy.typing as npt
@@ -32,19 +31,51 @@ with warnings.catch_warnings():
     from umi_tools._dedup_umi import edit_distance
     from umi_tools.network import breadth_first_search
 
+from pathlib import Path
+
 from pixelator.collapse.constants import SEED
-from pixelator.exception import FileFqGzEmpty
-from pixelator.types import PathType
 from pixelator.utils import gz_size
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("pixelator.collapse")
 
 np.random.seed(SEED)
 
 UniqueFragment = str
 UpiB = str
-UniqueFragmentToUpiB = Dict[UniqueFragment, List[UpiB]]
-UniqueFragmentAndCount = Tuple[str, int]
+UniqueFragmentToUpiB = dict[UniqueFragment, list[UpiB]]
+
+
+class FileFqGzEmpty(Exception):
+    """Class to manage empty fastq.gz file exceptions.
+
+    Attributes
+    ----------
+        msg: the error message to output
+        fname: the name of the file
+        size: the size of the file uncompressed (should be 0)
+
+    """
+
+    def __init__(self, msg: str, fname: str | Path, size: int):
+        """Initialize the exception."""
+        self.msg = msg
+        self.fname = os.fspath(fname)
+        self.size = size
+
+
+class CollapsedFragment(typing.NamedTuple):
+    """A collapsed fragment.
+
+    :attr sequence: the consensus sequence for a list of similar fragments
+    :attr unique_molecules_count: the number of unique fragments that are
+        represented by this collapsed fragment.
+    :attr read_count: the number of reads that are represented
+        by this collapsed fragment
+    """
+
+    sequence: str
+    unique_molecules_count: int
+    reads_count: int
 
 
 def build_annoytree(data: npt.NDArray[np.uint8], n_trees: int = 10) -> AnnoyIndex:
@@ -76,7 +107,7 @@ def build_annoytree(data: npt.NDArray[np.uint8], n_trees: int = 10) -> AnnoyInde
     return tree
 
 
-def build_binary_data(seqs: List[str]) -> npt.NDArray[np.uint8]:
+def build_binary_data(seqs: list[str]) -> npt.NDArray[np.uint8]:
     """Build a binary matrix from a list of sequences using two-bit encoding.
 
     Convert a list of DNA sequences (str) to binary sequences
@@ -100,15 +131,16 @@ def build_binary_data(seqs: List[str]) -> npt.NDArray[np.uint8]:
     return data
 
 
-def get_representative_sequence_for_component(
-    components: List[Set[UniqueFragment]], counts: Dict[UniqueFragment, int]
-) -> Generator[Tuple[UniqueFragment, int], None, None]:
+def get_collapsed_fragments_for_component(  # noqa: DOC402,DOC404
+    components: list[set[UniqueFragment]], counts: dict[UniqueFragment, int]
+) -> Generator[CollapsedFragment, None, None]:
     """Take the representative sequence from a component based on its counts.
 
     Given a list of components (i.e. sequences that presumably belong to the
     same original molecule), and the counts of occurrences for each of these,
-    return an iterator of tuples with the representative sequence for that
-    component and the number of reads collapsed for that umi.
+    return an iterator of objects with the representative sequence for that
+    component the total number of reads associated with the cluster and
+    the number of collapsed fragments.
 
     The representative molecule is selected as the one with the most associated
     upib's, and if there is a tie the lexicographically smallest sequence is picked
@@ -116,25 +148,42 @@ def get_representative_sequence_for_component(
 
     :param components: a list of components as produced from `get_connected_components`
     :param counts: a dictionary of the counts of each unique fragment
-    :yields: the representative sequence and the size of the component as a tuple
-    :rtype: Generator[Tuple[UniqueFragment, int], None, None]
+    :rtype: Generator[CollapsedFragment, None, None]
+    :yields CollapsedFragment: a collapsed fragment
     """
     for component in components:
-        counts_and_sequences = defaultdict(list)
-        for seq in component:
-            counts_and_sequences[counts[seq]].append(seq)
-        max_count = max(counts_and_sequences.keys())
-        yield (
-            sorted(counts_and_sequences[max_count])[0],
-            len(component),
-        )
+        # get the most common sequence in the component and use
+        # this as the 'consensus sequence'
+
+        # get an iterator over the fragments
+        fragment_it = iter(component)
+
+        # Initialize variables for finding the representative with the first fragment
+        # of a component
+        representative_frag = next(fragment_it)
+        representative_frag_count = counts[representative_frag]
+        total_reads = representative_frag_count
+
+        # Loop over the other fragments to find the representative
+        for fragment in fragment_it:
+            fragment_read_counts = counts[fragment]
+            total_reads += fragment_read_counts
+            if fragment_read_counts > representative_frag_count or (
+                fragment_read_counts == representative_frag_count
+                and fragment < representative_frag
+            ):
+                representative_frag = fragment
+                representative_frag_count = fragment_read_counts
+
+        collapsed_fragments = len(component)
+        yield CollapsedFragment(representative_frag, collapsed_fragments, total_reads)
 
 
 # This code snipped has been obtained from:
 # https://github.com/CGATOxford/umi-tools
 def get_connected_components(
-    graph: Dict[UniqueFragment, List[UniqueFragment]], counts: Dict[UniqueFragment, int]
-) -> List[Set[UniqueFragment]]:
+    graph: dict[UniqueFragment, list[UniqueFragment]], counts: dict[UniqueFragment, int]
+) -> list[set[UniqueFragment]]:
     """Get connected components from a graph of sequences.
 
     Find the connected components from the sequence graph (represented by an adjacency
@@ -150,7 +199,7 @@ def get_connected_components(
     :param counts: a dictionary of counts (copies) for each sequence in `graph`
     :returns: a list of sets of sequences where each set represents a
               connected component
-    :rtype: List[Set[UniqueFragment]]
+    :rtype: list[set[UniqueFragment]]
     """
     found = set()
     components = []
@@ -163,10 +212,10 @@ def get_connected_components(
 
 
 def identify_fragments_to_collapse(
-    seqs: List[UniqueFragment],
+    seqs: list[UniqueFragment],
     min_dist: int,
     max_neighbours: int,
-) -> Dict[UniqueFragment, List[UniqueFragment]]:
+) -> dict[UniqueFragment, list[UniqueFragment]]:
     """Identify fragments to collapse by approximate nearest neighbourhood search.
 
     Tries to identify all sequences in the given list of sequences
@@ -190,9 +239,9 @@ def identify_fragments_to_collapse(
     :param max_neighbours: the number of neighbours to use in the Annoy index
     :returns: a dictionary with fragments as keys and a list of their adjoining
               fragments as values
-    :rtype: Dict[UniqueFragment, List[UniqueFragment]]
+    :rtype: dict[UniqueFragment, list[UniqueFragment]]
     """
-    logger.debug("Computing adjancency sequences from %i elements", len(seqs))
+    logger.debug("Computing adjacency sequences from %i elements", len(seqs))
 
     # use a nearest neighbours tree to reduce the search space
     # TODO this approach requires memory (n_ele * len(seq) * 2)
@@ -206,7 +255,7 @@ def identify_fragments_to_collapse(
 
     # iterate the neighbours of each sequence to obtain
     # the adjacency list (dictionary of lists)
-    adj_list = {seq: [] for seq in seqs}  # type: Dict[str, List[str]]
+    adj_list: dict[str, list[str]] = {seq: [] for seq in seqs}
     for i, seq1 in enumerate(seqs):
         if i % 100000 == 0:
             logger.debug("Processed 100,000 reads...")
@@ -244,27 +293,26 @@ def identify_fragments_to_collapse(
 
 def collapse_sequences_unique(
     seq_dict: UniqueFragmentToUpiB,
-) -> Generator[UniqueFragmentAndCount, None, None]:
+) -> Generator[CollapsedFragment, None, None]:
     """Get all fragments.
 
     Let each key in `seq_dict` represent it's own sequence. This is equivalent
     to not collapsing the sequences.
 
     :param seq_dict: the fragment to upib dict
-    :yield UniqueFragmentAndCount: a unique fragment and the number of reads collapsed
-    :rtype: Generator[UniqueFragmentAndCount, None, None]
+    :yield a CollapsedFragment object
     """
     logger.debug("Picking all unique sequences (i.e. no collapsing is carried out)")
 
     for seq in seq_dict.keys():
-        yield (seq, len(seq_dict[seq]))
+        yield CollapsedFragment(seq, 1, len(seq_dict[seq]))
 
 
 def collapse_sequences_adjacency(
     seq_dict: UniqueFragmentToUpiB,
     max_neighbours: int,
     min_dist: int,
-) -> Iterator[UniqueFragmentAndCount]:
+) -> Iterator[CollapsedFragment]:
     """Collapse sequences based on their adjacency.
 
     Tries to identify all fragments that represent the same underlying
@@ -285,7 +333,7 @@ def collapse_sequences_adjacency(
     :param min_dist: the hamming distance threshold (i.e. the mismatches
                      between two sequences)
     :returns: An iterator of the of collapsed molecules, and their original counts
-    :rtype: Iterator[UniqueFragmentAndCount]
+    :rtype: Iterator[CollapsedFragment]
     """
     logger.debug("Collapsing %i sequences", len(seq_dict))
 
@@ -296,7 +344,7 @@ def collapse_sequences_adjacency(
         seqs=seqs, max_neighbours=max_neighbours, min_dist=min_dist
     )
     full_components = get_connected_components(adj_list, counts)
-    components = get_representative_sequence_for_component(full_components, counts)
+    components = get_collapsed_fragments_for_component(full_components, counts)
     return components
 
 
@@ -310,7 +358,7 @@ def create_fragment_to_upib_dict(
     umia_end: Optional[int] = None,
     umib_start: Optional[int] = None,
     umib_end: Optional[int] = None,
-) -> UniqueFragmentToUpiB:
+) -> tuple[UniqueFragmentToUpiB, int]:
     """Create a dict mapping fragments to upib's.
 
     Parses a fastq file with pixel data and extracts the UPIA, UPIB,
@@ -328,9 +376,11 @@ def create_fragment_to_upib_dict(
     :param umia_end: the 1-based end position of UMIA
     :param umib_start: the 0-based start position of UMIB
     :param umib_end: the 1-based end position of UMIB
-    :returns: a dictionary of with the sequence of umi+upia
-              as keys and the list of associated upibs as values
-    :rtype: UniqueFragmentToUpiB
+    :returns: a tuple with:
+        - a dictionary with the sequence of umi+upia as keys
+          and the list of associated upibs as values.
+        - the number of input reads
+    :rtype: tuple[UniqueFragmentToUpiB, int]
     :raises FileFqGzEmpty: when the file is empty
     :raises RuntimeError: when there is a error parsing the file
     """
@@ -338,8 +388,9 @@ def create_fragment_to_upib_dict(
 
     has_umia = umia_start is not None and umia_end is not None
     has_umib = umib_start is not None and umib_end is not None
-
     seqs_dict = defaultdict(list)
+    input_reads_count = 0
+
     try:
         for _, seq, _ in pyfastx.Fastq(input_file, build_index=False):
             upia = seq[upia_start:upia_end]
@@ -354,6 +405,7 @@ def create_fragment_to_upib_dict(
                 umi = ""
             seq = umi + upia
             seqs_dict[seq].append(upib)
+            input_reads_count += 1
     except Exception as exc:
         gzlen = gz_size(input_file)
         if gzlen == 0:
@@ -365,7 +417,7 @@ def create_fragment_to_upib_dict(
         ) from exc
 
     logger.debug("umi-upi sequences were extracted from %s", input_file)
-    return seqs_dict
+    return seqs_dict, input_reads_count
 
 
 def filter_by_minimum_upib_count(
@@ -383,20 +435,11 @@ def filter_by_minimum_upib_count(
     """
     unique_reads = {k: v for k, v in unique_reads.items() if len(v) >= min_count}
     # in case there are no reads after filtering
-    if not unique_reads:
-        logger.warning(
-            (
-                "The input file %s does not any contain"
-                "reads after filtering by count >= %i"
-            ),
-            input,
-            min_count,
-        )
     return unique_reads
 
 
 def create_edgelist(
-    clustered_reads: Iterable[UniqueFragmentAndCount],
+    clustered_reads: Iterable[CollapsedFragment],
     unique_reads: UniqueFragmentToUpiB,
     umia_start: Optional[int],
     umia_end: Optional[int],
@@ -423,9 +466,8 @@ def create_edgelist(
         - `upib`, the upib of the fragment
         - `umi`, the umi of the fragment
         - `count`, the number of upib's associated with the fragment
-        - `umi_unique_count`, the number of unique molecules (based on upia+umi)
-           associated with the fragment
-        - `upi_unique_count`, the number of unique upib's associated with the fragment
+        - `unique_molecules_count`, the number of unique molecules (based on upia+umi)
+           associated with the collapsed molecule
         - `marker`, the marker associated with this fragment
         - `sequence`, the antibody DNA-oligo sequence of the marker associated
            with the fragment
@@ -455,39 +497,29 @@ def create_edgelist(
     # iterate each collapsed umi+upia to get the upib
     # with the highest count and store in a list
     def data():
-        for cluster_representative_fragment, fragment_count in clustered_reads:
+        for (
+            cluster_representative_fragment,
+            unique_molecules_count,
+            read_count,
+        ) in clustered_reads:
             # get all the upis from the sequence in the cluster
-            upis = unique_reads[cluster_representative_fragment]
+            upibs = unique_reads[cluster_representative_fragment]
 
-            # take the most abundant umi-upi
-            umi_upia = cluster_representative_fragment
-            umi = umi_upia[:umi_size]
-            upia = umi_upia[umi_size:]
+            # The cluster_representative_fragment is the concatenation of UMI + UPIA
+            umi = cluster_representative_fragment[:umi_size]
+            upia = cluster_representative_fragment[umi_size:]
 
             # take the most common upib from the list
-            unique_upis = Counter(upis)
-            upib, _ = unique_upis.most_common(1)[0]
-
-            # count (number of molecules) is the number
-            # of upis in the umi-upia cluster
-            count = len(upis)
-            umi_unique_count = fragment_count
-            upi_unique_count = len(unique_upis)
+            unique_upibs = Counter(upibs)
+            upib, _ = unique_upibs.most_common(1)[0]
 
             # update data array
-            yield (upia, upib, umi, count, umi_unique_count, upi_unique_count)
+            yield (upia, upib, umi, read_count, unique_molecules_count)
 
     # create an edge list (pd.DataFrame) with the collapsed sequences
     df = pd.DataFrame(
         data=data(),
-        columns=[
-            "upia",
-            "upib",
-            "umi",
-            "count",
-            "umi_unique_count",
-            "upi_unique_count",
-        ],
+        columns=["upia", "upib", "umi", "count", "unique_molecules_count"],
     )
     df.insert(3, "marker", marker)
     df.insert(4, "sequence", sequence)
@@ -495,7 +527,7 @@ def create_edgelist(
     return df
 
 
-def write_tmp_feather_file(df: pd.DataFrame) -> PathType:
+def write_tmp_feather_file(df: pd.DataFrame) -> Path:
     """Write the dataframe to a feather file in the OS tmpdir.
 
     :param df: the data frame to write
@@ -505,7 +537,7 @@ def write_tmp_feather_file(df: pd.DataFrame) -> PathType:
     # create a temporary edge list and save it to a temp file
     tmp_file = tempfile.mkstemp(suffix=".feather")[1]
     df.to_feather(tmp_file)
-    return tmp_file
+    return Path(tmp_file)
 
 
 def collapse_fastq(
@@ -524,7 +556,7 @@ def collapse_fastq(
     max_neighbours: Optional[int] = None,
     mismatches: Optional[int] = None,
     min_count: Optional[int] = None,
-) -> Optional[PathType]:
+) -> tuple[Path | None, int]:
     """Collapses reads from a fastq file.
 
     Takes a fastq file as input and collapses its
@@ -532,7 +564,7 @@ def collapse_fastq(
     UPIB. The collapsed (error corrected) reads are saved as a
     `pd.DataFrame` to a temporary file with the following columns:
 
-    upia,upib,umi,marker,count,umi_unique_count,upi_unique_count
+    upia,upib,umi,marker,count
 
     The function returns the path to the file or None if the input
     fastq file is empty or corrupted.
@@ -574,7 +606,7 @@ def collapse_fastq(
     :param mismatches: the number of mismatches allowed between sequences
     :param min_count: discard reads with a count lower than this
     :returns: a str containing the path to the edge list file
-    :rtype: Optional[PathType]
+    :rtype: tuple[Path | None, int]
     :raises AssertionError: invalid input
     :raises RuntimeError: raises an exception
     """
@@ -598,7 +630,7 @@ def collapse_fastq(
     # the running time. Another approach would be to create a class with
     # a look up table and store the sequences in a list of tuples
     try:
-        unique_reads = create_fragment_to_upib_dict(
+        unique_reads, input_reads_count = create_fragment_to_upib_dict(
             input_file,
             upia_start,
             upia_end,
@@ -612,18 +644,26 @@ def collapse_fastq(
     except FileFqGzEmpty as err:
         # we want to allow empty files
         logger.warning(str(err.msg))
-        return None
+        return (None, 0)
 
     # In case there are no reads in the input file
     if not unique_reads:
         # we want to allow empty files
         logger.warning("The input file %s does not contain data", input_file)
-        return None
+        return (None, 0)
 
     if min_count and min_count > 1:
         unique_reads = filter_by_minimum_upib_count(unique_reads, min_count)
         if not unique_reads:
-            return None
+            logger.warning(
+                (
+                    "The input file %s does not any contain"
+                    "reads after filtering by count >= %i"
+                ),
+                input_file,
+                min_count,
+            )
+            return (None, input_reads_count)
 
     if algorithm == "adjacency":
         clustered_reads = collapse_sequences_adjacency(
@@ -631,7 +671,7 @@ def collapse_fastq(
             max_neighbours=max_neighbours,  # type: ignore
             min_dist=mismatches,  # type: ignore
         )
-    if algorithm == "unique":
+    elif algorithm == "unique":
         clustered_reads = collapse_sequences_unique(
             seq_dict=unique_reads,
         )
@@ -654,4 +694,4 @@ def collapse_fastq(
         len(edgelist),
         tmp_file,
     )
-    return tmp_file
+    return tmp_file, input_reads_count

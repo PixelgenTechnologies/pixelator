@@ -1,6 +1,5 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
-"""
+"""Copyright © 2023 Pixelgen Technologies AB."""
+
 import logging
 from pathlib import Path
 
@@ -8,14 +7,14 @@ import pytest
 
 from pixelator.config import config
 from pixelator.config.panel import load_antibody_panel
+
 from .base import BaseWorkflowTestMixin
 
 logger = logging.getLogger(__name__)
 
 
 class BaseDemuxTestsMixin(BaseWorkflowTestMixin):
-    """
-    Base class for demux command tests.
+    """Base class for demux command tests.
 
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:

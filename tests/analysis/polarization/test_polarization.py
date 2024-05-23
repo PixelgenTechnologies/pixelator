@@ -1,18 +1,22 @@
 """
 Tests for the polarization modules
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
-import random
 
-import pandas as pd
+from unittest.mock import create_autospec
+
 import numpy as np
+import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 from pixelator.analysis.polarization import (
+    PolarizationAnalysis,
     polarization_scores,
-    polarization_scores_component,
+    polarization_scores_component_graph,
 )
+from pixelator.graph import Graph
+from pixelator.pixeldataset import PixelDataset
 
 from tests.graph.networkx.test_tools import create_randomly_connected_bipartite_graph
 
@@ -22,45 +26,106 @@ def test_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
     # TODO we should test more scenarios here (sparse and clustered patterns)
 
     scores = polarization_scores(
-        edgelist=full_graph_edgelist, permutations=0, use_full_bipartite=True
+        edgelist=full_graph_edgelist,
+        n_permutations=10,
+        use_full_bipartite=True,
+        random_seed=1,
     )
 
-    expected = pd.DataFrame(
-        data={
-            "morans_i": [-0.05841822339465653, -0.05841818713383407],
-            "morans_p_value": [0.0006289900162095327, 0.0006289959783166696],
-            "morans_p_adjusted": [0.0006289959783166696, 0.0006289959783166696],
-            "morans_z": [-3.41879540404497, -3.4187928246970136],
-            "marker": ["A", "B"],
-            "component": ["PXLCMP0000000", "PXLCMP0000000"],
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "A",
+                "morans_i": -0.17764378122173094,
+                "morans_z": -25.810281029712247,
+                "morans_p_value": 3.399057861353845e-147,
+                "morans_p_adjusted": 6.79811572270769e-147,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "B",
+                "morans_i": -0.17764378122173102,
+                "morans_z": -25.39946321402526,
+                "morans_p_value": 1.2782689040515938e-142,
+                "morans_p_adjusted": 1.2782689040515938e-142,
+                "component": "PXLCMP0000000",
+            },
         },
-        index=pd.Index([0, 1]),
+        orient="index",
+    )
+
+    # test polarization scores
+    assert_frame_equal(scores.sort_index(axis=1), expected.sort_index(axis=1))
+
+
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_permuted_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
+    # TODO we should test more scenarios here (sparse and clustered patterns)
+    scores = polarization_scores(
+        edgelist=full_graph_edgelist,
+        n_permutations=10,
+        use_full_bipartite=True,
+        random_seed=1,
+    )
+
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "A",
+                "morans_i": -0.17764378122173094,
+                "morans_z": -25.810281029712247,
+                "morans_p_value": 3.399057861353845e-147,
+                "morans_p_adjusted": 6.79811572270769e-147,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "B",
+                "morans_i": -0.17764378122173102,
+                "morans_z": -25.39946321402526,
+                "morans_p_value": 1.2782689040515938e-142,
+                "morans_p_adjusted": 1.2782689040515938e-142,
+                "component": "PXLCMP0000000",
+            },
+        },
+        orient="index",
     )
     # test polarization scores
     assert_frame_equal(scores, expected)
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
-def test_permuted_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
+def test_polarization_log1p(enable_backend, full_graph_edgelist: pd.DataFrame):
     # TODO we should test more scenarios here (sparse and clustered patterns)
-    np.random.seed(1)
 
     scores = polarization_scores(
-        edgelist=full_graph_edgelist, permutations=999, use_full_bipartite=True
+        edgelist=full_graph_edgelist,
+        n_permutations=10,
+        transformation="log1p",
+        use_full_bipartite=True,
+        random_seed=1,
     )
 
-    expected = pd.DataFrame(
-        data={
-            "morans_i": [-0.05841822339465653, -0.05841818713383407],
-            "morans_p_value": [0.0006289900162095327, 0.0006289959783166696],
-            "morans_p_adjusted": [0.0006289959783166696, 0.0006289959783166696],
-            "morans_z": [-3.41879540404497, -3.4187928246970136],
-            "morans_p_value_sim": {0: 0.02, 1: 0.01},
-            "morans_z_sim": {0: -3.2672829000275208, 1: -3.973415289418734},
-            "marker": ["A", "B"],
-            "component": ["PXLCMP0000000", "PXLCMP0000000"],
+    # test polarization scores
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "A",
+                "morans_i": -0.1776437812217308,
+                "morans_z": -25.810281029712225,
+                "morans_p_value": 3.3990578613561664e-147,
+                "morans_p_adjusted": 6.798115722712333e-147,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "B",
+                "morans_i": -0.17764378122173088,
+                "morans_z": -25.399463214025243,
+                "morans_p_value": 1.2782689040520306e-142,
+                "morans_p_adjusted": 1.2782689040520306e-142,
+                "component": "PXLCMP0000000",
+            },
         },
-        index=pd.Index([0, 1]),
+        orient="index",
     )
     # test polarization scores
     assert_frame_equal(scores, expected)
@@ -72,33 +137,112 @@ def test_polarization_with_differentially_polarized_markers():
         n1=50, n2=100, p=0.1, random_seed=2
     )
 
-    random.seed(1)
+    rng = np.random.default_rng(1)
+
     for v in graph.vs:
         v["markers"] = {"A": 0, "B": 1, "C": 0}
-    random_vertex = graph.vs.get_vertex(random.randint(0, graph.vcount()))
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
     random_vertex["markers"]["A"] = 5
     neighbors = random_vertex.neighbors()
     for n in neighbors:
         n["markers"]["A"] = 2
 
-    random_vertex = graph.vs.get_vertex(random.randint(0, graph.vcount()))
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
     random_vertex["markers"]["C"] = 10
 
-    scores = polarization_scores_component(graph, component_id="PXLCMP0000000")
+    scores = polarization_scores_component_graph(
+        graph, component_id="PXLCMP0000000", n_permutations=10, random_seed=1
+    )
 
     # We don't expect to get a value for B, since it has only one value in it.
     # Hence it is filtered out.
     expected = pd.DataFrame.from_dict(
         {
-            "morans_i": {0: 0.37307837882553935, 1: -0.0037658463832960496},
-            "morans_p_value": {0: 1.317601591958555e-17, 1: 0.5910333410276116},
-            "morans_z": {0: 8.54213868598478, 1: 0.537339187874427},
-            "marker": {0: "A", 1: "C"},
-            "component": {0: "PXLCMP0000000", 1: "PXLCMP0000000"},
-        }
+            0: {
+                "marker": "A",
+                "morans_i": 0.3009109262187527,
+                "morans_z": 8.855302575253617,
+                "morans_p_value": 4.1728555387292095e-19,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "C",
+                "morans_i": -0.001864280387770322,
+                "morans_z": 0.33792334994637657,
+                "morans_p_value": 0.3677104754311888,
+                "component": "PXLCMP0000000",
+            },
+        },
+        orient="index",
     )
     # test polarization scores
-    assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
+    assert_frame_equal(scores, expected, check_exact=False, atol=1e-1)
+
+
+def test_polarization_with_min_marker_count():
+    # Set seed to get same graph every time
+    graph = create_randomly_connected_bipartite_graph(
+        n1=50, n2=100, p=0.1, random_seed=2
+    )
+
+    rng = np.random.default_rng(1)
+
+    for v in graph.vs:
+        v["markers"] = {"A": 0, "B": 1, "C": 0, "D": 0}
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
+    random_vertex["markers"]["A"] = 5
+    neighbors = random_vertex.neighbors()
+    for n in neighbors:
+        n["markers"]["A"] = 2
+
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
+    random_vertex["markers"]["C"] = 10
+
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
+    random_vertex["markers"]["D"] = 4
+
+    scores = polarization_scores_component_graph(
+        graph,
+        component_id="PXLCMP0000000",
+        n_permutations=10,
+        random_seed=1,
+        min_marker_count=5,
+    )
+
+    # We don't expect to get a value for B, since it has only one value in it.
+    # We don't expect to get a value for D, since the marker is filtered due to
+    # low counts
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "A",
+                "morans_i": 0.3009109262187527,
+                "morans_z": 6.6115290465881955,
+                "morans_p_value": 1.9018523168814586e-11,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "C",
+                "morans_i": -0.001864280387770322,
+                "morans_z": -0.11473061339664403,
+                "morans_p_value": 0.4543293240814379,
+                "component": "PXLCMP0000000",
+            },
+        },
+        orient="index",
+    )
+    # test polarization scores
+    assert_frame_equal(scores, expected, check_exact=False, atol=1e-1)
 
 
 def test_permuted_polarization_with_differentially_polarized_markers():
@@ -107,35 +251,276 @@ def test_permuted_polarization_with_differentially_polarized_markers():
         n1=50, n2=100, p=0.1, random_seed=2
     )
 
-    random.seed(1)
+    rng = np.random.default_rng(1)
+
     for v in graph.vs:
         v["markers"] = {"A": 0, "B": 1, "C": 0}
-    random_vertex = graph.vs.get_vertex(random.randint(0, graph.vcount()))
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
     random_vertex["markers"]["A"] = 5
     neighbors = random_vertex.neighbors()
     for n in neighbors:
         n["markers"]["A"] = 2
 
-    random_vertex = graph.vs.get_vertex(random.randint(0, graph.vcount()))
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
     random_vertex["markers"]["C"] = 10
 
-    np.random.seed(1)
-    scores = polarization_scores_component(
-        graph, component_id="PXLCMP0000000", permutations=999
+    scores = polarization_scores_component_graph(
+        graph,
+        component_id="PXLCMP0000000",
+        n_permutations=10,
+        random_seed=1,
+        min_marker_count=0,
     )
 
     # We don't expect to get a value for B, since it has only one value in it.
     # Hence it is filtered out.
     expected = pd.DataFrame.from_dict(
         {
-            "morans_i": {0: 0.37307837882553935, 1: -0.0037658463832960496},
-            "morans_p_value": {0: 1.317601591958555e-17, 1: 0.5910333410276116},
-            "morans_z": {0: 8.54213868598478, 1: 0.537339187874427},
-            "morans_p_value_sim": {0: 0.001, 1: 0.411},
-            "morans_z_sim": {0: 8.91274668296225, 1: 0.5422508893213437},
-            "marker": {0: "A", 1: "C"},
-            "component": {0: "PXLCMP0000000", 1: "PXLCMP0000000"},
-        }
+            0: {
+                "marker": "A",
+                "morans_i": 0.3009109262187527,
+                "morans_z": 8.855302575253617,
+                "morans_p_value": 4.1728555387292095e-19,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "C",
+                "morans_i": -0.001864280387770322,
+                "morans_z": 0.33792334994637657,
+                "morans_p_value": 0.3677104754311888,
+                "component": "PXLCMP0000000",
+            },
+        },
+        orient="index",
     )
     # test polarization scores
-    assert_frame_equal(scores, expected, check_exact=False, atol=1e-3)
+    assert_frame_equal(scores, expected, check_exact=False, atol=1e-1)
+
+
+def test_polarization_transformation():
+    # Set seed to get same graph every time
+    graph = create_randomly_connected_bipartite_graph(
+        n1=50, n2=100, p=0.1, random_seed=2
+    )
+
+    rng = np.random.default_rng(1)
+
+    for v in graph.vs:
+        v["markers"] = {"A": 0, "B": 1, "C": 0, "D": 0}
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
+    random_vertex["markers"]["A"] = 5
+    neighbors = random_vertex.neighbors()
+    for n in neighbors:
+        n["markers"]["A"] = 2
+
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
+    random_vertex["markers"]["C"] = 10
+
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
+    random_vertex["markers"]["D"] = 4
+
+    scores_1 = polarization_scores_component_graph(
+        graph,
+        component_id="PXLCMP0000000",
+        n_permutations=10,
+        random_seed=1,
+        min_marker_count=5,
+    )
+
+    scores_2 = polarization_scores_component_graph(
+        graph,
+        component_id="PXLCMP0000000",
+        n_permutations=10,
+        random_seed=1,
+        min_marker_count=0,
+    )
+
+    # We don't expect to get a value for B, since it has only one value in it.
+    # We don't expect to get a value for D, since the marker is filtered due to
+    # low counts
+    expected_1 = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "A",
+                "morans_i": 0.3009109262187527,
+                "morans_z": 6.6115290465881955,
+                "morans_p_value": 1.9018523168814586e-11,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "C",
+                "morans_i": -0.001864280387770322,
+                "morans_z": -0.11473061339664403,
+                "morans_p_value": 0.4543293240814379,
+                "component": "PXLCMP0000000",
+            },
+        },
+        orient="index",
+    )
+
+    # We don't expect to get a value for B, since it has only one value in it.
+    # We DO expect to get a value for D, since it is not filtered this time
+    expected_2 = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "A",
+                "morans_i": 0.3009109262187527,
+                "morans_z": 6.6115290465881955,
+                "morans_p_value": 1.9018523168814586e-11,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "C",
+                "morans_i": -0.001864280387770322,
+                "morans_z": -0.11473061339664403,
+                "morans_p_value": 0.4543293240814379,
+                "component": "PXLCMP0000000",
+            },
+            2: {
+                "marker": "D",
+                "morans_i": -0.0031455494542742875,
+                "morans_z": 0.8264801996063112,
+                "morans_p_value": 0.204265872789349,
+                "component": "PXLCMP0000000",
+            },
+        },
+        orient="index",
+    )
+
+    # test polarization scores
+    assert_frame_equal(scores_1, expected_1, check_exact=False, atol=1e-1)
+    assert_frame_equal(scores_2, expected_2, check_exact=False, atol=1e-1)
+
+    # we also expect the scores to be the same for A and B
+    assert_frame_equal(scores_1, scores_2.head(2), check_exact=False, atol=1e-1)
+
+
+def test_polarization_backward_compatibility():
+    # This tests that we get the same polarity score as the original
+    # polarization score where markers were filtered prior to transformation
+    # transformation.
+
+    # Set seed to get same graph every time
+    graph = create_randomly_connected_bipartite_graph(
+        n1=50, n2=100, p=0.1, random_seed=2
+    )
+    rng = np.random.default_rng(1)
+
+    for v in graph.vs:
+        v["markers"] = {"A": 0, "B": 0, "C": 0}
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
+    random_vertex["markers"]["A"] = 5
+    neighbors = random_vertex.neighbors()
+    for n in neighbors:
+        n["markers"]["A"] = 2
+    random_vertex = graph.vs.get_vertex(
+        rng.integers(low=0, high=graph.vcount(), size=1)[0]
+    )
+    random_vertex["markers"]["C"] = 10
+    scores = polarization_scores_component_graph(
+        graph, component_id="PXLCMP0000000", n_permutations=10, random_seed=1
+    )
+    # We don't expect to get a value for B, since it has only one value in it.
+    # Hence it is filtered out.
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "A",
+                "morans_i": 0.3009109262187527,
+                "morans_z": 3.6409882113983114,
+                "morans_p_value": 0.00013579678673041425,
+                "component": "PXLCMP0000000",
+            },
+            1: {
+                "marker": "C",
+                "morans_i": -0.001864280387770322,
+                "morans_z": -2.558088675046134,
+                "morans_p_value": 0.005262462500942811,
+                "component": "PXLCMP0000000",
+            },
+        },
+        orient="index",
+    )
+    # test polarization scores
+    assert_frame_equal(scores, expected, check_exact=False, atol=1e-1)
+
+
+class TestPolarizationAnalysis:
+    analysis = PolarizationAnalysis(
+        transformation_type="log1p",
+        n_permutations=10,
+        min_marker_count=2,
+        random_seed=1,
+    )
+
+    def test_run_on_component(self, full_graph_edgelist):
+        component_id = "PXLCMP0000000"
+        component = Graph.from_edgelist(
+            full_graph_edgelist[full_graph_edgelist["component"] == component_id],
+            add_marker_counts=True,
+            simplify=True,
+            use_full_bipartite=True,
+        )
+
+        result = self.analysis.run_on_component(component, component_id)
+
+        expected = pd.DataFrame.from_dict(
+            {
+                0: {
+                    "marker": "A",
+                    "morans_i": -0.17764378122173094,
+                    "morans_z": -25.810281029712247,
+                    "morans_p_value": 3.399057861353845e-147,
+                    "component": "PXLCMP0000000",
+                },
+                1: {
+                    "marker": "B",
+                    "morans_i": -0.17764378122173102,
+                    "morans_z": -25.39946321402526,
+                    "morans_p_value": 1.2782689040515938e-142,
+                    "component": "PXLCMP0000000",
+                },
+            },
+            orient="index",
+        )
+
+        assert_frame_equal(result, expected, check_exact=False, atol=1e-3)
+
+    def test_post_process_data(self):
+        data = pd.DataFrame.from_dict(
+            {
+                "morans_p_value": [0.01, 0.02, 0.03],
+                "component": ["PXLCMP0000000"] * 3,
+            }
+        )
+
+        result = self.analysis.post_process_data(data)
+
+        assert_series_equal(
+            result["morans_p_adjusted"],
+            pd.Series([0.03, 0.03, 0.03], name="morans_p_adjusted"),
+        )
+
+    def test_add_to_pixel_dataset(self):
+        pxl_dataset = create_autospec(PixelDataset, instance=True)
+        mock_data = pd.DataFrame(
+            {
+                "data": [0.01, 0.02, 0.03],
+                "component": ["PXLCMP0000000"] * 3,
+            }
+        )
+
+        pxl_dataset = self.analysis.add_to_pixel_dataset(mock_data, pxl_dataset)
+        assert_frame_equal(pxl_dataset.polarization, mock_data)

@@ -1,11 +1,10 @@
 """Module with functions that relate to marking functions in pixelator.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
-
-from functools import wraps
 import warnings
+from functools import wraps
 
 
 def experimental(f):

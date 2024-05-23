@@ -1,11 +1,10 @@
 """Tests for the marks module.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
-from pixelator.marks import experimental
-
 import pytest
+from pixelator.marks import experimental
 
 
 def test_experimental():

@@ -1,9 +1,7 @@
 """Console script for pixelator (annotate).
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
-
-from concurrent import futures
 
 import click
 
@@ -11,7 +9,6 @@ from pixelator.annotate import annotate_components
 from pixelator.cli.common import logger, output_option
 from pixelator.config import config, load_antibody_panel
 from pixelator.utils import (
-    click_echo,
     create_output_stage_dir,
     get_sample_name,
     log_step_start,
@@ -27,8 +24,8 @@ from pixelator.utils import (
     options_metavar="<options>",
 )
 @click.argument(
-    "input_files",
-    nargs=-1,
+    "parquet_file",
+    nargs=1,
     required=True,
     type=click.Path(exists=True),
     metavar="parquet",
@@ -84,7 +81,7 @@ from pixelator.utils import (
 @timer
 def annotate(
     ctx,
-    input_files,
+    parquet_file,
     panel,
     min_size,
     max_size,
@@ -95,6 +92,7 @@ def annotate(
     """
     Filter, annotate and call cells from an edge list
     """
+    input_files = [parquet_file]
     # log input parameters
     log_step_start(
         "annotate",
@@ -120,13 +118,14 @@ def annotate(
 
     # warn if both --dynamic-filter and hard-coded sizes are input
     if min_size is not None and dynamic_filter in ["min", "both"]:
-        msg = "--dynamic-filter will overrule the value introduced in --min-size"
-        click_echo(msg, multiline=False)
-        logger.warning(msg)
+        logger.warning(
+            "--dynamic-filter will overrule the value introduced in --min-size"
+        )
+
     if max_size is not None and dynamic_filter in ["max", "both"]:
-        msg = "--dynamic-filter will overrule the value introduced in --max-size"
-        click_echo(msg, multiline=False)
-        logger.warning(msg)
+        logger.warning(
+            "--dynamic-filter will overrule the value introduced in --max-size"
+        )
 
     # create output folder if it does not exist
     annotate_output = create_output_stage_dir(output, "annotate")
@@ -135,38 +134,26 @@ def annotate(
     panel = load_antibody_panel(config, panel)
 
     # compute graph/components using parallel processing
-    with futures.ProcessPoolExecutor(max_workers=ctx.obj["CORES"]) as executor:
-        jobs = []
-        for ann_file in input_files:
-            msg = f"Computing annotation for file {ann_file}"
-            click_echo(msg, multiline=False)
-            logger.info(msg)
+    logger.info(f"Computing annotation for file {parquet_file}")
 
-            clean_name = get_sample_name(ann_file)
-            metrics_file = annotate_output / f"{clean_name}.report.json"
+    clean_name = get_sample_name(parquet_file)
+    metrics_file = annotate_output / f"{clean_name}.report.json"
 
-            write_parameters_file(
-                ctx,
-                annotate_output / f"{clean_name}.meta.json",
-                command_path="pixelator single-cell annotate",
-            )
+    write_parameters_file(
+        ctx,
+        annotate_output / f"{clean_name}.meta.json",
+        command_path="pixelator single-cell annotate",
+    )
 
-            jobs.append(
-                executor.submit(
-                    annotate_components,
-                    input=str(ann_file),
-                    panel=panel,
-                    output=str(annotate_output),
-                    output_prefix=clean_name,
-                    metrics_file=str(metrics_file),
-                    min_size=min_size,
-                    max_size=max_size,
-                    dynamic_filter=dynamic_filter,
-                    aggregate_calling=aggregate_calling,
-                    verbose=ctx.obj["VERBOSE"],
-                )
-            )
-
-        for job in futures.as_completed(jobs):
-            if job.exception() is not None:
-                raise job.exception()
+    annotate_components(
+        input=str(parquet_file),
+        panel=panel,
+        output=str(annotate_output),
+        output_prefix=clean_name,
+        metrics_file=str(metrics_file),
+        min_size=min_size,
+        max_size=max_size,
+        dynamic_filter=dynamic_filter,
+        aggregate_calling=aggregate_calling,
+        verbose=ctx.obj["VERBOSE"],
+    )

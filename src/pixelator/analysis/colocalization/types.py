@@ -1,6 +1,6 @@
 """Types associated with colocalization.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from dataclasses import dataclass
@@ -8,10 +8,11 @@ from typing import Callable, Literal
 
 import pandas as pd
 
-RegionByCountsDataFrame = pd.DataFrame
+from pixelator.analysis.types import RegionByCountsDataFrame
+
 MarkerColocalizationResults = pd.DataFrame
 
-TransformationTypes = Literal["raw", "log1p"]
+TransformationTypes = Literal["raw", "log1p", "rate-diff"]
 
 
 @dataclass

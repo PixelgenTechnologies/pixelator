@@ -1,7 +1,8 @@
 """Workflow test helper for single-cell report command.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 import logging
 from pathlib import Path
 

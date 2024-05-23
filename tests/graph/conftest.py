@@ -1,9 +1,8 @@
 """Test configuration generally useful in the graph module.
 
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
-
 
 import networkx as nx
 import pandas as pd
@@ -107,4 +106,10 @@ def pentagram_graph_fixture():
     g.vs.get_vertex(2)["pixel_type"] = "A"
     g.vs.get_vertex(3)["pixel_type"] = "B"
     g.vs.get_vertex(4)["pixel_type"] = "A"
+
+    g.vs.get_vertex(0)["name"] = "AAAA"
+    g.vs.get_vertex(1)["name"] = "TTTT"
+    g.vs.get_vertex(2)["name"] = "CCCC"
+    g.vs.get_vertex(3)["name"] = "GGGG"
+    g.vs.get_vertex(4)["name"] = "AATT"
     return g

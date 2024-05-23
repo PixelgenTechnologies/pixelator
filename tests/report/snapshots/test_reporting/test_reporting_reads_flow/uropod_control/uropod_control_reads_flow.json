@@ -1,0 +1,15 @@
+{
+    "sample_id": "uropod_control",
+    "input_read_count": 300000,
+    "qc_filtered_read_count": 298988,
+    "valid_pbs_read_count": 255274,
+    "valid_antibody_read_count": 251486,
+    "raw_molecule_read_count": 8117,
+    "size_filter_fail_molecule_read_count": 0,
+    "aggregate_molecule_read_count": 8117,
+    "cell_molecule_read_count": 8117,
+    "fraction_reads_in_molecules": 0.027056666666666666,
+    "fraction_reads_in_cells": 0.027056666666666666,
+    "fraction_valid_pbs_reads": 0.8509133333333333,
+    "fraction_valid_antibody_reads": 0.8382866666666666
+}

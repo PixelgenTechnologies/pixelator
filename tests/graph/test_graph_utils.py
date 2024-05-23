@@ -1,7 +1,9 @@
 """Tests for the graph utils module.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
+import json
 
 import numpy as np
 import pandas as pd
@@ -15,6 +17,8 @@ from pixelator.graph.utils import (
     edgelist_metrics,
     update_edgelist_membership,
 )
+from pixelator.report.common.json_encoder import PixelatorJSONEncoder
+from pixelator.report.models import SummaryStatistics
 
 
 def test_components_metrics(full_graph_edgelist: pd.DataFrame):
@@ -26,20 +30,21 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
         pd.DataFrame.from_records(
             [
                 {
-                    "vertices": 100,
-                    "edges": 2500,
+                    "pixels": 100,
+                    "a_pixels": 50,
+                    "b_pixels": 50,
                     "antibodies": 2,
-                    "upia": 50,
-                    "upib": 50,
-                    "umi": 1908,
+                    "molecules": 2500,
                     "reads": np.uint64(2500),
                     "mean_reads_per_molecule": 1.0,
                     "median_reads_per_molecule": 1.0,
-                    "mean_upia_degree": 50.0,
-                    "median_upia_degree": 50.0,
-                    "mean_umi_per_upia": 50.0,
-                    "median_umi_per_upia": 50.0,
-                    "upia_per_upib": 1.0,
+                    "mean_b_pixels_per_a_pixel": 50.0,
+                    "median_b_pixels_per_a_pixel": 50.0,
+                    "mean_a_pixels_per_b_pixel": 50.0,
+                    "median_a_pixels_per_b_pixel": 50.0,
+                    "a_pixel_b_pixel_ratio": 1.0,
+                    "mean_molecules_per_a_pixel": 50.0,
+                    "median_molecules_per_a_pixel": 50.0,
                 }
             ],
             index=pd.Index(["PXLCMP0000000"], name="component"),
@@ -51,7 +56,6 @@ def _create_df_with_expected_types(df):
     """Make sure that the dataframe gets the correct types and names."""
     df.columns.name = "markers"
     df.columns = df.columns.astype("string[pyarrow]")
-    df.index = df.index.astype("string[pyarrow]")
     df.index.name = "node"
     return df
 
@@ -243,48 +247,25 @@ def test_create_node_markers_counts_with_neighbourhood_1(
     assert counts["B"].sum() == 2759
 
 
-def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame):
+def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame, snapshot):
     """Test generating edgelist metrics."""
     metrics = edgelist_metrics(full_graph_edgelist)
-    assert metrics == {
-        "components": 1,
-        "components_modularity": 0.0,
-        "edges": 2500,
-        "frac_largest_edges": 1.0,
-        "frac_largest_vertices": 1.0,
-        "markers": 2,
-        "vertices": 100,
-        "total_upia": 50,
-        "total_upib": 50,
-        "mean_count": 1.0,
-        "total_umi": 1908,
-        "total_upi": 100,
-        "frac_upib_upia": 1.0,
-        "upia_degree_mean": 50.0,
-        "upia_degree_median": 50.0,
-    }
+
+    snapshot.assert_match(
+        json.dumps(metrics, indent=4, cls=PixelatorJSONEncoder), "edgelist_metrics.json"
+    )
 
 
-def test_edgelist_metrics_on_lazy_dataframe(full_graph_edgelist: pd.DataFrame):
+def test_edgelist_metrics_on_lazy_dataframe(
+    full_graph_edgelist: pd.DataFrame, snapshot
+):
     full_graph_edgelist = pl.DataFrame(full_graph_edgelist).lazy()
     metrics = edgelist_metrics(full_graph_edgelist)
-    assert metrics == {
-        "components": 1,
-        "components_modularity": 0.0,
-        "edges": 2500,
-        "frac_largest_edges": 1.0,
-        "frac_largest_vertices": 1.0,
-        "markers": 2,
-        "vertices": 100,
-        "total_upia": 50,
-        "total_upib": 50,
-        "mean_count": 1.0,
-        "total_umi": 1908,
-        "total_upi": 100,
-        "frac_upib_upia": 1.0,
-        "upia_degree_mean": 50.0,
-        "upia_degree_median": 50.0,
-    }
+
+    snapshot.assert_match(
+        json.dumps(metrics, indent=4, cls=PixelatorJSONEncoder),
+        "edgelist_metrics_lazy.json",
+    )
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)

@@ -1,8 +1,9 @@
 """
 Tests for base pixelator exports
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 # pylint: disable=redefined-outer-name
 import pixelator as mpx
 from pixelator.pixeldataset import PixelDataset

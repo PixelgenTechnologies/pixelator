@@ -1,13 +1,13 @@
 """
 Tests for the panel.py module
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 from tempfile import NamedTemporaryFile
 
 import pandas as pd
 import pytest
-
 from pixelator.config import AntibodyPanel
 
 

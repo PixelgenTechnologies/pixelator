@@ -1,19 +1,20 @@
-"""Copyright (c) 2023 Pixelgen Technologies AB.
+"""Copyright © 2023 Pixelgen Technologies AB.
 
 Pytest configuration for integration testing pixelator
 """
-from pathlib import Path
-
-import pytest
-from types import TracebackType
-from typing import Optional, Type
-
-from pixelator.test_utils import YamlIntegrationTestsCollector
-from pixelator.test_utils import use_workflow_context  # noqa: F401
-from pixelator.types import PathType
 
 import logging
 import sys
+from pathlib import Path
+from types import TracebackType
+from typing import Optional, Type
+
+import pytest
+from pixelator.test_utils import (  # noqa: F401
+    YamlIntegrationTestsCollector,
+    use_workflow_context,
+)
+from pixelator.types import PathType
 
 logger = logging.getLogger("integration")
 
@@ -60,9 +61,14 @@ def pytest_collect_file(
     :rtype: YamlIntegrationTestsCollector
     """
     file_path = Path(file_path)
+
     if file_path.suffix == ".yaml" and file_path.name.startswith("test_"):
         yaml_tests = YamlIntegrationTestsCollector.from_parent(parent, path=file_path)
         yaml_tests.add_marker(pytest.mark.workflow_test)
+
+        if "external_tests" in file_path.parts:
+            yaml_tests.add_marker(pytest.mark.external_workflow_test)
+
         return yaml_tests
 
     return None

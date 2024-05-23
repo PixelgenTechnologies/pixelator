@@ -9,10 +9,8 @@ Welcome to Pixelator's documentation!
     :caption: Contents:
 
     installation
-    usage
     contributing
     developers
-    authors
     changelog
     api
 

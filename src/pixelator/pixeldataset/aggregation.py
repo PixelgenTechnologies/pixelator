@@ -1,7 +1,8 @@
 """Module for aggregating pixeldatasets.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import logging
@@ -15,8 +16,8 @@ from anndata import AnnData
 from anndata import concat as concatenate_anndata
 
 from pixelator.pixeldataset import PixelDataset
-from pixelator.pixeldataset.utils import update_metrics_anndata, _enforce_edgelist_types
-
+from pixelator.pixeldataset.precomputed_layouts import aggregate_precomputed_layouts
+from pixelator.pixeldataset.utils import _enforce_edgelist_types, update_metrics_anndata
 
 logger = logging.getLogger(__name__)
 
@@ -146,12 +147,21 @@ def simple_aggregate(
         }
     }
 
+    precomputed_layouts = aggregate_precomputed_layouts(
+        [
+            (name, dataset.precomputed_layouts)
+            for name, dataset in zip(sample_names, datasets)
+        ],
+        all_markers=set(datasets[0].adata.var.index),
+    )
+
     return PixelDataset.from_data(
         adata=adata,
         edgelist=edgelists,
         polarization=polarizations,
         colocalization=colocalizations,
         metadata=metadata,
+        precomputed_layouts=precomputed_layouts,
         copy=False,
         allow_empty_edgelist=ignore_edgelists,
     )

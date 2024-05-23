@@ -1,6 +1,8 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
-"""
+"""Copyright © 2023 Pixelgen Technologies AB."""
+
+from __future__ import annotations
+
+import typing
 from pathlib import Path
 
 from . import (
@@ -11,10 +13,13 @@ from . import (
     BaseCollapseTestsMixin,
     BaseDemuxTestsMixin,
     BaseGraphTestsMixin,
+    BaseLayoutTestsMixin,
     BasePreQCTestsMixin,
     BaseReportTestsMixin,
 )
-from .workflow_context import PixelatorWorkflowContext
+
+if typing.TYPE_CHECKING:
+    from .workflow_context import PixelatorWorkflowContext
 
 
 # IMPORTANT: Note the order of the base classes.
@@ -24,6 +29,7 @@ from .workflow_context import PixelatorWorkflowContext
 class PixelatorWorkflowTest(
     BaseReportTestsMixin,
     BaseAnalysisTestsMixin,
+    BaseLayoutTestsMixin,
     BaseAnnotateTestsMixin,
     BaseGraphTestsMixin,
     BaseCollapseTestsMixin,
@@ -32,8 +38,7 @@ class PixelatorWorkflowTest(
     BasePreQCTestsMixin,
     BaseAmpliconTestsMixin,
 ):
-    """
-    Pixelator workflow test base class.
+    """Pixelator workflow test base class.
 
     This class bundles all the basic tests for each command in the pixelator workflow.
     It is intended to be used as a base class for new workflow tests.
@@ -66,7 +71,5 @@ class PixelatorWorkflowTest(
 
     @property
     def workdir(self) -> Path:
-        """
-        Return the workdir from the workflow context.
-        """
+        """Return the workdir from the workflow context."""
         return self.context.workdir

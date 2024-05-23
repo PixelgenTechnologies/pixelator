@@ -1,0 +1,9 @@
+{
+    "sample_id": "uropod_control",
+    "raw_molecule_count": 4026,
+    "size_filter_fail_molecule_count": 0,
+    "aggregate_molecule_count": 4026,
+    "cell_molecule_count": 4026,
+    "fraction_molecules_in_cells": 1.0,
+    "fraction_molecules_discarded": 0.0
+}

@@ -1,6 +1,6 @@
 """Protocol of graph backends used by pixelator.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
@@ -12,6 +12,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Optional,
     Protocol,
     Set,
@@ -26,6 +27,15 @@ from scipy.sparse import csr_matrix
 if TYPE_CHECKING:
     from pixelator.graph import Graph
 
+SupportedLayoutAlgorithm = Literal[
+    "fruchterman_reingold",
+    "fruchterman_reingold_3d",
+    "kamada_kawai",
+    "kamada_kawai_3d",
+    "pmds",
+    "pmds_3d",
+]
+
 
 class GraphBackend(Protocol):
     """Protocol for graph backends."""
@@ -36,6 +46,7 @@ class GraphBackend(Protocol):
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
+        convert_indices_to_integers: bool = True,
     ) -> GraphBackend:
         """Build a graph from an edgelist.
 
@@ -54,6 +65,7 @@ class GraphBackend(Protocol):
         :param simplify: simplifies the graph (remove redundant edges)
         :param use_full_bipartite: use the bipartite graph instead of the projection
                                   (UPIA)
+        :param convert_indices_to_integers: convert the indices to integers (this is the default)
         :returns: a Graph instance
         :rtype: GraphBackend
         :raises: AssertionError when the input edge list is not valid
@@ -126,12 +138,22 @@ class GraphBackend(Protocol):
         """
         ...
 
+    def node_marker_counts(self) -> pd.DataFrame:
+        """Get the marker counts of each node as a dataframe.
+
+        :return: node markers as a dataframe
+        :rtype: pd.DataFrame
+        :raises: AssertionError if graph nodes don't include markers
+        """
+        ...
+
     def layout_coordinates(
         self,
-        layout_algorithm: str = "fruchterman_reingold",
+        layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
@@ -143,10 +165,13 @@ class GraphBackend(Protocol):
           - fruchterman_reingold_3d
           - kamada_kawai
           - kamada_kawai_3d
+          - pmds
+          - pmds_3d
 
-
-        The `fruchterman_reingold` options are in general faster, but less
-        accurate than the `kamada_kawai` ones.
+        For most cases the `pmds` options should be about 10-100x faster
+        than the force directed layout methods, i.e. `fruchterman_reingold`
+        and `kamada_kawai`. Among the force directed layout methods,
+        `fruchterman_reingold` is generally faster than `kamada_kawai`.
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
         :param only_keep_a_pixels: If true, only keep the a-pixels
@@ -155,6 +180,7 @@ class GraphBackend(Protocol):
         :param random_seed: used as the seed for graph layouts with a stochastic
                             element. Useful to get deterministic layouts across
                             method calls.
+        :param **kwargs: will be passed to the underlying layout implementation
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid

@@ -124,8 +124,3 @@ Main development happened thanks to:
 - Florian De Temmerman ([@fbdtemme](https://github.com/fbdtemme))
 
 A huge thank you to all [code contributors](https://github.com/PixelgenTechnologies/pixelator/graphs/contributors)!
-
-A non-exhaustive list of contributors follows:
-
-- Filip Karlsson ([@fika-pixelgen](https://github.com/fika-pixelgen))
-- Max Karlsson ([@maxkarlsson](https://github.com/maxkarlsson))

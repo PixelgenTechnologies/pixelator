@@ -1,0 +1,3 @@
+sample_id,raw_molecule_count,size_filter_fail_molecule_count,aggregate_molecule_count,cell_molecule_count,fraction_molecules_in_cells,fraction_molecules_discarded
+pbmcs_unstimulated,3086,0,3086,3086,1.0,0.0
+uropod_control,4026,0,4026,4026,1.0,0.0

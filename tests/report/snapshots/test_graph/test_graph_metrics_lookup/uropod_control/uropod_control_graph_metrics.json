@@ -1,0 +1,25 @@
+{
+    "sample_id": "uropod_control",
+    "component_count": 3963,
+    "molecule_count": 4026,
+    "read_count": 8117,
+    "marker_count": 68,
+    "read_count_per_molecule_stats": {
+        "mean": 2.016145057128664,
+        "std": 0.12798892626922903,
+        "min": 2.0,
+        "q1": 2.0,
+        "q2": 2.0,
+        "q3": 2.0,
+        "max": 4.0,
+        "count": 4026,
+        "iqr": 0.0
+    },
+    "a_pixel_count": 3996,
+    "b_pixel_count": 3982,
+    "components_modularity": 0.9997434707190047,
+    "fraction_molecules_in_largest_component": 0.0007451564828614009,
+    "fraction_pixels_in_largest_component": 0.000501378791677112,
+    "a_pixel_b_pixel_ratio": 1.0035158211953792,
+    "pixel_count": 7978
+}

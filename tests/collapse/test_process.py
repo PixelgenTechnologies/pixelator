@@ -1,9 +1,9 @@
 """Tests for collapse.py module.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
-# pylint: disable=redefined-outer-name
 
+# pylint: disable=redefined-outer-name
 
 from functools import partial
 from pathlib import Path
@@ -15,6 +15,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 from pixelator.collapse.process import (
+    CollapsedFragment,
     build_annoytree,
     build_binary_data,
     collapse_fastq,
@@ -23,8 +24,8 @@ from pixelator.collapse.process import (
     create_edgelist,
     create_fragment_to_upib_dict,
     filter_by_minimum_upib_count,
+    get_collapsed_fragments_for_component,
     get_connected_components,
-    get_representative_sequence_for_component,
     identify_fragments_to_collapse,
     write_tmp_feather_file,
 )
@@ -43,7 +44,7 @@ def test_create_fragment_to_upib_dict():
 
         mock_fastq_reader.Fastq.return_value = mock_reads()
 
-        result = create_fragment_to_upib_dict(
+        seq_dict, input_reads_count = create_fragment_to_upib_dict(
             input_file="/foo/bar",
             upia_start=0,
             upia_end=3,
@@ -52,7 +53,8 @@ def test_create_fragment_to_upib_dict():
             umia_start=7,
             umia_end=10,
         )
-        assert result == {"HIJABC": ["EF"], "HIJXXX": ["EF"], "HIJZZZ": ["EF"]}
+        assert input_reads_count == 3
+        assert seq_dict == {"HIJABC": ["EF"], "HIJXXX": ["EF"], "HIJZZZ": ["EF"]}
 
 
 def test_filter_by_minimum_upib_count():
@@ -77,7 +79,11 @@ def test_create_edgelist():
         "HIJNOXXX": ["EF", "LL"],
         "HIJNOZZZ": ["EF"],
     }
-    clustered_sequences = [("HIJNOABC", 2), ("HIJNOXXX", 1), ("HIJNOZZZ", 1)]
+    clustered_sequences = [
+        CollapsedFragment("HIJNOABC", 2, 6),
+        CollapsedFragment("HIJNOXXX", 1, 2),
+        CollapsedFragment("HIJNOZZZ", 1, 1),
+    ]
 
     result = create_edgelist(
         clustered_reads=clustered_sequences,
@@ -100,9 +106,8 @@ def test_create_edgelist():
                     "umi": "HIJNO",
                     "marker": "CD4",
                     "sequence": "AAAAA",
-                    "count": 3,
-                    "umi_unique_count": 2,
-                    "upi_unique_count": 3,
+                    "count": 6,
+                    "unique_molecules_count": 2,
                 },
                 {
                     "upia": "XXX",
@@ -111,8 +116,7 @@ def test_create_edgelist():
                     "marker": "CD4",
                     "sequence": "AAAAA",
                     "count": 2,
-                    "umi_unique_count": 1,
-                    "upi_unique_count": 2,
+                    "unique_molecules_count": 1,
                 },
                 {
                     "upia": "ZZZ",
@@ -121,8 +125,7 @@ def test_create_edgelist():
                     "marker": "CD4",
                     "sequence": "AAAAA",
                     "count": 1,
-                    "umi_unique_count": 1,
-                    "upi_unique_count": 1,
+                    "unique_molecules_count": 1,
                 },
             ]
         ),
@@ -145,14 +148,13 @@ def test_get_connected_components():
     assert result == [{"A", "B", "C"}, {"D", "E"}]
 
 
-def test_get_representative_sequence_for_component():
+def test_get_collapsed_fragments_for_component():
     """Test get representative sequence for a component."""
     counts = {"A": 10, "B": 1, "C": 1, "D": 2, "E": 6}
     components = [{"A", "B", "C"}, {"D", "E"}]
-    result = get_representative_sequence_for_component(
-        components=components, counts=counts
-    )
-    assert list(result) == [("A", 3), ("E", 2)]
+    result = get_collapsed_fragments_for_component(components=components, counts=counts)
+    result_list = list(result)
+    assert result_list == [CollapsedFragment("A", 3, 12), CollapsedFragment("E", 2, 8)]
 
 
 def test_identify_fragments_to_collapse():
@@ -188,7 +190,12 @@ def test_collapse_sequences_unique():
     }
 
     result = collapse_sequences_unique(fragments_to_upib)
-    assert list(result) == [("TATATA", 3), ("GCGCGC", 3), ("ATATAT", 2), ("GGGGGG", 1)]
+    assert list(result) == [
+        CollapsedFragment("TATATA", 1, 3),
+        CollapsedFragment("GCGCGC", 1, 3),
+        CollapsedFragment("ATATAT", 1, 2),
+        CollapsedFragment("GGGGGG", 1, 1),
+    ]
 
 
 def test_collapse_sequences_adjacency_no_errors():
@@ -203,7 +210,10 @@ def test_collapse_sequences_adjacency_no_errors():
     result = collapse_sequences_adjacency(
         fragments_to_upib, max_neighbours=10, min_dist=2
     )
-    assert list(result) == [(x, 1) for x in list(fragments_to_upib.keys())]
+    assert list(result) == [
+        CollapsedFragment(key, 1, len(values))
+        for key, values in fragments_to_upib.items()
+    ]
 
 
 def test_collapse_sequences_adjacency_with_errors():
@@ -229,10 +239,10 @@ def test_collapse_sequences_adjacency_with_errors():
     result = sorted(list(result))
 
     assert result == [
-        ("ATATAT", 1),
-        ("GCGCGC", 1),
-        ("GGGGGG", 1),
-        ("TATATA", 2),
+        CollapsedFragment("ATATAT", 1, 2),
+        CollapsedFragment("GCGCGC", 1, 3),
+        CollapsedFragment("GGGGGG", 1, 1),
+        CollapsedFragment("TATATA", 2, 6),
     ]
 
 
@@ -252,10 +262,10 @@ def test_collapse_sequences_adjacency_with_errors_picks_most_abundant():
         fragments_to_upib, max_neighbours=10, min_dist=2
     )
     assert sorted(list(result)) == [
-        ("ATATAT", 1),
-        ("GCGCGC", 1),
-        ("GGGGGG", 1),
-        ("TATATA", 2),  # Note that since "TATATA" has more upib's
+        CollapsedFragment("ATATAT", 1, 2),
+        CollapsedFragment("GCGCGC", 1, 3),
+        CollapsedFragment("GGGGGG", 1, 1),
+        CollapsedFragment("TATATA", 2, 5),  # Note that since "TATATA" has more upib's
         # associated it will be picked
     ]
 
@@ -277,7 +287,7 @@ def test_collapse_fastq_algorithm_unique():
 
         mock_fastq_reader.Fastq.return_value = mock_reads()
 
-        result_file = collapse_fastq(
+        result_file, input_read_count = collapse_fastq(
             input_file="/foo/bar",
             algorithm="unique",
             marker="CD4",
@@ -303,8 +313,7 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
+                        "unique_molecules_count": 1,
                     },
                     {
                         "upia": "TTT",
@@ -313,8 +322,7 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
+                        "unique_molecules_count": 1,
                     },
                     {
                         "upia": "GGG",
@@ -323,8 +331,7 @@ def test_collapse_fastq_algorithm_unique():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
+                        "unique_molecules_count": 1,
                     },
                 ]
             ),
@@ -341,7 +348,7 @@ def test_collapse_fastq_algorithm_adjacency():
 
         mock_fastq_reader.Fastq.return_value = mock_reads()
 
-        result_file = collapse_fastq(
+        result_file, input_read_count = collapse_fastq(
             input_file="/foo/bar",
             algorithm="adjacency",
             marker="CD4",
@@ -369,8 +376,7 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
+                        "unique_molecules_count": 1,
                     },
                     {
                         "upia": "TTT",
@@ -379,8 +385,7 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
+                        "unique_molecules_count": 1,
                     },
                     {
                         "upia": "GGG",
@@ -389,8 +394,7 @@ def test_collapse_fastq_algorithm_adjacency():
                         "marker": "CD4",
                         "sequence": "AAAAAAAA",
                         "count": 1,
-                        "umi_unique_count": 1,
-                        "upi_unique_count": 1,
+                        "unique_molecules_count": 1,
                     },
                 ]
             ),
@@ -424,7 +428,7 @@ def test_collapse_fastq_algorithm_adjacency_simulated_reads():
 
         mock_fastq_reader.Fastq.return_value = mock_reads()
 
-        result_file = collapse_fastq(
+        result_file, input_read_count = collapse_fastq(
             input_file="/foo/bar",
             algorithm="adjacency",
             marker="CD4",
@@ -445,9 +449,7 @@ def test_collapse_fastq_algorithm_adjacency_simulated_reads():
         assert data["upia"].nunique() == 1001
         assert data["upib"].nunique() == 1003
         assert data["umi"].nunique() == 9580
-        assert data["count"].describe()["mean"] == 9.857187370170337
-        assert data["umi_unique_count"].describe()["mean"] == 1.0378063980058163
-        assert data["upi_unique_count"].describe()["mean"] == 1.0250311591192356
+        assert data["count"].describe()["mean"] == 9.897174906522642
 
 
 def test_build_annoytree():

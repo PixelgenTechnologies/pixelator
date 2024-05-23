@@ -1,23 +1,28 @@
 """Functions related to the graph dataclass used in pixelator graph operations.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from functools import cached_property, lru_cache
+from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 import pandas as pd
 import polars as pl
-from scipy.sparse import csr_matrix
-from functools import lru_cache
+from scipy.sparse import csr_array, csr_matrix
 
 from pixelator.graph.backends.implementations import (
     graph_backend,
     graph_backend_from_graph_type,
 )
-from pixelator.graph.backends.protocol import GraphBackend, VertexClustering
+from pixelator.graph.backends.protocol import (
+    GraphBackend,
+    SupportedLayoutAlgorithm,
+    VertexClustering,
+)
+from pixelator.graph.node_metrics import local_g
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +48,7 @@ class Graph:
         add_marker_counts: bool,
         simplify: bool,
         use_full_bipartite: bool,
+        convert_indices_to_integers: bool = True,
     ) -> Graph:
         """Build a graph from an edgelist.
 
@@ -63,6 +69,7 @@ class Graph:
         :param simplify: simplifies the graph (remove redundant edges)
         :param use_full_bipartite: use the bipartite graph instead of the projection
                                   (UPIA)
+        :param convert_indices_to_integers: convert the indices to integers (this is the default)
         :returns: a Graph instance
         :rtype: Graph
         :raises: AssertionError when the input edge list is not valid
@@ -72,6 +79,7 @@ class Graph:
             add_marker_counts=add_marker_counts,
             simplify=simplify,
             use_full_bipartite=use_full_bipartite,
+            convert_indices_to_integers=convert_indices_to_integers,
         )
 
         return Graph(backend=backend)
@@ -112,6 +120,11 @@ class Graph:
     def es(self):
         """A sequence of the edges in the Graph instance."""
         return self._backend.es
+
+    @cached_property
+    def node_marker_counts(self):
+        """Get the node marker counts as a dataframe."""
+        return self._backend.node_marker_counts()
 
     def vcount(self):
         """Get the total number of vertices in the Graph instance."""
@@ -170,11 +183,12 @@ class Graph:
 
     def layout_coordinates(
         self,
-        layout_algorithm: str = "fruchterman_reingold",
+        layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         cache: bool = False,
         random_seed: Optional[int] = None,
+        **kwargs,
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
@@ -186,6 +200,8 @@ class Graph:
           - fruchterman_reingold_3d
           - kamada_kawai
           - kamada_kawai_3d
+          - pmds
+          - pmds_3d
 
 
         The `fruchterman_reingold` options are in general faster, but less
@@ -203,6 +219,7 @@ class Graph:
         :param random_seed: used as the seed for graph layouts with a stochastic
                             element. Useful to get deterministic layouts across
                             method calls.
+        :param **kwargs: will be passed to the underlying layout implementation
         :return: the coordinates and markers (if activated) as a dataframe
         :rtype: pd.DataFrame
         :raises: AssertionError if the provided `layout_algorithm` is not valid
@@ -214,6 +231,7 @@ class Graph:
                 only_keep_a_pixels=only_keep_a_pixels,
                 get_node_marker_matrix=get_node_marker_matrix,
                 random_seed=random_seed,
+                **kwargs,
             )
         else:
             return self._backend.layout_coordinates(
@@ -221,6 +239,7 @@ class Graph:
                 only_keep_a_pixels=only_keep_a_pixels,
                 get_node_marker_matrix=get_node_marker_matrix,
                 random_seed=random_seed,
+                **kwargs,
             )
 
     @lru_cache(maxsize=1)
@@ -265,3 +284,44 @@ class Graph:
                             of different length
         """
         self._backend.add_names_to_vertexes(vs_names=vs_names)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the graph."""
+        return f"Graph with {self.vcount()} vertices and {self.ecount()} edges"
+
+    def local_g(
+        self,
+        k: int = 1,
+        use_weights: bool = True,
+        normalize_counts: bool = True,
+        W: csr_array | None = None,
+        method: Literal["gi", "gstari"] = "gi",
+    ) -> pd.DataFrame:
+        """Compute the local G metric for each node in the graph.
+
+        The local G metric is a measure of the local clustering of a node in the graph.
+
+        :param k: The number of steps in the k-step random walk. Default is 1.
+        :param use_weights: Whether to use weights in the computation. When turned off, all
+        edge weights will be equal to 1. Default is True.
+        :param normalize_counts: Whether to normalize counts to proportions. Default is True.
+        :param W: A sparse matrix of custom edge weights. This will override the automated
+        computation of edge weights. `W` must have the same dimensions as A. Note that weights can
+        be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
+        :param method: The method to use for computing local G. Must be one of 'gi' or 'gstari'.
+        'gi' is the original local G metric, which does not consider self-loops, meaning that the
+        local marker expression for a node is computed by aggregating the weighted expression of
+        its neighbors. 'gstari' is a simplified version of local G that does consider self-loops.
+        In other words, the local marker expression of a node also includes the weighted marker
+        expression of the node itself. Default is 'gi'.
+        :return: A DataFrame of local G-scores for each node and marker.
+        """
+        return local_g(
+            A=self.get_adjacency_sparse(),
+            counts=self.node_marker_counts,
+            k=k,
+            use_weights=use_weights,
+            normalize_counts=normalize_counts,
+            W=W,
+            method=method,
+        )

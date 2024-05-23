@@ -1,0 +1,3 @@
+sample_id,total_read_count,passed_filter_read_count,low_quality_read_count,too_many_n_read_count,too_short_read_count,too_long_read_count,discarded
+pbmcs_unstimulated,200000,199390,610,0,0,0,0.003049999999999997
+uropod_control,300000,298988,1012,0,0,0,0.0033733333333333393

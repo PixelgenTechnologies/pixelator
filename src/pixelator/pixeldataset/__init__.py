@@ -1,7 +1,8 @@
 """Module for PixelDataset and associated functions.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
+
 from __future__ import annotations
 
 import logging
@@ -19,29 +20,26 @@ import polars as pl
 from anndata import AnnData
 
 from pixelator.graph import Graph
+from pixelator.pixeldataset.backends import (
+    FileBasedPixelDatasetBackend,
+    ObjectBasedPixelDatasetBackend,
+    PixelDatasetBackend,
+)
+from pixelator.pixeldataset.datastores import (
+    PixelDataStore,
+    ZipBasedPixelFileWithCSV,
+    ZipBasedPixelFileWithParquet,
+)
+from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pixeldataset.utils import (
     _enforce_edgelist_types,
     update_metrics_anndata,
 )
-from pixelator.pixeldataset.backends import (
-    PixelDatasetBackend,
-    FileBasedPixelDatasetBackend,
-    ObjectBasedPixelDatasetBackend,
-)
-from pixelator.pixeldataset.file_formats import (
-    PixelFileFormatSpec,
-    PixelFileParquetFormatSpec,
-    PixelFileCSVFormatSpec,
-)
 from pixelator.types import PathType
-
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", module="libpysal")
-
 
 logger = logging.getLogger(__name__)
 
-SIZE_DEFINITION = "edges"
+SIZE_DEFINITION = "molecules"
 # minimum number of vertices (nodes) required for polarization/co-localization
 MIN_VERTICES_REQUIRED = 100
 
@@ -75,6 +73,8 @@ class PixelDataset:
                   each component -> Optional
     colocalization: the colocalization scores (pd.DataFrame) for each
                     component -> Optional
+    precomputed_layouts: pre-computed layouts that can be used to visualize
+                         that component -> Optional
     """
 
     def __init__(self, backend: PixelDatasetBackend) -> None:
@@ -109,6 +109,7 @@ class PixelDataset:
         metadata: Optional[Dict[str, Any]] = None,
         polarization: Optional[pd.DataFrame] = None,
         colocalization: Optional[pd.DataFrame] = None,
+        precomputed_layouts: PreComputedLayouts | None = None,
         copy: bool = True,
         allow_empty_edgelist: bool = False,
     ) -> PixelDataset:
@@ -121,6 +122,7 @@ class PixelDataset:
                              defaults to None
         :param colocalization: a `pd.DataFrame` with colocalization information,
                                defaults to None
+        :param precomputed_layouts: a PreComputedLayouts object, defaults to None
         :param copy: specify if the input data should be copied or not.
                      Defaults to True.
         :param allow_empty_edgelist: allow the edgelist to be empty. Defaults to False.
@@ -134,6 +136,7 @@ class PixelDataset:
                 metadata=metadata,
                 polarization=polarization,
                 colocalization=colocalization,
+                precomputed_layouts=precomputed_layouts,
                 copy=copy,
                 allow_edgelist_to_be_empty=allow_empty_edgelist,
             )
@@ -204,6 +207,18 @@ class PixelDataset:
         """Set the metadata object."""
         self._backend.metadata = value
 
+    @property
+    def precomputed_layouts(
+        self,
+    ) -> PreComputedLayouts | None:
+        """Get the precomputed layouts."""
+        return self._backend.precomputed_layouts
+
+    @precomputed_layouts.setter
+    def precomputed_layouts(self, value: PreComputedLayouts | None) -> None:
+        """Set the precomputed layouts."""
+        self._backend.precomputed_layouts = value
+
     def graph(
         self,
         component_id: Optional[str] = None,
@@ -261,6 +276,12 @@ class PixelDataset:
                 f"{self.colocalization.shape[0]} elements"
             )
 
+        if (
+            self.precomputed_layouts is not None
+            and not self.precomputed_layouts.is_empty
+        ):
+            msg += "\n\tContains precomputed layouts"
+
         if self.metadata is not None:
             msg += "\n\tMetadata:\n"
             msg += "\n".join(
@@ -284,19 +305,26 @@ class PixelDataset:
         return PixelDataset.from_data(
             adata=self.adata.copy(),
             edgelist=self.edgelist.copy(),
-            polarization=self.polarization.copy()
-            if self.polarization is not None
-            else None,
-            colocalization=self.colocalization.copy()
-            if self.colocalization is not None
-            else None,
+            polarization=(
+                self.polarization.copy() if self.polarization is not None else None
+            ),
+            colocalization=(
+                self.colocalization.copy() if self.colocalization is not None else None
+            ),
             metadata=self.metadata.copy() if self.metadata is not None else None,
+            precomputed_layouts=(
+                self.precomputed_layouts.copy()
+                if self.precomputed_layouts is not None
+                and not self.precomputed_layouts.is_empty
+                else None
+            ),
         )
 
     def save(
         self,
         path: PathType,
-        file_format: Literal["csv", "parquet"] | PixelFileFormatSpec = "parquet",
+        file_format: Literal["csv", "parquet"] | PixelDataStore = "parquet",
+        force_overwrite: bool = False,
     ) -> None:
         """Save the PixelDataset to a .pxl file in the location provided in `path`.
 
@@ -304,22 +332,24 @@ class PixelDataset:
         :param file_format: should be 'csv' or 'parquet'. Default is 'parquet'.
                             This indicates what file-format is used to serialize
                             the data frames in the .pxl file.
+        :param force_overwrite: By default pixelator will not overwrite existing .pxl files, set this to true to
+                                force an overwrite of the existing file.
         :returns: None
         :rtype: None
         :raises: AssertionError if invalid file format specified
         """
         logger.debug("Saving PixelDataset to %s", path)
 
-        if isinstance(file_format, PixelFileFormatSpec):
+        if isinstance(file_format, PixelDataStore):
             format_spec = file_format
         elif file_format not in ["csv", "parquet"]:
             raise AssertionError("`file_format` must be `csv` or `parquet`")
         if file_format == "csv":
-            format_spec = PixelFileCSVFormatSpec()
+            format_spec = ZipBasedPixelFileWithCSV(path)
         if file_format == "parquet":
-            format_spec = PixelFileParquetFormatSpec()
+            format_spec = ZipBasedPixelFileWithParquet(path)
 
-        format_spec.save(self, path)
+        format_spec.save(self, force_overwrite=force_overwrite)
 
     def filter(
         self,
@@ -331,6 +361,8 @@ class PixelDataset:
         Please note that markers will be filtered from the edgelist, even when provided,
         since it might cause different components to form, and hence invalidated the
         rest of the data.
+
+        Consequently precomputed layouts will also not be filtered by marker.
 
         :param components: The components you want to keep, defaults to None
         :param markers: The markers you want to keep, defaults to None
@@ -363,7 +395,6 @@ class PixelDataset:
                 if change_components
                 else self.edgelist_lazy
             )
-
             edgelist = _enforce_edgelist_types(edgelist_pred.collect().to_pandas())
 
         if self.polarization is not None:
@@ -391,10 +422,23 @@ class PixelDataset:
             )
             colocalization = self.colocalization[colocalization_mask]
 
+        if not (self.precomputed_layouts is None or self.precomputed_layouts.is_empty):
+            precomputed_layouts = self.precomputed_layouts.filter(
+                component_ids=components
+            )
+
         return PixelDataset.from_data(
             adata=adata,
             edgelist=edgelist,
             metadata=self.metadata,
             polarization=polarization if self.polarization is not None else None,
             colocalization=colocalization if self.colocalization is not None else None,
+            precomputed_layouts=(
+                precomputed_layouts
+                if not (
+                    self.precomputed_layouts is None
+                    or self.precomputed_layouts.is_empty
+                )
+                else None
+            ),
         )

@@ -1,0 +1,10 @@
+{
+    "sample_id": "pbmcs_unstimulated",
+    "fraction_q30": 0.9606927317923855,
+    "fraction_q30_bc": 0.9660959533395918,
+    "fraction_q30_pbs1": 0.9683133231643615,
+    "fraction_q30_pbs2": 0.9477632357943524,
+    "fraction_q30_umi": 0.965813230797693,
+    "fraction_q30_upia": 0.9602759816852228,
+    "fraction_q30_upib": 0.9671804579646854
+}

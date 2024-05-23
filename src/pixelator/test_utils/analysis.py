@@ -1,6 +1,5 @@
-"""
-Copyright (c) 2023 Pixelgen Technologies AB.
-"""
+"""Copyright © 2023 Pixelgen Technologies AB."""
+
 import logging
 
 import pytest
@@ -11,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAnalysisTestsMixin(BaseWorkflowTestMixin):
-    """
-    Base class for analysis command tests.
+    """Base class for analysis command tests.
 
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
@@ -28,7 +26,10 @@ class BaseAnalysisTestsMixin(BaseWorkflowTestMixin):
         params = self.__get_parameters()
         verbose = self.__get_options("common").get("verbose")
         input_files = list(
-            map(lambda f: str(f), (self.workdir / "annotate").glob("*.dataset.pxl"))
+            map(
+                lambda f: str(f),
+                (self.workdir / "annotate").glob("*.annotate.dataset.pxl"),
+            )
         )
 
         command = [
@@ -53,7 +54,7 @@ class BaseAnalysisTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(depends=["test_analysis_run"])
     def test_analysis_dataset_exists(self):
-        pxl_files = (self.workdir / "analysis").glob("*.dataset.pxl")
+        pxl_files = (self.workdir / "analysis").glob("*.analysis.dataset.pxl")
         for f in pxl_files:
             assert f.is_file()
 

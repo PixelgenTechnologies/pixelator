@@ -1,0 +1,25 @@
+{
+    "sample_id": "pbmcs_unstimulated",
+    "component_count": 3052,
+    "molecule_count": 3086,
+    "read_count": 6237,
+    "marker_count": 68,
+    "read_count_per_molecule_stats": {
+        "mean": 2.0210628645495787,
+        "std": 0.1458331527003784,
+        "min": 2.0,
+        "q1": 2.0,
+        "q2": 2.0,
+        "q3": 2.0,
+        "max": 4.0,
+        "count": 3086,
+        "iqr": 0.0
+    },
+    "a_pixel_count": 3077,
+    "b_pixel_count": 3060,
+    "components_modularity": 0.999668815620027,
+    "fraction_molecules_in_largest_component": 0.0006480881399870382,
+    "fraction_pixels_in_largest_component": 0.0004888381945576015,
+    "a_pixel_b_pixel_ratio": 1.0055555555555555,
+    "pixel_count": 6137.0
+}

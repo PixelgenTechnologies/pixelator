@@ -1,0 +1,2631 @@
+{
+    "tag": "Cutadapt report",
+    "schema_version": [
+        0,
+        3
+    ],
+    "cutadapt_version": "4.6",
+    "python_version": "3.11.7",
+    "command_line_arguments": [
+        "-e",
+        "0.1",
+        "--adapter",
+        "file:/tmp/tmp2njwpibg.fa",
+        "--cores",
+        "0",
+        "--action=none",
+        "--no-indels",
+        "--untrimmed-output",
+        "demux/uropod_control.failed.fastq.gz",
+        "--overlap",
+        "8",
+        "--json",
+        "demux/uropod_control.report.json",
+        "--output",
+        "demux/uropod_control.processed-{name}.fastq.gz",
+        "uropod_control.processed.fastq.gz",
+        "--debug"
+    ],
+    "cores": 8,
+    "input": {
+        "path1": "uropod_control.processed.fastq.gz",
+        "path2": null,
+        "paired": false
+    },
+    "read_counts": {
+        "input": 255274,
+        "filtered": {
+            "too_short": null,
+            "too_long": null,
+            "too_many_n": null,
+            "too_many_expected_errors": null,
+            "casava_filtered": null,
+            "discard_trimmed": null,
+            "discard_untrimmed": 0
+        },
+        "output": 255274,
+        "reverse_complemented": null,
+        "read1_with_adapter": 251486,
+        "read2_with_adapter": null
+    },
+    "basepair_counts": {
+        "input": 33696168,
+        "input_read1": 33696168,
+        "input_read2": null,
+        "quality_trimmed": null,
+        "quality_trimmed_read1": null,
+        "quality_trimmed_read2": null,
+        "poly_a_trimmed": null,
+        "poly_a_trimmed_read1": null,
+        "poly_a_trimmed_read2": null,
+        "output": 33696168,
+        "output_read1": 33696168,
+        "output_read2": null
+    },
+    "adapters_read1": [
+        {
+            "name": "CD274",
+            "total_matches": 551,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TCCCTTGC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 551,
+                "adjacent_bases": {
+                    "A": 158,
+                    "C": 89,
+                    "G": 191,
+                    "T": 113,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            551
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD44",
+            "total_matches": 14384,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TATCCCTT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 14384,
+                "adjacent_bases": {
+                    "A": 3372,
+                    "C": 2844,
+                    "G": 3970,
+                    "T": 4198,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            14384
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD25",
+            "total_matches": 296,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GCCGGACG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 296,
+                "adjacent_bases": {
+                    "A": 86,
+                    "C": 50,
+                    "G": 87,
+                    "T": 73,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            296
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD279",
+            "total_matches": 99,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TTCTGGGT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 99,
+                "adjacent_bases": {
+                    "A": 22,
+                    "C": 22,
+                    "G": 30,
+                    "T": 25,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            99
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD41",
+            "total_matches": 40,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AACAAGAC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 40,
+                "adjacent_bases": {
+                    "A": 7,
+                    "C": 5,
+                    "G": 17,
+                    "T": 11,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            40
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "HLA-ABC",
+            "total_matches": 56939,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ATTGGCAC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 56939,
+                "adjacent_bases": {
+                    "A": 12654,
+                    "C": 13947,
+                    "G": 12210,
+                    "T": 18128,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            56939
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD54",
+            "total_matches": 2600,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GAAAGTCA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 2600,
+                "adjacent_bases": {
+                    "A": 667,
+                    "C": 613,
+                    "G": 709,
+                    "T": 611,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            2600
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD26",
+            "total_matches": 9481,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GTCTTTGT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 9481,
+                "adjacent_bases": {
+                    "A": 2692,
+                    "C": 1736,
+                    "G": 3100,
+                    "T": 1953,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            9481
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD27",
+            "total_matches": 1101,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GTTGTCCG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 1101,
+                "adjacent_bases": {
+                    "A": 232,
+                    "C": 240,
+                    "G": 274,
+                    "T": 355,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            1101
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD38",
+            "total_matches": 8778,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TCAACGCT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 8778,
+                "adjacent_bases": {
+                    "A": 2720,
+                    "C": 1831,
+                    "G": 2782,
+                    "T": 1445,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            8778
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD16",
+            "total_matches": 617,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GTGCATTC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 617,
+                "adjacent_bases": {
+                    "A": 192,
+                    "C": 130,
+                    "G": 184,
+                    "T": 111,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            617
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD52",
+            "total_matches": 639,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GACTGGGA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 639,
+                "adjacent_bases": {
+                    "A": 155,
+                    "C": 94,
+                    "G": 174,
+                    "T": 216,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            639
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD53",
+            "total_matches": 97,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TGCATGTC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 97,
+                "adjacent_bases": {
+                    "A": 28,
+                    "C": 18,
+                    "G": 30,
+                    "T": 21,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            97
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD11c",
+            "total_matches": 99,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AAGTCGTG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 99,
+                "adjacent_bases": {
+                    "A": 26,
+                    "C": 22,
+                    "G": 23,
+                    "T": 28,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            99
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD11a",
+            "total_matches": 6620,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ACATTGAC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 6620,
+                "adjacent_bases": {
+                    "A": 1245,
+                    "C": 1219,
+                    "G": 1711,
+                    "T": 2445,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            6620
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD127",
+            "total_matches": 618,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TGATAGAA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 618,
+                "adjacent_bases": {
+                    "A": 151,
+                    "C": 100,
+                    "G": 171,
+                    "T": 196,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            618
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD29",
+            "total_matches": 3285,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ATTCGCCT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 3285,
+                "adjacent_bases": {
+                    "A": 786,
+                    "C": 531,
+                    "G": 985,
+                    "T": 983,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            3285
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD82",
+            "total_matches": 3736,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AACCTTCC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 3736,
+                "adjacent_bases": {
+                    "A": 1044,
+                    "C": 686,
+                    "G": 1237,
+                    "T": 769,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            3736
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD45RB",
+            "total_matches": 2995,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GCATTCTG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 2995,
+                "adjacent_bases": {
+                    "A": 771,
+                    "C": 617,
+                    "G": 873,
+                    "T": 734,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            2995
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD40",
+            "total_matches": 568,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TCAGGGTG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 568,
+                "adjacent_bases": {
+                    "A": 187,
+                    "C": 122,
+                    "G": 117,
+                    "T": 142,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            568
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD19",
+            "total_matches": 53,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CTACGACG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 53,
+                "adjacent_bases": {
+                    "A": 13,
+                    "C": 6,
+                    "G": 16,
+                    "T": 18,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            53
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD8",
+            "total_matches": 17232,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CTCAGATG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 17232,
+                "adjacent_bases": {
+                    "A": 4698,
+                    "C": 2806,
+                    "G": 4809,
+                    "T": 4919,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            17232
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD59",
+            "total_matches": 1796,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GAGGTTAG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 1796,
+                "adjacent_bases": {
+                    "A": 508,
+                    "C": 343,
+                    "G": 449,
+                    "T": 496,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            1796
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "TCRVb5",
+            "total_matches": 339,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GCGCAACT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 339,
+                "adjacent_bases": {
+                    "A": 120,
+                    "C": 52,
+                    "G": 109,
+                    "T": 58,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            339
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "mIgG2a",
+            "total_matches": 121,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CTACTCGC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 121,
+                "adjacent_bases": {
+                    "A": 36,
+                    "C": 14,
+                    "G": 45,
+                    "T": 26,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            121
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD11b",
+            "total_matches": 47,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ACTGTGTC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 47,
+                "adjacent_bases": {
+                    "A": 11,
+                    "C": 9,
+                    "G": 16,
+                    "T": 11,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            47
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD86",
+            "total_matches": 1237,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TCTGCTCC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 1237,
+                "adjacent_bases": {
+                    "A": 383,
+                    "C": 231,
+                    "G": 376,
+                    "T": 247,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            1237
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD197",
+            "total_matches": 1215,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AGGATGTT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 1215,
+                "adjacent_bases": {
+                    "A": 408,
+                    "C": 243,
+                    "G": 280,
+                    "T": 284,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            1215
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "HLA-DR",
+            "total_matches": 8231,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CCAGCATG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 8231,
+                "adjacent_bases": {
+                    "A": 2513,
+                    "C": 1571,
+                    "G": 2539,
+                    "T": 1608,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            8231
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD3E",
+            "total_matches": 6089,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AGCTACTA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 6089,
+                "adjacent_bases": {
+                    "A": 1681,
+                    "C": 1245,
+                    "G": 1783,
+                    "T": 1380,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            6089
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD2",
+            "total_matches": 7695,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CCGATATC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 7695,
+                "adjacent_bases": {
+                    "A": 1918,
+                    "C": 1427,
+                    "G": 2656,
+                    "T": 1694,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            7695
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD20",
+            "total_matches": 127,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GAATCCCG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 127,
+                "adjacent_bases": {
+                    "A": 36,
+                    "C": 29,
+                    "G": 43,
+                    "T": 19,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            127
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD45RA",
+            "total_matches": 524,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GGAGCCAA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 524,
+                "adjacent_bases": {
+                    "A": 132,
+                    "C": 129,
+                    "G": 169,
+                    "T": 94,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            524
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD14",
+            "total_matches": 21,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AGAGGCTC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 21,
+                "adjacent_bases": {
+                    "A": 4,
+                    "C": 3,
+                    "G": 11,
+                    "T": 3,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            21
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD4",
+            "total_matches": 2764,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CTGACCAT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 2764,
+                "adjacent_bases": {
+                    "A": 674,
+                    "C": 538,
+                    "G": 759,
+                    "T": 793,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            2764
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "mIgG2b",
+            "total_matches": 105,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GTATCGGT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 105,
+                "adjacent_bases": {
+                    "A": 36,
+                    "C": 18,
+                    "G": 21,
+                    "T": 30,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            105
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "mIgG1",
+            "total_matches": 80,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TTTGGAAG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 80,
+                "adjacent_bases": {
+                    "A": 27,
+                    "C": 16,
+                    "G": 20,
+                    "T": 17,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            80
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD9",
+            "total_matches": 50,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ACCAGTAC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 50,
+                "adjacent_bases": {
+                    "A": 15,
+                    "C": 13,
+                    "G": 13,
+                    "T": 9,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            50
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD69",
+            "total_matches": 446,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AAGCATAG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 446,
+                "adjacent_bases": {
+                    "A": 114,
+                    "C": 118,
+                    "G": 117,
+                    "T": 97,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            446
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "B2M",
+            "total_matches": 35500,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CTGTAGGA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 35500,
+                "adjacent_bases": {
+                    "A": 5773,
+                    "C": 9577,
+                    "G": 9643,
+                    "T": 10507,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            35500
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD36",
+            "total_matches": 21,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ATTTCGAG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 21,
+                "adjacent_bases": {
+                    "A": 2,
+                    "C": 5,
+                    "G": 4,
+                    "T": 10,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            21
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD45",
+            "total_matches": 27160,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ATAGGGGA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 27160,
+                "adjacent_bases": {
+                    "A": 8029,
+                    "C": 6210,
+                    "G": 7074,
+                    "T": 5847,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            27160
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD152",
+            "total_matches": 62,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AACGGCTA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 62,
+                "adjacent_bases": {
+                    "A": 24,
+                    "C": 11,
+                    "G": 15,
+                    "T": 12,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            62
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD337",
+            "total_matches": 37,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TCCCAGTG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 37,
+                "adjacent_bases": {
+                    "A": 17,
+                    "C": 2,
+                    "G": 12,
+                    "T": 6,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            37
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD1d",
+            "total_matches": 5,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TACTCTTG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 5,
+                "adjacent_bases": {
+                    "A": 1,
+                    "C": 0,
+                    "G": 4,
+                    "T": 0,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            5
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD84",
+            "total_matches": 323,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AGTTATCG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 323,
+                "adjacent_bases": {
+                    "A": 149,
+                    "C": 37,
+                    "G": 69,
+                    "T": 68,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            323
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD161",
+            "total_matches": 47,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GTGAGTAG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 47,
+                "adjacent_bases": {
+                    "A": 22,
+                    "C": 10,
+                    "G": 7,
+                    "T": 8,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            47
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD163",
+            "total_matches": 30,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CATGGGCA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 30,
+                "adjacent_bases": {
+                    "A": 8,
+                    "C": 8,
+                    "G": 9,
+                    "T": 5,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            30
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD200",
+            "total_matches": 46,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AGGGCAGT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 46,
+                "adjacent_bases": {
+                    "A": 19,
+                    "C": 5,
+                    "G": 8,
+                    "T": 14,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            46
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD137",
+            "total_matches": 23,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CCTAAGAA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 23,
+                "adjacent_bases": {
+                    "A": 4,
+                    "C": 8,
+                    "G": 7,
+                    "T": 4,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            23
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD229",
+            "total_matches": 521,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GTTCAGAC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 521,
+                "adjacent_bases": {
+                    "A": 119,
+                    "C": 136,
+                    "G": 152,
+                    "T": 114,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            521
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD244",
+            "total_matches": 110,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AGCCCGAA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 110,
+                "adjacent_bases": {
+                    "A": 30,
+                    "C": 22,
+                    "G": 36,
+                    "T": 22,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            110
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD154",
+            "total_matches": 30,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TGGGGCTT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 30,
+                "adjacent_bases": {
+                    "A": 8,
+                    "C": 8,
+                    "G": 12,
+                    "T": 2,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            30
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD18",
+            "total_matches": 9293,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CACACGGT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 9293,
+                "adjacent_bases": {
+                    "A": 2624,
+                    "C": 1650,
+                    "G": 2809,
+                    "T": 2210,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            9293
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD71",
+            "total_matches": 207,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GCACTTAG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 207,
+                "adjacent_bases": {
+                    "A": 55,
+                    "C": 31,
+                    "G": 64,
+                    "T": 57,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            207
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "ACTB",
+            "total_matches": 77,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TCGTAACG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 77,
+                "adjacent_bases": {
+                    "A": 21,
+                    "C": 17,
+                    "G": 21,
+                    "T": 18,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            77
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD48",
+            "total_matches": 823,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GACCACTC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 823,
+                "adjacent_bases": {
+                    "A": 248,
+                    "C": 166,
+                    "G": 225,
+                    "T": 184,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            823
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD43",
+            "total_matches": 1379,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GTAGGACC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 1379,
+                "adjacent_bases": {
+                    "A": 421,
+                    "C": 289,
+                    "G": 385,
+                    "T": 284,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            1379
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD150",
+            "total_matches": 44,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CTTGCACC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 44,
+                "adjacent_bases": {
+                    "A": 22,
+                    "C": 8,
+                    "G": 7,
+                    "T": 7,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            44
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD22",
+            "total_matches": 180,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CTCAAGAG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 180,
+                "adjacent_bases": {
+                    "A": 42,
+                    "C": 47,
+                    "G": 56,
+                    "T": 35,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            180
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD62P",
+            "total_matches": 30,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ATGACTGC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 30,
+                "adjacent_bases": {
+                    "A": 6,
+                    "C": 7,
+                    "G": 6,
+                    "T": 11,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            30
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD50",
+            "total_matches": 380,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ACTCTCAC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 380,
+                "adjacent_bases": {
+                    "A": 111,
+                    "C": 76,
+                    "G": 96,
+                    "T": 97,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            380
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD33",
+            "total_matches": 25,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TCCGTAAC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 25,
+                "adjacent_bases": {
+                    "A": 6,
+                    "C": 1,
+                    "G": 13,
+                    "T": 5,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            25
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD37",
+            "total_matches": 738,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TTGTCCAA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 738,
+                "adjacent_bases": {
+                    "A": 334,
+                    "C": 87,
+                    "G": 177,
+                    "T": 140,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            738
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD162",
+            "total_matches": 1013,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GCTATTGA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 1013,
+                "adjacent_bases": {
+                    "A": 461,
+                    "C": 145,
+                    "G": 160,
+                    "T": 247,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            1013
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD328",
+            "total_matches": 53,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AAGTAGCT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 53,
+                "adjacent_bases": {
+                    "A": 17,
+                    "C": 11,
+                    "G": 9,
+                    "T": 16,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            53
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD7",
+            "total_matches": 4405,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GATTGTGC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 4405,
+                "adjacent_bases": {
+                    "A": 1364,
+                    "C": 1040,
+                    "G": 942,
+                    "T": 1059,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            4405
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD102",
+            "total_matches": 923,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "TTTCTGGT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 923,
+                "adjacent_bases": {
+                    "A": 312,
+                    "C": 187,
+                    "G": 236,
+                    "T": 188,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            923
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD47",
+            "total_matches": 1001,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GATAGGGT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 1001,
+                "adjacent_bases": {
+                    "A": 331,
+                    "C": 216,
+                    "G": 267,
+                    "T": 187,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            1001
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD72",
+            "total_matches": 92,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GGTTTACC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 92,
+                "adjacent_bases": {
+                    "A": 30,
+                    "C": 19,
+                    "G": 23,
+                    "T": 20,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            92
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD5",
+            "total_matches": 1939,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CAGATCCG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 1939,
+                "adjacent_bases": {
+                    "A": 499,
+                    "C": 495,
+                    "G": 508,
+                    "T": 437,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            1939
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD55",
+            "total_matches": 258,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CAGTCAGT",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 258,
+                "adjacent_bases": {
+                    "A": 81,
+                    "C": 61,
+                    "G": 71,
+                    "T": 45,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            258
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD278",
+            "total_matches": 814,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "AAAGCAAC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 814,
+                "adjacent_bases": {
+                    "A": 234,
+                    "C": 153,
+                    "G": 229,
+                    "T": 198,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            814
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD32",
+            "total_matches": 153,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CAATCGGC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 153,
+                "adjacent_bases": {
+                    "A": 40,
+                    "C": 32,
+                    "G": 43,
+                    "T": 38,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            153
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD268",
+            "total_matches": 87,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CACGTTTC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 87,
+                "adjacent_bases": {
+                    "A": 26,
+                    "C": 22,
+                    "G": 20,
+                    "T": 19,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            87
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD64",
+            "total_matches": 13,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "GCTGAACC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 13,
+                "adjacent_bases": {
+                    "A": 2,
+                    "C": 4,
+                    "G": 2,
+                    "T": 5,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            13
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD49D",
+            "total_matches": 1743,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ACCTTGTG",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 1743,
+                "adjacent_bases": {
+                    "A": 513,
+                    "C": 358,
+                    "G": 504,
+                    "T": 368,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            1743
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD158",
+            "total_matches": 33,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "ACTCGGAA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 33,
+                "adjacent_bases": {
+                    "A": 5,
+                    "C": 7,
+                    "G": 13,
+                    "T": 8,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            33
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD314",
+            "total_matches": 104,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CTTCTTGA",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 104,
+                "adjacent_bases": {
+                    "A": 29,
+                    "C": 22,
+                    "G": 30,
+                    "T": 23,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            104
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "CD35",
+            "total_matches": 49,
+            "on_reverse_complement": null,
+            "linked": false,
+            "five_prime_end": null,
+            "three_prime_end": {
+                "type": "anchored_three_prime",
+                "sequence": "CCAGACAC",
+                "error_rate": 0.1,
+                "indels": false,
+                "error_lengths": null,
+                "matches": 49,
+                "adjacent_bases": {
+                    "A": 9,
+                    "C": 15,
+                    "G": 16,
+                    "T": 9,
+                    "": 0
+                },
+                "dominant_adjacent_base": null,
+                "trimmed_lengths": [
+                    {
+                        "len": 8,
+                        "expect": 3.9,
+                        "counts": [
+                            49
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "adapters_read2": null,
+    "poly_a_trimmed_read1": null,
+    "poly_a_trimmed_read2": null,
+    "sample_id": "uropod_control"
+}

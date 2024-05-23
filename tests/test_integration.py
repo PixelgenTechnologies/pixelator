@@ -1,12 +1,12 @@
 """Integration tests for the pixelator CLI.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 # pylint: disable=redefined-outer-name
 
 import pytest
 from click.testing import CliRunner
-
 from pixelator import cli
 
 pytestmark = pytest.mark.integration_test

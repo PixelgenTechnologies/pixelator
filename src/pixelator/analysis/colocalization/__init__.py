@@ -1,19 +1,22 @@
 """Functions for the colocalization analysis in pixelator.
 
-Copyright (c) 2023 Pixelgen Technologies AB.
+Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import logging
 from functools import partial
 from typing import Optional, get_args
 
+import numpy as np
 import pandas as pd
+from scipy.stats import mannwhitneyu
+from statsmodels.stats.multitest import multipletests
 
+from pixelator.analysis.analysis_engine import PerComponentAnalysis
 from pixelator.analysis.colocalization.estimate import (
     estimate_observation_statistics,
     permutation_analysis_results,
 )
-from pixelator.analysis.colocalization.permute import permutations
 from pixelator.analysis.colocalization.prepare import (
     filter_by_region_counts,
     filter_by_unique_values,
@@ -28,10 +31,13 @@ from pixelator.analysis.colocalization.types import (
     MarkerColocalizationResults,
     TransformationTypes,
 )
+from pixelator.analysis.permute import permutations
 from pixelator.graph.utils import Graph
+from pixelator.pixeldataset import PixelDataset
 from pixelator.statistics import (
     correct_pvalues,
     log1p_transformation,
+    rate_diff_transformation,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,7 +72,9 @@ def colocalization_from_component_edgelist(
     graph = Graph.from_edgelist(
         edgelist=edgelist,
         add_marker_counts=True,
-        simplify=False,
+        # If we do A-node projection, we will simplify anyway.
+        # This just removes the warning.
+        simplify=False if use_full_bipartite else True,
         use_full_bipartite=use_full_bipartite,
     )
     return colocalization_from_component_graph(
@@ -87,6 +95,8 @@ def _transform_data(
         return data
     if transform == "log1p":
         return log1p_transformation(data)
+    if transform == "rate-diff":
+        return rate_diff_transformation(data)
     raise ValueError(
         f"`transform`must be one of: {'/'.join(get_args(TransformationTypes))}"
     )
@@ -244,7 +254,9 @@ def colocalization_scores(
             graph = Graph.from_edgelist(
                 edgelist=component_df,
                 add_marker_counts=True,
-                simplify=False,
+                # If we do A-node projection, we will simplify anyway.
+                # This just removes the warning.
+                simplify=False if use_full_bipartite else True,
                 use_full_bipartite=use_full_bipartite,
             )
             if len(graph.vs) < 2:
@@ -284,3 +296,162 @@ def colocalization_scores(
 
     logger.debug("Colocalization scores for dataset computed")
     return scores
+
+
+def _colocalization_wilcoxon(
+    markers,
+    df,
+    reference,
+    target,
+    contrast_column,
+    value_column,
+):
+    reference_df = df.loc[df[contrast_column] == reference, :]
+    target_df = df.loc[df[contrast_column] == target, :]
+
+    if reference_df.empty or target_df.empty:
+        return {}
+
+    estimate = np.median(
+        target_df[value_column].to_numpy()[:, None]
+        - reference_df[value_column].to_numpy()
+    )
+
+    stat, p_value = mannwhitneyu(
+        x=reference_df[value_column],
+        y=target_df[value_column],
+        alternative="two-sided",
+    )
+
+    return {
+        "marker_1": markers[0],
+        "marker_2": markers[1],
+        "markers": "/".join(markers),
+        "stat": stat,
+        "p_value": p_value,
+        "median_difference": estimate,
+    }
+
+
+def get_differential_colocalization(
+    colocalization_data_frame: pd.DataFrame,
+    target: str,
+    reference: str,
+    contrast_column: str = "sample",
+    use_z_score: bool = True,
+) -> pd.DataFrame:
+    """Calculate the differential colocalization.
+
+    :param colocalization_data_frame: The colocalization data frame.
+    :param target: The label for target components in the contrast_column.
+    :param reference: The label for reference components in the contrast_column.
+    :param contrast_column: The column to use for the contrast. Defaults to "sample".
+    :param use_z_score: Whether to use the z-score. Defaults to True.
+
+    :return: The differential colocalization.
+    :rtype: pd.DataFrame
+    """
+    if use_z_score:
+        value_column = "pearson_z"
+    else:
+        value_column = "pearson"
+
+    same_marker_mask = (
+        colocalization_data_frame["marker_1"] == colocalization_data_frame["marker_2"]
+    )
+    data_frame = colocalization_data_frame.loc[~same_marker_mask, :]
+
+    differential_colocalization = pd.DataFrame.from_records(
+        data_frame.groupby(["marker_1", "marker_2"]).apply(
+            lambda marker_data: _colocalization_wilcoxon(
+                marker_data.name,
+                marker_data,
+                reference=reference,
+                target=target,
+                contrast_column=contrast_column,
+                value_column=value_column,
+            )
+        )
+    )
+    # If a marker appears only in one of the datasets, it's differential value will be NAN
+    nan_values = differential_colocalization[
+        differential_colocalization["median_difference"].isna()
+    ].index
+    differential_colocalization.drop(
+        nan_values,
+        axis="index",
+        inplace=True,
+    )
+
+    _, pvals_corrected, *_ = multipletests(
+        differential_colocalization["p_value"], method="bonferroni"
+    )
+    differential_colocalization["p_adj"] = pvals_corrected
+
+    return differential_colocalization
+
+
+class ColocalizationAnalysis(PerComponentAnalysis):
+    """Run colocalization analysis on each component."""
+
+    ANALYSIS_NAME = "colocalization"
+
+    def __init__(
+        self,
+        transformation_type: TransformationTypes,
+        neighbourhood_size: int,
+        n_permutations: int,
+        min_region_count: int,
+    ):
+        """Initialize the ColocalizationAnalysis.
+
+        :param transformation_type: transformation method to use
+        :param neighbourhood_size: size of the neighbourhood to consider
+        :param n_permutations: Select number of permutations used to
+                               calculate empirical z-scores and p-values of the
+                               colocalization values
+        :param min_region_count: The minimum size of the region (e.g. number
+                             of counts in the neighbourhood) required
+                             for it to be considered for colocalization analysis
+        """
+        self.transformation_type = transformation_type
+        self.neighbourhood_size = neighbourhood_size
+        self.n_permutations = n_permutations
+        self.min_region_count = min_region_count
+
+    def run_on_component(self, component: Graph, component_id: str) -> pd.DataFrame:
+        """Run colocalization analysis on the component."""
+        logger.debug("Running colocalization analysis on component %s", component_id)
+        return colocalization_from_component_graph(
+            graph=component,
+            component_id=component_id,
+            transformation=self.transformation_type,
+            neighbourhood_size=self.neighbourhood_size,
+            n_permutations=self.n_permutations,
+            min_region_count=self.min_region_count,
+        )
+
+    def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Post process the colocalization data.
+
+        This will adjust the p-values using the Benjamini-Hochberg method.
+        """
+        logger.debug("Post processing colocalization analysis data")
+        if data.empty:
+            return data
+        p_value_columns = filter(lambda x: "_p" in x, data.columns)
+        for p_value_col in p_value_columns:
+            data.insert(
+                data.columns.get_loc(p_value_col) + 1,
+                f"{p_value_col}_adjusted",
+                correct_pvalues(data[p_value_col].to_numpy()),
+            )
+        return data
+
+    def add_to_pixel_dataset(
+        self, data: pd.DataFrame, pxl_dataset: PixelDataset
+    ) -> PixelDataset:
+        """Add the colocalization data to the PixelDataset."""
+        logger.debug("Adding colocalization analysis data to PixelDataset")
+        pxl_dataset.colocalization = data
+        return pxl_dataset

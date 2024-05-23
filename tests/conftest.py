@@ -1,12 +1,15 @@
 """Configuration and shared files/objects for the testing framework.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2022 Pixelgen Technologies AB.
 """
+
 import os
 import random
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
 from anndata import AnnData
 from pixelator.config import AntibodyPanel
@@ -15,6 +18,7 @@ from pixelator.graph.utils import union as graph_union
 from pixelator.pixeldataset import (
     PixelDataset,
 )
+from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pixeldataset.utils import edgelist_to_anndata
 
 from tests.graph.networkx.test_tools import (
@@ -59,7 +63,7 @@ def data_root_fixture():
 @pytest.fixture(name="edgelist", scope="module")
 def edgelist_fixture(data_root):
     """Load an example edgelist from disk."""
-    edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
+    edgelist = pl.read_csv(str(data_root / "test_edge_list.csv")).to_pandas()
     edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
     return enforce_edgelist_types_for_tests(edgelist)
 
@@ -92,8 +96,6 @@ def edgelist_with_communities_fixture():
     edgelist["marker"] = "A"
     edgelist["sequence"] = "ATCG"
     edgelist["count"] = 1
-    edgelist["umi_unique_count"] = 1
-    edgelist["upi_unique_count"] = 1
 
     edgelist = enforce_edgelist_types_for_tests(edgelist)
     return edgelist
@@ -118,7 +120,7 @@ def panel_fixture(data_root):
 
 
 @pytest.fixture(name="pixel_dataset_file")
-def pixel_dataset_file(setup_basic_pixel_dataset, tmp_path):
+def pixel_dataset_file(setup_basic_pixel_dataset, tmp_path) -> Path:
     """Create pxl file."""
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
@@ -136,8 +138,50 @@ def random_graph_edgelist_fixture():
     return edgelist
 
 
+@pytest.fixture(name="layout_df")
+def layout_df_fixture() -> pd.DataFrame:
+    nbr_of_rows = 300
+    components = [
+        "PXLCMP0000000",
+        "PXLCMP0000000",
+        "PXLCMP0000001",
+        "PXLCMP0000002",
+        "PXLCMP0000003",
+        "PXLCMP0000004",
+    ]
+    graph_projections = ["bipartite", "a-node"]
+    layout_methods = ["pmds", "fr"]
+    rgn = np.random.default_rng(1)
+    layout_df = pd.DataFrame(
+        {
+            "x": rgn.random(nbr_of_rows),
+            "y": rgn.random(nbr_of_rows),
+            "z": rgn.random(nbr_of_rows),
+            "graph_projection": rgn.choice(graph_projections, nbr_of_rows),
+            "layout": rgn.choice(layout_methods, nbr_of_rows),
+            "component": rgn.choice(components, nbr_of_rows),
+            "name": "TTTT",
+            "pixel_type": "A",
+            "index": range(0, nbr_of_rows),
+        }
+        | {
+            marker: rgn.integers(0, 10, nbr_of_rows)
+            for marker in ["CD45", "CD3", "CD3", "CD19", "CD19", "CD3"]
+        }
+    )
+
+    yield layout_df
+
+
+@pytest.fixture(name="precomputed_layouts")
+def precomputed_layouts_fixture(layout_df) -> pd.DataFrame:
+    yield PreComputedLayouts(pl.DataFrame(layout_df).lazy())
+
+
 @pytest.fixture(name="setup_basic_pixel_dataset")
-def setup_basic_pixel_dataset(edgelist: pd.DataFrame, adata: AnnData):
+def setup_basic_pixel_dataset(
+    edgelist: pd.DataFrame, adata: AnnData, precomputed_layouts: PreComputedLayouts
+):
     """Create basic pixel dataset, with some dummy data."""
     # TODO make these dataframes more realistic
     # Right now the edgelist does line up with the polarization
@@ -181,6 +225,7 @@ def setup_basic_pixel_dataset(edgelist: pd.DataFrame, adata: AnnData):
         metadata=metadata,
         polarization=polarization_scores,
         colocalization=colocalization_scores,
+        precomputed_layouts=precomputed_layouts,
     )
     return (
         dataset,
@@ -189,6 +234,7 @@ def setup_basic_pixel_dataset(edgelist: pd.DataFrame, adata: AnnData):
         metadata,
         polarization_scores,
         colocalization_scores,
+        precomputed_layouts,
     )
 
 

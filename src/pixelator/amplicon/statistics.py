@@ -1,16 +1,17 @@
+"""Collect statistics for amplicon.
+
+Copyright © 2023 Pixelgen Technologies AB.
 """
-Copyright (c) 2023 Pixelgen Technologies AB.
-"""
+
 import collections
 import dataclasses
 from functools import cache
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Union
 
+import numba as nb
 import numpy as np
 
 from pixelator.config import RegionType, config, get_position_in_parent
-
-import numba as nb
 
 
 @nb.njit
@@ -31,8 +32,10 @@ def _count_elem_in_array_where_greater_or_equal_than(arr, value):
     return result
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class SequenceQualityStats:
+    """Container for sequence quality statistics."""
+
     fraction_q30_upia: float
     fraction_q30_upib: float
     fraction_q30_umi: float
@@ -41,7 +44,8 @@ class SequenceQualityStats:
     fraction_q30_bc: float
     fraction_q30: float
 
-    def asdict(self) -> Dict[str, Any]:
+    def asdict(self) -> dict[str, Any]:
+        """Return a dictionary representation of this instance."""
         return {k: v for k, v in dataclasses.asdict(self).items()}
 
 
@@ -49,6 +53,10 @@ class SequenceQualityStatsCollector:
     """Accumulate read quality statistics for a given design."""
 
     def __init__(self, design_name: str):
+        """Accumulate read quality statistics for a given design.
+
+        :param design_name: The name of the design of the reads for which to statistics.
+        """
         design = config.get_assay(design_name)
 
         if design is None:
@@ -81,19 +89,25 @@ class SequenceQualityStatsCollector:
             raise ValueError("Assay does not contain a UMI region")
 
     @cache
-    def get_position(self, region_id: str) -> Tuple[int, int]:
+    def get_position(self, region_id: str) -> tuple[int, int]:
+        """Return the positions for a region.
+
+        :param region_id: id of the region
+        :returns: a tuple with start and end positions
+        :raise ValueError: An unknown region id was given
+        """
         r = self._positions.get(region_id)
         if r is None:
             raise ValueError(f"Unknown region: {region_id}")
         return r
 
     @staticmethod
-    def _read_stats(quali: np.ndarray) -> Tuple[int, int]:
+    def _read_stats(quali: np.ndarray) -> tuple[int, int]:
         bases_in_read = _count_elem_in_array_where_greater_than(quali, 2)
         q30_bases_in_read = _count_elem_in_array_where_greater_or_equal_than(quali, 30)
         return bases_in_read, q30_bases_in_read
 
-    def _umi_stats(self, quali: np.ndarray) -> Tuple[int, int]:
+    def _umi_stats(self, quali: np.ndarray) -> tuple[int, int]:
         # Q30 Bases in UMI
         umi_regions = self.design.get_regions_by_type(RegionType.UMI)
         umi_positions = [self.get_position(r.region_id) for r in umi_regions]
@@ -109,7 +123,7 @@ class SequenceQualityStatsCollector:
 
         return bases_in_umi, q30_bases_in_umi
 
-    def _get_stats_from_position(self, quali: np.ndarray, pos: str) -> Tuple[int, int]:
+    def _get_stats_from_position(self, quali: np.ndarray, pos: str) -> tuple[int, int]:
         upia_pos = self.get_position(pos)
         slice_obj = slice(*upia_pos)
         quali_subset = quali[slice_obj]
@@ -117,26 +131,29 @@ class SequenceQualityStatsCollector:
         q30 = _count_elem_in_array_where_greater_or_equal_than(quali_subset, 30)
         return bases, q30
 
-    def _upia_stats(self, quali: np.ndarray) -> Tuple[int, int]:
+    def _upia_stats(self, quali: np.ndarray) -> tuple[int, int]:
         return self._get_stats_from_position(quali, "upi-a")
 
-    def _upib_stats(self, quali: np.ndarray) -> Tuple[int, int]:
+    def _upib_stats(self, quali: np.ndarray) -> tuple[int, int]:
         return self._get_stats_from_position(quali, "upi-b")
 
-    def _pbs1_stats(self, quali: np.ndarray) -> Tuple[int, int]:
+    def _pbs1_stats(self, quali: np.ndarray) -> tuple[int, int]:
         return self._get_stats_from_position(quali, "pbs-1")
 
-    def _pbs2_stats(self, quali: np.ndarray) -> Tuple[int, int]:
+    def _pbs2_stats(self, quali: np.ndarray) -> tuple[int, int]:
         return self._get_stats_from_position(quali, "pbs-2")
 
-    def _bc_stats(self, quali: np.ndarray) -> Tuple[int, int]:
+    def _bc_stats(self, quali: np.ndarray) -> tuple[int, int]:
         return self._get_stats_from_position(quali, "bc")
 
     @property
+    def read_count(self) -> int:
+        """Return the number of reads processed."""
+        return self._counter["read_count"]
+
+    @property
     def stats(self) -> SequenceQualityStats:
-        """
-        Return the accumulated statistics as a SequenceQualityStats object.
-        """
+        """Return the accumulated statistics as a SequenceQualityStats object."""
         fraction_q30_upia = (
             self._counter["q30_bases_in_upia"] / self._counter["bases_in_upia"]
         )
@@ -170,9 +187,7 @@ class SequenceQualityStatsCollector:
         )
 
     def update(self, qualities: Union[str, np.ndarray]) -> None:
-        """
-        Update the statistics with the given read qualities.
-        """
+        """Update the statistics with the given read qualities."""
         # Use numpy for vectorized operations
         # Reinterpret cast to integers (same as ord)
         if isinstance(qualities, str):
@@ -189,6 +204,7 @@ class SequenceQualityStatsCollector:
         bases_in_bc, q30_bases_in_bc = self._bc_stats(quali)
 
         self._counter.update(
+            read_count=1,
             bases_in_read=bases_in_read,
             q30_bases_in_read=q30_bases_in_read,
             bases_in_umi=bases_in_umi,
