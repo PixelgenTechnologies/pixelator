@@ -256,10 +256,13 @@ class PixelDataStore(Protocol):
     def write_precomputed_layouts(
         self,
         layouts: PreComputedLayouts,
+        collapse_to_single_dataframe: bool = False,
     ) -> None:
         """Write pre-computed layouts to the data store.
 
         :param layouts: The pre-computed layouts to write.
+        :param collapse_to_single_dataframe: Whether to collapse the layouts into
+                                             a single dataframe before writing.
         """
         ...
 
@@ -454,6 +457,7 @@ class ZipBasedPixelFile(PixelDataStore):
     def write_precomputed_layouts(
         self,
         layouts: Optional[PreComputedLayouts],
+        collapse_to_single_dataframe: bool = False,
     ) -> None:
         """Write pre-computed layouts to the data store."""
         if layouts is None:
@@ -463,15 +467,27 @@ class ZipBasedPixelFile(PixelDataStore):
         self._check_if_writeable(self.LAYOUTS_KEY)
 
         logger.debug("Starting to write layouts...")
-
-        for idx, layouts_to_write in enumerate(layouts.component_iterator()):
-            if idx % 100 == 0:
-                logger.debug("Writing layouts...")
+        # This option is in place to allow collecting all the layouts into
+        # as single dataframe before writing (they will still be written into
+        # partitions), but this is much faster than writing them one by one
+        # for scenarios with many very small layouts.
+        if collapse_to_single_dataframe:
+            logger.debug("Writing from a single dataframe...")
             self.write_dataframe(
-                layouts_to_write,
+                layouts.to_df(),
                 self.LAYOUTS_KEY,
                 partitioning=PreComputedLayouts.DEFAULT_PARTITIONING,
             )
+        else:
+            logger.debug("Writing by iterating components...")
+            for idx, layouts_to_write in enumerate(layouts.component_iterator()):
+                if idx % 100 == 0:
+                    logger.debug("Writing layouts...")
+                self.write_dataframe(
+                    layouts_to_write,
+                    self.LAYOUTS_KEY,
+                    partitioning=PreComputedLayouts.DEFAULT_PARTITIONING,
+                )
 
         logger.debug("Completed writing layouts...")
 
@@ -506,7 +522,16 @@ class ZipBasedPixelFile(PixelDataStore):
 
         if dataset.precomputed_layouts is not None:
             logger.debug("Writing precomputed layouts")
-            self.write_precomputed_layouts(dataset.precomputed_layouts)
+            # This speeds things up massively when you have many, very small
+            # layouts, like we do in some test data.
+            try:
+                write_layouts_in_one_go = dataset.adata.obs["vertices"].sum() < 100_000
+            except KeyError:
+                write_layouts_in_one_go = False
+            self.write_precomputed_layouts(
+                dataset.precomputed_layouts,
+                collapse_to_single_dataframe=write_layouts_in_one_go,
+            )
 
         logger.debug("PixelDataset saved to %s", self.path)
 
@@ -560,6 +585,7 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
     def write_precomputed_layouts(
         self,
         layouts: Optional[PreComputedLayouts],
+        collapse_to_single_dataframe: bool = False,
     ) -> None:
         """Write pre-computed layouts to the data store (NB: Not implemented!)."""
         raise NotImplementedError(
