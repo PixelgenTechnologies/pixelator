@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.1] - 2024-05-27
+
+### Fixed
+
+* Poor performance when writing many small layouts to pxl file (~45x speed-up). This should almost only
+  impact test scenarios, since most real components should be large enough for this not to be an issue.
+
 ## [0.17.0] - 2024-05-23
 
 ### Added
