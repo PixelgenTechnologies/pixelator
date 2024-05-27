@@ -101,8 +101,8 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
         median_b_pixels_per_a_pixel = b_pixels_per_a_pixel_series.median()
 
         a_pixels_per_b_pixel = group_df.groupby("upib", observed=True)["upia"].nunique()
-        mean_a_pixels_per_b_pixel = b_pixels_per_a_pixel_series.mean()
-        median_a_pixels_per_b_pixel = b_pixels_per_a_pixel_series.median()
+        mean_a_pixels_per_b_pixel = a_pixels_per_b_pixel.mean()
+        median_a_pixels_per_b_pixel = a_pixels_per_b_pixel.median()
 
         # Same reasoning as above
         molecule_count_per_a_pixel_series = group_df.groupby("upia", observed=True)[
