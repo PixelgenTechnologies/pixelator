@@ -55,7 +55,7 @@ def test_reporting_reads_flow_summary(
     snapshot.assert_match(reads_flow.to_csv(), "reads_flow_summary.csv")
 
 
-def test_reporting_molecules_flow_summaru(
+def test_reporting_molecules_flow_summary(
     pixelator_workdir, all_stages_all_reports_and_meta, snapshot
 ):
     reporting = PixelatorReporting(pixelator_workdir)
