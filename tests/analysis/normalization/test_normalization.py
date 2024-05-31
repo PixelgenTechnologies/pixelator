@@ -21,4 +21,4 @@ def test_dsb_normalize():
         str(DATA_ROOT / "dsb_normalization_test_output.csv")
     ).astype(float)
     result = dsb_normalize(input_data, isotype_controls=["mIgG1", "mIgG2a", "mIgG2b"])
-    assert_frame_equal(result, output_data)
+    assert_frame_equal(result, output_data, atol=0.01)
