@@ -23,16 +23,15 @@ def _get_baseline_expression(dataframe: pd.DataFrame, axis=0):
     """Fit a double gaussian distribution to the expression data and return mean of the first gaussian as baseline."""
     baseline = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
     scores = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
+    gmm = GaussianMixture(n_components=2, max_iter=1000, random_state=0)
     if axis == 0:
         for i in dataframe.index:
-            gmm = GaussianMixture(n_components=2, max_iter=1000, random_state=0)
             marker_data = dataframe.loc[i, :].to_frame()
             gmm = gmm.fit(marker_data)
             baseline[i] = np.min(gmm.means_)
             scores[i] = np.abs(gmm.means_[1] - gmm.means_[0]) / np.sum(gmm.covariances_)
     elif axis == 1:
         for i in dataframe.columns:
-            gmm = GaussianMixture(n_components=2, max_iter=1000, random_state=0)
             marker_data = dataframe.loc[:, i].to_frame()
             gmm = gmm.fit(marker_data)
             baseline[i] = np.min(gmm.means_)

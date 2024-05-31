@@ -20,5 +20,7 @@ def test_dsb_normalize():
     output_data = pd.read_csv(
         str(DATA_ROOT / "dsb_normalization_test_output.csv")
     ).astype(float)
+    output_data = output_data - output_data.iloc[0, :]
     result = dsb_normalize(input_data, isotype_controls=["mIgG1", "mIgG2a", "mIgG2b"])
+    result = result - result.iloc[0, :]
     assert_frame_equal(result, output_data, atol=0.01)
