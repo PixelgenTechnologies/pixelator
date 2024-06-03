@@ -12,7 +12,7 @@ from sklearn.mixture import GaussianMixture
 
 
 def _limma(pheno, exprs, rcond=1e-8):
-    """Linear regression to remove confounding factors from expression data."""
+    """Linear regression to remove confounding factors from abundance data."""
     design_matrix = np.column_stack((np.ones((len(pheno), 1)), pheno))
     coefficients, res, rank, s = np.linalg.lstsq(design_matrix, exprs, rcond=rcond)
     beta = coefficients[1:]  # remove intercept term
@@ -24,25 +24,21 @@ def _get_baseline_expression(dataframe: pd.DataFrame, axis=0):
     baseline = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
     scores = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
     gmm = GaussianMixture(n_components=2, max_iter=1000, random_state=0)
-    if axis == 0:
-        for i in dataframe.index:
-            marker_data = dataframe.loc[i, :].to_frame()
-            gmm = gmm.fit(marker_data)
-            baseline[i] = np.min(gmm.means_)
-            scores[i] = np.abs(gmm.means_[1] - gmm.means_[0]) / np.sum(gmm.covariances_)
-    elif axis == 1:
-        for i in dataframe.columns:
-            marker_data = dataframe.loc[:, i].to_frame()
-            gmm = gmm.fit(marker_data)
-            baseline[i] = np.min(gmm.means_)
-            scores[i] = np.abs(gmm.means_[1] - gmm.means_[0]) / np.sum(gmm.covariances_)
+    if axis not in {0, 1}:
+        raise ValueError(f"Axis was {axis}. Must be 0 or 1")
+    ax_iter = dataframe.index if axis == 0 else dataframe.columns
+    for i in ax_iter:
+        current_axis = dataframe.loc[i, :] if axis == 0 else dataframe.loc[:, i]
+        gmm = gmm.fit(current_axis.to_frame())
+        baseline[i] = np.min(gmm.means_)
+        scores[i] = np.abs(gmm.means_[1] - gmm.means_[0]) / np.sum(gmm.covariances_)
     return baseline, scores
 
 
 def dsb_normalize(
     raw_expression: pd.DataFrame, isotype_controls: Union[List, None] = None
 ):
-    """empty-droplet-free method as implemented in the dsb package.
+    """empty-droplet-free method as implemented in Mulè et. al. dsb package.
 
     The normalization steps are: 1- log1p transformation, 2- remove baseline
     expression per marker, 3- regularize expression per component.
