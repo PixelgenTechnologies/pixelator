@@ -20,9 +20,7 @@ def _regress_out_confounder(pheno, exprs, rcond=1e-8):
 
 
 def _get_background_abundance(dataframe: pd.DataFrame, axis=0):
-    """Fit a double gaussian distribution to the abundance data and return the mean 
-    of the first gaussian as an estimation of the background level."""
-    
+    """Fit a double gaussian distribution to the abundance data and return the mean of the first gaussian as an estimation of the background level."""
     background = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
     scores = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
     gmm = GaussianMixture(n_components=2, max_iter=1000, random_state=0)
