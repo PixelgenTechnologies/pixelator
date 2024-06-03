@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED] - 2024-??-??
 
+### Added
+
+* Add `dsb_normalization` function for normalization of marker abundance.
+
 ### Fixed
 
 * Fix a bug where `a_pixels_per_b_pixel` summary statistics where equal to the `b_pixels_per_a_pixel` statistics.
