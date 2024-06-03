@@ -25,3 +25,7 @@
 - [local G](https://doi.org/10.1007/s11749-018-0599-x)
 
   > Bivand, R.S., Wong, D.W.S. Comparing implementations of global and local indicators of spatial association. TEST 27, 716–748 (2018). https://doi.org/10.1007/s11749-018-0599-x
+
+- [dsb](https://doi.org/10.1038/s41467-022-29356-8)
+
+  > Mulè, M.P., Martins, A.J. & Tsang, J.S. Normalizing and denoising protein expression data from droplet-based single cell profiling. Nat Commun 13, 2099 (2022). https://doi.org/10.1038/s41467-022-29356-8
