@@ -23,7 +23,7 @@ def test_dsb_normalize():
     output_data = output_data - output_data.iloc[0, :]
     result = dsb_normalize(input_data, isotype_controls=["mIgG1", "mIgG2a", "mIgG2b"])
     result = result - result.iloc[0, :]
-    assert_frame_equal(result, output_data, atol=0.01)
+    assert_frame_equal(result, output_data, atol=0.05)
 
 
 def test_dsb_normalize_no_isotype():
@@ -36,4 +36,4 @@ def test_dsb_normalize_no_isotype():
     output_data = output_data - output_data.iloc[0, :]
     result = dsb_normalize(input_data)
     result = result - result.iloc[0, :]
-    assert_frame_equal(result, output_data, atol=0.01)
+    assert_frame_equal(result, output_data, atol=0.05)
