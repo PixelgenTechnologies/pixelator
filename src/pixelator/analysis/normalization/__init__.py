@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.mixture import GaussianMixture
+from sklearn.preprocessing import StandardScaler
 
 
 def _regress_out_confounder(pheno, exprs, rcond=1e-8):
@@ -55,9 +56,10 @@ def dsb_normalize(
     if isotype_controls is not None:
         control_signals = log_abundance.loc[:, isotype_controls]
         control_signals["component_background"] = component_background
+        control_signals = StandardScaler().fit_transform(control_signals)
         pheno = PCA(n_components=1).fit_transform(control_signals)
     else:
-        pheno = component_background.values.reshape(-1, 1)
+        raise ValueError(f"At least one isotype control must be provided.")
 
     normalized_abundance = _regress_out_confounder(pheno, log_abundance)
 
