@@ -11,7 +11,7 @@ from sklearn.decomposition import PCA
 from sklearn.mixture import GaussianMixture
 
 
-def _limma(pheno, exprs, rcond=1e-8):
+def _regress_out_confounder(pheno, exprs, rcond=1e-8):
     """Linear regression to remove confounding factors from abundance data."""
     design_matrix = np.column_stack((np.ones((len(pheno), 1)), pheno))
     coefficients, res, rank, s = np.linalg.lstsq(design_matrix, exprs, rcond=rcond)
@@ -19,9 +19,11 @@ def _limma(pheno, exprs, rcond=1e-8):
     return exprs - design_matrix[:, 1:].dot(beta)
 
 
-def _get_baseline_expression(dataframe: pd.DataFrame, axis=0):
-    """Fit a double gaussian distribution to the expression data and return mean of the first gaussian as baseline."""
-    baseline = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
+def _get_background_abundance(dataframe: pd.DataFrame, axis=0):
+    """Fit a double gaussian distribution to the abundance data and return the mean 
+    of the first gaussian as an estimation of the background level."""
+    
+    background = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
     scores = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
     gmm = GaussianMixture(n_components=2, max_iter=1000, random_state=0)
     if axis not in {0, 1}:
@@ -30,35 +32,35 @@ def _get_baseline_expression(dataframe: pd.DataFrame, axis=0):
     for i in ax_iter:
         current_axis = dataframe.loc[i, :] if axis == 0 else dataframe.loc[:, i]
         gmm = gmm.fit(current_axis.to_frame())
-        baseline[i] = np.min(gmm.means_)
+        background[i] = np.min(gmm.means_)
         scores[i] = np.abs(gmm.means_[1] - gmm.means_[0]) / np.sum(gmm.covariances_)
-    return baseline, scores
+    return background, scores
 
 
 def dsb_normalize(
-    raw_expression: pd.DataFrame, isotype_controls: Union[List, None] = None
+    raw_abundance: pd.DataFrame, isotype_controls: Union[List, None] = None
 ):
     """empty-droplet-free method as implemented in Mulè et. al. dsb package.
 
-    The normalization steps are: 1- log1p transformation, 2- remove baseline
-    expression per marker, 3- regularize expression per component.
+    The normalization steps are: 1- log1p transformation, 2- remove background
+    abundance per marker, 3- regularize abundance per component.
 
-    :param raw_expression: the raw expression data.
+    :param raw_abundance: the raw abundance count data.
     :param isotype_controls: list of isotype controls.
-    :return: normalized expression data.
+    :return: normalized abundance data.
     """
-    log_expression = np.log1p(raw_expression)
-    marker_baseline, _ = _get_baseline_expression(log_expression, axis=1)
-    log_expression = log_expression - marker_baseline
-    component_baseline, _ = _get_baseline_expression(log_expression, axis=0)
+    log_abundance = np.log1p(raw_abundance)
+    marker_background, _ = _get_background_abundance(log_abundance, axis=1)
+    log_abundance = log_abundance - marker_background
+    component_background, _ = _get_background_abundance(log_abundance, axis=0)
 
     if isotype_controls is not None:
-        control_signals = log_expression.loc[:, isotype_controls]
-        control_signals["component_baseline"] = component_baseline
+        control_signals = log_abundance.loc[:, isotype_controls]
+        control_signals["component_background"] = component_background
         pheno = PCA(n_components=1).fit_transform(control_signals)
     else:
-        pheno = component_baseline.values.reshape(-1, 1)
+        pheno = component_background.values.reshape(-1, 1)
 
-    normalized_expression = _limma(pheno, log_expression)
+    normalized_abundance = _regress_out_confounder(pheno, log_abundance)
 
-    return normalized_expression
+    return normalized_abundance
