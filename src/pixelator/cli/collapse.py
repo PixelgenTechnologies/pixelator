@@ -47,9 +47,9 @@ def _handle_errors(jobs, executor):
                 # If we have an out of memory exception, make sure we exit with that.
                 if abs(exit_code) == 9:
                     logger.error(
-                        "One of the child processes was killed (exit code: 9). Usually this is caused "
-                        "by a child process using to much memory. We will return an exit code of 137 "
-                        "to indicate that the process was killed by the out of memory killer."
+                        "One of the child processes was killed (exit code: 9). "
+                        "Usually this is caused by the out-of-memory killer terminating the process. "
+                        "The parent process will return an exit code of 137 to indicate that it terminated because of a kill signal in the child process."
                     )
                     sys.exit(137)
         logger.error(
