@@ -762,11 +762,12 @@ def pmds_layout(
     :param g: A networkx graph object
     :param pivots: The number of pivot nodes to use
     :param dim: The dimension of the layout
-    :param weights: Edge weights to use for the layout computation. Options are:
-    - an np.array with non-negative values (same number of elements as edges in g)
-    - "prob_dist" to use -log(P)^3, where P is the probability of a random walker
-    to traverse the end nodes of and edge (i->j) and back again (j->i) in 5 steps.
-    - None to use unweighted shortest path lengths
+    :param weights: Edge weights to use for the layout computation.
+    Options are:
+
+    * an np.array with non-negative values (same number of elements as edges in g)
+    * "prob_dist" to use -log(P)^3, where P is the probability of a random walker to traverse the end nodes of and edge (i->j) and back again (j->i) in 5 steps.
+    * None to use unweighted shortest path lengths
     :param seed: Set seed for reproducibility
     :return: A dataframe with layout coordinates
     :rtype: pd.DataFrame
