@@ -556,6 +556,208 @@ def test_layout_coordinates_3d_pmds_should_have_descending_order_iqr(pentagram_g
     assert iqr_y > iqr_z
 
 
+def test_layout_coordinates_3d_pmds_with_weights(pentagram_graph):
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="pmds_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+        random_seed=1234,
+        pivots=4,
+        weights="prob_dist",
+    )
+
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "index": 0,
+                "name": "AAAA",
+                "pixel_type": "A",
+                "x": -788.4580905950703,
+                "y": -724.6021961736528,
+                "z": -186.12970679012426,
+                "x_norm": -0.725416966494274,
+                "y_norm": -0.6666666666666665,
+                "z_norm": -0.17124771612433604,
+                "A": 1,
+                "B": 0,
+                "C": 0,
+                "D": 0,
+                "E": 0,
+            },
+            2: {
+                "index": 2,
+                "name": "CCCC",
+                "pixel_type": "A",
+                "x": 788.4580905950703,
+                "y": -724.6021961736528,
+                "z": 186.12970679012406,
+                "x_norm": 0.725416966494274,
+                "y_norm": -0.6666666666666665,
+                "z_norm": 0.17124771612433584,
+                "A": 0,
+                "B": 0,
+                "C": 1,
+                "D": 0,
+                "E": 0,
+            },
+            3: {
+                "index": 3,
+                "name": "GGGG",
+                "pixel_type": "B",
+                "x": -1275.7519892876674,
+                "y": 181.15054904341315,
+                "z": 115.03448511234889,
+                "x_norm": -0.9861466676154083,
+                "y_norm": 0.1400280084028009,
+                "z_norm": 0.08892078954761287,
+                "A": 0,
+                "B": 0,
+                "C": 0,
+                "D": 1,
+                "E": 0,
+            },
+            1: {
+                "index": 1,
+                "name": "TTTT",
+                "pixel_type": "B",
+                "x": 3.245800140250904e-14,
+                "y": 1086.9032942604792,
+                "z": 1.8082196842712436e-13,
+                "x_norm": 2.9862823651292013e-17,
+                "y_norm": 1.0,
+                "z_norm": 1.6636435769582817e-16,
+                "A": 0,
+                "B": 1,
+                "C": 0,
+                "D": 0,
+                "E": 0,
+            },
+            4: {
+                "index": 4,
+                "name": "AATT",
+                "pixel_type": "A",
+                "x": 1275.7519892876674,
+                "y": 181.15054904341318,
+                "z": -115.03448511234888,
+                "x_norm": 0.9861466676154083,
+                "y_norm": 0.1400280084028009,
+                "z_norm": -0.08892078954761287,
+                "A": 0,
+                "B": 0,
+                "C": 0,
+                "D": 0,
+                "E": 1,
+            },
+        },
+        orient="index",
+    ).sort_index()
+
+    assert_frame_equal(result.sort_index(), expected)
+
+
+def test_layout_coordinates_3d_pmds_with_noise(pentagram_graph):
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="pmds_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+        random_seed=1234,
+        pivots=4,
+        add_noise=True,
+    )
+
+    print(result)
+
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "index": 0,
+                "name": "AAAA",
+                "pixel_type": "A",
+                "x": -1.4631096635776302,
+                "y": -1.7053668962424664,
+                "z": -0.23125827563077705,
+                "x_norm": -0.6477205077696587,
+                "y_norm": -0.7549680925944681,
+                "z_norm": -0.10237833256546937,
+                "A": 1,
+                "B": 0,
+                "C": 0,
+                "D": 0,
+                "E": 0,
+            },
+            2: {
+                "index": 2,
+                "name": "CCCC",
+                "pixel_type": "A",
+                "x": 1.9060291164324072,
+                "y": -2.004588924309282,
+                "z": 0.34397739001793665,
+                "x_norm": 0.6837997932379808,
+                "y_norm": -0.7191587369533468,
+                "z_norm": 0.1234040268036727,
+                "A": 0,
+                "B": 0,
+                "C": 1,
+                "D": 0,
+                "E": 0,
+            },
+            3: {
+                "index": 3,
+                "name": "GGGG",
+                "pixel_type": "B",
+                "x": -2.9623596875703333,
+                "y": 0.18793410106978886,
+                "z": 0.11242189550518256,
+                "x_norm": -0.9972786834305034,
+                "y_norm": 0.06326803381539883,
+                "z_norm": 0.03784684230230168,
+                "A": 0,
+                "B": 0,
+                "C": 0,
+                "D": 1,
+                "E": 0,
+            },
+            1: {
+                "index": 1,
+                "name": "TTTT",
+                "pixel_type": "B",
+                "x": -0.024608351072924427,
+                "y": 2.4719143696556296,
+                "z": -0.43576822717805364,
+                "x_norm": -0.009803532504467718,
+                "y_norm": 0.9847670329217193,
+                "z_norm": -0.17360236640376547,
+                "A": 0,
+                "B": 1,
+                "C": 0,
+                "D": 0,
+                "E": 0,
+            },
+            4: {
+                "index": 4,
+                "name": "AATT",
+                "pixel_type": "A",
+                "x": 3.7937661368457256,
+                "y": 0.6668374217847848,
+                "z": -0.8368343471334123,
+                "x_norm": 0.9624501238193671,
+                "y_norm": 0.1691716716354497,
+                "z_norm": -0.21229862146550235,
+                "A": 0,
+                "B": 0,
+                "C": 0,
+                "D": 0,
+                "E": 1,
+            },
+        },
+        orient="index",
+    ).sort_index()
+
+    assert_frame_equal(result.sort_index(), expected)
+
+
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
     # Just making sure all existing algorithms get exercised
