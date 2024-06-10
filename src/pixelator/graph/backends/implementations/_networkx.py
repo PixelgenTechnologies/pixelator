@@ -743,6 +743,7 @@ def pmds_layout(
     pivots: int = 50,
     dim: int = 2,
     weights: Optional[Union[np.ndarray, str]] = None,
+    add_noise: bool = False,
     seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """Calculate a pivot MDS layout for a graph as described in [1]_.
@@ -768,6 +769,9 @@ def pmds_layout(
     * an np.array with non-negative values (same number of elements as edges in g)
     * "prob_dist" to use -log(P)^3, where P is the probability of a random walker to traverse the end nodes of and edge (i->j) and back again (j->i) in 5 steps.
     * None to use unweighted shortest path lengths
+    :param add_noise: Add noise to the layout coordinates. This is useful to
+    move nodes with identical coordinates such that they do not overlap each
+    other in visualizations.
     :param seed: Set seed for reproducibility
     :return: A dataframe with layout coordinates
     :rtype: pd.DataFrame
@@ -849,6 +853,12 @@ def pmds_layout(
     # Flip the coordinates here to make sure that we get the correct coordinate ordering
     # i.e. iqr(x) > iqr(y) > iqr(z)
     coordinates = np.flip(coordinates, axis=1)
+
+    if add_noise:
+        radii = np.sqrt(np.sum(coordinates**2, axis=1))
+        sd_radii = np.std(radii)
+        noise = np.random.normal(0, np.sqrt(sd_radii), size=coordinates.shape)
+        coordinates = coordinates + noise
 
     coordinates = {node_list[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
 
