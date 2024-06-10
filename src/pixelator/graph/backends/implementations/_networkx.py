@@ -739,27 +739,38 @@ class NetworkxBasedVertexClustering(VertexClustering):
 
 
 def pmds_layout(
-    g: nx.Graph, pivots: int = 50, dim: int = 2, seed: Optional[int] = None
+    g: nx.Graph,
+    pivots: int = 50,
+    dim: int = 2,
+    weights: Optional[Union[np.ndarray, str]] = None,
+    seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """Calculate a pivot MDS layout for a graph as described in [1]_.
 
-    The algorithm is similar to classical multidimensional scaling (MDS), but uses only
-    a smalls set of random pivot nodes. The algorithm is considerably faster than MDS
-    and therefore scales better to large graphs. The topology of resulting layouts are
-    deterministic for a given seed, but may be mirrored across different systems due to
-    variations in floating-point precision.
+    The algorithm is similar to classical multidimensional scaling (MDS),
+    but uses only a smalls set of random pivot nodes. The algorithm is
+    considerably faster than MDS and therefore scales better to large graphs.
+    The topology of resulting layouts are deterministic for a given seed,
+    but may be mirrored across different systems due to variations in
+    floating-point precision.
 
-    .. [1] Brandes U, Pich C. Eigensolver Methods for Progressive Multidimensional
-        Scaling of Large Data. International Symposium on Graph Drawing, 2007.
-        Lecture Notes in Computer Science, vol 4372. doi: 10.1007/978-3-540-70904-6_6.
+    .. [1] Brandes U, Pich C. Eigensolver Methods for Progressive
+        Multidimensional Scaling of Large Data. International Symposium
+        on Graph Drawing, 2007. Lecture Notes in Computer Science, vol
+        4372. doi: 10.1007/978-3-540-70904-6_6.
 
     :param g: A networkx graph object
     :param pivots: The number of pivot nodes to use
     :param dim: The dimension of the layout
+    :param weights: Edge weights to use for the layout computation. Options are:
+    - an np.array with non-negative values (same number of elements as edges in g)
+    - "prob_dist" to use -log(P)^3, where P is the probability of a random walker
+    to traverse the end nodes of and edge (i->j) and back again (j->i) in 5 steps.
+    - None to use unweighted shortest path lengths
     :param seed: Set seed for reproducibility
     :return: A dataframe with layout coordinates
     :rtype: pd.DataFrame
-    :raises: ValueError raises if conditions are not met
+    :raises ValueError: if conditions are not met
     """
     if not nx.is_connected(g):
         raise ValueError("Only connected graphs are supported.")
@@ -779,6 +790,28 @@ def pmds_layout(
             f"'pivots' must be greater than or equal to {pivot_lower_bound}"
         )
 
+    if isinstance(weights, str):
+        if weights != "prob_dist":
+            raise ValueError("If 'weights' is a string, it must be 'prob_dist'.")
+        weights = -(np.log(_prob_edge_weights(g, k=5)) ** 3)
+    elif isinstance(weights, np.ndarray):
+        if len(weights) != len(g.edges):
+            raise ValueError(
+                "'weights' must have the same length as the number of edges in the graph."
+            )
+        if np.any(weights < 0):
+            raise ValueError("All elements in 'weights' must be non-negative.")
+    elif weights is not None:
+        raise ValueError("'weights' must be a string or an array.")
+
+    if weights is not None:
+        edges = list(g.edges)
+        edge_weight_dict = {edges[i]: weights[i] for i in range(len(edges))}
+        nx.set_edge_attributes(g, edge_weight_dict, "weight")
+        weight = "weight"
+    else:
+        weight = None
+
     if seed is not None:
         np.random.seed(seed)
 
@@ -788,7 +821,7 @@ def pmds_layout(
     pivs = np.random.choice(node_list, pivots, replace=False)
 
     # Calculate the shortest path length from the pivots to all other nodes
-    A = nx.to_scipy_sparse_array(g, weight=None, nodelist=node_list, format="csr")
+    A = nx.to_scipy_sparse_array(g, weight=weight, nodelist=node_list, format="csr")
 
     # This is a workaround for what seems to be a bug in the type of
     # the indices of the sparse array created above
@@ -797,15 +830,16 @@ def pmds_layout(
     D = sp.sparse.csgraph.shortest_path(
         A,
         directed=False,
-        unweighted=True,
+        unweighted=weight is None,
         method="D",
         indices=np.where(np.isin(g.nodes, pivs))[0],
     ).T
 
     # Center values in rows and columns
-    cmean = np.mean(D**2, axis=0)
-    rmean = np.mean(D**2, axis=1)
-    D_pivs_centered = D**2 - np.add.outer(rmean, cmean) + np.mean(D**2)
+    D2 = D**2
+    cmean = np.mean(D2, axis=0)
+    rmean = np.mean(D2, axis=1)
+    D_pivs_centered = D2 - np.add.outer(rmean, cmean) + np.mean(D2)
 
     # Compute SVD and use distances to compute coordinates for all nodes
     # in an abstract cartesian space
@@ -818,3 +852,57 @@ def pmds_layout(
     coordinates = {node_list[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
 
     return coordinates
+
+
+def _prob_edge_weights(
+    g: nx.Graph,
+    k: int = 5,
+) -> np.ndarray:
+    """Compute edge weights based on k-step transition probabilities.
+
+    The transition probabilities are computed using powers of the
+    stochastic matrix of the graph with self-loops allowed.
+
+    :param g: A networkx graph object
+    :param k: The number of steps in the random walk
+    :return: An array of edge weights
+    :rtype: np.array
+    :raises ValueError: if conditions are not met
+    """
+    # Check that k is an integer between 1 and 10
+    if not isinstance(k, int) and k < 1 or k > 10:
+        raise ValueError("'k' must be an integer between 1 and 10.")
+
+    A = nx.to_scipy_sparse_array(g, weight=None, nodelist=list(g.nodes), format="csr")
+
+    # Add 1 to the diagonal
+    A = A + sp.sparse.diags([1] * A.shape[0], format="csr")
+
+    # Divide by row sum
+    D = sp.sparse.diags(1 / A.sum(axis=1), format="csr")
+    P = D @ A
+
+    # Compute the transition probabilities for a k-step walk
+    P_step = _mat_pow(P, k)
+
+    # Set diagonal to 0 and renormalize rows
+    P_step = P_step - sp.sparse.diags(P_step.diagonal(), format="csr")
+    P_step = P_step.multiply(1 / P_step.sum(axis=1))
+
+    P_step_bidirectional = P_step.multiply(P_step.T)
+
+    # Extract the transition probabilities for edges in g
+    edges = list(g.edges)
+    edge_probs = P_step_bidirectional[
+        [list(g.nodes).index(u) for u, _ in edges],
+        [list(g.nodes).index(v) for _, v in edges],
+    ]
+
+    return np.array(edge_probs)[0]
+
+
+def _mat_pow(mat, power):
+    mat_power = mat
+    for _ in range(power - 1):
+        mat_power = mat @ mat_power
+    return mat_power
