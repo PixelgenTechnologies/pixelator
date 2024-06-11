@@ -855,9 +855,14 @@ def pmds_layout(
     coordinates = np.flip(coordinates, axis=1)
 
     if add_noise:
-        radii = np.sqrt(np.sum(coordinates**2, axis=1))
-        sd_radii = np.std(radii)
-        noise = np.random.normal(0, np.sqrt(sd_radii), size=coordinates.shape)
+        # Compute distances between nodes in the layout
+        arr_inds = {node_list[i]: i for i in range(coordinates.shape[0])}
+        start_nodes = coordinates[[arr_inds[u] for u, _ in g.edges], :]
+        end_nodes = coordinates[[arr_inds[v] for _, v in g.edges], :]
+        d = np.sqrt(((start_nodes - end_nodes) ** 2).sum(axis=1))
+
+        # Sample random noise using the standard deviation of the distances
+        noise = np.random.normal(0, np.sqrt(np.std(d)), size=coordinates.shape)
         coordinates = coordinates + noise
 
     coordinates = {node_list[i]: coordinates[i, :] for i in range(coordinates.shape[0])}
