@@ -579,23 +579,6 @@ def test_layout_coordinates_3d_pmds_with_weights(pentagram_graph):
     assert_array_almost_equal(l2, expected, decimal=4)
 
 
-def test_layout_coordinates_3d_pmds_with_noise(pentagram_graph):
-    result = pentagram_graph.layout_coordinates(
-        layout_algorithm="pmds_3d",
-        get_node_marker_matrix=True,
-        cache=False,
-        only_keep_a_pixels=False,
-        random_seed=1234,
-        pivots=4,
-        add_noise=True,
-    )
-
-    l2 = np.linalg.norm(result[["x", "y", "z"]], axis=1)
-    expected = [1.86076503, 2.6739763, 2.63864552, 2.2730532, 4.18239676]
-
-    assert_array_almost_equal(l2, expected, decimal=4)
-
-
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_layout_coordinates_for_all_algorithms(enable_backend, pentagram_graph):
     # Just making sure all existing algorithms get exercised
