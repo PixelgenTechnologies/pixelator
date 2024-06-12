@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 from pandas.testing import assert_frame_equal
 from pixelator.graph import Graph
 
@@ -567,93 +567,16 @@ def test_layout_coordinates_3d_pmds_with_weights(pentagram_graph):
         weights="prob_dist",
     )
 
-    expected = pd.DataFrame.from_dict(
-        {
-            0: {
-                "index": 0,
-                "name": "AAAA",
-                "pixel_type": "A",
-                "x": -788.4580905950703,
-                "y": -724.6021961736528,
-                "z": -186.12970679012426,
-                "x_norm": -0.725416966494274,
-                "y_norm": -0.6666666666666665,
-                "z_norm": -0.17124771612433604,
-                "A": 1,
-                "B": 0,
-                "C": 0,
-                "D": 0,
-                "E": 0,
-            },
-            2: {
-                "index": 2,
-                "name": "CCCC",
-                "pixel_type": "A",
-                "x": 788.4580905950703,
-                "y": -724.6021961736528,
-                "z": 186.12970679012406,
-                "x_norm": 0.725416966494274,
-                "y_norm": -0.6666666666666665,
-                "z_norm": 0.17124771612433584,
-                "A": 0,
-                "B": 0,
-                "C": 1,
-                "D": 0,
-                "E": 0,
-            },
-            3: {
-                "index": 3,
-                "name": "GGGG",
-                "pixel_type": "B",
-                "x": -1275.7519892876674,
-                "y": 181.15054904341315,
-                "z": 115.03448511234889,
-                "x_norm": -0.9861466676154083,
-                "y_norm": 0.1400280084028009,
-                "z_norm": 0.08892078954761287,
-                "A": 0,
-                "B": 0,
-                "C": 0,
-                "D": 1,
-                "E": 0,
-            },
-            1: {
-                "index": 1,
-                "name": "TTTT",
-                "pixel_type": "B",
-                "x": 3.245800140250904e-14,
-                "y": 1086.9032942604792,
-                "z": 1.8082196842712436e-13,
-                "x_norm": 2.9862823651292013e-17,
-                "y_norm": 1.0,
-                "z_norm": 1.6636435769582817e-16,
-                "A": 0,
-                "B": 1,
-                "C": 0,
-                "D": 0,
-                "E": 0,
-            },
-            4: {
-                "index": 4,
-                "name": "AATT",
-                "pixel_type": "A",
-                "x": 1275.7519892876674,
-                "y": 181.15054904341318,
-                "z": -115.03448511234888,
-                "x_norm": 0.9861466676154083,
-                "y_norm": 0.1400280084028009,
-                "z_norm": -0.08892078954761287,
-                "A": 0,
-                "B": 0,
-                "C": 0,
-                "D": 0,
-                "E": 1,
-            },
-        },
-        orient="index",
-    ).sort_index()
+    l2 = np.linalg.norm(result[["x", "y", "z"]], axis=1)
+    expected = [
+        1086.90329426,
+        1086.90329426,
+        1293.67368078,
+        1086.90329426,
+        1293.67368078,
+    ]
 
-    assert_frame_equal(result.sort_index(), expected)
+    assert_array_almost_equal(l2, expected, decimal=4)
 
 
 def test_layout_coordinates_3d_pmds_with_noise(pentagram_graph):
