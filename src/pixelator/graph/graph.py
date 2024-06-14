@@ -183,7 +183,7 @@ class Graph:
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = "wpmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         cache: bool = False,
@@ -202,10 +202,11 @@ class Graph:
           - kamada_kawai_3d
           - pmds
           - pmds_3d
+          - wpmds_3d
 
 
-        The `fruchterman_reingold` options are in general faster, but less
-        accurate than the `kamada_kawai` ones.
+        The `pmds` options are much faster than the force-directed algorithms fruchterman_reingold
+        and kamada_kawai. The `wpmds_3d` option is a weighted version of the `pmds_3d` algorithm.
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
         :param only_keep_a_pixels: If true, only keep the a-pixels

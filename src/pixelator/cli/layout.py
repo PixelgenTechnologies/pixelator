@@ -48,7 +48,7 @@ from pixelator.utils import (
     "--layout-algorithm",
     required=False,
     multiple=True,
-    default=["pmds_3d"],
+    default=["wpmds_3d"],
     help="Select a layout algorithm to use. This can be specified multiple times to compute multiple layouts. Default: pmds_3d",
     type=click.Choice(get_args(SupportedLayoutAlgorithm)),
 )

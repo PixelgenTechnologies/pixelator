@@ -34,6 +34,7 @@ SupportedLayoutAlgorithm = Literal[
     "kamada_kawai_3d",
     "pmds",
     "pmds_3d",
+    "wpmds_3d",
 ]
 
 
@@ -149,7 +150,7 @@ class GraphBackend(Protocol):
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = "wpmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
@@ -167,11 +168,14 @@ class GraphBackend(Protocol):
           - kamada_kawai_3d
           - pmds
           - pmds_3d
+          - wpmds_3d
 
         For most cases the `pmds` options should be about 10-100x faster
         than the force directed layout methods, i.e. `fruchterman_reingold`
         and `kamada_kawai`. Among the force directed layout methods,
-        `fruchterman_reingold` is generally faster than `kamada_kawai`.
+        `fruchterman_reingold` is generally faster than `kamada_kawai`. The
+        `wpmds_3d` method uses edge weights to improve the layout, but is slightly
+        slower than `pmds_3d`.
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
         :param only_keep_a_pixels: If true, only keep the a-pixels
