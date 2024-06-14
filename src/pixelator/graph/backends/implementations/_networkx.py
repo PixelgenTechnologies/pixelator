@@ -786,7 +786,12 @@ def pmds_layout(
         raise ValueError("Only connected graphs are supported.")
 
     if pivots >= len(g.nodes):
-        raise ValueError("'pivots' must be less than the number of nodes in the graph.")
+        total_nodes = len(g.nodes)
+        warnings.warn(
+            f"'pivots' ({pivots}) should be less than the number of "
+            f"nodes ({total_nodes}) in the graph. Using all nodes as 'pivots'."
+        )
+        pivots = total_nodes
 
     if dim not in [2, 3]:
         raise ValueError("'dim' must be either 2 or 3.")
