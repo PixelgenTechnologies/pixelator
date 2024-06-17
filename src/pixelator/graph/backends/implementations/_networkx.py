@@ -890,7 +890,7 @@ def _prob_edge_weights(
 
     A = nx.to_scipy_sparse_array(g, weight=None, nodelist=list(g.nodes), format="csr")
 
-    # Add 1 to the diagonal
+    # Add 1 to the diagonal to allow self-loops
     A = A + sp.sparse.diags([1] * A.shape[0], format="csr")
 
     # Divide by row sum
@@ -904,6 +904,9 @@ def _prob_edge_weights(
     P_step = P_step - sp.sparse.diags(P_step.diagonal(), format="csr")
     P_step = P_step.multiply(1 / P_step.sum(axis=1))
 
+    # Compute bi-directional transition probabilities which are symmetric
+    # Now we get the probability of going from i to j and back again in k steps,
+    # so it doesn't matter if we start in i or j.
     P_step_bidirectional = P_step.multiply(P_step.T)
 
     # Extract the transition probabilities for edges in g
