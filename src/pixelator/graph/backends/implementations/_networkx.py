@@ -900,11 +900,10 @@ def _prob_edge_weights(
     # Compute the transition probabilities for a k-step walk
     P_step = _mat_pow(P, k)
 
-    # Set diagonal to 0 and renormalize rows
-    P_step = P_step - sp.sparse.diags(P_step.diagonal(), format="csr")
-    P_step = P_step.multiply(1 / P_step.sum(axis=1))
+    # Keep edges from original graph
+    P_step = P_step.multiply(A)
 
-    # Compute bi-directional transition probabilities which are symmetric
+    # Compute bi-directional transition probabilities which are symmetric.
     # Now we get the probability of going from i to j and back again in k steps,
     # so it doesn't matter if we start in i or j.
     P_step_bidirectional = P_step.multiply(P_step.T)
