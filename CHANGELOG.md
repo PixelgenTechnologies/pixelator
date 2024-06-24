@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* Add `wpmds` option in `pmds_layout` to compute edge weighted layouts. This is now set as the default layout algorithm.
 * Add `dsb_normalization` function for normalization of marker abundance.
 
 ### Fixed
