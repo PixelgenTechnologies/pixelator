@@ -262,18 +262,32 @@ def _get_component_graph(pxl_data: PixelDataset, component: str):
 
 
 def _get_coordinates(
-    component_graph: Graph,
-    layout_algorithm: str,
+    pxl_data: PixelDataset,
+    component: str,
+    layout_algorithm: Union[str, None],
     cache_layout: bool = False,
     show_b_nodes: bool = False,
     random_seed: int | None = None,
 ) -> pd.DataFrame:
-    coordinates = component_graph.layout_coordinates(
-        layout_algorithm=layout_algorithm,  # type: ignore
-        cache=cache_layout,
-        only_keep_a_pixels=not show_b_nodes,
-        random_seed=random_seed,
-    )
+    component_graph = _get_component_graph(pxl_data=pxl_data, component=component)
+    if (
+        layout_algorithm is None
+        and hasattr(pxl_data, "precomputed_layouts")
+        and pxl_data.precomputed_layouts is not None
+    ):
+        coordinates = pxl_data.precomputed_layouts.filter(
+            component_ids=component
+        ).to_df()
+    else:
+        if layout_algorithm is None:
+            layout_algorithm = "pmds_3d"
+        coordinates = component_graph.layout_coordinates(
+            layout_algorithm=layout_algorithm,  # type: ignore
+            cache=cache_layout,
+            only_keep_a_pixels=not show_b_nodes,
+            random_seed=random_seed,
+        )
+
     filtered_coordinates = coordinates
     filtered_coordinates["pixel_type"] = [
         component_graph.raw.nodes[ind]["pixel_type"]
@@ -290,7 +304,7 @@ def _get_coordinates(
     edgelist = edgelist[edgelist[1].isin(filtered_coordinates.index)]
     edgelist = edgelist.loc[:, [0, 1]].to_numpy()
 
-    return filtered_coordinates, edgelist
+    return filtered_coordinates, edgelist, component_graph
 
 
 def _plot_for_legend(coordinates: pd.DataFrame, axis, show_b_nodes, cmap, node_size):
@@ -392,8 +406,10 @@ def _get_color_values(mark, filtered_coordinates, log_scale, vmax):
 def plot_2d_graph(
     pxl_data: PixelDataset,
     component: Union["str", list],
-    marker: str = "pixel_type",
-    layout_algorithm: Literal["fruchterman_reingold", "kamada_kawai", "pmds"] = "pmds",
+    marker: Union["str", list] = "pixel_type",
+    layout_algorithm: Union[
+        Literal["fruchterman_reingold", "kamada_kawai", "pmds"], None
+    ] = None,
     show_edges: bool = False,
     log_scale: bool = True,
     node_size: float = 10.0,
@@ -445,9 +461,9 @@ def plot_2d_graph(
     include_colorbar = False
     vmax = 0  # maximum value for colorbar
     for i_c, comp in enumerate(component):
-        component_graph = _get_component_graph(pxl_data=pxl_data, component=comp)
-        coordinates, edgelist = _get_coordinates(
-            component_graph=component_graph,
+        coordinates, edgelist, component_graph = _get_coordinates(
+            pxl_data=pxl_data,
+            component=comp,
             layout_algorithm=layout_algorithm,
             cache_layout=cache_layout,
             show_b_nodes=show_b_nodes,
@@ -545,9 +561,9 @@ def plot_3d_graph(
     pxl_data: PixelDataset,
     component: str,
     marker: Union[list, None] = None,
-    layout_algorithm: Literal[
-        "fruchterman_reingold_3d", "kamada_kawai_3d", "pmds_3d"
-    ] = "fruchterman_reingold_3d",
+    layout_algorithm: Union[
+        Literal["fruchterman_reingold_3d", "kamada_kawai_3d", "pmds_3d"], None
+    ] = None,
     log_scale: bool = True,
     normalize: bool = False,
     node_size: float = 3.0,
@@ -575,9 +591,9 @@ def plot_3d_graph(
     :rtype: go.Figure
 
     """
-    component_graph = _get_component_graph(pxl_data=pxl_data, component=component)
-    coordinates, _ = _get_coordinates(
-        component_graph=component_graph,
+    coordinates, _, _ = _get_coordinates(
+        pxl_data=pxl_data,
+        component=component,
         layout_algorithm=layout_algorithm,
         cache_layout=cache_layout,
         show_b_nodes=show_b_nodes,
