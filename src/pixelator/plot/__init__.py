@@ -4,7 +4,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import warnings
-from typing import Literal, Optional, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -406,8 +406,8 @@ def _get_color_values(mark, filtered_coordinates, log_scale, vmax):
 
 def plot_2d_graph(
     pxl_data: PixelDataset,
-    component: Union["str", list],
-    marker: Union["str", list] = "pixel_type",
+    component: str | List[str],
+    marker: str | List[str] = "pixel_type",
     layout_algorithm: SupportedLayoutAlgorithm | None = None,
     show_edges: bool = False,
     log_scale: bool = True,
