@@ -19,6 +19,7 @@ from matplotlib.colors import Normalize
 
 from pixelator.analysis.colocalization import get_differential_colocalization
 from pixelator.graph import Graph
+from pixelator.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.marks import experimental
 from pixelator.pixeldataset import PixelDataset
 from pixelator.plot.constants import Color
@@ -264,7 +265,7 @@ def _get_component_graph(pxl_data: PixelDataset, component: str):
 def _get_coordinates(
     pxl_data: PixelDataset,
     component: str,
-    layout_algorithm: Union[str, None],
+    layout_algorithm: SupportedLayoutAlgorithm | None = None,
     cache_layout: bool = False,
     show_b_nodes: bool = False,
     random_seed: int | None = None,
@@ -407,9 +408,7 @@ def plot_2d_graph(
     pxl_data: PixelDataset,
     component: Union["str", list],
     marker: Union["str", list] = "pixel_type",
-    layout_algorithm: Union[
-        Literal["fruchterman_reingold", "kamada_kawai", "pmds"], None
-    ] = None,
+    layout_algorithm: SupportedLayoutAlgorithm | None = None,
     show_edges: bool = False,
     log_scale: bool = True,
     node_size: float = 10.0,
@@ -429,7 +428,7 @@ def plot_2d_graph(
     :param pxl_data: The pixel dataset to plot.
     :param component: The component(s) to plot. Defaults to None.
     :param marker: The marker attribute to use for coloring the nodes. Defaults to "pixel_type".
-    :param layout_algorithm: The layout algorithm to use. Defaults to "pmds".
+    :param layout_algorithm: The layout algorithm to use. Defaults to None (checking for pre-computed).
     :param show_edges: Whether to show the edges in the graph. Defaults to False.
     :param log_scale: Whether to use a logarithmic scale for the marker attribute. Defaults to True.
     :param node_size: The size of the nodes. Defaults to 10.0.
@@ -561,9 +560,7 @@ def plot_3d_graph(
     pxl_data: PixelDataset,
     component: str,
     marker: Union[list, None] = None,
-    layout_algorithm: Union[
-        Literal["fruchterman_reingold_3d", "kamada_kawai_3d", "pmds_3d"], None
-    ] = None,
+    layout_algorithm: SupportedLayoutAlgorithm | None = None,
     log_scale: bool = True,
     normalize: bool = False,
     node_size: float = 3.0,
