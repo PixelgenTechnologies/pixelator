@@ -214,6 +214,7 @@ def analysis(
                 neighbourhood_size=colocalization_neighbourhood_size,
                 n_permutations=colocalization_n_permutations,
                 min_region_count=colocalization_min_region_count,
+                min_marker_count=polarization_min_marker_count,
             )
         )
 
