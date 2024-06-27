@@ -58,6 +58,7 @@ def test_colocalization_from_component_edgelist(
         neighbourhood_size=1,
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
     )
 
     expected = pd.DataFrame.from_dict(
@@ -94,6 +95,7 @@ def test_colocalization_scores(enable_backend, full_graph_edgelist: pd.DataFrame
         neighbourhood_size=1,
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
     )
 
     expected = pd.DataFrame.from_dict(
@@ -131,6 +133,7 @@ def test_colocalization_scores_log1p(enable_backend, full_graph_edgelist: pd.Dat
         neighbourhood_size=1,
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
         random_seed=1477,
     )
 
@@ -171,6 +174,7 @@ def test_colocalization_scores_ratediff(
         neighbourhood_size=1,
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
         random_seed=1477,
     )
 
@@ -216,6 +220,7 @@ def test_colocalization_scores_should_not_fail_when_one_component_has_single_nod
         neighbourhood_size=1,
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
         random_seed=1477,
     )
 
@@ -234,6 +239,7 @@ def test_colocalization_scores_should_warn_when_no_data(
             neighbourhood_size=1,
             n_permutations=50,
             min_region_count=0,
+            min_marker_count=0,
             random_seed=1477,
         )
     assert (
@@ -247,6 +253,7 @@ class TestColocalizationAnalysis:
         transformation_type="raw",
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
         neighbourhood_size=1,
     )
 
