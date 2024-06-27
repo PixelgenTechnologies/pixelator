@@ -45,6 +45,7 @@ def test_plot_3d_graph(
     pxl_data, *_ = setup_basic_pixel_dataset
     result = plot_3d_graph(
         pxl_data,
+        layout_algorithm="pmds_3d",
         component=component,
         marker=marker,
         suppress_fig=True,
@@ -52,6 +53,63 @@ def test_plot_3d_graph(
     assert isinstance(result, go.Figure)
     # snapshot.assert_match(result.to_json(), "plot_3d_graph_fig.json")
     # TODO: Fix the snapshot test - Even though the plotly version matches (5.18.0), the test fails on github
+
+
+@pytest.mark.parametrize(
+    "component, marker",
+    [
+        ("PXLCMP0000000", "CD45"),
+        ("PXLCMP0000000", None),
+    ],
+)
+def test_plot_3d_graph_precomputed(
+    snapshot: Snapshot, component, marker, setup_basic_pixel_dataset
+):
+    """Test `plot_3d_graph` function.
+
+    :param snapshot: testing snapshot directory
+    """
+    np.random.seed(0)
+    snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"
+    pxl_data, *_ = setup_basic_pixel_dataset
+    assert pxl_data.precomputed_layouts is not None
+    result = plot_3d_graph(
+        pxl_data,
+        layout_algorithm=None,
+        component=component,
+        marker=marker,
+        suppress_fig=True,
+    )
+    assert isinstance(result, go.Figure)
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_2d_graph_precomputed",
+)
+@pytest.mark.parametrize(
+    "component, marker, show_b_nodes",
+    [
+        ("PXLCMP0000000", "CD45", False),
+        ((["PXLCMP0000001", "PXLCMP0000002"], ["CD3", "CD45", "CD19"], False)),
+        (("PXLCMP0000000", "pixel_type", True)),
+    ],
+)
+def test_plot_2d_graph_precomputed(
+    setup_basic_pixel_dataset, component, marker, show_b_nodes
+):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    assert pxl_data.precomputed_layouts is not None
+    fig, _ = plot_2d_graph(
+        pxl_data,
+        layout_algorithm=None,
+        component=component,
+        marker=marker,
+        show_b_nodes=show_b_nodes,
+        random_seed=0,
+    )
+    return fig
 
 
 @pytest.mark.mpl_image_compare(
@@ -71,6 +129,7 @@ def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_node
     pxl_data, *_ = setup_basic_pixel_dataset
     fig, _ = plot_2d_graph(
         pxl_data,
+        layout_algorithm="pmds",
         component=component,
         marker=marker,
         show_b_nodes=show_b_nodes,
