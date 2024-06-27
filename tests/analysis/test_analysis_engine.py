@@ -124,9 +124,13 @@ def test_run_analysis(setup_basic_pixel_dataset):
     dataset.colocalization = None
 
     analysis_functions = [
-        PolarizationAnalysis("raw", n_permutations=5, min_marker_count=1),
+        PolarizationAnalysis("log1p", n_permutations=5, min_marker_count=1),
         ColocalizationAnalysis(
-            "log1p", neighbourhood_size=3, n_permutations=5, min_region_count=3
+            "rate-diff",
+            neighbourhood_size=3,
+            n_permutations=5,
+            min_region_count=3,
+            min_marker_count=1,
         ),
     ]
 
