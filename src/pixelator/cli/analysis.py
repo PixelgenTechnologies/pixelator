@@ -150,6 +150,7 @@ def analysis(
     colocalization_neighbourhood_size,
     colocalization_n_permutations,
     colocalization_min_region_count,
+    colocalization_min_marker_count,
     output,
 ):
     """
@@ -171,6 +172,7 @@ def analysis(
         colocalization_neighbourhood_size=colocalization_neighbourhood_size,
         colocalization_n_permutations=colocalization_n_permutations,
         colocalization_min_region_count=colocalization_min_region_count,
+        colocalization_min_marker_count=colocalization_min_marker_count,
     )
 
     # some basic sanity check on the input files
@@ -214,7 +216,7 @@ def analysis(
                 neighbourhood_size=colocalization_neighbourhood_size,
                 n_permutations=colocalization_n_permutations,
                 min_region_count=colocalization_min_region_count,
-                min_marker_count=polarization_min_marker_count,
+                min_marker_count=colocalization_min_marker_count,
             )
         )
 

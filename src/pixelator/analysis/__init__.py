@@ -33,6 +33,7 @@ class AnalysisParameters:
     colocalization_neighbourhood_size: int
     colocalization_n_permutations: int
     colocalization_min_region_count: int
+    colocalization_min_marker_count: int
 
 
 def analyse_pixels(
