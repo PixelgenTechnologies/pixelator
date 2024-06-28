@@ -134,6 +134,14 @@ from pixelator.utils import (
         "valid for computing colocalization"
     ),
 )
+@click.option(
+    "--colocalization-min-marker-count",
+    default=5,
+    required=False,
+    type=click.IntRange(min=0),
+    show_default=True,
+    help=("The minimum number of marker counts in component for colocalization"),
+)
 @output_option
 @click.pass_context
 @timer

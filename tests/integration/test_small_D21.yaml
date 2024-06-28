@@ -30,6 +30,8 @@ small-D21:
           "5",
           "--colocalization-min-region-count",
           "0",
+          "--colocalization-min-marker-count",
+          "0",
           "--colocalization-n-permutations",
           "10",
           "--colocalization-neighbourhood-size",
