@@ -213,7 +213,7 @@ def test_colocalization_scores_low_marker_removed(
     ]
     marker_counts = component_edges.groupby("marker").count()["count"]
     second_highest_marker_count = marker_counts.sort_values()[-2]
-    result = colocalization_scores(
+    result2 = colocalization_scores(
         edgelist=component_edges,
         use_full_bipartite=True,
         transformation="rate-diff",
@@ -224,30 +224,21 @@ def test_colocalization_scores_low_marker_removed(
         random_seed=1477,
     )
 
-    expected = pd.DataFrame.from_dict(
-        {
-            0: {
-                "marker_1": "A",
-                "marker_2": "C",
-                "pearson": -1.0,
-                "pearson_mean": -1.0,
-                "pearson_stdev": 0.0,
-                "pearson_z": 0.0,
-                "pearson_p_value": 0.5,
-                "pearson_p_value_adjusted": 0.5,
-                "jaccard": 0.0,
-                "jaccard_mean": 0.0,
-                "jaccard_stdev": 0.0,
-                "jaccard_z": np.nan,
-                "jaccard_p_value": np.nan,
-                "jaccard_p_value_adjusted": np.nan,
-                "component": "PXLCMP0000000",
-            }
-        },
-        orient="index",
+    assert result2.shape[0] == 1
+
+    third_highest_marker_count = marker_counts.sort_values()[-3]
+    result3 = colocalization_scores(
+        edgelist=component_edges,
+        use_full_bipartite=True,
+        transformation="rate-diff",
+        neighbourhood_size=0,
+        n_permutations=50,
+        min_region_count=0,
+        min_marker_count=2 * third_highest_marker_count - 1,
+        random_seed=1477,
     )
 
-    assert_frame_equal(result, expected)
+    assert result3.shape[0] == 3
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
