@@ -113,13 +113,12 @@ class Config:
         :param include_aliases: Include panel aliases in the list
         :returns: A list of panel names
         """
-        out = list(self.panels.keys())
-        sorted(out)
+        out = sorted(list(self.panels.keys()))
 
         if not include_aliases:
             return out
 
-        out += list(self.panel_aliases.keys())
+        out += sorted(list(self.panel_aliases.keys()))
         return out
 
     def get_panel(
