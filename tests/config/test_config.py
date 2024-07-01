@@ -112,7 +112,9 @@ def test_loading_panel_from_config_specific_version():
     assert panel.name == "human-sc-immunology-spatial-proteomics-1"
     assert panel.version == "0.3.0"
 
-    panel = config.get_panel("human-sc-immunology-spatial-proteomics", version="0.4.0")
+    panel = config.get_panel(
+        "human-sc-immunology-spatial-proteomics-1", version="0.4.0"
+    )
     assert panel.name == "human-sc-immunology-spatial-proteomics-1"
     assert panel.version == "0.4.0"
 
