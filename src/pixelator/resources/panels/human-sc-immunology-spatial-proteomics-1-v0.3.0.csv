@@ -1,5 +1,7 @@
 # ---
-# name: human-sc-immunology-spatial-proteomics
+# name: human-sc-immunology-spatial-proteomics-1
+# aliases:
+#   - human-sc-immunology-spatial-proteomics
 # description: >-
 #     Single Cell Spatial Proteomics Immunology Panel I
 # version: 0.3.0

@@ -1,8 +1,12 @@
 # ---
-# name: human-sc-immunology-spatial-proteomics
+# name: human-sc-immunology-spatial-proteomics-2
+# aliases:
+#   - human-sc-immunology-spatial-proteomics
 # description: >-
-#     Single Cell Spatial Proteomics Immunology Panel I
-# version: 0.5.0
+#     Placeholder for the Human Single Cell Spatial Proteomics Immunology Panel II panel.
+#     This file is currently identical to the human-sc-immunology-spatial-proteomics-1 (v0.5.0) panel.
+#     TODO - update this file with the correct marker information.
+# version: 0.1.0
 # ---
 marker_id,control,nuclear,full_name,alt_id,sequence,conj_id
 CD274,,,,PDL1,TCCCTTGC,C001031

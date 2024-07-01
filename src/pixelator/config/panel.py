@@ -29,6 +29,7 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
     version: Optional[str] = None
     name: Optional[str] = None
     description: Optional[str] = None
+    aliases: List[str] = []
 
 
 class AntibodyPanel:
@@ -117,6 +118,11 @@ class AntibodyPanel:
     def description(self) -> Optional[str]:
         """Return the panel file description."""
         return self._metadata.description
+
+    @property
+    def aliases(self) -> list[str]:
+        """Return the (optional) list of panel file aliases."""
+        return self._metadata.aliases
 
     @classmethod
     def validate_antibody_panel(self, panel_df: pd.DataFrame) -> list[str]:

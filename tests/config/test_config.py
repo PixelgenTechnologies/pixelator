@@ -14,6 +14,7 @@ from pixelator.config import (
     get_position_in_parent,
     load_assays_package,
 )
+from pixelator.config.config_class import PanelException
 from pixelator.config.panel import load_antibody_panel
 
 
@@ -92,29 +93,33 @@ def config_with_multiple_versions(data_root):
 
 def test_loading_panel_from_config(config_with_multiple_versions):
     panel = config_with_multiple_versions.get_panel(
-        "human-sc-immunology-spatial-proteomics"
+        "human-sc-immunology-spatial-proteomics-1"
     )
-    assert panel.name == "human-sc-immunology-spatial-proteomics"
+    assert panel.name == "human-sc-immunology-spatial-proteomics-1"
     assert panel.version == "0.5.0"
 
 
-def test_loading_panel_from_config_specific_version(config_with_multiple_versions):
-    panel = config_with_multiple_versions.get_panel(
-        "human-sc-immunology-spatial-proteomics", version="0.2.0"
-    )
-    assert panel.name == "human-sc-immunology-spatial-proteomics"
-    assert panel.version == "0.2.0"
+def test_loading_panel_from_config_alias():
+    panel = config.get_panel("human-sc-immunology-spatial-proteomics")
+    assert panel.name == "human-sc-immunology-spatial-proteomics-1"
+    assert panel.version == "0.5.0"
 
-    panel = config_with_multiple_versions.get_panel(
-        "human-sc-immunology-spatial-proteomics", version="0.3.0"
+
+def test_loading_panel_from_config_specific_version():
+    panel = config.get_panel(
+        "human-sc-immunology-spatial-proteomics-1", version="0.3.0"
     )
-    assert panel.name == "human-sc-immunology-spatial-proteomics"
+    assert panel.name == "human-sc-immunology-spatial-proteomics-1"
     assert panel.version == "0.3.0"
+
+    panel = config.get_panel("human-sc-immunology-spatial-proteomics", version="0.4.0")
+    assert panel.name == "human-sc-immunology-spatial-proteomics-1"
+    assert panel.version == "0.4.0"
 
 
 def test_load_antibody_panel_util(data_root):
     cgf_panel = load_antibody_panel(config, "human-sc-immunology-spatial-proteomics")
-    assert cgf_panel.name == "human-sc-immunology-spatial-proteomics"
+    assert cgf_panel.name == "human-sc-immunology-spatial-proteomics-1"
 
     path_panel = load_antibody_panel(config, data_root / "UNO_D21_Beta.csv")
     assert path_panel.name == "human-sc-immunology-spatial-proteomics"
@@ -122,3 +127,20 @@ def test_load_antibody_panel_util(data_root):
 
     with pytest.raises(AssertionError):
         load_antibody_panel(config, "human-qwdqwdqwdqdw-proteomics")
+
+
+def test_list_panel_names(data_root):
+    assert config.list_panel_names(include_aliases=True) == [
+        "human-sc-immunology-spatial-proteomics-1",
+        "human-sc-immunology-spatial-proteomics-2",
+        "human-sc-immunology-spatial-proteomics",
+    ]
+
+
+def test_loading_duplicate_aliases(data_root):
+    this_config = copy.copy(config)
+    with pytest.raises(PanelException):
+        this_config.load_panel_file(
+            data_root
+            / "human-sc-immunology-spatial-proteomics-2-v0.1.0-duplicate-alias.csv"
+        )
