@@ -15,7 +15,9 @@ import polars as pl
 import scipy
 import seaborn as sns
 from matplotlib import cm
-from matplotlib.colors import Normalize
+from matplotlib.colors import LinearSegmentedColormap, Normalize
+from matplotlib.patches import Rectangle
+from scipy.stats import gaussian_kde
 
 from pixelator.analysis.colocalization import get_differential_colocalization
 from pixelator.graph import Graph
@@ -25,6 +27,7 @@ from pixelator.pixeldataset import PixelDataset
 from pixelator.plot.constants import Color
 
 sns.set_style("whitegrid")
+jet_colormap = LinearSegmentedColormap.from_list("jet_colormap", Color.JETSET)
 
 
 def _unit_sphere_surface(horizontal_resolution, vertical_resolution):
@@ -933,6 +936,165 @@ def plot_colocalization_diff_volcano(
     )
 
     return fig, ax
+
+
+def __plot_joint_distribution(data, x, y, **kargs):
+    g = sns.JointGrid(data, x=x, y=y)
+    g.plot_marginals(sns.kdeplot)
+    ax = g.plot_joint(
+        sns.scatterplot,
+        legend=False,
+        data=data,
+        hue="density",
+        palette=jet_colormap,
+        size=0.1,
+    )
+    return ax
+
+
+def __add_gate_box(
+    data,
+    gate: pd.Series | pd.DataFrame,
+    marker1,
+    marker2,
+    facet_row=None,
+    facet_column=None,
+    ax=None,
+    **kargs,
+):
+    if ax is None:
+        ax = plt.gca()
+
+    if facet_row is not None and facet_column is not None:
+        condition = (data.iloc[0][facet_row], data.iloc[0][facet_column])
+    elif facet_row is not None:
+        condition = data.iloc[0][facet_row]
+    elif facet_column is not None:
+        condition = data.iloc[0][facet_column]
+    else:
+        condition = None
+
+    if isinstance(gate, pd.DataFrame):
+        if condition in gate.index:
+            gate = gate.loc[condition, :]
+        else:
+            return
+    ax.add_patch(
+        Rectangle(
+            xy=(gate["xmin"], gate["ymin"]),
+            width=gate["xmax"] - gate["xmin"],
+            height=gate["ymax"] - gate["ymin"],
+            fill=False,
+            linestyle="--",
+            linewidth=1,
+            edgecolor="black",
+        )
+    )
+
+    # Counting data points inside the gate box
+    inside_box = (
+        (data[marker1] >= gate["xmin"])
+        & (data[marker1] < gate["xmax"])
+        & (data[marker2] >= gate["ymin"])
+        & (data[marker2] < gate["ymax"])
+    )
+    inside_percentage = f"{inside_box.mean() * 100:.1f}%"
+    ax.text(
+        x=gate["xmin"],
+        y=gate["ymax"],
+        s=inside_percentage,
+        verticalalignment="top",
+        horizontalalignment="left",
+        fontsize=10,
+        color="black",
+        fontweight="bold",
+    )
+    return
+
+
+def density_scatter_plot(
+    adata,
+    marker1,
+    marker2,
+    layer=None,
+    facet_row=None,
+    facet_column=None,
+    gate: pd.Series | pd.DataFrame | None = None,
+):
+    """Pseuducolor density scatter plot.
+
+    This function returns a scatter plot of abundance data for two markers colored
+    based on region density:
+    Example usage: `density_scatter_plot(pxl.adata, "CD3E", "CD4")`.
+    It is also possible to specify different conditions for faceting the plot by
+    columns and rows:
+    Example usage: `density_scatter_plot(pxl.adata, "CD3E", "CD4",
+                        facet_row = "stimulation", facet_column = "donor")`.
+    facet_row and facet_column should be names of categorical columns in adata.obs.
+    In addition, a gate can be specified as a Series with xmin, xmax, ymin, and ymax
+    to mark a range for components of interest. Alternatively, gate can be specified
+    as a DataFrame to allow for different gate ranges for various conditions.
+    When both facet_row and facet_column are specified, the condition becomes a
+    typle (facet_row, facet_column), if only one is specified, that parameter
+    becomes the condition. The condition permuations are used as the index of
+     the gate.
+    Example usage:
+        gate = pd.DataFrame(columns = ["xmin", "ymin", "xmax", "ymax"])
+        gate.loc["Resting"] = [2, 2, 5, 4]
+        gate.loc["PHA"] = [1.5, 1.5, 5, 4]
+        fig, ax = density_scatter_plot(pixel.adata, "CD3E", "CD4", layer="dsb",
+                    facet_column="sample", gate=gate)
+
+
+    :param adata: Anndata object containing the marker abundance data per
+     component.
+    :param marker1: The first marker to plot (x-axis).
+    :param marker2: The second marker to plot (y-axis).
+    :param layer: The layer (e.g. transformation) to use for the marker data.
+     Defaults to None.
+    :param facet_row: The column to use for faceting the plot by rows.
+     Defaults to None.
+    :param facet_column: The column to use for faceting the plot by columns.
+     Defaults to None.
+    :param gate: The gate to use for marking a range of interest. Defaults to
+     None.
+    """
+    layer_data = adata.to_df(layer)
+    data = layer_data.loc[:, [marker1, marker2]]
+    data.loc[:, "density"] = gaussian_kde(data.T)(data.T)
+    if facet_column is not None:
+        data.loc[:, facet_column] = adata.obs.loc[:, facet_column]
+
+    if facet_row is not None:
+        data.loc[:, facet_row] = adata.obs.loc[:, facet_row]
+
+    if facet_column is not None or facet_row is not None:
+        plot_grid = sns.FacetGrid(data=data, col=facet_column, row=facet_row)
+        plot_grid.map_dataframe(
+            sns.scatterplot,
+            x=marker1,
+            y=marker2,
+            hue="density",
+            palette=jet_colormap,
+            size=0.1,
+        )
+        if gate is not None:
+            plot_grid.map_dataframe(
+                __add_gate_box,
+                gate=gate,
+                marker1=marker1,
+                marker2=marker2,
+                facet_row=facet_row,
+                facet_column=facet_column,
+            )
+    else:
+        plot_grid = __plot_joint_distribution(data, x=marker1, y=marker2)
+        if gate is not None:
+            __add_gate_box(
+                data, marker1=marker1, marker2=marker2, ax=plot_grid.ax_joint, gate=gate
+            )
+    plot_grid.refline(x=0, y=0)
+    return plt.gcf(), plt.gca()
 
 
 @experimental
