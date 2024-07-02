@@ -6,6 +6,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 import warnings
 from typing import List, Literal, Optional, Tuple, Union
 
+import anndata
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -1013,12 +1014,12 @@ def __add_gate_box(
 
 
 def density_scatter_plot(
-    adata,
-    marker1,
-    marker2,
-    layer=None,
-    facet_row=None,
-    facet_column=None,
+    adata: anndata.AnnData,
+    marker1: str,
+    marker2: str,
+    layer: str | None = None,
+    facet_row: str | None = None,
+    facet_column: str | None = None,
     gate: pd.Series | pd.DataFrame | None = None,
 ):
     """Pseuducolor density scatter plot.
@@ -1050,8 +1051,8 @@ def density_scatter_plot(
      component.
     :param marker1: The first marker to plot (x-axis).
     :param marker2: The second marker to plot (y-axis).
-    :param layer: The layer (e.g. transformation) to use for the marker data.
-     Defaults to None.
+    :param layer: The anndata layer (e.g. transformation) to use for the marker
+     data. Defaults to None.
     :param facet_row: The column to use for faceting the plot by rows.
      Defaults to None.
     :param facet_column: The column to use for faceting the plot by columns.
