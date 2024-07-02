@@ -14,6 +14,7 @@ from pixelator.plot import (
     _calculate_distance_to_unit_sphere_zones,
     _unit_sphere_surface,
     cell_count_plot,
+    density_scatter_plot,
     edge_rank_plot,
     plot_2d_graph,
     plot_3d_graph,
@@ -709,3 +710,71 @@ def test_plot_3d_heatmap(edgelist):
             marker="CD3",
             distance_cutoff=0.4,
         )
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_density_scatter_plot/",
+)
+@pytest.mark.parametrize(
+    "marker1, marker2, extra_params",
+    [
+        (
+            "CD3",
+            "CD8",
+            {
+                "facet_row": None,
+                "facet_column": None,
+                "gate": pd.Series(
+                    [600, 10, 1000, 20], index=["xmin", "ymin", "xmax", "ymax"]
+                ),
+            },
+        ),
+        (
+            "CD3",
+            "CD8",
+            {
+                "facet_row": "mean_molecules_per_a_pixel",
+                "facet_column": None,
+                "gate": None,
+            },
+        ),
+        (
+            "CD3",
+            "CD8",
+            {
+                "facet_row": None,
+                "facet_column": "mean_molecules_per_a_pixel",
+                "gate": pd.Series(
+                    [600, 10, 1000, 20], index=["xmin", "ymin", "xmax", "ymax"]
+                ),
+            },
+        ),
+    ],
+)
+def test_density_scatter_plot(
+    setup_basic_pixel_dataset, marker1, marker2, extra_params
+):
+    facet_row = extra_params["facet_row"]
+    facet_column = extra_params["facet_column"]
+    gate = extra_params["gate"]
+
+    pxl_data, *_ = setup_basic_pixel_dataset
+    np.random.seed(0)
+    pxl_data.adata[:, marker1] = pxl_data.adata[
+        :, marker1
+    ].X.flatten() + np.random.randint(1, 20, size=pxl_data.adata.shape[0])
+    pxl_data.adata[:, marker2] = pxl_data.adata[
+        :, marker2
+    ].X.flatten() + np.random.randint(1, 20, size=pxl_data.adata.shape[0])
+    show_marginal = (facet_column is None) & (facet_row is None)
+    fig, _ = density_scatter_plot(
+        pxl_data.adata,
+        marker1=marker1,
+        marker2=marker2,
+        facet_row=facet_row,
+        facet_column=facet_column,
+        gate=gate,
+        show_marginal=show_marginal,
+    )
+    return fig
