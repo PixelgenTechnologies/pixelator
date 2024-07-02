@@ -1023,7 +1023,7 @@ def density_scatter_plot(
 ):
     """Pseuducolor density scatter plot.
 
-    This function returns a scatter plot of abundance data for two markers colored
+    This function creates a scatter plot of abundance data for two markers colored
     based on region density:
     Example usage: `density_scatter_plot(pxl.adata, "CD3E", "CD4")`.
     It is also possible to specify different conditions for faceting the plot by
