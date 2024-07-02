@@ -28,6 +28,17 @@ def test_config_creation():
     assert assay.name == "D21"
 
 
+def test_load_assays_dir(data_root):
+    config = Config()
+    config.load_assays(data_root / "assays")
+
+    a1 = config.get_assay("test1_D21")
+    assert a1.name == "test1_D21"
+
+    a2 = config.get_assay("test1_D21")
+    assert a2.name == "test1_D21"
+
+
 def test_parsing_recursion_protection(data_root):
     cfg = Config()
 
