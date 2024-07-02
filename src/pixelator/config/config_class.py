@@ -75,6 +75,9 @@ class Config:
                 raise PanelException(
                     f'Panel alias "{alias}" already exists in the '
                     f'config for panel "{self.panel_aliases[alias]}".'
+                    'If you provided your own panel file, please '
+                    'ensure the panel name an aliases are unique '
+                    'in the header of the file.'
                 )
                 continue
 
