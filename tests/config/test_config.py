@@ -149,6 +149,11 @@ def test_list_panel_names(data_root):
         "human-sc-immunology-spatial-proteomics",
     ]
 
+    assert config.list_panel_names(include_aliases=False) == [
+        "human-sc-immunology-spatial-proteomics-1",
+        "human-sc-immunology-spatial-proteomics-2",
+    ]
+
 
 def test_loading_duplicate_aliases(data_root):
     this_config = copy.deepcopy(config)
