@@ -1013,7 +1013,6 @@ def _add_gate_box(
         horizontalalignment="left",
         fontsize=10,
         color="black",
-        fontweight="bold",
     )
     return
 
