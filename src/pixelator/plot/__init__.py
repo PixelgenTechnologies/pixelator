@@ -941,7 +941,7 @@ def plot_colocalization_diff_volcano(
 def __plot_joint_distribution(data, x, y, **kargs):
     g = sns.JointGrid(data, x=x, y=y)
     g.plot_marginals(sns.kdeplot)
-    ax = g.plot_joint(
+    g.plot_joint(
         sns.scatterplot,
         legend=False,
         data=data,
@@ -949,7 +949,7 @@ def __plot_joint_distribution(data, x, y, **kargs):
         palette=jet_colormap,
         size=0.1,
     )
-    return ax
+    return g
 
 
 def __add_gate_box(

@@ -719,7 +719,17 @@ def test_plot_3d_heatmap(edgelist):
 @pytest.mark.parametrize(
     "marker1, marker2, extra_params",
     [
-        ("CD3", "CD8", {"facet_row": None, "facet_column": None, "gate": None}),
+        (
+            "CD3",
+            "CD8",
+            {
+                "facet_row": None,
+                "facet_column": None,
+                "gate": pd.Series(
+                    [600, 10, 1000, 20], index=["xmin", "ymin", "xmax", "ymax"]
+                ),
+            },
+        ),
         (
             "CD3",
             "CD8",
