@@ -86,7 +86,7 @@ def test_get_position_in_amplicon_D21():
 
 @pytest.fixture()
 def config_with_multiple_versions(data_root):
-    new_config = copy.copy(config)
+    new_config = copy.deepcopy(config)
     new_config.load_panel_file(data_root / "UNO_D21_Beta_old.csv")
     return new_config
 
@@ -140,7 +140,7 @@ def test_list_panel_names(data_root):
 
 
 def test_loading_duplicate_aliases(data_root):
-    this_config = copy.copy(config)
+    this_config = copy.deepcopy(config)
     with pytest.raises(PanelException):
         this_config.load_panel_file(
             data_root
