@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Add minimum marker count `colocalization_min_marker_count` parameter to calculate colocalization score.
+* Add `density_scatter_plot` function to make two-marker abundance scatter plots with pseudo-density coloring.
 * Add `wpmds` option in `pmds_layout` to compute edge weighted layouts. This is now set as the default layout algorithm.
 * Add `dsb_normalization` function for normalization of marker abundance.
 
