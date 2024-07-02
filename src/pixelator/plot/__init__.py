@@ -1031,7 +1031,7 @@ def density_scatter_plot(
     columns and rows:
     Example usage: `density_scatter_plot(pxl.adata, "CD3E", "CD4",
                         facet_row = "stimulation", facet_column = "donor")`.
-    facet_row and facet_column should be names of categorical columns in adata.obs.
+    `facet_row` and `facet_column` should be names of categorical columns in `adata.obs`.
     In addition, a gate can be specified as a Series with xmin, xmax, ymin, and ymax
     to mark a range for components of interest. Alternatively, gate can be specified
     as a DataFrame to allow for different gate ranges for various conditions.
