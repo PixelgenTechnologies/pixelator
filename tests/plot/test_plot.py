@@ -767,6 +767,7 @@ def test_density_scatter_plot(
     pxl_data.adata[:, marker2] = pxl_data.adata[
         :, marker2
     ].X.flatten() + np.random.randint(1, 20, size=pxl_data.adata.shape[0])
+    show_marginal = (facet_column is None) & (facet_row is None)
     fig, _ = density_scatter_plot(
         pxl_data.adata,
         marker1=marker1,
@@ -774,5 +775,6 @@ def test_density_scatter_plot(
         facet_row=facet_row,
         facet_column=facet_column,
         gate=gate,
+        show_marginal=show_marginal,
     )
     return fig

@@ -939,9 +939,11 @@ def plot_colocalization_diff_volcano(
     return fig, ax
 
 
-def _plot_joint_distribution(data, x, y, **kargs):
+def _plot_joint_distribution(data, x, y, show_marginal, **kargs):
     g = sns.JointGrid(data, x=x, y=y)
-    g.plot_marginals(sns.kdeplot)
+    g.plot_marginals(sns.kdeplot, fill=True)
+    g.ax_marg_x.axis("off")
+    g.ax_marg_y.axis("off")
     g.plot_joint(
         sns.scatterplot,
         legend=False,
@@ -950,6 +952,9 @@ def _plot_joint_distribution(data, x, y, **kargs):
         palette=jet_colormap,
         size=0.1,
     )
+    if not show_marginal:
+        g.ax_marg_x.set_visible(False)
+        g.ax_marg_y.set_visible(False)
     return g
 
 
@@ -1021,6 +1026,7 @@ def density_scatter_plot(
     facet_row: str | None = None,
     facet_column: str | None = None,
     gate: pd.Series | pd.DataFrame | None = None,
+    show_marginal=False,
 ):
     """Pseudocolor density scatter plot.
 
@@ -1059,6 +1065,7 @@ def density_scatter_plot(
      Defaults to None.
     :param gate: The gate to use for marking a range of interest. Defaults to
      None.
+    :param show_marginal: Whether to show marginal distributions. Defaults to False.
     """
     layer_data = adata.to_df(layer)
     data = layer_data.loc[:, [marker1, marker2]]
@@ -1070,6 +1077,8 @@ def density_scatter_plot(
         data.loc[:, facet_row] = adata.obs.loc[:, facet_row]
 
     if facet_column is not None or facet_row is not None:
+        if show_marginal:
+            warnings.warn("show_marginal is not supported for faceted plots.")
         plot_grid = sns.FacetGrid(data=data, col=facet_column, row=facet_row)
         plot_grid.map_dataframe(
             sns.scatterplot,
@@ -1088,13 +1097,17 @@ def density_scatter_plot(
                 facet_row=facet_row,
                 facet_column=facet_column,
             )
+        plot_grid.refline(x=0, y=0)
     else:
-        plot_grid = _plot_joint_distribution(data, x=marker1, y=marker2)
+        plot_grid = _plot_joint_distribution(
+            data, x=marker1, y=marker2, show_marginal=show_marginal
+        )
         if gate is not None:
             _add_gate_box(
                 data, marker1=marker1, marker2=marker2, ax=plot_grid.ax_joint, gate=gate
             )
-    plot_grid.refline(x=0, y=0)
+        plot_grid.ax_joint.axhline(0, color="black", linewidth=1, linestyle="--")
+        plot_grid.ax_joint.axvline(0, color="black", linewidth=1, linestyle="--")
     return plt.gcf(), plt.gca()
 
 
