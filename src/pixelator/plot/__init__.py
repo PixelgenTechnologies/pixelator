@@ -1027,7 +1027,7 @@ def density_scatter_plot(
     This function creates a scatter plot of abundance data for two markers colored
     based on region density:
     Example usage: `density_scatter_plot(pxl.adata, "CD3E", "CD4")`.
-    It is also possible to specify different conditions for faceting the plot by
+    It is also possible to specify one or two variables for faceting the plot by
     columns and rows:
     Example usage: `density_scatter_plot(pxl.adata, "CD3E", "CD4",
                         facet_row = "stimulation", facet_column = "donor")`.
