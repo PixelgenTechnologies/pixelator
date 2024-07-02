@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import itertools
 import typing
+import warnings
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -16,6 +17,7 @@ import semver
 
 from pixelator.config.assay import Assay
 from pixelator.config.panel import AntibodyPanel
+from pixelator.exceptions import PixelatorBaseException
 from pixelator.types import PathType
 
 DNA_CHARS = {"A", "C", "G", "T"}
@@ -23,6 +25,12 @@ DNA_CHARS = {"A", "C", "G", "T"}
 RangeType = typing.TypeVar(
     "RangeType", Tuple[int, int], Tuple[Optional[int], Optional[int]]
 )
+
+
+class PanelException(PixelatorBaseException):
+    """Exception raised for failures to load a panel into the global configuration."""
+
+    pass
 
 
 class Config:
@@ -36,6 +44,7 @@ class Config:
         """Initialize the config object."""
         self.assays: Dict[str, Assay] = {}
         self.panels: typing.MutableMapping[str, List[AntibodyPanel]] = defaultdict(list)
+        self.panel_aliases: Dict[str, str] = {}
 
         if assays is not None:
             self.assays.update({a.name: a for a in assays})
@@ -51,10 +60,28 @@ class Config:
         self.assays[assay.name] = assay
 
     def load_panel_file(self, path: PathType) -> None:
-        """Load the panel file."""
+        """Load the panel file.
+
+        :param path: The path to the panel file.
+        :raises PanelException: If the panel alias already exists in the config.
+        """
         panel = AntibodyPanel.from_csv(path)
         key = panel.name if panel.name is not None else str(panel.filename)
         self.panels[key].append(panel)
+
+        # Enable panel lookup by aliases
+        for alias in panel.aliases:
+            if (alias in self.panel_aliases) and (key != self.panel_aliases[alias]):
+                raise PanelException(
+                    f'Panel alias "{alias}" already exists in the '
+                    f'config for panel "{self.panel_aliases[alias]}".'
+                    "If you provided your own panel file, please "
+                    "ensure the panel name an aliases are unique "
+                    "in the header of the file."
+                )
+                continue
+
+            self.panel_aliases[alias] = key
 
     def load_assays(self, path: PathType):
         """Load all assays from a directory containing yaml files."""
@@ -83,11 +110,40 @@ class Config:
         """Get an assay by name."""
         return self.assays.get(assay_name)
 
+    def list_panel_names(self, include_aliases: bool = False) -> List[str]:
+        """Return a list of all panel names.
+
+        :param include_aliases: Include panel aliases in the list
+        :returns: A list of panel names
+        """
+        out = sorted(list(self.panels.keys()))
+
+        if not include_aliases:
+            return out
+
+        out += sorted(list(self.panel_aliases.keys()))
+        return out
+
     def get_panel(
-        self, panel_name: str, version: Optional[str] = None
+        self,
+        panel_name: str,
+        version: Optional[str] = None,
+        allow_aliases: bool = True,
     ) -> Optional[AntibodyPanel]:
-        """Get a panel by name."""
+        """Get a panel by name.
+
+        :param panel_name: The name of the panel
+        :param version: The optional version of a panel to return
+        :param allow_aliases: Allow panel aliases to be used
+        """
         panels_with_key = self.panels.get(panel_name)
+
+        # Try to load using an alias if no name matches are found
+        if panels_with_key is None and allow_aliases:
+            panel_alias = self.panel_aliases.get(panel_name)
+            if panel_alias is not None:
+                panels_with_key = self.panels.get(panel_alias)
+
         if panels_with_key is None:
             return None
 
