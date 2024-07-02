@@ -1036,7 +1036,7 @@ def density_scatter_plot(
     to mark a range for components of interest. Alternatively, gate can be specified
     as a DataFrame to allow for different gate ranges for various conditions.
     When both facet_row and facet_column are specified, the condition becomes a
-    typle (facet_row, facet_column), if only one is specified, that parameter
+    tuple (facet_row, facet_column), if only one is specified, that parameter
     becomes the condition. The condition permuations are used as the index of
      the gate.
     Example usage:
