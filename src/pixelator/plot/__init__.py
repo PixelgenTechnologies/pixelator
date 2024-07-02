@@ -939,7 +939,7 @@ def plot_colocalization_diff_volcano(
     return fig, ax
 
 
-def __plot_joint_distribution(data, x, y, **kargs):
+def _plot_joint_distribution(data, x, y, **kargs):
     g = sns.JointGrid(data, x=x, y=y)
     g.plot_marginals(sns.kdeplot)
     g.plot_joint(
@@ -953,7 +953,7 @@ def __plot_joint_distribution(data, x, y, **kargs):
     return g
 
 
-def __add_gate_box(
+def _add_gate_box(
     data,
     gate: pd.Series | pd.DataFrame,
     marker1,
@@ -1022,7 +1022,7 @@ def density_scatter_plot(
     facet_column: str | None = None,
     gate: pd.Series | pd.DataFrame | None = None,
 ):
-    """Pseuducolor density scatter plot.
+    """Pseudocolor density scatter plot.
 
     This function creates a scatter plot of abundance data for two markers colored
     based on region density:
@@ -1081,7 +1081,7 @@ def density_scatter_plot(
         )
         if gate is not None:
             plot_grid.map_dataframe(
-                __add_gate_box,
+                _add_gate_box,
                 gate=gate,
                 marker1=marker1,
                 marker2=marker2,
@@ -1089,9 +1089,9 @@ def density_scatter_plot(
                 facet_column=facet_column,
             )
     else:
-        plot_grid = __plot_joint_distribution(data, x=marker1, y=marker2)
+        plot_grid = _plot_joint_distribution(data, x=marker1, y=marker2)
         if gate is not None:
-            __add_gate_box(
+            _add_gate_box(
                 data, marker1=marker1, marker2=marker2, ax=plot_grid.ax_joint, gate=gate
             )
     plot_grid.refline(x=0, y=0)
