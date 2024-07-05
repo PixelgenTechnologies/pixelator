@@ -56,7 +56,7 @@ tasks:
     requires:
       vars: ["PIPELINE_SOURCE_DIR"]
     cmds:
-      - nf_options=();
+      - nf_options=(' --save_all ");
         [[ {{ .RESUME }} == 'true' ]] && nf_options+=('-resume ');
         cd "{{ .PIPELINE_SOURCE_DIR }}";
         nextflow run . -profile test --outdir {{ .PIPELINE_RESULTS_DIR }} ${nf_options[@]};
@@ -185,7 +185,7 @@ tasks:
         --compute-colocalization
         --use-full-bipartite
         --polarization-n-permutations
-        0
+        5
         --colocalization-min-region-count
         0
         --colocalization-min-marker-count
@@ -194,8 +194,6 @@ tasks:
         10
         --colocalization-neighbourhood-size
         1
-    requires:
-      vars: [ R1, R2 ]
     cmds:
       - rm -r "{{ .RESULTS_DIR }}"
       - pixelator single-cell amplicon {{ .R1 }} {{ .R2 }} --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
