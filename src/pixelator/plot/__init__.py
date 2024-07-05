@@ -422,7 +422,7 @@ def plot_2d_graph(
     alpha: float = 0.5,
     cache_layout: bool = False,
     random_seed: int | None = None,
-) -> Tuple[plt.Figure, plt.Axes]:
+) -> Tuple[plt.Figure, plt.Axes | np.ndarray]:
     """Plot a (collection of) 2D graph(s) based on the given pixel data.
 
     The graph can be plotted for one or a list of components.

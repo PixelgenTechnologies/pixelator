@@ -93,6 +93,7 @@ def create_dynamic_report(
     # Map pixelator metrics to QC report metrics
     metrics = Metrics(
         number_of_cells=annotate_metrics.cell_count,
+        fraction_outlier_cells=annotate_metrics.fraction_aggregate_components,
         average_reads_usable_per_cell=int(
             annotate_metrics.read_count_per_cell_stats.mean
         ),

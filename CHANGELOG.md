@@ -13,12 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add `density_scatter_plot` function to make two-marker abundance scatter plots with pseudo-density coloring.
 * Add `wpmds` option in `pmds_layout` to compute edge weighted layouts. This is now set as the default layout algorithm.
 * Add `dsb_normalization` function for normalization of marker abundance.
+* Add a `Fraction of Outlier Cells` metric to the QC report.
+* Add a `Panel Version` metadata field to the QC report.
+
 
 ### Fixed
 
 * Fix a bug where `a_pixels_per_b_pixel` summary statistics where equal to the `b_pixels_per_a_pixel` statistics.
 * `collapse` will return exit code 137 when one of the child processes is killed by the system (e.g. because it is
    to much memory). This allows e.g. Nextflow to retry the process with more memory automatically.
+* Hide the `Sample Description` metadata field in the QC report when no value is available.
+
+
+### Removed
+
+* Remove the `Pixel Version` metadata field from the QC report.
 
 ## [0.17.1] - 2024-05-27
 

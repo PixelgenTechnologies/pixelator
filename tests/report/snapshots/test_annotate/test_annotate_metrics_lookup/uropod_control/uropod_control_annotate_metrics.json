@@ -121,6 +121,7 @@
     "size_filter_fail_molecule_count": 0,
     "size_filter_fail_read_count": 0,
     "pixel_count": 7978,
+    "fraction_aggregate_components": 1.0,
     "fraction_reads_in_aggregates": 1.0,
     "fraction_molecules_in_aggregates": 1.0
 }
