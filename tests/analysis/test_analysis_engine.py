@@ -36,7 +36,7 @@ class MockAnalysis(PerComponentAnalysis):
     def add_to_pixel_dataset(
         self, data: pd.DataFrame, pxl_dataset: PixelDataset
     ) -> PixelDataset:
-        pxl_dataset.data_slots[self.ANALYSIS_NAME] = data
+        pxl_dataset.data_slots[self.ANALYSIS_NAME] = data  # type: ignore
         return pxl_dataset
 
     def concatenate_data(self, data: Iterable[pd.DataFrame]) -> pd.DataFrame:
