@@ -5,6 +5,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 import pytest
 from pixelator.report import PixelatorReporting, PixelatorWorkdir
+from pixelator.report.common.reporting import _ordered_pixelator_commands
 
 
 def test_reporting_plain_dir_constructor(pixelator_workdir):
@@ -62,3 +63,21 @@ def test_reporting_molecules_flow_summary(
     result = reporting.molecules_flow_summary()
 
     snapshot.assert_match(result.to_csv(), "molecules_flow_summary.csv")
+
+
+def test_sorted_pixelator_commands():
+    commands = _ordered_pixelator_commands()
+
+    assert len(commands) >= 10
+    assert commands[:10] == [
+        "pixelator single-cell amplicon",
+        "pixelator single-cell preqc",
+        "pixelator single-cell adapterqc",
+        "pixelator single-cell demux",
+        "pixelator single-cell collapse",
+        "pixelator single-cell graph",
+        "pixelator single-cell annotate",
+        "pixelator single-cell layout",
+        "pixelator single-cell analysis",
+        "pixelator single-cell report",
+    ]
