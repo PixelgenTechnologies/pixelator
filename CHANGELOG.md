@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `collapse` will return exit code 137 when one of the child processes is killed by the system (e.g. because it is
    to much memory). This allows e.g. Nextflow to retry the process with more memory automatically.
 * Hide the `Sample Description` metadata field in the QC report when no value is available.
+* A bug in aggregating files with precomputed layouts, where the lazy-loading of the layouts was not working correctly.
 
 
 ### Removed
