@@ -92,7 +92,7 @@ from pixelator.utils import (
 )
 @click.option(
     "--colocalization-transformation",
-    default="log1p",
+    default="rate-diff",
     required=False,
     type=click.Choice(get_args(TransformationTypes)),
     show_default=True,
