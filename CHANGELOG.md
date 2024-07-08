@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add a `Fraction of Outlier Cells` metric to the QC report.
 * Add a `Panel Version` metadata field to the QC report.
 
+### Changed
+
+* The default transformation for the calculation of the colocalization score is now `rate-diff` instead of `log1p`.
 
 ### Fixed
 
