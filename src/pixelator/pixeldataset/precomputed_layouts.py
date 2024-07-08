@@ -212,6 +212,8 @@ class PreComputedLayouts:
             self._data_provider: _DataProvider = _EmptyDataProvider()
         elif isinstance(layouts_lazy, pl.LazyFrame):
             self._data_provider = _SingleFrameDataProvider(layouts_lazy)
+        elif isinstance(layouts_lazy, pl.DataFrame):
+            self._data_provider = _SingleFrameDataProvider(layouts_lazy.lazy())
         elif isinstance(layouts_lazy, Iterable):
             self._data_provider = _MultiFrameDataProvider(layouts_lazy)
         else:
@@ -363,7 +365,7 @@ def aggregate_precomputed_layouts(
 
     try:
         return PreComputedLayouts(
-            pl.concat(data(), rechunk=False),
+            pl.concat(data(), rechunk=True).collect(),
             partitioning=["sample"] + PreComputedLayouts.DEFAULT_PARTITIONING,
         )
     except ValueError:
