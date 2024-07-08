@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Add a `Fraction of Outlier Cells` metric to the QC report.
 * Add a `Panel Version` metadata field to the QC report.
 
+### Changed
+
+* The default transformation for the calculation of the colocalization score is now `rate-diff` instead of `log1p`.
 
 ### Fixed
 
@@ -23,8 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `collapse` will return exit code 137 when one of the child processes is killed by the system (e.g. because it is
    to much memory). This allows e.g. Nextflow to retry the process with more memory automatically.
 * Hide the `Sample Description` metadata field in the QC report when no value is available.
+* Fix an issue where boolean parameters were formatted as integers in the Parameters section of the QC report.
 * A bug in aggregating files with precomputed layouts, where the lazy-loading of the layouts was not working correctly.
-
 
 ### Removed
 
