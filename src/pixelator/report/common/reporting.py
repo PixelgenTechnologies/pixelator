@@ -55,6 +55,9 @@ class PixelatorReporting:
         else:
             self.workdir = PixelatorWorkdir(workdir)
 
+        # all pixelator commands in defined order
+        self._command_list: list[str] | None = None
+
     def samples(self) -> set[str]:
         """Return a list of all samples encountered from command metadata files."""
         return self.workdir.samples()
@@ -353,7 +356,6 @@ class PixelatorReporting:
         :raises WorkdirOutputNotFound: If no commandline metadata is found for the sample
         """
         # Function scope import to avoid circular dependencies
-        from pixelator.cli import main_cli as click_context
 
         try:
             metadata_files = self.workdir.metadata_files(sample, cache=cache)
@@ -361,12 +363,42 @@ class PixelatorReporting:
             e.message = f'No command line metadata found for sample: "{sample}"'
             raise
 
-        data_flat: list[CommandInfo] = []
-        order = list(click_context.commands["single-cell"].commands.keys())  # type: ignore
-
+        data_flat = []
         for f in metadata_files:
             command_info_flat = CommandInfo.from_json(f)
             data_flat.append(command_info_flat)
 
-        data_flat.sort(key=lambda x: order.index(x.command.split(" ")[-1]))
+        if self._command_list is None:
+            self._command_list = _ordered_pixelator_commands()
+
+        # mypy cannot detect that self._command_list cannot be None
+        # anymore at this point so we cast it explicitly.
+        data_flat.sort(
+            key=lambda x: typing.cast("list[str]", self._command_list).index(x.command)
+        )
         return CLIInvocationInfo(data_flat, sample_id=sample)
+
+
+def _ordered_pixelator_commands() -> list[str]:
+    """Return a list of pixelator CLI commands in depth-first order."""
+    # local imports to avoid circular dependency issues
+    import click
+
+    from pixelator.cli import main_cli as click_context
+
+    def build_command_list(obj: typing.Any, prefix=None):
+        """Recursively go through groups and commands to create a list of commands."""
+        prefix = prefix or []
+
+        if isinstance(obj, click.Group):
+            res = []
+            new_prefix = prefix + [obj.name]
+
+            for subcommand in obj.commands.values():
+                res.extend(build_command_list(subcommand, prefix=new_prefix))
+
+            return res
+
+        return (" ".join(prefix + [obj.name]),)
+
+    return build_command_list(click_context)
