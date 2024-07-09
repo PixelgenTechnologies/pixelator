@@ -12,7 +12,7 @@ from pixelator.graph import Graph
 from pixelator.plot import (
     cell_count_plot,
     density_scatter_plot,
-    edge_rank_plot,
+    molecule_rank_plot,
     plot_2d_graph,
     plot_3d_graph,
     plot_3d_heatmap,
@@ -239,17 +239,17 @@ def test_cell_count_plot():
 
 @pytest.mark.mpl_image_compare(
     deterministic=False,
-    baseline_dir="../snapshots/test_plot/test_edge_rank_plot",
+    baseline_dir="../snapshots/test_plot/test_molecule_rank_plot",
 )
-def test_edge_rank_plot():
+def test_molecule_rank_plot():
     np.random.seed(0)
     data = pd.DataFrame(
         {
-            "edges": np.round(10 ** np.random.normal(4, 0.3, 500)).astype(int),
+            "molecules": np.round(10 ** np.random.normal(4, 0.3, 500)).astype(int),
             "group": np.random.choice(["A", "B"], 500),
         }
     )
-    plot, _ = edge_rank_plot(data, group_by="group")
+    plot, _ = molecule_rank_plot(data, group_by="group")
     return plot
 
 
