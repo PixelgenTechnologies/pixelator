@@ -10,12 +10,10 @@ import pytest
 from numpy.testing import assert_almost_equal
 from pixelator.graph import Graph
 from pixelator.plot import (
-    _calculate_densities,
-    _calculate_distance_to_unit_sphere_zones,
-    _unit_sphere_surface,
     cell_count_plot,
     density_scatter_plot,
     edge_rank_plot,
+    molecule_rank_plot,
     plot_2d_graph,
     plot_3d_graph,
     plot_3d_heatmap,
@@ -23,6 +21,11 @@ from pixelator.plot import (
     plot_colocalization_diff_volcano,
     plot_colocalization_heatmap,
     scatter_umi_per_upia_vs_tau,
+)
+from pixelator.plot.layout_plots import (
+    _calculate_densities,
+    _calculate_distance_to_unit_sphere_zones,
+    _unit_sphere_surface,
 )
 from pytest_snapshot.plugin import Snapshot
 
@@ -232,6 +235,38 @@ def test_cell_count_plot():
         }
     )
     plot, _ = cell_count_plot(data, color_by="group1", group_by="group2")
+    return plot
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=False,
+    baseline_dir="../snapshots/test_plot/test_molecule_rank_plot",
+)
+def test_molecule_rank_plot():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {
+            "molecules": np.round(10 ** np.random.normal(4, 0.3, 500)).astype(int),
+            "group": np.random.choice(["A", "B"], 500),
+        }
+    )
+    plot, _ = molecule_rank_plot(data, group_by="group")
+    return plot
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=False,
+    baseline_dir="../snapshots/test_plot/test_molecule_rank_plot",
+)
+def test_molecule_rank_plot_back_compatibility():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {
+            "edges": np.round(10 ** np.random.normal(4, 0.3, 500)).astype(int),
+            "group": np.random.choice(["A", "B"], 500),
+        }
+    )
+    plot, _ = molecule_rank_plot(data, group_by="group")
     return plot
 
 

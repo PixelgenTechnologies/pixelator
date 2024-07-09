@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * The default transformation for the calculation of the colocalization score is now `rate-diff` instead of `log1p`.
+* Rename `edge_rank_plot` function to `molecule_rank_plot`.
 
 ### Fixed
 
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    to much memory). This allows e.g. Nextflow to retry the process with more memory automatically.
 * Hide the `Sample Description` metadata field in the QC report when no value is available.
 * Fix an issue where boolean parameters were formatted as integers in the Parameters section of the QC report.
+* A bug in aggregating files with precomputed layouts, where the lazy-loading of the layouts was not working correctly.
 
 ### Removed
 
