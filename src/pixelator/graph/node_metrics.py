@@ -99,7 +99,7 @@ def local_g(
     :param k: The number of steps in the k-step random walk. Default is 1.
     :param use_weights: Whether to use weights in the computation. When turned off, all
     edge weights will be qeual to 1. Default is True.
-    :param normalize_counts: Whether to normalize counts to proportions. Default is True.
+    :param normalize_counts: Whether to normalize counts to proportions. Default is False.
     :param W: A sparse matrix of custom edge weights. This will override the automated
     computation of edge weights. `W` must have the same dimensions as A. Note that weights can
     be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
