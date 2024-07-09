@@ -10,9 +10,6 @@ import pytest
 from numpy.testing import assert_almost_equal
 from pixelator.graph import Graph
 from pixelator.plot import (
-    _calculate_densities,
-    _calculate_distance_to_unit_sphere_zones,
-    _unit_sphere_surface,
     cell_count_plot,
     density_scatter_plot,
     edge_rank_plot,
@@ -23,6 +20,11 @@ from pixelator.plot import (
     plot_colocalization_diff_volcano,
     plot_colocalization_heatmap,
     scatter_umi_per_upia_vs_tau,
+)
+from pixelator.plot.layout_plots import (
+    _calculate_densities,
+    _calculate_distance_to_unit_sphere_zones,
+    _unit_sphere_surface,
 )
 from pytest_snapshot.plugin import Snapshot
 
