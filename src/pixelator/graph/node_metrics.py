@@ -52,7 +52,9 @@ def compute_transition_probabilities(
         # Set diagonal of W to 0 if k > 1 for gi to avoid self-loops
         W_out.setdiag(values=0)
         # Renormalize transition probabilities to sum to 1
-        W_out = W_out / W_out.sum(axis=0)[:, None]
+        row_sums = np.array(W_out.sum(axis=1)).flatten()
+        inv_row_sums = np.reciprocal(row_sums, where=row_sums != 0)
+        W_out = W_out.multiply(inv_row_sums[:, np.newaxis])
 
     return W_out
 
@@ -63,7 +65,7 @@ def local_g(
     counts: pd.DataFrame,
     k: int = 1,
     use_weights: bool = True,
-    normalize_counts: bool = True,
+    normalize_counts: bool = False,
     W: sp.sparse.csr_array | None = None,
     method: Literal["gi", "gstari"] = "gi",
 ) -> pd.DataFrame:
@@ -97,7 +99,7 @@ def local_g(
     :param k: The number of steps in the k-step random walk. Default is 1.
     :param use_weights: Whether to use weights in the computation. When turned off, all
     edge weights will be qeual to 1. Default is True.
-    :param normalize_counts: Whether to normalize counts to proportions. Default is True.
+    :param normalize_counts: Whether to normalize counts to proportions. Default is False.
     :param W: A sparse matrix of custom edge weights. This will override the automated
     computation of edge weights. `W` must have the same dimensions as A. Note that weights can
     be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
@@ -156,6 +158,17 @@ def local_g(
             W = W.T
         else:
             W = A
+            if k > 1:
+                # Expand local neighborhood using matrix powers
+                W = sp.sparse.linalg.matrix_power(W, k)
+                # Set all positive elements to 1
+                W.data = np.ones_like(W.data)
+                if method == "gstari":
+                    # Set diagonal of A to 1 for gstari which expects self-loops
+                    W = W + sp.sparse.eye(n_nodes)
+                else:
+                    # Set diagonal of W to 0 for gi to avoid self-loops
+                    W.setdiag(values=0)
 
     # Compute lag matrix
     lag_mat = W @ counts
