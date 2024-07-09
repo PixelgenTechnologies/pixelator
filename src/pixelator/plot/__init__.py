@@ -101,7 +101,7 @@ def molecule_rank_plot(
     """Plot the number of molecules per component against its molecule rank.
 
     :param data: a pandas DataFrame with a column 'molecules' containing edge counts for MPX
-    momponents.
+    components.
     :param group_by: a column in the DataFrame to group the plot by.
 
     :return: a plot showing the number of molecules per component against its edge rank used
@@ -110,6 +110,8 @@ def molecule_rank_plot(
     :raises: AssertionError if the required column(s) are not present in the DataFrame
     :raises: ValueError if the data types are invalid
     """
+    if "molecules" not in data.columns and "edges" in data.columns:
+        data["molecules"] = data["edges"]
     assert "molecules" in data.columns, "column 'molecules' is missing from DataFrame"
     assert (
         isinstance(data["molecules"], pd.Series) and data["molecules"].dtype == int
@@ -143,6 +145,62 @@ def molecule_rank_plot(
         .set(xscale="log", yscale="log")
         .set_xlabels("Component rank (by number of molecules)")
         .set_ylabels("Number of molecules")
+    )
+
+    return plt.gcf(), plt.gca()
+
+
+def edge_rank_plot(
+    data: pd.DataFrame, group_by: Optional[str] = None
+) -> Tuple[plt.Figure, plt.Axes]:
+    """Plot the number of edges per component against its edge rank.
+
+    :param data: a pandas DataFrame with a column 'edges' containing edge counts for MPX
+    components.
+    :param group_by: a column in the DataFrame to group the plot by.
+
+    :return: a plot showing the number of edges per component against its edge rank used
+    for quality control.
+    :rtype: Tuple[plt.Figure, plt.Axes]
+    :raises: AssertionError if the required column(s) are not present in the DataFrame
+    :raises: ValueError if the data types are invalid
+    """
+    warnings.warn(
+        "edge_rank_plot is deprecated and will be removed in a future version. Use molecule_rank_plot instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    assert "edges" in data.columns, "column 'edges' is missing from DataFrame"
+    assert (
+        isinstance(data["edges"], pd.Series) and data["edges"].dtype == int
+    ), "'edges' must be a vector of integer values"
+
+    if group_by is not None:
+        assert (
+            group_by in data.columns
+        ), f"group variable '{group_by}' not found in DataFrame"
+
+        if data[group_by].dtype not in ["object", "category"]:
+            raise ValueError(
+                f"Invalid class '{data[group_by].dtype}' for column '{group_by}'. "
+                f"Expected a string or categorical value"
+            )
+        else:
+            edge_rank_df = data[[group_by, "edges"]].copy()
+            edge_rank_df["rank"] = edge_rank_df.groupby([group_by])["edges"].rank(
+                ascending=False, method="first"
+            )
+    else:
+        edge_rank_df = data[["edges"]].copy()
+        edge_rank_df["rank"] = edge_rank_df["edges"].rank(
+            ascending=False, method="first"
+        )
+
+    (
+        sns.relplot(data=edge_rank_df, x="rank", y="edges", hue=group_by, aspect=1.6)
+        .set(xscale="log", yscale="log")
+        .set_xlabels("Component rank (by number of edges)")
+        .set_ylabels("Number of edges")
     )
 
     return plt.gcf(), plt.gca()
