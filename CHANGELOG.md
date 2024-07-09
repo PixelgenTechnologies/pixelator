@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * The default transformation for the calculation of the colocalization score is now `rate-diff` instead of `log1p`.
+* Rename `edge_rank_plot` function to `molecule_rank_plot`.
 
 ### Fixed
 
