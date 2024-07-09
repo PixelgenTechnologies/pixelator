@@ -159,7 +159,7 @@ def local_g(
         else:
             W = A
             if k > 1:
-                # Exapand local neighborhood using matrix powers
+                # Expand local neighborhood using matrix powers
                 W = sp.sparse.linalg.matrix_power(W, k)
                 # Set all positive elements to 1
                 W.data = np.ones_like(W.data)

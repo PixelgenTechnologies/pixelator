@@ -307,6 +307,80 @@ def test_local_g_normalize_method_gstari(pentagram_graph):
     )
 
 
+def test_local_g_k4(pentagram_graph):
+    # Create a sparse adjacency matrix
+    A = pentagram_graph.get_adjacency_sparse()
+    # Create a 5x5 DataFrame of marker counts
+    counts = pd.DataFrame(
+        [
+            [1, 2, 3, 4, 5],
+            [6, 7, 8, 9, 10],
+            [11, 12, 13, 14, 15],
+            [16, 17, 18, 19, 20],
+            [21, 22, 23, 24, 25],
+        ],
+        columns=["A", "B", "C", "D", "E"],
+    )
+    counts.index.name = "node"
+    counts.columns.name = "markers"
+
+    # Compute local g-scores
+    gi_scores = local_g(
+        A, counts, k=4, use_weights=True, normalize_counts=True, method="gstari"
+    )
+
+    # Expected local g-scores
+    expected_gi_scores = pd.DataFrame.from_dict(
+        {
+            0: {
+                "A": -1.6919339037036998,
+                "B": -1.6919339037037184,
+                "C": 0.0,
+                "D": 1.6919339037036492,
+                "E": 1.691933903703703,
+            },
+            1: {
+                "A": -0.6945173598360008,
+                "B": -0.6945173598360104,
+                "C": 0.0,
+                "D": 0.6945173598359781,
+                "E": 0.6945173598359913,
+            },
+            2: {
+                "A": -0.30065880545156753,
+                "B": -0.3006588054515778,
+                "C": 0.0,
+                "D": 0.30065880545157325,
+                "E": 0.3006588054516006,
+            },
+            3: {
+                "A": 1.4593826070876255,
+                "B": 1.459382607087601,
+                "C": 0.0,
+                "D": -1.4593826070876004,
+                "E": -1.4593826070876499,
+            },
+            4: {
+                "A": 1.2277274619036243,
+                "B": 1.2277274619036218,
+                "C": 0.0,
+                "D": -1.2277274619036032,
+                "E": -1.2277274619036265,
+            },
+        },
+        orient="index",
+    )
+
+    expected_gi_scores.index.name = "node"
+    expected_gi_scores.columns.name = "markers"
+
+    # Compare the computed and expected local g-scores
+    assert isinstance(gi_scores, pd.DataFrame)
+    assert_frame_equal(
+        gi_scores.sort_index(), expected_gi_scores.sort_index(), check_column_type=False
+    )
+
+
 # Run the tests
 if __name__ == "__main__":
     pytest.main()
