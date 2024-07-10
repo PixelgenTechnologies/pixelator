@@ -17,7 +17,7 @@ def assert_backend_can_set_values(pixel_dataset_backend):
 
     assert not pixel_dataset_backend.edgelist.empty
     pixel_dataset_backend.edgelist = None
-    assert not pixel_dataset_backend.edgelist
+    assert pixel_dataset_backend.edgelist.empty
 
     assert not pixel_dataset_backend.polarization.empty
     pixel_dataset_backend.polarization = None

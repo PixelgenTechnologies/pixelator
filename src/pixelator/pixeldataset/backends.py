@@ -19,9 +19,7 @@ from anndata import AnnData
 
 from pixelator.pixeldataset.datastores import PixelDataStore
 from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
-from pixelator.pixeldataset.utils import (
-    _enforce_edgelist_types,
-)
+from pixelator.pixeldataset.types import EdgeList, EdgeListProtocol
 from pixelator.types import PathType
 
 
@@ -50,7 +48,7 @@ class PixelDatasetBackend(Protocol):
         """Return the edgelist."""
 
     @edgelist.setter
-    def edgelist(self, value: pd.DataFrame) -> None:
+    def edgelist(self, value: pd.DataFrame | EdgeListProtocol | None) -> None:
         """Set the edge list instance."""
 
     @property
@@ -109,7 +107,7 @@ class ObjectBasedPixelDatasetBackend:
     def __init__(
         self,
         adata: AnnData,
-        edgelist: pd.DataFrame,
+        edgelist: pd.DataFrame | EdgeListProtocol,
         metadata: Optional[Dict[str, Any]] = None,
         polarization: Optional[pd.DataFrame] = None,
         colocalization: Optional[pd.DataFrame] = None,
@@ -132,12 +130,13 @@ class ObjectBasedPixelDatasetBackend:
         if adata is None or adata.n_obs == 0:
             raise AssertionError("adata cannot be empty")
 
-        if edgelist is None or edgelist.shape[0] == 0:
-            if not allow_edgelist_to_be_empty:
-                raise AssertionError("edgelist cannot be empty")
-            edgelist = _enforce_edgelist_types(pd.DataFrame())
+        if isinstance(edgelist, pd.DataFrame):
+            edgelist = EdgeList(edgelist)
 
-        self._edgelist = _enforce_edgelist_types(edgelist.copy() if copy else edgelist)
+        if edgelist.is_empty() and not allow_edgelist_to_be_empty:
+            raise AssertionError("edgelist cannot be empty")
+
+        self._edgelist = edgelist.copy() if copy else edgelist
         self._adata = adata.copy() if copy else adata
         self._metadata = metadata
 
@@ -166,17 +165,19 @@ class ObjectBasedPixelDatasetBackend:
     @property
     def edgelist(self) -> pd.DataFrame:
         """Get the edge list for the pixel dataset."""
-        return self._edgelist
+        return self._edgelist.df
 
     @edgelist.setter
-    def edgelist(self, value: pd.DataFrame) -> None:
+    def edgelist(self, value: pd.DataFrame | EdgeListProtocol) -> None:
         """Set the edge list for the pixel dataset."""
+        if isinstance(value, pd.DataFrame) or value is None:
+            value = EdgeList(value)
         self._edgelist = value
 
     @property
     def edgelist_lazy(self) -> pl.LazyFrame:
         """Get a lazy frame representation of the edgelist."""
-        return pl.LazyFrame(self._edgelist)
+        return pl.LazyFrame(self._edgelist.df)
 
     @property
     def metadata(self) -> Optional[pd.DataFrame]:
@@ -248,16 +249,26 @@ class FileBasedPixelDatasetBackend:
             datastore = PixelDataStore.guess_datastore_from_path(path)
         self._datastore = datastore
         self._precomputed_layouts: PreComputedLayouts | None = None
+        self._edgelist_cache = None
 
     @cached_property
     def adata(self) -> AnnData:
         """Get the AnnData object for the pixel dataset."""
         return self._datastore.read_anndata()
 
-    @cached_property
+    @property
     def edgelist(self) -> pd.DataFrame:
         """Get the edge list object for the pixel dataset."""
-        return self._datastore.read_edgelist()
+        if not self._edgelist_cache:
+            self._edgelist_cache = EdgeList(self._datastore.read_edgelist())
+        return self._edgelist_cache.df
+
+    @edgelist.setter
+    def edgelist(self, value: pd.DataFrame | EdgeListProtocol) -> None:
+        """Set the edge list for the pixel dataset."""
+        if isinstance(value, pd.DataFrame) or value is None:
+            value = EdgeList(value)
+        self._edgelist_cache = value
 
     @property
     def edgelist_lazy(self) -> Optional[pl.LazyFrame]:

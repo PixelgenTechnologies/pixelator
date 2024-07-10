@@ -17,7 +17,8 @@ from anndata import concat as concatenate_anndata
 
 from pixelator.pixeldataset import PixelDataset
 from pixelator.pixeldataset.precomputed_layouts import aggregate_precomputed_layouts
-from pixelator.pixeldataset.utils import _enforce_edgelist_types, update_metrics_anndata
+from pixelator.pixeldataset.utils import update_metrics_anndata
+from pixelator.pixeldataset.types import EdgeListProtocol, EdgeList
 
 logger = logging.getLogger(__name__)
 
@@ -123,11 +124,9 @@ def simple_aggregate(
     update_metrics_anndata(adata=adata, inplace=True)
 
     if ignore_edgelists:
-        edgelists = pd.DataFrame()
+        edgelists = EdgeList(None)
     else:
-        edgelists = _enforce_edgelist_types(
-            _concatenate_edgelists(datasets, sample_names).to_pandas()
-        )
+        edgelists = _concatenate_edgelists(datasets, sample_names).to_pandas()
 
     polarizations = pd.concat(
         _get_attr_and_index_by_component(

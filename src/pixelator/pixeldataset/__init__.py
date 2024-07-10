@@ -31,8 +31,8 @@ from pixelator.pixeldataset.datastores import (
     ZipBasedPixelFileWithParquet,
 )
 from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
+from pixelator.pixeldataset.types import EdgeList, EdgeListProtocol
 from pixelator.pixeldataset.utils import (
-    _enforce_edgelist_types,
     update_metrics_anndata,
 )
 from pixelator.types import PathType
@@ -105,7 +105,7 @@ class PixelDataset:
     @staticmethod
     def from_data(
         adata: AnnData,
-        edgelist: Optional[pd.DataFrame],
+        edgelist: Optional[pd.DataFrame | EdgeListProtocol],
         metadata: Optional[Dict[str, Any]] = None,
         polarization: Optional[pd.DataFrame] = None,
         colocalization: Optional[pd.DataFrame] = None,
@@ -155,12 +155,14 @@ class PixelDataset:
     @property
     def edgelist(self) -> pd.DataFrame:
         """Get the edge list."""
-        return _enforce_edgelist_types(self._backend.edgelist)
+        return self._backend.edgelist
 
     @edgelist.setter
-    def edgelist(self, value: pd.DataFrame) -> None:
+    def edgelist(self, value: pd.DataFrame | EdgeListProtocol) -> None:
         """Set the edge list."""
-        self._backend.edgelist = _enforce_edgelist_types(value)
+        if isinstance(value, pd.DataFrame):
+            value = EdgeList(value)
+        self._backend.edgelist = value
 
     @property
     def edgelist_lazy(self) -> pl.LazyFrame:
@@ -395,7 +397,7 @@ class PixelDataset:
                 if change_components
                 else self.edgelist_lazy
             )
-            edgelist = _enforce_edgelist_types(edgelist_pred.collect().to_pandas())
+            edgelist = EdgeList(edgelist_pred.collect().to_pandas())
 
         if self.polarization is not None:
             polarization_mask = (

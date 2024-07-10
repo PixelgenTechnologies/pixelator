@@ -18,9 +18,6 @@ from pixelator.pixeldataset import (
     read,
 )
 from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
-from pixelator.pixeldataset.utils import (
-    _enforce_edgelist_types,
-)
 
 random.seed(42)
 np.random.seed(42)
@@ -45,7 +42,7 @@ def test_pixeldataset(setup_basic_pixel_dataset):
 
     assert_frame_equal(
         edgelist,
-        _enforce_edgelist_types(dataset.edgelist_lazy.collect().to_pandas()),
+        dataset.edgelist_lazy.collect().to_pandas(),
     )
 
     assert_frame_equal(
@@ -107,7 +104,7 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
         # this is expected since the lazy edgelist is an advanced feature
         # where the user will need to manage the required datatypes themselves
         # as needed.
-        _enforce_edgelist_types(dataset_new.edgelist_lazy.collect().to_pandas()),
+        dataset_new.edgelist_lazy.collect().to_pandas(),
     )
 
     assert_frame_equal(
@@ -419,33 +416,35 @@ def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
     )
 
 
-def test__enforce_edgelist_types():
-    # Typically we don't test private functions, but in this case
-    # I wanted to make sure that this function works as expected
-    # without exposing it as a public function (since the user shouldn't
-    # have to worry about it). Importing it here in tests, will have to
-    # be seen as a pragmatic solution to this problem.
-
-    data = pd.DataFrame(
-        {
-            "count": [1, 3, 1],
-            "upia": ["AAA", "AAA", "ATT"],
-            "upib": ["GGG", "GGG", "GCC"],
-            "umi": ["TAT", "ATA", "TTC"],
-            "marker": ["CD20", "CD20", "CD3"],
-            "sequence": ["AAA", "AAA", "TTT"],
-            "component": ["PXL000001", "PXL000001", "PXL000001"],
-        }
-    )
-
-    result = _enforce_edgelist_types(data)
-    expected = {
-        "count": "uint16",
-        "upia": "category",
-        "upib": "category",
-        "umi": "category",
-        "marker": "category",
-        "sequence": "category",
-        "component": "category",
-    }
-    assert result.dtypes.to_dict() == expected
+## TODO Move this test to the type
+# def test__enforce_edgelist_types():
+#    # Typically we don't test private functions, but in this case
+#    # I wanted to make sure that this function works as expected
+#    # without exposing it as a public function (since the user shouldn't
+#    # have to worry about it). Importing it here in tests, will have to
+#    # be seen as a pragmatic solution to this problem.
+#
+#    data = pd.DataFrame(
+#        {
+#            "count": [1, 3, 1],
+#            "upia": ["AAA", "AAA", "ATT"],
+#            "upib": ["GGG", "GGG", "GCC"],
+#            "umi": ["TAT", "ATA", "TTC"],
+#            "marker": ["CD20", "CD20", "CD3"],
+#            "sequence": ["AAA", "AAA", "TTT"],
+#            "component": ["PXL000001", "PXL000001", "PXL000001"],
+#        }
+#    )
+#
+#    result = _enforce_edgelist_types(data)
+#    expected = {
+#        "count": "uint16",
+#        "upia": "category",
+#        "upib": "category",
+#        "umi": "category",
+#        "marker": "category",
+#        "sequence": "category",
+#        "component": "category",
+#    }
+#    assert result.dtypes.to_dict() == expected
+#
