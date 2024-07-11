@@ -132,7 +132,8 @@ jobs:
       fail-fast: false
       matrix:
         case:
-          - D21
+          - mpx_v1
+          - mpx_v2
 
     if: needs.pre_job.outputs.should_skip == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
     steps:
