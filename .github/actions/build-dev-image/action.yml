@@ -59,7 +59,7 @@ runs:
           bakeSetCommands.push(...platformArray)
 
           # Override the version in the container if we are run in a version tag push event
-          if ( context.eventName === "push" && github.ref.startsWith('refs/tags/v) ) {
+          if ( context.eventName === "push" && github.ref.startsWith('refs/tags/v') ) {
             bakeSetCommands.push("*.args.VERSION_OVERRIDE=" + "${{ steps.meta.outputs.version }}" )
           }
 
