@@ -117,7 +117,7 @@ class AnnotateSampleReport(SampleReport):
     # ------------------------------------------------------------------------------- #
 
     aggregate_count: int | None = pydantic.Field(
-        description="The number of components identified as aggregates and removed from results."
+        description="The number of components identified as aggregates."
     )
 
     molecules_in_aggregates_count: int | None = pydantic.Field(
@@ -127,6 +127,23 @@ class AnnotateSampleReport(SampleReport):
     reads_in_aggregates_count: int | None = pydantic.Field(
         description="The total number of reads for unique molecules in aggregates."
     )
+
+    @pydantic.computed_field(
+        return_type=float,
+        description=textwrap.dedent(
+            """The fraction of components identified as aggregates or
+            None if aggregate recovery was disabled.
+            """
+        ),
+    )
+    def fraction_aggregate_components(self) -> float | None:
+        """Return the fraction of the total cell count that is marked as aggregates.
+
+        Returns None if aggregate recovery was disabled during analysis.
+        """
+        if self.aggregate_count is not None and self.cell_count > 0:
+            return self.aggregate_count / self.cell_count
+        return None
 
     @pydantic.computed_field(
         return_type=float,

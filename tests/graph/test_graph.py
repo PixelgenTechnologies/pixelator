@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 from pandas.testing import assert_frame_equal
 from pixelator.graph import Graph
 
@@ -554,6 +554,29 @@ def test_layout_coordinates_3d_pmds_should_have_descending_order_iqr(pentagram_g
 
     assert iqr_x > iqr_y
     assert iqr_y > iqr_z
+
+
+def test_layout_coordinates_3d_pmds_with_weights(pentagram_graph):
+    result = pentagram_graph.layout_coordinates(
+        layout_algorithm="pmds_3d",
+        get_node_marker_matrix=True,
+        cache=False,
+        only_keep_a_pixels=False,
+        random_seed=1234,
+        pivots=4,
+        weights="prob_dist",
+    )
+
+    l2 = np.linalg.norm(result[["x", "y", "z"]], axis=1)
+    expected = [
+        2998.85729688,
+        2998.85729688,
+        3569.35412551,
+        2998.85729688,
+        3569.35412551,
+    ]
+
+    assert_array_almost_equal(l2, expected, decimal=4)
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)

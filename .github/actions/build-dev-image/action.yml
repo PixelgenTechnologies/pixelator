@@ -1,9 +1,6 @@
 name: "build-dev-image"
 description: "Build a dev image and push it to the Pixelgen container registries"
 inputs:
-  tag:
-    description: "The tag to use for the image"
-    required: true
   cache-from:
     description: "The cache to use for the build"
     default: ""
@@ -61,7 +58,12 @@ runs:
           bakeSetCommands.push(...cacheToArray)
           bakeSetCommands.push(...platformArray)
 
-          bakeSetCommandsText = bakeSetCommands.join('\n')
+          // Override the version in the container if we are run in a version tag push event
+          if ( context.eventName === "push" && context.ref.startsWith('refs/tags/v') ) {
+            bakeSetCommands.push("*.args.VERSION_OVERRIDE=" + "${{ steps.meta.outputs.version }}" )
+          }
+
+          const bakeSetCommandsText = bakeSetCommands.join('\n')
           core.setOutput('set', bakeSetCommandsText)
 
     - name: Build and push to ghcr and ecr

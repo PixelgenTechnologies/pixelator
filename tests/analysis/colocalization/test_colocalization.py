@@ -58,6 +58,7 @@ def test_colocalization_from_component_edgelist(
         neighbourhood_size=1,
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
     )
 
     expected = pd.DataFrame.from_dict(
@@ -94,6 +95,7 @@ def test_colocalization_scores(enable_backend, full_graph_edgelist: pd.DataFrame
         neighbourhood_size=1,
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
     )
 
     expected = pd.DataFrame.from_dict(
@@ -131,6 +133,7 @@ def test_colocalization_scores_log1p(enable_backend, full_graph_edgelist: pd.Dat
         neighbourhood_size=1,
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
         random_seed=1477,
     )
 
@@ -171,6 +174,7 @@ def test_colocalization_scores_ratediff(
         neighbourhood_size=1,
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
         random_seed=1477,
     )
 
@@ -201,6 +205,43 @@ def test_colocalization_scores_ratediff(
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
+def test_colocalization_scores_low_marker_removed(
+    enable_backend, full_random_graph_edgelist: pd.DataFrame
+):
+    component_edges = full_random_graph_edgelist.loc[
+        full_random_graph_edgelist["component"] == "PXLCMP0000000", :
+    ]
+    marker_counts = component_edges.groupby("marker").count()["count"]
+    second_highest_marker_count = marker_counts.sort_values()[-2]
+    result2 = colocalization_scores(
+        edgelist=component_edges,
+        use_full_bipartite=True,
+        transformation="rate-diff",
+        neighbourhood_size=0,
+        n_permutations=50,
+        min_region_count=0,
+        min_marker_count=2 * second_highest_marker_count - 1,
+        random_seed=1477,
+    )
+
+    assert result2.shape[0] == 1
+
+    third_highest_marker_count = marker_counts.sort_values()[-3]
+    result3 = colocalization_scores(
+        edgelist=component_edges,
+        use_full_bipartite=True,
+        transformation="rate-diff",
+        neighbourhood_size=0,
+        n_permutations=50,
+        min_region_count=0,
+        min_marker_count=2 * third_highest_marker_count - 1,
+        random_seed=1477,
+    )
+
+    assert result3.shape[0] == 3
+
+
+@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_colocalization_scores_should_not_fail_when_one_component_has_single_node(
     enable_backend,
     full_graph_edgelist,
@@ -216,6 +257,7 @@ def test_colocalization_scores_should_not_fail_when_one_component_has_single_nod
         neighbourhood_size=1,
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
         random_seed=1477,
     )
 
@@ -234,6 +276,7 @@ def test_colocalization_scores_should_warn_when_no_data(
             neighbourhood_size=1,
             n_permutations=50,
             min_region_count=0,
+            min_marker_count=0,
             random_seed=1477,
         )
     assert (
@@ -247,6 +290,7 @@ class TestColocalizationAnalysis:
         transformation_type="raw",
         n_permutations=50,
         min_region_count=0,
+        min_marker_count=0,
         neighbourhood_size=1,
     )
 

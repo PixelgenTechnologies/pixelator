@@ -51,6 +51,7 @@ def colocalization_from_component_edgelist(
     n_permutations: int = 50,
     use_full_bipartite: bool = True,
     min_region_count: int = 5,
+    min_marker_count: int = 5,
     random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """Get the colocalization scores for the component in the given `edgelist`.
@@ -65,6 +66,8 @@ def colocalization_from_component_edgelist(
                                projection, defaults to True
     :param min_region_count: minimum number of counts in region to consider, defaults
                              to 5
+    :param min_marker_count: the minimum number of counts of a marker to calculate
+                             colocalization
     :param random_seed: Set the random seed for the permutation tests, defaults to None
     :return: a dataframe with computed colocalization scores
     :rtype: pd.DataFrame
@@ -84,6 +87,7 @@ def colocalization_from_component_edgelist(
         neighbourhood_size=neighbourhood_size,
         n_permutations=n_permutations,
         min_region_count=min_region_count,
+        min_marker_count=min_marker_count,
         random_seed=random_seed,
     )
 
@@ -109,6 +113,7 @@ def colocalization_from_component_graph(
     neighbourhood_size: int = 1,
     n_permutations: int = 50,
     min_region_count: int = 5,
+    min_marker_count: int = 5,
     random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """Compute the colocalization scores for this component graph.
@@ -121,19 +126,28 @@ def colocalization_from_component_graph(
                            p-values and z-scores, defaults to 50
     :param min_region_count: minimum number of counts in region to consider, defaults
                              to 5
+    :param min_marker_count: the minimum number of counts of a marker to calculate
+                             colocalization
     :param random_seed: Set the random seed for the permutation tests, defaults to None
     :return: a dataframe containing colocalization scores for this component
     :rtype: pd.DataFrame
     """
     logger.debug("Computing colocalization for component: %s", component_id)
     logger.debug("Prepare the graph data for computing colocalization")
-    marker_counts_by_region = prepare_from_graph(graph, n_neighbours=neighbourhood_size)
 
+    raw_marker_counts = graph.node_marker_counts
+    # Record markers to keep
+    # Remove markers with zero variance and markers below minimum marker count
+    markers_to_keep = raw_marker_counts.columns[
+        (raw_marker_counts != 0).any(axis=0)
+        & (raw_marker_counts.nunique() > 1)
+        & (raw_marker_counts.sum() >= min_marker_count)
+    ]
+
+    marker_counts_by_region = prepare_from_graph(graph, n_neighbours=neighbourhood_size)
+    marker_counts_by_region = marker_counts_by_region[markers_to_keep]
     marker_counts_by_region = filter_by_region_counts(
         marker_counts_by_region, min_region_counts=min_region_count
-    )
-    marker_counts_by_region = filter_by_unique_values(
-        marker_counts_by_region, at_least_n_unique=2
     )
 
     nrow, ncols = marker_counts_by_region.shape
@@ -187,6 +201,7 @@ def colocalization_scores(
     neighbourhood_size: int = 1,
     n_permutations: int = 50,
     min_region_count: int = 5,
+    min_marker_count: int = 5,
     random_seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """Compute colocalization scores for antibody pairs.
@@ -225,6 +240,8 @@ def colocalization_scores(
     :param min_region_count: The minimum size of the region (e.g. number
                              of counts in the neighbourhood) required
                              for it to be considered
+    :param min_marker_count: the minimum number of counts of a marker to calculate
+                             colocalization
     :param random_seed: Set a random seed for the permutation function
     :returns: a pd.DataFrame of scores
     :rtype: pd.DataFrame
@@ -273,6 +290,7 @@ def colocalization_scores(
                 neighbourhood_size=neighbourhood_size,
                 n_permutations=n_permutations,
                 min_region_count=min_region_count,
+                min_marker_count=min_marker_count,
                 random_seed=random_seed,
             )
 
@@ -402,6 +420,7 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         neighbourhood_size: int,
         n_permutations: int,
         min_region_count: int,
+        min_marker_count: int,
     ):
         """Initialize the ColocalizationAnalysis.
 
@@ -413,11 +432,14 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         :param min_region_count: The minimum size of the region (e.g. number
                              of counts in the neighbourhood) required
                              for it to be considered for colocalization analysis
+        :param min_marker_count: the minimum number of counts of a marker to calculate
+                             colocalization
         """
         self.transformation_type = transformation_type
         self.neighbourhood_size = neighbourhood_size
         self.n_permutations = n_permutations
         self.min_region_count = min_region_count
+        self.min_marker_count = min_marker_count
 
     def run_on_component(self, component: Graph, component_id: str) -> pd.DataFrame:
         """Run colocalization analysis on the component."""
@@ -429,6 +451,7 @@ class ColocalizationAnalysis(PerComponentAnalysis):
             neighbourhood_size=self.neighbourhood_size,
             n_permutations=self.n_permutations,
             min_region_count=self.min_region_count,
+            min_marker_count=self.min_marker_count,
         )
 
     def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:

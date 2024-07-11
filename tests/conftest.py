@@ -138,6 +138,16 @@ def random_graph_edgelist_fixture():
     return edgelist
 
 
+@pytest.fixture(name="full_random_graph_edgelist", scope="module")
+def full_random_graph_edgelist_fixture():
+    """Create an edgelist based on a random graph."""
+    g = create_random_graph(n_nodes=500, prob=0.005)
+    edgelist = create_simple_edge_list_from_graph(g, random_markers=True)
+    edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
+    edgelist = enforce_edgelist_types_for_tests(edgelist)
+    return edgelist
+
+
 @pytest.fixture(name="layout_df")
 def layout_df_fixture() -> pd.DataFrame:
     nbr_of_rows = 300

@@ -1,0 +1,40 @@
+small-mpx-v2:
+  design: D21
+  panel: "human-sc-immunology-spatial-proteomics-2"
+  panel_file: null
+  sample_ids:
+    - Sample01_PBMC_1085_500k_r1
+  input_files:
+    - ../data/Sample01_PBMC_1085_500k_r1_R1_001.fastq.gz
+    - ../data/Sample01_PBMC_1085_500k_r1_R2_001.fastq.gz
+
+  options:
+    common:
+      verbose: true
+    graph:
+      params: ["--multiplet-recovery"]
+    annotate:
+      params: ["--min-size", "1", "--max-size", "100000"]
+
+    layout:
+      # Overriding the default pmds here since pmds requires at least
+      # 50 nodes to work.
+      params: ["--layout-algorithm", "fruchterman_reingold"]
+
+    analysis:
+      params:
+        [
+          "--compute-polarization",
+          "--compute-colocalization",
+          "--use-full-bipartite",
+          "--polarization-n-permutations",
+          "5",
+          "--colocalization-min-region-count",
+          "0",
+          "--colocalization-min-marker-count",
+          "0",
+          "--colocalization-n-permutations",
+          "10",
+          "--colocalization-neighbourhood-size",
+          "1",
+        ]

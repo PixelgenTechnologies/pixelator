@@ -41,7 +41,7 @@ def list_single_cell_panels(ctx: click.Context, param: Any, value: Any) -> None:
     if not value or ctx.resilient_parsing:
         return
 
-    options = list(config.panels.keys())
+    options = config.list_panel_names(include_aliases=True)
     for option in options:
         click_echo(option)
 

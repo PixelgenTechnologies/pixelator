@@ -10,11 +10,10 @@ import pytest
 from numpy.testing import assert_almost_equal
 from pixelator.graph import Graph
 from pixelator.plot import (
-    _calculate_densities,
-    _calculate_distance_to_unit_sphere_zones,
-    _unit_sphere_surface,
     cell_count_plot,
+    density_scatter_plot,
     edge_rank_plot,
+    molecule_rank_plot,
     plot_2d_graph,
     plot_3d_graph,
     plot_3d_heatmap,
@@ -22,6 +21,11 @@ from pixelator.plot import (
     plot_colocalization_diff_volcano,
     plot_colocalization_heatmap,
     scatter_umi_per_upia_vs_tau,
+)
+from pixelator.plot.layout_plots import (
+    _calculate_densities,
+    _calculate_distance_to_unit_sphere_zones,
+    _unit_sphere_surface,
 )
 from pytest_snapshot.plugin import Snapshot
 
@@ -45,6 +49,7 @@ def test_plot_3d_graph(
     pxl_data, *_ = setup_basic_pixel_dataset
     result = plot_3d_graph(
         pxl_data,
+        layout_algorithm="pmds_3d",
         component=component,
         marker=marker,
         suppress_fig=True,
@@ -52,6 +57,63 @@ def test_plot_3d_graph(
     assert isinstance(result, go.Figure)
     # snapshot.assert_match(result.to_json(), "plot_3d_graph_fig.json")
     # TODO: Fix the snapshot test - Even though the plotly version matches (5.18.0), the test fails on github
+
+
+@pytest.mark.parametrize(
+    "component, marker",
+    [
+        ("PXLCMP0000000", "CD45"),
+        ("PXLCMP0000000", None),
+    ],
+)
+def test_plot_3d_graph_precomputed(
+    snapshot: Snapshot, component, marker, setup_basic_pixel_dataset
+):
+    """Test `plot_3d_graph` function.
+
+    :param snapshot: testing snapshot directory
+    """
+    np.random.seed(0)
+    snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"
+    pxl_data, *_ = setup_basic_pixel_dataset
+    assert pxl_data.precomputed_layouts is not None
+    result = plot_3d_graph(
+        pxl_data,
+        layout_algorithm=None,
+        component=component,
+        marker=marker,
+        suppress_fig=True,
+    )
+    assert isinstance(result, go.Figure)
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_2d_graph_precomputed",
+)
+@pytest.mark.parametrize(
+    "component, marker, show_b_nodes",
+    [
+        ("PXLCMP0000000", "CD45", False),
+        ((["PXLCMP0000001", "PXLCMP0000002"], ["CD3", "CD45", "CD19"], False)),
+        (("PXLCMP0000000", "pixel_type", True)),
+    ],
+)
+def test_plot_2d_graph_precomputed(
+    setup_basic_pixel_dataset, component, marker, show_b_nodes
+):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    assert pxl_data.precomputed_layouts is not None
+    fig, _ = plot_2d_graph(
+        pxl_data,
+        layout_algorithm=None,
+        component=component,
+        marker=marker,
+        show_b_nodes=show_b_nodes,
+        random_seed=0,
+    )
+    return fig
 
 
 @pytest.mark.mpl_image_compare(
@@ -71,6 +133,7 @@ def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_node
     pxl_data, *_ = setup_basic_pixel_dataset
     fig, _ = plot_2d_graph(
         pxl_data,
+        layout_algorithm="pmds",
         component=component,
         marker=marker,
         show_b_nodes=show_b_nodes,
@@ -172,6 +235,38 @@ def test_cell_count_plot():
         }
     )
     plot, _ = cell_count_plot(data, color_by="group1", group_by="group2")
+    return plot
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=False,
+    baseline_dir="../snapshots/test_plot/test_molecule_rank_plot",
+)
+def test_molecule_rank_plot():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {
+            "molecules": np.round(10 ** np.random.normal(4, 0.3, 500)).astype(int),
+            "group": np.random.choice(["A", "B"], 500),
+        }
+    )
+    plot, _ = molecule_rank_plot(data, group_by="group")
+    return plot
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=False,
+    baseline_dir="../snapshots/test_plot/test_molecule_rank_plot",
+)
+def test_molecule_rank_plot_back_compatibility():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {
+            "edges": np.round(10 ** np.random.normal(4, 0.3, 500)).astype(int),
+            "group": np.random.choice(["A", "B"], 500),
+        }
+    )
+    plot, _ = molecule_rank_plot(data, group_by="group")
     return plot
 
 
@@ -650,3 +745,71 @@ def test_plot_3d_heatmap(edgelist):
             marker="CD3",
             distance_cutoff=0.4,
         )
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_density_scatter_plot/",
+)
+@pytest.mark.parametrize(
+    "marker1, marker2, extra_params",
+    [
+        (
+            "CD3",
+            "CD8",
+            {
+                "facet_row": None,
+                "facet_column": None,
+                "gate": pd.Series(
+                    [600, 10, 1000, 20], index=["xmin", "ymin", "xmax", "ymax"]
+                ),
+            },
+        ),
+        (
+            "CD3",
+            "CD8",
+            {
+                "facet_row": "mean_molecules_per_a_pixel",
+                "facet_column": None,
+                "gate": None,
+            },
+        ),
+        (
+            "CD3",
+            "CD8",
+            {
+                "facet_row": None,
+                "facet_column": "mean_molecules_per_a_pixel",
+                "gate": pd.Series(
+                    [600, 10, 1000, 20], index=["xmin", "ymin", "xmax", "ymax"]
+                ),
+            },
+        ),
+    ],
+)
+def test_density_scatter_plot(
+    setup_basic_pixel_dataset, marker1, marker2, extra_params
+):
+    facet_row = extra_params["facet_row"]
+    facet_column = extra_params["facet_column"]
+    gate = extra_params["gate"]
+
+    pxl_data, *_ = setup_basic_pixel_dataset
+    np.random.seed(0)
+    pxl_data.adata[:, marker1] = pxl_data.adata[
+        :, marker1
+    ].X.flatten() + np.random.randint(1, 20, size=pxl_data.adata.shape[0])
+    pxl_data.adata[:, marker2] = pxl_data.adata[
+        :, marker2
+    ].X.flatten() + np.random.randint(1, 20, size=pxl_data.adata.shape[0])
+    show_marginal = (facet_column is None) & (facet_row is None)
+    fig, _ = density_scatter_plot(
+        pxl_data.adata,
+        marker1=marker1,
+        marker2=marker2,
+        facet_row=facet_row,
+        facet_column=facet_column,
+        gate=gate,
+        show_marginal=show_marginal,
+    )
+    return fig

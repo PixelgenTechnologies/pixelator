@@ -1,6 +1,6 @@
 """Tests for pixeldataset.aggregation module.
 
-Copyright (c) 2022 Pixelgen Technologies AB.
+Copyright © 2024 Pixelgen Technologies AB.
 """
 
 # pylint: disable=redefined-outer-name
@@ -185,6 +185,25 @@ def test_simple_aggregate(setup_basic_pixel_dataset):
 
     assert list(result.metadata.keys()) == ["samples"]
     assert result.metadata["samples"]["sample1"] == dataset_1.metadata
+
+    assert len(result.precomputed_layouts.to_df()) == 2 * len(
+        dataset_1.precomputed_layouts.to_df()
+    )
+
+
+def test_simple_aggregate_do_not_have_problems_with_layouts_when_working_with_files(
+    setup_basic_pixel_dataset, tmp_path
+):
+    dataset_1, *_ = setup_basic_pixel_dataset
+    tmp_data_set_path_1 = tmp_path / "dataset_1.pxl"
+    tmp_data_set_path_2 = tmp_path / "dataset_2.pxl"
+    dataset_1.save(tmp_data_set_path_1)
+    dataset_1.save(tmp_data_set_path_2)
+
+    result = simple_aggregate(
+        sample_names=["sample1", "sample2"],
+        datasets=[read(tmp_data_set_path_1), read(tmp_data_set_path_2)],
+    )
 
     assert len(result.precomputed_layouts.to_df()) == 2 * len(
         dataset_1.precomputed_layouts.to_df()

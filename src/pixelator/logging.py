@@ -214,6 +214,11 @@ class LoggingSetup:
                 # and thus we ignore them here.
                 return False
 
+            if issubclass(exc_type, SystemExit):
+                # SystemExit is raised when the application has been explicitly
+                # directed to exit, so we don't what a trace dumped for that.
+                return False
+
             self._root_logger.critical(
                 "Unhandled exception of type: {}".format(exc_type.__name__)
             )

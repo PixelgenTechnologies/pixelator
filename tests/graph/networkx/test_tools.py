@@ -19,6 +19,7 @@ def create_random_graph(n_nodes: int, prob: float) -> Graph:
     and a probability prob of connecting two
     nodes with an edge
     """
+    random.seed(0)
     rng = np.random.default_rng(2)
     edge_list = []
     for i in range(0, n_nodes):

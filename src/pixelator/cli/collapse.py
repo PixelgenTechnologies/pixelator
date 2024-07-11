@@ -3,6 +3,7 @@
 Copyright © 2022 Pixelgen Technologies AB.
 """
 
+import sys
 from collections import defaultdict
 from concurrent import futures
 from pathlib import Path
@@ -23,6 +24,38 @@ from pixelator.utils import (
     timer,
     write_parameters_file,
 )
+
+
+def _handle_errors(jobs, executor):
+    for job in jobs:
+        exception = job.exception()
+        if exception is None:
+            continue
+
+        logger.error(
+            "Found an issue in the process pool. Trying to determine what went wrong and set the correct exit code. Exception was: %s",
+            exception,
+        )
+        process_map = executor._processes
+        for pid in process_map.keys():
+            exit_code = process_map[pid].exitcode
+            if exit_code is not None and exit_code != 0:
+                logger.error(
+                    "The child process in the process pool returned a non-zero exit code: %s.",
+                    exit_code,
+                )
+                # If we have an out of memory exception, make sure we exit with that.
+                if abs(exit_code) == 9:
+                    logger.error(
+                        "One of the child processes was killed (exit code: 9). "
+                        "Usually this is caused by the out-of-memory killer terminating the process. "
+                        "The parent process will return an exit code of 137 to indicate that it terminated because of a kill signal in the child process."
+                    )
+                    sys.exit(137)
+        logger.error(
+            "Was unable to determine what when wrong in process pool. Will raise original exception."
+        )
+        raise exception
 
 
 @click.command(
@@ -238,12 +271,12 @@ def collapse(
                             min_count=min_count,
                         )
                     )
+            jobs = list(futures.as_completed(jobs))
+            _handle_errors(jobs, executor)
 
         total_input_reads = 0
         tmp_files = []
-        for job in futures.as_completed(jobs):
-            if job.exception() is not None:
-                raise job.exception()
+        for job in jobs:
             # the worker returns a path to a file (temp antibody edge list)
             tmp_file, input_reads_count = job.result()
             if tmp_file is not None:

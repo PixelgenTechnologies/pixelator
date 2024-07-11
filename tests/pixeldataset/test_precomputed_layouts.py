@@ -436,7 +436,7 @@ class TestGeneratePrecomputedLayoutsForComponents:
         } | set(pixel_dataset.adata.var.index)
 
         assert set(df["component"]) == set(pixel_dataset.adata.obs.index)
-        assert set(df["layout"]) == {"pmds_3d"}
+        assert set(df["layout"]) == {"wpmds_3d"}
 
     def test_generate_precomputed_layouts_for_components_with_specific_components(
         self, pixel_dataset
