@@ -2,7 +2,7 @@
 # name: human-sc-immunology-spatial-proteomics-2
 # description: >-
 #     Single Cell Spatial Proteomics Immunology Panel II, Human
-# version: 0.3.0
+# version: 0.1.0
 # ---
 marker_id,control,nuclear,full_name,alt_id,sequence,conj_id
 B2M,,,,,TAGCGCAG,IMM002P02C001
