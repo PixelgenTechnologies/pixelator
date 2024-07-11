@@ -58,12 +58,12 @@ runs:
           bakeSetCommands.push(...cacheToArray)
           bakeSetCommands.push(...platformArray)
 
-          # Override the version in the container if we are run in a version tag push event
-          if ( context.eventName === "push" && github.ref.startsWith('refs/tags/v) ) {
+          // Override the version in the container if we are run in a version tag push event
+          if ( context.eventName === "push" && github.ref.startsWith('refs/tags/v') ) {
             bakeSetCommands.push("*.args.VERSION_OVERRIDE=" + "${{ steps.meta.outputs.version }}" )
           }
 
-          bakeSetCommandsText = bakeSetCommands.join('\n')
+          const bakeSetCommandsText = bakeSetCommands.join('\n')
           core.setOutput('set', bakeSetCommandsText)
 
     - name: Build and push to ghcr and ecr
