@@ -5,11 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.2] - 2024-07-15
+
+### Changed
+
+-   Bump polars to stable 1.x series
+
+### Fixed
+
+-   Fix a qc report crash issue when the layout stage is run in a pipeline due to an unsupported parameter type.
+
 ## [0.18.1] - 2024-07-12
 
 ### Changed
 
--   Bump `umi_tools` version requirements 
+-   Bump `umi_tools` version requirements
 
 ## [0.18.0] - 2024-07-11
 
