@@ -418,7 +418,7 @@ def _compute_layouts(
                         .sort_index(axis=1)
                     )
                     .with_columns(
-                        component=pl.lit(component),
+                        component=pl.lit(component[0]),
                         graph_projection=pl.lit("bipartite"),
                         layout=pl.lit(layout_algorithm),
                     )

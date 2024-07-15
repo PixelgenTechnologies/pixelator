@@ -166,7 +166,7 @@ class PixelDataset:
     def edgelist_lazy(self) -> pl.LazyFrame:
         """Get the edge list as a lazy dataframe."""
         lz_edgelist = self._backend.edgelist_lazy
-        if "index" in lz_edgelist.columns:
+        if "index" in set(lz_edgelist.collect_schema().names()):
             warnings.warn(
                 "A column called `index` was identified in your edgelist. "
                 "This will be removed."
@@ -243,7 +243,7 @@ class PixelDataset:
             potential_component = self.edgelist_lazy.filter(
                 pl.col("component") == component_id
             )
-            if potential_component.fetch(1).is_empty():
+            if potential_component.head(1).collect().is_empty():
                 raise KeyError(f"{component_id} not found in edgelist")
             return Graph.from_edgelist(
                 potential_component,

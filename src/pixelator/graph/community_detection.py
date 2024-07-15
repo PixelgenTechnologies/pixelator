@@ -275,7 +275,7 @@ def recovered_component_info(
         merged.select(pl.col("component"), pl.col("component_new"))  # type: ignore
         .group_by(pl.col("component"))
         .agg(pl.col("component_new").unique().drop_nulls())
-        .collect(streaming=True, projection_pushdown=False)
+        .collect(streaming=True)
         .iter_rows()
     )
 
