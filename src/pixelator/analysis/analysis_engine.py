@@ -148,7 +148,7 @@ def edgelist_to_component_stream(
         .items()
     ):
         yield (
-            component_id,
+            str(component_id[0]),  # component id is a tuple here, hence the [0]
             Graph.from_edgelist(
                 edgelist=component_df.lazy(),
                 add_marker_counts=True,
