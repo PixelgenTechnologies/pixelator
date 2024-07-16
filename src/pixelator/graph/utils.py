@@ -439,7 +439,7 @@ def _update_edgelist_membership_lazy_frame(
     }
 
     def _map_edge_index_to_component_id():
-        return pl.col("edge_index").map_dict(edge_index_to_component_mapping)
+        return pl.col("edge_index").replace(edge_index_to_component_mapping)
 
     def _build_component_name_str():
         return pl.format(
@@ -457,7 +457,7 @@ def _update_edgelist_membership_lazy_frame(
         .with_columns(_build_component_name_str().alias("component"))
     )
     edgelist_with_component_info = edgelist_with_component_info.drop(
-        columns=["edge_index", "component_index"]
+        ["edge_index", "component_index"]
     )
     return edgelist_with_component_info
 
