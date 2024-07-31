@@ -305,6 +305,7 @@ class NetworkXGraphBackend(GraphBackend):
             graph,
             use_modularity=True,
             randomness=beta,
+            random_seed=42,
             extra_forced_iterations=n_iterations,
             **kwargs,
         )
