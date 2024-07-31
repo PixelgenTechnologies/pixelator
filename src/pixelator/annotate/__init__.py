@@ -221,7 +221,7 @@ def annotate_components(
     # components clustering
     if adata.n_obs > MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION:
         # perform the unsupervised clustering
-        cluster_components(adata=adata, inplace=True)
+        cluster_components(adata=adata, inplace=True, random_seed=1)
     else:
         logger.warning(
             ("Skipping clustering since there are less than %s components"),
