@@ -86,10 +86,10 @@ ENV ANNOY_TARGET_VARIANT="${TARGETVARIANT:-v3}"
 RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
     export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
     echo "Building Annoy for explicit target $TARGETPLATFORM/$ANNOY_TARGET_VARIANT"; \
-    pip3.11 install --prefix=/runtime -r requirements.txt; \
+    pip3.11 install -I --prefix=/runtime -r requirements.txt; \
    else \
         echo "Building Annoy without implicit target $TARGETPLATFORM"; \
-        pip3.11 install --prefix=/runtime -r requirements.txt; \
+        pip3.11 install -I --prefix=/runtime -r requirements.txt; \
     fi \
     && rm requirements.txt
 
@@ -101,7 +101,7 @@ COPY poetry.lock pyproject.toml /pixelator/
 COPY .git /pixelator/.git
 
 RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi
-RUN pip3.11 install --prefix=/runtime -r requirements.txt && rm requirements.txt
+RUN pip3.11 install -I --prefix=/runtime -r requirements.txt && rm requirements.txt
 
 # ------------------------------------------
 # -- Build the pixelator package
@@ -158,7 +158,7 @@ RUN ldconfig /usr/local/lib64
 
 COPY --from=build-pixelator /dist /dist
 RUN ls -alh /dist/
-RUN pip3.11 install /dist/*.tar.gz
+RUN pip3.11 install --prefix /usr/ /dist/*.tar.gz
 RUN rm -rf /dist
 
 RUN pip3.11 cache purge
