@@ -4,7 +4,7 @@ ARG USE_ENTRYPOINT=false
 ARG MAKEJOBS=4
 
 # Install pixelator dependencies in a separate stage to improve caching
-FROM registry.fedoraproject.org/fedora-minimal:39 as runtime-base
+FROM registry.fedoraproject.org/fedora-minimal:40 as runtime-base
 RUN microdnf install -y \
         python3.11 \
         git \
@@ -49,7 +49,7 @@ RUN microdnf install -y \
      && microdnf clean all
 
 
-# Build Fastp from source
+# Build Fastp and isal from source
 FROM builder-base as build-fastp
 
 RUN git clone https://github.com/intel/isa-l.git
@@ -86,10 +86,10 @@ ENV ANNOY_TARGET_VARIANT="${TARGETVARIANT:-v3}"
 RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
     export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
     echo "Building Annoy for explicit target $TARGETPLATFORM/$ANNOY_TARGET_VARIANT"; \
-    pip3.11 install --prefix=/runtime -r requirements.txt; \
+    pip3.11 install -I --prefix=/runtime -r requirements.txt; \
    else \
         echo "Building Annoy without implicit target $TARGETPLATFORM"; \
-        pip3.11 install --prefix=/runtime -r requirements.txt; \
+        pip3.11 install -I --prefix=/runtime -r requirements.txt; \
     fi \
     && rm requirements.txt
 
@@ -101,7 +101,7 @@ COPY poetry.lock pyproject.toml /pixelator/
 COPY .git /pixelator/.git
 
 RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi
-RUN pip3.11 install --prefix=/runtime -r requirements.txt && rm requirements.txt
+RUN pip3.11 install -I --prefix=/runtime -r requirements.txt && rm requirements.txt
 
 # ------------------------------------------
 # -- Build the pixelator package
@@ -132,7 +132,7 @@ FROM runtime-base as runtime-amd64
 
 # Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
-COPY --from=poetry-deps-install-amd64 /runtime/ /usr/local/
+COPY --from=poetry-deps-install-amd64 /runtime/ /usr/
 
 # ------------------------------------------
 # -- Build the runtime environment for arm64
@@ -142,7 +142,7 @@ FROM runtime-base as runtime-arm64
 
 # Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
-COPY --from=poetry-deps-install-arm64 /runtime/ /usr/local/
+COPY --from=poetry-deps-install-arm64 /runtime/ /usr/
 
 # ------------------------------------------
 # -- Build the final image
@@ -154,12 +154,11 @@ FROM runtime-${TARGETARCH} as runtime-final
 # We add this explicitly since nextflow often runs with PYTHONNOUSERSITE set
 # to fix interference with conda and this can cause problems.
 # Fastp will also build isal and we need to make that available
-ENV PYTHONPATH="$PYTHONPATH:/usr/local/lib/python3.11/site-packages:/usr/local/lib64/python3.11/site-packages"
 RUN ldconfig /usr/local/lib64
 
 COPY --from=build-pixelator /dist /dist
 RUN ls -alh /dist/
-RUN pip3.11 install /dist/*.tar.gz
+RUN pip3.11 install --prefix /usr/ /dist/*.tar.gz
 RUN rm -rf /dist
 
 RUN pip3.11 cache purge
