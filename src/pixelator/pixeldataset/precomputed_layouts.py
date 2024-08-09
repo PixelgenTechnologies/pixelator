@@ -315,13 +315,17 @@ class PreComputedLayouts:
         else:
             unique_components = self._convert_to_set(component_ids)  # type: ignore
 
-        for component_id in unique_components:
+        # We read in batches since it makes the read operations slightly
+        # faster than iterating them one at the time
+        for component_ids in batched(unique_components, 20):
             data = self.filter(
-                component_ids=component_id,
+                component_ids=component_ids,
                 graph_projection=graph_projections,
                 layout_method=layout_methods,
             )
-            yield data.to_df(columns)
+
+            for _, df in data.lazy.collect().group_by("component"):
+                yield df.select(columns if columns else pl.all()).to_pandas()
 
     @staticmethod
     def _convert_to_set(
@@ -339,7 +343,7 @@ class PreComputedLayouts:
 
 
 def aggregate_precomputed_layouts(
-    precomputed_layouts: Iterable[tuple[str, PreComputedLayouts | None]],
+    pxl_datasets: Iterable[tuple[str, PixelDataset | None]],
     all_markers: set[str],
 ) -> PreComputedLayouts:
     """Aggregate precomputed layouts into a single PreComputedLayouts instance."""
@@ -347,13 +351,14 @@ def aggregate_precomputed_layouts(
     def zero_fill_missing_markers(
         lazyframe: pl.LazyFrame, all_markers: set[str]
     ) -> pl.LazyFrame:
-        missing_markers = all_markers - set(lazyframe.columns)
+        missing_markers = all_markers - set(lazyframe.collect_schema().names())
         return lazyframe.with_columns(
             **{marker: pl.lit(0) for marker in missing_markers}
         )
 
     def data():
-        for sample_name, layout in precomputed_layouts:
+        for sample_name, pxl_dataset in pxl_datasets:
+            layout = pxl_dataset.precomputed_layouts
             if layout is None:
                 continue
             if layout.is_empty:
@@ -365,7 +370,7 @@ def aggregate_precomputed_layouts(
 
     try:
         return PreComputedLayouts(
-            pl.concat(data(), rechunk=True).collect(),
+            pl.concat(data()),
             partitioning=["sample"] + PreComputedLayouts.DEFAULT_PARTITIONING,
         )
     except ValueError:

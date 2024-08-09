@@ -148,10 +148,7 @@ def simple_aggregate(
     }
 
     precomputed_layouts = aggregate_precomputed_layouts(
-        [
-            (name, dataset.precomputed_layouts)
-            for name, dataset in zip(sample_names, datasets)
-        ],
+        [(name, dataset) for name, dataset in zip(sample_names, datasets)],
         all_markers=set(datasets[0].adata.var.index),
     )
 
