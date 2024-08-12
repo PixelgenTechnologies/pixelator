@@ -364,7 +364,10 @@ def aggregate_precomputed_layouts(
             if layout.is_empty:
                 continue
             layout_with_name = layout.lazy.with_columns(
-                sample=pl.lit(sample_name)
+                sample=pl.lit(sample_name),
+                component=pl.concat_str(
+                    pl.col("component"), pl.lit(sample_name), separator="_"
+                ),
             ).pipe(zero_fill_missing_markers, all_markers=all_markers)
             yield layout_with_name
 
