@@ -464,30 +464,39 @@ class ZipBasedPixelFile(PixelDataStore):
             logger.debug("No layouts to write, will skip.")
             return
 
-        self._check_if_writeable(self.LAYOUTS_KEY)
-
         logger.debug("Starting to write layouts...")
         # This option is in place to allow collecting all the layouts into
         # as single dataframe before writing (they will still be written into
         # partitions), but this is much faster than writing them one by one
         # for scenarios with many very small layouts.
-        if collapse_to_single_dataframe:
-            logger.debug("Writing from a single dataframe...")
-            self.write_dataframe(
-                layouts.to_df(),
-                self.LAYOUTS_KEY,
-                partitioning=PreComputedLayouts.DEFAULT_PARTITIONING,
+
+        from tempfile import TemporaryDirectory
+
+        self._set_to_write_mode()
+        self._check_if_writeable(self.LAYOUTS_KEY)
+        with TemporaryDirectory(prefix="pixelator-") as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            local_tmp_target = tmp_path / "local.layouts.parquet"
+            layouts.write_parquet(local_tmp_target, partitioning=layouts.partitioning)
+            pa_dataset = ds.dataset(local_tmp_target, partitioning="hive")
+            local_tmp_target = tmp_path / "local.partitioned.layouts.parquet"
+            ds.write_dataset(
+                pa_dataset,
+                local_tmp_target,
+                format="parquet",
+                partitioning_flavor="hive",
+                partitioning=layouts.partitioning,
+                use_threads=False,
+                existing_data_behavior="overwrite_or_ignore",
             )
-        else:
-            logger.debug("Writing by iterating components...")
-            for idx, layouts_to_write in enumerate(layouts.component_iterator()):
-                if idx % 100 == 0:
-                    logger.debug("Writing layouts...")
-                self.write_dataframe(
-                    layouts_to_write,
-                    self.LAYOUTS_KEY,
-                    partitioning=PreComputedLayouts.DEFAULT_PARTITIONING,
-                )
+
+            for file_ in local_tmp_target.rglob("*"):
+                if file_.is_file():
+                    # TODO Make sure written without compression
+                    file_name = file_.relative_to(local_tmp_target)
+                    self._file_system.zip.write(
+                        file_, arcname=f"{self.LAYOUTS_KEY}/{file_name}"
+                    )
 
         logger.debug("Completed writing layouts...")
 

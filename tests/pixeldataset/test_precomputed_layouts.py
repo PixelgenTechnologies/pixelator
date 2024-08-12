@@ -326,7 +326,14 @@ class TestPreComputedLayouts:
             {
                 "x": [1, 2, 3, 7, 8, 9],
                 "y": [4, 5, 6, 10, 11, 12],
-                "component": ["A", "B", "C", "A", "B", "C"],
+                "component": [
+                    "A_sample1",
+                    "B_sample1",
+                    "C_sample1",
+                    "A_sample2",
+                    "B_sample2",
+                    "C_sample2",
+                ],
                 "sample": [
                     "sample1",
                     "sample1",
@@ -366,7 +373,7 @@ class TestPreComputedLayouts:
             {
                 "x": [7, 8, 9],
                 "y": [10, 11, 12],
-                "component": ["A", "B", "C"],
+                "component": ["A_sample2", "B_sample2", "C_sample2"],
                 "sample": [
                     "sample2",
                     "sample2",
