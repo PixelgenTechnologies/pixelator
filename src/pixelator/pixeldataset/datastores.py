@@ -274,9 +274,6 @@ class _CustomZipFileSystem(ZipFileSystem):
         if maxdepth is not None and maxdepth < 1:
             raise ValueError("maxdepth must be at least 1")
 
-        # TODO Handle details True/False
-        # TODO Add tests to make sure we have parity with the original implementation
-
         result = {}
 
         def _below_max_recursion_depth(path):
@@ -288,25 +285,36 @@ class _CustomZipFileSystem(ZipFileSystem):
 
         for zip_info in self.zip.infolist():
             file_name = zip_info.filename
-            if not file_name.startswith(path):
+            if not file_name.startswith(path.lstrip("/")):
                 continue
 
             # zip files can contain explicit or implicit directories
             # hence the need to either add them directly or infer them
             # from the file paths
-            if zip_info.is_dir() and withdirs:
-                if not result.get(file_name) and _below_max_recursion_depth(file_name):
-                    result[file_name] = self.info(file_name)
-                continue
+            if zip_info.is_dir():
+                if withdirs:
+                    if not result.get(file_name) and _below_max_recursion_depth(
+                        file_name
+                    ):
+                        result[file_name.strip("/")] = (
+                            self.info(file_name) if detail else None
+                        )
+                    continue
+                else:
+                    continue  # Skip along to the next entry if we don't want to add the dirs
 
             if not result.get(file_name):
                 if _below_max_recursion_depth(file_name):
-                    result[file_name] = self.info(file_name)
+                    result[file_name] = self.info(file_name) if detail else None
 
+                # Here we handle the case of implicitly adding the
+                # directories if they have been requested
                 if withdirs:
                     directories = file_name.split("/")
                     for i in range(1, len(directories)):
-                        dir_path = "/".join(directories[:i])
+                        dir_path = "/".join(directories[:i]).strip(
+                            "/"
+                        )  # remove the trailing slash, as this is not expected
                         if not result.get(dir_path) and _below_max_recursion_depth(
                             dir_path
                         ):
@@ -316,7 +324,7 @@ class _CustomZipFileSystem(ZipFileSystem):
                                 "type": "directory",
                             }
 
-        return result
+        return result if detail else sorted(list(result.keys()))
 
 
 class ZipBasedPixelFile(PixelDataStore):
