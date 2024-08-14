@@ -267,6 +267,59 @@ class PixelDataStore(Protocol):
         ...
 
 
+class _CustomZipFileSystem(ZipFileSystem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def find(self, path, maxdepth=None, withdirs=False, detail=False, **kwargs):
+        if maxdepth is not None and maxdepth < 1:
+            raise ValueError("maxdepth must be at least 1")
+
+        # TODO Handle details True/False
+        # TODO Add tests to make sure we have parity with the original implementation
+
+        result = {}
+
+        def _below_max_recursion_depth(path):
+            if not maxdepth:
+                return True
+
+            depth = len(path.split("/"))
+            return depth <= maxdepth
+
+        for zip_info in self.zip.infolist():
+            file_name = zip_info.filename
+            if not file_name.startswith(path):
+                continue
+
+            # zip files can contain explicit or implicit directories
+            # hence the need to either add them directly or infer them
+            # from the file paths
+            if zip_info.is_dir() and withdirs:
+                if not result.get(file_name) and _below_max_recursion_depth(file_name):
+                    result[file_name] = self.info(file_name)
+                continue
+
+            if not result.get(file_name):
+                if _below_max_recursion_depth(file_name):
+                    result[file_name] = self.info(file_name)
+
+                if withdirs:
+                    directories = file_name.split("/")
+                    for i in range(1, len(directories)):
+                        dir_path = "/".join(directories[:i])
+                        if not result.get(dir_path) and _below_max_recursion_depth(
+                            dir_path
+                        ):
+                            result[dir_path] = {
+                                "name": dir_path,
+                                "size": 0,
+                                "type": "directory",
+                            }
+
+        return result
+
+
 class ZipBasedPixelFile(PixelDataStore):
     """Superclass for all zip-based pixel data stores."""
 
@@ -300,7 +353,7 @@ class ZipBasedPixelFile(PixelDataStore):
         self.close()
 
     def _setup_file_system(self, mode):
-        files_system = ZipFileSystem(fo=self.path, mode=mode, allowZip64=True)
+        files_system = _CustomZipFileSystem(fo=self.path, mode=mode, allowZip64=True)
 
         # For now we are overwriting the zip open method to force it to
         # always have force_zip=True, otherwise it won't work for large file
@@ -696,7 +749,13 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
     def _read_dataframe_from_zip_lazy(self, key: str) -> Optional[pl.LazyFrame]:
         try:
             self._set_to_read_mode()
-            dataset = ds.dataset(key, filesystem=self._file_system, partitioning="hive")
+            dataset = ds.dataset(
+                key,
+                filesystem=self._file_system,
+                partitioning="hive",
+                format="parquet",
+                partition_base_dir=key,
+            )
             return pl.scan_pyarrow_dataset(dataset)
         except FileNotFoundError:
             return None
