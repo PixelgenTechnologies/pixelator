@@ -249,14 +249,13 @@ class PixelDataStore(Protocol):
 
     def read_precomputed_layouts(
         self,
-    ) -> PreComputedLayouts | None:
+    ) -> PreComputedLayouts:
         """Read pre-computed layouts from the data store."""
         ...
 
     def write_precomputed_layouts(
         self,
         layouts: PreComputedLayouts,
-        collapse_to_single_dataframe: bool = False,
     ) -> None:
         """Write pre-computed layouts to the data store.
 
@@ -479,11 +478,11 @@ class ZipBasedPixelFile(PixelDataStore):
 
     def read_precomputed_layouts(
         self,
-    ) -> PreComputedLayouts | None:
+    ) -> PreComputedLayouts:
         """Read pre-computed layouts from the .pxl file."""
         layouts_lazy = self.read_dataframe_lazy(self.LAYOUTS_KEY)
         if layouts_lazy is None:
-            return None
+            return PreComputedLayouts.create_empty()
         return PreComputedLayouts(layouts_lazy=layouts_lazy)
 
     def write_metadata(self, metadata: Dict[str, Any]) -> None:
@@ -510,7 +509,6 @@ class ZipBasedPixelFile(PixelDataStore):
     def write_precomputed_layouts(
         self,
         layouts: Optional[PreComputedLayouts],
-        collapse_to_single_dataframe: bool = False,
     ) -> None:
         """Write pre-computed layouts to the data store."""
         if layouts is None:
@@ -582,17 +580,12 @@ class ZipBasedPixelFile(PixelDataStore):
             logger.debug("Writing colocalization scores")
             self.write_colocalization(dataset.colocalization)
 
-        if dataset.precomputed_layouts is not None:
+        if not dataset.precomputed_layouts.is_empty:
             logger.debug("Writing precomputed layouts")
             # This speeds things up massively when you have many, very small
             # layouts, like we do in some test data.
-            try:
-                write_layouts_in_one_go = dataset.adata.obs["vertices"].sum() < 100_000
-            except KeyError:
-                write_layouts_in_one_go = False
             self.write_precomputed_layouts(
                 dataset.precomputed_layouts,
-                collapse_to_single_dataframe=write_layouts_in_one_go,
             )
 
         logger.debug("PixelDataset saved to %s", self.path)
@@ -647,7 +640,6 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
     def write_precomputed_layouts(
         self,
         layouts: Optional[PreComputedLayouts],
-        collapse_to_single_dataframe: bool = False,
     ) -> None:
         """Write pre-computed layouts to the data store (NB: Not implemented!)."""
         raise NotImplementedError(
