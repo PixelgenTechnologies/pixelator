@@ -15,6 +15,8 @@ from typing import TYPE_CHECKING, Iterable, Optional, Protocol
 
 import pandas as pd
 import polars as pl
+import pyarrow.dataset as ds
+import pyarrow.parquet as pq
 
 from pixelator.exceptions import PixelatorBaseException
 from pixelator.graph import Graph
@@ -28,6 +30,22 @@ if TYPE_CHECKING:
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _write_parquet(frame: pl.LazyFrame, path: Path, partitioning: list[str]) -> None:
+    table = frame.collect().to_arrow()
+    file_options = ds.ParquetFileFormat().make_write_options(
+        compression="zstd",
+    )
+    ds.write_dataset(
+        table,
+        path,
+        format="parquet",
+        partitioning_flavor="hive",
+        partitioning=partitioning,
+        file_options=file_options,
+        existing_data_behavior="overwrite_or_ignore",
+    )
 
 
 class PreComputedLayoutsEmpty(PixelatorBaseException):
@@ -99,13 +117,7 @@ class _SingleFrameDataProvider(_DataProvider):
 
     def write_parquet(self, path: Path, partitioning: list[str]) -> None:
         """Write a parquet file to the provided path."""
-        self.lazy().collect().write_parquet(
-            path,
-            use_pyarrow=True,
-            pyarrow_options={
-                "partition_cols": partitioning,
-            },
-        )
+        _write_parquet(self.lazy(), path, partitioning)
 
     def lazy(self):
         return self._lazy_frame
@@ -214,11 +226,7 @@ class _MultiFrameDataProvider(_DataProvider):
     def write_parquet(self, path: Path, partitioning: list[str]) -> None:
         """Write a parquet file to the provided path."""
         for frame in self._lazy_frames:
-            frame.collect(streaming=True).write_parquet(
-                path,
-                use_pyarrow=True,
-                pyarrow_options={"partition_cols": partitioning},
-            )
+            _write_parquet(frame, path, partitioning)
 
 
 class PreComputedLayouts:

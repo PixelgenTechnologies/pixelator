@@ -10,6 +10,7 @@ import json
 import logging
 from functools import partial
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -524,30 +525,18 @@ class ZipBasedPixelFile(PixelDataStore):
             return
 
         logger.debug("Starting to write layouts...")
-        # This option is in place to allow collecting all the layouts into
-        # as single dataframe before writing (they will still be written into
-        # partitions), but this is much faster than writing them one by one
-        # for scenarios with many very small layouts.
-
-        from tempfile import TemporaryDirectory
 
         self._set_to_write_mode()
         self._check_if_writeable(self.LAYOUTS_KEY)
+
+        # This is a work around for the fact that sinking into parquet files
+        # from multiple sources is not supported. We therefore do this somewhat
+        # round about thing of first writing the parquet files to
+        # a temporary directory and then zipping them into the .pxl file.
         with TemporaryDirectory(prefix="pixelator-") as tmp_dir:
             tmp_path = Path(tmp_dir)
             local_tmp_target = tmp_path / "local.layouts.parquet"
             layouts.write_parquet(local_tmp_target, partitioning=layouts.partitioning)
-            pa_dataset = ds.dataset(local_tmp_target, partitioning="hive")
-            local_tmp_target = tmp_path / "local.partitioned.layouts.parquet"
-            ds.write_dataset(
-                pa_dataset,
-                local_tmp_target,
-                format="parquet",
-                partitioning_flavor="hive",
-                partitioning=layouts.partitioning,
-                use_threads=False,
-                existing_data_behavior="overwrite_or_ignore",
-            )
 
             for file_ in local_tmp_target.rglob("*"):
                 if file_.is_file():
