@@ -258,7 +258,7 @@ class FileBasedPixelDatasetBackend(PixelDatasetBackend):
         return self._datastore.read_edgelist()
 
     @property
-    def edgelist_lazy(self) -> Optional[pl.LazyFrame]:
+    def edgelist_lazy(self) -> pl.LazyFrame:
         """Get a lazy frame representation of the edgelist."""
         return self._datastore.read_edgelist_lazy()
 
