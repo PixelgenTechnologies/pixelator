@@ -38,6 +38,48 @@ class OrderedGroup(click.Group):
         return self.commands
 
 
+# snipped adapted from
+# https://stackoverflow.com/questions/46765803/python-click-multiple-group-names
+class AliasedOrderedGroup(OrderedGroup):
+    """Custom click.Group that supports aliases.
+
+    Currently only supports aliases for subgroups.
+    """
+
+    def group(self, *args, **kwargs):
+        """Attach a click group that supports aliases."""
+
+        def decorator(f):
+            aliased_group = []
+            aliases = kwargs.pop("aliases", [])
+            main_group = super(AliasedOrderedGroup, self).group(*args, **kwargs)(f)
+
+            for alias in aliases:
+                grp_kwargs = kwargs.copy()
+                del grp_kwargs["name"]
+                grp = super(AliasedOrderedGroup, self).group(
+                    alias, *args[1:], **grp_kwargs
+                )(f)
+                grp.short_help = "Alias for '{}'".format(main_group.name)
+                aliased_group.append(grp)
+
+            # for all the aliased groups, link to all attributes from the main group
+            for aliased in aliased_group:
+                aliased.commands = main_group.commands
+                aliased.params = main_group.params
+                aliased.callback = main_group.callback
+                aliased.epilog = main_group.epilog
+                aliased.options_metavar = main_group.options_metavar
+                aliased.add_help_option = main_group.add_help_option
+                aliased.no_args_is_help = main_group.no_args_is_help
+                aliased.hidden = main_group.hidden
+                aliased.deprecated = main_group.deprecated
+
+            return main_group
+
+        return decorator
+
+
 def output_option(func):
     """Wrap a Click entrypoint to add the --output option."""
 

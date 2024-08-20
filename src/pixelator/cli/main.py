@@ -9,6 +9,7 @@ import sys
 
 import click
 import yappi
+from click_aliases import ClickAliasedGroup
 
 from pixelator import __version__
 from pixelator.cli.adapterqc import adapterqc
@@ -16,7 +17,7 @@ from pixelator.cli.amplicon import amplicon
 from pixelator.cli.analysis import analysis
 from pixelator.cli.annotate import annotate
 from pixelator.cli.collapse import collapse
-from pixelator.cli.common import OrderedGroup, logger
+from pixelator.cli.common import AliasedOrderedGroup, logger
 from pixelator.cli.demux import demux
 from pixelator.cli.graph import graph
 from pixelator.cli.layout import layout
@@ -28,7 +29,7 @@ from pixelator.logging import LoggingSetup
 from pixelator.utils import click_echo
 
 
-@click.group(cls=OrderedGroup, name="pixelator")
+@click.group(cls=AliasedOrderedGroup, name="pixelator")
 @click.version_option(__version__)
 @click.option(
     "--verbose",
@@ -96,7 +97,7 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     return 0
 
 
-@click.group()
+@main_cli.group(name="single-cell-mpx", aliases=["single-cell"])
 @click.option(
     "--list-designs",
     is_flag=True,
@@ -117,24 +118,24 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     callback=list_single_cell_panels,
     help="List available panels and exit.",
 )
-def single_cell():
+def single_cell_mpx():
     """Build the click group for single-cell commands."""
 
 
 # Add single-cell top level command to cli
-main_cli.add_command(single_cell)
+main_cli.add_command(single_cell_mpx)
 
 # Add single-cell commands
-single_cell.add_command(amplicon)
-single_cell.add_command(preqc)
-single_cell.add_command(adapterqc)
-single_cell.add_command(demux)
-single_cell.add_command(collapse)
-single_cell.add_command(graph)
-single_cell.add_command(annotate)
-single_cell.add_command(layout)
-single_cell.add_command(analysis)
-single_cell.add_command(report)
+single_cell_mpx.add_command(amplicon)
+single_cell_mpx.add_command(preqc)
+single_cell_mpx.add_command(adapterqc)
+single_cell_mpx.add_command(demux)
+single_cell_mpx.add_command(collapse)
+single_cell_mpx.add_command(graph)
+single_cell_mpx.add_command(annotate)
+single_cell_mpx.add_command(layout)
+single_cell_mpx.add_command(analysis)
+single_cell_mpx.add_command(report)
 
 # Add cli plugins as commands on top level
 add_cli_plugins(main_cli)
