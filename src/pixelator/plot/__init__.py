@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.patches import Rectangle
 from scipy.stats import gaussian_kde
 
@@ -453,4 +453,73 @@ def density_scatter_plot(
             )
         plot_grid.ax_joint.axhline(0, color="black", linewidth=1, linestyle="--")
         plot_grid.ax_joint.axvline(0, color="black", linewidth=1, linestyle="--")
+    return plt.gcf(), plt.gca()
+
+
+def abundance_colocalization_plot(
+    pixel,
+    markers_x: list[str],
+    markers_y: list[str],
+    layer=None,
+    colocalization_column="pearson_z",
+):
+    """Plot abundance of markers x and y with colocalization as color.
+
+    :param pixel: Pixel object containing the data.
+    :param markers_x: List of markers for the x-axis.
+    :param markers_y: List of markers for the y-axis.
+    :param layer: The anndata layer (e.g. transformation) to use for the marker data.
+    :param colocalization_column: The column in the colocalization table to use for
+        colocalization values. Defaults to "pearson_z".
+    :return: a scatter plot of marker abundance with colocalization as color.
+    """
+    data = pixel.adata.to_df(layer)
+    merged_data = pd.DataFrame()
+    for i, mx in enumerate(markers_x):
+        for j, my in enumerate(markers_y):
+            marker_pair_rows = (
+                (pixel.colocalization["marker_1"] == mx)
+                & (pixel.colocalization["marker_2"] == my)
+            ) | (
+                (pixel.colocalization["marker_1"] == my)
+                & (pixel.colocalization["marker_2"] == mx)
+            )
+
+            coloc_data = pixel.colocalization.loc[marker_pair_rows, :].set_index(
+                "component"
+            )[colocalization_column]
+            data["colocalization"] = coloc_data
+            data["colocalization_abs"] = data["colocalization"].abs()
+            data["x_abundance"] = data[mx]
+            data["y_abundance"] = data[my]
+            data["marker_x"] = mx
+            data["marker_y"] = my
+            data.fillna(0)
+            merged_data = pd.concat((merged_data, data), axis=0)
+    plot_grid = sns.FacetGrid(data=merged_data, col="marker_x", row="marker_y")
+    plot_grid.map_dataframe(
+        sns.scatterplot,
+        x="x_abundance",
+        y="y_abundance",
+        hue="colocalization",
+        size="colocalization_abs",
+        hue_norm=Normalize(
+            vmin=merged_data["colocalization"].quantile(0.1),
+            vmax=merged_data["colocalization"].quantile(0.9),
+            clip=True,
+        ),
+        size_norm=Normalize(
+            vmin=merged_data["colocalization_abs"].quantile(0.1),
+            vmax=merged_data["colocalization_abs"].quantile(0.9),
+            clip=True,
+        ),
+    )
+    # TODO: See how the legend is determined based on the merged data to be
+    # able to access actual marker sizes.
+    for i in range(1, 6):
+        plot_grid._legend_data[list(plot_grid._legend_data.keys())[i]].set_markersize(5)
+    legend_data = {
+        i: plot_grid._legend_data[i] for i in list(plot_grid._legend_data.keys())[:6]
+    }
+    plot_grid.add_legend(legend_data=legend_data)
     return plt.gcf(), plt.gca()
