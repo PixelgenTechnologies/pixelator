@@ -12,6 +12,7 @@ from multiprocessing.pool import Pool
 from unittest.mock import patch
 
 import pytest
+
 from pixelator import __version__
 from pixelator.utils import (
     get_pool_executor,

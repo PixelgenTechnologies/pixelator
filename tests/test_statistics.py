@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from numpy.testing import assert_allclose, assert_array_almost_equal
 from pandas.testing import assert_frame_equal
+
 from pixelator.statistics import (
     clr_transformation,
     correct_pvalues,
