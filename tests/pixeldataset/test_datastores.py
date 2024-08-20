@@ -15,6 +15,7 @@ from anndata import AnnData
 from fsspec.implementations.zip import ZipFileSystem
 from pandas.core.frame import DataFrame
 from pandas.testing import assert_frame_equal
+
 from pixelator.pixeldataset import PixelDataset
 from pixelator.pixeldataset.datastores import (
     CannotOverwriteError,

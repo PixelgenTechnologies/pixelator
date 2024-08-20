@@ -15,6 +15,7 @@ import pandas as pd
 from anndata import AnnData
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
+
 from pixelator.config import AntibodyPanel
 from pixelator.graph import write_recovered_components
 from pixelator.pixeldataset.utils import (

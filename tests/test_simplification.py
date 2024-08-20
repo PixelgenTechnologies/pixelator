@@ -5,6 +5,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 
 import numpy as np
 import pytest
+
 from pixelator.utils.simplification import simplify_line_rdp
 
 

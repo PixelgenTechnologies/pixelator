@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
+
 from pixelator.analysis.polarization import (
     PolarizationAnalysis,
     polarization_scores,
@@ -17,7 +18,6 @@ from pixelator.analysis.polarization import (
 )
 from pixelator.graph import Graph
 from pixelator.pixeldataset import PixelDataset
-
 from tests.graph.networkx.test_tools import create_randomly_connected_bipartite_graph
 
 

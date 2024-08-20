@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
+
 from pixelator.graph import Graph
 from pixelator.pixeldataset import (
     PixelDataset,

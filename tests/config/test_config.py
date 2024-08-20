@@ -7,6 +7,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 import copy
 
 import pytest
+
 from pixelator.config import (
     Config,
     RegionType,

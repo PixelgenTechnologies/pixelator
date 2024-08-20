@@ -8,12 +8,12 @@ import pandas as pd
 import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
+
 from pixelator.pixeldataset.precomputed_layouts import (
     PreComputedLayouts,
     aggregate_precomputed_layouts,
     generate_precomputed_layouts_for_components,
 )
-
 from tests.utils import dna_seqs
 
 
