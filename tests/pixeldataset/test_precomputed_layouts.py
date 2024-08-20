@@ -98,6 +98,11 @@ def precomputed_layouts_fixture(request) -> PreComputedLayouts:
     raise Exception("We should never get here!")
 
 
+class MockPixelDataset:
+    def __init__(self, precomputed_layouts):
+        self.precomputed_layouts = precomputed_layouts
+
+
 class TestPreComputedLayouts:
     def test_is_empty_returns_true_for_empty_layout(self):
         layouts_lazy = pl.DataFrame({"component": []}).lazy()
@@ -285,30 +290,34 @@ class TestPreComputedLayouts:
 
     def test_aggregate_precomputed_layouts(self):
         # Create some sample PreComputedLayouts
-        layout1 = PreComputedLayouts(
-            pl.DataFrame(
-                {
-                    "x": [1, 2, 3],
-                    "y": [4, 5, 6],
-                    "component": ["A", "B", "C"],
-                    "sample": ["sample1", "sample1", "sample1"],
-                }
-            ).lazy()
+        pxl_1 = MockPixelDataset(
+            PreComputedLayouts(
+                pl.DataFrame(
+                    {
+                        "x": [1, 2, 3],
+                        "y": [4, 5, 6],
+                        "component": ["A", "B", "C"],
+                        "sample": ["sample1", "sample1", "sample1"],
+                    }
+                ).lazy()
+            )
         )
-        layout2 = PreComputedLayouts(
-            pl.DataFrame(
-                {
-                    "x": [7, 8, 9],
-                    "y": [10, 11, 12],
-                    "component": ["A", "B", "C"],
-                    "sample": ["sample2", "sample2", "sample2"],
-                }
-            ).lazy()
+        pxl_2 = MockPixelDataset(
+            PreComputedLayouts(
+                pl.DataFrame(
+                    {
+                        "x": [7, 8, 9],
+                        "y": [10, 11, 12],
+                        "component": ["A", "B", "C"],
+                        "sample": ["sample2", "sample2", "sample2"],
+                    }
+                ).lazy()
+            )
         )
 
         # Aggregate the layouts
         aggregated_layouts = aggregate_precomputed_layouts(
-            [("sample1", layout1), ("sample2", layout2)],
+            [("sample1", pxl_1), ("sample2", pxl_2)],
             all_markers={"x", "y", "component", "sample"},
         )
 
@@ -317,7 +326,14 @@ class TestPreComputedLayouts:
             {
                 "x": [1, 2, 3, 7, 8, 9],
                 "y": [4, 5, 6, 10, 11, 12],
-                "component": ["A", "B", "C", "A", "B", "C"],
+                "component": [
+                    "A_sample1",
+                    "B_sample1",
+                    "C_sample1",
+                    "A_sample2",
+                    "B_sample2",
+                    "C_sample2",
+                ],
                 "sample": [
                     "sample1",
                     "sample1",
@@ -332,21 +348,23 @@ class TestPreComputedLayouts:
 
     def test_aggregate_precomputed_layouts_one_empty_data_frame(self):
         # Create some sample PreComputedLayouts
-        layout1 = PreComputedLayouts(None)
-        layout2 = PreComputedLayouts(
-            pl.DataFrame(
-                {
-                    "x": [7, 8, 9],
-                    "y": [10, 11, 12],
-                    "component": ["A", "B", "C"],
-                    "sample": ["sample2", "sample2", "sample2"],
-                }
-            ).lazy()
+        mock_pxl_1 = MockPixelDataset(PreComputedLayouts(None))
+        mock_pxl_2 = MockPixelDataset(
+            PreComputedLayouts(
+                pl.DataFrame(
+                    {
+                        "x": [7, 8, 9],
+                        "y": [10, 11, 12],
+                        "component": ["A", "B", "C"],
+                        "sample": ["sample2", "sample2", "sample2"],
+                    }
+                ).lazy()
+            )
         )
 
         # Aggregate the layouts
         aggregated_layouts = aggregate_precomputed_layouts(
-            [("sample1", layout1), ("sample2", layout2)],
+            [("sample1", mock_pxl_1), ("sample2", mock_pxl_2)],
             all_markers={"x", "y", "component", "sample"},
         )
 
@@ -355,7 +373,7 @@ class TestPreComputedLayouts:
             {
                 "x": [7, 8, 9],
                 "y": [10, 11, 12],
-                "component": ["A", "B", "C"],
+                "component": ["A_sample2", "B_sample2", "C_sample2"],
                 "sample": [
                     "sample2",
                     "sample2",
@@ -367,12 +385,12 @@ class TestPreComputedLayouts:
 
     def test_aggregate_precomputed_layouts_no_layouts_in_data(self):
         # Create some sample PreComputedLayouts
-        layout1 = PreComputedLayouts(None)
-        layout2 = PreComputedLayouts(None)
+        mock_pxl_1 = MockPixelDataset(PreComputedLayouts(None))
+        mock_pxl_2 = MockPixelDataset(PreComputedLayouts(None))
 
         # Aggregate the layouts
         aggregated_layouts = aggregate_precomputed_layouts(
-            [("sample1", layout1), ("sample2", layout2)],
+            [("sample1", mock_pxl_1), ("sample2", mock_pxl_2)],
             all_markers={"x", "y", "component", "sample"},
         )
 
