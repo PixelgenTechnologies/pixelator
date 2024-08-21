@@ -12,6 +12,7 @@ from pytest_snapshot.plugin import Snapshot
 
 from pixelator.graph import Graph
 from pixelator.plot import (
+    abundance_colocalization_plot,
     cell_count_plot,
     density_scatter_plot,
     edge_rank_plot,
@@ -812,5 +813,20 @@ def test_density_scatter_plot(
         facet_column=facet_column,
         gate=gate,
         show_marginal=show_marginal,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_abundance_colocalization_plot/",
+)
+def test_abundance_colocalization_plot(setup_basic_pixel_dataset):
+    pixel_data, *_ = setup_basic_pixel_dataset
+    fig, _ = abundance_colocalization_plot(
+        pixel_data,
+        markers_x=["CD3", "CD8"],
+        markers_y=["CD14", "CD19"],
+        colocalization_column="pearson",
     )
     return fig

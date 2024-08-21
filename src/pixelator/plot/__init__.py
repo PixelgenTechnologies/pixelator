@@ -517,6 +517,8 @@ def abundance_colocalization_plot(
     # TODO: See how the legend is determined based on the merged data to be
     # able to access actual marker sizes.
     for i in range(1, 6):
+        if i >= len(plot_grid._legend_data):
+            break
         plot_grid._legend_data[list(plot_grid._legend_data.keys())[i]].set_markersize(5)
     legend_data = {
         i: plot_grid._legend_data[i] for i in list(plot_grid._legend_data.keys())[:6]
