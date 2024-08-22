@@ -515,7 +515,11 @@ def abundance_colocalization_plot(
         ),
     )
     # TODO: See how the legend is determined based on the merged data to be
-    # able to access actual marker sizes.
+    # able to access actual marker sizes. Right now the _legend_data includes
+    # many points with different sizes and and colors even though both are
+    # normalized to the same range. So in the code below, we are only keeping
+    # the first 5 points to include the color range and setting all the sizes
+    # to a fixed value 5.
     for i in range(1, 6):
         if i >= len(plot_grid._legend_data):
             break
