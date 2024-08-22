@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - Improved memory usage when aggregating pixel files with precomputed layouts.
 
+### Added
+
+-   Add `abundance_colocalization_plot` function to make scatter plots of selected marker-pairs' abundance.
+
 ## [0.18.2] - 2024-07-16
 
 ### Changed
