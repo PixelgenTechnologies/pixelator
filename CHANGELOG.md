@@ -10,7 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
- - Improved memory usage when aggregating pixel files with precomputed layouts.
+-   Improved memory usage when aggregating pixel files with precomputed layouts.
+
+### Changed
+
+-   Rename `single-cell` command group to `single-cell-mpx`. `single-cell` is now an alias to the new command group.
 
 ### Added
 
