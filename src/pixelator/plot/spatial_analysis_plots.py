@@ -124,7 +124,7 @@ def plot_colocalization_diff_heatmap(
     n_top_marker_pairs: Union[int, None] = None,
     cmap: str = "vlag",
     use_z_score: bool = True,
-) -> Tuple[plt.Figure, plt.Axes]:
+) -> Tuple[plt.Figure, plt.Axes | list[plt.Axes]]:
     """Plot the differential colocalization between reference and target components.
 
     Example usage: plot_colocalization_diff_heatmap(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample").
