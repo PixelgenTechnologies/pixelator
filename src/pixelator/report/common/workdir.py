@@ -48,33 +48,33 @@ SingleCellStageLiteral = typing.Literal[
 # Duplicating the keys is unavoidable here
 WorkdirCacheKey: typing.TypeAlias = typing.Literal[
     "metadata",
-    "single-cell amplicon",
-    "single-cell preqc",
-    "single-cell adapterqc",
-    "single-cell demux",
-    "single-cell collapse",
-    "single-cell graph",
-    "single-cell annotate",
-    "single-cell annotate dataset",
-    "single-cell annotate raw_components_metrics",
-    "single-cell layout",
-    "single-cell analysis",
-    "single-cell report",
+    "single-cell-mpx amplicon",
+    "single-cell-mpx preqc",
+    "single-cell-mpx adapterqc",
+    "single-cell-mpx demux",
+    "single-cell-mpx collapse",
+    "single-cell-mpx graph",
+    "single-cell-mpx annotate",
+    "single-cell-mpx annotate dataset",
+    "single-cell-mpx annotate raw_components_metrics",
+    "single-cell-mpx layout",
+    "single-cell-mpx analysis",
+    "single-cell-mpx report",
 ]
 
 SINGLE_CELL_STAGES_TO_CACHE_KEY_MAPPING: dict[
     SingleCellStageLiteral, WorkdirCacheKey
 ] = {
-    "amplicon": "single-cell amplicon",
-    "preqc": "single-cell preqc",
-    "adapterqc": "single-cell adapterqc",
-    "demux": "single-cell demux",
-    "collapse": "single-cell collapse",
-    "graph": "single-cell graph",
-    "annotate": "single-cell annotate",
-    "layout": "single-cell layout",
-    "analysis": "single-cell analysis",
-    "report": "single-cell report",
+    "amplicon": "single-cell-mpx amplicon",
+    "preqc": "single-cell-mpx preqc",
+    "adapterqc": "single-cell-mpx adapterqc",
+    "demux": "single-cell-mpx demux",
+    "collapse": "single-cell-mpx collapse",
+    "graph": "single-cell-mpx graph",
+    "annotate": "single-cell-mpx annotate",
+    "layout": "single-cell-mpx layout",
+    "analysis": "single-cell-mpx analysis",
+    "report": "single-cell-mpx report",
 }
 
 
@@ -121,18 +121,18 @@ class PixelatorWorkdir:
     # that will be used to search for report files in the workdir folder.
     _SEARCH_PATTERNS: Dict[WorkdirCacheKey, str] = {
         "metadata": "**/*.meta.json",
-        "single-cell amplicon": "amplicon/*.report.json",
-        "single-cell preqc": "preqc/*.report.json",
-        "single-cell adapterqc": "adapterqc/*.report.json",
-        "single-cell demux": "demux/*.report.json",
-        "single-cell collapse": "collapse/*.report.json",
-        "single-cell graph": "graph/*.report.json",
-        "single-cell annotate": "annotate/*.report.json",
-        "single-cell annotate dataset": "annotate/*.dataset.pxl",
-        "single-cell annotate raw_components_metrics": "annotate/*.raw_components_metrics.csv.gz",
-        "single-cell layout": "layout/*.report.json",
-        "single-cell analysis": "analysis/*.report.json",
-        "single-cell report": "report/*.report.json",
+        "single-cell-mpx amplicon": "amplicon/*.report.json",
+        "single-cell-mpx preqc": "preqc/*.report.json",
+        "single-cell-mpx adapterqc": "adapterqc/*.report.json",
+        "single-cell-mpx demux": "demux/*.report.json",
+        "single-cell-mpx collapse": "collapse/*.report.json",
+        "single-cell-mpx graph": "graph/*.report.json",
+        "single-cell-mpx annotate": "annotate/*.report.json",
+        "single-cell-mpx annotate dataset": "annotate/*.dataset.pxl",
+        "single-cell-mpx annotate raw_components_metrics": "annotate/*.raw_components_metrics.csv.gz",
+        "single-cell-mpx layout": "layout/*.report.json",
+        "single-cell-mpx analysis": "analysis/*.report.json",
+        "single-cell-mpx report": "report/*.report.json",
     }
 
     _SEARCH_ANNOTATE_DATASET = "annotate/*.dataset.pxl"
@@ -412,7 +412,7 @@ class PixelatorWorkdir:
         :param cache: Whether to return cached result if available
         :return: The path to the filtered dataset if a sample is given, otherwise a list of all datasets
         """
-        cache_key: WorkdirCacheKey = "single-cell annotate dataset"
+        cache_key: WorkdirCacheKey = "single-cell-mpx annotate dataset"
         func = functools.partial(self._collect_output_files, cache_key)
         return self._cached_reports_implementation(cache_key, func, sample, cache)
 
@@ -441,6 +441,6 @@ class PixelatorWorkdir:
         :param cache: Whether to return cached results if available
         :return: The path to a raw_component_metrics file if a sample is given, otherwise a list of all files
         """
-        cache_key: WorkdirCacheKey = "single-cell annotate raw_components_metrics"
+        cache_key: WorkdirCacheKey = "single-cell-mpx annotate raw_components_metrics"
         func = functools.partial(self._collect_output_files, cache_key)
         return self._cached_reports_implementation(cache_key, func, sample, cache)

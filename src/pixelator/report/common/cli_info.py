@@ -16,17 +16,34 @@ CommandIndexTuple: typing.TypeAlias = tuple[
     dict[str, CommandInfo], dict[str, CommandOptionDict]
 ]
 
-_SINGLE_CELL_STAGES_TO_CACHE_KEY_MAPPING: dict[SingleCellStageLiteral, str] = {
-    "amplicon": "pixelator single-cell amplicon",
-    "preqc": "pixelator single-cell preqc",
-    "adapterqc": "pixelator single-cell adapterqc",
-    "demux": "pixelator single-cell demux",
-    "collapse": "pixelator single-cell collapse",
-    "graph": "pixelator single-cell graph",
-    "annotate": "pixelator single-cell annotate",
-    "layout": "pixelator single-cell layout",
-    "analysis": "pixelator single-cell analysis",
-    "report": "pixelator single-cell report",
+_SINGLE_CELL_STAGES_TO_CACHE_KEY_MAPPING: dict[
+    SingleCellStageLiteral, str | list[str]
+] = {
+    "amplicon": [
+        "pixelator single-cell-mpx amplicon",
+        "pixelator single-cell amplicon",
+    ],
+    "preqc": ["pixelator single-cell-mpx preqc", "pixelator single-cell preqc"],
+    "adapterqc": [
+        "pixelator single-cell-mpx adapterqc",
+        "pixelator single-cell adapterqc",
+    ],
+    "demux": ["pixelator single-cell-mpx demux", "pixelator single-cell demux"],
+    "collapse": [
+        "pixelator single-cell-mpx collapse",
+        "pixelator single-cell collapse",
+    ],
+    "graph": ["pixelator single-cell-mpx graph", "pixelator single-cell graph"],
+    "annotate": [
+        "pixelator single-cell-mpx annotate",
+        "pixelator single-cell annotate",
+    ],
+    "layout": ["pixelator single-cell-mpx layout", "pixelator single-cell layout"],
+    "analysis": [
+        "pixelator single-cell-mpx analysis",
+        "pixelator single-cell analysis",
+    ],
+    "report": ["pixelator single-cell-mpx report", "pixelator single-cell report"],
 }
 
 
@@ -88,7 +105,17 @@ class CLIInvocationInfo(Iterable[CommandInfo]):
         """
         stage = stage.value if isinstance(stage, enum.Enum) else stage
         stage_key = _SINGLE_CELL_STAGES_TO_CACHE_KEY_MAPPING[stage]
-        return self._commands_index.get(stage_key)
+        res = None
+
+        if isinstance(stage_key, list):
+            for key in stage_key:
+                res = self._commands_index.get(key)
+                if res:
+                    break
+        else:
+            res = self._commands_index.get(stage_key)
+
+        return res
 
     def get_option(
         self, stage: SingleCellStage | SingleCellStageLiteral, option: str
@@ -104,8 +131,19 @@ class CLIInvocationInfo(Iterable[CommandInfo]):
         """
         stage = stage.value if isinstance(stage, enum.Enum) else stage
         stage_key = _SINGLE_CELL_STAGES_TO_CACHE_KEY_MAPPING[stage]
-        stage_dict = self._options_index.get(stage_key)
+        stage_dict = None
+
+        if isinstance(stage_key, list):
+            for key in stage_key:
+                stage_dict = self._options_index.get(key)
+                if stage_dict:
+                    break
+
+        else:
+            stage_dict = self._commands_index.get(stage_key)
+
         if stage_dict is None:
+            stage_key = stage_key[0] if isinstance(stage_key, list) else stage_key
             raise KeyError(f"No commandline metadata found for stage: {stage_key}")
 
         return stage_dict[option]
