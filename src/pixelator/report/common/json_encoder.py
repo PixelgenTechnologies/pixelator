@@ -28,5 +28,5 @@ class PixelatorJSONEncoder(json.JSONEncoder):
         if isinstance(obj, BaseModel):
             return obj.model_dump(mode="json")
         if dataclasses.is_dataclass(obj):
-            return dataclasses.asdict(obj)
+            return dataclasses.asdict(obj)  # type: ignore
         return super().default(obj)
