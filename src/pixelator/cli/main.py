@@ -9,7 +9,6 @@ import sys
 
 import click
 import yappi
-from click_aliases import ClickAliasedGroup
 
 from pixelator import __version__
 from pixelator.cli.adapterqc import adapterqc
