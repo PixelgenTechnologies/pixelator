@@ -74,14 +74,6 @@ def test_command_line_interface():
 def test_single_cell_list_designs():
     """Test that the list designs command works."""
     runner = CliRunner()
-    result = runner.invoke(cli.main_cli, ["single-cell-mpx", "--list-designs"])
-    assert result.exit_code == 0
-    assert "D21" in result.stdout
-
-
-def test_aliased_single_cell_list_designs():
-    """Test that the list designs command works."""
-    runner = CliRunner()
     result = runner.invoke(cli.main_cli, ["single-cell", "--list-designs"])
     assert result.exit_code == 0
     assert "D21" in result.stdout
@@ -90,14 +82,6 @@ def test_aliased_single_cell_list_designs():
 def test_single_cell_list_panels():
     """Test that the list panels command works."""
     runner = CliRunner()
-    result = runner.invoke(cli.main_cli, ["single-cell-mpx", "--list-panels"])
-    assert result.exit_code == 0
-    assert "human-sc-immunology-spatial-proteomics" in result.stdout
-
-
-def test_aliases_single_cell_list_panels():
-    """Test that the list panels command works."""
-    runner = CliRunner()
-    result = runner.invoke(cli.main_cli, ["single-cell-mpx", "--list-panels"])
+    result = runner.invoke(cli.main_cli, ["single-cell", "--list-panels"])
     assert result.exit_code == 0
     assert "human-sc-immunology-spatial-proteomics" in result.stdout
