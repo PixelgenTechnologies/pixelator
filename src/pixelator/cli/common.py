@@ -16,7 +16,7 @@ BASE_DIR = str(Path(__file__).parent)
 logger = logging.getLogger("pixelator.cli")
 
 
-# code snipped obtained from
+# code snippet obtained from
 # https://stackoverflow.com/questions/47972638/how-can-i-define-the-order-of-click-sub-commands-in-help
 # the purpose is to order subcommands in order of addition
 class OrderedGroup(click.Group):
@@ -38,7 +38,7 @@ class OrderedGroup(click.Group):
         return self.commands
 
 
-# snipped adapted from
+# snippet adapted from
 # https://stackoverflow.com/questions/46765803/python-click-multiple-group-names
 class AliasedOrderedGroup(OrderedGroup):
     """Custom click.Group that supports aliases.
