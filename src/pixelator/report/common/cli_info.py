@@ -140,7 +140,7 @@ class CLIInvocationInfo(Iterable[CommandInfo]):
                     break
 
         else:
-            stage_dict = self._commands_index.get(stage_key)
+            stage_dict = self._options_index.get(stage_key)
 
         if stage_dict is None:
             stage_key = stage_key[0] if isinstance(stage_key, list) else stage_key
