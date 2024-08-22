@@ -83,9 +83,6 @@ jobs:
       - name: Run test suite
         run: tox --skip-pkg-install
 
-      - name: Run test suite on local python version
-        run: tox -e ${{ steps.set_tox_env.outputs.tox_env }}
-
   test-coverage:
     name: "Check the test coverage"
     runs-on: ubuntu-latest
