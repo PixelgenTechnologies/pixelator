@@ -109,6 +109,6 @@ def test_cli_info_get_option_missing_stage(uropod_cli_invocation_data_no_amplico
 
     with pytest.raises(
         KeyError,
-        match="No commandline metadata found for stage: pixelator single-cell amplicon",
+        match="No commandline metadata found for stage: pixelator single-cell-mpx amplicon",
     ):
         data.get_option(SingleCellStage.AMPLICON, "--output")
