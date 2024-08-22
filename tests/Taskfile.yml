@@ -1,6 +1,19 @@
 version: "3"
 
 tasks:
+  test-tox:
+    desc: >-
+      Run the test suite using tox.
+    summary: |
+      Run the test suite using tox.
+
+      This allows running tests agains multiple python version easily
+    vars:
+      TOXENV: '{{ .TOXENV | default "py311" }}'
+
+    cmds:
+      - tox -e {{ .TOXENV }}
+
   pull-nf-core-pixelator:
     internal: true
     desc: >-

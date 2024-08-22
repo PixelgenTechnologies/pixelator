@@ -60,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python environment - ${{ matrix.py }}
+      - name: Set up Python environment
         uses: ./.github/actions/setup-python
         with:
           python-version: ${{ matrix.py }}
@@ -69,30 +69,22 @@ jobs:
         with:
           uri: 'https://opengene.org/fastp/fastp'
           name: 'fastp'
-          version: '0.23.2'
+          version: '0.23.4'
 
-      - name: Generate tox env for python version
-        uses: actions/github-script@v6
-        id: set_tox_env
-        with:
-          script: |
-            const pythonVersion = "${{ matrix.py }}"
-            const toxEnv = "py" + pythonVersion.replace(/\./g, '')
-            core.setOutput("tox_env", toxEnv)
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --user pipx
-          python -m pipx ensurepath
-          pipx install poetry
-          pip install tox
-          poetry self add poetry-plugin-export
-          poetry export --output dev_requirements.txt --quiet --no-interaction --no-ansi --without-hashes --with dev
-          pip install -r dev_requirements.txt
-          pip install -e .
+      - name: Install tox
+        run: python -m pip install tox-gh>=1.2
+
+      - name: Setup test suite
+        run: tox -vv --notest
+
+      - name: Run test suite
+        run: tox --skip-pkg-install
 
       - name: Run test suite on local python version
-        run: tox -e ${{ steps.set_tox_env.outputs.tox_env }} --current-env
+        run: tox -e ${{ steps.set_tox_env.outputs.tox_env }}
 
   test-coverage:
     name: "Check the test coverage"
@@ -109,15 +101,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Create dependencies file
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
         run: |
-          pip install poetry
-          poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi --with dev
-          pip install -r requirements.txt
+          poetry install --with dev
 
       - name: Run test suite
         run: |
-          pytest --cov=src/
+          poetry run pytest --cov=src/
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
@@ -150,12 +143,13 @@ jobs:
           name: 'fastp'
           version: '0.23.2'
 
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+
       - name: Install dependencies
         run: |
-          pip install poetry
-          poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi --with dev
-          pip install -r requirements.txt
+          poetry install --with dev
 
       - name: Run workflow tests
         run: |
-          pytest -s -m "workflow_test" --basetemp=/tmp/pytest-results tests/integration/test_small_${{ matrix.case }}.yaml --log-cli-level=DEBUG
+          poetry run pytest -s -m "workflow_test" --basetemp=/tmp/pytest-results tests/integration/test_small_${{ matrix.case }}.yaml --log-cli-level=DEBUG
