@@ -179,7 +179,7 @@ def get_collapsed_fragments_for_component(  # noqa: DOC402,DOC404
         yield CollapsedFragment(representative_frag, collapsed_fragments, total_reads)
 
 
-# This code snipped has been obtained from:
+# This code snippet has been obtained from:
 # https://github.com/CGATOxford/umi-tools
 def get_connected_components(
     graph: dict[UniqueFragment, list[UniqueFragment]], counts: dict[UniqueFragment, int]
