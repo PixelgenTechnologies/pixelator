@@ -1,6 +1,6 @@
 {
     "sample_id": "pbmcs_unstimulated",
-    "components_modularity": 0.9996688156200267,
+    "components_modularity": 0.999668815620027,
     "fraction_molecules_in_largest_component": 0.0006480881399870382,
     "fraction_pixels_in_largest_component": 0.0004888381945576015,
     "input_cell_count": 3052,
@@ -25,7 +25,7 @@
     },
     "read_count_per_cell_stats": {
         "mean": 2.043577981651376,
-        "std": 0.2592989644447358,
+        "std": 0.2592989644447359,
         "min": 2.0,
         "q1": 2.0,
         "q2": 2.0,
@@ -47,7 +47,7 @@
     },
     "b_pixel_count_per_cell_stats": {
         "mean": 1.0026212319790302,
-        "std": 0.05113082359929529,
+        "std": 0.05113082359929531,
         "min": 1.0,
         "q1": 1.0,
         "q2": 1.0,
@@ -69,7 +69,7 @@
     },
     "a_pixel_b_pixel_ratio_per_cell_stats": {
         "mean": 1.0068807339449541,
-        "std": 0.09380465569259072,
+        "std": 0.09380465569259074,
         "min": 0.5,
         "q1": 1.0,
         "q2": 1.0,
@@ -90,8 +90,8 @@
         "iqr": 0.0
     },
     "a_pixel_count_per_b_pixel_per_cell_stats": {
-        "mean": 1.0081913499344692,
-        "std": 0.0901346310843966,
+        "mean": 1.0026212319790302,
+        "std": 0.05113082359929531,
         "min": 1.0,
         "q1": 1.0,
         "q2": 1.0,
@@ -102,7 +102,7 @@
     },
     "b_pixel_count_per_a_pixel_per_cell_stats": {
         "mean": 1.0026212319790302,
-        "std": 0.05113082359929529,
+        "std": 0.05113082359929531,
         "min": 1.0,
         "q1": 1.0,
         "q2": 1.0,
