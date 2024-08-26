@@ -172,12 +172,13 @@ def test_plot_colocalization_diff_heatmap(setup_basic_pixel_dataset):
     colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "PXLCMP0000003"]
     fig, _ = plot_colocalization_diff_heatmap(
         colocalization_data,
-        target="PXLCMP0000003",
+        targets="PXLCMP0000003",
         reference="PXLCMP0000002",
         contrast_column="component",
         use_z_score=False,
+        min_log_p=0,
     )
-    return fig
+    return fig["PXLCMP0000003"]
 
 
 @pytest.mark.mpl_image_compare(
@@ -197,7 +198,7 @@ def test_plot_colocalization_diff_volcano(setup_basic_pixel_dataset):
     colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "PXLCMP0000003"]
     fig, _ = plot_colocalization_diff_volcano(
         colocalization_data,
-        target="PXLCMP0000003",
+        targets="PXLCMP0000003",
         reference="PXLCMP0000002",
         contrast_column="component",
         use_z_score=False,

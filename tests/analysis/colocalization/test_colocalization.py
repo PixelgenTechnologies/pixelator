@@ -25,20 +25,20 @@ def test_get_differential_colocalization(setup_basic_pixel_dataset):
     pxl_data, *_ = setup_basic_pixel_dataset
     result = get_differential_colocalization(
         colocalization_data_frame=pxl_data.colocalization,
-        target="PXLCMP0000002",
+        targets="PXLCMP0000002",
         reference="PXLCMP0000003",
         contrast_column="component",
         use_z_score=False,
-    )
+    ).iloc[:1, :]
     expected = pd.DataFrame.from_dict(
         {
             0: {
                 "marker_1": "CD19",
                 "marker_2": "CD45",
-                "markers": "CD19/CD45",
                 "stat": 0.0,
                 "p_value": 1.0,
-                "median_difference": 0.09999999999999998,
+                "median_difference": 0.1,
+                "target": "PXLCMP0000002",
                 "p_adj": 1.0,
             }
         },
