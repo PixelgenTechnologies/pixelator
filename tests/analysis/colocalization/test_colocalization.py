@@ -38,8 +38,8 @@ def test_get_differential_colocalization(setup_basic_pixel_dataset):
                 "stat": 0.0,
                 "p_value": 1.0,
                 "median_difference": 0.1,
-                "target": "PXLCMP0000002",
                 "p_adj": 1.0,
+                "target": "PXLCMP0000002",
             }
         },
         orient="index",
