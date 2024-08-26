@@ -321,8 +321,8 @@ def plot_colocalization_diff_volcano(
     )
 
     fig, axes = plt.subplots(1, len(targets))
-    for target in targets:
-        ax = axes[target] if len(targets) > 1 else axes
+    for i, target in enumerate(sorted(targets)):
+        ax = axes[i] if len(targets) > 1 else axes
         target_differential_colocalization = differential_colocalization.loc[
             differential_colocalization["target"] == target, :
         ]
@@ -342,7 +342,11 @@ def plot_colocalization_diff_volcano(
             cmap=cmap,
         )
 
-        ax.set(xlabel="Median difference", ylabel=r"$-\log_{10}$(adj. p-value)")
+        ax.set(
+            xlabel="Median difference",
+            ylabel=r"$-\log_{10}$(adj. p-value)",
+            title=f"Differential colocalization between {reference} and {target}",
+        )
         fig = plt.gcf()
         fig.colorbar(p, label="Mean target colocalization score", cmap=cmap)
         _add_top_marker_labels(
@@ -351,5 +355,5 @@ def plot_colocalization_diff_volcano(
             min_log_p=min_log_p,
             ax=ax,
         )
-
+    fig.set_size_inches(6 * len(targets), 5)
     return fig, axes

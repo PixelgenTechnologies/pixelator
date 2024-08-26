@@ -208,6 +208,31 @@ def test_plot_colocalization_diff_volcano(setup_basic_pixel_dataset):
 
 
 @pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_colocalization_diff_volcano_multiple",
+)
+def test_plot_colocalization_diff_volcano_multiple(setup_basic_pixel_dataset):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    colocalization_data = pxl_data.colocalization
+    colocalization_data.loc[5] = [
+        "CD3",
+        "CD19",
+        0.5,
+        "PXLCMP0000002",
+    ]  # Adding a new pair of colocalization data as the volcano needs at least 2 rows
+    colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "PXLCMP0000003"]
+    fig, _ = plot_colocalization_diff_volcano(
+        colocalization_data,
+        reference="PXLCMP0000002",
+        contrast_column="component",
+        use_z_score=False,
+        min_log_p=-1,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
     deterministic=False,
     baseline_dir="../snapshots/test_plot/test_scatter_umi_per_upia_vs_tau",
 )
