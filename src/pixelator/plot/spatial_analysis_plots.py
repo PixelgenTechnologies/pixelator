@@ -66,7 +66,7 @@ def plot_colocalization_heatmap(
     colocalization_data: pd.DataFrame,
     markers: Union[list, None] = None,
     cmap: str = "vlag",
-    use_z_scores: bool = False,
+    value_column: str = "pearson_z",
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot a colocalization heatmap based on the provided colocalization data.
 
@@ -80,21 +80,18 @@ def plot_colocalization_heatmap(
     "marker_1", "marker_2", "pearson", "pearson_z", and "component".
     :param markers: The markers to include in the heatmap. Defaults to None.
     :param cmap: The colormap to use for the heatmap. Defaults to "vlag".
-    :param use_z_scores: Whether to use z-scores. Defaults to False.
+    :param value_column: What colocalization metric to use. Defaults to "pearson_z".
 
     :return: The figure and axes objects of the plot.
     :rtype: Tuple[plt.Figure, plt.Axes]
 
     """
-    if use_z_scores:
-        value_col = "pearson_z"
-    else:
-        value_col = "pearson"
-
-    colocalization_data = _make_colocalization_symmetric(colocalization_data, value_col)
+    colocalization_data = _make_colocalization_symmetric(
+        colocalization_data, value_column
+    )
 
     colocalization_data_pivot = _pivot_colocalization_data(
-        colocalization_data, value_col, markers=markers
+        colocalization_data, value_column, markers=markers
     )
     sns.clustermap(
         colocalization_data_pivot,
@@ -116,7 +113,7 @@ def plot_colocalization_diff_heatmap(
     top_marker_log_p: float | None = None,
     min_log_p: float = 3.0,
     cmap: str = "vlag",
-    use_z_score: bool = True,
+    value_column: str = "pearson_z",
 ) -> Tuple[dict, dict]:
     """Plot the differential colocalization between reference and target components.
 
@@ -132,12 +129,13 @@ def plot_colocalization_diff_heatmap(
     contrast_column. When not specified, all labels in the contrast_column
     except the reference label are used as targets.
     :param contrast_column: The column to use for the contrast. Defaults to "sample".
-    :param top_marker_log_p: When set to a value, only markers with at least
-    one higher log10 p-score are plotted.
+    :param top_marker_log_p: When set to a value, only markers that differentially
+    colocalize with at least one other marker with a log10 p-score higher than
+    top_marker_log_p are inclueded in the plot.
     :param min_log_p: The minimum log10 p-value. Pairs with lower log10 p-value
     are assigned 0.
     :param cmap: The colormap to use for the heatmap. Defaults to "vlag".
-    :param use_z_score: Whether to use the z-score. Defaults to True.
+    :param value_column: What colocalization metric to use. Defaults to "pearson_z".
 
     :return: Two dicts mapping target names respectively to figures and axes of
     the generated plots.
@@ -153,11 +151,11 @@ def plot_colocalization_diff_heatmap(
         reference=reference,
         targets=targets,
         contrast_column=contrast_column,
-        use_z_score=use_z_score,
+        value_column=value_column,
     )
     figs = {}
     axes = {}
-    for ind, target in enumerate(targets):
+    for target in sorted(targets):
         target_diff = differential_colocalization.loc[
             differential_colocalization["target"] == target, :
         ]
@@ -217,7 +215,7 @@ def _add_top_marker_labels(
         -np.log10(differential_colocalization["p_adj"]) > min_log_p, :
     ]
 
-    ## Labels for marker pair withs highest negative differential colocalization scores
+    # Labels for marker pair withs highest negative differential colocalization scores
     for _, row in differential_colocalization.head(n_top_pairs).iterrows():
         x, y = row[["median_difference", "p_adj"]]
         y = -np.log10(y)
@@ -231,7 +229,7 @@ def _add_top_marker_labels(
             fontsize="xx-small",
         )
 
-    ## Labels for marker pair with highest positive differential colocalization scores
+    # Labels for marker pair with highest positive differential colocalization scores
     for _, row in differential_colocalization.tail(n_top_pairs).iterrows():
         x, y = row[["median_difference", "p_adj"]]
         y = -np.log10(y)
@@ -272,7 +270,7 @@ def plot_colocalization_diff_volcano(
     targets: str | list[str] | None = None,
     contrast_column: str = "sample",
     cmap: str = "vlag",
-    use_z_score: bool = True,
+    value_column="pearson_z",
     n_top_pairs: int = 5,
     min_log_p: float = 5.0,
 ) -> Tuple[plt.Figure, plt.Axes]:
@@ -287,18 +285,13 @@ def plot_colocalization_diff_volcano(
     :param reference: The label for reference components in the contrast_column.
     :param contrast_column: The column to use for the contrast. Defaults to "sample".
     :param cmap: The colormap to use for the heatmap. Defaults to "vlag".
-    :param use_z_score: Whether to use the z-score. Defaults to True.
+    :param value_column: What colocalization metric to use. Defaults to "pearson_z".
     :param n_top_pairs: Number of high value marker-pairs to label from positive and negative sides.
     :param min_log_p: marker-pairs only receive a label if -log10 of their p-value is higher than
                       this parameter.
 
     :return: The figure and axes objects of the plot.
     """
-    if use_z_score:
-        value_col = "pearson_z"
-    else:
-        value_col = "pearson"
-
     if isinstance(targets, str):
         targets = [targets]
     elif targets is None:
@@ -317,7 +310,7 @@ def plot_colocalization_diff_volcano(
         targets=targets,
         reference=reference,
         contrast_column=contrast_column,
-        use_z_score=use_z_score,
+        value_column=value_column,
     )
 
     fig, axes = plt.subplots(1, len(targets))
@@ -331,12 +324,12 @@ def plot_colocalization_diff_volcano(
             target_coloc=colocalization_data.loc[
                 colocalization_data[contrast_column] == target, :
             ],
-            value_col=value_col,
+            value_col=value_column,
         )
         p = ax.scatter(
             x=target_differential_colocalization["median_difference"],
             y=-np.log10(target_differential_colocalization["p_adj"]),
-            c=target_differential_colocalization[value_col],
+            c=target_differential_colocalization[value_column],
             s=20,
             marker="o",
             cmap=cmap,
@@ -347,7 +340,6 @@ def plot_colocalization_diff_volcano(
             ylabel=r"$-\log_{10}$(adj. p-value)",
             title=f"Differential colocalization between {reference} and {target}",
         )
-        fig = plt.gcf()
         fig.colorbar(p, label="Mean target colocalization score", cmap=cmap)
         _add_top_marker_labels(
             target_differential_colocalization,

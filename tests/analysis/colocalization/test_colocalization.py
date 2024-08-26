@@ -28,7 +28,7 @@ def test_get_differential_colocalization(setup_basic_pixel_dataset):
         targets="PXLCMP0000002",
         reference="PXLCMP0000003",
         contrast_column="component",
-        use_z_score=False,
+        value_column="pearson",
     ).iloc[:1, :]
     expected = pd.DataFrame.from_dict(
         {

@@ -151,7 +151,9 @@ def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_node
 def test_plot_colocalization_heatmap(setup_basic_pixel_dataset):
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
-    fig, _ = plot_colocalization_heatmap(pxl_data.colocalization)
+    fig, _ = plot_colocalization_heatmap(
+        pxl_data.colocalization, value_column="pearson"
+    )
     return fig
 
 
@@ -175,7 +177,7 @@ def test_plot_colocalization_diff_heatmap(setup_basic_pixel_dataset):
         targets="PXLCMP0000003",
         reference="PXLCMP0000002",
         contrast_column="component",
-        use_z_score=False,
+        value_column="pearson",
         min_log_p=0,
     )
     return fig["PXLCMP0000003"]
@@ -201,7 +203,7 @@ def test_plot_colocalization_diff_volcano(setup_basic_pixel_dataset):
         targets="PXLCMP0000003",
         reference="PXLCMP0000002",
         contrast_column="component",
-        use_z_score=False,
+        value_column="pearson",
         min_log_p=-1,
     )
     return fig
@@ -226,7 +228,7 @@ def test_plot_colocalization_diff_volcano_multiple(setup_basic_pixel_dataset):
         colocalization_data,
         reference="PXLCMP0000002",
         contrast_column="component",
-        use_z_score=False,
+        value_column="pearson",
         min_log_p=-1,
     )
     return fig

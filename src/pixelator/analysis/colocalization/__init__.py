@@ -348,7 +348,7 @@ def get_differential_colocalization(
     reference: str,
     targets: str | list[str] | None = None,
     contrast_column: str = "sample",
-    use_z_score: bool = True,
+    value_column: str = "pearson_z",
 ) -> pd.DataFrame:
     """Calculate the differential colocalization.
 
@@ -356,16 +356,11 @@ def get_differential_colocalization(
     :param target: The label for target components in the contrast_column.
     :param reference: The label for reference components in the contrast_column.
     :param contrast_column: The column to use for the contrast. Defaults to "sample".
-    :param use_z_score: Whether to use the z-score. Defaults to True.
+    :param value_column: What colocalization metric to use. Defaults to "pearson_z".
 
     :return: The differential colocalization.
     :rtype: pd.DataFrame
     """
-    if use_z_score:
-        value_column = "pearson_z"
-    else:
-        value_column = "pearson"
-
     if targets is None:
         targets = colocalization_data_frame[contrast_column].unique()
         targets = list(set(targets) - {reference})
