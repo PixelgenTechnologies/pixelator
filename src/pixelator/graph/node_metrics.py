@@ -51,8 +51,10 @@ def compute_transition_probabilities(
     if remove_self_loops and k > 1:
         # Set diagonal of W to 0 if k > 1 for gi to avoid self-loops
         W_out.setdiag(values=0)
-        # Renormalize transition probabilities to sum to 1
-        W_out = W_out / W_out.sum(axis=0)[:, None]
+    # Renormalize transition probabilities to sum to 1
+    row_sums = np.array(W_out.sum(axis=1)).flatten()
+    inv_row_sums = np.reciprocal(row_sums, where=row_sums != 0)
+    W_out = W_out.multiply(inv_row_sums[:, np.newaxis])
 
     return W_out
 
