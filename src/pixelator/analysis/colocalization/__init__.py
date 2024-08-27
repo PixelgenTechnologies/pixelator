@@ -7,9 +7,7 @@ import logging
 from functools import partial
 from typing import Optional, get_args
 
-import numpy as np
 import pandas as pd
-from scipy.stats import mannwhitneyu
 from statsmodels.stats.multitest import multipletests
 
 from pixelator.analysis.analysis_engine import PerComponentAnalysis
@@ -38,6 +36,7 @@ from pixelator.statistics import (
     correct_pvalues,
     log1p_transformation,
     rate_diff_transformation,
+    wilcoxon_test,
 )
 
 logger = logging.getLogger(__name__)
@@ -316,33 +315,6 @@ def colocalization_scores(
     return scores
 
 
-def _wilcoxon(
-    df,
-    reference,
-    target,
-    contrast_column,
-    value_column,
-) -> pd.Series:
-    reference_df = df.loc[df[contrast_column] == reference, :]
-    target_df = df.loc[df[contrast_column] == target, :]
-
-    if reference_df.empty or target_df.empty:
-        return pd.Series({"stat": 0, "p_value": 1, "median_difference": 0})
-
-    estimate = np.median(
-        target_df[value_column].to_numpy()[:, None]
-        - reference_df[value_column].to_numpy()
-    )
-
-    stat, p_value = mannwhitneyu(
-        x=reference_df[value_column],
-        y=target_df[value_column],
-        alternative="two-sided",
-    )
-
-    return pd.Series({"stat": stat, "p_value": p_value, "median_difference": estimate})
-
-
 def get_differential_colocalization(
     colocalization_data_frame: pd.DataFrame,
     reference: str,
@@ -380,7 +352,7 @@ def get_differential_colocalization(
         differential_colocalization = (
             data_frame.groupby(["marker_1", "marker_2"])
             .apply(
-                lambda marker_data: _wilcoxon(
+                lambda marker_data: wilcoxon_test(
                     marker_data,
                     reference=reference,
                     target=target,

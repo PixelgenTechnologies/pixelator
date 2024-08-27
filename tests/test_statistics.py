@@ -13,6 +13,7 @@ from pixelator.statistics import (
     log1p_transformation,
     rate_diff_transformation,
     rel_normalization,
+    wilcoxon_test,
 )
 
 
@@ -164,3 +165,25 @@ def test_rel_normalization():
             index=["0000000", "0000001"],
         ),
     )
+
+
+def test_wilcoxon_test():
+    same_dist_df = pd.DataFrame(
+        {
+            "group": ["A"] * 50 + ["B"] * 50,
+            "value": np.random.normal(size=100),
+        }
+    )
+    same_dist_result = wilcoxon_test(same_dist_df, "A", "B", "group", "value")
+    assert same_dist_result["p_value"] > 0.05
+    diff_dist_df = pd.DataFrame(
+        {
+            "group": ["A"] * 50 + ["B"] * 50,
+            "value": np.concatenate(
+                [np.random.normal(size=50), np.random.normal(loc=1, size=50)]
+            ),
+        }
+    )
+    diff_dist_result = wilcoxon_test(diff_dist_df, "A", "B", "group", "value")
+    assert diff_dist_result["p_value"] < 0.05
+    assert diff_dist_result["median_difference"] > 0

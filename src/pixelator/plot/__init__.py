@@ -26,6 +26,7 @@ from pixelator.plot.spatial_analysis_plots import (
     plot_colocalization_diff_heatmap,
     plot_colocalization_diff_volcano,
     plot_colocalization_heatmap,
+    plot_polarity_diff_volcano,
 )
 
 sns.set_style("whitegrid")
