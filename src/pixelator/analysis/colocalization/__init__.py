@@ -316,19 +316,18 @@ def colocalization_scores(
     return scores
 
 
-def _colocalization_wilcoxon(
-    markers,
+def _wilcoxon(
     df,
     reference,
     target,
     contrast_column,
     value_column,
-):
+) -> pd.Series:
     reference_df = df.loc[df[contrast_column] == reference, :]
     target_df = df.loc[df[contrast_column] == target, :]
 
     if reference_df.empty or target_df.empty:
-        return {}
+        return pd.Series({"stat": 0, "p_value": 1, "median_difference": 0})
 
     estimate = np.median(
         target_df[value_column].to_numpy()[:, None]
@@ -341,22 +340,15 @@ def _colocalization_wilcoxon(
         alternative="two-sided",
     )
 
-    return {
-        "marker_1": markers[0],
-        "marker_2": markers[1],
-        "markers": "/".join(markers),
-        "stat": stat,
-        "p_value": p_value,
-        "median_difference": estimate,
-    }
+    return pd.Series({"stat": stat, "p_value": p_value, "median_difference": estimate})
 
 
 def get_differential_colocalization(
     colocalization_data_frame: pd.DataFrame,
-    target: str,
     reference: str,
+    targets: str | list[str] | None = None,
     contrast_column: str = "sample",
-    use_z_score: bool = True,
+    value_column: str = "pearson_z",
 ) -> pd.DataFrame:
     """Calculate the differential colocalization.
 
@@ -364,49 +356,62 @@ def get_differential_colocalization(
     :param target: The label for target components in the contrast_column.
     :param reference: The label for reference components in the contrast_column.
     :param contrast_column: The column to use for the contrast. Defaults to "sample".
-    :param use_z_score: Whether to use the z-score. Defaults to True.
+    :param value_column: What colocalization metric to use. Defaults to "pearson_z".
 
     :return: The differential colocalization.
     :rtype: pd.DataFrame
     """
-    if use_z_score:
-        value_column = "pearson_z"
-    else:
-        value_column = "pearson"
+    if targets is None:
+        targets = colocalization_data_frame[contrast_column].unique()
+        targets = list(set(targets) - {reference})
+    elif isinstance(targets, str):
+        targets = [targets]
 
+    if len(targets) > 5:
+        logger.warning(
+            "There are more than 5 targets in the dataset. This may take a while."
+        )
     same_marker_mask = (
         colocalization_data_frame["marker_1"] == colocalization_data_frame["marker_2"]
     )
     data_frame = colocalization_data_frame.loc[~same_marker_mask, :]
-
-    differential_colocalization = pd.DataFrame.from_records(
-        data_frame.groupby(["marker_1", "marker_2"]).apply(
-            lambda marker_data: _colocalization_wilcoxon(
-                marker_data.name,
-                marker_data,
-                reference=reference,
-                target=target,
-                contrast_column=contrast_column,
-                value_column=value_column,
+    merged_differential_colocalization = pd.DataFrame()
+    for target in targets:
+        differential_colocalization = (
+            data_frame.groupby(["marker_1", "marker_2"])
+            .apply(
+                lambda marker_data: _wilcoxon(
+                    marker_data,
+                    reference=reference,
+                    target=target,
+                    contrast_column=contrast_column,
+                    value_column=value_column,
+                )
             )
+            .reset_index()
         )
-    )
-    # If a marker appears only in one of the datasets, it's differential value will be NAN
-    nan_values = differential_colocalization[
-        differential_colocalization["median_difference"].isna()
-    ].index
-    differential_colocalization.drop(
-        nan_values,
-        axis="index",
-        inplace=True,
-    )
 
-    _, pvals_corrected, *_ = multipletests(
-        differential_colocalization["p_value"], method="bonferroni"
-    )
-    differential_colocalization["p_adj"] = pvals_corrected
+        # If a marker appears only in one of the datasets,
+        # it's differential value will be NAN
+        nan_values = differential_colocalization[
+            differential_colocalization["median_difference"].isna()
+        ].index
+        differential_colocalization.drop(
+            nan_values,
+            axis="index",
+            inplace=True,
+        )
 
-    return differential_colocalization
+        _, pvals_corrected, *_ = multipletests(
+            differential_colocalization["p_value"], method="bonferroni"
+        )
+        differential_colocalization["p_adj"] = pvals_corrected
+        differential_colocalization["target"] = target
+        merged_differential_colocalization = pd.concat(
+            (merged_differential_colocalization, differential_colocalization), axis=0
+        )
+
+    return merged_differential_colocalization
 
 
 class ColocalizationAnalysis(PerComponentAnalysis):

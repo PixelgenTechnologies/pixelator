@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [x.x.x] - 2024-xx-xx
 
 
+### Changed
+
+-   plot_colocalization_diff_volcano and plot_colocalization_diff_heatmap now support multiple targets.
+
 ### Fixed
 
 -   Improved memory usage when aggregating pixel files with precomputed layouts.
