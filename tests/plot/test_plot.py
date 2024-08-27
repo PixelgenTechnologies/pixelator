@@ -23,6 +23,7 @@ from pixelator.plot import (
     plot_colocalization_diff_heatmap,
     plot_colocalization_diff_volcano,
     plot_colocalization_heatmap,
+    plot_polarity_diff_volcano,
     scatter_umi_per_upia_vs_tau,
 )
 from pixelator.plot.layout_plots import (
@@ -211,6 +212,25 @@ def test_plot_colocalization_diff_volcano(setup_basic_pixel_dataset):
 
 @pytest.mark.mpl_image_compare(
     deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_polarity_diff_volcano",
+)
+def test_plot_polarity_diff_volcano(setup_basic_pixel_dataset):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    polarity_data = pxl_data.polarization
+    fig, _ = plot_polarity_diff_volcano(
+        polarity_data,
+        targets="PXLCMP0000003",
+        reference="PXLCMP0000002",
+        contrast_column="component",
+        value_column="morans_i",
+        min_log_p=-1,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
     baseline_dir="../snapshots/test_plot/test_plot_colocalization_diff_volcano_multiple",
 )
 def test_plot_colocalization_diff_volcano_multiple(setup_basic_pixel_dataset):
@@ -229,6 +249,24 @@ def test_plot_colocalization_diff_volcano_multiple(setup_basic_pixel_dataset):
         reference="PXLCMP0000002",
         contrast_column="component",
         value_column="pearson",
+        min_log_p=-1,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_plot_polarity_diff_volcano_multiple",
+)
+def test_plot_polarity_diff_volcano_multiple(setup_basic_pixel_dataset):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    polarity_data = pxl_data.polarization
+    fig, _ = plot_polarity_diff_volcano(
+        polarity_data,
+        reference="PXLCMP0000002",
+        contrast_column="component",
+        value_column="morans_i",
         min_log_p=-1,
     )
     return fig

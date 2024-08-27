@@ -12,6 +12,7 @@ import pandas as pd
 import seaborn as sns
 
 from pixelator.analysis.colocalization import get_differential_colocalization
+from pixelator.analysis.polarization import get_differential_polarity
 
 logger = logging.getLogger(__name__)
 
@@ -203,20 +204,21 @@ def plot_colocalization_diff_heatmap(
 
 
 def _add_top_marker_labels(
-    differential_colocalization,
+    plot_data,
     ax,
     n_top_pairs: int = 5,
     min_log_p: float = 5.0,
 ):
-    differential_colocalization = differential_colocalization.sort_values(
-        "median_difference"
-    )
-    differential_colocalization = differential_colocalization.loc[
-        -np.log10(differential_colocalization["p_adj"]) > min_log_p, :
-    ]
+    plot_data = plot_data.sort_values("median_difference")
+    plot_data = plot_data.loc[-np.log10(plot_data["p_adj"]) > min_log_p, :]
 
     # Labels for marker pair withs highest negative differential colocalization scores
-    for _, row in differential_colocalization.head(n_top_pairs).iterrows():
+    for _, row in plot_data.head(n_top_pairs).iterrows():
+        if "marker_1" not in row.index:
+            name = row["marker"]
+        else:
+            name = row["marker_1"] + "/" + row["marker_2"]
+
         x, y = row[["median_difference", "p_adj"]]
         y = -np.log10(y)
         if x > 0:
@@ -224,13 +226,17 @@ def _add_top_marker_labels(
         ax.text(
             x,
             y,
-            row["marker_1"] + "/" + row["marker_2"],
+            name,
             horizontalalignment="left",
             fontsize="xx-small",
         )
 
     # Labels for marker pair with highest positive differential colocalization scores
-    for _, row in differential_colocalization.tail(n_top_pairs).iterrows():
+    for _, row in plot_data.tail(n_top_pairs).iterrows():
+        if "marker_1" not in row.index:
+            name = row["marker"]
+        else:
+            name = row["marker_1"] + "/" + row["marker_2"]
         x, y = row[["median_difference", "p_adj"]]
         y = -np.log10(y)
         if x < 0:
@@ -238,7 +244,7 @@ def _add_top_marker_labels(
         ax.text(
             x,
             y,
-            row["marker_1"] + "/" + row["marker_2"],
+            name,
             horizontalalignment="left",
             fontsize="xx-small",
         )
@@ -274,7 +280,7 @@ def plot_colocalization_diff_volcano(
     n_top_pairs: int = 5,
     min_log_p: float = 5.0,
 ) -> Tuple[plt.Figure, plt.Axes]:
-    """Generate the volcano plot of differential colocalization between reference and target components.
+    """Generate the volcano plot of differential colocalization between reference and target(s) components.
 
     Example usage: `plot_colocalization_diff_volcano(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample")`.
 
@@ -300,7 +306,7 @@ def plot_colocalization_diff_volcano(
 
     if len(targets) > 5:
         raise ValueError(
-            "Only up to 5 target components can be visualized. "
+            "Only up to 5 targets can be visualized. "
             "Number of requested targets is {len(targets)}."
             "Requested targets are: {targets}."
         )
@@ -338,8 +344,9 @@ def plot_colocalization_diff_volcano(
         ax.set(
             xlabel="Median difference",
             ylabel=r"$-\log_{10}$(adj. p-value)",
-            title=f"Differential colocalization between {reference} and {target}",
+            title=f"Differential colocalization\nbetween {reference}\nand {target}",
         )
+        ax.title.set_y(1.05)
         fig.colorbar(p, label="Mean target colocalization score", cmap=cmap)
         _add_top_marker_labels(
             target_differential_colocalization,
@@ -347,5 +354,98 @@ def plot_colocalization_diff_volcano(
             min_log_p=min_log_p,
             ax=ax,
         )
+    fig.subplots_adjust(top=0.8)
+    fig.set_size_inches(6 * len(targets), 5)
+    return fig, axes
+
+
+def plot_polarity_diff_volcano(
+    polarity_data: pd.DataFrame,
+    reference: str,
+    targets: str | list[str] | None = None,
+    contrast_column: str = "sample",
+    cmap: str = "vlag",
+    value_column="morans_z",
+    n_top_pairs: int = 5,
+    min_log_p: float = 5.0,
+) -> Tuple[plt.Figure, plt.Axes]:
+    """Generate the volcano plot of differential polarity between reference and target(s) components.
+
+    Example usage: `plot_polarity_diff_volcano(
+                                                pxl.polariazation,target:"stimulated",
+                                                reference:"control",
+                                                contrast_column="sample"
+                                                )`.
+
+    :param polarity_data: The polarity data frame that can be found in a pixel variable
+                            "pxl" through pxl.polarization. The data frame should contain the
+                            columns "marker", the value_column (e.g. morans_z), and the contrast_column.
+    :param target: The label for target components in the contrast_column.
+    :param reference: The label for reference components in the contrast_column.
+    :param contrast_column: The column to use for the contrast. Defaults to "sample".
+    :param cmap: The colormap to use for the heatmap. Defaults to "vlag".
+    :param value_column: What polarity metric to use. Defaults to "morans_z".
+    :param n_top_pairs: Number of high value marker-pairs to label from positive and negative sides.
+    :param min_log_p: marker-pairs only receive a label if -log10 of their p-value is higher than
+                      this parameter.
+
+    :return: The figure and axes objects of the plot.
+    """
+    if isinstance(targets, str):
+        targets = [targets]
+    elif targets is None:
+        targets = polarity_data[contrast_column].unique()
+        targets = list(set(targets) - {reference})
+
+    if len(targets) > 5:
+        raise ValueError(
+            "Only up to 5 targets can be visualized. "
+            "Number of requested targets is {len(targets)}."
+            "Requested targets are: {targets}."
+        )
+
+    differential_polarity = get_differential_polarity(
+        polarity_data,
+        targets=targets,
+        reference=reference,
+        contrast_column=contrast_column,
+        value_column=value_column,
+    )
+
+    fig, axes = plt.subplots(1, len(targets))
+    for i, target in enumerate(sorted(targets)):
+        ax = axes[i] if len(targets) > 1 else axes
+        target_differential_polarity = differential_polarity.loc[
+            differential_polarity["target"] == target, :
+        ]
+        target_differential_polarity["target_mean"] = (
+            polarity_data[polarity_data[contrast_column] == target]
+            .groupby("marker")[value_column]
+            .mean()
+        )
+
+        p = ax.scatter(
+            x=target_differential_polarity["median_difference"],
+            y=-np.log10(target_differential_polarity["p_adj"]),
+            c=target_differential_polarity["target_mean"],
+            s=20,
+            marker="o",
+            cmap=cmap,
+        )
+
+        ax.set(
+            xlabel="Median difference",
+            ylabel=r"$-\log_{10}$(adj. p-value)",
+            title=f"Differential polarity\nbetween {reference}\nand {target}",
+        )
+        ax.title.set_y(1.05)
+        fig.colorbar(p, label="Mean target polarity score", cmap=cmap)
+        _add_top_marker_labels(
+            target_differential_polarity,
+            n_top_pairs=n_top_pairs,
+            min_log_p=min_log_p,
+            ax=ax,
+        )
+    fig.subplots_adjust(top=0.8)
     fig.set_size_inches(6 * len(targets), 5)
     return fig, axes

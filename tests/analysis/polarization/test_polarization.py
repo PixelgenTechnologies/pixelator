@@ -13,6 +13,7 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 
 from pixelator.analysis.polarization import (
     PolarizationAnalysis,
+    get_differential_polarity,
     polarization_scores,
     polarization_scores_component_graph,
 )
@@ -524,3 +525,44 @@ class TestPolarizationAnalysis:
 
         pxl_dataset = self.analysis.add_to_pixel_dataset(mock_data, pxl_dataset)
         assert_frame_equal(pxl_dataset.polarization, mock_data)
+
+
+def test_get_differential_polarity(setup_basic_pixel_dataset):
+    pxl_data, *_ = setup_basic_pixel_dataset
+    result = get_differential_polarity(
+        polarity_data=pxl_data.polarization,
+        targets="PXLCMP0000002",
+        reference="PXLCMP0000003",
+        contrast_column="component",
+        value_column="morans_i",
+    )
+    expected = pd.DataFrame.from_dict(
+        {
+            0: {
+                "marker": "CD19",
+                "stat": 0.0,
+                "p_value": 1.0,
+                "median_difference": 0.2,
+                "p_adj": 1.0,
+                "target": "PXLCMP0000002",
+            },
+            1: {
+                "marker": "CD3",
+                "stat": 0.0,
+                "p_value": 1.0,
+                "median_difference": 0.0,
+                "p_adj": 1.0,
+                "target": "PXLCMP0000002",
+            },
+            2: {
+                "marker": "CD45",
+                "stat": 0.0,
+                "p_value": 1.0,
+                "median_difference": 0.0,
+                "p_adj": 1.0,
+                "target": "PXLCMP0000002",
+            },
+        },
+        orient="index",
+    )
+    assert_frame_equal(result, expected, check_exact=False, atol=0.01)
