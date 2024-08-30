@@ -450,7 +450,7 @@ def _update_edgelist_membership_lazy_frame(
         combined_hash = hex(combined_hash)[2:]
         if len(combined_hash) < DIGITS:
             combined_hash = "0" * (DIGITS - len(combined_hash)) + combined_hash
-        return combined_hash
+        return combined_hash[-DIGITS:]
 
     edge_name_to_component_hash_mapping = {}
     for component in connected_components:

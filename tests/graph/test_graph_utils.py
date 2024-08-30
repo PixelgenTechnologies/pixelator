@@ -309,9 +309,9 @@ def test_update_edgelist_membership_lazyframe(enable_backend, data_root):
     result = update_edgelist_membership(edgelist, prefix="PXLCMP").collect().to_pandas()
 
     assert set(result["component"].unique()) == {
-        "PXLCMP0000000",
-        "PXLCMP0000001",
-        "PXLCMP0000002",
-        "PXLCMP0000003",
-        "PXLCMP0000004",
+        "PXLCMPc515837",
+        "PXLCMPfb79b98",
+        "PXLCMPc6e1853",
+        "PXLCMP2d884c2",
+        "PXLCMP347deb4",
     }

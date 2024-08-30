@@ -83,7 +83,7 @@ def test_recovery_technical_multiplets(
     )
     assert len(result.collect().to_pandas()["component"].unique()) == 2
     assert info.keys() == {"PXLCMP0000000"}
-    assert sorted(list(info.values())[0]) == ["RCVCMP0000000", "RCVCMP0000001"]
+    assert sorted(list(info.values())[0]) == ["RCVCMP6ff8a42", "RCVCMPa71de81"]
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
@@ -102,7 +102,7 @@ def test_recovery_technical_multiplets_benchmark(
     )
     assert len(result.collect().to_pandas()["component"].unique()) == 2
     assert info.keys() == {"PXLCMP0000000"}
-    assert sorted(list(info.values())[0]) == ["RCVCMP0000000", "RCVCMP0000001"]
+    assert sorted(list(info.values())[0]) == ["RCVCMP6ff8a42", "RCVCMPa71de81"]
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
