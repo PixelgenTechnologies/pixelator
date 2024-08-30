@@ -377,7 +377,7 @@ def _update_edgelist_membership_data_frame(
     if prefix is None:
         prefix = DEFAULT_COMPONENT_PREFIX
 
-    if "component" in edgelist.columns:
+    if "component" in edgelist.collect_schema().names():
         logger.info("The input edge list already contain a component column")
 
     if not graph:
@@ -450,13 +450,13 @@ def _update_edgelist_membership_lazy_frame(
         combined_hash = hex(combined_hash)[2:]
         if len(combined_hash) < DIGITS:
             combined_hash = "0" * (DIGITS - len(combined_hash)) + combined_hash
-        return combined_hash[-DIGITS:]
+        return combined_hash
 
-    edge_name_to_component_hash_mapping = {
-        _get_edge_name(e): _get_component_hash(component)
-        for component in connected_components
-        for e in graph.es.select_within({v.index for v in component.vertices()})
-    }
+    edge_name_to_component_hash_mapping = {}
+    for component in connected_components:
+        comp_hash = _get_component_hash(component)
+        for e in graph.es.select_within({v.index for v in component.vertices()}):
+            edge_name_to_component_hash_mapping[_get_edge_name(e)] = comp_hash
 
     def _build_component_name_str():
         return pl.format(
@@ -467,7 +467,11 @@ def _update_edgelist_membership_lazy_frame(
 
     logger.debug("Mapping components on the edge list")
     edgelist_with_component_info = (
-        edgelist.with_columns((pl.col("upia") + pl.col("upib")).alias("edge_name"))
+        edgelist.with_columns(
+            (pl.col("upia").cast(pl.String) + pl.col("upib").cast(pl.String)).alias(
+                "edge_name"
+            )
+        )
         .with_columns(_build_component_name_str().alias("component"))
         .drop("edge_name")
     )
