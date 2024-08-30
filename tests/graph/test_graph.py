@@ -6,6 +6,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 import random
 from unittest.mock import MagicMock
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,6 +14,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from pandas.testing import assert_frame_equal
 
 from pixelator.graph import Graph
+from pixelator.graph.backends.implementations._networkx import pmds_layout
 from tests.graph.networkx.test_tools import random_sequence
 from tests.test_tools import enforce_edgelist_types_for_tests
 
@@ -574,6 +576,31 @@ def test_layout_coordinates_3d_pmds_with_weights(pentagram_graph):
         3569.35412551,
         2998.85729688,
         3569.35412551,
+    ]
+
+    assert_array_almost_equal(l2, expected, decimal=4)
+
+
+def test_pmds_layout_3d_with_weights_multigraph(pentagram_graph):
+    g = pentagram_graph.raw
+    g_multi = nx.MultiGraph(g)
+
+    result = pmds_layout(
+        g_multi,
+        pivots=4,
+        dim=3,
+        weights="prob_dist",
+        seed=123,
+    )
+    result = pd.DataFrame.from_dict(result, orient="index", columns=["x", "y", "z"])
+
+    l2 = np.linalg.norm(result[["x", "y", "z"]], axis=1)
+    expected = [
+        3569.35412551,
+        2998.85729688,
+        2998.85729688,
+        3569.35412551,
+        2998.85729688,
     ]
 
     assert_array_almost_equal(l2, expected, decimal=4)
