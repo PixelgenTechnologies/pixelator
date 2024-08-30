@@ -377,7 +377,7 @@ def _update_edgelist_membership_data_frame(
     if prefix is None:
         prefix = DEFAULT_COMPONENT_PREFIX
 
-    if "component" in edgelist.collect_schema().names():
+    if "component" in edgelist.columns:
         logger.info("The input edge list already contain a component column")
 
     if not graph:
