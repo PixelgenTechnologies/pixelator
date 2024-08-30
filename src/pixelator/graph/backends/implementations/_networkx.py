@@ -925,7 +925,7 @@ def _prob_edge_weights(
     # Add 1 to the diagonal to allow self-loops
     A = A + sp.sparse.diags([1] * A.shape[0], format="csr")
 
-    # # Divide by row sum
+    # Divide by row sum to get the stochastic matrix
     D = sp.sparse.diags(1 / A.sum(axis=1), format="csr")
     P = D @ A
 
