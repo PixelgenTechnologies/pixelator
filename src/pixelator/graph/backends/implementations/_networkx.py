@@ -775,7 +775,10 @@ def pmds_layout(
     Options are:
 
     * an np.array with non-negative values (same number of elements as edges in g)
-    * "prob_dist" to use -log(P)^3, where P is the probability of a random walker to traverse the end nodes of and edge (i->j) and back again (j->i) in 5 steps.
+    * "prob_dist" to weight each edge (i, j) by -log(P)^3, where P is the probability
+        of a random walker to go from i to j in 5 steps and then back again (j->i)
+        in 5 steps. For this computation, self-loops are added to the graph to ensure
+        that all transitions are possible.
     * None to use unweighted shortest path lengths
     :param seed: Set seed for reproducibility
     :return: A dataframe with layout coordinates
@@ -876,7 +879,35 @@ def _prob_edge_weights(
     """Compute edge weights based on k-step transition probabilities.
 
     The transition probabilities are computed using powers of the
-    stochastic matrix of the graph with self-loops allowed.
+    stochastic matrix of the graph with self-loops allowed. Self-loops
+    are necessary for bipartite graphs and without them many transitions
+    will be impossible. For instance, if we have a bipartite graph with
+    A nodes and B nodes where A can only be connected with B and vice versa,
+    there is no possible 2-step path from an A node to a B node. However,
+    if we allow self-loops, we can go from an A node to itself and then to
+    a B node in two steps. By allowing self-loops, we make all transitions
+    within the neighborhood k possible.
+
+    The transition probabilities are computed for a k-step random walk
+    by taking the k'th power of the stochastic matrix. Transition
+    probabilities are not symmetric, i.e. it matters what node we start
+    from. The probability of going from i to j in k steps
+    is not the same as the probability of going from j to i in k steps.
+    This is impractical for layout algorithms that require a single weight
+    per edge. To make the transition probabilities symmetric, we multiply
+    the transition probabilities in both directions (pk(i, j) * pk(j, i)).
+    This way, we get the probability of going from i to j in k steps and then
+    back again in k steps, so it no longer matters if we start in i or j.
+
+    Once we have computed the transition probabilities for all k-step
+    paths, we then extract the probabilities for the edges in the original
+    graph.
+
+    If we consider an edge (u, v) in the original graph, we now have
+    the probability of a random walker going from u to v in k steps and then
+    back again in k steps with self-loops allowed. If u anv v are well
+    connected (if there are many possible k-step paths between them), this
+    probability should be high.
 
     :param g: A networkx graph object
     :param k: The number of steps in the random walk
@@ -888,12 +919,13 @@ def _prob_edge_weights(
     if not isinstance(k, int) and k < 1 or k > 10:
         raise ValueError("'k' must be an integer between 1 and 10.")
 
-    A = nx.to_scipy_sparse_array(g, weight=None, nodelist=list(g.nodes), format="csr")
+    # Get the adjacency matrix. By default it is order by the nodes
+    A = nx.to_scipy_sparse_array(g, weight=None, format="csr")
 
     # Add 1 to the diagonal to allow self-loops
     A = A + sp.sparse.diags([1] * A.shape[0], format="csr")
 
-    # Divide by row sum
+    # # Divide by row sum
     D = sp.sparse.diags(1 / A.sum(axis=1), format="csr")
     P = D @ A
 
@@ -904,18 +936,28 @@ def _prob_edge_weights(
     P_step = P_step.multiply(A)
 
     # Compute bi-directional transition probabilities which are symmetric.
-    # Now we get the probability of going from i to j and back again in k steps,
-    # so it doesn't matter if we start in i or j.
+    # Now we get the probability of going from i to j and back again in k
+    # steps, so it no longer matters if we start in i or j.
     P_step_bidirectional = P_step.multiply(P_step.T)
 
     # Extract the transition probabilities for edges in g
-    edges = list(g.edges)
-    edge_probs = P_step_bidirectional[
-        [list(g.nodes).index(u) for u, _ in edges],
-        [list(g.nodes).index(v) for _, v in edges],
-    ]
+    edges = np.array(list(g.edges))
+    nodes = np.array(list(g.nodes))
 
-    return np.array(edge_probs)[0]
+    # Get end node IDs for the edges
+    node_from = edges[:, 0]
+    node_to = edges[:, 1]
+
+    # Find the correct positions to extract from the probability matrix
+    index_dict = {val: idx for idx, val in enumerate(nodes)}
+    vectorized_index = np.vectorize(lambda x: index_dict.get(x, -1))
+    row_indices = vectorized_index(node_from)
+    col_indices = vectorized_index(node_to)
+
+    # Extract the probabilities
+    edge_probs = np.asarray(P_step_bidirectional[row_indices, col_indices])[0]
+
+    return edge_probs
 
 
 def _mat_pow(mat, power):
