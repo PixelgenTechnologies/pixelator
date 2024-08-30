@@ -3,6 +3,7 @@
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
+import hashlib
 import logging
 import typing
 import warnings
@@ -432,33 +433,45 @@ def _update_edgelist_membership_lazy_frame(
     connected_components = graph.connected_components()
 
     logger.debug("Building edge to component mappings")
-    edge_index_to_component_mapping = {
-        e.index: component_idx
-        for component_idx, component in enumerate(connected_components)
+
+    def _get_edge_name(e):
+        if e.vertex_tuple[0]._data["pixel_type"] == "A":
+            return e.vertex_tuple[0]._data["name"] + e.vertex_tuple[1]._data["name"]
+        else:
+            return e.vertex_tuple[1]._data["name"] + e.vertex_tuple[0]._data["name"]
+
+    def _get_component_hash(comp):
+        combined_hash = 0
+        node_names = [v._data["name"] for v in comp.vertices()]
+        for s in node_names:
+            # Using xor of hashes to ensure order independence
+            hash_value = int(hashlib.sha256(s.encode()).hexdigest(), 16)
+            combined_hash ^= hash_value
+        combined_hash = hex(combined_hash)[2:]
+        if len(combined_hash) < DIGITS:
+            combined_hash = "0" * (DIGITS - len(combined_hash)) + combined_hash
+        return combined_hash[-DIGITS:]
+
+    edge_name_to_component_hash_mapping = {
+        _get_edge_name(e): _get_component_hash(component)
+        for component in connected_components
         for e in graph.es.select_within({v.index for v in component.vertices()})
     }
-
-    def _map_edge_index_to_component_id():
-        return pl.col("edge_index").replace(edge_index_to_component_mapping)
 
     def _build_component_name_str():
         return pl.format(
             "{}{}",
             pl.lit(prefix),
-            pl.col("component_index")
-            .cast(pl.Utf8)
-            .str.pad_start(length=DIGITS, fill_char="0"),
+            pl.col("edge_name").replace(edge_name_to_component_hash_mapping),
         )
 
     logger.debug("Mapping components on the edge list")
     edgelist_with_component_info = (
-        edgelist.with_row_count(name="edge_index")
-        .with_columns(_map_edge_index_to_component_id().alias("component_index"))
+        edgelist.with_columns((pl.col("upia") + pl.col("upib")).alias("edge_name"))
         .with_columns(_build_component_name_str().alias("component"))
+        .drop("edge_name")
     )
-    edgelist_with_component_info = edgelist_with_component_info.drop(
-        ["edge_index", "component_index"]
-    )
+
     return edgelist_with_component_info
 
 
