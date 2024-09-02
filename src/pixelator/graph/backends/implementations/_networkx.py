@@ -941,8 +941,8 @@ def _prob_edge_weights(
     P_step_bidirectional = P_step.multiply(P_step.T)
 
     # Extract the transition probabilities for edges in g
-    edges = np.array(list(g.edges))
-    nodes = np.array(list(g.nodes))
+    edges = np.array(g.edges)
+    nodes = np.array(g.nodes)
 
     # Get end node IDs for the edges
     node_from = edges[:, 0]
