@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [x.x.x] - 2024-xx-xx
 
-
 ### Changed
 
+-   Support for MultiGraphs in `pmds_layout`
 -   Support multiple targets in `plot_colocalization_diff_volcano` and `plot_colocalization_diff_heatmap`.
 
 ### Fixed
