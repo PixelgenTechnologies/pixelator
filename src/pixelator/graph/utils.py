@@ -366,52 +366,9 @@ def edgelist_metrics(
     raise TypeError("edgelist was not of type `pd.DataFrame` or `pl.LazyFrame")
 
 
-def _update_edgelist_membership_data_frame(
-    edgelist: pd.DataFrame,
-    graph: Optional[Graph] = None,
-    prefix: Optional[str] = None,
-) -> pd.DataFrame:
-    logger.debug("Updating membership in edge list with %i rows", edgelist.shape[0])
-
-    if prefix is None:
-        prefix = DEFAULT_COMPONENT_PREFIX
-
-    if "component" in edgelist.columns:
-        logger.info("The input edge list already contain a component column")
-
-    if not graph:
-        graph = Graph.from_edgelist(
-            edgelist=edgelist,
-            add_marker_counts=False,
-            simplify=False,
-            use_full_bipartite=True,
-        )
-
-    logger.debug("Fetching connected components")
-    connected_components = graph.connected_components()
-    logger.debug(
-        "Got the connected components. "
-        "Will begin the iteration to updated edge memberships"
-    )
-
-    membership = np.empty(edgelist.shape[0], dtype=object)
-    component_id_format = f"{prefix}{{:0{DIGITS}d}}"
-    for i, component in enumerate(connected_components):
-        component_id = component_id_format.format(i)
-        edges = [
-            e.index
-            for e in graph.es.select_within({v.index for v in component.vertices()})
-        ]
-        membership[edges] = component_id
-    edgelist = edgelist.assign(component=membership)
-
-    logger.debug("Membership in edge list updated")
-    return edgelist
-
-
 def _update_edgelist_membership_lazy_frame(
     edgelist: pl.LazyFrame,
-    graph: Optional[Graph] = None,
+    node_component_map: pd.Series,
     prefix: Optional[str] = None,
 ) -> pl.LazyFrame:
     if prefix is None:
@@ -419,17 +376,6 @@ def _update_edgelist_membership_lazy_frame(
 
     if "component" in edgelist.columns:
         logger.info("The input edge list already contains a component column")
-
-    if not graph:
-        graph = Graph.from_edgelist(
-            edgelist=edgelist,
-            add_marker_counts=False,
-            simplify=False,
-            use_full_bipartite=True,
-        )
-
-    logger.debug("Searching for connected components")
-    connected_components = graph.connected_components()
 
     logger.debug("Building edge to component mappings")
     edge_index_to_component_mapping = {
@@ -463,10 +409,10 @@ def _update_edgelist_membership_lazy_frame(
 
 
 def update_edgelist_membership(
-    edgelist: Union[pd.DataFrame, pl.LazyFrame],
-    graph: Optional[Graph] = None,
+    edgelist: pl.LazyFrame,
+    node_component_map: pd.Series,
     prefix: Optional[str] = None,
-) -> Union[pd.DataFrame, pl.LazyFrame]:
+) -> pl.LazyFrame:
     """Update the edgelist with component names.
 
     Compute the connected components of the graph represented
@@ -487,19 +433,13 @@ def update_edgelist_membership(
     :param prefix: the prefix to prepend to the component ids, if None will
                     use `DEFAULT_COMPONENT_PREFIX`
     :returns: the updated edge list
-    :rtype: Union[pd.DataFrame, pl.LazyFrame]
+    :rtype: pl.LazyFrame
     :raises TypeError: if edgelist is not either pd.DataFrame or pl.LazyFrame
     """
-    if isinstance(edgelist, pd.DataFrame):
-        logger.debug("Updating edgelist where type is pd.DataFrame")
-        return _update_edgelist_membership_data_frame(
-            edgelist=edgelist, graph=graph, prefix=prefix
-        )
-
     if isinstance(edgelist, pl.LazyFrame):
         logger.debug("Updating edgelist where type is pl.LazyFrame")
         return _update_edgelist_membership_lazy_frame(
-            edgelist=edgelist, graph=graph, prefix=prefix
+            edgelist=edgelist, node_component_map=node_component_map, prefix=prefix
         )
 
-    raise TypeError("edgelist was not of type pd.DataFrame or pl.LazyFrame")
+    raise TypeError("edgelist was not of type pl.LazyFrame")

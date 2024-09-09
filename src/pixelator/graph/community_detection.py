@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
+import networkx as nx
 import numpy as np
 import polars as pl
 
@@ -116,17 +117,25 @@ def connect_components(
             "The edge list has 0 elements after removing problematic edges"
         )
 
-    graph = Graph.from_edgelist(
-        edgelist=edgelist,
-        add_marker_counts=False,
-        simplify=False,
-        use_full_bipartite=True,
+    weighted_edgelist = (
+        edgelist.select(["upia", "upib"])
+        .group_by(["upia", "upib"])
+        .len()
+        .sort(["upia", "upib"])  # sort to make sure the graph is the same
+        .collect()
     )
+    graph = nx.Graph()
+    for row in weighted_edgelist.iter_rows():
+        graph.add_edge(row[0], row[1], weight=row[2])
+
+    node_component_map = pd.Series(index=graph.nodes())
+    for i, cc in enumerate(nx.connected_components(graph)):
+        node_component_map[list(cc)] = i
 
     # assign component column to edge list
     edgelist = update_edgelist_membership(
         edgelist=edgelist,
-        graph=graph,
+        node_component_map=node_component_map.astype(np.int64),
         prefix=DEFAULT_COMPONENT_PREFIX,
     )
 
@@ -282,7 +291,6 @@ def recovered_component_info(
 
 def recover_technical_multiplets(
     edgelist: pl.LazyFrame,
-    graph: Graph,
     leiden_iterations: int = 10,
     removed_edges_edgelist_file: Optional[PathType] = None,
 ) -> Tuple[pl.LazyFrame, Dict[str, List[str]]]:
