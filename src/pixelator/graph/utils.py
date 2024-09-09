@@ -377,16 +377,6 @@ def _update_edgelist_membership_lazy_frame(
     if "component" in edgelist.columns:
         logger.info("The input edge list already contains a component column")
 
-    logger.debug("Building edge to component mappings")
-    edge_index_to_component_mapping = {
-        e.index: component_idx
-        for component_idx, component in enumerate(connected_components)
-        for e in graph.es.select_within({v.index for v in component.vertices()})
-    }
-
-    def _map_edge_index_to_component_id():
-        return pl.col("edge_index").replace(edge_index_to_component_mapping)
-
     def _build_component_name_str():
         return pl.format(
             "{}{}",
@@ -398,12 +388,24 @@ def _update_edgelist_membership_lazy_frame(
 
     logger.debug("Mapping components on the edge list")
     edgelist_with_component_info = (
-        edgelist.with_row_count(name="edge_index")
-        .with_columns(_map_edge_index_to_component_id().alias("component_index"))
+        edgelist.with_columns(
+            pl.col("upia")
+            .alias("component_a")
+            .replace_strict(
+                old=list(node_component_map.index), new=node_component_map.values
+            )
+        )
+        .with_columns(
+            pl.col("upib")
+            .alias("component_b")
+            .replace_strict(
+                old=list(node_component_map.index), new=node_component_map.values
+            )
+        )
+        .filter(pl.col("component_a") == pl.col("component_b"))
+        .rename({"component_a": "component_index"})
         .with_columns(_build_component_name_str().alias("component"))
-    )
-    edgelist_with_component_info = edgelist_with_component_info.drop(
-        ["edge_index", "component_index"]
+        .drop(["component_b", "component_index"])
     )
     return edgelist_with_component_info
 
