@@ -13,6 +13,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
+import xxhash
 from scipy.sparse import identity
 
 from pixelator.graph.backends.implementations import (
@@ -182,7 +183,7 @@ def _get_neighborhood_counts(
     normalization: Optional[Literal["mean"]] = None,
 ):
     An = _get_extended_adjacency(graph, k=k)
-    neighbourhood_counts = An * node_marker_counts
+    neighbourhood_counts = An * node_marker_counts()
 
     # TODO Optionally add more methods here
     if normalization == "mean":
@@ -366,82 +367,58 @@ def edgelist_metrics(
     raise TypeError("edgelist was not of type `pd.DataFrame` or `pl.LazyFrame")
 
 
-def _update_edgelist_membership_lazy_frame(
-    edgelist: pl.LazyFrame,
-    node_component_map: pd.Series,
-    prefix: Optional[str] = None,
-) -> pl.LazyFrame:
-    if prefix is None:
-        prefix = DEFAULT_COMPONENT_PREFIX
-
-    if "component" in edgelist.columns:
-        logger.info("The input edge list already contains a component column")
-
-    def _build_component_name_str():
-        return pl.format(
-            "{}{}",
-            pl.lit(prefix),
-            pl.col("component_index")
-            .cast(pl.Utf8)
-            .str.pad_start(length=DIGITS, fill_char="0"),
-        )
-
-    logger.debug("Mapping components on the edge list")
-    edgelist_with_component_info = (
-        edgelist.with_columns(
-            pl.col("upia")
-            .alias("component_a")
-            .replace_strict(
-                old=list(node_component_map.index), new=node_component_map.values
-            )
-        )
-        .with_columns(
-            pl.col("upib")
-            .alias("component_b")
-            .replace_strict(
-                old=list(node_component_map.index), new=node_component_map.values
-            )
-        )
-        .filter(pl.col("component_a") == pl.col("component_b"))
-        .rename({"component_a": "component_index"})
-        .with_columns(_build_component_name_str().alias("component"))
-        .drop(["component_b", "component_index"])
-    )
-    return edgelist_with_component_info
-
-
 def update_edgelist_membership(
     edgelist: pl.LazyFrame,
     node_component_map: pd.Series,
     prefix: Optional[str] = None,
-) -> pl.LazyFrame:
+) -> typing.Tuple[pl.LazyFrame, pl.LazyFrame]:
     """Update the edgelist with component names.
 
-    Compute the connected components of the graph represented
-    by the `edgelist` (or directly on the `graph` if provided).
-    These connected components are assigned a numeric id. These
-    id's are added as a `component` column in the `edgelist`.
-    If a component column already exists, this will be updated.
-
-    The name of each component will be determined in the following way:
-    `prefix`+[up to 7 0's of padding]+[component number].
+    Using the node_component_map, this function will add the component
+    information to the edgelist. Each edge in the edgelist goes into
+    the "remaining_edgelist" if both nodes are in the same component.
+    If they are not, or if the component information is missing for
+    either of them, the edge will go into the "removed_edgelist".
+    The component names are determined by calculating a hash of the
+    nodes in that component.
 
     :param edgelist: the edge list
-    :param graph: optionally, the graph the corresponding to the edgelist
-                  if you have already computed this. This is convenient to
-                  avoid graph recomputation when it is not necessary.
-                  It is important that you know that the edgelist and the graph
-                  are in-sync if you use this feature.
-    :param prefix: the prefix to prepend to the component ids, if None will
-                    use `DEFAULT_COMPONENT_PREFIX`
-    :returns: the updated edge list
-    :rtype: pl.LazyFrame
-    :raises TypeError: if edgelist is not either pd.DataFrame or pl.LazyFrame
+    :param node_component_map: a pd.Series mapping the nodes to their components
+    :returns: the remaining_edgelist and the removed_edgelist
+    :rtype: pl.LazyFrame, pl.LazyFrame
+    :raises TypeError: if edgelist is not a pl.LazyFrame
     """
     if isinstance(edgelist, pl.LazyFrame):
         logger.debug("Updating edgelist where type is pl.LazyFrame")
-        return _update_edgelist_membership_lazy_frame(
-            edgelist=edgelist, node_component_map=node_component_map, prefix=prefix
+        if "component" in edgelist.columns:
+            logger.info("The input edge list already contains a component column")
+
+        # Create a mapping of the components to a hash of its UPIs
+        node_component_map = node_component_map.astype(str)
+        components = node_component_map.unique()
+        for comp in components:
+            comp_nodes = node_component_map[node_component_map == comp].index
+            comp_hash = xxhash.xxh64()
+            for n in comp_nodes:
+                comp_hash.update(str(n).encode())
+            node_component_map[node_component_map == comp] = comp_hash.hexdigest()
+        node_component_dict = node_component_map.to_dict()
+        logger.debug("Mapping components on the edge list")
+        edgelist_with_component_info = edgelist.with_columns(
+            component_a=pl.col("upia").replace_strict(node_component_dict, default="")
+        ).with_columns(
+            component_b=pl.col("upib").replace_strict(node_component_dict, default="")
         )
+        remaining_edgelist = (
+            edgelist_with_component_info.filter(pl.col("compenent_a") != "")
+            .filter(pl.col("component_a") == pl.col("component_b"))
+            .rename({"component_a": "component"})
+            .drop("component_b")
+        )
+        removed_edgelist = edgelist_with_component_info.filter(
+            pl.col("component_a") == ""
+            or pl.col("component_a") != pl.col("component_b")
+        )
+        return remaining_edgelist, removed_edgelist
 
     raise TypeError("edgelist was not of type pl.LazyFrame")
