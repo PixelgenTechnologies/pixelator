@@ -6,7 +6,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 import logging
 from pathlib import Path
 from time import time
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Optional, Tuple
 
 import networkx as nx
 import numpy as np
@@ -16,12 +16,9 @@ import xxhash
 from graspologic.partition import leiden
 
 from pixelator.graph.constants import (
-    DEFAULT_COMPONENT_PREFIX,
-    DEFAULT_COMPONENT_PREFIX_RECOVERY,
     MIN_PIXELS_TO_REFINE,
     STRONG_EDGE_THRESHOLD,
 )
-from pixelator.graph.graph import Graph
 from pixelator.graph.utils import (
     edgelist_metrics,
     update_edgelist_membership,
@@ -176,13 +173,15 @@ def connect_components(
         Path(output) / f"{sample_name}.edgelist.parquet",
         compression="zstd",
     )
-    """
+
+    logger.debug("Generate graph report")
+    result_metrics = edgelist_metrics(remaining_edgelist)
+
     report = GraphSampleReport(
         sample_id=sample_name,
         **result_metrics,
     )
     report.write_json_file(Path(metrics_file), indent=4)
-    """
 
 
 def merge_strongly_connected_communities(

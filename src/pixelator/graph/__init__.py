@@ -9,9 +9,8 @@ from pixelator.graph.community_detection import (
     write_recovered_components,
 )
 from pixelator.graph.constants import (
-    DEFAULT_COMPONENT_PREFIX,
-    DEFAULT_COMPONENT_PREFIX_RECOVERY,
-    DIGITS,
+    MIN_PIXELS_TO_REFINE,
+    STRONG_EDGE_THRESHOLD,
 )
 from pixelator.graph.graph import Graph
 from pixelator.graph.utils import (
@@ -25,9 +24,8 @@ __all__ = [
     "connect_components",
     "recover_technical_multiplets",
     "write_recovered_components",
-    "DEFAULT_COMPONENT_PREFIX",
-    "DEFAULT_COMPONENT_PREFIX_RECOVERY",
-    "DIGITS",
+    "MIN_PIXELS_TO_REFINE",
+    "STRONG_EDGE_THRESHOLD",
     "Graph",
     "components_metrics",
     "create_node_markers_counts",

@@ -10,7 +10,6 @@ from functools import reduce
 from typing import Dict, List, Literal, Optional, Union
 
 import networkx as nx
-import numpy as np
 import pandas as pd
 import polars as pl
 import xxhash
@@ -18,10 +17,6 @@ from scipy.sparse import identity
 
 from pixelator.graph.backends.implementations import (
     NetworkXGraphBackend,
-)
-from pixelator.graph.constants import (
-    DEFAULT_COMPONENT_PREFIX,
-    DIGITS,
 )
 from pixelator.graph.graph import Graph
 from pixelator.report.models import SummaryStatistics
@@ -293,77 +288,48 @@ def _calculate_graph_metrics(
     return metrics
 
 
-def _edgelist_metrics_pandas_data_frame(
-    edgelist: pd.DataFrame, graph: Optional[Graph] = None
-) -> EdgelistMetrics:
-    metrics: EdgelistMetrics = {}  # type: ignore
-    metrics["a_pixel_count"] = edgelist["upia"].nunique()
-    metrics["b_pixel_count"] = edgelist["upib"].nunique()
-    metrics["marker_count"] = edgelist["marker"].nunique()
-    metrics["molecule_count"] = edgelist.shape[0]
-    metrics["read_count"] = int(edgelist["count"].sum())
-    metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
-        edgelist["count"]
-    )
-
-    metrics = _calculate_graph_metrics(metrics=metrics, graph=graph, edgelist=edgelist)
-    return metrics
-
-
-def _edgelist_metrics_lazy_frame(
-    edgelist: pl.LazyFrame, graph: Optional[Graph] = None
-) -> EdgelistMetrics:
-    metrics: EdgelistMetrics = {}  # type: ignore
-
-    unique_counts = edgelist.select(
-        pl.col("upia").n_unique(),
-        pl.col("upib").n_unique(),
-        pl.col("marker").n_unique(),
-    ).collect()
-
-    metrics["a_pixel_count"] = int(unique_counts["upia"][0])
-    metrics["b_pixel_count"] = int(unique_counts["upib"][0])
-    metrics["marker_count"] = int(unique_counts["marker"][0])
-    # Note that we get upi here and count that, because otherwise just calling count
-    # here confuses polars since there is a column with that name.
-    metrics["molecule_count"] = int(
-        edgelist.select(pl.col("upia").count()).collect()["upia"][0]
-    )
-
-    counts_per_molecule = edgelist.select(pl.col("count")).collect()["count"]
-    metrics["read_count"] = int(counts_per_molecule.sum())
-    metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
-        counts_per_molecule
-    )
-    combined_metrics: EdgelistMetrics = _calculate_graph_metrics(
-        metrics=metrics, graph=graph, edgelist=edgelist
-    )
-    return combined_metrics
-
-
 def edgelist_metrics(
-    edgelist: Union[pd.DataFrame, pl.LazyFrame], graph: Optional[Graph] = None
+    edgelist: pl.LazyFrame, graph: Optional[Graph] = None
 ) -> EdgelistMetrics:
     """Compute edgelist metrics.
 
     A simple function that computes a dictionary of basic metrics
-    from an edge list (pd.DataFrame).
+    from an edge list (pl.LazyFrame).
 
-    :param edgelist: the edge list (pd.DataFrame)
+    :param edgelist: the edge list (pl.LazyFrame)
     :param graph: optionally add the graph instance that corresponds to the
                   edgelist (to not have to re-compute it)
     :returns: a dataclass of metrics
     :rtype: EdgelistMetrics
-    :raises TypeError: if edgelist is not either pd.DataFrame or pl.LazyFrame
+    :raises TypeError: if edgelist is not a pl.LazyFrame
     """
-    if isinstance(edgelist, pd.DataFrame):
-        logger.debug("Computing edgelist metrics where edgelist type is pd.DataFrame")
-        return _edgelist_metrics_pandas_data_frame(edgelist=edgelist, graph=graph)
-
     if isinstance(edgelist, pl.LazyFrame):
-        logger.debug("Computing edgelist metrics where edgelist type is pl.LazyFrame")
-        return _edgelist_metrics_lazy_frame(edgelist=edgelist, graph=graph)
+        metrics: EdgelistMetrics = {}  # type: ignore
 
+        unique_counts = edgelist.select(
+            pl.col("upia").n_unique(),
+            pl.col("upib").n_unique(),
+            pl.col("marker").n_unique(),
+        ).collect()
+
+        metrics["a_pixel_count"] = int(unique_counts["upia"][0])
+        metrics["b_pixel_count"] = int(unique_counts["upib"][0])
+        metrics["marker_count"] = int(unique_counts["marker"][0])
+        # Note that we get upi here and count that, because otherwise just calling count
+        # here confuses polars since there is a column with that name.
+        metrics["molecule_count"] = int(
+            edgelist.select(pl.col("upia").count()).collect()["upia"][0]
+        )
+
+        counts_per_molecule = edgelist.select(pl.col("count")).collect()["count"]
+        metrics["read_count"] = int(counts_per_molecule.sum())
+        metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
+            counts_per_molecule
+        )
+        combined_metrics: EdgelistMetrics = _calculate_graph_metrics(
+            metrics=metrics, graph=graph, edgelist=edgelist
+        )
+        return combined_metrics
     raise TypeError("edgelist was not of type `pd.DataFrame` or `pl.LazyFrame")
 
 
@@ -390,7 +356,7 @@ def update_edgelist_membership(
     """
     if isinstance(edgelist, pl.LazyFrame):
         logger.debug("Updating edgelist where type is pl.LazyFrame")
-        if "component" in edgelist.columns:
+        if "component" in edgelist.collect_schema().names():
             logger.info("The input edge list already contains a component column")
 
         # Create a mapping of the components to a hash of its UPIs
