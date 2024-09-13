@@ -376,14 +376,14 @@ def update_edgelist_membership(
             component_b=pl.col("upib").replace_strict(node_component_dict, default="")
         )
         remaining_edgelist = (
-            edgelist_with_component_info.filter(pl.col("compenent_a") != "")
+            edgelist_with_component_info.filter(pl.col("component_a") != "")
             .filter(pl.col("component_a") == pl.col("component_b"))
             .rename({"component_a": "component"})
             .drop("component_b")
         )
         removed_edgelist = edgelist_with_component_info.filter(
-            pl.col("component_a") == ""
-            or pl.col("component_a") != pl.col("component_b")
+            (pl.col("component_a") == "")
+            | (pl.col("component_a") != pl.col("component_b"))
         )
         return remaining_edgelist, removed_edgelist
 

@@ -169,7 +169,7 @@ def connect_components(
 
     # save the edge list (recovered)
     logger.debug("Save the edgelist")
-    edgelist_summary.collect(streaming=True).write_parquet(
+    remaining_edgelist.collect(streaming=True).write_parquet(
         Path(output) / f"{sample_name}.edgelist.parquet",
         compression="zstd",
     )
