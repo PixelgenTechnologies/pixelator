@@ -12,7 +12,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
-import xxhash
 from graspologic.partition import leiden
 
 from pixelator.graph.constants import (
@@ -21,6 +20,8 @@ from pixelator.graph.constants import (
 )
 from pixelator.graph.utils import (
     edgelist_metrics,
+    map_upis_to_components,
+    split_remaining_and_removed_edgelist,
     update_edgelist_membership,
 )
 from pixelator.report.models.graph import GraphSampleReport
@@ -109,19 +110,21 @@ def connect_components(
             "The edge list has %i intersecting UPIA and UPIB, these will be removed",
             len(problematic_edges),
         )
-        edgelist = edgelist.filter(
+        edgelist_no_prob = edgelist.filter(
             (~pl.col("upib").is_in(problematic_edges))
             & (~pl.col("upia").is_in(problematic_edges))
         )
+    else:
+        edgelist_no_prob = edgelist
 
-    nbr_of_rows = edgelist.select(pl.count()).collect()[0, 0]
+    nbr_of_rows = edgelist_no_prob.select(pl.count()).collect()[0, 0]
     if nbr_of_rows == 0:
         raise RuntimeError(
             "The edge list has 0 elements after removing problematic edges"
         )
 
     edgelist_summary = (
-        edgelist.select(["upia", "upib"])
+        edgelist_no_prob.select(["upia", "upib"])
         .group_by(["upia", "upib"])
         .len()
         .sort(["upia", "upib"])  # sort to make sure the graph is the same
@@ -140,36 +143,39 @@ def connect_components(
     logger.debug("Calculating raw edgelist metrics")
 
     if multiplet_recovery:
-        recovered_node_component_map, info = recover_technical_multiplets(
-            edgelist=edgelist_summary,
-            node_component_map=node_component_map.astype(np.int64),
-            leiden_iterations=leiden_iterations,
-            removed_edges_edgelist_file=Path(output)
-            / f"{sample_name}.discarded_edgelist.parquet",
+        recovered_node_component_map, component_refinement_history = (
+            recover_technical_multiplets(
+                edgelist=edgelist_summary,
+                node_component_map=node_component_map.astype(np.int64),
+                leiden_iterations=leiden_iterations,
+                removed_edges_edgelist_file=Path(output)
+                / f"{sample_name}.discarded_edgelist.parquet",
+            )
         )
 
         # save the recovered components info to a file
-        write_recovered_components(
-            info,
-            filename=Path(output) / f"{sample_name}.components_recovered.csv",
+        component_refinement_history.to_csv(
+            Path(output) / f"{sample_name}.components_recovered.csv"
         )
-
-    # result_metrics = edgelist_metrics(edgelist, graph)
+    else:
+        recovered_node_component_map = node_component_map
 
     # assign component column to edge list
-    remaining_edgelist, removed_edgelist = update_edgelist_membership(
+    edgelist_with_component_info = map_upis_to_components(
         edgelist=edgelist,
-        node_component_map=node_component_map.astype(np.int64),
+        node_component_map=recovered_node_component_map.astype(np.int64),
     )
-
+    remaining_edgelist, removed_edgelist = split_remaining_and_removed_edgelist(
+        edgelist_with_component_info
+    )
     logger.debug("Save discarded edge list")
-    removed_edgelist.collect(streaming=True).write_parquet(
+    removed_edgelist.collect(streaming=True, no_optimization=True).write_parquet(
         Path(output) / f"{sample_name}.discarded_edgelist.parquet"
     )
 
     # save the edge list (recovered)
     logger.debug("Save the edgelist")
-    remaining_edgelist.collect(streaming=True).write_parquet(
+    remaining_edgelist.collect(streaming=True, no_optimization=True).write_parquet(
         Path(output) / f"{sample_name}.edgelist.parquet",
         compression="zstd",
     )
@@ -285,7 +291,7 @@ def recover_technical_multiplets(
 
     last_depth = -1
     start_leiden = time()
-    edges_to_remove = []
+    n_edges_to_remove = 0
     community_annotation_history = []
     while component_refinement_list:
         component, depth = component_refinement_list.pop(0)
@@ -327,24 +333,9 @@ def recover_technical_multiplets(
         if community_serie.nunique() == 1:
             continue
 
-        removed_edges_from_component = component_edgelist[
+        n_edges_to_remove += (
             component_edgelist["cla"] != component_edgelist["clb"]
-        ]
-        comp_hash = xxhash.xxh64()
-        comp_hash.update("".join(component_nodes))
-        removed_hash = xxhash.xxh64()
-        removed_hash.update("".join(sorted(removed_edges_from_component["upi"])))
-        print(
-            "component: ",
-            component,
-            "nodes hash: ",
-            comp_hash.hexdigest(),
-            "removed edges hash: ",
-            removed_hash.hexdigest(),
-        )
-        edges_to_remove += (
-            removed_edges_from_component["upia"] + removed_edges_from_component["upib"]
-        ).to_list()
+        ).sum()
         community_size_map = community_serie.groupby(community_serie).count()
 
         if (community_size_map > MIN_PIXELS_TO_REFINE).sum() > 1:
@@ -374,17 +365,17 @@ def recover_technical_multiplets(
 
     print("Finished leiden in ", time() - start_leiden)
 
-    info = pd.DataFrame(
+    component_refinement_history = pd.DataFrame(
         community_annotation_history,
         columns=["old", "new", "old_size", "new_size", "depth"],
-    )
+    ).astype(int)
 
     logger.info(
         "Obtained %i components after removing %i edges",
         node_component_map.nunique(),
-        len(edges_to_remove),
+        n_edges_to_remove,
     )
-    return node_component_map, info
+    return node_component_map, component_refinement_history
 
 
 def write_recovered_components(

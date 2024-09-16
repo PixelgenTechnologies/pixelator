@@ -229,11 +229,11 @@ class TestZipBasedPixelFile:
         datastore.write_edgelist(dataset.edgelist, partitioning=partitioning)
 
         assert set(list(datastore._file_system.walk("/edgelist.parquet/"))[0][1]) == {
-            "component=PXLCMP0000000",
-            "component=PXLCMP0000001",
-            "component=PXLCMP0000002",
-            "component=PXLCMP0000003",
-            "component=PXLCMP0000004",
+            "component=4b8692abd885af88",
+            "component=757e30bb92bf8942",
+            "component=a890ffee844f65ae",
+            "component=fec08a0ed873fd2a",
+            "component=be6287782f5c81e4",
         }
 
     def test_pixelfile_datastore_can_read_layouts(
@@ -260,26 +260,26 @@ class TestZipBasedPixelFile:
             datastore.write_precomputed_layouts(layouts=precomputed_layout)
 
         assert set(ZipFile(file_target).namelist()) == {
-            "layouts.parquet/graph_projection=a-node/layout=fr/component=PXLCMP0000001/part-0.parquet",
-            "layouts.parquet/graph_projection=a-node/layout=fr/component=PXLCMP0000000/part-0.parquet",
-            "layouts.parquet/graph_projection=a-node/layout=fr/component=PXLCMP0000003/part-0.parquet",
-            "layouts.parquet/graph_projection=bipartite/layout=fr/component=PXLCMP0000002/part-0.parquet",
-            "layouts.parquet/graph_projection=a-node/layout=pmds/component=PXLCMP0000000/part-0.parquet",
-            "layouts.parquet/graph_projection=bipartite/layout=fr/component=PXLCMP0000000/part-0.parquet",
-            "layouts.parquet/graph_projection=a-node/layout=pmds/component=PXLCMP0000004/part-0.parquet",
-            "layouts.parquet/graph_projection=bipartite/layout=pmds/component=PXLCMP0000004/part-0.parquet",
-            "layouts.parquet/graph_projection=bipartite/layout=fr/component=PXLCMP0000001/part-0.parquet",
-            "layouts.parquet/graph_projection=a-node/layout=pmds/component=PXLCMP0000002/part-0.parquet",
-            "layouts.parquet/graph_projection=a-node/layout=pmds/component=PXLCMP0000001/part-0.parquet",
-            "layouts.parquet/graph_projection=bipartite/layout=pmds/component=PXLCMP0000002/part-0.parquet",
-            "layouts.parquet/graph_projection=bipartite/layout=fr/component=PXLCMP0000004/part-0.parquet",
-            "layouts.parquet/graph_projection=a-node/layout=fr/component=PXLCMP0000002/part-0.parquet",
-            "layouts.parquet/graph_projection=a-node/layout=fr/component=PXLCMP0000004/part-0.parquet",
-            "layouts.parquet/graph_projection=bipartite/layout=pmds/component=PXLCMP0000003/part-0.parquet",
-            "layouts.parquet/graph_projection=bipartite/layout=pmds/component=PXLCMP0000000/part-0.parquet",
-            "layouts.parquet/graph_projection=bipartite/layout=pmds/component=PXLCMP0000001/part-0.parquet",
-            "layouts.parquet/graph_projection=a-node/layout=pmds/component=PXLCMP0000003/part-0.parquet",
-            "layouts.parquet/graph_projection=bipartite/layout=fr/component=PXLCMP0000003/part-0.parquet",
+            "layouts.parquet/graph_projection=a-node/layout=fr/component=757e30bb92bf8942/part-0.parquet",
+            "layouts.parquet/graph_projection=a-node/layout=fr/component=4b8692abd885af88/part-0.parquet",
+            "layouts.parquet/graph_projection=a-node/layout=fr/component=be6287782f5c81e4/part-0.parquet",
+            "layouts.parquet/graph_projection=bipartite/layout=fr/component=a890ffee844f65ae/part-0.parquet",
+            "layouts.parquet/graph_projection=a-node/layout=pmds/component=4b8692abd885af88/part-0.parquet",
+            "layouts.parquet/graph_projection=bipartite/layout=fr/component=4b8692abd885af88/part-0.parquet",
+            "layouts.parquet/graph_projection=a-node/layout=pmds/component=fec08a0ed873fd2a/part-0.parquet",
+            "layouts.parquet/graph_projection=bipartite/layout=pmds/component=fec08a0ed873fd2a/part-0.parquet",
+            "layouts.parquet/graph_projection=bipartite/layout=fr/component=757e30bb92bf8942/part-0.parquet",
+            "layouts.parquet/graph_projection=a-node/layout=pmds/component=a890ffee844f65ae/part-0.parquet",
+            "layouts.parquet/graph_projection=a-node/layout=pmds/component=757e30bb92bf8942/part-0.parquet",
+            "layouts.parquet/graph_projection=bipartite/layout=pmds/component=a890ffee844f65ae/part-0.parquet",
+            "layouts.parquet/graph_projection=bipartite/layout=fr/component=fec08a0ed873fd2a/part-0.parquet",
+            "layouts.parquet/graph_projection=a-node/layout=fr/component=a890ffee844f65ae/part-0.parquet",
+            "layouts.parquet/graph_projection=a-node/layout=fr/component=fec08a0ed873fd2a/part-0.parquet",
+            "layouts.parquet/graph_projection=bipartite/layout=pmds/component=be6287782f5c81e4/part-0.parquet",
+            "layouts.parquet/graph_projection=bipartite/layout=pmds/component=4b8692abd885af88/part-0.parquet",
+            "layouts.parquet/graph_projection=bipartite/layout=pmds/component=757e30bb92bf8942/part-0.parquet",
+            "layouts.parquet/graph_projection=a-node/layout=pmds/component=be6287782f5c81e4/part-0.parquet",
+            "layouts.parquet/graph_projection=bipartite/layout=fr/component=be6287782f5c81e4/part-0.parquet",
         }
 
     def test_pixelfile_datastore_can_write_with_partitioning_with_multiple_partitions(
@@ -300,7 +300,7 @@ class TestZipBasedPixelFile:
 
         assert (
             list(datastore._file_system.walk("/edgelist.parquet/"))[1][0]
-            == "edgelist.parquet/component=PXLCMP0000000"
+            == "edgelist.parquet/component=4b8692abd885af88"
         )
         assert set(list(datastore._file_system.walk("/edgelist.parquet/"))[1][1]) == {
             "marker=CD20",

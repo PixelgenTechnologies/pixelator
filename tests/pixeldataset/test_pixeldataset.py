@@ -169,7 +169,7 @@ def test_pixeldataset_graph_raises_when_component_not_found(setup_basic_pixel_da
 
 def test_pixeldataset_graph_finds_component(setup_basic_pixel_dataset):
     dataset, *_ = setup_basic_pixel_dataset
-    component_graph = dataset.graph("PXLCMP0000000")
+    component_graph = dataset.graph("4b8692abd885af88")
     assert isinstance(component_graph, Graph)
     assert len(component_graph.connected_components()) == 1
 
@@ -287,18 +287,18 @@ def test_filter_by_component(setup_basic_pixel_dataset):
     _assert_has_components(
         dataset_1,
         {
-            "PXLCMP0000003",
-            "PXLCMP0000004",
-            "PXLCMP0000000",
-            "PXLCMP0000002",
-            "PXLCMP0000001",
+            "a890ffee844f65ae",
+            "be6287782f5c81e4",
+            "4b8692abd885af88",
+            "757e30bb92bf8942",
+            "fec08a0ed873fd2a",
         },
     )
 
     # Try filtering
     result = dataset_1.filter(
         components=[
-            "PXLCMP0000000",
+            "a890ffee844f65ae",
         ]
     )
 
@@ -306,18 +306,18 @@ def test_filter_by_component(setup_basic_pixel_dataset):
     _assert_has_components(
         dataset_1,
         {
-            "PXLCMP0000003",
-            "PXLCMP0000004",
-            "PXLCMP0000000",
-            "PXLCMP0000002",
-            "PXLCMP0000001",
+            "a890ffee844f65ae",
+            "be6287782f5c81e4",
+            "4b8692abd885af88",
+            "757e30bb92bf8942",
+            "fec08a0ed873fd2a",
         },
     )
 
     _assert_has_components(
         result,
         {
-            "PXLCMP0000000",
+            "a890ffee844f65ae",
         },
     )
 
@@ -383,7 +383,7 @@ def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
     )
 
     # Try filtering
-    result = dataset_1.filter(components=["PXLCMP0000000"], markers=["CD3", "CD45"])
+    result = dataset_1.filter(components=["4b8692abd885af88"], markers=["CD3", "CD45"])
 
     # Original should not have changed
     assert set(dataset_1.adata.var.index) == original_adata_markers
@@ -399,7 +399,7 @@ def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
     _assert_has_components(
         result,
         {
-            "PXLCMP0000000",
+            "4b8692abd885af88",
         },
     )
 

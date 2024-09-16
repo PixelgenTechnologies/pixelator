@@ -7,6 +7,7 @@ import os
 import random
 from pathlib import Path
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -64,7 +65,11 @@ def data_root_fixture():
 def edgelist_fixture(data_root):
     """Load an example edgelist from disk."""
     edgelist = pl.read_csv(str(data_root / "test_edge_list.csv")).to_pandas()
-    edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
+    g = nx.from_pandas_edgelist(edgelist, source="upia", target="upib")
+    node_component_map = pd.Series(index=g.nodes())
+    for i, cc in enumerate(nx.connected_components(g)):
+        node_component_map[list(cc)] = i
+    edgelist = update_edgelist_membership(edgelist, node_component_map)
     return enforce_edgelist_types_for_tests(edgelist)
 
 
@@ -107,7 +112,10 @@ def full_graph_edgelist_fixture():
     random.seed(10)
     g = create_fully_connected_bipartite_graph(50)
     edgelist = create_simple_edge_list_from_graph(g)
-    edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
+    node_component_map = pd.Series(index=g.raw.nodes())
+    for i, cc in enumerate(nx.connected_components(g.raw)):
+        node_component_map[list(cc)] = i
+    edgelist = update_edgelist_membership(edgelist, node_component_map)
     edgelist = enforce_edgelist_types_for_tests(edgelist)
     return edgelist
 
@@ -133,7 +141,10 @@ def random_graph_edgelist_fixture():
     """Create an edgelist based on a random graph."""
     g = create_random_graph(n_nodes=500, prob=0.005)
     edgelist = create_simple_edge_list_from_graph(g)
-    edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
+    node_component_map = pd.Series(index=g.raw.nodes())
+    for i, cc in enumerate(nx.connected_components(g.raw)):
+        node_component_map[list(cc)] = i
+    edgelist = update_edgelist_membership(edgelist, node_component_map)
     edgelist = enforce_edgelist_types_for_tests(edgelist)
     return edgelist
 
@@ -143,7 +154,10 @@ def full_random_graph_edgelist_fixture():
     """Create an edgelist based on a random graph."""
     g = create_random_graph(n_nodes=500, prob=0.005)
     edgelist = create_simple_edge_list_from_graph(g, random_markers=True)
-    edgelist = update_edgelist_membership(edgelist, prefix="PXLCMP")
+    node_component_map = pd.Series(index=g.raw.nodes())
+    for i, cc in enumerate(nx.connected_components(g.raw)):
+        node_component_map[list(cc)] = i
+    edgelist = update_edgelist_membership(edgelist, node_component_map)
     edgelist = enforce_edgelist_types_for_tests(edgelist)
     return edgelist
 
@@ -152,12 +166,12 @@ def full_random_graph_edgelist_fixture():
 def layout_df_fixture() -> pd.DataFrame:
     nbr_of_rows = 300
     components = [
-        "PXLCMP0000000",
-        "PXLCMP0000000",
-        "PXLCMP0000001",
-        "PXLCMP0000002",
-        "PXLCMP0000003",
-        "PXLCMP0000004",
+        "4b8692abd885af88",
+        "4b8692abd885af88",
+        "757e30bb92bf8942",
+        "a890ffee844f65ae",
+        "be6287782f5c81e4",
+        "fec08a0ed873fd2a",
     ]
     graph_projections = ["bipartite", "a-node"]
     layout_methods = ["pmds", "fr"]
@@ -203,12 +217,12 @@ def setup_basic_pixel_dataset(
             "marker": ["CD45", "CD3", "CD3", "CD19", "CD19", "CD3"],
             "morans_i": [1, 1.5, 0.1, 0.3, 0.1, 1],
             "component": [
-                "PXLCMP0000000",
-                "PXLCMP0000000",
-                "PXLCMP0000001",
-                "PXLCMP0000002",
-                "PXLCMP0000003",
-                "PXLCMP0000004",
+                "4b8692abd885af88",
+                "4b8692abd885af88",
+                "757e30bb92bf8942",
+                "a890ffee844f65ae",
+                "be6287782f5c81e4",
+                "fec08a0ed873fd2a",
             ],
         },
     )
@@ -218,11 +232,11 @@ def setup_basic_pixel_dataset(
             "marker_2": ["CD3", "CD19", "CD45", "CD45", "CD19"],
             "pearson": [0.1, 0.5, 0.3, 0.2, 0.1],
             "component": [
-                "PXLCMP0000000",
-                "PXLCMP0000001",
-                "PXLCMP0000002",
-                "PXLCMP0000003",
-                "PXLCMP0000004",
+                "4b8692abd885af88",
+                "757e30bb92bf8942",
+                "a890ffee844f65ae",
+                "be6287782f5c81e4",
+                "fec08a0ed873fd2a",
             ],
         },
     )

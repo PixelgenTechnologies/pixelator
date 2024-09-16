@@ -48,7 +48,7 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
                     "median_molecules_per_a_pixel": 50.0,
                 }
             ],
-            index=pd.Index(["PXLCMP0000000"], name="component"),
+            index=pd.Index(["23885f346392ff2c"], name="component"),
         ),
     )
 
@@ -269,19 +269,18 @@ def test_edgelist_metrics_on_lazy_dataframe(
     )
 
 
-@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
-def test_update_edgelist_membership(enable_backend, data_root):
+def test_update_edgelist_membership(data_root):
     """Test updating the edgelist membership."""
     edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
-    result = update_edgelist_membership(edgelist.copy(), prefix="PXLCMP")
+    result = update_edgelist_membership(edgelist.copy())
 
     assert "component" not in edgelist.columns
     assert set(result["component"].unique()) == {
-        "PXLCMP0000000",
-        "PXLCMP0000001",
-        "PXLCMP0000002",
-        "PXLCMP0000003",
-        "PXLCMP0000004",
+        "59288b8c7e3ec4a0",
+        "872bd619ea096f44",
+        "a6b8f1dea39e91e7",
+        "b0ac7b6449572775",
+        "ddfbce5bf926de84",
     }
 
 
@@ -293,11 +292,11 @@ def test_update_edgelist_membership_benchmark(benchmark, enable_backend, data_ro
 
     assert "component" not in edgelist.columns
     assert set(result["component"].unique()) == {
-        "PXLCMP0000000",
-        "PXLCMP0000001",
-        "PXLCMP0000002",
-        "PXLCMP0000003",
-        "PXLCMP0000004",
+        "59288b8c7e3ec4a0",
+        "872bd619ea096f44",
+        "a6b8f1dea39e91e7",
+        "b0ac7b6449572775",
+        "ddfbce5bf926de84",
     }
 
 
@@ -309,9 +308,9 @@ def test_update_edgelist_membership_lazyframe(enable_backend, data_root):
     result = update_edgelist_membership(edgelist, prefix="PXLCMP").collect().to_pandas()
 
     assert set(result["component"].unique()) == {
-        "PXLCMP0000000",
-        "PXLCMP0000001",
-        "PXLCMP0000002",
-        "PXLCMP0000003",
-        "PXLCMP0000004",
+        "59288b8c7e3ec4a0",
+        "872bd619ea096f44",
+        "a6b8f1dea39e91e7",
+        "b0ac7b6449572775",
+        "ddfbce5bf926de84",
     }
