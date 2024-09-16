@@ -7,7 +7,7 @@ import logging
 import typing
 import warnings
 from functools import reduce
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import networkx as nx
 import pandas as pd
@@ -340,7 +340,7 @@ def map_upis_to_components(
     edgelist: pl.LazyFrame,
     node_component_map: pd.Series,
     prefix: Optional[str] = None,
-) -> pl.LazyFrame | pd.DataFrame:
+) -> pl.LazyFrame:
     """Update the edgelist with component names corresponding to upia/upib.
 
     Using the node_component_map, this function will add the component
@@ -352,7 +352,7 @@ def map_upis_to_components(
     :param edgelist: the edge list
     :param node_component_map: a pd.Series mapping the nodes to their components
     :returns: the remaining_edgelist and the removed_edgelist
-    :rtype: pl.LazyFrame | pd.DataFrame
+    :rtype: pl.LazyFrame
     :raises TypeError: if edgelist is not either a pl.LazyFrame or a pd.DataFrame
     """
     # Create a mapping of the components to a hash of its UPIs
@@ -447,7 +447,7 @@ def update_edgelist_membership(
 
 def split_remaining_and_removed_edgelist(
     edgelist: pl.LazyFrame,
-) -> pl.LazyFrame:
+) -> Tuple[pl.LazyFrame, pl.LazyFrame]:
     """Split the edgelist into remaining and removed.
 
     Inputs an edgelist with component_a and component_b columns.
