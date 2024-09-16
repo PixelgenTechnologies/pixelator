@@ -194,7 +194,7 @@ def plot_colocalization_diff_heatmap(
             cmap=cmap,
         )
         g.figure.suptitle(
-            f"Differential colocalization between {reference} and {target}"
+            f"Differential colocalization between {target} and {reference}"
         )
         plt.tight_layout()
         figs[target] = plt.gcf()
@@ -215,7 +215,10 @@ def _add_top_marker_labels(
     # Labels for marker pair withs highest negative differential colocalization scores
     for _, row in plot_data.head(n_top_pairs).iterrows():
         if "marker_1" not in row.index:
-            name = row["marker"]
+            if "marker" in row.index:
+                name = row["marker"]
+            else:
+                name = row.name
         else:
             name = row["marker_1"] + "/" + row["marker_2"]
 
@@ -234,7 +237,10 @@ def _add_top_marker_labels(
     # Labels for marker pair with highest positive differential colocalization scores
     for _, row in plot_data.tail(n_top_pairs).iterrows():
         if "marker_1" not in row.index:
-            name = row["marker"]
+            if "marker" in row.index:
+                name = row["marker"]
+            else:
+                name = row.name
         else:
             name = row["marker_1"] + "/" + row["marker_2"]
         x, y = row[["median_difference", "p_adj"]]
@@ -344,7 +350,7 @@ def plot_colocalization_diff_volcano(
         ax.set(
             xlabel="Median difference",
             ylabel=r"$-\log_{10}$(adj. p-value)",
-            title=f"Differential colocalization\nbetween {reference}\nand {target}",
+            title=f"Differential colocalization\nbetween {target}\nand {reference}",
         )
         ax.title.set_y(1.05)
         fig.colorbar(p, label="Mean target colocalization score", cmap=cmap)
@@ -417,7 +423,7 @@ def plot_polarity_diff_volcano(
         ax = axes[i] if len(targets) > 1 else axes
         target_differential_polarity = differential_polarity.loc[
             differential_polarity["target"] == target, :
-        ]
+        ].set_index("marker")
         target_differential_polarity["target_mean"] = (
             polarity_data[polarity_data[contrast_column] == target]
             .groupby("marker")[value_column]
@@ -436,7 +442,7 @@ def plot_polarity_diff_volcano(
         ax.set(
             xlabel="Median difference",
             ylabel=r"$-\log_{10}$(adj. p-value)",
-            title=f"Differential polarity\nbetween {reference}\nand {target}",
+            title=f"Differential polarity\nbetween {target}\nand {reference}",
         )
         ax.title.set_y(1.05)
         fig.colorbar(p, label="Mean target polarity score", cmap=cmap)
