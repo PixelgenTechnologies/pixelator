@@ -531,8 +531,8 @@ def test_get_differential_polarity(setup_basic_pixel_dataset):
     pxl_data, *_ = setup_basic_pixel_dataset
     result = get_differential_polarity(
         polarity_data=pxl_data.polarization,
-        targets="a890ffee844f65ae",
-        reference="be6287782f5c81e4",
+        targets="701ec72d3bda62d5",
+        reference="bec92437d668cfa1",
         contrast_column="component",
         value_column="morans_i",
     )
@@ -544,7 +544,7 @@ def test_get_differential_polarity(setup_basic_pixel_dataset):
                 "p_value": 1.0,
                 "median_difference": 0.2,
                 "p_adj": 1.0,
-                "target": "a890ffee844f65ae",
+                "target": "701ec72d3bda62d5",
             },
             1: {
                 "marker": "CD3",
@@ -552,7 +552,7 @@ def test_get_differential_polarity(setup_basic_pixel_dataset):
                 "p_value": 1.0,
                 "median_difference": 0.0,
                 "p_adj": 1.0,
-                "target": "a890ffee844f65ae",
+                "target": "701ec72d3bda62d5",
             },
             2: {
                 "marker": "CD45",
@@ -560,7 +560,7 @@ def test_get_differential_polarity(setup_basic_pixel_dataset):
                 "p_value": 1.0,
                 "median_difference": 0.0,
                 "p_adj": 1.0,
-                "target": "a890ffee844f65ae",
+                "target": "701ec72d3bda62d5",
             },
         },
         orient="index",

@@ -166,12 +166,12 @@ def full_random_graph_edgelist_fixture():
 def layout_df_fixture() -> pd.DataFrame:
     nbr_of_rows = 300
     components = [
-        "4b8692abd885af88",
-        "4b8692abd885af88",
-        "757e30bb92bf8942",
-        "a890ffee844f65ae",
-        "be6287782f5c81e4",
-        "fec08a0ed873fd2a",
+        "2ac2ca983a4b82dd",
+        "2ac2ca983a4b82dd",
+        "6ed5d4e4cfe588bd",
+        "701ec72d3bda62d5",
+        "bec92437d668cfa1",
+        "ce2709afa8ebd1c9",
     ]
     graph_projections = ["bipartite", "a-node"]
     layout_methods = ["pmds", "fr"]
@@ -217,12 +217,12 @@ def setup_basic_pixel_dataset(
             "marker": ["CD45", "CD3", "CD3", "CD19", "CD19", "CD3"],
             "morans_i": [1, 1.5, 0.1, 0.3, 0.1, 1],
             "component": [
-                "4b8692abd885af88",
-                "4b8692abd885af88",
-                "757e30bb92bf8942",
-                "a890ffee844f65ae",
-                "be6287782f5c81e4",
-                "fec08a0ed873fd2a",
+                "2ac2ca983a4b82dd",
+                "2ac2ca983a4b82dd",
+                "6ed5d4e4cfe588bd",
+                "701ec72d3bda62d5",
+                "bec92437d668cfa1",
+                "ce2709afa8ebd1c9",
             ],
         },
     )
@@ -232,11 +232,11 @@ def setup_basic_pixel_dataset(
             "marker_2": ["CD3", "CD19", "CD45", "CD45", "CD19"],
             "pearson": [0.1, 0.5, 0.3, 0.2, 0.1],
             "component": [
-                "4b8692abd885af88",
-                "757e30bb92bf8942",
-                "a890ffee844f65ae",
-                "be6287782f5c81e4",
-                "fec08a0ed873fd2a",
+                "2ac2ca983a4b82dd",
+                "6ed5d4e4cfe588bd",
+                "701ec72d3bda62d5",
+                "bec92437d668cfa1",
+                "ce2709afa8ebd1c9",
             ],
         },
     )

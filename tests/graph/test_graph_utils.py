@@ -276,11 +276,11 @@ def test_update_edgelist_membership(data_root):
 
     assert "component" not in edgelist.columns
     assert set(result["component"].unique()) == {
-        "59288b8c7e3ec4a0",
-        "872bd619ea096f44",
-        "a6b8f1dea39e91e7",
-        "b0ac7b6449572775",
-        "ddfbce5bf926de84",
+        "bec92437d668cfa1",
+        "701ec72d3bda62d5",
+        "ce2709afa8ebd1c9",
+        "2ac2ca983a4b82dd",
+        "6ed5d4e4cfe588bd",
     }
 
 
@@ -292,11 +292,11 @@ def test_update_edgelist_membership_benchmark(benchmark, enable_backend, data_ro
 
     assert "component" not in edgelist.columns
     assert set(result["component"].unique()) == {
-        "59288b8c7e3ec4a0",
-        "872bd619ea096f44",
-        "a6b8f1dea39e91e7",
-        "b0ac7b6449572775",
-        "ddfbce5bf926de84",
+        "bec92437d668cfa1",
+        "701ec72d3bda62d5",
+        "ce2709afa8ebd1c9",
+        "2ac2ca983a4b82dd",
+        "6ed5d4e4cfe588bd",
     }
 
 
@@ -308,9 +308,9 @@ def test_update_edgelist_membership_lazyframe(enable_backend, data_root):
     result = update_edgelist_membership(edgelist, prefix="PXLCMP").collect().to_pandas()
 
     assert set(result["component"].unique()) == {
-        "59288b8c7e3ec4a0",
-        "872bd619ea096f44",
-        "a6b8f1dea39e91e7",
-        "b0ac7b6449572775",
-        "ddfbce5bf926de84",
+        "bec92437d668cfa1",
+        "701ec72d3bda62d5",
+        "ce2709afa8ebd1c9",
+        "2ac2ca983a4b82dd",
+        "6ed5d4e4cfe588bd",
     }

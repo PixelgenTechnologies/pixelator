@@ -357,13 +357,13 @@ def map_upis_to_components(
     """
     # Create a mapping of the components to a hash of its UPIs
     node_component_map = node_component_map.astype(str)
-    components = node_component_map.unique()
-    for comp in components:
-        comp_nodes = node_component_map[node_component_map == comp].index
+    components = node_component_map.groupby(node_component_map)
+    for _, comp in components:
+        comp_nodes = sorted(comp.index)
         comp_hash = xxhash.xxh64()
-        for n in comp_nodes:
-            comp_hash.update(str(n).encode())
-        node_component_map[node_component_map == comp] = comp_hash.hexdigest()
+        for node in comp_nodes:
+            comp_hash.update(str(node))
+        node_component_map[comp_nodes] = comp_hash.hexdigest()
     node_component_dict = node_component_map.to_dict()
     logger.debug("Mapping components on the edge list")
     edgelist_with_component_info = edgelist.with_columns(
