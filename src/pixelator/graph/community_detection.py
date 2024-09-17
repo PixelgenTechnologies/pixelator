@@ -15,6 +15,7 @@ import polars as pl
 from graspologic.partition import leiden
 
 from pixelator.graph.constants import (
+    LEIDEN_RESOLUTION,
     MIN_PIXELS_TO_REFINE,
     STRONG_EDGE_THRESHOLD,
 )
@@ -323,7 +324,7 @@ def recover_technical_multiplets(
         # run the leiden algorithm to get the communities
         community_dict = leiden(
             edgelist_tuple,
-            resolution=0.1,
+            resolution=LEIDEN_RESOLUTION,
             random_seed=42,
         )
         component_edgelist, community_serie = merge_strongly_connected_communities(
