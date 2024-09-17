@@ -91,8 +91,8 @@ def test_recovery_technical_multiplets(
     assert result.nunique() == 2
     expected_info = pd.DataFrame(
         {
-            0: {"old": 0, "new": 2, "old_size": 200, "new_size": 100, "depth": 0},
-            1: {"old": 0, "new": 3, "old_size": 200, "new_size": 100, "depth": 0},
+            0: {"old": 0, "new": 1, "old_size": 200, "new_size": 100, "depth": 0},
+            1: {"old": 0, "new": 2, "old_size": 200, "new_size": 100, "depth": 0},
         }
     ).T
     assert_frame_equal(info, expected_info)
@@ -121,8 +121,8 @@ def test_recovery_technical_multiplets_benchmark(
     assert result.nunique() == 2
     expected_info = pd.DataFrame(
         {
-            0: {"old": 0, "new": 2, "old_size": 200, "new_size": 100, "depth": 0},
-            1: {"old": 0, "new": 3, "old_size": 200, "new_size": 100, "depth": 0},
+            0: {"old": 0, "new": 1, "old_size": 200, "new_size": 100, "depth": 0},
+            1: {"old": 0, "new": 2, "old_size": 200, "new_size": 100, "depth": 0},
         }
     ).T
     assert_frame_equal(info, expected_info)

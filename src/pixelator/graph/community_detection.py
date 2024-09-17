@@ -5,6 +5,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 import logging
 from pathlib import Path
+from queue import Queue
 from time import time
 from typing import Optional, Tuple
 
@@ -37,7 +38,7 @@ def connect_components(
     sample_name: str,
     metrics_file: str,
     multiplet_recovery: bool,
-    leiden_iterations: int = 10,
+    max_refinement_recursion_depth: int = 5,
     min_count: int = 2,
 ) -> None:
     """Retrieve all connected components from an edgelist.
@@ -70,7 +71,7 @@ def connect_components(
     :param sample_name: the prefix to prepend to the files (sample name)
     :param metrics_file: the path to a JSON file to write metrics
     :param multiplet_recovery: set to true to activate multiplet recovery
-    :param leiden_iterations: The number of times a component can be broken down into
+    :param max_refinement_recursion_depth: The number of times a component can be broken down into
                              smaller components during the recovery process.
     :param min_count: the minimum number of counts (molecules) an edge must have
     :returns: None
@@ -124,16 +125,14 @@ def connect_components(
             "The edge list has 0 elements after removing problematic edges"
         )
 
-    edgelist_summary = (
+    edges = (
         edgelist_no_prob.select(["upia", "upib"])
         .group_by(["upia", "upib"])
         .len()
         .sort(["upia", "upib"])  # sort to make sure the graph is the same
         .collect()
     )
-    graph = nx.Graph()
-    for row in edgelist_summary.iter_rows():
-        graph.add_edge(row[0], row[1])
+    graph = nx.from_edgelist(edges.select(["upia", "upib"]).iter_rows())
 
     node_component_map = pd.Series(index=graph.nodes())
     for i, cc in enumerate(nx.connected_components(graph)):
@@ -146,9 +145,9 @@ def connect_components(
     if multiplet_recovery:
         recovered_node_component_map, component_refinement_history = (
             recover_technical_multiplets(
-                edgelist=edgelist_summary,
+                edgelist=edges,
                 node_component_map=node_component_map.astype(np.int64),
-                leiden_iterations=leiden_iterations,
+                max_refinement_recursion_depth=max_refinement_recursion_depth,
                 removed_edges_edgelist_file=Path(output)
                 / f"{sample_name}.discarded_edgelist.parquet",
             )
@@ -170,13 +169,13 @@ def connect_components(
         edgelist_with_component_info
     )
     logger.debug("Save discarded edge list")
-    removed_edgelist.collect(streaming=True, no_optimization=True).write_parquet(
+    removed_edgelist.collect().write_parquet(
         Path(output) / f"{sample_name}.discarded_edgelist.parquet"
     )
 
     # save the edge list (recovered)
     logger.debug("Save the edgelist")
-    remaining_edgelist.collect(streaming=True, no_optimization=True).write_parquet(
+    remaining_edgelist.collect().write_parquet(
         Path(output) / f"{sample_name}.edgelist.parquet",
         compression="zstd",
     )
@@ -209,13 +208,17 @@ def merge_strongly_connected_communities(
     :returns: A tuple with the modified edge list and the updated community mapping
     """
     community_serie = pd.Series(node_community_dict)
-    edgelist["cla"] = community_serie[edgelist["upia"]].values
-    edgelist["clb"] = community_serie[edgelist["upib"]].values
+    edgelist["upia_community"] = community_serie[edgelist["upia"]].values
+    edgelist["upib_community"] = community_serie[edgelist["upib"]].values
 
     if community_serie.nunique() == 1:
         return edgelist, community_serie
 
-    edge_counts = edgelist.groupby(["cla", "clb"])["upia"].count().unstack(fill_value=0)
+    edge_counts = (
+        edgelist.groupby(["upia_community", "upib_community"])["upia"]
+        .count()
+        .unstack(fill_value=0)
+    )
     edge_counts = edge_counts.add(edge_counts.T, fill_value=0)
     cross_community_edges = edge_counts.where(
         np.tril(np.ones(edge_counts.shape), k=-1).astype(bool)
@@ -223,14 +226,17 @@ def merge_strongly_connected_communities(
     connected_communities = cross_community_edges[cross_community_edges > n_edges].index
     communities_graph = nx.from_edgelist(connected_communities)
     for cc in nx.connected_components(communities_graph):
-        community_serie[community_serie.isin(cc)] = min(cc)
+        new_tag = min(cc)
+        community_serie[community_serie.isin(cc)] = new_tag
+        edgelist.loc[edgelist["upia_community"].isin(cc), "upia_community"] = new_tag
+        edgelist.loc[edgelist["upib_community"].isin(cc), "upib_community"] = new_tag
     return edgelist, community_serie
 
 
 def recover_technical_multiplets(
     edgelist: pl.DataFrame,
     node_component_map: pd.Series,
-    leiden_iterations: int = 10,
+    max_refinement_recursion_depth: int = 5,
     removed_edges_edgelist_file: Optional[PathType] = None,
 ) -> Tuple[pd.Series, pd.DataFrame]:
     """Perform component recovery by deleting spurious edges.
@@ -254,7 +260,7 @@ def recover_technical_multiplets(
 
     :param edgelist: The edge list used to create the graph
     :param node_component_map: A series with the component mapping for each node
-    :param leiden_iterations: The number of times a component can be broken down
+    :param max_refinement_recursion_depth: The number of times a component can be broken down
                             into smaller components during the recovery process.
     :return: A tuple with the updated node component map the history of component
              breakdowns.
@@ -265,43 +271,26 @@ def recover_technical_multiplets(
         edgelist.select(pl.count()).item(0, 0),
     )
 
-    # add the combined upi here as a way to make sure we can use it to
-    # check edge membership for between the old and the (potential)
-    # new components.
-    edgelist = edgelist.with_columns(
-        pl.concat_str(pl.col("upia"), pl.col("upib")).alias("upi")
-    )
-
-    def id_generator(min_id=0):
-        internal_counter = min_id
-
-        def get_id():
-            nonlocal internal_counter
-            internal_counter += 1
-            return internal_counter
-
-        return get_id
+    def id_generator(start=0):
+        next_id = start
+        while True:
+            yield next_id
+            next_id += 1
 
     id_gen = id_generator(node_component_map.max() + 1)
 
-    component_refinement_list = []
+    component_refinement_queue = Queue()  # type: ignore
     comp_sizes = node_component_map.groupby(node_component_map).count()
     large_components = comp_sizes[comp_sizes > MIN_PIXELS_TO_REFINE]
     for component in large_components.index:
-        component_refinement_list.append((component, 0))
+        component_refinement_queue.put((component, 0))
 
-    last_depth = -1
-    start_leiden = time()
     n_edges_to_remove = 0
     community_annotation_history = []
-    while component_refinement_list:
-        component, depth = component_refinement_list.pop(0)
-        if depth >= leiden_iterations:
+    while not component_refinement_queue.empty():
+        component, depth = component_refinement_queue.get()
+        if depth >= max_refinement_recursion_depth:
             break
-
-        if depth > last_depth:
-            print("Leiden depth reached: ", depth)
-            last_depth = depth
 
         # get the subgraph for the component
         component_nodes = sorted(
@@ -335,7 +324,7 @@ def recover_technical_multiplets(
             continue
 
         n_edges_to_remove += (
-            component_edgelist["cla"] != component_edgelist["clb"]
+            component_edgelist["upia_community"] != component_edgelist["upib_community"]
         ).sum()
         community_size_map = community_serie.groupby(community_serie).count()
 
@@ -345,7 +334,7 @@ def recover_technical_multiplets(
             further_refinement = False
 
         for new_community in community_size_map.index:
-            new_id = id_gen()
+            new_id = next(id_gen)
             node_component_map[
                 community_serie[community_serie == new_community].index
             ] = new_id
@@ -362,9 +351,7 @@ def recover_technical_multiplets(
                 further_refinement
                 and community_size_map[new_community] > MIN_PIXELS_TO_REFINE
             ):
-                component_refinement_list.append((new_id, depth + 1))
-
-    print("Finished leiden in ", time() - start_leiden)
+                component_refinement_queue.put((new_id, depth + 1))
 
     component_refinement_history = pd.DataFrame(
         community_annotation_history,

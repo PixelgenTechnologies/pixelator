@@ -288,7 +288,7 @@ def test_update_edgelist_membership(data_root):
 def test_update_edgelist_membership_benchmark(benchmark, enable_backend, data_root):
     """Test updating the edgelist membership."""
     edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
-    result = benchmark(update_edgelist_membership, edgelist.copy(), prefix="PXLCMP")
+    result = benchmark(update_edgelist_membership, edgelist.copy())
 
     assert "component" not in edgelist.columns
     assert set(result["component"].unique()) == {
@@ -305,7 +305,7 @@ def test_update_edgelist_membership_lazyframe(enable_backend, data_root):
     edgelist = pl.read_csv(str(data_root / "test_edge_list.csv")).lazy()
     assert "component" not in edgelist.columns
 
-    result = update_edgelist_membership(edgelist, prefix="PXLCMP").collect().to_pandas()
+    result = update_edgelist_membership(edgelist).collect().to_pandas()
 
     assert set(result["component"].unique()) == {
         "bec92437d668cfa1",

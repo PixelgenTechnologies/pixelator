@@ -38,14 +38,14 @@ from pixelator.utils import (
     help=("Activate the multiplet recovery using leiden community detection"),
 )
 @click.option(
-    "--leiden-iterations",
-    default=10,
+    "--max-refinement-recursion-depth",
+    default=5,
     required=False,
     type=click.IntRange(1, 100),
     show_default=True,
     help=(
-        "Number of iterations for the leiden algorithm, high values will decrease "
-        "the variance of the results but increase the runtime"
+        "The number of times a component can be broken down into "
+        "smaller components during the multiplet recovery process."
     ),
 )
 @click.option(
@@ -65,7 +65,7 @@ def graph(
     ctx,
     parquet_file,
     multiplet_recovery,
-    leiden_iterations,
+    max_refinement_recursion_depth,
     min_count,
     output,
 ):
@@ -77,7 +77,7 @@ def graph(
         input_files=input_files,
         output=output,
         multiplet_recovery=multiplet_recovery,
-        leiden_iterations=leiden_iterations,
+        max_refinement_recursion_depth=max_refinement_recursion_depth,
         min_count=min_count,
     )
 
@@ -105,6 +105,6 @@ def graph(
         sample_name=clean_name,
         metrics_file=str(metrics_file),
         multiplet_recovery=multiplet_recovery,
-        leiden_iterations=leiden_iterations,
+        max_refinement_recursion_depth=max_refinement_recursion_depth,
         min_count=min_count,
     )

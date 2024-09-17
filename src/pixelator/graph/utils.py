@@ -339,7 +339,6 @@ def edgelist_metrics(
 def map_upis_to_components(
     edgelist: pl.LazyFrame,
     node_component_map: pd.Series,
-    prefix: Optional[str] = None,
 ) -> pl.LazyFrame:
     """Update the edgelist with component names corresponding to upia/upib.
 
@@ -388,16 +387,19 @@ def map_upis_to_components(
 def update_edgelist_membership(
     edgelist: pl.LazyFrame | pd.DataFrame,
     node_component_map: Optional[pd.Series] = None,
-    prefix: Optional[str] = None,
 ) -> pl.LazyFrame | pd.DataFrame:
     """Update the edgelist with component names.
 
     Using the node_component_map, this function will add the component
     information to the edgelist. If for an edge, components of UPIA and
-    UPIB do not match, that edge will be removed.
+    UPIB do not match, that edge will be removed. If node_component_map
+    is missing, it will be constructed based on the connected component
+    in the graph made from the edgelist.
 
     :param edgelist: the edge list
     :param node_component_map: a pd.Series mapping the nodes to their components
+    if missing, it will be constructed based on the connected components in the
+    graph made from the edgelist.
     :returns: the remaining_edgelist and the removed_edgelist
     :rtype: pl.LazyFrame | pd.DataFrame
     :raises TypeError: if edgelist is not either a pl.LazyFrame or a pd.DataFrame
@@ -409,16 +411,14 @@ def update_edgelist_membership(
         was_dataframe = False
 
     if node_component_map is None:
-        edgelist_summary = (
+        edges = (
             edgelist.select(["upia", "upib"])
             .group_by(["upia", "upib"])
             .len()
             .sort(["upia", "upib"])  # sort to make sure the graph is the same
             .collect()
         )
-        graph = nx.Graph()
-        for row in edgelist_summary.iter_rows():
-            graph.add_edge(row[0], row[1])
+        graph = nx.from_edgelist(edges.select(["upia", "upib"]).iter_rows())
 
         node_component_map = pd.Series(index=graph.nodes())
         for i, cc in enumerate(nx.connected_components(graph)):
