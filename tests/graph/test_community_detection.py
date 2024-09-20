@@ -81,11 +81,14 @@ def test_recovery_technical_multiplets(
         )
     )
     node_component_map[:] = 0
-    edge_list_summary = (
-        pl.from_pandas(edgelist_with_communities).group_by(["upia", "upib"]).len()
+    edges = (
+        edgelist_with_communities.groupby(["upia", "upib"])
+        .count()
+        .reset_index()
+        .rename(columns={"count": "len"})
     )
     result, info = recover_technical_multiplets(
-        edgelist=edge_list_summary,
+        edgelist=edges,
         node_component_map=node_component_map,
     )
     assert result.nunique() == 2
@@ -104,8 +107,11 @@ def test_recovery_technical_multiplets_benchmark(
 ):
     assert len(edgelist_with_communities["component"].unique()) == 1
 
-    edge_list_summary = (
-        pl.from_pandas(edgelist_with_communities).group_by(["upia", "upib"]).len()
+    edges = (
+        edgelist_with_communities.groupby(["upia", "upib"])
+        .count()
+        .reset_index()
+        .rename(columns={"count": "len"})
     )
     node_component_map = pd.Series(
         index=set(edgelist_with_communities["upia"]).union(
@@ -115,7 +121,7 @@ def test_recovery_technical_multiplets_benchmark(
     node_component_map[:] = 0
     result, info = benchmark(
         recover_technical_multiplets,
-        edgelist=edge_list_summary,
+        edgelist=edges,
         node_component_map=node_component_map,
     )
     assert result.nunique() == 2

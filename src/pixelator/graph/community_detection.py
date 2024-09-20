@@ -4,6 +4,8 @@ Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import logging
+from copy import copy
+from dataclasses import dataclass
 from pathlib import Path
 from queue import Queue
 from time import time
@@ -131,8 +133,9 @@ def connect_components(
         .len()
         .sort(["upia", "upib"])  # sort to make sure the graph is the same
         .collect()
+        .to_pandas()
     )
-    graph = nx.from_edgelist(edges.select(["upia", "upib"]).iter_rows())
+    graph = nx.from_pandas_edgelist(edges, source="upia", target="upib")
 
     node_component_map = pd.Series(index=graph.nodes())
     for i, cc in enumerate(nx.connected_components(graph)):
@@ -159,6 +162,8 @@ def connect_components(
         )
     else:
         recovered_node_component_map = node_component_map
+
+    del edges
 
     # assign component column to edge list
     edgelist_with_component_info = map_upis_to_components(
@@ -193,14 +198,15 @@ def connect_components(
 def merge_strongly_connected_communities(
     edgelist: pd.DataFrame,
     node_community_dict: dict,
-    n_edges: int = STRONG_EDGE_THRESHOLD,
+    n_edges: int | None = None,
 ) -> Tuple[pd.DataFrame, pd.Series]:
     """Merge strongly connected communities in an edge list.
 
     This function takes an edge list and a dictionary with the community mapping
     for each node. It then computes the number of edges between communities and
     if they are higher than the given n_edges. It assigns the same community id
-    to the nodes in the connected strongly connected communities.
+    to the nodes in the connected strongly connected communities. If n_edges is
+    None, the split communities are not considered for merging.
 
     :param edgelist: The edge list to process
     :param node_community_dict: A dictionary with the community mapping for each node
@@ -211,7 +217,7 @@ def merge_strongly_connected_communities(
     edgelist["upia_community"] = community_serie[edgelist["upia"]].values
     edgelist["upib_community"] = community_serie[edgelist["upib"]].values
 
-    if community_serie.nunique() == 1:
+    if n_edges is None or (community_serie.nunique() == 1):
         return edgelist, community_serie
 
     edge_counts = (
@@ -234,7 +240,7 @@ def merge_strongly_connected_communities(
 
 
 def recover_technical_multiplets(
-    edgelist: pl.DataFrame,
+    edgelist: pd.DataFrame,
     node_component_map: pd.Series,
     max_refinement_recursion_depth: int = 5,
     removed_edges_edgelist_file: Optional[PathType] = None,
@@ -264,11 +270,11 @@ def recover_technical_multiplets(
                             into smaller components during the recovery process.
     :return: A tuple with the updated node component map the history of component
              breakdowns.
-    :rtype: Tuple[pd.Series, pl.DataFrame]
+    :rtype: Tuple[pd.Series, pd.DataFrame]
     """
     logger.debug(
         "Starting multiplets recovery in edge list with %i rows",
-        edgelist.select(pl.count()).item(0, 0),
+        edgelist.shape[0],
     )
 
     def id_generator(start=0):
@@ -278,80 +284,80 @@ def recover_technical_multiplets(
             next_id += 1
 
     id_gen = id_generator(node_component_map.max() + 1)
-
-    component_refinement_queue = Queue()  # type: ignore
     comp_sizes = node_component_map.groupby(node_component_map).count()
-    large_components = comp_sizes[comp_sizes > MIN_PIXELS_TO_REFINE]
-    for component in large_components.index:
-        component_refinement_queue.put((component, 0))
 
     n_edges_to_remove = 0
     community_annotation_history = []
-    while not component_refinement_queue.empty():
-        component, depth = component_refinement_queue.get()
-        if depth >= max_refinement_recursion_depth:
-            break
+    to_be_refined_next = comp_sizes[comp_sizes > MIN_PIXELS_TO_REFINE].index
+    for depth in range(max_refinement_recursion_depth):
+        edgelist["component_a"] = node_component_map[edgelist["upia"]].values
+        edgelist["component_b"] = node_component_map[edgelist["upib"]].values
+        component_groups = edgelist.groupby("component_a")
+        to_be_refined = copy(to_be_refined_next)
+        to_be_refined_next = []
+        for component, component_edgelist in component_groups:
+            if component not in to_be_refined:
+                continue
 
-        # get the subgraph for the component
-        component_nodes = sorted(
-            node_component_map[node_component_map == component].index
-        )
+            component_edgelist = component_edgelist[
+                component_edgelist["component_b"] == component
+            ].sort_values(["upia", "upib"])
 
-        component_edgelist = (
-            edgelist.filter(
-                pl.col("upia").is_in(component_nodes)
-                & pl.col("upib").is_in(component_nodes)
+            component_nodes = list(
+                set(component_edgelist["upia"]).union(set(component_edgelist["upib"]))
             )
-            .to_pandas()
-            .sort_values(["upia", "upib"])
-        )
 
-        edgelist_tuple = list(
-            map(tuple, np.array(component_edgelist[["upia", "upib", "len"]]))
-        )
+            edgelist_tuple = list(
+                map(tuple, np.array(component_edgelist[["upia", "upib", "len"]]))
+            )
 
-        # run the leiden algorithm to get the communities
-        community_dict = leiden(
-            edgelist_tuple,
-            resolution=LEIDEN_RESOLUTION,
-            random_seed=42,
-        )
-        component_edgelist, community_serie = merge_strongly_connected_communities(
-            component_edgelist, community_dict
-        )
+            # run the leiden algorithm to get the communities
+            community_dict = leiden(
+                edgelist_tuple,
+                resolution=LEIDEN_RESOLUTION
+                if depth > 0
+                else 1.0,  # Higher initial resolution to break up the mega-cluster
+                random_seed=42,
+            )
 
-        if community_serie.nunique() == 1:
-            continue
+            component_edgelist, community_serie = merge_strongly_connected_communities(
+                component_edgelist,
+                community_dict,
+                n_edges=STRONG_EDGE_THRESHOLD if depth > 0 else None,
+            )
 
-        n_edges_to_remove += (
-            component_edgelist["upia_community"] != component_edgelist["upib_community"]
-        ).sum()
-        community_size_map = community_serie.groupby(community_serie).count()
+            if community_serie.nunique() == 1:
+                continue
+            n_edges_to_remove += (
+                component_edgelist["upia_community"]
+                != component_edgelist["upib_community"]
+            ).sum()
+            community_size_map = community_serie.groupby(community_serie).count()
 
-        if (community_size_map > MIN_PIXELS_TO_REFINE).sum() > 1:
-            further_refinement = True
-        else:
-            further_refinement = False
+            if (community_size_map > MIN_PIXELS_TO_REFINE).sum() > 1:
+                further_refinement = True
+            else:
+                further_refinement = False
 
-        for new_community in community_size_map.index:
-            new_id = next(id_gen)
-            node_component_map[
-                community_serie[community_serie == new_community].index
-            ] = new_id
-            community_annotation_history.append(
-                (
-                    component,
-                    new_id,
-                    len(component_nodes),
-                    community_size_map[new_community],
-                    depth,
+            for new_community in community_size_map.index:
+                new_id = next(id_gen)
+                node_component_map[
+                    community_serie[community_serie == new_community].index
+                ] = new_id
+                community_annotation_history.append(
+                    (
+                        component,
+                        new_id,
+                        len(component_nodes),
+                        community_size_map[new_community],
+                        depth,
+                    )
                 )
-            )
-            if (
-                further_refinement
-                and community_size_map[new_community] > MIN_PIXELS_TO_REFINE
-            ):
-                component_refinement_queue.put((new_id, depth + 1))
+                if (
+                    further_refinement
+                    and community_size_map[new_community] > MIN_PIXELS_TO_REFINE
+                ):
+                    to_be_refined_next.append(new_id)
 
     component_refinement_history = pd.DataFrame(
         community_annotation_history,
