@@ -187,7 +187,6 @@ def connect_components(
         compression="zstd",
     )
 
-    """
     logger.debug("Generate graph report")
     result_metrics = edgelist_metrics(remaining_edgelist)
 
@@ -196,7 +195,6 @@ def connect_components(
         **result_metrics,
     )
     report.write_json_file(Path(metrics_file), indent=4)
-    """
 
 
 def merge_strongly_connected_communities(
