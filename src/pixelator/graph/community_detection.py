@@ -173,6 +173,8 @@ def connect_components(
     remaining_edgelist, removed_edgelist = split_remaining_and_removed_edgelist(
         edgelist_with_component_info
     )
+
+    # save the edge list (discarded)
     logger.debug("Save discarded edge list")
     removed_edgelist.collect().write_parquet(
         Path(output) / f"{sample_name}.discarded_edgelist.parquet"
@@ -185,6 +187,7 @@ def connect_components(
         compression="zstd",
     )
 
+    """
     logger.debug("Generate graph report")
     result_metrics = edgelist_metrics(remaining_edgelist)
 
@@ -193,6 +196,7 @@ def connect_components(
         **result_metrics,
     )
     report.write_json_file(Path(metrics_file), indent=4)
+    """
 
 
 def merge_strongly_connected_communities(
@@ -318,6 +322,7 @@ def recover_technical_multiplets(
                 if depth > 0
                 else 1.0,  # Higher initial resolution to break up the mega-cluster
                 random_seed=42,
+                trials=5,
             )
 
             component_edgelist, community_serie = merge_strongly_connected_communities(
