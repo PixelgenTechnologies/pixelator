@@ -207,7 +207,7 @@ def merge_strongly_connected_communities(
     This function takes an edge list and a dictionary with the community mapping
     for each node. It then computes the number of edges between communities and
     if they are higher than the given n_edges. It assigns the same community id
-    to the nodes in the connected strongly connected communities. If n_edges is
+    to the nodes in the connected strongly connected communities. If `n_edges` is
     None, the split communities are not considered for merging.
 
     :param edgelist: The edge list to process
