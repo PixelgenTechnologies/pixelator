@@ -250,7 +250,7 @@ def recover_technical_multiplets(
     """Perform component recovery by deleting spurious edges.
 
     The molecular pixelation assay may under some conditions introduce spurious
-    false edges. This creates components that are made up of two or more internally
+    edges. This creates components that are made up of two or more internally
     well-connected graphs, that are connected to each other by a low number of edges
     (typically in the single digits). We call these components technical multiplets.
     This method will attempt to break up these components by performing community
