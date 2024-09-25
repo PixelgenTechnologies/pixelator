@@ -270,7 +270,7 @@ def recover_technical_multiplets(
     :param node_component_map: A series with the component mapping for each node
     :param max_refinement_recursion_depth: The number of times a component can be broken down
                             into smaller components during the recovery process.
-    :return: A tuple with the updated node component map the history of component
+    :return: A tuple with the updated node component map and the history of component
              breakdowns.
     :rtype: Tuple[pd.Series, pd.DataFrame]
     """
