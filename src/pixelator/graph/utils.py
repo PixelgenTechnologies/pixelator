@@ -301,9 +301,10 @@ def edgelist_metrics(
                   edgelist (to not have to re-compute it)
     :returns: a dataclass of metrics
     :rtype: EdgelistMetrics
-    :raises TypeError: if edgelist is not a pl.LazyFrame
+    :raises TypeError: if edgelist is not either a pl.LazyFrame or a pd.DataFrame
     """
     if isinstance(edgelist, pd.DataFrame):
+        logger.debug("Computing edgelist metrics where edgelist type is pd.DataFrame")
         edgelist = pl.LazyFrame(edgelist)
 
     if isinstance(edgelist, pl.LazyFrame):
