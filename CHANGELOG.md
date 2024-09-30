@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
- - Improved memory usage when aggregating pixel files with precomputed layouts.
+ - Improved memory usage when aggregating PXL files with precomputed layouts.
 
 ## [0.18.2] - 2024-07-16
 
