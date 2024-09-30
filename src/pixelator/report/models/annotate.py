@@ -17,10 +17,6 @@ from pixelator.report.models.summary_statistics import SummaryStatistics
 class AnnotateSampleReport(SampleReport):
     """Model for report data returned by the annotate stage."""
 
-    components_modularity: float = pydantic.Field(
-        description="The modularity of the graph components.",
-    )
-
     fraction_molecules_in_largest_component: float = pydantic.Field(
         description="The fraction of molecules in the largest component.",
     )
