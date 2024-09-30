@@ -5,6 +5,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import numpy as np
+
 from pixelator.annotate.cell_calling import (
     find_component_size_limits,
 )

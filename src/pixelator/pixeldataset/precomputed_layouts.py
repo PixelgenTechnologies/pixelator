@@ -10,10 +10,13 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Optional, Protocol
 
 import pandas as pd
 import polars as pl
+import pyarrow.dataset as ds
+import pyarrow.parquet as pq
 
 from pixelator.exceptions import PixelatorBaseException
 from pixelator.graph import Graph
@@ -27,6 +30,22 @@ if TYPE_CHECKING:
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _write_parquet(frame: pl.LazyFrame, path: Path, partitioning: list[str]) -> None:
+    table = frame.collect().to_arrow()
+    file_options = ds.ParquetFileFormat().make_write_options(
+        compression="zstd",
+    )
+    ds.write_dataset(
+        table,
+        path,
+        format="parquet",
+        partitioning_flavor="hive",
+        partitioning=partitioning,
+        file_options=file_options,
+        existing_data_behavior="overwrite_or_ignore",
+    )
 
 
 class PreComputedLayoutsEmpty(PixelatorBaseException):
@@ -49,11 +68,19 @@ class _DataProvider(Protocol):
         layout_methods: str | set[str] | None = None,
     ) -> pl.LazyFrame | list[pl.LazyFrame]: ...
 
+    def write_parquet(self, path: Path, partitioning: list[str]) -> None:
+        """Write a parquet file to the provided path."""
+        ...
+
 
 class _EmptyDataProvider(_DataProvider):
     def __init__(self) -> None:
         # This class needs no parameters
         pass
+
+    def write_parquet(self, path: Path, partitioning: list[str]) -> None:
+        """Write a parquet file to the provided path."""
+        return
 
     def is_empty(self) -> bool:
         return True
@@ -87,6 +114,10 @@ class _SingleFrameDataProvider(_DataProvider):
         if columns:
             return self._lazy_frame.select(columns).collect().to_pandas()
         return self.lazy().collect().to_pandas()
+
+    def write_parquet(self, path: Path, partitioning: list[str]) -> None:
+        """Write a parquet file to the provided path."""
+        _write_parquet(self.lazy(), path, partitioning)
 
     def lazy(self):
         return self._lazy_frame
@@ -192,6 +223,11 @@ class _MultiFrameDataProvider(_DataProvider):
 
         return list(data())
 
+    def write_parquet(self, path: Path, partitioning: list[str]) -> None:
+        """Write a parquet file to the provided path."""
+        for frame in self._lazy_frames:
+            _write_parquet(frame, path, partitioning)
+
 
 class PreComputedLayouts:
     """Pre-computed layouts for a set of graphs, per component."""
@@ -251,6 +287,10 @@ class PreComputedLayouts:
         For example when writing hive style parquet files.
         """
         return self._partitioning
+
+    def write_parquet(self, path: Path, partitioning: list[str]) -> None:
+        """Write a parquet file to the provided path."""
+        self._data_provider.write_parquet(path, partitioning)
 
     def unique_components(self) -> set[str]:
         """Return the unique components in the layouts."""
@@ -315,13 +355,17 @@ class PreComputedLayouts:
         else:
             unique_components = self._convert_to_set(component_ids)  # type: ignore
 
-        for component_id in unique_components:
+        # We read in batches since it makes the read operations slightly
+        # faster than iterating them one at the time
+        for component_ids in batched(unique_components, 20):
             data = self.filter(
-                component_ids=component_id,
+                component_ids=component_ids,
                 graph_projection=graph_projections,
                 layout_method=layout_methods,
             )
-            yield data.to_df(columns)
+
+            for _, df in data.lazy.collect().group_by("component"):
+                yield df.select(columns if columns else pl.all()).to_pandas()
 
     @staticmethod
     def _convert_to_set(
@@ -339,7 +383,7 @@ class PreComputedLayouts:
 
 
 def aggregate_precomputed_layouts(
-    precomputed_layouts: Iterable[tuple[str, PreComputedLayouts | None]],
+    pxl_datasets: Iterable[tuple[str, PixelDataset | None]],
     all_markers: set[str],
 ) -> PreComputedLayouts:
     """Aggregate precomputed layouts into a single PreComputedLayouts instance."""
@@ -347,25 +391,29 @@ def aggregate_precomputed_layouts(
     def zero_fill_missing_markers(
         lazyframe: pl.LazyFrame, all_markers: set[str]
     ) -> pl.LazyFrame:
-        missing_markers = all_markers - set(lazyframe.columns)
+        missing_markers = all_markers - set(lazyframe.collect_schema().names())
         return lazyframe.with_columns(
             **{marker: pl.lit(0) for marker in missing_markers}
         )
 
     def data():
-        for sample_name, layout in precomputed_layouts:
+        for sample_name, pxl_dataset in pxl_datasets:
+            layout = pxl_dataset.precomputed_layouts
             if layout is None:
                 continue
             if layout.is_empty:
                 continue
             layout_with_name = layout.lazy.with_columns(
-                sample=pl.lit(sample_name)
+                sample=pl.lit(sample_name),
+                component=pl.concat_str(
+                    pl.col("component"), pl.lit(sample_name), separator="_"
+                ),
             ).pipe(zero_fill_missing_markers, all_markers=all_markers)
             yield layout_with_name
 
     try:
         return PreComputedLayouts(
-            pl.concat(data(), rechunk=True).collect(),
+            data(),
             partitioning=["sample"] + PreComputedLayouts.DEFAULT_PARTITIONING,
         )
     except ValueError:

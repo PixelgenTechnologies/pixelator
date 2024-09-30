@@ -10,6 +10,7 @@ from typing import Optional
 
 import networkx as nx
 import numpy as np
+
 from pixelator.graph.utils import Graph
 
 

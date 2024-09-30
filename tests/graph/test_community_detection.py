@@ -6,6 +6,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 import pandas as pd
 import polars as pl
 import pytest
+
 from pixelator.graph.community_detection import (
     community_detection_crossing_edges,
     connect_components,

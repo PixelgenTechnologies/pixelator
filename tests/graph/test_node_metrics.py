@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 import scipy.sparse as sp
 from pandas.testing import assert_frame_equal
+
 from pixelator.graph.node_metrics import compute_transition_probabilities, local_g
 
 

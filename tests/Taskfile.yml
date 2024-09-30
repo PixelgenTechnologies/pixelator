@@ -56,7 +56,7 @@ tasks:
     requires:
       vars: ["PIPELINE_SOURCE_DIR"]
     cmds:
-      - nf_options=(' --save_all ");
+      - nf_options=(' --save_all ');
         [[ {{ .RESUME }} == 'true' ]] && nf_options+=('-resume ');
         cd "{{ .PIPELINE_SOURCE_DIR }}";
         nextflow run . -profile test --outdir {{ .PIPELINE_RESULTS_DIR }} ${nf_options[@]};

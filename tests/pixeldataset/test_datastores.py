@@ -4,6 +4,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 """
 
 from pathlib import Path
+from shutil import make_archive
 from unittest.mock import patch
 from zipfile import ZipFile
 
@@ -11,8 +12,10 @@ import pandas as pd
 import polars as pl
 import pytest
 from anndata import AnnData
+from fsspec.implementations.zip import ZipFileSystem
 from pandas.core.frame import DataFrame
 from pandas.testing import assert_frame_equal
+
 from pixelator.pixeldataset import PixelDataset
 from pixelator.pixeldataset.datastores import (
     CannotOverwriteError,
@@ -21,6 +24,7 @@ from pixelator.pixeldataset.datastores import (
     ZipBasedPixelFile,
     ZipBasedPixelFileWithCSV,
     ZipBasedPixelFileWithParquet,
+    _CustomZipFileSystem,
 )
 from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
 
@@ -40,7 +44,7 @@ class TestPixelDataStore:
         dataset, *_ = setup_basic_pixel_dataset
         file_target = tmp_path / "dataset.pxl"
         # Writing pre-computed layouts is not supported for csv files
-        dataset.precomputed_layouts = None
+        dataset.precomputed_layouts = None  # type: ignore
         dataset.save(str(file_target), file_format="csv")
         res = PixelDataStore.guess_datastore_from_path(file_target)
         assert isinstance(res, ZipBasedPixelFileWithCSV)
@@ -67,7 +71,7 @@ class TestPixelDataStore:
     ):
         dataset, *_ = setup_basic_pixel_dataset
         # Writing pre-computed layouts is not supported for csv files
-        dataset.precomputed_layouts = None
+        dataset.precomputed_layouts = None  # type: ignore
         file_target = tmp_path / "dataset.pxl"
         dataset.save(str(file_target), file_format="csv")
         res = PixelDataStore.from_path(file_target)
@@ -141,7 +145,7 @@ class TestPixelDataStore:
     ):
         dataset, *_ = setup_basic_pixel_dataset
         # Writing pre-computed layouts is not supported for csv files
-        dataset.precomputed_layouts = None
+        dataset.precomputed_layouts = None  # type: ignore
         file_target = tmp_path / "dataset.pxl"
         dataset.save(
             str(file_target),
@@ -338,6 +342,104 @@ class TestZipBasedPixelFileWithCSV:
         file_target = tmp_path / "dataset.pxl"
         assert not file_target.is_file()
         # Writing pre-computed layouts is not supported for csv files
-        dataset.precomputed_layouts = None
+        dataset.precomputed_layouts = None  # type: ignore
         ZipBasedPixelFileWithCSV(file_target).save(dataset)
         assert file_target.is_file()
+
+
+@pytest.mark.test_this
+class TestCustomZipFileSystem:
+    @pytest.fixture(name="zip_file")
+    def zip_file_fixture(self, tmp_path):
+        data_dir = tmp_path / "data/"
+        data_dir.mkdir()
+        file1 = data_dir / "file1.txt"
+        file1.write_text("Hello, World!")
+        file2 = data_dir / "file2.txt"
+        file2.write_text("Lorem ipsum dolor sit amet")
+
+        empty_dir = data_dir / "dir1"
+        empty_dir.mkdir()
+
+        dir_with_files = data_dir / "dir2"
+        dir_with_files.mkdir()
+        file3 = dir_with_files / "file3.txt"
+        file3.write_text("Hello!")
+
+        zip_file = tmp_path / "test"
+        return Path(make_archive(zip_file, "zip", data_dir))
+
+    @pytest.mark.parametrize("detail", [True, False])
+    @pytest.mark.parametrize("withdirs", [True, False])
+    @pytest.mark.parametrize("max_depth", [None, 1, 2])
+    def test_ensure_parity(self, zip_file, detail, withdirs, max_depth):
+        custom_zip_file_system = _CustomZipFileSystem(zip_file)
+        zip_file_system = ZipFileSystem(zip_file)
+        result = custom_zip_file_system.find(
+            "/", detail=detail, withdirs=withdirs, max_depth=max_depth
+        )
+        expected_result = zip_file_system.find(
+            "/", detail=detail, withdirs=withdirs, max_depth=max_depth
+        )
+        assert result
+        assert result == expected_result
+
+    def test_find_returns_expected_result_detail_true(self, zip_file):
+        custom_zip_file_system = _CustomZipFileSystem(zip_file)
+        zip_file_system = ZipFileSystem(zip_file)
+
+        result = custom_zip_file_system.find("/", detail=True)
+        expected_result = zip_file_system.find("/", detail=True)
+
+        assert result
+        assert result == expected_result
+
+    def test_find_returns_expected_result_detail_false(self, zip_file):
+        custom_zip_file_system = _CustomZipFileSystem(zip_file)
+        zip_file_system = ZipFileSystem(zip_file)
+
+        result = custom_zip_file_system.find("/", detail=False)
+        expected_result = zip_file_system.find("/", detail=False)
+
+        assert result
+        assert result == expected_result
+
+    def test_find_returns_expected_result_detail_true_include_dirs(self, zip_file):
+        custom_zip_file_system = _CustomZipFileSystem(zip_file)
+        zip_file_system = ZipFileSystem(zip_file)
+
+        result = custom_zip_file_system.find("/", detail=True, withdirs=True)
+        expected_result = zip_file_system.find("/", detail=True, withdirs=True)
+
+        assert result
+        assert result == expected_result
+
+    def test_find_returns_expected_result_detail_false_include_dirs(self, zip_file):
+        custom_zip_file_system = _CustomZipFileSystem(zip_file)
+        zip_file_system = ZipFileSystem(zip_file)
+
+        result = custom_zip_file_system.find("/", detail=False, withdirs=True)
+        expected_result = zip_file_system.find("/", detail=False, withdirs=True)
+
+        assert result
+        assert result == expected_result
+
+    def test_find_returns_expected_result_recursion_depth_set(self, zip_file):
+        custom_zip_file_system = _CustomZipFileSystem(zip_file)
+        zip_file_system = ZipFileSystem(zip_file)
+
+        result = custom_zip_file_system.find("/", maxdepth=1)
+        expected_result = zip_file_system.find("/", maxdepth=1)
+
+        assert result
+        assert result == expected_result
+
+    def test_find_returns_expected_result_path_set(self, zip_file):
+        custom_zip_file_system = _CustomZipFileSystem(zip_file)
+        zip_file_system = ZipFileSystem(zip_file)
+
+        result = custom_zip_file_system.find("/dir2")
+        expected_result = zip_file_system.find("/dir2")
+
+        assert result
+        assert result == expected_result

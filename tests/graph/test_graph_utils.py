@@ -10,6 +10,7 @@ import pandas as pd
 import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
+
 from pixelator.graph import Graph
 from pixelator.graph.utils import (
     components_metrics,

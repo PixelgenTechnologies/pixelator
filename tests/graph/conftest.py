@@ -7,9 +7,9 @@ Copyright © 2023 Pixelgen Technologies AB.
 import networkx as nx
 import pandas as pd
 import pytest
+
 from pixelator.graph import Graph
 from pixelator.graph.backends.implementations import graph_backend
-
 from tests.graph.networkx.test_tools import add_random_names_to_vertexes
 
 

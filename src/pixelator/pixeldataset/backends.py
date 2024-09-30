@@ -82,7 +82,7 @@ class PixelDatasetBackend(Protocol):
         """Set the metadata object."""
 
     @property
-    def precomputed_layouts(self) -> Optional[PreComputedLayouts]:
+    def precomputed_layouts(self) -> PreComputedLayouts:
         """Get the precomputed layouts for the component graphs.
 
         Please note that since these have been pre-computed, if you have made
@@ -91,12 +91,12 @@ class PixelDatasetBackend(Protocol):
         ...
 
     @precomputed_layouts.setter
-    def precomputed_layouts(self, value: PreComputedLayouts) -> None:
+    def precomputed_layouts(self, value: PreComputedLayouts | None) -> None:
         """Set the precomputed layouts for the component graphs."""
         ...
 
 
-class ObjectBasedPixelDatasetBackend:
+class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
     """A backend for PixelDataset that is backed by in memory objects.
 
     `ObjectBasedPixelDatasetBackend` provides a backend for PixelDatasets that
@@ -209,12 +209,10 @@ class ObjectBasedPixelDatasetBackend:
         self._colocalization = value
 
     @property
-    def precomputed_layouts(self) -> PreComputedLayouts | None:
+    def precomputed_layouts(self) -> PreComputedLayouts:
         """Get the precomputed layouts."""
         if self._precomputed_layouts is None:
-            return None
-        if self._precomputed_layouts.is_empty:
-            return None
+            return PreComputedLayouts.create_empty()
         return self._precomputed_layouts
 
     @precomputed_layouts.setter
@@ -225,7 +223,7 @@ class ObjectBasedPixelDatasetBackend:
         self._precomputed_layouts = value
 
 
-class FileBasedPixelDatasetBackend:
+class FileBasedPixelDatasetBackend(PixelDatasetBackend):
     """A file based backend for PixelDataset.
 
     `FileBasedPixelDatasetBackend` is used to lazily fetch information from
@@ -260,7 +258,7 @@ class FileBasedPixelDatasetBackend:
         return self._datastore.read_edgelist()
 
     @property
-    def edgelist_lazy(self) -> Optional[pl.LazyFrame]:
+    def edgelist_lazy(self) -> pl.LazyFrame:
         """Get a lazy frame representation of the edgelist."""
         return self._datastore.read_edgelist_lazy()
 
@@ -280,19 +278,16 @@ class FileBasedPixelDatasetBackend:
         return self._datastore.read_metadata()
 
     @property
-    def precomputed_layouts(self) -> PreComputedLayouts | None:
+    def precomputed_layouts(self) -> PreComputedLayouts:
         """Get the precomputed layouts."""
         # If it is None it means it is uninitialized, and we should
         # attempt to read it lazily
+
+        if isinstance(self._precomputed_layouts, PreComputedLayouts):
+            return self._precomputed_layouts
+
         if self._precomputed_layouts is None:
-            return self._datastore.read_precomputed_layouts()
-
-        # It can also be empty, in which case it has been read and
-        # found to be empty. Or it has been initialized to be empty,
-        # which means that it should be cleared.
-        if self._precomputed_layouts.is_empty:
-            return None
-
+            self._precomputed_layouts = self._datastore.read_precomputed_layouts()
         return self._precomputed_layouts
 
     @precomputed_layouts.setter

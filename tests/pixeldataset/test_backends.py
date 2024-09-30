@@ -33,7 +33,7 @@ def assert_backend_can_set_values(pixel_dataset_backend):
 
     assert pixel_dataset_backend.precomputed_layouts
     pixel_dataset_backend.precomputed_layouts = None
-    assert not pixel_dataset_backend.precomputed_layouts
+    assert pixel_dataset_backend.precomputed_layouts.is_empty
 
 
 def test_file_based_pixel_dataset_backend_set_attrs(pixel_dataset_file):

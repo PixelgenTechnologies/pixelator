@@ -7,6 +7,7 @@ import os
 import shutil
 
 import pytest
+
 from pixelator.report import PixelatorWorkdir
 from pixelator.report.common import WorkdirOutputNotFound
 

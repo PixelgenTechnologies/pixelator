@@ -8,6 +8,7 @@ from tempfile import NamedTemporaryFile
 
 import pandas as pd
 import pytest
+
 from pixelator.config import AntibodyPanel
 
 

@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
+
 from pixelator.logging import LoggingSetup
 from pixelator.utils import (
     get_process_pool_executor,

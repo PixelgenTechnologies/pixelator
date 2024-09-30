@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
+
 from pixelator.pixeldataset import (
     read,
 )
@@ -200,9 +201,10 @@ def test_simple_aggregate_do_not_have_problems_with_layouts_when_working_with_fi
     dataset_1.save(tmp_data_set_path_1)
     dataset_1.save(tmp_data_set_path_2)
 
+    datasets = list([read(tmp_data_set_path_1), read(tmp_data_set_path_2)])
     result = simple_aggregate(
         sample_names=["sample1", "sample2"],
-        datasets=[read(tmp_data_set_path_1), read(tmp_data_set_path_2)],
+        datasets=datasets,
     )
 
     assert len(result.precomputed_layouts.to_df()) == 2 * len(

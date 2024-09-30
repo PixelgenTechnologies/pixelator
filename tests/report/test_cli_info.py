@@ -6,6 +6,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 import shutil
 
 import pytest
+
 from pixelator.report import PixelatorReporting, SingleCellStage
 from pixelator.report.common import WorkdirOutputNotFound
 from pixelator.report.models import CommandInfo
