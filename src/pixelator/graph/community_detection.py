@@ -190,6 +190,7 @@ def connect_components(
 
     logger.debug("Generate graph report")
     result_metrics = edgelist_metrics(graph_output_edgelist)
+    result_metrics["edges_with_colliding_upi_count"] = len(problematic_edges)
     del graph_output_edgelist
     report = GraphSampleReport(
         sample_id=sample_name,

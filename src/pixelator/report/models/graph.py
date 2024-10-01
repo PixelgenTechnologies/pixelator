@@ -63,6 +63,11 @@ class GraphSampleReport(SampleReport):
         description="The fraction of all pixels that are located in the largest component.",
     )
 
+    edges_with_colliding_upi_count: int = pydantic.Field(
+        ...,
+        description="The number of edges with UPIs that have appeared both as UPIA and UPIB.",
+    )
+
     @pydantic.computed_field(
         return_type=float,
         description="The ratio of the total number of A-pixels and the total number of B-pixels in the graph.",

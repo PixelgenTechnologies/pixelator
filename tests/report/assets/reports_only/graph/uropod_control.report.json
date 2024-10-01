@@ -19,6 +19,7 @@
     "b_pixel_count": 3982,
     "fraction_molecules_in_largest_component": 0.0007451564828614009,
     "fraction_pixels_in_largest_component": 0.000501378791677112,
+    "edges_with_colliding_upi_count": 0,
     "a_pixel_b_pixel_ratio": 1.0035158211953792,
     "pixel_count": 7978.0
 }

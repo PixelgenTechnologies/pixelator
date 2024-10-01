@@ -256,6 +256,8 @@ class EdgelistMetrics(typing.TypedDict, total=True):
     fraction_molecules_in_largest_component: float
     fraction_pixels_in_largest_component: float
 
+    edges_with_colliding_upi_count: int
+
 
 MetricsDict = typing.TypeVar(
     "MetricsDict", Dict[str, Union[int, float]], EdgelistMetrics
