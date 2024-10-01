@@ -213,7 +213,7 @@ def merge_strongly_connected_communities(
 
     :param edgelist: The edge list to process
     :param node_community_dict: A dictionary with the community mapping for each node
-    :param n_edges: The threshold for the number of edges between communities
+    :param n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
     :returns: A tuple with the modified edge list and the updated community mapping
     """
     community_serie = pd.Series(node_community_dict)
