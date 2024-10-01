@@ -268,7 +268,9 @@ def recover_technical_multiplets(
         https://doi.org/10.1038/s4q:598-019-41695-z
 
     :param edgelist: The edge list used to create the graph
-    :param node_component_map: A series with the component mapping for each node
+    :param node_component_map: A series with the component mapping for each
+                            node where the index is the upi (i.e. node name)
+                            and the value is the component id.
     :param max_refinement_recursion_depth: The number of times a component can be broken down
                             into smaller components during the recovery process.
     :return: A tuple with the updated node component map and the history of component
