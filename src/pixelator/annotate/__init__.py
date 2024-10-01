@@ -268,7 +268,6 @@ def annotate_components(
         fraction_pixels_in_largest_component=edgelist_metrics_dict[
             "fraction_pixels_in_largest_component"
         ],
-        components_modularity=edgelist_metrics_dict["components_modularity"],
         **adata_metrics_dict,
         input_cell_count=input_cell_count,
         input_read_count=input_read_count,

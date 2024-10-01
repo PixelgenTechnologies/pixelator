@@ -1,6 +1,5 @@
 {
     "sample_id": "pbmcs_unstimulated",
-    "components_modularity": 0.999668815620027,
     "fraction_molecules_in_largest_component": 0.0006480881399870382,
     "fraction_pixels_in_largest_component": 0.0004888381945576015,
     "input_cell_count": 3052,

@@ -49,10 +49,6 @@ class GraphSampleReport(SampleReport):
         description="The number of unique B-pixels in the graph.",
     )
 
-    components_modularity: float = pydantic.Field(
-        ..., description="The modularity of the components."
-    )
-
     fraction_molecules_in_largest_component: float = pydantic.Field(
         ...,
         ge=0,
