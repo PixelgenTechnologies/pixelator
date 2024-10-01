@@ -182,15 +182,15 @@ def connect_components(
 
     # save the edge list (recovered)
     logger.debug("Save the edgelist")
-    remaining_edgelist = remaining_edgelist.collect()
-    remaining_edgelist.write_parquet(
+    graph_output_edgelist = remaining_edgelist.collect()
+    graph_output_edgelist.write_parquet(
         Path(output) / f"{sample_name}.edgelist.parquet",
         compression="zstd",
     )
 
     logger.debug("Generate graph report")
-    result_metrics = edgelist_metrics(remaining_edgelist)
-    del remaining_edgelist
+    result_metrics = edgelist_metrics(graph_output_edgelist)
+    del graph_output_edgelist
     report = GraphSampleReport(
         sample_id=sample_name,
         **result_metrics,

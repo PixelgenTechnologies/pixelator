@@ -343,8 +343,8 @@ def edgelist_metrics(
         metrics["marker_count"] = edgelist.n_unique("marker")
         metrics["molecule_count"] = edgelist.shape[0]
 
-        counts_per_molecule = edgelist.select(pl.col("count"))["count"]
-        metrics["read_count"] = counts_per_molecule.sum()
+        counts_per_molecule = edgelist["count"]
+        metrics["read_count"] = int(counts_per_molecule.sum())
         metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
             counts_per_molecule
         )
