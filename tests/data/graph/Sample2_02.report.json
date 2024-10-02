@@ -8,7 +8,6 @@
     "molecules": 6786,
     "vertices": 13034,
     "components": 150,
-    "components_modularity": 0.99,
     "frac_upib_upia": 0.5,
     "frac_largest_edges": 0.1,
     "frac_largest_vertices": 0.1,

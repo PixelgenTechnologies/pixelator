@@ -36,8 +36,8 @@ from pixelator.plot.layout_plots import (
 @pytest.mark.parametrize(
     "component, marker",
     [
-        ("PXLCMP0000000", "CD45RA"),
-        ("PXLCMP0000000", None),
+        ("2ac2ca983a4b82dd", "CD45RA"),
+        ("2ac2ca983a4b82dd", None),
     ],
 )
 def test_plot_3d_graph(
@@ -65,8 +65,8 @@ def test_plot_3d_graph(
 @pytest.mark.parametrize(
     "component, marker",
     [
-        ("PXLCMP0000000", "CD45"),
-        ("PXLCMP0000000", None),
+        ("2ac2ca983a4b82dd", "CD45"),
+        ("2ac2ca983a4b82dd", None),
     ],
 )
 def test_plot_3d_graph_precomputed(
@@ -97,9 +97,9 @@ def test_plot_3d_graph_precomputed(
 @pytest.mark.parametrize(
     "component, marker, show_b_nodes",
     [
-        ("PXLCMP0000000", "CD45", False),
-        ((["PXLCMP0000001", "PXLCMP0000002"], ["CD3", "CD45", "CD19"], False)),
-        (("PXLCMP0000000", "pixel_type", True)),
+        (("2ac2ca983a4b82dd", "CD45", False)),
+        ((["6ed5d4e4cfe588bd", "701ec72d3bda62d5"], ["CD3", "CD45", "CD19"], False)),
+        (("2ac2ca983a4b82dd", "pixel_type", True)),
     ],
 )
 def test_plot_2d_graph_precomputed(
@@ -126,9 +126,9 @@ def test_plot_2d_graph_precomputed(
 @pytest.mark.parametrize(
     "component, marker, show_b_nodes",
     [
-        ("PXLCMP0000000", "CD45RA", False),
-        ((["PXLCMP0000001", "PXLCMP0000002"], ["CD20", "CD45", "CD45RA"], False)),
-        (("PXLCMP0000000", "pixel_type", True)),
+        ("2ac2ca983a4b82dd", "CD45RA", False),
+        ((["6ed5d4e4cfe588bd", "701ec72d3bda62d5"], ["CD20", "CD45", "CD45RA"], False)),
+        (("2ac2ca983a4b82dd", "pixel_type", True)),
     ],
 )
 def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_nodes):
@@ -170,18 +170,18 @@ def test_plot_colocalization_diff_heatmap(setup_basic_pixel_dataset):
         "CD3",
         "CD19",
         0.5,
-        "PXLCMP0000002",
+        "701ec72d3bda62d5",
     ]  # Adding a new pair of colocalization data as the heatmap needs at least 2 rows
-    colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "PXLCMP0000003"]
+    colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "ce2709afa8ebd1c9"]
     fig, _ = plot_colocalization_diff_heatmap(
         colocalization_data,
-        targets="PXLCMP0000003",
-        reference="PXLCMP0000002",
+        targets="ce2709afa8ebd1c9",
+        reference="701ec72d3bda62d5",
         contrast_column="component",
         value_column="pearson",
         min_log_p=0,
     )
-    return fig["PXLCMP0000003"]
+    return fig["ce2709afa8ebd1c9"]
 
 
 @pytest.mark.mpl_image_compare(
@@ -196,13 +196,13 @@ def test_plot_colocalization_diff_volcano(setup_basic_pixel_dataset):
         "CD3",
         "CD19",
         0.5,
-        "PXLCMP0000002",
+        "701ec72d3bda62d5",
     ]  # Adding a new pair of colocalization data as the volcano needs at least 2 rows
-    colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "PXLCMP0000003"]
+    colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "ce2709afa8ebd1c9"]
     fig, _ = plot_colocalization_diff_volcano(
         colocalization_data,
-        targets="PXLCMP0000003",
-        reference="PXLCMP0000002",
+        targets="ce2709afa8ebd1c9",
+        reference="701ec72d3bda62d5",
         contrast_column="component",
         value_column="pearson",
         min_log_p=-1,
@@ -220,8 +220,8 @@ def test_plot_polarity_diff_volcano(setup_basic_pixel_dataset):
     polarity_data = pxl_data.polarization
     fig, _ = plot_polarity_diff_volcano(
         polarity_data,
-        targets="PXLCMP0000003",
-        reference="PXLCMP0000002",
+        targets="ce2709afa8ebd1c9",
+        reference="701ec72d3bda62d5",
         contrast_column="component",
         value_column="morans_i",
         min_log_p=-1,
@@ -241,12 +241,12 @@ def test_plot_colocalization_diff_volcano_multiple(setup_basic_pixel_dataset):
         "CD3",
         "CD19",
         0.5,
-        "PXLCMP0000002",
+        "701ec72d3bda62d5",
     ]  # Adding a new pair of colocalization data as the volcano needs at least 2 rows
-    colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "PXLCMP0000003"]
+    colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "ce2709afa8ebd1c9"]
     fig, _ = plot_colocalization_diff_volcano(
         colocalization_data,
-        reference="PXLCMP0000002",
+        reference="701ec72d3bda62d5",
         contrast_column="component",
         value_column="pearson",
         min_log_p=-1,
@@ -264,7 +264,7 @@ def test_plot_polarity_diff_volcano_multiple(setup_basic_pixel_dataset):
     polarity_data = pxl_data.polarization
     fig, _ = plot_polarity_diff_volcano(
         polarity_data,
-        reference="PXLCMP0000002",
+        reference="701ec72d3bda62d5",
         contrast_column="component",
         value_column="morans_i",
         min_log_p=-1,

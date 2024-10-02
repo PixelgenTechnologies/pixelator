@@ -7,20 +7,16 @@ import logging
 import typing
 import warnings
 from functools import reduce
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import networkx as nx
-import numpy as np
 import pandas as pd
 import polars as pl
+import xxhash
 from scipy.sparse import identity
 
 from pixelator.graph.backends.implementations import (
     NetworkXGraphBackend,
-)
-from pixelator.graph.constants import (
-    DEFAULT_COMPONENT_PREFIX,
-    DIGITS,
 )
 from pixelator.graph.graph import Graph
 from pixelator.report.models import SummaryStatistics
@@ -257,9 +253,10 @@ class EdgelistMetrics(typing.TypedDict, total=True):
 
     read_count_per_molecule_stats: SummaryStatistics
 
-    components_modularity: float
     fraction_molecules_in_largest_component: float
     fraction_pixels_in_largest_component: float
+
+    edges_with_colliding_upi_count: int
 
 
 MetricsDict = typing.TypeVar(
@@ -267,51 +264,7 @@ MetricsDict = typing.TypeVar(
 )
 
 
-def _calculate_graph_metrics(
-    metrics: MetricsDict,
-    graph: Optional[Graph],
-    edgelist: Union[pd.DataFrame, pl.LazyFrame],
-) -> MetricsDict:
-    if not graph:
-        graph = Graph.from_edgelist(
-            edgelist=edgelist,
-            add_marker_counts=False,
-            simplify=False,
-            use_full_bipartite=True,
-        )
-    components = graph.connected_components()
-    pixel_count = graph.vcount()
-
-    metrics["component_count"] = len(components)
-    metrics["components_modularity"] = components.modularity
-    biggest = components.giant()
-    metrics["fraction_molecules_in_largest_component"] = (
-        biggest.ecount() / metrics["molecule_count"]
-    )
-    metrics["fraction_pixels_in_largest_component"] = biggest.vcount() / pixel_count
-    return metrics
-
-
-def _edgelist_metrics_pandas_data_frame(
-    edgelist: pd.DataFrame, graph: Optional[Graph] = None
-) -> EdgelistMetrics:
-    metrics: EdgelistMetrics = {}  # type: ignore
-    metrics["a_pixel_count"] = edgelist["upia"].nunique()
-    metrics["b_pixel_count"] = edgelist["upib"].nunique()
-    metrics["marker_count"] = edgelist["marker"].nunique()
-    metrics["molecule_count"] = edgelist.shape[0]
-    metrics["read_count"] = int(edgelist["count"].sum())
-    metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
-        edgelist["count"]
-    )
-
-    metrics = _calculate_graph_metrics(metrics=metrics, graph=graph, edgelist=edgelist)
-    return metrics
-
-
-def _edgelist_metrics_lazy_frame(
-    edgelist: pl.LazyFrame, graph: Optional[Graph] = None
-) -> EdgelistMetrics:
+def _edgelist_metrics_lazyframe(edgelist: pl.LazyFrame) -> EdgelistMetrics:
     metrics: EdgelistMetrics = {}  # type: ignore
 
     unique_counts = edgelist.select(
@@ -334,172 +287,227 @@ def _edgelist_metrics_lazy_frame(
     metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
         counts_per_molecule
     )
-    combined_metrics: EdgelistMetrics = _calculate_graph_metrics(
-        metrics=metrics, graph=graph, edgelist=edgelist
+
+    component_stats = (
+        edgelist.group_by("component")
+        .agg(
+            pl.col("upia").n_unique().alias("n_upia"),
+            pl.col("upib").n_unique().alias("n_upib"),
+            pl.len().alias("n_molecule"),
+        )
+        .collect()
     )
-    return combined_metrics
+    metrics["component_count"] = component_stats.shape[0]
+    component_stats = component_stats.with_columns(
+        n_upi=pl.col("n_upia") + pl.col("n_upib")
+    )
+    largest_component = component_stats.filter(
+        pl.col("n_molecule") == component_stats["n_molecule"].max()
+    )[0]
+    metrics["fraction_molecules_in_largest_component"] = (
+        largest_component["n_molecule"][0] / component_stats["n_molecule"].sum()
+    )
+    metrics["fraction_pixels_in_largest_component"] = (
+        largest_component["n_upi"][0] / component_stats["n_upi"].sum()
+    )
+    return metrics
 
 
 def edgelist_metrics(
-    edgelist: Union[pd.DataFrame, pl.LazyFrame], graph: Optional[Graph] = None
+    edgelist: pl.DataFrame | pd.DataFrame | pl.LazyFrame,
 ) -> EdgelistMetrics:
     """Compute edgelist metrics.
 
     A simple function that computes a dictionary of basic metrics
-    from an edge list (pd.DataFrame).
+    from an edge list (pl.DataFrame).
 
-    :param edgelist: the edge list (pd.DataFrame)
+    :param edgelist: the edge list (pl.DataFrame)
     :param graph: optionally add the graph instance that corresponds to the
                   edgelist (to not have to re-compute it)
     :returns: a dataclass of metrics
     :rtype: EdgelistMetrics
-    :raises TypeError: if edgelist is not either pd.DataFrame or pl.LazyFrame
+    :raises TypeError: if edgelist is not either a pl.LazyFrame
+    , pl.DataFrame or a pd.DataFrame
     """
-    if isinstance(edgelist, pd.DataFrame):
-        logger.debug("Computing edgelist metrics where edgelist type is pd.DataFrame")
-        return _edgelist_metrics_pandas_data_frame(edgelist=edgelist, graph=graph)
-
     if isinstance(edgelist, pl.LazyFrame):
         logger.debug("Computing edgelist metrics where edgelist type is pl.LazyFrame")
-        return _edgelist_metrics_lazy_frame(edgelist=edgelist, graph=graph)
+        return _edgelist_metrics_lazyframe(edgelist)
 
-    raise TypeError("edgelist was not of type `pd.DataFrame` or `pl.LazyFrame")
+    if isinstance(edgelist, pd.DataFrame):
+        logger.debug("Computing edgelist metrics where edgelist type is pd.DataFrame")
+        edgelist = pl.from_pandas(edgelist)
 
+    if isinstance(edgelist, pl.DataFrame):
+        metrics: EdgelistMetrics = {}  # type: ignore
 
-def _update_edgelist_membership_data_frame(
-    edgelist: pd.DataFrame,
-    graph: Optional[Graph] = None,
-    prefix: Optional[str] = None,
-) -> pd.DataFrame:
-    logger.debug("Updating membership in edge list with %i rows", edgelist.shape[0])
+        metrics["a_pixel_count"] = edgelist.n_unique("upia")
+        metrics["b_pixel_count"] = edgelist.n_unique("upib")
+        metrics["marker_count"] = edgelist.n_unique("marker")
+        metrics["molecule_count"] = edgelist.shape[0]
 
-    if prefix is None:
-        prefix = DEFAULT_COMPONENT_PREFIX
-
-    if "component" in edgelist.columns:
-        logger.info("The input edge list already contain a component column")
-
-    if not graph:
-        graph = Graph.from_edgelist(
-            edgelist=edgelist,
-            add_marker_counts=False,
-            simplify=False,
-            use_full_bipartite=True,
+        counts_per_molecule = edgelist["count"]
+        metrics["read_count"] = int(counts_per_molecule.sum())
+        metrics["read_count_per_molecule_stats"] = SummaryStatistics.from_series(
+            counts_per_molecule
         )
 
-    logger.debug("Fetching connected components")
-    connected_components = graph.connected_components()
-    logger.debug(
-        "Got the connected components. "
-        "Will begin the iteration to updated edge memberships"
+        component_stats = edgelist.group_by("component").agg(
+            pl.col("upia").n_unique().alias("n_upia"),
+            pl.col("upib").n_unique().alias("n_upib"),
+            pl.len().alias("n_molecule"),
+        )
+        metrics["component_count"] = component_stats.shape[0]
+        component_stats = component_stats.with_columns(
+            n_upi=pl.col("n_upia") + pl.col("n_upib")
+        )
+        largest_component = component_stats.filter(
+            pl.col("n_molecule") == component_stats["n_molecule"].max()
+        )[0]
+        metrics["fraction_molecules_in_largest_component"] = (
+            largest_component["n_molecule"][0] / component_stats["n_molecule"].sum()
+        )
+        metrics["fraction_pixels_in_largest_component"] = (
+            largest_component["n_upi"][0] / component_stats["n_upi"].sum()
+        )
+        return metrics
+    raise TypeError(
+        "edgelist was not of type `pd.LazyFrame`, `pd.DataFrame` or `pl.DataFrame"
     )
 
-    membership = np.empty(edgelist.shape[0], dtype=object)
-    component_id_format = f"{prefix}{{:0{DIGITS}d}}"
-    for i, component in enumerate(connected_components):
-        component_id = component_id_format.format(i)
-        edges = [
-            e.index
-            for e in graph.es.select_within({v.index for v in component.vertices()})
-        ]
-        membership[edges] = component_id
-    edgelist = edgelist.assign(component=membership)
 
-    logger.debug("Membership in edge list updated")
-    return edgelist
-
-
-def _update_edgelist_membership_lazy_frame(
+def map_upis_to_components(
     edgelist: pl.LazyFrame,
-    graph: Optional[Graph] = None,
-    prefix: Optional[str] = None,
+    node_component_map: pd.Series,
 ) -> pl.LazyFrame:
-    if prefix is None:
-        prefix = DEFAULT_COMPONENT_PREFIX
+    """Update the edgelist with component names corresponding to upia/upib.
 
-    if "component" in edgelist.columns:
-        logger.info("The input edge list already contains a component column")
+    Using the node_component_map, this function will add the component
+    information to the edgelist. Two columns are added to the edgelist,
+    i.e. component_a and component_b respectively for upia and upib.
+    The component names are then determined by calculating a hash of
+    the nodes in that component.
 
-    if not graph:
-        graph = Graph.from_edgelist(
-            edgelist=edgelist,
-            add_marker_counts=False,
-            simplify=False,
-            use_full_bipartite=True,
-        )
-
-    logger.debug("Searching for connected components")
-    connected_components = graph.connected_components()
-
-    logger.debug("Building edge to component mappings")
-    edge_index_to_component_mapping = {
-        e.index: component_idx
-        for component_idx, component in enumerate(connected_components)
-        for e in graph.es.select_within({v.index for v in component.vertices()})
-    }
-
-    def _map_edge_index_to_component_id():
-        return pl.col("edge_index").replace(edge_index_to_component_mapping)
-
-    def _build_component_name_str():
-        return pl.format(
-            "{}{}",
-            pl.lit(prefix),
-            pl.col("component_index")
-            .cast(pl.Utf8)
-            .str.pad_start(length=DIGITS, fill_char="0"),
-        )
-
+    :param edgelist: the edge list
+    :param node_component_map: a pd.Series mapping the nodes to their components
+    :returns: the remaining_edgelist and the removed_edgelist
+    :rtype: pl.LazyFrame
+    :raises TypeError: if edgelist is not either a pl.LazyFrame or a pd.DataFrame
+    """
+    # Create a mapping of the components to a hash of its UPIs
+    node_component_map = node_component_map.astype(str)
+    components = node_component_map.groupby(node_component_map)
+    for _, comp in components:
+        comp_nodes = sorted(comp.index)
+        comp_hash = xxhash.xxh64()
+        for node in comp_nodes:
+            comp_hash.update(str(node))
+        node_component_map[comp_nodes] = comp_hash.hexdigest()
+    node_component_dict = node_component_map.to_dict()
     logger.debug("Mapping components on the edge list")
-    edgelist_with_component_info = (
-        edgelist.with_row_count(name="edge_index")
-        .with_columns(_map_edge_index_to_component_id().alias("component_index"))
-        .with_columns(_build_component_name_str().alias("component"))
+    edgelist_with_component_info = edgelist.with_columns(
+        component_a=pl.col("upia")
+        .cast(pl.String)
+        .replace_strict(
+            node_component_dict,
+            default="",
+        ),
+    ).with_columns(
+        component_b=pl.col("upib")
+        .cast(pl.String)
+        .replace_strict(
+            node_component_dict,
+            default="",
+        ),
     )
-    edgelist_with_component_info = edgelist_with_component_info.drop(
-        ["edge_index", "component_index"]
-    )
+
     return edgelist_with_component_info
 
 
 def update_edgelist_membership(
-    edgelist: Union[pd.DataFrame, pl.LazyFrame],
-    graph: Optional[Graph] = None,
-    prefix: Optional[str] = None,
-) -> Union[pd.DataFrame, pl.LazyFrame]:
+    edgelist: pl.LazyFrame | pd.DataFrame,
+    node_component_map: Optional[pd.Series] = None,
+) -> pl.LazyFrame | pd.DataFrame:
     """Update the edgelist with component names.
 
-    Compute the connected components of the graph represented
-    by the `edgelist` (or directly on the `graph` if provided).
-    These connected components are assigned a numeric id. These
-    id's are added as a `component` column in the `edgelist`.
-    If a component column already exists, this will be updated.
-
-    The name of each component will be determined in the following way:
-    `prefix`+[up to 7 0's of padding]+[component number].
+    Using the node_component_map, this function will add the component
+    information to the edgelist. If for an edge, components of UPIA and
+    UPIB do not match, that edge will be removed. If node_component_map
+    is missing, it will be constructed based on the connected component
+    in the graph made from the edgelist.
 
     :param edgelist: the edge list
-    :param graph: optionally, the graph the corresponding to the edgelist
-                  if you have already computed this. This is convenient to
-                  avoid graph recomputation when it is not necessary.
-                  It is important that you know that the edgelist and the graph
-                  are in-sync if you use this feature.
-    :param prefix: the prefix to prepend to the component ids, if None will
-                    use `DEFAULT_COMPONENT_PREFIX`
-    :returns: the updated edge list
-    :rtype: Union[pd.DataFrame, pl.LazyFrame]
-    :raises TypeError: if edgelist is not either pd.DataFrame or pl.LazyFrame
+    :param node_component_map: a pd.Series mapping the nodes to their components
+    if missing, it will be constructed based on the connected components in the
+    graph made from the edgelist.
+    :returns: the remaining_edgelist and the removed_edgelist
+    :rtype: pl.LazyFrame | pd.DataFrame
+    :raises TypeError: if edgelist is not either a pl.LazyFrame or a pd.DataFrame
     """
     if isinstance(edgelist, pd.DataFrame):
-        logger.debug("Updating edgelist where type is pd.DataFrame")
-        return _update_edgelist_membership_data_frame(
-            edgelist=edgelist, graph=graph, prefix=prefix
+        was_dataframe = True
+        edgelist = pl.LazyFrame(edgelist)
+    else:
+        was_dataframe = False
+
+    if node_component_map is None:
+        edges = (
+            edgelist.select(["upia", "upib"])
+            .group_by(["upia", "upib"])
+            .len()
+            .sort(["upia", "upib"])  # sort to make sure the graph is the same
+            .collect()
         )
+        graph = nx.from_edgelist(edges.select(["upia", "upib"]).iter_rows())
+
+        node_component_map = pd.Series(index=graph.nodes())
+        for i, cc in enumerate(nx.connected_components(graph)):
+            node_component_map[list(cc)] = i
+        del graph
 
     if isinstance(edgelist, pl.LazyFrame):
         logger.debug("Updating edgelist where type is pl.LazyFrame")
-        return _update_edgelist_membership_lazy_frame(
-            edgelist=edgelist, graph=graph, prefix=prefix
-        )
+        if "component" in edgelist.collect_schema().names():
+            logger.info("The input edge list already contains a component column")
 
-    raise TypeError("edgelist was not of type pd.DataFrame or pl.LazyFrame")
+        edgelist_with_component_info = map_upis_to_components(
+            edgelist, node_component_map
+        )
+        edgelist_with_component_info, _ = split_remaining_and_removed_edgelist(
+            edgelist_with_component_info
+        )
+    else:
+        raise TypeError("edgelist was not of type pl.LazyFrame or pd.DataFrame")
+
+    if was_dataframe:
+        return edgelist_with_component_info.collect().to_pandas()
+    else:
+        return edgelist_with_component_info
+
+
+def split_remaining_and_removed_edgelist(
+    edgelist: pl.LazyFrame,
+) -> Tuple[pl.LazyFrame, pl.LazyFrame]:
+    """Split the edgelist into remaining and removed.
+
+    Inputs an edgelist with component_a and component_b columns.
+    If the two columns match in a row and they are not invalid,
+    i.e. empty string. They will be added to the remaining_edgelist.
+    Otherwise they will be added to the removed_edgelist.
+
+    :param edgelist: the edge list
+    :returns: the remaining_edgelist and the removed_edgelist
+    """
+    if "component" in edgelist.collect_schema().names():
+        logger.info("The input edge list already contains a component column")
+        edgelist = edgelist.drop("component")
+
+    remaining_edgelist = (
+        edgelist.filter(pl.col("component_a") != "")
+        .filter(pl.col("component_a") == pl.col("component_b"))
+        .rename({"component_a": "component"})
+        .drop("component_b")
+    )
+    removed_edgelist = edgelist.filter(
+        (pl.col("component_a") == "") | (pl.col("component_a") != pl.col("component_b"))
+    )
+    return remaining_edgelist, removed_edgelist

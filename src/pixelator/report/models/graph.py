@@ -49,10 +49,6 @@ class GraphSampleReport(SampleReport):
         description="The number of unique B-pixels in the graph.",
     )
 
-    components_modularity: float = pydantic.Field(
-        ..., description="The modularity of the components."
-    )
-
     fraction_molecules_in_largest_component: float = pydantic.Field(
         ...,
         ge=0,
@@ -65,6 +61,11 @@ class GraphSampleReport(SampleReport):
         ge=0,
         le=1,
         description="The fraction of all pixels that are located in the largest component.",
+    )
+
+    edges_with_colliding_upi_count: int = pydantic.Field(
+        ...,
+        description="The number of edges with UPIs that have appeared both as UPIA and UPIB.",
     )
 
     @pydantic.computed_field(

@@ -41,7 +41,7 @@ def test_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
                 "morans_z": -25.810281029712247,
                 "morans_p_value": 3.399057861353845e-147,
                 "morans_p_adjusted": 6.79811572270769e-147,
-                "component": "PXLCMP0000000",
+                "component": "23885f346392ff2c",
             },
             1: {
                 "marker": "B",
@@ -49,7 +49,7 @@ def test_polarization(enable_backend, full_graph_edgelist: pd.DataFrame):
                 "morans_z": -25.39946321402526,
                 "morans_p_value": 1.2782689040515938e-142,
                 "morans_p_adjusted": 1.2782689040515938e-142,
-                "component": "PXLCMP0000000",
+                "component": "23885f346392ff2c",
             },
         },
         orient="index",
@@ -77,7 +77,7 @@ def test_permuted_polarization(enable_backend, full_graph_edgelist: pd.DataFrame
                 "morans_z": -25.810281029712247,
                 "morans_p_value": 3.399057861353845e-147,
                 "morans_p_adjusted": 6.79811572270769e-147,
-                "component": "PXLCMP0000000",
+                "component": "23885f346392ff2c",
             },
             1: {
                 "marker": "B",
@@ -85,7 +85,7 @@ def test_permuted_polarization(enable_backend, full_graph_edgelist: pd.DataFrame
                 "morans_z": -25.39946321402526,
                 "morans_p_value": 1.2782689040515938e-142,
                 "morans_p_adjusted": 1.2782689040515938e-142,
-                "component": "PXLCMP0000000",
+                "component": "23885f346392ff2c",
             },
         },
         orient="index",
@@ -115,7 +115,7 @@ def test_polarization_log1p(enable_backend, full_graph_edgelist: pd.DataFrame):
                 "morans_z": -25.810281029712225,
                 "morans_p_value": 3.3990578613561664e-147,
                 "morans_p_adjusted": 6.798115722712333e-147,
-                "component": "PXLCMP0000000",
+                "component": "23885f346392ff2c",
             },
             1: {
                 "marker": "B",
@@ -123,7 +123,7 @@ def test_polarization_log1p(enable_backend, full_graph_edgelist: pd.DataFrame):
                 "morans_z": -25.399463214025243,
                 "morans_p_value": 1.2782689040520306e-142,
                 "morans_p_adjusted": 1.2782689040520306e-142,
-                "component": "PXLCMP0000000",
+                "component": "23885f346392ff2c",
             },
         },
         orient="index",
@@ -467,7 +467,7 @@ class TestPolarizationAnalysis:
     )
 
     def test_run_on_component(self, full_graph_edgelist):
-        component_id = "PXLCMP0000000"
+        component_id = "23885f346392ff2c"
         component = Graph.from_edgelist(
             full_graph_edgelist[full_graph_edgelist["component"] == component_id],
             add_marker_counts=True,
@@ -484,14 +484,14 @@ class TestPolarizationAnalysis:
                     "morans_i": -0.17764378122173094,
                     "morans_z": -25.810281029712247,
                     "morans_p_value": 3.399057861353845e-147,
-                    "component": "PXLCMP0000000",
+                    "component": component_id,
                 },
                 1: {
                     "marker": "B",
                     "morans_i": -0.17764378122173102,
                     "morans_z": -25.39946321402526,
                     "morans_p_value": 1.2782689040515938e-142,
-                    "component": "PXLCMP0000000",
+                    "component": component_id,
                 },
             },
             orient="index",
@@ -531,8 +531,8 @@ def test_get_differential_polarity(setup_basic_pixel_dataset):
     pxl_data, *_ = setup_basic_pixel_dataset
     result = get_differential_polarity(
         polarity_data=pxl_data.polarization,
-        targets="PXLCMP0000002",
-        reference="PXLCMP0000003",
+        targets="701ec72d3bda62d5",
+        reference="bec92437d668cfa1",
         contrast_column="component",
         value_column="morans_i",
     )
@@ -544,7 +544,7 @@ def test_get_differential_polarity(setup_basic_pixel_dataset):
                 "p_value": 1.0,
                 "median_difference": 0.2,
                 "p_adj": 1.0,
-                "target": "PXLCMP0000002",
+                "target": "701ec72d3bda62d5",
             },
             1: {
                 "marker": "CD3",
@@ -552,7 +552,7 @@ def test_get_differential_polarity(setup_basic_pixel_dataset):
                 "p_value": 1.0,
                 "median_difference": 0.0,
                 "p_adj": 1.0,
-                "target": "PXLCMP0000002",
+                "target": "701ec72d3bda62d5",
             },
             2: {
                 "marker": "CD45",
@@ -560,7 +560,7 @@ def test_get_differential_polarity(setup_basic_pixel_dataset):
                 "p_value": 1.0,
                 "median_difference": 0.0,
                 "p_adj": 1.0,
-                "target": "PXLCMP0000002",
+                "target": "701ec72d3bda62d5",
             },
         },
         orient="index",

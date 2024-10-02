@@ -17,9 +17,9 @@
     },
     "a_pixel_count": 3077,
     "b_pixel_count": 3060,
-    "components_modularity": 0.999668815620027,
     "fraction_molecules_in_largest_component": 0.0006480881399870382,
     "fraction_pixels_in_largest_component": 0.0004888381945576015,
+    "edges_with_colliding_upi_count": 0,
     "a_pixel_b_pixel_ratio": 1.0055555555555555,
     "pixel_count": 6137
 }

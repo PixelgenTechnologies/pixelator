@@ -35,27 +35,6 @@ random.seed(42)
 np.random.seed(42)
 
 
-def test_write_recovered_components(tmp_path: Path):
-    """test_write_recovered_components."""
-    file_target = tmp_path / "components_recovered.csv"
-    write_recovered_components(
-        {"PXLCMP0000000": ["PXLCMP0000000", "PXLCMP0000001"]},
-        filename=file_target,
-    )
-
-    result = pd.read_csv(file_target)
-    assert list(result.columns) == ["cell_id", "recovered_from"]
-    assert_frame_equal(
-        result,
-        pd.DataFrame(
-            {
-                "cell_id": ["PXLCMP0000000", "PXLCMP0000001"],
-                "recovered_from": ["PXLCMP0000000", "PXLCMP0000000"],
-            }
-        ),
-    )
-
-
 def test_antibody_metrics(full_graph_edgelist: pd.DataFrame):
     """test_antibody_metrics."""
     assert_frame_equal(

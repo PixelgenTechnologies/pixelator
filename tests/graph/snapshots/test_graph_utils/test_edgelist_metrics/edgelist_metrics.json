@@ -16,7 +16,6 @@
         "iqr": 0.0
     },
     "component_count": 1,
-    "components_modularity": 0.0,
     "fraction_molecules_in_largest_component": 1.0,
     "fraction_pixels_in_largest_component": 1.0
 }
