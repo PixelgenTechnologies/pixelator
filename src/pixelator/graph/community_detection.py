@@ -20,7 +20,6 @@ from graspologic.partition import leiden
 from pixelator.graph.constants import (
     LEIDEN_RESOLUTION,
     MIN_PIXELS_TO_REFINE,
-    STRONG_EDGE_THRESHOLD,
 )
 from pixelator.graph.utils import (
     edgelist_metrics,
@@ -41,6 +40,7 @@ def connect_components(
     metrics_file: str,
     multiplet_recovery: bool,
     max_refinement_recursion_depth: int = 5,
+    max_edges_to_split: int = 5,
     min_count: int = 2,
 ) -> None:
     """Retrieve all connected components from an edgelist.
@@ -75,6 +75,8 @@ def connect_components(
     :param multiplet_recovery: set to true to activate multiplet recovery
     :param max_refinement_recursion_depth: The number of times a component can be broken down into
                              smaller components during the recovery process.
+    :param max_edges_to_split: The maximum number of edges between the product components
+                                when splitting during multiplet recovery.
     :param min_count: the minimum number of counts (molecules) an edge must have
     :returns: None
     :rtype: None
@@ -151,8 +153,7 @@ def connect_components(
                 edgelist=edges,
                 node_component_map=node_component_map.astype(np.int64),
                 max_refinement_recursion_depth=max_refinement_recursion_depth,
-                removed_edges_edgelist_file=Path(output)
-                / f"{sample_name}.discarded_edgelist.parquet",
+                max_edges_to_split=max_edges_to_split,
             )
         )
 
@@ -247,7 +248,7 @@ def recover_technical_multiplets(
     edgelist: pd.DataFrame,
     node_component_map: pd.Series,
     max_refinement_recursion_depth: int = 5,
-    removed_edges_edgelist_file: Optional[PathType] = None,
+    max_edges_to_split: int = 5,
 ) -> Tuple[pd.Series, pd.DataFrame]:
     """Perform component recovery by deleting spurious edges.
 
@@ -274,6 +275,8 @@ def recover_technical_multiplets(
                             and the value is the component id.
     :param max_refinement_recursion_depth: The number of times a component can be broken down
                             into smaller components during the recovery process.
+    :param max_edges_to_split: The maximum number of edges between the product components
+                            when splitting during multiplet recovery.
     :return: A tuple with the updated node component map and the history of component
              breakdowns.
     :rtype: Tuple[pd.Series, pd.DataFrame]
@@ -330,7 +333,7 @@ def recover_technical_multiplets(
             component_edgelist, community_serie = merge_strongly_connected_communities(
                 component_edgelist,
                 community_dict,
-                n_edges=STRONG_EDGE_THRESHOLD if depth > 0 else None,
+                n_edges=max_edges_to_split if depth > 0 else None,
             )
 
             if community_serie.nunique() == 1:

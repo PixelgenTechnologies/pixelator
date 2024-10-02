@@ -4,6 +4,7 @@
         "options": {
             "--multiplet-recovery": "True",
             "--max-refinement-recursion-depth": 5,
+            "--max-edges-to-split": 5,
             "--min-count": 2,
             "--output": "."
         }

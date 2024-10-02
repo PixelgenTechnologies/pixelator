@@ -10,7 +10,6 @@ from pixelator.graph.community_detection import (
 )
 from pixelator.graph.constants import (
     MIN_PIXELS_TO_REFINE,
-    STRONG_EDGE_THRESHOLD,
 )
 from pixelator.graph.graph import Graph
 from pixelator.graph.utils import (
@@ -25,7 +24,6 @@ __all__ = [
     "recover_technical_multiplets",
     "write_recovered_components",
     "MIN_PIXELS_TO_REFINE",
-    "STRONG_EDGE_THRESHOLD",
     "Graph",
     "components_metrics",
     "create_node_markers_counts",

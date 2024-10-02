@@ -49,6 +49,18 @@ from pixelator.utils import (
     ),
 )
 @click.option(
+    "--max-edges-to-split",
+    default=5,
+    required=False,
+    type=click.IntRange(1, 100),
+    show_default=True,
+    help=(
+        "Maximum number of edges  between the product components "
+        "as a result of a component split operation during "
+        "the multiplet recovery process."
+    ),
+)
+@click.option(
     "--min-count",
     default=2,
     required=False,
@@ -66,6 +78,7 @@ def graph(
     parquet_file,
     multiplet_recovery,
     max_refinement_recursion_depth,
+    max_edges_to_split,
     min_count,
     output,
 ):
@@ -78,6 +91,7 @@ def graph(
         output=output,
         multiplet_recovery=multiplet_recovery,
         max_refinement_recursion_depth=max_refinement_recursion_depth,
+        max_edges_to_split=max_edges_to_split,
         min_count=min_count,
     )
 
@@ -106,5 +120,6 @@ def graph(
         metrics_file=str(metrics_file),
         multiplet_recovery=multiplet_recovery,
         max_refinement_recursion_depth=max_refinement_recursion_depth,
+        max_edges_to_split=max_edges_to_split,
         min_count=min_count,
     )
