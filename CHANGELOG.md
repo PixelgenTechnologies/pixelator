@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+-   Name components using UPI hashes.
+-   Run multiple iterations of multiplet recovery during graph step specified using `--max-refinement-recursion-depth"`.
 -   Support for MultiGraphs in `pmds_layout`
 -   Support multiple targets in `plot_colocalization_diff_volcano` and `plot_colocalization_diff_heatmap`.
 
