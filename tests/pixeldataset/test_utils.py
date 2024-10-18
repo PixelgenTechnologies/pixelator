@@ -94,6 +94,7 @@ def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
             "molecules",
             "pixels",
             "reads",
+            "is_potential_doublet",
         ]
     )
     assert "clr" in adata.obsm

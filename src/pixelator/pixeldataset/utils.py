@@ -13,8 +13,11 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 import pandas as pd
 from anndata import AnnData, ImplicitModificationWarning, read_h5ad
+from graspologic.partition import leiden
 
 from pixelator.graph import components_metrics
+from pixelator.graph.community_detection import merge_strongly_connected_communities
+from pixelator.graph.constants import LEIDEN_RESOLUTION
 from pixelator.statistics import (
     clr_transformation,
     log1p_transformation,
@@ -217,6 +220,63 @@ def write_anndata(adata: AnnData, filename: PathType) -> None:
     adata.write(filename=filename, compression="gzip")
 
 
+def _assess_doublet(component_edgelist: pd.DataFrame):
+    """Check whether a component is a potential doublet.
+
+    A component is a potential doublet if a) it has more than one community and
+    b) the second largest community is at least 20% of the size of the largest
+    community. (If the other communities are smaller they are assumed to be debries.)
+    """
+    component_edgelist = (
+        component_edgelist.groupby(["upia", "upib"], observed=True)["count"]
+        .count()
+        .reset_index()
+        .sort_values(["upia", "upib"])
+    )
+    edgelist_tuple = list(
+        map(tuple, np.array(component_edgelist[["upia", "upib", "count"]]))
+    )
+    component_communities_dict = leiden(
+        edgelist_tuple,
+        resolution=LEIDEN_RESOLUTION,
+        random_seed=42,
+    )
+    _, component_communities = merge_strongly_connected_communities(
+        component_edgelist,
+        component_communities_dict,
+        n_edges=20,
+    )
+    component_community_sizes = component_communities.value_counts().sort_values(
+        ascending=False
+    )
+    if len(component_community_sizes) > 1 and component_community_sizes.iloc[1] > (
+        0.2 * component_community_sizes.iloc[0]
+    ):
+        return True
+    else:
+        return False
+
+
+def mark_potential_doublets(
+    edgelist: pd.DataFrame,
+) -> pd.Series:
+    """Mark whether a component is a potential doublet.
+
+    A component is a potential doublet if a) it has more than one community and
+    b) the second largest community is at least 20% of the size of the largest
+    community. (If the other communities are smaller they are assumed to be debries.)
+
+    :param edgelist: the edge list dataframe containing component labels.
+    :returns: a boolean series indicating whether a component is a potential doublet.
+    :rtype: pd.Series
+    """
+    is_potential_doublet = pd.Series(index=edgelist["component"].unique(), dtype=bool)
+    for component_id, component_edgelist in edgelist.groupby("component"):
+        is_potential_doublet[component_id] = _assess_doublet(component_edgelist)
+
+    return is_potential_doublet
+
+
 def edgelist_to_anndata(
     edgelist: pd.DataFrame,
     panel: AntibodyPanel,
@@ -262,7 +322,9 @@ def edgelist_to_anndata(
     # compute components metrics (obs) and re-index
     components_metrics_df = components_metrics(edgelist=edgelist)
     components_metrics_df = components_metrics_df.reindex(index=counts_df.index)
-
+    components_metrics_df["is_potential_doublet"] = mark_potential_doublets(
+        edgelist=edgelist
+    )
     # compute antibody metrics (var) and re-index
     antibody_metrics_df = antibody_metrics(edgelist=edgelist)
     antibody_metrics_df = antibody_metrics_df.reindex(index=panel.markers, fill_value=0)
