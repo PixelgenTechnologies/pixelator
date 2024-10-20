@@ -15,15 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Support for MultiGraphs in `pmds_layout`
 -   Support multiple targets in `plot_colocalization_diff_volcano` and `plot_colocalization_diff_heatmap`.
 
-### Fixed
-
--   Improve memory usage when aggregating pixel files with precomputed layouts.
-
 ### Added
 
 -   Add `abundance_colocalization_plot` function to make scatter plots of selected marker-pairs' abundance.
 -   Add `plot_polarity_diff_volcano` to make statistical comparison plots of selected component groups.
 -   Add `get_differential_polarity` to statistically compare polarity scores of selected component groups.
+
+## [0.18.3] - 2024-09-26
+
+### Fixed
+
+ - Improved memory usage when aggregating PXL files with precomputed layouts.
 
 ## [0.18.2] - 2024-07-16
 
