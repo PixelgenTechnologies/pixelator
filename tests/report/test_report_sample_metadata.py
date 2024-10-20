@@ -5,6 +5,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 import pandas as pd
 import pytest
+
 from pixelator.report.models.report_metadata import SampleMetadata, SampleMetadataRecord
 
 

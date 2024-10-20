@@ -11,7 +11,7 @@ LABEL org.opencontainers.image.licenses = "MIT"
 
 # Install pixelator dependencies in a separate stage to improve caching
 FROM runtime AS entrypoint-true
-ENTRYPOINT [ "/usr/local/bin/pixelator" ]
+ENTRYPOINT [ "/usr/bin/pixelator" ]
 
 FROM runtime AS entrypoint-false
 ENTRYPOINT []

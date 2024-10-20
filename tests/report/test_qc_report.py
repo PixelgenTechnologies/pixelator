@@ -14,6 +14,8 @@ from pathlib import Path
 import lxml
 import pytest
 from lxml.etree import _Element as LxmlElement
+from playwright.sync_api import Page, expect
+
 from pixelator import __version__
 from pixelator.report.qcreport import (
     QCReportBuilder,
@@ -29,7 +31,6 @@ from pixelator.report.qcreport.collect import (
     collect_components_umap_data,
     collect_reads_per_molecule_frequency,
 )
-from playwright.sync_api import Page, expect
 
 
 @pytest.fixture()

@@ -210,14 +210,18 @@ class PixelDataset:
     @property
     def precomputed_layouts(
         self,
-    ) -> PreComputedLayouts | None:
+    ) -> PreComputedLayouts:
         """Get the precomputed layouts."""
         return self._backend.precomputed_layouts
 
     @precomputed_layouts.setter
     def precomputed_layouts(self, value: PreComputedLayouts | None) -> None:
         """Set the precomputed layouts."""
-        self._backend.precomputed_layouts = value
+        # Note that the type ignore here is to handle the fact that the setter
+        # needs to be able to take None (in order to make it easier to the user)
+        # but that will be transformed into a empty PreComputedLayouts object
+        # by the backend as and when it sees fit.
+        self._backend.precomputed_layouts = value  # type: ignore
 
     def graph(
         self,

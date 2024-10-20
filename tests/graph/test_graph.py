@@ -11,8 +11,8 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from pandas.testing import assert_frame_equal
-from pixelator.graph import Graph
 
+from pixelator.graph import Graph
 from tests.graph.networkx.test_tools import random_sequence
 from tests.test_tools import enforce_edgelist_types_for_tests
 

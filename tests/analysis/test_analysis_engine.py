@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 from pandas.testing import assert_frame_equal
+
 from pixelator.analysis.analysis_engine import (
     PerComponentAnalysis,
     _AnalysisManager,

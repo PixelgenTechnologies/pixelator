@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from numpy.random import default_rng
 from pandas.testing import assert_frame_equal
+
 from pixelator.analysis.colocalization.estimate import (
     estimate_observation_statistics,
     permutation_analysis_results,

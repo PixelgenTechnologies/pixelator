@@ -3,7 +3,7 @@
 
 ![python-version](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
-[![DOI](https://img.shields.io/badge/DOI-10.1101/2023.06.05.543770-B31B1B.svg)](https://www.biorxiv.org/content/10.1101/2023.06.05.543770v1)
+[![DOI](https://img.shields.io/badge/DOI-10.1038/S41592--024--02268--9-B31B1B.svg)](https://doi.org/10.1038/s41592-024-02268-9)
 [![conda](https://anaconda.org/bioconda/pixelator/badges/version.svg)](https://bioconda.github.io/recipes/pixelator/README.html#package-pixelator)
 [![pypi](https://img.shields.io/pypi/v/pixelgen-pixelator)](https://pypi.org/project/pixelgen-pixelator/)
 [![Tests](https://github.com/PixelgenTechnologies/pixelator/actions/workflows/tests.yml/badge.svg)](https://github.com/PixelgenTechnologies/pixelator/actions/workflows/tests.yml)
@@ -113,7 +113,7 @@ Pixelator is developed and maintained by the [developers](https://github.com/Pix
 
 When using pixelator in your research, please cite the following publication:
 
-> Karlsson, Filip, Tomasz Kallas, Divya Thiagarajan, Max Karlsson, Maud Schweitzer, Jose Fernandez Navarro, Louise Leijonancker, _et al._ “Molecular Pixelation: Single Cell Spatial Proteomics by Sequencing.” bioRxiv, June 8, 2023. https://doi.org/10.1101/2023.06.05.543770.
+> Karlsson, Filip, Tomasz Kallas, Divya Thiagarajan, Max Karlsson, Maud Schweitzer, Jose Fernandez Navarro, Louise Leijonancker, _et al._ "Molecular pixelation: spatial proteomics of single cells by sequencing." Nature Methods, May 8, 2024. https://doi.org/10.1038/s41592-024-02268-9.
 
 
 Main development happened thanks to:

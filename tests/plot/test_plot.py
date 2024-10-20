@@ -8,6 +8,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import pytest
 from numpy.testing import assert_almost_equal
+from pytest_snapshot.plugin import Snapshot
+
 from pixelator.graph import Graph
 from pixelator.plot import (
     cell_count_plot,
@@ -27,7 +29,6 @@ from pixelator.plot.layout_plots import (
     _calculate_distance_to_unit_sphere_zones,
     _unit_sphere_surface,
 )
-from pytest_snapshot.plugin import Snapshot
 
 
 @pytest.mark.parametrize(

@@ -10,6 +10,7 @@ import json
 import logging
 from functools import partial
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -249,14 +250,13 @@ class PixelDataStore(Protocol):
 
     def read_precomputed_layouts(
         self,
-    ) -> PreComputedLayouts | None:
+    ) -> PreComputedLayouts:
         """Read pre-computed layouts from the data store."""
         ...
 
     def write_precomputed_layouts(
         self,
         layouts: PreComputedLayouts,
-        collapse_to_single_dataframe: bool = False,
     ) -> None:
         """Write pre-computed layouts to the data store.
 
@@ -265,6 +265,67 @@ class PixelDataStore(Protocol):
                                              a single dataframe before writing.
         """
         ...
+
+
+class _CustomZipFileSystem(ZipFileSystem):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def find(self, path, maxdepth=None, withdirs=False, detail=False, **kwargs):
+        if maxdepth is not None and maxdepth < 1:
+            raise ValueError("maxdepth must be at least 1")
+
+        result = {}
+
+        def _below_max_recursion_depth(path):
+            if not maxdepth:
+                return True
+
+            depth = len(path.split("/"))
+            return depth <= maxdepth
+
+        for zip_info in self.zip.infolist():
+            file_name = zip_info.filename
+            if not file_name.startswith(path.lstrip("/")):
+                continue
+
+            # zip files can contain explicit or implicit directories
+            # hence the need to either add them directly or infer them
+            # from the file paths
+            if zip_info.is_dir():
+                if withdirs:
+                    if not result.get(file_name) and _below_max_recursion_depth(
+                        file_name
+                    ):
+                        result[file_name.strip("/")] = (
+                            self.info(file_name) if detail else None
+                        )
+                    continue
+                else:
+                    continue  # Skip along to the next entry if we don't want to add the dirs
+
+            if not result.get(file_name):
+                if _below_max_recursion_depth(file_name):
+                    result[file_name] = self.info(file_name) if detail else None
+
+                # Here we handle the case of implicitly adding the
+                # directories if they have been requested
+                if withdirs:
+                    directories = file_name.split("/")
+                    for i in range(1, len(directories)):
+                        dir_path = "/".join(directories[:i]).strip(
+                            "/"
+                        )  # remove the trailing slash, as this is not expected
+                        if not result.get(dir_path) and _below_max_recursion_depth(
+                            dir_path
+                        ):
+                            result[dir_path] = {
+                                "name": dir_path,
+                                "size": 0,
+                                "type": "directory",
+                            }
+
+        return result if detail else sorted(list(result.keys()))
 
 
 class ZipBasedPixelFile(PixelDataStore):
@@ -300,7 +361,7 @@ class ZipBasedPixelFile(PixelDataStore):
         self.close()
 
     def _setup_file_system(self, mode):
-        files_system = ZipFileSystem(fo=self.path, mode=mode, allowZip64=True)
+        files_system = _CustomZipFileSystem(fo=self.path, mode=mode, allowZip64=True)
 
         # For now we are overwriting the zip open method to force it to
         # always have force_zip=True, otherwise it won't work for large file
@@ -426,11 +487,11 @@ class ZipBasedPixelFile(PixelDataStore):
 
     def read_precomputed_layouts(
         self,
-    ) -> PreComputedLayouts | None:
+    ) -> PreComputedLayouts:
         """Read pre-computed layouts from the .pxl file."""
         layouts_lazy = self.read_dataframe_lazy(self.LAYOUTS_KEY)
         if layouts_lazy is None:
-            return None
+            return PreComputedLayouts.create_empty()
         return PreComputedLayouts(layouts_lazy=layouts_lazy)
 
     def write_metadata(self, metadata: Dict[str, Any]) -> None:
@@ -457,37 +518,33 @@ class ZipBasedPixelFile(PixelDataStore):
     def write_precomputed_layouts(
         self,
         layouts: Optional[PreComputedLayouts],
-        collapse_to_single_dataframe: bool = False,
     ) -> None:
         """Write pre-computed layouts to the data store."""
         if layouts is None:
             logger.debug("No layouts to write, will skip.")
             return
 
+        logger.debug("Starting to write layouts...")
+
+        self._set_to_write_mode()
         self._check_if_writeable(self.LAYOUTS_KEY)
 
-        logger.debug("Starting to write layouts...")
-        # This option is in place to allow collecting all the layouts into
-        # as single dataframe before writing (they will still be written into
-        # partitions), but this is much faster than writing them one by one
-        # for scenarios with many very small layouts.
-        if collapse_to_single_dataframe:
-            logger.debug("Writing from a single dataframe...")
-            self.write_dataframe(
-                layouts.to_df(),
-                self.LAYOUTS_KEY,
-                partitioning=PreComputedLayouts.DEFAULT_PARTITIONING,
-            )
-        else:
-            logger.debug("Writing by iterating components...")
-            for idx, layouts_to_write in enumerate(layouts.component_iterator()):
-                if idx % 100 == 0:
-                    logger.debug("Writing layouts...")
-                self.write_dataframe(
-                    layouts_to_write,
-                    self.LAYOUTS_KEY,
-                    partitioning=PreComputedLayouts.DEFAULT_PARTITIONING,
-                )
+        # This is a work around for the fact that sinking into parquet files
+        # from multiple sources is not supported. We therefore do this somewhat
+        # round about thing of first writing the parquet files to
+        # a temporary directory and then zipping them into the .pxl file.
+        with TemporaryDirectory(prefix="pixelator-") as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            local_tmp_target = tmp_path / "local.layouts.parquet"
+            layouts.write_parquet(local_tmp_target, partitioning=layouts.partitioning)
+
+            for file_ in local_tmp_target.rglob("*"):
+                if file_.is_file():
+                    # TODO Make sure written without compression
+                    file_name = file_.relative_to(local_tmp_target)
+                    self._file_system.zip.write(
+                        file_, arcname=f"{self.LAYOUTS_KEY}/{file_name}"
+                    )
 
         logger.debug("Completed writing layouts...")
 
@@ -520,17 +577,12 @@ class ZipBasedPixelFile(PixelDataStore):
             logger.debug("Writing colocalization scores")
             self.write_colocalization(dataset.colocalization)
 
-        if dataset.precomputed_layouts is not None:
+        if not dataset.precomputed_layouts.is_empty:
             logger.debug("Writing precomputed layouts")
             # This speeds things up massively when you have many, very small
             # layouts, like we do in some test data.
-            try:
-                write_layouts_in_one_go = dataset.adata.obs["vertices"].sum() < 100_000
-            except KeyError:
-                write_layouts_in_one_go = False
             self.write_precomputed_layouts(
                 dataset.precomputed_layouts,
-                collapse_to_single_dataframe=write_layouts_in_one_go,
             )
 
         logger.debug("PixelDataset saved to %s", self.path)
@@ -585,7 +637,6 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
     def write_precomputed_layouts(
         self,
         layouts: Optional[PreComputedLayouts],
-        collapse_to_single_dataframe: bool = False,
     ) -> None:
         """Write pre-computed layouts to the data store (NB: Not implemented!)."""
         raise NotImplementedError(
@@ -687,7 +738,13 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
     def _read_dataframe_from_zip_lazy(self, key: str) -> Optional[pl.LazyFrame]:
         try:
             self._set_to_read_mode()
-            dataset = ds.dataset(key, filesystem=self._file_system, partitioning="hive")
+            dataset = ds.dataset(
+                key,
+                filesystem=self._file_system,
+                partitioning="hive",
+                format="parquet",
+                partition_base_dir=key,
+            )
             return pl.scan_pyarrow_dataset(dataset)
         except FileNotFoundError:
             return None
