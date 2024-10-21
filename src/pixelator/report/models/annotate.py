@@ -25,6 +25,20 @@ class AnnotateSampleReport(SampleReport):
         description="The fraction of pixels (A and B pixels) in the largest component.",
     )
 
+    fraction_potential_doublets: float = pydantic.Field(
+        description=(
+            "The fraction of components that appear to consist of multiple "
+            "parts by the community detection algorithm."
+        ),
+    )
+
+    n_edges_to_split_potential_doublets: int = pydantic.Field(
+        description=(
+            "The total number of edges that need to be removed to split the "
+            "potential doublets into their sub-communities."
+        ),
+    )
+
     # ------------------------------------------------------------------------------- #
     #   Annotate metrics
     # ------------------------------------------------------------------------------- #

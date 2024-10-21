@@ -376,6 +376,8 @@ class AnnotateAnndataStatistics(typing.TypedDict):
     min_size_threshold: Optional[int]
     max_size_threshold: Optional[int]
     doublet_size_threshold: Optional[int]
+    fraction_potential_doublets: Optional[float]
+    n_edges_to_split_potential_doublets: Optional[int]
 
 
 def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
@@ -412,6 +414,8 @@ def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
         "min_size_threshold": None,
         "max_size_threshold": None,
         "doublet_size_threshold": None,
+        "fraction_potential_doublets": None,
+        "n_edges_to_split_potential_doublets": None,
     }
 
     # Tau type will only be available if it has been added in the annotate step
@@ -432,5 +436,13 @@ def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
 
     if "doublet_size_threshold" in adata.uns:
         metrics["doublet_size_threshold"] = adata.uns["doublet_size_threshold"]
+
+    if "is_potential_doublet" in adata.obs:
+        metrics["fraction_potential_doublets"] = adata.obs[
+            "is_potential_doublet"
+        ].mean()
+        metrics["n_edges_to_split_potential_doublets"] = adata.obs[
+            "n_edges_to_split_doublet"
+        ].sum()
 
     return metrics

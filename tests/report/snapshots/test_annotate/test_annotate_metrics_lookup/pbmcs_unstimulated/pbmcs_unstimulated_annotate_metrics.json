@@ -2,6 +2,8 @@
     "sample_id": "pbmcs_unstimulated",
     "fraction_molecules_in_largest_component": 0.0006480881399870382,
     "fraction_pixels_in_largest_component": 0.0004888381945576015,
+    "fraction_potential_doublets": 0.0,
+    "n_edges_to_split_potential_doublets": 0,
     "input_cell_count": 3052,
     "input_read_count": 6237,
     "cell_count": 3052,

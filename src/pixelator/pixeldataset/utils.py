@@ -16,7 +16,6 @@ from anndata import AnnData, ImplicitModificationWarning, read_h5ad
 from graspologic.partition import leiden
 
 from pixelator.graph import components_metrics
-from pixelator.graph.community_detection import merge_strongly_connected_communities
 from pixelator.graph.constants import LEIDEN_RESOLUTION
 from pixelator.statistics import (
     clr_transformation,
@@ -237,17 +236,13 @@ def _compute_sub_communities(
         resolution=LEIDEN_RESOLUTION,
         random_seed=42,
     )
+    component_communities = pd.Series(component_communities_dict)
 
-    _, component_communities = merge_strongly_connected_communities(
-        component_edgelist,
-        component_communities_dict,
-        n_edges=n_edges_reconnect,
-    )
     return component_communities
 
 
 def _assess_doublet(component_edgelist: pd.DataFrame):
-    """Check whether a component is a potential doublet.
+    """Check whether a component is a potential doublet and how many edges should be removed to split it.
 
     A component is a potential doublet if a) it has more than one community and
     b) the second largest community is at least 20% of the size of the largest
@@ -260,9 +255,13 @@ def _assess_doublet(component_edgelist: pd.DataFrame):
     if len(component_community_sizes) > 1 and component_community_sizes.iloc[1] > (
         0.2 * component_community_sizes.iloc[0]
     ):
-        return True
+        edges_to_remove = (
+            component_edgelist["upia"].map(component_communities)
+            != component_edgelist["upib"].map(component_communities)
+        ).sum()
+        return True, edges_to_remove
     else:
-        return False
+        return False, 0
 
 
 def mark_potential_doublets(
@@ -279,10 +278,15 @@ def mark_potential_doublets(
     :rtype: pd.Series
     """
     is_potential_doublet = pd.Series(index=edgelist["component"].unique(), dtype=bool)
+    n_edges_to_split_doublet = pd.Series(
+        index=edgelist["component"].unique(), dtype=int
+    )
     for component_id, component_edgelist in edgelist.groupby("component"):
-        is_potential_doublet[component_id] = _assess_doublet(component_edgelist)
+        is_potential_doublet[component_id], n_edges_to_split_doublet[component_id] = (
+            _assess_doublet(component_edgelist)
+        )
 
-    return is_potential_doublet
+    return is_potential_doublet, n_edges_to_split_doublet
 
 
 def edgelist_to_anndata(
@@ -330,9 +334,10 @@ def edgelist_to_anndata(
     # compute components metrics (obs) and re-index
     components_metrics_df = components_metrics(edgelist=edgelist)
     components_metrics_df = components_metrics_df.reindex(index=counts_df.index)
-    components_metrics_df["is_potential_doublet"] = mark_potential_doublets(
-        edgelist=edgelist
-    )
+    (
+        components_metrics_df["is_potential_doublet"],
+        components_metrics_df["n_edges_to_split_doublet"],
+    ) = mark_potential_doublets(edgelist=edgelist)
     # compute antibody metrics (var) and re-index
     antibody_metrics_df = antibody_metrics(edgelist=edgelist)
     antibody_metrics_df = antibody_metrics_df.reindex(index=panel.markers, fill_value=0)
