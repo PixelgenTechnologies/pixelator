@@ -220,13 +220,9 @@ def write_anndata(adata: AnnData, filename: PathType) -> None:
     adata.write(filename=filename, compression="gzip")
 
 
-def _assess_doublet(component_edgelist: pd.DataFrame):
-    """Check whether a component is a potential doublet.
-
-    A component is a potential doublet if a) it has more than one community and
-    b) the second largest community is at least 20% of the size of the largest
-    community. (If the other communities are smaller they are assumed to be debries.)
-    """
+def _compute_sub_communities(
+    component_edgelist: pd.DataFrame, n_edges_reconnect: int | None = None
+):
     component_edgelist = (
         component_edgelist.groupby(["upia", "upib"], observed=True)["count"]
         .count()
@@ -241,11 +237,23 @@ def _assess_doublet(component_edgelist: pd.DataFrame):
         resolution=LEIDEN_RESOLUTION,
         random_seed=42,
     )
+
     _, component_communities = merge_strongly_connected_communities(
         component_edgelist,
         component_communities_dict,
-        n_edges=20,
+        n_edges=n_edges_reconnect,
     )
+    return component_communities
+
+
+def _assess_doublet(component_edgelist: pd.DataFrame):
+    """Check whether a component is a potential doublet.
+
+    A component is a potential doublet if a) it has more than one community and
+    b) the second largest community is at least 20% of the size of the largest
+    community. (If the other communities are smaller they are assumed to be debries.)
+    """
+    component_communities = _compute_sub_communities(component_edgelist)
     component_community_sizes = component_communities.value_counts().sort_values(
         ascending=False
     )
