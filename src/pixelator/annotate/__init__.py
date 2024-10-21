@@ -414,8 +414,8 @@ def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
         "min_size_threshold": None,
         "max_size_threshold": None,
         "doublet_size_threshold": None,
-        "fraction_potential_doublets": None,
-        "n_edges_to_split_potential_doublets": None,
+        "fraction_potential_doublets": 0.0,
+        "n_edges_to_split_potential_doublets": 0,
     }
 
     # Tau type will only be available if it has been added in the annotate step
