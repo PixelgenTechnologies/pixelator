@@ -233,7 +233,7 @@ def _compute_sub_communities(
     )
     component_communities_dict = leiden(
         edgelist_tuple,
-        resolution=LEIDEN_RESOLUTION,
+        resolution=0.5 * LEIDEN_RESOLUTION,
         random_seed=42,
     )
     component_communities = pd.Series(component_communities_dict)
