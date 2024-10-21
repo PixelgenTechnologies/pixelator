@@ -2,6 +2,8 @@
     "sample_id": "uropod_control",
     "fraction_molecules_in_largest_component": 0.0007451564828614009,
     "fraction_pixels_in_largest_component": 0.000501378791677112,
+    "fraction_potential_doublets": 0.0,
+    "n_edges_to_split_potential_doublets": 0,
     "input_cell_count": 3963,
     "input_read_count": 8117,
     "cell_count": 3963,
