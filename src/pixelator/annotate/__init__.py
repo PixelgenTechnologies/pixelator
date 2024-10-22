@@ -441,6 +441,8 @@ def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
         metrics["fraction_potential_doublets"] = adata.obs[
             "is_potential_doublet"
         ].mean()
+
+    if "n_edges_to_split_doublet" in adata.obs:
         metrics["n_edges_to_split_potential_doublets"] = adata.obs[
             "n_edges_to_split_doublet"
         ].sum()
