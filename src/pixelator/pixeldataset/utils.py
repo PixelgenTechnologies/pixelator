@@ -273,7 +273,7 @@ def mark_potential_doublets(
 
     A component is a potential doublet if a) it has more than one community and
     b) the second largest community is at least 20% of the size of the largest
-    community. (If the other communities are smaller they are assumed to be debries.)
+    community.
 
     :param edgelist: the edge list dataframe containing component labels.
     :returns: a boolean series indicating whether a component is a potential doublet.
