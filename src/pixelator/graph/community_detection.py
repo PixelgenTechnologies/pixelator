@@ -172,8 +172,8 @@ def connect_components(
 
     # save the edge list (discarded)
     logger.debug("Save discarded edge list")
-    removed_edgelist = removed_edgelist.collect()
-    removed_edgelist.write_parquet(
+    removed_edgelist_df = removed_edgelist.collect()
+    removed_edgelist_df.write_parquet(
         Path(output) / f"{sample_name}.discarded_edgelist.parquet"
     )
 
@@ -189,20 +189,20 @@ def connect_components(
     result_metrics = edgelist_metrics(graph_output_edgelist)
 
     result_metrics["edges_with_colliding_upi_count"] = (
-        removed_edgelist["depth"] == 0
+        removed_edgelist_df["depth"] == 0
     ).sum()
     result_metrics["edges_removed_in_multiplet_recovery_first_iteration"] = (
-        removed_edgelist["depth"] == 1
+        removed_edgelist_df["depth"] == 1
     ).sum()
     result_metrics["edges_removed_in_multiplet_recovery_refinement"] = (
-        removed_edgelist["depth"] > 1
+        removed_edgelist_df["depth"] > 1
     ).sum()
     result_metrics["fraction_edges_removed_in_refinement"] = (
-        removed_edgelist["depth"] > 1
-    ).sum() / max(len(removed_edgelist), 1)
+        removed_edgelist_df["depth"] > 1
+    ).sum() / max(len(removed_edgelist_df), 1)
 
     del graph_output_edgelist
-    del removed_edgelist
+    del removed_edgelist_df
 
     report = GraphSampleReport(
         sample_id=sample_name,
