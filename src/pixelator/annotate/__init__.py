@@ -376,8 +376,8 @@ class AnnotateAnndataStatistics(typing.TypedDict):
     min_size_threshold: Optional[int]
     max_size_threshold: Optional[int]
     doublet_size_threshold: Optional[int]
-    fraction_potential_doublets: float
-    n_edges_to_split_potential_doublets: int
+    fraction_potential_doublets: Optional[float]
+    n_edges_to_split_potential_doublets: Optional[int]
 
 
 def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
