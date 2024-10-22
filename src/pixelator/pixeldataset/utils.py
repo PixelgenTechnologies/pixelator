@@ -16,7 +16,7 @@ from anndata import AnnData, ImplicitModificationWarning, read_h5ad
 from graspologic.partition import leiden
 
 from pixelator.graph import components_metrics
-from pixelator.graph.constants import LEIDEN_RESOLUTION
+from pixelator.graph.constants import LEIDEN_RESOLUTION, RELATIVE_ANNOTATE_RESOLUTION
 from pixelator.statistics import (
     clr_transformation,
     log1p_transformation,
@@ -233,7 +233,7 @@ def _compute_sub_communities(
     )
     component_communities_dict = leiden(
         edgelist_tuple,
-        resolution=0.5 * LEIDEN_RESOLUTION,
+        resolution=RELATIVE_ANNOTATE_RESOLUTION * LEIDEN_RESOLUTION,
         random_seed=42,
     )
     component_communities = pd.Series(component_communities_dict)
@@ -246,7 +246,10 @@ def _assess_doublet(component_edgelist: pd.DataFrame) -> tuple[bool, int]:
 
     A component is a potential doublet if a) it has more than one community and
     b) the second largest community is at least 20% of the size of the largest
-    community. (If the other communities are smaller they are assumed to be debries.)
+    community. A lower resolution is to be used for annotation of potential doublets
+    compared to the component recovery in the graph phase. The reduction factor in
+    annotate resolution is set by RELATIVE_ANNOTATE_RESOLUTION (default is 0.5).
+
     """
     component_communities = _compute_sub_communities(component_edgelist)
     component_community_sizes = component_communities.value_counts().sort_values(
