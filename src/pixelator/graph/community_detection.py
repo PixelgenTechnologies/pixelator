@@ -172,7 +172,8 @@ def connect_components(
 
     # save the edge list (discarded)
     logger.debug("Save discarded edge list")
-    removed_edgelist.collect().write_parquet(
+    removed_edgelist = removed_edgelist.collect()
+    removed_edgelist.write_parquet(
         Path(output) / f"{sample_name}.discarded_edgelist.parquet"
     )
 
@@ -186,8 +187,23 @@ def connect_components(
 
     logger.debug("Generate graph report")
     result_metrics = edgelist_metrics(graph_output_edgelist)
-    result_metrics["edges_with_colliding_upi_count"] = len(problematic_edges)
+
+    result_metrics["edges_with_colliding_upi_count"] = (
+        removed_edgelist["depth"] == 0
+    ).sum()
+    result_metrics["edges_removed_in_multiplet_recovery_first_iteration"] = (
+        removed_edgelist["depth"] == 1
+    ).sum()
+    result_metrics["edges_removed_in_multiplet_recovery_refinement"] = (
+        removed_edgelist["depth"] > 1
+    ).sum()
+    result_metrics["fraction_edges_removed_in_refinement"] = (
+        removed_edgelist["depth"] > 1
+    ).sum() / max(len(removed_edgelist), 1)
+
     del graph_output_edgelist
+    del removed_edgelist
+
     report = GraphSampleReport(
         sample_id=sample_name,
         **result_metrics,

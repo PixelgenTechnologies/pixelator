@@ -257,6 +257,9 @@ class EdgelistMetrics(typing.TypedDict, total=True):
     fraction_pixels_in_largest_component: float
 
     edges_with_colliding_upi_count: int
+    edges_removed_in_multiplet_recovery_first_iteration: int
+    edges_removed_in_multiplet_recovery_refinement: int
+    fraction_edges_removed_in_refinement: float
 
 
 MetricsDict = typing.TypeVar(
