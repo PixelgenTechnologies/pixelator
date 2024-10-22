@@ -189,14 +189,14 @@ def connect_components(
     result_metrics = edgelist_metrics(graph_output_edgelist)
 
     result_metrics["edges_with_colliding_upi_count"] = (
-        removed_edgelist_df["depth"] == 0
-    ).sum()
+        (removed_edgelist_df["depth"] == 0).sum().astype(int)
+    )
     result_metrics["edges_removed_in_multiplet_recovery_first_iteration"] = (
-        removed_edgelist_df["depth"] == 1
-    ).sum()
+        (removed_edgelist_df["depth"] == 1).sum().astype(int)
+    )
     result_metrics["edges_removed_in_multiplet_recovery_refinement"] = (
-        removed_edgelist_df["depth"] > 1
-    ).sum()
+        (removed_edgelist_df["depth"] > 1).sum().astype(int)
+    )
     result_metrics["fraction_edges_removed_in_refinement"] = (
         removed_edgelist_df["depth"] > 1
     ).sum() / max(len(removed_edgelist_df), 1)
