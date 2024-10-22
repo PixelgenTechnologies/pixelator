@@ -268,7 +268,7 @@ def _assess_doublet(component_edgelist: pd.DataFrame) -> tuple[bool, int]:
 
 def mark_potential_doublets(
     edgelist: pd.DataFrame,
-) -> pd.Series:
+) -> tuple[pd.Series, pd.Series]:
     """Mark whether a component is a potential doublet.
 
     A component is a potential doublet if a) it has more than one community and
