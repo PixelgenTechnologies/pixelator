@@ -257,6 +257,9 @@ class EdgelistMetrics(typing.TypedDict, total=True):
     fraction_pixels_in_largest_component: float
 
     edges_with_colliding_upi_count: int
+    edges_removed_in_multiplet_recovery_first_iteration: int
+    edges_removed_in_multiplet_recovery_refinement: int
+    fraction_edges_removed_in_refinement: float
 
 
 MetricsDict = typing.TypeVar(
@@ -378,6 +381,7 @@ def edgelist_metrics(
 def map_upis_to_components(
     edgelist: pl.LazyFrame,
     node_component_map: pd.Series,
+    node_depth_map: Optional[pd.Series] = None,
 ) -> pl.LazyFrame:
     """Update the edgelist with component names corresponding to upia/upib.
 
@@ -419,6 +423,22 @@ def map_upis_to_components(
             default="",
         ),
     )
+    if node_depth_map is not None:
+        node_depth_dict = node_depth_map.to_dict()
+        edgelist_with_component_info = (
+            edgelist_with_component_info.with_columns(
+                upia_depth=pl.col("upia")
+                .cast(pl.String)
+                .replace_strict(node_depth_dict, default=0),
+                upib_depth=pl.col("upib")
+                .cast(pl.String)
+                .replace_strict(node_depth_dict, default=0),
+            )
+            .with_columns(
+                depth=pl.min_horizontal([pl.col("upia_depth"), pl.col("upib_depth")])
+            )
+            .drop(["upia_depth", "upib_depth"])
+        )
 
     return edgelist_with_component_info
 
@@ -507,6 +527,9 @@ def split_remaining_and_removed_edgelist(
         .rename({"component_a": "component"})
         .drop("component_b")
     )
+    if "depth" in remaining_edgelist.columns:
+        remaining_edgelist = remaining_edgelist.drop("depth")
+
     removed_edgelist = edgelist.filter(
         (pl.col("component_a") == "") | (pl.col("component_a") != pl.col("component_b"))
     )

@@ -17,12 +17,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+_   Add `depth` column to `discarded_edgelist.parquet` output of the GRAPH stage that indicates at which refinement iteration the edge is removed.
+_   Add `edges_removed_in_multiplet_recovery_first_iteration`, `edges_removed_in_multiplet_recovery_refinement` and `fraction_edges_removed_in_refinement` to graph report.json.
 -   Add `is_potential_doublet` and `n_edges_to_split_doublet` columns to adata.obs.
 -   Add `fraction_potential_doublets` and `n_edges_to_split_potential_doublets` to annotate report.json.
 -   Add `--max-edges-to-split` option to `graph` to specify the maximum number of edges that can be removed between two sub-components during multiplet recovery.
 -   Add `abundance_colocalization_plot` function to make scatter plots of selected marker-pairs' abundance.
 -   Add `plot_polarity_diff_volcano` to make statistical comparison plots of selected component groups.
 -   Add `get_differential_polarity` to statistically compare polarity scores of selected component groups.
+
+### Removed
+
+-   Remove the `components_recovered.csv` output from the GRAPH stage.
 
 ## [0.18.3] - 2024-09-26
 

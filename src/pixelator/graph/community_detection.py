@@ -148,21 +148,15 @@ def connect_components(
     logger.debug("Calculating raw edgelist metrics")
 
     if multiplet_recovery:
-        recovered_node_component_map, component_refinement_history = (
-            recover_technical_multiplets(
-                edgelist=edges,
-                node_component_map=node_component_map.astype(np.int64),
-                max_refinement_recursion_depth=max_refinement_recursion_depth,
-                max_edges_to_split=max_edges_to_split,
-            )
-        )
-
-        # save the recovered components info to a file
-        component_refinement_history.to_csv(
-            Path(output) / f"{sample_name}.components_recovered.csv"
+        recovered_node_component_map, node_depth_map = recover_technical_multiplets(
+            edgelist=edges,
+            node_component_map=node_component_map.astype(np.int64),
+            max_refinement_recursion_depth=max_refinement_recursion_depth,
+            max_edges_to_split=max_edges_to_split,
         )
     else:
         recovered_node_component_map = node_component_map
+        node_depth_map = pd.Series(index=node_component_map.index, data=0)
 
     del edges
 
@@ -170,6 +164,7 @@ def connect_components(
     edgelist_with_component_info = map_upis_to_components(
         edgelist=edgelist,
         node_component_map=recovered_node_component_map.astype(np.int64),
+        node_depth_map=node_depth_map.astype(np.int64),
     )
     remaining_edgelist, removed_edgelist = split_remaining_and_removed_edgelist(
         edgelist_with_component_info
@@ -177,7 +172,8 @@ def connect_components(
 
     # save the edge list (discarded)
     logger.debug("Save discarded edge list")
-    removed_edgelist.collect().write_parquet(
+    removed_edgelist_df = removed_edgelist.collect()
+    removed_edgelist_df.write_parquet(
         Path(output) / f"{sample_name}.discarded_edgelist.parquet"
     )
 
@@ -191,8 +187,23 @@ def connect_components(
 
     logger.debug("Generate graph report")
     result_metrics = edgelist_metrics(graph_output_edgelist)
-    result_metrics["edges_with_colliding_upi_count"] = len(problematic_edges)
+
+    result_metrics["edges_with_colliding_upi_count"] = int(
+        (removed_edgelist_df["depth"] == 0).sum()
+    )
+    result_metrics["edges_removed_in_multiplet_recovery_first_iteration"] = int(
+        (removed_edgelist_df["depth"] == 1).sum()
+    )
+    result_metrics["edges_removed_in_multiplet_recovery_refinement"] = int(
+        (removed_edgelist_df["depth"] > 1).sum()
+    )
+    result_metrics["fraction_edges_removed_in_refinement"] = float(
+        (removed_edgelist_df["depth"] > 1).sum() / max(len(removed_edgelist_df), 1)
+    )
+
     del graph_output_edgelist
+    del removed_edgelist_df
+
     report = GraphSampleReport(
         sample_id=sample_name,
         **result_metrics,
@@ -249,7 +260,7 @@ def recover_technical_multiplets(
     node_component_map: pd.Series,
     max_refinement_recursion_depth: int = 5,
     max_edges_to_split: int = 5,
-) -> Tuple[pd.Series, pd.DataFrame]:
+) -> Tuple[pd.Series, pd.Series]:
     """Perform component recovery by deleting spurious edges.
 
     The molecular pixelation assay may under some conditions introduce spurious
@@ -277,9 +288,9 @@ def recover_technical_multiplets(
                             into smaller components during the recovery process.
     :param max_edges_to_split: The maximum number of edges between the product components
                             when splitting during multiplet recovery.
-    :return: A tuple with the updated node component map and the history of component
-             breakdowns.
-    :rtype: Tuple[pd.Series, pd.DataFrame]
+    :return: A tuple with the updated node component map and the iteration depth at which each
+             node is re-assigned to a component.
+    :rtype: Tuple[pd.Series, pd.Series]
     """
     logger.debug(
         "Starting multiplets recovery in edge list with %i rows",
@@ -296,8 +307,8 @@ def recover_technical_multiplets(
     comp_sizes = node_component_map.groupby(node_component_map).count()
 
     n_edges_to_remove = 0
-    community_annotation_history = []
     to_be_refined_next = comp_sizes[comp_sizes > MIN_PIXELS_TO_REFINE].index
+    node_depth_map = pd.Series(index=node_component_map.index, data=0)
     for depth in range(max_refinement_recursion_depth):
         edgelist["component_a"] = node_component_map[edgelist["upia"]].values
         edgelist["component_b"] = node_component_map[edgelist["upib"]].values
@@ -311,10 +322,6 @@ def recover_technical_multiplets(
             component_edgelist = component_edgelist[
                 component_edgelist["component_b"] == component
             ].sort_values(["upia", "upib"])
-
-            component_nodes = list(
-                set(component_edgelist["upia"]).union(set(component_edgelist["upib"]))
-            )
 
             edgelist_tuple = list(
                 map(tuple, np.array(component_edgelist[["upia", "upib", "len"]]))
@@ -343,6 +350,7 @@ def recover_technical_multiplets(
                 != component_edgelist["upib_community"]
             ).sum()
             community_size_map = community_serie.groupby(community_serie).count()
+            node_depth_map[community_serie.index] = depth + 1
 
             if (community_size_map > MIN_PIXELS_TO_REFINE).sum() > 1:
                 further_refinement = True
@@ -354,32 +362,18 @@ def recover_technical_multiplets(
                 node_component_map[
                     community_serie[community_serie == new_community].index
                 ] = new_id
-                community_annotation_history.append(
-                    (
-                        component,
-                        new_id,
-                        len(component_nodes),
-                        community_size_map[new_community],
-                        depth,
-                    )
-                )
                 if (
                     further_refinement
                     and community_size_map[new_community] > MIN_PIXELS_TO_REFINE
                 ):
                     to_be_refined_next.append(new_id)
 
-    component_refinement_history = pd.DataFrame(
-        community_annotation_history,
-        columns=["old", "new", "old_size", "new_size", "depth"],
-    ).astype(int)
-
     logger.info(
         "Obtained %i components after removing %i edges",
         node_component_map.nunique(),
         n_edges_to_remove,
     )
-    return node_component_map, component_refinement_history
+    return node_component_map, node_depth_map
 
 
 def write_recovered_components(

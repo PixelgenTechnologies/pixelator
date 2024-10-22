@@ -20,6 +20,9 @@
     "fraction_molecules_in_largest_component": 0.0006480881399870382,
     "fraction_pixels_in_largest_component": 0.0004888381945576015,
     "edges_with_colliding_upi_count": 0,
+    "edges_removed_in_multiplet_recovery_first_iteration": 0,
+    "edges_removed_in_multiplet_recovery_refinement": 0,
+    "fraction_edges_removed_in_refinement": 0.0,
     "a_pixel_b_pixel_ratio": 1.0055555555555555,
     "pixel_count": 6137
 }
