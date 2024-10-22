@@ -221,6 +221,8 @@ def write_anndata(adata: AnnData, filename: PathType) -> None:
 
 def _compute_sub_communities(
     component_edgelist: pd.DataFrame, n_edges_reconnect: int | None = None
+) -> pd.Series:
+    component_edgelist: pd.DataFrame, n_edges_reconnect: int | None = None
 ):
     component_edgelist = (
         component_edgelist.groupby(["upia", "upib"], observed=True)["count"]
