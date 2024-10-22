@@ -188,18 +188,18 @@ def connect_components(
     logger.debug("Generate graph report")
     result_metrics = edgelist_metrics(graph_output_edgelist)
 
-    result_metrics["edges_with_colliding_upi_count"] = (
-        (removed_edgelist_df["depth"] == 0).sum().astype(int)
+    result_metrics["edges_with_colliding_upi_count"] = int(
+        (removed_edgelist_df["depth"] == 0).sum()
     )
-    result_metrics["edges_removed_in_multiplet_recovery_first_iteration"] = (
-        (removed_edgelist_df["depth"] == 1).sum().astype(int)
+    result_metrics["edges_removed_in_multiplet_recovery_first_iteration"] = int(
+        (removed_edgelist_df["depth"] == 1).sum()
     )
-    result_metrics["edges_removed_in_multiplet_recovery_refinement"] = (
-        (removed_edgelist_df["depth"] > 1).sum().astype(int)
+    result_metrics["edges_removed_in_multiplet_recovery_refinement"] = int(
+        (removed_edgelist_df["depth"] > 1).sum()
     )
-    result_metrics["fraction_edges_removed_in_refinement"] = (
-        removed_edgelist_df["depth"] > 1
-    ).sum() / max(len(removed_edgelist_df), 1)
+    result_metrics["fraction_edges_removed_in_refinement"] = float(
+        (removed_edgelist_df["depth"] > 1).sum() / max(len(removed_edgelist_df), 1)
+    )
 
     del graph_output_edgelist
     del removed_edgelist_df
