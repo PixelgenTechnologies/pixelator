@@ -87,18 +87,12 @@ def test_recovery_technical_multiplets(
         .reset_index()
         .rename(columns={"count": "len"})
     )
-    result, info = recover_technical_multiplets(
+    result, depth_info = recover_technical_multiplets(
         edgelist=edges,
         node_component_map=node_component_map,
     )
     assert result.nunique() == 2
-    expected_info = pd.DataFrame(
-        {
-            0: {"old": 0, "new": 1, "old_size": 200, "new_size": 100, "depth": 0},
-            1: {"old": 0, "new": 2, "old_size": 200, "new_size": 100, "depth": 0},
-        }
-    ).T
-    assert_frame_equal(info, expected_info)
+    assert set(depth_info.unique()) == {1}
 
 
 def test_recovery_technical_multiplets_benchmark(
@@ -119,16 +113,10 @@ def test_recovery_technical_multiplets_benchmark(
         )
     )
     node_component_map[:] = 0
-    result, info = benchmark(
+    result, depth_info = benchmark(
         recover_technical_multiplets,
         edgelist=edges,
         node_component_map=node_component_map,
     )
     assert result.nunique() == 2
-    expected_info = pd.DataFrame(
-        {
-            0: {"old": 0, "new": 1, "old_size": 200, "new_size": 100, "depth": 0},
-            1: {"old": 0, "new": 2, "old_size": 200, "new_size": 100, "depth": 0},
-        }
-    ).T
-    assert_frame_equal(info, expected_info)
+    assert set(depth_info.unique()) == {1}
