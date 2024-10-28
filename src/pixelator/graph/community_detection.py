@@ -5,17 +5,13 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 import logging
 from copy import copy
-from dataclasses import dataclass
 from pathlib import Path
-from queue import Queue
-from time import time
-from typing import Optional, Tuple
+from typing import Tuple
 
 import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
-from graspologic.partition import leiden
 
 from pixelator.graph.constants import (
     LEIDEN_RESOLUTION,
@@ -25,7 +21,6 @@ from pixelator.graph.utils import (
     edgelist_metrics,
     map_upis_to_components,
     split_remaining_and_removed_edgelist,
-    update_edgelist_membership,
 )
 from pixelator.report.models.graph import GraphSampleReport
 from pixelator.types import PathType
@@ -296,6 +291,9 @@ def recover_technical_multiplets(
         "Starting multiplets recovery in edge list with %i rows",
         edgelist.shape[0],
     )
+
+    # Import here since the import is very slow and expensive
+    from graspologic.partition import leiden
 
     def id_generator(start=0):
         next_id = start

@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 import pandas as pd
 from anndata import AnnData, ImplicitModificationWarning, read_h5ad
-from graspologic.partition import leiden
 
 from pixelator.graph import components_metrics
 from pixelator.graph.constants import LEIDEN_RESOLUTION, RELATIVE_ANNOTATE_RESOLUTION
@@ -222,6 +221,9 @@ def write_anndata(adata: AnnData, filename: PathType) -> None:
 def _compute_sub_communities(
     component_edgelist: pd.DataFrame, n_edges_reconnect: int | None = None
 ) -> pd.Series:
+    # Import here since the import is very slow and expensive
+    from graspologic.partition import leiden
+
     component_edgelist = (
         component_edgelist.groupby(["upia", "upib"], observed=True)["count"]
         .count()
