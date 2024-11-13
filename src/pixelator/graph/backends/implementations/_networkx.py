@@ -803,7 +803,7 @@ def pmds_layout(
     if pivots < dim:
         raise ValueError("'pivots' must be greater than or equal to dim.")
 
-    if n_nodes < dim:
+    if n_nodes <= dim:
         raise ValueError(
             f"Number of nodes in the graph ({n_nodes}) must be greater than or equal to 'dim' ({dim})."
         )
