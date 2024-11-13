@@ -788,8 +788,9 @@ def pmds_layout(
     if not nx.is_connected(g):
         raise ValueError("Only connected graphs are supported.")
 
-    if pivots >= len(g.nodes):
-        total_nodes = len(g.nodes)
+    n_nodes = len(g.nodes)
+    if pivots >= n_nodes:
+        total_nodes = n_nodes
         warnings.warn(
             f"'pivots' ({pivots}) should be less than the number of "
             f"nodes ({total_nodes}) in the graph. Using all nodes as 'pivots'."
@@ -801,6 +802,11 @@ def pmds_layout(
 
     if pivots < dim:
         raise ValueError("'pivots' must be greater than or equal to dim.")
+
+    if n_nodes < dim:
+        raise ValueError(
+            f"Number of nodes in the graph ({n_nodes}) must be greater than or equal to 'dim' ({dim})."
+        )
 
     pivot_lower_bound = np.min([np.floor(0.2 * len(g.nodes)), 50])
     if pivots < pivot_lower_bound:
@@ -862,6 +868,7 @@ def pmds_layout(
     # Compute SVD and use distances to compute coordinates for all nodes
     # in an abstract cartesian space
     _, _, Vh = sp.sparse.linalg.svds(D_pivs_centered, k=dim, random_state=seed)
+
     coordinates = D_pivs_centered @ np.transpose(Vh)
     # Flip the coordinates here to make sure that we get the correct coordinate ordering
     # i.e. iqr(x) > iqr(y) > iqr(z)
