@@ -9,6 +9,7 @@ import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
 
+from pixelator.pixeldataset import PixelDataset
 from pixelator.pixeldataset.precomputed_layouts import (
     PreComputedLayouts,
     aggregate_precomputed_layouts,
@@ -525,6 +526,46 @@ class TestGeneratePrecomputedLayoutsForComponents:
 
         df = precomputed_layouts.to_df()
         assert set(df["layout"]) == {"pmds_3d"}
+
+    @pytest.mark.test_this
+    def test_generate_precomputed_layouts_on_to_small_components(self):
+        edgelist = pd.DataFrame.from_dict(
+            {
+                "upia": ["A", "B", "C"],
+                "upib": ["B", "C", "A"],
+                "umi": ["G", "H", "I"],
+                "sequence": ["J", "K", "L"],
+                "component": [
+                    "2ac2ca983a4b82dd",
+                    "2ac2ca983a4b82dd",
+                    "2ac2ca983a4b82dd",
+                ],
+                "marker": ["CD3", "CD3", "CD3"],
+                "count": [1, 1, 1],
+            }
+        )
+
+        class MockAnnData:
+            def __init__(self):
+                self.n_obs = 10
+
+            def copy(self):
+                return self
+
+            @property
+            def obs(self):
+                return pd.DataFrame(index=edgelist["component"].unique())
+
+            @property
+            def var(self):
+                return pd.DataFrame(index=edgelist["marker"].unique())
+
+        pixel_dataset = PixelDataset.from_data(MockAnnData(), edgelist=edgelist)
+        layout_algorithm = "wpmds_3d"
+        with pytest.raises(ValueError):
+            generate_precomputed_layouts_for_components(
+                pixel_dataset, layout_algorithms=layout_algorithm
+            )
 
 
 @pytest.mark.integration_test
