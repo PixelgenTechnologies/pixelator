@@ -16,6 +16,8 @@ from pixelator.config.panel import AntibodyPanel
 
 logger = logging.getLogger(__name__)
 
+DEMUX_PERCENTAGE_THRESHOLD = 0.5
+
 
 def demux_fastq(
     input: str,
@@ -29,7 +31,7 @@ def demux_fastq(
     cores: int,
     verbose: bool,
     sample_id: str,
-) -> None:
+) -> bool:
     """Demultiplex the input fastq file into separate files based on the barcodes.
 
     This function is a wrapper around `cutadapt` to process a `fastq`
@@ -51,7 +53,7 @@ def demux_fastq(
     :param cores: the number of cores to use
     :param verbose: run in verbose mode when true
     :param sample_id: the sample id
-    :returns: None
+    :returns: true if demux results were ok
     :raises ValueError: raises an exception
             OSError: raises an exception
             CalledProcessError: raises an exception
@@ -123,3 +125,24 @@ def demux_fastq(
 
     with open(report, "w") as fh:
         json.dump(modified_data, fh, indent=4)
+
+    return check_demux_results_are_ok(modified_data, sample_id)
+
+
+def check_demux_results_are_ok(report_data: dict, sample_id: str) -> bool:
+    """Check if the demultiplexing results are ok."""
+    read_counts = report_data["read_counts"]
+    input_reads = read_counts["input"]
+    output_reads = read_counts["output"]
+
+    if output_reads / input_reads < DEMUX_PERCENTAGE_THRESHOLD:
+        logger.error(
+            (
+                "Low demultiplexing rate (%.2f%%) for %s. Your results may not be reliable."
+                "Are you sure you have used the correct panel file?"
+            ),
+            output_reads / input_reads * 100,
+            sample_id,
+        )
+        return False
+    return True

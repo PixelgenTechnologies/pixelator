@@ -4,6 +4,8 @@ Console script for pixelator (demux)
 Copyright © 2022 Pixelgen Technologies AB.
 """
 
+import sys
+
 import click
 
 from pixelator.cli.common import (
@@ -161,7 +163,7 @@ def demux(
         command_path="pixelator single-cell demux",
     )
 
-    demux_fastq(
+    results_ok = demux_fastq(
         input=str(fastq_file),
         output=str(output_file),
         failed=str(failed_file),
@@ -174,3 +176,6 @@ def demux(
         verbose=ctx.obj["VERBOSE"],
         sample_id=name,
     )
+
+    if not results_ok:
+        sys.exit(1)
