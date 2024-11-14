@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Specify maximum number of edges that can be removed between two sub-components during multiplet recovery using `--max-edges-to-split`.
 -   Support for MultiGraphs in `pmds_layout`
 -   Support multiple targets in `plot_colocalization_diff_volcano` and `plot_colocalization_diff_heatmap`.
+-   If demultiplexing has a success rate lower than 50% the command will exit with a status of 1. This prevents further pipeline stages to be run on
+    what is probably bad data.
 
 ### Added
 
