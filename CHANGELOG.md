@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2024-12-10
+
+### Changed
+
+-   Name components using UPI hashes.
+-   Run multiple iterations of multiplet recovery during the `graph` stage specified using `--max-refinement-recursion-depth`.
+-   Specify maximum number of edges that can be removed between two sub-components during multiplet recovery using `--max-edges-to-split`.
+-   Support for MultiGraphs in `pmds_layout`
+-   Support multiple targets in `plot_colocalization_diff_volcano` and `plot_colocalization_diff_heatmap`.
+-   If demultiplexing has a success rate lower than 50% the command will exit with a status of 1. This prevents further pipeline stages to be run on
+    what is probably bad data.
+-   Clarify that `--min-size` and `--max-size` in the `annotate` stage should not be used at the same time as `--dynamic-filter`.
+-   Setting a lower threshold of 300 edges when `--dynamic-filter` is used in the `annotate` stage, components smaller than that will always
+    be filtered. Note that this can still be overridden by setting `--min-size` explicitly.
+-   Clarify error message when all components are filtered out in the `annotate` stage.
+
+### Added
+
+-   Add `depth` column to `discarded_edgelist.parquet` output of the `graph` stage that indicates at which refinement iteration the edge is removed.
+-   Add `edges_removed_in_multiplet_recovery_first_iteration`, `edges_removed_in_multiplet_recovery_refinement` and `fraction_edges_removed_in_refinement` to graph report.json.
+-   Add `is_potential_doublet` and `n_edges_to_split_doublet` columns to adata.obs.
+-   Add `fraction_potential_doublets` and `n_edges_to_split_potential_doublets` to annotate report.json.
+-   Add `--max-edges-to-split` option to `graph` to specify the maximum number of edges that can be removed between two sub-components during multiplet recovery.
+-   Add `abundance_colocalization_plot` function to make scatter plots of selected marker-pairs' abundance.
+-   Add `plot_polarity_diff_volcano` to make statistical comparison plots of selected component groups.
+-   Add `get_differential_polarity` to statistically compare polarity scores of selected component groups.
+
+### Removed
+
+-   Remove the `components_recovered.csv` output from the `graph` stage.
+
+### Fixed
+
+-   Improved error message when the number of nodes is lower than the number of requested dimensions in `pmds_layout`.
+
 ## [0.18.3] - 2024-09-26
 
 ### Fixed

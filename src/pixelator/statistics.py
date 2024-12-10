@@ -10,6 +10,7 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+from scipy.stats import mannwhitneyu
 
 logger = logging.getLogger(__name__)
 
@@ -180,3 +181,39 @@ def rel_normalization(df: pd.DataFrame, axis: Literal[0, 1] = 0) -> pd.DataFrame
 
     logger.debug("REL normalization computed")
     return norm_df
+
+
+def wilcoxon_test(
+    df: pd.DataFrame,
+    reference: str,
+    target: str,
+    contrast_column: str,
+    value_column: str,
+) -> pd.Series:
+    """Perform a Wilcoxon rank-sum test between two groups.
+
+    :param df: the dataframe containing the data.
+    :param reference: name of the reference group in the contrast column.
+    :param target: name of the target group in the contrast column.
+    :param contrast_column: name the column containing the group information.
+    :param value_column: name of the column containing the values to compare.
+    :return: a series containing the test statistic, p-value and median difference.
+    """
+    reference_df = df.loc[df[contrast_column] == reference, :]
+    target_df = df.loc[df[contrast_column] == target, :]
+
+    if reference_df.empty or target_df.empty:
+        return pd.Series({"stat": 0, "p_value": 1, "median_difference": 0})
+
+    estimate = np.median(
+        target_df[value_column].to_numpy()[:, None]
+        - reference_df[value_column].to_numpy()
+    )
+
+    stat, p_value = mannwhitneyu(
+        x=reference_df[value_column],
+        y=target_df[value_column],
+        alternative="two-sided",
+    )
+
+    return pd.Series({"stat": stat, "p_value": p_value, "median_difference": estimate})

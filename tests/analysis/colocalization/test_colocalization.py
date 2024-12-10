@@ -25,21 +25,21 @@ def test_get_differential_colocalization(setup_basic_pixel_dataset):
     pxl_data, *_ = setup_basic_pixel_dataset
     result = get_differential_colocalization(
         colocalization_data_frame=pxl_data.colocalization,
-        target="PXLCMP0000002",
-        reference="PXLCMP0000003",
+        targets="701ec72d3bda62d5",
+        reference="bec92437d668cfa1",
         contrast_column="component",
-        use_z_score=False,
-    )
+        value_column="pearson",
+    ).iloc[:1, :]
     expected = pd.DataFrame.from_dict(
         {
             0: {
                 "marker_1": "CD19",
                 "marker_2": "CD45",
-                "markers": "CD19/CD45",
                 "stat": 0.0,
                 "p_value": 1.0,
-                "median_difference": 0.09999999999999998,
+                "median_difference": 0.1,
                 "p_adj": 1.0,
+                "target": "701ec72d3bda62d5",
             }
         },
         orient="index",
@@ -116,7 +116,7 @@ def test_colocalization_scores(enable_backend, full_graph_edgelist: pd.DataFrame
                 "jaccard_z": np.nan,
                 "jaccard_p_value": np.nan,
                 "jaccard_p_value_adjusted": np.nan,
-                "component": "PXLCMP0000000",
+                "component": "23885f346392ff2c",
             }
         },
         orient="index",
@@ -155,7 +155,7 @@ def test_colocalization_scores_log1p(enable_backend, full_graph_edgelist: pd.Dat
                 "jaccard_z": np.nan,
                 "jaccard_p_value": np.nan,
                 "jaccard_p_value_adjusted": np.nan,
-                "component": "PXLCMP0000000",
+                "component": "23885f346392ff2c",
             }
         },
         orient="index",
@@ -196,7 +196,7 @@ def test_colocalization_scores_ratediff(
                 "jaccard_z": np.nan,
                 "jaccard_p_value": np.nan,
                 "jaccard_p_value_adjusted": np.nan,
-                "component": "PXLCMP0000000",
+                "component": "23885f346392ff2c",
             }
         },
         orient="index",
@@ -210,7 +210,7 @@ def test_colocalization_scores_low_marker_removed(
     enable_backend, full_random_graph_edgelist: pd.DataFrame
 ):
     component_edges = full_random_graph_edgelist.loc[
-        full_random_graph_edgelist["component"] == "PXLCMP0000000", :
+        full_random_graph_edgelist["component"] == "05639f32aabd2c23", :
     ]
     marker_counts = component_edges.groupby("marker").count()["count"]
     second_highest_marker_count = marker_counts.sort_values()[-2]
@@ -296,7 +296,7 @@ class TestColocalizationAnalysis:
     )
 
     def test_run_on_component(self, full_graph_edgelist):
-        component_id = "PXLCMP0000000"
+        component_id = "23885f346392ff2c"
         component = Graph.from_edgelist(
             full_graph_edgelist[full_graph_edgelist["component"] == component_id],
             add_marker_counts=True,
@@ -321,7 +321,7 @@ class TestColocalizationAnalysis:
                     "jaccard_stdev": 0.0,
                     "jaccard_z": np.nan,
                     "jaccard_p_value": np.nan,
-                    "component": "PXLCMP0000000",
+                    "component": component_id,
                 }
             },
             orient="index",

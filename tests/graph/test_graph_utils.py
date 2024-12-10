@@ -48,7 +48,7 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
                     "median_molecules_per_a_pixel": 50.0,
                 }
             ],
-            index=pd.Index(["PXLCMP0000000"], name="component"),
+            index=pd.Index(["23885f346392ff2c"], name="component"),
         ),
     )
 
@@ -269,19 +269,18 @@ def test_edgelist_metrics_on_lazy_dataframe(
     )
 
 
-@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
-def test_update_edgelist_membership(enable_backend, data_root):
+def test_update_edgelist_membership(data_root):
     """Test updating the edgelist membership."""
     edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
-    result = update_edgelist_membership(edgelist.copy(), prefix="PXLCMP")
+    result = update_edgelist_membership(edgelist.copy())
 
     assert "component" not in edgelist.columns
     assert set(result["component"].unique()) == {
-        "PXLCMP0000000",
-        "PXLCMP0000001",
-        "PXLCMP0000002",
-        "PXLCMP0000003",
-        "PXLCMP0000004",
+        "bec92437d668cfa1",
+        "701ec72d3bda62d5",
+        "ce2709afa8ebd1c9",
+        "2ac2ca983a4b82dd",
+        "6ed5d4e4cfe588bd",
     }
 
 
@@ -289,15 +288,15 @@ def test_update_edgelist_membership(enable_backend, data_root):
 def test_update_edgelist_membership_benchmark(benchmark, enable_backend, data_root):
     """Test updating the edgelist membership."""
     edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
-    result = benchmark(update_edgelist_membership, edgelist.copy(), prefix="PXLCMP")
+    result = benchmark(update_edgelist_membership, edgelist.copy())
 
     assert "component" not in edgelist.columns
     assert set(result["component"].unique()) == {
-        "PXLCMP0000000",
-        "PXLCMP0000001",
-        "PXLCMP0000002",
-        "PXLCMP0000003",
-        "PXLCMP0000004",
+        "bec92437d668cfa1",
+        "701ec72d3bda62d5",
+        "ce2709afa8ebd1c9",
+        "2ac2ca983a4b82dd",
+        "6ed5d4e4cfe588bd",
     }
 
 
@@ -306,12 +305,12 @@ def test_update_edgelist_membership_lazyframe(enable_backend, data_root):
     edgelist = pl.read_csv(str(data_root / "test_edge_list.csv")).lazy()
     assert "component" not in edgelist.columns
 
-    result = update_edgelist_membership(edgelist, prefix="PXLCMP").collect().to_pandas()
+    result = update_edgelist_membership(edgelist).collect().to_pandas()
 
     assert set(result["component"].unique()) == {
-        "PXLCMP0000000",
-        "PXLCMP0000001",
-        "PXLCMP0000002",
-        "PXLCMP0000003",
-        "PXLCMP0000004",
+        "bec92437d668cfa1",
+        "701ec72d3bda62d5",
+        "ce2709afa8ebd1c9",
+        "2ac2ca983a4b82dd",
+        "6ed5d4e4cfe588bd",
     }

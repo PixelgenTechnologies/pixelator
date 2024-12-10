@@ -245,7 +245,7 @@ class PixelDataset:
         """
         if component_id:
             potential_component = self.edgelist_lazy.filter(
-                pl.col("component") == component_id
+                pl.col("component").cast(pl.String) == component_id
             )
             if potential_component.head(1).collect().is_empty():
                 raise KeyError(f"{component_id} not found in edgelist")

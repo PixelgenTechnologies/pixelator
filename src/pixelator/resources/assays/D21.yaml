@@ -40,7 +40,7 @@ assay_spec:
 
       - region_id: umi-b
         region_type: umi
-        name: Pixel binding site 1
+        name: Unique molecular identifier B
         sequence_type: random
         sequence: NNNNNNNNNN
         min_len: 10
@@ -48,7 +48,7 @@ assay_spec:
 
       - region_id: bc
         region_type: barcode
-        name: barcode
+        name: Barcode
         sequence_type: random
         sequence: NNNNNNNN
         min_len: 8

@@ -100,7 +100,7 @@
             "description": "Activate the multiplet recovery"
           },
           {
-            "name": "--leiden-iterations",
+            "name": "--max-refinement-recursion-depth",
             "value": 10,
             "default_value": 10,
             "description": "Number of iterations for the leiden algorithm, high values will decrease the variance of the results but increase the runtime"

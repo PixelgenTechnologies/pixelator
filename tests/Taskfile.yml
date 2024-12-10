@@ -1,6 +1,19 @@
 version: "3"
 
 tasks:
+  test-tox:
+    desc: >-
+      Run the test suite using tox.
+    summary: |
+      Run the test suite using tox.
+
+      This allows running tests agains multiple python version easily
+    vars:
+      TOXENV: '{{ .TOXENV | default "py311" }}'
+
+    cmds:
+      - tox -e {{ .TOXENV }}
+
   pull-nf-core-pixelator:
     internal: true
     desc: >-
@@ -53,8 +66,6 @@ tasks:
       PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
       PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "results" }}'
       RESUME: '{{ .RESUME | default "false" }}'
-    requires:
-      vars: ["PIPELINE_SOURCE_DIR"]
     cmds:
       - nf_options=(' --save_all ');
         [[ {{ .RESUME }} == 'true' ]] && nf_options+=('-resume ');
@@ -131,9 +142,6 @@ tasks:
       PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
       PIPELINE_BRANCH: '{{ .PIPELINE_BRANCH | default "pixelator-next" }}'
       PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "results" }}'
-    requires:
-      vars:
-        - PIPELINE_SOURCE_DIR
     cmds:
       - task: pull-nf-core-pixelator
       - task: run-nf-core-pixelator-test-profile

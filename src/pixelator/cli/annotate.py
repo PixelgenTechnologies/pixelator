@@ -6,6 +6,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 import click
 
 from pixelator.annotate import annotate_components
+from pixelator.annotate.constants import MINIMUM_N_EDGES_CELL_SIZE
 from pixelator.cli.common import logger, output_option
 from pixelator.config import config, load_antibody_panel
 from pixelator.utils import (
@@ -45,7 +46,7 @@ from pixelator.utils import (
     required=False,
     type=click.INT,
     show_default=False,
-    help="The minimum size (edges) a component must have (default is disabled)",
+    help="The minimum size (edges) a component must have (default is disabled). Note that this cannot be set at the same time as --dynamic-filter.",
 )
 @click.option(
     "--max-size",
@@ -53,7 +54,7 @@ from pixelator.utils import (
     required=False,
     type=click.INT,
     show_default=False,
-    help="The maximum size (edges) a component must have (default is disabled)",
+    help="The maximum size (edges) a component must have (default is disabled). Note that this cannot be set at the same time as --dynamic-filter.",
 )
 @click.option(
     "--dynamic-filter",
@@ -61,10 +62,10 @@ from pixelator.utils import (
     default=None,
     type=click.Choice(["both", "min", "max"]),
     help=(
-        "Enable the estimation of dynamic size filters using a log-rank approach\n"
-        "\t both: estimate both min and max size"
-        "\t min: estimate min size (--min-size)"
-        "\t max: estimate max size (--max-size)"
+        "Enable the dynamic component size filters. The following modes are available: "
+        "both/max/min. both: estimates both minimum and maximum component size, min: estimates the minimum component "
+        f"size (or uses {MINIMUM_N_EDGES_CELL_SIZE} edges, whichever is smallest), "
+        "max: estimates the maximum component size. Note that this cannot be set at the same time as --min-size or --max-size."
     ),
 )
 @click.option(
@@ -110,11 +111,17 @@ def annotate(
 
     # sanity check on thresholds and input parameters
     if min_size is not None and min_size < 0:
-        click.ClickException("--min-size cannot be less than 0")
+        raise click.ClickException("--min-size cannot be less than 0")
     if max_size is not None and max_size < 0:
-        click.ClickException("--max-size cannot be less than 0")
+        raise click.ClickException("--max-size cannot be less than 0")
     if max_size is not None and min_size is not None and max_size < min_size:
-        click.ClickException("--max-size cannot be less than --min-size")
+        raise click.ClickException("--max-size cannot be less than --min-size")
+
+    if min_size is not None or max_size is not None:
+        if dynamic_filter is not None:
+            raise click.ClickException(
+                "Cannot set --dynamic-filter and --min-size or --max-size at the same time"
+            )
 
     # warn if both --dynamic-filter and hard-coded sizes are input
     if min_size is not None and dynamic_filter in ["min", "both"]:

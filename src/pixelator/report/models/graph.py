@@ -49,10 +49,6 @@ class GraphSampleReport(SampleReport):
         description="The number of unique B-pixels in the graph.",
     )
 
-    components_modularity: float = pydantic.Field(
-        ..., description="The modularity of the components."
-    )
-
     fraction_molecules_in_largest_component: float = pydantic.Field(
         ...,
         ge=0,
@@ -65,6 +61,28 @@ class GraphSampleReport(SampleReport):
         ge=0,
         le=1,
         description="The fraction of all pixels that are located in the largest component.",
+    )
+
+    edges_with_colliding_upi_count: int = pydantic.Field(
+        ...,
+        description="The number of edges with UPIs that have appeared both as UPIA and UPIB.",
+    )
+
+    edges_removed_in_multiplet_recovery_first_iteration: int = pydantic.Field(
+        ...,
+        description="The number of edges removed in the first iteration of multiplet recovery.",
+    )
+
+    edges_removed_in_multiplet_recovery_refinement: int = pydantic.Field(
+        ...,
+        description="The number of edges removed in the refinement of multiplet recovery.",
+    )
+
+    fraction_edges_removed_in_refinement: float = pydantic.Field(
+        ...,
+        ge=0,
+        le=1,
+        description="The fraction of total removed edges that are removed in the refinement of multiplet recovery.",
     )
 
     @pydantic.computed_field(

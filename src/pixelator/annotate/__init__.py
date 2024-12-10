@@ -22,6 +22,7 @@ from pixelator.annotate.constants import (
     MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION,
 )
 from pixelator.config import AntibodyPanel
+from pixelator.exceptions import PixelatorBaseException
 from pixelator.graph.utils import components_metrics, edgelist_metrics
 from pixelator.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.pixeldataset.utils import edgelist_to_anndata
@@ -35,6 +36,12 @@ from pixelator.report.models.annotate import AnnotateSampleReport
 numba.config.THREADING_LAYER = "omp"
 
 logger = logging.getLogger(__name__)
+
+
+class NoCellsFoundException(PixelatorBaseException):
+    """Raised when no cells are found in the edge list."""
+
+    pass
 
 
 def filter_components_sizes(
@@ -81,7 +88,9 @@ def filter_components_sizes(
         # check if none of the components pass the filters
         n_components = filter_arr.sum()
         if n_components == 0:
-            raise RuntimeError("None of the components pass the filters")
+            raise NoCellsFoundException(
+                "All cells were filtered by the size filters. Consider either setting different size filters or disabling them."
+            )
 
         logger.debug(
             "Filtering resulted in %i components that pass the filters",
@@ -199,8 +208,11 @@ def annotate_components(
     ].sum()
 
     # save the components metrics (raw)
+    component_info_file_path = (
+        Path(output) / f"{output_prefix}.raw_components_metrics.csv.gz"
+    )
     component_metrics.to_csv(
-        Path(output) / f"{output_prefix}.raw_components_metrics.csv.gz",
+        component_info_file_path,
         header=True,
         index=True,
         sep=",",
@@ -268,7 +280,6 @@ def annotate_components(
         fraction_pixels_in_largest_component=edgelist_metrics_dict[
             "fraction_pixels_in_largest_component"
         ],
-        components_modularity=edgelist_metrics_dict["components_modularity"],
         **adata_metrics_dict,
         input_cell_count=input_cell_count,
         input_read_count=input_read_count,
@@ -377,6 +388,8 @@ class AnnotateAnndataStatistics(typing.TypedDict):
     min_size_threshold: Optional[int]
     max_size_threshold: Optional[int]
     doublet_size_threshold: Optional[int]
+    fraction_potential_doublets: Optional[float]
+    n_edges_to_split_potential_doublets: Optional[int]
 
 
 def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
@@ -413,6 +426,8 @@ def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
         "min_size_threshold": None,
         "max_size_threshold": None,
         "doublet_size_threshold": None,
+        "fraction_potential_doublets": None,
+        "n_edges_to_split_potential_doublets": None,
     }
 
     # Tau type will only be available if it has been added in the annotate step
@@ -433,5 +448,15 @@ def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
 
     if "doublet_size_threshold" in adata.uns:
         metrics["doublet_size_threshold"] = adata.uns["doublet_size_threshold"]
+
+    if "is_potential_doublet" in adata.obs:
+        metrics["fraction_potential_doublets"] = adata.obs[
+            "is_potential_doublet"
+        ].mean()
+
+    if "n_edges_to_split_doublet" in adata.obs:
+        metrics["n_edges_to_split_potential_doublets"] = adata.obs[
+            "n_edges_to_split_doublet"
+        ].sum()
 
     return metrics

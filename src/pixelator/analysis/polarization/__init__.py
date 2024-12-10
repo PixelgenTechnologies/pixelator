@@ -9,13 +9,14 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 from scipy.stats import norm
+from statsmodels.stats.multitest import multipletests
 
 from pixelator.analysis.analysis_engine import PerComponentAnalysis
 from pixelator.analysis.permute import permutations
 from pixelator.analysis.polarization.types import PolarizationTransformationTypes
 from pixelator.graph.utils import Graph
 from pixelator.pixeldataset import MIN_VERTICES_REQUIRED, PixelDataset
-from pixelator.statistics import correct_pvalues
+from pixelator.statistics import correct_pvalues, wilcoxon_test
 from pixelator.utils import get_pool_executor
 
 logger = logging.getLogger(__name__)
@@ -370,3 +371,70 @@ class PolarizationAnalysis(PerComponentAnalysis):
         logger.debug("Adding polarization analysis data to PixelDataset")
         pxl_dataset.polarization = data
         return pxl_dataset
+
+
+def get_differential_polarity(
+    polarity_data: pd.DataFrame,
+    reference: str,
+    targets: str | list[str] | None = None,
+    contrast_column: str = "sample",
+    value_column: str = "morans_z",
+) -> pd.DataFrame:
+    """Calculate the differential polarity.
+
+    :param polarity_data: The polarity data frame.
+    :param target: The label for target components in the contrast_column.
+    :param reference: The label for reference components in the contrast_column.
+    :param contrast_column: The column to use for the contrast. Defaults to "sample".
+    :param value_column: What polarity metric to use. Defaults to "morans_z".
+
+    :return: The differential polarity.
+    :rtype: pd.DataFrame
+    """
+    if targets is None:
+        targets = polarity_data[contrast_column].unique()
+        targets = list(set(targets) - {reference})
+    elif isinstance(targets, str):
+        targets = [targets]
+
+    if len(targets) > 5:
+        logger.warning(
+            "There are more than 5 targets in the dataset. This may take a while."
+        )
+    merged_differential_polarity = pd.DataFrame()
+    for target in targets:
+        differential_polarity = (
+            polarity_data.groupby("marker")
+            .apply(
+                lambda marker_data: wilcoxon_test(
+                    marker_data,
+                    reference=reference,
+                    target=target,
+                    contrast_column=contrast_column,
+                    value_column=value_column,
+                )
+            )
+            .reset_index()
+        )
+
+        # If a marker appears only in one of the datasets,
+        # it's differential value will be NAN
+        nan_values = differential_polarity[
+            differential_polarity["median_difference"].isna()
+        ].index
+        differential_polarity.drop(
+            nan_values,
+            axis="index",
+            inplace=True,
+        )
+
+        _, pvals_corrected, *_ = multipletests(
+            differential_polarity["p_value"], method="bonferroni"
+        )
+        differential_polarity["p_adj"] = pvals_corrected
+        differential_polarity["target"] = target
+        merged_differential_polarity = pd.concat(
+            (merged_differential_polarity, differential_polarity), axis=0
+        )
+
+    return merged_differential_polarity

@@ -35,39 +35,39 @@ def test_command_line_interface():
     # Single cell commands
 
     # amplicon
-    result = runner.invoke(cli.single_cell, ["amplicon", "--help"])
+    result = runner.invoke(cli.single_cell_mpx, ["amplicon", "--help"])
     assert result.exit_code == 0
 
     # preqc
-    result = runner.invoke(cli.single_cell, ["preqc", "--help"])
+    result = runner.invoke(cli.single_cell_mpx, ["preqc", "--help"])
     assert result.exit_code == 0
 
     # adapterqc
-    result = runner.invoke(cli.single_cell, ["adapterqc", "--help"])
+    result = runner.invoke(cli.single_cell_mpx, ["adapterqc", "--help"])
     assert result.exit_code == 0
 
     # demux
-    result = runner.invoke(cli.single_cell, ["demux", "--help"])
+    result = runner.invoke(cli.single_cell_mpx, ["demux", "--help"])
     assert result.exit_code == 0
 
     # collapse
-    result = runner.invoke(cli.single_cell, ["collapse", "--help"])
+    result = runner.invoke(cli.single_cell_mpx, ["collapse", "--help"])
     assert result.exit_code == 0
 
     # graph
-    result = runner.invoke(cli.single_cell, ["graph", "--help"])
+    result = runner.invoke(cli.single_cell_mpx, ["graph", "--help"])
     assert result.exit_code == 0
 
     # annotate
-    result = runner.invoke(cli.single_cell, ["annotate", "--help"])
+    result = runner.invoke(cli.single_cell_mpx, ["annotate", "--help"])
     assert result.exit_code == 0
 
     # analysis
-    result = runner.invoke(cli.single_cell, ["analysis", "--help"])
+    result = runner.invoke(cli.single_cell_mpx, ["analysis", "--help"])
     assert result.exit_code == 0
 
     # report
-    result = runner.invoke(cli.single_cell, ["report", "--help"])
+    result = runner.invoke(cli.single_cell_mpx, ["report", "--help"])
     assert result.exit_code == 0
 
 

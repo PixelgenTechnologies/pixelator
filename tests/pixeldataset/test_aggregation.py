@@ -45,7 +45,7 @@ def test_simple_aggregate(setup_basic_pixel_dataset):
     assert len(result.edgelist) == 2 * len(dataset_1.edgelist)
     assert "sample" in result.edgelist.columns
     row = result.edgelist.iloc[0]
-    assert re.match(r"PXLCMP(\d+)_sample\d", row["component"])
+    assert re.match(r"^.{16}_sample\d+$", row["component"])
     assert result.edgelist["sample"].dtype == pd.CategoricalDtype(
         categories=["sample1", "sample2"], ordered=False
     )

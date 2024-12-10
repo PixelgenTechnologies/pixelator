@@ -17,16 +17,26 @@ from pixelator.report.models.summary_statistics import SummaryStatistics
 class AnnotateSampleReport(SampleReport):
     """Model for report data returned by the annotate stage."""
 
-    components_modularity: float = pydantic.Field(
-        description="The modularity of the graph components.",
-    )
-
     fraction_molecules_in_largest_component: float = pydantic.Field(
         description="The fraction of molecules in the largest component.",
     )
 
     fraction_pixels_in_largest_component: float = pydantic.Field(
         description="The fraction of pixels (A and B pixels) in the largest component.",
+    )
+
+    fraction_potential_doublets: float | None = pydantic.Field(
+        description=(
+            "The fraction of components that appear to consist of multiple "
+            "parts by the community detection algorithm."
+        ),
+    )
+
+    n_edges_to_split_potential_doublets: int | None = pydantic.Field(
+        description=(
+            "The total number of edges that need to be removed to split the "
+            "potential doublets into their sub-communities."
+        ),
     )
 
     # ------------------------------------------------------------------------------- #

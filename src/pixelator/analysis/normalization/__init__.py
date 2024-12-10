@@ -1,4 +1,4 @@
-"""Functions for the colocalization analysis in pixelator.
+"""Functions for the normalization operations in pixelator.
 
 Copyright © 2024 Pixelgen Technologies AB.
 """

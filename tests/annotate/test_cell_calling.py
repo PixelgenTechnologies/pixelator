@@ -9,6 +9,7 @@ import numpy as np
 from pixelator.annotate.cell_calling import (
     find_component_size_limits,
 )
+from pixelator.annotate.constants import MINIMUM_N_EDGES_CELL_SIZE
 
 
 def test_find_component_min_size_limits_signal_and_noise():
@@ -31,7 +32,7 @@ def test_find_component_min_size_limits_only_signal():
 
     min_bound = find_component_size_limits(np.absolute(test_data), direction="lower")
     assert min_bound > 100
-    assert min_bound < 200
+    assert min_bound <= MINIMUM_N_EDGES_CELL_SIZE
 
 
 def test_find_component_min_size_limits_only_noise():
@@ -40,7 +41,7 @@ def test_find_component_min_size_limits_only_noise():
     test_data = random_state.poisson(100, 500)
 
     min_bound = find_component_size_limits(np.absolute(test_data), direction="lower")
-    assert min_bound < 100
+    assert min_bound >= MINIMUM_N_EDGES_CELL_SIZE
 
 
 def test_find_component_min_size_limits_signal_and_many_doublets():

@@ -15,6 +15,7 @@ import pandas as pd
 from anndata import AnnData, ImplicitModificationWarning, read_h5ad
 
 from pixelator.graph import components_metrics
+from pixelator.graph.constants import LEIDEN_RESOLUTION, RELATIVE_ANNOTATE_RESOLUTION
 from pixelator.statistics import (
     clr_transformation,
     log1p_transformation,
@@ -217,6 +218,82 @@ def write_anndata(adata: AnnData, filename: PathType) -> None:
     adata.write(filename=filename, compression="gzip")
 
 
+def _compute_sub_communities(
+    component_edgelist: pd.DataFrame, n_edges_reconnect: int | None = None
+) -> pd.Series:
+    # Import here since the import is very slow and expensive
+    from graspologic.partition import leiden
+
+    component_edgelist = (
+        component_edgelist.groupby(["upia", "upib"], observed=True)["count"]
+        .count()
+        .reset_index()
+        .sort_values(["upia", "upib"])
+    )
+    edgelist_tuple = list(
+        map(tuple, np.array(component_edgelist[["upia", "upib", "count"]]))
+    )
+    component_communities_dict = leiden(
+        edgelist_tuple,
+        resolution=RELATIVE_ANNOTATE_RESOLUTION * LEIDEN_RESOLUTION,
+        random_seed=42,
+    )
+    component_communities = pd.Series(component_communities_dict)
+
+    return component_communities
+
+
+def _assess_doublet(component_edgelist: pd.DataFrame) -> tuple[bool, int]:
+    """Check whether a component is a potential doublet and how many edges should be removed to split it.
+
+    A component is a potential doublet if a) it has more than one community and
+    b) the second largest community is at least 20% of the size of the largest
+    community. A lower resolution is to be used for annotation of potential doublets
+    compared to the component recovery in the graph phase. The reduction factor in
+    annotate resolution is set by RELATIVE_ANNOTATE_RESOLUTION (default is 0.5).
+
+    """
+    component_communities = _compute_sub_communities(component_edgelist)
+    component_community_sizes = component_communities.value_counts().sort_values(
+        ascending=False
+    )
+    if len(component_community_sizes) > 1 and component_community_sizes.iloc[1] > (
+        0.2 * component_community_sizes.iloc[0]
+    ):
+        edges_to_remove = (
+            component_edgelist["upia"].map(component_communities)
+            != component_edgelist["upib"].map(component_communities)
+        ).sum()
+        return True, edges_to_remove
+    else:
+        return False, 0
+
+
+def mark_potential_doublets(
+    edgelist: pd.DataFrame,
+) -> tuple[pd.Series, pd.Series]:
+    """Mark whether a component is a potential doublet.
+
+    A component is a potential doublet if a) it has more than one community and
+    b) the second largest community is at least 20% of the size of the largest
+    community.
+
+    :param edgelist: the edge list dataframe containing component labels.
+    :returns: a boolean series indicating whether a component is a potential doublet.
+    :rtype: pd.Series
+    """
+    is_potential_doublet = pd.Series(index=edgelist["component"].unique(), dtype=bool)
+    n_edges_to_split_doublet = pd.Series(
+        index=edgelist["component"].unique(), dtype=int
+    )
+    for component_id, component_edgelist in edgelist.groupby("component"):
+        is_potential_doublet[component_id], n_edges_to_split_doublet[component_id] = (
+            _assess_doublet(component_edgelist)
+        )
+
+    return is_potential_doublet, n_edges_to_split_doublet
+
+
 def edgelist_to_anndata(
     edgelist: pd.DataFrame,
     panel: AntibodyPanel,
@@ -262,7 +339,10 @@ def edgelist_to_anndata(
     # compute components metrics (obs) and re-index
     components_metrics_df = components_metrics(edgelist=edgelist)
     components_metrics_df = components_metrics_df.reindex(index=counts_df.index)
-
+    (
+        components_metrics_df["is_potential_doublet"],
+        components_metrics_df["n_edges_to_split_doublet"],
+    ) = mark_potential_doublets(edgelist=edgelist)
     # compute antibody metrics (var) and re-index
     antibody_metrics_df = antibody_metrics(edgelist=edgelist)
     antibody_metrics_df = antibody_metrics_df.reindex(index=panel.markers, fill_value=0)

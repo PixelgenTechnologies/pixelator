@@ -9,6 +9,7 @@ import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
 
+from pixelator.pixeldataset import PixelDataset
 from pixelator.pixeldataset.precomputed_layouts import (
     PreComputedLayouts,
     aggregate_precomputed_layouts,
@@ -20,11 +21,11 @@ from tests.utils import dna_seqs
 def layout_df() -> pl.LazyFrame:
     nbr_of_rows = 300
     components = [
-        "PXLCMP0000000",
-        "PXLCMP0000001",
-        "PXLCMP0000002",
-        "PXLCMP0000003",
-        "PXLCMP0000004",
+        "2ac2ca983a4b82dd",
+        "6ed5d4e4cfe588bd",
+        "701ec72d3bda62d5",
+        "bec92437d668cfa1",
+        "ce2709afa8ebd1c9",
     ]
     sample = ["sample_1", "sample_2"]
     graph_projections = ["bipartite", "a-node"]
@@ -54,11 +55,11 @@ def layout_df() -> pl.LazyFrame:
 
 def layout_df_generator() -> Iterable[pl.LazyFrame]:
     for component in [
-        "PXLCMP0000000",
-        "PXLCMP0000001",
-        "PXLCMP0000002",
-        "PXLCMP0000003",
-        "PXLCMP0000004",
+        "2ac2ca983a4b82dd",
+        "6ed5d4e4cfe588bd",
+        "701ec72d3bda62d5",
+        "bec92437d668cfa1",
+        "ce2709afa8ebd1c9",
     ]:
         nbr_of_rows = 300
         sample = ["sample_1", "sample_2"]
@@ -127,11 +128,11 @@ class TestPreComputedLayouts:
         df = precomputed_layouts.to_df()
         assert isinstance(df, pd.DataFrame)
         assert set(df["component"]) == {
-            "PXLCMP0000000",
-            "PXLCMP0000001",
-            "PXLCMP0000002",
-            "PXLCMP0000003",
-            "PXLCMP0000004",
+            "2ac2ca983a4b82dd",
+            "6ed5d4e4cfe588bd",
+            "701ec72d3bda62d5",
+            "bec92437d668cfa1",
+            "ce2709afa8ebd1c9",
         }
         assert set(df.columns) == {
             "x",
@@ -150,11 +151,11 @@ class TestPreComputedLayouts:
         df = precomputed_layouts.to_df(columns=["x", "y", "component"])
         assert isinstance(df, pd.DataFrame)
         assert set(df["component"]) == {
-            "PXLCMP0000000",
-            "PXLCMP0000001",
-            "PXLCMP0000002",
-            "PXLCMP0000003",
-            "PXLCMP0000004",
+            "2ac2ca983a4b82dd",
+            "6ed5d4e4cfe588bd",
+            "701ec72d3bda62d5",
+            "bec92437d668cfa1",
+            "ce2709afa8ebd1c9",
         }
         assert set(df.columns) == {
             "x",
@@ -165,11 +166,11 @@ class TestPreComputedLayouts:
     def test_get_unique_components(self, precomputed_layouts):
         unique_componentens = precomputed_layouts.unique_components()
         assert unique_componentens == {
-            "PXLCMP0000000",
-            "PXLCMP0000001",
-            "PXLCMP0000002",
-            "PXLCMP0000003",
-            "PXLCMP0000004",
+            "2ac2ca983a4b82dd",
+            "6ed5d4e4cfe588bd",
+            "701ec72d3bda62d5",
+            "bec92437d668cfa1",
+            "ce2709afa8ebd1c9",
         }
 
     def test_lazy_returns_polars_lazy_frame(self):
@@ -182,7 +183,7 @@ class TestPreComputedLayouts:
     def test_filter_returns_filtered_dataframe(self):
         layouts_lazy = pl.DataFrame(
             {
-                "component": ["PXLCMP0000000", "PXLCMP0000001"],
+                "component": ["2ac2ca983a4b82dd", "6ed5d4e4cfe588bd"],
                 "graph_projection": ["a-node", "b-node"],
                 "layout": ["pmds", "fr"],
             }
@@ -190,7 +191,7 @@ class TestPreComputedLayouts:
 
         precomputed_layouts = PreComputedLayouts(layouts_lazy)
         filtered = precomputed_layouts.filter(
-            component_ids=["PXLCMP0000000"],
+            component_ids=["2ac2ca983a4b82dd"],
             graph_projection="a-node",
             layout_method="pmds",
         )
@@ -199,7 +200,7 @@ class TestPreComputedLayouts:
 
         expected_df = pd.DataFrame(
             {
-                "component": ["PXLCMP0000000"],
+                "component": ["2ac2ca983a4b82dd"],
                 "graph_projection": ["a-node"],
                 "layout": ["pmds"],
             }
@@ -210,10 +211,10 @@ class TestPreComputedLayouts:
         layouts_lazy = pl.DataFrame(
             {
                 "component": [
-                    "PXLCMP0000000",
-                    "PXLCMP0000000",
-                    "PXLCMP0000001",
-                    "PXLCMP0000001",
+                    "2ac2ca983a4b82dd",
+                    "2ac2ca983a4b82dd",
+                    "6ed5d4e4cfe588bd",
+                    "6ed5d4e4cfe588bd",
                 ],
                 "graph_projection": ["a-node", "a-node", "a-node", "a-node"],
                 "layout": ["pmds", "pmds", "fr", "pmds"],
@@ -222,21 +223,21 @@ class TestPreComputedLayouts:
         precomputed_layouts = PreComputedLayouts(layouts_lazy)
 
         result = precomputed_layouts.component_iterator(
-            component_ids=["PXLCMP0000000", "PXLCMP0000001"],
+            component_ids=["2ac2ca983a4b82dd", "6ed5d4e4cfe588bd"],
             graph_projections="a-node",
             layout_methods="pmds",
         )
 
         expected_df1 = pd.DataFrame(
             {
-                "component": ["PXLCMP0000000", "PXLCMP0000000"],
+                "component": ["2ac2ca983a4b82dd", "2ac2ca983a4b82dd"],
                 "graph_projection": ["a-node", "a-node"],
                 "layout": ["pmds", "pmds"],
             }
         )
         expected_df2 = pd.DataFrame(
             {
-                "component": ["PXLCMP0000001"],
+                "component": ["6ed5d4e4cfe588bd"],
                 "graph_projection": ["a-node"],
                 "layout": ["pmds"],
             }
@@ -256,10 +257,10 @@ class TestPreComputedLayouts:
         layouts_lazy = pl.DataFrame(
             {
                 "component": [
-                    "PXLCMP0000000",
-                    "PXLCMP0000000",
-                    "PXLCMP0000001",
-                    "PXLCMP0000001",
+                    "2ac2ca983a4b82dd",
+                    "2ac2ca983a4b82dd",
+                    "6ed5d4e4cfe588bd",
+                    "6ed5d4e4cfe588bd",
                 ],
                 "graph_projection": ["a-node", "a-node", "a-node", "a-node"],
                 "layout": ["pmds", "pmds", "fr", "pmds"],
@@ -271,7 +272,7 @@ class TestPreComputedLayouts:
 
         result = list(
             precomputed_layouts.component_iterator(
-                component_ids=["PXLCMP0000000"],
+                component_ids=["2ac2ca983a4b82dd"],
                 graph_projections="a-node",
                 layout_methods="pmds",
                 columns=["component", "x", "y"],
@@ -280,7 +281,7 @@ class TestPreComputedLayouts:
 
         expected_df1 = pd.DataFrame(
             {
-                "component": ["PXLCMP0000000", "PXLCMP0000000"],
+                "component": ["2ac2ca983a4b82dd", "2ac2ca983a4b82dd"],
                 "x": [0.5, 0.9],
                 "y": [0.4, 0.1],
             }
@@ -459,7 +460,7 @@ class TestGeneratePrecomputedLayoutsForComponents:
     def test_generate_precomputed_layouts_for_components_with_specific_components(
         self, pixel_dataset
     ):
-        components = {"PXLCMP0000000", "PXLCMP0000001"}
+        components = {"2ac2ca983a4b82dd", "6ed5d4e4cfe588bd"}
         precomputed_layouts = generate_precomputed_layouts_for_components(
             pixel_dataset, components=components
         )
@@ -525,6 +526,46 @@ class TestGeneratePrecomputedLayoutsForComponents:
 
         df = precomputed_layouts.to_df()
         assert set(df["layout"]) == {"pmds_3d"}
+
+    @pytest.mark.test_this
+    def test_generate_precomputed_layouts_on_to_small_components(self):
+        edgelist = pd.DataFrame.from_dict(
+            {
+                "upia": ["A", "B", "C"],
+                "upib": ["B", "C", "A"],
+                "umi": ["G", "H", "I"],
+                "sequence": ["J", "K", "L"],
+                "component": [
+                    "2ac2ca983a4b82dd",
+                    "2ac2ca983a4b82dd",
+                    "2ac2ca983a4b82dd",
+                ],
+                "marker": ["CD3", "CD3", "CD3"],
+                "count": [1, 1, 1],
+            }
+        )
+
+        class MockAnnData:
+            def __init__(self):
+                self.n_obs = 10
+
+            def copy(self):
+                return self
+
+            @property
+            def obs(self):
+                return pd.DataFrame(index=edgelist["component"].unique())
+
+            @property
+            def var(self):
+                return pd.DataFrame(index=edgelist["marker"].unique())
+
+        pixel_dataset = PixelDataset.from_data(MockAnnData(), edgelist=edgelist)
+        layout_algorithm = "wpmds_3d"
+        with pytest.raises(ValueError):
+            generate_precomputed_layouts_for_components(
+                pixel_dataset, layout_algorithms=layout_algorithm
+            )
 
 
 @pytest.mark.integration_test
