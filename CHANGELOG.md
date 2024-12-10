@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   If demultiplexing has a success rate lower than 50% the command will exit with a status of 1. This prevents further pipeline stages to be run on
     what is probably bad data.
 -   Clarify that `--min-size` and `--max-size` in the `annotate` stage should not be used at the same time as `--dynamic-filter`.
+-   Setting a lower threshold of 300 edges when `--dynamic-filter` is used in the `annotate` stage, components smaller than that will always
+    be filtered. Note that this can still be overridden by setting `--min-size` explicitly.
 
 ### Added
 

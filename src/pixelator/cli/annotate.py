@@ -6,6 +6,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 import click
 
 from pixelator.annotate import annotate_components
+from pixelator.annotate.constants import MINIMUM_N_EDGES_CELL_SIZE
 from pixelator.cli.common import logger, output_option
 from pixelator.config import config, load_antibody_panel
 from pixelator.utils import (
@@ -62,8 +63,9 @@ from pixelator.utils import (
     type=click.Choice(["both", "min", "max"]),
     help=(
         "Enable the dynamic component size filters. The following modes are available: "
-        "both/max/min. both: estimates both min and max size, min: estimates min size, max: estimates max size. "
-        "Note that this cannot be set at the same time as --min-size or --max-size."
+        "both/max/min. both: estimates both minimum and maximum component size, min: estimates the minimum component "
+        f"size (or uses {MINIMUM_N_EDGES_CELL_SIZE} edges, whichever is smallest), "
+        "max: estimates the maximum component size. Note that this cannot be set at the same time as --min-size or --max-size."
     ),
 )
 @click.option(
