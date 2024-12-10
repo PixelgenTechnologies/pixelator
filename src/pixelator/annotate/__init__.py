@@ -22,6 +22,7 @@ from pixelator.annotate.constants import (
     MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION,
 )
 from pixelator.config import AntibodyPanel
+from pixelator.exceptions import PixelatorBaseException
 from pixelator.graph.utils import components_metrics, edgelist_metrics
 from pixelator.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.pixeldataset.utils import edgelist_to_anndata
@@ -35,6 +36,12 @@ from pixelator.report.models.annotate import AnnotateSampleReport
 numba.config.THREADING_LAYER = "omp"
 
 logger = logging.getLogger(__name__)
+
+
+class NoCellsFoundException(PixelatorBaseException):
+    """Raised when no cells are found in the edge list."""
+
+    pass
 
 
 def filter_components_sizes(
@@ -81,7 +88,9 @@ def filter_components_sizes(
         # check if none of the components pass the filters
         n_components = filter_arr.sum()
         if n_components == 0:
-            raise RuntimeError("None of the components pass the filters")
+            raise NoCellsFoundException(
+                "All cells were filtered by the size filters. Consider either setting different size filters or disabling them."
+            )
 
         logger.debug(
             "Filtering resulted in %i components that pass the filters",
@@ -199,8 +208,11 @@ def annotate_components(
     ].sum()
 
     # save the components metrics (raw)
+    component_info_file_path = (
+        Path(output) / f"{output_prefix}.raw_components_metrics.csv.gz"
+    )
     component_metrics.to_csv(
-        Path(output) / f"{output_prefix}.raw_components_metrics.csv.gz",
+        component_info_file_path,
         header=True,
         index=True,
         sep=",",

@@ -10,7 +10,11 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
-from pixelator.annotate import cluster_components, filter_components_sizes
+from pixelator.annotate import (
+    NoCellsFoundException,
+    cluster_components,
+    filter_components_sizes,
+)
 from pixelator.cli.annotate import annotate_components
 from pixelator.config import AntibodyPanel
 from pixelator.pixeldataset.utils import read_anndata
@@ -135,3 +139,28 @@ def test_annotate_adata(edgelist: pd.DataFrame, tmp_path: Path, panel: AntibodyP
     assert (tmp_path / f"{output_prefix}.raw_components_metrics.csv.gz").is_file()
     assert (tmp_path / f"{output_prefix}.annotate.dataset.pxl").is_file()
     assert metrics_file.is_file()
+
+
+@pytest.mark.integration_test
+def test_annotate_adata_should_raise_no_cells_count_exception(
+    edgelist: pd.DataFrame, tmp_path: Path, panel: AntibodyPanel
+):
+    with pytest.raises(NoCellsFoundException) as expected_exception:
+        output_prefix = "test_filtered"
+        metrics_file = tmp_path / "metrics.json"
+        assert not metrics_file.is_file()
+        tmp_edgelist_file = tmp_path / "tmp_edgelist.parquet"
+        edgelist.to_parquet(tmp_edgelist_file, index=False)
+
+        annotate_components(
+            input=str(tmp_edgelist_file),
+            panel=panel,
+            output=str(tmp_path),
+            output_prefix=output_prefix,
+            metrics_file=str(metrics_file),
+            min_size=100_000,  # Nothing should pass this
+            max_size=None,
+            dynamic_filter=None,
+            verbose=True,
+            aggregate_calling=True,
+        )

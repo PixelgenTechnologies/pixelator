@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Clarify that `--min-size` and `--max-size` in the `annotate` stage should not be used at the same time as `--dynamic-filter`.
 -   Setting a lower threshold of 300 edges when `--dynamic-filter` is used in the `annotate` stage, components smaller than that will always
     be filtered. Note that this can still be overridden by setting `--min-size` explicitly.
+-   Clarify error message when all components are filtered out in the `annotate` stage.
 
 ### Added
 
