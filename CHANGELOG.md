@@ -5,12 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [x.x.x] - 2024-xx-xx
+## [0.19.0] - 2024-12-10
 
 ### Changed
 
 -   Name components using UPI hashes.
--   Run multiple iterations of multiplet recovery during graph step specified using `--max-refinement-recursion-depth`.
+-   Run multiple iterations of multiplet recovery during the `graph` stage specified using `--max-refinement-recursion-depth`.
 -   Specify maximum number of edges that can be removed between two sub-components during multiplet recovery using `--max-edges-to-split`.
 -   Support for MultiGraphs in `pmds_layout`
 -   Support multiple targets in `plot_colocalization_diff_volcano` and `plot_colocalization_diff_heatmap`.
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
--   Add `depth` column to `discarded_edgelist.parquet` output of the GRAPH stage that indicates at which refinement iteration the edge is removed.
+-   Add `depth` column to `discarded_edgelist.parquet` output of the `graph` stage that indicates at which refinement iteration the edge is removed.
 -   Add `edges_removed_in_multiplet_recovery_first_iteration`, `edges_removed_in_multiplet_recovery_refinement` and `fraction_edges_removed_in_refinement` to graph report.json.
 -   Add `is_potential_doublet` and `n_edges_to_split_doublet` columns to adata.obs.
 -   Add `fraction_potential_doublets` and `n_edges_to_split_potential_doublets` to annotate report.json.
@@ -34,12 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
--   Remove the `components_recovered.csv` output from the GRAPH stage.
-
+-   Remove the `components_recovered.csv` output from the `graph` stage.
 
 ### Fixed
 
-- better error message when the number of nodes is lower than the number of requested dimensions in `pmds_layout`.
+-   Improved error message when the number of nodes is lower than the number of requested dimensions in `pmds_layout`.
 
 ## [0.18.3] - 2024-09-26
 
