@@ -53,7 +53,7 @@ from pixelator.utils import (
     required=False,
     type=click.INT,
     show_default=False,
-    help="The maximum size (edges) a component must have (default is disabled). Note that this cannot bet set at the same time as --dynamic-filter.",
+    help="The maximum size (edges) a component must have (default is disabled). Note that this cannot be set at the same time as --dynamic-filter.",
 )
 @click.option(
     "--dynamic-filter",
