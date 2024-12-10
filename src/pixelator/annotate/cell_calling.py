@@ -14,6 +14,7 @@ from pixelator.annotate.constants import (
     CELL_MAX_SIZE_SMOOTHING_FACTOR,
     CELL_MIN_SIZE_SMOOTHING_FACTOR,
     DISTANCE_DEVIATION_FACTOR,
+    MINIMUM_N_EDGES_CELL_SIZE,
     MINIMUM_NBR_OF_CELLS_FOR_SIZE_LIMIT,
     PRE_FILTER_LIMIT,
 )
@@ -210,4 +211,14 @@ def find_component_size_limits(
     bound = potential_bounds[0] if potential_bounds else None
 
     logger.debug("Size limit of %i found", bound)
+
+    if direction == "lower" and bound is not None:
+        if bound < MINIMUM_N_EDGES_CELL_SIZE:
+            logger.warning(
+                "Dynamic minimum component size found is below the minimum size threshold of %s edges. "
+                "Using that as the minimum size to avoid downstream problems.",
+                MINIMUM_N_EDGES_CELL_SIZE,
+            )
+            bound = MINIMUM_N_EDGES_CELL_SIZE
+
     return bound
