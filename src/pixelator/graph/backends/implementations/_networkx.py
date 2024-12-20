@@ -269,7 +269,11 @@ class NetworkXGraphBackend(GraphBackend):
     def get_adjacency_sparse(
         self, node_ordering: Iterable[Any] | None = None
     ) -> csr_matrix:
-        """Get the sparse adjacency matrix."""
+        """Get the sparse adjacency matrix.
+
+        :param node_ordering: Control the node ordering in the adjacency matrix
+        :return: a sparse adjacency matrix
+        """
         return nx.to_scipy_sparse_array(self._raw, nodelist=node_ordering)
 
     def connected_components(self) -> NetworkxBasedVertexClustering:

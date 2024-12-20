@@ -137,7 +137,11 @@ class Graph:
     def get_adjacency_sparse(
         self, node_ordering: Iterable[Any] | None = None
     ) -> csr_matrix:
-        """Get the sparse adjacency matrix."""
+        """Get the sparse adjacency matrix.
+
+        :param node_ordering: Control the node ordering in the adjacency matrix
+        :return: a sparse adjacency matrix
+        """
         return self._backend.get_adjacency_sparse(node_ordering=node_ordering)
 
     def connected_components(self) -> VertexClustering:
