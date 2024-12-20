@@ -90,6 +90,10 @@ def local_g(
     as it enhances spatial trends across neighborhoods in the graph, even if the marker counts within
     individual nodes are sparse.
 
+    Note that it is important that the node ordering in the sparse adjacency matrix, and
+    the counts matrix line up. If calling this method directly the caller is responsible for
+    ensuring that this contract is fulfilled.
+
     .. [1] Bivand, R.S., Wong, D.W.S. Comparing implementations of global and
     local indicators of spatial association. TEST 27, 716–748 (2018).
     https://doi.org/10.1007/s11749-018-0599-x
