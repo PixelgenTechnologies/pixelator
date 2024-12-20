@@ -134,9 +134,15 @@ class Graph:
         """Get the total number of edges in the Graph instance."""
         return self._backend.ecount()
 
-    def get_adjacency_sparse(self) -> csr_matrix:
-        """Get the sparse adjacency matrix."""
-        return self._backend.get_adjacency_sparse()
+    def get_adjacency_sparse(
+        self, node_ordering: Iterable[Any] | None = None
+    ) -> csr_matrix:
+        """Get the sparse adjacency matrix.
+
+        :param node_ordering: Control the node ordering in the adjacency matrix
+        :return: a sparse adjacency matrix
+        """
+        return self._backend.get_adjacency_sparse(node_ordering=node_ordering)
 
     def connected_components(self) -> VertexClustering:
         """Get the connected components in the Graph instance."""
@@ -317,9 +323,11 @@ class Graph:
         expression of the node itself. Default is 'gi'.
         :return: A DataFrame of local G-scores for each node and marker.
         """
+        counts = self.node_marker_counts
+        A = self.get_adjacency_sparse(node_ordering=counts.index)
         return local_g(
-            A=self.get_adjacency_sparse(),
-            counts=self.node_marker_counts,
+            A=A,
+            counts=counts,
             k=k,
             use_weights=use_weights,
             normalize_counts=normalize_counts,

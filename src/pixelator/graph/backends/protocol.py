@@ -111,8 +111,14 @@ class GraphBackend(Protocol):
         """Get the total number of edges in the Graph instance."""
         ...
 
-    def get_adjacency_sparse(self) -> csr_matrix:
-        """Get the sparse adjacency matrix."""
+    def get_adjacency_sparse(
+        self, node_ordering: Iterable[Any] | None = None
+    ) -> csr_matrix:
+        """Get the sparse adjacency matrix.
+
+        :param node_ordering: Control the node ordering in the adjacency matrix
+        :return: a sparse adjacency matrix
+        """
         ...
 
     def connected_components(self) -> VertexClustering:
