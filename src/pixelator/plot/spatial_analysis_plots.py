@@ -461,7 +461,7 @@ def create_network_plot(
     colocalization_data: pd.DataFrame,
     value_column: str = "pearson_z",
     metric: str = "median",
-    hide_values: list[float] = [-1.5, 1.5],
+    mask_values: list[float] = [-1.5, 1.5],
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Generate the network plot of marker-marker colocalization.
 
@@ -469,12 +469,12 @@ def create_network_plot(
         colocalization_data,
         value_column="pearson_z",
         metric="median",
-        hide_values=[-1.5, 1.5])`.
+        mask_values=[-1.5, 1.5])`.
 
     :param colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", and the value_column (e.g. pearson_z) and should be filtered to only include the markers pairs of interest.
     :param value_column: The column to use for the colocalization. Defaults to "pearson_z".
     :param metric: The metric to use for the colocalization score summary. Defaults to "median".
-    :param hide_values: Values between these values will be hidden from the plot. Defaults to [-1.5, 1.5].
+    :param mask_values: Values between these values will be hidden from the plot. Defaults to [-1.5, 1.5].
 
     :return: The figure and axes objects of the plot.
     """
@@ -498,8 +498,8 @@ def create_network_plot(
         raise ValueError(f"Metric {metric} not supported")
 
     plot_scores = plot_scores[
-        (plot_scores["score"] < hide_values[0])
-        | (plot_scores["score"] > hide_values[1])
+        (plot_scores["score"] < mask_values[0])
+        | (plot_scores["score"] > mask_values[1])
     ]
 
     g = nx.from_pandas_edgelist(
