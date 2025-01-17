@@ -455,3 +455,87 @@ def plot_polarity_diff_volcano(
     fig.subplots_adjust(top=0.8)
     fig.set_size_inches(6 * len(targets), 5)
     return fig, axes
+
+
+def create_network_plot(
+    colocalization_data: pd.DataFrame,
+    value_column: str = "pearson_z",
+    metric: str = "median",
+    hide_values: list[float] = [-1.5, 1.5],
+) -> Tuple[plt.Figure, plt.Axes]:
+    """Generate the network plot of marker-marker colocalization.
+
+    Example usage: `create_network_plot(
+        colocalization_data,
+        value_column="pearson_z",
+        metric="median",
+        hide_values=[-1.5, 1.5])`.
+
+    :param colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", and the value_column (e.g. pearson_z) and should be filtered to only include the markers pairs of interest.
+    :param value_column: The column to use for the colocalization. Defaults to "pearson_z".
+    :param metric: The metric to use for the colocalization score summary. Defaults to "median".
+    :param hide_values: Values between these values will be hidden from the plot. Defaults to [-1.5, 1.5].
+
+    :return: The figure and axes objects of the plot.
+    """
+    if metric == "median":
+        plot_scores = (
+            colocalization_data.groupby(["marker_1", "marker_2"], as_index=False)[
+                [value_column]
+            ]
+            .median()
+            .rename(columns={value_column: "score"})
+        )
+    elif metric == "mean":
+        plot_scores = (
+            colocalization_data.groupby(["marker_1", "marker_2"], as_index=False)[
+                [value_column]
+            ]
+            .mean()
+            .rename(columns={value_column: "score"})
+        )
+    else:
+        raise ValueError(f"Metric {metric} not supported")
+
+    plot_scores = plot_scores[
+        (plot_scores["score"] < hide_values[0])
+        | (plot_scores["score"] > hide_values[1])
+    ]
+
+    g = nx.from_pandas_edgelist(
+        plot_scores,
+        source="marker_1",
+        target="marker_2",
+        edge_attr="score",
+    )
+
+    # Calculate the node coordinates on the whole dataset
+    pos = nx.spring_layout(g)
+
+    # Set up colorbar
+    norm_score_values = mcolors.Normalize(
+        vmin=-np.max(plot_scores["score"]), vmax=np.max(plot_scores["score"])
+    )
+    colormap = plt.cm.coolwarm
+    scalarmap = cm.ScalarMappable(norm=norm_score_values, cmap=colormap)
+    score_values = list(nx.get_edge_attributes(g, "score").values())
+    scalarmap.set_array(score_values)
+
+    edges, weights = zip(*nx.get_edge_attributes(g, "score").items())
+    edge_widths = np.abs(weights)
+
+    nx.draw_networkx(
+        g,
+        pos,
+        with_labels=True,
+        edge_color=scalarmap.to_rgba(weights),
+        width=edge_widths,
+        edge_cmap=colormap,
+        node_color="grey",
+        node_size=50,  # Reduced node size for better visibility
+    )
+    ax = plt.gca()
+    ax.margins(0.20)
+    plt.axis("off")
+    plt.colorbar(scalarmap, ax=ax, label=f"{metric} pearson-z")
+    plt.show()
