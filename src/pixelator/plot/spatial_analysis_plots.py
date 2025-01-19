@@ -462,35 +462,50 @@ def create_network_plot(
     value_column: str = "pearson_z",
     metric: str = "median",
     mask_values: list[float] = [-1.5, 1.5],
+    seed: int = 42,
+    only_positive: bool = False,
+    limits: list[float] = None,
+    facet_by: str = None,
 ) -> Tuple[plt.Figure, plt.Axes]:
-    """Generate the network plot of marker-marker colocalization.
+    """Generate the network plot of summarized marker-marker colocalization scores.
 
     Example usage: `create_network_plot(
         colocalization_data,
         value_column="pearson_z",
-        metric="median",
-        mask_values=[-1.5, 1.5])`.
+        metric="mean",
+        mask_values=[-1, 1],
+        facet_by=None,
+        only_positive=True,
+        seed=42,
+    )`
 
-    :param colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", and the value_column (e.g. pearson_z) and should be filtered to only include the markers pairs of interest.
+    :param colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", and the value_column (e.g. pearson_z).
     :param value_column: The column to use for the colocalization. Defaults to "pearson_z".
     :param metric: The metric to use for the colocalization score summary. Defaults to "median".
-    :param mask_values: Values between these values will be hidden from the plot. Defaults to [-1.5, 1.5].
+    :param hide_values: Values between these values will be hidden from the plot. Defaults to [-1.5, 1.5].
+    :param seed: The seed to use for the network layout. Defaults to 42.
+    :param only_positive: Whether to only include positive colocalization scores. Defaults to False.
+    :param facet_by: The column to facet the plot by. Defaults to None.
+    :param limits: The limits to use for the colocalization score. If None, the limits will be set to the minimum and maximum values of the colocalization score. If set, the limits will be used to clip the colocalization score. Defaults to None.
 
     :return: The figure and axes objects of the plot.
     """
+    # Set the columns to summarize the colocalization scores by
+    if facet_by is None:
+        group = ["marker_1", "marker_2"]
+    else:
+        group = ["marker_1", "marker_2", facet_by]
+
+    # Summarize the colocalization scores
     if metric == "median":
         plot_scores = (
-            colocalization_data.groupby(["marker_1", "marker_2"], as_index=False)[
-                [value_column]
-            ]
+            colocalization_data.groupby(group, as_index=False)[[value_column]]
             .median()
             .rename(columns={value_column: "score"})
         )
     elif metric == "mean":
         plot_scores = (
-            colocalization_data.groupby(["marker_1", "marker_2"], as_index=False)[
-                [value_column]
-            ]
+            colocalization_data.groupby(group, as_index=False)[[value_column]]
             .mean()
             .rename(columns={value_column: "score"})
         )
@@ -501,6 +516,11 @@ def create_network_plot(
         (plot_scores["score"] < mask_values[0])
         | (plot_scores["score"] > mask_values[1])
     ]
+    if only_positive:
+        plot_scores = plot_scores[plot_scores["score"] > 0]
+
+    if limits is not None:
+        plot_scores["score"] = plot_scores["score"].clip(limits[0], limits[1])
 
     g = nx.from_pandas_edgelist(
         plot_scores,
@@ -510,32 +530,91 @@ def create_network_plot(
     )
 
     # Calculate the node coordinates on the whole dataset
-    pos = nx.spring_layout(g)
+    pos = nx.spring_layout(g, seed=42)
 
-    # Set up colorbar
-    norm_score_values = mcolors.Normalize(
-        vmin=-np.max(plot_scores["score"]), vmax=np.max(plot_scores["score"])
-    )
-    colormap = plt.cm.coolwarm
-    scalarmap = cm.ScalarMappable(norm=norm_score_values, cmap=colormap)
-    score_values = list(nx.get_edge_attributes(g, "score").values())
-    scalarmap.set_array(score_values)
+    if facet_by is not None:
+        # Facet the plot by the specified column
+        fig, axs = plt.subplots(
+            1,
+            len(plot_scores[facet_by].unique()),
+            figsize=(10 * len(plot_scores[facet_by].unique()), 8),
+        )  # Set figure size for better visibility
+        # Initialize a list to store all weights for a shared colorbar
+        all_weights = []
+        for i, (facet_value, group) in enumerate(plot_scores.groupby(facet_by)):
+            g = nx.from_pandas_edgelist(
+                group,
+                source="marker_1",
+                target="marker_2",
+                edge_attr="score",
+            )
+            edges, weights = zip(*nx.get_edge_attributes(g, "score").items())
+            edge_widths = np.abs(weights)
+            all_weights.extend(
+                weights
+            )  # Append weights to the list for a shared colorbar
 
-    edges, weights = zip(*nx.get_edge_attributes(g, "score").items())
-    edge_widths = np.abs(weights)
+            nx.draw_networkx(
+                g,
+                pos,
+                with_labels=True,
+                edge_color=weights,
+                edge_vmin=-np.abs(
+                    np.max(all_weights)
+                ),  # Use the maximum absolute weight across all facets
+                edge_vmax=np.abs(
+                    np.max(all_weights)
+                ),  # Use the maximum absolute weight across all facets
+                width=edge_widths,
+                edge_cmap=plt.cm.coolwarm,
+                node_color="white",
+                node_shape="s",
+                node_size=300,  # Reduced node size for better visibility
+                ax=axs[i],
+            )
+            axs[i].margins(0.20)
+            axs[i].axis("off")
+            axs[i].set_title(f"{facet_value}")  # Add title for each facet
 
-    nx.draw_networkx(
-        g,
-        pos,
-        with_labels=True,
-        edge_color=scalarmap.to_rgba(weights),
-        width=edge_widths,
-        edge_cmap=colormap,
-        node_color="grey",
-        node_size=50,  # Reduced node size for better visibility
-    )
-    ax = plt.gca()
-    ax.margins(0.20)
-    plt.axis("off")
-    plt.colorbar(scalarmap, ax=ax, label=f"{metric} pearson-z")
-    plt.show()
+        # Create a shared colorbar
+        sm = plt.cm.ScalarMappable(
+            cmap=plt.cm.coolwarm,
+            norm=plt.Normalize(
+                vmin=-np.abs(np.max(all_weights)), vmax=np.abs(np.max(all_weights))
+            ),
+        )
+        sm._A = []
+        plt.colorbar(
+            sm, ax=axs, label=f"{metric} pearson-z", shrink=0.5, location="right"
+        )
+        plt.show()
+    else:
+        # If no facet_by is specified, draw the network as before
+        edges, weights = zip(*nx.get_edge_attributes(g, "score").items())
+        edge_widths = np.abs(weights)
+
+        nx.draw_networkx(
+            g,
+            pos,
+            with_labels=True,
+            edge_color=weights,
+            edge_vmin=-np.abs(np.max(weights)),
+            edge_vmax=np.abs(np.max(weights)),
+            width=edge_widths,
+            edge_cmap=plt.cm.coolwarm,
+            node_color="white",
+            node_shape="s",
+            node_size=300,  # Reduced node size for better visibility
+        )
+        ax = plt.gca()
+        ax.margins(0.20)
+        plt.axis("off")
+        sm = plt.cm.ScalarMappable(
+            cmap=plt.cm.coolwarm,
+            norm=plt.Normalize(
+                vmin=-np.abs(np.max(weights)), vmax=np.abs(np.max(weights))
+            ),
+        )
+        sm._A = []
+        plt.colorbar(sm, ax=ax, label=f"{metric} pearson-z", shrink=0.5)
+        plt.show()
