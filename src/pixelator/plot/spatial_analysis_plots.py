@@ -461,11 +461,11 @@ def create_network_plot(
     colocalization_data: pd.DataFrame,
     value_column: str = "pearson_z",
     metric: str = "median",
-    mask_values: list[float] = [-1.5, 1.5],
-    seed: int = 42,
+    mask_values: list[float] = None,
     only_positive: bool = False,
     limits: list[float] = None,
     facet_by: str = None,
+    seed: int = 42,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Generate the network plot of summarized marker-marker colocalization scores.
 
@@ -481,8 +481,8 @@ def create_network_plot(
 
     :param colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", and the value_column (e.g. pearson_z).
     :param value_column: The column to use for the colocalization. Defaults to "pearson_z".
-    :param metric: The metric to use for the colocalization score summary. Defaults to "median".
-    :param hide_values: Values between these values will be hidden from the plot. Defaults to [-1.5, 1.5].
+    :param metric: The metric to use for the colocalization score summary. One of "median" or "mean". Defaults to "median".
+    :param mask_values: Summarized colocalization scores between these values will be hidden from the plot. These values are removed after the summarization step, so they are taken into account when summarizing the colocalization scores. Should be a list of two values, first value is the lower limit and the second value is the upper limit (e.g. [-1, 1]). Defaults to None.
     :param seed: The seed to use for the network layout. Defaults to 42.
     :param only_positive: Whether to only include positive colocalization scores. Defaults to False.
     :param facet_by: The column to facet the plot by. Defaults to None.
@@ -512,13 +512,13 @@ def create_network_plot(
     else:
         raise ValueError(f"Metric {metric} not supported")
 
-    plot_scores = plot_scores[
-        (plot_scores["score"] < mask_values[0])
-        | (plot_scores["score"] > mask_values[1])
-    ]
+    if mask_values is not None:
+        plot_scores = plot_scores[
+            (plot_scores["score"] < mask_values[0])
+            | (plot_scores["score"] > mask_values[1])
+        ]
     if only_positive:
         plot_scores = plot_scores[plot_scores["score"] > 0]
-
     if limits is not None:
         plot_scores["score"] = plot_scores["score"].clip(limits[0], limits[1])
 
