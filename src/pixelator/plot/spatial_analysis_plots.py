@@ -587,7 +587,7 @@ def create_network_plot(
         plt.colorbar(
             sm, ax=axs, label=f"{metric} pearson-z", shrink=0.5, location="right"
         )
-        plt.show()
+        return fig, axs
     else:
         # If no facet_by is specified, draw the network as before
         edges, weights = zip(*nx.get_edge_attributes(g, "score").items())
@@ -617,4 +617,4 @@ def create_network_plot(
         )
         sm._A = []
         plt.colorbar(sm, ax=ax, label=f"{metric} pearson-z", shrink=0.5)
-        plt.show()
+        return ax
