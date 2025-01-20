@@ -461,6 +461,7 @@ def create_network_plot(
     colocalization_data: pd.DataFrame,
     value_column: str = "pearson_z",
     metric: str = "median",
+    layout: str = "fr",
     mask_values: list[float] = None,
     only_positive: bool = False,
     limits: list[float] = None,
@@ -473,6 +474,7 @@ def create_network_plot(
         colocalization_data,
         value_column="pearson_z",
         metric="mean",
+        layout="fr",
         mask_values=[-1, 1],
         facet_by=None,
         only_positive=True,
@@ -482,6 +484,7 @@ def create_network_plot(
     :param colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", and the value_column (e.g. pearson_z).
     :param value_column: The column to use for the colocalization. Defaults to "pearson_z".
     :param metric: The metric to use for the colocalization score summary. One of "median" or "mean". Defaults to "median".
+    :param layout: The layout to use for the network plot. One of "spring", "fr", "kk", "spectral", or "circular". Defaults to "fr".
     :param mask_values: Summarized colocalization scores between these values will be hidden from the plot. These values are removed after the summarization step, so they are taken into account when summarizing the colocalization scores. Should be a list of two values, first value is the lower limit and the second value is the upper limit (e.g. [-1, 1]). Defaults to None.
     :param seed: The seed to use for the network layout. Defaults to 42.
     :param only_positive: Whether to only include positive colocalization scores. Defaults to False.
@@ -530,7 +533,16 @@ def create_network_plot(
     )
 
     # Calculate the node coordinates on the whole dataset
-    pos = nx.spring_layout(g, seed=42)
+    if layout == "spring":
+        pos = nx.spring_layout(g, seed=42)
+    elif layout == "fr":
+        pos = nx.fruchterman_reingold_layout(g, seed=42)
+    elif layout == "kk":
+        pos = nx.kamada_kawai_layout(g)
+    elif layout == "spectral":
+        pos = nx.spectral_layout(g)
+    elif layout == "circular":
+        pos = nx.circular_layout(g)
 
     if facet_by is not None:
         # Facet the plot by the specified column
