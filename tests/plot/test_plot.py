@@ -25,6 +25,7 @@ from pixelator.plot import (
     plot_colocalization_heatmap,
     plot_polarity_diff_volcano,
     scatter_umi_per_upia_vs_tau,
+    create_network_plot,
 )
 from pixelator.plot.layout_plots import (
     _calculate_densities,
@@ -250,6 +251,22 @@ def test_plot_colocalization_diff_volcano_multiple(setup_basic_pixel_dataset):
         contrast_column="component",
         value_column="pearson",
         min_log_p=-1,
+    )
+    return fig
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=True,
+    baseline_dir="../snapshots/test_plot/test_create_network_plot",
+)
+def test_create_network_plot(setup_basic_pixel_dataset):
+    np.random.seed(0)
+    pxl_data, *_ = setup_basic_pixel_dataset
+    colocalization_data = pxl_data.colocalization
+    fig, ax = create_network_plot(
+        colocalization_data,
+        value_column="pearson",
+        seed=0,
     )
     return fig
 

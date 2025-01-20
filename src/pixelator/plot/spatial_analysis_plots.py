@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib as mpl
+import networkx as nx
 
 from pixelator.analysis.colocalization import get_differential_colocalization
 from pixelator.analysis.polarization import get_differential_polarity
@@ -605,6 +606,7 @@ def create_network_plot(
         return fig, axs
     else:
         # If no facet_by is specified, draw the network as before
+        fig, ax = plt.subplots()
         edges, weights = zip(*nx.get_edge_attributes(g, "score").items())
         edge_widths = np.abs(weights)
 
@@ -632,4 +634,4 @@ def create_network_plot(
         )
         sm._A = []
         plt.colorbar(sm, ax=ax, label=f"{metric} pearson-z", shrink=0.5)
-        return ax
+        return fig, ax
