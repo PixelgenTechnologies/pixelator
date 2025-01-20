@@ -464,6 +464,7 @@ def create_network_plot(
     layout: str = "fr",
     mask_values: list[float] = None,
     only_positive: bool = False,
+    color_map: str = "coolwarm",
     limits: list[float] = None,
     facet_by: str = None,
     seed: int = 42,
@@ -488,6 +489,7 @@ def create_network_plot(
     :param mask_values: Summarized colocalization scores between these values will be hidden from the plot. These values are removed after the summarization step, so they are taken into account when summarizing the colocalization scores. Should be a list of two values, first value is the lower limit and the second value is the upper limit (e.g. [-1, 1]). Defaults to None.
     :param seed: The seed to use for the network layout. Defaults to 42.
     :param only_positive: Whether to only include positive colocalization scores. Defaults to False.
+    :param color_map: The color map to use for the colocalization scores. This should be a single string that is a valid matplotlib color map name (https://matplotlib.org/stable/users/explain/colors/colormaps.html). Defaults to "coolwarm".
     :param facet_by: The column to facet the plot by. Defaults to None.
     :param limits: The limits to use for the colocalization score. If None, the limits will be set to the minimum and maximum values of the colocalization score. If set, the limits will be used to clip the colocalization score. Defaults to None.
 
@@ -578,7 +580,7 @@ def create_network_plot(
                     np.max(all_weights)
                 ),  # Use the maximum absolute weight across all facets
                 width=edge_widths,
-                edge_cmap=plt.cm.coolwarm,
+                edge_cmap=plt.cm.get_cmap(color_map),
                 node_color="white",
                 node_shape="s",
                 node_size=300,  # Reduced node size for better visibility
@@ -590,7 +592,7 @@ def create_network_plot(
 
         # Create a shared colorbar
         sm = plt.cm.ScalarMappable(
-            cmap=plt.cm.coolwarm,
+            cmap=plt.cm.get_cmap(color_map),
             norm=plt.Normalize(
                 vmin=-np.abs(np.max(all_weights)), vmax=np.abs(np.max(all_weights))
             ),
@@ -613,7 +615,7 @@ def create_network_plot(
             edge_vmin=-np.abs(np.max(weights)),
             edge_vmax=np.abs(np.max(weights)),
             width=edge_widths,
-            edge_cmap=plt.cm.coolwarm,
+            edge_cmap=plt.cm.get_cmap(color_map),
             node_color="white",
             node_shape="s",
             node_size=300,  # Reduced node size for better visibility
@@ -622,7 +624,7 @@ def create_network_plot(
         ax.margins(0.20)
         plt.axis("off")
         sm = plt.cm.ScalarMappable(
-            cmap=plt.cm.coolwarm,
+            cmap=plt.cm.get_cmap(color_map),
             norm=plt.Normalize(
                 vmin=-np.abs(np.max(weights)), vmax=np.abs(np.max(weights))
             ),
