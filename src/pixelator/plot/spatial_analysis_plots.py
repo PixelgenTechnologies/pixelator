@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import matplotlib as mpl
 
 from pixelator.analysis.colocalization import get_differential_colocalization
 from pixelator.analysis.polarization import get_differential_polarity
@@ -580,7 +581,7 @@ def create_network_plot(
                     np.max(all_weights)
                 ),  # Use the maximum absolute weight across all facets
                 width=edge_widths,
-                edge_cmap=plt.cm.get_cmap(color_map),
+                edge_cmap=mpl.colormaps[color_map],
                 node_color="white",
                 node_shape="s",
                 node_size=300,  # Reduced node size for better visibility
@@ -592,7 +593,7 @@ def create_network_plot(
 
         # Create a shared colorbar
         sm = plt.cm.ScalarMappable(
-            cmap=plt.cm.get_cmap(color_map),
+            cmap=mpl.colormaps[color_map],
             norm=plt.Normalize(
                 vmin=-np.abs(np.max(all_weights)), vmax=np.abs(np.max(all_weights))
             ),
@@ -615,7 +616,7 @@ def create_network_plot(
             edge_vmin=-np.abs(np.max(weights)),
             edge_vmax=np.abs(np.max(weights)),
             width=edge_widths,
-            edge_cmap=plt.cm.get_cmap(color_map),
+            edge_cmap=mpl.colormaps[color_map],
             node_color="white",
             node_shape="s",
             node_size=300,  # Reduced node size for better visibility
@@ -624,7 +625,7 @@ def create_network_plot(
         ax.margins(0.20)
         plt.axis("off")
         sm = plt.cm.ScalarMappable(
-            cmap=plt.cm.get_cmap(color_map),
+            cmap=mpl.colormaps[color_map],
             norm=plt.Normalize(
                 vmin=-np.abs(np.max(weights)), vmax=np.abs(np.max(weights))
             ),
