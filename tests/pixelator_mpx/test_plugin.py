@@ -38,7 +38,7 @@ def test_that_cli_plugins_are_loaded_in_main():
         ],
     ):
         add_cli_plugins(main_cli)
-        assert {"single-cell", "a-plugin"}.issubset(set(main_cli.commands.keys()))
+        assert {"single-cell-mpx", "a-plugin"}.issubset(set(main_cli.commands.keys()))
 
 
 def test_that_config_plugins_are_loaded_in_main():

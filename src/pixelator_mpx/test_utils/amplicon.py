@@ -32,7 +32,7 @@ class BaseAmpliconTestsMixin(BaseWorkflowTestMixin):
         command = [
             "--log-file",
             "amplicon-pixelator.log",
-            "single-cell",
+            "single-cell-mpx",
             "amplicon",
             "--output",
             ".",

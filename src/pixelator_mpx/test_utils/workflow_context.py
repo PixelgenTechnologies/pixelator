@@ -9,7 +9,7 @@ import pytest
 from click.testing import CliRunner
 from click.testing import Result as CliRunnerResult
 
-import pixelator_mpx.cli as pixelator_cli
+import pixelator.cli.main as pixelator_cli
 
 # Do not propagate to parent logger since
 logger = logging.getLogger("pixelator.test_utils")

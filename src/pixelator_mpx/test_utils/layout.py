@@ -35,7 +35,7 @@ class BaseLayoutTestsMixin(BaseWorkflowTestMixin):
         command = [
             "--log-file",
             "layout-pixelator.log",
-            "single-cell",
+            "single-cell-mpx",
             "layout",
             "--output",
             ".",

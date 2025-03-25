@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from pixelator_mpx import cli
+from pixelator import cli
 
 
 @pytest.fixture()
@@ -58,7 +58,7 @@ def test_fastq_valid_inputs(mocker, uropod_reads, run_in_tmpdir):
 
     with tempfile.TemporaryDirectory() as d:
         args = [
-            "single-cell",
+            "single-cell-mpx",
             "amplicon",
             str(uropod_reads[0]),
             str(uropod_reads[1]),
@@ -81,7 +81,7 @@ def test_fastq_swapped_read_input(mocker, uropod_reads, tmp_path):
 
     with tempfile.TemporaryDirectory() as d:
         args = [
-            "single-cell",
+            "single-cell-mpx",
             "amplicon",
             str(uropod_reads[1]),
             str(uropod_reads[0]),
@@ -101,7 +101,7 @@ def test_fastq_swapped_read_input(mocker, uropod_reads, tmp_path):
         cmd = runner.invoke(
             cli.main_cli,
             [
-                "single-cell",
+                "single-cell-mpx",
                 "amplicon",
                 str(uropod_reads[0]),
                 str(uropod_reads[0]),
@@ -127,7 +127,7 @@ def test_fastq_sample_name_mismatch(mocker, uropod_reads_sample_mismatch):
 
     with tempfile.TemporaryDirectory() as d:
         args = [
-            "single-cell",
+            "single-cell-mpx",
             "amplicon",
             str(uropod_reads_sample_mismatch[0]),
             str(uropod_reads_sample_mismatch[1]),

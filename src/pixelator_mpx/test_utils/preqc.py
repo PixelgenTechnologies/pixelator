@@ -41,7 +41,7 @@ class BasePreQCTestsMixin(BaseWorkflowTestMixin):
         command = [
             "--log-file",
             "preqc-pixelator.log",
-            "single-cell",
+            "single-cell-mpx",
             "preqc",
             "--output",
             ".",

@@ -40,7 +40,7 @@ class BaseGraphTestsMixin(BaseWorkflowTestMixin):
         command = [
             "--log-file",
             "graph-pixelator.log",
-            "single-cell",
+            "single-cell-mpx",
             "graph",
             "--output",
             ".",

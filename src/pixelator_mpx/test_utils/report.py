@@ -36,7 +36,7 @@ class BaseReportTestsMixin(BaseWorkflowTestMixin):
         command = [
             "--log-file",
             "report-pixelator.log",
-            "single-cell",
+            "single-cell-mpx",
             "report",
             ".",
             "--output",

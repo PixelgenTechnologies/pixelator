@@ -42,7 +42,7 @@ class BaseDemuxTestsMixin(BaseWorkflowTestMixin):
         command = [
             "--log-file",
             "demux-pixelator.log",
-            "single-cell",
+            "single-cell-mpx",
             "demux",
             "--panel",
             str(Path(panel_file).name) if panel_file else panel,

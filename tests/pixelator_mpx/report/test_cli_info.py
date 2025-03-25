@@ -20,7 +20,7 @@ def test_command_info_loading_from_json(
 
     for m in meta_files:
         data = CommandInfo.from_json(m)
-        assert data.command.startswith("pixelator single-cell")
+        assert data.command.startswith("pixelator single-cell-mpx")
 
 
 @pytest.fixture()
@@ -68,24 +68,24 @@ def test_cli_info_missing_stage(uropod_cli_invocation_data_no_amplicon):
 @pytest.mark.parametrize(
     "stage_selector,expected_command",
     [
-        (SingleCellStage.PREQC, "pixelator single-cell preqc"),
-        ("preqc", "pixelator single-cell preqc"),
-        (SingleCellStage.ADAPTERQC, "pixelator single-cell adapterqc"),
-        ("adapterqc", "pixelator single-cell adapterqc"),
-        (SingleCellStage.COLLAPSE, "pixelator single-cell collapse"),
-        ("collapse", "pixelator single-cell collapse"),
-        (SingleCellStage.DEMUX, "pixelator single-cell demux"),
-        ("demux", "pixelator single-cell demux"),
-        (SingleCellStage.GRAPH, "pixelator single-cell graph"),
-        ("graph", "pixelator single-cell graph"),
-        (SingleCellStage.ANNOTATE, "pixelator single-cell annotate"),
-        ("annotate", "pixelator single-cell annotate"),
-        (SingleCellStage.ANALYSIS, "pixelator single-cell analysis"),
-        ("analysis", "pixelator single-cell analysis"),
-        (SingleCellStage.LAYOUT, "pixelator single-cell layout"),
-        ("layout", "pixelator single-cell layout"),
-        (SingleCellStage.AMPLICON, "pixelator single-cell amplicon"),
-        ("amplicon", "pixelator single-cell amplicon"),
+        (SingleCellStage.PREQC, "pixelator single-cell-mpx preqc"),
+        ("preqc", "pixelator single-cell-mpx preqc"),
+        (SingleCellStage.ADAPTERQC, "pixelator single-cell-mpx adapterqc"),
+        ("adapterqc", "pixelator single-cell-mpx adapterqc"),
+        (SingleCellStage.COLLAPSE, "pixelator single-cell-mpx collapse"),
+        ("collapse", "pixelator single-cell-mpx collapse"),
+        (SingleCellStage.DEMUX, "pixelator single-cell-mpx demux"),
+        ("demux", "pixelator single-cell-mpx demux"),
+        (SingleCellStage.GRAPH, "pixelator single-cell-mpx graph"),
+        ("graph", "pixelator single-cell-mpx graph"),
+        (SingleCellStage.ANNOTATE, "pixelator single-cell-mpx annotate"),
+        ("annotate", "pixelator single-cell-mpx annotate"),
+        (SingleCellStage.ANALYSIS, "pixelator single-cell-mpx analysis"),
+        ("analysis", "pixelator single-cell-mpx analysis"),
+        (SingleCellStage.LAYOUT, "pixelator single-cell-mpx layout"),
+        ("layout", "pixelator single-cell-mpx layout"),
+        (SingleCellStage.AMPLICON, "pixelator single-cell-mpx amplicon"),
+        ("amplicon", "pixelator single-cell-mpx amplicon"),
     ],
 )
 def test_cli_info_get_stage(

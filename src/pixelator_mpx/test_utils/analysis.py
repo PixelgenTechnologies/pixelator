@@ -35,7 +35,7 @@ class BaseAnalysisTestsMixin(BaseWorkflowTestMixin):
         command = [
             "--log-file",
             "analysis-pixelator.log",
-            "single-cell",
+            "single-cell-mpx",
             "analysis",
             "--output",
             ".",

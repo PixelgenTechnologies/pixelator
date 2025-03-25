@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 import pytest
 
-from pixelator_mpx import __version__
+from pixelator import __version__
 from pixelator_mpx.utils import (
     get_pool_executor,
     get_process_pool_executor,

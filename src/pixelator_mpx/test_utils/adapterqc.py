@@ -32,7 +32,7 @@ class BaseAdapterQCTestsMixin(BaseWorkflowTestMixin):
         command = [
             "--log-file",
             "adapterqc-pixelator.log",
-            "single-cell",
+            "single-cell-mpx",
             "adapterqc",
             "--output",
             ".",

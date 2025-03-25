@@ -40,7 +40,7 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
         command = [
             "--log-file",
             "annotate-pixelator.log",
-            "single-cell",
+            "single-cell-mpx",
             "annotate",
             "--panel",
             str(Path(panel_file).name) if panel_file else panel,
@@ -121,8 +121,7 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
 
         if "--verbose" not in self.__this_command:
             return pytest.skip(
-                "Skipping raw_components_metrics.csv.gz test, "
-                '( "--verbose" not set )'
+                'Skipping raw_components_metrics.csv.gz test, ( "--verbose" not set )'
             )
 
         for f in vertex_files:

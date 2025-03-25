@@ -71,14 +71,14 @@ def test_sorted_pixelator_commands():
 
     assert len(commands) >= 10
     assert commands[:10] == [
-        "pixelator single-cell amplicon",
-        "pixelator single-cell preqc",
-        "pixelator single-cell adapterqc",
-        "pixelator single-cell demux",
-        "pixelator single-cell collapse",
-        "pixelator single-cell graph",
-        "pixelator single-cell annotate",
-        "pixelator single-cell layout",
-        "pixelator single-cell analysis",
-        "pixelator single-cell report",
+        "pixelator single-cell-mpx amplicon",
+        "pixelator single-cell-mpx preqc",
+        "pixelator single-cell-mpx adapterqc",
+        "pixelator single-cell-mpx demux",
+        "pixelator single-cell-mpx collapse",
+        "pixelator single-cell-mpx graph",
+        "pixelator single-cell-mpx annotate",
+        "pixelator single-cell-mpx layout",
+        "pixelator single-cell-mpx analysis",
+        "pixelator single-cell-mpx report",
     ]

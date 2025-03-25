@@ -16,7 +16,7 @@ import pytest
 from lxml.etree import _Element as LxmlElement
 from playwright.sync_api import Page, expect
 
-from pixelator_mpx import __version__
+from pixelator import __version__
 from pixelator_mpx.report.qcreport import (
     QCReportBuilder,
     QCReportData,

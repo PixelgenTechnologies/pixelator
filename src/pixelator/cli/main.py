@@ -96,7 +96,7 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     return 0
 
 
-@main_cli.group(name="single-cell")
+@main_cli.group(name="single-cell-mpx")
 @click.option(
     "--list-designs",
     is_flag=True,

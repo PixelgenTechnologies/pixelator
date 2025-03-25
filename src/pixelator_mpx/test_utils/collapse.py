@@ -36,7 +36,7 @@ class BaseCollapseTestsMixin(BaseWorkflowTestMixin):
         command = [
             "--log-file",
             "collapse-pixelator.log",
-            "single-cell",
+            "single-cell-mpx",
             "collapse",
             "--output",
             ".",
