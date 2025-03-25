@@ -228,7 +228,7 @@ def collapse(
         write_parameters_file(
             ctx,
             collapse_output / f"{sample}.meta.json",
-            command_path="pixelator single-cell collapse",
+            command_path="pixelator single-cell-mpx collapse",
         )
 
         # run cutadapt (demux mode) using parallel processing

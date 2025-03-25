@@ -110,7 +110,7 @@ def graph(
     write_parameters_file(
         ctx,
         graph_output / f"{clean_name}.meta.json",
-        command_path="pixelator single-cell graph",
+        command_path="pixelator single-cell-mpx graph",
     )
 
     connect_components(

@@ -39,7 +39,6 @@ import click
 import numpy as np
 import pandas as pd
 
-from pixelator import __version__
 from pixelator_mpx.types import PathType
 
 # Avoid a circular dependency
@@ -221,6 +220,8 @@ def log_step_start(
     :param **kwargs: any additional parameters that you wish to log
     :rtype: None
     """
+    from pixelator import __version__
+
     logger.info("Start pixelator %s %s", step_name, __version__)
 
     if isinstance(input_files, list):

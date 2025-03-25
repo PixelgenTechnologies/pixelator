@@ -135,7 +135,7 @@ def amplicon(
     write_parameters_file(
         ctx,
         amplicon_output / f"{sample_name}.meta.json",
-        command_path="pixelator single-cell amplicon",
+        command_path="pixelator single-cell-mpx amplicon",
     )
 
     msg = f"Creating amplicon for {','.join(str(p) for p in fastq_inputs)}"

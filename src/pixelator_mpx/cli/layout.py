@@ -86,7 +86,7 @@ def layout(
     write_parameters_file(
         ctx,
         layout_output_dir / f"{clean_name}.meta.json",
-        command_path="pixelator single-cell layout",
+        command_path="pixelator single-cell-mpx layout",
     )
 
     pxl_dataset = read(pxl_file)

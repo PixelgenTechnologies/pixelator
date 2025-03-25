@@ -149,7 +149,7 @@ def annotate(
     write_parameters_file(
         ctx,
         annotate_output / f"{clean_name}.meta.json",
-        command_path="pixelator single-cell annotate",
+        command_path="pixelator single-cell-mpx annotate",
     )
 
     annotate_components(

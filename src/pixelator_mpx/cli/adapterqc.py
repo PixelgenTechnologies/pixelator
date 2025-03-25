@@ -91,7 +91,7 @@ def adapterqc(
     write_parameters_file(
         ctx,
         adapterqc_output / f"{clean_name}.meta.json",
-        command_path="pixelator single-cell adapterqc",
+        command_path="pixelator single-cell-mpx adapterqc",
     )
 
     adapter_qc_fastq(

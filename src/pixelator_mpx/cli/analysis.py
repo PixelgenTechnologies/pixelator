@@ -202,7 +202,7 @@ def analysis(
     write_parameters_file(
         ctx,
         analysis_output / f"{clean_name}.meta.json",
-        command_path="pixelator single-cell analysis",
+        command_path="pixelator single-cell-mpx analysis",
     )
 
     analysis_to_run = []

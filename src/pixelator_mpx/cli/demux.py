@@ -160,7 +160,7 @@ def demux(
     write_parameters_file(
         ctx,
         demux_output / f"{name}.meta.json",
-        command_path="pixelator single-cell demux",
+        command_path="pixelator single-cell-mpx demux",
     )
 
     results_ok = demux_fastq(

@@ -182,7 +182,7 @@ def preqc(
     write_parameters_file(
         ctx,
         preqc_output / f"{clean_name}.meta.json",
-        command_path="pixelator single-cell preqc",
+        command_path="pixelator single-cell-mpx preqc",
     )
 
     qc_fastq(
