@@ -63,7 +63,7 @@ def _process_meta_json_data(data: Mapping[str, Any]) -> CommandInfo:
     :param data: The parsed meta.json file
     :return: A :class:`CommandInfo` object.
     """
-    from pixelator_mpx.cli import main_cli
+    from pixelator.cli import main_cli
 
     leaf_command = _find_click_command(main_cli, data)
     param_data: list[CommandOption] = []

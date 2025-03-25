@@ -15,7 +15,7 @@ import pandas as pd
 import polars as pl
 from anndata import AnnData
 
-from pixelator_mpx import __version__
+from pixelator import __version__
 from pixelator_mpx.annotate.aggregates import call_aggregates
 from pixelator_mpx.annotate.cell_calling import find_component_size_limits
 from pixelator_mpx.annotate.constants import (

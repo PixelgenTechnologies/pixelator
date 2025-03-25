@@ -10,7 +10,7 @@ import sys
 import click
 import yappi
 
-from pixelator_mpx import __version__
+from pixelator import __version__
 from pixelator_mpx.cli.adapterqc import adapterqc
 from pixelator_mpx.cli.amplicon import amplicon
 from pixelator_mpx.cli.analysis import analysis

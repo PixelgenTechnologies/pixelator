@@ -1,16 +1,7 @@
-"""Top-level package for Pixelator.
+"""Pixelator for use with MPX data.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """
-
-from importlib import metadata
-
-__version__ = "0.0.0"
-
-try:
-    __version__ = metadata.version("pixelgen-pixelator")
-except metadata.PackageNotFoundError:
-    pass
 
 # Adding imports here as shortcuts to be able to import like
 # import pixelator as mpx

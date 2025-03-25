@@ -39,7 +39,7 @@ import click
 import numpy as np
 import pandas as pd
 
-from pixelator_mpx import __version__
+from pixelator import __version__
 from pixelator_mpx.types import PathType
 
 # Avoid a circular dependency

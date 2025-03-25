@@ -384,7 +384,7 @@ def _ordered_pixelator_commands() -> list[str]:
     # local imports to avoid circular dependency issues
     import click
 
-    from pixelator_mpx.cli import main_cli as click_context
+    from pixelator.cli import main_cli as click_context
 
     def build_command_list(obj: typing.Any, prefix=None):
         """Recursively go through groups and commands to create a list of commands."""

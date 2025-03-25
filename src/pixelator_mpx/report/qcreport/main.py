@@ -8,9 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-import pandas as pd
-
-from pixelator_mpx import __version__
+from pixelator import __version__
 from pixelator_mpx.report.common import PixelatorReporting
 from pixelator_mpx.report.models.report_metadata import SampleMetadata
 from pixelator_mpx.report.qcreport.builder import QCReportBuilder
