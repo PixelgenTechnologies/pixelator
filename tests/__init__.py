@@ -1,6 +1,1 @@
-"""
-Copyright © 2023 Pixelgen Technologies AB.
-"""
-
-# This __init__.py is important for pytest!
-# If not present, pytest will not be able to determine the root test module
+"""Copyright © 2025 Pixelgen Technologies AB."""

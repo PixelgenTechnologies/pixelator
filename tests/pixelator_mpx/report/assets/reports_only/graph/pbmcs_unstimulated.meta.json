@@ -1,0 +1,11 @@
+{
+    "cli": {
+        "command": "pixelator single-cell graph",
+        "options": {
+            "--multiplet-recovery": true,
+            "--max-refinement-recursion-depth": 5,
+            "--min-count": 2,
+            "--output": "."
+        }
+    }
+}
