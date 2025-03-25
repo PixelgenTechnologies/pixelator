@@ -66,9 +66,9 @@ def permute(
     marker_sum = marker_counts.sum()
     marker_probs = marker_counts / marker_sum
     marker_probs_sum = marker_probs.sum()
-    assert (
-        -1e-10 < 1 - marker_probs_sum and marker_probs_sum - 1 < 1e-10
-    ), f"{marker_probs_sum}"
+    assert -1e-10 < 1 - marker_probs_sum and marker_probs_sum - 1 < 1e-10, (
+        f"{marker_probs_sum}"
+    )
     region_counts = df.sum(axis="columns")
 
     sampling = random_number_generator.multinomial(

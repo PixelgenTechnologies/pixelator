@@ -124,8 +124,7 @@ def qc_fastq(
     # check output file exists
     if not Path(output).is_file():
         error = (
-            f"ERROR running fastp.\nOutput file not present "
-            f"{output}\n{error_string}\n"
+            f"ERROR running fastp.\nOutput file not present {output}\n{error_string}\n"
         )
         logger.error(error)
         raise RuntimeError(error)

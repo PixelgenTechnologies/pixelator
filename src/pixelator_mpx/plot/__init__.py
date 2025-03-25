@@ -119,9 +119,9 @@ def molecule_rank_plot(
     ), "'molecules' must be a vector of integer values"
 
     if group_by is not None:
-        assert (
-            group_by in data.columns
-        ), f"group variable '{group_by}' not found in DataFrame"
+        assert group_by in data.columns, (
+            f"group variable '{group_by}' not found in DataFrame"
+        )
 
         if data[group_by].dtype not in ["object", "category"]:
             raise ValueError(
@@ -172,14 +172,14 @@ def edge_rank_plot(
         stacklevel=2,
     )
     assert "edges" in data.columns, "column 'edges' is missing from DataFrame"
-    assert (
-        isinstance(data["edges"], pd.Series) and data["edges"].dtype == int
-    ), "'edges' must be a vector of integer values"
+    assert isinstance(data["edges"], pd.Series) and data["edges"].dtype == int, (
+        "'edges' must be a vector of integer values"
+    )
 
     if group_by is not None:
-        assert (
-            group_by in data.columns
-        ), f"group variable '{group_by}' not found in DataFrame"
+        assert group_by in data.columns, (
+            f"group variable '{group_by}' not found in DataFrame"
+        )
 
         if data[group_by].dtype not in ["object", "category"]:
             raise ValueError(
