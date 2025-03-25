@@ -6,10 +6,10 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 import numpy as np
 
-from pixelator.annotate.cell_calling import (
+from pixelator_mpx.annotate.cell_calling import (
     find_component_size_limits,
 )
-from pixelator.annotate.constants import MINIMUM_N_EDGES_CELL_SIZE
+from pixelator_mpx.annotate.constants import MINIMUM_N_EDGES_CELL_SIZE
 
 
 def test_find_component_min_size_limits_signal_and_noise():

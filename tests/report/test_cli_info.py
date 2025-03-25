@@ -7,9 +7,9 @@ import shutil
 
 import pytest
 
-from pixelator.report import PixelatorReporting, SingleCellStage
-from pixelator.report.common import WorkdirOutputNotFound
-from pixelator.report.models import CommandInfo
+from pixelator_mpx.report import PixelatorReporting, SingleCellStage
+from pixelator_mpx.report.common import WorkdirOutputNotFound
+from pixelator_mpx.report.models import CommandInfo
 
 
 def test_command_info_loading_from_json(

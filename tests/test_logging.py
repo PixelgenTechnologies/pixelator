@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from pixelator.logging import LoggingSetup
-from pixelator.utils import (
+from pixelator_mpx.logging import LoggingSetup
+from pixelator_mpx.utils import (
     get_process_pool_executor,
     timer,
 )

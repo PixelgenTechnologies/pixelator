@@ -11,11 +11,11 @@ from typing import Optional, Type
 
 import pytest
 
-from pixelator.test_utils import (  # noqa: F401
+from pixelator_mpx.test_utils import (  # noqa: F401
     YamlIntegrationTestsCollector,
     use_workflow_context,
 )
-from pixelator.types import PathType
+from pixelator_mpx.types import PathType
 
 logger = logging.getLogger("integration")
 

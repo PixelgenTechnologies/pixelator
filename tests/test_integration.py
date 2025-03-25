@@ -8,7 +8,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 import pytest
 from click.testing import CliRunner
 
-from pixelator import cli
+from pixelator_mpx import cli
 
 pytestmark = pytest.mark.integration_test
 

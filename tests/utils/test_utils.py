@@ -13,8 +13,8 @@ from unittest.mock import patch
 
 import pytest
 
-from pixelator import __version__
-from pixelator.utils import (
+from pixelator_mpx import __version__
+from pixelator_mpx.utils import (
     get_pool_executor,
     get_process_pool_executor,
     get_read_sample_name,
@@ -235,7 +235,7 @@ def test_get_pool_executor_with_click_context():
         def obj(self):
             return {"CORES": 3}
 
-    with patch("pixelator.utils.click") as click:
+    with patch("pixelator_mpx.utils.click") as click:
         click.get_current_context.return_value = MockContext()
         pool = get_pool_executor()
         assert isinstance(pool, Pool)

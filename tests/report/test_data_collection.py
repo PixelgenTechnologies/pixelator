@@ -7,8 +7,8 @@ import json
 
 import pytest
 
-from pixelator.report.common.json_encoder import PixelatorJSONEncoder
-from pixelator.report.qcreport.collect import (
+from pixelator_mpx.report.common.json_encoder import PixelatorJSONEncoder
+from pixelator_mpx.report.qcreport.collect import (
     collect_antibody_counts_data,
     collect_antibody_percentages_data,
     collect_component_ranked_component_size_data,

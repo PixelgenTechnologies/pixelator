@@ -1,6 +1,6 @@
 """Copyright © 2024 Pixelgen Technologies AB."""
 
-from pixelator.demux.process import check_demux_results_are_ok
+from pixelator_mpx.demux.process import check_demux_results_are_ok
 
 
 def test_check_demux_results_are_ok():

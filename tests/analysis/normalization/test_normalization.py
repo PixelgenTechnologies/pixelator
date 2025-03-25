@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-from pixelator.analysis.normalization import dsb_normalize
+from pixelator_mpx.analysis.normalization import dsb_normalize
 
 DATA_ROOT = Path(__file__).parents[2] / "data"
 

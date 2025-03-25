@@ -7,8 +7,8 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from pixelator.report import PixelatorReporting, PixelatorWorkdir
-from pixelator.report.models.amplicon import AmpliconSampleReport
+from pixelator_mpx.report import PixelatorReporting, PixelatorWorkdir
+from pixelator_mpx.report.models.amplicon import AmpliconSampleReport
 
 
 @pytest.fixture()

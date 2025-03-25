@@ -10,14 +10,14 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
-from pixelator.annotate import (
+from pixelator_mpx.annotate import (
     NoCellsFoundException,
     cluster_components,
     filter_components_sizes,
 )
-from pixelator.cli.annotate import annotate_components
-from pixelator.config import AntibodyPanel
-from pixelator.pixeldataset.utils import read_anndata
+from pixelator_mpx.cli.annotate import annotate_components
+from pixelator_mpx.config import AntibodyPanel
+from pixelator_mpx.pixeldataset.utils import read_anndata
 
 
 def test_filter_components_no_filters(adata: AnnData):

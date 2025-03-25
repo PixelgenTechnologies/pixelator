@@ -13,13 +13,13 @@ import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 
-from pixelator.graph import Graph
-from pixelator.pixeldataset import (
+from pixelator_mpx.graph import Graph
+from pixelator_mpx.pixeldataset import (
     PixelDataset,
     read,
 )
-from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
-from pixelator.pixeldataset.utils import (
+from pixelator_mpx.pixeldataset.precomputed_layouts import PreComputedLayouts
+from pixelator_mpx.pixeldataset.utils import (
     _enforce_edgelist_types,
 )
 

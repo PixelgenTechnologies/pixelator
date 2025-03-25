@@ -13,10 +13,10 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from pixelator.pixeldataset import (
+from pixelator_mpx.pixeldataset import (
     read,
 )
-from pixelator.pixeldataset.aggregation import simple_aggregate
+from pixelator_mpx.pixeldataset.aggregation import simple_aggregate
 
 random.seed(42)
 np.random.seed(42)

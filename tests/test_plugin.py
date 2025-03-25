@@ -9,10 +9,10 @@ from unittest import mock
 
 import click
 
-from pixelator.cli.main import main_cli
-from pixelator.cli.plugin import add_cli_plugins, fetch_cli_plugins
-from pixelator.config import Config, config
-from pixelator.config.plugin import fetch_config_plugins, load_config_plugins
+from pixelator_mpx.cli.main import main_cli
+from pixelator_mpx.cli.plugin import add_cli_plugins, fetch_cli_plugins
+from pixelator_mpx.config import Config, config
+from pixelator_mpx.config.plugin import fetch_config_plugins, load_config_plugins
 
 
 @click.group()
@@ -28,12 +28,12 @@ def a_config_plugin(current_config: Config) -> Config:
 
 def test_that_cli_plugins_are_loaded_in_main():
     with mock.patch(
-        "pixelator.cli.plugin.fetch_cli_plugins",
+        "pixelator_mpx.cli.plugin.fetch_cli_plugins",
         return_value=[
             EntryPoint(
                 name="a_plugin",
                 value="tests.test_plugin:a_plugin",
-                group="pixelator.cli_plugin",
+                group="pixelator_mpx.cli_plugin",
             )
         ],
     ):
@@ -43,12 +43,12 @@ def test_that_cli_plugins_are_loaded_in_main():
 
 def test_that_config_plugins_are_loaded_in_main():
     with mock.patch(
-        "pixelator.config.plugin.fetch_config_plugins",
+        "pixelator_mpx.config.plugin.fetch_config_plugins",
         return_value=[
             EntryPoint(
                 name="a_config_plugin",
                 value="tests.test_plugin:a_config_plugin",
-                group="pixelator.config_plugin",
+                group="pixelator_mpx.config_plugin",
             )
         ],
     ):
@@ -67,7 +67,7 @@ def test_fetch_cli_plugins():
             EntryPoint(
                 name="a_plugin",
                 value="tests.test_plugin:a_plugin",
-                group="pixelator.cli_plugin",
+                group="pixelator_mpx.cli_plugin",
             )
         ]
     )
@@ -85,7 +85,7 @@ def test_fetch_config_plugins():
             EntryPoint(
                 name="a_config_plugin",
                 value="tests.test_plugin:a_config_plugin",
-                group="pixelator.config_plugin",
+                group="pixelator_mpx.config_plugin",
             )
         ]
     )

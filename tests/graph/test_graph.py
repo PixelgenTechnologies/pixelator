@@ -13,8 +13,8 @@ import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from pandas.testing import assert_frame_equal
 
-from pixelator.graph import Graph
-from pixelator.graph.backends.implementations._networkx import pmds_layout
+from pixelator_mpx.graph import Graph
+from pixelator_mpx.graph.backends.implementations._networkx import pmds_layout
 from tests.graph.networkx.test_tools import random_sequence
 from tests.test_tools import enforce_edgelist_types_for_tests
 

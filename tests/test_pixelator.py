@@ -5,8 +5,8 @@ Copyright © 2022 Pixelgen Technologies AB.
 """
 
 # pylint: disable=redefined-outer-name
-import pixelator as mpx
-from pixelator.pixeldataset import PixelDataset
+import pixelator_mpx as mpx
+from pixelator_mpx.pixeldataset import PixelDataset
 
 
 def test_read(setup_basic_pixel_dataset, tmp_path):

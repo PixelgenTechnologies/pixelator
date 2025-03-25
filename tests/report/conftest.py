@@ -12,8 +12,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from pixelator import PixelDataset
-from pixelator.report.common import PixelatorWorkdir
+from pixelator_mpx import PixelDataset
+from pixelator_mpx.report.common import PixelatorWorkdir
 
 
 @pytest.fixture(scope="session")

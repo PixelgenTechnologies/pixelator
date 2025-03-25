@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from pixelator import cli
+from pixelator_mpx import cli
 
 
 @pytest.fixture()
@@ -54,7 +54,7 @@ def uropod_reads_sample_mismatch(data_root):
 def test_fastq_valid_inputs(mocker, uropod_reads, run_in_tmpdir):
     runner = CliRunner()
 
-    mocker.patch("pixelator.cli.amplicon.amplicon_fastq")
+    mocker.patch("pixelator_mpx.cli.amplicon.amplicon_fastq")
 
     with tempfile.TemporaryDirectory() as d:
         args = [
@@ -77,7 +77,7 @@ def test_fastq_valid_inputs(mocker, uropod_reads, run_in_tmpdir):
 def test_fastq_swapped_read_input(mocker, uropod_reads, tmp_path):
     runner = CliRunner()
 
-    mocker.patch("pixelator.cli.amplicon.amplicon_fastq")
+    mocker.patch("pixelator_mpx.cli.amplicon.amplicon_fastq")
 
     with tempfile.TemporaryDirectory() as d:
         args = [
@@ -123,7 +123,7 @@ def test_fastq_swapped_read_input(mocker, uropod_reads, tmp_path):
 
 def test_fastq_sample_name_mismatch(mocker, uropod_reads_sample_mismatch):
     runner = CliRunner()
-    mocker.patch("pixelator.cli.amplicon.amplicon_fastq")
+    mocker.patch("pixelator_mpx.cli.amplicon.amplicon_fastq")
 
     with tempfile.TemporaryDirectory() as d:
         args = [

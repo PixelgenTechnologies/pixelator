@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-from pixelator.analysis.colocalization.statistics import (
+from pixelator_mpx.analysis.colocalization.statistics import (
     Jaccard,
     Pearson,
     apply_multiple_stats,

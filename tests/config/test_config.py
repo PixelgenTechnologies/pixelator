@@ -8,20 +8,20 @@ import copy
 
 import pytest
 
-from pixelator.config import (
+from pixelator_mpx.config import (
     Config,
     RegionType,
     config,
     get_position_in_parent,
     load_assays_package,
 )
-from pixelator.config.config_class import PanelException
-from pixelator.config.panel import load_antibody_panel
+from pixelator_mpx.config.config_class import PanelException
+from pixelator_mpx.config.panel import load_antibody_panel
 
 
 def test_config_creation():
     config = Config()
-    load_assays_package(config, "pixelator.resources.assays")
+    load_assays_package(config, "pixelator_mpx.resources.assays")
 
     assert {"D21"}.issubset(config.assays)
 

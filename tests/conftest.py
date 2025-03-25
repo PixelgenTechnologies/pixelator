@@ -14,14 +14,14 @@ import polars as pl
 import pytest
 from anndata import AnnData
 
-from pixelator.config import AntibodyPanel
-from pixelator.graph import update_edgelist_membership
-from pixelator.graph.utils import union as graph_union
-from pixelator.pixeldataset import (
+from pixelator_mpx.config import AntibodyPanel
+from pixelator_mpx.graph import update_edgelist_membership
+from pixelator_mpx.graph.utils import union as graph_union
+from pixelator_mpx.pixeldataset import (
     PixelDataset,
 )
-from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
-from pixelator.pixeldataset.utils import edgelist_to_anndata
+from pixelator_mpx.pixeldataset.precomputed_layouts import PreComputedLayouts
+from pixelator_mpx.pixeldataset.utils import edgelist_to_anndata
 from tests.graph.networkx.test_tools import (
     create_fully_connected_bipartite_graph,
     create_random_graph,

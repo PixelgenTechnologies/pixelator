@@ -9,8 +9,8 @@ import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
 
-from pixelator.pixeldataset import PixelDataset
-from pixelator.pixeldataset.precomputed_layouts import (
+from pixelator_mpx.pixeldataset import PixelDataset
+from pixelator_mpx.pixeldataset.precomputed_layouts import (
     PreComputedLayouts,
     aggregate_precomputed_layouts,
     generate_precomputed_layouts_for_components,
@@ -420,7 +420,7 @@ class TestGeneratePrecomputedLayoutsForComponents:
                 pass
 
         with mock.patch(
-            "pixelator.pixeldataset.precomputed_layouts.get_pool_executor",
+            "pixelator_mpx.pixeldataset.precomputed_layouts.get_pool_executor",
         ) as mock_pool_executor:
             mock_pool_executor.return_value = MockPoolExecutor()
             yield mock_pool_executor

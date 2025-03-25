@@ -9,16 +9,16 @@ import pandas as pd
 from numpy.random import default_rng
 from pandas.testing import assert_frame_equal
 
-from pixelator.analysis.colocalization.estimate import (
+from pixelator_mpx.analysis.colocalization.estimate import (
     estimate_observation_statistics,
     permutation_analysis_results,
 )
-from pixelator.analysis.colocalization.statistics import (
+from pixelator_mpx.analysis.colocalization.statistics import (
     Jaccard,
     Pearson,
     apply_multiple_stats,
 )
-from pixelator.analysis.permute import permutations
+from pixelator_mpx.analysis.permute import permutations
 
 
 def test_estimate_observation_statistics():

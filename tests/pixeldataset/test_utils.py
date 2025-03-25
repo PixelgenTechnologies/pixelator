@@ -16,20 +16,20 @@ from anndata import AnnData
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 
-from pixelator.config import AntibodyPanel
-from pixelator.graph import write_recovered_components
-from pixelator.pixeldataset.utils import (
+from pixelator_mpx.config import AntibodyPanel
+from pixelator_mpx.graph import write_recovered_components
+from pixelator_mpx.pixeldataset.utils import (
     antibody_metrics,
     component_antibody_counts,
     edgelist_to_anndata,
     read_anndata,
     write_anndata,
 )
-from pixelator.statistics import (
+from pixelator_mpx.statistics import (
     clr_transformation,
     log1p_transformation,
 )
-from pixelator.utils import batched
+from pixelator_mpx.utils import batched
 
 random.seed(42)
 np.random.seed(42)

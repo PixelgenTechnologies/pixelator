@@ -16,8 +16,8 @@ from fsspec.implementations.zip import ZipFileSystem
 from pandas.core.frame import DataFrame
 from pandas.testing import assert_frame_equal
 
-from pixelator.pixeldataset import PixelDataset
-from pixelator.pixeldataset.datastores import (
+from pixelator_mpx.pixeldataset import PixelDataset
+from pixelator_mpx.pixeldataset.datastores import (
     CannotOverwriteError,
     FileFormatNotRecognizedError,
     PixelDataStore,
@@ -26,7 +26,7 @@ from pixelator.pixeldataset.datastores import (
     ZipBasedPixelFileWithParquet,
     _CustomZipFileSystem,
 )
-from pixelator.pixeldataset.precomputed_layouts import PreComputedLayouts
+from pixelator_mpx.pixeldataset.precomputed_layouts import PreComputedLayouts
 
 
 class TestPixelDataStore:
@@ -208,7 +208,7 @@ class TestZipBasedPixelFile:
 
     def test_zip_based_pixel_guess_file_format_raises(self, pixel_dataset_file: Path):
         with patch(
-            "pixelator.pixeldataset.datastores.ZipBasedPixelFileWithParquet"
+            "pixelator_mpx.pixeldataset.datastores.ZipBasedPixelFileWithParquet"
         ) as mock:
             mock.EDGELIST_KEY = "non_existent_key"
             with pytest.raises(FileFormatNotRecognizedError):

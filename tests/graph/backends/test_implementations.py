@@ -6,11 +6,11 @@ Copyright © 2023 Pixelgen Technologies AB.
 import networkx as nx
 import pytest
 
-from pixelator.graph.backends.implementations import (
+from pixelator_mpx.graph.backends.implementations import (
     graph_backend,
     graph_backend_from_graph_type,
 )
-from pixelator.graph.backends.implementations._networkx import (
+from pixelator_mpx.graph.backends.implementations._networkx import (
     NetworkxBasedEdge,
     NetworkxBasedEdgeSequence,
     NetworkxBasedVertex,

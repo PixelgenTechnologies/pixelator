@@ -8,8 +8,8 @@ import shutil
 
 import pytest
 
-from pixelator.report import PixelatorWorkdir
-from pixelator.report.common import WorkdirOutputNotFound
+from pixelator_mpx.report import PixelatorWorkdir
+from pixelator_mpx.report.common import WorkdirOutputNotFound
 
 
 def test_workdir_samples(pixelator_workdir: PixelatorWorkdir, all_stages_all_reports):

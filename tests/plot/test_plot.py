@@ -10,8 +10,8 @@ import pytest
 from numpy.testing import assert_almost_equal
 from pytest_snapshot.plugin import Snapshot
 
-from pixelator.graph import Graph
-from pixelator.plot import (
+from pixelator_mpx.graph import Graph
+from pixelator_mpx.plot import (
     abundance_colocalization_plot,
     cell_count_plot,
     density_scatter_plot,
@@ -26,7 +26,7 @@ from pixelator.plot import (
     plot_polarity_diff_volcano,
     scatter_umi_per_upia_vs_tau,
 )
-from pixelator.plot.layout_plots import (
+from pixelator_mpx.plot.layout_plots import (
     _calculate_densities,
     _calculate_distance_to_unit_sphere_zones,
     _unit_sphere_surface,

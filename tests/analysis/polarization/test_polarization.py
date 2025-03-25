@@ -11,14 +11,14 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-from pixelator.analysis.polarization import (
+from pixelator_mpx.analysis.polarization import (
     PolarizationAnalysis,
     get_differential_polarity,
     polarization_scores,
     polarization_scores_component_graph,
 )
-from pixelator.graph import Graph
-from pixelator.pixeldataset import PixelDataset
+from pixelator_mpx.graph import Graph
+from pixelator_mpx.pixeldataset import PixelDataset
 from tests.graph.networkx.test_tools import create_randomly_connected_bipartite_graph
 
 

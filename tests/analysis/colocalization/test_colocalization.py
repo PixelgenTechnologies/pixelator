@@ -11,14 +11,14 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-from pixelator.analysis.colocalization import (
+from pixelator_mpx.analysis.colocalization import (
     ColocalizationAnalysis,
     colocalization_from_component_edgelist,
     colocalization_scores,
     get_differential_colocalization,
 )
-from pixelator.graph import Graph
-from pixelator.pixeldataset import PixelDataset
+from pixelator_mpx.graph import Graph
+from pixelator_mpx.pixeldataset import PixelDataset
 
 
 def test_get_differential_colocalization(setup_basic_pixel_dataset):

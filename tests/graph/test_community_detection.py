@@ -9,7 +9,7 @@ import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
 
-from pixelator.graph.community_detection import (
+from pixelator_mpx.graph.community_detection import (
     connect_components,
     recover_technical_multiplets,
 )

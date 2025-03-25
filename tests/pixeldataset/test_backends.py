@@ -3,7 +3,7 @@
 Copyright © 2024 Pixelgen Technologies AB.
 """
 
-from pixelator.pixeldataset.backends import (
+from pixelator_mpx.pixeldataset.backends import (
     FileBasedPixelDatasetBackend,
     ObjectBasedPixelDatasetBackend,
 )

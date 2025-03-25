@@ -15,7 +15,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 
-from pixelator.collapse.process import (
+from pixelator_mpx.collapse.process import (
     CollapsedFragment,
     build_annoytree,
     build_binary_data,
@@ -30,14 +30,14 @@ from pixelator.collapse.process import (
     identify_fragments_to_collapse,
     write_tmp_feather_file,
 )
-from pixelator.config import get_position_in_parent
-from pixelator.config.config_instance import config
-from pixelator.test_utils.simulation import ReadSimulator
+from pixelator_mpx.config import get_position_in_parent
+from pixelator_mpx.config.config_instance import config
+from pixelator_mpx.test_utils.simulation import ReadSimulator
 
 
 def test_create_fragment_to_upib_dict():
     """Test creating a fragment to upib dict."""
-    with mock.patch("pixelator.collapse.process.pyfastx") as mock_fastq_reader:
+    with mock.patch("pixelator_mpx.collapse.process.pyfastx") as mock_fastq_reader:
 
         def mock_reads(*args, **kwargs):
             for read in ["ABCDEFGHIJKLMNO", "ZZZDEFGHIJKLMNO", "XXXDEFGHIJKLMNO"]:
@@ -280,7 +280,7 @@ def test_build_binary_data():
 
 def test_collapse_fastq_algorithm_unique():
     """Small test for using unique algorithm, i.e. no collapsing of reads."""
-    with mock.patch("pixelator.collapse.process.pyfastx") as mock_fastq_reader:
+    with mock.patch("pixelator_mpx.collapse.process.pyfastx") as mock_fastq_reader:
 
         def mock_reads(*args, **kwargs):
             for read in ["AAATTTGGG", "TTTAAAGGG", "GGGCCCAAA"]:
@@ -341,7 +341,7 @@ def test_collapse_fastq_algorithm_unique():
 
 def test_collapse_fastq_algorithm_adjacency():
     """Small test of adjacency based collapsing."""
-    with mock.patch("pixelator.collapse.process.pyfastx") as mock_fastq_reader:
+    with mock.patch("pixelator_mpx.collapse.process.pyfastx") as mock_fastq_reader:
 
         def mock_reads(*args, **kwargs):
             for read in ["AAATTTGGG", "TTTAAAGGG", "GGGCCCAAA"]:
@@ -421,7 +421,7 @@ def test_collapse_fastq_algorithm_adjacency_simulated_reads():
     upib_start, upib_end = get_position_in_parent(assay, "upi-b")
     umib_start, umib_end = get_position_in_parent(assay, "umi-b")
 
-    with mock.patch("pixelator.collapse.process.pyfastx") as mock_fastq_reader:
+    with mock.patch("pixelator_mpx.collapse.process.pyfastx") as mock_fastq_reader:
 
         def mock_reads(*args, **kwargs):
             for read in read_generator():

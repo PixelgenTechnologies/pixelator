@@ -5,8 +5,8 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 import pytest
 
-from pixelator.report import PixelatorReporting, PixelatorWorkdir
-from pixelator.report.common.reporting import _ordered_pixelator_commands
+from pixelator_mpx.report import PixelatorReporting, PixelatorWorkdir
+from pixelator_mpx.report.common.reporting import _ordered_pixelator_commands
 
 
 def test_reporting_plain_dir_constructor(pixelator_workdir):

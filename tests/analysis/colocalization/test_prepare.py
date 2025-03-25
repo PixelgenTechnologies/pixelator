@@ -11,13 +11,13 @@ import pytest
 from numpy.random import default_rng
 from pandas.testing import assert_frame_equal
 
-from pixelator.analysis.colocalization.prepare import (
+from pixelator_mpx.analysis.colocalization.prepare import (
     filter_by_marker_counts,
     filter_by_region_counts,
     filter_by_unique_values,
     prepare_from_graph,
 )
-from pixelator.graph.utils import Graph
+from pixelator_mpx.graph.utils import Graph
 
 random_number_generator = default_rng(seed=433)
 

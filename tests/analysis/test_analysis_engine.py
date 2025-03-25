@@ -10,16 +10,16 @@ from unittest.mock import MagicMock
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-from pixelator.analysis.analysis_engine import (
+from pixelator_mpx.analysis.analysis_engine import (
     PerComponentAnalysis,
     _AnalysisManager,
     edgelist_to_component_stream,
     run_analysis,
 )
-from pixelator.analysis.colocalization import ColocalizationAnalysis
-from pixelator.analysis.polarization import PolarizationAnalysis
-from pixelator.graph import Graph
-from pixelator.pixeldataset import PixelDataset
+from pixelator_mpx.analysis.colocalization import ColocalizationAnalysis
+from pixelator_mpx.analysis.polarization import PolarizationAnalysis
+from pixelator_mpx.graph import Graph
+from pixelator_mpx.pixeldataset import PixelDataset
 
 
 class MockAnalysis(PerComponentAnalysis):

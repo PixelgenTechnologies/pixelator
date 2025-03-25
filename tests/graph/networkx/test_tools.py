@@ -11,7 +11,7 @@ from typing import Optional
 import networkx as nx
 import numpy as np
 
-from pixelator.graph.utils import Graph
+from pixelator_mpx.graph.utils import Graph
 
 
 def create_random_graph(n_nodes: int, prob: float) -> Graph:

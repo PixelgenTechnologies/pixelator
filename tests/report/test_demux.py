@@ -5,7 +5,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 import pytest
 
-from pixelator.report import PixelatorReporting, PixelatorWorkdir
+from pixelator_mpx.report import PixelatorReporting, PixelatorWorkdir
 
 
 @pytest.fixture()

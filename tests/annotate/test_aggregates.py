@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
-from pixelator.annotate.aggregates import call_aggregates
+from pixelator_mpx.annotate.aggregates import call_aggregates
 
 NBR_OF_MARKERS = 100
 NBR_OF_NON_ZERO_MARKERS = 10

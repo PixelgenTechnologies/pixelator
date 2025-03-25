@@ -2,7 +2,7 @@
 
 import os
 
-from pixelator.feature_flags import _load_flags_from_environment
+from pixelator_mpx.feature_flags import _load_flags_from_environment
 
 
 def test_load_flags_from_environment():

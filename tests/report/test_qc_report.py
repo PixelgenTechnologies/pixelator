@@ -16,15 +16,15 @@ import pytest
 from lxml.etree import _Element as LxmlElement
 from playwright.sync_api import Page, expect
 
-from pixelator import __version__
-from pixelator.report.qcreport import (
+from pixelator_mpx import __version__
+from pixelator_mpx.report.qcreport import (
     QCReportBuilder,
     QCReportData,
     SampleInfo,
     make_report,
 )
-from pixelator.report.qcreport.builder import DEFAULT_QC_REPORT_TEMPLATE
-from pixelator.report.qcreport.collect import (
+from pixelator_mpx.report.qcreport.builder import DEFAULT_QC_REPORT_TEMPLATE
+from pixelator_mpx.report.qcreport.collect import (
     collect_antibody_counts_data,
     collect_antibody_percentages_data,
     collect_component_ranked_component_size_data,
