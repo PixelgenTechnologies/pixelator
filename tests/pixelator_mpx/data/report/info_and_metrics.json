@@ -9,7 +9,7 @@
     "panel_version": "1.0.0",
     "parameters": [
       {
-        "command": "pixelator single-cell analysis",
+        "command": "pixelator single-cell-mpx analysis",
         "options": [
           {
             "name": "--compute-polarization",
@@ -50,7 +50,7 @@
         ]
       },
       {
-        "command": "pixelator single-cell annotate",
+        "command": "pixelator single-cell-mpx annotate",
         "options": [
           {
             "name": "--panel",
@@ -91,7 +91,7 @@
         ]
       },
       {
-        "command": "pixelator single-cell graph",
+        "command": "pixelator single-cell-mpx graph",
         "options": [
           {
             "name": "--multiplet-recovery",
@@ -120,7 +120,7 @@
         ]
       },
       {
-        "command": "pixelator single-cell collapse",
+        "command": "pixelator single-cell-mpx collapse",
         "options": [
           {
             "name": "--markers-ignore",
@@ -215,7 +215,7 @@
         ]
       },
       {
-        "command": "pixelator single-cell demux",
+        "command": "pixelator single-cell-mpx demux",
         "options": [
           {
             "name": "--mismatches",
@@ -262,7 +262,7 @@
         ]
       },
       {
-        "command": "pixelator single-cell adapterqc",
+        "command": "pixelator single-cell-mpx adapterqc",
         "options": [
           {
             "name": "--mismatches",
@@ -297,7 +297,7 @@
         ]
       },
       {
-        "command": "pixelator single-cell preqc",
+        "command": "pixelator single-cell-mpx preqc",
         "options": [
           {
             "name": "--trim-front",
@@ -362,7 +362,7 @@
         ]
       },
       {
-        "command": "pixelator single-cell amplicon",
+        "command": "pixelator single-cell-mpx amplicon",
         "options": [
           {
             "name": "--output",
