@@ -115,4 +115,4 @@ jobs:
 
       - name: Run mypy
         run: |
-          mypy --ignore-missing-imports --install-types --non-interactive src/pixelator
+          mypy --ignore-missing-imports --install-types --non-interactive src/
