@@ -59,7 +59,7 @@ jobs:
           python-version: "3.11"
 
       - name: ruff linter
-        uses: chartboost/ruff-action@v1
+        uses: astral-sh/ruff-action@v3
 
   format-check:
     name: "Check formatting"
@@ -70,7 +70,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: ruff formatter
-        uses: chartboost/ruff-action@v1
+        uses: astral-sh/ruff-action@v3
         with:
           args: "format --check"
 
