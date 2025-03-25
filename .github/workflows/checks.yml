@@ -40,7 +40,7 @@ jobs:
               paths:
                 - 'pyproject.toml'
                 - 'poetry.lock'
-                - 'src/pixelator/**'
+                - 'src/**'
                 - 'tests/**'
               paths_ignore:
                 - 'tests/**/*.md'

@@ -38,7 +38,7 @@ jobs:
           paths_filter: |
             main:
               paths:
-                - 'src/pixelator/**'
+                - 'src/**'
                 - 'docs/**'
                 - '**/*.md'
                 - '**/*.rst'
