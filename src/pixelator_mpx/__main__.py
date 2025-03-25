@@ -5,6 +5,6 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 import sys
 
-from pixelator_mpx.cli import main_cli
+from pixelator.cli import main_cli
 
 sys.exit(main_cli())
