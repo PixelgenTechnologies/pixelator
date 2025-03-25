@@ -40,7 +40,7 @@ jobs:
           paths_filter: |
             pixelator:
               paths:
-                - 'src/pixelator/**'
+                - 'src/**'
                 - 'tests/**'
                 - 'pyproject.toml'
                 - 'poetry.lock'
