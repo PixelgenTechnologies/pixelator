@@ -7,10 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [x.x.x] - ???
 
+### Changed
+
+- The commandline entry-point for MPX data has changed from `pixelator single-cell` to `pixelator single-cell-mpx`.
+- For analysis of MPX data you should now read MPX data like this:
+```
+from pixelator import read_mpx
+
+pxl_dataset = read_mpx("path/to/pxl")
+```
+
+
 ### Fixed
 
- - In some cases `local_g` would return scrambled results due to inconsistent node ordering, this
-   has now been fixed.
+- In some cases `local_g` would return scrambled results due to inconsistent node ordering, this
+  has now been fixed.
 
 ## [0.19.0] - 2024-12-10
 

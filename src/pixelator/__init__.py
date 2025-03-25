@@ -18,8 +18,10 @@ except metadata.PackageNotFoundError:
 # import pixelator as mpx
 # mpx.read("<file path>")
 # and similar
-# from pixelator_mpx.pixeldataset import read, PixelDataset  # noqa
-# from pixelator_mpx.pixeldataset.aggregation import simple_aggregate  # noqa
-#
-#
-# __all__ = ["read", "simple_aggregate", "PixelDataset"]
+from pixelator_mpx.pixeldataset import PixelDataset as MPXPixelDataset  # noqa
+from pixelator_mpx.pixeldataset import read as read_mpx
+from pixelator_mpx.pixeldataset.aggregation import (
+    simple_aggregate as mpx_simple_aggregate,
+)  # noqa
+
+__all__ = ["read_mpx", "mpx_simple_aggregate", "MPXPixelDataset"]
