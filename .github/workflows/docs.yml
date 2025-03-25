@@ -61,6 +61,7 @@ jobs:
       - name: Create dependencies file
         run: |
           pip install poetry
+          poetry self add poetry-plugin-export
           poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi --with dev
           pip install -r requirements.txt
 
