@@ -11,21 +11,21 @@ import click
 import yappi
 
 from pixelator import __version__
-from pixelator_mpx.cli.adapterqc import adapterqc
-from pixelator_mpx.cli.amplicon import amplicon
-from pixelator_mpx.cli.analysis import analysis
-from pixelator_mpx.cli.annotate import annotate
-from pixelator_mpx.cli.collapse import collapse
-from pixelator_mpx.cli.common import AliasedOrderedGroup, logger
-from pixelator_mpx.cli.demux import demux
-from pixelator_mpx.cli.graph import graph
-from pixelator_mpx.cli.layout import layout
-from pixelator_mpx.cli.misc import list_single_cell_designs, list_single_cell_panels
-from pixelator_mpx.cli.plugin import add_cli_plugins
-from pixelator_mpx.cli.preqc import preqc
-from pixelator_mpx.cli.report import report
-from pixelator_mpx.logging import LoggingSetup
-from pixelator_mpx.utils import click_echo
+from pixelator.mpx.cli.adapterqc import adapterqc
+from pixelator.mpx.cli.amplicon import amplicon
+from pixelator.mpx.cli.analysis import analysis
+from pixelator.mpx.cli.annotate import annotate
+from pixelator.mpx.cli.collapse import collapse
+from pixelator.mpx.cli.common import AliasedOrderedGroup, logger
+from pixelator.mpx.cli.demux import demux
+from pixelator.mpx.cli.graph import graph
+from pixelator.mpx.cli.layout import layout
+from pixelator.mpx.cli.misc import list_single_cell_designs, list_single_cell_panels
+from pixelator.mpx.cli.plugin import add_cli_plugins
+from pixelator.mpx.cli.preqc import preqc
+from pixelator.mpx.cli.report import report
+from pixelator.mpx.logging import LoggingSetup
+from pixelator.mpx.utils import click_echo
 
 
 @click.group(cls=AliasedOrderedGroup, name="pixelator")

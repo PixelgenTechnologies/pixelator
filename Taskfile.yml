@@ -175,5 +175,5 @@ tasks:
 
 includes:
   tests:
-    taskfile: ./tests/pixelator_mpx/Taskfile.yml
-    dir: ./tests/pixelator_mpx
+    taskfile: ./tests/pixelator/mpx/Taskfile.yml
+    dir: ./tests/pixelator/mpx
