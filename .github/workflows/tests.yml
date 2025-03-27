@@ -149,4 +149,4 @@ jobs:
 
       - name: Run workflow tests
         run: |
-          poetry run pytest -s -m "workflow_test" --basetemp=/tmp/pytest-results tests/pixelator/mpx/integration/test_small_${{ matrix.case }}.yaml --log-cli-level=DEBUG
+          poetry run pytest -s -m "workflow_test" --basetemp=/tmp/pytest-results tests/mpx/integration/test_small_${{ matrix.case }}.yaml --log-cli-level=DEBUG
