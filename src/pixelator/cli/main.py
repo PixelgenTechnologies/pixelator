@@ -11,21 +11,21 @@ import click
 import yappi
 
 from pixelator import __version__
-from pixelator.cli.adapterqc import adapterqc
-from pixelator.cli.amplicon import amplicon
-from pixelator.cli.analysis import analysis
-from pixelator.cli.annotate import annotate
-from pixelator.cli.collapse import collapse
-from pixelator.cli.common import AliasedOrderedGroup, logger
-from pixelator.cli.demux import demux
-from pixelator.cli.graph import graph
-from pixelator.cli.layout import layout
-from pixelator.cli.misc import list_single_cell_designs, list_single_cell_panels
-from pixelator.cli.plugin import add_cli_plugins
-from pixelator.cli.preqc import preqc
-from pixelator.cli.report import report
-from pixelator.logging import LoggingSetup
-from pixelator.utils import click_echo
+from pixelator.mpx.cli.adapterqc import adapterqc
+from pixelator.mpx.cli.amplicon import amplicon
+from pixelator.mpx.cli.analysis import analysis
+from pixelator.mpx.cli.annotate import annotate
+from pixelator.mpx.cli.collapse import collapse
+from pixelator.mpx.cli.common import AliasedOrderedGroup, logger
+from pixelator.mpx.cli.demux import demux
+from pixelator.mpx.cli.graph import graph
+from pixelator.mpx.cli.layout import layout
+from pixelator.mpx.cli.misc import list_single_cell_designs, list_single_cell_panels
+from pixelator.mpx.cli.plugin import add_cli_plugins
+from pixelator.mpx.cli.preqc import preqc
+from pixelator.mpx.cli.report import report
+from pixelator.mpx.logging import LoggingSetup
+from pixelator.mpx.utils import click_echo
 
 
 @click.group(cls=AliasedOrderedGroup, name="pixelator")
@@ -96,7 +96,7 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     return 0
 
 
-@main_cli.group(name="single-cell")
+@main_cli.group(name="single-cell-mpx")
 @click.option(
     "--list-designs",
     is_flag=True,

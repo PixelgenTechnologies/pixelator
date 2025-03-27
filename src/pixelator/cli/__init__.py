@@ -1,5 +1,6 @@
-"""
-Copyright © 2023 Pixelgen Technologies AB.
+"""CLI for Pixelator.
+
+Copyright © 2025 Pixelgen Technologies AB.
 """
 
-from .main import main_cli, single_cell_mpx  # noqa: F401
+from pixelator.cli.main import main_cli  # noqa

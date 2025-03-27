@@ -1,0 +1,10 @@
+{
+    "sample_id": "uropod_control",
+    "fraction_q30": 0.9602150898560277,
+    "fraction_q30_bc": 0.9624244207098193,
+    "fraction_q30_pbs1": 0.9721885264356955,
+    "fraction_q30_pbs2": 0.9535804849402897,
+    "fraction_q30_umi": 0.9627836138165338,
+    "fraction_q30_upia": 0.9523661337597942,
+    "fraction_q30_upib": 0.9642700474644683
+}

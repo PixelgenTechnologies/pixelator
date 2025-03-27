@@ -5,7 +5,7 @@ version = "0.0.0"
 homepage = "https://github.com/PixelgenTechnologies/pixelator"
 repository = "https://github.com/PixelgenTechnologies/pixelator"
 documentation = "https://software.pixelgen.com"
-description = "A command-line tool and library to process and analyze sequencing data from Molecular Pixelation (MPX) assays."
+description = "A command-line tool and library to process and analyze data generated from technologies from Pixelgen Technologies."
 authors = ["Pixelgen Technologies AB <developers@pixelgen.com>",]
 maintainers = ["Alvaro Martinez Barrio <alvaro.martinez.barrio@pixelgen.com>"]
 readme = "README.md"
@@ -122,12 +122,12 @@ ignore = ["E501","E402","E203","D213","D203"]
 exclude = ["docs/conf.py"]
 
 [tool.ruff.lint.per-file-ignores]
-"pixelator/report/__init__.py" = ["E501"]
+"pixelator/mpx/report/__init__.py" = ["E501"]
 "**/tests/**" = ["D101", "D102", "D103", "D105", "D107", "D200", "D202", "D205", "D212" , "D400", "D401", "D403", "D404", "D415"]
 # Since click uses a different layout for the docs strings to generate the
 # cli docs, we ignore these rules here.
-"src/pixelator/cli/**" = ["D200", "D212", "D400", "D415"]
-"src/pixelator/test_utils/**" = ["D"]
+"src/pixelator/mpx/cli/**" = ["D200", "D212", "D400", "D415"]
+"src/pixelator/mpx/test_utils/**" = ["D"]
 
 [tool.poetry-dynamic-versioning]
 enable = true

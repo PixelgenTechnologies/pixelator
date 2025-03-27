@@ -39,7 +39,7 @@ jobs:
               paths:
                 - 'pyproject.toml'
                 - 'poetry.lock'
-                - 'src/pixelator/**'
+                - 'src/**'
 
   build:
     name: "Build"
