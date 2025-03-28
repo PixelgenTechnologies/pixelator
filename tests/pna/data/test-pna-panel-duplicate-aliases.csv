@@ -1,0 +1,29 @@
+# ---
+# name: test-pna-panel-duplicate-aliases
+# aliases:
+#   - proxiome-immuno-155plex
+# description: >-
+#     Test R&D panel for PNA.
+#     V2 version to test specific version loading
+# version: 0.2.0
+# ---
+marker_id,control,nuclear,full_name,alt_id,sequence_1,conj_id,sequence_2
+HLA-ABC,,,,,ACTTCCTAGG,pna_rnd01,ACTTCCTAGG
+B2M,,,,,CCAGGTTCCG,pna_rnd02,CCAGGTTCCG
+CD11b,,,,,CAGCTATGGT,pna_rnd03,CAGCTATGGT
+CD11c,,,,,ATATGACGGT,pna_rnd04,ATATGACGGT
+CD18,,,,,GGGTAGGCTG,pna_rnd05,GGGTAGGCTG
+CD82,,,,,CCCGTCATGA,pna_rnd06,CCCGTCATGA
+CD3e,,,,,TGTAGAATTC,pna_rnd07,TGTAGAATTC
+CD4,,,,,GACAACTTCT,pna_rnd08,GACAACTTCT
+CD8,,,,,CGGTGGATCA,pna_rnd09,CGGTGGATCA
+TCRab,,,,,GGCGAGAAAT,pna_rnd10,GGCGAGAAAT
+HLA-DR,,,,,TGTTGTCGAA,pna_rnd11,TGTTGTCGAA
+CD45,,,,,TGGAGGCTCT,pna_rnd12,TGGAGGCTCT
+CD14,,,,,TGGCTATGTA,pna_rnd13,TGGCTATGTA
+CD16,,,,,ATAGGTTAGG,pna_rnd14,ATAGGTTAGG
+CD19,,,,,ACGGAATATT,pna_rnd15,ACGGAATATT
+mIgG1,yes,,,,ATGCTAGTCG,pna_rnd16,ATGCTAGTCG
+CD11a,,,,,ACACACTTGA,pna_rnd17,ACACACTTGA
+CD45RB,,,,,GAAGCAGTAT,pna_rnd18,GAAGCAGTAT
+ACTB,,,,,TTATGAACGG,pna_rnd19,TTATGAACGG

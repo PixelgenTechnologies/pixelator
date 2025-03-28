@@ -99,7 +99,8 @@ markers = [
     "integration_test: Marks a test as an integration test, which is often slow (deselect with '-m \"not integration_test\"')",
     "workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow (deselect with '-m \"not workflow_test\"')",
     "external_workflow_test: Marks a test as a complete pixelator workflow that requires external data, which is extremely slow and requires additional setup before running (deselect with '-m \"not external_workflow_test\"')",
-    "web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed (deselect with '-m \"not web_tests\"')"]
+    "web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed (deselect with '-m \"not web_tests\"')",
+    "slow: Marks a test as being slow (deselect with '-m \"not web_tests\"')",]
 mpl-results-path = "tests/reports_mpl"
 mpl-generate-summary = "html"
 addopts = ["-p no:pytest-workflow", "-m not workflow_test and not web_test", "--benchmark-disable", "--mpl"]
@@ -123,7 +124,7 @@ exclude = ["docs/conf.py"]
 
 [tool.ruff.lint.per-file-ignores]
 "pixelator/mpx/report/__init__.py" = ["E501"]
-"**/tests/**" = ["D101", "D102", "D103", "D105", "D107", "D200", "D202", "D205", "D212" , "D400", "D401", "D403", "D404", "D415"]
+"**/tests/**" = ["D100", "D101", "D102", "D103", "D105", "D107", "D200", "D202", "D205", "D212" , "D400", "D401", "D403", "D404", "D415"]
 # Since click uses a different layout for the docs strings to generate the
 # cli docs, we ignore these rules here.
 "src/pixelator/mpx/cli/**" = ["D200", "D212", "D400", "D415"]
