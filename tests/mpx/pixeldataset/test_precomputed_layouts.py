@@ -527,7 +527,6 @@ class TestGeneratePrecomputedLayoutsForComponents:
         df = precomputed_layouts.to_df()
         assert set(df["layout"]) == {"pmds_3d"}
 
-    @pytest.mark.test_this
     def test_generate_precomputed_layouts_on_to_small_components(self):
         edgelist = pd.DataFrame.from_dict(
             {
