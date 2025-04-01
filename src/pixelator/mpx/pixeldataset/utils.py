@@ -244,7 +244,6 @@ def _compute_sub_communities(
         iterations=1,
         randomness=0.001,
     )
-    #    leiden_communities = {int(k): v for k, v in leiden_communities.items()}
     component_communities = pd.Series(component_communities_dict)
 
     return component_communities
