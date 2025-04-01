@@ -527,7 +527,8 @@ def split_remaining_and_removed_edgelist(
         .rename({"component_a": "component"})
         .drop("component_b")
     )
-    if "depth" in remaining_edgelist.columns:
+    columns = remaining_edgelist.collect_schema().names()
+    if "depth" in columns:
         remaining_edgelist = remaining_edgelist.drop("depth")
 
     removed_edgelist = edgelist.filter(
