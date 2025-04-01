@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Optional
 import numpy as np
 import pandas as pd
 from anndata import AnnData, ImplicitModificationWarning, read_h5ad
+from graspologic_native import leiden
 
 from pixelator.mpx.graph import components_metrics
 from pixelator.mpx.graph.constants import (
@@ -224,9 +225,6 @@ def write_anndata(adata: AnnData, filename: PathType) -> None:
 def _compute_sub_communities(
     component_edgelist: pd.DataFrame, n_edges_reconnect: int | None = None
 ) -> pd.Series:
-    # Import here since the import is very slow and expensive
-    from graspologic.partition import leiden
-
     component_edgelist = (
         component_edgelist.groupby(["upia", "upib"], observed=True)["count"]
         .count()
@@ -236,11 +234,17 @@ def _compute_sub_communities(
     edgelist_tuple = list(
         map(tuple, np.array(component_edgelist[["upia", "upib", "count"]]))
     )
-    component_communities_dict = leiden(
+    _, component_communities_dict = leiden(
         edgelist_tuple,
         resolution=RELATIVE_ANNOTATE_RESOLUTION * LEIDEN_RESOLUTION,
-        random_seed=42,
+        seed=42,
+        # These parameters are used to sync up the native implementation with
+        # the python implementation we originally used.
+        use_modularity=True,
+        iterations=1,
+        randomness=0.001,
     )
+    #    leiden_communities = {int(k): v for k, v in leiden_communities.items()}
     component_communities = pd.Series(component_communities_dict)
 
     return component_communities
