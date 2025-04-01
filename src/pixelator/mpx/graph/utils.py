@@ -178,7 +178,7 @@ def _get_neighborhood_counts(
     normalization: Optional[Literal["mean"]] = None,
 ):
     An = _get_extended_adjacency(graph, k=k)
-    neighbourhood_counts = An * node_marker_counts
+    neighbourhood_counts = An @ node_marker_counts
 
     # TODO Optionally add more methods here
     if normalization == "mean":
