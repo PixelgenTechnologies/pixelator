@@ -17,7 +17,7 @@ except ImportError:
     pass
 
 if TYPE_CHECKING:
-    from pixelator.config import Config
+    from pixelator.pna.config import Config
 
 logger = logging.getLogger(__name__)
 
