@@ -803,8 +803,13 @@ def _filter_connected_components_by_size(
         .select(pl.col("component"), n_umi=pl.col("n_umi1") + pl.col("n_umi2"))
         .collect()
     )
+    pre_filtering_component_sizes = (
+        component_sizes.group_by("n_umi").len().sort("n_umi")
+    )
     component_stats.pre_filtering_component_sizes = dict(
-        zip(component_sizes["component"], component_sizes["n_umi"])
+        zip(
+            pre_filtering_component_sizes["n_umi"], pre_filtering_component_sizes["len"]
+        )
     )
     if isinstance(component_size_threshold, bool):
         if component_size_threshold:
