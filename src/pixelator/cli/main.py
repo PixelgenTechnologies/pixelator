@@ -26,18 +26,6 @@ from pixelator.mpx.cli.preqc import preqc
 from pixelator.mpx.cli.report import report
 from pixelator.mpx.logging import LoggingSetup
 from pixelator.mpx.utils import click_echo
-from pixelator.pna.cli.amplicon import amplicon
-from pixelator.pna.cli.analysis import analysis
-from pixelator.pna.cli.collapse import collapse
-from pixelator.pna.cli.combine_collapse import combine_collapse
-from pixelator.pna.cli.demux import demux
-from pixelator.pna.cli.graph import graph
-from pixelator.pna.cli.layout import layout
-from pixelator.pna.cli.misc import (
-    list_single_cell_pna_designs,
-    list_single_cell_pna_panels,
-)
-from pixelator.pna.cli.report import report
 
 
 @click.group(cls=AliasedOrderedGroup, name="pixelator")
@@ -147,6 +135,24 @@ single_cell_mpx.add_command(annotate)
 single_cell_mpx.add_command(layout)
 single_cell_mpx.add_command(analysis)
 single_cell_mpx.add_command(report)
+
+
+# Note that the import order here is intentional.
+# The PNA commands needs to be imported here, rather than
+# at the top, because otherwise things like importing
+# the configs will not work as expected.
+from pixelator.pna.cli.amplicon import amplicon
+from pixelator.pna.cli.analysis import analysis
+from pixelator.pna.cli.collapse import collapse
+from pixelator.pna.cli.combine_collapse import combine_collapse
+from pixelator.pna.cli.demux import demux
+from pixelator.pna.cli.graph import graph
+from pixelator.pna.cli.layout import layout
+from pixelator.pna.cli.misc import (
+    list_single_cell_pna_designs,
+    list_single_cell_pna_panels,
+)
+from pixelator.pna.cli.report import report
 
 
 @click.group()
