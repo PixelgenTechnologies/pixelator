@@ -301,7 +301,8 @@ def _cluster_components_using_leiden(
     # since it shouldn't apply to more than a few thousande components.
     connections = adata.obsp["connectivities"]
     edgelist = list(
-        (str(i), str(j), connections[i, j]) for i, j in zip(*connections.nonzero())
+        (adata.obs.index[i], adata.obs.index[j], connections[i, j])
+        for i, j in zip(*connections.nonzero())
     )
     _, partitions = leiden(
         edgelist,
@@ -313,8 +314,8 @@ def _cluster_components_using_leiden(
         iterations=1,
         randomness=0.001,
     )
-    partitions_df = pd.DataFrame.from_dict(partitions, orient="index").sort_index()
-    adata.obs["leiden"] = partitions_df.values
+    partitions_df = pd.DataFrame.from_dict(partitions, orient="index")
+    adata.obs["leiden"] = partitions_df
     adata.obs = adata.obs.astype({"leiden": "category"})
 
 
