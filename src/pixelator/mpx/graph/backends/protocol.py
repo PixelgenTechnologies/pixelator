@@ -125,26 +125,6 @@ class GraphBackend(Protocol):
         """Get the connected components in the Graph instance."""
         ...
 
-    def community_leiden(
-        self,
-        n_iterations: int = 10,
-        beta: float = 0.01,
-        **kwargs,
-    ) -> VertexClustering:
-        """Run community detection using the Leiden algorithm.
-
-        Run community detection on the graph, using the Leiden algorithm.
-        As an example we use this to remove edges that jump between cells
-        due to chimeric PCR products.
-
-        :param n_iterations: number of iterations to use in the Leiden algorithm
-        :param beta: parameter to control the randomness of the cluster refinement in
-                 the Leiden algorithm. Must be a positive, non-zero float.
-        :param **kwargs: will be passed to the underlying Leiden implementation
-        :rtype: VertexClustering
-        """
-        ...
-
     def node_marker_counts(self) -> pd.DataFrame:
         """Get the marker counts of each node as a dataframe.
 

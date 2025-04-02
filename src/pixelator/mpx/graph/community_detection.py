@@ -12,6 +12,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
+from graspologic_native import leiden
 
 from pixelator.mpx.graph.constants import (
     LEIDEN_RESOLUTION,
@@ -292,9 +293,6 @@ def recover_technical_multiplets(
         edgelist.shape[0],
     )
 
-    # Import here since the import is very slow and expensive
-    from graspologic.partition import leiden
-
     def id_generator(start=0):
         next_id = start
         while True:
@@ -326,13 +324,17 @@ def recover_technical_multiplets(
             )
 
             # run the leiden algorithm to get the communities
-            community_dict = leiden(
+            _, community_dict = leiden(
                 edgelist_tuple,
                 resolution=LEIDEN_RESOLUTION
                 if depth > 0
                 else 1.0,  # Higher initial resolution to break up the mega-cluster
-                random_seed=42,
+                seed=42,
                 trials=5,
+                # These parameters are used to sync up the native implementation with
+                # the python implementation we originally used.
+                iterations=1,
+                randomness=0.001,
             )
 
             component_edgelist, community_serie = merge_strongly_connected_communities(

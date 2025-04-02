@@ -10,6 +10,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
+import scipy
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from pandas.testing import assert_frame_equal
 
@@ -267,15 +268,6 @@ def test_connected_components(enable_backend, edgelist):
     assert graph_sizes == {1996, 1995, 1998, 1996, 1995}
 
 
-def test_community_leiden_raises_for_invalid_options(edgelist):
-    graph = Graph.from_edgelist(
-        edgelist, add_marker_counts=False, simplify=False, use_full_bipartite=True
-    )
-
-    with pytest.raises(AssertionError):
-        _ = graph.community_leiden(beta=-1.0)
-
-
 def test_connected_components_caches_results(edgelist):
     graph = Graph.from_edgelist(
         edgelist, add_marker_counts=False, simplify=False, use_full_bipartite=True
@@ -309,45 +301,20 @@ def test_connected_components_benchmark(benchmark, enable_backend, edgelist):
     assert graph_sizes == {1996, 1995, 1998, 1996, 1995}
 
 
-@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
-def test_get_adjacency_sparse(enable_backend, pentagram_graph):
-    # This is a little bit involved. Since different network backends might
-    # use different internal indexing schemes, they are not guaranteed to generate
-    # the same order of nodes in the adjacency matrix
-    #
-    # What this test does is to generate the sparse adjacency matrix
-    # and then try to find a rotation (i.e. an ordering of the nodes)
-    # for that and the expected adjacency matrix under which they are identical.
-    #
-    # Finally it tests for the equality of these rotated matrices.
-
-    # This import is very slow, so take it here
-    from graspologic.match import graph_match
-
+def test_get_adjacency_sparse(pentagram_graph):
     expected = np.array(
         [
-            [0, 0, 1, 1, 0],
-            [0, 0, 0, 1, 1],
-            [1, 0, 0, 0, 1],
-            [1, 1, 0, 0, 0],
             [0, 1, 1, 0, 0],
+            [1, 0, 0, 0, 1],
+            [1, 0, 0, 1, 0],
+            [0, 0, 1, 0, 1],
+            [0, 1, 0, 1, 0],
         ]
     )
 
     result = pentagram_graph.get_adjacency_sparse()
     results_dense = np.array(result.todense())
-    expected_idx_permutations, result_idx_permutations, *_ = graph_match(
-        expected, results_dense, rng=1
-    )
-
-    results_dense_permuted = results_dense[
-        np.ix_(result_idx_permutations, result_idx_permutations)
-    ]
-    expected_permuted = expected[
-        np.ix_(expected_idx_permutations, expected_idx_permutations)
-    ]
-
-    assert_array_equal(expected_permuted, results_dense_permuted)
+    assert_array_equal(expected, results_dense)
 
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)

@@ -157,36 +157,6 @@ class Graph:
 
         return self._connected_components  # type: ignore
 
-    def community_leiden(
-        self,
-        n_iterations: int = 2,
-        beta: float = 0.01,
-        **kwargs,
-    ) -> VertexClustering:
-        """Run community detection using the Leiden algorithm.
-
-        Run community detection on the graph, using the Leiden algorithm.
-        As an example we use this to remove edges that jump between cells
-        due to chimeric PCR products.
-
-        :param n_iterations: number of iterations to use in the Leiden algorithm
-        :param beta: controls the randomness of the refinement step of the
-                     Leiden algorithm
-        :param **kwargs: will be passed to the underlying Leiden implementation
-        :rtype: VertexClustering
-        :raises AssertionError: if invalid options are passed.
-        """
-        if not beta > 0:
-            raise AssertionError(
-                f"Beta parameter must be larger than 0. Beta was: {beta}"
-            )
-
-        return self._backend.community_leiden(
-            n_iterations=n_iterations,
-            beta=beta,
-            **kwargs,
-        )
-
     def layout_coordinates(
         self,
         layout_algorithm: SupportedLayoutAlgorithm = "wpmds_3d",
