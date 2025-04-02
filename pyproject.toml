@@ -55,6 +55,7 @@ fsspec = "*"
 fastparquet = "*"
 plotly = "*"
 graspologic-native = "^1.2.4"
+duckdb = "^1.2.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
