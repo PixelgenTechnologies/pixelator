@@ -53,8 +53,8 @@ polars = ">=1.0.0,<2.0.0"
 importlib-resources = "^5.12.0"
 fsspec = "*"
 fastparquet = "*"
-graspologic = ">=3.3.0,<4.0.0"
 plotly = "*"
+graspologic-native = "^1.2.4"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
