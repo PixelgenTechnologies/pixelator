@@ -30,7 +30,6 @@ from pixelator.pna.graph.report import (
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 
-EDGELIST_ITERATION_BATCH_SIZE = 1_000_000
 LEIDEN_RANDOM_SEED = 1
 
 
