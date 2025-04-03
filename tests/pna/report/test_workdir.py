@@ -34,7 +34,7 @@ def test_workdir_metadata(
     pixelator_workdir: PixelatorPNAWorkdir, all_stages_all_reports_and_meta
 ):
     f = pixelator_workdir.metadata_files()
-    assert len(f) == 17
+    assert len(f) == 16
 
 
 @pytest.mark.parametrize("sample_id", ["PNA055_Sample07_filtered_S7"])
