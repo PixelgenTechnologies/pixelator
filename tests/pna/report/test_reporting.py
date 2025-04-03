@@ -153,8 +153,6 @@ def test_cli_invocation_info(sample_name, all_stages_all_reports_and_meta, snaps
     amplicon_cmd2 = r.get_stage(SingleCellPNAStage.AMPLICON)
     amplicon_cmd3 = r.get_stage("amplicon")
 
-    #
-
     assert amplicon_cmd1 == amplicon_cmd2 == amplicon_cmd3
 
     snapshot.assert_match(r.to_json(), f"{sample_name}_cli_invocation_info.json")
