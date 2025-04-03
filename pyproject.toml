@@ -57,6 +57,7 @@ plotly = "*"
 graspologic-native = "^1.2.4"
 duckdb = "^1.2.1"
 faiss-cpu = "^1.10.0"
+zstandard = "^0.23.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
