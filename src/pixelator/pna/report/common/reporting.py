@@ -169,4 +169,4 @@ class PixelatorPNAReporting:
                 f"Unknown command in meta.json file: {','.join(unknown_commands)}"
             )
 
-        return CLIInvocationInfo(data_flat, sample_id=sample)
+        return CLIInvocationInfo(data_flat, sample_id=sample)  # type: ignore[arg-type]

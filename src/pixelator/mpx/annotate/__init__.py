@@ -313,6 +313,8 @@ def _cluster_components_using_leiden(
         # the python implementation we originally used.
         iterations=1,
         randomness=0.001,
+        trials=1,
+        starting_communities=None,
     )
     partitions_df = pd.DataFrame.from_dict(partitions, orient="index")
     adata.obs["leiden"] = partitions_df

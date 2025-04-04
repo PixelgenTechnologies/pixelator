@@ -322,9 +322,11 @@ def _refine_components(
             # the python implementation we originally used.
             iterations=leiden_iterations + 1,
             randomness=0.001,
+            trials=1,
+            starting_communities=None,
         )
         # Map the communites back from strings to integers
-        leiden_communities = {int(k): v for k, v in leiden_communities.items()}
+        leiden_communities = {int(k): v for k, v in leiden_communities.items()}  # type: ignore
         community_serie = merge_communities_with_many_crossing_edges(
             cluster_edges,
             leiden_communities,

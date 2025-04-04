@@ -243,6 +243,8 @@ def _compute_sub_communities(
         use_modularity=True,
         iterations=1,
         randomness=0.001,
+        trials=1,
+        starting_communities=None,
     )
     component_communities = pd.Series(component_communities_dict)
 

@@ -335,6 +335,8 @@ def recover_technical_multiplets(
                 # the python implementation we originally used.
                 iterations=1,
                 randomness=0.001,
+                use_modularity=True,
+                starting_communities=None,
             )
 
             component_edgelist, community_serie = merge_strongly_connected_communities(
