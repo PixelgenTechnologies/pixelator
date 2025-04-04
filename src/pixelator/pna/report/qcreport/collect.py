@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 
-from pixelator.mpx.utils.simplification import simplify_line_rdp
+from pixelator.common.utils.simplification import simplify_line_rdp
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.report.common import WorkdirOutputNotFound
 from pixelator.pna.report.qcreport.types import Metrics, QCReportData

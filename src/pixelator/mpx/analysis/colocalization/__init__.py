@@ -10,6 +10,12 @@ from typing import Optional, get_args
 import pandas as pd
 from statsmodels.stats.multitest import multipletests
 
+from pixelator.common.statistics import (
+    correct_pvalues,
+    log1p_transformation,
+    rate_diff_transformation,
+    wilcoxon_test,
+)
 from pixelator.mpx.analysis.analysis_engine import PerComponentAnalysis
 from pixelator.mpx.analysis.colocalization.estimate import (
     estimate_observation_statistics,
@@ -32,12 +38,6 @@ from pixelator.mpx.analysis.colocalization.types import (
 from pixelator.mpx.analysis.permute import permutations
 from pixelator.mpx.graph.utils import Graph
 from pixelator.mpx.pixeldataset import PixelDataset
-from pixelator.mpx.statistics import (
-    correct_pvalues,
-    log1p_transformation,
-    rate_diff_transformation,
-    wilcoxon_test,
-)
 
 logger = logging.getLogger(__name__)
 

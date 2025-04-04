@@ -19,9 +19,9 @@ import polars as pl
 import xxhash
 from graspologic_native import leiden
 
+from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.mpx.annotate.aggregates import call_aggregates
 from pixelator.mpx.annotate.cell_calling import find_component_size_limits
-from pixelator.mpx.exceptions import PixelatorBaseException
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanel
 from pixelator.pna.graph.report import (

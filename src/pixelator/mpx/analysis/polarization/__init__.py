@@ -11,13 +11,13 @@ from scipy.sparse import csr_matrix
 from scipy.stats import norm
 from statsmodels.stats.multitest import multipletests
 
+from pixelator.common.statistics import correct_pvalues, wilcoxon_test
+from pixelator.common.utils import get_pool_executor
 from pixelator.mpx.analysis.analysis_engine import PerComponentAnalysis
 from pixelator.mpx.analysis.permute import permutations
 from pixelator.mpx.analysis.polarization.types import PolarizationTransformationTypes
 from pixelator.mpx.graph.utils import Graph
 from pixelator.mpx.pixeldataset import MIN_VERTICES_REQUIRED, PixelDataset
-from pixelator.mpx.statistics import correct_pvalues, wilcoxon_test
-from pixelator.mpx.utils import get_pool_executor
 
 logger = logging.getLogger(__name__)
 

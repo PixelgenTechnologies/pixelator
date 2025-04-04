@@ -15,14 +15,14 @@ import pandas as pd
 from anndata import AnnData, ImplicitModificationWarning, read_h5ad
 from graspologic_native import leiden
 
+from pixelator.common.statistics import (
+    clr_transformation,
+    log1p_transformation,
+)
 from pixelator.mpx.graph import components_metrics
 from pixelator.mpx.graph.constants import (
     LEIDEN_RESOLUTION,
     RELATIVE_ANNOTATE_RESOLUTION,
-)
-from pixelator.mpx.statistics import (
-    clr_transformation,
-    log1p_transformation,
 )
 from pixelator.mpx.types import PathType
 

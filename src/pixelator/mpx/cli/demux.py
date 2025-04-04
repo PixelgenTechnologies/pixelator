@@ -8,15 +8,7 @@ import sys
 
 import click
 
-from pixelator.mpx.cli.common import (
-    design_option,
-    logger,
-    output_option,
-)
-from pixelator.mpx.config import config
-from pixelator.mpx.config.panel import load_antibody_panel
-from pixelator.mpx.demux import demux_fastq
-from pixelator.mpx.utils import (
+from pixelator.common.utils import (
     build_barcodes_file,
     create_output_stage_dir,
     get_extension,
@@ -26,6 +18,14 @@ from pixelator.mpx.utils import (
     timer,
     write_parameters_file,
 )
+from pixelator.mpx.cli.common import (
+    design_option,
+    logger,
+    output_option,
+)
+from pixelator.mpx.config import config
+from pixelator.mpx.config.panel import load_antibody_panel
+from pixelator.mpx.demux import demux_fastq
 
 
 @click.command(

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import click
 
-from pixelator.mpx.utils import create_output_stage_dir, log_step_start, timer
+from pixelator.common.utils import create_output_stage_dir, log_step_start, timer
 from pixelator.pna.cli.common import output_option
 from pixelator.pna.report.qcreport import create_per_sample_qc_reports
 

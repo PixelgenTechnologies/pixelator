@@ -13,8 +13,8 @@ from collections import defaultdict
 from pathlib import Path, PurePath
 from typing import Dict, List, Optional, Tuple
 
+from pixelator.common.utils import flatten, get_sample_name
 from pixelator.mpx.types import PathType
-from pixelator.mpx.utils import flatten, get_sample_name
 
 logger = logging.getLogger(__name__)
 

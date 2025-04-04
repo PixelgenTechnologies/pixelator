@@ -18,11 +18,11 @@ import polars as pl
 import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 
-from pixelator.mpx.exceptions import PixelatorBaseException
+from pixelator.common.exceptions import PixelatorBaseException
+from pixelator.common.utils import batched, flatten, get_pool_executor
 from pixelator.mpx.graph import Graph
 from pixelator.mpx.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.mpx.marks import experimental
-from pixelator.mpx.utils import batched, flatten, get_pool_executor
 
 if TYPE_CHECKING:
     from pixelator.mpx.pixeldataset import PixelDataset

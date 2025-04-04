@@ -11,7 +11,7 @@ from pathlib import Path
 
 import click
 
-from pixelator.mpx.utils import (
+from pixelator.common.utils import (
     create_output_stage_dir,
     log_step_start,
     sanity_check_inputs,

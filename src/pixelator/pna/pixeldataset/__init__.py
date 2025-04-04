@@ -18,7 +18,7 @@ import polars as pl
 import pyarrow as pa
 from anndata import AnnData, ImplicitModificationWarning
 
-from pixelator.mpx.statistics import clr_transformation, log1p_transformation
+from pixelator.common.statistics import clr_transformation, log1p_transformation
 from pixelator.pna.graph import PNAGraph, PNAGraphBackend
 from pixelator.pna.pixeldataset.io import (
     InplacePixelDataFilterer,

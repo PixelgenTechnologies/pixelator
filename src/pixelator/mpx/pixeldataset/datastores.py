@@ -32,9 +32,9 @@ import pyarrow.parquet as pq
 from anndata import AnnData
 from fsspec.implementations.zip import ZipFileSystem
 
-from pixelator.mpx.exceptions import PixelatorBaseException
+from pixelator.common.exceptions import PixelatorBaseException
+from pixelator.common.utils import batched
 from pixelator.mpx.pixeldataset.precomputed_layouts import PreComputedLayouts
-from pixelator.mpx.utils import batched
 
 if TYPE_CHECKING:
     from pixelator.mpx.pixeldataset import PixelDataset

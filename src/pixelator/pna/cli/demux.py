@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 
-from pixelator.mpx.utils import (
+from pixelator.common.utils import (
     create_output_stage_dir,
     get_sample_name,
     log_step_start,

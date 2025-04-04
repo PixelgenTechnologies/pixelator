@@ -15,7 +15,7 @@ import numpy.typing as npt
 import pyarrow as pa
 from dnaio import SequenceRecord
 
-from pixelator.mpx.exceptions import PixelatorBaseException
+from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.pna.config import PNAAntibodyPanel, PNAAssay, get_position_in_parent
 
 

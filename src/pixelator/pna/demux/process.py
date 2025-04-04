@@ -16,7 +16,7 @@ from cutadapt.pipeline import SingleEndPipeline
 from cutadapt.steps import SingleEndSink
 from cutadapt.utils import DummyProgress, Progress
 
-from pixelator.mpx.utils import get_sample_name
+from pixelator.common.utils import get_sample_name
 from pixelator.pna.config import PNAAntibodyPanel, PNAAssay
 from pixelator.pna.demux.barcode_demuxer import (
     BarcodeDemuxer,

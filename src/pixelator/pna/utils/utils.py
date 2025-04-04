@@ -13,7 +13,7 @@ from typing import Iterable, Literal
 import pandas as pd
 import polars as pl
 
-from pixelator.mpx.utils import (
+from pixelator.common.utils import (
     R1_REGEX,
     R2_REGEX,
     get_extension,

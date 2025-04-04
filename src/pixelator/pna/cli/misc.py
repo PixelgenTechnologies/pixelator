@@ -7,7 +7,7 @@ from typing import Any
 
 import click
 
-from pixelator.mpx.utils import click_echo
+from pixelator.common.utils import click_echo
 
 
 def list_single_cell_pna_designs(ctx: click.Context, param: Any, value: Any) -> None:

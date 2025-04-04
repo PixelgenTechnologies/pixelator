@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 
-from pixelator.mpx.exceptions import PixelatorBaseException
+from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.pna.analysis_engine import PerComponentTask
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PNAPixelDataset

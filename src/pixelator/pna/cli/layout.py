@@ -9,14 +9,14 @@ from pathlib import Path
 
 import click
 
-from pixelator.mpx.report.models.layout import LayoutSampleReport
-from pixelator.mpx.utils import (
+from pixelator.common.utils import (
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
     timer,
     write_parameters_file,
 )
+from pixelator.mpx.report.models.layout import LayoutSampleReport
 from pixelator.pna.analysis_engine import AnalysisManager, LoggingSetup
 from pixelator.pna.cli.common import logger, output_option
 from pixelator.pna.layout import CreateLayout

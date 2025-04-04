@@ -33,8 +33,8 @@ with warnings.catch_warnings():
 
 from pathlib import Path
 
+from pixelator.common.utils import gz_size
 from pixelator.mpx.collapse.constants import SEED
-from pixelator.mpx.utils import gz_size
 
 logger = logging.getLogger("pixelator.mpx.collapse")
 

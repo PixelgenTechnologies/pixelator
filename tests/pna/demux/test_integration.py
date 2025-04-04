@@ -6,7 +6,7 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from pixelator.mpx.utils import create_output_stage_dir
+from pixelator.common.utils import create_output_stage_dir
 from pixelator.pna.config import pna_config
 from pixelator.pna.demux import (
     correct_marker_barcodes,

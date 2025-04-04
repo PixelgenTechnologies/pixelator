@@ -17,9 +17,9 @@ from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
 
+from pixelator.common.utils import logger
 from pixelator.mpx.config import AntibodyPanel
 from pixelator.mpx.types import PathType
-from pixelator.mpx.utils import logger
 
 if TYPE_CHECKING:
     from pixelator.config.config_class import AntibodyPanelMetadata

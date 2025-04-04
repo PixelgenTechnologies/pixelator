@@ -2,7 +2,7 @@
 
 import pytest
 
-from pixelator.mpx.utils import flatten
+from pixelator.common.utils import flatten
 
 
 @pytest.mark.parametrize(

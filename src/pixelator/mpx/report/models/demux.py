@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pydantic
 
+from pixelator.common.utils import get_sample_name
 from pixelator.mpx.report.models.base import SampleReport
-from pixelator.mpx.utils import get_sample_name
 
 
 class DemuxSampleReport(SampleReport):

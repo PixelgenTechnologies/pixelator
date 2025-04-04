@@ -376,21 +376,3 @@ def recover_technical_multiplets(
         n_edges_to_remove,
     )
     return node_component_map, node_depth_map
-
-
-def write_recovered_components(
-    recovered_components: pd.DataFrame, filename: PathType
-) -> None:
-    """Help to write the recovered component info to a CSV file.
-
-    A helper function that writes to a CSV file the information
-    of the recovered components that is an edgelist between old
-    component annotations and new ones resulting from multiplet
-    recovery.
-
-    :returns: None
-    :rtype: None
-    """
-    logger.debug("Saving recovered components to %s", filename)
-    recovered_components.to_csv(filename, index=True)
-    logger.debug("Recovered components saved")

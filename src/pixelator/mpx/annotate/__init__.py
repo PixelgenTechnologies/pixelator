@@ -17,13 +17,13 @@ from anndata import AnnData
 from graspologic_native import leiden
 
 from pixelator import __version__
+from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.mpx.annotate.aggregates import call_aggregates
 from pixelator.mpx.annotate.cell_calling import find_component_size_limits
 from pixelator.mpx.annotate.constants import (
     MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION,
 )
 from pixelator.mpx.config import AntibodyPanel
-from pixelator.mpx.exceptions import PixelatorBaseException
 from pixelator.mpx.graph.utils import components_metrics, edgelist_metrics
 from pixelator.mpx.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.mpx.pixeldataset.utils import edgelist_to_anndata

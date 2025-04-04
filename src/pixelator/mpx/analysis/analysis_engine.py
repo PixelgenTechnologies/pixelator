@@ -11,11 +11,11 @@ from typing import Callable, Iterable, Protocol
 
 import pandas as pd
 
-from pixelator.mpx.graph import Graph
-from pixelator.mpx.pixeldataset import PixelDataset
-from pixelator.mpx.utils import (
+from pixelator.common.utils import (
     get_process_pool_executor,
 )
+from pixelator.mpx.graph import Graph
+from pixelator.mpx.pixeldataset import PixelDataset
 
 logger = logging.getLogger(__name__)
 

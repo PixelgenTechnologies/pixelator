@@ -12,9 +12,9 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
+from pixelator.common.utils.simplification import simplify_line_rdp
 from pixelator.mpx.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.mpx.report.qcreport.types import QCReportData
-from pixelator.mpx.utils.simplification import simplify_line_rdp
 
 logger = logging.getLogger(__name__)
 

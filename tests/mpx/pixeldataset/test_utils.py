@@ -3,8 +3,6 @@
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
-# pylint: disable=redefined-outer-name
-
 import logging
 import random
 from pathlib import Path
@@ -16,8 +14,12 @@ from anndata import AnnData
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 
+from pixelator.common.statistics import (
+    clr_transformation,
+    log1p_transformation,
+)
+from pixelator.common.utils import batched
 from pixelator.mpx.config import AntibodyPanel
-from pixelator.mpx.graph import write_recovered_components
 from pixelator.mpx.pixeldataset.utils import (
     antibody_metrics,
     component_antibody_counts,
@@ -25,12 +27,8 @@ from pixelator.mpx.pixeldataset.utils import (
     read_anndata,
     write_anndata,
 )
-from pixelator.mpx.statistics import (
-    clr_transformation,
-    log1p_transformation,
-)
-from pixelator.mpx.utils import batched
 
+# pylint: disable=redefined-outer-name
 random.seed(42)
 np.random.seed(42)
 

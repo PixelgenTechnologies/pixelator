@@ -8,12 +8,7 @@ from typing import get_args
 
 import click
 
-from pixelator.mpx.analysis import analyse_pixels
-from pixelator.mpx.analysis.colocalization import ColocalizationAnalysis
-from pixelator.mpx.analysis.colocalization.types import TransformationTypes
-from pixelator.mpx.analysis.polarization import PolarizationAnalysis
-from pixelator.mpx.cli.common import logger, output_option
-from pixelator.mpx.utils import (
+from pixelator.common.utils import (
     create_output_stage_dir,
     get_sample_name,
     log_step_start,
@@ -21,6 +16,11 @@ from pixelator.mpx.utils import (
     timer,
     write_parameters_file,
 )
+from pixelator.mpx.analysis import analyse_pixels
+from pixelator.mpx.analysis.colocalization import ColocalizationAnalysis
+from pixelator.mpx.analysis.colocalization.types import TransformationTypes
+from pixelator.mpx.analysis.polarization import PolarizationAnalysis
+from pixelator.mpx.cli.common import logger, output_option
 
 
 @click.command(

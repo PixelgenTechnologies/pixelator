@@ -11,6 +11,7 @@ import click
 import yappi
 
 from pixelator import __version__
+from pixelator.common.utils import click_echo
 from pixelator.mpx.cli.adapterqc import adapterqc
 from pixelator.mpx.cli.amplicon import amplicon
 from pixelator.mpx.cli.analysis import analysis
@@ -25,7 +26,6 @@ from pixelator.mpx.cli.plugin import add_cli_plugins
 from pixelator.mpx.cli.preqc import preqc
 from pixelator.mpx.cli.report import report
 from pixelator.mpx.logging import LoggingSetup
-from pixelator.mpx.utils import click_echo
 
 
 @click.group(cls=AliasedOrderedGroup, name="pixelator")

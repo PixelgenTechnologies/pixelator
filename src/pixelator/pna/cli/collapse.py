@@ -10,7 +10,7 @@ from pathlib import Path
 import click
 import polars as pl
 
-from pixelator.mpx.utils import (
+from pixelator.common.utils import (
     create_output_stage_dir,
     log_step_start,
     sanity_check_inputs,

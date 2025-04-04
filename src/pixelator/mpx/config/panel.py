@@ -14,8 +14,8 @@ import pandas as pd
 import pydantic
 import ruamel.yaml as yaml
 
+from pixelator.common.utils import logger
 from pixelator.mpx.types import PathType
-from pixelator.mpx.utils import logger
 
 if TYPE_CHECKING:
     from pixelator.mpx.config import Config
