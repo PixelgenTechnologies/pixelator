@@ -392,9 +392,11 @@ def recover_multiplets(
             umi_component_map=umi_component_map,  # type: ignore
             clusters_to_be_refined=clusters_to_be_refined,
             leiden_iterations=leiden_iterations,
-            refinement_options=refinement_options.inital_stage_options
-            if recursion_level == 0
-            else refinement_options.refinement_stage_options,
+            refinement_options=(
+                refinement_options.inital_stage_options
+                if recursion_level == 0
+                else refinement_options.refinement_stage_options
+            ),
         )
         edgelist_with_components = _update_components_column(
             edgelist,
