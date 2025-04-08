@@ -7,7 +7,7 @@ Copyright © 2024 Pixelgen Technologies AB
 
 import logging
 import typing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterable, Literal
@@ -31,7 +31,7 @@ from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 
 LEIDEN_RANDOM_SEED = 1
-
+MIN_PNA_COMPONENT_SIZE = 8000
 
 logger = logging.getLogger(__name__)
 
@@ -126,16 +126,33 @@ def _label_connected_components(
 class RefinementOptions:
     """Options for refining components."""
 
-    # TODO Make this much larger once we have fixed the tests
     min_component_size: int = 10
-    maximum_component_refinement_depth: int = 1
-    maximum_edges_to_remove: int | None = (
-        10  # TODO What is actually a good default here?
-    )
-    maximum_edges_to_remove_relative_to_smaller_community_nodes: float | None = 0.001
-    inital_stage_leiden_resolution: float = 1.0
-    refinement_stage_leiden_resolution: float = 0.01
+
+    max_edges_to_remove: int | None = 20
+    max_edges_to_remove_relative: float | None = None
+    leiden_resolution: float = 1.0
     min_component_size_to_prune: int = 100
+
+
+@dataclass
+class StagedRefinementOptions:
+    """Options for refining components at each stage."""
+
+    inital_stage_options: RefinementOptions = field(
+        default_factory=lambda: RefinementOptions(
+            max_edges_to_remove=None,
+            max_edges_to_remove_relative=None,
+            leiden_resolution=1.0,
+        )
+    )
+    refinement_stage_options: RefinementOptions = field(
+        default_factory=lambda: RefinementOptions(
+            max_edges_to_remove=4,
+            max_edges_to_remove_relative=None,
+            leiden_resolution=0.01,
+        )
+    )
+    max_component_refinement_depth: int = 1
 
 
 @dataclass(slots=True)
@@ -150,8 +167,8 @@ class MultipletRecoveryStats:
 def merge_communities_with_many_crossing_edges(
     edgelist: pl.DataFrame,
     node_community_dict: dict,
-    maximum_edges_to_remove: int | None = None,
-    maximum_edges_to_remove_relative_to_smaller_community_nodes: float | None = None,
+    max_edges_to_remove: int | None = None,
+    max_edges_to_remove_relative: float | None = None,
 ) -> pd.Series:
     """Merge communities what have many crossing edges between them in an edge list.
 
@@ -171,10 +188,7 @@ def merge_communities_with_many_crossing_edges(
     :returns: The updated community mapping
     """
     community_serie = pd.Series(node_community_dict)
-    if (
-        maximum_edges_to_remove is None
-        and maximum_edges_to_remove_relative_to_smaller_community_nodes is None
-    ):
+    if max_edges_to_remove is None and max_edges_to_remove_relative is None:
         return community_serie
     if community_serie.nunique() == 1:
         return community_serie
@@ -185,14 +199,13 @@ def merge_communities_with_many_crossing_edges(
     # remove between the communities.
     community_edgelist = (
         edgelist.with_columns(
-            community1=pl.min_horizontal(pl.col("umi1"), pl.col("umi2")).replace_strict(
-                node_community_dict
-            ),
-            community2=pl.max_horizontal(pl.col("umi1"), pl.col("umi2")).replace_strict(
-                node_community_dict
-            ),
+            community1=pl.col("umi1").replace_strict(node_community_dict),
+            community2=pl.col("umi2").replace_strict(node_community_dict),
         )
-        .with_columns()
+        .with_columns(
+            community1=pl.min_horizontal(pl.col("community1"), pl.col("community2")),
+            community2=pl.max_horizontal(pl.col("community1"), pl.col("community2")),
+        )
         .filter(pl.col("community1") != pl.col("community2"))
         .group_by(["community1", "community2"])
         .len()
@@ -202,8 +215,8 @@ def merge_communities_with_many_crossing_edges(
         )
         .with_columns(
             threshold=pl.max_horizontal(
-                maximum_edges_to_remove,
-                maximum_edges_to_remove_relative_to_smaller_community_nodes
+                max_edges_to_remove,
+                max_edges_to_remove_relative
                 * pl.min_horizontal(
                     pl.col("community1_size"), pl.col("community2_size")
                 ),
@@ -290,9 +303,12 @@ def _refine_components(
     umi_component_map: dict,
     clusters_to_be_refined: pl.dataframe.group_by.GroupBy,
     leiden_iterations: int,
-    leiden_resolution: float,
     refinement_options: RefinementOptions,
 ) -> tuple[dict, list]:
+    # Loading leiden is very slow, so we only load it when we are going
+    # to use it to speed up start times
+    from graspologic.partition.leiden import leiden
+
     def id_generator(start=0):
         next_id = start
         while True:
@@ -309,29 +325,20 @@ def _refine_components(
         if number_of_nodes < refinement_options.min_component_size:
             continue
 
-        _, leiden_communities = leiden(
-            cluster_edges.select(
-                pl.col("umi1").cast(pl.Utf8), pl.col("umi2").cast(pl.Utf8)
-            )
+        leiden_communities = leiden(
+            cluster_edges.select(["umi1", "umi2"])
             .with_columns(weight=pl.lit(1))
             .rows(),
-            seed=LEIDEN_RANDOM_SEED,
+            random_seed=LEIDEN_RANDOM_SEED,
             use_modularity=True,
-            resolution=leiden_resolution,
-            # These parameters are used to sync up the native implementation with
-            # the python implementation we originally used.
-            iterations=leiden_iterations + 1,
-            randomness=0.001,
-            trials=1,
-            starting_communities=None,
+            resolution=refinement_options.leiden_resolution,
+            extra_forced_iterations=leiden_iterations,
         )
-        # Map the communites back from strings to integers
-        leiden_communities = {int(k): v for k, v in leiden_communities.items()}  # type: ignore
         community_serie = merge_communities_with_many_crossing_edges(
             cluster_edges,
             leiden_communities,
-            refinement_options.maximum_edges_to_remove,
-            refinement_options.maximum_edges_to_remove_relative_to_smaller_community_nodes,
+            refinement_options.max_edges_to_remove,
+            refinement_options.max_edges_to_remove_relative,
         )
         if community_serie.nunique() > 1:
             for _, nodes in community_serie.groupby(community_serie):
@@ -346,23 +353,26 @@ def recover_multiplets(
     edgelist: pl.LazyFrame,
     umi_component_map: dict | None = None,
     leiden_iterations: int = 1,
-    refinement_options: RefinementOptions | None = None,
+    refinement_options: StagedRefinementOptions | None = None,
 ) -> tuple[nx.Graph, MultipletRecoveryStats]:
     """Recovery multiplets by leiden community detection, removing crossing edges between communities."""
     if umi_component_map is None:
         umi_component_map = _get_umi_component_map_from_edgelist(edgelist)
 
     if refinement_options is None:
-        refinement_options = RefinementOptions()
+        refinement_options = StagedRefinementOptions(
+            inital_stage_options=RefinementOptions(),
+            refinement_stage_options=RefinementOptions(),
+        )
 
     edgelist_with_components = _update_components_column(edgelist, umi_component_map)
     to_be_refined = _find_initial_components_to_be_refined(
         edgelist_with_components,
-        refinement_options.min_component_size,
+        refinement_options.inital_stage_options.min_component_size,
     )
 
     max_recursion_depth_observed = 0
-    for recursion_level in range(refinement_options.maximum_component_refinement_depth):
+    for recursion_level in range(refinement_options.max_component_refinement_depth):
         logger.debug(
             "Running Leiden community detection. At recursion depth %s", recursion_level
         )
@@ -378,12 +388,9 @@ def recover_multiplets(
             umi_component_map=umi_component_map,  # type: ignore
             clusters_to_be_refined=clusters_to_be_refined,
             leiden_iterations=leiden_iterations,
-            leiden_resolution=(
-                refinement_options.inital_stage_leiden_resolution
-                if recursion_level == 0
-                else refinement_options.refinement_stage_leiden_resolution
-            ),
-            refinement_options=refinement_options,
+            refinement_options=refinement_options.inital_stage_options
+            if recursion_level == 0
+            else refinement_options.refinement_stage_options,
         )
         edgelist_with_components = _update_components_column(
             edgelist,
@@ -419,20 +426,25 @@ def recover_multiplets(
 
 def filter_components_by_size_dynamic(
     component_sizes: pd.DataFrame,
+    lowest_passable_bound: int | None = MIN_PNA_COMPONENT_SIZE,
 ) -> tuple[pd.DataFrame, int | None]:
     """Filter components by size using dynamic thresholds.
 
     :param component_sizes: A DataFrame with columns `component` and `n_umi`.
     :returns: only the 'component' column of with the components that pass the filter, and the lower bound.
     """
+    if lowest_passable_bound is None:
+        lowest_passable_bound = MIN_PNA_COMPONENT_SIZE
+
     lower_bound = find_component_size_limits(
         component_sizes=component_sizes["n_umi"].to_numpy(), direction="lower"
     )
-    if lower_bound is None:
+    if lower_bound is None or lower_bound < lowest_passable_bound:
+        lower_bound = lowest_passable_bound
         logger.warning(
-            "Could not find a lower bound for component size filtering, will not filter components."
+            "Could not find a lower bound for component size filtering, will "
+            "set the lower bound to " + str(lowest_passable_bound),
         )
-        return component_sizes["component"], lower_bound
     return (
         component_sizes.filter(pl.col("n_umi") >= lower_bound)["component"],
         lower_bound,
@@ -452,7 +464,7 @@ def filter_components_by_size_hard_thresholds(
     if lower_bound is None:
         lower_bound = 0
     if higher_bound is None:
-        higher_bound = np.inf  # type: ignore
+        higher_bound = np.iinfo(np.uint64).max
     return component_sizes.filter(
         (pl.col("n_umi") >= lower_bound) & (pl.col("n_umi") <= higher_bound)
     )["component"]
@@ -515,7 +527,7 @@ def build_pxl_file_with_components(
     multiplet_recovery: bool,
     leiden_iterations: int,
     min_count: int,
-    refinement_options: RefinementOptions | None = None,
+    refinement_options: StagedRefinementOptions | None = None,
     component_size_threshold: tuple[int, int] | bool = True,
 ) -> tuple[PNAPixelDataset, GraphStatistics]:
     """Create a pxl file after having created components and removed crossing edges."""
@@ -683,8 +695,9 @@ def find_components(
     leiden_iterations: int = 10,
     min_read_count: int = 2,
     component_size_threshold: tuple[int, int] | bool = True,
-    refinement_options: RefinementOptions | None = None,
+    refinement_options: StagedRefinementOptions | None = None,
     return_component_statistics: Literal[True] = True,
+    dynamic_lowest_passable_bound: int | None = None,
 ) -> tuple[pl.LazyFrame, GraphStatistics]: ...
 
 
@@ -695,9 +708,10 @@ def find_components(
     leiden_iterations: int = 10,
     min_read_count: int = 2,
     component_size_threshold: tuple[int, int] | bool = True,
-    refinement_options: RefinementOptions | None = None,
+    refinement_options: StagedRefinementOptions | None = None,
     return_component_statistics: Literal[False] = False,
-) -> tuple[pl.LazyFrame, GraphStatistics]: ...
+    dynamic_lowest_passable_bound: int | None = None,
+) -> pl.LazyFrame: ...
 
 
 def find_components(
@@ -706,8 +720,9 @@ def find_components(
     leiden_iterations: int = 10,
     min_read_count: int = 2,
     component_size_threshold: tuple[int, int] | bool = True,
-    refinement_options: RefinementOptions | None = None,
+    refinement_options: StagedRefinementOptions | None = None,
     return_component_statistics: bool = False,
+    dynamic_lowest_passable_bound: int | None = None,
 ) -> pl.LazyFrame | tuple[pl.LazyFrame, GraphStatistics]:
     """Retrieve all connected components from an edgelist.
 
@@ -781,7 +796,10 @@ def find_components(
     )
 
     edgelist_with_components = _filter_connected_components_by_size(
-        edgelist_with_components, component_size_threshold, component_stats
+        edgelist_with_components,
+        component_size_threshold,
+        component_stats,
+        dynamic_lowest_passable_bound,
     )
     edgelist_with_components = _name_components_with_umi_hashes(
         edgelist_with_components
@@ -792,7 +810,10 @@ def find_components(
 
 
 def _filter_connected_components_by_size(
-    edgelist: pl.LazyFrame, component_size_threshold, component_stats: GraphStatistics
+    edgelist: pl.LazyFrame,
+    component_size_threshold,
+    component_stats: GraphStatistics,
+    dynamic_lowest_passable_bound=None,
 ):
     """Filter connected components by size and get statistics."""
     component_sizes = (
@@ -804,36 +825,36 @@ def _filter_connected_components_by_size(
         .select(pl.col("component"), n_umi=pl.col("n_umi1") + pl.col("n_umi2"))
         .collect()
     )
-    pre_filtering_component_sizes = (
-        component_sizes.group_by("n_umi").len().sort("n_umi")
+    unique, counts = np.unique(
+        component_sizes["n_umi"].cast(pl.Int32), return_counts=True
     )
-    component_stats.pre_filtering_component_sizes = dict(
-        zip(
-            pre_filtering_component_sizes["n_umi"], pre_filtering_component_sizes["len"]
-        )
-    )
-    if isinstance(component_size_threshold, bool):
-        if component_size_threshold:
-            logger.debug("Filtering components by dynamic size thresholds")
-            try:
-                passing_components, min_size = filter_components_by_size_dynamic(
-                    component_sizes
+    component_stats.pre_filtering_component_sizes = dict(zip(unique, counts))
+    if isinstance(component_size_threshold, bool) and component_size_threshold:
+        logger.debug("Filtering components by dynamic size thresholds")
+        try:
+            passing_components, min_size = filter_components_by_size_dynamic(
+                component_sizes,
+                lowest_passable_bound=dynamic_lowest_passable_bound,
+            )
+            component_stats.component_size_min_filtering_threshold = min_size
+        except Exception as e:
+            # This is a hack since the exception is not properly
+            # by passed the spline interpolation package.
+            if str(type(e)) == "<class 'dfitpack.error'>":
+                msg = (
+                    "Could not find component size filters, this probably means that no components (i.e. cells) were formed. "
+                    "If you are running on the command line you can try to use --component-size-max-threshold and "
+                    " --component-size-min-threshold to set hard thresholds, but most likely the problem is with the input data."
                 )
-                component_stats.component_size_min_filtering_threshold = min_size
-            except Exception as e:
-                # This is a hack since the exception is not properly
-                # by passed the spline interpolation package.
-                if str(type(e)) == "<class 'dfitpack.error'>":
-                    msg = (
-                        "Could not find component size filters, this probably means that no components (i.e. cells) were formed. "
-                        "If you are running on the command line you can try to use --component-size-max-threshold and "
-                        " --component-size-min-threshold to set hard thresholds, but most likely the problem is with the input data."
-                    )
-                    raise ConnectedComponentException(msg)
-                else:
-                    raise e
+                raise ConnectedComponentException(msg)
+            else:
+                raise e
     else:
-        min_size, max_size = component_size_threshold
+        if component_size_threshold is False:
+            min_size = 0
+            max_size = np.iinfo(np.uint64).max
+        else:
+            min_size, max_size = component_size_threshold
         component_stats.component_size_max_filtering_threshold = max_size
         component_stats.component_size_min_filtering_threshold = min_size
         logger.debug(

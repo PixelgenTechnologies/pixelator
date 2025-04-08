@@ -108,24 +108,49 @@ from pixelator.pna.graph.report import GraphSampleReport
     ),
 )
 @click.option(
-    "--max-edges-to-remove",
-    default=20,
+    "--initial-stage-max-edges-to-remove",
+    default=None,
     required=False,
-    type=click.IntRange(min=1, max=100),
+    type=click.IntRange(min=1, max=None),
     show_default=True,
     help=(
-        "The maximum number of edges to remove between components when they are being refined."
+        "The maximum number of edges to remove between components during the "
+        "initial stage (iteration == 0) of multiplet recovery."
     ),
 )
 @click.option(
-    "--max-edges-to-remove-relative-community-nodes",
-    default=0.001,
+    "--refinement-stage-max-edges-to-remove",
+    default=4,
     required=False,
-    type=click.FloatRange(min=1e-6, max=1),
+    type=click.IntRange(min=1, max=None),
+    show_default=True,
+    help=(
+        "The maximum number of edges to remove between components during the "
+        "refinement stage (iteration > 0) of multiplet recovery."
+    ),
+)
+@click.option(
+    "--initial-stage-max-edges-to-remove-relative",
+    default=None,
+    required=False,
+    type=click.FloatRange(min=1e-6, max=None),
     show_default=True,
     help=(
         "The maximum number of edges to remove between two components relative "
-        "to the number of nodes in the smaller of the two when they are being refined."
+        "to the number of nodes in the smaller of the two when during the "
+        "initial stage (iteration == 0) of multiplet recovery."
+    ),
+)
+@click.option(
+    "--refinement-stage-max-edges-to-remove-relative",
+    default=None,
+    required=False,
+    type=click.FloatRange(min=1e-6, max=None),
+    show_default=True,
+    help=(
+        "The maximum number of edges to remove between two components relative "
+        "to the number of nodes in the smaller of the two when during the "
+        "refinement stage (iteration > 0) of multiplet recovery."
     ),
 )
 @click.option(
@@ -174,8 +199,10 @@ def graph(
     min_count,
     min_component_size_in_refinement,
     max_refinement_recursion_depth,
-    max_edges_to_remove,
-    max_edges_to_remove_relative_community_nodes,
+    initial_stage_max_edges_to_remove,
+    refinement_stage_max_edges_to_remove,
+    initial_stage_max_edges_to_remove_relative,
+    refinement_stage_max_edges_to_remove_relative,
     min_component_size_to_prune,
     component_size_max_threshold,
     component_size_min_threshold,
@@ -215,8 +242,10 @@ def graph(
         min_count=min_count,
         min_component_size_in_refinement=min_component_size_in_refinement,
         max_refinement_recursion_depth=max_refinement_recursion_depth,
-        max_edges_to_remove=max_edges_to_remove,
-        maximum_edges_to_remove_relative_to_smaller_community_nodes=max_edges_to_remove_relative_community_nodes,
+        initial_stage_max_edges_to_remove=initial_stage_max_edges_to_remove,
+        refinement_stage_max_edges_to_remove=refinement_stage_max_edges_to_remove,
+        initial_stage_max_edges_to_remove_relative=initial_stage_max_edges_to_remove_relative,
+        refinement_stage_max_edges_to_remove_relative=refinement_stage_max_edges_to_remove_relative,
         min_component_size_to_prune=min_component_size_to_prune,
         component_size_max_threshold=component_size_max_threshold,
         component_size_min_threshold=component_size_min_threshold,
@@ -241,15 +270,22 @@ def graph(
     output_path = graph_output / f"{sample_name}.graph.pxl"
 
     panel = load_antibody_panel(pna_config, panel)
-
-    refinement_options = RefinementOptions(
-        maximum_component_refinement_depth=max_refinement_recursion_depth,
+    initial_stage_refinement_options = RefinementOptions(
         min_component_size=min_component_size_in_refinement,
-        maximum_edges_to_remove=max_edges_to_remove,
-        maximum_edges_to_remove_relative_to_smaller_community_nodes=max_edges_to_remove_relative_community_nodes,
-        inital_stage_leiden_resolution=initial_stage_leiden_resolution,
-        refinement_stage_leiden_resolution=refinement_stage_leiden_resolution,
+        max_edges_to_remove=initial_stage_max_edges_to_remove,
+        max_edges_to_remove_relative=initial_stage_max_edges_to_remove_relative,
         min_component_size_to_prune=min_component_size_to_prune,
+    )
+    refinement_stage_refinement_options = RefinementOptions(
+        min_component_size=min_component_size_in_refinement,
+        max_edges_to_remove=refinement_stage_max_edges_to_remove,
+        max_edges_to_remove_relative=refinement_stage_max_edges_to_remove_relative,
+        min_component_size_to_prune=min_component_size_to_prune,
+    )
+    refinement_options = StagedRefinementOptions(
+        max_component_refinement_depth=max_refinement_recursion_depth,
+        inital_stage_options=initial_stage_refinement_options,
+        refinement_stage_options=refinement_stage_refinement_options,
     )
 
     component_size_threshold = (
