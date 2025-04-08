@@ -328,6 +328,7 @@ def _refine_components(
             .with_columns(weight=pl.lit(1))
             .rows(),
             seed=LEIDEN_RANDOM_SEED,
+            use_modularity=True,
             resolution=refinement_options.leiden_resolution,
             # These parameters are used to sync up the native implementation with
             # the python implementation we originally used.
