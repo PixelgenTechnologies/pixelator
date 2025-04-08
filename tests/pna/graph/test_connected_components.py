@@ -11,6 +11,7 @@ from scipy.spatial import distance_matrix
 
 from pixelator.pna.graph.connected_components import (
     RefinementOptions,
+    StagedRefinementOptions,
     build_pxl_file_with_components,
     filter_components_by_size_dynamic,
     filter_components_by_size_hard_thresholds,
@@ -28,11 +29,13 @@ def test_recover_multiplets():
     multiple_graph = nx.karate_club_graph()
     assert sum(1 for _ in nx.connected_components(multiple_graph)) == 1
 
-    options = RefinementOptions(
-        min_component_size=10,
-        maximum_component_refinement_depth=1,
-        maximum_edges_to_remove=None,
-        maximum_edges_to_remove_relative_to_smaller_community_nodes=None,
+    options = StagedRefinementOptions(
+        inital_stage_options=RefinementOptions(
+            min_component_size=10,
+            max_edges_to_remove=None,
+            max_edges_to_remove_relative=None,
+        ),
+        max_component_refinement_depth=1,
     )
     edgelist = pl.LazyFrame(
         [{"umi1": e[0], "umi2": e[1]} for e in multiple_graph.edges()]
@@ -111,10 +114,18 @@ def test_recover_multiplets_large_graph(large_graph):
     # starting
     assert sum(1 for _ in nx.connected_components(large_graph)) == 1
 
-    options = RefinementOptions(
-        min_component_size=10,
-        maximum_component_refinement_depth=4,
-        maximum_edges_to_remove=5,
+    options = StagedRefinementOptions(
+        inital_stage_options=RefinementOptions(
+            min_component_size=10,
+            max_edges_to_remove=None,
+            max_edges_to_remove_relative=None,
+        ),
+        refinement_stage_options=RefinementOptions(
+            min_component_size=10,
+            max_edges_to_remove=5,
+            max_edges_to_remove_relative=None,
+        ),
+        max_component_refinement_depth=4,
     )
     edgelist = pl.LazyFrame([{"umi1": e[0], "umi2": e[1]} for e in large_graph.edges()])
 
@@ -146,15 +157,22 @@ def test_recover_multiplets_large_graph_with_small_stuff_added_on(
     # Check what we start from
     assert sum(1 for _ in nx.connected_components(large_graph)) == 2
     assert list(len(c) for c in nx.connected_components(large_graph)) == [21999, 1]
-
-    options = RefinementOptions(
-        min_component_size=10,
-        min_component_size_to_prune=50,
-        maximum_component_refinement_depth=4,
-        maximum_edges_to_remove=5,
-        # lowering the resolution to make sure something get
-        # to process in the second stage
-        inital_stage_leiden_resolution=0.01,
+    options = StagedRefinementOptions(
+        inital_stage_options=RefinementOptions(
+            min_component_size=10,
+            min_component_size_to_prune=50,
+            max_edges_to_remove=None,
+            # lowering the resolution to make sure something get
+            # to process in the second stage
+            leiden_resolution=0.01,
+        ),
+        refinement_stage_options=RefinementOptions(
+            min_component_size=10,
+            min_component_size_to_prune=50,
+            max_edges_to_remove=5,
+            leiden_resolution=0.01,
+        ),
+        max_component_refinement_depth=4,
     )
 
     edgelist = pl.LazyFrame(
@@ -179,11 +197,19 @@ def test_recover_multiplets_with_refinement_enabled():
     multiple_graph = nx.karate_club_graph()
     assert sum(1 for _ in nx.connected_components(multiple_graph)) == 1
 
-    options = RefinementOptions(
-        min_component_size=3,
-        maximum_component_refinement_depth=3,
-        maximum_edges_to_remove=None,
-        maximum_edges_to_remove_relative_to_smaller_community_nodes=None,
+    options = StagedRefinementOptions(
+        inital_stage_options=RefinementOptions(
+            min_component_size=3,
+            max_edges_to_remove=None,
+            max_edges_to_remove_relative=None,
+            leiden_resolution=1.0,
+        ),
+        refinement_stage_options=RefinementOptions(
+            max_edges_to_remove=None,
+            max_edges_to_remove_relative=None,
+            leiden_resolution=0.01,
+        ),
+        max_component_refinement_depth=3,
     )
     edgelist = pl.LazyFrame(
         [{"umi1": e[0], "umi2": e[1]} for e in multiple_graph.edges() if e[0] != e[1]]
@@ -210,9 +236,11 @@ def test_recover_multiplets_with_refinement_enabled():
 
 def test_filter_components_by_size_dynamic_if_no_limit_found_return_all():
     component_sizes = pl.DataFrame({"component": [0, 1, 2, 3], "n_umi": [3, 2, 4, 1]})
-    filtered, threshold = filter_components_by_size_dynamic(component_sizes)
+    filtered, threshold = filter_components_by_size_dynamic(
+        component_sizes, lowest_passable_bound=-1
+    )
     assert list(filtered) == component_sizes["component"].to_list()
-    assert threshold is None
+    assert threshold == -1
 
 
 def test_filter_components_by_size_dynamic():
@@ -227,7 +255,9 @@ def test_filter_components_by_size_dynamic():
     component_sizes = pl.DataFrame(
         {"component": range(len(components)), "n_umi": [len(c) for c in components]}
     )
-    passing_components, threshold = filter_components_by_size_dynamic(component_sizes)
+    passing_components, threshold = filter_components_by_size_dynamic(
+        component_sizes, lowest_passable_bound=0
+    )
     # This number make sense, since it is close to the number of cells we generated
     assert len(passing_components) == 995
     assert threshold == 7071
@@ -274,9 +304,16 @@ def test_find_components(lazy_edgelist_karate_graph):
         multiplet_recovery=True,
         min_read_count=1,
         component_size_threshold=(0, 100),
-        refinement_options=RefinementOptions(
-            maximum_edges_to_remove=None,
-            maximum_edges_to_remove_relative_to_smaller_community_nodes=None,
+        refinement_options=StagedRefinementOptions(
+            inital_stage_options=RefinementOptions(
+                max_edges_to_remove=None,
+                max_edges_to_remove_relative=None,
+            ),
+            refinement_stage_options=RefinementOptions(
+                max_edges_to_remove=None,
+                max_edges_to_remove_relative=None,
+            ),
+            max_component_refinement_depth=1,
         ),
     )
 
@@ -314,10 +351,18 @@ def test_find_components_dynamic_size_filter(lazy_edgelist_karate_graph):
         multiplet_recovery=True,
         min_read_count=1,
         component_size_threshold=True,
-        refinement_options=RefinementOptions(
-            maximum_edges_to_remove=None,
-            maximum_edges_to_remove_relative_to_smaller_community_nodes=None,
+        refinement_options=StagedRefinementOptions(
+            inital_stage_options=RefinementOptions(
+                max_edges_to_remove=None,
+                max_edges_to_remove_relative=None,
+            ),
+            refinement_stage_options=RefinementOptions(
+                max_edges_to_remove=None,
+                max_edges_to_remove_relative=None,
+            ),
+            max_component_refinement_depth=1,
         ),
+        dynamic_lowest_passable_bound=0,
     )
 
     edgelist = edgelist.collect()
@@ -335,12 +380,20 @@ def test_find_components_stats(lazy_edgelist_karate_graph):
         edgelist,
         multiplet_recovery=True,
         min_read_count=1,
-        component_size_threshold=True,
+        component_size_threshold=False,
         return_component_statistics=True,
-        refinement_options=RefinementOptions(
-            maximum_edges_to_remove=None,
-            min_component_size=1,
-            maximum_edges_to_remove_relative_to_smaller_community_nodes=None,
+        refinement_options=StagedRefinementOptions(
+            inital_stage_options=RefinementOptions(
+                min_component_size=1,
+                max_edges_to_remove=None,
+                max_edges_to_remove_relative=None,
+            ),
+            refinement_stage_options=RefinementOptions(
+                min_component_size=1,
+                max_edges_to_remove=None,
+                max_edges_to_remove_relative=None,
+            ),
+            max_component_refinement_depth=1,
         ),
     )
 
@@ -358,7 +411,7 @@ def test_find_components_stats(lazy_edgelist_karate_graph):
         pytest.approx(stats.fraction_nodes_in_largest_component_post_recovery, abs=1e-3)
         == 0.373
     )
-    assert stats.component_size_max_filtering_threshold is None
+    assert stats.component_size_max_filtering_threshold == np.iinfo(np.uint64).max
 
     assert stats.reads_input == 780
     assert stats.reads_post_read_count_filtering == 780
@@ -373,9 +426,16 @@ def test_find_components_fixed_thresholds(lazy_edgelist_karate_graph):
         min_read_count=1,
         component_size_threshold=(3, 10),
         return_component_statistics=True,
-        refinement_options=RefinementOptions(
-            maximum_edges_to_remove=None,
-            maximum_edges_to_remove_relative_to_smaller_community_nodes=None,
+        refinement_options=StagedRefinementOptions(
+            inital_stage_options=RefinementOptions(
+                max_edges_to_remove=None,
+                max_edges_to_remove_relative=None,
+            ),
+            refinement_stage_options=RefinementOptions(
+                max_edges_to_remove=None,
+                max_edges_to_remove_relative=None,
+            ),
+            max_component_refinement_depth=1,
         ),
     )
 
@@ -411,13 +471,22 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
         leiden_iterations=1,
         min_count=1,
         multiplet_recovery=True,
+        component_size_threshold=False,
         panel=mock_panel,
         sample_name="test_sample",
         path_output_pxl_file=output,
-        refinement_options=RefinementOptions(
-            maximum_edges_to_remove=None,
-            min_component_size=1,
-            maximum_edges_to_remove_relative_to_smaller_community_nodes=None,
+        refinement_options=StagedRefinementOptions(
+            inital_stage_options=RefinementOptions(
+                min_component_size=1,
+                max_edges_to_remove=None,
+                max_edges_to_remove_relative=None,
+            ),
+            refinement_stage_options=RefinementOptions(
+                min_component_size=1,
+                max_edges_to_remove=None,
+                max_edges_to_remove_relative=None,
+            ),
+            max_component_refinement_depth=1,
         ),
     )
 
@@ -498,6 +567,7 @@ def test_build_pxl_file_with_components_for_umi_collisions(
         panel=mock_panel,
         sample_name="test_sample",
         path_output_pxl_file=output,
+        component_size_threshold=False,
     )
     build_pxl_file_with_components(
         molecules_lazy_frame=edgelist_df_colliding,
@@ -507,6 +577,7 @@ def test_build_pxl_file_with_components_for_umi_collisions(
         panel=mock_panel,
         sample_name="test_sample",
         path_output_pxl_file=output_colliding,
+        component_size_threshold=False,
     )
 
     result = PNAPixelDataset.from_pxl_files(output)
@@ -529,8 +600,8 @@ def test_build_pxl_file_with_components_for_umi_collisions(
 def test_merge_communities_with_many_crossing_edges(
     comp1_size, comp2_size, n_crossing_edges
 ):
-    maximum_edges_to_remove = 20
-    maximum_edges_to_remove_relative_to_smaller_community_nodes = 0.001
+    max_edges_to_remove = 20
+    max_edges_to_remove_relative = 0.001
     comp1_edges = pl.DataFrame(
         {"umi1": [0] * (comp1_size - 1), "umi2": range(1, comp1_size)}
     )
@@ -561,13 +632,12 @@ def test_merge_communities_with_many_crossing_edges(
     comp_series = merge_communities_with_many_crossing_edges(
         edgelist,
         comp_dict,
-        maximum_edges_to_remove=maximum_edges_to_remove,
-        maximum_edges_to_remove_relative_to_smaller_community_nodes=maximum_edges_to_remove_relative_to_smaller_community_nodes,
+        max_edges_to_remove=max_edges_to_remove,
+        max_edges_to_remove_relative=max_edges_to_remove_relative,
     )
     if n_crossing_edges >= max(
-        maximum_edges_to_remove,
-        maximum_edges_to_remove_relative_to_smaller_community_nodes
-        * min(comp1_size, comp2_size),
+        max_edges_to_remove,
+        max_edges_to_remove_relative * min(comp1_size, comp2_size),
     ):
         assert len(comp_series.unique()) == 1
         assert len(comp_series[comp_series == 0]) == comp1_size + comp2_size
