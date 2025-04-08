@@ -305,10 +305,6 @@ def _refine_components(
     leiden_iterations: int,
     refinement_options: RefinementOptions,
 ) -> tuple[dict, list]:
-    # Loading leiden is very slow, so we only load it when we are going
-    # to use it to speed up start times
-    from graspologic.partition.leiden import leiden
-
     def id_generator(start=0):
         next_id = start
         while True:
@@ -325,15 +321,23 @@ def _refine_components(
         if number_of_nodes < refinement_options.min_component_size:
             continue
 
-        leiden_communities = leiden(
-            cluster_edges.select(["umi1", "umi2"])
+        _, leiden_communities = leiden(
+            cluster_edges.select(
+                pl.col("umi1").cast(pl.Utf8), pl.col("umi2").cast(pl.Utf8)
+            )
             .with_columns(weight=pl.lit(1))
             .rows(),
-            random_seed=LEIDEN_RANDOM_SEED,
-            use_modularity=True,
+            seed=LEIDEN_RANDOM_SEED,
             resolution=refinement_options.leiden_resolution,
-            extra_forced_iterations=leiden_iterations,
+            # These parameters are used to sync up the native implementation with
+            # the python implementation we originally used.
+            iterations=leiden_iterations + 1,
+            randomness=0.001,
+            trials=1,
+            starting_communities=None,
         )
+        # Map the communites back from strings to integers
+        leiden_communities = {int(k): v for k, v in leiden_communities.items()}  # type: ignore
         community_serie = merge_communities_with_many_crossing_edges(
             cluster_edges,
             leiden_communities,

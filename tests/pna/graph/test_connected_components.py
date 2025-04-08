@@ -11,6 +11,7 @@ from scipy.spatial import distance_matrix
 
 from pixelator.pna.graph.connected_components import (
     RefinementOptions,
+    StagedRefinementOptions,
     build_pxl_file_with_components,
     filter_components_by_size_dynamic,
     filter_components_by_size_hard_thresholds,
