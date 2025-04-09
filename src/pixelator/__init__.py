@@ -12,7 +12,6 @@ try:
 except metadata.PackageNotFoundError:
     pass
 
-# TODO Finish this!
 
 # Adding imports here as shortcuts to be able to import like
 # import pixelator as mpx
@@ -21,7 +20,9 @@ except metadata.PackageNotFoundError:
 from pixelator.mpx.pixeldataset import PixelDataset as MPXPixelDataset  # noqa
 from pixelator.mpx.pixeldataset import read as read_mpx
 from pixelator.mpx.pixeldataset.aggregation import (
-    simple_aggregate as mpx_simple_aggregate,
+    simple_aggregate as simple_aggregate_mpx,
 )  # noqa
 
-__all__ = ["read_mpx", "mpx_simple_aggregate", "MPXPixelDataset"]
+from pixelator.pna import read as read_pna
+
+__all__ = ["read_mpx", "simple_aggregate_mpx", "MPXPixelDataset", "read_pna"]

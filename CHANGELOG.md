@@ -5,7 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [x.x.x] - ???
+## [20.0.0] - ???
+
+This is a large release that reorganizes pixelator in a major way. We introduce the new module `pixelator.pna`
+that is used to process and analyze data from the Proximity Network Assay. As a consequence of this we
+move what used to be pixelator into two modules, `pixelator.mpx` for processing Molecular Pixelation data
+and `pixelator.common` which contains functions and classes used by both methods.
+
+As a user the major difference is if you want to read pixel files you will now have to use:
+
+**Molecular pixelator data**
+
+```
+from pixelator import read_mpx
+form pixelator import simple_aggregate_mpx
+```
+
+**Proximity network assay data**
+
+```
+from pixelator import read_pna
+```
+
+With the introduction of the Proximity Network Assay we have revamped the entire data processing
+pipeline, in order to handle the new data. We have also introduced a new pixel file format
+that utilized [duckdb](https://duckdb.org/) files to store the data. This allows us to be much
+more flexible and fast in loading and processing the data compared to the zip-based format we use
+for MPX data.
+
+Another major workflow change in how pixelator is used to work with Proximity Network Assay data
+is that there is no need to expliclity aggregate data. Instead the `read_pna` function will
+accept a list of files and will automatically aggregate the data for you, for those files
+without the need to create a new aggregated pxl file.
+
+For an update view on how to work with pixelator please check out the [documentation](https://software.pixelgen.com/).
+There you will also find updates on the new algorithms used for the Proximity Network Assay, etc.
+
+
+### Added
+- All functionality for analyzing PNA data
 
 ### Changed
 
@@ -16,7 +54,6 @@ from pixelator import read_mpx
 
 pxl_dataset = read_mpx("path/to/pxl")
 ```
-
 
 ### Fixed
 
