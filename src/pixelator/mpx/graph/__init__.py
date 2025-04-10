@@ -6,7 +6,6 @@ Copyright © 2023 Pixelgen Technologies AB.
 from pixelator.mpx.graph.community_detection import (
     connect_components,
     recover_technical_multiplets,
-    write_recovered_components,
 )
 from pixelator.mpx.graph.constants import (
     MIN_PIXELS_TO_REFINE,
@@ -22,7 +21,6 @@ from pixelator.mpx.graph.utils import (
 __all__ = [
     "connect_components",
     "recover_technical_multiplets",
-    "write_recovered_components",
     "MIN_PIXELS_TO_REFINE",
     "Graph",
     "components_metrics",

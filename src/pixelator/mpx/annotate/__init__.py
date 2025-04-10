@@ -14,15 +14,16 @@ import numpy as np
 import pandas as pd
 import polars as pl
 from anndata import AnnData
+from graspologic_native import leiden
 
 from pixelator import __version__
+from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.mpx.annotate.aggregates import call_aggregates
 from pixelator.mpx.annotate.cell_calling import find_component_size_limits
 from pixelator.mpx.annotate.constants import (
     MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION,
 )
 from pixelator.mpx.config import AntibodyPanel
-from pixelator.mpx.exceptions import PixelatorBaseException
 from pixelator.mpx.graph.utils import components_metrics, edgelist_metrics
 from pixelator.mpx.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.mpx.pixeldataset.utils import edgelist_to_anndata
@@ -296,13 +297,27 @@ def _cluster_components_using_leiden(
     adata: AnnData, resolution: float = 1.0, random_seed: Optional[int] = None
 ) -> None:
     """Carry out a leiden clustering on the components."""
-    # Import here since the import is very slow and expensive
-    from graspologic.partition import leiden
-
-    g = nx.from_scipy_sparse_array(adata.obsp["connectivities"])
-    partitions = leiden(g, resolution=resolution, random_seed=random_seed)
-    partitions_df = pd.DataFrame.from_dict(partitions, orient="index").sort_index()
-    adata.obs["leiden"] = partitions_df.values
+    # It should be ok to run this over all vs all even on a dense matrix
+    # since it shouldn't apply to more than a few thousande components.
+    connections = adata.obsp["connectivities"]
+    edgelist = list(
+        (adata.obs.index[i], adata.obs.index[j], connections[i, j])
+        for i, j in zip(*connections.nonzero())
+    )
+    _, partitions = leiden(
+        edgelist,
+        resolution=resolution,
+        seed=random_seed,
+        use_modularity=True,
+        # These parameters are used to sync up the native implementation with
+        # the python implementation we originally used.
+        iterations=1,
+        randomness=0.001,
+        trials=1,
+        starting_communities=None,
+    )
+    partitions_df = pd.DataFrame.from_dict(partitions, orient="index")
+    adata.obs["leiden"] = partitions_df
     adata.obs = adata.obs.astype({"leiden": "category"})
 
 

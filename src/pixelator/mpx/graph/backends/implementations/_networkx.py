@@ -282,48 +282,6 @@ class NetworkXGraphBackend(GraphBackend):
             self._raw, nx.connected_components(self._raw)
         )
 
-    def community_leiden(
-        self,
-        n_iterations: int = 10,
-        beta: float = 0.01,
-        **kwargs,
-    ) -> VertexClustering:
-        """Run community detection using the Leiden algorithm."""
-        # Only importing leiden at runtime since it is very slow to import
-        with warnings.catch_warnings():
-            # Graspologic raises a numba related warning here, that we can
-            # safely ignore.
-            warnings.filterwarnings("ignore", module="graspologic.models.edge_swaps")
-            from graspologic.partition import leiden
-
-        graph = self._raw
-
-        # TODO This is probably not sufficient for
-        # some cases, since it looses multi-edge information
-        # without translating that to weights.
-        # We should look into that once the rest of the code around
-        # this has been cleaned up a bit.
-
-        if isinstance(graph, nx.MultiGraph):
-            graph = nx.Graph(graph)
-
-        leiden_communities = leiden(
-            graph,
-            use_modularity=True,
-            randomness=beta,
-            extra_forced_iterations=n_iterations,
-            **kwargs,
-        )
-
-        def clusters(leiden_communities):
-            communities = defaultdict(set)
-            for node, community in leiden_communities.items():
-                communities[community].add(node)
-            for _, nodes in communities.items():
-                yield nodes
-
-        return NetworkxBasedVertexClustering(graph, clusters(leiden_communities))
-
     def _layout_coordinates(
         self,
         layout_algorithm: SupportedLayoutAlgorithm = "wpmds_3d",

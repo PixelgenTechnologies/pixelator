@@ -1,0 +1,63 @@
+name: pna-2
+assay_spec:
+  - region_id: amplicon
+    region_type: amplicon
+    name: amplicon
+    sequence_type: joined
+    regions:
+
+      - region_id: umi-1
+        region_type: umi
+        name: Unique molecular identifier 1
+        sequence_type: random
+        sequence: NNNNNNNNNNNNNNNNNNNNNNNNNNNN
+        min_len: 28
+        max_len: 28
+
+      - region_id: pid-1
+        region_type: pid
+        name: Protein identifier 1
+        sequence_type: random
+        sequence: NNNNNNNNNN
+        min_len: 10
+        max_len: 10
+
+      - region_id: lbs-1
+        region_type: lbs
+        name: Linker binding site 1
+        sequence_type: fixed
+        sequence: CAAGTGACGCTGGGCATGTCAAACACTCATGTC
+        min_len: 33
+        max_len: 33
+
+      - region_id: uei
+        region_type: uei
+        name: Unique event identifier 1
+        sequence_type: random
+        sequence: NNNNNNNNNNNNNNN
+        min_len: 15
+        max_len: 15
+
+      - region_id: lbs-2
+        region_type: lbs
+        name: Linker binding site 2
+        sequence_type: fixed
+        sequence: GCTTCGCTTAGATGTCGG
+        min_len: 18
+        max_len: 18
+
+      - region_id: pid-2
+        region_type: pid
+        name: Protein identifier 1
+        sequence_type: random
+        sequence: NNNNNNNNNN
+        min_len: 10
+        max_len: 10
+
+      - region_id: umi-2
+        region_type: umi
+        name: Unique molecular identifier 2
+        sequence_type: random
+        sequence: NNNNNNNNNNNNNNNNNNNNNNNNNNNN
+        min_len: 28
+        max_len: 28

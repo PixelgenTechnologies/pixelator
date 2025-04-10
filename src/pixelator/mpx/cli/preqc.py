@@ -7,14 +7,7 @@ from shutil import which
 
 import click
 
-from pixelator.mpx.cli.common import (
-    design_option,
-    logger,
-    output_option,
-)
-from pixelator.mpx.config import config
-from pixelator.mpx.qc import qc_fastq
-from pixelator.mpx.utils import (
+from pixelator.common.utils import (
     create_output_stage_dir,
     get_extension,
     get_sample_name,
@@ -23,6 +16,13 @@ from pixelator.mpx.utils import (
     timer,
     write_parameters_file,
 )
+from pixelator.mpx.cli.common import (
+    design_option,
+    logger,
+    output_option,
+)
+from pixelator.mpx.config import config
+from pixelator.mpx.qc import qc_fastq
 
 
 @click.command(

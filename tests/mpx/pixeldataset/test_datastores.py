@@ -347,7 +347,6 @@ class TestZipBasedPixelFileWithCSV:
         assert file_target.is_file()
 
 
-@pytest.mark.test_this
 class TestCustomZipFileSystem:
     @pytest.fixture(name="zip_file")
     def zip_file_fixture(self, tmp_path):

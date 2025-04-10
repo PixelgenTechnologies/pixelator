@@ -1,0 +1,10 @@
+{
+    "sample_id": "PNA055_Sample07_filtered_S7",
+    "product_id": "single-cell-pna",
+    "report_type": "reads_dataflow",
+    "input_read_count": 230997,
+    "amplicon_output_read_count": 205569,
+    "demux_output_read_count": 201754,
+    "collapse_output_molecule_count": 118344,
+    "graph_output_molecule_count": 113539
+}

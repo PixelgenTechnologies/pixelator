@@ -5,9 +5,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 import click
 
-from pixelator.mpx.cli.common import logger, output_option
-from pixelator.mpx.graph import connect_components
-from pixelator.mpx.utils import (
+from pixelator.common.utils import (
     create_output_stage_dir,
     get_sample_name,
     log_step_start,
@@ -15,6 +13,8 @@ from pixelator.mpx.utils import (
     timer,
     write_parameters_file,
 )
+from pixelator.mpx.cli.common import logger, output_option
+from pixelator.mpx.graph import connect_components
 
 
 @click.command(

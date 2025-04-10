@@ -11,11 +11,11 @@ from typing import BinaryIO, Sequence, Tuple  # noqa: F401
 import pyfastx
 from xopen import xopen
 
+from pixelator.common.utils import reverse_complement
 from pixelator.mpx.amplicon.statistics import SequenceQualityStatsCollector
 from pixelator.mpx.config import Region, config
 from pixelator.mpx.report.models import AmpliconSampleReport
 from pixelator.mpx.types import PathType
-from pixelator.mpx.utils import reverse_complement
 
 logger = logging.getLogger(__name__)
 

@@ -14,6 +14,7 @@ import pandas as pd
 import polars as pl
 import xxhash
 from scipy.sparse import identity
+from scipy.sparse.linalg import matrix_power
 
 from pixelator.mpx.graph.backends.implementations import (
     NetworkXGraphBackend,
@@ -158,16 +159,9 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
 
 
 def _get_extended_adjacency(graph: Graph, k: int = 0):
-    def sparse_mat_power(x, n):
-        if n == 0:
-            return identity(x.shape[0])
-        return reduce(lambda x, y: x @ y, (x for _ in range(0, n)))
-
     A = graph.get_adjacency_sparse()
-    An = (
-        reduce(lambda x, y: x + y, [sparse_mat_power(A, n) for n in range(0, k + 1)])
-        > 0
-    ).astype(int)
+    A.setdiag(1, k=0)
+    An = (matrix_power(A, k) > 0).astype(int)
     return An
 
 
@@ -178,11 +172,13 @@ def _get_neighborhood_counts(
     normalization: Optional[Literal["mean"]] = None,
 ):
     An = _get_extended_adjacency(graph, k=k)
-    neighbourhood_counts = An * node_marker_counts
+    neighbourhood_counts = An @ node_marker_counts
 
     # TODO Optionally add more methods here
     if normalization == "mean":
         nbr_of_neighbors_per_node = An.sum(axis=1)
+        # Reshape to ensure broadcasting compatibility
+        nbr_of_neighbors_per_node = nbr_of_neighbors_per_node.reshape((-1, 1))
         neighbourhood_counts = neighbourhood_counts / nbr_of_neighbors_per_node
 
     df = pd.DataFrame(
@@ -527,7 +523,8 @@ def split_remaining_and_removed_edgelist(
         .rename({"component_a": "component"})
         .drop("component_b")
     )
-    if "depth" in remaining_edgelist.columns:
+    columns = remaining_edgelist.collect_schema().names()
+    if "depth" in columns:
         remaining_edgelist = remaining_edgelist.drop("depth")
 
     removed_edgelist = edgelist.filter(
