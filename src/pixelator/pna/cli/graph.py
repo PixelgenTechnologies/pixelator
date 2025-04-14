@@ -21,6 +21,7 @@ from pixelator.pna.config import load_antibody_panel, pna_config
 from pixelator.pna.graph.connected_components import (
     ConnectedComponentException,
     RefinementOptions,
+    StagedRefinementOptions,
     build_pxl_file_with_components,
 )
 from pixelator.pna.graph.report import GraphSampleReport
