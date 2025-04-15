@@ -38,6 +38,5 @@
     "median_reads_per_cell": 4368.5,
     "median_markers_per_cell": 718.0,
     "median_average_k_coreness": 2.144437194127243,
-    "spatial_coherence": 0.0469548611619218,
     "fraction_of_outlier_cells": 0.0
 }

@@ -6,7 +6,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 import dataclasses
 from typing import List, Optional, TypedDict, TypeVar
 
-from pixelator.mpx.report.models.commands import CommandInfo
+from pixelator.pna.report.models.commands import CommandInfo
 
 CommandOptionValue = TypeVar("CommandOptionValue", str, int, float, bool)
 
@@ -190,7 +190,7 @@ class Metrics(TypedDict, total=False):
     #: Median of the number of usable reads per cell.
     median_reads_per_cell: float
 
-    #: Median of the number of markers per cell.
+    #: Median of the total number of markers per cell.
     median_markers_per_cell: float
 
     #: Connectivity expressed as the median of the average k-coreness of the cells.
@@ -198,10 +198,6 @@ class Metrics(TypedDict, total=False):
 
     #: Fraction of the total input reads that are in cells.
     fraction_discarded_cells: float
-
-    #: The spatial coherence of the cells as measured by the median percentage of
-    #: variance explained in 3 dimensions.
-    spatial_coherence: float
 
     #: The fraction of cells that are outliers as determined by the tau-metric
     #: outlier detection.

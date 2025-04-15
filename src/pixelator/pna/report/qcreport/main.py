@@ -4,7 +4,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -122,14 +122,14 @@ def create_per_sample_qc_reports(
         # create SampleInfo object
         sample_info = SampleInfo(
             pixelator_version=__version__,
-            generation_date=datetime.utcnow().isoformat(),
+            generation_date=datetime.now(timezone.utc).isoformat(),
             sample_id=sample,
             sample_description=sample_description,
             technology="PNA",
             technology_version=technology_version,
             panel_name=webreport_panel_name,
             panel_version=webreport_panel_version,
-            parameters=list(invocation_info),
+            parameters=list(invocation_info),  # type: ignore
         )
 
         create_qc_report(

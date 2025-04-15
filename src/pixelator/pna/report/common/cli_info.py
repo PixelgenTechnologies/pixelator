@@ -46,7 +46,7 @@ _SINGLE_CELL_STAGES_TO_CACHE_KEY_MAPPING: dict[
 }
 
 
-class CLIInvocationInfo(Iterable[CommandInfo]):
+class CLIInvocationInfo:
     """List of commandline invocations from a pixelator working directory.
 
     :ivar sample_id: The sample_id on which these commands where run

@@ -11,7 +11,9 @@ import logging
 import typing
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
+import polars as pl
 import scanpy as sc
 
 from pixelator.common.utils.simplification import simplify_line_rdp
@@ -163,39 +165,168 @@ def collect_ranked_component_size_data(
     return df.to_csv(index=True)
 
 
-def collect_proximity_data(pxl_dataset: PNAPixelDataset) -> str | None:
+def _build_symmetric_proximity_matrix(
+    df: pl.DataFrame, labels: npt.NDArray
+) -> npt.NDArray:
+    """Build a symmetric matrix from the pivoted dataframe.
+
+    The dataframe is expected to have a column 'marker_1' and the rest of the columns
+    are the markers.
+
+    The matrix is built by filling the missing values with 0, sorting the columns and
+    rows according to a fixed order, and then forcing the matrix to be symmetric
+    by averaging it with its transpose.
+
+    Params:
+        df: The dataframe to build the matrix from
+        labels: The labels to use for the fixed order of the matrix
+
+    Returns:
+        The symmetric matrix as a numpy array
+
+    """
+    missing_cols = set(labels) - set(df.columns[1:])
+    missing_rows = set(labels) - set(df["marker_1"])
+
+    # Create a mapping dictionary for the fixed order
+    order_mapping = {value: index for index, value in enumerate(labels)}
+
+    # Add missing columns
+    for col in missing_cols:
+        df = df.with_columns(pl.lit(None).alias(col))
+
+    # Add missing rows
+    for row in missing_rows:
+        df = df.vstack(
+            pl.DataFrame({"marker_1": [row], **{col: None for col in df.columns[1:]}})
+        )
+
+    assert df.shape[0] == df.shape[1] - 1, (
+        "Unexpected shape after correcting for missing rows/columns"
+    )
+
+    # Sort the columns starting from index 1
+    sorted_columns = sorted(
+        df.columns[1:], key=lambda col: order_mapping.get(col, float("inf"))
+    )
+
+    # Reorder columns
+    df_sorted = df.select(["marker_1"] + sorted_columns)
+    # Reorder rows
+    df_sorted = df_sorted.sort(by=pl.col("marker_1").replace_strict(order_mapping))
+
+    assert (df_sorted["marker_1"] == df_sorted.columns[1:]).all(), (
+        "Row and column order do not match"
+    )
+
+    matrix = df_sorted.drop("marker_1").to_numpy()
+
+    # Replace nan values by the matching transposed values to make a symmetric matrix
+    # and fill the rest with 0
+    symmetric_matrix = np.where(np.isnan(matrix), matrix.T, matrix)
+    symmetric_matrix = np.nan_to_num(symmetric_matrix, copy=False, nan=0.0)
+
+    assert not np.isnan(symmetric_matrix).any(), (
+        "Matrix still contains NaN values after filling"
+    )
+
+    return symmetric_matrix
+
+
+def collect_proximity_data(
+    pxl_dataset: PNAPixelDataset,
+    min_marker_count: int = 50,
+    min_join_count_expected_mean=2,
+    min_component_count=2,
+    max_markers=50,
+) -> str | None:
     """Collect the proximity data for the qc report.
 
-    :param pxl_dataset: The PNAPixelDataset object
-    :return: a json formatted string with the proximity data
+    Params:
+        pxl_dataset: The PNAPixelDataset object
+        min_marker_count: The minimum marker count for a marker pair to be included in the median scores
+        min_join_count_expected_mean: The minimum join count expected mean for a marker pair to be included in the median scores
+        min_component_count:
+            The minimum number of components needed for a marker pair after previous filtering
+            to be included in the median scores.
+        max_markers:
+            The maximum number of markers to include. Markers with the highest stddev are picked.d
+    Returns:
+        A json formatted string with the proximity data or None of no proximity data is found.
     """
-    df = pxl_dataset.proximity().to_df()
+    df = pxl_dataset.proximity().to_polars()
     if df is None:
         return None
 
-    proximity_data = df[["marker_1", "marker_2", "join_count_z", "log2_ratio"]]
-    # Create unqiue sorted array of markers
-    labels = np.unique(proximity_data[["marker_1", "marker_2"]].values)
-
-    join_count_z = proximity_data.pivot_table(
-        index="marker_1", columns="marker_2", values="join_count_z", fill_value=0.0
+    # Filter the scores
+    filtered_df = df.filter(
+        (pl.col("marker_1_count") >= min_marker_count)
+        & (pl.col("marker_2_count") >= min_marker_count)
+        & (pl.col("join_count_expected_mean") >= min_join_count_expected_mean)
     )
-    join_count_z = join_count_z.reindex(labels, fill_value=0.0)
-    join_count_z = join_count_z.reindex(labels, fill_value=0.0, axis="columns")
 
-    log2_ratio = proximity_data.pivot_table(
-        index="marker_1", columns="marker_2", values="log2_ratio", fill_value=0.0
+    # Group by marker_1, marker_2 and count the number of components that
+    # have that pair after previously filtering for marker count
+    group_counts = filtered_df.group_by(["marker_1", "marker_2"]).len()
+
+    # Filter the dataframe to only include the pairs that have at least min_component_count items
+    filtered_df = (
+        filtered_df.join(group_counts, on=["marker_1", "marker_2"], how="left")
+        .filter(pl.col("len") > min_component_count)
+        .drop("len")
     )
-    log2_ratio = log2_ratio.reindex(labels, fill_value=0.0)
-    log2_ratio = log2_ratio.reindex(labels, fill_value=0.0, axis="columns")
 
-    join_count_z.to_numpy().tolist()
+    # Group by marker_1, marker_2 and take the median across components for join_count_z and log2_ratio
+    result_df = filtered_df.group_by(["marker_1", "marker_2"]).agg(
+        [
+            pl.median("join_count_z").alias("median_z_score"),
+            pl.median("log2_ratio").alias("median_log2ratio"),
+        ]
+    )
+
+    # Create unique sorted array of markers
+    labels = np.unique(group_counts[["marker_1", "marker_2"]].to_numpy())
+
+    join_count_z = result_df.pivot(
+        on="marker_2",
+        index="marker_1",
+        values="median_z_score",
+        aggregate_function="median",
+        sort_columns=True,
+    )
+
+    n_labels = len(labels)
+    join_count_z_matrix = _build_symmetric_proximity_matrix(join_count_z, labels)
+
+    log2_ratio = result_df.pivot(
+        on="marker_2",
+        index="marker_1",
+        values="median_log2ratio",
+        aggregate_function="median",
+        sort_columns=True,
+    )
+
+    log2_ratio_matrix = _build_symmetric_proximity_matrix(log2_ratio, labels)
+
+    join_count_z_std = np.std(join_count_z_matrix, axis=1)
+    log2_ratio_std = np.std(log2_ratio_matrix, axis=1)
+
+    # This might not make much sense, but it is just to define a total order
+    combined_std = join_count_z_std + log2_ratio_std
+
+    # Select the last N element
+    marker_subset = np.sort(np.argsort(combined_std)[n_labels - max_markers : n_labels])
+
+    filtered_labels = labels[marker_subset]
+    filtered_idx = np.ix_(marker_subset, marker_subset)
+    join_count_z_matrix_filtered = join_count_z_matrix[filtered_idx]
+    log2_ratio_matrix_filtered = log2_ratio_matrix[filtered_idx]
 
     return json.dumps(
         {
-            "markers": labels.tolist(),
-            "join_count_z": np.round(join_count_z.to_numpy(), decimals=9).tolist(),
-            "log2_ratio": np.round(log2_ratio.to_numpy(), decimals=9).tolist(),
+            "markers": filtered_labels.tolist(),
+            "join_count_z": np.round(join_count_z_matrix_filtered, decimals=4).tolist(),
+            "log2_ratio": np.round(log2_ratio_matrix_filtered, decimals=4).tolist(),
         }
     )
 
@@ -303,11 +434,6 @@ def collect_metrics_report_data(
         median_average_k_coreness=(
             analysis_metrics.k_cores.median_average_k_core
             if analysis_metrics.k_cores
-            else 0.0
-        ),
-        spatial_coherence=(
-            analysis_metrics.svd.median_variance_explained_3d
-            if analysis_metrics.svd
             else 0.0
         ),
         fraction_of_outlier_cells=graph_metrics.fraction_of_aggregate_components,
