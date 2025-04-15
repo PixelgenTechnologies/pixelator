@@ -129,7 +129,7 @@ def create_per_sample_qc_reports(
             technology_version=technology_version,
             panel_name=webreport_panel_name,
             panel_version=webreport_panel_version,
-            parameters=list(invocation_info),
+            parameters=list(invocation_info),  # type: ignore
         )
 
         create_qc_report(
