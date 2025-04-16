@@ -340,6 +340,22 @@ def test_molecule_rank_plot_back_compatibility():
 
 @pytest.mark.mpl_image_compare(
     deterministic=False,
+    baseline_dir="../snapshots/test_plot/test_molecule_rank_plot",
+)
+def test_molecule_rank_plot_with_n_umi():
+    np.random.seed(0)
+    data = pd.DataFrame(
+        {
+            "n_umi": np.round(10 ** np.random.normal(4, 0.3, 500)).astype(int),
+            "group": np.random.choice(["A", "B"], 500),
+        }
+    )
+    plot, _ = molecule_rank_plot(data, group_by="group")
+    return plot
+
+
+@pytest.mark.mpl_image_compare(
+    deterministic=False,
     baseline_dir="../snapshots/test_plot/test_edge_rank_plot",
 )
 def test_edge_rank_plot():

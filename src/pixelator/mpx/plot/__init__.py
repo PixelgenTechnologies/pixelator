@@ -111,8 +111,12 @@ def molecule_rank_plot(
     :raises: AssertionError if the required column(s) are not present in the DataFrame
     :raises: ValueError if the data types are invalid
     """
-    if "molecules" not in data.columns and "edges" in data.columns:
-        data["molecules"] = data["edges"]
+    if "molecules" not in data.columns:
+        if "edges" in data.columns:
+            data["molecules"] = data["edges"]
+        elif "n_umi" in data.columns:
+            data["molecules"] = data["n_umi"].astype(int)
+
     assert "molecules" in data.columns, "column 'molecules' is missing from DataFrame"
     assert (
         isinstance(data["molecules"], pd.Series) and data["molecules"].dtype == int
