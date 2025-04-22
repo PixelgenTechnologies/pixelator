@@ -15,22 +15,27 @@ def molecule_rank_plot(
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot the number of molecules (n_umi) per component against its n_umi rank.
 
-    :param data: a pandas DataFrame with a column 'n_umi' containing antibody
-    counts in components.
-    :param group_by: a column in the DataFrame to group the plot by.
+    Args:
+        data (pd.DataFrame): A pandas DataFrame with a column 'n_umi' containing
+            antibody counts in components.
+        group_by (Optional[str]): A column in the DataFrame to group the plot by.
 
-    :return: a plot showing the number of molecules per component against its
-    molecule rank used for quality control.
-    :rtype: Tuple[plt.Figure, plt.Axes]
-    :raises: AssertionError if the required column(s) are not present in the DataFrame
-    :raises: ValueError if the data types are invalid
+    Returns:
+        Tuple[plt.Figure, plt.Axes]: A plot showing the number of molecules per
+        component against its molecule rank used for quality control.
+
+    Raises:
+        AssertionError: If the required column(s) are not present in the DataFrame.
+        ValueError: If the data types are invalid.
+    data: pd.DataFrame, group_by: Optional[str] = None
+
     """
-    assert "n_umi" in data.columns, "column 'n_umi' is missing from DataFrame"
+    if "n_umi" not in data.columns:
+        raise AssertionError("column 'n_umi' is missing from DataFrame")
 
     if group_by is not None:
-        assert group_by in data.columns, (
-            f"group variable '{group_by}' not found in DataFrame"
-        )
+        if group_by not in data.columns:
+            raise AssertionError(f"group variable '{group_by}' not found in DataFrame")
 
         if data[group_by].dtype not in ["object", "category"]:
             raise ValueError(
@@ -48,13 +53,17 @@ def molecule_rank_plot(
             ascending=False, method="first"
         )
 
-    (
+    plot_grid = (
         sns.relplot(
-            data=molecule_rank_df, x="rank", y="n_umi", hue=group_by, aspect=1.6
+            data=molecule_rank_df,
+            x="rank",
+            y="n_umi",
+            hue=group_by,
+            aspect=1.6,
         )
         .set(xscale="log", yscale="log")
         .set_xlabels("Component rank (by number of molecules)")
         .set_ylabels("Number of molecules")
     )
 
-    return plt.gcf(), plt.gca()
+    return plot_grid.figure, plot_grid.ax
