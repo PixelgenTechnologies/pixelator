@@ -145,7 +145,7 @@ def analysis(
     logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
     manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
     output_pxl_file_target = PxlFile.copy_pxl_file(pxl_file, output_file)
-    pxl_dataset = read(pxl_file)
+    pxl_dataset = read(pxl_file.path)
     pxl_dataset_with_analysis = manager.execute(pxl_dataset, output_pxl_file_target)
 
     write_parameters_file(
