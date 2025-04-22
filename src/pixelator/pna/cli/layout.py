@@ -100,7 +100,7 @@ def layout(
     )
 
     pxl_file = PxlFile(Path(pxl_file))
-    pxl_dataset = read(pxl_file)
+    pxl_dataset = read(pxl_file.path)
 
     analysis_to_run = [
         CreateLayout(
