@@ -54,6 +54,10 @@ from pixelator import read_mpx
 
 pxl_dataset = read_mpx("path/to/pxl")
 ```
+- The function 'dsb_normalize' is now a common method for both MPX and PNA data.:
+```
+from pixelator.common.statistics import dsb_normalize
+```
 
 ### Fixed
 
