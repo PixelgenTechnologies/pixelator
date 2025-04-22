@@ -30,14 +30,16 @@ from pixelator.pna.pixeldataset.io import (
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
 
-def read(paths: Path | list[Path]) -> PNAPixelDataset:
+def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
     """Read a PNAPixelDataset from one or more provided .pxl file(s).
 
     :param path: path to the file to read
     :return: an instance of `PNAPixelDataset`
     """
-    paths = paths if isinstance(paths, list) else [paths]
-    return PNAPixelDataset.from_pxl_files(paths)
+    if not isinstance(paths, list):
+        paths = [paths]  # type: ignore
+    normalized_paths = [Path(p) for p in paths]  # type: ignore
+    return PNAPixelDataset.from_pxl_files(normalized_paths)
 
 
 @dataclass(slots=True, frozen=True, repr=True)
