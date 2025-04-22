@@ -25,26 +25,32 @@ def clr_transformation(
 ) -> pd.DataFrame:
     """Transform antibody counts data with CLR (centered log ratio).
 
-    This function will perform CLR (centered log ratio) transformation
-    on the dataframe that is passed containing antibody counts.
+    This function performs a CLR (centered log ratio) transformation on the
+    provided dataframe containing antibody counts. The CLR transformation
+    divides the counts by the geometric mean and then applies a log
+    transformation. Alternatively, it can log-transform the counts first and
+    then subtract the geometric mean (log), centering the transformed counts
+    around zero (which may include negative values).
 
-    A description of CLR transformation can be found at:
-    https://en.wikipedia.org/wiki/Compositional_data#Center_logratio_transform
-    Essentially, the counts are divided by the geometric mean and then log-
-    transformed. An alternate version consists of log-transforming the counts
-    first and then subtracting the geometric mean (log). This makes the
-    transformed counts centered around zero (include negative values).
-    Use `axis=0` to apply the transformation by column (antibody) and `axis=1`
-    to apply the transformation by row (component).
+    Args:
+        df (pd.DataFrame): The dataframe of antibody counts.
+        axis (Literal[0, 1], optional): The axis on which to apply the
+            transformation. `axis=0` applies the transformation by columns
+            (antibody), and `axis=1` applies it by rows (component). Defaults
+            to 0.
+        non_negative (bool, optional): If `True`, the non-negative CLR
+            transformation is used. If `False`, the zero-centered CLR
+            transformation is used. Defaults to True.
 
-    :param df: the dataframe of antibody counts.
-    :param axis: on which axis to apply the transformation. axis=0 means
-                 by columns (antibody), and axis=1 means by row (component).
-    :param non_negative: if `True` the non-negative CLR transform will be used.
-                         if `False` the zero-centered CLR transformation will be used.
-    :raises AssertionError: when the input axis is not valid
-    :return: a dataframe with the antibody counts transformed
-    :rtype: pd.DataFrame
+    Raises:
+        AssertionError: If the input axis is not 0 or 1.
+
+    Returns:
+        pd.DataFrame: A dataframe with the antibody counts transformed.
+
+    References:
+        https://en.wikipedia.org/wiki/Compositional_data#Center_logratio_transform
+
     """
     if axis not in [0, 1]:
         raise AssertionError("Axis is required to be 0 or 1")
@@ -77,15 +83,15 @@ def clr_transformation(
 def correct_pvalues(pvalues: np.ndarray) -> np.ndarray:
     """Correct a series of p-values using the Benjamini-Hochberg method.
 
-    It returns the corrected p-values as `np.ndarray` in the same order
-    as the original array.
-
     An outline of the method can be found here:
     https://en.wikipedia.org/wiki/False_discovery_rate#Benjamini%E2%80%93Hochberg_procedure
 
-    :param pvalues: an array of p-values to adjust
-    :return: the array of adjusted p-values in the same order as the input array
-    :rtype: np.ndarray
+    Args:
+        pvalues (np.ndarray): An array of p-values to adjust.
+
+    Returns:
+        np.ndarray: The array of adjusted p-values in the same order as the input array.
+
     """
     # Most descriptions of the BH method states that p-values should
     # first be ordered in ascending order an ranked, however doing so
@@ -110,15 +116,17 @@ def correct_pvalues(pvalues: np.ndarray) -> np.ndarray:
 
 
 def log1p_transformation(df: pd.DataFrame) -> pd.DataFrame:
-    """Transform a antibody counts using the log1p function.
+    """Transform antibody counts using the log1p function.
 
-    A helper function that takes as input a dataframe of antibody
-    counts and transforms it using log1p function (natural logarithm
-    of 1 + x) on the count of each marker or component, element-wise.
+    This function applies the natural logarithm of (1 + x) to the count of each
+    marker or component, element-wise.
 
-    :param df: the dataframe of antibody counts (antibodies as columns)
-    :returns: a dataframe with the counts normalized
-    :rtype: pd.DataFrame
+    Args:
+        df (pd.DataFrame): The dataframe of antibody counts (antibodies as columns).
+
+    Returns:
+        pd.DataFrame: A dataframe with the counts normalized.
+
     """
     logger.debug(
         (
@@ -138,15 +146,17 @@ def log1p_transformation(df: pd.DataFrame) -> pd.DataFrame:
 def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
     """Transform antibody counts as deviation from an expected baseline distribution.
 
-    In this function we refer to baseline distribution as fixed ratio of different
-    antibody types in each node. For example, if in total 10% of antibodies are
-    HLA-ABC, in a node with 120 antibodies we expect to see 12 HLA-ABC counts.
-    If we actually see 8 counts in this node, the rate_diff_transformation for
-    HLA-ABC in this node will be -4.
+    The baseline distribution refers to a fixed ratio of different antibody types
+    in each node. For example, if 10% of antibodies are HLA-ABC, in a node with
+    120 antibodies, the expected count is 12. If the actual count is 8, the
+    transformation for HLA-ABC in this node will be -4.
 
-    :param df: the dataframe of raw antibody counts (antibodies as columns)
-    :returns: a dataframe with the counts difference from expected values
-    :rtype: pd.DataFrame
+    Args:
+        df (pd.DataFrame): The dataframe of raw antibody counts (antibodies as columns).
+
+    Returns:
+        pd.DataFrame: A dataframe with the counts difference from expected values.
+
     """
     antibody_counts_per_node = df.sum(axis=1)
     antibody_rates = df.sum(axis=0)
@@ -159,17 +169,22 @@ def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
 def rel_normalization(df: pd.DataFrame, axis: Literal[0, 1] = 0) -> pd.DataFrame:
     """Normalize antibody counts to the relative amount per marker or component.
 
-    A helper function that takes as input a dataframe of antibody
-    counts and normalizes it using relative counts (the count of each
-    marker or component is divided by its the total sum), element-wise.
-    Use `axis=0` to apply the normalization by column (antibody) and `axis=1`
-    to apply the normalization by row (component).
+    This function normalizes antibody counts using relative counts, where the
+    count of each marker or component is divided by its total sum. Use `axis=0`
+    to apply the normalization by column (antibody) and `axis=1` to apply it by
+    row (component).
 
-    :param df: the dataframe of antibody counts (antibodies as columns)
-    :param axis: on which axis to apply the normalization
-    :raises AssertionError: when the input axis is not valid
-    :returns: a dataframe with the counts normalized
-    :rtype: pd.DataFrame
+    Args:
+        df (pd.DataFrame): The dataframe of antibody counts (antibodies as columns).
+        axis (Literal[0, 1]): The axis on which to apply the normalization.
+            `axis=0` applies normalization by columns, and `axis=1` applies it by rows.
+
+    Raises:
+        AssertionError: If the input axis is not 0 or 1.
+
+    Returns:
+        pd.DataFrame: A dataframe with the counts normalized.
+
     """
     if axis not in [0, 1]:
         raise AssertionError("Axis is required to be 0 or 1")
@@ -195,12 +210,16 @@ def wilcoxon_test(
 ) -> pd.Series:
     """Perform a Wilcoxon rank-sum test between two groups.
 
-    :param df: the dataframe containing the data.
-    :param reference: name of the reference group in the contrast column.
-    :param target: name of the target group in the contrast column.
-    :param contrast_column: name the column containing the group information.
-    :param value_column: name of the column containing the values to compare.
-    :return: a series containing the test statistic, p-value and median difference.
+    Args:
+        df (pd.DataFrame): The dataframe containing the data.
+        reference (str): Name of the reference group in the contrast column.
+        target (str): Name of the target group in the contrast column.
+        contrast_column (str): Name of the column containing the group information.
+        value_column (str): Name of the column containing the values to compare.
+
+    Returns:
+        pd.Series: A series containing the test statistic, p-value, and median difference.
+
     """
     reference_df = df.loc[df[contrast_column] == reference, :]
     target_df = df.loc[df[contrast_column] == target, :]
@@ -231,7 +250,11 @@ def _regress_out_confounder(pheno, exprs, rcond=1e-8):
 
 
 def _get_background_abundance(dataframe: pd.DataFrame, axis=0):
-    """Fit a double gaussian distribution to the abundance data and return the mean of the first gaussian as an estimation of the background level."""
+    """Estimate the background abundance of a marker or component.
+
+    Fit a double gaussian distribution to the abundance data and return the
+    mean of the first gaussian as an estimation of the background level.
+    """
     background = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
     scores = pd.Series(index=dataframe.index if axis == 0 else dataframe.columns)
     gmm = GaussianMixture(n_components=2, max_iter=1000, random_state=0)
@@ -249,14 +272,30 @@ def _get_background_abundance(dataframe: pd.DataFrame, axis=0):
 def dsb_normalize(
     raw_abundance: pd.DataFrame, isotype_controls: Union[List, None] = None
 ):
-    """empty-droplet-free method as implemented in Mulè et. al. dsb package.
+    """Normalize abundance data using the empty-droplet-free method.
 
-    The normalization steps are: 1- log1p transformation, 2- remove background
-    abundance per marker, 3- regularize abundance per component.
+    This method is implemented as described in Mulè et al.'s dsb package.
+    The normalization steps are:
+    1. Log1p transformation.
+    2. Remove background abundance per marker.
+    3. Regularize abundance per component.
 
-    :param raw_abundance: the raw abundance count data.
-    :param isotype_controls: list of isotype controls.
-    :return: normalized abundance data.
+    Args:
+        raw_abundance (pd.DataFrame): The raw abundance count data.
+        isotype_controls (Union[List, None]): List of isotype controls.
+
+    Raises:
+        ValueError: If no isotype controls are provided.
+
+    Returns:
+        pd.DataFrame: Normalized abundance data.
+
+    References:
+        Integrating population and single-cell variations in vaccine responses
+        identifies a naturally adjuvanted human immune setpoint,
+        Matthew P. Mulè et al., Immunity, 2024,
+        https://doi.org/10.1016/j.immuni.2024.04.009
+
     """
     log_abundance = np.log1p(raw_abundance)
     marker_background, _ = _get_background_abundance(log_abundance, axis=1)
