@@ -2,6 +2,8 @@
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_allclose, assert_array_almost_equal
@@ -10,11 +12,14 @@ from pandas.testing import assert_frame_equal
 from pixelator.common.statistics import (
     clr_transformation,
     correct_pvalues,
+    dsb_normalize,
     log1p_transformation,
     rate_diff_transformation,
     rel_normalization,
     wilcoxon_test,
 )
+
+DATA_ROOT = Path(__file__).parent / "data"
 
 
 def test_correct_p_values_basic():
@@ -187,3 +192,16 @@ def test_wilcoxon_test():
     diff_dist_result = wilcoxon_test(diff_dist_df, "A", "B", "group", "value")
     assert diff_dist_result["p_value"] < 0.05
     assert diff_dist_result["median_difference"] > 0
+
+
+def test_dsb_normalize():
+    input_data = pd.read_csv(
+        str(DATA_ROOT / "dsb_normalization_test_input.csv")
+    ).astype(float)
+    output_data = pd.read_csv(
+        str(DATA_ROOT / "dsb_normalization_test_output.csv")
+    ).astype(float)
+    output_data = output_data - output_data.iloc[0, :]
+    result = dsb_normalize(input_data, isotype_controls=["mIgG1", "mIgG2a", "mIgG2b"])
+    result = result - result.iloc[0, :]
+    assert_frame_equal(result, output_data, atol=0.08)
