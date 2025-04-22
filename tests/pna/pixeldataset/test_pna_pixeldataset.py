@@ -1,6 +1,7 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
 from io import StringIO
+from pathlib import Path
 
 import pandas as pd
 import polars as pl
@@ -11,8 +12,27 @@ from polars.testing import assert_frame_equal
 from pixelator.pna.pixeldataset import (
     PixelDatasetConfig,
     PNAPixelDataset,
+    read,
 )
 from pixelator.pna.pixeldataset.io import PixelDataViewer
+
+
+class TestReadPixelDataset:
+    def test_read_pxl_file_single_file(self, pxl_file: Path):
+        dataset = read(pxl_file)
+        assert isinstance(dataset, PNAPixelDataset)
+
+    def test_read_pxl_file_multiple_files(self, pxl_file: Path):
+        dataset = read([pxl_file])
+        assert isinstance(dataset, PNAPixelDataset)
+
+    def test_read_pixel_file_single_file_str(self, pxl_file: Path):
+        dataset = read(str(pxl_file))
+        assert isinstance(dataset, PNAPixelDataset)
+
+    def test_read_pixel_file_multiple_files_str(self, pxl_file: Path):
+        dataset = read([str(pxl_file)])
+        assert isinstance(dataset, PNAPixelDataset)
 
 
 class TestPNAPixelDataset:
