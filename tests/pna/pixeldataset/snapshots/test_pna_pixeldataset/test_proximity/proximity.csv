@@ -1,0 +1,4 @@
+component,marker_1,marker_2,join_count,join_count_expected_mean,join_count_expected_sd,join_count_z,join_count_pvalue,sample,marker_1_count,marker_2_count,min_count,log2_ratio
+fc07dea9b679aca7,MarkerA,MarkerB,3,1.65,0.794,1.35,0.088,test_sample,3,7,3,0.8624964762500652
+fc07dea9b679aca7,MarkerA,MarkerA,87,86.5,9.96,0.062,0.575,test_sample,3,3,3,0.008315268212003745
+fc07dea9b679aca7,MarkerB,MarkerC,30,27.3,3.1,0.001,0.999,test_sample,7,4,4,0.13606154957602826

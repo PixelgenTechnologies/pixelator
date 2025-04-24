@@ -1,0 +1,13 @@
+{
+    "cli": {
+        "command": "pixelator single-cell-mpx annotate",
+        "options": {
+            "--panel": "test_panel.csv",
+            "--min-size": 1,
+            "--max-size": 10000,
+            "--dynamic-filter": null,
+            "--aggregate-calling": true,
+            "--output": "."
+        }
+    }
+}

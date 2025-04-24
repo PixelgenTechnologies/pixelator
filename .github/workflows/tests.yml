@@ -40,7 +40,7 @@ jobs:
               paths:
                 - 'pyproject.toml'
                 - 'poetry.lock'
-                - 'src/pixelator/**'
+                - 'src/**'
                 - 'tests/**'
               paths_ignore:
                 - 'tests/**/*.md'
@@ -59,6 +59,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
@@ -92,6 +94,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
@@ -128,6 +132,8 @@ jobs:
     if: needs.pre_job.outputs.should_skip == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
@@ -149,4 +155,4 @@ jobs:
 
       - name: Run workflow tests
         run: |
-          poetry run pytest -s -m "workflow_test" --basetemp=/tmp/pytest-results tests/integration/test_small_${{ matrix.case }}.yaml --log-cli-level=DEBUG
+          poetry run pytest -s -m "workflow_test" --basetemp=/tmp/pytest-results tests/mpx/integration/test_small_${{ matrix.case }}.yaml --log-cli-level=DEBUG

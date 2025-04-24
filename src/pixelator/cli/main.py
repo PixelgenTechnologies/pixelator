@@ -11,21 +11,21 @@ import click
 import yappi
 
 from pixelator import __version__
-from pixelator.cli.adapterqc import adapterqc
-from pixelator.cli.amplicon import amplicon
-from pixelator.cli.analysis import analysis
-from pixelator.cli.annotate import annotate
-from pixelator.cli.collapse import collapse
-from pixelator.cli.common import AliasedOrderedGroup, logger
-from pixelator.cli.demux import demux
-from pixelator.cli.graph import graph
-from pixelator.cli.layout import layout
-from pixelator.cli.misc import list_single_cell_designs, list_single_cell_panels
-from pixelator.cli.plugin import add_cli_plugins
-from pixelator.cli.preqc import preqc
-from pixelator.cli.report import report
-from pixelator.logging import LoggingSetup
-from pixelator.utils import click_echo
+from pixelator.common.utils import click_echo
+from pixelator.mpx.cli.adapterqc import adapterqc
+from pixelator.mpx.cli.amplicon import amplicon
+from pixelator.mpx.cli.analysis import analysis
+from pixelator.mpx.cli.annotate import annotate
+from pixelator.mpx.cli.collapse import collapse
+from pixelator.mpx.cli.common import AliasedOrderedGroup, logger
+from pixelator.mpx.cli.demux import demux
+from pixelator.mpx.cli.graph import graph
+from pixelator.mpx.cli.layout import layout
+from pixelator.mpx.cli.misc import list_single_cell_designs, list_single_cell_panels
+from pixelator.mpx.cli.plugin import add_cli_plugins
+from pixelator.mpx.cli.preqc import preqc
+from pixelator.mpx.cli.report import report
+from pixelator.mpx.logging import LoggingSetup
 
 
 @click.group(cls=AliasedOrderedGroup, name="pixelator")
@@ -96,7 +96,7 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     return 0
 
 
-@main_cli.group(name="single-cell")
+@main_cli.group(name="single-cell-mpx")
 @click.option(
     "--list-designs",
     is_flag=True,
@@ -118,7 +118,7 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     help="List available panels and exit.",
 )
 def single_cell_mpx():
-    """Build the click group for single-cell commands."""
+    """Commands related to the molecular pixelator assay."""
 
 
 # Add single-cell top level command to cli
@@ -135,6 +135,63 @@ single_cell_mpx.add_command(annotate)
 single_cell_mpx.add_command(layout)
 single_cell_mpx.add_command(analysis)
 single_cell_mpx.add_command(report)
+
+
+# Note that the import order here is intentional.
+# The PNA commands needs to be imported here, rather than
+# at the top, because otherwise things like importing
+# the configs will not work as expected.
+from pixelator.pna.cli.amplicon import amplicon
+from pixelator.pna.cli.analysis import analysis
+from pixelator.pna.cli.collapse import collapse
+from pixelator.pna.cli.combine_collapse import combine_collapse
+from pixelator.pna.cli.demux import demux
+from pixelator.pna.cli.graph import graph
+from pixelator.pna.cli.layout import layout
+from pixelator.pna.cli.misc import (
+    list_single_cell_pna_designs,
+    list_single_cell_pna_panels,
+)
+from pixelator.pna.cli.report import report
+
+
+@click.group()
+@click.option(
+    "--list-designs",
+    is_flag=True,
+    metavar="",
+    is_eager=True,
+    expose_value=False,
+    required=False,
+    callback=list_single_cell_pna_designs,
+    help="List available designs and exit.",
+)
+@click.option(
+    "--list-panels",
+    is_flag=True,
+    metavar="",
+    is_eager=True,
+    expose_value=False,
+    required=False,
+    callback=list_single_cell_pna_panels,
+    help="List available panels and exit.",
+)
+def single_cell_pna():
+    """Commands related to the network proximity assay."""
+    pass
+
+
+main_cli.add_command(single_cell_pna)
+
+# Add all commands to the group
+single_cell_pna.add_command(amplicon)
+single_cell_pna.add_command(demux)
+single_cell_pna.add_command(collapse)
+single_cell_pna.add_command(graph)
+single_cell_pna.add_command(analysis)
+single_cell_pna.add_command(layout)
+single_cell_pna.add_command(report)
+single_cell_pna.add_command(combine_collapse, name="combine-collapse")
 
 # Add cli plugins as commands on top level
 add_cli_plugins(main_cli)

@@ -5,7 +5,7 @@ version = "0.0.0"
 homepage = "https://github.com/PixelgenTechnologies/pixelator"
 repository = "https://github.com/PixelgenTechnologies/pixelator"
 documentation = "https://software.pixelgen.com"
-description = "A command-line tool and library to process and analyze sequencing data from Molecular Pixelation (MPX) assays."
+description = "A command-line tool and library to process and analyze data generated from technologies from Pixelgen Technologies."
 authors = ["Pixelgen Technologies AB <developers@pixelgen.com>",]
 maintainers = ["Alvaro Martinez Barrio <alvaro.martinez.barrio@pixelgen.com>"]
 readme = "README.md"
@@ -33,8 +33,8 @@ cutadapt = ">=4.2"
 umi_tools = ">=1.1.4,<2.0.0"
 pyfastx = "*"
 yappi = "*"
-pandas = "^2.0.0"
-numpy = "<1.24.0"
+pandas = ">=2.0.0,<3.0.0"
+numpy = ">=2.0.0,<3.0.0"
 annoy = "<=1.17.0"
 xopen = "*"
 xxhash = "*"
@@ -44,17 +44,20 @@ scanpy = "*"
 lxml = "*"
 cssselect = "*"
 typing_extensions = "*"
-scipy = "<1.13.0"
+scipy = ">=1.0.0,<2.0.0"
 pyarrow = ">=14"
 semver = "^3.0.0"
 ruamel-yaml = "^0.17.21"
 pydantic = ">=2.0,<2.5"
 polars = ">=1.0.0,<2.0.0"
 importlib-resources = "^5.12.0"
-fsspec = "^2024.9.0"
-fastparquet = "^2023.8.0"
-graspologic = "^3.3.0"
+fsspec = "*"
+fastparquet = "*"
 plotly = "*"
+graspologic-native = "^1.2.4"
+duckdb = "^1.2.1"
+faiss-cpu = "^1.10.0"
+zstandard = "^0.23.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
@@ -99,7 +102,8 @@ markers = [
     "integration_test: Marks a test as an integration test, which is often slow (deselect with '-m \"not integration_test\"')",
     "workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow (deselect with '-m \"not workflow_test\"')",
     "external_workflow_test: Marks a test as a complete pixelator workflow that requires external data, which is extremely slow and requires additional setup before running (deselect with '-m \"not external_workflow_test\"')",
-    "web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed (deselect with '-m \"not web_tests\"')"]
+    "web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed (deselect with '-m \"not web_tests\"')",
+    "slow: Marks a test as being slow (deselect with '-m \"not web_tests\"')",]
 mpl-results-path = "tests/reports_mpl"
 mpl-generate-summary = "html"
 addopts = ["-p no:pytest-workflow", "-m not workflow_test and not web_test", "--benchmark-disable", "--mpl"]
@@ -122,12 +126,12 @@ ignore = ["E501","E402","E203","D213","D203"]
 exclude = ["docs/conf.py"]
 
 [tool.ruff.lint.per-file-ignores]
-"pixelator/report/__init__.py" = ["E501"]
-"**/tests/**" = ["D101", "D102", "D103", "D105", "D107", "D200", "D202", "D205", "D212" , "D400", "D401", "D403", "D404", "D415"]
+"pixelator/mpx/report/__init__.py" = ["E501"]
+"**/tests/**" = ["D100", "D101", "D102", "D103", "D105", "D107", "D200", "D202", "D205", "D212" , "D400", "D401", "D403", "D404", "D415"]
 # Since click uses a different layout for the docs strings to generate the
 # cli docs, we ignore these rules here.
-"src/pixelator/cli/**" = ["D200", "D212", "D400", "D415"]
-"src/pixelator/test_utils/**" = ["D"]
+"src/pixelator/mpx/cli/**" = ["D200", "D212", "D400", "D415"]
+"src/pixelator/mpx/test_utils/**" = ["D"]
 
 [tool.poetry-dynamic-versioning]
 enable = true

@@ -12,12 +12,9 @@ from itertools import chain
 from pathlib import Path
 from typing import Iterator, Optional
 
-ROOT_DIR = Path(__file__).parent / ".."
-TEST_DIR = ROOT_DIR / "tests"
-RND_DIR = ROOT_DIR / "src/pixelator_rnd"
-RND_CONFIG_DIR = ROOT_DIR / "src/pixelator_rnd_config"
-TISSUE_DIR = ROOT_DIR / "src/pixelator_tissue"
-PYTHON_DIRS = [RND_DIR, TEST_DIR]
+ROOT_DIR = Path(__file__).parent / ".." / "src"
+
+DIRS = [ROOT_DIR]
 
 
 class CopyrightNoticeMissing(Exception):
@@ -63,7 +60,7 @@ def check_copyright(files: Optional[Iterator[Path]]):
 
     def errors():
         files_to_check = files or chain.from_iterable(
-            [directory.rglob("**/*.py") for directory in PYTHON_DIRS]
+            [directory.rglob("**/*.py") for directory in DIRS]
         )
         for py_file in files_to_check:
             error = check_file_for_copyright(py_file)
