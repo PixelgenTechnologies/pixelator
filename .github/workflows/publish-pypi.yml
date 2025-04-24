@@ -76,14 +76,14 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: debug 1
-        run: git status
-
       - name: Set up Python environment
         uses: actions/setup-python@v4
         id: setup-python
         with:
           python-version: "3.11"
+
+      - name: Show state of repo (useful for debugging)
+        run: git status
 
       #----------------------------------------------
       #   install & configure poetry
@@ -115,9 +115,6 @@ jobs:
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --only dev
-
-      - name: debug 2
-        run: git status
 
       #----------------------------------------------
       #   Build package
