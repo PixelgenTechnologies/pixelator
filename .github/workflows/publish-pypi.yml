@@ -113,17 +113,11 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --only dev
 
-      - name: debug 1
-        run: git status
-
       #----------------------------------------------
       #   Build package
       #----------------------------------------------
       - name: Build package
         run: poetry build
-
-      - name: debug 2
-        run: git status
 
       #----------------------------------------------
       #   Verify build version
