@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [20.0.0] - 2025-04-22
+## [20.0.0] - 2025-04-24
 
 This is a large release that reorganizes Pixelator in a major way. We introduce the new module `pixelator.pna`,
 which is used to process and analyze data from the Proximity Network Assay (PNA). As a consequence of this, we
