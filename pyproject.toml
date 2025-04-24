@@ -21,9 +21,7 @@ classifiers=[
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11']
 
-packages = [
-    { include = "pixelator", from = "src" },
-    { include = "tests", format = "sdist" }]
+packages = [{ include = "pixelator", from = "src" }]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
