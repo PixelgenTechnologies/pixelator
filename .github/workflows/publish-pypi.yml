@@ -76,6 +76,9 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - name: debug 1
+        run: git status
+
       - name: Set up Python environment
         uses: actions/setup-python@v4
         id: setup-python
@@ -112,6 +115,9 @@ jobs:
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --only dev
+
+      - name: debug 2
+        run: git status
 
       #----------------------------------------------
       #   Build package
