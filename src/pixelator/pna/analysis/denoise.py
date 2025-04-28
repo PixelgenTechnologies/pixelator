@@ -296,7 +296,7 @@ class DenoiseOneCore(PerComponentTask):
                 )
             )
         )
-        adata = pna_edgelist_to_anndata(edgelist.lazy(), panel)
+        adata = pna_edgelist_to_anndata(edgelist, panel)
         with PixelFileWriter(pxl_file_target.path) as writer:
             writer.write_edgelist(edgelist)
             writer.write_adata(adata)
