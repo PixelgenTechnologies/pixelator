@@ -1,0 +1,103 @@
+"""Pipeline console script for denoising pna data.
+
+Copyright © 2025 Pixelgen Technologies AB.
+"""
+
+import logging
+from pathlib import Path
+
+import click
+
+from pixelator.common.utils import (
+    create_output_stage_dir,
+    get_sample_name,
+    log_step_start,
+    sanity_check_inputs,
+    timer,
+    write_parameters_file,
+)
+from pixelator.pna import read
+from pixelator.pna.analysis.denoise import DenoiseOneCore
+from pixelator.pna.analysis_engine import AnalysisManager, LoggingSetup
+from pixelator.pna.cli.common import output_option
+from pixelator.pna.pixeldataset.io import PxlFile
+
+logger = logging.getLogger(__name__)
+
+
+@click.command(
+    "denoise",
+    short_help=("Add analysis results to a pxl file."),
+    options_metavar="<options>",
+)
+@click.argument(
+    "pxl_file",
+    required=True,
+    type=click.Path(exists=True),
+    metavar="<PIXELFILE>",
+)
+@click.option(
+    "--pval-threshold",
+    default=0.05,
+    required=False,
+    type=click.FloatRange(
+        0,
+        1,
+    ),
+    show_default=True,
+    help="pvalue threshold for an over-expression to be considered significant.",
+)
+@click.option(
+    "--inflate-factor",
+    default=1.5,
+    required=False,
+    type=click.FloatRange(
+        1,
+        10,
+    ),
+    show_default=True,
+    help="How much to inflate number of noise markers to remove.",
+)
+@output_option
+@click.pass_context
+@timer
+def denoise(
+    ctx,
+    pxl_file,
+    pval_threshold,
+    inflate_factor,
+    output,
+):
+    """Denoise components of a PXL file."""
+    input_files = [pxl_file]
+    log_step_start(
+        "denoise",
+        input_files=input_files,
+        output=output,
+        pval_threshold=pval_threshold,
+        inflate_factor=inflate_factor,
+    )
+
+    # some basic sanity check on the input files
+    sanity_check_inputs(input_files=input_files, allowed_extensions=("pxl",))
+
+    analysis_to_run = [DenoiseOneCore(pval_threshold, inflate_factor)]
+
+    sample_name = get_sample_name(pxl_file)
+    pxl_file = PxlFile(Path(pxl_file))
+    denoise_output = create_output_stage_dir(output, "denoise")
+    output_file = denoise_output / f"{sample_name}.denoised_graph.pxl"
+
+    logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
+    manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
+    output_pxl_file_target = PxlFile.copy_pxl_file(pxl_file, output_file)
+    pxl_dataset = read(pxl_file.path)
+    pxl_dataset_with_analysis = manager.execute(pxl_dataset, output_pxl_file_target)
+
+    write_parameters_file(
+        ctx,
+        denoise_output / f"{sample_name}.meta.json",
+        command_path="pixelator single-cell-pna denoise",
+    )
+
+    # TODO add report
