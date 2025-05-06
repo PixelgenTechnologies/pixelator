@@ -155,7 +155,7 @@ def _sample_nodes_to_be_removed(
     return to_be_removed
 
 
-def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list) -> list:
+def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list = []) -> list:
     """Identify nodes that become stranded after removing nodes_to_remove.
 
     Args:
@@ -167,8 +167,9 @@ def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list) -> list:
         connected component after nodes_to_remove are removed.
 
     """
-    component.raw.remove_nodes_from(nodes_to_remove)
-    connected_components = list(nx.connected_components(component.raw))
+    graph = component.raw.copy()
+    graph.remove_nodes_from(nodes_to_remove)
+    connected_components = list(nx.connected_components(graph))
     stranded_nodes = []
     for cc in connected_components[1:]:  # connected_components[0] is the largest
         stranded_nodes += list(cc)
