@@ -89,39 +89,25 @@ def pna_edgelist_to_anndata(
 
     def component_metrics(edgelist, counts_df):
         grouped_by_component = edgelist.group_by("component")
-        a_markers = (
-            grouped_by_component.agg(pl.col("umi1").n_unique().alias("n_umi1"))
-            .collect()
-            .to_pandas()
-            .set_index("component")
-        ).astype("uint64")
-        b_markers = (
-            grouped_by_component.agg(pl.col("umi2").n_unique().alias("n_umi2"))
-            .collect()
-            .to_pandas()
-            .set_index("component")
-        ).astype("uint64")
-        edges = (
-            grouped_by_component.agg(pl.len().alias("n_edges"))
-            .collect()
-            .to_pandas()
-            .set_index("component")
-        ).astype("uint64")
+        a_markers = grouped_by_component.agg(pl.col("umi1").n_unique().alias("n_umi1"))
+        b_markers = grouped_by_component.agg(pl.col("umi2").n_unique().alias("n_umi2"))
+        edges = grouped_by_component.agg(pl.len().alias("n_edges"))
+        reads_in_component = grouped_by_component.agg(
+            pl.col("read_count").sum().alias("reads_in_component")
+        )
+        info_agg = (
+            a_markers.join(b_markers, on="component")
+            .join(edges, on="component")
+            .join(reads_in_component, on="component")
+        )
+        if isinstance(info_agg, pl.LazyFrame):
+            info_agg = info_agg.collect()
+
+        info_agg_df = info_agg.to_pandas().set_index("component").astype("uint64")
         markers = pd.DataFrame(
             pd.Series((counts_df > 0).sum(axis=1), name="n_antibodies", dtype="uint64")
         )
-        reads_in_component = (
-            grouped_by_component.agg(
-                pl.col("read_count").sum().alias("reads_in_component")
-            )
-            .collect()
-            .to_pandas()
-            .set_index("component")
-        )
-
-        df = pd.concat(
-            [a_markers, b_markers, edges, markers, reads_in_component], axis=1
-        )
+        df = pd.concat([info_agg_df, markers], axis=1)
         df["n_umi"] = df["n_umi1"] + df["n_umi2"]
 
         return df

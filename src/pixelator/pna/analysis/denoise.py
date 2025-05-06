@@ -180,7 +180,7 @@ def denoise_one_core_layer(
     component: PNAGraph,
     pval_significance_threshold: float = 0.05,
     inflate_factor: float = 1.5,
-):
+) -> list:
     """Identify and remove markers over-expressed in the one-core layer of a graph.
 
     This function analyzes the one-core layer of a graph, identifies markers
@@ -203,6 +203,11 @@ def denoise_one_core_layer(
     """
     node_marker_counts = component.node_marker_counts
     node_core_numbers = pd.Series(nx.core_number(component.raw))
+    if (node_core_numbers <= 1).mean() >= 0.5:
+        logger.debug(
+            "Too many low core number nodes. Skipping denoising for this component."
+        )
+        return []
     markers_to_remove = get_overexpressed_markers_in_one_core(
         node_marker_counts=node_marker_counts,
         node_core_numbers=node_core_numbers,
@@ -290,6 +295,7 @@ class DenoiseOneCore(PerComponentTask):
         edgelist = (
             pxl.edgelist()
             .to_polars()
+            .drop("sample", strict=False)
             .filter(
                 pl.min_horizontal(
                     ~pl.col("umi1").is_in(data["umi"]),
