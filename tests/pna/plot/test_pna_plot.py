@@ -12,7 +12,7 @@ from pixelator.pna.plot import molecule_rank_plot
 
 @pytest.mark.mpl_image_compare(
     deterministic=False,
-    baseline_dir="../snapshots/test_plot/test_molecule_rank_plot",
+    baseline_dir="./snapshots/test_molecule_rank_plot",
 )
 def test_molecule_rank_plot():
     np.random.seed(0)
