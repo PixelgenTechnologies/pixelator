@@ -292,14 +292,15 @@ class DenoiseOneCore(PerComponentTask):
         panel_name = pxl.metadata().popitem()[1]["panel_name"]
         panel_name = "proxiome-immuno-155"  # TODO REMOVE THIS LINE
         panel = load_antibody_panel(pna_config, panel_name)
+        nodes_to_remove = pl.Series(data["umi"], dtype=pl.UInt64)
         edgelist = (
             pxl.edgelist()
             .to_polars()
             .drop("sample", strict=False)
             .filter(
                 pl.min_horizontal(
-                    ~pl.col("umi1").is_in(data["umi"]),
-                    ~pl.col("umi2").is_in(data["umi"]),
+                    ~pl.col("umi1").is_in(nodes_to_remove),
+                    ~pl.col("umi2").is_in(nodes_to_remove),
                 )
             )
         )

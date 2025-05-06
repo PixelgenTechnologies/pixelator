@@ -7,7 +7,7 @@ from pathlib import Path
 
 import networkx as nx
 import pandas as pd
-from pandas.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 from pixelator.pna.analysis.denoise import (
     DenoiseOneCore,
@@ -100,7 +100,28 @@ def test_denoise_one_core_analysis(pna_pxl_dataset, snapshot, tmp_path):
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
     manager = AnalysisManager([DenoiseOneCore()])
+    denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
 
-    dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
+    components = pna_pxl_dataset.adata().obs.index
+    for comp in components:
+        graph = PNAGraph.from_edgelist(
+            pna_pxl_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
+        )
+        denoised_graph = PNAGraph.from_edgelist(
+            denoised_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
+        )
+        node_core_numbers = pd.Series(nx.core_number(graph.raw))
+        denoised_node_core_numbers = pd.Series(nx.core_number(denoised_graph.raw))
 
-    assert True
+        # Check that all nodes with core number 1 in the denoised graph were
+        # also core number 1 in the original graph
+        assert set(
+            denoised_node_core_numbers[denoised_node_core_numbers == 1].index
+        ).issubset(set(node_core_numbers[node_core_numbers == 1].index))
+
+        # Check that higher core nodes remain intact after denoising
+        assert_series_equal(
+            node_core_numbers[node_core_numbers > 1],
+            denoised_node_core_numbers[denoised_node_core_numbers > 1],
+            check_like=True,
+        )
