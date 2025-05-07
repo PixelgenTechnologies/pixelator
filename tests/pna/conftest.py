@@ -42,7 +42,7 @@ def run_in_tmpdir():
 @pytest.fixture(name="pna_pxl_file", scope="module")
 def pna_pxl_file_fixture(pna_data_root):
     """Load an example pna pixel from disk."""
-    return pna_data_root / "example_pna_data.pxl"
+    return pna_data_root / "PNA055_Sample07_S7.layout.pxl"
 
 
 @pytest.fixture(name="pna_pxl_dataset", scope="module")
