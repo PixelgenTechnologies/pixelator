@@ -150,8 +150,8 @@ def _sample_nodes_to_be_removed(
         )
         marker_count_available = len(marker_nodes)
         n_to_be_removed = min(marker_count_available, marker["count"])
-        random.seed(0)
-        to_be_removed += list(random.sample(marker_nodes, n_to_be_removed))
+        rand_gen = random.Random(0)
+        to_be_removed += list(rand_gen.sample(marker_nodes, n_to_be_removed))
     return to_be_removed
 
 
