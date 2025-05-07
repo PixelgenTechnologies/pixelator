@@ -169,7 +169,7 @@ def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list = []) -> list:
     """
     graph = component.raw.copy()
     graph.remove_nodes_from(nodes_to_remove)
-    connected_components = list(nx.connected_components(graph))
+    connected_components = sorted(nx.connected_components(graph), key=len, reverse=True)
     stranded_nodes = []
     for cc in connected_components[1:]:  # connected_components[0] is the largest
         stranded_nodes += list(cc)
@@ -290,7 +290,6 @@ class DenoiseOneCore(PerComponentTask):
         """
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         panel_name = pxl.metadata().popitem()[1]["panel_name"]
-        panel_name = "proxiome-immuno-155"  # TODO REMOVE THIS LINE
         panel = load_antibody_panel(pna_config, panel_name)
         nodes_to_remove = pl.Series(data["umi"], dtype=pl.UInt64)
         edgelist = (
