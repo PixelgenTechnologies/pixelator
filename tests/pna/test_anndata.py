@@ -220,6 +220,7 @@ def test_pna_edgelist_to_anndata(edgelist):
             "n_umi2": np.uint64,
             "n_edges": np.uint64,
             "n_antibodies": np.uint64,
+            "reads_in_component": np.uint64,
         }
     )
     assert_frame_equal(

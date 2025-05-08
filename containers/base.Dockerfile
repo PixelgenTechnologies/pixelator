@@ -138,7 +138,7 @@ COPY --from=poetry-deps-install-amd64 /runtime/ /usr/
 # -- Build the runtime environment for arm64
 # ------------------------------------------
 
-FROM runtime-base as runtime-arm64
+FROM runtime-base AS runtime-arm64
 
 # Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
@@ -148,7 +148,7 @@ COPY --from=poetry-deps-install-arm64 /runtime/ /usr/
 # -- Build the final image
 # ------------------------------------------
 
-FROM runtime-${TARGETARCH} as runtime-final
+FROM runtime-${TARGETARCH} AS runtime-final
 
 # Make sure that the python packages are available in the system path
 # We add this explicitly since nextflow often runs with PYTHONNOUSERSITE set
