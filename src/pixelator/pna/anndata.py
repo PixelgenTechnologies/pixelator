@@ -33,9 +33,7 @@ def add_panel_information(adata, panel):
     return adata
 
 
-def pna_edgelist_to_anndata(
-    edgelist: pl.LazyFrame | pl.DataFrame, panel: PNAAntibodyPanel
-) -> AnnData:
+def pna_edgelist_to_anndata(edgelist: pl.LazyFrame, panel: PNAAntibodyPanel) -> AnnData:
     """Build an AnnData object from a PNA edgelist and a panel object."""
 
     def construct_marker_count_matrix(edgelist):
@@ -77,14 +75,10 @@ def pna_edgelist_to_anndata(
                     pl.col("count"),
                 ]
             )
+            .collect()
+            .pivot(on="marker", index="component", values="count")
+            .fill_null(0)
         )
-
-        if isinstance(marker_count, pl.LazyFrame):
-            marker_count = marker_count.collect()
-
-        marker_count = marker_count.pivot(
-            on="marker", index="component", values="count"
-        ).fill_null(0)
         return marker_count
 
     def component_metrics(edgelist, counts_df):
@@ -99,15 +93,15 @@ def pna_edgelist_to_anndata(
             a_markers.join(b_markers, on="component")
             .join(edges, on="component")
             .join(reads_in_component, on="component")
+            .collect()
+            .to_pandas()
+            .set_index("component")
+            .astype("uint64")
         )
-        if isinstance(info_agg, pl.LazyFrame):
-            info_agg = info_agg.collect()
-
-        info_agg_df = info_agg.to_pandas().set_index("component").astype("uint64")
         markers = pd.DataFrame(
             pd.Series((counts_df > 0).sum(axis=1), name="n_antibodies", dtype="uint64")
         )
-        df = pd.concat([info_agg_df, markers], axis=1)
+        df = pd.concat([info_agg, markers], axis=1)
         df["n_umi"] = df["n_umi1"] + df["n_umi2"]
 
         return df

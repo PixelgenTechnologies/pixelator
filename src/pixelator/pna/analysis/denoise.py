@@ -201,6 +201,7 @@ def denoise_one_core_layer(
 
     Returns:
         list: A list of nodes to be removed from the one-core layer of the graph.
+
     """
     node_marker_counts = component.node_marker_counts
     node_core_numbers = pd.Series(nx.core_number(component.raw))
@@ -304,7 +305,7 @@ class DenoiseOneCore(PerComponentTask):
                 )
             )
         )
-        adata = pna_edgelist_to_anndata(edgelist, panel)
+        adata = pna_edgelist_to_anndata(edgelist.lazy(), panel)
         with PixelFileWriter(pxl_file_target.path) as writer:
             writer.write_edgelist(edgelist)
             writer.write_adata(adata)
