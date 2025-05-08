@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Added component denoising functionality to be invoked as `pixelator single-cell-pna denoise`.
     Denoising removes nodes from markers that are overrepresented in the 1-core layer
-    of the a cell graph which suggests that they are caused by bleed-over from other cells.
+    of a cell graph which suggests that they are caused by bleed-over from other cells.
 
 ## [0.20.1] - 2025-04-24
 
