@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 @click.command(
     "denoise",
-    short_help=("Add analysis results to a pxl file."),
+    short_help=("Denoise a pxl file by applying node filtering techniques."),
     options_metavar="<options>",
 )
 @click.argument(
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
         1,
     ),
     show_default=True,
-    help="pvalue threshold for an over-expression to be considered significant.",
+    help="pvalue threshold for an over-expression in the one-core layer to be considered significant.",
 )
 @click.option(
     "--inflate-factor",
@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
         10,
     ),
     show_default=True,
-    help="How much to inflate number of noise markers to remove.",
+    help="How much to inflate number of noise markers in the one-core layer to remove.",
 )
 @output_option
 @click.pass_context

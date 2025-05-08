@@ -1,4 +1,4 @@
-"""Tests for the analysis engine.
+"""Tests for component denoising functions.
 
 Copyright © 2025 Pixelgen Technologies AB.
 """
@@ -77,7 +77,7 @@ def test_get_stranded_nodes():
     assert len(stranded_nodes_fully_connected) == 0
 
 
-def test_denoise_one_core_layer(pna_pxl_dataset, snapshot):
+def test_denoise_one_core_layer(pna_pxl_dataset):
     """Test the denoise_one_core_layer function."""
     components = pna_pxl_dataset.adata().obs.index
 
@@ -94,7 +94,7 @@ def test_denoise_one_core_layer(pna_pxl_dataset, snapshot):
         assert nx.is_connected(denoised_graph)
 
 
-def test_denoise_one_core_analysis(pna_pxl_dataset, snapshot, tmp_path):
+def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
     """Test the DenoiseOneCore analysis."""
     pxl_file_target = PixelDatasetSaver(pxl_dataset=pna_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"

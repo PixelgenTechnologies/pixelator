@@ -106,6 +106,8 @@ def get_overexpressed_markers_in_one_core(
     to core 1 by comparing their marker counts to nodes in higher cores. It
     uses Fisher's exact test to determine statistical significance and inflates
     the excess count of markers based on the provided inflate factor.
+    The inflate factor increases the number of nodes with a given over-expressed
+    marker to be removed from the one-core layer.
 
     Args:
         node_marker_counts (pd.DataFrame): A DataFrame where rows represent
@@ -199,7 +201,6 @@ def denoise_one_core_layer(
 
     Returns:
         list: A list of nodes to be removed from the one-core layer of the graph.
-
     """
     node_marker_counts = component.node_marker_counts
     node_core_numbers = pd.Series(nx.core_number(component.raw))
