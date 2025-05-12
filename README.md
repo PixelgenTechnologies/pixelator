@@ -16,9 +16,8 @@
 [**License**](#license) |
 [**Credits**](#credits)
 
-
-Pixelator is a software package to process sequencing FASTQ from Molecular Pixelation (MPX) assays
-and analyze PXL data.
+Pixelator is a software package to process sequencing FASTQ from Molecular Pixelation (MPX) and
+Proximity Network (PNA) assays and analyze PXL data.
 
 It provides the `pixelator` commandline tool to process FASTQ files and generate PXL files and reports
 and can be used as a python library for further downstream processing.
