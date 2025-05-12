@@ -36,3 +36,13 @@ class AnalysisSampleReport(SampleReport):
     proximity: ProximityReport | None
     k_cores: KCoreReport | None
     svd: SvdReport | None
+
+
+class DenoiseSampleReport(SampleReport):
+    """Model for report data returned by the single-cell denoise stage."""
+
+    report_type: str = "denoise"
+    number_of_umis_removed: int | None
+    ratio_of_umis_removed: float | None
+    number_of_disqualified_components: int | None
+    ratio_of_disqualified_components: float | None
