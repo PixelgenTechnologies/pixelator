@@ -146,6 +146,7 @@ from pixelator.pna.cli.analysis import analysis
 from pixelator.pna.cli.collapse import collapse
 from pixelator.pna.cli.combine_collapse import combine_collapse
 from pixelator.pna.cli.demux import demux
+from pixelator.pna.cli.denoise import denoise
 from pixelator.pna.cli.graph import graph
 from pixelator.pna.cli.layout import layout
 from pixelator.pna.cli.misc import (
@@ -188,6 +189,7 @@ single_cell_pna.add_command(amplicon)
 single_cell_pna.add_command(demux)
 single_cell_pna.add_command(collapse)
 single_cell_pna.add_command(graph)
+single_cell_pna.add_command(denoise)
 single_cell_pna.add_command(analysis)
 single_cell_pna.add_command(layout)
 single_cell_pna.add_command(report)

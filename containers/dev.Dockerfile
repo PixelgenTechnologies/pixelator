@@ -5,9 +5,9 @@ FROM pixelator-base
 ARG USE_ENTRYPOINT=false
 ARG MAKEJOBS=4
 
-LABEL org.opencontainers.image.vendor = "Pixelgen Technologies AB"
-LABEL org.opencontainers.image.base.name = "registry.fedoraproject.org/fedora-minimal:39"
-LABEL org.opencontainers.image.licenses = "MIT"
+LABEL org.opencontainers.image.vendor="Pixelgen Technologies AB"
+LABEL org.opencontainers.image.base.name="registry.fedoraproject.org/fedora-minimal:39"
+LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /pixelator
 COPY ./ /pixelator
