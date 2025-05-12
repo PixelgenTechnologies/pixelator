@@ -7,6 +7,7 @@ Copyright © 2025 Pixelgen Technologies AB
 
 import logging
 import random
+from itertools import chain
 
 import networkx as nx
 import numpy as np
@@ -172,9 +173,7 @@ def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list = []) -> list:
     graph = component.raw.copy()
     graph.remove_nodes_from(nodes_to_remove)
     connected_components = sorted(nx.connected_components(graph), key=len, reverse=True)
-    stranded_nodes = []
-    for cc in connected_components[1:]:  # connected_components[0] is the largest
-        stranded_nodes += list(cc)
+    stranded_nodes = list(chain.from_iterable(connected_components[1:]))
     return stranded_nodes
 
 
@@ -209,7 +208,7 @@ def denoise_one_core_layer(
         logger.debug(
             "Too many low core number nodes. Skipping denoising for this component."
         )
-        return []
+        return [None]  # Marking component as unqualified for denoising
     markers_to_remove = get_overexpressed_markers_in_one_core(
         node_marker_counts=node_marker_counts,
         node_core_numbers=node_core_numbers,
@@ -264,7 +263,6 @@ class DenoiseOneCore(PerComponentTask):
 
         """
         logger.debug(f"Running low-core denoising on component {component_id}")
-
         nodes_to_remove = pd.DataFrame(
             denoise_one_core_layer(
                 component,
@@ -293,7 +291,10 @@ class DenoiseOneCore(PerComponentTask):
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         panel_name = pxl.metadata().popitem()[1]["panel_name"]
         panel = load_antibody_panel(pna_config, panel_name)
-        nodes_to_remove = pl.Series(data["umi"], dtype=pl.UInt64)
+        nodes_to_remove = pl.Series(
+            data.loc[~data["umi"].isna(), "umi"], dtype=pl.UInt64
+        )
+
         edgelist = (
             pxl.edgelist()
             .to_polars()
@@ -305,7 +306,20 @@ class DenoiseOneCore(PerComponentTask):
                 )
             )
         )
+
         adata = pna_edgelist_to_anndata(edgelist.lazy(), panel)
+        denoise_info = pd.DataFrame(index=adata.obs.index)
+        denoise_info["disqualified_for_denoising"] = False
+        denoise_info.loc[
+            data.loc[data["umi"].isna(), "component"], "disqualified_for_denoising"
+        ] = True
+        n_umis_removed = data.loc[~data["umi"].isna(), :].groupby("component").size()
+        denoise_info["number_of_nodes_removed_in_denoise"] = n_umis_removed
+        denoise_info["number_of_nodes_removed_in_denoise"] = denoise_info[
+            "number_of_nodes_removed_in_denoise"
+        ].fillna(0)
+        adata.obs = adata.obs.join(denoise_info, how="left")
+
         with PixelFileWriter(pxl_file_target.path) as writer:
             writer.write_edgelist(edgelist)
             writer.write_adata(adata)
