@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Denoising removes nodes from markers that are overrepresented in the 1-core layer
     of a cell graph which suggests that they are caused by bleed-over from other cells.
 
+### Changed
+
+-   The proximity data will no longer be reported for markers with fewer than 10
+    molecules in the cell.
+
 ## [0.20.1] - 2025-04-24
 
 ### Changed
