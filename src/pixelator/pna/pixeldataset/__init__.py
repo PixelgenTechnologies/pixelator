@@ -199,10 +199,12 @@ class Proximity:
         self, adata: AnnData, proximity_df: pl.DataFrame
     ):
         marker_counts = pl.DataFrame(adata.to_df().reset_index())
-        component_node_counts = (
+        node_counts = (
             marker_counts.drop("component")
             .transpose(column_names=marker_counts["component"])
             .sum()
+            .transpose(column_names=["node_counts"])
+            .with_columns(component=marker_counts["component"])
         )
         marker_counts = marker_counts.unpivot(
             index="component", variable_name="marker", value_name="marker_1_count"
@@ -215,16 +217,29 @@ class Proximity:
             marker_1_count=pl.col("marker_1_count").cast(pl.UInt32),
             marker_2_count=pl.col("marker_2_count").cast(pl.UInt32),
         )
-
+        marker_counts = marker_counts.join(
+            node_counts,
+            left_on="component",
+            right_on="component",
+            how="left",
+        )
+        marker_counts = marker_counts.with_columns(
+            marker_1_freq=pl.col("marker_1_count") / pl.col("node_counts"),
+            marker_2_freq=pl.col("marker_2_count") / pl.col("node_counts"),
+        )
         proximity_df = (
             proximity_df.join(
-                marker_counts.select(["component", "marker", "marker_1_count"]),
+                marker_counts.select(
+                    ["component", "marker", "marker_1_count", "marker_1_freq"]
+                ),
                 left_on=["component", "marker_1"],
                 right_on=["component", "marker"],
                 how="left",
             )
             .join(
-                marker_counts.select(["component", "marker", "marker_2_count"]),
+                marker_counts.select(
+                    ["component", "marker", "marker_2_count", "marker_2_freq"]
+                ),
                 left_on=["component", "marker_2"],
                 right_on=["component", "marker"],
                 how="left",
