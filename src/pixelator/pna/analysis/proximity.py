@@ -49,9 +49,7 @@ def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
     return pair_cnt
 
 
-def _filter_out_low_count_markers(
-    edgelist: pl.DataFrame, min_count: int = 0
-) -> pl.DataFrame:
+def _get_markers_above_min_count(edgelist: pl.DataFrame, min_count: int = 0) -> set:
     """Filter out markers with low counts from the edgelist.
 
     Args:
@@ -85,10 +83,7 @@ def _filter_out_low_count_markers(
 
     passing_markers = umi_counts.filter(pl.col("total_count") >= min_count)
 
-    return edgelist.filter(
-        pl.col("marker_1").is_in(passing_markers["marker"])
-        & pl.col("marker_2").is_in(passing_markers["marker"])
-    )
+    return set(passing_markers["marker"])
 
 
 def proximity_with_permute_stats(
@@ -127,7 +122,7 @@ def proximity_with_permute_stats(
         z-scores, and p-values for the specified result columns.
 
     """
-    edgelist = _filter_out_low_count_markers(edgelist, min_marker_count)
+    passing_markers = _get_markers_above_min_count(edgelist, min_marker_count)
     results = proximity_function(edgelist).set_index(["marker_1", "marker_2"])
 
     def compute_permuted_results():
@@ -153,7 +148,13 @@ def proximity_with_permute_stats(
         ) / np.maximum(results[f"{col}_expected_sd"], min_std)
         results[f"{col}_p"] = norm.sf(np.abs(results[f"{col}_z"]))
 
-    return results.reset_index()
+    results = results.reset_index()
+    results = results[
+        results["marker_1"].isin(passing_markers)
+        & results["marker_2"].isin(passing_markers)
+    ]
+
+    return results
 
 
 def jcs_with_permute_stats(
