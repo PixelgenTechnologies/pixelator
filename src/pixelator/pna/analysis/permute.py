@@ -56,6 +56,8 @@ def permute_edgelist(
     marker1_permute = (
         edgelist.select(["umi1", "marker_1"])
         .unique()
+        .group_by("umi1")
+        .first()
         .sort("umi1")
         .with_columns(
             pl.col("marker_1").shuffle(random_number_generator.integers(0, int(1e10)))
@@ -64,6 +66,8 @@ def permute_edgelist(
     marker2_permute = (
         edgelist.select(["umi2", "marker_2"])
         .unique()
+        .group_by("umi2")
+        .first()
         .sort("umi2")
         .with_columns(
             pl.col("marker_2").shuffle(random_number_generator.integers(0, int(1e10)))
