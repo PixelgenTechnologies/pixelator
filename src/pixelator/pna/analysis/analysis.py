@@ -19,6 +19,7 @@ from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 
 logger = logging.getLogger(__name__)
+MIN_UMI_COUNT_TO_INCLUDE_MARKER = 10
 
 
 class ProximityAnalysis(PerComponentTask):
@@ -29,6 +30,7 @@ class ProximityAnalysis(PerComponentTask):
     def __init__(
         self,
         n_permutations: int = 100,
+        min_marker_count: int = MIN_UMI_COUNT_TO_INCLUDE_MARKER,
     ) -> None:
         """Initialize a ProximityAnalysis instance.
 
@@ -37,7 +39,9 @@ class ProximityAnalysis(PerComponentTask):
         """
         self.method = "join_count_statistics"
         self._proxmimity_function = partial(
-            jcs_with_permute_stats, n_permutations=n_permutations
+            jcs_with_permute_stats,
+            n_permutations=n_permutations,
+            min_marker_count=min_marker_count,
         )
 
     def run_on_component_edgelist(

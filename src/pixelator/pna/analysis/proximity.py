@@ -42,6 +42,43 @@ def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
     return pair_cnt
 
 
+def _filter_out_low_count_markers(
+    edgelist: pl.DataFrame, min_count: int = 0
+) -> pl.DataFrame:
+    """Filter out markers with low counts from the edgelist.
+
+    :param edgelist: A DataFrame representing the edgelist
+    :param min_count: Minimum count threshold for markers
+    :returns: A filtered DataFrame with low-count markers removed
+    """
+    umi1_counts = (
+        edgelist.select(["umi1", "marker_1"])
+        .unique()
+        .group_by("marker_1")
+        .len()
+        .rename({"marker_1": "marker", "len": "umi1_count"})
+    )
+    umi2_counts = (
+        edgelist.select(["umi2", "marker_2"])
+        .unique()
+        .group_by("marker_2")
+        .len()
+        .rename({"marker_2": "marker", "len": "umi2_count"})
+    )
+    umi_counts = (
+        umi1_counts.join(umi2_counts, on="marker", how="full", coalesce=True)
+        .fill_null(0)
+        .with_columns(total_count=pl.col("umi1_count") + pl.col("umi2_count"))
+    )
+
+    passing_markers = umi_counts.filter(pl.col("total_count") >= min_count)
+
+    return edgelist.filter(
+        pl.col("marker_1").is_in(passing_markers["marker"])
+        & pl.col("marker_2").is_in(passing_markers["marker"])
+    )
+
+
 def proximity_with_permute_stats(
     edgelist: pl.DataFrame,
     proximity_function: Callable[[pl.DataFrame], pd.DataFrame],
@@ -49,6 +86,7 @@ def proximity_with_permute_stats(
     n_permutations: int = 100,
     seed: int | None = 42,
     min_std: float = 1.0,
+    min_marker_count: int = 0,
 ) -> pd.DataFrame:
     """Compute proximity results augmented with statistics based on permutation tests.
 
@@ -59,6 +97,7 @@ def proximity_with_permute_stats(
     :param seed: Seed for the random number generator
     :returns: A DataFrame containing the proximity statistics
     """
+    edgelist = _filter_out_low_count_markers(edgelist, min_marker_count)
     results = proximity_function(edgelist).set_index(["marker_1", "marker_2"])
 
     def compute_permuted_results():
@@ -88,7 +127,9 @@ def proximity_with_permute_stats(
 
 
 def jcs_with_permute_stats(
-    edgelist: pl.DataFrame, n_permutations: int = 100
+    edgelist: pl.DataFrame,
+    n_permutations: int = 100,
+    min_marker_count: int = 0,
 ) -> pd.DataFrame:
     """Compute proximity results augmented with statistics based on permutation tests.
 
@@ -103,6 +144,7 @@ def jcs_with_permute_stats(
         n_permutations=n_permutations,
         seed=42,
         min_std=1.0,
+        min_marker_count=min_marker_count,
     )
 
 
