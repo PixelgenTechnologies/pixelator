@@ -219,8 +219,7 @@ class Proximity:
         )
         marker_counts = marker_counts.join(
             node_counts,
-            left_on="component",
-            right_on="component",
+            on="component",
             how="left",
         )
         marker_counts = marker_counts.with_columns(
