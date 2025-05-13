@@ -199,6 +199,11 @@ class Proximity:
         self, adata: AnnData, proximity_df: pl.DataFrame
     ):
         marker_counts = pl.DataFrame(adata.to_df().reset_index())
+        component_node_counts = (
+            marker_counts.drop("component")
+            .transpose(column_names=marker_counts["component"])
+            .sum()
+        )
         marker_counts = marker_counts.unpivot(
             index="component", variable_name="marker", value_name="marker_1_count"
         )
