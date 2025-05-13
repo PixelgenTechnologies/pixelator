@@ -15,12 +15,19 @@ from pixelator.pna.analysis.permute import edgelist_permutations
 
 
 def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
-    """Get the number of edges for each marker pair in the edgelist.
+    """Compute the number of edges for each marker pair in the given edgelist.
 
-    :param edgelist: A DataFrame representing the edgelist
-    :param marker_list: A list of markers. If not provided, it will be
-    generated from the unique markers in the edgelist
-    :returns: A DataFrame containing the number of edges for each marker pair
+    Args:
+        edgelist (pl.DataFrame): A DataFrame representing the edgelist with
+            columns "marker_1" and "marker_2".
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the number of edges for each
+        marker pair. The resulting DataFrame includes the columns:
+            - "marker_1": The first marker in the pair.
+            - "marker_2": The second marker in the pair.
+            - "join_count": The number of edges between the marker pair.
+
     """
     pair_cnt = edgelist.group_by(["marker_1", "marker_2"]).len().to_pandas()
     m1 = pair_cnt["marker_1"].astype(str)
@@ -47,9 +54,14 @@ def _filter_out_low_count_markers(
 ) -> pl.DataFrame:
     """Filter out markers with low counts from the edgelist.
 
-    :param edgelist: A DataFrame representing the edgelist
-    :param min_count: Minimum count threshold for markers
-    :returns: A filtered DataFrame with low-count markers removed
+    Args:
+        edgelist (pl.DataFrame): A DataFrame representing the edgelist.
+        min_count (int, optional): Minimum count threshold for markers. Defaults to 0.
+
+    Returns:
+        pl.DataFrame: A filtered DataFrame with low-count markers removed.
+    edgelist: pl.DataFrame, min_count: int = 0
+
     """
     umi1_counts = (
         edgelist.select(["umi1", "marker_1"])
@@ -90,12 +102,30 @@ def proximity_with_permute_stats(
 ) -> pd.DataFrame:
     """Compute proximity results augmented with statistics based on permutation tests.
 
-    :param edgelist: A DataFrame representing the edgelist
-    :param proximity_function: A function that computes proximity
-    :param result_columns: A list of columns to compute statistics for
-    :param n_permutations: Number of permutations to perform
-    :param seed: Seed for the random number generator
-    :returns: A DataFrame containing the proximity statistics
+    This function calculates proximity metrics for a given edgelist and augments
+    the results with statistical measures derived from permutation tests. It
+    supports computing z-scores and p-values for specified result columns.
+
+    Args:
+        edgelist (pl.DataFrame): A DataFrame representing the edgelist.
+        proximity_function (Callable[[pl.DataFrame], pd.DataFrame]): A function
+            that computes proximity metrics for the given edgelist.
+        result_columns (list[str]): A list of column names for which statistics
+            (e.g., z-scores, p-values) will be computed.
+        n_permutations (int, optional): The number of permutations to perform.
+            Defaults to 100.
+        seed (int | None, optional): Seed for the random number generator.
+            Defaults to 42.
+        min_std (float, optional): Minimum standard deviation to use when
+            normalizing z-scores. Defaults to 1.0.
+        min_marker_count (int, optional): Minimum marker count threshold for
+            filtering the edgelist. Defaults to 0.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the proximity results augmented with
+        statistical measures, including expected means, standard deviations,
+        z-scores, and p-values for the specified result columns.
+
     """
     edgelist = _filter_out_low_count_markers(edgelist, min_marker_count)
     results = proximity_function(edgelist).set_index(["marker_1", "marker_2"])
@@ -133,9 +163,14 @@ def jcs_with_permute_stats(
 ) -> pd.DataFrame:
     """Compute proximity results augmented with statistics based on permutation tests.
 
-    :param edgelist: A DataFrame representing the edgelist
-    :param n_permutations: Number of permutations to perform
-    :returns: A DataFrame containing the proximity statistics
+    Args:
+        edgelist (pl.DataFrame): A DataFrame representing the edgelist.
+        n_permutations (int, optional): Number of permutations to perform. Defaults to 100.
+        min_marker_count (int, optional): Minimum marker count to consider. Defaults to 0.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the proximity statistics.
+
     """
     return proximity_with_permute_stats(
         edgelist,
@@ -191,28 +226,32 @@ def calculate_differential_proximity(
 ) -> pd.DataFrame:
     """Perform differential analysis on marker-pair proximity data.
 
-    :param proximity_df: Input data containing proximity metrics and grouping
-        information. Must include columns for `contrast_column`, `marker_1`,
-        `marker_2`, and the proximity metric (default: "join_count_z").
-    :param contrast_column: The column name representing the grouping variable
-        for contrasts.
-    :param reference: The reference group in the contrast_column.
-    :param targets : List of target groups to compare against the reference.
-        If None, all groups in `contrast_column` except the reference are used.
-    :param metric: Column name representing the proximity metric to analyze.,
-        default="join_count_z"
-    :param metric_type: Type of measures to analyze (self, co- or all
-        proximities), default="all"
-    :param min_n_obs: Minimum number of observations required for a group to be
-        included in the analysis., default=0
-    :param p_adjust_method: Method for adjusting p-values for multiple
-        comparisons,default="bonferroni". The available methods are:
-        "bonferroni", "holm", "hochberg", "hommel", "fdr_bh", "fdr_by",
-        and "sidak". You can refer to statsmodels.stats.multitest documentation
-        for method implementation details.
+    Args:
+        proximity_df (pd.DataFrame): Input data containing proximity metrics and
+            grouping information. Must include columns for `contrast_column`,
+            `marker_1`, `marker_2`, and the proximity metric (default: "join_count_z").
+        contrast_column (str): The column name representing the grouping variable
+        reference (str): The reference group in the `contrast_column`.
+        targets (List[str] | None, optional): List of target groups to compare
+            against the reference. If None, all groups in `contrast_column` except
+            the reference are used. Defaults to None.
+        metric (str, optional): Column name representing the proximity metric to
+            analyze. Defaults to "join_count_z".
+        metric_type (Literal["all", "self", "co"], optional): Type of measures to
+            analyze ("self", "co", or "all" proximities). Defaults to "all".
+        min_n_obs (int, optional): Minimum number of observations required for a
+            group to be included in the analysis. Defaults to 0.
+        p_adjust_method (optional): Method for adjusting p-values
+            for multiple comparisons. Defaults to "bonferroni".
 
-    :return: A DataFrame containing the results of the differential proximity
-        analysis.
+    Returns:
+        pd.DataFrame: A DataFrame containing the results of the differential
+        proximity analysis, including statistical metrics and adjusted p-values.
+
+    Raises:
+        ValueError: If `contrast_column` is not in `proximity_df`.
+        ValueError: If no data is found for the specified `metric_type`.
+
     """
     if contrast_column not in proximity_df.columns:
         raise ValueError(f"{contrast_column} must be a column in the data.")
