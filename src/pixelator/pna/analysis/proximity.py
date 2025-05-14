@@ -58,7 +58,6 @@ def _get_markers_above_min_count(edgelist: pl.DataFrame, min_count: int = 0) -> 
 
     Returns:
         pl.DataFrame: A filtered DataFrame with low-count markers removed.
-    edgelist: pl.DataFrame, min_count: int = 0
 
     """
     umi1_counts = (
