@@ -21,6 +21,7 @@ from pixelator.pna.cli.common import (
     output_option,
     panel_option,
     threads_option,
+    memory_option
 )
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import load_antibody_panel
@@ -30,7 +31,7 @@ from pixelator.pna.demux import (
     finalize_batched_groups,
 )
 from pixelator.pna.demux.report import DemuxSampleReport
-from pixelator.pna.utils.units import parse_size
+from pixelator.common.utils.units import parse_size
 
 
 def _chunk_size_validator(ctx, param, value):
@@ -89,6 +90,7 @@ def _chunk_size_validator(ctx, param, value):
     ),
 )
 @threads_option
+@memory_option
 @design_option
 @panel_option
 @output_option
@@ -104,6 +106,7 @@ def demux(
     output,
     design,
     threads,
+    memory,
     strategy,
 ):
     """Demultiplex Molecular Pixelation data (FASTQ) to generate one file per antibody."""
@@ -160,7 +163,7 @@ def demux(
         stategy=strategy,
     )
 
-    finalize_batched_groups(demux_output, strategy=strategy)
+    finalize_batched_groups(demux_output, strategy=strategy, memory=memory)
 
     sample_name = get_sample_name(fastq_file)
     report_json = demux_output / f"{sample_name}.report.json"

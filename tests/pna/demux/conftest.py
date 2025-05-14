@@ -25,7 +25,9 @@ def demux_m2_tmp_parquet_data(pna_data_root):
 
 
 @pytest.fixture()
-def demux_intermediary_dir(tmpdir, demux_m1_tmp_parquet_data, demux_m2_tmp_parquet_data) -> Path:
+def demux_intermediary_dir(
+    tmpdir, demux_m1_tmp_parquet_data, demux_m2_tmp_parquet_data
+) -> Path:
     shutil.copy(demux_m1_tmp_parquet_data, tmpdir)
     shutil.copy(demux_m2_tmp_parquet_data, tmpdir)
     return Path(tmpdir)

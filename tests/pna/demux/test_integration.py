@@ -105,7 +105,7 @@ def test_demux_writing_independent(tmp_path, testdata_amplicon_fastq):
         input_dir=demux_output / "tmp",
         output_dir=demux_output,
         strategy=strategy,
-        remove_intermediates=False
+        remove_intermediates=False,
     )
 
     output_reads = stats.as_json()["output_reads"]

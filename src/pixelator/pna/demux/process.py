@@ -243,6 +243,7 @@ def finalize_batched_groups(
     output_dir: Path,
     remove_intermediates: bool = True,
     strategy: Literal["paired", "independent"] = "independent",
+    memory: int = None,
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
@@ -259,14 +260,23 @@ def finalize_batched_groups(
     output_dir.mkdir(exist_ok=True, parents=True)
 
     if strategy == "independent":
-        return _finalize_batched_groups_independent(input_dir, output_dir, remove_intermediates)
+        return _finalize_batched_groups_independent(
+            input_dir,
+            output_dir,
+            remove_intermediates=remove_intermediates,
+            memory=memory,
+        )
     elif strategy == "paired":
-        return _finalize_batched_groups_paired(input_dir, output_dir, remove_intermediates)
+        return _finalize_batched_groups_paired(
+            input_dir, output_dir, remove_intermediates
+        )
     else:
         raise ValueError("Unknown strategy")
 
 
-def _finalize_batched_groups_paired(input_dir: Path, output_dir, remove_intermediates: bool = True):
+def _finalize_batched_groups_paired(
+    input_dir: Path, output_dir, remove_intermediates: bool = True
+):
     parquet_files = []
     arrow_files = input_dir.glob("*.arrow")
 
@@ -310,7 +320,8 @@ def _finalize_batched_groups_paired(input_dir: Path, output_dir, remove_intermed
 def _finalize_batched_groups_independent(
     input_dir: Path,
     output_dir: Path,
-    remove_intermediates: bool = True
+    remove_intermediates: bool = True,
+    memory: int = None,
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
@@ -320,25 +331,38 @@ def _finalize_batched_groups_independent(
     The sorting is done on the `marker_1` and `marker_2` columns and written to parquet metadata
     which allows for fast contiguous reads [marker_1, marker_2] groups.
 
-    :param work_dir: the path to the work directory containing the demuxed data
-    :param remove_intermediates: Whether to remove the intermediate Arrow files after writing to parquet
-    :returns: A list of paths to the Parquet files
-    :raises ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
+    Params:
+        work_dir:
+            the path to the work directory containing the demuxed data
+        remove_intermediates:
+            Whether to remove the intermediate Arrow files after writing to parquet
+        memory:
+            Maximum amount of memory to use
+
+    Returns:
+        A list of paths to the Parquet files
+
+    Raises:
+        ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
     """
     parquet_files = []
     tmp_files = list(input_dir.glob("*.parquet"))
 
     conn = dd.connect(":memory:")
+    if memory:
+        conn.execute(f"SET memory_limit = {memory / 1000}MB")
 
     for f in tmp_files:
         sorting_order: list[tuple[str, str]]
 
         if ".m1." in str(f):
-            sorting_order = ("marker_1","marker_2")
+            sorting_order = ("marker_1", "marker_2")
         elif ".m2." in str(f):
-            sorting_order = ("marker_2","marker_1")
+            sorting_order = ("marker_2", "marker_1")
         else:
-            raise PixelatorBaseException(f"Unrecognised marker suffix. Could not determine sorting order")
+            raise PixelatorBaseException(
+                f"Unrecognised marker suffix. Could not determine sorting order"
+            )
 
         output_name = str(clean_suffixes(f).name)
         output_name = output_name.removesuffix(".arrow").removesuffix(".parquet")
