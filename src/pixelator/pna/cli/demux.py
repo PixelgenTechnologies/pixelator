@@ -153,7 +153,7 @@ def demux(
         assay=assay,
         panel=panel,
         stats=stats,
-        output_dir=demux_output,
+        output_dir=demux_output / "tmp",
         threads=threads,
         reads_per_chunk=output_chunk_reads,
         max_chunks=output_max_chunks,

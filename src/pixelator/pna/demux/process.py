@@ -8,6 +8,7 @@ import sys
 import typing
 from pathlib import Path, PurePath
 from typing import Literal
+import duckdb as dd
 
 import pyarrow as pa
 import pyarrow.parquet
@@ -16,6 +17,7 @@ from cutadapt.pipeline import SingleEndPipeline
 from cutadapt.steps import SingleEndSink
 from cutadapt.utils import DummyProgress, Progress
 
+from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.common.utils import get_sample_name
 from pixelator.pna.config import PNAAntibodyPanel, PNAAssay
 from pixelator.pna.demux.barcode_demuxer import (
@@ -237,7 +239,8 @@ def demux_barcode_groups(
 
 
 def finalize_batched_groups(
-    work_dir: Path,
+    input_dir: Path,
+    output_dir: Path,
     remove_intermediates: bool = True,
     strategy: Literal["paired", "independent"] = "independent",
 ):
@@ -253,17 +256,19 @@ def finalize_batched_groups(
     :returns: A list of paths to the Parquet files
     :raises ValueError: If an invalid strategy is provided.
     """
+    output_dir.mkdir(exist_ok=True, parents=True)
+
     if strategy == "independent":
-        return _finalize_batched_groups_independent(work_dir, remove_intermediates)
+        return _finalize_batched_groups_independent(input_dir, output_dir, remove_intermediates)
     elif strategy == "paired":
-        return _finalize_batched_groups_paired(work_dir, remove_intermediates)
+        return _finalize_batched_groups_paired(input_dir, output_dir, remove_intermediates)
     else:
         raise ValueError("Unknown strategy")
 
 
-def _finalize_batched_groups_paired(work_dir: Path, remove_intermediates: bool = True):
+def _finalize_batched_groups_paired(input_dir: Path, output_dir, remove_intermediates: bool = True):
     parquet_files = []
-    arrow_files = work_dir.glob("*.arrow")
+    arrow_files = input_dir.glob("*.arrow")
 
     for f in arrow_files:
         with pyarrow.ipc.open_file(f) as reader:
@@ -279,10 +284,10 @@ def _finalize_batched_groups_paired(work_dir: Path, remove_intermediates: bool =
             collapsed_table = collapsed_table.sort_by(
                 [("marker_1", "ascending"), ("marker_2", "ascending")]
             )
-            output_df_name = str(clean_suffixes(f))
+            output_df_name = str(clean_suffixes(f).name)
             output_df_name = output_df_name.removesuffix(".arrow")
 
-            out_filename = Path(f"{output_df_name}.parquet")
+            out_filename = Path(output_dir) / f"{output_df_name}.parquet"
             parquet_files.append(out_filename)
 
             pa.parquet.write_table(
@@ -303,7 +308,9 @@ def _finalize_batched_groups_paired(work_dir: Path, remove_intermediates: bool =
 
 
 def _finalize_batched_groups_independent(
-    work_dir: Path, remove_intermediates: bool = True
+    input_dir: Path,
+    output_dir: Path,
+    remove_intermediates: bool = True
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
@@ -319,50 +326,35 @@ def _finalize_batched_groups_independent(
     :raises ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
     """
     parquet_files = []
-    arrow_files = work_dir.glob("*.arrow")
+    tmp_files = list(input_dir.glob("*.parquet"))
 
-    base_sorting_order = [("marker_1", "ascending"), ("marker_2", "ascending")]
-    base_sorted_columns = [pa.parquet.SortingColumn(0), pa.parquet.SortingColumn(1)]
+    conn = dd.connect(":memory:")
 
-    for f in arrow_files:
-        sorting_columns: list[pa.parquet.SortingColumn]
+    for f in tmp_files:
         sorting_order: list[tuple[str, str]]
 
-        with pyarrow.ipc.open_file(f) as reader:
-            tbl = reader.read_all()
+        if ".m1." in str(f):
+            sorting_order = ("marker_1","marker_2")
+        elif ".m2." in str(f):
+            sorting_order = ("marker_2","marker_1")
+        else:
+            raise PixelatorBaseException(f"Unrecognised marker suffix. Could not determine sorting order")
 
-            if ".m1." in str(f):
-                sorting_order = list(base_sorting_order)
-                sorting_columns = list(base_sorted_columns)
-            elif ".m2." in str(f):
-                sorting_order = list(base_sorting_order[::-1])
-                sorting_columns = list(base_sorted_columns[::-1])
-            else:
-                raise ValueError(
-                    "No marker identifier (m1 or m2) found in demuxed output filename."
-                )
+        output_name = str(clean_suffixes(f).name)
+        output_name = output_name.removesuffix(".arrow").removesuffix(".parquet")
 
-            collapsed_table = tbl.group_by(
-                ["marker_1", "marker_2", "molecule"]
-            ).aggregate([([], "count_all")])
-            collapsed_table = collapsed_table.rename_columns(
-                {"count_all": "read_count"}
-            )
-            collapsed_table = collapsed_table.sort_by(sorting_order)
+        output_path = Path(output_dir) / f"{output_name}.parquet"
+        parquet_files.append(output_path)
 
-            output_df_name = str(clean_suffixes(f))
-            output_df_name = output_df_name.removesuffix(".arrow")
-
-            out_filename = Path(f"{output_df_name}.parquet")
-            parquet_files.append(out_filename)
-
-            pa.parquet.write_table(
-                collapsed_table,
-                out_filename,
-                compression="zstd",
-                compression_level=6,
-                sorting_columns=sorting_columns,
-            )
+        # Params not supported in ORDER BY clause
+        conn.execute(f"""
+            COPY (
+                SELECT *, count(*) as read_count
+                FROM read_parquet('{f}')
+                GROUP BY ALL
+                ORDER BY {sorting_order[0]}, {sorting_order[1]}
+            ) TO '{output_path}' (FORMAT parquet);
+        """)
 
         if remove_intermediates:
             f.unlink()

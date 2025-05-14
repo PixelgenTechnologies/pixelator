@@ -223,6 +223,9 @@ class DemuxRecordBatch:
     def to_arrow(self) -> pa.RecordBatch:
         """Convert a number of cached records to a pyarrow RecordBatch."""
         _size = self._size
+
+        assert _size > 0
+
         # Passing the size option to pa.array does not seem to work for some reason.
         # So we are using slices instead.
         return pa.RecordBatch.from_arrays(
@@ -719,7 +722,13 @@ class PairedBarcodeDemuxer(BarcodeDemuxer):
         umi2 = read_bytes[self._umi2_slice]
         uei = read_bytes[self._uei_slice]
 
+        assert b'N' not in umi1
+
         vector = self._embedding.encode(umi1, umi2, uei)
+
+        # Round trip
+        original = self._embedding.decode(self._embedding.get_umi1_bytes(vector))
+        assert umi1 == original
 
         group_id = self._supergroups[(pid1, pid2)]
 
