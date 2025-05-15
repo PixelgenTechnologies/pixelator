@@ -354,7 +354,7 @@ def _finalize_batched_groups_independent(
 
     conn = dd.connect(":memory:")
     if memory:
-        val = f"{ memory / 10**6 }MB"
+        val = f"{memory / 10**6}MB"
         conn.execute(f"SET memory_limit = '{val}'")
 
     for f in tmp_files:
