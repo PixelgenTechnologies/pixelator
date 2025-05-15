@@ -253,9 +253,12 @@ def finalize_batched_groups(
     The sorting is done on the `marker_1` and `marker_2` columns and written to parquet metadata
     which allows for fast contiguous reads [marker_1, marker_2] groups.
 
-    :param work_dir: the path to the work directory containing the demuxed data
-    :returns: A list of paths to the Parquet files
-    :raises ValueError: If an invalid strategy is provided.
+    Params:
+        input_dir: the path to the work directory containing the demuxed data
+        output_dir: the path to the output directory
+        remove_intermediates: whether to remove the intermediate Arrow files after writing to parquet
+        strategy: the demultiplexing strategy to use. Can be "paired" or "independent"
+        memory: maximum amount of memory to use in bytes
     """
     output_dir.mkdir(exist_ok=True, parents=True)
 
@@ -351,7 +354,8 @@ def _finalize_batched_groups_independent(
 
     conn = dd.connect(":memory:")
     if memory:
-        conn.execute(f"SET memory_limit = {memory / 1000}MB")
+        val = f"{ memory / 10**6 }MB"
+        conn.execute(f"SET memory_limit = '{val}'")
 
     for f in tmp_files:
         sorting_order: list[tuple[str, str]]
