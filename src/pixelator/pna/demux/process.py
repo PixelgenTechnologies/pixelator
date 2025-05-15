@@ -8,8 +8,8 @@ import sys
 import typing
 from pathlib import Path, PurePath
 from typing import Literal
-import duckdb as dd
 
+import duckdb as dd
 import pyarrow as pa
 import pyarrow.parquet
 from cutadapt.files import FileOpener, InputPaths, OutputFiles
@@ -344,6 +344,7 @@ def _finalize_batched_groups_independent(
 
     Raises:
         ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
+
     """
     parquet_files = []
     tmp_files = list(input_dir.glob("*.parquet"))

@@ -41,7 +41,6 @@ from typing import TYPE_CHECKING, Any, Iterator, Optional, Protocol, Tuple, Type
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-
 from cutadapt.files import (
     FileFormat,
     InputFiles,

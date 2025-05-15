@@ -6,9 +6,10 @@ Copyright © 2024 Pixelgen Technologies AB
 import functools
 import logging
 from pathlib import Path
-from pixelator.common.utils.units import parse_size
 
 import click
+
+from pixelator.common.utils.units import parse_size
 
 
 def output_option(func):
