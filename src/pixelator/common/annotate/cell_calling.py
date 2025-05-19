@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import UnivariateSpline
 
-from pixelator.mpx.annotate.constants import (
+from pixelator.common.annotate.constants import (
     CELL_MAX_SIZE_SMOOTHING_FACTOR,
     CELL_MIN_SIZE_SMOOTHING_FACTOR,
     DISTANCE_DEVIATION_FACTOR,

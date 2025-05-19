@@ -15,6 +15,7 @@ import pandas as pd
 import polars as pl
 from scipy.stats import fisher_exact
 
+from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import PerComponentTask
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import pna_config
@@ -308,6 +309,7 @@ class DenoiseOneCore(PerComponentTask):
         )
 
         adata = pna_edgelist_to_anndata(edgelist.lazy(), panel)
+        call_aggregates(adata)
         denoise_info = pd.DataFrame(index=adata.obs.index)
         denoise_info["disqualified_for_denoising"] = False
         denoise_info.loc[

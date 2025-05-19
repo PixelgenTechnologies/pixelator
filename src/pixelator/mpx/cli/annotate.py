@@ -5,6 +5,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 import click
 
+from pixelator.common.annotate.constants import MINIMUM_N_EDGES_CELL_SIZE
 from pixelator.common.utils import (
     create_output_stage_dir,
     get_sample_name,
@@ -14,7 +15,6 @@ from pixelator.common.utils import (
     write_parameters_file,
 )
 from pixelator.mpx.annotate import annotate_components
-from pixelator.mpx.annotate.constants import MINIMUM_N_EDGES_CELL_SIZE
 from pixelator.mpx.cli.common import logger, output_option
 from pixelator.mpx.config import config, load_antibody_panel
 

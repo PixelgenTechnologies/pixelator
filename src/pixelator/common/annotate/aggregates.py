@@ -10,7 +10,7 @@ import numpy as np
 from anndata import AnnData
 from scipy.stats import iqr
 
-from pixelator.mpx.annotate.constants import (
+from pixelator.common.annotate.constants import (
     TAU_HARD_THRESHOLD,
     TAU_IQR_LOWER_THRESHOLD,
     TAU_IQR_UPPER_THRESHOLD,
