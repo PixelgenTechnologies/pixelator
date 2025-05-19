@@ -242,7 +242,7 @@ def finalize_batched_groups(
     output_dir: Path,
     remove_intermediates: bool = True,
     strategy: Literal["paired", "independent"] = "independent",
-    memory: int = None,
+    memory: int | None = None,
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
@@ -273,16 +273,17 @@ def finalize_batched_groups(
             input_dir,
             output_dir,
             remove_intermediates=remove_intermediates,
-            memory=memory
+            memory=memory,
         )
     else:
         raise ValueError("Unknown strategy")
 
 
 def _finalize_batched_groups_paired(
-    input_dir: Path, output_dir,
+    input_dir: Path,
+    output_dir,
     remove_intermediates: bool = True,
-    memory: int = None,
+    memory: int | None = None,
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
@@ -300,20 +301,21 @@ def _finalize_batched_groups_paired(
         remove_intermediates:
             Whether to remove the intermediate Arrow files after writing to parquet
         memory:
-            Maximum amount of memory to use
+            Maximum amount of memory to use. Use None to disable memory limits.
 
     Returns:
         A list of paths to the Parquet files
 
     Raises:
         ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
+
     """
     parquet_files = []
     tmp_parquet_files = list(input_dir.glob("*.parquet"))
 
     conn = dd.connect(":memory:")
     if memory:
-        val = f"{memory / 10 ** 6}MB"
+        val = f"{memory / 10**6}MB"
         conn.execute(f"SET memory_limit = '{val}'")
 
     for f in tmp_parquet_files:
@@ -325,7 +327,7 @@ def _finalize_batched_groups_paired(
 
         # Params not supported in ORDER BY clause
         conn.execute(
-           f"""
+            f"""
            COPY (
                SELECT *, count(*) as read_count
                FROM read_parquet('{f}')
@@ -345,7 +347,7 @@ def _finalize_batched_groups_independent(
     input_dir: Path,
     output_dir: Path,
     remove_intermediates: bool = True,
-    memory: int = None,
+    memory: int | None = None,
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
@@ -361,24 +363,25 @@ def _finalize_batched_groups_independent(
         remove_intermediates:
             Whether to remove the intermediate Arrow files after writing to parquet
         memory:
-            Maximum amount of memory to use
+            Maximum amount of memory to use. Use None to disable memory limits.
 
     Returns:
         A list of paths to the Parquet files
 
     Raises:
         ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
+
     """
     parquet_files = []
     tmp_files = list(input_dir.glob("*.parquet"))
 
     conn = dd.connect(":memory:")
     if memory:
-        val = f"{memory / 10 ** 6}MB"
+        val = f"{memory / 10**6}MB"
         conn.execute(f"SET memory_limit = '{val}'")
 
     for f in tmp_files:
-        sorting_order: list[tuple[str, str]]
+        sorting_order: tuple[str, str]
 
         if ".m1." in str(f):
             sorting_order = ("marker_1", "marker_2")
