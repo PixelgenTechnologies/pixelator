@@ -4,23 +4,14 @@ Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import logging
-import typing
-from pathlib import Path
 from typing import Literal, Optional
 
 import numba
 import numpy as np
 import pandas as pd
-import polars as pl
 from anndata import AnnData
 from graspologic_native import leiden
 
-from pixelator import __version__
-from pixelator.common.annotate.aggregates import call_aggregates
-from pixelator.common.annotate.cell_calling import find_component_size_limits
-from pixelator.common.annotate.constants import (
-    MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION,
-)
 from pixelator.common.exceptions import PixelatorBaseException
 
 # Work around for issue with numba and multithreading

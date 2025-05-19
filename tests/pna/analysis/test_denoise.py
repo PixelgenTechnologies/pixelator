@@ -272,7 +272,7 @@ def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
     )
     manager = AnalysisManager([DenoiseOneCore()])
     denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
-
+    assert "tau_type" in denoised_dataset.adata().obs.columns
     components = pna_pxl_dataset.adata().obs.index
     for comp in components:
         graph = PNAGraph.from_edgelist(
