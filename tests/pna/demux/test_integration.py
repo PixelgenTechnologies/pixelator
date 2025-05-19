@@ -40,14 +40,14 @@ def test_demux_writing_strategy_paired(tmp_path, testdata_amplicon_fastq):
         assay=assay,
         panel=panel,
         stats=stats,
-        output_dir=demux_output,
+        output_dir=demux_output / "tmp",
         threads=threads,
         reads_per_chunk=10_000,
         stategy=strategy,
     )
 
     finalize_batched_groups(
-        input_dir=demux_output,
+        input_dir=demux_output / "tmp",
         output_dir=demux_output,
         strategy=strategy,
         remove_intermediates=False,

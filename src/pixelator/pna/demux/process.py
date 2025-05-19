@@ -41,7 +41,6 @@ from pixelator.pna.utils import clean_suffixes
 
 logger = logging.getLogger("demux")
 
-
 import multiprocessing as mp
 
 
@@ -271,48 +270,70 @@ def finalize_batched_groups(
         )
     elif strategy == "paired":
         return _finalize_batched_groups_paired(
-            input_dir, output_dir, remove_intermediates
+            input_dir,
+            output_dir,
+            remove_intermediates=remove_intermediates,
+            memory=memory
         )
     else:
         raise ValueError("Unknown strategy")
 
 
 def _finalize_batched_groups_paired(
-    input_dir: Path, output_dir, remove_intermediates: bool = True
+    input_dir: Path, output_dir,
+    remove_intermediates: bool = True,
+    memory: int = None,
 ):
+    """Post-process the demuxed data by sorting and writing to Parquet.
+
+    The demuxed data is written as intermediate parquet files in the work directory.
+    These are then sorted and deduplicated.
+
+    The sorting is done on the `marker_1` and `marker_2` columns and written to parquet metadata
+    which allows for fast contiguous reads of [marker_1, marker_2] groups.
+
+    Params:
+        input_dir:
+            the path to the work directory containing the demuxed data
+        output_dir:
+            the path to the output directory where the final parquet files are written
+        remove_intermediates:
+            Whether to remove the intermediate Arrow files after writing to parquet
+        memory:
+            Maximum amount of memory to use
+
+    Returns:
+        A list of paths to the Parquet files
+
+    Raises:
+        ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
+    """
     parquet_files = []
-    arrow_files = input_dir.glob("*.arrow")
+    tmp_parquet_files = list(input_dir.glob("*.parquet"))
 
-    for f in arrow_files:
-        with pyarrow.ipc.open_file(f) as reader:
-            tbl = reader.read_all()
+    conn = dd.connect(":memory:")
+    if memory:
+        val = f"{memory / 10 ** 6}MB"
+        conn.execute(f"SET memory_limit = '{val}'")
 
-            # We dont care about stable sorting
-            collapsed_table = tbl.group_by(
-                ["marker_1", "marker_2", "molecule"]
-            ).aggregate([([], "count_all")])
-            collapsed_table = collapsed_table.rename_columns(
-                {"count_all": "read_count"}
-            )
-            collapsed_table = collapsed_table.sort_by(
-                [("marker_1", "ascending"), ("marker_2", "ascending")]
-            )
-            output_df_name = str(clean_suffixes(f).name)
-            output_df_name = output_df_name.removesuffix(".arrow")
+    for f in tmp_parquet_files:
+        output_name = str(clean_suffixes(f).name)
+        output_name = output_name.removesuffix(".arrow").removesuffix(".parquet")
 
-            out_filename = Path(output_dir) / f"{output_df_name}.parquet"
-            parquet_files.append(out_filename)
+        output_path = Path(output_dir) / f"{output_name}.parquet"
+        parquet_files.append(output_path)
 
-            pa.parquet.write_table(
-                collapsed_table,
-                out_filename,
-                compression="zstd",
-                compression_level=6,
-                sorting_columns=[
-                    pa.parquet.SortingColumn(0),
-                    pa.parquet.SortingColumn(1),
-                ],
-            )
+        # Params not supported in ORDER BY clause
+        conn.execute(
+           f"""
+           COPY (
+               SELECT *, count(*) as read_count
+               FROM read_parquet('{f}')
+               GROUP BY ALL
+               ORDER BY marker_1, marker_2
+           ) TO '{output_path}' (FORMAT parquet, COMPRESSION zstd, COMPRESSION_LEVEL 6);
+           """
+        )
 
         if remove_intermediates:
             f.unlink()
@@ -347,14 +368,13 @@ def _finalize_batched_groups_independent(
 
     Raises:
         ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
-
     """
     parquet_files = []
     tmp_files = list(input_dir.glob("*.parquet"))
 
     conn = dd.connect(":memory:")
     if memory:
-        val = f"{memory / 10**6}MB"
+        val = f"{memory / 10 ** 6}MB"
         conn.execute(f"SET memory_limit = '{val}'")
 
     for f in tmp_files:
@@ -382,7 +402,7 @@ def _finalize_batched_groups_independent(
                 FROM read_parquet('{f}')
                 GROUP BY ALL
                 ORDER BY {sorting_order[0]}, {sorting_order[1]}
-            ) TO '{output_path}' (FORMAT parquet);
+            ) TO '{output_path}' (FORMAT parquet, COMPRESSION zstd, COMPRESSION_LEVEL 6);
         """)
 
         if remove_intermediates:
