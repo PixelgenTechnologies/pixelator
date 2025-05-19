@@ -46,7 +46,12 @@ def test_demux_writing_strategy_paired(tmp_path, testdata_amplicon_fastq):
         stategy=strategy,
     )
 
-    finalize_batched_groups(demux_output, strategy=strategy, remove_intermediates=False)
+    finalize_batched_groups(
+        input_dir=demux_output,
+        output_dir=demux_output,
+        strategy=strategy,
+        remove_intermediates=False,
+    )
 
     output_reads = stats.as_json()["output_reads"]
 

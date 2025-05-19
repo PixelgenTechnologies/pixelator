@@ -223,9 +223,6 @@ class DemuxRecordBatch:
     def to_arrow(self) -> pa.RecordBatch:
         """Convert a number of cached records to a pyarrow RecordBatch."""
         _size = self._size
-
-        assert _size > 0
-
         # Passing the size option to pa.array does not seem to work for some reason.
         # So we are using slices instead.
         return pa.RecordBatch.from_arrays(
