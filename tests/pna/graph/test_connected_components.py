@@ -396,7 +396,10 @@ def test_find_components_stats(lazy_edgelist_karate_graph):
             max_component_refinement_depth=1,
         ),
     )
-
+    assert stats.reads_post_umi_collision_removal <= stats.reads_input
+    assert (
+        stats.reads_post_umi_collision_removal >= stats.reads_post_read_count_filtering
+    )
     assert stats.node_count_pre_recovery == 51
     assert stats.edge_count_pre_recovery == 78
 
