@@ -53,12 +53,12 @@ def _memory_validator(ctx, param, value):
         return int(parse_size(value))
     except ValueError as exc:
         raise click.BadParameter(
-            "memory option must be a positive integer, optionally with a unit suffix [K, M, G]"
+            "--memory option must be a positive integer, optionally with a unit suffix [K, M, G]"
         )
 
 
 def memory_option(func):
-    """Decorate a click command and add the --design option."""
+    """Decorate a click command and add the --memory option."""
 
     @click.option(
         "--memory",
