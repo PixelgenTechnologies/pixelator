@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+-   Pixelator can now handle sample names starting with a number for PNA data.
 -   Work around a bug in pyarrow that could cause the `pixelator single-cell-pna demux` to generate invalid
     molecule embeddings for very large input files.
 
