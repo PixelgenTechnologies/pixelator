@@ -9,6 +9,8 @@ from pathlib import Path
 
 import click
 
+from pixelator.common.utils.units import parse_size
+
 
 def output_option(func):
     """Wrap a Click entrypoint to add the --output option."""
@@ -38,6 +40,33 @@ def threads_option(func):
         required=False,
         show_default=True,
         help="The number of total worker threads available for parallel processing",
+    )
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def _memory_validator(ctx, param, value):
+    try:
+        return int(parse_size(value))
+    except ValueError as exc:
+        raise click.BadParameter(
+            "--memory option must be a positive integer, optionally with a unit suffix [K, M, G]"
+        )
+
+
+def memory_option(func):
+    """Decorate a click command and add the --memory option."""
+
+    @click.option(
+        "--memory",
+        default=None,
+        required=False,
+        callback=_memory_validator,
+        show_default=True,
+        help="The maximum amount of memory available for processing",
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):

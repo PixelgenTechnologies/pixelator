@@ -15,9 +15,11 @@ from pixelator.common.utils import (
     timer,
     write_parameters_file,
 )
+from pixelator.common.utils.units import parse_size
 from pixelator.pna.cli.common import (
     design_option,
     logger,
+    memory_option,
     output_option,
     panel_option,
     threads_option,
@@ -30,7 +32,6 @@ from pixelator.pna.demux import (
     finalize_batched_groups,
 )
 from pixelator.pna.demux.report import DemuxSampleReport
-from pixelator.pna.utils.units import parse_size
 
 
 def _chunk_size_validator(ctx, param, value):
@@ -89,6 +90,7 @@ def _chunk_size_validator(ctx, param, value):
     ),
 )
 @threads_option
+@memory_option
 @design_option
 @panel_option
 @output_option
@@ -104,6 +106,7 @@ def demux(
     output,
     design,
     threads,
+    memory,
     strategy,
 ):
     """Demultiplex Molecular Pixelation data (FASTQ) to generate one file per antibody."""
@@ -148,19 +151,33 @@ def demux(
         threads=threads,
     )
 
+    # Store intermediate parquet files before deduplication and sorting
+    tmp_output_dir = demux_output / "tmp"
+    tmp_output_dir.mkdir()
+
     demux_barcode_groups(
         corrected_reads=corrected,
         assay=assay,
         panel=panel,
         stats=stats,
-        output_dir=demux_output,
+        output_dir=tmp_output_dir,
         threads=threads,
         reads_per_chunk=output_chunk_reads,
         max_chunks=output_max_chunks,
         stategy=strategy,
     )
 
-    finalize_batched_groups(demux_output, strategy=strategy)
+    finalize_batched_groups(
+        input_dir=tmp_output_dir,
+        output_dir=demux_output,
+        strategy=strategy,
+        memory=memory,
+    )
+
+    # remove results in the temporary output directory
+    for file in tmp_output_dir.iterdir():
+        file.unlink()
+    tmp_output_dir.rmdir()
 
     sample_name = get_sample_name(fastq_file)
     report_json = demux_output / f"{sample_name}.report.json"
