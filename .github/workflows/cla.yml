@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: "CLA Assistant"
         if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
-        uses: contributor-assistant/github-action@v2.3.0
+        uses: contributor-assistant/github-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # the below token should have repo scope and must be manually added by you in the repository's secret
@@ -26,20 +26,8 @@ jobs:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.CLA_SIGNATURES_REPO_TOKEN }}
         with:
           path-to-signatures: 'signatures/pixelator/version1/cla.json'
-          # TODO: Add path to CLA document
-          path-to-document: 'TODO: ' # e.g. a CLA or a DCO document
-          # branch should not be protected
+          path-to-document: 'https://software.pixelgen.com/assets/files/Pixelgen_Individual_Contributor_License_Agreement_(CLA)-671dac61b4e5458371c420b857122e5a.pdf' # e.g. a CLA or a DCO document
           branch: 'main'
-          allowlist: ambarrio,fbdtemme,johandahlberg,dependabot[bot]
+          allowlist: johandahlberg,fbdtemme,ptajvar,maxkarlsson,ludvigla,vincent-van-hoef,dependabot[bot]
           remote-organization-name: PixelgenTechnologies
           remote-repository-name: cla-signatures
-
-          # the followings are the optional inputs - If the optional inputs are not given, then default values will be taken
-          #remote-organization-name: enter the remote organization name where the signatures should be stored (Default is storing the signatures in the same repository)
-          #create-file-commit-message: 'For example: Creating file for storing CLA Signatures'
-          #signed-commit-message: 'For example: $contributorName has signed the CLA in $owner/$repo#$pullRequestNo'
-          #custom-notsigned-prcomment: 'pull request comment with Introductory message to ask new contributors to sign'
-          #custom-pr-sign-comment: 'The signature to be committed in order to sign the CLA'
-          #custom-allsigned-prcomment: 'pull request comment when all contributors has signed, defaults to **CLA Assistant Lite bot** All Contributors have signed the CLA.'
-          #lock-pullrequest-aftermerge: false - if you don't want this bot to automatically lock the pull request after merging (default - true)
-          #use-dco-flag: true - If you are using DCO instead of CLA
