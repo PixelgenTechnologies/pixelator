@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Two columns, `marker_1_freq` and `marker_2_freq`, have been added to the proximity
     data to indicate the respective marker frequencies.
 
+### Fixed
+
+-   Work around a bug in pyarrow that could cause the `pixelator single-cell-pna demux` to generate invalid
+    molecule embeddings for very large input files.
 
 ## [0.20.1] - 2025-04-24
 
