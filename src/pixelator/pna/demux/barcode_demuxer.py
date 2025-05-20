@@ -718,9 +718,7 @@ class PairedBarcodeDemuxer(BarcodeDemuxer):
         umi1 = read_bytes[self._umi1_slice]
         umi2 = read_bytes[self._umi2_slice]
         uei = read_bytes[self._uei_slice]
-
         vector = self._embedding.encode(umi1, umi2, uei)
-
         group_id = self._supergroups[(pid1, pid2)]
 
         if group_id is None:
