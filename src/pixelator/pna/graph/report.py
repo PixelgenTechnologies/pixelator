@@ -20,6 +20,10 @@ class GraphStatistics:
     molecules_input: int = 0
     reads_input: int = 0
 
+    # Molecules and reads after removing UMI collisions
+    molecules_post_umi_collision_removal: int = 0
+    reads_post_umi_collision_removal: int = 0
+
     # Input into to initial graph after read_count filtering
     molecules_post_read_count_filtering: int = 0
     reads_post_read_count_filtering: int = 0

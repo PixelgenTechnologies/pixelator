@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Pixelator can now handle sample names starting with a number for PNA data.
 -   Work around a bug in pyarrow that could cause the `pixelator single-cell-pna demux` to generate invalid
     molecule embeddings for very large input files.
+-   Update tau metric information after denoising components.
+-   Fix the number of input reads and molecules in the graph report to correspond to the raw counts and add
+    the number of reads and molecules after UMI collision removal as separate entries in the report.
 
 ## [0.20.1] - 2025-04-24
 
