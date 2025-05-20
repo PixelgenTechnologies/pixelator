@@ -35,19 +35,22 @@ def test_demux_writing_strategy_paired(tmp_path, testdata_amplicon_fastq):
         threads=threads,
     )
 
+    tmp_demux_output = demux_output / "tmp"
+    tmp_demux_output.mkdir(exist_ok=True)
+
     demux_barcode_groups(
         corrected_reads=corrected,
         assay=assay,
         panel=panel,
         stats=stats,
-        output_dir=demux_output / "tmp",
+        output_dir=tmp_demux_output,
         threads=threads,
         reads_per_chunk=10_000,
         stategy=strategy,
     )
 
     finalize_batched_groups(
-        input_dir=demux_output / "tmp",
+        input_dir=tmp_demux_output,
         output_dir=demux_output,
         strategy=strategy,
         remove_intermediates=False,
@@ -94,12 +97,15 @@ def test_demux_writing_independent(tmp_path, testdata_amplicon_fastq):
         threads=threads,
     )
 
+    tmp_demux_output = demux_output / "tmp"
+    tmp_demux_output.mkdir(exist_ok=True)
+
     demux_barcode_groups(
         corrected_reads=corrected,
         assay=assay,
         panel=panel,
         stats=stats,
-        output_dir=demux_output / "tmp",
+        output_dir=tmp_demux_output,
         threads=threads,
         reads_per_chunk=50_000,
         max_chunks=8,
@@ -107,7 +113,7 @@ def test_demux_writing_independent(tmp_path, testdata_amplicon_fastq):
     )
 
     finalize_batched_groups(
-        input_dir=demux_output / "tmp",
+        input_dir=tmp_demux_output,
         output_dir=demux_output,
         strategy=strategy,
         remove_intermediates=False,

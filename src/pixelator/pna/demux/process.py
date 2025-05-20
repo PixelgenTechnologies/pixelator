@@ -259,8 +259,6 @@ def finalize_batched_groups(
         strategy: the demultiplexing strategy to use. Can be "paired" or "independent"
         memory: maximum amount of memory to use in bytes
     """
-    output_dir.mkdir(exist_ok=True, parents=True)
-
     if strategy == "independent":
         return _finalize_batched_groups_independent(
             input_dir,
@@ -299,7 +297,7 @@ def _finalize_batched_groups_paired(
         output_dir:
             the path to the output directory where the final parquet files are written
         remove_intermediates:
-            Whether to remove the intermediate Arrow files after writing to parquet
+            Whether to remove the intermediate parquet files after sorting and deduplication
         memory:
             Maximum amount of memory to use. Use None to disable memory limits.
 
@@ -320,15 +318,14 @@ def _finalize_batched_groups_paired(
 
     for f in tmp_parquet_files:
         output_name = str(clean_suffixes(f).name)
-        output_name = output_name.removesuffix(".arrow").removesuffix(".parquet")
+        output_name = output_name.removesuffix(".parquet")
 
         output_path = Path(output_dir) / f"{output_name}.parquet"
         parquet_files.append(output_path)
 
-        # Params not supported in ORDER BY clause
         conn.execute(
             f"""
-           COPY (
+            COPY (
                SELECT *, count(*) as read_count
                FROM read_parquet('{f}')
                GROUP BY ALL
@@ -360,8 +357,8 @@ def _finalize_batched_groups_independent(
     Params:
         work_dir:
             the path to the work directory containing the demuxed data
-        remove_intermediates:
-            Whether to remove the intermediate Arrow files after writing to parquet
+      remove_intermediates:
+            Whether to remove the intermediate parquet files after sorting and deduplication
         memory:
             Maximum amount of memory to use. Use None to disable memory limits.
 
@@ -393,7 +390,7 @@ def _finalize_batched_groups_independent(
             )
 
         output_name = str(clean_suffixes(f).name)
-        output_name = output_name.removesuffix(".arrow").removesuffix(".parquet")
+        output_name = output_name.removesuffix(".parquet")
 
         output_path = Path(output_dir) / f"{output_name}.parquet"
         parquet_files.append(output_path)

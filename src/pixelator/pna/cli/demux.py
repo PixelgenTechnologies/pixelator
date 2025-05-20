@@ -153,6 +153,7 @@ def demux(
 
     # Store intermediate parquet files before deduplication and sorting
     tmp_output_dir = demux_output / "tmp"
+    tmp_output_dir.mkdir()
 
     demux_barcode_groups(
         corrected_reads=corrected,
@@ -172,6 +173,11 @@ def demux(
         strategy=strategy,
         memory=memory,
     )
+
+    # remove results in the temporary output directory
+    for file in tmp_output_dir.iterdir():
+        file.unlink()
+    tmp_output_dir.rmdir()
 
     sample_name = get_sample_name(fastq_file)
     report_json = demux_output / f"{sample_name}.report.json"

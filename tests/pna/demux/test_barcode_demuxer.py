@@ -190,6 +190,7 @@ def is_sorted(x: npt.NDArray[np.integer]) -> bool:
 
 
 def test_finalize_batched_groups_independent(demux_intermediary_dir):
+    (demux_intermediary_dir / "dedup").mkdir()
     res = finalize_batched_groups(
         demux_intermediary_dir, demux_intermediary_dir / "dedup", strategy="independent"
     )

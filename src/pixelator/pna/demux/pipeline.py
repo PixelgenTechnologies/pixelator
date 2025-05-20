@@ -546,17 +546,22 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
     ):
         """Create a new ParallelDemuxPipelineRunner instance.
 
-        :param inpaths: The input paths to read data from
-        :param n_workers: The number of worker processes to spawn
-        :param output_directory: The directory to write the output files to
-        :param filename_policy: The policy to determine the filename of the output files
-        :param buffer_size: The size of the buffer to use for reading data
+        Args:
+            inpaths: The input paths to read data from.
+            n_workers: The number of worker processes to spawn.
+            output_directory: The directory to write the output files to.
+            filename_policy: The policy to determine the filename of the output files.
+            buffer_size: The size of the buffer to use for reading data.
+
         """
         self._n_workers = n_workers
         self._need_work_queue: multiprocessing.Queue = mpctx.Queue()
         self._buffer_size = 4 * 1024**2 if buffer_size is None else buffer_size
         self._inpaths = inpaths
         self._filename_policy = filename_policy
+
+        if not output_directory.exists():
+            raise NotADirectoryError(output_directory)
 
         output_directory.mkdir(parents=True, exist_ok=True)
 
