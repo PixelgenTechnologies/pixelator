@@ -15,6 +15,7 @@ from pixelator.pna.pixeldataset import (
     read,
 )
 from pixelator.pna.pixeldataset.io import PixelDataViewer
+from tests.pna.pixeldataset.conftest import create_pxl_file
 
 
 class TestReadPixelDataset:
@@ -321,3 +322,55 @@ class TestPrecomputedLayouts:
         assert "x_norm" in result.columns
         assert "y_norm" in result.columns
         assert "z_norm" in result.columns
+
+
+@pytest.fixture(
+    name="pxl_dataset_w_sample_names",
+    scope="module",
+    params=[
+        "1-sample-starting-with-nbr",
+        "sample-containing-dash",
+        "sample_with_underscores",
+        "✅-sample-with-emoji",
+    ],
+)
+def pixel_file_with_different_sample_names_fixture(
+    request,
+    tmp_path_factory,
+    edgelist_parquet_path,
+    proximity_parquet_path,
+    layout_parquet_path,
+):
+    target = tmp_path_factory.mktemp("data") / "file.pxl"
+    sample_name = request.param
+    target = create_pxl_file(
+        target=target,
+        sample_name=sample_name,
+        edgelist_parquet_path=edgelist_parquet_path,
+        proximity_parquet_path=proximity_parquet_path,
+        layout_parquet_path=layout_parquet_path,
+    )
+    return PNAPixelDataset.from_pxl_files([target]), sample_name
+
+
+class TestPixelDatasetNames:
+    """Test that pixel dataset can handle sample names that contain things like dashes, that are also keywords in duckdb."""
+
+    def test_sample_names(self, pxl_dataset_w_sample_names):
+        pxl_dataset, sample_name = pxl_dataset_w_sample_names
+        assert len(pxl_dataset.sample_names()) == 1
+        assert pxl_dataset.sample_names() == {sample_name}
+
+    def test_edgelist(self, pxl_dataset_w_sample_names):
+        pxl_dataset, sample_name = pxl_dataset_w_sample_names
+        df = pxl_dataset.edgelist().to_polars()
+        actual_sample_name = df.select("sample").unique()
+        assert actual_sample_name.shape[0] == 1
+        assert actual_sample_name[0, 0] == sample_name
+
+    def test_anndata(self, pxl_dataset_w_sample_names):
+        pxl_dataset, sample_name = pxl_dataset_w_sample_names
+        df = pxl_dataset.adata()
+        actual_sample_name = df.obs["sample"].unique()
+        assert actual_sample_name.shape[0] == 1
+        assert actual_sample_name[0] == sample_name

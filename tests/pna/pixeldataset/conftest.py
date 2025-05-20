@@ -244,7 +244,29 @@ def proximity_parquet_path_fixture(tmp_path_factory, proximity_dataframe):
     return path
 
 
-@pytest.fixture(name="pxl_file", scope="module")
+def create_pxl_file(
+    target,
+    sample_name,
+    edgelist_parquet_path,
+    proximity_parquet_path,
+    layout_parquet_path,
+):
+    with PixelFileWriter(target) as writer:
+        writer.write_edgelist(edgelist_parquet_path)
+        writer.write_adata(adata_data_func())
+        writer.write_metadata({"sample_name": sample_name, "version": "0.1.0"})
+        if proximity_parquet_path:
+            writer.write_proximity(proximity_parquet_path)
+        if layout_parquet_path:
+            writer.write_layouts(layout_parquet_path)
+
+    return target
+
+
+@pytest.fixture(
+    name="pxl_file",
+    scope="module",
+)
 def pixel_file_fixture(
     tmp_path_factory,
     edgelist_parquet_path,
@@ -252,13 +274,13 @@ def pixel_file_fixture(
     layout_parquet_path,
 ):
     target = tmp_path_factory.mktemp("data") / "file.pxl"
-    with PixelFileWriter(target) as writer:
-        writer.write_edgelist(edgelist_parquet_path)
-        writer.write_adata(adata_data_func())
-        writer.write_metadata({"sample_name": "test_sample", "version": "0.1.0"})
-        writer.write_proximity(proximity_parquet_path)
-        writer.write_layouts(layout_parquet_path)
-
+    target = create_pxl_file(
+        target=target,
+        sample_name="test_sample",
+        edgelist_parquet_path=edgelist_parquet_path,
+        proximity_parquet_path=proximity_parquet_path,
+        layout_parquet_path=layout_parquet_path,
+    )
     return target
 
 

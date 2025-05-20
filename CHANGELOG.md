@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Panel files no longer allow `_` as a character in the marker ids, since this causes
     problems with Seurat in R in downstream analysis.
 
+### Fixed
+
+-   Pixelator can now handle sample names starting with a number for PNA data.
+-   Work around a bug in pyarrow that could cause the `pixelator single-cell-pna demux` to generate invalid
+    molecule embeddings for very large input files.
+
 ## [0.20.1] - 2025-04-24
 
 ### Changed

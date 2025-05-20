@@ -40,6 +40,7 @@ from queue import Empty
 from typing import TYPE_CHECKING, Any, Iterator, Optional, Protocol, Tuple, Type
 
 import pyarrow as pa
+import pyarrow.parquet as pq
 from cutadapt.files import (
     FileFormat,
     InputFiles,
@@ -217,7 +218,7 @@ class PartsFilenamePolicy(DemuxFilenamePolicy):
 
     def get_filename(self, group_index: int) -> str:
         """Return the filename for the given group index."""
-        return f"{self.prefix}.part_{group_index:03d}.arrow"
+        return f"{self.prefix}.part_{group_index:03d}.parquet"
 
 
 class IndependentMarkersFilenamePolicy(DemuxFilenamePolicy):
@@ -256,11 +257,11 @@ class IndependentMarkersFilenamePolicy(DemuxFilenamePolicy):
         """Return the filename for the given group index."""
         if group_index in self._m1_groups:
             idx = self._rescaled_m1(group_index)
-            return f"{self.prefix}.m1.part_{idx:03d}.arrow"
+            return f"{self.prefix}.m1.part_{idx:03d}.parquet"
 
         if group_index in self._m2_groups:
             idx = self._rescaled_m2(group_index)
-            return f"{self.prefix}.m2.part_{idx:03d}.arrow"
+            return f"{self.prefix}.m2.part_{idx:03d}.parquet"
 
         raise ValueError(f"Invalid group index {group_index}")
 
@@ -296,7 +297,7 @@ class DemuxWriterProcess(mpctx_Process):
         self._batch_size = 10_000
         self._schema = schema
 
-        self._batch_writers: dict[int, pa.RecordBatchFileWriter] = {}
+        self._batch_writers: dict[int, pq.ParquetWriter] = {}
 
         # Write uncompressed here
         # These IPC files will be compressed later to parquet after sorting.
@@ -308,10 +309,11 @@ class DemuxWriterProcess(mpctx_Process):
         """Open a new writer for the given group index."""
         name = self.filename_policy.get_filename(group_index)
         output_file_path = str(self.output_directory / name)
-        batch_writer = pa.RecordBatchFileWriter(
+        batch_writer = pq.ParquetWriter(
             output_file_path,
             self._schema,
-            options=pa.ipc.IpcWriteOptions(**self._write_options),
+            compression="zstd",
+            compression_level=1,
         )
         self._batch_writers[group_index] = batch_writer
         return batch_writer
@@ -544,17 +546,24 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
     ):
         """Create a new ParallelDemuxPipelineRunner instance.
 
-        :param inpaths: The input paths to read data from
-        :param n_workers: The number of worker processes to spawn
-        :param output_directory: The directory to write the output files to
-        :param filename_policy: The policy to determine the filename of the output files
-        :param buffer_size: The size of the buffer to use for reading data
+        Args:
+            inpaths: The input paths to read data from.
+            n_workers: The number of worker processes to spawn.
+            output_directory: The directory to write the output files to.
+            filename_policy: The policy to determine the filename of the output files.
+            buffer_size: The size of the buffer to use for reading data.
+
         """
         self._n_workers = n_workers
         self._need_work_queue: multiprocessing.Queue = mpctx.Queue()
         self._buffer_size = 4 * 1024**2 if buffer_size is None else buffer_size
         self._inpaths = inpaths
         self._filename_policy = filename_policy
+
+        if not output_directory.exists():
+            raise NotADirectoryError(output_directory)
+
+        output_directory.mkdir(parents=True, exist_ok=True)
 
         # the workers read from these connections
         in_connections = [mpctx.Pipe(duplex=False) for _ in range(self._n_workers)]
