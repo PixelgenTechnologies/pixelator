@@ -4,7 +4,7 @@ ARG USE_ENTRYPOINT=false
 ARG MAKEJOBS=4
 
 # Install pixelator dependencies in a separate stage to improve caching
-FROM registry.fedoraproject.org/fedora-minimal:40 as runtime-base
+FROM registry.fedoraproject.org/fedora-minimal:40 AS runtime-base
 RUN microdnf install -y \
         python3.11 \
         git \
@@ -28,7 +28,7 @@ RUN poetry self add "poetry-dynamic-versioning[plugin]"
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
 
 
-FROM runtime-base as builder-base
+FROM runtime-base AS builder-base
 
 RUN microdnf install -y \
         python3.11 \
@@ -50,7 +50,7 @@ RUN microdnf install -y \
 
 
 # Build Fastp and isal from source
-FROM builder-base as build-fastp
+FROM builder-base AS build-fastp
 
 RUN git clone https://github.com/intel/isa-l.git
 
@@ -66,7 +66,7 @@ WORKDIR /fastp
 RUN make -j${MAKEJOBS}
 RUN make install
 
-FROM builder-base as poetry-deps-install-amd64
+FROM builder-base AS poetry-deps-install-amd64
 
 WORKDIR /pixelator
 COPY poetry.lock pyproject.toml ./
@@ -94,7 +94,7 @@ RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
     && rm requirements.txt
 
 
-FROM runtime-base as  poetry-deps-install-arm64
+FROM runtime-base AS poetry-deps-install-arm64
 
 WORKDIR /pixelator
 COPY poetry.lock pyproject.toml /pixelator/
@@ -106,7 +106,7 @@ RUN pip3.11 install -I --prefix=/runtime -r requirements.txt && rm requirements.
 # ------------------------------------------
 # -- Build the pixelator package
 # ------------------------------------------
-FROM runtime-base as build-pixelator
+FROM runtime-base AS build-pixelator
 
 ARG VERSION_OVERRIDE
 
@@ -128,7 +128,7 @@ RUN cp -r /pixelator/dist/ /dist/ && \
 # -- Build the runtime environment for amd64
 # ------------------------------------------
 
-FROM runtime-base as runtime-amd64
+FROM runtime-base AS runtime-amd64
 
 # Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
