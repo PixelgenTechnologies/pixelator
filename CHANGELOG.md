@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     molecules in the cell.
 -   Two columns, `marker_1_freq` and `marker_2_freq`, have been added to the proximity
     data to indicate the respective marker frequencies.
+-   Panel files no longer allow `_` as a character in the marker ids, since this causes
+    problems with Seurat in R in downstream analysis.
 
 ### Fixed
 

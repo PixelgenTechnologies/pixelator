@@ -123,6 +123,15 @@ class PNAAntibodyPanel(AntibodyPanel):
         """
         errors = super().validate_antibody_panel(panel_df)
 
+        if any(panel_df["marker_id"].str.contains("_")):
+            # Markers should not contain underscores since this messes
+            # things up with Seurat on the R side
+            errors.append(
+                "The marker_id column should not contain underscores. "
+                "Please use dashes instead. Offending values: "
+                f"{panel_df['marker_id'][panel_df['marker_id'].str.contains('_')]}"
+            )
+
         return errors
 
 
