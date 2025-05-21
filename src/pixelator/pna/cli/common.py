@@ -62,7 +62,7 @@ def memory_option(func):
 
     @click.option(
         "--memory",
-        default=None,
+        default="30G",
         required=False,
         callback=_memory_validator,
         show_default=True,
