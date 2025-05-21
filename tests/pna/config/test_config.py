@@ -140,10 +140,13 @@ def test_list_panel_names(pna_data_root):
     assert sorted(pna_config.list_panel_names(include_aliases=True)) == [
         "proxiome-immuno-155",
         "proxiome-immuno-155plex",
+        "proxiome-immuno-156-FMC63",
+        "proxiome-immuno-156-FMC63plex",
     ]
 
     assert sorted(pna_config.list_panel_names(include_aliases=False)) == [
         "proxiome-immuno-155",
+        "proxiome-immuno-156-FMC63",
     ]
 
 
