@@ -5,7 +5,7 @@ from typing import Any
 
 from ruamel import yaml
 
-from pixelator.mpx.types import PathType
+from pixelator.common.types import PathType
 
 
 def load_yaml_file(path: PathType) -> Any:

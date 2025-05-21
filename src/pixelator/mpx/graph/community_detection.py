@@ -24,7 +24,6 @@ from pixelator.mpx.graph.utils import (
     split_remaining_and_removed_edgelist,
 )
 from pixelator.mpx.report.models.graph import GraphSampleReport
-from pixelator.mpx.types import PathType
 
 logger = logging.getLogger(__name__)
 

@@ -39,11 +39,11 @@ import click
 import numpy as np
 import pandas as pd
 
-from pixelator.mpx.types import PathType
+from pixelator.common.types import PathType
 
 # Avoid a circular dependency
 if TYPE_CHECKING:
-    from pixelator.mpx.config import AntibodyPanel
+    from pixelator.common.config import AntibodyPanel
 
 logger = logging.getLogger(__name__)
 

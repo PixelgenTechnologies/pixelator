@@ -19,15 +19,15 @@ from pixelator.common.statistics import (
     clr_transformation,
     log1p_transformation,
 )
+from pixelator.common.types import PathType
 from pixelator.mpx.graph import components_metrics
 from pixelator.mpx.graph.constants import (
     LEIDEN_RESOLUTION,
     RELATIVE_ANNOTATE_RESOLUTION,
 )
-from pixelator.mpx.types import PathType
 
 if TYPE_CHECKING:
-    from pixelator.mpx.config import AntibodyPanel
+    from pixelator.common.config import AntibodyPanel
 
 logger = logging.getLogger(__name__)
 

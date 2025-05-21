@@ -1,6 +1,6 @@
 """Copyright © 2023 Pixelgen Technologies AB."""
 
-from pixelator.mpx.config.config_class import (
+from pixelator.common.config.config_class import (
     Config,
     load_assays_package,
     load_panels_package,

@@ -15,10 +15,10 @@ from typing import Dict, List, Optional, Tuple
 import importlib_resources
 import semver
 
+from pixelator.common.config.assay import Assay
+from pixelator.common.config.panel import AntibodyPanel
 from pixelator.common.exceptions import PixelatorBaseException
-from pixelator.mpx.config.assay import Assay
-from pixelator.mpx.config.panel import AntibodyPanel
-from pixelator.mpx.types import PathType
+from pixelator.common.types import PathType
 
 DNA_CHARS = {"A", "C", "G", "T"}
 

@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from pixelator.common.config.panel import load_antibody_panel
 from pixelator.mpx.config import config
-from pixelator.mpx.config.panel import load_antibody_panel
 
 from .base import BaseWorkflowTestMixin
 

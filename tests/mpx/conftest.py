@@ -14,7 +14,7 @@ import polars as pl
 import pytest
 from anndata import AnnData
 
-from pixelator.mpx.config import AntibodyPanel
+from pixelator.common.config import AntibodyPanel
 from pixelator.mpx.graph import update_edgelist_membership
 from pixelator.mpx.graph.utils import union as graph_union
 from pixelator.mpx.pixeldataset import (

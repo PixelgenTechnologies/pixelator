@@ -8,6 +8,7 @@ import sys
 
 import click
 
+from pixelator.common.config.panel import load_antibody_panel
 from pixelator.common.utils import (
     build_barcodes_file,
     create_output_stage_dir,
@@ -24,7 +25,6 @@ from pixelator.mpx.cli.common import (
     output_option,
 )
 from pixelator.mpx.config import config
-from pixelator.mpx.config.panel import load_antibody_panel
 from pixelator.mpx.demux import demux_fastq
 
 

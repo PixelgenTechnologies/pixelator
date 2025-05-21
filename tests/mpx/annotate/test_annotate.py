@@ -11,9 +11,9 @@ import pytest
 from anndata import AnnData
 
 from pixelator.common.annotate import NoCellsFoundException, filter_components_sizes
+from pixelator.common.config import AntibodyPanel
 from pixelator.mpx.annotate import cluster_components
 from pixelator.mpx.cli.annotate import annotate_components
-from pixelator.mpx.config import AntibodyPanel
 from pixelator.mpx.pixeldataset.utils import read_anndata
 
 

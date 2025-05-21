@@ -8,9 +8,8 @@ import copy
 
 import pytest
 
-from pixelator.mpx.config import (
+from pixelator.common.config import (
     RegionType,
-    config,
     get_position_in_parent,
 )
 from pixelator.pna.config.config_class import (
@@ -133,7 +132,7 @@ def test_load_antibody_panel_util(pna_data_root):
     assert path_panel.filename == "test-pna-panel-v2.csv"
 
     with pytest.raises(AssertionError):
-        load_antibody_panel(config, "human-qwdqwdqwdqdw-proteomics")
+        load_antibody_panel(pna_config, "human-qwdqwdqwdqdw-proteomics")
 
 
 def test_list_panel_names(pna_data_root):
@@ -149,7 +148,7 @@ def test_list_panel_names(pna_data_root):
 
 def test_loading_duplicate_aliases(pna_data_root):
     this_config = copy.deepcopy(pna_config)
-    from pixelator.mpx.config.config_class import PanelException
+    from pixelator.common.config.config_class import PanelException
 
     with pytest.raises(PanelException):
         this_config.load_panel_file(
