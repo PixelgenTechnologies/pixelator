@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Added component denoising functionality to be invoked as `pixelator single-cell-pna denoise`.
     Denoising removes nodes from markers that are overrepresented in the 1-core layer
     of a cell graph which suggests that they are caused by bleed-over from other cells.
+-   Added the proxiome-immuno-156-FMC63 panel, which includes all the markers from the
+    proxiome-immuno-155 panel, but with the addition of the FMC63 marker.
 
 ### Changed
 
