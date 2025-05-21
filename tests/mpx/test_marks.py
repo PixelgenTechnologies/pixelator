@@ -5,7 +5,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 import pytest
 
-from pixelator.mpx.marks import experimental
+from pixelator.common.marks import experimental
 
 
 def test_experimental():

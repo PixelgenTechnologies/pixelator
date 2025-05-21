@@ -11,7 +11,6 @@ from .graph import GraphSampleReport
 from .molecules_flow import MoleculesDataflowReport
 from .preqc import PreQCSampleReport
 from .reads_flow import ReadsDataflowReport
-from .summary_statistics import SummaryStatistics
 
 __all__ = [
     "AdapterQCSampleReport",
@@ -26,5 +25,4 @@ __all__ = [
     "MoleculesDataflowReport",
     "CommandInfo",
     "CommandOption",
-    "SummaryStatistics",
 ]

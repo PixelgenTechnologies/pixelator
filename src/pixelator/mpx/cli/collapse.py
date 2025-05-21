@@ -11,6 +11,7 @@ from pathlib import Path
 import click
 import polars as pl
 
+from pixelator.common.report.models import SummaryStatistics
 from pixelator.common.utils import (
     create_output_stage_dir,
     get_process_pool_executor,
@@ -23,7 +24,7 @@ from pixelator.common.utils import (
 from pixelator.mpx.cli.common import design_option, logger, output_option
 from pixelator.mpx.collapse import collapse_fastq
 from pixelator.mpx.config import config, get_position_in_parent, load_antibody_panel
-from pixelator.mpx.report.models import CollapseSampleReport, SummaryStatistics
+from pixelator.mpx.report.models import CollapseSampleReport
 
 
 def _handle_errors(jobs, executor):

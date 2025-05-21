@@ -10,8 +10,8 @@ from typing import Optional
 
 import pydantic
 
+from pixelator.common.report.models.summary_statistics import SummaryStatistics
 from pixelator.mpx.report.models.base import SampleReport
-from pixelator.mpx.report.models.summary_statistics import SummaryStatistics
 
 
 class AnnotateSampleReport(SampleReport):

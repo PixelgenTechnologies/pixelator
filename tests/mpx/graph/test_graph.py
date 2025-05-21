@@ -10,12 +10,11 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
-import scipy
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from pandas.testing import assert_frame_equal
 
+from pixelator.common.graph.backends.implementations._networkx import pmds_layout
 from pixelator.mpx.graph import Graph
-from pixelator.mpx.graph.backends.implementations._networkx import pmds_layout
 from tests.mpx.graph.networkx.test_tools import random_sequence
 from tests.mpx.test_tools import enforce_edgelist_types_for_tests
 

@@ -9,7 +9,7 @@ from typing import Iterable
 
 import polars as pl
 
-from pixelator.mpx.graph.backends.protocol import SupportedLayoutAlgorithm
+from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.pna.analysis_engine import (
     PerComponentTask,
 )

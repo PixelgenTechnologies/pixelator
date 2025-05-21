@@ -9,7 +9,10 @@ import pytest
 import scipy.sparse as sp
 from pandas.testing import assert_frame_equal
 
-from pixelator.mpx.graph.node_metrics import compute_transition_probabilities, local_g
+from pixelator.common.graph.node_metrics import (
+    compute_transition_probabilities,
+    local_g,
+)
 
 
 def test_compute_transition_probabilities(pentagram_graph):

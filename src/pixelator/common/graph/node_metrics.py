@@ -1,6 +1,6 @@
 """Functions related to computing node metrics on graphs.
 
-Copyright © 2024 Pixelgen Technologies AB.
+Copyright © 2025 Pixelgen Technologies AB.
 """
 
 from typing import Literal
@@ -9,54 +9,7 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 
-from pixelator.mpx.marks import experimental
-
-
-def compute_transition_probabilities(
-    A: sp.sparse.csr_array,
-    k: int = 1,
-    remove_self_loops: bool = False,
-) -> sp.sparse.csr_array:
-    """Compute transition probabilities of a graph.
-
-    This function computes the transition probabilities for node pairs in a graph.
-    Transition probabilities can for example be useful for weighting marker counts
-    when computing local spatial node metrics such as local G. The transition
-    probability is the probability of going from one node to another in a k-step walk,
-    where `k` is the number of steps in the walk. When `k=1`, the transition probabilities
-    are defined for the edges in the graph. With `k>1`, the transition probabilities can
-    be positive for node pairs that are not directly connected by an edge, including
-    transitions from a node to itself. In some situations, it may be desirable to ignore
-    these transitions (self-loops), which can be achieved by setting `remove_self_loops=True`.
-    In this case, the diagonal of the transition probability matrix is set to 0 and the
-    probabilities are renormalized (row-wise) to sum to 1.
-
-    :param A: A sparse adjacency matrix representing the graph.
-    :param k: The number of steps in the random walk. Default is 1.
-    :param remove_self_loops: Whether to remove self-loops from the transition probability
-    matrix. Default is False.
-    :return: A sparse matrix with transition probabilities.
-    :rtype: sp.sparse.csr_matrix
-    """
-    # Check that k is a positive integer
-    if not isinstance(k, int) or k < 1:
-        raise ValueError("k must be a positive integer")
-
-    W_out = A / A.sum(axis=0)[:, None]
-
-    # Multiply W by itself k times
-    if k > 1:
-        W_out = sp.sparse.linalg.matrix_power(W_out, k)
-
-    if remove_self_loops and k > 1:
-        # Set diagonal of W to 0 if k > 1 for gi to avoid self-loops
-        W_out.setdiag(values=0)
-        # Renormalize transition probabilities to sum to 1
-        row_sums = np.array(W_out.sum(axis=1)).flatten()
-        inv_row_sums = np.reciprocal(row_sums, where=row_sums != 0)
-        W_out = W_out.multiply(inv_row_sums[:, np.newaxis])
-
-    return W_out
+from pixelator.common.marks import experimental
 
 
 @experimental
@@ -229,3 +182,50 @@ def local_g(
     gi_mat[~np.isfinite(gi_mat)] = 0
 
     return pd.DataFrame(gi_mat, index=node_indices, columns=marker_columns)
+
+
+def compute_transition_probabilities(
+    A: sp.sparse.csr_array,
+    k: int = 1,
+    remove_self_loops: bool = False,
+) -> sp.sparse.csr_array:
+    """Compute transition probabilities of a graph.
+
+    This function computes the transition probabilities for node pairs in a graph.
+    Transition probabilities can for example be useful for weighting marker counts
+    when computing local spatial node metrics such as local G. The transition
+    probability is the probability of going from one node to another in a k-step walk,
+    where `k` is the number of steps in the walk. When `k=1`, the transition probabilities
+    are defined for the edges in the graph. With `k>1`, the transition probabilities can
+    be positive for node pairs that are not directly connected by an edge, including
+    transitions from a node to itself. In some situations, it may be desirable to ignore
+    these transitions (self-loops), which can be achieved by setting `remove_self_loops=True`.
+    In this case, the diagonal of the transition probability matrix is set to 0 and the
+    probabilities are renormalized (row-wise) to sum to 1.
+
+    :param A: A sparse adjacency matrix representing the graph.
+    :param k: The number of steps in the random walk. Default is 1.
+    :param remove_self_loops: Whether to remove self-loops from the transition probability
+    matrix. Default is False.
+    :return: A sparse matrix with transition probabilities.
+    :rtype: sp.sparse.csr_matrix
+    """
+    # Check that k is a positive integer
+    if not isinstance(k, int) or k < 1:
+        raise ValueError("k must be a positive integer")
+
+    W_out = A / A.sum(axis=0)[:, None]
+
+    # Multiply W by itself k times
+    if k > 1:
+        W_out = sp.sparse.linalg.matrix_power(W_out, k)
+
+    if remove_self_loops and k > 1:
+        # Set diagonal of W to 0 if k > 1 for gi to avoid self-loops
+        W_out.setdiag(values=0)
+        # Renormalize transition probabilities to sum to 1
+        row_sums = np.array(W_out.sum(axis=1)).flatten()
+        inv_row_sums = np.reciprocal(row_sums, where=row_sums != 0)
+        W_out = W_out.multiply(inv_row_sums[:, np.newaxis])
+
+    return W_out

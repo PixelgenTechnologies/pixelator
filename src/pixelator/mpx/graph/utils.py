@@ -6,21 +6,19 @@ Copyright © 2023 Pixelgen Technologies AB.
 import logging
 import typing
 import warnings
-from functools import reduce
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import networkx as nx
 import pandas as pd
 import polars as pl
 import xxhash
-from scipy.sparse import identity
 from scipy.sparse.linalg import matrix_power
 
-from pixelator.mpx.graph.backends.implementations import (
+from pixelator.common.graph import Graph
+from pixelator.common.graph.backends.implementations import (
     NetworkXGraphBackend,
 )
-from pixelator.mpx.graph.graph import Graph
-from pixelator.mpx.report.models import SummaryStatistics
+from pixelator.common.report.models import SummaryStatistics
 
 logger = logging.getLogger(__name__)
 

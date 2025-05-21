@@ -13,16 +13,16 @@ import pandas as pd
 import polars as pl
 from scipy.sparse import csr_array, csr_matrix
 
-from pixelator.mpx.graph.backends.implementations import (
+from pixelator.common.graph.backends.implementations import (
     graph_backend,
     graph_backend_from_graph_type,
 )
-from pixelator.mpx.graph.backends.protocol import (
+from pixelator.common.graph.backends.protocol import (
     GraphBackend,
     SupportedLayoutAlgorithm,
     VertexClustering,
 )
-from pixelator.mpx.graph.node_metrics import local_g
+from pixelator.common.graph.node_metrics import local_g
 
 logger = logging.getLogger(__name__)
 
