@@ -19,12 +19,14 @@ classifiers=[
     'License :: OSI Approved :: MIT License',
     'Natural Language :: English',
     'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11']
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    ]
 
 packages = [{ include = "pixelator", from = "src" }]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.12"
+python = ">=3.10,<3.13"
 click = "*"
 yapf = "*"
 cutadapt = ">=4.2"
@@ -104,7 +106,7 @@ markers = [
     "slow: Marks a test as being slow (deselect with '-m \"not web_tests\"')",]
 mpl-results-path = "tests/reports_mpl"
 mpl-generate-summary = "html"
-addopts = ["-p no:pytest-workflow", "-m not workflow_test and not web_test", "--benchmark-disable", "--mpl"]
+addopts = ["-p no:pytest-workflow", "-m not workflow_test and not web_test", "--benchmark-disable"]
 filterwarnings = ["ignore::DeprecationWarning",]
 
 [tool.ruff]
