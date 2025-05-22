@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import logging
 import warnings
-from collections import defaultdict
 from timeit import default_timer as timer
 from typing import (
     TYPE_CHECKING,
@@ -31,7 +30,7 @@ import scipy as sp
 from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
-from pixelator.mpx.graph.backends.protocol import (
+from pixelator.common.graph.backends.protocol import (
     Edge,
     EdgeSequence,
     GraphBackend,

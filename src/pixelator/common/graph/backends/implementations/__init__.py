@@ -8,8 +8,10 @@ from typing import Literal, Optional, Union
 
 import networkx as nx
 
-from pixelator.mpx.graph.backends.implementations._networkx import NetworkXGraphBackend
-from pixelator.mpx.graph.backends.protocol import GraphBackend
+from pixelator.common.graph.backends.implementations._networkx import (
+    NetworkXGraphBackend,
+)
+from pixelator.common.graph.backends.protocol import GraphBackend
 
 __all__ = ["NetworkXGraphBackend"]
 

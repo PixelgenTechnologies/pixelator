@@ -15,9 +15,11 @@ import pandas as pd
 import polars as pl
 import pyarrow as pa
 
-from pixelator.mpx.graph import Graph as BaseGraph
-from pixelator.mpx.graph.backends.implementations._networkx import NetworkXGraphBackend
-from pixelator.mpx.graph.backends.protocol import (
+from pixelator.common.graph import Graph as BaseGraph
+from pixelator.common.graph.backends.implementations._networkx import (
+    NetworkXGraphBackend,
+)
+from pixelator.common.graph.backends.protocol import (
     SupportedLayoutAlgorithm,
     VertexClustering,
 )

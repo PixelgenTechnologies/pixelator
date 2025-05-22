@@ -19,7 +19,7 @@ from pathlib import Path
 import click
 from numba import NumbaDeprecationWarning
 
-from pixelator.mpx.types import PathType
+from pixelator.common.types import PathType
 
 # Silence deprecation warnings
 warnings.simplefilter("ignore", category=NumbaDeprecationWarning)

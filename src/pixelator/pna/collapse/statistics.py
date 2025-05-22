@@ -11,7 +11,7 @@ from typing import Any
 import polars as pl
 import pydantic
 
-from pixelator.mpx.report.models import SummaryStatistics
+from pixelator.common.report.models import SummaryStatistics
 
 
 @dataclasses.dataclass(slots=True)

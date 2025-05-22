@@ -14,11 +14,11 @@ import pandas as pd
 import pydantic
 import ruamel.yaml as yaml
 
+from pixelator.common.types import PathType
 from pixelator.common.utils import logger
-from pixelator.mpx.types import PathType
 
 if TYPE_CHECKING:
-    from pixelator.mpx.config import Config
+    from pixelator.common.config import Config
 
 
 class AntibodyPanelMetadata(pydantic.BaseModel):

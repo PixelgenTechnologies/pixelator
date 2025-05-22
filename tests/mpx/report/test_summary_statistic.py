@@ -3,7 +3,7 @@
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
-from pixelator.mpx.report.models import SummaryStatistics
+from pixelator.common.report.models import SummaryStatistics
 
 
 def test_summary_statistic_from_pandas_series(adata):

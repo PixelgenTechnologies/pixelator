@@ -11,7 +11,8 @@ from typing import Any, Union
 import numba as nb
 import numpy as np
 
-from pixelator.mpx.config import RegionType, config, get_position_in_parent
+from pixelator.common.config import RegionType, get_position_in_parent
+from pixelator.mpx.config import config
 
 
 @nb.njit

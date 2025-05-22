@@ -11,6 +11,7 @@ import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
 
+from pixelator.common.report.json_encoder import PixelatorJSONEncoder
 from pixelator.mpx.graph import Graph
 from pixelator.mpx.graph.utils import (
     components_metrics,
@@ -18,8 +19,6 @@ from pixelator.mpx.graph.utils import (
     edgelist_metrics,
     update_edgelist_membership,
 )
-from pixelator.mpx.report.common.json_encoder import PixelatorJSONEncoder
-from pixelator.mpx.report.models import SummaryStatistics
 
 
 def test_components_metrics(full_graph_edgelist: pd.DataFrame):

@@ -10,8 +10,9 @@ from unittest import mock
 import click
 
 from pixelator.cli.main import main_cli
+from pixelator.common.config import Config
 from pixelator.mpx.cli.plugin import add_cli_plugins, fetch_cli_plugins
-from pixelator.mpx.config import Config, config
+from pixelator.mpx.config import config
 from pixelator.mpx.config.plugin import fetch_config_plugins, load_config_plugins
 
 

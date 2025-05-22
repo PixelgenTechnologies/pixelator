@@ -5,20 +5,19 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-import importlib
-import importlib.resources
 import itertools
 import typing
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import importlib_resources
 import semver
 
-from pixelator.common.config.config_class import Config, PanelException
+from pixelator.common.config.assay import Assay
+from pixelator.common.config.panel import AntibodyPanel
+from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.common.types import PathType
-from pixelator.pna.config.assay import PNAAssay
-from pixelator.pna.config.panel import PNAAntibodyPanel
 
 DNA_CHARS = {"A", "C", "G", "T"}
 
@@ -27,19 +26,23 @@ RangeType = typing.TypeVar(
 )
 
 
-class PNAConfig:
+class PanelException(PixelatorBaseException):
+    """Exception raised for failures to load a panel into the global configuration."""
+
+    pass
+
+
+class Config:
     """Class containing the pixelator configuration (assay settings)."""
 
     def __init__(
         self,
-        assays: Optional[List[PNAAssay]] = None,
-        panels: Optional[List[PNAAntibodyPanel]] = None,
+        assays: Optional[List[Assay]] = None,
+        panels: Optional[List[AntibodyPanel]] = None,
     ) -> None:
         """Initialize the config object."""
-        self.assays: Dict[str, PNAAssay] = {}
-        self.panels: typing.MutableMapping[str, List[PNAAntibodyPanel]] = defaultdict(
-            list
-        )
+        self.assays: Dict[str, Assay] = {}
+        self.panels: typing.MutableMapping[str, List[AntibodyPanel]] = defaultdict(list)
         self.panel_aliases: Dict[str, str] = {}
 
         if assays is not None:
@@ -52,7 +55,7 @@ class PNAConfig:
 
     def load_assay(self, path: PathType) -> None:
         """Load an assay from a yaml file."""
-        assay = PNAAssay.from_yaml(path)
+        assay = Assay.from_yaml(path)
         self.assays[assay.name] = assay
 
     def load_panel_file(self, path: PathType) -> None:
@@ -61,7 +64,7 @@ class PNAConfig:
         :param path: The path to the panel file.
         :raises PanelException: If the panel alias already exists in the config.
         """
-        panel = PNAAntibodyPanel.from_csv(path)
+        panel = AntibodyPanel.from_csv(path)
         key = panel.name if panel.name is not None else str(panel.filename)
         self.panels[key].append(panel)
 
@@ -102,7 +105,7 @@ class PNAConfig:
         for f in csv_files:
             self.load_panel_file(f)
 
-    def get_assay(self, assay_name: str) -> Optional[PNAAssay]:
+    def get_assay(self, assay_name: str) -> Optional[Assay]:
         """Get an assay by name."""
         return self.assays.get(assay_name)
 
@@ -125,7 +128,7 @@ class PNAConfig:
         panel_name: str,
         version: Optional[str] = None,
         allow_aliases: bool = True,
-    ) -> Optional[PNAAntibodyPanel]:
+    ) -> Optional[AntibodyPanel]:
         """Get a panel by name.
 
         :param panel_name: The name of the panel
@@ -161,34 +164,35 @@ class PNAConfig:
         return selected_panel
 
 
-ConfigType = typing.TypeVar("ConfigType", Config, PNAConfig)
-
-
-def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
+def load_assays_package(config: Config, package_name: str) -> Config:
     """Load default assays from a resources package.
 
     :param config: The config object to load assays into
     :param package_name: The name of the package to load assays from
     :return: The updated config object
     """
-    for resource in importlib.resources.files(package_name).iterdir():
+    # TODO: Consider switching to base importlib.resources after
+    #       dropping python3.8 support.
+    for resource in importlib_resources.files(package_name).iterdir():
         if resource.is_file():
-            with importlib.resources.as_file(resource) as file_path:
+            with importlib_resources.as_file(resource) as file_path:
                 config.load_assay(file_path)
 
     return config
 
 
-def load_panels_package(config: ConfigType, package_name: str) -> ConfigType:
+def load_panels_package(config: Config, package_name: str) -> Config:
     """Load default panels from a resources package.
 
     :param config: The config object to load panel files into
     :param package_name: The name of the package to load panels from
     :return: The updated config object
     """
-    for resource in importlib.resources.files(package_name).iterdir():
+    # TODO: Consider switching to base importlib.resources after
+    #       dropping python3.8 support.
+    for resource in importlib_resources.files(package_name).iterdir():
         if resource.is_file():
-            with importlib.resources.as_file(resource) as file_path:
+            with importlib_resources.as_file(resource) as file_path:
                 config.load_panel_file(file_path)
 
     return config

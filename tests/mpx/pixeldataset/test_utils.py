@@ -14,12 +14,12 @@ from anndata import AnnData
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 
+from pixelator.common.config import AntibodyPanel
 from pixelator.common.statistics import (
     clr_transformation,
     log1p_transformation,
 )
 from pixelator.common.utils import batched
-from pixelator.mpx.config import AntibodyPanel
 from pixelator.mpx.pixeldataset.utils import (
     antibody_metrics,
     component_antibody_counts,

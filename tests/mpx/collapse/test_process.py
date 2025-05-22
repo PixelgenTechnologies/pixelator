@@ -15,6 +15,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 
+from pixelator.common.config import get_position_in_parent
 from pixelator.mpx.collapse.process import (
     CollapsedFragment,
     build_annoytree,
@@ -30,7 +31,6 @@ from pixelator.mpx.collapse.process import (
     identify_fragments_to_collapse,
     write_tmp_feather_file,
 )
-from pixelator.mpx.config import get_position_in_parent
 from pixelator.mpx.config.config_instance import config
 from pixelator.mpx.test_utils.simulation import ReadSimulator
 

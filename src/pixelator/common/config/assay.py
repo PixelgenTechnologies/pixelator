@@ -16,8 +16,8 @@ except ImportError:
 import pydantic
 from pydantic import BaseModel
 
-from pixelator.mpx.config.utils import load_yaml_file
-from pixelator.mpx.types import PathType
+from pixelator.common.config.utils import load_yaml_file
+from pixelator.common.types import PathType
 
 
 class RegionType(str, enum.Enum):

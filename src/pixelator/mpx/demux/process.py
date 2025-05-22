@@ -12,7 +12,7 @@ from subprocess import CalledProcessError
 # List is used as type hint in comment
 from typing import List  # noqa: F401
 
-from pixelator.mpx.config.panel import AntibodyPanel
+from pixelator.common.config.panel import AntibodyPanel
 
 logger = logging.getLogger(__name__)
 

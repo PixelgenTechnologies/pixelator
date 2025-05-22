@@ -9,7 +9,7 @@ from tempfile import NamedTemporaryFile
 import pandas as pd
 import pytest
 
-from pixelator.mpx.config import AntibodyPanel
+from pixelator.common.config import AntibodyPanel
 
 
 def test_panel(data_root):

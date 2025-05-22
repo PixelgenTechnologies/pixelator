@@ -22,12 +22,12 @@ from pixelator.common.annotate.cell_calling import find_component_size_limits
 from pixelator.common.annotate.constants import (
     MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION,
 )
+from pixelator.common.config import AntibodyPanel
 from pixelator.common.exceptions import PixelatorBaseException
-from pixelator.mpx.config import AntibodyPanel
+from pixelator.common.report.models import SummaryStatistics
 from pixelator.mpx.graph.utils import components_metrics, edgelist_metrics
 from pixelator.mpx.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.mpx.pixeldataset.utils import edgelist_to_anndata
-from pixelator.mpx.report.models import SummaryStatistics
 from pixelator.mpx.report.models.annotate import AnnotateSampleReport
 
 # TODO

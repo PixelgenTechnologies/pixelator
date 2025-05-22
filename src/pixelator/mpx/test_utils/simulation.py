@@ -8,7 +8,7 @@ from typing import Generator, Iterable, Iterator, List, Optional
 
 import numpy as np
 
-from pixelator.mpx.config import Assay
+from pixelator.common.config import Assay
 from pixelator.mpx.config.config_instance import config
 
 

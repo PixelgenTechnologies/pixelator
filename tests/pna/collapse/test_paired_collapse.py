@@ -7,7 +7,7 @@ import polars as pl
 import pytest
 from numpy.core.numeric import array_equal
 
-from pixelator.mpx.report.models import SummaryStatistics
+from pixelator.common.report.models import SummaryStatistics
 from pixelator.pna.collapse import MoleculeCollapser
 from pixelator.pna.collapse.statistics import CollapseStatistics, MarkerLinkGroupStats
 from pixelator.pna.collapse.utilities import _collect_label_array_indices, _split_chunks

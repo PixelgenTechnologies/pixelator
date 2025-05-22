@@ -19,7 +19,7 @@ import semver
 from lxml.etree import _Element as LxmlElement
 from lxml.html import builder as E
 
-from pixelator.mpx.report.common.json_encoder import PixelatorJSONEncoder
+from pixelator.common.report.json_encoder import PixelatorJSONEncoder
 from pixelator.mpx.report.qcreport.types import Metrics, QCReportData, SampleInfo
 
 logger = logging.getLogger(__name__)

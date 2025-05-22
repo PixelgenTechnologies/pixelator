@@ -8,8 +8,8 @@ import networkx as nx
 import pandas as pd
 import pytest
 
+from pixelator.common.graph.backends.implementations import graph_backend
 from pixelator.mpx.graph import Graph
-from pixelator.mpx.graph.backends.implementations import graph_backend
 from tests.mpx.graph.networkx.test_tools import add_random_names_to_vertexes
 
 

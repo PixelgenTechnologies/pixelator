@@ -16,12 +16,12 @@ from pixelator.common.utils import (
     timer,
     write_parameters_file,
 )
-from pixelator.mpx.report.models.layout import LayoutSampleReport
 from pixelator.pna.analysis_engine import AnalysisManager, LoggingSetup
-from pixelator.pna.cli.common import logger, output_option
+from pixelator.pna.cli.common import output_option
 from pixelator.pna.layout import CreateLayout
 from pixelator.pna.pixeldataset import PxlFile, read
 from pixelator.pna.report.common import PixelatorPNAWorkdir
+from pixelator.pna.report.models.layout import LayoutSampleReport
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +119,8 @@ def layout(
     metrics_file = layout_output_dir / f"{clean_name}.report.json"
     report = LayoutSampleReport(
         sample_id=clean_name,
+        product_id="single-cell-pna",
+        report_type="layout",
     )
     report.write_json_file(metrics_file, indent=4)
 
