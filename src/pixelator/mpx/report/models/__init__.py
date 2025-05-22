@@ -1,5 +1,7 @@
 """Copyright © 2023 Pixelgen Technologies AB."""
 
+from pixelator.common.report.models import SummaryStatistics
+
 from .adapterqc import AdapterQCSampleReport
 from .amplicon import AmpliconSampleReport
 from .analysis import AnalysisSampleReport
@@ -25,4 +27,5 @@ __all__ = [
     "MoleculesDataflowReport",
     "CommandInfo",
     "CommandOption",
+    "SummaryStatistics",
 ]
