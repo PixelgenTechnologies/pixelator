@@ -49,6 +49,8 @@ def threads_option(func):
 
 
 def _memory_validator(ctx, param, value):
+    if value is None:
+        return None
     try:
         return int(parse_size(value))
     except ValueError as exc:
