@@ -6,7 +6,7 @@ ARG MAKEJOBS=4
 # Install pixelator dependencies in a separate stage to improve caching
 FROM registry.fedoraproject.org/fedora-minimal:40 AS runtime-base
 RUN microdnf install -y \
-        python3.11 \
+        python3.12 \
         git \
         sqlite \
         zlib \
@@ -86,10 +86,10 @@ ENV ANNOY_TARGET_VARIANT="${TARGETVARIANT:-v3}"
 RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
     export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
     echo "Building Annoy for explicit target $TARGETPLATFORM/$ANNOY_TARGET_VARIANT"; \
-    pip3.11 install -I --prefix=/runtime -r requirements.txt; \
+    pip3.12 install -I --prefix=/runtime -r requirements.txt; \
    else \
         echo "Building Annoy without implicit target $TARGETPLATFORM"; \
-        pip3.11 install -I --prefix=/runtime -r requirements.txt; \
+        pip3.12 install -I --prefix=/runtime -r requirements.txt; \
     fi \
     && rm requirements.txt
 
