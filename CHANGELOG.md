@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     of a cell graph which suggests that they are caused by bleed-over from other cells.
 -   Added the proxiome-immuno-156-FMC63 panel, which includes all the markers from the
     proxiome-immuno-155 panel, but with the addition of the FMC63 marker.
+-   Added molecules_post_umi_collision_removal and reads_post_umi_collision_removal
+    to the graph report file.
 
 ### Changed
 

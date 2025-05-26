@@ -65,6 +65,8 @@ def test_graph_sample_report():
         product_id="single-cell-pna",
         molecules_input=1000,
         reads_input=2000,
+        molecules_post_umi_collision_removal=950,
+        reads_post_umi_collision_removal=1950,
         molecules_output=900,
         reads_output=1800,
         reads_post_read_count_filtering=1900,
@@ -134,6 +136,8 @@ def test_graph_sample_report():
     assert report.reads_post_read_count_filtering == 1900
     assert report.reads_input == 2000
     assert report.reads_output == 1800
+    assert report.reads_post_umi_collision_removal == 1950
+    assert report.molecules_post_umi_collision_removal == 950
 
 
 def test_graph_sample_report_to_json(snapshot):
@@ -142,6 +146,8 @@ def test_graph_sample_report_to_json(snapshot):
         product_id="single-cell-pna",
         molecules_input=1000,
         molecules_output=900,
+        molecules_post_umi_collision_removal=950,
+        reads_post_umi_collision_removal=1950,
         reads_input=2000,
         reads_output=1800,
         molecules_post_read_count_filtering=1000,
