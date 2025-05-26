@@ -8,13 +8,11 @@ on:
     branches: [main, dev]
   workflow_dispatch:
 
-
 permissions:
   id-token: write
   actions: write
   contents: read
   packages: write
-
 
 env:
   ANNOY_COMPILER_ARGS: "-DANNOYLIB_MULTITHREADED_BUILD,-mno-avx512f"
@@ -54,6 +52,7 @@ jobs:
       fail-fast: false
       matrix:
         py:
+          - "3.12"
           - "3.11"
           - "3.10"
 
@@ -69,9 +68,9 @@ jobs:
 
       - uses: supplypike/setup-bin@v3
         with:
-          uri: 'https://opengene.org/fastp/fastp'
-          name: 'fastp'
-          version: '0.23.4'
+          uri: "https://opengene.org/fastp/fastp"
+          name: "fastp"
+          version: "0.23.4"
 
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
@@ -121,7 +120,7 @@ jobs:
   test-workflow:
     name: Test small workflow - ${{ matrix.case }}
     runs-on: ubuntu-latest
-    needs: [ pre_job ]
+    needs: [pre_job]
     strategy:
       fail-fast: false
       matrix:
@@ -142,9 +141,9 @@ jobs:
 
       - uses: supplypike/setup-bin@v3
         with:
-          uri: 'https://opengene.org/fastp/fastp'
-          name: 'fastp'
-          version: '0.23.2'
+          uri: "https://opengene.org/fastp/fastp"
+          name: "fastp"
+          version: "0.23.2"
 
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
