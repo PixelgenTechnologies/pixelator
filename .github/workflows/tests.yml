@@ -99,7 +99,7 @@ jobs:
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
@@ -137,7 +137,7 @@ jobs:
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - uses: supplypike/setup-bin@v3
         with:
