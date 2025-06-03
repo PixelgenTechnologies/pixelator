@@ -55,8 +55,8 @@ def amplicon_fastq(
     """
     threads = threads if threads > 0 else mp.cpu_count()
 
-    if len(inputs) != 2:
-        raise ValueError("Expected two input files, got %s" % len(inputs))
+    if len(inputs) not in [1, 2]:
+        raise ValueError("Expected one or two input files, got %s" % len(inputs))
 
     # Open file handles for input files
     input_files = InputPaths(*(str(i) for i in inputs))
@@ -85,9 +85,10 @@ def amplicon_fastq(
     failed_1 = Path(
         output.parent / f"{clean_suffixes(Path(inputs[0])).name}.failed.fq.zst"
     )
-    failed_2 = Path(
-        output.parent / f"{clean_suffixes(Path(inputs[1])).name}.failed.fq.zst"
-    )
+    if len(inputs) == 2:
+        failed_2 = Path(
+            output.parent / f"{clean_suffixes(Path(inputs[1])).name}.failed.fq.zst"
+        )
 
     amplicon_failed_writer = None
     if save_failed:
