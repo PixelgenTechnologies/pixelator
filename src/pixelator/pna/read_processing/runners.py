@@ -252,6 +252,7 @@ class WorkerProcess(mpctx_Process):
                 0 if self._pipeline.paired else None,
                 self._pipeline._modifiers,
                 self._pipeline._steps,
+                paired=self._pipeline.paired,
             )
             self._write_pipe.send(-1)
             self._write_pipe.send(stats)

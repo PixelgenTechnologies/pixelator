@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import logging
 import typing
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple, Union
 
 from cutadapt.files import InputFiles
 from cutadapt.info import ModificationInfo
@@ -52,10 +52,12 @@ ModifierStage = typing.Literal["pre", "post"]
 
 
 class AmpliconPipeline(Pipeline):
-    """Processing pipeline for combining paired-end reads into a single amplicon sequence.
+    """Processing pipeline for combining paired‐end reads now extended to also accept single‐end input (either R1 _or_ R2).
 
-    A series of modifiers and steps can be applied to the reads before and after the combining step.
-    The pipeline is designed to work with paired-end reads only.
+    - If two files (R1+R2) are provided: pre‐steps (paired), then combine, then post‐steps (single).
+    - If only one file is provided (single‐end), you detect “R1” vs “R2” by looking at
+      read.name, and treat that one FASTQ as if it were already “combined.”  All
+      single‐end modifiers/steps run in that branch.
 
     :param combiner: The step that combines the reads into a single amplicon sequence.
     :param pre_modifiers: A list of modifiers that are applied to the reads before the combining step.
@@ -64,27 +66,37 @@ class AmpliconPipeline(Pipeline):
     :param post_steps: A list of steps that are applied to the reads after the combining step.
     """
 
-    paired = True
+    paired: bool | None = None
 
     def __init__(
         self,
         combiner: CombiningModifier,
-        pre_modifiers: Iterable[PairedEndModifier] | None = None,
-        pre_steps: Iterable[PairedEndStep] | None = None,
+        pre_modifiers: (
+            Iterable[
+                Union[
+                    PairedModifiers,
+                    SingleEndModifier,
+                ]
+            ]
+            | None
+        ) = None,
+        pre_steps: Iterable[Union[PairedEndStep, SingleEndStep]] | None = None,
         post_modifiers: Iterable[SingleEndModifier] | None = None,
         post_steps: Iterable[SingleEndStep] | None = None,
     ):
-        """Create a new AmpliconPipeline instance.
+        """Initialize the pipeline.
 
-        :param combiner: The step that combines the reads into a single amplicon sequence.
+        :param combiner: The step that combines the reads into a single
+        amplicon sequence. In single-end mode, this step works as a modifier
+        to enforce the expected read format.
         :param pre_modifiers: A list of modifiers that are applied to the reads before the combining step.
         :param pre_steps: A list of steps that are applied to the reads before the combining step.
         :param post_modifiers: A list of modifiers that are applied to the reads after the combining step.
         :param post_steps: A list of steps that are applied to the reads after the combining step.
         """
         self._combiner = combiner
-        self._pre_modifiers: list[PairedEndModifier] = []
-        self._pre_steps: list[PairedEndStep] = list(pre_steps) if pre_steps else []
+        self._pre_modifiers: list[Union[PairedModifiers, SingleEndModifier]] = []
+        self._pre_steps: list[Union[PairedEndStep, SingleEndStep]] = []
         self._post_modifiers: list[SingleEndModifier] = []
         self._post_steps: list[SingleEndStep] = list(post_steps) if post_steps else []
 
@@ -109,7 +121,17 @@ class AmpliconPipeline(Pipeline):
         """Return a list of all steps in the pipeline."""
         return self._pre_steps or [] + [self._combiner] + self._post_steps or []
 
-    def _add_modifiers(self, modifiers, stage: ModifierStage):
+    def _add_modifiers(
+        self,
+        modifiers: Iterable[
+            Union[
+                PairedModifiers,
+                SingleEndModifier,
+                Tuple[Optional[SingleEndModifier], Optional[SingleEndModifier]],
+            ]
+        ],
+        stage: ModifierStage,
+    ) -> None:
         for modifier in modifiers:
             if isinstance(modifier, tuple):
                 self._add_two_single_modifiers(modifier[0], modifier[1], stage=stage)
@@ -150,6 +172,63 @@ class AmpliconPipeline(Pipeline):
         if stage == "post":
             self._post_modifiers.append(modifier)
 
+    def _pre_process_paired(self, reads):
+        """Pre‐process paired reads."""
+        pre_modifiers_and_steps = self._pre_modifiers + self._pre_steps
+        read1, read2 = reads
+        n_bp1 = len(read1)
+        n_bp2 = len(read2)
+        info1 = ModificationInfo(read1)
+        info2 = ModificationInfo(read2)
+
+        for step in pre_modifiers_and_steps:
+            reads = step(*reads, info1, info2)  # type: ignore
+            if reads is None:
+                break
+
+        if reads is not None:
+            read1, read2 = reads
+
+        return read1, read2, info1, info2, n_bp1, n_bp2
+
+    def _pre_process_single(self, single_read):
+        """Pre‐process single reads."""
+        pre_modifiers_and_steps = self._pre_modifiers + self._pre_steps
+        name = single_read.name
+        is_r2 = ("R2" in name) or ("/2" in name) or ("_2" in name)
+        if is_r2:
+            read1, read2 = None, single_read
+        else:
+            read1, read2 = single_read, None
+        info1 = ModificationInfo(read1) if read1 is not None else None
+        info2 = ModificationInfo(read2) if read2 is not None else None
+
+        for modifier in pre_modifiers_and_steps:
+            if isinstance(modifier, (PairedEndModifier, PairedEndStep)):
+                if isinstance(modifier, PairedEndModifierWrapper):
+                    if is_r2:
+                        out = modifier._modifier2(read2, info2)
+                        read2 = out
+                    else:
+                        out = modifier._modifier1(read1, info1)
+                        read1 = out
+                else:
+                    out = modifier(
+                        read1, read2, ModificationInfo(read1), ModificationInfo(read2)
+                    )
+                    read1, read2 = out
+            else:
+                if is_r2:
+                    out = modifier(read2, info2)  # type: ignore
+                    read2 = out
+                else:
+                    out = modifier(read1, info1)
+                    read1 = out
+            if out is None:
+                break
+
+        return read1, read2, info1, info2, len(single_read)
+
     def process_reads(
         self,
         infiles: InputFiles,
@@ -158,15 +237,25 @@ class AmpliconPipeline(Pipeline):
         """Receive a slice of reads and process them through the pipeline.
 
         :param infiles: A list of input files to process.
+        :returns: (n_reads, total1_bp, total2_bp or None).
         """
         self._infiles = infiles
         self._reader = infiles.open()
+
+        if len(infiles._files) == 1:
+            self.paired = False
+        elif len(infiles._files) == 2:
+            self.paired = True
+        else:
+            raise ValueError(
+                "AmpliconPipeline requires either one or two input files (single‐end or paired‐end)."
+            )
+
         n = 0  # no. of processed reads
         total1_bp = 0
-        total2_bp = 0
+        total2_bp = 0 if self.paired else None
         assert self._reader is not None
 
-        pre_modifiers_and_steps = self._pre_modifiers + self._pre_steps
         post_modifiers_and_steps = self._post_modifiers + self._post_steps
 
         # Note that this reader is not a real file but a chunk backed by a BytesIO object
@@ -174,36 +263,35 @@ class AmpliconPipeline(Pipeline):
         # Each worker will have its own chunk of reads to process in its own pipeline instance.
         for reads in self._reader:
             n += 1
-            if n % 10000 == 0 and progress is not None:
+            if (n % 10000 == 0) and (progress is not None):
                 progress.update(10000)
-            read1, read2 = reads
-            total1_bp += len(read1)
-            total2_bp += len(read2)
-            info1 = ModificationInfo(read1)
-            info2 = ModificationInfo(read2)
+            if self.paired:
+                read1, read2, info1, info2, n_bp1, n_bp2 = self._pre_process_paired(
+                    reads
+                )
+                total1_bp += n_bp1
+                total2_bp += n_bp2
 
-            for step in pre_modifiers_and_steps:
-                reads = step(*reads, info1, info2)  # type: ignore
-                if reads is None:
-                    break
+            else:
+                # Decide if this read was “R1” or “R2” by looking at its name:
+                read1, read2, info1, info2, n_bp = self._pre_process_single(reads)
+                total1_bp += n_bp
 
-            if reads is not None:
-                read1, read2 = reads
-                combined_read = self._combiner(read1, read2, info1, info2)
-                combined_read_info = ModificationInfo(combined_read)
+            combined_read = self._combiner(read1, read2, info1, info2)
+            combined_read_info = ModificationInfo(combined_read)
 
-                if combined_read is not None:
-                    for step in post_modifiers_and_steps:
-                        try:
-                            read = step(combined_read, combined_read_info)  # type: ignore
-                        except Exception as e:
-                            logging.error(
-                                "Error in step %s for read %s", step, combined_read.name
-                            )
-                            raise
+            if combined_read is not None:
+                for step in post_modifiers_and_steps:
+                    try:
+                        read = step(combined_read, combined_read_info)  # type: ignore
+                    except Exception as e:
+                        logging.error(
+                            "Error in step %s for read %s", step, combined_read.name
+                        )
+                        raise
 
-                        if read is None:
-                            break
+                    if read is None:
+                        break
 
         if progress is not None:
             progress.update(n % 10000)

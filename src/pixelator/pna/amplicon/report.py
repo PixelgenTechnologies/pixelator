@@ -4,7 +4,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 """
 
 import typing
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import pydantic
 from cutadapt.report import Statistics
@@ -178,6 +178,7 @@ class AmpliconStatistics(Statistics):
     def __init__(self) -> None:
         """Initialize the AmpliconStatistics object."""
         super().__init__()
+        self.paired: bool | None = None
         self._custom_stats: dict[str, Any] = dict()
 
     def __iadd__(self, other: Any):
@@ -274,3 +275,21 @@ class AmpliconStatistics(Statistics):
                 self._custom_stats[name] += step.get_statistics()
             else:
                 self._custom_stats[name] = step.get_statistics()
+
+    def collect(
+        self,
+        n: int,
+        total_bp1: int,
+        total_bp2: Optional[int],
+        modifiers,
+        steps,
+        paired: Optional[bool] = None,
+    ):
+        """
+        n -- total number of reads
+        total_bp1 -- number of bases in first reads
+        total_bp2 -- number of bases in second reads. None for single-end data.
+        """
+        stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
+        stats.paired = paired
+        return stats
