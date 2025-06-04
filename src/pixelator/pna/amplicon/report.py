@@ -285,11 +285,7 @@ class AmpliconStatistics(Statistics):
         steps,
         paired: Optional[bool] = None,
     ):
-        """
-        n -- total number of reads
-        total_bp1 -- number of bases in first reads
-        total_bp2 -- number of bases in second reads. None for single-end data.
-        """
+        """Enable stats.paired to be explicitly set in the collect method."""
         stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
         stats.paired = paired
         return stats
