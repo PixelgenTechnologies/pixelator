@@ -283,9 +283,10 @@ class AmpliconStatistics(Statistics):
         total_bp2: Optional[int],
         modifiers,
         steps,
-        paired: Optional[bool] = None,
+        set_paired_to_none: bool = False,
     ):
-        """Enable stats.paired to be explicitly set in the collect method."""
+        """Enable stats.paired to be set to None when unknown."""
         stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
-        stats.paired = paired
+        if set_paired_to_none:
+            stats.paired = None
         return stats
