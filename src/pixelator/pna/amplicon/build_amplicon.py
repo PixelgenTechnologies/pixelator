@@ -708,10 +708,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
     def __call__(
         self,
-        read1: SequenceRecord | None,
-        read2: SequenceRecord | None,
-        info1: ModificationInfo | None,
-        info2: ModificationInfo | None,
+        read1: Optional[SequenceRecord],
+        read2: Optional[SequenceRecord],
+        info1: Optional[ModificationInfo],
+        info2: Optional[ModificationInfo],
     ) -> Optional[SequenceRecord]:
         """Build an amplicon from paired-end reads (read1, read2), or a single read if only one is present.
 
@@ -737,7 +737,9 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             regions = r1_regions if is_read1 else r2_regions
             is_reversed = not is_read1
             pid1_umi1_region_seq, pid1_umi1_region_qual = self._get_region_sequence(
-                read, regions.pid1_umi1, is_reversed=is_reversed
+                read,
+                regions.pid1_umi1,
+                is_reversed=is_reversed,  #
             )
             pid2_umi2_region_seq, pid2_umi2_region_qual = self._get_region_sequence(
                 read, regions.pid2_umi2, is_reversed=is_reversed
@@ -798,7 +800,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
                 self._writer.write(read1, read2)
             return None
 
-        if read1 is not None and r1_regions.lbs1 is None:
+        if read1 is not None and r1_regions.lbs1 is None:  # type: ignore
             self._custom_stats.passed_missing_lbs1_anchor += 1
 
         # Combine the regions into a single amplicon sequence
@@ -819,7 +821,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
         # Create a new amplicon template to fill with the reads
         amplicon = SequenceRecord(
-            name=read1.name if read1 is not None else read2.name,
+            name=read1.name if read1 is not None else read2.name,  # type: ignore
             sequence=seq.decode("ascii"),
             qualities=qual.decode("ascii"),
         )
