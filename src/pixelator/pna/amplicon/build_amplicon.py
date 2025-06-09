@@ -760,7 +760,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             lbs2_region_qual = self._consensus_qual_lbs2(
                 read1,
                 read2,
-                region1_slice=regions.lbs2 if is_read1 else None,
+                region1_slice=regions.lbs2 if is_read1 else None,  # type: ignore
                 region2_slice=regions.lbs2 if not is_read1 else None,  # type: ignore
             )
             error = self._check_regions(
@@ -790,13 +790,13 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
                 lbs1_region_qual = self._consensus_qual_lbs1(
                     read1,
                     read2,
-                    r1_regions.lbs1,
+                    r1_regions.lbs1,  # type: ignore
                     r2_regions.lbs1,  # type: ignore
                 )
                 lbs2_region_qual = self._consensus_qual_lbs2(
                     read1,
                     read2,
-                    r1_regions.lbs2,
+                    r1_regions.lbs2,  # type: ignore
                     r2_regions.lbs2,  # type: ignore
                 )
 

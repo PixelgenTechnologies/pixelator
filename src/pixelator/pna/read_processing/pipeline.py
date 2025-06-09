@@ -96,7 +96,13 @@ class AmpliconPipeline(Pipeline):
         :param post_steps: A list of steps that are applied to the reads after the combining step.
         """
         self._combiner = combiner
-        self._pre_modifiers: list[Union[PairedEndModifier, tuple[SingleEndModifier | None, SingleEndModifier | None], SingleEndModifier]] = []
+        self._pre_modifiers: list[
+            Union[
+                PairedEndModifier,
+                tuple[SingleEndModifier | None, SingleEndModifier | None],
+                SingleEndModifier,
+            ]
+        ] = []
         self._pre_steps: list[Union[PairedEndStep, SingleEndStep]] = []
         self._post_modifiers: list[SingleEndModifier] = []
         self._post_steps: list[SingleEndStep] = list(post_steps) if post_steps else []
