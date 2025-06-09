@@ -498,7 +498,6 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         :param return_ascii: whether to return the sequence as ASCII bytes
         :return: the sequence  and quality of the region as a tuple, or None if the slice is empty
         """
-        assert read.qualities is not None
         if not region_slice:
             return None, None
 
