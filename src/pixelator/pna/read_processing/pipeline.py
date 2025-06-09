@@ -74,8 +74,9 @@ class AmpliconPipeline(Pipeline):
         pre_modifiers: (
             Iterable[
                 Union[
-                    PairedModifiers,
+                    PairedEndModifier,
                     SingleEndModifier,
+                    tuple[SingleEndModifier | None, SingleEndModifier | None],
                 ]
             ]
             | None
@@ -95,7 +96,7 @@ class AmpliconPipeline(Pipeline):
         :param post_steps: A list of steps that are applied to the reads after the combining step.
         """
         self._combiner = combiner
-        self._pre_modifiers: list[Union[PairedModifiers, SingleEndModifier]] = []
+        self._pre_modifiers: list[Union[PairedEndModifier, tuple[SingleEndModifier | None, SingleEndModifier | None], SingleEndModifier]] = []
         self._pre_steps: list[Union[PairedEndStep, SingleEndStep]] = []
         self._post_modifiers: list[SingleEndModifier] = []
         self._post_steps: list[SingleEndStep] = list(post_steps) if post_steps else []
@@ -125,8 +126,8 @@ class AmpliconPipeline(Pipeline):
         self,
         modifiers: Iterable[
             Union[
-                PairedModifiers,
                 SingleEndModifier,
+                PairedEndModifier,
                 Tuple[Optional[SingleEndModifier], Optional[SingleEndModifier]],
             ]
         ],

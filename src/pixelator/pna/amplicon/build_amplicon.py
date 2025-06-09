@@ -639,11 +639,11 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             tq = bytearray(template_qual)
 
             if region1_slice:
-                q = read1.qualities[region1_slice].encode("ascii")[: len(tq)]
+                q = read1.qualities[region1_slice].encode("ascii")[: len(tq)]  # type: ignore
                 tq[: len(q)] = q
 
             else:
-                q = (read2.qualities[region2_slice])[::-1].encode("ascii")[: len(tq)]
+                q = (read2.qualities[region2_slice])[::-1].encode("ascii")[: len(tq)]  # type: ignore
                 tq[-len(q) :] = q
 
             return bytes(tq)
@@ -652,10 +652,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             tq1 = bytearray(template_qual)
             tq2 = bytearray(template_qual)
 
-            q1 = read1.qualities[region1_slice].encode("ascii")[: len(template_qual)]
+            q1 = read1.qualities[region1_slice].encode("ascii")[: len(template_qual)]  # type: ignore
             tq1[: len(q1)] = q1
 
-            q2 = (read2.qualities[region2_slice])[::-1].encode("ascii")[
+            q2 = (read2.qualities[region2_slice])[::-1].encode("ascii")[  # type: ignore
                 : len(template_qual)
             ]
             tq2[-len(q2) :] = q2
@@ -738,26 +738,30 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             is_reversed = not is_read1
             pid1_umi1_region_seq, pid1_umi1_region_qual = self._get_region_sequence(
                 read,
-                regions.pid1_umi1,
-                is_reversed=is_reversed,  #
+                regions.pid1_umi1,  # type: ignore
+                is_reversed=is_reversed,
             )
             pid2_umi2_region_seq, pid2_umi2_region_qual = self._get_region_sequence(
-                read, regions.pid2_umi2, is_reversed=is_reversed
+                read,
+                regions.pid2_umi2,  # type: ignore
+                is_reversed=is_reversed,
             )
             uei_region_seq, uei_region_qual = self._get_region_sequence(
-                read, regions.uei, is_reversed=is_reversed
+                read,
+                regions.uei,  # type: ignore
+                is_reversed=is_reversed,
             )
             lbs1_region_qual = self._consensus_qual_lbs1(
                 read1,
                 read2,
-                region1_slice=regions.lbs1 if is_read1 else None,
-                region2_slice=regions.lbs1 if not is_read1 else None,
+                region1_slice=regions.lbs1 if is_read1 else None,  # type: ignore
+                region2_slice=regions.lbs1 if not is_read1 else None,  # type: ignore
             )
             lbs2_region_qual = self._consensus_qual_lbs2(
                 read1,
                 read2,
                 region1_slice=regions.lbs2 if is_read1 else None,
-                region2_slice=regions.lbs2 if not is_read1 else None,
+                region2_slice=regions.lbs2 if not is_read1 else None,  # type: ignore
             )
             error = self._check_regions(
                 pid1_umi1_region_seq, uei_region_seq, pid2_umi2_region_seq
@@ -766,19 +770,34 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             try:
                 # Combine the info from forward and reverse reads, or use only the available read
                 pid1_umi1_region_seq, pid1_umi1_region_qual = self._consensus_seq(
-                    read1, read2, r1_regions.pid1_umi1, r2_regions.pid1_umi1
+                    read1,
+                    read2,
+                    r1_regions.pid1_umi1,  # type: ignore
+                    r2_regions.pid1_umi1,  # type: ignore
                 )
                 pid2_umi2_region_seq, pid2_umi2_region_qual = self._consensus_seq(
-                    read1, read2, r1_regions.pid2_umi2, r2_regions.pid2_umi2
+                    read1,
+                    read2,
+                    r1_regions.pid2_umi2,  # type: ignore
+                    r2_regions.pid2_umi2,  # type: ignore
                 )
                 uei_region_seq, uei_region_qual = self._consensus_seq(
-                    read1, read2, r1_regions.uei, r2_regions.uei
+                    read1,
+                    read2,
+                    r1_regions.uei,  # type: ignore
+                    r2_regions.uei,  # type: ignore
                 )
                 lbs1_region_qual = self._consensus_qual_lbs1(
-                    read1, read2, r1_regions.lbs1, r2_regions.lbs1
+                    read1,
+                    read2,
+                    r1_regions.lbs1,
+                    r2_regions.lbs1,  # type: ignore
                 )
                 lbs2_region_qual = self._consensus_qual_lbs2(
-                    read1, read2, r1_regions.lbs2, r2_regions.lbs2
+                    read1,
+                    read2,
+                    r1_regions.lbs2,
+                    r2_regions.lbs2,  # type: ignore
                 )
 
                 # Check for errors and increment the statistics
