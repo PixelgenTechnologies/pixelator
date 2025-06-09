@@ -708,10 +708,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
     def __call__(
         self,
-        read1: Optional[SequenceRecord],
-        read2: Optional[SequenceRecord],
-        info1: Optional[ModificationInfo],
-        info2: Optional[ModificationInfo],
+        read1: SequenceRecord | None,
+        read2: SequenceRecord | None,
+        info1: ModificationInfo | None,
+        info2: ModificationInfo | None,
     ) -> Optional[SequenceRecord]:
         """Build an amplicon from paired-end reads (read1, read2), or a single read if only one is present.
 
