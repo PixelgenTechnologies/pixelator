@@ -122,3 +122,21 @@ def test_can_skip_input_checks(mocker, testdata_300k_sample_mismatch):
         ]
         cmd = runner.invoke(cli.main_cli, args)
         assert cmd.exit_code == 0
+
+
+def test_fastq_single_end(testdata_unbalanced_r12):
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as d:
+        args = [
+            "single-cell-pna",
+            "amplicon",
+            str(testdata_unbalanced_r12[0]),
+            "--output",
+            str(d),
+            "--design",
+            "pna-2",
+        ]
+        cmd = runner.invoke(cli.main_cli, args)
+
+        assert cmd.exit_code == 0
