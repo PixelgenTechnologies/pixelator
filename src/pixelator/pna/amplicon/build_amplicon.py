@@ -570,7 +570,11 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             return s_np.tobytes(), q_np.tobytes()
 
     def _consensus_qual_lbs1(
-        self, read1: SequenceRecord, read2: SequenceRecord, region1_slice, region2_slice
+        self,
+        read1: SequenceRecord | None,
+        read2: SequenceRecord | None,
+        region1_slice,
+        region2_slice,
     ):
         """Combine the quality scores of the LBS-1 region from forward and reverse reads.
 
@@ -584,7 +588,11 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         )
 
     def _consensus_qual_lbs2(
-        self, read1: SequenceRecord, read2: SequenceRecord, region1_slice, region2_slice
+        self,
+        read1: SequenceRecord | None,
+        read2: SequenceRecord | None,
+        region1_slice,
+        region2_slice,
     ):
         """Combine the quality scores of the LBS-2 region from forward and reverse reads.
 
@@ -599,8 +607,8 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
     @staticmethod
     def _consensus_qual_lbs(
-        read1: SequenceRecord,
-        read2: SequenceRecord,
+        read1: SequenceRecord | None,
+        read2: SequenceRecord | None,
         region1_slice,
         region2_slice,
         template_qual,
