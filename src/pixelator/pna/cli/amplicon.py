@@ -133,8 +133,10 @@ def amplicon(
         force_run=force_run,
     )
 
+    fastq_inputs = [Path(fastq_1)]
+    if fastq_2:
+        fastq_inputs.append(Path(fastq_2))
     # some basic sanity check on the input files
-    fastq_inputs = [Path(fastq_1)] + [Path(fastq_2)] if fastq_2 else []
     sanity_check_inputs(
         fastq_inputs,
         allowed_extensions=("fastq.gz", "fq.gz", "fastq", "fq", "fastq.zst", "fq.zst"),
@@ -142,34 +144,36 @@ def amplicon(
 
     # create output folder if it does not exist
     amplicon_output = create_output_stage_dir(output, "amplicon")
+    r1_sample_name = get_read_sample_name(fastq_1)
 
     # Some checks on the input files
     # - check if there are read 1 and read2 identifiers in the filename
     # - check if the sample name is the same for read1 and read2
-    if not is_read_file(fastq_1, "r1"):
-        msg = "Read 1 file does not contain a recognised read 1 suffix."
-        logger.log(level=error_level, msg=msg)
-        if not skip_input_checks:
-            sys.exit(1)
+    # no need to check this if only one fastq file is given.
+    if fastq_2 is not None:
+        if not is_read_file(fastq_1, "r1"):
+            msg = "Read 1 file does not contain a recognised read 1 suffix."
+            logger.log(level=error_level, msg=msg)
+            if not skip_input_checks:
+                sys.exit(1)
 
-    if fastq_2 and not is_read_file(fastq_2, "r2"):
-        msg = "Read 2 file does not contain a recognised read 2 suffix."
-        logger.log(level=error_level, msg=msg)
-        if not skip_input_checks:
-            sys.exit(1)
+        if fastq_2 and not is_read_file(fastq_2, "r2"):
+            msg = "Read 2 file does not contain a recognised read 2 suffix."
+            logger.log(level=error_level, msg=msg)
+            if not skip_input_checks:
+                sys.exit(1)
 
-    r1_sample_name = get_read_sample_name(fastq_1)
-    r2_sample_name = get_read_sample_name(fastq_2) if fastq_2 else None
+        r2_sample_name = get_read_sample_name(fastq_2) if fastq_2 else None
 
-    if fastq_2 and r1_sample_name != r2_sample_name:
-        msg = (
-            f"The sample name for read1 and read2 is different:\n"
-            f'"{r1_sample_name}" vs "{r2_sample_name}"\n'
-            "Did you pass the correct files?"
-        )
-        logger.log(level=error_level, msg=msg)
-        if not skip_input_checks:
-            sys.exit(1)
+        if r1_sample_name != r2_sample_name:
+            msg = (
+                f"The sample name for read1 and read2 is different:\n"
+                f'"{r1_sample_name}" vs "{r2_sample_name}"\n'
+                "Did you pass the correct files?"
+            )
+            logger.log(level=error_level, msg=msg)
+            if not skip_input_checks:
+                sys.exit(1)
 
     sample_name = sample_name or r1_sample_name
     output_file = amplicon_output / f"{sample_name}.amplicon.fq.zst"
