@@ -496,7 +496,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         :param region_slice: the slice for the region
         :param is_reversed: whether the region is reversed (e.g. LBS-2)
         :param return_ascii: whether to return the sequence as ASCII bytes
-        :return: the sequence of the region, or None if the slice is empty
+        :return: the sequence  and quality of the region as a tuple, or None if the slice is empty
         """
         assert read.qualities is not None
         if not region_slice:
