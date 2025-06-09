@@ -80,7 +80,7 @@ jobs:
         uses: actions/setup-python@v4
         id: setup-python
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Show state of repo (useful for debugging)
         run: git status
@@ -161,7 +161,7 @@ jobs:
         uses: actions/setup-python@v4
         id: setup-python
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
