@@ -724,9 +724,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         r1_regions = self._scan_forward_read(read1) if read1 is not None else None
         r2_regions = self._scan_reverse_read(read2) if read2 is not None else None
         if read1 is None or read2 is None:
-            read = read1 if read1 else read2
-            regions = r1_regions if read1 else r2_regions
-            is_reversed = read1 is None
+            is_read1 = read1 is not None
+            read = read1 if is_read1 else read2
+            regions = r1_regions if is_read1 else r2_regions
+            is_reversed = not is_read1
             pid1_umi1_region_seq, pid1_umi1_region_qual = self._get_region_sequence(
                 read, regions.pid1_umi1, is_reversed=is_reversed
             )
@@ -739,14 +740,14 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             lbs1_region_qual = self._consensus_qual_lbs1(
                 read1,
                 read2,
-                region1_slice=regions.lbs1 if read1 else None,
-                region2_slice=regions.lbs1 if read2 else None,
+                region1_slice=regions.lbs1 if is_read1 else None,
+                region2_slice=regions.lbs1 if not is_read1 else None,
             )
             lbs2_region_qual = self._consensus_qual_lbs2(
                 read1,
                 read2,
-                region1_slice=regions.lbs2 if read1 else None,
-                region2_slice=regions.lbs2 if read2 else None,
+                region1_slice=regions.lbs2 if is_read1 else None,
+                region2_slice=regions.lbs2 if not is_read1 else None,
             )
             error = self._check_regions(
                 pid1_umi1_region_seq, uei_region_seq, pid2_umi2_region_seq
