@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     proxiome-immuno-155 panel, but with the addition of the FMC63 marker.
 -   Support for python 3.12. The container builds for pixelator will use python 3.12 from
     this point.
+-   Added molecules_post_umi_collision_removal and reads_post_umi_collision_removal
+    to the graph report file.
 
 ### Changed
 

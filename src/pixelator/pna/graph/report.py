@@ -81,6 +81,14 @@ class GraphSampleReport(SampleReport):
         ..., description="The number of reads in the input edgelist."
     )
 
+    molecules_post_umi_collision_removal: int = pydantic.Field(
+        ..., description="The number of molecules after removing UMI collisions."
+    )
+
+    reads_post_umi_collision_removal: int = pydantic.Field(
+        ..., description="The number of reads after removing UMI collisions."
+    )
+
     molecules_post_read_count_filtering: int = pydantic.Field(
         ..., description="The number of molecules after read count filtering."
     )
