@@ -205,7 +205,7 @@ def denoise_one_core_layer(
     """
     node_marker_counts = component.node_marker_counts
     node_core_numbers = pd.Series(nx.core_number(component.raw))
-    if (node_core_numbers <= 1).mean() >= 0.5:
+    if (node_core_numbers <= 1).mean() >= 0.9:
         logger.debug(
             "Too many low core number nodes. Skipping denoising for this component."
         )
