@@ -1,11 +1,11 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import numpy as np
 import pytest
+import zstandard as zstd
 
 from pixelator.pna.amplicon.process import amplicon_fastq
 from pixelator.pna.config import pna_config
-import zstandard as zstd
-import numpy as np
 
 
 @pytest.mark.slow
