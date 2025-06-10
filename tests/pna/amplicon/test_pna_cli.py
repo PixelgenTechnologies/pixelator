@@ -125,6 +125,7 @@ def test_can_skip_input_checks(mocker, testdata_300k_sample_mismatch):
         assert cmd.exit_code == 0
 
 
+@pytest.mark.slow
 def test_fastq_single_end(testdata_unbalanced_r12):
     runner = CliRunner()
 
