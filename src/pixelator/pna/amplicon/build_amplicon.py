@@ -527,8 +527,6 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         :param region1_slice: the slice from the forward read
         :param region2_slice: the slice from the reverse read
         """
-        assert read1.qualities is not None
-        assert read2.qualities is not None
 
         if not region1_slice and not region2_slice:
             return None, None
@@ -626,11 +624,6 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         # Since we only use this for Q30 statistics, this is not a big issue
         # For fully accurate quality scores we would need to have the full alignment
         # instead of just the matched region and this has a very high overhead.
-        if read1 is not None:
-            assert read1.qualities is not None
-        if read2 is not None:
-            assert read2.qualities is not None
-
         if not region1_slice and not region2_slice:
             return template_qual
 

@@ -73,10 +73,11 @@ class AmpliconPipeline(Pipeline):
         combiner: CombiningModifier,
         pre_modifiers: (
             Iterable[
-                Union[
-                    PairedEndModifier,
-                    SingleEndModifier,
-                    tuple[SingleEndModifier | None, SingleEndModifier | None],
+                PairedEndModifier
+                | SingleEndModifier
+                | tuple[
+                    SingleEndModifier | None,
+                    SingleEndModifier | None,
                 ]
             ]
             | None
@@ -97,11 +98,9 @@ class AmpliconPipeline(Pipeline):
         """
         self._combiner = combiner
         self._pre_modifiers: list[
-            Union[
-                PairedEndModifier,
-                tuple[SingleEndModifier | None, SingleEndModifier | None],
-                SingleEndModifier,
-            ]
+            SingleEndModifier
+            | PairedEndModifier
+            | tuple[SingleEndModifier | None, SingleEndModifier | None]
         ] = []
         self._pre_steps: list[Union[PairedEndStep, SingleEndStep]] = []
         self._post_modifiers: list[SingleEndModifier] = []
