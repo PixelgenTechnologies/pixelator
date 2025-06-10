@@ -121,6 +121,8 @@ def get_overexpressed_markers_in_one_core(
             for statistical significance in Fisher's exact test. Defaults to 0.05.
         inflate_factor (float, optional): A factor used to inflate the excess
             count of markers identified as overexpressed. Defaults to 1.5.
+        one_core_ratio_threshold(float, optional): Components with higher nodes in
+                                                   their one-core layer are not denoised.
 
     Returns:
         pd.DataFrame: A DataFrame with two columns:
@@ -242,6 +244,8 @@ class DenoiseOneCore(PerComponentTask):
             pval_significance_threshold (float): The p-value threshold for considering
             a marker over-expressed in the one-core layer.
             inflate_factor: A factor used to inflate the excess count of markers.
+            one_core_ratio_threshold: Components with higher nodes in their one-core
+                                      layer are not denoised.
 
         """
         self.pval_significance_threshold = pval_significance_threshold
