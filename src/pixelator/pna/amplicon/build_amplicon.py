@@ -5,7 +5,8 @@ Copyright © 2024 Pixelgen Technologies AB.
 
 import enum
 import typing
-from typing import Optional, cast
+from dataclasses import dataclass
+from typing import Any, Optional, cast
 
 import numpy as np
 from cutadapt._align import Aligner
@@ -266,7 +267,9 @@ class AmpliconBuilderFailureReason(enum.Enum):
     NO_CONSENSUS = "no_consensus"
 
 
-class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistics):
+class PairedEndAmpliconBuilder(
+    CombiningModifier, HasFilterStatistics, HasCustomStatistics
+):
     """Construct an amplicon from a pair of reads.
 
     :param assay: the assay design
@@ -532,13 +535,13 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
         if not region1_slice or not region2_slice:
             if region1_slice:
-                s, q = AmpliconBuilder._get_region_sequence(
+                s, q = PairedEndAmpliconBuilder._get_region_sequence(
                     read1,
                     region1_slice,
                     is_reversed=False,
                 )
             else:
-                s, q = AmpliconBuilder._get_region_sequence(
+                s, q = PairedEndAmpliconBuilder._get_region_sequence(
                     read2,
                     region2_slice,
                     is_reversed=True,
@@ -550,10 +553,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             # TODO: Consensus of non LBS regions with partial lengths?
             #   We can inject both r1 and r2 into an all N template with zero qualities
 
-            s1, q1 = AmpliconBuilder._get_region_sequence(
+            s1, q1 = PairedEndAmpliconBuilder._get_region_sequence(
                 read1, region1_slice, is_reversed=False, as_bytearray=True
             )
-            s2, q2 = AmpliconBuilder._get_region_sequence(
+            s2, q2 = PairedEndAmpliconBuilder._get_region_sequence(
                 read2, region2_slice, is_reversed=True, as_bytearray=True
             )
 
@@ -697,6 +700,14 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
         return None
 
+    def handle(self, read1, read2, info1, info2):
+        """Handle the reads and their modification info.
+
+        This method is a placeholder for any additional processing that might be needed
+        before building the amplicon.
+        """
+        raise NotImplementedError("This method should be implemented in subclasses.")
+
     def __call__(
         self,
         read1: SequenceRecord | None,
@@ -719,84 +730,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         if read1 is None and read2 is None:
             return None
 
-        # Create a slice for each region in the amplicon (if it could be found)
-        r1_regions = self._scan_forward_read(read1) if read1 is not None else None
-        r2_regions = self._scan_reverse_read(read2) if read2 is not None else None
-        if read1 is None or read2 is None:
-            is_read1 = read1 is not None
-            read = read1 if is_read1 else read2
-            regions = r1_regions if is_read1 else r2_regions
-            is_reversed = not is_read1
-            pid1_umi1_region_seq, pid1_umi1_region_qual = self._get_region_sequence(
-                read,
-                regions.pid1_umi1,  # type: ignore
-                is_reversed=is_reversed,
-            )
-            pid2_umi2_region_seq, pid2_umi2_region_qual = self._get_region_sequence(
-                read,
-                regions.pid2_umi2,  # type: ignore
-                is_reversed=is_reversed,
-            )
-            uei_region_seq, uei_region_qual = self._get_region_sequence(
-                read,
-                regions.uei,  # type: ignore
-                is_reversed=is_reversed,
-            )
-            lbs1_region_qual = self._consensus_qual_lbs1(
-                read1,
-                read2,
-                region1_slice=regions.lbs1 if is_read1 else None,  # type: ignore
-                region2_slice=regions.lbs1 if not is_read1 else None,  # type: ignore
-            )
-            lbs2_region_qual = self._consensus_qual_lbs2(
-                read1,
-                read2,
-                region1_slice=regions.lbs2 if is_read1 else None,  # type: ignore
-                region2_slice=regions.lbs2 if not is_read1 else None,  # type: ignore
-            )
-            error = self._check_regions(
-                pid1_umi1_region_seq, uei_region_seq, pid2_umi2_region_seq
-            )
-        else:
-            try:
-                # Combine the info from forward and reverse reads, or use only the available read
-                pid1_umi1_region_seq, pid1_umi1_region_qual = self._consensus_seq(
-                    read1,
-                    read2,
-                    r1_regions.pid1_umi1,  # type: ignore
-                    r2_regions.pid1_umi1,  # type: ignore
-                )
-                pid2_umi2_region_seq, pid2_umi2_region_qual = self._consensus_seq(
-                    read1,
-                    read2,
-                    r1_regions.pid2_umi2,  # type: ignore
-                    r2_regions.pid2_umi2,  # type: ignore
-                )
-                uei_region_seq, uei_region_qual = self._consensus_seq(
-                    read1,
-                    read2,
-                    r1_regions.uei,  # type: ignore
-                    r2_regions.uei,  # type: ignore
-                )
-                lbs1_region_qual = self._consensus_qual_lbs1(
-                    read1,
-                    read2,
-                    r1_regions.lbs1,  # type: ignore
-                    r2_regions.lbs1,  # type: ignore
-                )
-                lbs2_region_qual = self._consensus_qual_lbs2(
-                    read1,
-                    read2,
-                    r1_regions.lbs2,  # type: ignore
-                    r2_regions.lbs2,  # type: ignore
-                )
-
-                # Check for errors and increment the statistics
-                error = self._check_regions(
-                    pid1_umi1_region_seq, uei_region_seq, pid2_umi2_region_seq
-                )
-            except AssertionError:
-                error = AmpliconBuilderFailureReason.NO_CONSENSUS
+        amplicon, error = self.handle(read1, read2, info1, info2)
 
         # Write failed reads to the "failed" writer
         if error is not None:
@@ -815,16 +749,16 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
         # Combine the regions into a single amplicon sequence
         seq = self._region_combiner.build_sequence(
-            pid1_umi1_region_seq,
-            pid2_umi2_region_seq,
-            uei_region_seq,
+            amplicon.pid1_umi1_region_seq,
+            amplicon.pid2_umi2_region_seq,
+            amplicon.uei_region_seq,
         )
         qual = self._region_combiner.build_qualities(
-            pid1_umi1_region_qual,
-            pid2_umi2_region_qual,
-            uei_region_qual,
-            lbs1_region_qual,
-            lbs2_region_qual,
+            amplicon.pid1_umi1_region_qual,
+            amplicon.pid2_umi2_region_qual,
+            amplicon.uei_region_qual,
+            amplicon.lbs1_region_qual,
+            amplicon.lbs2_region_qual,
         )
 
         assert len(seq) == len(qual)
@@ -840,3 +774,141 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         self._custom_stats.passed_reads += 1
 
         return amplicon
+
+
+@dataclass
+class Amplicon:
+    pid1_umi1_region_seq: bytearray | Any | bytes | None
+    pid1_umi1_region_qual: bytearray | Any | None
+    pid2_umi2_region_seq: bytearray | Any | bytes | None
+    pid2_umi2_region_qual: bytearray | Any | None
+    uei_region_seq: bytearray | Any | bytes | None
+    uei_region_qual: bytearray | Any | None
+    lbs1_region_qual: bytearray | Any | None
+    lbs2_region_qual: bytearray | Any | None
+
+
+class PairedEndAmpliconBuilder(PairedEndAmpliconBuilder):
+    """A wrapper for AmpliconBuilder that handles paired-end reads."""
+
+    def handle(
+        self,
+        read1: SequenceRecord | None,
+        read2: SequenceRecord | None,
+        info1: ModificationInfo | None = None,
+        info2: ModificationInfo | None = None,
+    ) -> tuple[Amplicon, AmpliconBuilderFailureReason | None]:
+        if read1 is None and read2 is None:
+            return None
+
+        # Create a slice for each region in the amplicon (if it could be found)
+        r1_regions = self._scan_forward_read(read1) if read1 is not None else None
+        r2_regions = self._scan_reverse_read(read2) if read2 is not None else None
+        try:
+            # Combine the info from forward and reverse reads, or use only the available read
+            pid1_umi1_region_seq, pid1_umi1_region_qual = self._consensus_seq(
+                read1,
+                read2,
+                r1_regions.pid1_umi1,  # type: ignore
+                r2_regions.pid1_umi1,  # type: ignore
+            )
+            pid2_umi2_region_seq, pid2_umi2_region_qual = self._consensus_seq(
+                read1,
+                read2,
+                r1_regions.pid2_umi2,  # type: ignore
+                r2_regions.pid2_umi2,  # type: ignore
+            )
+            uei_region_seq, uei_region_qual = self._consensus_seq(
+                read1,
+                read2,
+                r1_regions.uei,  # type: ignore
+                r2_regions.uei,  # type: ignore
+            )
+            lbs1_region_qual = self._consensus_qual_lbs1(
+                read1,
+                read2,
+                r1_regions.lbs1,  # type: ignore
+                r2_regions.lbs1,  # type: ignore
+            )
+            lbs2_region_qual = self._consensus_qual_lbs2(
+                read1,
+                read2,
+                r1_regions.lbs2,  # type: ignore
+                r2_regions.lbs2,  # type: ignore
+            )
+
+            # Check for errors and increment the statistics
+            error = self._check_regions(
+                pid1_umi1_region_seq, uei_region_seq, pid2_umi2_region_seq
+            )
+        except AssertionError:
+            error = AmpliconBuilderFailureReason.NO_CONSENSUS
+
+        return Amplicon(
+            pid1_umi1_region_seq=pid1_umi1_region_seq,
+            pid1_umi1_region_qual=pid1_umi1_region_qual,
+            pid2_umi2_region_seq=pid2_umi2_region_seq,
+            pid2_umi2_region_qual=pid2_umi2_region_qual,
+            uei_region_seq=uei_region_seq,
+            uei_region_qual=uei_region_qual,
+            lbs1_region_qual=lbs1_region_qual,
+            lbs2_region_qual=lbs2_region_qual,
+        ), error
+
+
+class SingleEndAmpliconBuilder(PairedEndAmpliconBuilder):
+    def handle(
+        self,
+        read1: SequenceRecord | None,
+        read2: SequenceRecord | None,
+    ) -> tuple[Amplicon, AmpliconBuilderFailureReason | None]:
+        is_read1 = read1 is not None
+        read = read1 if is_read1 else read2
+
+        regions = (
+            self._scan_forward_read(read) if is_read1 else self._scan_reverse_read(read)
+        )
+
+        is_reversed = not is_read1
+
+        pid1_umi1_region_seq, pid1_umi1_region_qual = self._get_region_sequence(
+            read,
+            regions.pid1_umi1,  # type: ignore
+            is_reversed=is_reversed,
+        )
+        pid2_umi2_region_seq, pid2_umi2_region_qual = self._get_region_sequence(
+            read,
+            regions.pid2_umi2,  # type: ignore
+            is_reversed=is_reversed,
+        )
+        uei_region_seq, uei_region_qual = self._get_region_sequence(
+            read,
+            regions.uei,  # type: ignore
+            is_reversed=is_reversed,
+        )
+        lbs1_region_qual = self._consensus_qual_lbs1(
+            read1,
+            read2,
+            region1_slice=regions.lbs1 if is_read1 else None,  # type: ignore
+            region2_slice=regions.lbs1 if not is_read1 else None,  # type: ignore
+        )
+        lbs2_region_qual = self._consensus_qual_lbs2(
+            read1,
+            read2,
+            region1_slice=regions.lbs2 if is_read1 else None,  # type: ignore
+            region2_slice=regions.lbs2 if not is_read1 else None,  # type: ignore
+        )
+        error = self._check_regions(
+            pid1_umi1_region_seq, uei_region_seq, pid2_umi2_region_seq
+        )
+
+        return Amplicon(
+            pid1_umi1_region_seq=pid1_umi1_region_seq,
+            pid1_umi1_region_qual=pid1_umi1_region_qual,
+            pid2_umi2_region_seq=pid2_umi2_region_seq,
+            pid2_umi2_region_qual=pid2_umi2_region_qual,
+            uei_region_seq=uei_region_seq,
+            uei_region_qual=uei_region_qual,
+            lbs1_region_qual=lbs1_region_qual,
+            lbs2_region_qual=lbs2_region_qual,
+        ), error
