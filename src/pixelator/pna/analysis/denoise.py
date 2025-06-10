@@ -201,6 +201,8 @@ def denoise_one_core_layer(
             for determining marker overexpression significance. Defaults to 0.05.
         inflate_factor (float, optional): A factor used for inflating certain
             calculations (not explicitly used in the provided code). Defaults to 1.5.
+        one_core_ratio_threshold(float, optional): Components with higher nodes in
+                                                   their one-core layer are not denoised.
 
     Returns:
         list: A list of nodes to be removed from the one-core layer of the graph.
