@@ -182,6 +182,7 @@ def denoise_one_core_layer(
     component: PNAGraph,
     pval_significance_threshold: float = 0.05,
     inflate_factor: float = 1.5,
+    one_core_ratio_threshold: float = 0.9,
 ) -> list:
     """Identify and remove markers over-expressed in the one-core layer of a graph.
 
@@ -205,7 +206,7 @@ def denoise_one_core_layer(
     """
     node_marker_counts = component.node_marker_counts
     node_core_numbers = pd.Series(nx.core_number(component.raw))
-    if (node_core_numbers <= 1).mean() >= 0.5:
+    if (node_core_numbers <= 1).mean() >= one_core_ratio_threshold:
         logger.debug(
             "Too many low core number nodes. Skipping denoising for this component."
         )
@@ -230,7 +231,10 @@ class DenoiseOneCore(PerComponentTask):
     TASK_NAME = "denoise-one-core"
 
     def __init__(
-        self, pval_significance_threshold: float = 0.05, inflate_factor: float = 1.5
+        self,
+        pval_significance_threshold: float = 0.05,
+        inflate_factor: float = 1.5,
+        one_core_ratio_threshold: float = 0.9,
     ):
         """Initialize a DenoiseOneCore instance.
 
@@ -242,6 +246,7 @@ class DenoiseOneCore(PerComponentTask):
         """
         self.pval_significance_threshold = pval_significance_threshold
         self.inflate_factor = inflate_factor
+        self.one_core_ratio_threshold = one_core_ratio_threshold
 
     def run_on_component_graph(
         self, component: PNAGraph, component_id: str
@@ -269,6 +274,7 @@ class DenoiseOneCore(PerComponentTask):
                 component,
                 pval_significance_threshold=self.pval_significance_threshold,
                 inflate_factor=self.inflate_factor,
+                one_core_ratio_threshold=self.one_core_ratio_threshold,
             ),
             columns=["umi"],
         )

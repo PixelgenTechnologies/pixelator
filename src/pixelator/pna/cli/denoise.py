@@ -44,6 +44,20 @@ logger = logging.getLogger(__name__)
     help="Run the denoise step to remove markers that are over-expressed in the one-core layer of a component.",
 )
 @click.option(
+    "--one-core-ratio-threshold",
+    default=0.9,
+    required=False,
+    type=click.FloatRange(
+        0,
+        1,
+    ),
+    show_default=True,
+    help=(
+        "ratio of the number of nodes in the one-core layer to the total number of nodes in a component. "
+        "If the ratio is above this threshold, the component is marked as disqualified for denoising."
+    ),
+)
+@click.option(
     "--pval-threshold",
     default=0.05,
     required=False,
@@ -72,6 +86,7 @@ def denoise(
     ctx,
     pxl_file,
     run_one_core_graph_denoising,
+    one_core_ratio_threshold,
     pval_threshold,
     inflate_factor,
     output,
@@ -82,6 +97,7 @@ def denoise(
         "denoise",
         input_files=input_files,
         run_one_core_graph_denoising=run_one_core_graph_denoising,
+        one_core_ratio_threshold=one_core_ratio_threshold,
         pval_threshold=pval_threshold,
         inflate_factor=inflate_factor,
         output=output,
@@ -115,7 +131,9 @@ def denoise(
         report.write_json_file(metrics, indent=4)
         return
 
-    analysis_to_run = [DenoiseOneCore(pval_threshold, inflate_factor)]
+    analysis_to_run = [
+        DenoiseOneCore(pval_threshold, inflate_factor, one_core_ratio_threshold)
+    ]
     logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
     manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
     pxl_dataset = read(pxl_file.path)
