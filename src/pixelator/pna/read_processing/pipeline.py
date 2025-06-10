@@ -102,7 +102,9 @@ class AmpliconPipeline(Pipeline):
             | PairedEndModifier
             | tuple[SingleEndModifier | None, SingleEndModifier | None]
         ] = []
-        self._pre_steps: list[Union[PairedEndStep, SingleEndStep]] = []
+        self._pre_steps: list[Union[PairedEndStep, SingleEndStep]] = (
+            list(pre_steps) if pre_steps else []
+        )
         self._post_modifiers: list[SingleEndModifier] = []
         self._post_steps: list[SingleEndStep] = list(post_steps) if post_steps else []
 
@@ -125,7 +127,7 @@ class AmpliconPipeline(Pipeline):
     @property
     def _steps(self) -> list[PairedEndModifier]:
         """Return a list of all steps in the pipeline."""
-        return self._pre_steps or [] + [self._combiner] + self._post_steps or []
+        return self._pre_steps + [self._combiner] + self._post_steps
 
     def _add_modifiers(
         self,
@@ -200,40 +202,14 @@ class AmpliconPipeline(Pipeline):
     def _pre_process_single(self, single_read):
         """Pre‐process single reads."""
         pre_modifiers_and_steps = self._pre_modifiers + self._pre_steps
-        name = single_read.name
-        is_r2 = ("R2" in name) or ("/2" in name) or ("_2" in name)
-        if is_r2:
-            read1, read2 = None, single_read
-        else:
-            read1, read2 = single_read, None
-        info1 = ModificationInfo(read1) if read1 is not None else None
-        info2 = ModificationInfo(read2) if read2 is not None else None
+        info = ModificationInfo(single_read)
 
         for modifier in pre_modifiers_and_steps:
-            if isinstance(modifier, (PairedEndModifier, PairedEndStep)):
-                if isinstance(modifier, PairedEndModifierWrapper):
-                    if is_r2:
-                        out = modifier._modifier2(read2, info2)
-                        read2 = out
-                    else:
-                        out = modifier._modifier1(read1, info1)
-                        read1 = out
-                else:
-                    out = modifier(
-                        read1, read2, ModificationInfo(read1), ModificationInfo(read2)
-                    )
-                    read1, read2 = out
-            else:
-                if is_r2:
-                    out = modifier(read2, info2)  # type: ignore
-                    read2 = out
-                else:
-                    out = modifier(read1, info1)
-                    read1 = out
+            out = modifier(single_read, info)
             if out is None:
                 break
 
-        return read1, read2, info1, info2, len(single_read)
+        return out, info, len(single_read)
 
     def process_reads(
         self,
@@ -277,22 +253,26 @@ class AmpliconPipeline(Pipeline):
                 )
                 total1_bp += n_bp1
                 total2_bp += n_bp2
+                final_read = self._combiner(read1, read2, info1, info2)
 
             else:
-                # Decide if this read was “R1” or “R2” by looking at its name:
-                read1, read2, info1, info2, n_bp = self._pre_process_single(reads)
+                read, info, n_bp = self._pre_process_single(reads)
                 total1_bp += n_bp
+                # Figure out which read to pass as None, since the combiner expects two reads.
+                if read.name.endswith("/2") or read.name.endswith("_R2"):
+                    final_read = self._combiner(None, read, None, info)
+                else:
+                    final_read = self._combiner(read, None, info, None)
 
-            combined_read = self._combiner(read1, read2, info1, info2)
-            combined_read_info = ModificationInfo(combined_read)
+            final_read_info = ModificationInfo(final_read)
 
-            if combined_read is not None:
+            if final_read is not None:
                 for step in post_modifiers_and_steps:
                     try:
-                        read = step(combined_read, combined_read_info)  # type: ignore
+                        read = step(final_read, final_read_info)  # type: ignore
                     except Exception as e:
                         logging.error(
-                            "Error in step %s for read %s", step, combined_read.name
+                            "Error in step %s for read %s", step, final_read.name
                         )
                         raise
 
