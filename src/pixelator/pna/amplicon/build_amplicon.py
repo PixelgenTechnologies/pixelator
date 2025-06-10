@@ -527,7 +527,6 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         :param region1_slice: the slice from the forward read
         :param region2_slice: the slice from the reverse read
         """
-
         if not region1_slice and not region2_slice:
             return None, None
 
