@@ -8,13 +8,11 @@ on:
     branches: [main, dev]
   workflow_dispatch:
 
-
 permissions:
   id-token: write
   actions: write
   contents: read
   packages: write
-
 
 env:
   ANNOY_COMPILER_ARGS: "-DANNOYLIB_MULTITHREADED_BUILD,-mno-avx512f"
@@ -56,7 +54,7 @@ jobs:
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Create dependencies file
         run: |

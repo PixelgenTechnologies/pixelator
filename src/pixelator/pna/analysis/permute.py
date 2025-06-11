@@ -60,7 +60,7 @@ def permute_edgelist(
         .first()
         .sort("umi1")
         .with_columns(
-            pl.col("marker_1").shuffle(random_number_generator.integers(0, int(1e10)))
+            pl.col("marker_1").shuffle(random_number_generator.integers(0, int(1e10)))  # type: ignore
         )
     )
     marker2_permute = (
@@ -70,7 +70,7 @@ def permute_edgelist(
         .first()
         .sort("umi2")
         .with_columns(
-            pl.col("marker_2").shuffle(random_number_generator.integers(0, int(1e10)))
+            pl.col("marker_2").shuffle(random_number_generator.integers(0, int(1e10)))  # type: ignore
         )
     )
 

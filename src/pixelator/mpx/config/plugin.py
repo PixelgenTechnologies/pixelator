@@ -39,7 +39,7 @@ def fetch_config_plugins() -> Generator[EntryPoint, None, None]:
     else:
         # Older interface, deprecated in Python 3.10 and recent
         # importlib_metadata, but we need it in Python 3.8 and 3.9.
-        selected_entrypoints = eps.get(group, [])
+        selected_entrypoints = eps.get(group, [])  # type: ignore
 
     for entrypoint in selected_entrypoints:
         logger.debug("Detected config plugin %s", entrypoint.name)

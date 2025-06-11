@@ -15,4 +15,4 @@ COPY .git /pixelator/.git
 
 RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi --only dev
 
-RUN pip3.11 install -r requirements.txt && rm requirements.txt
+RUN pip3.12 install -r requirements.txt && rm requirements.txt

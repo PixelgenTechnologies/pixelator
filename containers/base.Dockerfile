@@ -4,9 +4,9 @@ ARG USE_ENTRYPOINT=false
 ARG MAKEJOBS=4
 
 # Install pixelator dependencies in a separate stage to improve caching
-FROM registry.fedoraproject.org/fedora-minimal:40 AS runtime-base
+FROM registry.fedoraproject.org/fedora-minimal:42 AS runtime-base
 RUN microdnf install -y \
-        python3.11 \
+        python3.12 \
         git \
         sqlite \
         zlib \
@@ -16,23 +16,23 @@ RUN microdnf install -y \
      && microdnf clean all
 
 ENV PIPX_BIN_DIR="/usr/local/bin"
-RUN python3.11 -m ensurepip
-RUN pip3.11 install --upgrade pip
-RUN pip3.11 install pipx
+RUN python3.12 -m ensurepip
+RUN pip3.12 install --upgrade pip
+RUN pip3.12 install pipx
 RUN pipx install poetry
 RUN poetry self add poetry-plugin-export
 RUN poetry self add "poetry-dynamic-versioning[plugin]"
 
 # This is needed to easily run other python scripts inside the pixelator container
 # eg. samplesheet checking in nf-core/pixelator
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
 
 
 FROM runtime-base AS builder-base
 
 RUN microdnf install -y \
-        python3.11 \
-        python3.11-devel \
+        python3.12 \
+        python3.12-devel \
         wget \
         git \
         sqlite-devel \
@@ -86,10 +86,10 @@ ENV ANNOY_TARGET_VARIANT="${TARGETVARIANT:-v3}"
 RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
     export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
     echo "Building Annoy for explicit target $TARGETPLATFORM/$ANNOY_TARGET_VARIANT"; \
-    pip3.11 install -I --prefix=/runtime -r requirements.txt; \
+    pip3.12 install -I --prefix=/runtime -r requirements.txt; \
    else \
         echo "Building Annoy without implicit target $TARGETPLATFORM"; \
-        pip3.11 install -I --prefix=/runtime -r requirements.txt; \
+        pip3.12 install -I --prefix=/runtime -r requirements.txt; \
     fi \
     && rm requirements.txt
 
@@ -101,7 +101,7 @@ COPY poetry.lock pyproject.toml /pixelator/
 COPY .git /pixelator/.git
 
 RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi
-RUN pip3.11 install -I --prefix=/runtime -r requirements.txt && rm requirements.txt
+RUN pip3.12 install -I --prefix=/runtime -r requirements.txt && rm requirements.txt
 
 # ------------------------------------------
 # -- Build the pixelator package
@@ -158,7 +158,7 @@ RUN ldconfig /usr/local/lib64
 
 COPY --from=build-pixelator /dist /dist
 RUN ls -alh /dist/
-RUN pip3.11 install --prefix /usr/ /dist/*.tar.gz
+RUN pip3.12 install --prefix /usr/ /dist/*.tar.gz
 RUN rm -rf /dist
 
-RUN pip3.11 cache purge
+RUN pip3.12 cache purge
