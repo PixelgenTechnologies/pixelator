@@ -4,7 +4,7 @@ ARG USE_ENTRYPOINT=false
 ARG MAKEJOBS=4
 
 # Install pixelator dependencies in a separate stage to improve caching
-FROM registry.fedoraproject.org/fedora-minimal:40 AS runtime-base
+FROM registry.fedoraproject.org/fedora-minimal:42 AS runtime-base
 RUN microdnf install -y \
         python3.12 \
         git \
