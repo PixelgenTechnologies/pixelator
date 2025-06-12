@@ -533,13 +533,13 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
         if not region1_slice or not region2_slice:
             if region1_slice:
-                s, q = PairedEndAmpliconBuilder._get_region_sequence(
+                s, q = AmpliconBuilder._get_region_sequence(
                     read1,
                     region1_slice,
                     is_reversed=False,
                 )
             else:
-                s, q = PairedEndAmpliconBuilder._get_region_sequence(
+                s, q = AmpliconBuilder._get_region_sequence(
                     read2,
                     region2_slice,
                     is_reversed=True,
@@ -551,10 +551,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             # TODO: Consensus of non LBS regions with partial lengths?
             #   We can inject both r1 and r2 into an all N template with zero qualities
 
-            s1, q1 = PairedEndAmpliconBuilder._get_region_sequence(
+            s1, q1 = AmpliconBuilder._get_region_sequence(
                 read1, region1_slice, is_reversed=False, as_bytearray=True
             )
-            s2, q2 = PairedEndAmpliconBuilder._get_region_sequence(
+            s2, q2 = AmpliconBuilder._get_region_sequence(
                 read2, region2_slice, is_reversed=True, as_bytearray=True
             )
 
