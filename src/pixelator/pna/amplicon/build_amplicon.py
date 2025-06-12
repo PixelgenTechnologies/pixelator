@@ -267,9 +267,7 @@ class AmpliconBuilderFailureReason(enum.Enum):
     NO_CONSENSUS = "no_consensus"
 
 
-class PairedEndAmpliconBuilder(
-    CombiningModifier, HasFilterStatistics, HasCustomStatistics
-):
+class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistics):
     """Construct an amplicon from a pair of reads.
 
     :param assay: the assay design
@@ -530,7 +528,7 @@ class PairedEndAmpliconBuilder(
         :param region1_slice: the slice from the forward read
         :param region2_slice: the slice from the reverse read
         """
-        if not region1_slice and not region2_slice:
+        if region1_slice is None and region2_slice is None:
             return None, None
 
         if not region1_slice or not region2_slice:
@@ -744,8 +742,10 @@ class PairedEndAmpliconBuilder(
                 self._writer.write(read1, read2)
             return None
 
-        if read1 is not None and r1_regions.lbs1 is None:  # type: ignore
-            self._custom_stats.passed_missing_lbs1_anchor += 1
+        if read1 is not None:
+            r1_regions = self._scan_forward_read(read1)
+            if r1_regions.lbs1 is None:
+                self._custom_stats.passed_missing_lbs1_anchor += 1
 
         # Combine the regions into a single amplicon sequence
         seq = self._region_combiner.build_sequence(
@@ -788,7 +788,7 @@ class Amplicon:
     lbs2_region_qual: bytearray | Any | None
 
 
-class PairedEndAmpliconBuilder(PairedEndAmpliconBuilder):
+class PairedEndAmpliconBuilder(AmpliconBuilder):
     """A wrapper for AmpliconBuilder that handles paired-end reads."""
 
     def handle(
@@ -843,6 +843,16 @@ class PairedEndAmpliconBuilder(PairedEndAmpliconBuilder):
             )
         except AssertionError:
             error = AmpliconBuilderFailureReason.NO_CONSENSUS
+            return Amplicon(
+                pid1_umi1_region_seq=None,
+                pid1_umi1_region_qual=None,
+                pid2_umi2_region_seq=None,
+                pid2_umi2_region_qual=None,
+                uei_region_seq=None,
+                uei_region_qual=None,
+                lbs1_region_qual=None,
+                lbs2_region_qual=None,
+            ), error
 
         return Amplicon(
             pid1_umi1_region_seq=pid1_umi1_region_seq,
@@ -856,11 +866,13 @@ class PairedEndAmpliconBuilder(PairedEndAmpliconBuilder):
         ), error
 
 
-class SingleEndAmpliconBuilder(PairedEndAmpliconBuilder):
+class SingleEndAmpliconBuilder(AmpliconBuilder):
     def handle(
         self,
         read1: SequenceRecord | None,
         read2: SequenceRecord | None,
+        info1: ModificationInfo | None = None,
+        info2: ModificationInfo | None = None,
     ) -> tuple[Amplicon, AmpliconBuilderFailureReason | None]:
         is_read1 = read1 is not None
         read = read1 if is_read1 else read2
