@@ -66,7 +66,7 @@ class BasesCountStatistics(pydantic.BaseModel):
     quality_trimmed_read1: int = pydantic.Field(
         ..., description="The number of quality trimmed bases in read1."
     )
-    quality_trimmed_read2: int = pydantic.Field(
+    quality_trimmed_read2: Optional[int] = pydantic.Field(
         ..., description="The number of quality trimmed bases in read2."
     )
     output: int = pydantic.Field(..., description="The total number of output bases.")
