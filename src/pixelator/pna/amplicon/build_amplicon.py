@@ -909,7 +909,7 @@ class SingleEndAmpliconBuilder(AmpliconBuilder):
         read = read1 if is_read1 else read2
 
         regions = (
-            self._scan_forward_read(read) if is_read1 else self._scan_reverse_read(read)
+            self._scan_forward_read(read) if is_read1 else self._scan_reverse_read(read)  # type: ignore
         )
 
         is_reversed = not is_read1
