@@ -778,6 +778,8 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
 @dataclass
 class Amplicon:
+    """A dataclass to hold the regions of an amplicon."""
+
     pid1_umi1_region_seq: bytearray | Any | bytes | None
     pid1_umi1_region_qual: bytearray | Any | None
     pid2_umi2_region_seq: bytearray | Any | bytes | None
@@ -793,17 +795,31 @@ class PairedEndAmpliconBuilder(AmpliconBuilder):
 
     def handle(
         self,
-        read1: SequenceRecord | None,
-        read2: SequenceRecord | None,
+        read1: SequenceRecord,
+        read2: SequenceRecord,
         info1: ModificationInfo | None = None,
         info2: ModificationInfo | None = None,
     ) -> tuple[Amplicon, AmpliconBuilderFailureReason | None]:
-        if read1 is None and read2 is None:
-            return None
+        """Process paired-end sequencing reads to build an Amplicon object and determine failure reasons.
 
-        # Create a slice for each region in the amplicon (if it could be found)
-        r1_regions = self._scan_forward_read(read1) if read1 is not None else None
-        r2_regions = self._scan_reverse_read(read2) if read2 is not None else None
+        This method scans the provided forward and reverse reads for specific regions, generates consensus
+        sequences and quality scores for each region, and checks for errors. If consensus cannot be reached,
+        it returns an Amplicon object with all regions set to None and an appropriate failure reason.
+
+        Args:
+            read1 (SequenceRecord): The forward sequencing read.
+            read2 (SequenceRecord): The reverse sequencing read.
+            info1 (ModificationInfo | None, optional): Additional modification information for read1. Defaults to None.
+            info2 (ModificationInfo | None, optional): Additional modification information for read2. Defaults to None.
+
+        Returns:
+            tuple[Amplicon, AmpliconBuilderFailureReason | None]:
+                A tuple containing the constructed Amplicon object and a failure reason if applicable.
+                If both reads are None, returns None.
+
+        """
+        r1_regions = self._scan_forward_read(read1)
+        r2_regions = self._scan_reverse_read(read2)
         try:
             # Combine the info from forward and reverse reads, or use only the available read
             pid1_umi1_region_seq, pid1_umi1_region_qual = self._consensus_seq(
@@ -867,6 +883,8 @@ class PairedEndAmpliconBuilder(AmpliconBuilder):
 
 
 class SingleEndAmpliconBuilder(AmpliconBuilder):
+    """A wrapper for AmpliconBuilder that handles single-end reads."""
+
     def handle(
         self,
         read1: SequenceRecord | None,
@@ -874,6 +892,19 @@ class SingleEndAmpliconBuilder(AmpliconBuilder):
         info1: ModificationInfo | None = None,
         info2: ModificationInfo | None = None,
     ) -> tuple[Amplicon, AmpliconBuilderFailureReason | None]:
+        """Process a single read or a pair of reads to construct an amplicon.
+
+        Args:
+            read1 (SequenceRecord | None): The forward read, or None if not available.
+            read2 (SequenceRecord | None): The reverse read, or None if not available.
+            info1 (ModificationInfo | None, optional): Modification info for the forward read (ignored).
+            info2 (ModificationInfo | None, optional): Modification info for the reverse read (ignored).
+
+        Returns:
+            tuple[Amplicon, AmpliconBuilderFailureReason | None]:
+                A tuple containing the constructed Amplicon and an optional failure reason.
+
+        """
         is_read1 = read1 is not None
         read = read1 if is_read1 else read2
 
