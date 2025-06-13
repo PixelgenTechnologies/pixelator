@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import logging
 import typing
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple
 
 from cutadapt.files import InputFiles
 from cutadapt.info import ModificationInfo
@@ -82,7 +82,7 @@ class AmpliconPipeline(Pipeline):
             ]
             | None
         ) = None,
-        pre_steps: Iterable[Union[PairedEndStep, SingleEndStep]] | None = None,
+        pre_steps: Iterable[PairedEndStep | SingleEndStep] | None = None,
         post_modifiers: Iterable[SingleEndModifier] | None = None,
         post_steps: Iterable[SingleEndStep] | None = None,
     ):
@@ -102,7 +102,7 @@ class AmpliconPipeline(Pipeline):
             | PairedEndModifier
             | tuple[SingleEndModifier | None, SingleEndModifier | None]
         ] = []
-        self._pre_steps: list[Union[PairedEndStep, SingleEndStep]] = (
+        self._pre_steps: list[PairedEndStep | SingleEndStep] = (
             list(pre_steps) if pre_steps else []
         )
         self._post_modifiers: list[SingleEndModifier] = []
@@ -132,11 +132,9 @@ class AmpliconPipeline(Pipeline):
     def _add_modifiers(
         self,
         modifiers: Iterable[
-            Union[
-                SingleEndModifier,
-                PairedEndModifier,
-                Tuple[Optional[SingleEndModifier], Optional[SingleEndModifier]],
-            ]
+            SingleEndModifier
+            | PairedEndModifier
+            | Tuple[Optional[SingleEndModifier], Optional[SingleEndModifier]],
         ],
         stage: ModifierStage,
     ) -> None:
