@@ -134,20 +134,11 @@ class PixelFileWriter:
 
     def _clean_existing_adata_tables(self):
         tables = self._connection.sql("SHOW ALL TABLES")
-        adata_tables = (
-            tables.pl()
-            .filter((pl.col("name").str.starts_with("__adata__")))
-            .select(
-                pl.concat_str(
-                    [pl.col("database"), pl.col("schema"), pl.col("name")],
-                    separator=".",
-                ).alias("name")
+        adata_tables = tables.pl().filter((pl.col("name").str.starts_with("__adata__")))
+        for table in adata_tables.iter_rows(named=True):
+            self._connection.sql(
+                f"DROP TABLE {table['database']}.{table['schema']}.{table['name']}"
             )
-            .get_column("name")
-            .to_list()
-        )
-        for table in adata_tables:
-            self._connection.sql(f"DROP TABLE {table}")
 
     def write_adata(self, adata: AnnData) -> None:
         """Write the AnnData object to the PXL file.
