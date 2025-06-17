@@ -407,9 +407,9 @@ class TestPixelDatasetNames:
 
 
 def test_rewriting_anndata(pxl_file_w_sample_names):
-    pxl_dataset = pxl_file_w_sample_names
-    pxl = PNAPixelDataset.from_pxl_files(pxl_dataset)
+    pxl_file = pxl_file_w_sample_names
+    pxl = PNAPixelDataset.from_pxl_files(pxl_file)
     adata = pxl.adata()
 
-    with PixelFileWriter(pxl_dataset) as writer:
+    with PixelFileWriter(pxl_file) as writer:
         writer.write_adata(adata)

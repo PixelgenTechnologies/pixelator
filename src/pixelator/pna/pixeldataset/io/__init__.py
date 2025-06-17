@@ -137,7 +137,7 @@ class PixelFileWriter:
         adata_tables = tables.pl().filter((pl.col("name").str.starts_with("__adata__")))
         for table in adata_tables.iter_rows(named=True):
             self._connection.sql(
-                f"DROP TABLE {table['database']}.{table['schema']}.{table['name']}"
+                f'DROP TABLE "{table["database"]}"."{table["schema"]}"."{table["name"]}"'
             )
 
     def write_adata(self, adata: AnnData) -> None:
