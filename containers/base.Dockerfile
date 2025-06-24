@@ -6,14 +6,15 @@ ARG MAKEJOBS=4
 # Install pixelator dependencies in a separate stage to improve caching
 FROM registry.fedoraproject.org/fedora-minimal:42 AS runtime-base
 RUN microdnf install -y \
-        python3.12 \
-        git \
-        sqlite \
-        zlib \
-        libdeflate \
-        libstdc++ \
-        procps-ng \
-     && microdnf clean all
+    python3.12 \
+    git \
+    sqlite \
+    zlib \
+    libdeflate \
+    libstdc++ \
+    procps-ng \
+    gzip \
+    && microdnf clean all
 
 ENV PIPX_BIN_DIR="/usr/local/bin"
 RUN python3.12 -m ensurepip
@@ -31,22 +32,22 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
 FROM runtime-base AS builder-base
 
 RUN microdnf install -y \
-        python3.12 \
-        python3.12-devel \
-        wget \
-        git \
-        sqlite-devel \
-        zlib-devel \
-        libdeflate-devel \
-        gcc \
-        gcc-c++ \
-        make \
-        cmake \
-        autoconf \
-        automake \
-        libtool \
-        nasm \
-     && microdnf clean all
+    python3.12 \
+    python3.12-devel \
+    wget \
+    git \
+    sqlite-devel \
+    zlib-devel \
+    libdeflate-devel \
+    gcc \
+    gcc-c++ \
+    make \
+    cmake \
+    autoconf \
+    automake \
+    libtool \
+    nasm \
+    && microdnf clean all
 
 
 # Build Fastp and isal from source
@@ -87,9 +88,9 @@ RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
     export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
     echo "Building Annoy for explicit target $TARGETPLATFORM/$ANNOY_TARGET_VARIANT"; \
     pip3.12 install -I --prefix=/runtime -r requirements.txt; \
-   else \
-        echo "Building Annoy without implicit target $TARGETPLATFORM"; \
-        pip3.12 install -I --prefix=/runtime -r requirements.txt; \
+    else \
+    echo "Building Annoy without implicit target $TARGETPLATFORM"; \
+    pip3.12 install -I --prefix=/runtime -r requirements.txt; \
     fi \
     && rm requirements.txt
 
@@ -116,8 +117,8 @@ COPY .git /pixelator/.git
 
 RUN poetry config virtualenvs.create false
 RUN if [ ! -z "${VERSION_OVERRIDE}" ]; then \
-        echo "Overriding version to ${VERSION_OVERRIDE}"; \
-        POETRY_DYNAMIC_VERSIONING_OVERRIDE="pixelgen-pixelator=${VERSION_OVERRIDE}" poetry build -f sdist; \
+    echo "Overriding version to ${VERSION_OVERRIDE}"; \
+    POETRY_DYNAMIC_VERSIONING_OVERRIDE="pixelgen-pixelator=${VERSION_OVERRIDE}" poetry build -f sdist; \
     else poetry build -f sdist; \
     fi
 
