@@ -1,5 +1,7 @@
 """Copyright © 2023 Pixelgen Technologies AB."""
 
+from pixelator.common.report.models import SummaryStatistics
+
 from .base import SampleReport
 from .collapse import CollapseSampleReport
 from .commands import CommandInfo, CommandOption
@@ -11,4 +13,5 @@ __all__ = [
     "ReadsDataflowReport",
     "CommandInfo",
     "CommandOption",
+    "SummaryStatistics",
 ]

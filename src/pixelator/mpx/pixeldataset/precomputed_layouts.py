@@ -19,10 +19,10 @@ import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 
 from pixelator.common.exceptions import PixelatorBaseException
+from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
+from pixelator.common.marks import experimental
 from pixelator.common.utils import batched, flatten, get_pool_executor
 from pixelator.mpx.graph import Graph
-from pixelator.mpx.graph.backends.protocol import SupportedLayoutAlgorithm
-from pixelator.mpx.marks import experimental
 
 if TYPE_CHECKING:
     from pixelator.mpx.pixeldataset import PixelDataset

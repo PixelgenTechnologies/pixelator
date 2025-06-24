@@ -5,6 +5,7 @@ from pixelator.pna.config.config_class import (
     load_assays_package,
     load_panels_package,
 )
+from pixelator.pna.config.plugin import load_config_plugins
 
 pna_config = PNAConfig()
 
@@ -14,5 +15,4 @@ pna_config = load_assays_package(pna_config, assays_package)
 panels_package = "pixelator.pna.resources.panels"
 pna_config = load_panels_package(pna_config, panels_package)
 
-# TODO: Temporarily disable config plugins
-# pna_config = load_config_plugins(pna_config)
+pna_config = load_config_plugins(pna_config)

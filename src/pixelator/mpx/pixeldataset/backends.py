@@ -17,12 +17,12 @@ import pandas as pd
 import polars as pl
 from anndata import AnnData
 
+from pixelator.common.types import PathType
 from pixelator.mpx.pixeldataset.datastores import PixelDataStore
 from pixelator.mpx.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.mpx.pixeldataset.utils import (
     _enforce_edgelist_types,
 )
-from pixelator.mpx.types import PathType
 
 
 class PixelDatasetBackend(Protocol):

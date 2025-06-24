@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0] - 2025-06-24
+
+### Added
+
+-   Added component denoising functionality to be invoked as `pixelator single-cell-pna denoise`.
+    Denoising removes nodes from markers that are overrepresented in the 1-core layer
+    of a cell graph which suggests that they are caused by bleed-over from other cells.
+-   Added the proxiome-immuno-156-FMC63 panel, which includes all the markers from the
+    proxiome-immuno-155 panel, but with the addition of the FMC63 marker.
+-   Support for python 3.12. The container builds for pixelator will use python 3.12 from
+    this point.
+-   Added molecules_post_umi_collision_removal and reads_post_umi_collision_removal
+    to the graph report file.
+
+### Changed
+
+-   The proximity data will no longer be reported for markers with fewer than 10
+    molecules in the cell.
+-   Two columns, `marker_1_freq` and `marker_2_freq`, have been added to the proximity
+    data to indicate the respective marker frequencies.
+-   Panel files no longer allow `_` as a character in the marker ids, since this causes
+    problems with Seurat in R in downstream analysis.
+
+### Fixed
+
+-   Pixelator can now handle sample names starting with a number for PNA data.
+-   Work around a bug in pyarrow that could cause the `pixelator single-cell-pna demux` to generate invalid
+    molecule embeddings for very large input files.
+-   Update tau metric information after denoising components.
+-   Fix the number of input reads and molecules in the graph report to correspond to the raw counts and add
+    the number of reads and molecules after UMI collision removal as separate entries in the report.
+
 ## [0.20.1] - 2025-04-24
 
 ### Changed

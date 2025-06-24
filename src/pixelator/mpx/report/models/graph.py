@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import pydantic
 
+from pixelator.common.report.models.summary_statistics import SummaryStatistics
 from pixelator.mpx.report.models.base import SampleReport
-from pixelator.mpx.report.models.summary_statistics import SummaryStatistics
 
 
 class GraphSampleReport(SampleReport):

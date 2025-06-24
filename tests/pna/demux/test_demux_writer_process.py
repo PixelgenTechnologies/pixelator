@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import pyarrow as pa
+import pyarrow.parquet as pq
 import pytest
 
 from pixelator.pna.demux.barcode_demuxer import DemuxRecordBatch
@@ -228,9 +229,8 @@ def test_demux_writer_process(tmp_path, expected_df):
     writer_process.join()
 
     # Check that the files have been written
-    assert (output_dir / "sample1.part_000.arrow").exists()
-    with pa.ipc.open_file(output_dir / "sample1.part_000.arrow") as reader:
-        df = reader.read_pandas()
+    assert (output_dir / "sample1.part_000.parquet").exists()
+    df = pd.read_parquet(output_dir / "sample1.part_000.parquet")
 
     # Check that the content is as expected
     assert df.shape[0] == 30

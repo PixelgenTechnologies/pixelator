@@ -8,6 +8,7 @@ from typing import get_args
 
 import click
 
+from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.common.utils import (
     get_sample_name,
     log_step_start,
@@ -17,7 +18,6 @@ from pixelator.common.utils import (
 )
 from pixelator.mpx import read
 from pixelator.mpx.cli.common import logger, output_option
-from pixelator.mpx.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.mpx.pixeldataset.precomputed_layouts import (
     generate_precomputed_layouts_for_components,
 )

@@ -3,6 +3,7 @@
 from io import StringIO
 from pathlib import Path
 
+import anndata
 import pandas as pd
 import polars as pl
 import pytest
@@ -14,7 +15,8 @@ from pixelator.pna.pixeldataset import (
     PNAPixelDataset,
     read,
 )
-from pixelator.pna.pixeldataset.io import PixelDataViewer
+from pixelator.pna.pixeldataset.io import PixelDataViewer, PixelFileWriter
+from tests.pna.pixeldataset.conftest import create_pxl_file
 
 
 class TestReadPixelDataset:
@@ -321,3 +323,93 @@ class TestPrecomputedLayouts:
         assert "x_norm" in result.columns
         assert "y_norm" in result.columns
         assert "z_norm" in result.columns
+
+
+@pytest.fixture(
+    name="pxl_dataset_w_sample_names",
+    scope="module",
+    params=[
+        "1-sample-starting-with-nbr",
+        "sample-containing-dash",
+        "sample_with_underscores",
+        "✅-sample-with-emoji",
+    ],
+)
+def pixel_dataset_with_different_sample_names_fixture(
+    request,
+    tmp_path_factory,
+    edgelist_parquet_path,
+    proximity_parquet_path,
+    layout_parquet_path,
+):
+    sample_name = request.param
+    target = tmp_path_factory.mktemp("data") / (sample_name + ".pxl")
+    target = create_pxl_file(
+        target=target,
+        sample_name=sample_name,
+        edgelist_parquet_path=edgelist_parquet_path,
+        proximity_parquet_path=proximity_parquet_path,
+        layout_parquet_path=layout_parquet_path,
+    )
+    return PNAPixelDataset.from_pxl_files([target]), sample_name
+
+
+@pytest.fixture(
+    name="pxl_file_w_sample_names",
+    scope="module",
+    params=[
+        "1-sample-starting-with-nbr",
+        "sample-containing-dash",
+        "sample_with_underscores",
+        "✅-sample-with-emoji",
+    ],
+)
+def pxl_file_with_sample_names_fixture(
+    request,
+    tmp_path_factory,
+    edgelist_parquet_path,
+    proximity_parquet_path,
+    layout_parquet_path,
+):
+    sample_name = request.param
+    target = tmp_path_factory.mktemp("data") / (sample_name + ".pxl")
+    target = create_pxl_file(
+        target=target,
+        sample_name=sample_name,
+        edgelist_parquet_path=edgelist_parquet_path,
+        proximity_parquet_path=proximity_parquet_path,
+        layout_parquet_path=layout_parquet_path,
+    )
+    return target
+
+
+class TestPixelDatasetNames:
+    """Test that pixel dataset can handle sample names that contain things like dashes, that are also keywords in duckdb."""
+
+    def test_sample_names(self, pxl_dataset_w_sample_names):
+        pxl_dataset, sample_name = pxl_dataset_w_sample_names
+        assert len(pxl_dataset.sample_names()) == 1
+        assert pxl_dataset.sample_names() == {sample_name}
+
+    def test_edgelist(self, pxl_dataset_w_sample_names):
+        pxl_dataset, sample_name = pxl_dataset_w_sample_names
+        df = pxl_dataset.edgelist().to_polars()
+        actual_sample_name = df.select("sample").unique()
+        assert actual_sample_name.shape[0] == 1
+        assert actual_sample_name[0, 0] == sample_name
+
+    def test_anndata(self, pxl_dataset_w_sample_names):
+        pxl_dataset, sample_name = pxl_dataset_w_sample_names
+        df = pxl_dataset.adata()
+        actual_sample_name = df.obs["sample"].unique()
+        assert actual_sample_name.shape[0] == 1
+        assert actual_sample_name[0] == sample_name
+
+
+def test_rewriting_anndata(pxl_file_w_sample_names):
+    pxl_file = pxl_file_w_sample_names
+    pxl = PNAPixelDataset.from_pxl_files(pxl_file)
+    adata = pxl.adata()
+
+    with PixelFileWriter(pxl_file) as writer:
+        writer.write_adata(adata)

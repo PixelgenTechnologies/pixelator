@@ -19,9 +19,9 @@ import polars as pl
 import xxhash
 from graspologic_native import leiden
 
+from pixelator.common.annotate.aggregates import call_aggregates
+from pixelator.common.annotate.cell_calling import find_component_size_limits
 from pixelator.common.exceptions import PixelatorBaseException
-from pixelator.mpx.annotate.aggregates import call_aggregates
-from pixelator.mpx.annotate.cell_calling import find_component_size_limits
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanel
 from pixelator.pna.graph.report import (
@@ -64,10 +64,6 @@ def _filter_edgelist(
     component_stats: GraphStatistics,
 ):
     """Filter the edgelist by read count."""
-    pre_filter_stat = edgelist.select(["read_count", "uei_count"]).sum().collect()
-    component_stats.molecules_input = pre_filter_stat["uei_count"][0]
-    component_stats.reads_input = pre_filter_stat["read_count"][0]
-
     edgelist = edgelist.filter(pl.col("read_count") >= min_read_count)
     post_filter_stat = edgelist.select(
         [
@@ -119,7 +115,7 @@ def _label_connected_components(
         fraction_nodes_in_largest_component
     )
 
-    return umi_component_map
+    return umi_component_map, component_stats
 
 
 @dataclass
@@ -538,11 +534,6 @@ def build_pxl_file_with_components(
     component_size_threshold: tuple[int, int] | bool = True,
 ) -> tuple[PNAPixelDataset, GraphStatistics]:
     """Create a pxl file after having created components and removed crossing edges."""
-    umi1_clashes, umi2_clashes = _find_clashing_umis(molecules_lazy_frame)
-    molecules_lazy_frame = molecules_lazy_frame.filter(
-        ~pl.col("umi1").is_in(umi1_clashes) & ~pl.col("umi2").is_in(umi2_clashes)
-    )
-
     with TemporaryDirectory(prefix="pixelator-") as tmp_dir:
         tmp_dir_path = Path(tmp_dir)
 
@@ -680,6 +671,7 @@ def _add_post_recovery_stats(edgelist: pl.LazyFrame, component_stats: GraphStati
         connected_component_sizes["component_size"].max()  # type: ignore
         / connected_component_sizes["component_size"].sum()  # type: ignore
     )
+    return component_stats
 
 
 def _name_components_with_umi_hashes(edgelist):
@@ -693,6 +685,27 @@ def _name_components_with_umi_hashes(edgelist):
         comp_hashes[comp] = hash_component(set(umi1 + umi2))
 
     return edgelist.with_columns(pl.col("component").replace_strict(comp_hashes))
+
+
+def _remove_umi_clashes_and_get_stats(input_edgelist, component_stats):
+    raw_stat = input_edgelist.select(["read_count", "uei_count"]).sum().collect()
+    component_stats.molecules_input = raw_stat["uei_count"][0]
+    component_stats.reads_input = raw_stat["read_count"][0]
+    umi1_clashes, umi2_clashes = _find_clashing_umis(input_edgelist)
+    no_clash_edgelist = input_edgelist.filter(
+        ~pl.col("umi1").is_in(umi1_clashes) & ~pl.col("umi2").is_in(umi2_clashes)
+    )
+    post_collision_stat = (
+        no_clash_edgelist.select(["read_count", "uei_count"]).sum().collect()
+    )
+    component_stats.molecules_post_umi_collision_removal = post_collision_stat[
+        "uei_count"
+    ][0]
+    component_stats.reads_post_umi_collision_removal = post_collision_stat[
+        "read_count"
+    ][0]
+
+    return no_clash_edgelist, component_stats
 
 
 @typing.overload
@@ -758,12 +771,17 @@ def find_components(
     :returns: an edgelist with components added to it, and a component statistics object if return_component_statistics is True
     """
     component_stats = GraphStatistics()
-    working_edgelist, node_map = _get_working_edgelist(input_edgelist)
+    no_clash_edgelist, component_stats = _remove_umi_clashes_and_get_stats(
+        input_edgelist, component_stats
+    )
+    working_edgelist, node_map = _get_working_edgelist(no_clash_edgelist)
     working_edgelist = _filter_edgelist(
         working_edgelist, min_read_count, component_stats
     )
     logger.debug("Labelling connected components")
-    umi_component_map = _label_connected_components(working_edgelist, component_stats)
+    umi_component_map, component_stats = _label_connected_components(
+        working_edgelist, component_stats
+    )
 
     if multiplet_recovery:
         logger.debug("Initiating multiplet recovery")
@@ -783,7 +801,9 @@ def find_components(
         working_edgelist, umi_component_map
     )
     if multiplet_recovery:
-        _add_post_recovery_stats(edgelist_with_components, component_stats)
+        component_stats = _add_post_recovery_stats(
+            edgelist_with_components, component_stats
+        )
         component_stats.component_count_pre_component_size_filtering = (
             component_stats.component_count_post_recovery
         )

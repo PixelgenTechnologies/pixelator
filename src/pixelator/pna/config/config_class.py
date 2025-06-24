@@ -15,8 +15,8 @@ from typing import Dict, List, Optional, Tuple
 
 import semver
 
-from pixelator.mpx.config.config_class import Config, PanelException
-from pixelator.mpx.types import PathType
+from pixelator.common.config.config_class import Config, PanelException
+from pixelator.common.types import PathType
 from pixelator.pna.config.assay import PNAAssay
 from pixelator.pna.config.panel import PNAAntibodyPanel
 

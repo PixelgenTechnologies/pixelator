@@ -6,8 +6,6 @@ Copyright © 2023 Pixelgen Technologies AB.
 import pytest
 
 from pixelator.mpx.report import PixelatorReporting, PixelatorWorkdir
-from pixelator.mpx.report.models import SummaryStatistics
-from pixelator.mpx.report.models.annotate import AnnotateSampleReport
 
 
 @pytest.fixture()

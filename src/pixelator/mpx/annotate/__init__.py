@@ -8,7 +8,6 @@ import typing
 from pathlib import Path
 from typing import Literal, Optional
 
-import networkx as nx
 import numba
 import numpy as np
 import pandas as pd
@@ -17,17 +16,18 @@ from anndata import AnnData
 from graspologic_native import leiden
 
 from pixelator import __version__
-from pixelator.common.exceptions import PixelatorBaseException
-from pixelator.mpx.annotate.aggregates import call_aggregates
-from pixelator.mpx.annotate.cell_calling import find_component_size_limits
-from pixelator.mpx.annotate.constants import (
+from pixelator.common.annotate import filter_components_sizes
+from pixelator.common.annotate.aggregates import call_aggregates
+from pixelator.common.annotate.cell_calling import find_component_size_limits
+from pixelator.common.annotate.constants import (
     MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION,
 )
-from pixelator.mpx.config import AntibodyPanel
+from pixelator.common.config import AntibodyPanel
+from pixelator.common.exceptions import PixelatorBaseException
+from pixelator.common.report.models import SummaryStatistics
 from pixelator.mpx.graph.utils import components_metrics, edgelist_metrics
 from pixelator.mpx.pixeldataset import SIZE_DEFINITION, PixelDataset
 from pixelator.mpx.pixeldataset.utils import edgelist_to_anndata
-from pixelator.mpx.report.models import SummaryStatistics
 from pixelator.mpx.report.models.annotate import AnnotateSampleReport
 
 # TODO
@@ -43,61 +43,6 @@ class NoCellsFoundException(PixelatorBaseException):
     """Raised when no cells are found in the edge list."""
 
     pass
-
-
-def filter_components_sizes(
-    component_sizes: np.ndarray,
-    min_size: Optional[int],
-    max_size: Optional[int],
-) -> np.ndarray:
-    """Filter components by size.
-
-    Filter the component sizes provided in `component_sizes` using the size
-    cut-offs defined in `min_size` and `max_size`. The components are not
-    actually filtered, the function returns a boolean numpy array which
-    evaluates to True if the component pass the filters.
-
-    :param component_sizes: a numpy array with the size of each component
-    :param min_size: the minimum size a component must have
-    :param max_size: the maximum size a component must have
-    :returns: a boolean np.array with the filtered status (True if the component
-              pass the filters)
-    :rtype: np.ndarray
-    :raises: RuntimeError if all the components are filtered
-    """
-    n_components = len(component_sizes)
-    logger.debug(
-        "Filtering %i components using min-size=%s and max-size=%s",
-        n_components,
-        min_size,
-        max_size,
-    )
-
-    # create a numpy array with True as default
-    filter_arr = np.full((n_components), True)
-
-    # check if any filter has been provided to the function
-    if min_size is None and max_size is None:
-        logger.warning("No filtering criteria provided to filter components")
-    else:
-        # get the components to filter (boolean array)
-        if min_size is not None:
-            filter_arr &= component_sizes > min_size
-        if max_size is not None:
-            filter_arr &= component_sizes < max_size
-
-        # check if none of the components pass the filters
-        n_components = filter_arr.sum()
-        if n_components == 0:
-            raise NoCellsFoundException(
-                "All cells were filtered by the size filters. Consider either setting different size filters or disabling them."
-            )
-
-        logger.debug(
-            "Filtering resulted in %i components that pass the filters",
-            n_components,
-        )
-    return filter_arr
 
 
 def annotate_components(

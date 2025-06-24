@@ -25,7 +25,7 @@ import pyarrow as pa
 import pyarrow.compute
 import pyarrow.parquet
 
-from pixelator.mpx.report.models import SummaryStatistics
+from pixelator.common.report.models import SummaryStatistics
 from pixelator.pna.collapse.adjacency import (
     build_network_cluster,
     build_network_directional,

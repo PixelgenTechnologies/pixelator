@@ -1,7 +1,6 @@
 # Pixelator
 
-
-![python-version](https://img.shields.io/badge/python-3.10%20%7C%203.11-blue)
+![python-version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 [![DOI](https://img.shields.io/badge/DOI-10.1038/S41592--024--02268--9-B31B1B.svg)](https://doi.org/10.1038/s41592-024-02268-9)
 [![conda](https://anaconda.org/bioconda/pixelator/badges/version.svg)](https://bioconda.github.io/recipes/pixelator/README.html#package-pixelator)
@@ -16,13 +15,11 @@
 [**License**](#license) |
 [**Credits**](#credits)
 
-
-Pixelator is a software package to process sequencing FASTQ from Molecular Pixelation (MPX) assays
-and analyze PXL data.
+Pixelator is a software package to process sequencing FASTQ from Molecular Pixelation (MPX) and
+Proximity Network (PNA) assays and analyze PXL data.
 
 It provides the `pixelator` commandline tool to process FASTQ files and generate PXL files and reports
 and can be used as a python library for further downstream processing.
-
 
 <p align="center">
     <img src="https://www.pixelgen.com/wp-content/uploads/2022/12/share-image-pixelgen.png" height=200
@@ -56,7 +53,9 @@ A conda package is available on the bioconda channel and can be installed with c
 ```shell
 conda install -c bioconda pixelator
 ```
+
 or
+
 ```shell
 mamba install -c bioconda pixelator
 ```
@@ -115,12 +114,11 @@ When using pixelator in your research, please cite the following publication:
 
 > Karlsson, Filip, Tomasz Kallas, Divya Thiagarajan, Max Karlsson, Maud Schweitzer, Jose Fernandez Navarro, Louise Leijonancker, _et al._ "Molecular pixelation: spatial proteomics of single cells by sequencing." Nature Methods, May 8, 2024. https://doi.org/10.1038/s41592-024-02268-9.
 
-
 Main development happened thanks to:
 
-- Jose Fernandez Navarro ([@jfnavarro](https://github.com/jfnavarro))
-- Alvaro Martinez Barrio ([@ambarrio](https://github.com/ambarrio))
-- Johan Dahlberg ([@johandahlberg](https://github.com/johandahlberg))
-- Florian De Temmerman ([@fbdtemme](https://github.com/fbdtemme))
+-   Jose Fernandez Navarro ([@jfnavarro](https://github.com/jfnavarro))
+-   Alvaro Martinez Barrio ([@ambarrio](https://github.com/ambarrio))
+-   Johan Dahlberg ([@johandahlberg](https://github.com/johandahlberg))
+-   Florian De Temmerman ([@fbdtemme](https://github.com/fbdtemme))
 
 A huge thank you to all [code contributors](https://github.com/PixelgenTechnologies/pixelator/graphs/contributors)!

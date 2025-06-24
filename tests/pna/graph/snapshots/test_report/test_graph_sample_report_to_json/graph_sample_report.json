@@ -4,6 +4,8 @@
     "report_type": "graph",
     "molecules_input": 1000,
     "reads_input": 2000,
+    "molecules_post_umi_collision_removal": 950,
+    "reads_post_umi_collision_removal": 1950,
     "molecules_post_read_count_filtering": 1000,
     "reads_post_read_count_filtering": 2000,
     "molecules_output": 900,

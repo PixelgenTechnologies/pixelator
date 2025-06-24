@@ -6,7 +6,6 @@ Copyright © 2024 Pixelgen Technologies AB.
 from io import StringIO
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
@@ -35,7 +34,7 @@ MarkerB,MarkerC,9864156ed5c9eb6c,c925e4e5eeb989b9,0.0,1.0,0.0,0.061,0.062,0.001,
 def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     manager = AnalysisManager(
-        [ProximityAnalysis(n_permutations=25)],
+        [ProximityAnalysis(n_permutations=25, min_marker_count=0)],
         n_cores=3,
     )
     output_pxl_file = PxlFile.copy_pxl_file(
@@ -59,19 +58,58 @@ def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
     )
     expected_proximity = expected_proximity.astype({"join_count": "uint32"})
 
-    proximity_correlation = pd.merge(
-        proximity,
-        expected_proximity,
-        on=["component", "marker_1", "marker_2"],
-        suffixes=["_actual", "_expected"],
+    assert_frame_equal(
+        proximity, expected_proximity, check_like=True, check_dtype=False
     )
-    proximity_correlation = proximity_correlation.fillna(0)
-    correlation = np.corrcoef(
-        proximity_correlation["join_count_z_actual"],
-        proximity_correlation["join_count_z_expected"],
-    )[0, 1]
-    assert np.round(correlation, decimals=2) >= 0.90
-    ## TODO: Figure why the results aren't exactly the same given the fixed seed
+
+
+def test_proximity_analysis_jcs_marker_count_filtering(
+    pna_pxl_file: Path, pna_data_root, tmp_path
+):
+    pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
+    min_marker_count = 10
+    manager_unfiltered = AnalysisManager(
+        [ProximityAnalysis(n_permutations=100, min_marker_count=0)],
+        n_cores=3,
+    )
+    manager_filtered = AnalysisManager(
+        [ProximityAnalysis(n_permutations=100, min_marker_count=min_marker_count)],
+        n_cores=3,
+    )
+    output_pxl_file_unfiltered = PxlFile.copy_pxl_file(
+        PxlFile(pna_pxl_file), tmp_path / "proximity_unfiltered.pxl"
+    )
+    output_pxl_file_filtered = PxlFile.copy_pxl_file(
+        PxlFile(pna_pxl_file), tmp_path / "proximity_filtered.pxl"
+    )
+    dataset_unfiltered = manager_unfiltered.execute(
+        pna_pxl_dataset, output_pxl_file_unfiltered
+    )
+    dataset_filtered = manager_filtered.execute(
+        pna_pxl_dataset, output_pxl_file_filtered
+    )
+
+    proximity_unfiltered = dataset_unfiltered.proximity().to_df()
+    proximity_filtered = dataset_filtered.proximity().to_df()
+
+    assert proximity_filtered.shape[0] == (
+        proximity_unfiltered.shape[0]
+        - (proximity_unfiltered["min_count"] < min_marker_count).sum()
+    )
+
+    proximity_unfiltered = proximity_unfiltered.set_index(
+        ["component", "marker_1", "marker_2"]
+    ).sort_index()
+    proximity_filtered = proximity_filtered.set_index(
+        ["component", "marker_1", "marker_2"]
+    ).sort_index()
+
+    assert all(
+        proximity_filtered["join_count"]
+        == proximity_unfiltered.loc[
+            proximity_unfiltered["min_count"] >= min_marker_count, "join_count"
+        ]
+    )
 
 
 def test_calculate_differential_proximity():

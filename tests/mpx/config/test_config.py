@@ -8,15 +8,15 @@ import copy
 
 import pytest
 
-from pixelator.mpx.config import (
+from pixelator.common.config import (
     Config,
     RegionType,
-    config,
     get_position_in_parent,
     load_assays_package,
 )
-from pixelator.mpx.config.config_class import PanelException
-from pixelator.mpx.config.panel import load_antibody_panel
+from pixelator.common.config.config_class import PanelException
+from pixelator.common.config.panel import load_antibody_panel
+from pixelator.mpx.config import config
 
 
 def test_config_creation():

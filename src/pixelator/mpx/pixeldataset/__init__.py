@@ -19,6 +19,7 @@ import pandas as pd
 import polars as pl
 from anndata import AnnData
 
+from pixelator.common.types import PathType
 from pixelator.mpx.graph import Graph
 from pixelator.mpx.pixeldataset.backends import (
     FileBasedPixelDatasetBackend,
@@ -35,7 +36,6 @@ from pixelator.mpx.pixeldataset.utils import (
     _enforce_edgelist_types,
     update_metrics_anndata,
 )
-from pixelator.mpx.types import PathType
 
 logger = logging.getLogger(__name__)
 

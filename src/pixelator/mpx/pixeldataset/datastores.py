@@ -39,7 +39,7 @@ from pixelator.mpx.pixeldataset.precomputed_layouts import PreComputedLayouts
 if TYPE_CHECKING:
     from pixelator.mpx.pixeldataset import PixelDataset
 
-from pixelator.mpx.types import PathType
+from pixelator.common.types import PathType
 
 logger = logging.getLogger(__name__)
 

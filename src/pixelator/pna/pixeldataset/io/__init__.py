@@ -134,20 +134,11 @@ class PixelFileWriter:
 
     def _clean_existing_adata_tables(self):
         tables = self._connection.sql("SHOW ALL TABLES")
-        adata_tables = (
-            tables.pl()
-            .filter((pl.col("name").str.starts_with("__adata__")))
-            .select(
-                pl.concat_str(
-                    [pl.col("database"), pl.col("schema"), pl.col("name")],
-                    separator=".",
-                ).alias("name")
+        adata_tables = tables.pl().filter((pl.col("name").str.starts_with("__adata__")))
+        for table in adata_tables.iter_rows(named=True):
+            self._connection.sql(
+                f'DROP TABLE "{table["database"]}"."{table["schema"]}"."{table["name"]}"'
             )
-            .get_column("name")
-            .to_list()
-        )
-        for table in adata_tables:
-            self._connection.sql(f"DROP TABLE {table}")
 
     def write_adata(self, adata: AnnData) -> None:
         """Write the AnnData object to the PXL file.
@@ -334,6 +325,9 @@ class PixelDataViewer:
         :raises ValueError: If any of the files are not valid PXL files.
         """
         self._db_to_file_mapping = sample_name_to_pxl_file_mapping
+        self._normalized_sample_name_mapping = self._map_sample_names_to_db_names(
+            sample_name_to_pxl_file_mapping
+        )
         # verify all files are PXL files
         invalid_files = [
             pxl_file
@@ -345,6 +339,39 @@ class PixelDataViewer:
 
         self._adata_join_strategy = adata_join_strategy
         self._connection: duckdb.DuckDBPyConnection = None  # type: ignore
+
+    def _map_sample_names_to_db_names(
+        self, sample_name_to_pxl_file_mapping: dict[str, PxlFile]
+    ) -> dict[str, str]:
+        """Create a normalized sample name lookup table for working with the duckdb files."""
+
+        def _normalize_sample_name(name: str) -> str:
+            # Remove whitespaces and dashes from the sample name
+            # and prefix it with "db_", and prefix all names
+            # with "db_" to handle when sample names starts with a number.
+            return f"db_{name.replace('-', '_').replace(' ', '_')}"
+
+        normalized_names = {
+            sample_name: _normalize_sample_name(sample_name)
+            for sample_name, _ in sample_name_to_pxl_file_mapping.items()
+        }
+
+        if len(normalized_names) != len(sample_name_to_pxl_file_mapping.keys()):
+            raise ValueError(
+                "Sample names are not unique after normalizing them - please provide sample names that are unique "
+                "even when replacing `-` and whitespaces with `_`."
+            )
+
+        return normalized_names
+
+    def _get_normalized_name(self, sample_name: str) -> str:
+        """Get the normalized name for a sample name."""
+        try:
+            return self._normalized_sample_name_mapping[sample_name]
+        except KeyError:
+            raise KeyError(
+                f"Sample name {sample_name} not found in the mapping. Available names are: {set(self._normalized_sample_name_mapping.keys())}"
+            )
 
     @staticmethod
     def from_files(pxl_files: Iterable[PxlFile]) -> PixelDataViewer:
@@ -397,12 +424,18 @@ class PixelDataViewer:
         :return: The AnnData object.
         """
         with self as connection:
-            X = connection.sql(f"SELECT * FROM {sample}.__adata__X").to_df()
-            var = connection.sql(f"SELECT * FROM {sample}.__adata__var").to_df()
-            obs = connection.sql(f"SELECT * FROM {sample}.__adata__obs").to_df()
+            X = connection.sql(
+                f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__X"
+            ).to_df()
+            var = connection.sql(
+                f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__var"
+            ).to_df()
+            obs = connection.sql(
+                f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__obs"
+            ).to_df()
 
             maybe_uns = connection.sql(
-                f"select * from {sample}.__adata__uns"
+                f"select * from {self._get_normalized_name(sample)}.__adata__uns"
             ).fetchone()
             uns = json.loads(maybe_uns[0]) if maybe_uns else None
 
@@ -412,7 +445,7 @@ class PixelDataViewer:
                 tables.pl()
                 .filter(
                     (pl.col("name").str.starts_with("__adata__obsm"))
-                    & (pl.col("database") == sample)
+                    & (pl.col("database") == self._get_normalized_name(sample))
                 )
                 .select(
                     pl.concat_str(
@@ -467,7 +500,7 @@ class PixelDataViewer:
 
     def _attach_to_files(self, connection: duckdb.DuckDBPyConnection):
         for name, path in self._db_to_file_mapping.items():
-            query = f"ATTACH DATABASE '{path}' AS {name}"
+            query = f"ATTACH DATABASE '{path}' AS {self._get_normalized_name(name)}"
             connection.execute(query)
 
     def _simple_union_table_view(
@@ -483,7 +516,7 @@ class PixelDataViewer:
             table_queries = []
             for sample_name, _ in self._db_to_file_mapping.items():
                 table_queries.append(
-                    f"SELECT *, '{sample_name}' as 'sample' FROM {sample_name}.{table_name}"
+                    f"SELECT *, '{sample_name}' as 'sample' FROM {self._get_normalized_name(sample_name)}.{table_name}"
                 )
             union_query = "\n UNION ALL \n".join(table_queries)
 

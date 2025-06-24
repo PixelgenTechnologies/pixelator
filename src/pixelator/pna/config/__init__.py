@@ -1,7 +1,7 @@
 """Copyright © 2023 Pixelgen Technologies AB."""
 
-from pixelator.mpx.config.panel import AntibodyPanelMetadata
-from pixelator.mpx.config.utils import load_yaml_file
+from pixelator.common.config.panel import AntibodyPanelMetadata
+from pixelator.common.config.utils import load_yaml_file
 from pixelator.pna.config.assay import (
     AssayModel,
     PNAAssay,
