@@ -5,18 +5,16 @@ on:
   push:
     branches: [main, dev]
     tags:
-      - "v*"   # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
   pull_request:
     branches: [main, dev]
   workflow_dispatch:
-
 
 permissions:
   id-token: write
   actions: write
   contents: read
   packages: write
-
 
 jobs:
   pre_job:
@@ -57,6 +55,9 @@ jobs:
       - name: Set up build environment
         id: setup_build_env
         uses: ./.github/actions/setup-image-build-env
+        with:
+          quay-username: ${{ secrets.QUAY_IO_USERNAME }}
+          quay-password: ${{ secrets.QUAY_IO_PASSWORD }}
 
       - name: Build and push images
         id: build_image
