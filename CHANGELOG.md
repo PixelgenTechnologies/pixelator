@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
--   We now destribute container images on [quay.io](https://quay.io/repository/pixelgen-technologies/pixelator).
+-   We now distribute container images on [quay.io](https://quay.io/repository/pixelgen-technologies/pixelator).
 
 ### Fixed
 
