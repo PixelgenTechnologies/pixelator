@@ -10,6 +10,12 @@ inputs:
   aws-registry:
     description: "The AWS ECR registry to authenticate with"
     default: "890888997283.dkr.ecr.eu-north-1.amazonaws.com"
+  quay-username:
+    description: "The username for Quay Container Registry"
+    required: true
+  quay-password:
+    description: "The password for Quay Container Registry"
+    required: true
 outputs: {}
 runs:
   using: "composite"
@@ -38,3 +44,10 @@ runs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ github.token }}
+
+    - name: Login to Quay Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: quay.io
+        username: ${{ inputs.quay-username }}
+        password: ${{ inputs.quay-password }}

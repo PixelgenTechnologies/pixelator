@@ -26,6 +26,7 @@ runs:
         images: |
           ghcr.io/pixelgentechnologies/pixelator
           890888997283.dkr.ecr.eu-north-1.amazonaws.com/pixelator
+          quay.io/pixelgen-technologies/pixelator
         tags: |
           type=ref,event=branch
           type=ref,event=pr
