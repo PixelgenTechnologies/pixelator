@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.21.2] - 2025-06-26
 
+### Added
+
+-   We now destribute container images on [quay.io](https://quay.io/repository/pixelgen-technologies/pixelator).
+
 ### Fixed
 
 -   Performance regression in `graph` causing memory usage to grow by a factor of two.

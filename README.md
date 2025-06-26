@@ -5,6 +5,7 @@
 [![DOI](https://img.shields.io/badge/DOI-10.1038/S41592--024--02268--9-B31B1B.svg)](https://doi.org/10.1038/s41592-024-02268-9)
 [![conda](https://anaconda.org/bioconda/pixelator/badges/version.svg)](https://bioconda.github.io/recipes/pixelator/README.html#package-pixelator)
 [![pypi](https://img.shields.io/pypi/v/pixelgen-pixelator)](https://pypi.org/project/pixelgen-pixelator/)
+[![Docker Repository on Quay](https://quay.io/repository/pixelgen-technologies/pixelator/status "Docker Repository on Quay")](https://quay.io/repository/pixelgen-technologies/pixelator)
 [![Tests](https://github.com/PixelgenTechnologies/pixelator/actions/workflows/tests.yml/badge.svg)](https://github.com/PixelgenTechnologies/pixelator/actions/workflows/tests.yml)
 
 [**Documentation**](#documentation) |
