@@ -422,7 +422,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             # No LBS-1 found, we will assume the read is properly anchored and extract the PID-1, UMI-1 region,
             # simply from the expected position.
             region_slices.pid1_umi1 = slice(0, self._pid_1_umi_1_region_len)
-            lbs1_end_pos = self._pid_1_umi_1_region_len
+            lbs1_end_pos = self._pid_1_umi_1_region_len + len(self._lbs1_seq)
 
         # if the read is longer than the end of the uei region and thus contains the (partial) lbs-2 region
         if len(read) > self._uei_region_end_pos:
