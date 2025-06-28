@@ -66,6 +66,14 @@ def testdata_300k(pna_data_root) -> tuple[Path, Path]:
 
 
 @pytest.fixture(scope="module")
+def testdata_unbalanced_r12(pna_data_root) -> tuple[Path, Path]:
+    return (
+        Path(pna_data_root / "unbalanced_R1.fastq.gz"),
+        Path(pna_data_root / "unbalanced_R2.fastq.gz"),
+    )
+
+
+@pytest.fixture(scope="module")
 def testdata_amplicon_fastq(full_run_dir) -> Path:
     p = full_run_dir / "amplicon" / "PNA055_Sample07_filtered_S7.amplicon.fq.zst"
     return p
