@@ -411,6 +411,8 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         lbs2_alm = None
 
         if lbs1_alm:
+            if lbs1_alm[2] != 38:
+                return region_slices
             lbs1_start_pos, lbs1_end_pos = lbs1_alm[2], lbs1_alm[3]
             region_slices.lbs1 = slice(lbs1_start_pos, lbs1_end_pos)
 
@@ -421,6 +423,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         elif len(read) >= self._pid_1_umi_1_region_len:
             # No LBS-1 found, we will assume the read is properly anchored and extract the PID-1, UMI-1 region,
             # simply from the expected position.
+            return region_slices
             region_slices.pid1_umi1 = slice(0, self._pid_1_umi_1_region_len)
             lbs1_end_pos = self._pid_1_umi_1_region_len + len(self._lbs1_seq)
 
@@ -456,6 +459,8 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         lbs1_alm = None
 
         if lbs2_alm:
+            if lbs2_alm[2] != 38:
+                return region_slices
             lbs_2_start_pos, lbs_2_end_pos = lbs2_alm[2], lbs2_alm[3]
             region_slices.lbs2 = slice(lbs_2_start_pos, lbs_2_end_pos)
             if lbs_2_start_pos >= self._pid_2_umi_2_region_len:
@@ -473,6 +478,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         elif len(read) > self._pid_2_umi_2_region_len:
             # No LBS-2 found, we will assume the read is properly anchored and extract the PID-2, UMI-2 region,
             # simply from the expected position.
+            return region_slices
             region_slices.pid2_umi2 = slice(0, self._pid_2_umi_2_region_len)
 
         # Check if we have the full pbs-1, umi-1 region after lbs-2 alignment
