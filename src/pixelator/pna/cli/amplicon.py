@@ -206,9 +206,9 @@ def amplicon(
 
     report.write_json_file(json_file, indent=4)
 
-    if report.fraction_discarded_reads > 0.5:
+    if report.fraction_discarded_reads > 0.9:
         logger.error(
-            "The number of reads in the output file is less than half of the input file. "
+            "The number of reads in the output file is less than 10pct of the input file. "
             "This may indicate a problem with the amplicon design."
         )
         if not force_run:
