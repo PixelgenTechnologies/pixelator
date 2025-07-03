@@ -226,3 +226,28 @@ def test_amplicon_crappy_lbs1():
 
     assert amplicon is not None
     assert step._custom_stats.passed_missing_lbs1_anchor == 1
+
+
+def test_amplicon_intersecting_reads():
+    assay = pna_config.get_assay("pna-2")
+    step = AmpliconBuilder(assay, mismatches=0.1)
+
+    r1 = SequenceRecord(
+        name="@VH00725:177:AAFHGNGM5:1:1101:65059:1057 1:N:0:AGGTCTTG+GATGAGGA",
+        sequence="TGGCAAACGTCTGCAGTTATAAAGCTGACCAGGTTCCGCCCCCCTCTAAGCGAAGCAACAAACTCCCCCCAGACATGCGGAACCTGGCTTCGCTTAGATGTCGGCTATGGTCTTACCGACATCTAAGCGAAGCAACAAACTCCCCCCAG",
+        qualities="CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC;CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC;CCCCCCCCC",
+    )
+
+    r2 = SequenceRecord(
+        name="@VH00725:177:AAFHGNGM5:1:1101:65059:1057 2:N:0:AGGTCTTG+GATGAGGA",
+        sequence="CGGAACCTGGGTGGTTTAATCTTAAATCTATGGTCTTACCGACATCTAAGCGAAGCAACAAACTCCCCCCAGACATGA",
+        qualities="CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC;CCCCCCCCCCCCCCCC",
+    )
+
+    info1 = ModificationInfo(r1)
+    info2 = ModificationInfo(r2)
+
+    amplicon = step(r1, r2, info1, info2)
+
+    assert amplicon is not None
+    assert step._custom_stats.passed_missing_lbs1_anchor == 1
