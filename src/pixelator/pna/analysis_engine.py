@@ -154,13 +154,13 @@ class PerComponentTask(Protocol, Generic[T]):
         :raises TypeError: If the component is not a Graph or a LazyFrame.
         """
         try:
-            return self.run_on_component_graph(component.graph, component.component_id)
-        except NotImplementedError:
-            pass
-        try:
             return self.run_on_component_edgelist(
                 component.frame, component.component_id
             )
+        except NotImplementedError:
+            pass
+        try:
+            return self.run_on_component_graph(component.graph, component.component_id)
         except NotImplementedError as e:
             logger.error(
                 "Either `run_on_component_graph` or `run_on_component_edgelist` "

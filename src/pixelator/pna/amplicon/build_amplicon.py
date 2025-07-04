@@ -263,6 +263,7 @@ class AmpliconBuilderFailureReason(enum.Enum):
     PARTIAL_PID1_UMI1 = "partial_pid1_umi1"
     PARTIAL_PID2_UMI2 = "partial_pid2_umi2"
     PARTIAL_UEI = "partial_uei"
+    NO_CONSENSUS = "no_consensus"
 
 
 class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistics):
@@ -421,13 +422,14 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             # No LBS-1 found, we will assume the read is properly anchored and extract the PID-1, UMI-1 region,
             # simply from the expected position.
             region_slices.pid1_umi1 = slice(0, self._pid_1_umi_1_region_len)
+            lbs1_end_pos = self._pid_1_umi_1_region_len + len(self._lbs1_seq)
 
         # if the read is longer than the end of the uei region and thus contains the (partial) lbs-2 region
         if len(read) > self._uei_region_end_pos:
             lbs2_alm = self._lbs2_aligner.locate(read.sequence)
             if lbs2_alm:
                 # [lbs1 end pos, lbs2 start pos)
-                region_slices.uei = slice(lbs1_alm[3], lbs2_alm[2])
+                region_slices.uei = slice(lbs1_end_pos, lbs2_alm[2])
 
         # Check if we have the full pbs-2, umi-2 region after lbs-2 alignment
         if lbs2_alm:
@@ -687,27 +689,30 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         r1_regions = self._scan_forward_read(read1)
         r2_regions = self._scan_reverse_read(read2)
 
-        # Combine the info from forward and reverse reads
-        pid1_umi1_region_seq, pid1_umi1_region_qual = self._consensus_seq(
-            read1, read2, r1_regions.pid1_umi1, r2_regions.pid1_umi1
-        )
-        pid2_umi2_region_seq, pid2_umi2_region_qual = self._consensus_seq(
-            read1, read2, r1_regions.pid2_umi2, r2_regions.pid2_umi2
-        )
-        uei_region_seq, uei_region_qual = self._consensus_seq(
-            read1, read2, r1_regions.uei, r2_regions.uei
-        )
-        lbs1_region_qual = self._consensus_qual_lbs1(
-            read1, read2, r1_regions.lbs1, r2_regions.lbs1
-        )
-        lbs2_region_qual = self._consensus_qual_lbs2(
-            read1, read2, r1_regions.lbs2, r2_regions.lbs2
-        )
+        try:
+            # Combine the info from forward and reverse reads
+            pid1_umi1_region_seq, pid1_umi1_region_qual = self._consensus_seq(
+                read1, read2, r1_regions.pid1_umi1, r2_regions.pid1_umi1
+            )
+            pid2_umi2_region_seq, pid2_umi2_region_qual = self._consensus_seq(
+                read1, read2, r1_regions.pid2_umi2, r2_regions.pid2_umi2
+            )
+            uei_region_seq, uei_region_qual = self._consensus_seq(
+                read1, read2, r1_regions.uei, r2_regions.uei
+            )
+            lbs1_region_qual = self._consensus_qual_lbs1(
+                read1, read2, r1_regions.lbs1, r2_regions.lbs1
+            )
+            lbs2_region_qual = self._consensus_qual_lbs2(
+                read1, read2, r1_regions.lbs2, r2_regions.lbs2
+            )
 
-        # Check for errors and increment the statistics
-        error = self._check_regions(
-            pid1_umi1_region_seq, uei_region_seq, pid2_umi2_region_seq
-        )
+            # Check for errors and increment the statistics
+            error = self._check_regions(
+                pid1_umi1_region_seq, uei_region_seq, pid2_umi2_region_seq
+            )
+        except AssertionError:
+            error = AmpliconBuilderFailureReason.NO_CONSENSUS
 
         # Write failed reads to the "failed" writer
         if error is not None:
