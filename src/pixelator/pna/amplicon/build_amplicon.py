@@ -346,8 +346,8 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             assay.get_region_by_id("pid-2").min_len
             + assay.get_region_by_id("umi-2").min_len
         )
-        self._lbs1_seq = assay.get_region_by_id("lbs-1").get_sequence().encode("ascii")
-        self._lbs2_seq = assay.get_region_by_id("lbs-2").get_sequence().encode("ascii")
+        self._lbs1_seq = assay.get_region_by_id("lbs-1").get_sequence()
+        self._lbs2_seq = assay.get_region_by_id("lbs-2").get_sequence()
         self._lbs1_qual = bytes(b"!" * len(self._lbs1_seq))
         self._lbs2_qual = bytes(b"!" * len(self._lbs2_seq))
 
@@ -406,14 +406,22 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         :return: the slices for the different regions of the amplicon in the read
         """
         region_slices = AmpliconRegionSlices()
-
-        lbs1_alm = self._lbs1_aligner.locate(read.sequence)
+        lbs1_start_pos = self._pid_1_umi_1_region_len
+        lbs1_end_pos = min(lbs1_start_pos + len(self._lbs1_seq), len(read))
+        hamming_distance = sum(
+            x != y for x, y in zip(self._lbs1_seq, read.sequence[lbs1_start_pos:])
+        )
+        lbs1_alm = (
+            0,
+            lbs1_end_pos - lbs1_start_pos,
+            lbs1_start_pos,
+            lbs1_end_pos,
+            lbs1_end_pos - lbs1_start_pos,
+            0,
+        )
         lbs2_alm = None
 
-        if lbs1_alm:
-            if lbs1_alm[2] != 38:
-                return region_slices
-            lbs1_start_pos, lbs1_end_pos = lbs1_alm[2], lbs1_alm[3]
+        if hamming_distance <= 2 and (lbs1_alm[1] >= 5):
             region_slices.lbs1 = slice(lbs1_start_pos, lbs1_end_pos)
 
             if lbs1_start_pos >= self._pid_1_umi_1_region_len:
@@ -454,18 +462,30 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         :return: the slices for the different regions of the amplicon in the read
         """
         region_slices = AmpliconRegionSlices()
-
-        lbs2_alm = self._lbs2_rc_aligner.locate(read.sequence)
+        lbs2_start_pos = self._pid_2_umi_2_region_len
+        lbs2_end_pos = min(lbs2_start_pos + len(self._lbs2_seq), len(read))
+        hamming_distance = sum(
+            x != y
+            for x, y in zip(
+                self._lbs2_seq,
+                reverse_complement(read.sequence[lbs2_start_pos:lbs2_end_pos]),
+            )
+        )
+        lbs2_alm = (
+            0,
+            lbs2_end_pos - lbs2_start_pos,
+            lbs2_start_pos,
+            lbs2_end_pos,
+            lbs2_end_pos - lbs2_start_pos,
+            0,
+        )
         lbs1_alm = None
 
-        if lbs2_alm:
-            if lbs2_alm[2] != 38:
-                return region_slices
-            lbs_2_start_pos, lbs_2_end_pos = lbs2_alm[2], lbs2_alm[3]
-            region_slices.lbs2 = slice(lbs_2_start_pos, lbs_2_end_pos)
-            if lbs_2_start_pos >= self._pid_2_umi_2_region_len:
+        if hamming_distance <= 2 and (lbs2_alm[1] >= 5):
+            region_slices.lbs2 = slice(lbs2_start_pos, lbs2_end_pos)
+            if lbs2_start_pos >= self._pid_2_umi_2_region_len:
                 region_slices.pid2_umi2 = slice(
-                    lbs_2_start_pos - self._pid_2_umi_2_region_len, lbs_2_start_pos
+                    lbs2_start_pos - self._pid_2_umi_2_region_len, lbs2_start_pos
                 )
 
             # if the read is longer than the end of the uei region and thus contains the (partial) lbs-2 region
