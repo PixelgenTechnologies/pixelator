@@ -560,10 +560,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
                 read2, region2_slice, is_reversed=True, as_bytearray=True
             )
 
-            assert len(s1) == len(s2)
-            assert len(q1) == len(q2)
+            assert len(s1) == len(s2)  # type: ignore
+            assert len(q1) == len(q2)  # type: ignore
 
-            s_np = np.select([q1 > q2, q1 <= q2], [s1, s2])
+            s_np = np.select([q1 > q2, q1 <= q2], [s1, s2])  # type: ignore
             q_np = np.max([q1, q2], axis=0)
 
             return s_np.tobytes(), q_np.tobytes()
@@ -944,7 +944,9 @@ class SingleEndAmpliconBuilder(AmpliconBuilder):
             region2_slice=regions.lbs2 if not is_read1 else None,  # type: ignore
         )
         error = self._check_regions(
-            pid1_umi1_region_seq, uei_region_seq, pid2_umi2_region_seq
+            pid1_umi1_region_seq,  # type: ignore
+            uei_region_seq,  # type: ignore
+            pid2_umi2_region_seq,  # type: ignore
         )
 
         return Amplicon(
