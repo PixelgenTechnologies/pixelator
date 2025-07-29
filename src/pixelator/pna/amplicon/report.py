@@ -4,7 +4,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 """
 
 import typing
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import pydantic
 from cutadapt.report import Statistics
@@ -280,7 +280,7 @@ class AmpliconStatistics(Statistics):
         self,
         n: int,
         total_bp1: int,
-        total_bp2: Optional[int],
+        total_bp2: int | None,
         modifiers,
         steps,
         set_paired_to_none: bool = False,
