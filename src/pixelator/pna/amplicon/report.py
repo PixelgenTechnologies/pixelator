@@ -4,7 +4,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 """
 
 import typing
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import pydantic
 from cutadapt.report import Statistics
