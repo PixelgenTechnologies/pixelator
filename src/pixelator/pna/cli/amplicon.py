@@ -155,13 +155,13 @@ def amplicon(
             msg = "Read 1 file does not contain a recognised read 1 suffix."
             logger.log(level=error_level, msg=msg)
             if not skip_input_checks:
-                sys.exit(1)
+                ctx.exit(1)
 
         if fastq_2 and not is_read_file(fastq_2, "r2"):
             msg = "Read 2 file does not contain a recognised read 2 suffix."
             logger.log(level=error_level, msg=msg)
             if not skip_input_checks:
-                sys.exit(1)
+                ctx.exit(1)
 
         r2_sample_name = get_read_sample_name(fastq_2) if fastq_2 else None
 
@@ -173,7 +173,7 @@ def amplicon(
             )
             logger.log(level=error_level, msg=msg)
             if not skip_input_checks:
-                sys.exit(1)
+                ctx.exit(1)
 
     sample_name = sample_name or r1_sample_name
     output_file = amplicon_output / f"{sample_name}.amplicon.fq.zst"
@@ -192,7 +192,7 @@ def amplicon(
     if assay is None:
         msg = f"Could not find assay design with name '{design}'"
         logger.error(msg)
-        return sys.exit(1)
+        return ctx.exit(1)
 
     stats = amplicon_fastq(
         inputs=fastq_inputs,
@@ -216,4 +216,4 @@ def amplicon(
             "This may indicate a problem with the amplicon design."
         )
         if not force_run:
-            sys.exit(1)
+            ctx.exit(1)
