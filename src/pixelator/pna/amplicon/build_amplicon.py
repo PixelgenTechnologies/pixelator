@@ -490,7 +490,9 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         return region_slices
 
     @staticmethod
-    def _get_region_sequence(read, region_slice, is_reversed=False, as_bytearray=False) -> tuple[bytes | None, bytes | None]:
+    def _get_region_sequence(
+        read, region_slice, is_reversed=False, as_bytearray=False
+    ) -> tuple[bytes | None, bytes | None]:
         """Get the sequence of a region from a read.
 
         :param read: the read to extract the region from
