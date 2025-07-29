@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-import zstandard as zstd
+import xopen
 from click.testing import CliRunner
 
 from pixelator import cli
@@ -143,12 +143,10 @@ def test_fastq_single_end(testdata_unbalanced_r12):
 
         assert cmd.exit_code == 0
 
-        def read_zst_lines(path):
-            with open(path, "rb") as f:
-                dctx = zstd.ZstdDecompressor()
-                with dctx.stream_reader(f) as reader:
-                    return reader.read().splitlines()
+        def read_lines(path):
+            with xopen.xopen(path, "rt") as f:
+                return f.read().splitlines()
 
-        reads = read_zst_lines(d + "/amplicon/unbalanced.amplicon.fq.zst")
+        reads = read_lines(d + "/amplicon/unbalanced.amplicon.fq.zst")
         assert len(reads) % 4 == 0
         assert len(reads) > 300
