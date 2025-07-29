@@ -102,14 +102,9 @@ def amplicon_fastq(
 
     # Construct an amplicon builder class that will be used to combine the reads using the assay design
 
-    builder = (
-        PairedEndAmpliconBuilder(
-            assay=assay, mismatches=mismatches, writer=amplicon_failed_writer
-        )
-        if is_paired_end
-        else SingleEndAmpliconBuilder(
-            assay=assay, mismatches=mismatches, writer=amplicon_failed_writer
-        )
+    builder_factory = PairedEndAmpliconBuilder if is_paired_end else SingleEndAmpliconBuilder
+    builder = builder_factory(
+        assay=assay, mismatches=mismatches, writer=amplicon_failed_writer
     )
 
     pre_steps: list[PairedEndStep | SingleEndStep] = []
