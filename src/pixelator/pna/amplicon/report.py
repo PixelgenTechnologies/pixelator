@@ -4,7 +4,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 """
 
 import typing
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import pydantic
 from cutadapt.report import Statistics
@@ -66,7 +66,7 @@ class BasesCountStatistics(pydantic.BaseModel):
     quality_trimmed_read1: int = pydantic.Field(
         ..., description="The number of quality trimmed bases in read1."
     )
-    quality_trimmed_read2: int = pydantic.Field(
+    quality_trimmed_read2: Optional[int] = pydantic.Field(
         ..., description="The number of quality trimmed bases in read2."
     )
     output: int = pydantic.Field(..., description="The total number of output bases.")
@@ -178,10 +178,13 @@ class AmpliconStatistics(Statistics):
     def __init__(self) -> None:
         """Initialize the AmpliconStatistics object."""
         super().__init__()
+        self.paired: bool | None = None
         self._custom_stats: dict[str, Any] = dict()
 
     def __iadd__(self, other: Any):
         """Merge statistics from another object into this one."""
+        if other.paired is None:
+            other.paired = self.paired
         super().__iadd__(other)
         if hasattr(other, "_custom_stats"):
             for name, value in other._custom_stats.items():
@@ -272,3 +275,18 @@ class AmpliconStatistics(Statistics):
                 self._custom_stats[name] += step.get_statistics()
             else:
                 self._custom_stats[name] = step.get_statistics()
+
+    def collect(
+        self,
+        n: int,
+        total_bp1: int,
+        total_bp2: int | None,
+        modifiers,
+        steps,
+        set_paired_to_none: bool = False,
+    ):
+        """Enable stats.paired to be set to None when unknown."""
+        stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
+        if set_paired_to_none:
+            stats.paired = None
+        return stats

@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+import xopen
 from click.testing import CliRunner
 
 from pixelator import cli
@@ -122,3 +123,30 @@ def test_can_skip_input_checks(mocker, testdata_300k_sample_mismatch):
         ]
         cmd = runner.invoke(cli.main_cli, args)
         assert cmd.exit_code == 0
+
+
+@pytest.mark.slow
+def test_fastq_single_end(testdata_unbalanced_r12):
+    runner = CliRunner()
+
+    with tempfile.TemporaryDirectory() as d:
+        args = [
+            "single-cell-pna",
+            "amplicon",
+            str(testdata_unbalanced_r12[1]),
+            "--output",
+            str(d),
+            "--design",
+            "pna-2",
+        ]
+        cmd = runner.invoke(cli.main_cli, args)
+
+        assert cmd.exit_code == 0
+
+        def read_lines(path):
+            with xopen.xopen(path, "rt") as f:
+                return f.read().splitlines()
+
+        reads = read_lines(d + "/amplicon/unbalanced.amplicon.fq.zst")
+        assert len(reads) % 4 == 0
+        assert len(reads) > 300

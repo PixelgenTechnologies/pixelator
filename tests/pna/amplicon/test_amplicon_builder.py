@@ -3,13 +3,13 @@
 from cutadapt.info import ModificationInfo
 from dnaio import SequenceRecord
 
-from pixelator.pna.amplicon.build_amplicon import AmpliconBuilder
+from pixelator.pna.amplicon.build_amplicon import PairedEndAmpliconBuilder
 from pixelator.pna.config import pna_config
 
 
 def test_amplicon_builder_no_mismatches():
     assay = pna_config.get_assay("pna-2")
-    step = AmpliconBuilder(assay, mismatches=0.1)
+    step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
     r1 = SequenceRecord(
         name="@VH00725:177:AAFHGNGM5:1:1101:65059:1057 1:N:0:AGGTCTTG+GATGAGGA",
@@ -53,7 +53,7 @@ def test_amplicon_builder_no_mismatches():
 
 def test_amplicon_builder_shift():
     assay = pna_config.get_assay("pna-2")
-    step = AmpliconBuilder(assay, mismatches=0.2)
+    step = PairedEndAmpliconBuilder(assay, mismatches=0.2)
 
     r1 = SequenceRecord(
         name="@VH00725:177:AAFHGNGM5:1:1101:65059:1057 1:N:0:AGGTCTTG+GATGAGGA",
@@ -90,7 +90,7 @@ def test_amplicon_builder_shift():
 
 def test_amplicon_builder_large_shift():
     assay = pna_config.get_assay("pna-2")
-    step = AmpliconBuilder(assay, mismatches=0.1)
+    step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
     r1 = SequenceRecord(
         name="VH00725:177:AAFHGNGM5:1:1101:68505:3745 1:N:0:AGGTCTTG+GATGAGGA",
@@ -129,7 +129,7 @@ def test_uei_deletion():
     # NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCCGACATCTAAGCGAAGCNNNNNNNNNNNNNNNGACATGAGTGTTTGACATGCCCAGCGTCACTTGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
     # Rev comp template
 
-    step = AmpliconBuilder(assay, mismatches=0.1)
+    step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
     info1 = ModificationInfo(r1)
     info2 = ModificationInfo(r2)
     amplicon = step(r1, r2, info1, info2)
@@ -160,7 +160,7 @@ def test_bad_lbs2():
         qualities="CC-CCCCCCCCCCC-CCCC;C;CCCCCCCCCCCC;CCCCCCCCCCCCC;CCCCC-CCCCCCCCCCCCCCCCCCCCCCC",
     )
 
-    step = AmpliconBuilder(assay, mismatches=0.2)
+    step = PairedEndAmpliconBuilder(assay, mismatches=0.2)
     info1 = ModificationInfo(r1)
     info2 = ModificationInfo(r2)
     amplicon = step(r1, r2, info1, info2)
@@ -183,7 +183,7 @@ def test_lbs2_insertion():
         qualities="CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC;CCCCCCCCCCCCCCCCCCCCCCCCC;C",
     )
 
-    step = AmpliconBuilder(assay, mismatches=0.2)
+    step = PairedEndAmpliconBuilder(assay, mismatches=0.2)
     info1 = ModificationInfo(r1)
     info2 = ModificationInfo(r2)
     amplicon = step(r1, r2, info1, info2)
@@ -205,7 +205,7 @@ def test_lbs2_insertion():
 
 def test_amplicon_crappy_lbs1():
     assay = pna_config.get_assay("pna-2")
-    step = AmpliconBuilder(assay, mismatches=0.1)
+    step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
     r1 = SequenceRecord(
         name="@VH00725:177:AAFHGNGM5:1:1101:65059:1057 1:N:0:AGGTCTTG+GATGAGGA",
@@ -230,7 +230,7 @@ def test_amplicon_crappy_lbs1():
 
 def test_amplicon_intersecting_reads():
     assay = pna_config.get_assay("pna-2")
-    step = AmpliconBuilder(assay, mismatches=0.1)
+    step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
     r1 = SequenceRecord(
         name="@VH00725:177:AAFHGNGM5:1:1101:65059:1057 1:N:0:AGGTCTTG+GATGAGGA",
