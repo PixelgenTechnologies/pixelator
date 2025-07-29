@@ -564,7 +564,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             assert len(q1) == len(q2)  # type: ignore
 
             s_np = np.select([q1 > q2, q1 <= q2], [s1, s2])  # type: ignore
-            q_np = np.max([q1, q2], axis=0)
+            q_np = np.max([q1, q2], axis=0)  # type: ignore
 
             return s_np.tobytes(), q_np.tobytes()
 
