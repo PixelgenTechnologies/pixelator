@@ -263,7 +263,7 @@ class PxlFile:
 
     def is_pxl_file(self) -> bool:
         """Check if the file is a PXL file."""
-        with duckdb.connect(self.path) as con:
+        with duckdb.connect(self.path, read_only=True) as con:
             tables = con.sql("SHOW ALL TABLES").to_df()
             return len(
                 set(PXL_FILE_MANDATOR_TABLES).intersection(
@@ -274,7 +274,7 @@ class PxlFile:
     def metadata(self) -> dict:
         """Read the metadata from the PXL file."""
         try:
-            with duckdb.connect(self.path) as con:
+            with duckdb.connect(self.path, read_only=True) as con:
                 metadata = con.sql("SELECT * FROM metadata").fetchone()
                 return json.loads(metadata[0]) if metadata else {}
         except duckdb.CatalogException:
