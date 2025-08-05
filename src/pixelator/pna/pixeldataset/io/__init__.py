@@ -894,9 +894,10 @@ class InplacePixelDataFilterer:
             self._filter_edgelist(connection, components_as_list)
             self._filter_proximity(connection, components_as_list)
             self._filter_layouts(connection, components_as_list)
-            self._filter_adata(self.pxl_file, components_as_list)
             if metadata:
                 self._update_metadata(connection, metadata)
+
+        self._filter_adata(self.pxl_file, components_as_list)
 
 
 def copy_databases(src_db: Path, target_db: Path) -> None:
