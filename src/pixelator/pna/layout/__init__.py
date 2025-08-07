@@ -6,6 +6,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 import tempfile
 from pathlib import Path
 from typing import Iterable
+import os
 
 import polars as pl
 
@@ -64,8 +65,11 @@ class CreateLayout(PerComponentTask):
             )
             results.append(layout)
 
-        concatenated = pl.concat(results, how="vertical").lazy()
-        return concatenated
+        concatenated = pl.concat(results, how="vertical")
+        tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".parquet")
+        concatenated.write_parquet(Path(tmp_file.name))
+        del concatenated
+        return pl.LazyFrame({"filenames": [tmp_file.name]})
 
     def run_on_component_edgelist(
         self, component: pl.LazyFrame, component_id: str
@@ -84,8 +88,19 @@ class CreateLayout(PerComponentTask):
 
     def add_to_pixel_file(self, data: pl.LazyFrame, pxl_file_target: PxlFile) -> None:
         """Add the data in the right place in the pxl_dataset."""
+        tmp_component_files = data.collect()
+        data = pl.concat(
+            [
+                pl.scan_parquet(Path(fname))
+                for fname in tmp_component_files["filenames"]
+            ],
+            how="vertical",
+        )
         with tempfile.NamedTemporaryFile(suffix=".parquet") as tmp_file:
             tmp_file = Path(tmp_file.name)  # type: ignore
             data.sink_parquet(tmp_file)  # type: ignore
             with PixelFileWriter(pxl_file_target.path) as writer:
                 writer.write_layouts(tmp_file)
+
+        for fname in tmp_component_files["filenames"]:
+            os.remove(Path(fname))
