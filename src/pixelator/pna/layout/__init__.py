@@ -3,10 +3,10 @@
 Copyright © 2024 Pixelgen Technologies AB.
 """
 
+import os
 import tempfile
 from pathlib import Path
 from typing import Iterable
-import os
 
 import polars as pl
 
@@ -93,18 +93,8 @@ class CreateLayout(PerComponentTask):
     def add_to_pixel_file(self, data: pl.LazyFrame, pxl_file_target: PxlFile) -> None:
         """Add the data in the right place in the pxl_dataset."""
         tmp_component_files = data.collect()
-        data = pl.concat(
-            [
-                pl.scan_parquet(Path(fname))
-                for fname in tmp_component_files["filenames"]
-            ],
-            how="vertical",
-        )
-        with tempfile.NamedTemporaryFile(suffix=".parquet") as tmp_file:
-            tmp_file = Path(tmp_file.name)  # type: ignore
-            data.sink_parquet(tmp_file)  # type: ignore
-            with PixelFileWriter(pxl_file_target.path) as writer:
-                writer.write_layouts(tmp_file)
 
-        for fname in tmp_component_files["filenames"]:
-            os.remove(Path(fname))
+        with PixelFileWriter(pxl_file_target.path) as writer:
+            for fname in tmp_component_files["filenames"]:
+                writer.write_layouts(Path(fname), append=True)
+                os.remove(Path(fname))

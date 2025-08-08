@@ -107,13 +107,44 @@ class PixelFileWriter:
         """Close the writer context manager."""
         self.close()
 
-    def _write_parquet_file_to_table(self, table_name, edgelist_file: Path):
-        self._connection.sql(
-            f"""
-            CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM read_parquet($parquet_file);
-            """,
-            params={"parquet_file": str(edgelist_file)},
-        )
+    def _write_parquet_file_to_table(
+        self, table_name, edgelist_file: Path, append: bool = False
+    ):
+        if append:
+            result = self._connection.sql(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_name = $table_name
+                """,
+                params={"table_name": table_name},
+            ).fetchall()
+
+            if result:
+                self._connection.sql(
+                    f"""
+                    INSERT INTO {table_name}
+                    SELECT * FROM read_parquet($parquet_file);
+                    """,
+                    params={"parquet_file": str(edgelist_file)},
+                )
+            else:
+                self._connection.sql(
+                    f"""
+                    CREATE TABLE {table_name} AS
+                    SELECT * FROM read_parquet($parquet_file);
+                    """,
+                    params={"parquet_file": str(edgelist_file)},
+                )
+        else:
+            # Default behavior: overwrite table
+            self._connection.sql(
+                f"""
+                CREATE OR REPLACE TABLE {table_name} AS
+                SELECT * FROM read_parquet($parquet_file);
+                """,
+                params={"parquet_file": str(edgelist_file)},
+            )
 
     def write_edgelist(self, edgelist: Path | pl.DataFrame) -> None:
         """Write the edgelist to the PXL file.
@@ -186,14 +217,14 @@ class PixelFileWriter:
             params={"metadata": metadata},
         )
 
-    def write_layouts(self, layouts: Path | pl.DataFrame) -> None:
+    def write_layouts(self, layouts: Path | pl.DataFrame, append=False) -> None:
         """Write the layouts to the PXL file.
 
         :param layouts: The path to the layouts parquet file.
         """
         try:
             if layouts.is_file():  # type: ignore
-                self._write_parquet_file_to_table("layouts", layouts)  # type: ignore
+                self._write_parquet_file_to_table("layouts", layouts, append=append)  # type: ignore
                 return
         except AttributeError:
             pass
