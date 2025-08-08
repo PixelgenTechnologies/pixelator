@@ -69,6 +69,7 @@ class CreateLayout(PerComponentTask):
         tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".parquet")
         concatenated.write_parquet(Path(tmp_file.name))
         del concatenated
+        del results
         return pl.LazyFrame({"filenames": [tmp_file.name]})
 
     def run_on_component_edgelist(
@@ -80,7 +81,10 @@ class CreateLayout(PerComponentTask):
         :param component_id: The id of the component.
         :return: a LazyFrame containing the layout data.
         """
-        raise NotImplementedError
+        graph = PNAGraph.from_edgelist(component)
+        result = self.run_on_component_graph(graph, component_id)
+        del graph
+        return result
 
     def concatenate_data(self, data: Iterable[pl.LazyFrame]) -> pl.LazyFrame:
         """Concatenate the data. Override this if you need custom concatenation behavior."""
