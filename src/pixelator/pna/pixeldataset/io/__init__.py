@@ -263,7 +263,7 @@ class PxlFile:
 
     def is_pxl_file(self) -> bool:
         """Check if the file is a PXL file."""
-        with duckdb.connect(self.path) as con:
+        with duckdb.connect(self.path, read_only=True) as con:
             tables = con.sql("SHOW ALL TABLES").to_df()
             return len(
                 set(PXL_FILE_MANDATOR_TABLES).intersection(
@@ -274,7 +274,7 @@ class PxlFile:
     def metadata(self) -> dict:
         """Read the metadata from the PXL file."""
         try:
-            with duckdb.connect(self.path) as con:
+            with duckdb.connect(self.path, read_only=True) as con:
                 metadata = con.sql("SELECT * FROM metadata").fetchone()
                 return json.loads(metadata[0]) if metadata else {}
         except duckdb.CatalogException:
@@ -500,7 +500,7 @@ class PixelDataViewer:
 
     def _attach_to_files(self, connection: duckdb.DuckDBPyConnection):
         for name, path in self._db_to_file_mapping.items():
-            query = f"ATTACH DATABASE '{path}' AS {self._get_normalized_name(name)}"
+            query = f"ATTACH DATABASE '{path}' AS {self._get_normalized_name(name)} (READ_ONLY);"
             connection.execute(query)
 
     def _simple_union_table_view(
@@ -894,9 +894,10 @@ class InplacePixelDataFilterer:
             self._filter_edgelist(connection, components_as_list)
             self._filter_proximity(connection, components_as_list)
             self._filter_layouts(connection, components_as_list)
-            self._filter_adata(self.pxl_file, components_as_list)
             if metadata:
                 self._update_metadata(connection, metadata)
+
+        self._filter_adata(self.pxl_file, components_as_list)
 
 
 def copy_databases(src_db: Path, target_db: Path) -> None:
@@ -909,7 +910,7 @@ def copy_databases(src_db: Path, target_db: Path) -> None:
     :param target_db: The target PXL file.
     """
     query = f"""
-    ATTACH '{str(src_db)}' AS src;
+    ATTACH '{str(src_db)}' AS src (READ_ONLY);
     ATTACH '{str(target_db)}' AS target;
     COPY FROM DATABASE src TO target;
     """
