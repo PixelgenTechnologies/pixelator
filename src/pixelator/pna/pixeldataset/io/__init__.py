@@ -500,7 +500,7 @@ class PixelDataViewer:
 
     def _attach_to_files(self, connection: duckdb.DuckDBPyConnection):
         for name, path in self._db_to_file_mapping.items():
-            query = f"ATTACH DATABASE '{path}' AS {self._get_normalized_name(name)}"
+            query = f"ATTACH DATABASE '{path}' AS {self._get_normalized_name(name)} (READ_ONLY);"
             connection.execute(query)
 
     def _simple_union_table_view(
