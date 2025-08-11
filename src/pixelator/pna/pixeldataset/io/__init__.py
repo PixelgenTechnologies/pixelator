@@ -910,7 +910,7 @@ def copy_databases(src_db: Path, target_db: Path) -> None:
     :param target_db: The target PXL file.
     """
     query = f"""
-    ATTACH '{str(src_db)}' AS src;
+    ATTACH '{str(src_db)}' AS src (READ_ONLY);
     ATTACH '{str(target_db)}' AS target;
     COPY FROM DATABASE src TO target;
     """
