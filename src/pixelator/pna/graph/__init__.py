@@ -232,7 +232,7 @@ class PNAGraphBackend(NetworkXGraphBackend):
         )
 
         if get_node_marker_matrix:
-            node_marker_counts = self.node_marker_counts()  # type: ignore
+            node_marker_counts = self.node_marker_counts().astype(pd.UInt8Dtype())  # type: ignore
             df = pd.concat([coordinates, node_marker_counts], axis=1)
         else:
             df = coordinates
