@@ -16,7 +16,11 @@ from pixelator.common.utils import (
     timer,
     write_parameters_file,
 )
-from pixelator.pna.analysis_engine import AnalysisManager, LoggingSetup
+from pixelator.pna.analysis_engine import (
+    AnalysisManager,
+    LoggingSetup,
+    AlternativeAnalysisManager,
+)
 from pixelator.pna.cli.common import output_option
 from pixelator.pna.layout import CreateLayout
 from pixelator.pna.pixeldataset import PxlFile, read
@@ -99,21 +103,25 @@ def layout(
         command_path="pixelator single-cell-pna layout",
     )
 
-    pxl_file = PxlFile(Path(pxl_file))
-    pxl_dataset = read(pxl_file.path)
-
     analysis_to_run = [
         CreateLayout(
             layout_algorithm,
+            pixel_dataset_path=Path(pxl_file),
         )
     ]
+
+    pxl_file = PxlFile(Path(pxl_file))
+    pxl_dataset = read(pxl_file.path)
+
     logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
-    analysis_manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
+    analysis_manager = AlternativeAnalysisManager(
+        analysis_to_run, logging_setup=logging_setup
+    )
     pxl_file_target = PxlFile.copy_pxl_file(
         pxl_file, layout_output_dir / f"{clean_name}.layout.pxl"
     )
     pxl_dataset = analysis_manager.execute(
-        pixel_dataset=pxl_dataset, pxl_file_target=pxl_file_target
+        pixel_dataset_path=pxl_file.path, pxl_file_target=pxl_file_target
     )
 
     metrics_file = layout_output_dir / f"{clean_name}.report.json"
