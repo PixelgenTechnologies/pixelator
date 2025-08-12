@@ -16,6 +16,7 @@ from pixelator.pna.analysis_engine import (
     PerComponentTask,
 )
 from pixelator.pna.graph import PNAGraph
+from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 
 
