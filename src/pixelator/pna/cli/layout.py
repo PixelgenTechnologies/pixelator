@@ -19,7 +19,6 @@ from pixelator.common.utils import (
 from pixelator.pna.analysis_engine import (
     AnalysisManager,
     LoggingSetup,
-    AlternativeAnalysisManager,
 )
 from pixelator.pna.cli.common import output_option
 from pixelator.pna.layout import CreateLayout
@@ -114,13 +113,11 @@ def layout(
     pxl_dataset = read(pxl_file.path)
 
     logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
-    analysis_manager = AlternativeAnalysisManager(
-        analysis_to_run, logging_setup=logging_setup
-    )
+    analysis_manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
     pxl_file_target = PxlFile.copy_pxl_file(
         pxl_file, layout_output_dir / f"{clean_name}.layout.pxl"
     )
-    pxl_dataset = analysis_manager.execute(
+    pxl_dataset = analysis_manager.execute_from_path(
         pixel_dataset_path=pxl_file.path, pxl_file_target=pxl_file_target
     )
 

@@ -11,6 +11,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from functools import wraps
 from logging.handlers import SocketHandler
+from pathlib import Path
 from typing import Callable, Generic, Iterable, Protocol, TypeVar
 
 import click
@@ -22,7 +23,6 @@ from pixelator.pna import read
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import Component, PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PxlFile
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +105,25 @@ class PerComponentTask(Protocol, Generic[T]):
 
     TASK_NAME: typing.ClassVar[str]
 
+    def __init__(self):
+        """Initialize analyses."""
+        self.pxl_dataset = None
+
+    def set_dataset(self, pxl_file_path: Path):
+        """Specify a dataset to enable analysis being run directly from component IDs."""
+        self.pxl_dataset = read(pxl_file_path)
+
+    @with_logging
+    def run_from_component_id(self, component_id: str) -> T:
+        """Run the analysis on this component.
+
+        This method assumes that the dataset is stored internally
+        and the component is directly accessible from its id.
+
+        :param component_id: The id of the component.
+        """
+        raise NotImplementedError
+
     @with_logging
     def run_on_component_graph(self, component: PNAGraph, component_id: str) -> T:
         """Run the analysis on this component.
@@ -126,14 +145,16 @@ class PerComponentTask(Protocol, Generic[T]):
         raise NotImplementedError
 
     @with_logging
-    def run(self, component: PNAGraph | pl.LazyFrame, component_id: str) -> T:
+    def run(self, component: PNAGraph | pl.LazyFrame | str, component_id: str) -> T:
         """Run the analysis on this component.
 
         :param component: The component to run the analysis on. Either a Graph or a LazyFrame.
         :param component_id: The id of the component.
         :raises TypeError: If the component is not a Graph or a LazyFrame.
         """
-        if isinstance(component, PNAGraph):
+        if isinstance(component, str):
+            return self.run_from_component_id(component)
+        elif isinstance(component, PNAGraph):
             return self.run_on_component_graph(component, component_id)
         elif isinstance(component, pl.LazyFrame):
             return self.run_on_component_edgelist(component, component_id)
@@ -155,11 +176,8 @@ class PerComponentTask(Protocol, Generic[T]):
         :param logging_setup: The logging setup to use.
         :raises TypeError: If the component is not a Graph or a LazyFrame.
         """
-        try:
-            print("hi")
+        if isinstance(component, str):
             return self.run_from_component_id(component)
-        except NotImplementedError:
-            pass
         try:
             return self.run_on_component_edgelist(
                 component.frame, component.component_id
@@ -235,7 +253,9 @@ class AnalysisManager:
             pxl_dataset_builder = PNAPixelDataset.from_pxl_files
         self._pxl_dataset_builder = pxl_dataset_builder
 
-    def _execute_computations_in_parallel(self, component_stream: Iterable[Component]):
+    def _execute_computations_in_parallel(
+        self, component_stream: Iterable[Component | str]
+    ):
         with _get_joblib_executor(
             nbr_cores=self._n_cores, verbose=100, return_as="generator_unordered"
         ) as parallel:
@@ -243,7 +263,9 @@ class AnalysisManager:
             def func(component, analysis_to_run):
                 results = []
                 for analysis_name, analysis in analysis_to_run.items():
-                    logger.debug(f"running {analysis_name} on {component.component_id}")
+                    logger.debug(
+                        f"running {analysis_name} on {component.component_id if isinstance(component, Component) else component}"
+                    )
                     results.append(
                         (
                             analysis_name,
@@ -265,11 +287,15 @@ class AnalysisManager:
                 )
             )
 
-    def _execute_computations_sequentially(self, component_stream: Iterable[Component]):
+    def _execute_computations_sequentially(
+        self, component_stream: Iterable[Component | str]
+    ):
         for component in component_stream:
             results = []
             for analysis_name, analysis in self.analysis_to_run.items():
-                logger.debug(f"running {analysis_name} on {component.component_id}")
+                logger.debug(
+                    f"running {analysis_name} on {component.component_id if isinstance(component, Component) else component}"
+                )
                 results.append(
                     (
                         analysis_name,
@@ -318,45 +344,11 @@ class AnalysisManager:
         )
         return pxl_dataset_with_results
 
-
-class AlternativeAnalysisManager(AnalysisManager):
-    """Alternative implementation of the AnalysisManager for different analysis strategies."""
-
-    def _execute_computations_in_parallel(self, component_stream: Iterable[str]):
-        with _get_joblib_executor(
-            nbr_cores=self._n_cores, verbose=100, return_as="generator_unordered"
-        ) as parallel:
-
-            def func(component, analysis_to_run):
-                results = []
-                for analysis_name, analysis in analysis_to_run.items():
-                    logger.debug(f"running {analysis_name} on {component}")
-                    results.append(
-                        (
-                            analysis_name,
-                            analysis.run_on_component(
-                                component, logging_setup=self._logging_setup
-                            ),
-                        )
-                    )
-
-                return results
-
-            yield from itertools.chain.from_iterable(
-                parallel(
-                    delayed(func)(
-                        component,
-                        self.analysis_to_run,
-                    )
-                    for component in component_stream
-                )
-            )
-
     def _share_data(self, pixel_dataset_path: Path):
         for key in self.analysis_to_run.keys():
-            self.analysis_to_run[key].pixel_dataset_path = pixel_dataset_path
+            self.analysis_to_run[key].set_dataset(pixel_dataset_path)
 
-    def execute(
+    def execute_from_path(
         self, pixel_dataset_path: Path, pxl_file_target: PxlFile
     ) -> PNAPixelDataset:
         """Execute the analysis on the provided pixel dataset."""

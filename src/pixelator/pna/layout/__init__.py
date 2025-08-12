@@ -14,10 +14,8 @@ from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.pna.analysis_engine import (
     PerComponentTask,
 )
-from pixelator.pna import read
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
-from pixelator.pna.pixeldataset import PNAPixelDataset
 
 
 class CreateLayout(PerComponentTask):
@@ -29,19 +27,15 @@ class CreateLayout(PerComponentTask):
         self,
         layout_algorithms: list[SupportedLayoutAlgorithm],
         algorithm_kwargs: dict | None = None,
-        pixel_dataset_path: Path | None = None,
     ) -> None:
         """Create a new CreateLayout instance.
 
         :param layout_algorithms: The layout algorithms to run.
         :param algorithm_kwargs: Additional keyword arguments to pass to the layout algorithms.
         """
+        super().__init__()
         self._layout_algorithms = layout_algorithms
         self._algorithm_kwargs = algorithm_kwargs or {}
-        self.pixel_dataset_path = pixel_dataset_path
-        self.pxl_dataset = None
-        if self.pixel_dataset_path is not None:
-            self.pxl_dataset = read([self.pixel_dataset_path])
 
     def run_from_component_id(self, component_id: str):
         edgelist = (
