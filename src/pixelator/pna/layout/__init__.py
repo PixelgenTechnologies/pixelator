@@ -37,7 +37,7 @@ class CreateLayout(PerComponentTask):
         super().__init__()
         self._layout_algorithms = layout_algorithms
         self._algorithm_kwargs = algorithm_kwargs or {}
-        self.pxl_dataset = None
+        self.pxl_dataset: PNAPixelDataset | None = None
 
     def set_dataset(self, pxl_file_path: Path):
         """Specify a dataset to enable analysis being run directly from component IDs."""
@@ -53,7 +53,7 @@ class CreateLayout(PerComponentTask):
         :return: a LazyFrame containing the layout data.
         """
         edgelist = (
-            self.pxl_dataset.filter(components=[component_id])
+            self.pxl_dataset.filter(components=[component_id])  # type: ignore
             .edgelist()
             .to_polars()
             .lazy()
