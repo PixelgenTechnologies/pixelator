@@ -11,6 +11,7 @@ from typing import Iterable
 import polars as pl
 
 from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
+from pixelator.pna import read
 from pixelator.pna.analysis_engine import (
     PerComponentTask,
 )
@@ -36,8 +37,21 @@ class CreateLayout(PerComponentTask):
         super().__init__()
         self._layout_algorithms = layout_algorithms
         self._algorithm_kwargs = algorithm_kwargs or {}
+        self.pxl_dataset = None
+
+    def set_dataset(self, pxl_file_path: Path):
+        """Specify a dataset to enable analysis being run directly from component IDs."""
+        self.pxl_dataset = read(pxl_file_path)
 
     def run_from_component_id(self, component_id: str):
+        """Run the layout on a component specified by its ID.
+
+        This only works when the pxl_dataset is set so that components
+        are directly accessible through their IDs.
+
+        :param component_id: The id of the component.
+        :return: a LazyFrame containing the layout data.
+        """
         edgelist = (
             self.pxl_dataset.filter(components=[component_id])
             .edgelist()

@@ -105,13 +105,9 @@ class PerComponentTask(Protocol, Generic[T]):
 
     TASK_NAME: typing.ClassVar[str]
 
-    def __init__(self):
-        """Initialize analyses."""
-        self.pxl_dataset = None
-
     def set_dataset(self, pxl_file_path: Path):
         """Specify a dataset to enable analysis being run directly from component IDs."""
-        self.pxl_dataset = read(pxl_file_path)
+        ...
 
     @with_logging
     def run_from_component_id(self, component_id: str) -> T:
@@ -326,44 +322,33 @@ class AnalysisManager:
             self.analysis_to_run[key].add_to_pixel_file(data, pxl_file_target)
         return self._pxl_dataset_builder(pxl_file_target)  # type: ignore
 
+    def _execute_on_iterator(self, iterator, pxl_file_target: PxlFile):
+        if self._n_cores is None or self._n_cores > 1:
+            per_component_results = self._execute_computations_in_parallel(iterator)
+        else:
+            per_component_results = self._execute_computations_sequentially(iterator)
+        post_processed_data = self._post_process(per_component_results)
+        pxl_dataset_with_results = self._add_to_pixel_dataset(
+            post_processed_data, pxl_file_target=pxl_file_target
+        )
+        return pxl_dataset_with_results
+
     def execute(
         self, pixel_dataset: PNAPixelDataset, pxl_file_target: PxlFile
     ) -> PNAPixelDataset:
         """Execute the analysis on the provided pixel dataset."""
-        if self._n_cores is None or self._n_cores > 1:
-            per_component_results = self._execute_computations_in_parallel(
-                pixel_dataset.edgelist().iterator()
-            )
-        else:
-            per_component_results = self._execute_computations_sequentially(
-                pixel_dataset.edgelist().iterator()
-            )
-        post_processed_data = self._post_process(per_component_results)
-        pxl_dataset_with_results = self._add_to_pixel_dataset(
-            post_processed_data, pxl_file_target=pxl_file_target
-        )
-        return pxl_dataset_with_results
+        iterator = pixel_dataset.edgelist().iterator()
+        return self._execute_on_iterator(iterator, pxl_file_target)
 
-    def _share_data(self, pixel_dataset_path: Path):
+    def _share_data(self, input_pxl_file_path: Path):
         for key in self.analysis_to_run.keys():
-            self.analysis_to_run[key].set_dataset(pixel_dataset_path)
+            self.analysis_to_run[key].set_dataset(input_pxl_file_path)
 
     def execute_from_path(
-        self, pixel_dataset_path: Path, pxl_file_target: PxlFile
+        self, input_pxl_file_path: Path, pxl_file_target: PxlFile
     ) -> PNAPixelDataset:
-        """Execute the analysis on the provided pixel dataset."""
-        self._share_data(pixel_dataset_path)
-        pixel_dataset = read(pixel_dataset_path)
-        if self._n_cores is None or self._n_cores > 1:
-            per_component_results = self._execute_computations_in_parallel(
-                pixel_dataset.components()
-            )
-        else:
-            per_component_results = self._execute_computations_sequentially(
-                pixel_dataset.components()
-            )
-        post_processed_data = self._post_process(per_component_results)
-        pxl_dataset_with_results = self._add_to_pixel_dataset(
-            post_processed_data, pxl_file_target=pxl_file_target
-        )
-        return pxl_dataset_with_results
+        """Execute the analysis on the provided pixel file path."""
+        self._share_data(input_pxl_file_path)
+        pixel_dataset = read(input_pxl_file_path)
+        iterator = pixel_dataset.components()
+        return self._execute_on_iterator(iterator, pxl_file_target)

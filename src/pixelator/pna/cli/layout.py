@@ -105,7 +105,6 @@ def layout(
     analysis_to_run = [
         CreateLayout(
             layout_algorithm,
-            pixel_dataset_path=Path(pxl_file),
         )
     ]
 
@@ -118,7 +117,7 @@ def layout(
         pxl_file, layout_output_dir / f"{clean_name}.layout.pxl"
     )
     pxl_dataset = analysis_manager.execute_from_path(
-        pixel_dataset_path=pxl_file.path, pxl_file_target=pxl_file_target
+        input_pxl_file_path=pxl_file.path, pxl_file_target=pxl_file_target
     )
 
     metrics_file = layout_output_dir / f"{clean_name}.report.json"
