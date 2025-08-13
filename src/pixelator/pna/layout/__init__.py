@@ -60,7 +60,6 @@ class CreateLayout(PerComponentTask):
             .lazy()
         )
         res = self.run_on_component_edgelist(edgelist, component_id)
-        del edgelist
         return res
 
     def run_on_component_graph(
@@ -95,8 +94,6 @@ class CreateLayout(PerComponentTask):
         concatenated = pl.concat(results, how="vertical")
         tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".parquet")
         concatenated.write_parquet(Path(tmp_file.name))
-        del concatenated
-        del results
         return pl.LazyFrame({"filenames": [tmp_file.name]})
 
     def run_on_component_edgelist(
@@ -110,7 +107,6 @@ class CreateLayout(PerComponentTask):
         """
         graph = PNAGraph.from_edgelist(component)
         result = self.run_on_component_graph(graph, component_id)
-        del graph
         return result
 
     def concatenate_data(self, data: Iterable[pl.LazyFrame]) -> pl.LazyFrame:
