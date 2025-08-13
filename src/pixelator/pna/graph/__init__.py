@@ -94,66 +94,39 @@ class PNAGraphBackend(NetworkXGraphBackend):
     """Graph backend for PNA data that reuses most of the NetworkXGraphBackend."""
 
     @staticmethod
-    def _build_graph_from_lazy_frame(g: nx.Graph, edgelist: pl.LazyFrame, **kwargs):
-        def create_nodes(umi_col, marker_col, type):
-            if "marker1" in edgelist.collect_schema().keys():
-                rows = (
-                    edgelist.rename(
-                        {"marker1": "marker_1", "marker2": "marker_2"}, strict=False
-                    )
-                    .select([pl.col(umi_col), pl.col(marker_col)])
-                    .unique()
-                    # When renaming and selecting we need to disable projection pushdown
-                    .collect(streaming=True, projection_pushdown=False)
-                    .iter_rows()
-                )
-            else:
-                rows = (
-                    edgelist.select([pl.col(umi_col), pl.col(marker_col)])
-                    .unique()
-                    .collect(streaming=True)
-                    .iter_rows()
-                )
-
-            for row in rows:
-                node = (row[0], {"marker": row[1], "pixel_type": type})
-                yield node
-
-        g.add_nodes_from(
-            create_nodes(
-                "umi1",
-                "marker_1",
-                "A",
-            )
-        )
-        g.add_nodes_from(
-            create_nodes(
-                "umi2",
-                "marker_2",
-                "B",
-            )
-        )
-
+    def _build_graph_from_row_iterator(
+        g: nx.Graph, row_iterator: Iterable[dict], **kwargs
+    ):
         read_count_per_node: dict[str, int] = defaultdict(int)
+        node_marker_type: dict[str, str] = defaultdict(str)
+        node_type: dict[str, str] = defaultdict(str)
+        pixel_type: dict[str, str] = defaultdict(str)
 
         def create_edges():
-            for row in (
-                edgelist.select([pl.col("umi1"), pl.col("umi2"), pl.col("read_count")])
-                .collect()
-                .iter_rows()
-            ):
-                node1, node2, read_count = row[0], row[1], row[2]
-                read_count_per_node[node1] += read_count
-                read_count_per_node[node2] += read_count
+            for row in row_iterator:
+                node1, node2 = row["umi1"], row["umi2"]
+                read_count_per_node[node1] += row["read_count"]
+                read_count_per_node[node2] += row["read_count"]
+                node_marker_type[node1] = row["marker_1"]
+                node_marker_type[node2] = row["marker_2"]
+                node_type[node1] = row["A"]
+                node_type[node2] = row["B"]
                 yield node1, node2
 
         g.add_edges_from(create_edges())
-
         nx.set_node_attributes(g, read_count_per_node, "read_count")
+        nx.set_node_attributes(g, node_marker_type, "marker")
+        nx.set_node_attributes(g, node_type, "pixel_type")
 
         node_names = {node: node for node in g.nodes()}
         nx.set_node_attributes(g, node_names, "name")
         return g
+
+    @staticmethod
+    def _build_graph_from_lazy_frame(g: nx.Graph, edgelist: pl.LazyFrame, **kwargs):
+        return _build_graph_from_row_iterator(
+            g, edgelist.collect().iter_rows(named=True), **kwargs
+        )
 
     @staticmethod
     def from_edgelist(edgelist: pl.LazyFrame, **kwargs):  # type: ignore
@@ -168,8 +141,8 @@ class PNAGraphBackend(NetworkXGraphBackend):
         # TODO This is completely untested!
         g: nx.Graph = nx.empty_graph(0, nx.Graph)
         for batch in batches:
-            edgelist = pl.from_arrow(batch).lazy()  # type: ignore
-            g = PNAGraphBackend._build_graph_from_lazy_frame(g, edgelist, **kwargs)
+            edgelist = batch.to_pylist()
+            g = PNAGraphBackend._build_graph_from_row_iterator(g, edgelist, **kwargs)
 
         return PNAGraphBackend(g)
 
