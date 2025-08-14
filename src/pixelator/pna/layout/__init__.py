@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Iterable
 
 import polars as pl
+import pyarrow as pa
 
 from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.pna import read
@@ -56,8 +57,7 @@ class CreateLayout(PerComponentTask):
         edgelist = (
             self.pxl_dataset.filter(components=[component_id])  # type: ignore
             .edgelist()
-            .to_polars()
-            .lazy()
+            .to_record_batches()
         )
         res = self.run_on_component_edgelist(edgelist, component_id)
         return res
@@ -97,7 +97,7 @@ class CreateLayout(PerComponentTask):
         return pl.LazyFrame({"filenames": [tmp_file.name]})
 
     def run_on_component_edgelist(
-        self, component: pl.LazyFrame, component_id: str
+        self, component: pa.RecordBatch | pl.LazyFrame, component_id: str
     ) -> pl.LazyFrame:
         """Run the layout on a component.
 
@@ -105,7 +105,10 @@ class CreateLayout(PerComponentTask):
         :param component_id: The id of the component.
         :return: a LazyFrame containing the layout data.
         """
-        graph = PNAGraph.from_edgelist(component)
+        if isinstance(component, pl.LazyFrame):
+            graph = PNAGraph.from_edgelist(component)
+        else:
+            graph = PNAGraph.from_record_batches(component)
         result = self.run_on_component_graph(graph, component_id)
         return result
 

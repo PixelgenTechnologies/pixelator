@@ -36,6 +36,10 @@ class PNAGraph(BaseGraph):
         self._connected_components_needs_recompute = False
         self._connected_components: VertexClustering | None = None
 
+    def from_record_batches(edgelist: Iterable[pa.RecordBatch], **kwargs) -> "PNAGraph":
+        """Create a graph from record batches."""
+        return PNAGraph(PNAGraphBackend.from_record_batches(edgelist, **kwargs))
+
     def from_edgelist(edgelist: pl.LazyFrame, **kwargs):  # type: ignore
         """Create a graph from an edgelist."""
         return PNAGraph(PNAGraphBackend.from_edgelist(edgelist, **kwargs))
@@ -109,8 +113,8 @@ class PNAGraphBackend(NetworkXGraphBackend):
                 read_count_per_node[node2] += row["read_count"]
                 node_marker_type[node1] = row["marker_1"]
                 node_marker_type[node2] = row["marker_2"]
-                node_type[node1] = row["A"]
-                node_type[node2] = row["B"]
+                node_type[node1] = "A"
+                node_type[node2] = "B"
                 yield node1, node2
 
         g.add_edges_from(create_edges())
@@ -124,7 +128,7 @@ class PNAGraphBackend(NetworkXGraphBackend):
 
     @staticmethod
     def _build_graph_from_lazy_frame(g: nx.Graph, edgelist: pl.LazyFrame, **kwargs):
-        return _build_graph_from_row_iterator(
+        return PNAGraphBackend._build_graph_from_row_iterator(
             g, edgelist.collect().iter_rows(named=True), **kwargs
         )
 
