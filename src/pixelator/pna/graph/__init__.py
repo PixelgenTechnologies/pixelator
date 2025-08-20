@@ -103,6 +103,7 @@ class PNAGraphBackend(NetworkXGraphBackend):
     ):
         read_count_per_node: dict[str, int] = defaultdict(int)
         node_marker_type: dict[str, str] = defaultdict(str)
+        node_type: dict[str, str] = defaultdict(str)
 
         def create_edges():
             for row in row_iterator:

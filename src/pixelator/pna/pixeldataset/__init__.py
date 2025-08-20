@@ -82,9 +82,16 @@ class Edgelist:
         """Get the component names."""
         return self._components or set(self._querier.read_all_component_names())
 
-    def _handle_backwards_compatibility(self, df: pl.DataFrame) -> pl.DataFrame:
+    def _handle_backwards_compatibility(
+        self, df: pl.DataFrame | pd.DataFrame
+    ) -> pl.DataFrame | pd.DataFrame:
         # Handle legacy marker names
-        return df.rename({"marker1": "marker_1", "marker2": "marker_2"}, strict=False)
+        if isinstance(df, pl.DataFrame):
+            return df.rename(
+                {"marker1": "marker_1", "marker2": "marker_2"}, strict=False
+            )
+        else:
+            return df.rename(columns={"marker1": "marker_1", "marker2": "marker_2"})
 
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""
