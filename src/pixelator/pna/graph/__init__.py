@@ -133,10 +133,20 @@ class PNAGraphBackend(NetworkXGraphBackend):
         )
 
     @staticmethod
-    def from_edgelist(edgelist: pl.LazyFrame, **kwargs):  # type: ignore
+    def _build_graph_from_pandas(g: nx.Graph, edgelist: pd.DataFrame, **kwargs):
+        return PNAGraphBackend._build_graph_from_row_iterator(
+            g, [edge for _, edge in edgelist.iterrows()], **kwargs
+        )
+
+    @staticmethod
+    def from_edgelist(edgelist: pl.LazyFrame | pd.DataFrame, **kwargs):  # type: ignore
         """Create a graph from an edgelist."""
         g: nx.Graph = nx.empty_graph(0, nx.Graph)
-        g = PNAGraphBackend._build_graph_from_lazy_frame(g, edgelist, **kwargs)
+        if isinstance(edgelist, pl.LazyFrame):
+            g = PNAGraphBackend._build_graph_from_lazy_frame(g, edgelist, **kwargs)
+        elif isinstance(edgelist, pd.DataFrame):
+            g = PNAGraphBackend._build_graph_from_pandas(g, edgelist, **kwargs)
+
         return PNAGraphBackend(g)
 
     @staticmethod

@@ -96,7 +96,7 @@ class Edgelist:
 
     def to_df(self) -> pd.DataFrame:
         """Get the edgelist as a pandas DataFrame."""
-        return self.to_polars().to_pandas()
+        return self._querier.read_edglist(components=self.components, as_pandas=True)
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
@@ -110,7 +110,7 @@ class Edgelist:
     ) -> Iterable[pa.RecordBatch]:
         """Get the edgelist as a stream of pyarrow RecordBatches."""
         return self._querier.read_edgelist_stream(
-            components=self._components, batch_size=batch_size
+            components=self.components, batch_size=batch_size
         )
 
     def _iterator(self) -> Iterable[tuple[str, pl.DataFrame]]:
