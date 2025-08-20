@@ -607,7 +607,7 @@ class PixelDataQuerier:
                     components if len(components) > 1 else components[0]
                 )
             if as_pandas:
-                return connection.sql(query, params=params).pd()
+                return connection.sql(query, params=params).df()
             return connection.sql(query, params=params).pl()
 
     def read_edgelist_len(
