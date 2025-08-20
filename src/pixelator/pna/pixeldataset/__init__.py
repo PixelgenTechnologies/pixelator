@@ -96,7 +96,8 @@ class Edgelist:
 
     def to_df(self) -> pd.DataFrame:
         """Get the edgelist as a pandas DataFrame."""
-        return self._querier.read_edglist(components=self.components, as_pandas=True)
+        df = self._querier.read_edgelist(components=self.components, as_pandas=True)
+        return self._handle_backwards_compatibility(df)
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
