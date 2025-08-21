@@ -893,14 +893,18 @@ def _prob_edge_weights(
     A = nx.to_scipy_sparse_array(g, weight=None, format="csr")
 
     # Add 1 to the diagonal to allow self-loops
-    A = A + sp.sparse.diags([1] * A.shape[0], format="csr")
+    A = A + sp.sparse.diags_array([1] * A.shape[0], format="csr")
 
     # Divide by row sum to get the stochastic matrix
-    D = sp.sparse.diags(1 / A.sum(axis=1), format="csr")
+    D = sp.sparse.diags_array(1 / A.sum(axis=1), format="csr")
     P = D @ A
 
     # Compute the transition probabilities for a k-step walk
-    P_step = _mat_pow(P, k)
+    min_weight = 0.001  # To avoid having the sparse matrix grow too dense
+    P_step = _mat_pow(P, k, prune_threshold=min_weight)
+    P_step = (P_step + min_weight * P) / (
+        1 + min_weight
+    )  # Ensure that the original values are not pruned
 
     # Keep edges from original graph
     P_step = P_step.multiply(A)
@@ -925,13 +929,16 @@ def _prob_edge_weights(
     col_indices = vectorized_index(node_to)
 
     # Extract the probabilities
-    edge_probs = np.asarray(P_step_bidirectional[row_indices, col_indices])[0]
+    edge_probs = np.asarray(P_step_bidirectional[row_indices, col_indices])
 
     return edge_probs
 
 
-def _mat_pow(mat, power):
-    mat_power = mat
+def _mat_pow(mat, power, prune_threshold: float | None = None):
+    mat_power = mat.copy()
     for _ in range(power - 1):
+        if prune_threshold:
+            mat_power.data[np.abs(mat_power.data) < prune_threshold] = 0
+            mat_power.eliminate_zeros()
         mat_power = mat @ mat_power
     return mat_power

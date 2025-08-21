@@ -11,10 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Support limited concurrent access to pixelfiles for selected read-only operations
 
-## [0.21.3] - 2025-07-04
-
 ### Fixed
 
+-   Reduce memory usage during layout computation.
+-   Fix support for single-end reads.
 -   Fix support for long over-lapping reads in paired-end amplicon.
 
 ## [0.21.2] - 2025-06-26

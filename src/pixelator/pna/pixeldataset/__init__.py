@@ -82,9 +82,16 @@ class Edgelist:
         """Get the component names."""
         return self._components or set(self._querier.read_all_component_names())
 
-    def _handle_backwards_compatibility(self, df: pl.DataFrame) -> pl.DataFrame:
+    def _handle_backwards_compatibility(
+        self, df: pl.DataFrame | pd.DataFrame
+    ) -> pl.DataFrame | pd.DataFrame:
         # Handle legacy marker names
-        return df.rename({"marker1": "marker_1", "marker2": "marker_2"}, strict=False)
+        if isinstance(df, pl.DataFrame):
+            return df.rename(
+                {"marker1": "marker_1", "marker2": "marker_2"}, strict=False
+            )
+        else:
+            return df.rename(columns={"marker1": "marker_1", "marker2": "marker_2"})
 
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""
@@ -96,7 +103,8 @@ class Edgelist:
 
     def to_df(self) -> pd.DataFrame:
         """Get the edgelist as a pandas DataFrame."""
-        return self.to_polars().to_pandas()
+        df = self._querier.read_edgelist(components=self.components, as_pandas=True)
+        return self._handle_backwards_compatibility(df)
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
@@ -110,7 +118,7 @@ class Edgelist:
     ) -> Iterable[pa.RecordBatch]:
         """Get the edgelist as a stream of pyarrow RecordBatches."""
         return self._querier.read_edgelist_stream(
-            components=self._components, batch_size=batch_size
+            components=self.components, batch_size=batch_size
         )
 
     def _iterator(self) -> Iterable[tuple[str, pl.DataFrame]]:
