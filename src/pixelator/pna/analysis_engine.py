@@ -150,8 +150,7 @@ class PerComponentTask(Protocol, Generic[T]):
         The default implementation will first try the graph based analysis and then fall back
         to the edgelist based analysis if the graph based analysis raises NotImplementedError.
 
-        :param component: The component to run the analysis on. Either a Graph or a LazyFrame.
-        :param component_id: The id of the component.
+        :param component: The component to run the analysis on. Either a Graph, a LazyFrame or the name of a component.
         :param logging_setup: The logging setup to use.
         :raises TypeError: If the component is not a Graph or a LazyFrame.
         """
