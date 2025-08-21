@@ -141,23 +141,6 @@ class PerComponentTask(Protocol, Generic[T]):
         raise NotImplementedError
 
     @with_logging
-    def run(self, component: PNAGraph | pl.LazyFrame | str, component_id: str) -> T:
-        """Run the analysis on this component.
-
-        :param component: The component to run the analysis on. Either a Graph or a LazyFrame.
-        :param component_id: The id of the component.
-        :raises TypeError: If the component is not a Graph or a LazyFrame.
-        """
-        if isinstance(component, str):
-            return self.run_from_component_id(component)
-        elif isinstance(component, PNAGraph):
-            return self.run_on_component_graph(component, component_id)
-        elif isinstance(component, pl.LazyFrame):
-            return self.run_on_component_edgelist(component, component_id)
-        else:
-            raise TypeError(f"Unknown component type: {type(component)}")
-
-    @with_logging
     def run_on_component(
         self, component: Component | str, logging_setup: LoggingSetup | None = None
     ) -> T:
@@ -340,7 +323,7 @@ class AnalysisManager:
         iterator = pixel_dataset.edgelist().iterator()
         return self._execute_on_iterator(iterator, pxl_file_target)
 
-    def _share_data(self, input_pxl_file_path: Path):
+    def _set_path_to_dataset(self, input_pxl_file_path: Path):
         for key in self.analysis_to_run.keys():
             self.analysis_to_run[key].set_dataset(input_pxl_file_path)
 
@@ -348,7 +331,7 @@ class AnalysisManager:
         self, input_pxl_file_path: Path, pxl_file_target: PxlFile
     ) -> PNAPixelDataset:
         """Execute the analysis on the provided pixel file path."""
-        self._share_data(input_pxl_file_path)
+        self._set_path_to_dataset(input_pxl_file_path)
         pixel_dataset = read(input_pxl_file_path)
         iterator = pixel_dataset.components()
         return self._execute_on_iterator(iterator, pxl_file_target)

@@ -3,12 +3,15 @@
 Copyright © 2024 Pixelgen Technologies AB.
 """
 
+import itertools
 import os
 import tempfile
 from pathlib import Path
 from typing import Iterable
 
+import pandas as pd
 import polars as pl
+import pyarrow as pa
 
 from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.pna import read
@@ -56,20 +59,18 @@ class CreateLayout(PerComponentTask):
         edgelist = (
             self.pxl_dataset.filter(components=[component_id])  # type: ignore
             .edgelist()
-            .to_polars()
-            .lazy()
+            .to_record_batches()
         )
         res = self.run_on_component_edgelist(edgelist, component_id)
         return res
 
     def run_on_component_graph(
         self, component: PNAGraph, component_id: str
-    ) -> pl.LazyFrame:
+    ) -> list[str]:
         """Run the layout on a component.
 
-        :param component: The component to run the analysis on. Either a Graph or a LazyFrame.
-        :param component_id: The id of the component.
-        :return: a LazyFrame containing the layout data.
+        :param component: The component graph to run the analysis on.
+        :return: Name of the parquet file containing the layout data.
         :raises TypeError: If the component is not a Graph or a LazyFrame.
         """
         results = []
@@ -77,47 +78,47 @@ class CreateLayout(PerComponentTask):
             # TODO to get things working working with setting a different
             # k for pmgs w need to pass the weights from here, or change
             # the code in pixelator to have that as a parameter
-            layout = pl.DataFrame(
-                component.layout_coordinates(
-                    algo,
-                    get_node_marker_matrix=False,
-                    **self._algorithm_kwargs,
-                )
+            layout = component.layout_coordinates(
+                algo,
+                get_node_marker_matrix=False,
+                **self._algorithm_kwargs,
             )
-            layout = layout.with_columns(
-                component=pl.lit(component_id),
-                graph_projection=pl.lit("full"),
-                layout=pl.lit(algo),
-            )
+            layout["component"] = component_id
+            layout["graph_projection"] = "full"
+            layout["layout"] = algo
             results.append(layout)
 
-        concatenated = pl.concat(results, how="vertical")
+        concatenated = pd.concat(results, axis=0).reset_index(drop=True)
         tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".parquet")
-        concatenated.write_parquet(Path(tmp_file.name))
-        return pl.LazyFrame({"filenames": [tmp_file.name]})
+        concatenated.to_parquet(Path(tmp_file.name))
+        return [tmp_file.name]
 
     def run_on_component_edgelist(
-        self, component: pl.LazyFrame, component_id: str
-    ) -> pl.LazyFrame:
+        self, component: pa.RecordBatch | pl.LazyFrame, component_id: str
+    ) -> list[str]:
         """Run the layout on a component.
 
         :param component: The component to run the analysis on. Either a Graph or a LazyFrame.
         :param component_id: The id of the component.
-        :return: a LazyFrame containing the layout data.
+        :return: Name of the parquet file containing the layout data.
         """
-        graph = PNAGraph.from_edgelist(component)
+        if isinstance(component, pl.LazyFrame):
+            graph = PNAGraph.from_edgelist(component)
+        else:
+            graph = PNAGraph.from_record_batches(component)
         result = self.run_on_component_graph(graph, component_id)
+
         return result
 
-    def concatenate_data(self, data: Iterable[pl.LazyFrame]) -> pl.LazyFrame:
+    def concatenate_data(self, data: Iterable[str]) -> list[str]:
         """Concatenate the data. Override this if you need custom concatenation behavior."""
-        return pl.concat(data, how="vertical_relaxed")
+        return list(itertools.chain.from_iterable(data))
 
-    def add_to_pixel_file(self, data: pl.LazyFrame, pxl_file_target: PxlFile) -> None:
+    def add_to_pixel_file(self, data: list[str], pxl_file_target: PxlFile) -> None:
         """Add the data in the right place in the pxl_dataset."""
-        tmp_component_files = data.collect()
-
+        paths = [Path(fname) for fname in data]
         with PixelFileWriter(pxl_file_target.path) as writer:
-            for fname in tmp_component_files["filenames"]:
-                writer.write_layouts(Path(fname), append=True)
-                os.remove(Path(fname))
+            writer.write_layouts(paths)
+
+        for fname in data:
+            os.remove(Path(fname))
