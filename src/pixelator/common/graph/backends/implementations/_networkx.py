@@ -902,7 +902,7 @@ def _prob_edge_weights(
     # Compute the transition probabilities for a k-step walk
     min_weight = 0.001  # To avoid having the sparse matrix grow too dense
     P_step = _mat_pow(P, k, prune_threshold=min_weight)
-    P_step = P_step + P  # Ensure that the original values are not pruned
+    P_step = P_step + min_weight * P  # Ensure that the original values are not pruned
     # Redivide by row sum to ensure rows sum up to 1 after pruning.
     D_P = sp.sparse.diags_array(1 / P_step.sum(axis=1), format="csr", offsets=0)
     P_step = D_P @ P_step

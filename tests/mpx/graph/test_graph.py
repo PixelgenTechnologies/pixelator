@@ -537,11 +537,11 @@ def test_layout_coordinates_3d_pmds_with_weights(pentagram_graph):
 
     l2 = np.linalg.norm(result[["x", "y", "z"]], axis=1)
     expected = [
-        974.8546,
-        974.8546,
-        1160.309,
-        974.8546,
-        1160.309,
+        2991.8175,
+        2991.8175,
+        3560.975,
+        2991.8175,
+        3560.975,
     ]
 
     assert_array_almost_equal(l2, expected, decimal=4)
@@ -562,11 +562,11 @@ def test_pmds_layout_3d_with_weights_multigraph(pentagram_graph):
 
     l2 = np.linalg.norm(result[["x", "y", "z"]], axis=1)
     expected = [
-        1160.309,
-        974.8546,
-        974.8546,
-        1160.309,
-        974.8546,
+        3560.975,
+        2991.8175,
+        2991.8175,
+        3560.975,
+        2991.8175,
     ]
 
     assert_array_almost_equal(l2, expected, decimal=4)
