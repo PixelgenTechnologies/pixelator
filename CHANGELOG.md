@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [x.x.x] - 2025-??-??
+## [0.21.4] - 2025-08-27
 
 ### Added
 
@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Reduce memory usage during layout computation.
 -   Fix support for single-end reads.
+
+## [0.21.3] - 2025-07-04
+
+### Fixed
+
 -   Fix support for long over-lapping reads in paired-end amplicon.
 
 ## [0.21.2] - 2025-06-26
