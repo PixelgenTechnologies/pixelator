@@ -12,11 +12,15 @@ from cutadapt.modifiers import (
     PairedEndModifier,
     PairedEndModifierWrapper,
     QualityTrimmer,
+    SingleEndModifier,
 )
-from cutadapt.steps import PairedEndStep, SingleEndFilter, SingleEndSink
+from cutadapt.steps import PairedEndStep, SingleEndFilter, SingleEndSink, SingleEndStep
 from cutadapt.utils import DummyProgress, Progress
 
-from pixelator.pna.amplicon.build_amplicon import AmpliconBuilder
+from pixelator.pna.amplicon.build_amplicon import (
+    PairedEndAmpliconBuilder,
+    SingleEndAmpliconBuilder,
+)
 from pixelator.pna.amplicon.filters import TooManyN
 from pixelator.pna.amplicon.quality import QualityProfileStep
 from pixelator.pna.amplicon.report import AmpliconStatistics
@@ -55,8 +59,8 @@ def amplicon_fastq(
     """
     threads = threads if threads > 0 else mp.cpu_count()
 
-    if len(inputs) != 2:
-        raise ValueError("Expected two input files, got %s" % len(inputs))
+    if len(inputs) not in [1, 2]:
+        raise ValueError("Expected one or two input files, got %s" % len(inputs))
 
     # Open file handles for input files
     input_files = InputPaths(*(str(i) for i in inputs))
@@ -85,35 +89,50 @@ def amplicon_fastq(
     failed_1 = Path(
         output.parent / f"{clean_suffixes(Path(inputs[0])).name}.failed.fq.zst"
     )
-    failed_2 = Path(
-        output.parent / f"{clean_suffixes(Path(inputs[1])).name}.failed.fq.zst"
-    )
+    if len(inputs) == 2:
+        failed_2 = Path(
+            output.parent / f"{clean_suffixes(Path(inputs[1])).name}.failed.fq.zst"
+        )
 
     amplicon_failed_writer = None
     if save_failed:
         amplicon_failed_writer = output_files.open_record_writer(failed_1, failed_2)
 
+    is_paired_end = len(inputs) == 2
+
     # Construct an amplicon builder class that will be used to combine the reads using the assay design
-    builder = AmpliconBuilder(
+
+    builder_factory = (
+        PairedEndAmpliconBuilder if is_paired_end else SingleEndAmpliconBuilder
+    )
+    builder = builder_factory(
         assay=assay, mismatches=mismatches, writer=amplicon_failed_writer
     )
 
-    pre_steps: list[PairedEndStep] = []
-    pre_modifiers: list[PairedEndModifier] = []
+    pre_steps: list[PairedEndStep | SingleEndStep] = []
+    pre_modifiers: list[PairedEndModifier | SingleEndModifier] = []
 
-    pre_modifiers.append(
-        PairedEndModifierWrapper(
-            QualityTrimmer(cutoff_front=0, cutoff_back=quality_cutoff),
-            QualityTrimmer(cutoff_front=0, cutoff_back=quality_cutoff),
-        )
-    )
-
-    if poly_g_trimming:
+    if is_paired_end:
         pre_modifiers.append(
             PairedEndModifierWrapper(
-                NextseqQualityTrimmer(cutoff=20), NextseqQualityTrimmer(cutoff=20)
+                QualityTrimmer(cutoff_front=0, cutoff_back=quality_cutoff),
+                QualityTrimmer(cutoff_front=0, cutoff_back=quality_cutoff),
             )
         )
+
+        if poly_g_trimming:
+            pre_modifiers.append(
+                PairedEndModifierWrapper(
+                    NextseqQualityTrimmer(cutoff=20), NextseqQualityTrimmer(cutoff=20)
+                )
+            )
+    else:
+        pre_modifiers.append(
+            QualityTrimmer(cutoff_front=0, cutoff_back=quality_cutoff),
+        )
+
+        if poly_g_trimming:
+            pre_modifiers.append(NextseqQualityTrimmer(cutoff=20))
 
     sink = SingleEndSink(output_files.open_record_writer(output))
 

@@ -62,6 +62,21 @@ class BarcodeCorrectionStatistics(Statistics):
             else:
                 self._custom_stats[name] = step.get_statistics()
 
+    def collect(
+        self,
+        n: int,
+        total_bp1: int,
+        total_bp2: int | None,
+        modifiers,
+        steps,
+        set_paired_to_none: bool = False,
+    ):
+        """Enable stats.paired to be set to None when unknown."""
+        stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
+        if set_paired_to_none:
+            stats.paired = None
+        return stats
+
 
 class DemuxSampleReport(SampleReport):
     """Model for a demux sample report."""

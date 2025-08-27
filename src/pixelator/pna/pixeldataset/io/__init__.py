@@ -47,6 +47,7 @@ from pathlib import Path
 from typing import Iterable, Literal, Sized
 
 import duckdb
+import pandas as pd
 import polars as pl
 import pyarrow as pa
 from anndata import AnnData
@@ -107,12 +108,19 @@ class PixelFileWriter:
         """Close the writer context manager."""
         self.close()
 
-    def _write_parquet_file_to_table(self, table_name, edgelist_file: Path):
+    def _write_parquet_file_to_table(
+        self, table_name, edgelist_file: Path | list[Path]
+    ):
         self._connection.sql(
             f"""
-            CREATE OR REPLACE TABLE {table_name} AS SELECT * FROM read_parquet($parquet_file);
+            CREATE OR REPLACE TABLE {table_name} AS
+            SELECT * FROM read_parquet($parquet_file);
             """,
-            params={"parquet_file": str(edgelist_file)},
+            params={
+                "parquet_file": [str(f) for f in edgelist_file]
+                if isinstance(edgelist_file, list)
+                else str(edgelist_file)
+            },
         )
 
     def write_edgelist(self, edgelist: Path | pl.DataFrame) -> None:
@@ -186,13 +194,13 @@ class PixelFileWriter:
             params={"metadata": metadata},
         )
 
-    def write_layouts(self, layouts: Path | pl.DataFrame) -> None:
+    def write_layouts(self, layouts: Path | pl.DataFrame | list[Path]) -> None:
         """Write the layouts to the PXL file.
 
         :param layouts: The path to the layouts parquet file.
         """
         try:
-            if layouts.is_file():  # type: ignore
+            if isinstance(layouts, list) or layouts.is_file():  # type: ignore
                 self._write_parquet_file_to_table("layouts", layouts)  # type: ignore
                 return
         except AttributeError:
@@ -263,7 +271,7 @@ class PxlFile:
 
     def is_pxl_file(self) -> bool:
         """Check if the file is a PXL file."""
-        with duckdb.connect(self.path) as con:
+        with duckdb.connect(self.path, read_only=True) as con:
             tables = con.sql("SHOW ALL TABLES").to_df()
             return len(
                 set(PXL_FILE_MANDATOR_TABLES).intersection(
@@ -274,7 +282,7 @@ class PxlFile:
     def metadata(self) -> dict:
         """Read the metadata from the PXL file."""
         try:
-            with duckdb.connect(self.path) as con:
+            with duckdb.connect(self.path, read_only=True) as con:
                 metadata = con.sql("SELECT * FROM metadata").fetchone()
                 return json.loads(metadata[0]) if metadata else {}
         except duckdb.CatalogException:
@@ -500,7 +508,7 @@ class PixelDataViewer:
 
     def _attach_to_files(self, connection: duckdb.DuckDBPyConnection):
         for name, path in self._db_to_file_mapping.items():
-            query = f"ATTACH DATABASE '{path}' AS {self._get_normalized_name(name)}"
+            query = f"ATTACH DATABASE '{path}' AS {self._get_normalized_name(name)} (READ_ONLY);"
             connection.execute(query)
 
     def _simple_union_table_view(
@@ -581,7 +589,8 @@ class PixelDataQuerier:
     def read_edgelist(
         self,
         components: Iterable[str] | str | None = None,
-    ) -> pl.DataFrame:
+        as_pandas=False,
+    ) -> pl.DataFrame | pd.DataFrame:
         """Read the edgelist from the PXL file.
 
         :param components: The components to filter by.
@@ -597,6 +606,8 @@ class PixelDataQuerier:
                 params["components"] = (
                     components if len(components) > 1 else components[0]
                 )
+            if as_pandas:
+                return connection.sql(query, params=params).df()
             return connection.sql(query, params=params).pl()
 
     def read_edgelist_len(
@@ -894,9 +905,10 @@ class InplacePixelDataFilterer:
             self._filter_edgelist(connection, components_as_list)
             self._filter_proximity(connection, components_as_list)
             self._filter_layouts(connection, components_as_list)
-            self._filter_adata(self.pxl_file, components_as_list)
             if metadata:
                 self._update_metadata(connection, metadata)
+
+        self._filter_adata(self.pxl_file, components_as_list)
 
 
 def copy_databases(src_db: Path, target_db: Path) -> None:
@@ -909,7 +921,7 @@ def copy_databases(src_db: Path, target_db: Path) -> None:
     :param target_db: The target PXL file.
     """
     query = f"""
-    ATTACH '{str(src_db)}' AS src;
+    ATTACH '{str(src_db)}' AS src (READ_ONLY);
     ATTACH '{str(target_db)}' AS target;
     COPY FROM DATABASE src TO target;
     """

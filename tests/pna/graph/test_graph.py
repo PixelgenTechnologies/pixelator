@@ -8,8 +8,6 @@ import pytest
 from pixelator.pna.graph import PNAGraph
 
 EDGELIST_DATA = """umi1,umi2,count,uei,marker_1,marker_2,component
-16718381540940362211,4765690112321800547,10,2210194,MarkerC,MarkerB,fc07dea9b679aca7
-16718381540940362211,13496407243000087834,10,54146122,MarkerC,MarkerB,fc07dea9b679aca7
 16718381540940362211,3120322361086630706,10,8039964,MarkerC,MarkerA,fc07dea9b679aca7
 16718381540940362211,3381206478569230700,10,40323847,MarkerC,MarkerA,fc07dea9b679aca7
 16718381540940362211,1906719288004785482,10,12428327,MarkerC,MarkerC,fc07dea9b679aca7
@@ -18,7 +16,6 @@ EDGELIST_DATA = """umi1,umi2,count,uei,marker_1,marker_2,component
 16718381540940362211,10575684261142813337,10,52561776,MarkerC,MarkerB,fc07dea9b679aca7
 16718381540940362211,11601060255102815255,10,64718951,MarkerC,MarkerC,fc07dea9b679aca7
 16718381540940362211,5412574254597463076,10,25729979,MarkerC,MarkerC,fc07dea9b679aca7
-4765690112321800547,13496407243000087834,10,76405491,MarkerB,MarkerB,fc07dea9b679aca7
 4765690112321800547,3120322361086630706,10,38367755,MarkerB,MarkerA,fc07dea9b679aca7
 4765690112321800547,3381206478569230700,10,46092159,MarkerB,MarkerA,fc07dea9b679aca7
 4765690112321800547,11449696640771709155,10,99720993,MarkerB,MarkerB,fc07dea9b679aca7
@@ -28,15 +25,11 @@ EDGELIST_DATA = """umi1,umi2,count,uei,marker_1,marker_2,component
 13496407243000087834,3120322361086630706,10,95010031,MarkerB,MarkerA,fc07dea9b679aca7
 13496407243000087834,3381206478569230700,10,65045927,MarkerB,MarkerA,fc07dea9b679aca7
 13496407243000087834,11449696640771709155,10,38892142,MarkerB,MarkerB,fc07dea9b679aca7
-3120322361086630706,3381206478569230700,10,84548057,MarkerA,MarkerA,fc07dea9b679aca7
-3120322361086630706,2986818696398050493,10,52535432,MarkerA,MarkerB,fc07dea9b679aca7
-3120322361086630706,11449696640771709155,10,37541664,MarkerA,MarkerB,fc07dea9b679aca7
 3093013882117452616,17578746049728489641,10,31024187,MarkerA,MarkerA,e7d82bca9694eea7
 3093013882117452616,5828273475010330184,10,42295915,MarkerA,MarkerB,e7d82bca9694eea7
 4633887202036215820,17578746049728489641,10,48583535,MarkerA,MarkerA,e7d82bca9694eea7
 4633887202036215820,5828273475010330184,10,71882171,MarkerA,MarkerB,e7d82bca9694eea7
 4633887202036215820,6367193580528650492,10,88948783,MarkerA,MarkerB,e7d82bca9694eea7
-17578746049728489641,6367193580528650492,10,93404351,MarkerA,MarkerB,e7d82bca9694eea7
 12237051952843152705,6006701602935914176,10,53134349,MarkerA,MarkerC,4920229146151c29
 12237051952843152705,1657631243467327470,10,35779519,MarkerA,MarkerA,4920229146151c29
 12237051952843152705,8754864093431251381,10,67273937,MarkerA,MarkerC,4920229146151c29
@@ -56,15 +49,10 @@ EDGELIST_DATA = """umi1,umi2,count,uei,marker_1,marker_2,component
 9914041027802204156,11721705052923611698,10,78709830,MarkerB,MarkerC,3770519d30f36d18
 9914041027802204156,3527325133011089308,10,31646617,MarkerB,MarkerA,3770519d30f36d18
 9914041027802204156,4489093624312168814,10,23936944,MarkerB,MarkerA,3770519d30f36d18
-11721705052923611698,4489093624312168814,10,79168886,MarkerC,MarkerA,3770519d30f36d18
-4419594517623728635,10605176534183593997,10,87648423,MarkerB,MarkerC,4920229146151c29
 4419594517623728635,8754864093431251381,10,7929971,MarkerB,MarkerC,4920229146151c29
 17533628619506136151,4489093624312168814,10,67126331,MarkerC,MarkerA,3770519d30f36d18
 10605176534183593997,1657631243467327470,10,57364873,MarkerC,MarkerA,4920229146151c29
 10605176534183593997,8754864093431251381,10,15027946,MarkerC,MarkerC,4920229146151c29
-6006701602935914176,1657631243467327470,10,86004090,MarkerC,MarkerA,4920229146151c29
-6006701602935914176,8754864093431251381,10,45033936,MarkerC,MarkerC,4920229146151c29
-1657631243467327470,8754864093431251381,10,23064220,MarkerA,MarkerC,4920229146151c29
 """
 
 
@@ -95,7 +83,7 @@ def test_graph_from_edgelist():
         16718381540940362211: {
             "marker": "MarkerC",
             "pixel_type": "A",
-            "read_count": 100,
+            "read_count": 80,
             "name": 16718381540940362211,
         },
         3093013882117452616: {
@@ -107,7 +95,7 @@ def test_graph_from_edgelist():
         4419594517623728635: {
             "marker": "MarkerB",
             "pixel_type": "A",
-            "read_count": 20,
+            "read_count": 10,
             "name": 4419594517623728635,
         },
         17533628619506136151: {
@@ -125,7 +113,7 @@ def test_graph_from_edgelist():
         3120322361086630706: {
             "marker": "MarkerA",
             "pixel_type": "B",
-            "read_count": 60,
+            "read_count": 30,
             "name": 3120322361086630706,
         },
         14716292412758382347: {
@@ -142,8 +130,8 @@ def test_graph_from_edgelist():
         },
         13496407243000087834: {
             "marker": "MarkerB",
-            "pixel_type": "B",
-            "read_count": 50,
+            "pixel_type": "A",
+            "read_count": 30,
             "name": 13496407243000087834,
         },
         1645819806523959612: {
@@ -155,7 +143,7 @@ def test_graph_from_edgelist():
         6006701602935914176: {
             "marker": "MarkerC",
             "pixel_type": "B",
-            "read_count": 30,
+            "read_count": 10,
             "name": 6006701602935914176,
         },
         9914041027802204156: {
@@ -191,37 +179,37 @@ def test_graph_from_edgelist():
         17578746049728489641: {
             "marker": "MarkerA",
             "pixel_type": "B",
-            "read_count": 30,
+            "read_count": 20,
             "name": 17578746049728489641,
         },
         1657631243467327470: {
             "marker": "MarkerA",
             "pixel_type": "B",
-            "read_count": 90,
+            "read_count": 70,
             "name": 1657631243467327470,
         },
         4765690112321800547: {
             "marker": "MarkerB",
-            "pixel_type": "B",
-            "read_count": 80,
+            "pixel_type": "A",
+            "read_count": 60,
             "name": 4765690112321800547,
         },
         10605176534183593997: {
             "marker": "MarkerC",
-            "pixel_type": "B",
-            "read_count": 30,
+            "pixel_type": "A",
+            "read_count": 20,
             "name": 10605176534183593997,
         },
         11721705052923611698: {
             "marker": "MarkerC",
             "pixel_type": "B",
-            "read_count": 30,
+            "read_count": 20,
             "name": 11721705052923611698,
         },
         11449696640771709155: {
             "marker": "MarkerB",
             "pixel_type": "B",
-            "read_count": 40,
+            "read_count": 30,
             "name": 11449696640771709155,
         },
         3527325133011089308: {
@@ -233,19 +221,19 @@ def test_graph_from_edgelist():
         4489093624312168814: {
             "marker": "MarkerA",
             "pixel_type": "B",
-            "read_count": 30,
+            "read_count": 20,
             "name": 4489093624312168814,
         },
         2986818696398050493: {
             "marker": "MarkerB",
             "pixel_type": "B",
-            "read_count": 20,
+            "read_count": 10,
             "name": 2986818696398050493,
         },
         3381206478569230700: {
             "marker": "MarkerA",
             "pixel_type": "B",
-            "read_count": 40,
+            "read_count": 30,
             "name": 3381206478569230700,
         },
         1906719288004785482: {
@@ -269,13 +257,13 @@ def test_graph_from_edgelist():
         8754864093431251381: {
             "marker": "MarkerC",
             "pixel_type": "B",
-            "read_count": 110,
+            "read_count": 90,
             "name": 8754864093431251381,
         },
         6367193580528650492: {
             "marker": "MarkerB",
             "pixel_type": "B",
-            "read_count": 20,
+            "read_count": 10,
             "name": 6367193580528650492,
         },
         10575684261142813337: {
