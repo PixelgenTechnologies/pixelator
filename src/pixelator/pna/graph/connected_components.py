@@ -693,7 +693,8 @@ def _remove_umi_clashes_and_get_stats(input_edgelist, component_stats):
     component_stats.reads_input = raw_stat["read_count"][0]
     umi1_clashes, umi2_clashes = _find_clashing_umis(input_edgelist)
     no_clash_edgelist = input_edgelist.filter(
-        ~pl.col("umi1").is_in(umi1_clashes) & ~pl.col("umi2").is_in(umi2_clashes)
+        ~pl.col("umi1").is_in(umi1_clashes.implode())
+        & ~pl.col("umi2").is_in(umi2_clashes.implode())
     )
     post_collision_stat = (
         no_clash_edgelist.select(["read_count", "uei_count"]).sum().collect()
