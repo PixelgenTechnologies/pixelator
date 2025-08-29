@@ -59,7 +59,10 @@ def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
     expected_proximity = expected_proximity.astype({"join_count": "uint32"})
 
     assert_frame_equal(
-        proximity, expected_proximity, check_like=True, check_dtype=False
+        proximity,
+        expected_proximity,
+        check_like=True,
+        check_dtype=False,
     )
 
 
