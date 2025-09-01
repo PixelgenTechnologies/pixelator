@@ -42,13 +42,11 @@ def test_pixeldataset(setup_basic_pixel_dataset):
     assert_frame_equal(
         edgelist,
         dataset.edgelist,
-        check_categorical=False,
     )
 
     assert_frame_equal(
         edgelist,
         _enforce_edgelist_types(dataset.edgelist_lazy.collect().to_pandas()),
-        check_categorical=False,
     )
 
     assert_frame_equal(
@@ -106,7 +104,6 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     assert_frame_equal(
         edgelist,
         dataset_new.edgelist,
-        check_categorical=False,
     )
     assert_frame_equal(
         edgelist,
@@ -115,7 +112,6 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
         # where the user will need to manage the required datatypes themselves
         # as needed.
         _enforce_edgelist_types(dataset_new.edgelist_lazy.collect().to_pandas()),
-        check_categorical=False,
     )
 
     assert_frame_equal(
