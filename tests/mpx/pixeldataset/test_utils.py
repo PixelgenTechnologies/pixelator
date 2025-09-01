@@ -48,7 +48,6 @@ def test_antibody_metrics(full_graph_edgelist: pd.DataFrame):
                 name="marker",
             ),
         ),
-        check_categorical=False,
     )
 
 
