@@ -118,7 +118,8 @@ class PNAAntibodyPanel(AntibodyPanel):
     def _validate_sequences(panel_df, sequence_col):
         errors = []
         sequences = panel_df[sequence_col]
-        if not sequences.apply(lambda x: len(x) == len(sequences.iloc[0])).all():
+        ref_length = len(sequences.iloc[0])
+        if not sequences.apply(lambda x: len(x) == ref_length).all():
             errors.append(f"All {sequence_col} values must have the same length.")
 
         if not sequences.str.match("^[ATCG]*$").all():
