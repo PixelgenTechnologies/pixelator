@@ -114,6 +114,22 @@ class PNAAntibodyPanel(AntibodyPanel):
         # return a local copy
         return panel.copy()
 
+    @staticmethod
+    def _validate_sequences(panel_df, sequence_col):
+        errors = []
+        sequences = panel_df[sequence_col]
+        ref_length = len(sequences.iloc[0])
+        if not sequences.apply(lambda x: len(x) == ref_length).all():
+            errors.append(f"All {sequence_col} values must have the same length.")
+
+        if not sequences.str.match("^[ATCG]*$").all():
+            errors.append(
+                f"All {sequence_col} values must only contain ATCG characters. Offending values: "
+                f"{sequences[~sequences.str.match('^[ATCG]*$')].tolist()}"
+            )
+
+        return errors
+
     @classmethod
     def validate_antibody_panel(cls, panel_df: pd.DataFrame) -> list[str]:
         """Validate the antibody panel dataframe.
@@ -131,6 +147,9 @@ class PNAAntibodyPanel(AntibodyPanel):
                 "Please use dashes instead. Offending values: "
                 f"{panel_df['marker_id'][panel_df['marker_id'].str.contains('_')]}"
             )
+
+        errors += cls._validate_sequences(panel_df, "sequence_1")
+        errors += cls._validate_sequences(panel_df, "sequence_2")
 
         return errors
 
