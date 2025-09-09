@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 -   Validation on antibody panel sequence lengths and characters.
+-   If a panel file contains a "uniprot_id" column, it will be added to the adata.var.
 
 ## [0.21.4] - 2025-08-27
 
