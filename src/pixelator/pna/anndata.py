@@ -24,7 +24,10 @@ def calculate_antibody_metrics(counts_df):
 
 def add_panel_information(adata, panel):
     """Add extra panel variables to var."""
-    panel_meta_data = panel.df[["marker_id", "uniprot_id", "control", "nuclear"]]
+    if "uniprot_id" in panel.df.columns:
+        panel_meta_data = panel.df[["marker_id", "uniprot_id", "control", "nuclear"]]
+    else:
+        panel_meta_data = panel.df[["marker_id", "control", "nuclear"]]
     panel_meta_data = panel_meta_data.set_index("marker_id")
     panel_meta_data.index = panel_meta_data.index.astype(str)
     panel_meta_data = panel_meta_data.fillna("no")
