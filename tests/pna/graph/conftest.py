@@ -23,6 +23,7 @@ def mock_panel_fixture():
                 "MarkerB",
                 "MarkerC",
             ],
+            "uniprot_id": ["P61769", "P05107", "P15391"],
             "control": ["no", "no", "yes"],
             "nuclear": ["yes", "no", "no"],
         }

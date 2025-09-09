@@ -10,6 +10,7 @@ def test_panel_validation():
     # all is ok
     data = {
         "marker_id": ["marker1", "marker2", "marker3"],
+        "uniprot_id": ["P61769", "P05107", "P15391"],
         "control": [False, True, False],
         "nuclear": [True, False, True],
         "sequence_1": ["ATCG", "GCTA", "ATCC"],
@@ -23,6 +24,7 @@ def test_panel_validation():
 def test_panel_validation_fails_on_underscores_in_marker_names():
     data = {
         "marker_id": ["marker_1", "marker2", "marker3"],
+        "uniprot_id": ["P61769", "P05107", "P15391"],
         "control": [False, True, False],
         "nuclear": [True, False, True],
         "sequence_1": ["ATCG", "GCTA", "ATCC"],
