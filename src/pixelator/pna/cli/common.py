@@ -32,7 +32,7 @@ def output_option(func):
 
 
 def threads_option(func):
-    """Decorate a click command and add the --design option."""
+    """Decorate a click command and add the --threads option."""
 
     @click.option(
         "--threads",
@@ -139,7 +139,7 @@ def panel_option(func):
         default=None,
         type=click.UNPROCESSED,
         callback=validate_panel,
-        help="The name of a  panel to load from the supported panels. Optionally, provide a path to a custom panel file.",
+        help="The name of a panel to load from the supported panels. Optionally, provide a path to a custom panel file.",
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):

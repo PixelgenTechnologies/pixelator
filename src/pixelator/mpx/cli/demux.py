@@ -172,7 +172,7 @@ def demux(
         mismatches=mismatches,
         barcodes=barcodes,
         min_length=min_length,
-        cores=0,  # cutadapt will choose the optimal number
+        cores=ctx.obj["CORES"],
         verbose=ctx.obj["VERBOSE"],
         sample_id=name,
     )

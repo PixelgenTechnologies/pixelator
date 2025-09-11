@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [x.x.x] - 2025-xx-xx
 
+
+### Fixed
+
+-   `pixelator single-cell demux` respects the `--cores` option.
+
 ### Added
 
 -   Validation on antibody panel sequence lengths and characters.
