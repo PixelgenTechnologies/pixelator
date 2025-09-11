@@ -6,6 +6,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 
 import copy
 
+import pandas as pd
 import pytest
 
 from pixelator.common.config import (
@@ -18,7 +19,7 @@ from pixelator.pna.config.config_class import (
     load_panels_package,
 )
 from pixelator.pna.config.config_instance import pna_config
-from pixelator.pna.config.panel import load_antibody_panel
+from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 
 
 def test_config_creation():
@@ -133,6 +134,18 @@ def test_load_antibody_panel_util(pna_data_root):
 
     with pytest.raises(AssertionError):
         load_antibody_panel(pna_config, "human-qwdqwdqwdqdw-proteomics")
+
+
+def test_panel_with_non_dna_sequences(pna_data_root):
+    panel_df = pd.read_csv(pna_data_root / "test-pna-panel-v2.csv", skiprows=9)
+    panel_df.loc[0, "sequence_1"] = "PPPPPP"
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df)
+    assert len(errors) == 2
+    assert errors[0] == "All sequence_1 values must have the same length."
+    assert (
+        errors[1]
+        == "All sequence_1 values must only contain ATCG characters. Offending values: ['PPPPPP']"
+    )
 
 
 def test_list_panel_names(pna_data_root):

@@ -13,6 +13,7 @@ except ImportError:
     from typing_extensions import Self
 
 
+import re
 from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
@@ -114,6 +115,22 @@ class PNAAntibodyPanel(AntibodyPanel):
         # return a local copy
         return panel.copy()
 
+    @staticmethod
+    def _validate_sequences(panel_df, sequence_col):
+        errors = []
+        sequences = panel_df[sequence_col]
+        ref_length = len(sequences.iloc[0])
+        if not sequences.apply(lambda x: len(x) == ref_length).all():
+            errors.append(f"All {sequence_col} values must have the same length.")
+
+        if not sequences.str.match("^[ATCG]*$").all():
+            errors.append(
+                f"All {sequence_col} values must only contain ATCG characters. Offending values: "
+                f"{sequences[~sequences.str.match('^[ATCG]*$')].tolist()}"
+            )
+
+        return errors
+
     @classmethod
     def validate_antibody_panel(cls, panel_df: pd.DataFrame) -> list[str]:
         """Validate the antibody panel dataframe.
@@ -131,6 +148,30 @@ class PNAAntibodyPanel(AntibodyPanel):
                 "Please use dashes instead. Offending values: "
                 f"{panel_df['marker_id'][panel_df['marker_id'].str.contains('_')]}"
             )
+
+        # Check UniProt IDs format conforming to the UniProt naming convention. Empty IDs are allowed.
+        if "uniprot_id" in panel_df.columns:
+            # Pattern for valid UniProt IDs
+            pattern = r"^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}$"
+
+            def check_id(id_str):
+                if pd.isna(id_str):
+                    return True
+                return all(
+                    bool(re.match(pattern, id_)) for id_ in str(id_str).split(";")
+                )
+
+            bad_ids = panel_df[~panel_df["uniprot_id"].apply(check_id)]["uniprot_id"]
+
+            if len(bad_ids) > 0:
+                errors.append(
+                    "Invalid UniProt IDs found."
+                    "Please conform to the naming convention or remove the following IDs:"
+                    f"{bad_ids.tolist()}"
+                )
+
+        errors += cls._validate_sequences(panel_df, "sequence_1")
+        errors += cls._validate_sequences(panel_df, "sequence_2")
 
         return errors
 
