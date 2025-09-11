@@ -13,10 +13,10 @@ except ImportError:
     from typing_extensions import Self
 
 
+import re
 from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
-import re
 
 from pixelator.common.config import AntibodyPanel
 from pixelator.common.types import PathType
