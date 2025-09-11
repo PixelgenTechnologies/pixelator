@@ -157,7 +157,9 @@ class PNAAntibodyPanel(AntibodyPanel):
             def check_id(id_str):
                 if pd.isna(id_str):
                     return True
-                return all(bool(re.match(pattern, id)) for id in str(id_str).split(";"))
+                return all(
+                    bool(re.match(pattern, id_)) for id_ in str(id_str).split(";")
+                )
 
             bad_ids = panel_df[~panel_df["uniprot_id"].apply(check_id)]["uniprot_id"]
 
