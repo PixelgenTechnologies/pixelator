@@ -57,3 +57,17 @@ def test_panel_validation_fails_on_invalid_uniprot_ids():
         match=r".*Invalid UniProt IDs found.*Please conform to the naming convention or remove the following IDs:.*",
     ):
         PNAAntibodyPanel(df=df, metadata=None)
+
+
+def test_panel_validation_ok_on_concatenated_uniprot_ids():
+    data = {
+        "marker_id": ["marker1", "marker2", "marker3"],
+        "uniprot_id": ["P05107;P15391", "P05107", "P15391"],
+        "control": [False, True, False],
+        "nuclear": [True, False, True],
+        "sequence_1": ["ATCG", "GCTA", "ATCC"],
+        "sequence_2": ["ATCG", "GCTA", "ATCC"],
+        "conj_id": ["conj1", "conj2", "conj3"],
+    }
+    df = pd.DataFrame(data)
+    PNAAntibodyPanel(df=df, metadata=None)
