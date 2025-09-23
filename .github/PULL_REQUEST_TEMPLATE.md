@@ -31,6 +31,6 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] If a new tool or package is included, I have updated poetry.lock, and [cited it properly](../CITATIONS.md)
+- [ ] If a new tool or package is included, I have updated dependencies in `pyproject.toml` and [cited it properly](../CITATIONS.md)
 - [ ] I have checked my code and documentation and corrected any misspellings
 - [ ] I have documented any significant changes to the code in [CHANGELOG.md](../CHANGELOG.md)
