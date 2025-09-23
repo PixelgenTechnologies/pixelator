@@ -1,115 +1,145 @@
-[tool]
-[tool.poetry]
+[project]
 name = "pixelgen-pixelator"
-version = "0.0.0"
-homepage = "https://github.com/PixelgenTechnologies/pixelator"
-repository = "https://github.com/PixelgenTechnologies/pixelator"
-documentation = "https://software.pixelgen.com"
+dynamic = ["version"]
 description = "A command-line tool and library to process and analyze data generated from technologies from Pixelgen Technologies."
-authors = ["Pixelgen Technologies AB <developers@pixelgen.com>",]
-maintainers = ["Alvaro Martinez Barrio <alvaro.martinez.barrio@pixelgen.com>"]
+authors = [
+    { name = "Pixelgen Technologies AB", email = "developers@pixelgen.com" },
+]
+requires-python = ">=3.10,<3.13"
 readme = "README.md"
-license =  "MIT"
-keywords = ["protein", "single-cell", "molecular-pixelation", "spatial", "proteomics"]
-classifiers=[
-    'Development Status :: 4 - Beta',
-    'Intended Audience :: Developers',
-    'Intended Audience :: Science/Research',
-    'Topic :: Scientific/Engineering :: Bio-Informatics',
-    'License :: OSI Approved :: MIT License',
-    'Natural Language :: English',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
-    'Programming Language :: Python :: 3.12',
-    ]
+license = "MIT"
+maintainers = [
+    { name = "Alvaro Martinez Barrio", email = "alvaro.martinez.barrio@pixelgen.com" },
+]
+keywords = [
+    "protein",
+    "single-cell",
+    "molecular-pixelation",
+    "spatial",
+    "proteomics",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "click",
+    "yapf",
+    "cutadapt>=4.2",
+    "umi_tools>=1.1.4,<2.0.0",
+    "pyfastx",
+    "yappi",
+    "pandas>=2.0.0,<3.0.0",
+    "numpy>=2.0.0,<3.0.0",
+    "annoy<=1.17.0",
+    "xopen",
+    "xxhash",
+    "anndata>=0.8.0",
+    "numba>=0.56.4",
+    "scanpy",
+    "lxml",
+    "cssselect",
+    "typing_extensions",
+    "scipy>=1.0.0,<2.0.0",
+    "pyarrow>=14",
+    "semver>=3.0.0,<4",
+    "ruamel-yaml>=0.17.21,<0.18",
+    "pydantic>=2.0,<2.5",
+    "polars>=1.0.0,<1.27.0",
+    "importlib-resources>=5.12.0,<6",
+    "fsspec",
+    "fastparquet",
+    "plotly",
+    "graspologic-native>=1.2.4,<2",
+    "duckdb>=1.2.1,<2",
+    "faiss-cpu>=1.10.0,<2",
+    "zstandard>=0.23.0,<0.24",
+]
 
-packages = [{ include = "pixelator", from = "src" }]
+[project.urls]
+Homepage = "https://github.com/PixelgenTechnologies/pixelator"
+Repository = "https://github.com/PixelgenTechnologies/pixelator"
+Documentation = "https://software.pixelgen.com"
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.13"
-click = "*"
-yapf = "*"
-cutadapt = ">=4.2"
-umi_tools = ">=1.1.4,<2.0.0"
-pyfastx = "*"
-yappi = "*"
-pandas = ">=2.0.0,<3.0.0"
-numpy = ">=2.0.0,<3.0.0"
-annoy = "<=1.17.0"
-xopen = "*"
-xxhash = "*"
-anndata = ">=0.8.0"
-numba = ">=0.56.4"
-scanpy = "*"
-lxml = "*"
-cssselect = "*"
-typing_extensions = "*"
-scipy = ">=1.0.0,<2.0.0"
-pyarrow = ">=14"
-semver = "^3.0.0"
-ruamel-yaml = "^0.17.21"
-pydantic = ">=2.0,<2.5"
-polars = ">=1.0.0,<1.27.0"
-importlib-resources = "^5.12.0"
-fsspec = "*"
-fastparquet = "*"
-plotly = "*"
-graspologic-native = "^1.2.4"
-duckdb = "^1.2.1"
-faiss-cpu = "^1.10.0"
-zstandard = "^0.23.0"
+[project.scripts]
+pixelator = "pixelator.cli:main_cli"
 
-[tool.poetry.group.dev.dependencies]
-ruff = "*"
-pre-commit = "^3.2.2"
-bumpversion = "*"
-coverage = "*"
-invoke = "*"
-isort = "*"
-pylint = "*"
-pytest = "^7.0.0"
-pytest-mpl = "^0.17.0"
-sphinx = "*"
-tox = "*"
-tox-current-env = "^0.0.11"
-black = "*"
-mypy = "*"
-pytest-watch = "*"
-pytest-snapshot = "*"
-pytest-cov = "*"
-pytest-mock = "*"
-pytest-dependency = "*"
-sphinx-copybutton = ">=0.5.2"
-sphinx-design = ">=0.4.1"
-sphinx-inline-tabs = ">=2023.4.21"
-myst-parser = "^2.0.0"
-furo = "^2023.5.20"
-pytest-benchmark = "^4.0.0"
-pytest-playwright = "^0.4.4"
+[dependency-groups]
+dev = [
+    "ruff",
+    "pre-commit>=3.2.2,<4",
+    "bumpversion",
+    "coverage",
+    "invoke",
+    "isort",
+    "pylint",
+    "pytest>=7.0.0,<8",
+    "pytest-mpl>=0.17.0,<0.18",
+    "sphinx",
+    "tox",
+    "tox-current-env>=0.0.11,<0.0.12",
+    "black",
+    "mypy",
+    "pytest-watch",
+    "pytest-snapshot",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-dependency",
+    "sphinx-copybutton>=0.5.2",
+    "sphinx-design>=0.4.1",
+    "sphinx-inline-tabs>=2023.4.21",
+    "myst-parser>=2.0.0,<3",
+    "furo>=2023.5.20,<2024",
+    "pytest-benchmark>=4.0.0,<5",
+    "pytest-playwright>=0.4.4,<0.5",
+]
 
+[tool.hatch.build.targets.sdist]
+include = ["src/pixelator"]
 
-[tool.poetry.scripts]
-pixelator = 'pixelator.cli:main_cli'
+[tool.hatch.build.targets.wheel]
+include = ["src/pixelator"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/pixelator" = "pixelator"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "no-guess-dev"
+fallback_version = "0.0.0"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.1"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["hatchling>=1.25.0", "hatch-vcs>=0.5.0"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
-pythonpath = [ "src" ]
-testpaths = [ "tests" ]
+pythonpath = ["src"]
+testpaths = ["tests"]
 markers = [
     "integration_test: Marks a test as an integration test, which is often slow (deselect with '-m \"not integration_test\"')",
     "workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow (deselect with '-m \"not workflow_test\"')",
     "external_workflow_test: Marks a test as a complete pixelator workflow that requires external data, which is extremely slow and requires additional setup before running (deselect with '-m \"not external_workflow_test\"')",
     "web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed (deselect with '-m \"not web_tests\"')",
-    "slow: Marks a test as being slow (deselect with '-m \"not web_tests\"')",]
+    "slow: Marks a test as being slow (deselect with '-m \"not web_tests\"')",
+]
 mpl-results-path = "tests/reports_mpl"
 mpl-generate-summary = "html"
-addopts = ["--mpl", "-p no:pytest-workflow", "-m not workflow_test and not web_test", "--benchmark-disable"]
-filterwarnings = ["ignore::DeprecationWarning",]
-
-[tool.ruff]
+addopts = [
+    "--mpl",
+    "-p no:pytest-workflow",
+    "-m not workflow_test and not web_test",
+    "--benchmark-disable",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.ruff.lint]
 select = [
@@ -118,30 +148,34 @@ select = [
     # pydocstyle
     "D",
     # isort,
-    "I"]
+    "I",
+]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
-ignore = ["E501","E402","E203","D213","D203"]
+ignore = ["E501", "E402", "E203", "D213", "D203"]
 exclude = ["docs/conf.py"]
 
 [tool.ruff.lint.per-file-ignores]
 "pixelator/mpx/report/__init__.py" = ["E501"]
-"**/tests/**" = ["D100", "D101", "D102", "D103", "D105", "D107", "D200", "D202", "D205", "D212" , "D400", "D401", "D403", "D404", "D415"]
+"**/tests/**" = [
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D105",
+    "D107",
+    "D200",
+    "D202",
+    "D205",
+    "D212",
+    "D400",
+    "D401",
+    "D403",
+    "D404",
+    "D415",
+]
 # Since click uses a different layout for the docs strings to generate the
 # cli docs, we ignore these rules here.
 "src/pixelator/mpx/cli/**" = ["D200", "D212", "D400", "D415"]
 "src/pixelator/mpx/test_utils/**" = ["D"]
-
-[tool.poetry-dynamic-versioning]
-enable = true
-vcs = "git"
-# Metadata is unset, only add sha when not on a version tag
-dirty = true
-style = "pep440"
-bump = false
-latest-tag = true
-strict = false
-
-[tool.poetry-dynamic-versioning.substitution]
-files = [ "src/pixelator/__init__.py", ]
