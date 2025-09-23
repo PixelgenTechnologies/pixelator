@@ -25,5 +25,4 @@ runs:
         cache: 'pip'
         cache-dependency-path: |
           **/pyproject.toml
-          **/poetry.lock
           **/dev_requirements.txt
