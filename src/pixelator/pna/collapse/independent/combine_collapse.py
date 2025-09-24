@@ -72,7 +72,9 @@ def combine_independent_parquet_files(
     umi1_files: Iterable[Path],
     umi2_files: Iterable[Path],
     output_file: Path,
+    threads: int | None = None,
     memory_limit: str | None = None,
+    temp_directory: Path | None = None,
 ) -> CombineCollapseIndependentStats:
     """Scan a directory for parquet files with corrected UMI1s and UMI2s and join them.
 
@@ -105,8 +107,10 @@ def combine_independent_parquet_files(
         umi1_files: The list of UMI1 parquet files.
         umi2_files: The list of UMI2 parquet files.
         output_file: The path to the output parquet file.
+        threads: The number of threads to use for DuckDB. If None, the default is used (all available cores).
         memory_limit: The memory limit to use for DuckDB. eg: '16GB'
             If None, the default is used (80% of the system memory).
+        temp_directory: The directory used by DuckDB for disk spilling
 
     Returns:
         A dictionary with additional statistics calculated on the combined parquet data.
@@ -115,7 +119,15 @@ def combine_independent_parquet_files(
     conn = dd.connect(":memory:")
 
     if memory_limit is not None:
-        conn.execute(f"SET memory_limit = ?", memory_limit)
+        conn.execute(f"SET memory_limit = '{memory_limit / 10**6}MiB';")
+    if threads is not None:
+        conn.execute(f"SET threads = {threads};")
+    if temp_directory is not None:
+        conn.execute(
+            f"""
+            SET temp_directory = '{str(temp_directory.absolute())}';
+            """
+        )
 
     logger.info("Combining and sorting UMI1 parquet files")
     sorted_umi1_file = _merge_sort_parquet(
@@ -187,8 +199,11 @@ def combine_independent_parquet_files(
         output_molecules=int(output_molecules), corrected_reads=int(corrected_reads)
     )
 
+    # Sorted UMI files are only intermediates and can be removed
     sorted_umi1_file.unlink()
     sorted_umi2_file.unlink()
+
+    conn.close()
 
     return stats
 
