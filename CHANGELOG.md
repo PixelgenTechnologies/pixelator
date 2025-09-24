@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 -   `pixelator single-cell demux` respects the `--cores` option.
+-    Fix a bug in `pixelator single-cell demux` where the total number of input reads
+     report in the report.json files would be slightly smaller than the actual number of reads in the input files.
 
 ### Added
 
