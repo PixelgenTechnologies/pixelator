@@ -262,4 +262,4 @@ def test_marker_correction_pipeline(tmp_path, testdata_amplicon_fastq):
         threads=threads,
     )
 
-    assert (demux_output / "PNA055_Sample07_filtered_S7.failed.fq.zst").exists()
+    assert (demux_output / "PNA055_Sample07_filtered_S7.demux.failed.fq.zst").exists()
