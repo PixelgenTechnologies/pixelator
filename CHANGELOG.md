@@ -47,6 +47,10 @@ marker names. To use the previous version, specify `--panel proxiome-immuno-155-
 -   Fix an issue where very large samples (3k cells) could not be collapsed
     due to the limits of the PyArrow string array type.
 
+### Changed
+
+-   Migrated from Poetry to a uv-based workflow (tooling and CI); packaging now uses Hatchling with VCS-based versioning.
+
 ## [0.21.4] - 2025-08-27
 
 ### Added
