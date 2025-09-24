@@ -19,10 +19,8 @@ RUN microdnf install -y \
 ENV PIPX_BIN_DIR="/usr/local/bin"
 RUN python3.12 -m ensurepip
 RUN pip3.12 install --upgrade pip
-RUN pip3.12 install pipx
-RUN pipx install poetry
-RUN poetry self add poetry-plugin-export
-RUN poetry self add "poetry-dynamic-versioning[plugin]"
+
+# Poetry no longer used; dependencies are built via hatchling in the build stage
 
 # This is needed to easily run other python scripts inside the pixelator container
 # eg. samplesheet checking in nf-core/pixelator
@@ -67,43 +65,6 @@ WORKDIR /fastp
 RUN make -j${MAKEJOBS}
 RUN make install
 
-FROM builder-base AS poetry-deps-install-amd64
-
-WORKDIR /pixelator
-COPY poetry.lock pyproject.toml ./
-COPY .git .git
-RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi
-
-## We need to define the ARG we will be using in each build stage
-ARG TARGETPLATFORM
-ARG TARGETARCH
-ARG TARGETVARIANT
-
-ENV ANNOY_TARGET_VARIANT="${TARGETVARIANT:-v3}"
-
-# We need to control the annoy compile options. By default annoy will use march=native which causes issues when
-# building on more modern host than the target platform.
-
-RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
-    export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
-    echo "Building Annoy for explicit target $TARGETPLATFORM/$ANNOY_TARGET_VARIANT"; \
-    pip3.12 install -I --prefix=/runtime -r requirements.txt; \
-    else \
-    echo "Building Annoy without implicit target $TARGETPLATFORM"; \
-    pip3.12 install -I --prefix=/runtime -r requirements.txt; \
-    fi \
-    && rm requirements.txt
-
-
-FROM runtime-base AS poetry-deps-install-arm64
-
-WORKDIR /pixelator
-COPY poetry.lock pyproject.toml /pixelator/
-COPY .git /pixelator/.git
-
-RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi
-RUN pip3.12 install -I --prefix=/runtime -r requirements.txt && rm requirements.txt
-
 # ------------------------------------------
 # -- Build the pixelator package
 # ------------------------------------------
@@ -115,15 +76,39 @@ WORKDIR /pixelator
 COPY . /pixelator
 COPY .git /pixelator/.git
 
-RUN poetry config virtualenvs.create false
+# Build sdist using hatchling + hatch-vcs
+RUN python3.12 -m pip install --no-cache-dir build hatchling hatch-vcs
 RUN if [ ! -z "${VERSION_OVERRIDE}" ]; then \
     echo "Overriding version to ${VERSION_OVERRIDE}"; \
-    POETRY_DYNAMIC_VERSIONING_OVERRIDE="pixelgen-pixelator=${VERSION_OVERRIDE}" poetry build -f sdist; \
-    else poetry build -f sdist; \
+    SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION_OVERRIDE}" python3.12 -m build --sdist; \
+    else python3.12 -m build --sdist; \
     fi
 
 RUN cp -r /pixelator/dist/ /dist/ && \
     rm -rf /pixelator
+
+# ------------------------------------------
+# -- Install Python deps in build image (with compilers)
+# ------------------------------------------
+FROM builder-base AS deps-install
+
+# Build-arg passthrough for Annoy target variant
+ARG TARGETPLATFORM
+ARG TARGETARCH
+ARG TARGETVARIANT
+ENV ANNOY_TARGET_VARIANT="${TARGETVARIANT:-v3}"
+
+# Copy built sdist and install to a relocatable prefix
+COPY --from=build-pixelator /dist /dist
+RUN if [ "$TARGETARCH" = "amd64" ] && [ -n "$ANNOY_TARGET_VARIANT" ]; then \
+    export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
+    echo "Compiling Python deps for $TARGETPLATFORM/$ANNOY_TARGET_VARIANT (amd64 with x86-64 flags)"; \
+    else \
+    unset ANNOY_COMPILER_ARGS; \
+    echo "Compiling Python deps without x86-64 variant flags on $TARGETARCH"; \
+    fi && \
+    pip3.12 install -I --prefix=/runtime /dist/*.tar.gz && \
+    rm -rf /dist
 
 # ------------------------------------------
 # -- Build the runtime environment for amd64
@@ -131,9 +116,8 @@ RUN cp -r /pixelator/dist/ /dist/ && \
 
 FROM runtime-base AS runtime-amd64
 
-# Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
-COPY --from=poetry-deps-install-amd64 /runtime/ /usr/
+COPY --from=deps-install /runtime/ /usr/
 
 # ------------------------------------------
 # -- Build the runtime environment for arm64
@@ -141,9 +125,8 @@ COPY --from=poetry-deps-install-amd64 /runtime/ /usr/
 
 FROM runtime-base AS runtime-arm64
 
-# Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
-COPY --from=poetry-deps-install-arm64 /runtime/ /usr/
+COPY --from=deps-install /runtime/ /usr/
 
 # ------------------------------------------
 # -- Build the final image
@@ -151,15 +134,9 @@ COPY --from=poetry-deps-install-arm64 /runtime/ /usr/
 
 FROM runtime-${TARGETARCH} AS runtime-final
 
-# Make sure that the python packages are available in the system path
-# We add this explicitly since nextflow often runs with PYTHONNOUSERSITE set
-# to fix interference with conda and this can cause problems.
-# Fastp will also build isal and we need to make that available
+# Ensure Python packages are available in system path and isal
 RUN ldconfig /usr/local/lib64
 
-COPY --from=build-pixelator /dist /dist
-RUN ls -alh /dist/
-RUN pip3.12 install --prefix /usr/ /dist/*.tar.gz
-RUN rm -rf /dist
+# Nothing to install here; deps already copied into this image in runtime-ARCH stages
 
 RUN pip3.12 cache purge

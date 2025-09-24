@@ -13,6 +13,8 @@ WORKDIR /pixelator
 COPY ./ /pixelator
 COPY .git /pixelator/.git
 
-RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi --only dev
-
-RUN pip3.12 install -r requirements.txt && rm requirements.txt
+# Install uv and export dev-only dependencies to a requirements file, then install with pip
+RUN python3.12 -m pip install --no-cache-dir uv \
+  && uv export --only-group dev --output-file requirements_dev.txt \
+  && pip3.12 install --no-cache-dir -r requirements_dev.txt \
+  && rm -f requirements_dev.txt
