@@ -14,26 +14,30 @@ RUN microdnf install -y \
     libstdc++ \
     procps-ng \
     gzip \
+    curl \
     && microdnf clean all
 
 ENV PIPX_BIN_DIR="/usr/local/bin"
-RUN python3.12 -m ensurepip
-RUN pip3.12 install --upgrade pip
+
+# Install uv and add it to PATH; then remove curl to keep the image minimal
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
+RUN microdnf remove -y curl && microdnf clean all
+
+# Install Python via uv to avoid large rpm payload
+RUN uv python install 3.12
 
 # Poetry no longer used; dependencies are built via hatchling in the build stage
 
 # This is needed to easily run other python scripts inside the pixelator container
 # eg. samplesheet checking in nf-core/pixelator
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
+RUN update-alternatives --install /usr/bin/python python "$(uv python find 3.12)" 1
 
 
 FROM runtime-base AS builder-base
 
 RUN microdnf install -y \
-    python3.12 \
-    python3.12-devel \
     wget \
-    git \
     sqlite-devel \
     zlib-devel \
     libdeflate-devel \
@@ -76,8 +80,8 @@ WORKDIR /pixelator
 COPY . /pixelator
 COPY .git /pixelator/.git
 
-# Build sdist using hatchling + hatch-vcs
-RUN python3.12 -m pip install --no-cache-dir build hatchling hatch-vcs
+# Build sdist using hatchling + hatch-vcs (install build tools via uv)
+RUN uv pip install --no-cache-dir build hatchling hatch-vcs
 RUN if [ ! -z "${VERSION_OVERRIDE}" ]; then \
     echo "Overriding version to ${VERSION_OVERRIDE}"; \
     SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION_OVERRIDE}" python3.12 -m build --sdist; \
@@ -107,7 +111,7 @@ RUN if [ "$TARGETARCH" = "amd64" ] && [ -n "$ANNOY_TARGET_VARIANT" ]; then \
     unset ANNOY_COMPILER_ARGS; \
     echo "Compiling Python deps without x86-64 variant flags on $TARGETARCH"; \
     fi && \
-    pip3.12 install -I --prefix=/runtime /dist/*.tar.gz && \
+    uv pip install -I --prefix=/runtime /dist/*.tar.gz && \
     rm -rf /dist
 
 # ------------------------------------------
@@ -139,4 +143,5 @@ RUN ldconfig /usr/local/lib64
 
 # Nothing to install here; deps already copied into this image in runtime-ARCH stages
 
+RUN uv cache clean || true
 RUN pip3.12 cache purge
