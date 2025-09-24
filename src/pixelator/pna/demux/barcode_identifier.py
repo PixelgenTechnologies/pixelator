@@ -67,6 +67,7 @@ class BarcodeIdentifierStatistics:
             self.corrected += other.corrected
             self.missing_pid1 += other.missing_pid1
             self.missing_pid2 += other.missing_pid2
+            self.missing_pid1_pid2 += other.missing_pid1_pid2
             self.pid1_matches_distance_distribution += (
                 other.pid1_matches_distance_distribution
             )
