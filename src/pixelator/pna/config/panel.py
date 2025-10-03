@@ -5,6 +5,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+from functools import cached_property
 from pathlib import Path
 
 try:
@@ -17,8 +18,9 @@ import re
 from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
+import ruamel.yaml as yaml
 
-from pixelator.common.config import AntibodyPanel
+from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 
@@ -27,7 +29,7 @@ if TYPE_CHECKING:
     from pixelator.pna.config.config_class import PNAConfig
 
 
-class PNAAntibodyPanel(AntibodyPanel):
+class PNAAntibodyPanel:
     """Class representing a Molecular Pixelation antibody panel."""
 
     # required columns
@@ -97,6 +99,53 @@ class PNAAntibodyPanel(AntibodyPanel):
 
         return cls(df, metadata, file_name=panel_file.name)
 
+    @property
+    def name(self) -> Optional[str]:
+        """The name defined in the panel metadata."""
+        return self._metadata.name
+
+    @property
+    def version(self) -> Optional[str]:
+        """Return the panel file version."""
+        return self._metadata.version
+
+    @property
+    def description(self) -> Optional[str]:
+        """Return the panel file description."""
+        return self._metadata.description
+
+    @property
+    def aliases(self) -> list[str]:
+        """Return the (optional) list of panel file aliases."""
+        return self._metadata.aliases
+
+    @classmethod
+    def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
+        """Parse front-matter YAML from a file.
+
+        :param file: the file to parse
+        :return AntibodyPanelMetadata: a pydantic model with the metadata
+        """
+        yaml_loader = yaml.YAML(typ="safe")
+
+        metadata_lines = []
+        with open(str(file), "r") as f:
+            for line in f:
+                if line.startswith("# "):
+                    metadata_lines.append(line[2:])
+                else:
+                    break
+
+        metadata = "".join(metadata_lines)
+        raw_config = list(yaml_loader.load_all(metadata))
+
+        if len(raw_config) == 0:
+            warnings.warn(f"Expected a YAML frontmatter in {file}")
+            return AntibodyPanelMetadata(version=None, name=None, description=None)
+
+        frontmatter = raw_config[0]
+        return AntibodyPanelMetadata.model_validate(frontmatter)
+
     @classmethod
     def _parse_panel(cls, panel_file: Path) -> pd.DataFrame:
         panel = pd.read_csv(str(panel_file), comment="#")
@@ -114,6 +163,35 @@ class PNAAntibodyPanel(AntibodyPanel):
 
         # return a local copy
         return panel.copy()
+
+    @cached_property
+    def markers_control(self) -> List[str]:
+        """Return a list of marker control (names)."""
+        return list(self._df[self._df["control"]].marker_id.unique())
+
+    @cached_property
+    def markers(self) -> List[str]:
+        """Return the list of unique markers in the panel."""
+        return list(self._df.marker_id.unique())
+
+    @property
+    def df(self) -> pd.DataFrame:
+        """Return the panel dataframe."""
+        return self._df
+
+    @property
+    def filename(self) -> Optional[str]:
+        """Return the filename of the marker panel."""
+        return self._filename
+
+    @cached_property
+    def size(self) -> int:
+        """Return the size of the marker panel."""
+        return self._df.shape[0]
+
+    def get_marker_id(self, seq: str) -> str:
+        """Return the marker name."""
+        return self._df.loc[seq].marker_id
 
     @staticmethod
     def _validate_sequences(panel_df, sequence_col):
@@ -138,7 +216,23 @@ class PNAAntibodyPanel(AntibodyPanel):
         :param panel_df: The dataframe containing the panel information.
         :returns: A list of errors found in the panel.
         """
-        errors = super().validate_antibody_panel(panel_df)
+        errors = []
+
+        # some basic sanity check on the panel size and columns
+        if not set(cls._REQUIRED_COLUMNS).issubset(set(panel_df.columns)):
+            missing_columns = set(cls._REQUIRED_COLUMNS) - set(panel_df.columns)
+            errors.append(f"Panel has missing required columns: {missing_columns}")
+            return errors
+
+        if panel_df.shape[0] == 0:
+            errors.append("Panel file is empty")
+            return errors
+
+        # sanity check on the unique columns
+        for col in cls._UNIQUE_COLUMNS:
+            if not len(panel_df[col].unique()) == len(panel_df[col]):
+                errors.append(f"All values in column: {col} were not unique")
+
 
         if any(panel_df["marker_id"].str.contains("_")):
             # Markers should not contain underscores since this messes
