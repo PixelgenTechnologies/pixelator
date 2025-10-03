@@ -26,10 +26,15 @@ def mock_panel_fixture():
             "uniprot_id": ["P61769", "P05107", "P15391"],
             "control": ["no", "no", "yes"],
             "nuclear": ["yes", "no", "no"],
+            "sequence_1": ["AAAA", "CCCC", "GGGG"],
+            "sequence_2": ["TTTT", "AAAA", "CCCC"],
+            "conj_id": ["C001", "C002", "C003"],
         }
     )
     mock_antibody_panel.name = "mock-panel"
     mock_antibody_panel.version = "0.0.0"
+    mock_antibody_panel.description = "Dummy panel data"
+    mock_antibody_panel.aliases = ["mock_alias"]
     return mock_antibody_panel
 
 

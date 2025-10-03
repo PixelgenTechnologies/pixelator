@@ -71,11 +71,12 @@ class TestPNAPixelDataset:
     def test_adata(self, pxl_dataset: PNAPixelDataset, adata_data):
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
-        # Right now we actually drop all uns data
-        # I'm not sure if that is the best possible behavior
-        # here, but it is the default when anndata
-        # concatenates multiple datasets
-        adata_data.uns = {}
+        adata_data.uns = {
+            'my_key': {
+                'with_nesting': ['and array', 'of values'],
+                'another_key': 1.0
+            }
+        }
 
         adata = pxl_dataset.adata(add_clr_transform=False, add_log1p_transform=False)
         adata_assert_equal(adata, adata_data)
