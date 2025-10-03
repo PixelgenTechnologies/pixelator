@@ -1,5 +1,6 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import pytest
 from click.testing import CliRunner
 
 from pixelator import cli
@@ -27,6 +28,7 @@ def test_demux_invalid_chunk_size(tmp_path, testdata_amplicon_fastq):
     assert "Invalid value for '--output-chunk-reads'" in cmd.output
 
 
+@pytest.mark.slow
 def test_demux_valid(tmp_path, testdata_amplicon_fastq):
     runner = CliRunner()
 

@@ -9,6 +9,7 @@ from pathlib import Path
 import networkx as nx
 import pandas as pd
 from pandas.testing import assert_frame_equal, assert_series_equal
+import pytest
 
 from pixelator.pna.analysis.denoise import (
     DenoiseOneCore,
@@ -191,6 +192,7 @@ CX3CR1,5,efe0ed189cb499fc
 """
 
 
+@pytest.mark.slow
 def test_get_overexpressed_markers_in_one_core(pna_pxl_dataset):
     """Test the get_overexpressed_markers_in_one_core function."""
     components = pna_pxl_dataset.adata().obs.index
@@ -248,6 +250,7 @@ def test_get_stranded_nodes():
     assert len(stranded_nodes_fully_connected) == 0
 
 
+@pytest.mark.slow
 def test_denoise_one_core_layer(pna_pxl_dataset):
     """Test the denoise_one_core_layer function."""
     components = pna_pxl_dataset.adata().obs.index
@@ -265,6 +268,7 @@ def test_denoise_one_core_layer(pna_pxl_dataset):
         assert nx.is_connected(denoised_graph)
 
 
+@pytest.mark.slow
 def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
     """Test the DenoiseOneCore analysis."""
     pxl_file_target = PixelDatasetSaver(pxl_dataset=pna_pxl_dataset).save(

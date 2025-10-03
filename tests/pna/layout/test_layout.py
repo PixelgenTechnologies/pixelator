@@ -3,12 +3,14 @@
 from pathlib import Path
 
 from pandas.testing import assert_frame_equal
+import pytest
 
 from pixelator.pna.analysis_engine import AnalysisManager
 from pixelator.pna.layout import CreateLayout
 from pixelator.pna.pixeldataset import PixelDatasetSaver, PNAPixelDataset
 
 
+@pytest.mark.slow
 def test_layout(pna_pxl_dataset: PNAPixelDataset, tmp_path):
     manager = AnalysisManager(
         [
@@ -44,6 +46,7 @@ def test_layout(pna_pxl_dataset: PNAPixelDataset, tmp_path):
     assert "B" in set(result["pixel_type"].to_list())
 
 
+@pytest.mark.slow
 def test_layout_from_path(pna_pxl_dataset: PNAPixelDataset, tmp_path):
     manager = AnalysisManager(
         [

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 from pandas.testing import assert_frame_equal
+import pytest
 
 from pixelator.pna.analysis.analysis import ProximityAnalysis
 from pixelator.pna.analysis.proximity import calculate_differential_proximity
@@ -63,6 +64,7 @@ def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
     )
 
 
+@pytest.mark.slow
 def test_proximity_analysis_jcs_marker_count_filtering(
     pna_pxl_file: Path, pna_data_root, tmp_path
 ):
