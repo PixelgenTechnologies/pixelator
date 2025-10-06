@@ -102,6 +102,10 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
         duckdb_temp_dir = Path(duckdb_temp_dir)
         ctx.obj["DUCKDB_TEMP_DIR"] = duckdb_temp_dir
 
+    duckdb_stdout_logging = os.environ.get("PIXELATOR_DUCKDB_STDOUT_LOGGING")
+    if duckdb_stdout_logging:
+        ctx.obj["DUCKDB_STDOUT_LOGGING"] = bool(duckdb_stdout_logging)
+
     return 0
 
 

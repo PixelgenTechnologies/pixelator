@@ -75,6 +75,7 @@ def combine_independent_parquet_files(
     threads: int | None = None,
     memory_limit: str | None = None,
     temp_directory: Path | None = None,
+    verbose: bool = False
 ) -> CombineCollapseIndependentStats:
     """Scan a directory for parquet files with corrected UMI1s and UMI2s and join them.
 
@@ -118,16 +119,27 @@ def combine_independent_parquet_files(
     """
     conn = dd.connect(":memory:")
 
+    if verbose:
+        conn.execute(
+            f"""
+            CALL enable_logging(storage='stdout', storage_buffer_size=2048);
+            """
+         )
+
     if memory_limit is not None:
         conn.execute(f"SET memory_limit = '{memory_limit / 10**6}MiB';")
+        logger.info("Using DuckDB memory limit to %s MiB", memory_limit / 10**6)
     if threads is not None:
         conn.execute(f"SET threads = {threads};")
+        logger.info("Using DuckDB threads limit to %s", threads)
     if temp_directory is not None:
         conn.execute(
             f"""
             SET temp_directory = '{str(temp_directory.absolute())}';
             """
         )
+        logger.info("Using DuckDB temp directory: %s", temp_directory.absolute())
+
 
     logger.info("Combining and sorting UMI1 parquet files")
     sorted_umi1_file = _merge_sort_parquet(
