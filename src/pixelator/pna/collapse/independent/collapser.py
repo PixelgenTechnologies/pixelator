@@ -331,8 +331,8 @@ class RegionCollapser:
 
     _umi1_schema = pa.schema(
         fields=[
-            pa.field("marker_1", pa.string()),
-            pa.field("marker_2", pa.string()),
+            pa.field("marker_1", pa.large_string()),
+            pa.field("marker_2", pa.large_string()),
             pa.field("read_count", pa.uint16()),
             pa.field("original_umi1", pa.uint64()),
             pa.field("original_umi2", pa.uint64()),
@@ -342,8 +342,8 @@ class RegionCollapser:
     )
     _umi2_schema = pa.schema(
         fields=[
-            pa.field("marker_1", pa.string()),
-            pa.field("marker_2", pa.string()),
+            pa.field("marker_1", pa.large_string()),
+            pa.field("marker_2", pa.large_string()),
             pa.field("read_count", pa.uint16()),
             pa.field("original_umi1", pa.uint64()),
             pa.field("original_umi2", pa.uint64()),
