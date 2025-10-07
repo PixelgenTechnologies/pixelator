@@ -1,6 +1,7 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
 import pandas as pd
+from pandas.testing import assert_frame_equal
 import pytest
 
 from pixelator.pna.config.panel import PNAAntibodyPanel
@@ -71,3 +72,22 @@ def test_panel_validation_ok_on_concatenated_uniprot_ids():
     }
     df = pd.DataFrame(data)
     PNAAntibodyPanel(df=df, metadata=None)
+
+
+def test_panel_from_pxl(pxl_file):
+    panel = PNAAntibodyPanel.from_pxl(pxl_file)
+    assert panel.name == "test-pna-panel"
+    assert panel.version == "0.1.0"
+    assert panel.description == "Test R&D panel for RNA"
+    assert panel.aliases == ["test-pna"]
+
+    expected_data = {
+        "marker_id": ["MarkerA", "MarkerB", "MarkerC"],
+        "control": ["no", "no", "yes"],
+        "nuclear": ["yes", "no", "no"],
+        "sequence_1": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
+        "sequence_2": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
+        "conj_id": ["pna_rnd01", "pna_rnd02", "pna_rnd03"],
+    }
+    expected_df = pd.DataFrame(expected_data)
+    assert_frame_equal(panel.df, expected_df)

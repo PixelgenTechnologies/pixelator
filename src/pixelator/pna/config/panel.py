@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Optional
 import pandas as pd
 import ruamel.yaml as yaml
 
+from pixelator import read_pna
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
@@ -98,6 +99,37 @@ class PNAAntibodyPanel:
         logger.debug("Antibody panel from file %s created", filename)
 
         return cls(df, metadata, file_name=panel_file.name)
+
+    @classmethod
+    def from_pxl(cls, filename: PathType) -> Self:
+        """Create an AntibodyPanel from a pxl file.
+
+        :param filename: The path to the panel file.
+        :returns: The AntibodyPanel object.
+        :raises AssertionError: exception if panel file is missing,
+        :rtype: AntibodyPanel
+        """
+        pxl_file = Path(filename)
+
+        if not pxl_file.is_file() or pxl_file.suffix != ".pxl":
+            raise AssertionError(
+                f"Panel file {filename} not found or has an incorrect format"
+            )
+
+        logger.debug("Creating Antibody panel from file %s", filename)
+
+        pxl_data = read_pna(pxl_file)
+        adata = pxl_data.adata()
+        df = adata.var \
+            .reset_index(names="marker_id") \
+            [cls._REQUIRED_COLUMNS]
+        if "uniprot_id" in adata.var.columns:
+            df.insert(1, "uniprot_id", adata.var.reset_index()["uniprot_id"])
+        metadata = AntibodyPanelMetadata.model_validate(adata.uns["panel_header"])
+
+        logger.debug("Antibody panel from file %s created", filename)
+
+        return cls(df, metadata, file_name=pxl_file.name)
 
     @property
     def name(self) -> Optional[str]:
