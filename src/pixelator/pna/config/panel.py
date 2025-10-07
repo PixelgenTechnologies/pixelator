@@ -5,8 +5,10 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import warnings
 from functools import cached_property
 from pathlib import Path
+from typing import TYPE_CHECKING, List, Optional
 
 try:
     from typing import Self
@@ -26,7 +28,6 @@ from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 
 if TYPE_CHECKING:
-    from pixelator.config.config_class import AntibodyPanelMetadata
     from pixelator.pna.config.config_class import PNAConfig
 
 
