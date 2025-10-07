@@ -92,7 +92,13 @@ class TestPixelFileReader:
             'my_key': {
                 'with_nesting': ['and array', 'of values'],
                 'another_key': 1.0
-            }
+            },
+            "panel_header": {
+                "name": "test-pna-panel",
+                "aliases": ["test-pna"],
+                "description": "Test R&D panel for RNA",
+                "verion": "0.1.0",
+            },
         }
 
 
@@ -178,7 +184,13 @@ class TestPixelDataViewer:
             'my_key': {
                 'with_nesting': ['and array', 'of values'],
                 'another_key': 1.0
-            }
+            },
+            "panel_header": {
+                "name": "test-pna-panel",
+                "aliases": ["test-pna"],
+                "description": "Test R&D panel for RNA",
+                "verion": "0.1.0",
+            },
         }
 
         res = pxl_view.read_adata()

@@ -16,7 +16,7 @@ from pixelator.pna.pixeldataset import (
     read,
 )
 from pixelator.pna.pixeldataset.io import PixelDataViewer, PixelFileWriter
-from tests.pna.pixeldataset.conftest import create_pxl_file
+from tests.pna.conftest import create_pxl_file
 
 
 class TestReadPixelDataset:
@@ -75,7 +75,13 @@ class TestPNAPixelDataset:
             'my_key': {
                 'with_nesting': ['and array', 'of values'],
                 'another_key': 1.0
-            }
+            },
+            "panel_header": {
+                "name": "test-pna-panel",
+                "aliases": ["test-pna"],
+                "description": "Test R&D panel for RNA",
+                "verion": "0.1.0",
+            },
         }
 
         adata = pxl_dataset.adata(add_clr_transform=False, add_log1p_transform=False)
