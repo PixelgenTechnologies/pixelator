@@ -89,10 +89,7 @@ class TestPixelFileReader:
 
         adata_data.obs["sample"] = "test_sample"
         adata_data.uns = {
-            'my_key': {
-                'with_nesting': ['and array', 'of values'],
-                'another_key': 1.0
-            },
+            "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
             "panel_header": {
                 "name": "test-pna-panel",
                 "aliases": ["test-pna"],
@@ -100,7 +97,6 @@ class TestPixelFileReader:
                 "verion": "0.1.0",
             },
         }
-
 
         results = reader.read_adata()
         adata_assert_equal(results, adata_data)
@@ -181,10 +177,7 @@ class TestPixelDataViewer:
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
         adata_data.uns = {
-            'my_key': {
-                'with_nesting': ['and array', 'of values'],
-                'another_key': 1.0
-            },
+            "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
             "panel_header": {
                 "name": "test-pna-panel",
                 "aliases": ["test-pna"],

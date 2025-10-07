@@ -86,16 +86,13 @@ fc07dea9b679aca7,MarkerB,MarkerC,30,27.3,3.1,0.001,0.999
 """
 
 UNS_DATA = {
-    "my_key": {
-        "with_nesting": ["and array", "of values"],
-        "another_key": 1.0
-    },
+    "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
     "panel_header": {
         "name": "test-pna-panel",
         "aliases": ["test-pna"],
         "description": "Test R&D panel for RNA",
         "version": "0.1.0",
-    }
+    },
 }
 
 LAYOUT_DATA = """

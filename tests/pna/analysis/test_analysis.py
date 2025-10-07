@@ -7,8 +7,8 @@ from io import StringIO
 from pathlib import Path
 
 import pandas as pd
-from pandas.testing import assert_frame_equal
 import pytest
+from pandas.testing import assert_frame_equal
 
 from pixelator.pna.analysis.analysis import ProximityAnalysis
 from pixelator.pna.analysis.proximity import calculate_differential_proximity

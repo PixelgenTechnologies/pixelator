@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from pandas.testing import assert_frame_equal
 import pytest
+from pandas.testing import assert_frame_equal
 
 from pixelator.pna.analysis_engine import AnalysisManager
 from pixelator.pna.layout import CreateLayout

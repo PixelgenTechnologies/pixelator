@@ -120,9 +120,7 @@ class PNAAntibodyPanel:
 
         pxl_data = read_pna(pxl_file)
         adata = pxl_data.adata()
-        df = adata.var \
-            .reset_index(names="marker_id") \
-            [cls._REQUIRED_COLUMNS]
+        df = adata.var.reset_index(names="marker_id")[cls._REQUIRED_COLUMNS]
         if "uniprot_id" in adata.var.columns:
             df.insert(1, "uniprot_id", adata.var.reset_index()["uniprot_id"])
         metadata = AntibodyPanelMetadata.model_validate(adata.uns["panel_header"])
@@ -264,7 +262,6 @@ class PNAAntibodyPanel:
         for col in cls._UNIQUE_COLUMNS:
             if not len(panel_df[col].unique()) == len(panel_df[col]):
                 errors.append(f"All values in column: {col} were not unique")
-
 
         if any(panel_df["marker_id"].str.contains("_")):
             # Markers should not contain underscores since this messes

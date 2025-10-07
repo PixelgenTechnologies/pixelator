@@ -11,19 +11,25 @@ from io import StringIO
 
 # pylint: disable=redefined-outer-name
 from pathlib import Path
+
 import pandas as pd
 import polars as pl
 import pytest
 from anndata import AnnData
 
-from pixelator.pna.pixeldataset import read
 from pixelator.mpx.pixeldataset.utils import update_metrics_anndata
-from pixelator.pna.pixeldataset import PNAPixelDataset
+from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter
-
-from tests.pna.data.pxl_data import EDGELIST_DATA, \
-        ADATA_X, ADATA_OBS, ADATA_VAR, PROXIMITY_DATA, UNS_DATA, \
-        LAYOUT_DATA, LAYOUT_DATA_WITH_MARKER_COUNTS
+from tests.pna.data.pxl_data import (
+    ADATA_OBS,
+    ADATA_VAR,
+    ADATA_X,
+    EDGELIST_DATA,
+    LAYOUT_DATA,
+    LAYOUT_DATA_WITH_MARKER_COUNTS,
+    PROXIMITY_DATA,
+    UNS_DATA,
+)
 
 PNA_DATA_ROOT = Path(__file__).parent / "data"
 

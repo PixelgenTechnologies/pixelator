@@ -1,8 +1,8 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
 import pandas as pd
-from pandas.testing import assert_frame_equal
 import pytest
+from pandas.testing import assert_frame_equal
 
 from pixelator.pna.config.panel import PNAAntibodyPanel
 

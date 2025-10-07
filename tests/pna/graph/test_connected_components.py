@@ -9,6 +9,7 @@ import pytest
 from polars.testing.asserts import assert_frame_equal
 from scipy.spatial import distance_matrix
 
+from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.graph.connected_components import (
     RefinementOptions,
     StagedRefinementOptions,
@@ -21,7 +22,6 @@ from pixelator.pna.graph.connected_components import (
     merge_communities_with_many_crossing_edges,
     recover_multiplets,
 )
-from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import PNAPixelDataset
 
 
@@ -510,9 +510,9 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
         "aliases": mock_panel.aliases,
         "version": mock_panel.version,
     }
-    reconstructed_panel = adata.var \
-            .reset_index(names="marker_id") \
-            [PNAAntibodyPanel._REQUIRED_COLUMNS]
+    reconstructed_panel = adata.var.reset_index(names="marker_id")[
+        PNAAntibodyPanel._REQUIRED_COLUMNS
+    ]
     reconstructed_panel.insert(1, "uniprot_id", adata.var.reset_index()["uniprot_id"])
 
     assert_frame_equal(
