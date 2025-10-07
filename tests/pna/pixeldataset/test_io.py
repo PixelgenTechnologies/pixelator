@@ -94,7 +94,7 @@ class TestPixelFileReader:
                 "name": "test-pna-panel",
                 "aliases": ["test-pna"],
                 "description": "Test R&D panel for RNA",
-                "verion": "0.1.0",
+                "version": "0.1.0",
             },
         }
 
@@ -182,7 +182,7 @@ class TestPixelDataViewer:
                 "name": "test-pna-panel",
                 "aliases": ["test-pna"],
                 "description": "Test R&D panel for RNA",
-                "verion": "0.1.0",
+                "version": "0.1.0",
             },
         }
 
