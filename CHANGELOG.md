@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   `pixelator single-cell demux` respects the `--cores` option.
 -    Fix a bug in `pixelator single-cell demux` where the total number of input reads
      report in the report.json files would be slightly smaller than the actual number of reads in the input files.
+-    Include panel data in `.pxl` file
 -    Fix an issue where very large samples (3k cells) could not be collapsed
      due to the limits of the PyArrow string array type.
 
