@@ -504,7 +504,7 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
     }
 
     adata = result.adata()
-    assert adata.uns["panel_header"] == {
+    assert adata.uns["panel_metadata"] == {
         "name": mock_panel.name,
         "description": mock_panel.description,
         "aliases": mock_panel.aliases,

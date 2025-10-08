@@ -73,7 +73,7 @@ class TestPNAPixelDataset:
         adata_data.obs["sample"] = "test_sample"
         adata_data.uns = {
             "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
-            "panel_header": {
+            "panel_metadata": {
                 "name": "test-pna-panel",
                 "aliases": ["test-pna"],
                 "description": "Test R&D panel for RNA",

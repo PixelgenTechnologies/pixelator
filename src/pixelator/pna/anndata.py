@@ -31,7 +31,7 @@ def add_panel_information(adata, panel):
 
     adata.var = adata.var.join(panel_copy, how="left")
 
-    adata.uns["panel_header"] = {
+    adata.uns["panel_metadata"] = {
         "name": panel.name,
         "aliases": panel.aliases,
         "description": panel.description,

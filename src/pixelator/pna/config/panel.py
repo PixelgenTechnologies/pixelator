@@ -124,7 +124,7 @@ class PNAAntibodyPanel:
         df = adata.var.reset_index(names="marker_id")[cls._REQUIRED_COLUMNS]
         if "uniprot_id" in adata.var.columns:
             df.insert(1, "uniprot_id", adata.var.reset_index()["uniprot_id"])
-        metadata = AntibodyPanelMetadata.model_validate(adata.uns["panel_header"])
+        metadata = AntibodyPanelMetadata.model_validate(adata.uns["panel_metadata"])
 
         logger.debug("Antibody panel from file %s created", filename)
 
