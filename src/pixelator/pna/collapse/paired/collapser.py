@@ -134,8 +134,8 @@ class MoleculeCollapser:
 
     _output_schema = pa.schema(
         [
-            pa.field("marker_1", pa.string()),
-            pa.field("marker_2", pa.string()),
+            pa.field("marker_1", pa.large_string()),
+            pa.field("marker_2", pa.large_string()),
             pa.field("umi1", pa.uint64()),
             pa.field("umi2", pa.uint64()),
             pa.field("read_count", pa.int64()),
@@ -673,10 +673,14 @@ class MoleculeCollapser:
             marker2_array[:] = marker2_name
 
             records = records.add_column(
-                0, self._output_schema.field("marker_1"), pa.array(marker1_array)
+                0,
+                self._output_schema.field("marker_1"),
+                pa.array(marker1_array, type=pa.large_string()),
             )
             records = records.add_column(
-                1, self._output_schema.field("marker_2"), pa.array(marker2_array)
+                1,
+                self._output_schema.field("marker_2"),
+                pa.array(marker2_array, type=pa.large_string()),
             )
 
             _logger.info(
