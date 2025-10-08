@@ -88,11 +88,23 @@ class TestPixelFileReader:
         reader = PixelDataQuerier(pxl_view)
 
         adata_data.obs["sample"] = "test_sample"
-        # Right now we actually drop all uns data
-        # I'm not sure if that is the best possible behavior
-        # here, but it is the default when anndata
-        # concatenates multiple datasets
-        adata_data.uns = {}
+        adata_data.uns = {
+            "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
+            "panel_metadata": {
+                "name": "test-pna-panel",
+                "aliases": ["test-pna"],
+                "description": "Test R&D panel for RNA",
+                "version": "0.1.0",
+                "panel_columns": [
+                    "marker_id",
+                    "control",
+                    "nuclear",
+                    "sequence_1",
+                    "conj_id",
+                    "sequence_2",
+                ],
+            },
+        }
 
         results = reader.read_adata()
         adata_assert_equal(results, adata_data)
@@ -172,11 +184,23 @@ class TestPixelDataViewer:
     def test_read_adata(self, pxl_view, adata_data):
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
-        # Right now we actually drop all uns data
-        # I'm not sure if that is the best possible behavior
-        # here, but it is the default when anndata
-        # concatenates multiple datasets
-        adata_data.uns = {}
+        adata_data.uns = {
+            "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
+            "panel_metadata": {
+                "name": "test-pna-panel",
+                "aliases": ["test-pna"],
+                "description": "Test R&D panel for RNA",
+                "version": "0.1.0",
+                "panel_columns": [
+                    "marker_id",
+                    "control",
+                    "nuclear",
+                    "sequence_1",
+                    "conj_id",
+                    "sequence_2",
+                ],
+            },
+        }
 
         res = pxl_view.read_adata()
         adata_assert_equal(res, adata_data)

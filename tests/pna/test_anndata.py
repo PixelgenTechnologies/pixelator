@@ -25,6 +25,7 @@ mock_antibody_panel.df = pd.DataFrame(
         "uniprot_id": ["P61769", "P05107", "P15391"],
         "control": ["no", "no", "yes"],
         "nuclear": ["yes", "no", "no"],
+        "sequence_1": ["AAAA", "CCCC", "GGGG"],
     }
 )
 
@@ -159,6 +160,7 @@ def test_pna_edgelist_to_anndata(edgelist):
                 "uniprot_id": "P61769",
                 "control": "no",
                 "nuclear": "yes",
+                "sequence_1": "AAAA",
             },
             "B": {
                 "antibody_count": 5,
@@ -167,6 +169,7 @@ def test_pna_edgelist_to_anndata(edgelist):
                 "uniprot_id": "P05107",
                 "control": "no",
                 "nuclear": "no",
+                "sequence_1": "CCCC",
             },
             "C": {
                 "antibody_count": 4,
@@ -175,6 +178,7 @@ def test_pna_edgelist_to_anndata(edgelist):
                 "uniprot_id": "P15391",
                 "control": "yes",
                 "nuclear": "no",
+                "sequence_1": "GGGG",
             },
         },
         orient="index",

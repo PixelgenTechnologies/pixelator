@@ -9,6 +9,7 @@ import pytest
 from polars.testing.asserts import assert_frame_equal
 from scipy.spatial import distance_matrix
 
+from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.graph.connected_components import (
     RefinementOptions,
     StagedRefinementOptions,
@@ -501,6 +502,32 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
         "82d07c06fbe77d34",
         "051c05ea14e7a441",
     }
+
+    adata = result.adata()
+    assert adata.uns["panel_metadata"] == {
+        "name": mock_panel.name,
+        "description": mock_panel.description,
+        "aliases": mock_panel.aliases,
+        "version": mock_panel.version,
+        "panel_columns": [
+            "marker_id",
+            "uniprot_id",
+            "control",
+            "nuclear",
+            "sequence_1",
+            "sequence_2",
+            "conj_id",
+        ],
+    }
+    reconstructed_panel = adata.var.reset_index(names="marker_id")[
+        PNAAntibodyPanel._REQUIRED_COLUMNS
+    ]
+    reconstructed_panel.insert(1, "uniprot_id", adata.var.reset_index()["uniprot_id"])
+
+    assert_frame_equal(
+        pl.from_pandas(reconstructed_panel),
+        pl.from_pandas(mock_panel.df),
+    )
 
     assert stats.molecules_input == 156
     assert stats.reads_input == 780

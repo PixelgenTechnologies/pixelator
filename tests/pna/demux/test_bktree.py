@@ -7,6 +7,7 @@ Copyright (c) Pixelgen Technologies AB
 import random
 
 import numpy as np
+import pytest
 
 from pixelator.pna.config import pna_config
 from pixelator.pna.demux.correction import BKTreeItem, build_bktree
@@ -47,6 +48,7 @@ def change_2_nucleotides(s: bytes) -> bytes:
     return res
 
 
+@pytest.mark.slow
 def test_bktree_building():
     panel = pna_config.get_panel("proxiome-immuno-155")
     tree = build_bktree(panel, sequence_key="sequence_1")

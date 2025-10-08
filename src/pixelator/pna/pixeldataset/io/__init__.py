@@ -503,6 +503,7 @@ class PixelDataViewer:
         adatas = list(underlying_data())
         concatenated = anndata_concat(adatas, join=self._adata_join_strategy)
         concatenated.var = adatas[0].var
+        concatenated.uns = adatas[0].uns
         update_metrics_anndata(concatenated, inplace=True)
         return concatenated
 
