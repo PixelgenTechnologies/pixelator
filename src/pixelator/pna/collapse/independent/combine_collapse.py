@@ -73,8 +73,9 @@ def combine_independent_parquet_files(
     umi2_files: Iterable[Path],
     output_file: Path,
     threads: int | None = None,
-    memory_limit: str | None = None,
-    temp_directory: Path | None = None,
+    memory_limit: int | None = None,
+    temp_directory: str | Path | None = None,
+    max_temp_directory_size: str | None = None,
     verbose: bool = False
 ) -> CombineCollapseIndependentStats:
     """Scan a directory for parquet files with corrected UMI1s and UMI2s and join them.
@@ -109,9 +110,15 @@ def combine_independent_parquet_files(
         umi2_files: The list of UMI2 parquet files.
         output_file: The path to the output parquet file.
         threads: The number of threads to use for DuckDB. If None, the default is used (all available cores).
-        memory_limit: The memory limit to use for DuckDB. eg: '16GB'
+        memory_limit: The memory limit to use for DuckDB in MB eg: '1024MiB' for 1GiB.
             If None, the default is used (80% of the system memory).
         temp_directory: The directory used by DuckDB for disk spilling
+        max_temp_directory_size:
+            The maximum size in bytes that DuckDB is allowed to use for temporary files.
+            If None, the default is used (90% of the system disk space).
+
+        verbose: If True, enable DuckDB stdout logging.
+
 
     Returns:
         A dictionary with additional statistics calculated on the combined parquet data.
@@ -127,19 +134,26 @@ def combine_independent_parquet_files(
          )
 
     if memory_limit is not None:
-        conn.execute(f"SET memory_limit = '{memory_limit / 10**6}MiB';")
-        logger.info("Using DuckDB memory limit to %s MiB", memory_limit / 10**6)
+        conn.execute(f"SET memory_limit = '{memory_limit / 10**6}MB';")
+        logger.info("Using DuckDB memory limit: %s MB", memory_limit / 10**6)
     if threads is not None:
         conn.execute(f"SET threads = {threads};")
-        logger.info("Using DuckDB threads limit to %s", threads)
+        logger.info("Using DuckDB threads limit: %s", threads)
     if temp_directory is not None:
+        temp_directory = str(Path(temp_directory).absolute())
         conn.execute(
             f"""
-            SET temp_directory = '{str(temp_directory.absolute())}';
+            SET temp_directory = '{temp_directory}';
             """
         )
-        logger.info("Using DuckDB temp directory: %s", temp_directory.absolute())
+        logger.info("Using DuckDB temp directory: %s", temp_directory)
 
+    if max_temp_directory_size is not None:
+        conn.execute(f"SET max_temp_directory_size = '{max_temp_directory_size}';")
+        logger.info(
+            "Using DuckDB temp directory size limit: %s",
+            max_temp_directory_size,
+        )
 
     logger.info("Combining and sorting UMI1 parquet files")
     sorted_umi1_file = _merge_sort_parquet(

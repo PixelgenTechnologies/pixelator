@@ -106,6 +106,11 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     if duckdb_stdout_logging:
         ctx.obj["DUCKDB_STDOUT_LOGGING"] = bool(duckdb_stdout_logging)
 
+    duckdb_tmp_dir_size = os.environ.get("PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE")
+    if duckdb_tmp_dir_size:
+        duckdb_tmp_dir_size = duckdb_tmp_dir_size.strip()
+        ctx.obj["DUCKDB_MAX_TEMP_DIR_SIZE"] = duckdb_tmp_dir_size
+
     return 0
 
 
