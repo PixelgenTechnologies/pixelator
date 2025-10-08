@@ -121,10 +121,10 @@ class PNAAntibodyPanel:
 
         pxl_data = read_pna(pxl_file)
         adata = pxl_data.adata()
-        df = adata.var.reset_index(names="marker_id")[cls._REQUIRED_COLUMNS]
-        if "uniprot_id" in adata.var.columns:
-            df.insert(1, "uniprot_id", adata.var.reset_index()["uniprot_id"])
-        metadata = AntibodyPanelMetadata.model_validate(adata.uns["panel_metadata"])
+        panel_metadata = adata.uns["panel_metadata"]
+        panel_columns = panel_metadata.pop("panel_columns")
+        df = adata.var.reset_index(names="marker_id")[panel_columns]
+        metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
 
         logger.debug("Antibody panel from file %s created", filename)
 

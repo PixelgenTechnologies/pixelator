@@ -25,6 +25,7 @@ def calculate_antibody_metrics(counts_df):
 def add_panel_information(adata, panel):
     """Add panel data to var."""
     panel_copy = panel.df.copy()
+    panel_columns = list(panel_copy.columns)
     panel_copy = panel_copy.set_index("marker_id")
     panel_copy.index = panel_copy.index.astype(str)
     panel_copy = panel_copy.fillna("no")
@@ -36,6 +37,7 @@ def add_panel_information(adata, panel):
         "aliases": panel.aliases,
         "description": panel.description,
         "version": panel.version,
+        "panel_columns": panel_columns,
     }
 
     return adata

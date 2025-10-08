@@ -509,6 +509,15 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
         "description": mock_panel.description,
         "aliases": mock_panel.aliases,
         "version": mock_panel.version,
+        "panel_columns": [
+            "marker_id",
+            "uniprot_id",
+            "control",
+            "nuclear",
+            "sequence_1",
+            "sequence_2",
+            "conj_id",
+        ],
     }
     reconstructed_panel = adata.var.reset_index(names="marker_id")[
         PNAAntibodyPanel._REQUIRED_COLUMNS

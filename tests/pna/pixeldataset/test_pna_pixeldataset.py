@@ -78,6 +78,14 @@ class TestPNAPixelDataset:
                 "aliases": ["test-pna"],
                 "description": "Test R&D panel for RNA",
                 "version": "0.1.0",
+                "panel_columns": [
+                    "marker_id",
+                    "control",
+                    "nuclear",
+                    "sequence_1",
+                    "conj_id",
+                    "sequence_2",
+                ],
             },
         }
 

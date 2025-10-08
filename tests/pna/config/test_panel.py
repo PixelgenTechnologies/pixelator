@@ -86,8 +86,8 @@ def test_panel_from_pxl(pxl_file):
         "control": ["no", "no", "yes"],
         "nuclear": ["yes", "no", "no"],
         "sequence_1": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
-        "sequence_2": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
         "conj_id": ["pna_rnd01", "pna_rnd02", "pna_rnd03"],
+        "sequence_2": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
     }
     expected_df = pd.DataFrame(expected_data)
     assert_frame_equal(panel.df, expected_df)
