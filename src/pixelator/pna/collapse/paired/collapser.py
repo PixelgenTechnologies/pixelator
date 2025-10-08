@@ -673,10 +673,14 @@ class MoleculeCollapser:
             marker2_array[:] = marker2_name
 
             records = records.add_column(
-                0, self._output_schema.field("marker_1"), pa.array(marker1_array, type=pa.large_string())
+                0,
+                self._output_schema.field("marker_1"),
+                pa.array(marker1_array, type=pa.large_string()),
             )
             records = records.add_column(
-                1, self._output_schema.field("marker_2"), pa.array(marker2_array, type=pa.large_string())
+                1,
+                self._output_schema.field("marker_2"),
+                pa.array(marker2_array, type=pa.large_string()),
             )
 
             _logger.info(
