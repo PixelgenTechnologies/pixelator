@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     to limit available memory.
 -   Add the `PIXELATOR_DUCKDB_TEMP_DIR` environment variable to control the location where DuckDB will spill to disk
     for memory constrained operations.
+-   Add the `PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE` environment variable to control the maximum amount of internal
+    temporary disk space that DuckDB can use for memory constrained operations. No disk space limit is applied by default.
 
 ## [0.21.4] - 2025-08-27
 
