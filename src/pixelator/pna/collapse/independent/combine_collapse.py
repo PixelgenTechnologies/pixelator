@@ -19,7 +19,7 @@ from pixelator.pna.collapse.independent import (
     SingleUMICollapseSampleReport,
 )
 from pixelator.pna.collapse.paired.combine_collapse import logger
-
+from pixelator.pna.utils import init_duckdb_conn
 
 def _merge_sort_parquet(
     conn: DuckDBPyConnection, parquet: Iterable[Path], output_file: Path
@@ -75,8 +75,6 @@ def combine_independent_parquet_files(
     threads: int | None = None,
     memory_limit: int | None = None,
     temp_directory: str | Path | None = None,
-    max_temp_directory_size: str | None = None,
-    verbose: bool = False
 ) -> CombineCollapseIndependentStats:
     """Scan a directory for parquet files with corrected UMI1s and UMI2s and join them.
 
@@ -124,36 +122,7 @@ def combine_independent_parquet_files(
         A dictionary with additional statistics calculated on the combined parquet data.
 
     """
-    conn = dd.connect(":memory:")
-
-    if verbose:
-        conn.execute(
-            f"""
-            CALL enable_logging(storage='stdout', storage_buffer_size=2048);
-            """
-         )
-
-    if memory_limit is not None:
-        conn.execute(f"SET memory_limit = '{memory_limit / 10**6}MB';")
-        logger.info("Using DuckDB memory limit: %s MB", memory_limit / 10**6)
-    if threads is not None:
-        conn.execute(f"SET threads = {threads};")
-        logger.info("Using DuckDB threads limit: %s", threads)
-    if temp_directory is not None:
-        temp_directory = str(Path(temp_directory).absolute())
-        conn.execute(
-            f"""
-            SET temp_directory = '{temp_directory}';
-            """
-        )
-        logger.info("Using DuckDB temp directory: %s", temp_directory)
-
-    if max_temp_directory_size is not None:
-        conn.execute(f"SET max_temp_directory_size = '{max_temp_directory_size}';")
-        logger.info(
-            "Using DuckDB temp directory size limit: %s",
-            max_temp_directory_size,
-        )
+    conn = init_duckdb_conn(memory_limit=memory_limit, threads=threads, temp_dir=temp_directory)
 
     logger.info("Combining and sorting UMI1 parquet files")
     sorted_umi1_file = _merge_sort_parquet(

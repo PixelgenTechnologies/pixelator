@@ -146,9 +146,7 @@ def combine_collapse(ctx, parquet, reports, output, parquet_pattern, report_patt
             umi1_files, umi2_files, combined_parquet_output,
             threads=threads,
             memory_limit=memory,
-            temp_directory=ctx.obj.get("DUCKDB_TEMP_DIR"),
-            max_temp_directory_size=ctx.obj.get("DUCKDB_MAX_TEMP_DIR_SIZE"),
-            verbose=ctx.obj.get("DUCKDB_STDOUT_LOGGING")
+            temp_directory=ctx.obj.get("DUCKDB_TEMP_DIR")
         )
 
         logger.info(f"Combining report files.")

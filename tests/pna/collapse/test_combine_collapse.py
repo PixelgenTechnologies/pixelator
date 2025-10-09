@@ -548,8 +548,6 @@ def test_combine_independent_parquet(tmp_path, m1_collapsed_data, m2_collapsed_d
         temp_directory=Path('/tmp'),
         threads=2,
         memory_limit=2**30,
-        max_temp_directory_size="2GB",
-        verbose=True
     )
 
     assert combined_parquet.exists()
