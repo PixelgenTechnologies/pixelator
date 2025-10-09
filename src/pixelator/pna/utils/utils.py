@@ -233,7 +233,7 @@ def init_duckdb_conn(
     Args:
         path: The path to the duckdb database file. Defaults to ":memory:" for in-memory database.
         read_only: Whether to open the database in read-only mode. Defaults to False.
-        memory_limit: The memory limit in bytes. If None, no limit is set. Defaults
+        memory_limit: The memory limit in bytes. If None, no limit is set. Defaults to None.
         threads: The number of threads to use. If None, duckdb will decide. Defaults to None.
         temp_dir: The directory to use for temporary files. If None, duckdb will decide (defaults to /tmp). Defaults to None.
         temp_dir_size_limit: The maximum size of the temporary directory. If None, no limit is set. Defaults to None.
