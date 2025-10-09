@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Validation on antibody panel sequence lengths and characters.
 -   If panel contains uniprot_id column, it will be added to adata.var.
+-   Add a `--memory` flag to `pixelator single-cell-pna demux` and `pixelator single-cell-pna combine-collapse`
+    to limit available memory.
+-   Add the `PIXELATOR_DUCKDB_TEMP_DIR` environment variable to control the location where DuckDB will spill to disk
+    for memory constrained operations.
 
 ## [0.21.4] - 2025-08-27
 
