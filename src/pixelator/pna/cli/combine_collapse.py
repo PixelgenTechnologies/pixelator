@@ -15,10 +15,7 @@ from pixelator.common.utils import (
     sanity_check_inputs,
     write_parameters_file,
 )
-from pixelator.pna.cli.common import (
-    logger,
-    output_option,
-)
+from pixelator.pna.cli.common import logger, memory_option, output_option
 from pixelator.pna.collapse.independent.combine_collapse import (
     combine_independent_parquet_files,
     combine_independent_report_files,
@@ -84,10 +81,13 @@ def validate_mismatches(ctx, param, value):
     type=str,
     help="The pattern to match report files.",
 )
+@memory_option
 @output_option
 @click.pass_context
 @timer(command_name="combine-collapse")
-def combine_collapse(ctx, parquet, reports, output, parquet_pattern, report_pattern):
+def combine_collapse(
+    ctx, parquet, reports, output, parquet_pattern, report_pattern, memory
+):
     """Collapse Molecular Pixelation data (FASTQ) by umi-upi to remove duplicates and perform error correction."""  # noqa
     # log input parameters
     log_step_start(
@@ -96,7 +96,9 @@ def combine_collapse(ctx, parquet, reports, output, parquet_pattern, report_patt
         report=reports,
         parquet_pattern=parquet_pattern,
         report_pattern=report_pattern,
+        memory=memory,
     )
+    threads = ctx.obj["CORES"] or None
 
     if parquet_pattern is not None:
         additional_parquet = glob.glob(parquet_pattern)
@@ -139,7 +141,12 @@ def combine_collapse(ctx, parquet, reports, output, parquet_pattern, report_patt
 
         combined_parquet_output = collapse_output / f"{sample_name}.collapse.parquet"
         stats = combine_independent_parquet_files(
-            umi1_files, umi2_files, combined_parquet_output
+            umi1_files,
+            umi2_files,
+            combined_parquet_output,
+            threads=threads,
+            memory_limit=memory,
+            temp_directory=ctx.obj.get("DUCKDB_TEMP_DIR"),
         )
 
         logger.info(f"Combining report files.")

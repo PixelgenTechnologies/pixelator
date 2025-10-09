@@ -124,6 +124,11 @@ def demux(
         strategy=strategy,
     )
 
+    # Respect the global --cores if provided
+    # TODO: Remove threads after unifying all CLI commands to use --cores
+    threads = threads if threads > 0 else ctx.obj["CORES"]
+    duckdb_tmp_dir = ctx.obj.get("DUCKDB_TEMP_DIR")
+
     # some basic sanity check on the input files
     sanity_check_inputs(
         input_files,
@@ -172,6 +177,8 @@ def demux(
         output_dir=demux_output,
         strategy=strategy,
         memory=memory,
+        threads=threads,
+        temp_dir=duckdb_tmp_dir,
     )
 
     # remove results in the temporary output directory
