@@ -1,5 +1,4 @@
 FROM pixelator-base
-
 # Add an entrypoint to the image to allow for easy use of the container on the commandline
 # This options needs to be disabled for the best compatibility with Nextflow.
 ARG USE_ENTRYPOINT=false
@@ -13,6 +12,6 @@ WORKDIR /pixelator
 COPY ./ /pixelator
 COPY .git /pixelator/.git
 
-RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi --only dev
-
-RUN pip3.12 install -r requirements.txt && rm requirements.txt
+RUN uv export --only-group dev --output-file requirements_dev.txt
+RUN uv pip install --system -r requirements_dev.txt && rm requirements_dev.txt
+RUN uv pip install --system -e . --no-deps
