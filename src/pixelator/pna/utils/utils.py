@@ -10,9 +10,9 @@ from functools import wraps
 from pathlib import Path, PurePath
 from typing import Iterable, Literal
 
+import duckdb as dd
 import pandas as pd
 import polars as pl
-import duckdb as dd
 
 from pixelator.common.utils import (
     R1_REGEX,
@@ -220,13 +220,14 @@ def normalize_input_to_list(
     return [v for v in one_or_more_values]
 
 
-def init_duckdb_conn(path: Path | str = ":memory:",
-                     read_only: bool = False,
-                     memory_limit: int | None = None,
-                     threads: int | None = None,
-                     temp_dir: Path | None = None,
-                     temp_dir_size_limit: str | None = None
-                     ) -> dd.DuckDBPyConnection:
+def init_duckdb_conn(
+    path: Path | str = ":memory:",
+    read_only: bool = False,
+    memory_limit: int | None = None,
+    threads: int | None = None,
+    temp_dir: str | Path | None = None,
+    temp_dir_size_limit: str | None = None,
+) -> dd.DuckDBPyConnection:
     """Initialize a duckdb connection with resource limits.
 
     Args:
@@ -236,20 +237,23 @@ def init_duckdb_conn(path: Path | str = ":memory:",
         threads: The number of threads to use. If None, duckdb will decide. Defaults to None.
         temp_dir: The directory to use for temporary files. If None, duckdb will decide (defaults to /tmp). Defaults to None.
         temp_dir_size_limit: The maximum size of the temporary directory. If None, no limit is set. Defaults to None.
+
     Returns:
         A duckdb connection object.
+
     """
     conn = dd.connect(database=str(path), read_only=read_only)
 
     commands = []
     if memory_limit is not None:
-        commands.append(f"SET memory_limit = '{memory_limit / 10 ** 6}MiB';")
-        logger.debug("Using DuckDB memory limit: %s MB", memory_limit / 10 ** 6)
+        commands.append(f"SET memory_limit = '{memory_limit / 10**6}MiB';")
+        logger.debug("Using DuckDB memory limit: %s MB", memory_limit / 10**6)
     if threads is not None:
         commands.append(f"SET threads = {threads};")
         logger.debug("Using DuckDB threads limit: %s", threads)
     if temp_dir is not None:
-        commands.append(f"SET temp_directory = '{str(temp_dir.absolute())}';")
+        temp_dir = str(Path(temp_dir).absolute())
+        commands.append(f"SET temp_directory = '{temp_dir}';")
         logger.debug("Using DuckDB temp directory: %s", temp_dir)
     if temp_dir_size_limit is not None:
         commands.append(f"SET max_temp_directory_size = '{temp_dir_size_limit}';")

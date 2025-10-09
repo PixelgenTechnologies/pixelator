@@ -99,13 +99,11 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     # Read in environment variables
     duckdb_temp_dir = os.environ.get("PIXELATOR_DUCKDB_TEMP_DIR")
     if duckdb_temp_dir:
-        duckdb_temp_dir = Path(duckdb_temp_dir)
-        ctx.obj["DUCKDB_TEMP_DIR"] = duckdb_temp_dir
+        ctx.obj["DUCKDB_TEMP_DIR"] = Path(duckdb_temp_dir)
 
     duckdb_tmp_dir_size = os.environ.get("PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE")
     if duckdb_tmp_dir_size:
-        duckdb_tmp_dir_size = duckdb_tmp_dir_size.strip()
-        ctx.obj["DUCKDB_MAX_TEMP_DIR_SIZE"] = duckdb_tmp_dir_size
+        ctx.obj["DUCKDB_MAX_TEMP_DIR_SIZE"] = duckdb_tmp_dir_size.strip()
 
     return 0
 

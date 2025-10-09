@@ -544,8 +544,10 @@ def marker2_parquet():
 def test_combine_independent_parquet(tmp_path, m1_collapsed_data, m2_collapsed_data):
     combined_parquet = tmp_path / "combined.parquet"
     stats = combine_independent_parquet_files(
-        m1_collapsed_data, m2_collapsed_data, combined_parquet,
-        temp_directory=Path('/tmp'),
+        m1_collapsed_data,
+        m2_collapsed_data,
+        combined_parquet,
+        temp_directory=Path("/tmp"),
         threads=2,
         memory_limit=2**30,
     )

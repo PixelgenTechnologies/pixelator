@@ -21,6 +21,7 @@ from pixelator.pna.collapse.independent import (
 from pixelator.pna.collapse.paired.combine_collapse import logger
 from pixelator.pna.utils import init_duckdb_conn
 
+
 def _merge_sort_parquet(
     conn: DuckDBPyConnection, parquet: Iterable[Path], output_file: Path
 ) -> Path:
@@ -122,7 +123,9 @@ def combine_independent_parquet_files(
         A dictionary with additional statistics calculated on the combined parquet data.
 
     """
-    conn = init_duckdb_conn(memory_limit=memory_limit, threads=threads, temp_dir=temp_directory)
+    conn = init_duckdb_conn(
+        memory_limit=memory_limit, threads=threads, temp_dir=temp_directory
+    )
 
     logger.info("Combining and sorting UMI1 parquet files")
     sorted_umi1_file = _merge_sort_parquet(

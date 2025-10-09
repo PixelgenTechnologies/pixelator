@@ -268,7 +268,7 @@ def finalize_batched_groups(
             remove_intermediates=remove_intermediates,
             memory=memory,
             threads=threads,
-            temp_dir=temp_dir
+            temp_dir=temp_dir,
         )
     elif strategy == "paired":
         return _finalize_batched_groups_paired(
@@ -277,7 +277,7 @@ def finalize_batched_groups(
             remove_intermediates=remove_intermediates,
             memory=memory,
             threads=threads,
-            temp_dir=temp_dir
+            temp_dir=temp_dir,
         )
     else:
         raise ValueError("Unknown strategy")
@@ -289,7 +289,7 @@ def _finalize_batched_groups_paired(
     remove_intermediates: bool = True,
     memory: int | None = None,
     threads: int | None = None,
-    temp_dir: Path | None = None,
+    temp_dir: str | Path | None = None,
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
@@ -350,7 +350,7 @@ def _finalize_batched_groups_independent(
     remove_intermediates: bool = True,
     memory: int | None = None,
     threads: int | None = None,
-    temp_dir: Path | None = None,
+    temp_dir: str | Path | None = None,
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
