@@ -224,7 +224,9 @@ def init_duckdb_conn(path: Path | str = ":memory:",
                      read_only: bool = False,
                      memory_limit: int | None = None,
                      threads: int | None = None,
-                     temp_dir: Path | None = None) -> dd.DuckDBPyConnection:
+                     temp_dir: Path | None = None,
+                     temp_dir_size_limit: str | None = None
+                     ) -> dd.DuckDBPyConnection:
     """Initialize a duckdb connection with resource limits.
 
     Args:
@@ -233,7 +235,7 @@ def init_duckdb_conn(path: Path | str = ":memory:",
         memory_limit: The memory limit in bytes. If None, no limit is set. Defaults
         threads: The number of threads to use. If None, duckdb will decide. Defaults to None.
         temp_dir: The directory to use for temporary files. If None, duckdb will decide (defaults to /tmp). Defaults to None.
-
+        temp_dir_size_limit: The maximum size of the temporary directory. If None, no limit is set. Defaults to None.
     Returns:
         A duckdb connection object.
     """
@@ -242,11 +244,19 @@ def init_duckdb_conn(path: Path | str = ":memory:",
     commands = []
     if memory_limit is not None:
         commands.append(f"SET memory_limit = '{memory_limit / 10 ** 6}MiB';")
+        logger.debug("Using DuckDB memory limit: %s MB", memory_limit / 10 ** 6)
     if threads is not None:
         commands.append(f"SET threads = {threads};")
+        logger.debug("Using DuckDB threads limit: %s", threads)
     if temp_dir is not None:
         commands.append(f"SET temp_directory = '{str(temp_dir.absolute())}';")
+        logger.debug("Using DuckDB temp directory: %s", temp_dir)
+    if temp_dir_size_limit is not None:
+        commands.append(f"SET max_temp_directory_size = '{temp_dir_size_limit}';")
+        logger.debug("Using DuckDB temp directory size limit: %s", temp_dir_size_limit)
+
     if commands:
         conn.execute("\n".join(commands))
 
+    conn = dd.connect(":memory:")
     return conn
