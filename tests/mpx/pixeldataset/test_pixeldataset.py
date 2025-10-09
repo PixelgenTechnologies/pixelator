@@ -101,7 +101,10 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     dataset.save(str(file_target))
     dataset_new = PixelDataset.from_file(str(file_target))
 
-    assert_frame_equal(edgelist, dataset_new.edgelist)
+    assert_frame_equal(
+        edgelist,
+        dataset_new.edgelist,
+    )
     assert_frame_equal(
         edgelist,
         # Note that we need to enforce the types manually here for this to work,
@@ -111,10 +114,7 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
         _enforce_edgelist_types(dataset_new.edgelist_lazy.collect().to_pandas()),
     )
 
-    assert_frame_equal(
-        adata.to_df(),
-        dataset_new.adata.to_df(),
-    )
+    assert_frame_equal(adata.to_df(), dataset_new.adata.to_df())
 
     assert metadata == dataset_new.metadata
 

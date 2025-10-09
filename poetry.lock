@@ -2605,19 +2605,19 @@ testing = ["coverage", "pytest", "pytest-benchmark"]
 
 [[package]]
 name = "polars"
-version = "1.26.0"
+version = "1.31.0"
 description = "Blazingly fast DataFrame library"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "polars-1.26.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:2afefcd356608981b2e15d46df9ddaa6e77f36095ebeb73c3261e198bd51c925"},
-    {file = "polars-1.26.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:587eb3c5000423eb20be998f523e605ddba0d3c598ba4a7e2a4d0b92b1fd2a7e"},
-    {file = "polars-1.26.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:66c30f4b7e060c2e7f3a45d6ac94ab3b179831a2f1e629401bf7912d54311529"},
-    {file = "polars-1.26.0-cp39-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:110d6987d37ae954a5ef16d739fb717df9d39b144790d12d98fb3e72ed35621c"},
-    {file = "polars-1.26.0-cp39-abi3-win_amd64.whl", hash = "sha256:189a58aaf393003515fa6d83e2dea815a2b448265f2007a926274ed12672583c"},
-    {file = "polars-1.26.0-cp39-abi3-win_arm64.whl", hash = "sha256:58db2dce39cad5f8fc8e8c5c923a250eb21eff4146b03514d570d1c205a4874c"},
-    {file = "polars-1.26.0.tar.gz", hash = "sha256:b5492d38e5ec2ae6a8853833c5a31549194a361b901134fc5f2f57b49bd563ea"},
+    {file = "polars-1.31.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:ccc68cd6877deecd46b13cbd2663ca89ab2a2cb1fe49d5cfc66a9cef166566d9"},
+    {file = "polars-1.31.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:a94c5550df397ad3c2d6adc212e59fd93d9b044ec974dd3653e121e6487a7d21"},
+    {file = "polars-1.31.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ada7940ed92bea65d5500ae7ac1f599798149df8faa5a6db150327c9ddbee4f1"},
+    {file = "polars-1.31.0-cp39-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:b324e6e3e8c6cc6593f9d72fe625f06af65e8d9d47c8686583585533a5e731e1"},
+    {file = "polars-1.31.0-cp39-abi3-win_amd64.whl", hash = "sha256:3fd874d3432fc932863e8cceff2cff8a12a51976b053f2eb6326a0672134a632"},
+    {file = "polars-1.31.0-cp39-abi3-win_arm64.whl", hash = "sha256:62ef23bb9d10dca4c2b945979f9a50812ac4ace4ed9e158a6b5d32a7322e6f75"},
+    {file = "polars-1.31.0.tar.gz", hash = "sha256:59a88054a5fc0135386268ceefdbb6a6cc012d21b5b44fed4f1d3faabbdcbf32"},
 ]
 
 [package.extras]
@@ -2628,7 +2628,7 @@ calamine = ["fastexcel (>=0.9)"]
 cloudpickle = ["cloudpickle"]
 connectorx = ["connectorx (>=0.3.2)"]
 database = ["polars[adbc,connectorx,sqlalchemy]"]
-deltalake = ["deltalake (>=0.19.0)"]
+deltalake = ["deltalake (>=1.0.0)"]
 excel = ["polars[calamine,openpyxl,xlsx2csv,xlsxwriter]"]
 fsspec = ["fsspec"]
 gpu = ["cudf-polars-cu12"]
@@ -3737,11 +3737,6 @@ files = [
     {file = "scikit_learn-1.5.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f60021ec1574e56632be2a36b946f8143bf4e5e6af4a06d85281adc22938e0dd"},
     {file = "scikit_learn-1.5.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:394397841449853c2290a32050382edaec3da89e35b3e03d6cc966aebc6a8ae6"},
     {file = "scikit_learn-1.5.2-cp312-cp312-win_amd64.whl", hash = "sha256:57cc1786cfd6bd118220a92ede80270132aa353647684efa385a74244a41e3b1"},
-    {file = "scikit_learn-1.5.2-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:e9a702e2de732bbb20d3bad29ebd77fc05a6b427dc49964300340e4c9328b3f5"},
-    {file = "scikit_learn-1.5.2-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:b0768ad641981f5d3a198430a1d31c3e044ed2e8a6f22166b4d546a5116d7908"},
-    {file = "scikit_learn-1.5.2-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:178ddd0a5cb0044464fc1bfc4cca5b1833bfc7bb022d70b05db8530da4bb3dd3"},
-    {file = "scikit_learn-1.5.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f7284ade780084d94505632241bf78c44ab3b6f1e8ccab3d2af58e0e950f9c12"},
-    {file = "scikit_learn-1.5.2-cp313-cp313-win_amd64.whl", hash = "sha256:b7b0f9a0b1040830d38c39b91b3a44e1b643f4b36e36567b80b7c6bd2202a27f"},
     {file = "scikit_learn-1.5.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:757c7d514ddb00ae249832fe87100d9c73c6ea91423802872d9e74970a0e40b9"},
     {file = "scikit_learn-1.5.2-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:52788f48b5d8bca5c0736c175fa6bdaab2ef00a8f536cda698db61bd89c551c1"},
     {file = "scikit_learn-1.5.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:643964678f4b5fbdc95cbf8aec638acc7aa70f5f79ee2cdad1eec3df4ba6ead8"},
@@ -4932,4 +4927,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "ecbd107b08f1e482d152d7b28891b992533e12f754dad096ad638cb50a44213b"
+content-hash = "0da45781322026f929f8df5689806d8ef7d6f95637b22f98db9cfb4af4ce0175"
