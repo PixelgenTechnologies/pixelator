@@ -7,8 +7,11 @@ Copyright © 2025 Pixelgen Technologies AB
 
 import logging
 import random
+import tempfile
 from itertools import chain
+from pathlib import Path
 
+import duckdb
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -229,6 +232,37 @@ def denoise_one_core_layer(
     return nodes_to_remove
 
 
+def write_denoised_edgelist(
+    pxl: PNAPixelDataset, umis_to_remove: list, output_edgelits_path: str
+):
+    """Write a denoised edgelist to a new pixel file by removing specified UMIs.
+
+    This function takes an existing PNAPixelDataset, removes edges associated
+    with the specified UMIs, and writes the resulting edgelist to a new pixel
+    file. It also updates the AnnData object in the new pixel file to reflect
+    the changes.
+
+    Args:
+        pxl (PNAPixelDataset): The original pixel dataset containing the edgelist.
+        umis_to_remove (list): A list of UMIs (nodes) to be removed from the edgelist.
+        output_edgelits_path (str): The file path where the new pixel file will be saved.
+
+    """
+    con = pxl.view.__enter__()
+
+    con.execute(
+        f"""
+        COPY(
+            SELECT *
+            FROM edgelist
+            WHERE umi1 NOT IN (SELECT value FROM (SELECT UNNEST(?) AS value))
+            AND umi2 NOT IN (SELECT value FROM (SELECT UNNEST(?) AS value))
+        ) TO '{output_edgelits_path}' (FORMAT PARQUET)
+    """,
+        [umis_to_remove, umis_to_remove],
+    )
+
+
 class DenoiseOneCore(PerComponentTask):
     """Denoise bleed-over markers in parts of the component with low coreness."""
 
@@ -304,36 +338,29 @@ class DenoiseOneCore(PerComponentTask):
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         panel_name = pxl.metadata().popitem()[1]["panel_name"]
         panel = load_antibody_panel(pna_config, panel_name)
-        nodes_to_remove = pl.Series(
-            data.loc[~data["umi"].isna(), "umi"], dtype=pl.UInt64
+        nodes_to_remove = (
+            data.loc[~data["umi"].isna(), "umi"].astype(np.uint64).tolist()
         )
-
-        edgelist = (
-            pxl.edgelist()
-            .to_polars()
-            .drop("sample", strict=False)
-            .filter(
-                pl.min_horizontal(
-                    ~pl.col("umi1").is_in(nodes_to_remove),
-                    ~pl.col("umi2").is_in(nodes_to_remove),
-                )
-            )
-        )
-
-        adata = pna_edgelist_to_anndata(edgelist.lazy(), panel)
-        call_aggregates(adata)
-        denoise_info = pd.DataFrame(index=adata.obs.index)
-        denoise_info["disqualified_for_denoising"] = False
-        denoise_info.loc[
-            data.loc[data["umi"].isna(), "component"], "disqualified_for_denoising"
-        ] = True
-        n_umis_removed = data.loc[~data["umi"].isna(), :].groupby("component").size()
-        denoise_info["number_of_nodes_removed_in_denoise"] = n_umis_removed
-        denoise_info["number_of_nodes_removed_in_denoise"] = denoise_info[
-            "number_of_nodes_removed_in_denoise"
-        ].fillna(0)
-        adata.obs = adata.obs.join(denoise_info, how="left")
 
         with PixelFileWriter(pxl_file_target.path) as writer:
-            writer.write_edgelist(edgelist)
+            with tempfile.TemporaryDirectory() as temp_dir:
+                denoised_edgelist_path = temp_dir + "/denoised_edgelist.parquet"
+                write_denoised_edgelist(pxl, nodes_to_remove, denoised_edgelist_path)
+                writer.write_edgelist(Path(denoised_edgelist_path))
+            adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
+            call_aggregates(adata)
+            denoise_info = pd.DataFrame(index=adata.obs.index)
+            denoise_info["disqualified_for_denoising"] = False
+            denoise_info.loc[
+                data.loc[data["umi"].isna(), "component"], "disqualified_for_denoising"
+            ] = True
+            n_umis_removed = (
+                data.loc[~data["umi"].isna(), :].groupby("component").size()
+            )
+            denoise_info["number_of_nodes_removed_in_denoise"] = n_umis_removed
+            denoise_info["number_of_nodes_removed_in_denoise"] = denoise_info[
+                "number_of_nodes_removed_in_denoise"
+            ].fillna(0)
+            adata.obs = adata.obs.join(denoise_info, how="left")
+
             writer.write_adata(adata)

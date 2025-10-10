@@ -1,5 +1,6 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import tempfile
 from unittest.mock import create_autospec
 
 import numpy as np
@@ -10,6 +11,7 @@ from pandas.testing import assert_frame_equal
 
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanel, load_antibody_panel
+from pixelator.pna.pixeldataset.io import PixelFileWriter
 
 mock_antibody_panel = create_autospec(PNAAntibodyPanel)
 mock_antibody_panel.markers = ["A", "B", "C"]
@@ -134,8 +136,27 @@ def create_edgelist():
     return pl.LazyFrame(df)
 
 
-def test_pna_edgelist_to_anndata(edgelist):
-    adata = pna_edgelist_to_anndata(edgelist, mock_antibody_panel)
+@pytest.fixture(name="pixelconnection")
+def create_pixel_dataset_connection(edgelist):
+    from pixelator import __version__
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with PixelFileWriter(temp_dir + "/tmp.pxl") as writer:
+            writer.write_metadata(
+                {
+                    "sample_name": "temp",
+                    "version": __version__,
+                    "technology": "single-cell-pna",
+                    "panel_name": "mock.name",
+                    "panel_version": "mock.version",
+                }
+            )
+            writer.write_edgelist(edgelist.collect())
+            yield writer.get_connection()
+
+
+def test_pna_edgelist_to_anndata(pixelconnection):
+    adata = pna_edgelist_to_anndata(pixelconnection, mock_antibody_panel)
 
     assert adata.shape == (3, 3)
 
@@ -237,9 +258,10 @@ def test_pna_edgelist_to_anndata(edgelist):
     )
 
 
-def test_pna_edgelist_to_anndata_save_adata(edgelist, tmp_path):
+def test_pna_edgelist_to_anndata_save_adata(pixelconnection, tmp_path):
     from pixelator.pna.config import pna_config
 
     panel = load_antibody_panel(pna_config, "proxiome-immuno-155")
-    adata = pna_edgelist_to_anndata(edgelist, panel=panel)
+    adata = pna_edgelist_to_anndata(pixelconnection, panel)
+
     adata.write_h5ad(tmp_path / "test.h5ad")
