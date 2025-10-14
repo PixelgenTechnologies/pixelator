@@ -261,6 +261,7 @@ def write_denoised_edgelist(
     """,
         [umis_to_remove, umis_to_remove],
     )
+    pxl.view.__exit__(None, None, None)
 
 
 class DenoiseOneCore(PerComponentTask):
@@ -342,25 +343,26 @@ class DenoiseOneCore(PerComponentTask):
             data.loc[~data["umi"].isna(), "umi"].astype(np.uint64).tolist()
         )
 
-        with PixelFileWriter(pxl_file_target.path) as writer:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                denoised_edgelist_path = temp_dir + "/denoised_edgelist.parquet"
-                write_denoised_edgelist(pxl, nodes_to_remove, denoised_edgelist_path)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            denoised_edgelist_path = temp_dir + "/denoised_edgelist.parquet"
+            write_denoised_edgelist(pxl, nodes_to_remove, denoised_edgelist_path)
+            with PixelFileWriter(pxl_file_target.path) as writer:
                 writer.write_edgelist(Path(denoised_edgelist_path))
-            adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
-            call_aggregates(adata)
-            denoise_info = pd.DataFrame(index=adata.obs.index)
-            denoise_info["disqualified_for_denoising"] = False
-            denoise_info.loc[
-                data.loc[data["umi"].isna(), "component"], "disqualified_for_denoising"
-            ] = True
-            n_umis_removed = (
-                data.loc[~data["umi"].isna(), :].groupby("component").size()
-            )
-            denoise_info["number_of_nodes_removed_in_denoise"] = n_umis_removed
-            denoise_info["number_of_nodes_removed_in_denoise"] = denoise_info[
-                "number_of_nodes_removed_in_denoise"
-            ].fillna(0)
-            adata.obs = adata.obs.join(denoise_info, how="left")
+                adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
+                call_aggregates(adata)
+                denoise_info = pd.DataFrame(index=adata.obs.index)
+                denoise_info["disqualified_for_denoising"] = False
+                denoise_info.loc[
+                    data.loc[data["umi"].isna(), "component"],
+                    "disqualified_for_denoising",
+                ] = True
+                n_umis_removed = (
+                    data.loc[~data["umi"].isna(), :].groupby("component").size()
+                )
+                denoise_info["number_of_nodes_removed_in_denoise"] = n_umis_removed
+                denoise_info["number_of_nodes_removed_in_denoise"] = denoise_info[
+                    "number_of_nodes_removed_in_denoise"
+                ].fillna(0)
+                adata.obs = adata.obs.join(denoise_info, how="left")
 
-            writer.write_adata(adata)
+                writer.write_adata(adata)
