@@ -29,7 +29,10 @@ def test_demux_invalid_chunk_size(tmp_path, testdata_amplicon_fastq):
 
 
 @pytest.mark.slow
-def test_demux_valid(tmp_path, testdata_amplicon_fastq):
+@pytest.mark.parametrize(
+    "panel_file", ["proxiome-immuno-155", "proxiome-immuno-155-v2"]
+)
+def test_demux_valid(tmp_path, testdata_amplicon_fastq, panel_file):
     runner = CliRunner()
 
     args = [
@@ -41,7 +44,7 @@ def test_demux_valid(tmp_path, testdata_amplicon_fastq):
         "--design",
         "pna-2",
         "--panel",
-        "proxiome-immuno-155",
+        panel_file,
     ]
     cmd = runner.invoke(cli.main_cli, args)
 
