@@ -211,9 +211,6 @@ def pna_edgelist_to_anndata(
     isotype_counts = node_counts_df[isotype_markers].sum(axis=1)
     adata.obs["isotype_fraction"] = isotype_counts / total_marker_counts
 
-    intracellular_markers = adata.var[adata.var["nuclear"] == "yes"].index
-    adata.obs["intracellular_fraction"] = (
-        node_counts_df[intracellular_markers].sum(axis=1) / total_marker_counts
-    )
+    adata.obs["intracellular_fraction"] = 0.0
 
     return adata

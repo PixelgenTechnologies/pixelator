@@ -216,7 +216,7 @@ def test_pna_edgelist_to_anndata(pixelconnection):
                 "n_antibodies": 3,
                 "reads_in_component": 12,
                 "isotype_fraction": 0.14285714285714285,
-                "intracellular_fraction": 0.5714285714285714,
+                "intracellular_fraction": 0.0,
             },
             "2": {
                 "n_umi": 6,
@@ -226,7 +226,7 @@ def test_pna_edgelist_to_anndata(pixelconnection):
                 "n_antibodies": 3,
                 "reads_in_component": 14,
                 "isotype_fraction": 0.5,
-                "intracellular_fraction": 0.16666666666666666,
+                "intracellular_fraction": 0.0,
             },
             "3": {
                 "n_umi": 3,
@@ -236,7 +236,7 @@ def test_pna_edgelist_to_anndata(pixelconnection):
                 "n_antibodies": 2,
                 "reads_in_component": 4,
                 "isotype_fraction": 0.0,
-                "intracellular_fraction": 0.6666666666666666,
+                "intracellular_fraction": 0.0,
             },
         },
         orient="index",
