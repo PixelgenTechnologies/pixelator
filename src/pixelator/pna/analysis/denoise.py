@@ -233,7 +233,7 @@ def denoise_one_core_layer(
 
 
 def write_denoised_edgelist(
-    pxl: PNAPixelDataset, umis_to_remove: list, output_edgelits_path: str
+    pxl: PNAPixelDataset, umis_to_remove: list, output_edgelist_path: str
 ):
     """Write a denoised edgelist to a new pixel file by removing specified UMIs.
 
@@ -245,23 +245,21 @@ def write_denoised_edgelist(
     Args:
         pxl (PNAPixelDataset): The original pixel dataset containing the edgelist.
         umis_to_remove (list): A list of UMIs (nodes) to be removed from the edgelist.
-        output_edgelits_path (str): The file path where the new pixel file will be saved.
+        output_edgelist_path (str): The file path where the new pixel file will be saved.
 
     """
-    con = pxl.view.__enter__()
-
-    con.execute(
-        f"""
-        COPY(
-            SELECT *
-            FROM edgelist
-            WHERE umi1 NOT IN (SELECT value FROM (SELECT UNNEST(?) AS value))
-            AND umi2 NOT IN (SELECT value FROM (SELECT UNNEST(?) AS value))
-        ) TO '{output_edgelits_path}' (FORMAT PARQUET)
-    """,
-        [umis_to_remove, umis_to_remove],
-    )
-    pxl.view.__exit__(None, None, None)
+    with pxl.view as con:
+        con.execute(
+            f"""
+            COPY(
+                SELECT *
+                FROM edgelist
+                WHERE umi1 NOT IN (SELECT value FROM (SELECT UNNEST(?) AS value))
+                AND umi2 NOT IN (SELECT value FROM (SELECT UNNEST(?) AS value))
+            ) TO '{output_edgelist_path}' (FORMAT PARQUET)
+            """,
+            [umis_to_remove, umis_to_remove],
+        )
 
 
 class DenoiseOneCore(PerComponentTask):

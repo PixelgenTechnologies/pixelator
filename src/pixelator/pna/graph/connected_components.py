@@ -261,7 +261,7 @@ def _update_components_column(
     )
 
 
-def make_edgelits_with_component_column(
+def make_edgelist_with_component_column(
     edgelist: pl.LazyFrame, umi_component_map: dict
 ) -> pl.LazyFrame:
     """Add a component column to an edgelist using a node map and remove crossing edges.
@@ -800,7 +800,7 @@ def find_components(
         )
         component_stats.max_recursion_depth = recover_stats.max_recursion_depth
 
-    edgelist_with_components = make_edgelits_with_component_column(
+    edgelist_with_components = make_edgelist_with_component_column(
         working_edgelist, umi_component_map
     )
     if multiplet_recovery:
