@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     for memory constrained operations.
 -   Add the `PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE` environment variable to control the maximum amount of internal
     temporary disk space that DuckDB can use for memory constrained operations. No disk space limit is applied by default.
+-   Add new panel file with preferred marker ids, and without `nuclear` column
 
 ## [0.21.4] - 2025-08-27
 
