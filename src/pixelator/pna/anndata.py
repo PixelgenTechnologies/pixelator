@@ -48,8 +48,26 @@ def add_panel_information(adata, panel):
 def pna_edgelist_to_anndata(
     pixel_connection: duckdb.DuckDBPyConnection, panel: PNAAntibodyPanel
 ) -> AnnData:
-    """Build an AnnData object from a PNA edgelist and a panel object."""
+    """
+    Build an AnnData object from a DuckDB connection to a pixel file and a panel object.
 
+    Parameters
+    ----------
+    pixel_connection : duckdb.DuckDBPyConnection
+        A DuckDB connection to a pixel file. The connection must contain an 'edgelist' table
+        with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
+    panel : PNAAntibodyPanel
+        The antibody panel object containing marker metadata.
+
+    Returns
+    -------
+    AnnData
+        An AnnData object with counts and panel information.
+
+    Notes
+    -----
+    Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
+    """
     def calculate_count_info(pixel_connection: duckdb.DuckDBPyConnection):
         with tempfile.TemporaryDirectory() as temp_dir:
             pixel_connection.execute(f"""

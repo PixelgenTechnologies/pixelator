@@ -546,6 +546,7 @@ def build_pxl_file_with_components(
             refinement_options=refinement_options,
             component_size_threshold=component_size_threshold,
         )
+        logger.debug("Sorting edgelist by component")
         edgelist_with_components_sorted = edgelist_with_components.sort("component")
         tmp_edgelist_file_sorted = (
             tmp_dir_path / f"{sample_name}.edgelist.sorted.parquet"
@@ -553,7 +554,6 @@ def build_pxl_file_with_components(
         edgelist_with_components_sorted.sink_parquet(tmp_edgelist_file_sorted)
         with PixelFileWriter(path_output_pxl_file) as pxl_file_writer:
             pxl_file_writer.write_edgelist(tmp_edgelist_file_sorted)
-            logger.debug("Sorting edgelist by component")
             logger.debug("Counting molecules")
 
             sums = (

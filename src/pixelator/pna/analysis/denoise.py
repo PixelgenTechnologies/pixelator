@@ -235,17 +235,17 @@ def denoise_one_core_layer(
 def write_denoised_edgelist(
     pxl: PNAPixelDataset, umis_to_remove: list, output_edgelist_path: str
 ):
-    """Write a denoised edgelist to a new pixel file by removing specified UMIs.
+    """Write a filtered edgelist (with specified UMIs removed) to a Parquet file.
 
     This function takes an existing PNAPixelDataset, removes edges associated
-    with the specified UMIs, and writes the resulting edgelist to a new pixel
-    file. It also updates the AnnData object in the new pixel file to reflect
-    the changes.
+    with the specified UMIs, and writes the resulting edgelist to a Parquet file
+    at the specified path. It does not create a new pixel (.pxl) file or update
+    any AnnData object.
 
     Args:
         pxl (PNAPixelDataset): The original pixel dataset containing the edgelist.
         umis_to_remove (list): A list of UMIs (nodes) to be removed from the edgelist.
-        output_edgelist_path (str): The file path where the new pixel file will be saved.
+        output_edgelist_path (str): The file path where the filtered edgelist Parquet file will be saved.
 
     """
     with pxl.view as con:
