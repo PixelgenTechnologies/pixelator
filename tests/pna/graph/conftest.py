@@ -35,10 +35,10 @@ def mock_panel_fixture(request):
     )
 
     if version.startswith("2"):
-        mock_antibody_panel.df.drop(columns=["nuclear"])
+        mock_antibody_panel.df.drop(columns=["nuclear"], inplace=True)
 
     mock_antibody_panel.name = "mock-panel"
-    mock_antibody_panel.version = "0.0.0"
+    mock_antibody_panel.version = version
     mock_antibody_panel.description = "Dummy panel data"
     mock_antibody_panel.aliases = ["mock_alias"]
     return mock_antibody_panel
