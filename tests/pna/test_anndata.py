@@ -248,7 +248,7 @@ def test_pna_edgelist_to_anndata(pixelconnection):
             "n_umi1": np.uint64,
             "n_umi2": np.uint64,
             "n_edges": np.uint64,
-            "n_antibodies": np.uint64,
+            "n_antibodies": np.uint32,
             "reads_in_component": np.uint64,
         }
     )

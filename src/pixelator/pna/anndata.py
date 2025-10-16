@@ -1,9 +1,9 @@
 """Copyright © 2024 Pixelgen Technologies AB."""
 
 import logging
-import tempfile
 
 import duckdb
+import numpy as np
 import pandas as pd
 import polars as pl
 from anndata import AnnData
@@ -68,90 +68,115 @@ def pna_edgelist_to_anndata(
     Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
 
     """
+    logger.debug("Constructing counts matrix.")
 
-    def calculate_count_info(pixel_connection: duckdb.DuckDBPyConnection):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            pixel_connection.execute(f"""
-                COPY (
+    marker_names = [f"'{m}'" for m in panel.markers]
+    marker_names_sql = ", ".join(marker_names)
+    node_counts_df = (
+        pixel_connection.execute(f"""
+        SELECT *
+        FROM (
+            WITH counts_df_long AS (
+                WITH
+                    marker_1_counts AS (
+                        SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS marker_1_count
+                        FROM edgelist
+                        GROUP BY component, marker_1),
+                    marker_2_counts AS (
+                        SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS marker_2_count
+                        FROM edgelist
+                        GROUP BY component, marker_2
+                    )
+                SELECT
+                    COALESCE(a.component, b.component) AS component,
+                    COALESCE(a.marker, b.marker) AS marker,
+                    COALESCE(a.marker_1_count, 0) AS marker_1_count,
+                    COALESCE(b.marker_2_count, 0) AS marker_2_count,
+                    COALESCE(a.marker_1_count, 0) + COALESCE(b.marker_2_count, 0) AS count
+                FROM marker_1_counts a
+                FULL OUTER JOIN marker_2_counts b
+                    ON a.component = b.component AND a.marker = b.marker
+            )
+            PIVOT counts_df_long
+            ON marker IN ({marker_names_sql})
+            USING SUM(count)
+            GROUP BY component
+        )
+    """)
+        .df()
+        .fillna(0)
+    )
+
+    node_counts_df.set_index("component", inplace=True)
+    node_counts_df = node_counts_df.reindex(columns=panel.markers, fill_value=0)
+    node_counts_df = node_counts_df.astype("uint32")
+
+    # compute components metrics (obs) and re-index
+    logger.debug("Computing component metrics.")
+
+    components_metrics_df = pixel_connection.execute(f"""
+            WITH
+                component_marker_counts AS (
+                    SELECT
+                        COALESCE(a.component, b.component) AS component,
+                        COALESCE(a.marker_1_count, 0) AS marker_1_count,
+                        COALESCE(b.marker_2_count, 0) AS marker_2_count
+                    FROM marker_1_counts a
+                    FULL OUTER JOIN marker_2_counts b
+                        ON a.component = b.component AND a.marker = b.marker
+                    ),
+                component_umi AS (
+                    SELECT
+                        component,
+                        SUM(marker_1_count) AS n_umi1,
+                        SUM(marker_2_count) AS n_umi2
+                    FROM component_marker_counts
+                    GROUP BY component
+                ),
+                marker_1_counts AS (
                     SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS marker_1_count
                     FROM edgelist
-                    GROUP BY component, marker_1
-                ) TO '{temp_dir + "/marker_1_counts.parquet"}' (FORMAT PARQUET)
-            """)
-            pixel_connection.execute(f"""
-                COPY (
+                    GROUP BY component, marker_1),
+                marker_2_counts AS (
                     SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS marker_2_count
                     FROM edgelist
                     GROUP BY component, marker_2
-                ) TO '{temp_dir + "/marker_2_counts.parquet"}' (FORMAT PARQUET)
-            """)
-            pixel_connection.execute(f"""
-                COPY (
+                ),
+                edge_counts AS (
                     SELECT component, COUNT(*) AS n_edges, SUM(read_count) AS reads_in_component
                     FROM edgelist
                     GROUP BY component
-                ) TO '{temp_dir + "/edge_counts.parquet"}' (FORMAT PARQUET)
-            """)
-            m1_counts_df = pl.read_parquet(temp_dir + "/marker_1_counts.parquet")
-            m2_counts_df = pl.read_parquet(temp_dir + "/marker_2_counts.parquet")
-            edge_counts_df = pl.read_parquet(temp_dir + "/edge_counts.parquet")
+                )
+            SELECT
+                u.component,
+                n_umi1,
+                n_umi2,
+                e.n_edges,
+                e.reads_in_component,
+                (n_umi1 + n_umi2) AS n_umi
+            FROM component_umi u
+            LEFT JOIN edge_counts e ON u.component = e.component
+            ORDER BY u.component
+    """).df()
 
-        return m1_counts_df, m2_counts_df, edge_counts_df
+    n_antibodies = pd.Series(
+        (node_counts_df != 0).sum(axis=1),
+        index=node_counts_df.index,
+        name="n_antibodies",
+        dtype=np.uint32,
+    )
+    components_metrics_df.set_index("component", inplace=True)
+    components_metrics_df = components_metrics_df.join(n_antibodies)
 
-    def mix_counts(m1_counts_df, m2_counts_df):
-        counts_df = (
-            m1_counts_df.join(
-                m2_counts_df, on=["component", "marker"], how="full", coalesce=True
-            )
-            .fill_null(0)
-            .with_columns(
-                (pl.col("marker_1_count") + pl.col("marker_2_count")).alias("count")
-            )
-            .pivot(values="count", index="component", on="marker")
-            .fill_null(0)
-            .to_pandas()
-            .set_index("component")
-            .astype("uint32")
-        )
-        return counts_df
-
-    def component_metrics(
-        m1_counts_df: pl.DataFrame,
-        m2_counts_df: pl.DataFrame,
-        edge_counts_df: pl.DataFrame,
-    ) -> pd.DataFrame:
-        a_markers = m1_counts_df.group_by("component").agg(
-            pl.col("marker_1_count").sum().alias("n_umi1")
-        )
-        b_markers = m2_counts_df.group_by("component").agg(
-            pl.col("marker_2_count").sum().alias("n_umi2")
-        )
-        info_agg = (
-            a_markers.join(b_markers, on="component")
-            .join(edge_counts_df, on="component")
-            .to_pandas()
-            .set_index("component")
-            .astype("uint64")
-        )
-        node_counts_df = mix_counts(m1_counts_df, m2_counts_df)
-        markers = pd.DataFrame(
-            pd.Series(
-                (node_counts_df > 0).sum(axis=1), name="n_antibodies", dtype="uint64"
-            )
-        )
-        df = pd.concat([info_agg, markers], axis=1)
-        df["n_umi"] = df["n_umi1"] + df["n_umi2"]
-
-        return df
-
-    logger.debug("Constructing counts matrix.")
-    m1_counts_df, m2_counts_df, edge_counts_df = calculate_count_info(pixel_connection)
-    node_counts_df = mix_counts(m1_counts_df, m2_counts_df)
-    node_counts_df = node_counts_df.reindex(columns=panel.markers, fill_value=0)
-    # compute components metrics (obs) and re-index
-    logger.debug("Computing component metrics.")
-    components_metrics_df = component_metrics(
-        m1_counts_df, m2_counts_df, edge_counts_df
+    components_metrics_df = components_metrics_df.astype(
+        {
+            "n_umi": np.uint64,
+            "n_umi1": np.uint64,
+            "n_umi2": np.uint64,
+            "n_edges": np.uint64,
+            "n_antibodies": np.uint32,
+            "reads_in_component": np.uint64,
+        }
     )
     components_metrics_df = components_metrics_df.reindex(index=node_counts_df.index)
     components_metrics_df.index = components_metrics_df.index.astype(str)
