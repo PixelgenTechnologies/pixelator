@@ -97,7 +97,7 @@ HLA-DR-DP-DQ,,HLA class II histocompatibility antigen,,P01903;P20036;P01909,AACA
 Siglec-9,,Sialic acid-binding Ig-like lectin 9,,Q9Y336,TTAACAAGCA,pna_rnd101,TTAACAAGCA
 TCRva7.2,,T cell receptor alpha variable 7,,A0A075B6U4,TCCCAGGTCC,pna_rnd102,TCCCAGGTCC
 Fas,,Tumor necrosis factor receptor superfamily member 6,CD95,P25445,TACTGTTGGG,pna_rnd103,TACTGTTGGG
-TCRVG9,,T cell receptor gamma variable 9,TCRVg9,,TCGTTTGTCA,pna_rnd104,TCGTTTGTCA
+TCRVg9,,T cell receptor gamma variable 9,TCRVg9,,TCGTTTGTCA,pna_rnd104,TCGTTTGTCA
 CD127,,Interleukin-7 receptor subunit alpha,IL-7Rα,P16871,TGTTAGAGGA,pna_rnd105,TGTTAGAGGA
 Thrombomodulin,,Thrombomodulin,CD141,P07204,AATTGTTCGT,pna_rnd106,AATTGTTCGT
 CD31,,Platelet endothelial cell adhesion molecule,PECAM-1,P16284,GGCAAAGAGC,pna_rnd107,GGCAAAGAGC
