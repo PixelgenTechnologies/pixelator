@@ -116,6 +116,15 @@ def pna_edgelist_to_anndata(
 
     components_metrics_df = pixel_connection.execute(f"""
             WITH
+                marker_1_counts AS (
+                    SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS marker_1_count
+                    FROM edgelist
+                    GROUP BY component, marker_1),
+                marker_2_counts AS (
+                    SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS marker_2_count
+                    FROM edgelist
+                    GROUP BY component, marker_2
+                ),
                 component_marker_counts AS (
                     SELECT
                         COALESCE(a.component, b.component) AS component,
@@ -132,15 +141,6 @@ def pna_edgelist_to_anndata(
                         SUM(marker_2_count) AS n_umi2
                     FROM component_marker_counts
                     GROUP BY component
-                ),
-                marker_1_counts AS (
-                    SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS marker_1_count
-                    FROM edgelist
-                    GROUP BY component, marker_1),
-                marker_2_counts AS (
-                    SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS marker_2_count
-                    FROM edgelist
-                    GROUP BY component, marker_2
                 ),
                 edge_counts AS (
                     SELECT component, COUNT(*) AS n_edges, SUM(read_count) AS reads_in_component
