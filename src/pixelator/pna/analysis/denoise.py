@@ -254,8 +254,8 @@ def write_denoised_edgelist(
             COPY(
                 SELECT *
                 FROM edgelist
-                WHERE umi1 NOT IN (SELECT value FROM (SELECT UNNEST(?) AS value))
-                AND umi2 NOT IN (SELECT value FROM (SELECT UNNEST(?) AS value))
+                WHERE umi1 NOT IN (SELECT UNNEST(?))
+                AND umi2 NOT IN (SELECT UNNEST(?))
             ) TO '{output_edgelist_path}' (FORMAT PARQUET)
             """,
             [umis_to_remove, umis_to_remove],
