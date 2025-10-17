@@ -99,6 +99,15 @@ class PixelFileWriter:
         self._connection.close()
         self._connection = None
 
+    def get_connection(self) -> duckdb.DuckDBPyConnection:
+        """Get the connection to the PXL file.
+
+        :return: The duckdb connection.
+        """
+        if self._connection is None:
+            raise ValueError("Connection is not open.")
+        return self._connection
+
     def __enter__(self):
         """Open the writer as a context manager."""
         self.open()

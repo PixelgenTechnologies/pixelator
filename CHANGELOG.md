@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+-   Move to duckdb-based implementation of edgelist to anndata for improved memory usage.
 -   Validation on antibody panel sequence lengths and characters.
 -   If panel contains uniprot_id column, it will be added to adata.var.
 -   Add a `--memory` flag to `pixelator single-cell-pna demux` and `pixelator single-cell-pna combine-collapse`

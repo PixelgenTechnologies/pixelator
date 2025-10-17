@@ -18,7 +18,7 @@ from pixelator.pna.graph.connected_components import (
     filter_components_by_size_hard_thresholds,
     find_components,
     hash_component,
-    make_edgelits_with_component_column,
+    make_edgelist_with_component_column,
     merge_communities_with_many_crossing_edges,
     recover_multiplets,
 )
@@ -42,7 +42,7 @@ def test_recover_multiplets():
         [{"umi1": e[0], "umi2": e[1]} for e in multiple_graph.edges()]
     )
     umi_component_map, stats = recover_multiplets(edgelist, refinement_options=options)
-    edgelist = make_edgelits_with_component_column(edgelist, umi_component_map)
+    edgelist = make_edgelist_with_component_column(edgelist, umi_component_map)
     split_graph = nx.from_edgelist(edgelist.select(["umi1", "umi2"]).collect().rows())
 
     assert stats.crossing_edges_removed == 21
@@ -133,7 +133,7 @@ def test_recover_multiplets_large_graph(large_graph):
     umi_component_map, recovery_stats = recover_multiplets(
         edgelist, refinement_options=options
     )
-    edgelist = make_edgelits_with_component_column(edgelist, umi_component_map)
+    edgelist = make_edgelist_with_component_column(edgelist, umi_component_map)
     split_graph = nx.from_edgelist(edgelist.select(["umi1", "umi2"]).collect().rows())
     assert recovery_stats.crossing_edges_removed == 36
     assert recovery_stats.crossing_edges_removed_in_initial_stage == 36
@@ -182,7 +182,7 @@ def test_recover_multiplets_large_graph_with_small_stuff_added_on(
     umi_component_map, recovery_stats = recover_multiplets(
         edgelist, refinement_options=options
     )
-    edgelist = make_edgelits_with_component_column(edgelist, umi_component_map)
+    edgelist = make_edgelist_with_component_column(edgelist, umi_component_map)
     split_graph = nx.from_edgelist(edgelist.select(["umi1", "umi2"]).collect().rows())
     assert recovery_stats.crossing_edges_removed == 59
     assert recovery_stats.crossing_edges_removed_in_initial_stage == 58
@@ -217,7 +217,7 @@ def test_recover_multiplets_with_refinement_enabled():
     )
 
     umi_component_map, stats = recover_multiplets(edgelist, refinement_options=options)
-    edgelist = make_edgelits_with_component_column(edgelist, umi_component_map)
+    edgelist = make_edgelist_with_component_column(edgelist, umi_component_map)
     split_graph = nx.from_edgelist(edgelist.select(["umi1", "umi2"]).collect().rows())
     assert stats.crossing_edges_removed == 21
     assert stats.max_recursion_depth == 1

@@ -261,7 +261,7 @@ def _update_components_column(
     )
 
 
-def make_edgelits_with_component_column(
+def make_edgelist_with_component_column(
     edgelist: pl.LazyFrame, umi_component_map: dict
 ) -> pl.LazyFrame:
     """Add a component column to an edgelist using a node map and remove crossing edges.
@@ -546,70 +546,73 @@ def build_pxl_file_with_components(
             refinement_options=refinement_options,
             component_size_threshold=component_size_threshold,
         )
-
         logger.debug("Sorting edgelist by component")
         edgelist_with_components_sorted = edgelist_with_components.sort("component")
         tmp_edgelist_file_sorted = (
             tmp_dir_path / f"{sample_name}.edgelist.sorted.parquet"
         )
-        edgelist_with_components_sorted.collect().write_parquet(
-            tmp_edgelist_file_sorted
-        )
-        logger.debug("Counting molecules")
-
-        sums = (
-            edgelist_with_components_sorted.select(["uei_count", "read_count"])
-            .sum()
-            .collect()
-        )
-        component_statics.molecules_output = sums.item(0, "uei_count")
-
-        logger.debug("Building edgelist from anndata")
-        adata = pna_edgelist_to_anndata(edgelist_with_components_sorted, panel=panel)
-        call_aggregates(adata)
-
-        component_statics.reads_output = adata.obs["reads_in_component"].sum()
-
-        component_statics.median_reads_per_component = adata.obs[
-            "reads_in_component"
-        ].median()
-        component_statics.median_markers_per_component = adata.obs["n_umi"].median()
-
-        # Add tau_type metrics
-        aggregates_mask = adata.obs["tau_type"] != "normal"
-        number_of_aggregates = np.sum(aggregates_mask)
-
-        component_statics.aggregate_count = number_of_aggregates
-        aggregate_stats = (
-            adata[aggregates_mask].obs[["n_edges", "n_umi", "reads_in_component"]].sum()
-        )
-
-        component_statics.read_count_in_aggregates = aggregate_stats[
-            "reads_in_component"
-        ].item()
-        component_statics.node_count_in_aggregates = aggregate_stats["n_umi"].item()
-        component_statics.edge_count_in_aggregates = aggregate_stats["n_edges"].item()
-
-        # Sort adata on component names for stable output
-        adata = adata[adata.obs_names.sort_values(), :]
-
-        # import here to avoid circular imports
-        from pixelator import __version__
-
-        metadata = {
-            "sample_name": sample_name,
-            "version": __version__,
-            "technology": "single-cell-pna",
-            "panel_name": panel.name,
-            "panel_version": panel.version,
-        }
-
-        logger.debug("Building pxl file")
-
+        edgelist_with_components_sorted.sink_parquet(tmp_edgelist_file_sorted)
         with PixelFileWriter(path_output_pxl_file) as pxl_file_writer:
+            pxl_file_writer.write_edgelist(tmp_edgelist_file_sorted)
+            logger.debug("Counting molecules")
+
+            sums = (
+                edgelist_with_components_sorted.select(["uei_count", "read_count"])
+                .sum()
+                .collect()
+            )
+            component_statics.molecules_output = sums.item(0, "uei_count")
+
+            logger.debug("Building edgelist from anndata")
+            adata = pna_edgelist_to_anndata(
+                pxl_file_writer.get_connection(), panel=panel
+            )
+            call_aggregates(adata)
+
+            component_statics.reads_output = adata.obs["reads_in_component"].sum()
+
+            component_statics.median_reads_per_component = adata.obs[
+                "reads_in_component"
+            ].median()
+            component_statics.median_markers_per_component = adata.obs["n_umi"].median()
+
+            # Add tau_type metrics
+            aggregates_mask = adata.obs["tau_type"] != "normal"
+            number_of_aggregates = np.sum(aggregates_mask)
+
+            component_statics.aggregate_count = number_of_aggregates
+            aggregate_stats = (
+                adata[aggregates_mask]
+                .obs[["n_edges", "n_umi", "reads_in_component"]]
+                .sum()
+            )
+
+            component_statics.read_count_in_aggregates = aggregate_stats[
+                "reads_in_component"
+            ].item()
+            component_statics.node_count_in_aggregates = aggregate_stats["n_umi"].item()
+            component_statics.edge_count_in_aggregates = aggregate_stats[
+                "n_edges"
+            ].item()
+
+            # Sort adata on component names for stable output
+            adata = adata[adata.obs_names.sort_values(), :]
+
+            # import here to avoid circular imports
+            from pixelator import __version__
+
+            metadata = {
+                "sample_name": sample_name,
+                "version": __version__,
+                "technology": "single-cell-pna",
+                "panel_name": panel.name,
+                "panel_version": panel.version,
+            }
+
+            logger.debug("Building pxl file")
+
             pxl_file_writer.write_metadata(metadata)
             pxl_file_writer.write_adata(adata)
-            pxl_file_writer.write_edgelist(tmp_edgelist_file_sorted)
 
         return PNAPixelDataset.from_pxl_files(path_output_pxl_file), component_statics
 
@@ -797,7 +800,7 @@ def find_components(
         )
         component_stats.max_recursion_depth = recover_stats.max_recursion_depth
 
-    edgelist_with_components = make_edgelits_with_component_column(
+    edgelist_with_components = make_edgelist_with_component_column(
         working_edgelist, umi_component_map
     )
     if multiplet_recovery:
