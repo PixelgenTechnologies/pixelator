@@ -34,9 +34,9 @@ CD29,,Integrin beta-1,Integrin β1,P05556,TCCAGTGTCT,pna_rnd23,TCCAGTGTCT
 CD5,,T cell surface glycoprotein CD5,,P06127,CACCCATCAA,pna_rnd24,CACCCATCAA
 CD162,,P-selectin glycoprotein ligand 1,SELPLG;PSGL-1,Q14242,CTTCGTGGAC,pna_rnd25,CTTCGTGGAC
 CD27,,CD27 antigen,,P26842,GGTTTGCAAA,pna_rnd26,GGTTTGCAAA
-CR1,,Complement receptor type 1,CD35;CR1,P17927,CGCCACCTTT,pna_rnd27,CGCCACCTTT
+CR1,,Complement receptor type 1,CD35,P17927,CGCCACCTTT,pna_rnd27,CGCCACCTTT
 CD26,,Dipeptidyl peptidase 4,DPP4,P27487,GATTCGCTGT,pna_rnd28,GATTCGCTGT
-CD49d,,Integrin α-4,CD49D;Integrin α4,P13612,AACTTAGGTT,pna_rnd29,AACTTAGGTT
+CD49d,,Integrin α-4,Integrin α4,P13612,AACTTAGGTT,pna_rnd29,AACTTAGGTT
 CD37,,Leukocyte antigen CD37,Tetraspanin-26,P11049,AGAAGAAGAG,pna_rnd30,AGAAGAAGAG
 CD41,,Integrin α-IIb,Integrin αIIb,P08514,TAAGGCATAA,pna_rnd31,TAAGGCATAA
 CD20,,B-lymphocyte antigen CD20,,P11836,GCCACACCCA,pna_rnd33,GCCACACCCA
@@ -94,12 +94,12 @@ CD90,,Thy-1 membrane glycoprotein,Thy-1,P04216,TAGCCGATTA,pna_rnd95,TAGCCGATTA
 CD70,,CD70 antigen,CD27L,P32970,CTCAGCATGC,pna_rnd96,CTCAGCATGC
 GPR56,,Adhesion G-protein coupled receptor G1,TM7XN1,Q9Y653,GCGTCTCTCT,pna_rnd97,GCGTCTCTCT
 HLA-DQ,,"HLA class II histocompatibility antigen, DQ",,P01906;P05538;P01920;P01909,ATACTTGAGC,pna_rnd98,ATACTTGAGC
-TCRVd2,,T cell receptor delta variable 2,TCRVd2,,CCGACCATTC,pna_rnd99,CCGACCATTC
+TCRVd2,,T cell receptor delta variable 2,,,CCGACCATTC,pna_rnd99,CCGACCATTC
 HLA-DR-DP-DQ,,HLA class II histocompatibility antigen,,P01903;P20036;P01909,AACAGAGGAA,pna_rnd100,AACAGAGGAA
 Siglec-9,,Sialic acid-binding Ig-like lectin 9,,Q9Y336,TTAACAAGCA,pna_rnd101,TTAACAAGCA
 TCRVa7.2,,T cell receptor alpha variable 7,,A0A075B6U4,TCCCAGGTCC,pna_rnd102,TCCCAGGTCC
 Fas,,Tumor necrosis factor receptor superfamily member 6,CD95,P25445,TACTGTTGGG,pna_rnd103,TACTGTTGGG
-TCRVg9,,T cell receptor gamma variable 9,TCRVg9,,TCGTTTGTCA,pna_rnd104,TCGTTTGTCA
+TCRVg9,,T cell receptor gamma variable 9,,,TCGTTTGTCA,pna_rnd104,TCGTTTGTCA
 CD127,,Interleukin-7 receptor subunit alpha,IL-7Rα,P16871,TGTTAGAGGA,pna_rnd105,TGTTAGAGGA
 CD141,,Thrombomodulin,TM,P07204,AATTGTTCGT,pna_rnd106,AATTGTTCGT
 CD31,,Platelet endothelial cell adhesion molecule,PECAM-1,P16284,GGCAAAGAGC,pna_rnd107,GGCAAAGAGC
