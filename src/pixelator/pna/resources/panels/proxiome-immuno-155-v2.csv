@@ -99,7 +99,7 @@ TCRVa7.2,,T cell receptor alpha variable 7,,A0A075B6U4,TCCCAGGTCC,pna_rnd102,TCC
 Fas,,Tumor necrosis factor receptor superfamily member 6,CD95,P25445,TACTGTTGGG,pna_rnd103,TACTGTTGGG
 TCRVg9,,T cell receptor gamma variable 9,TCRVg9,,TCGTTTGTCA,pna_rnd104,TCGTTTGTCA
 CD127,,Interleukin-7 receptor subunit alpha,IL-7Rα,P16871,TGTTAGAGGA,pna_rnd105,TGTTAGAGGA
-Thrombomodulin,,Thrombomodulin,CD141,P07204,AATTGTTCGT,pna_rnd106,AATTGTTCGT
+CD141,,Thrombomodulin,TM,P07204,AATTGTTCGT,pna_rnd106,AATTGTTCGT
 CD31,,Platelet endothelial cell adhesion molecule,PECAM-1,P16284,GGCAAAGAGC,pna_rnd107,GGCAAAGAGC
 CD6,,T cell differentiation antigen CD6,,P30203,CTAAGATCTC,pna_rnd108,CTAAGATCTC
 CD57,,Galactosylgalactosylxylosylprotein 3-beta-glucuronosyltransferase 1,,Q9P2W7,ACGACGGGAC,pna_rnd111,ACGACGGGAC
