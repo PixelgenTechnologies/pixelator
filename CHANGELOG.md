@@ -10,8 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Important changes
 
 The panel files `proxiome-immuno-155` and `proxiome-immuno-156-FMC63` have been updated with clearer
-marker names. To use the previous version, specify `--panel proxiome-immuno-155-v1` when running
-pixelator.
+marker names. To use the previous version, specify `--panel proxiome-immuno-155-v1` or `--panel proxiome-immuno-156-FMC63-v1` when running pixelator.
 
 ### Fixed
 
