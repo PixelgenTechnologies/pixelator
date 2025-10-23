@@ -31,7 +31,7 @@ def test_collapse_run(mocker, testdata_paired_small_demux):
 
 
 @pytest.mark.parametrize(
-    "panel_file", ["proxiome-immuno-155", "proxiome-immuno-155-v2"]
+    "panel_file", ["proxiome-immuno-155-v1", "proxiome-immuno-155-v2"]
 )
 def test_invalid_mismatch_param(mocker, testdata_paired_small_demux, panel_file):
     runner = CliRunner()
