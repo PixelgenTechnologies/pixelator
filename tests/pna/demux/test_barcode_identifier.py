@@ -86,7 +86,8 @@ def test_barcode_identifier_failed():
     panel = pna_config.get_panel("proxiome-immuno-155")
 
 
-    failed_writer = ProxyRecordWriter([tempfile.NamedTemporaryFile().name], fileformat="fastq")
+    with tempfile.NamedTemporaryFile() as buffer:
+        failed_writer = ProxyRecordWriter([buffer.name], fileformat="fastq")
 
     barcodes_id = BarcodeIdentifier(
         assay=assay,
