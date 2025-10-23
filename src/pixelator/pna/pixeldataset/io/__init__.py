@@ -99,6 +99,15 @@ class PixelFileWriter:
         self._connection.close()
         self._connection = None
 
+    def get_connection(self) -> duckdb.DuckDBPyConnection:
+        """Get the connection to the PXL file.
+
+        :return: The duckdb connection.
+        """
+        if self._connection is None:
+            raise ValueError("Connection is not open.")
+        return self._connection
+
     def __enter__(self):
         """Open the writer as a context manager."""
         self.open()
@@ -503,6 +512,7 @@ class PixelDataViewer:
         adatas = list(underlying_data())
         concatenated = anndata_concat(adatas, join=self._adata_join_strategy)
         concatenated.var = adatas[0].var
+        concatenated.uns = adatas[0].uns
         update_metrics_anndata(concatenated, inplace=True)
         return concatenated
 

@@ -8,6 +8,8 @@ It is responsible for identifying the antibody pair associated with a given barc
 Copyright (c) Pixelgen Technologies AB
 """
 
+import tempfile
+
 from cutadapt.files import ProxyRecordWriter
 from dnaio import SequenceRecord
 
@@ -83,7 +85,8 @@ def test_barcode_identifier_failed():
     assay = pna_config.get_assay("pna-2")
     panel = pna_config.get_panel("proxiome-immuno-155")
 
-    failed_writer = ProxyRecordWriter(1, fileformat="fastq")
+    with tempfile.NamedTemporaryFile() as buffer:
+        failed_writer = ProxyRecordWriter([buffer.name], fileformat="fastq")
 
     barcodes_id = BarcodeIdentifier(
         assay=assay,

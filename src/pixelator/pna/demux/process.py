@@ -37,7 +37,7 @@ from pixelator.pna.demux.pipeline import (
 )
 from pixelator.pna.demux.report import BarcodeCorrectionStatistics
 from pixelator.pna.read_processing.runners import ParallelPipelineRunner
-from pixelator.pna.utils import clean_suffixes
+from pixelator.pna.utils import clean_suffixes, init_duckdb_conn
 
 logger = logging.getLogger("demux")
 
@@ -243,6 +243,8 @@ def finalize_batched_groups(
     remove_intermediates: bool = True,
     strategy: Literal["paired", "independent"] = "independent",
     memory: int | None = None,
+    threads: int | None = None,
+    temp_dir: str | Path | None = None,
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
@@ -265,6 +267,8 @@ def finalize_batched_groups(
             output_dir,
             remove_intermediates=remove_intermediates,
             memory=memory,
+            threads=threads,
+            temp_dir=temp_dir,
         )
     elif strategy == "paired":
         return _finalize_batched_groups_paired(
@@ -272,6 +276,8 @@ def finalize_batched_groups(
             output_dir,
             remove_intermediates=remove_intermediates,
             memory=memory,
+            threads=threads,
+            temp_dir=temp_dir,
         )
     else:
         raise ValueError("Unknown strategy")
@@ -282,6 +288,8 @@ def _finalize_batched_groups_paired(
     output_dir,
     remove_intermediates: bool = True,
     memory: int | None = None,
+    threads: int | None = None,
+    temp_dir: str | Path | None = None,
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
@@ -310,11 +318,7 @@ def _finalize_batched_groups_paired(
     """
     parquet_files = []
     tmp_parquet_files = list(input_dir.glob("*.parquet"))
-
-    conn = dd.connect(":memory:")
-    if memory:
-        val = f"{memory / 10**6}MB"
-        conn.execute(f"SET memory_limit = '{val}'")
+    conn = init_duckdb_conn(memory_limit=memory, threads=threads, temp_dir=temp_dir)
 
     for f in tmp_parquet_files:
         output_name = str(clean_suffixes(f).name)
@@ -345,6 +349,8 @@ def _finalize_batched_groups_independent(
     output_dir: Path,
     remove_intermediates: bool = True,
     memory: int | None = None,
+    threads: int | None = None,
+    temp_dir: str | Path | None = None,
 ):
     """Post-process the demuxed data by sorting and writing to Parquet.
 
@@ -357,10 +363,14 @@ def _finalize_batched_groups_independent(
     Params:
         work_dir:
             the path to the work directory containing the demuxed data
-      remove_intermediates:
-            Whether to remove the intermediate parquet files after sorting and deduplication
+        remove_intermediates:
+             Whether to remove the intermediate parquet files after sorting and deduplication
         memory:
-            Maximum amount of memory to use. Use None to disable memory limits.
+            Maximum amount of memory to use for DuckDB operations. Use None to disable memory limits.
+        threads:
+            The number of threads to use for DuckDB operations. Use None to let DuckDB decide.
+        temp_dir:
+            The temporary directory to use for DuckDB operations. If None, DuckDB will decide (defaults to /tmp).
 
     Returns:
         A list of paths to the Parquet files
@@ -372,10 +382,7 @@ def _finalize_batched_groups_independent(
     parquet_files = []
     tmp_files = list(input_dir.glob("*.parquet"))
 
-    conn = dd.connect(":memory:")
-    if memory:
-        val = f"{memory / 10**6}MB"
-        conn.execute(f"SET memory_limit = '{val}'")
+    conn = init_duckdb_conn(memory_limit=memory, threads=threads, temp_dir=temp_dir)
 
     for f in tmp_files:
         sorting_order: tuple[str, str]

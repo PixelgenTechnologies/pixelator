@@ -119,7 +119,7 @@ class BaseQCReportBuilder(metaclass=abc.ABCMeta):
             raise AssertionError("Could not find body element in QC report template")
 
         version = root.xpath('//meta[@name="application-name"]/@data-version')
-        version = version[0] if version else None
+        version = version[0] if version else ""
         self._check_version_compatibility(version)
 
         logger.debug("QC report template %s loaded", self.template)

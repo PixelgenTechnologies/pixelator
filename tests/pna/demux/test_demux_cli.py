@@ -1,5 +1,6 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import pytest
 from click.testing import CliRunner
 
 from pixelator import cli
@@ -27,7 +28,11 @@ def test_demux_invalid_chunk_size(tmp_path, testdata_amplicon_fastq):
     assert "Invalid value for '--output-chunk-reads'" in cmd.output
 
 
-def test_demux_valid(tmp_path, testdata_amplicon_fastq):
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "panel_file", ["proxiome-immuno-155-v1", "proxiome-immuno-155-v2"]
+)
+def test_demux_valid(tmp_path, testdata_amplicon_fastq, panel_file):
     runner = CliRunner()
 
     args = [
@@ -39,7 +44,7 @@ def test_demux_valid(tmp_path, testdata_amplicon_fastq):
         "--design",
         "pna-2",
         "--panel",
-        "proxiome-immuno-155",
+        panel_file,
     ]
     cmd = runner.invoke(cli.main_cli, args)
 

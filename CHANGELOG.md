@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0] - 2025-10-23
+
+### Important changes
+
+The panel files `proxiome-immuno-155` and `proxiome-immuno-156-FMC63` have been updated with clearer
+marker names. To use the previous version, specify `--panel proxiome-immuno-155-v1` or `--panel proxiome-immuno-156-FMC63-v1` when running pixelator.
+
+### Added
+
+-   Move to duckdb-based implementation of edgelist to anndata for improved memory usage.
+-   Validation on antibody panel sequence lengths and characters.
+-   If panel contains uniprot_id column, it will be added to adata.var.
+-   Add a `--memory` flag to `pixelator single-cell-pna demux` and `pixelator single-cell-pna combine-collapse`
+    to limit available memory.
+-   Add the `PIXELATOR_DUCKDB_TEMP_DIR` environment variable to control the location where DuckDB will spill to disk
+    for memory constrained operations.
+-   Add the `PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE` environment variable to control the maximum amount of internal
+    temporary disk space that DuckDB can use for memory constrained operations. No disk space limit is applied by default.
+-   Add new panel file with updated marker ids, full names, and additional ids
+-   Add new panel file with FLAG add-on
+
+### Removed
+
+ - The `nuclear` column has been removed from the panel file, and will not appear in e.g. the downstream .pxl files.
+
+### Fixed
+
+-   `pixelator single-cell demux` respects the `--cores` option.
+-    Fix a bug in `pixelator single-cell demux` where the total number of input reads
+     report in the report.json files would be slightly smaller than the actual number of reads in the input files.
+-    Include panel data in `.pxl` file for PNA data
+-    Fix an issue where very large samples (3k cells) could not be collapsed
+     due to the limits of the PyArrow string array type.
+
 ## [0.21.4] - 2025-08-27
 
 ### Added

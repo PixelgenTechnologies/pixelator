@@ -1,5 +1,6 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import tempfile
 from unittest.mock import create_autospec
 
 import numpy as np
@@ -10,6 +11,7 @@ from pandas.testing import assert_frame_equal
 
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanel, load_antibody_panel
+from pixelator.pna.pixeldataset.io import PixelFileWriter
 
 mock_antibody_panel = create_autospec(PNAAntibodyPanel)
 mock_antibody_panel.markers = ["A", "B", "C"]
@@ -22,8 +24,10 @@ mock_antibody_panel.df = pd.DataFrame(
             "B",
             "C",
         ],
+        "uniprot_id": ["P61769", "P05107", "P15391"],
         "control": ["no", "no", "yes"],
         "nuclear": ["yes", "no", "no"],
+        "sequence_1": ["AAAA", "CCCC", "GGGG"],
     }
 )
 
@@ -132,8 +136,27 @@ def create_edgelist():
     return pl.LazyFrame(df)
 
 
-def test_pna_edgelist_to_anndata(edgelist):
-    adata = pna_edgelist_to_anndata(edgelist, mock_antibody_panel)
+@pytest.fixture(name="pixelconnection")
+def create_pixel_dataset_connection(edgelist):
+    from pixelator import __version__
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        with PixelFileWriter(temp_dir + "/tmp.pxl") as writer:
+            writer.write_metadata(
+                {
+                    "sample_name": "temp",
+                    "version": __version__,
+                    "technology": "single-cell-pna",
+                    "panel_name": "mock.name",
+                    "panel_version": "mock.version",
+                }
+            )
+            writer.write_edgelist(edgelist.collect())
+            yield writer.get_connection()
+
+
+def test_pna_edgelist_to_anndata(pixelconnection):
+    adata = pna_edgelist_to_anndata(pixelconnection, mock_antibody_panel)
 
     assert adata.shape == (3, 3)
 
@@ -155,22 +178,28 @@ def test_pna_edgelist_to_anndata(edgelist):
                 "antibody_count": 7,
                 "antibody_pct": np.float32(0.4375),
                 "components": 3,
+                "uniprot_id": "P61769",
                 "control": "no",
                 "nuclear": "yes",
+                "sequence_1": "AAAA",
             },
             "B": {
                 "antibody_count": 5,
                 "antibody_pct": np.float32(0.3125),
                 "components": 3,
+                "uniprot_id": "P05107",
                 "control": "no",
                 "nuclear": "no",
+                "sequence_1": "CCCC",
             },
             "C": {
                 "antibody_count": 4,
                 "antibody_pct": np.float32(0.25),
                 "components": 2,
+                "uniprot_id": "P15391",
                 "control": "yes",
                 "nuclear": "no",
+                "sequence_1": "GGGG",
             },
         },
         orient="index",
@@ -187,7 +216,7 @@ def test_pna_edgelist_to_anndata(edgelist):
                 "n_antibodies": 3,
                 "reads_in_component": 12,
                 "isotype_fraction": 0.14285714285714285,
-                "intracellular_fraction": 0.5714285714285714,
+                "intracellular_fraction": 0.0,
             },
             "2": {
                 "n_umi": 6,
@@ -197,7 +226,7 @@ def test_pna_edgelist_to_anndata(edgelist):
                 "n_antibodies": 3,
                 "reads_in_component": 14,
                 "isotype_fraction": 0.5,
-                "intracellular_fraction": 0.16666666666666666,
+                "intracellular_fraction": 0.0,
             },
             "3": {
                 "n_umi": 3,
@@ -207,7 +236,7 @@ def test_pna_edgelist_to_anndata(edgelist):
                 "n_antibodies": 2,
                 "reads_in_component": 4,
                 "isotype_fraction": 0.0,
-                "intracellular_fraction": 0.6666666666666666,
+                "intracellular_fraction": 0.0,
             },
         },
         orient="index",
@@ -219,7 +248,7 @@ def test_pna_edgelist_to_anndata(edgelist):
             "n_umi1": np.uint64,
             "n_umi2": np.uint64,
             "n_edges": np.uint64,
-            "n_antibodies": np.uint64,
+            "n_antibodies": np.uint32,
             "reads_in_component": np.uint64,
         }
     )
@@ -229,9 +258,10 @@ def test_pna_edgelist_to_anndata(edgelist):
     )
 
 
-def test_pna_edgelist_to_anndata_save_adata(edgelist, tmp_path):
+def test_pna_edgelist_to_anndata_save_adata(pixelconnection, tmp_path):
     from pixelator.pna.config import pna_config
 
     panel = load_antibody_panel(pna_config, "proxiome-immuno-155")
-    adata = pna_edgelist_to_anndata(edgelist, panel=panel)
+    adata = pna_edgelist_to_anndata(pixelconnection, panel)
+
     adata.write_h5ad(tmp_path / "test.h5ad")

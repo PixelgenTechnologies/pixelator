@@ -19,6 +19,7 @@ from pixelator.pna.collapse.independent import (
     SingleUMICollapseSampleReport,
 )
 from pixelator.pna.collapse.paired.combine_collapse import logger
+from pixelator.pna.utils import init_duckdb_conn
 
 
 def _merge_sort_parquet(
@@ -72,7 +73,9 @@ def combine_independent_parquet_files(
     umi1_files: Iterable[Path],
     umi2_files: Iterable[Path],
     output_file: Path,
-    memory_limit: str | None = None,
+    threads: int | None = None,
+    memory_limit: int | None = None,
+    temp_directory: str | Path | None = None,
 ) -> CombineCollapseIndependentStats:
     """Scan a directory for parquet files with corrected UMI1s and UMI2s and join them.
 
@@ -105,17 +108,24 @@ def combine_independent_parquet_files(
         umi1_files: The list of UMI1 parquet files.
         umi2_files: The list of UMI2 parquet files.
         output_file: The path to the output parquet file.
-        memory_limit: The memory limit to use for DuckDB. eg: '16GB'
+        threads: The number of threads to use for DuckDB. If None, the default is used (all available cores).
+        memory_limit: The memory limit to use for DuckDB in MB eg: '1024MiB' for 1GiB.
             If None, the default is used (80% of the system memory).
+        temp_directory: The directory used by DuckDB for disk spilling
+        max_temp_directory_size:
+            The maximum size in bytes that DuckDB is allowed to use for temporary files.
+            If None, the default is used (90% of the system disk space).
+
+        verbose: If True, enable DuckDB stdout logging.
+
 
     Returns:
         A dictionary with additional statistics calculated on the combined parquet data.
 
     """
-    conn = dd.connect(":memory:")
-
-    if memory_limit is not None:
-        conn.execute(f"SET memory_limit = ?", memory_limit)
+    conn = init_duckdb_conn(
+        memory_limit=memory_limit, threads=threads, temp_dir=temp_directory
+    )
 
     logger.info("Combining and sorting UMI1 parquet files")
     sorted_umi1_file = _merge_sort_parquet(
@@ -187,8 +197,11 @@ def combine_independent_parquet_files(
         output_molecules=int(output_molecules), corrected_reads=int(corrected_reads)
     )
 
+    # Sorted UMI files are only intermediates and can be removed
     sorted_umi1_file.unlink()
     sorted_umi2_file.unlink()
+
+    conn.close()
 
     return stats
 

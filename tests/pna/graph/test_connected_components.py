@@ -9,6 +9,7 @@ import pytest
 from polars.testing.asserts import assert_frame_equal
 from scipy.spatial import distance_matrix
 
+from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.graph.connected_components import (
     RefinementOptions,
     StagedRefinementOptions,
@@ -17,7 +18,7 @@ from pixelator.pna.graph.connected_components import (
     filter_components_by_size_hard_thresholds,
     find_components,
     hash_component,
-    make_edgelits_with_component_column,
+    make_edgelist_with_component_column,
     merge_communities_with_many_crossing_edges,
     recover_multiplets,
 )
@@ -41,7 +42,7 @@ def test_recover_multiplets():
         [{"umi1": e[0], "umi2": e[1]} for e in multiple_graph.edges()]
     )
     umi_component_map, stats = recover_multiplets(edgelist, refinement_options=options)
-    edgelist = make_edgelits_with_component_column(edgelist, umi_component_map)
+    edgelist = make_edgelist_with_component_column(edgelist, umi_component_map)
     split_graph = nx.from_edgelist(edgelist.select(["umi1", "umi2"]).collect().rows())
 
     assert stats.crossing_edges_removed == 21
@@ -132,7 +133,7 @@ def test_recover_multiplets_large_graph(large_graph):
     umi_component_map, recovery_stats = recover_multiplets(
         edgelist, refinement_options=options
     )
-    edgelist = make_edgelits_with_component_column(edgelist, umi_component_map)
+    edgelist = make_edgelist_with_component_column(edgelist, umi_component_map)
     split_graph = nx.from_edgelist(edgelist.select(["umi1", "umi2"]).collect().rows())
     assert recovery_stats.crossing_edges_removed == 36
     assert recovery_stats.crossing_edges_removed_in_initial_stage == 36
@@ -181,7 +182,7 @@ def test_recover_multiplets_large_graph_with_small_stuff_added_on(
     umi_component_map, recovery_stats = recover_multiplets(
         edgelist, refinement_options=options
     )
-    edgelist = make_edgelits_with_component_column(edgelist, umi_component_map)
+    edgelist = make_edgelist_with_component_column(edgelist, umi_component_map)
     split_graph = nx.from_edgelist(edgelist.select(["umi1", "umi2"]).collect().rows())
     assert recovery_stats.crossing_edges_removed == 59
     assert recovery_stats.crossing_edges_removed_in_initial_stage == 58
@@ -216,7 +217,7 @@ def test_recover_multiplets_with_refinement_enabled():
     )
 
     umi_component_map, stats = recover_multiplets(edgelist, refinement_options=options)
-    edgelist = make_edgelits_with_component_column(edgelist, umi_component_map)
+    edgelist = make_edgelist_with_component_column(edgelist, umi_component_map)
     split_graph = nx.from_edgelist(edgelist.select(["umi1", "umi2"]).collect().rows())
     assert stats.crossing_edges_removed == 21
     assert stats.max_recursion_depth == 1
@@ -466,6 +467,7 @@ def test_find_components_fixed_thresholds(lazy_edgelist_karate_graph):
 
 
 @pytest.mark.slow
+@pytest.mark.parametrize("mock_panel", ["1.0.0", "2.0.0"], indirect=True)
 def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, tmpdir):
     output = Path(tmpdir) / "output.pxl"
 
@@ -501,6 +503,35 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
         "82d07c06fbe77d34",
         "051c05ea14e7a441",
     }
+
+    expected_columns = [
+        "marker_id",
+        "uniprot_id",
+        "control",
+        "nuclear",
+        "sequence_1",
+        "sequence_2",
+        "conj_id",
+    ]
+    if mock_panel.version.startswith("2"):
+        expected_columns.pop(expected_columns.index("nuclear"))
+
+    adata = result.adata()
+    assert adata.uns["panel_metadata"] == {
+        "name": mock_panel.name,
+        "description": mock_panel.description,
+        "aliases": mock_panel.aliases,
+        "version": mock_panel.version,
+        "panel_columns": expected_columns,
+    }
+    reconstructed_panel = adata.var.reset_index(names="marker_id")[
+        adata.uns["panel_metadata"]["panel_columns"]
+    ]
+
+    assert_frame_equal(
+        pl.from_pandas(reconstructed_panel),
+        pl.from_pandas(mock_panel.df),
+    )
 
     assert stats.molecules_input == 156
     assert stats.reads_input == 780

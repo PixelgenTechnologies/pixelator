@@ -15,6 +15,7 @@ from pixelator.pna.demux.barcode_demuxer import (
     create_barcode_group_to_batch_mapping,
     independent_marker_groups_mapping,
 )
+from pixelator.pna.demux.barcode_identifier import BarcodeIdentifierStatistics
 
 
 @pytest.fixture
@@ -73,7 +74,7 @@ def test_demux_record_batch():
 
 def test_independent_demuxing(testdata_demux_passed_reads):
     assay = pna_config.get_assay("pna-2")
-    panel = pna_config.get_panel("proxiome-immuno-155")
+    panel = pna_config.get_panel("proxiome-immuno-155-v1")
 
     marker_counts = {
         ("CD18", "CD45"): 1,
@@ -214,6 +215,34 @@ def test_finalize_batched_groups_independent(demux_intermediary_dir):
     assert is_sorted(df2["marker_2"].to_numpy())
 
 
+def test_barcode_identifier_statistics_accumulation():
+    acc = BarcodeIdentifierStatistics()
+    acc.corrected = 3094
+    acc.exact = 128662
+    acc.missing_pid1 = 897
+    acc.missing_pid2 = 1794
+    acc.missing_pid1_pid2 = 8
+
+    assert acc.input == 134455
+
+    ch = BarcodeIdentifierStatistics()
+    ch.corrected = 1396
+    ch.exact = 68605
+    ch.missing_pid1 = 425
+    ch.missing_pid2 = 684
+    ch.missing_pid1_pid2 = 4
+    ch.n_in_umi1 = 0
+    ch.n_in_umi2 = 0
+
+    assert ch.input == 71114
+    assert ch.failed == 1113
+
+    acc += ch
+
+    assert acc.input == 205569
+    assert acc.failed == 2699 + 1113
+
+
 @pytest.mark.slow
 def test_marker_correction_pipeline(tmp_path, testdata_amplicon_fastq):
     input_file = testdata_amplicon_fastq
@@ -232,3 +261,5 @@ def test_marker_correction_pipeline(tmp_path, testdata_amplicon_fastq):
         save_failed=True,
         threads=threads,
     )
+
+    assert (demux_output / "PNA055_Sample07_filtered_S7.demux.failed.fq.zst").exists()

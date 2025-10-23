@@ -16,7 +16,7 @@ from pixelator.pna.pixeldataset import (
     read,
 )
 from pixelator.pna.pixeldataset.io import PixelDataViewer, PixelFileWriter
-from tests.pna.pixeldataset.conftest import create_pxl_file
+from tests.pna.conftest import create_pxl_file
 
 
 class TestReadPixelDataset:
@@ -71,11 +71,23 @@ class TestPNAPixelDataset:
     def test_adata(self, pxl_dataset: PNAPixelDataset, adata_data):
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
-        # Right now we actually drop all uns data
-        # I'm not sure if that is the best possible behavior
-        # here, but it is the default when anndata
-        # concatenates multiple datasets
-        adata_data.uns = {}
+        adata_data.uns = {
+            "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
+            "panel_metadata": {
+                "name": "test-pna-panel",
+                "aliases": ["test-pna"],
+                "description": "Test R&D panel for RNA",
+                "version": "0.1.0",
+                "panel_columns": [
+                    "marker_id",
+                    "control",
+                    "nuclear",
+                    "sequence_1",
+                    "conj_id",
+                    "sequence_2",
+                ],
+            },
+        }
 
         adata = pxl_dataset.adata(add_clr_transform=False, add_log1p_transform=False)
         adata_assert_equal(adata, adata_data)

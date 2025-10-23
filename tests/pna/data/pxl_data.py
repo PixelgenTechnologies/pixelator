@@ -1,16 +1,3 @@
-"""Copyright © 2025 Pixelgen Technologies AB."""
-
-from io import StringIO
-
-import pandas as pd
-import polars as pl
-import pytest
-from anndata import AnnData
-
-from pixelator.mpx.pixeldataset.utils import update_metrics_anndata
-from pixelator.pna.pixeldataset import PNAPixelDataset
-from pixelator.pna.pixeldataset.io import PixelFileWriter
-
 EDGELIST_DATA = """umi1,umi2,read_count,uei_count,marker_1,marker_2,component
 16718381540940362211,4765690112321800547,10,2210194,MarkerC,MarkerB,fc07dea9b679aca7
 16718381540940362211,13496407243000087834,10,54146122,MarkerC,MarkerB,fc07dea9b679aca7
@@ -85,10 +72,10 @@ fc07dea9b679aca7,4,10,3,normal,0.5
 e7d82bca9694eea7,3,3,2,normal,0.75
 """
 
-ADATA_VAR = """,antibody_count,antibody_pct,components,control,nuclear
-MarkerA,14,0.33333334,4,no,yes
-MarkerB,12,0.2857143,4,no,no
-MarkerC,16,0.3809524,3,yes,no
+ADATA_VAR = """,antibody_count,antibody_pct,components,control,nuclear,sequence_1,conj_id,sequence_2
+MarkerA,14,0.33333334,4,no,yes,ACTTCCTAGG,pna_rnd01,ACTTCCTAGG
+MarkerB,12,0.2857143,4,no,no,CCAGGTTCCG,pna_rnd02,CCAGGTTCCG
+MarkerC,16,0.3809524,3,yes,no,CAGCTATGGT,pna_rnd03,CAGCTATGGT
 """
 
 
@@ -98,7 +85,23 @@ fc07dea9b679aca7,MarkerA,MarkerA,87,86.5,9.96,0.062,0.575
 fc07dea9b679aca7,MarkerB,MarkerC,30,27.3,3.1,0.001,0.999
 """
 
-UNS_DATA = {"my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0}}
+UNS_DATA = {
+    "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
+    "panel_metadata": {
+        "name": "test-pna-panel",
+        "aliases": ["test-pna"],
+        "description": "Test R&D panel for RNA",
+        "version": "0.1.0",
+        "panel_columns": [
+            "marker_id",
+            "control",
+            "nuclear",
+            "sequence_1",
+            "conj_id",
+            "sequence_2",
+        ],
+    },
+}
 
 LAYOUT_DATA = """
 component,layout,projection,index,pixel_type,x,y,z,x_norm,y_norm,z_norm
@@ -175,148 +178,3 @@ e7d82bca9694eea7,wpmds_3d,full,6367193580528650492,B,-3547.082310373761,-1.19968
 3770519d30f36d18,wpmds_3d,full,4489093624312168814,B,5172.760468478328,5.600614486509197e-13,-2.15801871306354e-13,1.0,1.0827128997443661e-16,-4.1718898955674334e-17,1,0,0
 3770519d30f36d18,wpmds_3d,full,3527325133011089308,B,-8701.345998372599,2547.699687924787,1193.9848473143566,-0.9514937069516293,0.278591406515319,0.1305624519043019,1,0,0
 """
-
-
-@pytest.fixture(name="layout_dataframe", scope="module")
-def layout_dataframe_fixture():
-    layout = pl.read_csv(
-        StringIO(LAYOUT_DATA),
-        schema={
-            "component": pl.Utf8,
-            "layout": pl.Utf8,
-            "projection": pl.Utf8,
-            "index": pl.UInt64,
-            "pixel_type": pl.Utf8,
-            "x": pl.Float64,
-            "y": pl.Float64,
-            "z": pl.Float64,
-            "x_norm": pl.Float64,
-            "y_norm": pl.Float64,
-            "z_norm": pl.Float64,
-        },
-    )
-    return layout
-
-
-@pytest.fixture(name="layout_parquet_path", scope="module")
-def layout_parquet_path_fixture(tmp_path_factory, layout_dataframe):
-    path = tmp_path_factory.mktemp("data") / "layout.parquet"
-    layout_dataframe.write_parquet(path)
-    return path
-
-
-@pytest.fixture(name="edgelist_dataframe", scope="module")
-def edgelist_dataframe_fixture(edgelist_data):
-    edgelist = pl.read_csv(
-        StringIO(edgelist_data),
-        schema={
-            "umi1": pl.UInt64,
-            "umi2": pl.UInt64,
-            "read_count": pl.UInt32,
-            "uei_count": pl.UInt32,
-            "marker_1": pl.Utf8,
-            "marker_2": pl.Utf8,
-            "component": pl.Utf8,
-        },
-    )
-    return edgelist
-
-
-@pytest.fixture(name="edgelist_parquet_path", scope="module")
-def edgelist_parquet_path_fixture(tmp_path_factory, edgelist_dataframe):
-    path = tmp_path_factory.mktemp("data") / "edgelist.parquet"
-    edgelist_dataframe.write_parquet(path)
-    return path
-
-
-@pytest.fixture(name="proximity_dataframe", scope="module")
-def proximity_dataframe_fixture(proximity_data):
-    proximity = pl.read_csv(
-        StringIO(proximity_data),
-    )
-    return proximity
-
-
-@pytest.fixture(name="proximity_parquet_path", scope="module")
-def proximity_parquet_path_fixture(tmp_path_factory, proximity_dataframe):
-    path = tmp_path_factory.mktemp("data") / "proximity.parquet"
-    proximity_dataframe.write_parquet(path)
-    return path
-
-
-def create_pxl_file(
-    target,
-    sample_name,
-    edgelist_parquet_path,
-    proximity_parquet_path,
-    layout_parquet_path,
-):
-    with PixelFileWriter(target) as writer:
-        writer.write_edgelist(edgelist_parquet_path)
-        writer.write_adata(adata_data_func())
-        writer.write_metadata({"sample_name": sample_name, "version": "0.1.0"})
-        if proximity_parquet_path:
-            writer.write_proximity(proximity_parquet_path)
-        if layout_parquet_path:
-            writer.write_layouts(layout_parquet_path)
-
-    return target
-
-
-@pytest.fixture(
-    name="pxl_file",
-    scope="module",
-)
-def pixel_file_fixture(
-    tmp_path_factory,
-    edgelist_parquet_path,
-    proximity_parquet_path,
-    layout_parquet_path,
-):
-    target = tmp_path_factory.mktemp("data") / "file.pxl"
-    target = create_pxl_file(
-        target=target,
-        sample_name="test_sample",
-        edgelist_parquet_path=edgelist_parquet_path,
-        proximity_parquet_path=proximity_parquet_path,
-        layout_parquet_path=layout_parquet_path,
-    )
-    return target
-
-
-@pytest.fixture(name="pxl_dataset", scope="function")
-def pixel_dataset_fixture(pxl_file):
-    return PNAPixelDataset.from_pxl_files(pxl_file)
-
-
-@pytest.fixture(name="edgelist_data", scope="module")
-def edgelist_data_fixture():
-    return EDGELIST_DATA
-
-
-@pytest.fixture(name="proximity_data", scope="module")
-def proximity_data_fixture():
-    return PROXIMITY_DATA
-
-
-@pytest.fixture(name="uns_data", scope="module")
-def uns_data_fixture():
-    return UNS_DATA
-
-
-def adata_data_func():
-    X = pd.read_csv(StringIO(ADATA_X), index_col="component")
-
-    adata = AnnData(
-        X=X,
-        obs=pd.read_csv(StringIO(ADATA_OBS), index_col="component"),
-        var=pd.read_csv(StringIO(ADATA_VAR), index_col=0),
-        uns=UNS_DATA,
-    )
-    adata = update_metrics_anndata(adata, inplace=False)
-    return adata
-
-
-@pytest.fixture(name="adata_data", scope="function")
-def adata_data_fixture():
-    return adata_data_func()
