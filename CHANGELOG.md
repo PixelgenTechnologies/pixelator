@@ -12,15 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 The panel files `proxiome-immuno-155` and `proxiome-immuno-156-FMC63` have been updated with clearer
 marker names. To use the previous version, specify `--panel proxiome-immuno-155-v1` or `--panel proxiome-immuno-156-FMC63-v1` when running pixelator.
 
-### Fixed
-
--   `pixelator single-cell demux` respects the `--cores` option.
--    Fix a bug in `pixelator single-cell demux` where the total number of input reads
-     report in the report.json files would be slightly smaller than the actual number of reads in the input files.
--    Include panel data in `.pxl` file for PNA data
--    Fix an issue where very large samples (3k cells) could not be collapsed
-     due to the limits of the PyArrow string array type.
-
 ### Added
 
 -   Move to duckdb-based implementation of edgelist to anndata for improved memory usage.
@@ -38,6 +29,15 @@ marker names. To use the previous version, specify `--panel proxiome-immuno-155-
 ### Removed
 
  - The `nuclear` column has been removed from the panel file, and will not appear in e.g. the downstream .pxl files.
+
+### Fixed
+
+-   `pixelator single-cell demux` respects the `--cores` option.
+-    Fix a bug in `pixelator single-cell demux` where the total number of input reads
+     report in the report.json files would be slightly smaller than the actual number of reads in the input files.
+-    Include panel data in `.pxl` file for PNA data
+-    Fix an issue where very large samples (3k cells) could not be collapsed
+     due to the limits of the PyArrow string array type.
 
 ## [0.21.4] - 2025-08-27
 
