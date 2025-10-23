@@ -33,6 +33,7 @@ marker names. To use the previous version, specify `--panel proxiome-immuno-155-
 -   Add the `PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE` environment variable to control the maximum amount of internal
     temporary disk space that DuckDB can use for memory constrained operations. No disk space limit is applied by default.
 -   Add new panel file with updated marker ids, full names, and additional ids
+-   Add new panel file with FLAG add-on
 
 ### Removed
 
