@@ -38,7 +38,6 @@ class PNAAntibodyPanel:
     _REQUIRED_COLUMNS = [
         "marker_id",
         "control",
-        "nuclear",
         "sequence_1",
         "sequence_2",
         "conj_id",

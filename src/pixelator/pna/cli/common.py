@@ -115,7 +115,7 @@ def validate_panel(ctx, param, value):
     else:
         from pixelator.pna.config import pna_config
 
-        panel_options = list(pna_config.list_panel_names())
+        panel_options = list(pna_config.list_panel_names(include_aliases=True))
 
         if value not in panel_options:
             raise click.UsageError(

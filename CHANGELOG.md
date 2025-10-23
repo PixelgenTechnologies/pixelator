@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [x.x.x] - 2025-xx-xx
 
+### Important changes
+
+The panel files `proxiome-immuno-155` and `proxiome-immuno-156-FMC63` have been updated with clearer
+marker names. To use the previous version, specify `--panel proxiome-immuno-155-v1` or `--panel proxiome-immuno-156-FMC63-v1` when running pixelator.
 
 ### Fixed
 
@@ -28,6 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     for memory constrained operations.
 -   Add the `PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE` environment variable to control the maximum amount of internal
     temporary disk space that DuckDB can use for memory constrained operations. No disk space limit is applied by default.
+-   Add new panel file with updated marker ids, full names, and additional ids
+
+### Removed
+
+ - The `nuclear` column has been removed from the panel file, and will not appear in e.g. the downstream .pxl files.
 
 ## [0.21.4] - 2025-08-27
 

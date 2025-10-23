@@ -467,6 +467,7 @@ def test_find_components_fixed_thresholds(lazy_edgelist_karate_graph):
 
 
 @pytest.mark.slow
+@pytest.mark.parametrize("mock_panel", ["1.0.0", "2.0.0"], indirect=True)
 def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, tmpdir):
     output = Path(tmpdir) / "output.pxl"
 
@@ -503,26 +504,29 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
         "051c05ea14e7a441",
     }
 
+    expected_columns = [
+        "marker_id",
+        "uniprot_id",
+        "control",
+        "nuclear",
+        "sequence_1",
+        "sequence_2",
+        "conj_id",
+    ]
+    if mock_panel.version.startswith("2"):
+        expected_columns.pop(expected_columns.index("nuclear"))
+
     adata = result.adata()
     assert adata.uns["panel_metadata"] == {
         "name": mock_panel.name,
         "description": mock_panel.description,
         "aliases": mock_panel.aliases,
         "version": mock_panel.version,
-        "panel_columns": [
-            "marker_id",
-            "uniprot_id",
-            "control",
-            "nuclear",
-            "sequence_1",
-            "sequence_2",
-            "conj_id",
-        ],
+        "panel_columns": expected_columns,
     }
     reconstructed_panel = adata.var.reset_index(names="marker_id")[
-        PNAAntibodyPanel._REQUIRED_COLUMNS
+        adata.uns["panel_metadata"]["panel_columns"]
     ]
-    reconstructed_panel.insert(1, "uniprot_id", adata.var.reset_index()["uniprot_id"])
 
     assert_frame_equal(
         pl.from_pandas(reconstructed_panel),

@@ -105,11 +105,13 @@ def test_loading_panel_from_config(config_with_multiple_versions):
     assert panel.version == "0.2.0"
 
 
-@pytest.mark.parametrize("panel_name", ["proxiome-immuno-155", "proxiome-immuno-155"])
+@pytest.mark.parametrize(
+    "panel_name", ["proxiome-immuno-155-v1", "proxiome-immuno-155-v2"]
+)
 def test_loading_panel_from_config_alias(panel_name):
     panel = pna_config.get_panel(panel_name)
     assert panel.name == panel_name
-    assert panel.version == "1.0.0"
+    assert panel.version == f"{panel_name[-1]}.0.0"
 
 
 def test_loading_panel_from_config_specific_version(config_with_multiple_versions):
@@ -124,7 +126,7 @@ def test_loading_panel_from_config_specific_version(config_with_multiple_version
 
 def test_load_antibody_panel_util(pna_data_root):
     cgf_panel = load_antibody_panel(pna_config, "proxiome-immuno-155")
-    assert cgf_panel.name == "proxiome-immuno-155"
+    assert cgf_panel.name == "proxiome-immuno-155-v2"
 
     path_panel = load_antibody_panel(
         pna_config, pna_data_root / "test-pna-panel-v2.csv"
@@ -149,16 +151,28 @@ def test_panel_with_non_dna_sequences(pna_data_root):
 
 
 def test_list_panel_names(pna_data_root):
-    assert sorted(pna_config.list_panel_names(include_aliases=True)) == [
-        "proxiome-immuno-155",
-        "proxiome-immuno-155plex",
-        "proxiome-immuno-156-FMC63",
-        "proxiome-immuno-156-FMC63plex",
-    ]
+    assert sorted(pna_config.list_panel_names(include_aliases=True)) == sorted(
+        [
+            "proxiome-immuno-155",
+            "proxiome-immuno-155plex",
+            "proxiome-immuno-155-v1",
+            "proxiome-immuno-155plex-v1",
+            "proxiome-immuno-155-v2",
+            "proxiome-immuno-155plex-v2",
+            "proxiome-immuno-156-FMC63",
+            "proxiome-immuno-156-FMC63plex",
+            "proxiome-immuno-156-FMC63-v1",
+            "proxiome-immuno-156-FMC63-v2",
+            "proxiome-immuno-156-FMC63plex-v1",
+            "proxiome-immuno-156-FMC63plex-v2",
+        ]
+    )
 
     assert sorted(pna_config.list_panel_names(include_aliases=False)) == [
-        "proxiome-immuno-155",
-        "proxiome-immuno-156-FMC63",
+        "proxiome-immuno-155-v1",
+        "proxiome-immuno-155-v2",
+        "proxiome-immuno-156-FMC63-v1",
+        "proxiome-immuno-156-FMC63-v2",
     ]
 
 
