@@ -161,13 +161,18 @@ def test_list_panel_names(pna_data_root):
             "proxiome-immuno-155plex-v2",
             "proxiome-immuno-156-FMC63",
             "proxiome-immuno-156-FMC63plex",
+            "proxiome-immuno-156-FMC63-v1",
+            "proxiome-immuno-156-FMC63-v2",
+            "proxiome-immuno-156-FMC63plex-v1",
+            "proxiome-immuno-156-FMC63plex-v2",
         ]
     )
 
     assert sorted(pna_config.list_panel_names(include_aliases=False)) == [
         "proxiome-immuno-155-v1",
         "proxiome-immuno-155-v2",
-        "proxiome-immuno-156-FMC63",
+        "proxiome-immuno-156-FMC63-v1",
+        "proxiome-immuno-156-FMC63-v2",
     ]
 
 
