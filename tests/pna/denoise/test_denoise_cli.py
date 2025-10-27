@@ -1,10 +1,10 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
-from click.testing import CliRunner
 import pytest
+from click.testing import CliRunner
 
 from pixelator import cli
 from pixelator.pna.pixeldataset import read
