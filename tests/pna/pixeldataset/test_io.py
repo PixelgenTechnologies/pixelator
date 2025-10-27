@@ -114,7 +114,11 @@ class TestPixelFileReader:
 
         results = reader.read_metadata()
         assert results == {
-            "test_sample": {"sample_name": "test_sample", "version": "0.1.0"}
+            "test_sample": {
+                "sample_name": "test_sample",
+                "version": "0.1.0",
+                "panel_name": "custom_panel",
+            }
         }
 
     def test_read_proximity(self, pxl_view, proximity_dataframe):
@@ -257,7 +261,11 @@ class TestPxlDataQuerier:
         querier = PixelDataQuerier(pxl_view)
         result = querier.read_metadata()
         assert result == {
-            "test_sample": {"sample_name": "test_sample", "version": "0.1.0"}
+            "test_sample": {
+                "sample_name": "test_sample",
+                "version": "0.1.0",
+                "panel_name": "custom_panel",
+            }
         }
 
     def test_read_layouts(self, pxl_view, layout_dataframe):
