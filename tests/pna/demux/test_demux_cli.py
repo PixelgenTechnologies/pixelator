@@ -68,6 +68,5 @@ def test_demux_custom_panel(tmp_path, testdata_amplicon_fastq, pna_data_root):
     ]
     cmd = runner.invoke(cli.main_cli, args)
 
-    print(cmd.output)
 
     assert cmd.exit_code == 0
