@@ -65,7 +65,6 @@ fc07dea9b679aca7,3,7,4
 e7d82bca9694eea7,4,2,0
 """
 
-# FIXME sometimes, this needs `n_umi` column
 ADATA_OBS = """component,n_umi1,n_umi2,n_umi,antibody,tau_type,tau
 3770519d30f36d18,4,3,7,3,normal,0.33333333333333337
 4920229146151c29,11,4,15,3,normal,0.6666666666666667
