@@ -193,7 +193,13 @@ def create_pxl_file(
     with PixelFileWriter(target) as writer:
         writer.write_edgelist(edgelist_parquet_path)
         writer.write_adata(adata_data_func())
-        writer.write_metadata({"sample_name": sample_name, "version": "0.1.0"})
+        writer.write_metadata(
+            {
+                "sample_name": sample_name,
+                "version": "0.1.0",
+                "panel_name": "custom_panel",
+            }
+        )
         if proximity_parquet_path:
             writer.write_proximity(proximity_parquet_path)
         if layout_parquet_path:
