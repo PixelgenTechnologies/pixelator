@@ -1,5 +1,6 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -74,6 +75,20 @@ def test_panel_validation_ok_on_concatenated_uniprot_ids():
     PNAAntibodyPanel(df=df, metadata=None)
 
 
+def test_panel_validation_ok_uniprotid_nan():
+    data = {
+        "marker_id": ["marker1", "marker2", "marker3"],
+        "uniprot_id": ["P05107", "P05107", np.nan],
+        "control": [False, True, False],
+        "nuclear": [True, False, True],
+        "sequence_1": ["ATCG", "GCTA", "ATCC"],
+        "sequence_2": ["ATCG", "GCTA", "ATCC"],
+        "conj_id": ["conj1", "conj2", "conj3"],
+    }
+    df = pd.DataFrame(data)
+    PNAAntibodyPanel(df=df, metadata=None)
+
+
 def test_panel_from_pxl(pxl_file):
     panel = PNAAntibodyPanel.from_pxl(pxl_file)
     assert panel.name == "test-pna-panel"
@@ -85,6 +100,7 @@ def test_panel_from_pxl(pxl_file):
         "marker_id": ["MarkerA", "MarkerB", "MarkerC"],
         "control": ["no", "no", "yes"],
         "nuclear": ["yes", "no", "no"],
+        "uniprot_id": ["P12345", "P56890;P65470", np.nan],
         "sequence_1": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
         "conj_id": ["pna_rnd01", "pna_rnd02", "pna_rnd03"],
         "sequence_2": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],

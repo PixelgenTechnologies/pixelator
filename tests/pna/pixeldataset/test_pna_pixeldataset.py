@@ -82,6 +82,7 @@ class TestPNAPixelDataset:
                     "marker_id",
                     "control",
                     "nuclear",
+                    "uniprot_id",
                     "sequence_1",
                     "conj_id",
                     "sequence_2",

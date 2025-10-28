@@ -25,7 +25,7 @@ def mock_panel_fixture(request):
                 "MarkerB",
                 "MarkerC",
             ],
-            "uniprot_id": ["P61769", "P05107", "P15391"],
+            "uniprot_id": ["P61769", "P05107", np.nan],
             "control": ["no", "no", "yes"],
             "nuclear": ["yes", "no", "no"],
             "sequence_1": ["AAAA", "CCCC", "GGGG"],
