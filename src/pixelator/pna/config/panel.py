@@ -123,6 +123,7 @@ class PNAAntibodyPanel:
         panel_metadata = adata.uns["panel_metadata"]
         panel_columns = panel_metadata.pop("panel_columns")
         df = adata.var.reset_index(names="marker_id")[panel_columns]
+        df.index = df.conj_id  # type: ignore
         metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
 
         logger.debug("Antibody panel from file %s created", filename)

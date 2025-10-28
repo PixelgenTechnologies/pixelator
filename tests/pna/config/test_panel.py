@@ -105,4 +105,5 @@ def test_panel_from_pxl(pxl_file):
         "sequence_2": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
     }
     expected_df = pd.DataFrame(expected_data)
+    expected_df.index = expected_df.conj_id
     assert_frame_equal(panel.df, expected_df)
