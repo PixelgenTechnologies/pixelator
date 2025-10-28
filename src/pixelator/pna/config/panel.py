@@ -188,6 +188,10 @@ class PNAAntibodyPanel:
                 f"The following errors were found validating the panel: {msg_str}"
             )
 
+        panel["control"] = panel["control"].fillna("no")
+        if "uniprot_id" in panel.columns:
+            panel["uniprot_id"] = panel["uniprot_id"].fillna("")
+
         # assign the sequence (unique) as index
         panel.index = panel.conj_id  # type: ignore
 
@@ -275,7 +279,7 @@ class PNAAntibodyPanel:
         # Check UniProt IDs format conforming to the UniProt naming convention. Empty IDs are allowed.
         if "uniprot_id" in panel_df.columns:
             # Pattern for valid UniProt IDs
-            pattern = r"^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}$"
+            pattern = r"^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}|$"
 
             def check_id(id_str):
                 if pd.isna(id_str):

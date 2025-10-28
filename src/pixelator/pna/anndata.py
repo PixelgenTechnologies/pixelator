@@ -30,7 +30,6 @@ def add_panel_information(adata, panel):
     panel_columns = list(panel_copy.columns)
     panel_copy = panel_copy.set_index("marker_id")
     panel_copy.index = panel_copy.index.astype(str)
-    panel_copy["control"] = panel_copy["control"].fillna("no")
 
     adata.var = adata.var.join(panel_copy, how="left")
 

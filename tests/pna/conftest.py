@@ -255,7 +255,7 @@ def adata_data_func():
     adata = AnnData(
         X=X,
         obs=pd.read_csv(StringIO(ADATA_OBS), index_col="component"),
-        var=pd.read_csv(StringIO(ADATA_VAR), index_col=0),
+        var=pd.read_csv(StringIO(ADATA_VAR), index_col=0).fillna(""),
         uns=UNS_DATA,
     )
     adata = update_metrics_anndata(adata, inplace=False)
