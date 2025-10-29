@@ -179,7 +179,7 @@ class PNAAntibodyPanel:
 
     @classmethod
     def _parse_panel(cls, panel_file: Path) -> pd.DataFrame:
-        panel = pd.read_csv(str(panel_file), comment="#")
+        panel = pd.read_csv(str(panel_file), comment="#").fillna("")
 
         # validate the panel
         errors = cls.validate_antibody_panel(panel)
@@ -190,8 +190,6 @@ class PNAAntibodyPanel:
             )
 
         panel["control"] = panel["control"].fillna("no")
-        if "uniprot_id" in panel.columns:
-            panel["uniprot_id"] = panel["uniprot_id"].fillna("")
 
         # assign the sequence (unique) as index
         panel.index = panel.conj_id  # type: ignore
@@ -283,8 +281,6 @@ class PNAAntibodyPanel:
             pattern = r"^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}|$"
 
             def check_id(id_str):
-                if pd.isna(id_str):
-                    return True
                 return all(
                     bool(re.match(pattern, id_)) for id_ in str(id_str).split(";")
                 )
