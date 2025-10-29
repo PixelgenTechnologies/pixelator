@@ -189,7 +189,7 @@ class PNAAntibodyPanel:
                 f"The following errors were found validating the panel: {msg_str}"
             )
 
-        panel["control"] = panel["control"].fillna("no")
+        panel["control"] = panel["control"].map(lambda s: s.lower() == "yes")
 
         # assign the sequence (unique) as index
         panel.index = panel.conj_id  # type: ignore
