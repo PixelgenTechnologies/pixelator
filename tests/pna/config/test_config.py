@@ -139,8 +139,11 @@ def test_load_antibody_panel_util(pna_data_root):
 
 
 def test_panel_with_non_dna_sequences(pna_data_root):
-    panel_df = pd.read_csv(pna_data_root / "test-pna-panel-v2.csv", skiprows=9)
-    panel_df.loc[0, "sequence_1"] = "PPPPPP"
+    panel_df = pd.read_csv(
+        pna_data_root / "test-pna-panel-v2.csv", skiprows=9, index_col="marker_id"
+    ).fillna("")
+    panel_df["control"] = panel_df["control"].map(lambda s: s.lower() == "yes")
+    panel_df.loc["CD45", "sequence_1"] = "PPPPPP"
     errors = PNAAntibodyPanel.validate_antibody_panel(panel_df)
     assert len(errors) == 2
     assert errors[0] == "All sequence_1 values must have the same length."
