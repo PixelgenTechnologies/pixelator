@@ -44,6 +44,11 @@ def amplicon_fastq(
     mismatches: float = 0.1,
     poly_g_trimming: bool = False,
     quality_cutoff: int = 20,
+    low_complexity_filter: bool = True,
+    low_complexity_threshold: float = 0.8,
+    lbs_filter: bool = True,
+    lbs_filter_min_overlap: int = 8,
+    lbs_filter_error_rate: float = 0.1,
     threads: int = -1,
     save_failed: bool = False,
 ) -> AmpliconStatistics:
@@ -52,15 +57,24 @@ def amplicon_fastq(
     This function will take paired-end reads and combine them into the proper amplicon
     sequences based on the assay design. The reads will be quality trimmed and filtered.
 
-    :param inputs: The input files to process
-    :param assay: The assay design to use
-    :param output: The output file to write
-    :param mismatches: The number of mismatches to allow
-    :param poly_g_trimming: Whether to perform poly-G trimming
-    :param quality_cutoff: The quality cutoff to use for quality trimming read tails
-    :param threads: The number of cores to use. -1 will use all available cores
-    :param save_failed: Whether to save reads that fail during amplicon combining to a separate file
-    :return: A `AmpliconStatistics` instance
+    Args:
+        inputs: The input files to process
+        assay: The assay design to use
+        output: The output file to write
+        mismatches: The number of mismatches to allow
+        poly_g_trimming: Whether to perform poly-G trimming
+        quality_cutoff: The quality cutoff to use for quality trimming read tails
+        low_complexity_filter: Whether to filter reads with low complexity UMIs
+        low_complexity_threshold: The percentage of the UMI that must consists of a single base to be considered of low complexity.
+        lbs_filter: Whether to filter reads with LBS detected in the UMI regions
+        lbs_filter_min_overlap: The minimum overlap to use for LBS detection in UMI regions
+        lbs_filter_error_rate: The maximum error rate to allow when determining overlap with the LBS sequence in UMI regions,
+        threads: The number of cores to use. -1 will use all available cores
+        save_failed: Whether to save reads that fail during amplicon combining to a separate file
+
+    Returns:
+        An `AmpliconStatistics` instance.
+
     """
     threads = threads if threads > 0 else mp.cpu_count()
 
@@ -115,6 +129,10 @@ def amplicon_fastq(
         assay=assay, mismatches=mismatches, writer=amplicon_failed_writer
     )
 
+    # ----------------------------------------
+    # Configure pre amplicon filtering and trimming steps
+    # ----------------------------------------
+
     pre_steps: list[PairedEndStep | SingleEndStep] = []
     pre_modifiers: list[PairedEndModifier | SingleEndModifier] = []
 
@@ -142,10 +160,46 @@ def amplicon_fastq(
 
     sink = SingleEndSink(output_files.open_record_writer(output))
 
+    # ----------------------------------------
+    # Configure post amplicon filtering steps
+    # ----------------------------------------
+
+    # Configure if failed reads should be saved to a separate output file
     post_failed_writer = None
     if save_failed:
         post_failed_writer = output_files.open_record_writer(
             output.parent / f"{output_filename}.post_failed.fq.zst"
+        )
+
+    post_filters: list[SingleEndStep] = []
+
+    # Always run the TooManyN filter
+    post_filters.append(
+        SingleEndFilterWithFailureReason(
+            predicate=TooManyN(0, assay), writer=post_failed_writer
+        )
+    )
+
+    # Configure low complexity UMI filter
+    if low_complexity_filter:
+        post_filters.append(
+            SingleEndFilterWithFailureReason(
+                predicate=LowComplexityUMI(assay, proportion=low_complexity_threshold),
+                writer=post_failed_writer,
+            )
+        )
+
+    # Configure LBS in UMI filter
+    if lbs_filter:
+        post_filters.append(
+            SingleEndFilterWithFailureReason(
+                predicate=LBSDetectedInUMI(
+                    assay,
+                    min_overlap=lbs_filter_min_overlap,
+                    max_error_rate=lbs_filter_error_rate,
+                ),
+                writer=post_failed_writer,
+            )
         )
 
     # Construct the pipeline
@@ -153,16 +207,8 @@ def amplicon_fastq(
         combiner=builder,
         pre_modifiers=pre_modifiers,
         pre_steps=pre_steps,
-        post_steps=[
-            SingleEndFilterWithFailureReason(
-                predicate=TooManyN(0, assay), writer=post_failed_writer
-            ),
-            SingleEndFilterWithFailureReason(
-                predicate=LowComplexityUMI(assay), writer=post_failed_writer
-            ),
-            SingleEndFilterWithFailureReason(
-                predicate=LBSDetectedInUMI(assay), writer=post_failed_writer
-            ),
+        post_steps=post_filters
+        + [
             QualityProfileStep(assay=assay),
             sink,
         ],
