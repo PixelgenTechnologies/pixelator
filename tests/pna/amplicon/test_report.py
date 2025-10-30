@@ -12,76 +12,80 @@ from pixelator.pna.amplicon.report import AmpliconSampleReport, AmpliconStatisti
 @pytest.fixture(name="amplicon_report")
 def amplicon_report_fixture():
     return {
-        "sample_id": "PNA055_Sample07_filtered_S7",
+        "sample_id": "PNA055_Sample07_300k_S7_001",
         "product_id": "single-cell-pna",
         "report_type": "amplicon",
-        "input_reads": 99812,
-        "output_reads": 97407,
-        "passed_missing_lbs1_anchor": 0,
-        "passed_missing_uei_reads": 0,
-        "passed_partial_uei_reads": 0,
-        "failed_too_many_n_reads": 0,
+        "input_reads": 300000,
+        "output_reads": 271272,
+        "passed_missing_uei_reads": 61587,
+        "passed_partial_uei_reads": 4450,
+        "passed_missing_lbs1_anchor": 4315,
+        "failed_too_many_n_reads": 71,
         "failed_partial_upi1_umi1_reads": 0,
         "failed_partial_upi2_umi2_reads": 0,
-        "failed_missing_upi1_umi1_reads": 0,
-        "failed_missing_upi2_umi2_reads": 0,
-        "total_failed_reads": 2405,
+        "failed_missing_upi1_umi1_reads": 18243,
+        "failed_missing_upi2_umi2_reads": 8265,
+        "failed_lbs_detected_in_umi_reads": 2038,
+        "failed_low_complexity_umi_reads": 111,
+        "total_failed_reads": 28728,
         "q30_statistics": {
-            "total": 0.9687832501504746,
-            "umi1": 0.9697718996434694,
-            "pid1": 0.978598047368259,
-            "lbs1": 0.97016165067683,
-            "uei": 0.9399345016271932,
-            "lbs2": 0.978912115748876,
-            "pid2": 0.976195755951831,
-            "umi2": 0.9580841945944043,
+            "total": 0.9479181592425334,
+            "umi1": 0.9770778301588706,
+            "pid1": 0.9823977410127105,
+            "lbs1": 0.9418085938797941,
+            "uei": 0.7419050497901245,
+            "lbs2": 0.817271504046038,
+            "pid2": 0.9677843640331475,
+            "umi2": 0.9653207850423191,
         },
         "basepair_counts": {
-            "input": 12177064,
-            "input_read1": 4391728,
-            "input_read2": 7785336,
-            "quality_trimmed": 125811,
-            "quality_trimmed_read1": 101807,
-            "quality_trimmed_read2": 24004,
-            "output": 13831794,
+            "input": 36600000,
+            "input_read1": 13200000,
+            "input_read2": 23400000,
+            "quality_trimmed": 50062,
+            "quality_trimmed_read1": 2278,
+            "quality_trimmed_read2": 47784,
+            "output": 38520624,
         },
-        "failed_invalid_amplicon_reads": 0,
-        "fraction_discarded_reads": 0.02409529916242536,
+        "failed_invalid_amplicon_reads": 26508,
+        "fraction_discarded_reads": 0.09576,
     }
 
 
 def test_amplicon_sample_report(amplicon_report):
     report = AmpliconSampleReport(**amplicon_report)
-    assert report.sample_id == "PNA055_Sample07_filtered_S7"
+    assert report.sample_id == "PNA055_Sample07_300k_S7_001"
     assert report.product_id == "single-cell-pna"
     assert report.report_type == "amplicon"
-    assert report.input_reads == 99812
-    assert report.output_reads == 97407
-    assert report.passed_missing_uei_reads == 0
-    assert report.passed_partial_uei_reads == 0
-    assert report.failed_too_many_n_reads == 0
+    assert report.input_reads == 300000
+    assert report.output_reads == 271272
+    assert report.passed_missing_uei_reads == 61587
+    assert report.passed_partial_uei_reads == 4450
+    assert report.failed_too_many_n_reads == 71
     assert report.failed_partial_upi1_umi1_reads == 0
     assert report.failed_partial_upi2_umi2_reads == 0
-    assert report.failed_missing_upi1_umi1_reads == 0
-    assert report.failed_missing_upi2_umi2_reads == 0
-    assert report.total_failed_reads == 2405
-    assert report.q30_statistics.total == 0.9687832501504746
-    assert report.q30_statistics.umi1 == 0.9697718996434694
-    assert report.q30_statistics.pid1 == 0.978598047368259
-    assert report.q30_statistics.lbs1 == 0.97016165067683
-    assert report.q30_statistics.uei == 0.9399345016271932
-    assert report.q30_statistics.lbs2 == 0.978912115748876
-    assert report.q30_statistics.pid2 == 0.976195755951831
-    assert report.q30_statistics.umi2 == 0.9580841945944043
-    assert report.basepair_counts.input == 12177064
-    assert report.basepair_counts.input_read1 == 4391728
-    assert report.basepair_counts.input_read2 == 7785336
-    assert report.basepair_counts.quality_trimmed == 125811
-    assert report.basepair_counts.quality_trimmed_read1 == 101807
-    assert report.basepair_counts.quality_trimmed_read2 == 24004
-    assert report.basepair_counts.output == 13831794
-    assert report.failed_invalid_amplicon_reads == 0
-    assert report.fraction_discarded_reads == 0.02409529916242536
+    assert report.failed_missing_upi1_umi1_reads == 18243
+    assert report.failed_missing_upi2_umi2_reads == 8265
+    assert report.failed_lbs_detected_in_umi_reads == 2038
+    assert report.failed_low_complexity_umi_reads == 111
+    assert report.total_failed_reads == 28728
+    assert report.q30_statistics.total == 0.9479181592425334
+    assert report.q30_statistics.umi1 == 0.9770778301588706
+    assert report.q30_statistics.pid1 == 0.9823977410127105
+    assert report.q30_statistics.lbs1 == 0.9418085938797941
+    assert report.q30_statistics.uei == 0.7419050497901245
+    assert report.q30_statistics.lbs2 == 0.817271504046038
+    assert report.q30_statistics.pid2 == 0.9677843640331475
+    assert report.q30_statistics.umi2 == 0.9653207850423191
+    assert report.basepair_counts.input == 36600000
+    assert report.basepair_counts.input_read1 == 13200000
+    assert report.basepair_counts.input_read2 == 23400000
+    assert report.basepair_counts.quality_trimmed == 50062
+    assert report.basepair_counts.quality_trimmed_read1 == 2278
+    assert report.basepair_counts.quality_trimmed_read2 == 47784
+    assert report.basepair_counts.output == 38520624
+    assert report.failed_invalid_amplicon_reads == 26508
+    assert report.fraction_discarded_reads == 0.09576
 
 
 def test_amplicon_sample_report_from_amplicon_stats():

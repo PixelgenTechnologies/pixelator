@@ -21,7 +21,12 @@ from pixelator.pna.amplicon.build_amplicon import (
     PairedEndAmpliconBuilder,
     SingleEndAmpliconBuilder,
 )
-from pixelator.pna.amplicon.filters import TooManyN
+from pixelator.pna.amplicon.filters import (
+    LBSDetectedInUMI,
+    LowComplexityUMI,
+    SingleEndFilterWithFailureReason,
+    TooManyN,
+)
 from pixelator.pna.amplicon.quality import QualityProfileStep
 from pixelator.pna.amplicon.report import AmpliconStatistics
 from pixelator.pna.config.assay import PNAAssay
@@ -86,6 +91,7 @@ def amplicon_fastq(
 
     # Open file handles for failed reads
     # TODO: Should this be configurable?
+    output_filename = clean_suffixes(Path(inputs[0])).name
     failed_1 = Path(
         output.parent / f"{clean_suffixes(Path(inputs[0])).name}.failed.fq.zst"
     )
@@ -136,13 +142,27 @@ def amplicon_fastq(
 
     sink = SingleEndSink(output_files.open_record_writer(output))
 
+    post_failed_writer = None
+    if save_failed:
+        post_failed_writer = output_files.open_record_writer(
+            output.parent / f"{output_filename}.post_failed.fq.zst"
+        )
+
     # Construct the pipeline
     pipeline = AmpliconPipeline(
         combiner=builder,
         pre_modifiers=pre_modifiers,
         pre_steps=pre_steps,
         post_steps=[
-            SingleEndFilter(predicate=TooManyN(0, assay)),
+            SingleEndFilterWithFailureReason(
+                predicate=TooManyN(0, assay), writer=post_failed_writer
+            ),
+            SingleEndFilterWithFailureReason(
+                predicate=LowComplexityUMI(assay), writer=post_failed_writer
+            ),
+            SingleEndFilterWithFailureReason(
+                predicate=LBSDetectedInUMI(assay), writer=post_failed_writer
+            ),
             QualityProfileStep(assay=assay),
             sink,
         ],
