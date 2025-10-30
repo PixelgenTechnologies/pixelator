@@ -84,11 +84,11 @@ def test_get_position_in_amplicon_pna_1():
 
     assert umi1_pos == (0, 28)
     assert pid1_pos == (28, 38)
-    assert lbs1_pos == (38, 71)
-    assert uei_pos == (71, 86)
-    assert lbs2_pos == (86, 104)
-    assert pid2_pos == (104, 114)
-    assert umi2_pos == (114, 142)
+    assert lbs1_pos == (38, 70)
+    assert uei_pos == (70, 85)
+    assert lbs2_pos == (85, 103)
+    assert pid2_pos == (103, 113)
+    assert umi2_pos == (113, 141)
 
 
 @pytest.fixture()
