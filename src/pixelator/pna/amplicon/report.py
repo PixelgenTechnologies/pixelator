@@ -142,6 +142,16 @@ class AmpliconSampleReport(SampleReport):
         description="The number of reads discarded because they are missing UPI2/UMI2 sequences.",
     )
 
+    failed_lbs_detected_in_umi_reads: Optional[int] = pydantic.Field(
+        ...,
+        description="The number of reads discarded because of the UMI regions contain partial LBS sequences.",
+    )
+
+    failed_low_complexity_umi_reads: Optional[int] = pydantic.Field(
+        ...,
+        description="The number of reads discarded because of the UMI regions having very low complexity.",
+    )
+
     total_failed_reads: int = pydantic.Field(
         ...,
         description="The total number of reads that failed the filters and are discarded.",
@@ -248,6 +258,12 @@ class AmpliconStatistics(Statistics):
             passed_partial_uei_reads=amplicon_report["passed_partial_uei_reads"],  # type: ignore
             passed_missing_lbs1_anchor=amplicon_report["passed_missing_lbs1_anchor"],  # type: ignore
             failed_too_many_n_reads=self.filtered["too_many_n"],  # type: ignore
+            failed_lbs_detected_in_umi_reads=self.filtered["lbs_detected_in_umi"]
+            if "lbs_detected_in_umi" in self.filtered
+            else 0,  # type: ignore
+            failed_low_complexity_umi_reads=self.filtered["low_complexity_umi"]
+            if "low_complexity_umi" in self.filtered
+            else 0,  # type: ignore
             failed_partial_upi1_umi1_reads=amplicon_report[
                 "failed_partial_upi1_umi1_reads"
             ],  # type: ignore
