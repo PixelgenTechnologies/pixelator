@@ -78,7 +78,7 @@ def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
 
 
 def test_panel_validation_ok_uniprotid_empty(panel_df):
-    panel_df["marker1", "uniprot_id"] = ""
+    panel_df.loc["marker1", "uniprot_id"] = ""
     PNAAntibodyPanel(df=panel_df, metadata=None)
 
 
