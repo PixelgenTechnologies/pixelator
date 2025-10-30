@@ -234,7 +234,7 @@ def merge_communities_with_many_crossing_edges(
 def _get_umi_component_map_from_edgelist(edgelist: pl.LazyFrame) -> dict:
     """Get a umi component map from an edgelist."""
     umi_component_map = dict()
-    if "component1" in edgelist.columns:
+    if "component1" in edgelist.collect_schema().names():
         component_umis = (
             edgelist.group_by("component1")
             .agg(pl.col("umi1").unique(), pl.col("umi2").unique())

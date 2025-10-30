@@ -181,7 +181,7 @@ class PixelFileWriter:
             params={"uns_data": uns},
         )
 
-        for key in adata.obsm_keys():
+        for key in adata.obsm:
             obsm_layer = adata.obsm[key].reset_index(names="index")
             self._connection.sql(
                 f"""
