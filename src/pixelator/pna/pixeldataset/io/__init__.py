@@ -486,7 +486,7 @@ class PixelDataViewer:
 
             adata = AnnData(
                 X=X.set_index("index").rename_axis(index={"index": "component"}),
-                var=var.set_index("index").rename_axis(index={"index": None}),
+                var=var.set_index("index").rename_axis(index={"index": "marker_id"}),
                 obs=obs.set_index("index").rename_axis(index={"index": "component"}),
                 uns=uns,
                 obsm=obsm,

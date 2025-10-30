@@ -35,8 +35,8 @@ class PNAAntibodyPanel:
     """Class representing a Molecular Pixelation antibody panel."""
 
     # required columns
+    _INDEX_COLUMN = "marker_id"
     _REQUIRED_COLUMNS = [
-        "marker_id",
         "control",
         "sequence_1",
         "sequence_2",
@@ -122,8 +122,7 @@ class PNAAntibodyPanel:
         adata = pxl_data.adata()
         panel_metadata = adata.uns["panel_metadata"]
         panel_columns = panel_metadata.pop("panel_columns")
-        df = adata.var.reset_index(names="marker_id")[panel_columns]
-        df.index = df.conj_id  # type: ignore
+        df = adata.var[panel_columns]
         metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
 
         logger.debug("Antibody panel from file %s created", filename)
@@ -179,33 +178,23 @@ class PNAAntibodyPanel:
 
     @classmethod
     def _parse_panel(cls, panel_file: Path) -> pd.DataFrame:
-        panel = pd.read_csv(str(panel_file), comment="#").fillna("")
-
-        # validate the panel
-        errors = cls.validate_antibody_panel(panel)
-        if len(errors) > 0:
-            msg_str = "\n".join(errors)
-            raise AssertionError(
-                f"The following errors were found validating the panel: {msg_str}"
-            )
+        panel = pd.read_csv(str(panel_file), comment="#", index_col="marker_id").fillna(
+            ""
+        )
 
         panel["control"] = panel["control"].map(lambda s: s.lower() == "yes")
 
-        # assign the sequence (unique) as index
-        panel.index = panel.conj_id  # type: ignore
-
-        # return a local copy
         return panel.copy()
 
     @cached_property
     def markers_control(self) -> List[str]:
         """Return a list of marker control (names)."""
-        return list(self._df[self._df["control"]].marker_id.unique())
+        return list(self._df[self._df["control"]].index)
 
     @cached_property
     def markers(self) -> List[str]:
         """Return the list of unique markers in the panel."""
-        return list(self._df.marker_id.unique())
+        return list(self._df.index.unique())
 
     @property
     def df(self) -> pd.DataFrame:
@@ -221,10 +210,6 @@ class PNAAntibodyPanel:
     def size(self) -> int:
         """Return the size of the marker panel."""
         return self._df.shape[0]
-
-    def get_marker_id(self, seq: str) -> str:
-        """Return the marker name."""
-        return self._df.loc[seq].marker_id
 
     @staticmethod
     def _validate_sequences(panel_df, sequence_col):
@@ -266,14 +251,21 @@ class PNAAntibodyPanel:
             if not len(panel_df[col].unique()) == len(panel_df[col]):
                 errors.append(f"All values in column: {col} were not unique")
 
-        if any(panel_df["marker_id"].str.contains("_")):
+        if panel_df.index.name != cls._INDEX_COLUMN:
+            errors.append(f"`{cls._INDEX_COLUMN}` is missing or is not set as index")
+            return errors
+
+        if any(panel_df.index.str.contains("_")):
             # Markers should not contain underscores since this messes
             # things up with Seurat on the R side
             errors.append(
                 "The marker_id column should not contain underscores. "
                 "Please use dashes instead. Offending values: "
-                f"{panel_df['marker_id'][panel_df['marker_id'].str.contains('_')]}"
+                f"{panel_df.index[panel_df.index.str.contains('_')]}"
             )
+
+        if panel_df["control"].dtype != bool:
+            errors.append("`control` column is not boolean")
 
         # Check UniProt IDs format conforming to the UniProt naming convention. Empty IDs are allowed.
         if "uniprot_id" in panel_df.columns:

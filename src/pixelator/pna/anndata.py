@@ -26,19 +26,14 @@ def calculate_antibody_metrics(counts_df):
 
 def add_panel_information(adata, panel):
     """Add panel data to var."""
-    panel_copy = panel.df.copy()
-    panel_columns = list(panel_copy.columns)
-    panel_copy = panel_copy.set_index("marker_id")
-    panel_copy.index = panel_copy.index.astype(str)
-
-    adata.var = adata.var.join(panel_copy, how="left")
+    adata.var = adata.var.join(panel.df, how="left")
 
     adata.uns["panel_metadata"] = {
         "name": panel.name,
         "aliases": panel.aliases,
         "description": panel.description,
         "version": panel.version,
-        "panel_columns": panel_columns,
+        "panel_columns": list(panel.df.columns),
     }
 
     return adata
@@ -206,7 +201,7 @@ def pna_edgelist_to_anndata(
 
     # find fraction of isotype markers in cell
     total_marker_counts = node_counts_df.sum(axis=1)
-    isotype_markers = adata.var[adata.var["control"] == "yes"].index
+    isotype_markers = adata.var[adata.var["control"]].index
     isotype_counts = node_counts_df[isotype_markers].sum(axis=1)
     adata.obs["isotype_fraction"] = isotype_counts / total_marker_counts
 

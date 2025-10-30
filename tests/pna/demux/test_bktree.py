@@ -63,11 +63,11 @@ def test_bktree_building():
     for index, row in panel.df.iterrows():
         seq = row["sequence_1"].encode("ascii")
 
-        n1 = tree.find(BKTreeItem(row["marker_id"], seq), 1)
+        n1 = tree.find(BKTreeItem(row.name, seq), 1)
         best_score, best_item = n1[0]
         assert best_score == 0
         assert best_item.sequence == seq
-        assert best_item.id == row["marker_id"]
+        assert best_item.id == row.name
 
     # Assert that one mismatch is always correctly found
     # Do this 1000 times to make sure since we are using random nucleotides
@@ -76,9 +76,9 @@ def test_bktree_building():
             seq = row["sequence_1"].encode("ascii")
             one_mismatch_seq = change_nucleotide(seq)
 
-            n1 = tree.find(BKTreeItem(row["marker_id"], one_mismatch_seq), 1)
+            n1 = tree.find(BKTreeItem(row.name, one_mismatch_seq), 1)
             assert len(n1) > 0
             best_score, best_item = n1[0]
             assert best_score == 1
             assert best_item.sequence == seq
-            assert best_item.id == row["marker_id"]
+            assert best_item.id == row.name

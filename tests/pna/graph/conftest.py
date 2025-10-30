@@ -26,13 +26,14 @@ def mock_panel_fixture(request):
                 "MarkerC",
             ],
             "uniprot_id": ["P61769", "P05107", ""],
-            "control": ["no", "no", "yes"],
+            "control": [False, False, True],
             "nuclear": ["yes", "no", "no"],
             "sequence_1": ["AAAA", "CCCC", "GGGG"],
             "sequence_2": ["TTTT", "AAAA", "CCCC"],
             "conj_id": ["C001", "C002", "C003"],
         }
     )
+    mock_antibody_panel.df.index = mock_antibody_panel.df.marker_id
 
     if version.startswith("2"):
         mock_antibody_panel.df.drop(columns=["nuclear"], inplace=True)

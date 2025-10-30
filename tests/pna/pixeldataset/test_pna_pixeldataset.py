@@ -79,7 +79,6 @@ class TestPNAPixelDataset:
                 "description": "Test R&D panel for RNA",
                 "version": "0.1.0",
                 "panel_columns": [
-                    "marker_id",
                     "control",
                     "nuclear",
                     "uniprot_id",
