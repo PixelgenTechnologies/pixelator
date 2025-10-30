@@ -99,6 +99,47 @@ from pixelator.pna.utils import get_read_sample_name, is_read_file
         "will fail with an exit status of 1. Setting this flag will force an exit status of 0."
     ),
 )
+@click.option(
+    "--low-complexity-filter",
+    is_flag=True,
+    default=True,
+    help="Enable filtering of amplicons with low complexity UMI sequences.",
+)
+@click.option(
+    "--low-complexity-threshold",
+    default=0.8,
+    required=False,
+    type=click.FloatRange(0.5, 1.0),
+    help=(
+        "The threshold for determining if a UMI sequence is of low complexity and will be removed."
+    ),
+)
+@click.option(
+    "--lbs-filter",
+    is_flag=True,
+    default=True,
+    help="Enable filtering of amplicons with UMI sequences that show similarity to the LBS sequence.",
+)
+@click.option(
+    "--lbs-filter-min-overlap",
+    default=8,
+    required=False,
+    type=click.IntRange(4, 28),
+    help=(
+        "The minimum overlap required in a semi-global alignment of a UMI sequence with the LBS regions. "
+        "Reads with less overlap will not be removed by the LBS filter."
+    ),
+)
+@click.option(
+    "--lbs-filter-error-rate",
+    default=0.1,
+    required=False,
+    type=click.FloatRange(0.0, 1.0),
+    help=(
+        "The allowed error-rate in a semi-global alignment of a UMI sequence with the LBS regions."
+        "The error rate is defined as a percentage of UMI length."
+    ),
+)
 @threads_option
 @click.pass_context
 @timer
@@ -112,6 +153,11 @@ def amplicon(
     mismatches: int,
     remove_polyg: bool,
     quality_cutoff: int,
+    low_complexity_filter: bool,
+    low_complexity_threshold: float,
+    lbs_filter: bool,
+    lbs_filter_min_overlap: int,
+    lbs_filter_error_rate: float,
     skip_input_checks: bool,
     force_run: bool,
     threads: int,
@@ -202,6 +248,11 @@ def amplicon(
         poly_g_trimming=remove_polyg,
         quality_cutoff=quality_cutoff,
         threads=threads,
+        low_complexity_filter=low_complexity_filter,
+        low_complexity_threshold=low_complexity_threshold,
+        lbs_filter=lbs_filter,
+        lbs_filter_min_overlap=lbs_filter_min_overlap,
+        lbs_filter_error_rate=lbs_filter_error_rate,
     )
 
     report = AmpliconSampleReport(
