@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 -   Panel data can now be fetched from the `.pxl` file in the denoise step
+-  `control` is now stored as boolean in the Panel object, instead of `yes`/`no`.
 -   Fix an error in the "Linker binding site 1" region of the `pna-2` assay config file
 
 ## [0.22.0] - 2025-10-23
