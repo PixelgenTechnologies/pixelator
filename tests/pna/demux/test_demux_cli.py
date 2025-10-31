@@ -49,3 +49,23 @@ def test_demux_valid(tmp_path, testdata_amplicon_fastq, panel_file):
     cmd = runner.invoke(cli.main_cli, args)
 
     assert cmd.exit_code == 0
+
+
+@pytest.mark.slow
+def test_demux_custom_panel(tmp_path, testdata_amplicon_fastq, pna_data_root):
+    runner = CliRunner()
+
+    args = [
+        "single-cell-pna",
+        "demux",
+        str(testdata_amplicon_fastq),
+        "--output",
+        str(tmp_path),
+        "--design",
+        "pna-2",
+        "--panel",
+        str(pna_data_root / "panels/test-pna-panel.csv"),
+    ]
+    cmd = runner.invoke(cli.main_cli, args)
+
+    assert cmd.exit_code == 0

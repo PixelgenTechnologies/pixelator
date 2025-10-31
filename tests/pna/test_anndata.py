@@ -24,12 +24,12 @@ mock_antibody_panel.df = pd.DataFrame(
             "B",
             "C",
         ],
-        "uniprot_id": ["P61769", "P05107", "P15391"],
-        "control": ["no", "no", "yes"],
+        "uniprot_id": ["P61769", "P05107", ""],
+        "control": [False, False, True],
         "nuclear": ["yes", "no", "no"],
         "sequence_1": ["AAAA", "CCCC", "GGGG"],
     }
-)
+).set_index("marker_id")
 
 
 @pytest.fixture(name="edgelist")
@@ -179,7 +179,7 @@ def test_pna_edgelist_to_anndata(pixelconnection):
                 "antibody_pct": np.float32(0.4375),
                 "components": 3,
                 "uniprot_id": "P61769",
-                "control": "no",
+                "control": False,
                 "nuclear": "yes",
                 "sequence_1": "AAAA",
             },
@@ -188,7 +188,7 @@ def test_pna_edgelist_to_anndata(pixelconnection):
                 "antibody_pct": np.float32(0.3125),
                 "components": 3,
                 "uniprot_id": "P05107",
-                "control": "no",
+                "control": False,
                 "nuclear": "no",
                 "sequence_1": "CCCC",
             },
@@ -196,8 +196,8 @@ def test_pna_edgelist_to_anndata(pixelconnection):
                 "antibody_count": 4,
                 "antibody_pct": np.float32(0.25),
                 "components": 2,
-                "uniprot_id": "P15391",
-                "control": "yes",
+                "uniprot_id": "",
+                "control": True,
                 "nuclear": "no",
                 "sequence_1": "GGGG",
             },

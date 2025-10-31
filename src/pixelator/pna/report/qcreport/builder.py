@@ -187,7 +187,7 @@ class BaseQCReportBuilder(metaclass=abc.ABCMeta):
         if len(res) > 0:
             data_element = res[0]
             parent = data_element.getparent()
-            if parent:
+            if parent is not None:
                 parent.remove(data_element)
 
         return body

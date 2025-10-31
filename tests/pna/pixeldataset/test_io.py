@@ -96,9 +96,9 @@ class TestPixelFileReader:
                 "description": "Test R&D panel for RNA",
                 "version": "0.1.0",
                 "panel_columns": [
-                    "marker_id",
                     "control",
                     "nuclear",
+                    "uniprot_id",
                     "sequence_1",
                     "conj_id",
                     "sequence_2",
@@ -114,7 +114,11 @@ class TestPixelFileReader:
 
         results = reader.read_metadata()
         assert results == {
-            "test_sample": {"sample_name": "test_sample", "version": "0.1.0"}
+            "test_sample": {
+                "sample_name": "test_sample",
+                "version": "0.1.0",
+                "panel_name": "custom_panel",
+            }
         }
 
     def test_read_proximity(self, pxl_view, proximity_dataframe):
@@ -192,9 +196,9 @@ class TestPixelDataViewer:
                 "description": "Test R&D panel for RNA",
                 "version": "0.1.0",
                 "panel_columns": [
-                    "marker_id",
                     "control",
                     "nuclear",
+                    "uniprot_id",
                     "sequence_1",
                     "conj_id",
                     "sequence_2",
@@ -257,7 +261,11 @@ class TestPxlDataQuerier:
         querier = PixelDataQuerier(pxl_view)
         result = querier.read_metadata()
         assert result == {
-            "test_sample": {"sample_name": "test_sample", "version": "0.1.0"}
+            "test_sample": {
+                "sample_name": "test_sample",
+                "version": "0.1.0",
+                "panel_name": "custom_panel",
+            }
         }
 
     def test_read_layouts(self, pxl_view, layout_dataframe):

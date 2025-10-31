@@ -5,7 +5,6 @@ assay_spec:
     name: amplicon
     sequence_type: joined
     regions:
-
       - region_id: umi-1
         region_type: umi
         name: Unique molecular identifier 1
@@ -26,9 +25,9 @@ assay_spec:
         region_type: lbs
         name: Linker binding site 1
         sequence_type: fixed
-        sequence: CAAGTGACGCTGGGCATGTCAAACACTCATGTC
-        min_len: 33
-        max_len: 33
+        sequence: CAAGTGACGCTGGGCATTCAAACACTCATGTC
+        min_len: 32
+        max_len: 32
 
       - region_id: uei
         region_type: uei

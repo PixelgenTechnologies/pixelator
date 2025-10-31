@@ -193,7 +193,13 @@ def create_pxl_file(
     with PixelFileWriter(target) as writer:
         writer.write_edgelist(edgelist_parquet_path)
         writer.write_adata(adata_data_func())
-        writer.write_metadata({"sample_name": sample_name, "version": "0.1.0"})
+        writer.write_metadata(
+            {
+                "sample_name": sample_name,
+                "version": "0.1.0",
+                "panel_name": "custom_panel",
+            }
+        )
         if proximity_parquet_path:
             writer.write_proximity(proximity_parquet_path)
         if layout_parquet_path:
@@ -245,13 +251,11 @@ def uns_data_fixture():
 
 def adata_data_func():
     X = pd.read_csv(StringIO(ADATA_X), index_col="component")
+    obs = pd.read_csv(StringIO(ADATA_OBS), index_col="component")
+    var = pd.read_csv(StringIO(ADATA_VAR), index_col="marker_id").fillna("")
+    var["control"] = var["control"].map(lambda s: s.lower() == "yes")
 
-    adata = AnnData(
-        X=X,
-        obs=pd.read_csv(StringIO(ADATA_OBS), index_col="component"),
-        var=pd.read_csv(StringIO(ADATA_VAR), index_col=0),
-        uns=UNS_DATA,
-    )
+    adata = AnnData(X=X, obs=obs, var=var, uns=UNS_DATA)
     adata = update_metrics_anndata(adata, inplace=False)
     return adata
 

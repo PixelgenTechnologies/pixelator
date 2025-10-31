@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.1] - 2025-10-31
+
+### Fixed
+
+-   Panel data can now be fetched from the `.pxl` file in the denoise step
+-  `control` is now stored as boolean in the Panel object, instead of `yes`/`no`.
+-   Fix an error in the "Linker binding site 1" region of the `pna-2` assay config file
+
 ## [0.22.0] - 2025-10-23
 
 ### Important changes
@@ -28,16 +36,16 @@ marker names. To use the previous version, specify `--panel proxiome-immuno-155-
 
 ### Removed
 
- - The `nuclear` column has been removed from the panel file, and will not appear in e.g. the downstream .pxl files.
+-   The `nuclear` column has been removed from the panel file, and will not appear in e.g. the downstream .pxl files.
 
 ### Fixed
 
 -   `pixelator single-cell demux` respects the `--cores` option.
--    Fix a bug in `pixelator single-cell demux` where the total number of input reads
-     report in the report.json files would be slightly smaller than the actual number of reads in the input files.
--    Include panel data in `.pxl` file for PNA data
--    Fix an issue where very large samples (3k cells) could not be collapsed
-     due to the limits of the PyArrow string array type.
+-   Fix a bug in `pixelator single-cell demux` where the total number of input reads
+    report in the report.json files would be slightly smaller than the actual number of reads in the input files.
+-   Include panel data in `.pxl` file for PNA data
+-   Fix an issue where very large samples (3k cells) could not be collapsed
+    due to the limits of the PyArrow string array type.
 
 ## [0.21.4] - 2025-08-27
 

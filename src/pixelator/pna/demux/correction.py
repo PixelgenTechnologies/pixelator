@@ -228,7 +228,7 @@ def build_bktree(panel: PNAAntibodyPanel, sequence_key: str) -> BKTree:
 
     for _, row in panel.df.iterrows():
         seq = row[sequence_key].encode("ascii")
-        tree.add(BKTreeItem(row["marker_id"], seq))
+        tree.add(BKTreeItem(row.name, seq))
 
     return tree
 
@@ -248,6 +248,6 @@ def build_exact_dict_lookup(
 
     for _, row in panel.df.iterrows():
         seq = row[sequence_key].encode("ascii")
-        lut[seq] = row["marker_id"]
+        lut[seq] = row.name
 
     return lut

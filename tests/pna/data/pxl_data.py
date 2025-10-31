@@ -65,17 +65,17 @@ fc07dea9b679aca7,3,7,4
 e7d82bca9694eea7,4,2,0
 """
 
-ADATA_OBS = """component,n_umi1,n_umi2,antibody,tau_type,tau
-3770519d30f36d18,4,3,3,normal,0.33333333333333337
-4920229146151c29,11,4,3,normal,0.6666666666666667
-fc07dea9b679aca7,4,10,3,normal,0.5
-e7d82bca9694eea7,3,3,2,normal,0.75
+ADATA_OBS = """component,n_umi1,n_umi2,n_umi,antibody,tau_type,tau
+3770519d30f36d18,4,3,7,3,normal,0.33333333333333337
+4920229146151c29,11,4,15,3,normal,0.6666666666666667
+fc07dea9b679aca7,4,10,14,3,normal,0.5
+e7d82bca9694eea7,3,3,6,2,normal,0.75
 """
 
-ADATA_VAR = """,antibody_count,antibody_pct,components,control,nuclear,sequence_1,conj_id,sequence_2
-MarkerA,14,0.33333334,4,no,yes,ACTTCCTAGG,pna_rnd01,ACTTCCTAGG
-MarkerB,12,0.2857143,4,no,no,CCAGGTTCCG,pna_rnd02,CCAGGTTCCG
-MarkerC,16,0.3809524,3,yes,no,CAGCTATGGT,pna_rnd03,CAGCTATGGT
+ADATA_VAR = """marker_id,antibody_count,antibody_pct,components,control,nuclear,uniprot_id,sequence_1,conj_id,sequence_2
+MarkerA,14,0.33333334,4,no,yes,P12345,ACTTCCTAGG,pna_rnd01,ACTTCCTAGG
+MarkerB,12,0.2857143,4,no,no,P56890;P65470,CCAGGTTCCG,pna_rnd02,CCAGGTTCCG
+MarkerC,16,0.3809524,3,yes,no,,CAGCTATGGT,pna_rnd03,CAGCTATGGT
 """
 
 
@@ -93,9 +93,9 @@ UNS_DATA = {
         "description": "Test R&D panel for RNA",
         "version": "0.1.0",
         "panel_columns": [
-            "marker_id",
             "control",
             "nuclear",
+            "uniprot_id",
             "sequence_1",
             "conj_id",
             "sequence_2",

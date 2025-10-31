@@ -524,9 +524,7 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
         "version": mock_panel.version,
         "panel_columns": expected_columns,
     }
-    reconstructed_panel = adata.var.reset_index(names="marker_id")[
-        adata.uns["panel_metadata"]["panel_columns"]
-    ]
+    reconstructed_panel = adata.var[adata.uns["panel_metadata"]["panel_columns"]]
 
     assert_frame_equal(
         pl.from_pandas(reconstructed_panel),

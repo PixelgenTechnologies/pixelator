@@ -79,9 +79,9 @@ class TestPNAPixelDataset:
                 "description": "Test R&D panel for RNA",
                 "version": "0.1.0",
                 "panel_columns": [
-                    "marker_id",
                     "control",
                     "nuclear",
+                    "uniprot_id",
                     "sequence_1",
                     "conj_id",
                     "sequence_2",
@@ -96,8 +96,8 @@ class TestPNAPixelDataset:
         self, pxl_dataset: PNAPixelDataset, adata_data
     ):
         adata = pxl_dataset.adata()
-        assert "log1p" in adata.obsm_keys()
-        assert "clr" in adata.obsm_keys()
+        assert "log1p" in adata.obsm
+        assert "clr" in adata.obsm
 
     def test_adata_should_not_mutate_original(
         self, pxl_dataset: PNAPixelDataset, adata_data
