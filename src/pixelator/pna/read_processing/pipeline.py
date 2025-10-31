@@ -167,7 +167,7 @@ class AmpliconPipeline(Pipeline):
         if stage == "pre":
             self._pre_modifiers.append(PairedEndModifierWrapper(modifier1, modifier2))
         if stage == "post":
-            self._post_modifiers.append(PairedEndModifierWrapper(modifier1, modifier2))
+            raise ValueError("Cannot add paired single-end modifiers for post stage")
 
     def _add_modifier(self, modifier: PairedEndModifier, stage: ModifierStage) -> None:
         """Add a Modifier (without wrapping it in a PairedEndModifierWrapper)."""
