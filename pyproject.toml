@@ -118,7 +118,6 @@ dev = [
     "sphinx",
     "black",
     "mypy",
-    "pytest-watch",
     "pytest-snapshot",
     "pytest-cov",
     "pytest-mock",
@@ -130,6 +129,7 @@ dev = [
     "furo>=2023.5.20,<2024",
     "pytest-benchmark>=4.0.0,<5",
     "pytest-playwright>=0.4.4,<0.5",
+    "pytest-watcher>=0.4.3",
 ]
 
 
