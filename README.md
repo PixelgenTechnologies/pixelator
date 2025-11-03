@@ -34,32 +34,18 @@ More information about pixelator is available on the [Pixelgen Technologies Soft
 
 ## Installation
 
-Pixelgen Technologies has developed and tested pixelator extensively in Ubuntu 20.04.6 LTS. However, pixelator should run on computers installed with any recent version of the major Linux distributions, even if installed in Windows WSL.
+Pixelgen Technologies has developed and tested pixelator extensively in Ubuntu 20.04.6 LTS. However, pixelator should run on computers installed with any recent version of the major Linux distributions.
 
-It should only take a few minutes to install pixelator on any modern computer using any of the following methods.
-
-### Installation with pip
-
-Our software pixelator is available on PyPi as `pixelgen-pixelator` and can be installed with pip.
-It is recommended to install pixelator in a separate virtual environment.
+Pixelator is available on PyPi as `pixelgen-pixelator` and can be installed with pip. It is recommended to install pixelator in a separate virtual environment.
 
 ```shell
 pip install pixelgen-pixelator
 ```
 
-### Installation with conda / mamba
+### Additional installation instructions
 
-A conda package is available on the bioconda channel and can be installed with conda or mamba.
-
-```shell
-conda install -c bioconda pixelator
-```
-
-or
-
-```shell
-mamba install -c bioconda pixelator
-```
+For runnning some of the MPX related pixelator commands you will need to have `fastp` installed on
+you system. For installation instructions, please visit the [fastp GitHub repository](https://github.com/OpenGene/fastp).
 
 ### Installation from source
 
