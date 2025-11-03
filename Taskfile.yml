@@ -7,20 +7,20 @@ tasks:
     desc: >-
       Install the project using poetry (including dependencies and git hooks).
     cmds:
-      - poetry install
+      - uv sync
       - pre-commit install
 
   format-check:
     desc: >-
       Check code formatting using ruff.
     cmds:
-      - ruff format --diff --check .
+      - uv run ruff format --diff --check .
 
   format:
     desc: >-
       Format code using ruff.
     cmds:
-      - ruff format .
+      - uv run ruff format .
 
   lint:
     desc: >-
@@ -36,7 +36,7 @@ tasks:
       FIX: '{{ .FIX | default "false" }}'
       UNSAFE_FIXES: '{{ .UNSAFE_FIXES | default "false" }}'
     cmds:
-      - ruff check src tests
+      - uv run ruff check src tests
         {{ if eq .FIX "true" }}
         --fix
         {{end}}
@@ -48,19 +48,19 @@ tasks:
     desc: >-
       Run type checking using mypy.
     cmds:
-      - mypy --ignore-missing-imports --install-types --non-interactive src tests
+      - uv run mypy --ignore-missing-imports --install-types --non-interactive src tests
 
   test:
     desc: |-
       Run tests using pytest with the default flags defined in pyproject.toml.
     cmds:
-      - pytest tests {{ .CLI_ARGS }}
+      - uv run pytest tests {{ .CLI_ARGS }}
 
   test-workflow:
     desc: >-
       Run workflow tests using pytest.
     cmds:
-      - pytest tests -m "workflow_test and not external_workflow_test" {{ .CLI_ARGS }}
+      - uv run pytest tests -m "workflow_test and not external_workflow_test" {{ .CLI_ARGS }}
 
   test-workflow-external:
     desc: >-
@@ -72,13 +72,13 @@ tasks:
       These tests can take a very long time to run and require input data to be available in a fixed location.
       External workflow test are not included in the `test-all` task.
     cmds:
-      - pytest tests -m external_workflow_test
+      - uv run pytest tests -m external_workflow_test
 
   test-web:
     desc: >-
       Run web tests using pytest.
     cmds:
-      - pytest tests -m web_test {{ .CLI_ARGS }}
+      - uv run pytest tests -m web_test {{ .CLI_ARGS }}
 
   test-all:
     desc: >-
@@ -104,13 +104,13 @@ tasks:
       MARKS: '{{ .MARKS | default "" }}'
       TEST_PATH: '{{ .TEST_PATH | default "tests/" }}'
     cmds:
-      - ptw -- {{ .TEST_PATH }} {{ .MARKS }}
+      - uv run ptw . --now {{ .TEST_PATH }} {{ .MARKS }}
 
   test-benchmark:
     desc: >-
       Run only the benchmark tests using pytest.
     cmds:
-      - pytest --benchmark-enable --benchmark-only tests/ {{ .CLI_ARGS }}
+      - uv run pytest --benchmark-enable --benchmark-only tests/ {{ .CLI_ARGS }}
 
   coverage:
     desc: >-
@@ -133,13 +133,13 @@ tasks:
     vars:
       WORKFLOW_TEST: '{{ .WORKFLOW_TEST | default "false" }}'
     cmds:
-      - 'coverage run --source src -m pytest
+      - 'uv run coverage run --source src -m pytest
         {{ if eq .WORKFLOW_TEST "true" }}
         -m "not external_workflow_test and not web_test"
         {{else}}
         -m "not workflow_test and not web_test"
         {{end}}'
-      - coverage report
+      - uv run coverage report
 
   test-nf-core-pixelator:
     desc: >-

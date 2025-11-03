@@ -97,8 +97,8 @@ tasks:
     vars:
       PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
       PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "tmp" }}'
-      REPORTS_ASSETS_DIR: '{{ .REPORTS_ASSETS_DIR }}'
-      DATA_ASSETS_DIR: '{{ .DATA_ASSETS_DIR }}'
+      REPORTS_ASSETS_DIR: "{{ .REPORTS_ASSETS_DIR }}"
+      DATA_ASSETS_DIR: "{{ .DATA_ASSETS_DIR }}"
     requires:
       vars: ["REPORTS_ASSETS_DIR", "DATA_ASSETS_DIR"]
     dir: "{{ .USER_WORKING_DIR }}"
@@ -107,9 +107,9 @@ tasks:
         nf_core_pixelator_dir="$(realpath $PWD)";
         echo "Copying json reports from $nf_core_pixelator_dir to {{ .REPORTS_ASSETS_DIR }}";
         for f in {{ .PIPELINE_RESULTS_DIR }}/pixelator/{adapterqc,amplicon,analysis,annotate,collapse,demux,graph,preqc}/*.json; do
-          relative_f=$(realpath --relative-to={{ .PIPELINE_RESULTS_DIR }}/pixelator "$f");
-          mkdir --parents $(dirname "{{ .REPORTS_ASSETS_DIR }}/${relative_f}");
-          cp "$f" "{{ .REPORTS_ASSETS_DIR }}/${relative_f}";
+        relative_f=$(realpath --relative-to={{ .PIPELINE_RESULTS_DIR }}/pixelator "$f");
+        mkdir --parents $(dirname "{{ .REPORTS_ASSETS_DIR }}/${relative_f}");
+        cp "$f" "{{ .REPORTS_ASSETS_DIR }}/${relative_f}";
         done
       - cd {{ .PIPELINE_SOURCE_DIR }};
         nf_core_pixelator_dir="$(realpath $PWD)";
@@ -118,7 +118,7 @@ tasks:
         find {{ .PIPELINE_RESULTS_DIR }}/pixelator/annotate/ -name "uropod_control*raw_components_metrics.csv.gz" -exec cp {} {{ .DATA_ASSETS_DIR }} \; ;
 
   #      - task: remove-pipeline-run
-#        vars: { PIPELINE_RESULTS_DIR: "{{ .PIPELINE_SOURCE_DIR }}/tmp" }
+  #        vars: { PIPELINE_RESULTS_DIR: "{{ .PIPELINE_SOURCE_DIR }}/tmp" }
 
   update-report-test-data:
     desc: >-
@@ -157,10 +157,10 @@ tasks:
       Create web test data.
 
     sources:
-      - '{{ .USER_WORKING_DIR }}/src/pixelator/**/*.py'
-      - '{{ .USER_WORKING_DIR }}/src/pixelator/resources/**'
-      - '{{ .R1 }}'
-      - '{{ .R2 }}'
+      - "{{ .USER_WORKING_DIR }}/src/pixelator/**/*.py"
+      - "{{ .USER_WORKING_DIR }}/src/pixelator/resources/**"
+      - "{{ .R1 }}"
+      - "{{ .R2 }}"
     summary: |
       Create web test data.
 
@@ -204,12 +204,12 @@ tasks:
         1
     cmds:
       - rm -r "{{ .RESULTS_DIR }}"
-      - pixelator single-cell amplicon {{ .R1 }} {{ .R2 }} --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
-      - pixelator single-cell preqc {{ .RESULTS_DIR }}/amplicon/*.fastq.gz --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
-      - pixelator single-cell adapterqc {{ .RESULTS_DIR }}/preqc/*processed*fastq.gz --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
-      - pixelator single-cell demux {{ .RESULTS_DIR }}/adapterqc/*processed*fastq.gz --design {{ .DESIGN }} --panel {{ .PANEL }} --output {{ .RESULTS_DIR }}
-      - pixelator single-cell collapse {{ .RESULTS_DIR }}/demux/*processed*fastq.gz --design {{ .DESIGN }} --panel {{ .PANEL }} --output {{ .RESULTS_DIR }}
-      - pixelator single-cell graph {{ .RESULTS_DIR }}/collapse/*.parquet --output {{ .RESULTS_DIR }}
-      - pixelator single-cell annotate {{ .RESULTS_DIR }}/graph/*.parquet --panel {{ .PANEL }} --output {{ .RESULTS_DIR }} {{ .ANNOTATE_PARAMS | catLines }}
-      - pixelator single-cell analysis {{ .RESULTS_DIR }}/annotate/*.dataset.pxl --output {{ .RESULTS_DIR }} {{ .ANALYSIS_PARAMS | catLines }}
-      - pixelator single-cell report {{ .RESULTS_DIR }} --output {{ .RESULTS_DIR }}
+      - uv run pixelator single-cell amplicon {{ .R1 }} {{ .R2 }} --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
+      - uv run pixelator single-cell preqc {{ .RESULTS_DIR }}/amplicon/*.fastq.gz --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
+      - uv run pixelator single-cell adapterqc {{ .RESULTS_DIR }}/preqc/*processed*fastq.gz --design {{ .DESIGN }} --output {{ .RESULTS_DIR }}
+      - uv run pixelator single-cell demux {{ .RESULTS_DIR }}/adapterqc/*processed*fastq.gz --design {{ .DESIGN }} --panel {{ .PANEL }} --output {{ .RESULTS_DIR }}
+      - uv run pixelator single-cell collapse {{ .RESULTS_DIR }}/demux/*processed*fastq.gz --design {{ .DESIGN }} --panel {{ .PANEL }} --output {{ .RESULTS_DIR }}
+      - uv run pixelator single-cell graph {{ .RESULTS_DIR }}/collapse/*.parquet --output {{ .RESULTS_DIR }}
+      - uv run pixelator single-cell annotate {{ .RESULTS_DIR }}/graph/*.parquet --panel {{ .PANEL }} --output {{ .RESULTS_DIR }} {{ .ANNOTATE_PARAMS | catLines }}
+      - uv run pixelator single-cell analysis {{ .RESULTS_DIR }}/annotate/*.dataset.pxl --output {{ .RESULTS_DIR }} {{ .ANALYSIS_PARAMS | catLines }}
+      - uv run pixelator single-cell report {{ .RESULTS_DIR }} --output {{ .RESULTS_DIR }}
