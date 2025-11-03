@@ -7,7 +7,6 @@ ARG MAKEJOBS=4
 FROM registry.fedoraproject.org/fedora-minimal:42 AS runtime-base
 RUN microdnf install -y \
     python3.12 \
-    git \
     sqlite \
     zlib \
     libdeflate \
@@ -15,24 +14,20 @@ RUN microdnf install -y \
     procps-ng \
     gzip \
     tar \
-    curl \
     && microdnf clean all
 
-ENV PIPX_BIN_DIR="/usr/local/bin"
-
-# Install uv and add it to PATH; then remove curl to keep the image minimal
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:${PATH}"
-
-# Set python version for uv
-ENV UV_PYTHON="/usr/bin/python3.12"
+# This is needed to easily run other python scripts inside the pixelator container
+# eg. samplesheet checking in nf-core/pixelator
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
 
 
 FROM runtime-base AS builder-base
 
 RUN microdnf install -y \
+    python3.12 \
+    python3.12-devel \
     wget \
+    git \
     sqlite-devel \
     zlib-devel \
     libdeflate-devel \
@@ -44,9 +39,18 @@ RUN microdnf install -y \
     automake \
     libtool \
     nasm \
-    python3.12-devel \
     && microdnf clean all
 
+# Set this, otherwise the build will default to 3.13
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
+
+# Disable Python downloads, because we want to use the system interpreter
+ENV UV_PYTHON_DOWNLOADS=0
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
 
 # Build Fastp and isal from source
 FROM builder-base AS build-fastp
@@ -65,10 +69,46 @@ WORKDIR /fastp
 RUN make -j${MAKEJOBS}
 RUN make install
 
+FROM builder-base AS uv-deps-install-amd64
+ENV UV_PYTHON_DOWNLOADS=0
+
+WORKDIR /pixelator
+COPY uv.lock pyproject.toml README.md ./
+COPY .git .git
+
+## We need to define the ARG we will be using in each build stage
+ARG TARGETPLATFORM
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+ENV ANNOY_TARGET_VARIANT="${TARGETVARIANT:-v3}"
+ENV UV_PYTHON_DOWNLOADS=0
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+# We need to control the annoy compile options. By default annoy will use march=native which causes issues when
+# building on more modern host than the target platform.
+
+# This will build a command like uv pip install annoy==1.17.0 using the version of annoy that
+# is specified in the uv.lock file
+RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
+    export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
+    fi;
+RUN uv pip install --system $(uv export --format 'requirements.txt' --no-hashes | grep annoy)
+
+FROM builder-base AS uv-deps-install-arm64
+ENV UV_PYTHON_DOWNLOADS=0
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+WORKDIR /pixelator
+COPY poetry.lock pyproject.toml README.md /pixelator/
+COPY .git /pixelator/.git
+
+RUN uv pip install --system $(uv export --format 'requirements.txt' --no-hashes | grep annoy)
+
 # ------------------------------------------
 # -- Build the pixelator package
 # ------------------------------------------
-FROM runtime-base AS build-pixelator
+FROM builder-base AS build-pixelator
 
 ARG VERSION_OVERRIDE
 
@@ -76,39 +116,11 @@ WORKDIR /pixelator
 COPY . /pixelator
 COPY .git /pixelator/.git
 
-# Build sdist using hatchling + hatch-vcs (install build tools via uv)
-# RUN uv pip install --system --no-cache-dir build hatchling hatch-vcs
 RUN if [ ! -z "${VERSION_OVERRIDE}" ]; then \
     echo "Overriding version to ${VERSION_OVERRIDE}"; \
-    SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION_OVERRIDE}" uv build --sdist; \
-    else uv build --sdist; \
+    SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION_OVERRIDE}" uv pip install --system . ; \
+    else uv pip install --system . ; \
     fi
-
-RUN cp -r /pixelator/dist/ /dist/ && \
-    rm -rf /pixelator
-
-# ------------------------------------------
-# -- Install Python deps in build image (with compilers)
-# ------------------------------------------
-FROM builder-base AS deps-install
-
-# Build-arg passthrough for Annoy target variant
-ARG TARGETPLATFORM
-ARG TARGETARCH
-ARG TARGETVARIANT
-ENV ANNOY_TARGET_VARIANT="${TARGETVARIANT:-v3}"
-
-# Copy built sdist and install to a relocatable prefix
-COPY --from=build-pixelator /dist /dist
-RUN if [ "$TARGETARCH" = "amd64" ] && [ -n "$ANNOY_TARGET_VARIANT" ]; then \
-    export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
-    echo "Compiling Python deps for $TARGETPLATFORM/$ANNOY_TARGET_VARIANT (amd64 with x86-64 flags)"; \
-    else \
-    unset ANNOY_COMPILER_ARGS; \
-    echo "Compiling Python deps without x86-64 variant flags on $TARGETARCH"; \
-    fi && \
-    uv pip install --system --prefix=/runtime /dist/*.tar.gz && \
-    rm -rf /dist
 
 # ------------------------------------------
 # -- Build the runtime environment for amd64
@@ -116,8 +128,9 @@ RUN if [ "$TARGETARCH" = "amd64" ] && [ -n "$ANNOY_TARGET_VARIANT" ]; then \
 
 FROM runtime-base AS runtime-amd64
 
+# Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
-COPY --from=deps-install /runtime/ /usr/
+COPY --from=uv-deps-install-amd64 /usr/local/ /usr/local/
 
 # ------------------------------------------
 # -- Build the runtime environment for arm64
@@ -125,8 +138,9 @@ COPY --from=deps-install /runtime/ /usr/
 
 FROM runtime-base AS runtime-arm64
 
+# Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
-COPY --from=deps-install /runtime/ /usr/
+COPY --from=uv-deps-install-arm64 /usr/local/ /usr/local/
 
 # ------------------------------------------
 # -- Build the final image
@@ -134,10 +148,11 @@ COPY --from=deps-install /runtime/ /usr/
 
 FROM runtime-${TARGETARCH} AS runtime-final
 
-# Ensure Python packages are available in system path and isal
+# Make sure that the python packages are available in the system path
+# We add this explicitly since nextflow often runs with PYTHONNOUSERSITE set
+# to fix interference with conda and this can cause problems.
+COPY --from=build-pixelator /usr/local/ /usr/
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
+# Fastp will also build isal and we need to make that available
 RUN ldconfig /usr/local/lib64
-
-# Nothing to install here; deps already copied into this image in runtime-ARCH stages
-
-RUN uv cache clean || true
-RUN python -m pip cache purge || true
