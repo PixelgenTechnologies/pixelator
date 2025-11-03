@@ -22,7 +22,3 @@ runs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ inputs.python-version }}
-        cache: 'pip'
-        cache-dependency-path: |
-          **/pyproject.toml
-          **/dev_requirements.txt
