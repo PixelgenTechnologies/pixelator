@@ -42,18 +42,6 @@ target "pixelator-base" {
     ]
 }
 
-
-
-target pixelator-dev {
-    depends_on = ["pixelator-base"]
-    contexts = {
-        pixelator-base = "target:pixelator-base"
-    }
-    dockerfile = "containers/dev.Dockerfile"
-    tags = [ "pixelator:latest-dev" ]
-}
-
-
 target pixelator-prod {
     depends_on = ["pixelator-base"]
     contexts = {
@@ -67,7 +55,6 @@ target pixelator-prod {
         BUILD_VERSION = BUILD_VERSION
     }
 }
-
 
 target "docker-metadata-action" {}
 

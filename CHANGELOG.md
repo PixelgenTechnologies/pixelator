@@ -5,12 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [x.x.x] - 2025-xx-xx
+
+### Changed
+
+-   Moved from using `poetry` to `uv` for dependency management and packaging.
+
 ## [0.22.1] - 2025-10-31
 
 ### Fixed
 
 -   Panel data can now be fetched from the `.pxl` file in the denoise step
--  `control` is now stored as boolean in the Panel object, instead of `yes`/`no`.
+-   `control` is now stored as boolean in the Panel object, instead of `yes`/`no`.
 -   Fix an error in the "Linker binding site 1" region of the `pna-2` assay config file
 
 ## [0.22.0] - 2025-10-23
@@ -46,6 +52,10 @@ marker names. To use the previous version, specify `--panel proxiome-immuno-155-
 -   Include panel data in `.pxl` file for PNA data
 -   Fix an issue where very large samples (3k cells) could not be collapsed
     due to the limits of the PyArrow string array type.
+
+### Changed
+
+-   Migrated from Poetry to a uv-based workflow (tooling and CI); packaging now uses Hatchling with VCS-based versioning.
 
 ## [0.21.4] - 2025-08-27
 

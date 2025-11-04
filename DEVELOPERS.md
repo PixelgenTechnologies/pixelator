@@ -4,22 +4,21 @@ This document covers how to get up and running with developing pixelator.
 
 ## Table of contents
 
-- [Setup the developer environment](#setup-the-developer-environment)
-- [Pixelator developer tools](#pixelator-developer-tools)
-- [Adding new dependencies](#adding-new-dependencies)
-- [Testing pixelator](#testing-pixelator)
-  - [Pixelator unit tests](#pixelator-unit-tests)
-  - [Pixelator integration tests](#pixelator-integration-tests)
-- [Understanding the pixelator plugin system](#understanding-the-pixelator-plugin-system)
-
+-   [Setup the developer environment](#setup-the-developer-environment)
+-   [Pixelator developer tools](#pixelator-developer-tools)
+-   [Adding new dependencies](#adding-new-dependencies)
+-   [Testing pixelator](#testing-pixelator)
+    -   [Pixelator unit tests](#pixelator-unit-tests)
+    -   [Pixelator integration tests](#pixelator-integration-tests)
+-   [Understanding the pixelator plugin system](#understanding-the-pixelator-plugin-system)
 
 ## Setup the developer environment
 
 We recommend that you develop pixelator in a separate python virtual environment. There are
-many ways to setup a virtual environment, we recommend using mamba. If you have a different
-way that you prefer, you can use that as well.
+many ways to setup a virtual environment, we recommend using [uv](https://docs.astral.sh/uv/).
+If you have a different tool that you prefer, you should be able to use that as well.
 
-Below we outline the steps you need to take to setup your development environment using mamba.
+Below we outline the steps you need to take to setup your development environment using uv.
 
 ### 1. Prepare and checkout the pixelator repository for Github
 
@@ -38,44 +37,33 @@ cd pixelator
 
 You are now ready to setup your development environment.
 
-### 2. Setup a virtual environment for pixelator
+### 2. Setup a virtual environment using uv
 
-You will need to [install mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html) to use this method.
-
-If you are on a Mac or Linux you can use the following commands to install mamba:
-
-```shell
-curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-bash Miniforge3-$(uname)-$(uname -m).sh
-```
-
-If you are one Windows refer to these instructions: https://github.com/conda-forge/miniforge?tab=readme-ov-file#windows
-
-For more information on how to install mamba see the [mamba documentation](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html).
-
-
-All base dependencies are included in the `environment.yml` file provided in the repo root.
-You can now run the following commands to create your pixelator environment:
-
-```shell
-mamba env create -f environment.yml
-```
-
-Activate the conda environment:
-```shell
-mamba activate pixelator
-```
+You will need to [install uv](https://docs.astral.sh/uv/getting-started/installation/) to use this method.
 
 ### 3. Install pixelator
 
-To install pixelator you can now run:
+You can now run to setup the virtual environment and install pixelator:
 
 ```shell
-task install
+uv sync
 ```
 
-This will install pixelator with all it's dependencies in your virtual environment, and
-setup git hooks to run pre-commit checks before you commit your changes.
+To activate the virtual environment you can use:
+
+```shell
+source .venv/bin/activate
+```
+
+### 4. Install pre-commit hooks
+
+To make sure your code adheres to the coding standards used in pixelator we use
+pre-commit hooks. These should check that your code is formatted correctly before you
+commit your changes.
+
+```shell
+pre-commit install
+```
 
 You are now ready to start developing pixelator. Congrats!
 
@@ -100,6 +88,7 @@ Run the following command to view the available tasks:
 ```shell
 task --list
 ```
+
 It will look something like this:
 
 ```console
@@ -124,6 +113,7 @@ View more detailed documentation for a specific task, for example:
 ```shell
 task test-nf-core-pixelator --summary
 ```
+
 ```console
 task: test-nf-core-pixelator
 
@@ -156,23 +146,23 @@ For example:
 ```shell
 RESUME=true task test-nf-core-pixelator
 ```
+
 ## Adding new dependencies
 
 If you need to add a new dependency to pixelator this should be managed through `poetry`.
 You do this by running:
 
 ```shell
-poetry add <package>
+uv add <package>
 ```
 
-This will update `pyproject.toml` and `poetry.lock` with the new dependency. Both
+This will update `pyproject.toml` and `uv.lock` with the new dependency. Both
 these files should be committed to the repository to record the new dependency.
 
 ## Testing pixelator
 
 Pixelator uses `pytest` to run tests. We have a number of different types of tests that can be run.
 The section below outline how to run these tests, and in what situations they are useful.
-
 
 ### Pixelator unit tests
 
@@ -212,10 +202,10 @@ by using something like below:
 TEST_PATH="tests/pixeldataset" task test-watch
 ```
 
-
 ### Pixelator integration tests
 
 #### Pixelator internal integration tests
+
 Pixelator has a basic set of integration tests that that will run all pixelator commands and
 check that they run without errors. Note that these do not verify the outputs of each command in
 any comprehensive way, but are useful for catching basic errors.
@@ -243,7 +233,6 @@ panel: "human-sc-immunology-spatial-proteomics"
 panel_file: null
 ```
 
-
 #### Pixelator nf-core/pixelator integration tests
 
 Pixelator is built to be orchestrated by the nextflow pipeline [nf-core/pixelator](https://github.com/nf-core/pixelator).
@@ -261,7 +250,6 @@ It can also be triggered on Github Actions:
 gh workflow run --ref <your-branch-name> nf-core-pixelator-tests.yml
 ```
 
-
 ### Pixelator benchmark tests
 
 Sometimes it is useful to be able to run micro-benchmarks to see how changes affect performance.
@@ -278,12 +266,11 @@ task test-benchmark
 Pixelator defines several additional markers for tests.
 These are usually disabled by default and can be enabled by running `pytest -m <marker> tests/`
 
-- integration_test: Marks a test as an integration test, which is often slow
-- workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow
-- external_workflow_test: Marks a test as a complete pixelator workflow that requires external data, which is extremely slow and requires additional setup before running
-- web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed.
-            Additionally, the full pipeline is run on the micro testdata to generate reports.
-
+-   integration_test: Marks a test as an integration test, which is often slow
+-   workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow
+-   external_workflow_test: Marks a test as a complete pixelator workflow that requires external data, which is extremely slow and requires additional setup before running
+-   web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed.
+    Additionally, the full pipeline is run on the micro testdata to generate reports.
 
 All `external_workflow_test` tests are also `workflow_tests`.
 
@@ -308,6 +295,7 @@ pytest --markers
 ```
 
 ## Understanding the pixelator plugin system
+
 Pixelator has a plugin system that allows you to extend the functionality of pixelator.
 This section outlines how to create new plugins and make sure these are picked-up
 by pixelator at runtime.
