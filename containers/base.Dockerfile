@@ -6,7 +6,7 @@ ARG MAKEJOBS=4
 # Install pixelator dependencies in a separate stage to improve caching
 FROM registry.fedoraproject.org/fedora-minimal:42 AS runtime-base
 RUN microdnf install -y \
-    python3.12 \
+    python3.13 \
     sqlite \
     zlib \
     libdeflate \
@@ -18,14 +18,14 @@ RUN microdnf install -y \
 
 # This is needed to easily run other python scripts inside the pixelator container
 # eg. samplesheet checking in nf-core/pixelator
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1
 
 
 FROM runtime-base AS builder-base
 
 RUN microdnf install -y \
-    python3.12 \
-    python3.12-devel \
+    python3.13 \
+    python3.13-devel \
     wget \
     git \
     sqlite-devel \
@@ -41,8 +41,7 @@ RUN microdnf install -y \
     nasm \
     && microdnf clean all
 
-# Set this, otherwise the build will default to 3.13
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1
 
 # Disable Python downloads, because we want to use the system interpreter
 ENV UV_PYTHON_DOWNLOADS=0
@@ -153,6 +152,6 @@ FROM runtime-${TARGETARCH} AS runtime-final
 # to fix interference with conda and this can cause problems.
 COPY --from=build-pixelator /usr/local/ /usr/
 
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1
 # Fastp will also build isal and we need to make that available
 RUN ldconfig /usr/local/lib64

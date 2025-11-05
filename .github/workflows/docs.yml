@@ -54,7 +54,7 @@ jobs:
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Install uv and sync dependencies
         run: |
