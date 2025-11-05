@@ -1,6 +1,6 @@
 # Pixelator
 
-![python-version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pixelgen-pixelator)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 [![DOI](https://img.shields.io/badge/DOI-10.1038/S41592--024--02268--9-B31B1B.svg)](https://doi.org/10.1038/s41592-024-02268-9)
 [![conda](https://anaconda.org/bioconda/pixelator/badges/version.svg)](https://bioconda.github.io/recipes/pixelator/README.html#package-pixelator)

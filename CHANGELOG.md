@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [x.x.x] - 2025-xx-xx
 
+### Added
+
+-   Support for Python 3.13.
+
 ### Changed
 
 -   Moved from using `poetry` to `uv` for dependency management and packaging.
