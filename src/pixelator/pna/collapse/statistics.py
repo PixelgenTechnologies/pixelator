@@ -50,7 +50,6 @@ class MarkerLinkGroupStats(pydantic.BaseModel):
 
     corrected_reads_count: int = 0
     cluster_size_distribution: list = pydantic.Field(
-        ...,
         default_factory=list,
         description="The result of binning the size of each group of close molecules.",
     )
