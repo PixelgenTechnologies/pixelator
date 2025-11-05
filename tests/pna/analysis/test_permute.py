@@ -5,6 +5,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 """
 
 import polars as pl
+import pytest
 from numpy.random import default_rng
 from polars.testing import assert_frame_equal
 
@@ -70,6 +71,7 @@ def test_permute_edgelist():
     assert_frame_equal(m2_counts, m2_counts_perm)
 
 
+@pytest.mark.slow
 def test_permutations():
     df = pl.DataFrame(
         random_number_generator.integers(0, 100, size=(200, 4)),

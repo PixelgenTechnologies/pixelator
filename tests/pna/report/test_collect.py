@@ -73,6 +73,7 @@ def test_collect_report_data(sample_id, all_stages_all_reports_and_meta, snapsho
     snapshot.assert_match(json.dumps(data_dict, indent=4), f"0-metrics.json")
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("sample_id", ["PNA055_Sample07_filtered_S7"])
 def test_collect_colocalization_data(
     sample_id, all_stages_all_reports_and_meta, snapshot

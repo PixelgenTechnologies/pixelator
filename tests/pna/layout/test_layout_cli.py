@@ -3,13 +3,10 @@
 import tempfile
 from pathlib import Path
 
-import networkx as nx
-import polars as pl
 import pytest
 from click.testing import CliRunner
 
 from pixelator import cli
-from pixelator.pna.layout import CreateLayout
 from pixelator.pna.pixeldataset import read
 
 
@@ -20,7 +17,7 @@ def test_runs_ok(pna_data_root):
     with tempfile.TemporaryDirectory() as d:
         args = [
             "--cores",
-            "1",  # Notabene, using 1 thread here to make sure we actually use the mock
+            "2",
             "single-cell-pna",
             "layout",
             str(pna_data_root / "PNA055_Sample07_S7.layout.pxl"),
