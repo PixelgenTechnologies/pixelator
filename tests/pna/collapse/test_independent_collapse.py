@@ -59,6 +59,7 @@ class TestRegionCollapserInternals:
         assert umi2_seq == umi2_seq2
 
 
+@pytest.mark.slow
 def test_region_collapser_umi1(tmp_path, m1_demuxed_data_part0):
     assay = pna_config.get_assay("pna-2")
     panel = pna_config.get_panel("proxiome-immuno-155")
@@ -84,6 +85,7 @@ def test_region_collapser_umi1(tmp_path, m1_demuxed_data_part0):
     ]
 
 
+@pytest.mark.slow
 def test_region_collapser_umi2(tmp_path, m1_demuxed_data_part0):
     assay = pna_config.get_assay("pna-2")
     panel = pna_config.get_panel("proxiome-immuno-155")

@@ -9,7 +9,6 @@ import pytest
 from polars.testing.asserts import assert_frame_equal
 from scipy.spatial import distance_matrix
 
-from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.graph.connected_components import (
     RefinementOptions,
     StagedRefinementOptions,
@@ -235,6 +234,7 @@ def test_recover_multiplets_with_refinement_enabled():
     ]
 
 
+@pytest.mark.slow
 def test_filter_components_by_size_dynamic_if_no_limit_found_return_all():
     component_sizes = pl.DataFrame({"component": [0, 1, 2, 3], "n_umi": [3, 2, 4, 1]})
     filtered, threshold = filter_components_by_size_dynamic(
