@@ -18,7 +18,7 @@ def test_demux_invalid_chunk_size(tmp_path, testdata_amplicon_fastq):
         "--design",
         "pna-2",
         "--panel",
-        "proxiome-immuno-155",
+        "proxiome-immuno-155-v3",
         "--output-chunk-reads",
         "123239KB",
     ]
