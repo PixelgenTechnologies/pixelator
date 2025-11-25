@@ -125,8 +125,8 @@ def test_loading_panel_from_config_specific_version(config_with_multiple_version
 
 
 def test_load_antibody_panel_util(pna_data_root):
-    cgf_panel = load_antibody_panel(pna_config, "proxiome-immuno-155")
-    assert cgf_panel.name == "proxiome-immuno-155-v3"
+    cgf_panel = load_antibody_panel(pna_config, "proxiome-immuno-155-v2")
+    assert cgf_panel.name == "proxiome-immuno-155-v2"
 
     path_panel = load_antibody_panel(
         pna_config, pna_data_root / "test-pna-panel-v2.csv"
