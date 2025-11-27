@@ -262,5 +262,4 @@ def init_duckdb_conn(
     if commands:
         conn.execute("\n".join(commands))
 
-    conn = dd.connect(":memory:")
     return conn
