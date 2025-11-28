@@ -8,6 +8,7 @@ from typing import Optional
 import numpy as np
 from cutadapt._align import Aligner
 from cutadapt.adapters import Where
+from cutadapt.align import EndSkip
 from cutadapt.info import ModificationInfo
 from cutadapt.predicates import Predicate
 from cutadapt.steps import SingleEndFilter
@@ -193,10 +194,10 @@ class LowComplexityUMI(Predicate):
         umi1_char_freqs = umi1_counts / len(umi1)
         umi2_char_freqs = umi2_counts / len(umi2)
 
-        if np.any(umi1_char_freqs > self.proportion):
+        if np.any(umi1_char_freqs >= self.proportion):
             return True
 
-        if np.any(umi2_char_freqs > self.proportion):
+        if np.any(umi2_char_freqs >= self.proportion):
             return True
 
         return False
@@ -217,7 +218,7 @@ class LBSDetectedInUMI(Predicate):
 
     """
 
-    def __init__(self, assay, min_overlap=8, max_error_rate=0.125) -> None:
+    def __init__(self, assay, min_overlap=8, max_error_rate=0.2) -> None:
         """Initialize a LBSDetectedInUMI pipeline predicate."""
         self.assay = assay
         self.min_overlap = min_overlap
@@ -226,22 +227,24 @@ class LBSDetectedInUMI(Predicate):
         lbs1_ref = assay.get_region_by_id("lbs-1").get_sequence()
         lbs2_ref = assay.get_region_by_id("lbs-2").get_sequence()
 
+        flags = EndSkip.SEMIGLOBAL
+
         self._lbs1_aligner = Aligner(
             reference=lbs1_ref,
             max_error_rate=self.max_error_rate,
             wildcard_ref=False,
-            wildcard_query=True,
+            wildcard_query=False,
             min_overlap=min_overlap,
-            flags=Where.ANYWHERE,
+            flags=flags,
         )
 
         self._lbs2_aligner = Aligner(
             reference=lbs2_ref,
             max_error_rate=self.max_error_rate,
             wildcard_ref=False,
-            wildcard_query=True,
+            wildcard_query=False,
             min_overlap=min_overlap,
-            flags=Where.ANYWHERE,
+            flags=flags,
         )
 
         self._umi1_region_slice = slice(*get_position_in_parent(assay, "umi-1"))

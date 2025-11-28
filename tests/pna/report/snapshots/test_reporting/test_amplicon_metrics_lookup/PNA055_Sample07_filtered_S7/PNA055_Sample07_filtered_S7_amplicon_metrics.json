@@ -12,6 +12,8 @@
     "failed_partial_upi2_umi2_reads": 0,
     "failed_missing_upi1_umi1_reads": 11708,
     "failed_missing_upi2_umi2_reads": 5953,
+    "failed_lbs_detected_in_umi_reads": null,
+    "failed_low_complexity_umi_reads": null,
     "total_failed_reads": 25428,
     "q30_statistics": {
         "total": 0.948687067758244,

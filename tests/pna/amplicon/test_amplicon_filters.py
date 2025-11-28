@@ -22,6 +22,17 @@ class TestLowComplexityUMI:
             self.predicate.test(SequenceRecord(name="pass", sequence=ampl1), None)
         )
 
+    def test_umi1_all_c(self):
+        """Test that an assembled amplicon sequence with UMI-1 of all C's fails the filter."""
+
+        #                      UMI1                                                                                                           UMI2
+        #        ----------------------------|                                                                                    |----------------------------
+        #
+        input = "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCAGGTTCCGCAAGTGACGCTGGGCATGTCAAACACTCATGTCTGGGGGGAGTTTGTTGCTTCGCTTAGATGTCGGTAAGACCATAGATTTAAGATTAAACCACCCAGGTTCCG"
+        assert self.predicate.test(
+            SequenceRecord(name="fail-umi1-all-c", sequence=input), None
+        )
+
     def test_low_complexity_umi1(self):
         """Test that an assembled amplicon sequence with low-complexity UMI-1 fails the filter."""
 
@@ -49,20 +60,22 @@ class TestLBSDetectedInUMI:
     @classmethod
     def setup_class(cls):
         assay = pna_config.get_assay("pna-2")
-        cls.predicate = LBSDetectedInUMI(assay)
+        cls.predicate = LBSDetectedInUMI(assay, max_error_rate=0.125, min_overlap=8)
 
     def test_correct_sequence(self):
         #                      UMI1                                                                                                           UMI2
         #       ----------------------------|                                                                                    |----------------------------
         #        NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
         ampl1 = "TGGCAAACGTCTGCAGTTATAAAGCTGACCAGGTTCCGCAAGTGACGCTGGGCATGTCAAACACTCATGTCTGGGGGGAGTTTGTTGCTTCGCTTAGATGTCGGTAAGACCATAGATTTAAGATTAAACCACCCAGGTTCCG"
-        assert self.predicate.test(SequenceRecord(name="pass", sequence=ampl1), None)
+        assert not self.predicate.test(
+            SequenceRecord(name="pass", sequence=ampl1), None
+        )
 
     def test_umi1_lbs1_match_end(self):
         #                      UMI1                                                                                                           UMI2
         #        ----------------------------|                                                                                    |----------------------------
         #        NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
-        ampl1 = "TGGCAAACGTCTGCAGTTATCAAGTGACGCTGGGCATGCAAGTGACGCTGGGCATGTCAAACACTCATGTCTGGGGGGAGTTTGTTGCTTCGCTTAGATGTCGGTAAGACCATAGATTTAAGATTAAACCACCCAGGTTCCG"
+        ampl1 = "TGGCAAACGTCTGCAGTTCAAGTGACGCTCTGGGCATGCAAGTGACGCTGGGCATGTCAAACACTCATGTCTGGGGGGAGTTTGTTGCTTCGCTTAGATGTCGGTAAGACCATAGATTTAAGATTAAACCACCCAGGTTCCG"
         assert self.predicate.test(
             SequenceRecord(name="umi_match_end", sequence=ampl1), None
         )
@@ -85,9 +98,8 @@ class TestLBSDetectedInUMI:
 
     def test_umi1_lbs2_match_start(self):
         umi_filter = LBSDetectedInUMI(pna_config.get_assay("pna-2"))
-
         #                     UMI1                                                                                                           UMI2
-        #       ----------------------------|                                                                                    |----------------------------
+        #       ----------------------------|                                                                                     |----------------------------
         #       NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
         ampl = "GCTTAGATGTCGGAACACTCATGTCTGACCAGGTTCCGCAAGTGACGCTGGGCATGTCAAACACTCATGTCTGGGGGGAGTTTGTTGCTTCGCTTAGATGTCGGTAAGACCATAGATTTAAGATTAAACCACCCAGGTTCCG"
         assert self.predicate.test(SequenceRecord(name="match", sequence=ampl), None)
