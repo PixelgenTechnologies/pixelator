@@ -100,7 +100,7 @@ from pixelator.pna.utils import get_read_sample_name, is_read_file
     ),
 )
 @click.option(
-    "--low-complexity-filter",
+    "--low-complexity-filter/--no-low-complexity-filter",
     is_flag=True,
     default=True,
     help="Enable filtering of amplicons with low complexity UMI sequences.",
@@ -115,7 +115,7 @@ from pixelator.pna.utils import get_read_sample_name, is_read_file
     ),
 )
 @click.option(
-    "--lbs-filter",
+    "--lbs-filter/--no-lbs-filter",
     is_flag=True,
     default=True,
     help="Enable filtering of amplicons with UMI sequences that show similarity to the LBS sequence.",
