@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 -   Moved from using `poetry` to `uv` for dependency management and packaging.
+-   Better performance when reading adata from multiple pxl files.
 
 ## [0.22.1] - 2025-10-31
 
