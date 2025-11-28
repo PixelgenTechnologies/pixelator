@@ -435,63 +435,64 @@ class PixelDataViewer:
         """Return the list of sample names known to the view."""
         return list(self._db_to_file_mapping.keys())
 
-    def read_adata_from_sample(self, sample: str) -> AnnData:
+    def read_adata_from_sample(
+        self, connection: duckdb.DuckDBPyConnection, sample: str
+    ) -> AnnData:
         """Read the AnnData object from the PXL file.
 
         :return: The AnnData object.
         """
-        with self as connection:
-            X = connection.sql(
-                f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__X"
-            ).to_df()
-            var = connection.sql(
-                f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__var"
-            ).to_df()
-            obs = connection.sql(
-                f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__obs"
-            ).to_df()
+        X = connection.sql(
+            f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__X"
+        ).to_df()
+        var = connection.sql(
+            f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__var"
+        ).to_df()
+        obs = connection.sql(
+            f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__obs"
+        ).to_df()
 
-            maybe_uns = connection.sql(
-                f"select * from {self._get_normalized_name(sample)}.__adata__uns"
-            ).fetchone()
-            uns = json.loads(maybe_uns[0]) if maybe_uns else None
+        maybe_uns = connection.sql(
+            f"select * from {self._get_normalized_name(sample)}.__adata__uns"
+        ).fetchone()
+        uns = json.loads(maybe_uns[0]) if maybe_uns else None
 
-            tables = connection.sql("SHOW ALL TABLES")
+        tables = connection.sql("SHOW ALL TABLES")
 
-            obsm_tables = (
-                tables.pl()
-                .filter(
-                    (pl.col("name").str.starts_with("__adata__obsm"))
-                    & (pl.col("database") == self._get_normalized_name(sample))
-                )
-                .select(
-                    pl.concat_str(
-                        [pl.col("database"), pl.col("schema"), pl.col("name")],
-                        separator=".",
-                    ).alias("name")
-                )
-                .get_column("name")
-                .to_list()
+        obsm_tables = (
+            tables.pl()
+            .filter(
+                (pl.col("name").str.starts_with("__adata__obsm"))
+                & (pl.col("database") == self._get_normalized_name(sample))
             )
-
-            obsm = {
-                table.split("__adata__obsm_")[1]: (
-                    connection.sql(f"SELECT * FROM {table}")
-                    .to_df()
-                    .set_index("index")
-                    .rename_axis(index={"index": "component"})
-                )
-                for table in obsm_tables
-            }
-
-            adata = AnnData(
-                X=X.set_index("index").rename_axis(index={"index": "component"}),
-                var=var.set_index("index").rename_axis(index={"index": "marker_id"}),
-                obs=obs.set_index("index").rename_axis(index={"index": "component"}),
-                uns=uns,
-                obsm=obsm,
+            .select(
+                pl.concat_str(
+                    [pl.col("database"), pl.col("schema"), pl.col("name")],
+                    separator=".",
+                ).alias("name")
             )
-            return adata
+            .get_column("name")
+            .to_list()
+        )
+
+        obsm = {
+            table.split("__adata__obsm_")[1]: (
+                connection.sql(f"SELECT * FROM {table}")
+                .to_df()
+                .set_index("index")
+                .rename_axis(index={"index": "component"})
+            )
+            for table in obsm_tables
+        }
+
+        adata = AnnData(
+            X=X.set_index("index").rename_axis(index={"index": "component"}),
+            var=var.set_index("index").rename_axis(index={"index": "marker_id"}),
+            obs=obs.set_index("index").rename_axis(index={"index": "component"}),
+            uns=uns,
+            obsm=obsm,
+        )
+        return adata
 
     @cache
     def read_adata(self) -> AnnData:
@@ -504,10 +505,13 @@ class PixelDataViewer:
         """
 
         def underlying_data():
-            for sample_name, _ in self._db_to_file_mapping.items():
-                adata = self.read_adata_from_sample(sample_name)
-                adata.obs["sample"] = sample_name
-                yield adata
+            with self as connection:
+                for sample_name, _ in self._db_to_file_mapping.items():
+                    adata = self.read_adata_from_sample(
+                        connection=connection, sample=sample_name
+                    )
+                    adata.obs["sample"] = sample_name
+                    yield adata
 
         adatas = list(underlying_data())
         concatenated = anndata_concat(adatas, join=self._adata_join_strategy)
@@ -517,9 +521,10 @@ class PixelDataViewer:
         return concatenated
 
     def _attach_to_files(self, connection: duckdb.DuckDBPyConnection):
+        query = ""
         for name, path in self._db_to_file_mapping.items():
-            query = f"ATTACH DATABASE '{path}' AS {self._get_normalized_name(name)} (READ_ONLY);"
-            connection.execute(query)
+            query += f"ATTACH DATABASE '{path}' AS {self._get_normalized_name(name)} (READ_ONLY);\n"
+        connection.execute(query)
 
     def _simple_union_table_view(
         self, connection: duckdb.DuckDBPyConnection, table_name: str, view_name: str
