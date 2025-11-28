@@ -227,6 +227,28 @@ class PNAAntibodyPanel:
 
         return errors
 
+    @staticmethod
+    def _validate_marker_names(panel_df):
+        errors = []
+        if any(panel_df.index.str.contains("_")):
+            # Markers should not contain underscores since this messes
+            # things up with Seurat on the R side
+            errors.append(
+                "The marker_id column should not contain underscores. "
+                "Please use dashes instead. Offending values: "
+                f"{panel_df.index[panel_df.index.str.contains('_')]}"
+            )
+        if any(panel_df.index.str.contains("\s")):
+            # Markers should not contain white-spaces since this causes
+            # issues in the demultiplexing step (and other places that
+            # might assume that marker names are single tokens)
+            errors.append(
+                "The marker_id column should not contain white-spaces. "
+                "Please use dashes instead. Offending values: "
+                f"{panel_df.index[panel_df.index.str.contains('\s')]}"
+            )
+        return errors
+
     @classmethod
     def validate_antibody_panel(cls, panel_df: pd.DataFrame) -> list[str]:
         """Validate the antibody panel dataframe.
@@ -255,14 +277,7 @@ class PNAAntibodyPanel:
             errors.append(f"`{cls._INDEX_COLUMN}` is missing or is not set as index")
             return errors
 
-        if any(panel_df.index.str.contains("_")):
-            # Markers should not contain underscores since this messes
-            # things up with Seurat on the R side
-            errors.append(
-                "The marker_id column should not contain underscores. "
-                "Please use dashes instead. Offending values: "
-                f"{panel_df.index[panel_df.index.str.contains('_')]}"
-            )
+        errors += cls._validate_marker_names(panel_df)
 
         if panel_df["control"].dtype != bool:
             errors.append("`control` column is not boolean")
