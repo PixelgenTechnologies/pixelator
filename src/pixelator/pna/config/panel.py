@@ -242,10 +242,11 @@ class PNAAntibodyPanel:
             # Markers should not contain white-spaces since this causes
             # issues in the demultiplexing step (and other places that
             # might assume that marker names are single tokens)
+            problematic_lines = panel_df.index[panel_df.index.str.contains("\s")]
             errors.append(
                 "The marker_id column should not contain white-spaces. "
                 "Please use dashes instead. Offending values: "
-                f"{panel_df.index[panel_df.index.str.contains('\s')]}"
+                f"{problematic_lines}"
             )
         return errors
 
