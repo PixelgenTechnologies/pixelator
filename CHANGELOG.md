@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [x.x.x] - 2025-xx-xx
 
+### Important changes
+
+To avoid mistakes in choosing panels, the default panel alias `proxiome-immuno-155` has been removed.
+Users must now explicitly choose a panel version when using Pixelator with PNA data.
+
 ### Added
 
 -   Support for Python 3.13.
+-   `proxiome-immuno-155-v3` panel added with new barcode sequences for CD49e, CD79a, and ICOS.
 
 ### Changed
 

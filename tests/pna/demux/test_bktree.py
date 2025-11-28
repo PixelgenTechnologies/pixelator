@@ -50,7 +50,7 @@ def change_2_nucleotides(s: bytes) -> bytes:
 
 @pytest.mark.slow
 def test_bktree_building():
-    panel = pna_config.get_panel("proxiome-immuno-155")
+    panel = pna_config.get_panel("proxiome-immuno-155-v3")
     tree = build_bktree(panel, sequence_key="sequence_1")
 
     # Check that the tree is not empty
