@@ -245,7 +245,7 @@ class PNAAntibodyPanel:
             problematic_lines = panel_df.index[panel_df.index.str.contains("\s")]
             errors.append(
                 "The marker_id column should not contain white-spaces. "
-                "Please use dashes instead. Offending values: "
+                "Please use dashes instead or remove the white-spaces. Offending values: "
                 f"{problematic_lines}"
             )
         return errors
