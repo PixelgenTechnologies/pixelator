@@ -5,12 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [x.x.x] - 2025-xx-xx
+## [0.23.0] - 2025-12-01
 
 ### Important changes
 
 To avoid mistakes in choosing panels, the default panel alias `proxiome-immuno-155` has been removed.
-Users must now explicitly choose a panel version when using Pixelator with PNA data.
+Users must now explicitly choose a panel version when using Pixelator with PNA data depending on
+which kit lot has been used to produce the data. See the table below for which panel version to use:
+
+| Kit lot        | Panel version           | Panel name                   |
+| -------------- | ----------------------- | ---------------------------- |
+| 2502–2506      | Immuno 155              | proxiome-immuno-155-v2       |
+| 2502–2506      | Immuno 155 + FMC63      | proxiome-immuno-156-FMC63-v2 |
+| 2507 and above | Immuno 155 v1.1         | proxiome-immuno-155-v3       |
+| 2507 and above | Immuno 155 v1.1 + FLAG  | proxiome-immuno-156-FLAG-v3  |
+| 2507 and above | Immuno 155 v1.1 + FMC63 | proxiome-immuno-156-FMC63-v3 |
 
 ### Added
 
@@ -23,12 +32,12 @@ Users must now explicitly choose a panel version when using Pixelator with PNA d
     The filtering behavior can be controlled using the `--lbs-filter-min-overlap` and
     `--lbs-filter-error-rate` parameters. This filter is enabled by default.
 -   `proxiome-immuno-155-v3` panel added with new barcode sequences for CD49e, CD79a, and ICOS.
+-   Improve the panel file validation by checking for white-spaces in marker ids.
 
 ### Changed
 
 -   Moved from using `poetry` to `uv` for dependency management and packaging.
 -   Better performance when reading adata from multiple pxl files.
-
 
 ### Fixed
 
