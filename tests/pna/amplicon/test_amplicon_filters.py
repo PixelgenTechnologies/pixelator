@@ -15,8 +15,8 @@ class TestLowComplexityUMI:
     def test_low_complexity_predicate(self):
         """Test that an assembled amplicon sequence passes the LowComplexityUMI filter."""
         #                      UMI1                                                                                                           UMI2
-        #       ----------------------------|                                                                                    |----------------------------
-        #       NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+        #        ----------------------------|                                                                                    |----------------------------
+        #        NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
         ampl1 = "TGGCAAACGTCTGCAGTTATAAAGCTGACCAGGTTCCGCAAGTGACGCTGGGCATGTCAAACACTCATGTCTGGGGGGAGTTTGTTGCTTCGCTTAGATGTCGGTAAGACCATAGATTTAAGATTAAACCACCCAGGTTCCG"
         assert not (
             self.predicate.test(SequenceRecord(name="pass", sequence=ampl1), None)
@@ -37,8 +37,8 @@ class TestLowComplexityUMI:
         """Test that an assembled amplicon sequence with low-complexity UMI-1 fails the filter."""
 
         #                      UMI1                                                                                                           UMI2
-        #       ----------------------------|                                                                                    |----------------------------
-        #       NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+        #        ----------------------------|                                                                                    |----------------------------
+        #        NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
         ampl2 = "CCCCCCCCCCCCCCCCCCCCCCCCTGACCAGGTTCCGCAAGTGACGCTGGGCATGTCAAACACTCATGTCTGGGGGGAGTTTGTTGCTTCGCTTAGATGTCGGTAAGACCATAGATTTAAGATTAAACCACCCAGGTTCCG"
         assert self.predicate.test(
             SequenceRecord(name="fail-umi1", sequence=ampl2), None
@@ -48,8 +48,8 @@ class TestLowComplexityUMI:
         """Test that an assembled amplicon sequence with low-complexity UMI-2 fails the filter."""
 
         #                      UMI1                                                                                                           UMI2
-        #       ----------------------------|                                                                                    |----------------------------
-        #       NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+        #        ----------------------------|                                                                                    |----------------------------
+        #        NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
         ampl3 = "TGGCAAACGTCTGCAGTTATAAAGCTGACCAGGTTCCGCAAGTGACGCTGGGCATGTCAAACACTCATGTCTGGGGGGAGTTTGTTGCTTCGCTTAGATGTCGGTAAGACCATAGATTTTTTTTTTTTTTTTTTTCGTTTTT"
         assert self.predicate.test(
             SequenceRecord(name="fail-umi2", sequence=ampl3), None
@@ -64,7 +64,7 @@ class TestLBSDetectedInUMI:
 
     def test_correct_sequence(self):
         #                      UMI1                                                                                                           UMI2
-        #       ----------------------------|                                                                                    |----------------------------
+        #        ----------------------------|                                                                                    |----------------------------
         #        NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
         ampl1 = "TGGCAAACGTCTGCAGTTATAAAGCTGACCAGGTTCCGCAAGTGACGCTGGGCATGTCAAACACTCATGTCTGGGGGGAGTTTGTTGCTTCGCTTAGATGTCGGTAAGACCATAGATTTAAGATTAAACCACCCAGGTTCCG"
         assert not self.predicate.test(
