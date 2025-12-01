@@ -20,6 +20,7 @@ Users must now explicitly choose a panel version when using Pixelator with PNA d
 ### Changed
 
 -   Moved from using `poetry` to `uv` for dependency management and packaging.
+-   Better performance when reading adata from multiple pxl files.
 
 ## [0.22.1] - 2025-10-31
 

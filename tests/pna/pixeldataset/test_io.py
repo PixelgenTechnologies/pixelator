@@ -182,7 +182,8 @@ class TestPixelDataViewer:
         assert pxl_view.sample_names() == ["test_sample"]
 
     def test_read_adata_from_sample(self, pxl_view: PixelDataViewer, adata_data):
-        res = pxl_view.read_adata_from_sample("test_sample")
+        with pxl_view as connection:
+            res = pxl_view.read_adata_from_sample(connection, "test_sample")
         adata_assert_equal(res, adata_data)
 
     def test_read_adata(self, pxl_view, adata_data):
