@@ -15,12 +15,25 @@ Users must now explicitly choose a panel version when using Pixelator with PNA d
 ### Added
 
 -   Support for Python 3.13.
+-   Add a new filter controlled by the `--low-complexity` flag to `pixelator single-cell-pna amplicon`.
+    This filter removes reads with UMIs with low sequence complexity. The threshold can be controlled
+    using the `--umi-complexity-threshold` parameter. This filter is enabled by default.
+-   Add a new filter controlled by the `--lbs-filter` flag `pixelator single-cell-pna amplicon`.
+    This filter removes UMIs where a linker binding site (LBS) sequence is found within a UMI sequence.
+    The filtering behavior can be controlled using the `--lbs-filter-min-overlap` and
+    `--lbs-filter-error-rate` parameters. This filter is enabled by default.
 -   `proxiome-immuno-155-v3` panel added with new barcode sequences for CD49e, CD79a, and ICOS.
 
 ### Changed
 
 -   Moved from using `poetry` to `uv` for dependency management and packaging.
 -   Better performance when reading adata from multiple pxl files.
+
+
+### Fixed
+
+-   Fix an issue with DuckDB connection initialization that caused configured memory limits for
+    `pixelator single-cell-pna combine-collapse` to be ignored.
 
 ## [0.22.1] - 2025-10-31
 

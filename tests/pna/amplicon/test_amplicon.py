@@ -31,6 +31,7 @@ def test_amplicon_300k(tmp_path, testdata_300k):
         inputs=input_files,
         assay=pna_assay,
         output=tmp_path / "testdata_300k.fq.zst",
+        save_failed=True,
     )
 
     assert (tmp_path / "testdata_300k.fq.zst").exists()
