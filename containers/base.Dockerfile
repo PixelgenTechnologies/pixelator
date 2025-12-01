@@ -6,34 +6,26 @@ ARG MAKEJOBS=4
 # Install pixelator dependencies in a separate stage to improve caching
 FROM registry.fedoraproject.org/fedora-minimal:42 AS runtime-base
 RUN microdnf install -y \
-    python3.12 \
-    git \
+    python3.13 \
     sqlite \
     zlib \
     libdeflate \
     libstdc++ \
     procps-ng \
     gzip \
+    tar \
     && microdnf clean all
-
-ENV PIPX_BIN_DIR="/usr/local/bin"
-RUN python3.12 -m ensurepip
-RUN pip3.12 install --upgrade pip
-RUN pip3.12 install pipx
-RUN pipx install poetry
-RUN poetry self add poetry-plugin-export
-RUN poetry self add "poetry-dynamic-versioning[plugin]"
 
 # This is needed to easily run other python scripts inside the pixelator container
 # eg. samplesheet checking in nf-core/pixelator
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.12 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1
 
 
 FROM runtime-base AS builder-base
 
 RUN microdnf install -y \
-    python3.12 \
-    python3.12-devel \
+    python3.13 \
+    python3.13-devel \
     wget \
     git \
     sqlite-devel \
@@ -49,6 +41,15 @@ RUN microdnf install -y \
     nasm \
     && microdnf clean all
 
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1
+
+# Disable Python downloads, because we want to use the system interpreter
+ENV UV_PYTHON_DOWNLOADS=0
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
 
 # Build Fastp and isal from source
 FROM builder-base AS build-fastp
@@ -67,12 +68,12 @@ WORKDIR /fastp
 RUN make -j${MAKEJOBS}
 RUN make install
 
-FROM builder-base AS poetry-deps-install-amd64
+FROM builder-base AS uv-deps-install-amd64
+ENV UV_PYTHON_DOWNLOADS=0
 
 WORKDIR /pixelator
-COPY poetry.lock pyproject.toml ./
+COPY uv.lock pyproject.toml README.md ./
 COPY .git .git
-RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi
 
 ## We need to define the ARG we will be using in each build stage
 ARG TARGETPLATFORM
@@ -80,34 +81,33 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 
 ENV ANNOY_TARGET_VARIANT="${TARGETVARIANT:-v3}"
+ENV UV_PYTHON_DOWNLOADS=0
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
 # We need to control the annoy compile options. By default annoy will use march=native which causes issues when
 # building on more modern host than the target platform.
 
+# This will build a command like uv pip install annoy==1.17.0 using the version of annoy that
+# is specified in the uv.lock file
 RUN if [ -n "$ANNOY_TARGET_VARIANT" ]; then \
     export ANNOY_COMPILER_ARGS="-D_CRT_SECURE_NO_WARNINGS,-DANNOYLIB_MULTITHREADED_BUILD,-march=x86-64-$ANNOY_TARGET_VARIANT"; \
-    echo "Building Annoy for explicit target $TARGETPLATFORM/$ANNOY_TARGET_VARIANT"; \
-    pip3.12 install -I --prefix=/runtime -r requirements.txt; \
-    else \
-    echo "Building Annoy without implicit target $TARGETPLATFORM"; \
-    pip3.12 install -I --prefix=/runtime -r requirements.txt; \
-    fi \
-    && rm requirements.txt
+    fi;
+RUN uv pip install --system $(uv export --format 'requirements.txt' --no-hashes | grep annoy)
 
-
-FROM runtime-base AS poetry-deps-install-arm64
+FROM builder-base AS uv-deps-install-arm64
+ENV UV_PYTHON_DOWNLOADS=0
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
 WORKDIR /pixelator
-COPY poetry.lock pyproject.toml /pixelator/
+COPY poetry.lock pyproject.toml README.md /pixelator/
 COPY .git /pixelator/.git
 
-RUN poetry export --output requirements.txt --without-hashes --no-interaction --no-ansi
-RUN pip3.12 install -I --prefix=/runtime -r requirements.txt && rm requirements.txt
+RUN uv pip install --system $(uv export --format 'requirements.txt' --no-hashes | grep annoy)
 
 # ------------------------------------------
 # -- Build the pixelator package
 # ------------------------------------------
-FROM runtime-base AS build-pixelator
+FROM builder-base AS build-pixelator
 
 ARG VERSION_OVERRIDE
 
@@ -115,15 +115,11 @@ WORKDIR /pixelator
 COPY . /pixelator
 COPY .git /pixelator/.git
 
-RUN poetry config virtualenvs.create false
 RUN if [ ! -z "${VERSION_OVERRIDE}" ]; then \
     echo "Overriding version to ${VERSION_OVERRIDE}"; \
-    POETRY_DYNAMIC_VERSIONING_OVERRIDE="pixelgen-pixelator=${VERSION_OVERRIDE}" poetry build -f sdist; \
-    else poetry build -f sdist; \
+    SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION_OVERRIDE}" uv pip install --system . ; \
+    else uv pip install --system . ; \
     fi
-
-RUN cp -r /pixelator/dist/ /dist/ && \
-    rm -rf /pixelator
 
 # ------------------------------------------
 # -- Build the runtime environment for amd64
@@ -133,7 +129,7 @@ FROM runtime-base AS runtime-amd64
 
 # Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
-COPY --from=poetry-deps-install-amd64 /runtime/ /usr/
+COPY --from=uv-deps-install-amd64 /usr/local/ /usr/local/
 
 # ------------------------------------------
 # -- Build the runtime environment for arm64
@@ -143,7 +139,7 @@ FROM runtime-base AS runtime-arm64
 
 # Copy both fastp executable and isa-l library
 COPY --from=build-fastp /usr/local/ /usr/local/
-COPY --from=poetry-deps-install-arm64 /runtime/ /usr/
+COPY --from=uv-deps-install-arm64 /usr/local/ /usr/local/
 
 # ------------------------------------------
 # -- Build the final image
@@ -154,12 +150,8 @@ FROM runtime-${TARGETARCH} AS runtime-final
 # Make sure that the python packages are available in the system path
 # We add this explicitly since nextflow often runs with PYTHONNOUSERSITE set
 # to fix interference with conda and this can cause problems.
+COPY --from=build-pixelator /usr/local/ /usr/
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1
 # Fastp will also build isal and we need to make that available
 RUN ldconfig /usr/local/lib64
-
-COPY --from=build-pixelator /dist /dist
-RUN ls -alh /dist/
-RUN pip3.12 install --prefix /usr/ /dist/*.tar.gz
-RUN rm -rf /dist
-
-RUN pip3.12 cache purge

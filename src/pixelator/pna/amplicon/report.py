@@ -114,7 +114,7 @@ class AmpliconSampleReport(SampleReport):
         ),
     )
     def failed_invalid_amplicon_reads(self) -> int:
-        """Calculate the number of reads discarded because they are missing or have a partial region."""
+        """Calculate the number of reads discarded because they have a missing or partial region."""
         return (
             self.failed_partial_upi1_umi1_reads
             + self.failed_partial_upi2_umi2_reads
@@ -140,6 +140,16 @@ class AmpliconSampleReport(SampleReport):
     failed_missing_upi2_umi2_reads: int = pydantic.Field(
         ...,
         description="The number of reads discarded because they are missing UPI2/UMI2 sequences.",
+    )
+
+    failed_lbs_detected_in_umi_reads: Optional[int] = pydantic.Field(
+        default=None,
+        description="The number of reads discarded because the UMI regions contain partial LBS sequences.",
+    )
+
+    failed_low_complexity_umi_reads: Optional[int] = pydantic.Field(
+        default=None,
+        description="The number of reads discarded because the UMI regions have very low complexity.",
     )
 
     total_failed_reads: int = pydantic.Field(
@@ -201,10 +211,8 @@ class AmpliconStatistics(Statistics):
 
     def as_dict(self) -> Dict:
         """Return a dict representation of the class."""
-        filtered = {name: self.filtered.get(name) for name in self.FILTERS.keys()}
         filtered_total = sum(self.filtered.values())
         written_reads = self.read_length_statistics.written_reads()
-        written_bp = self.read_length_statistics.written_bp()
         assert (written_reads + filtered_total) == self.n
 
         q30_regions_report = None
@@ -248,6 +256,16 @@ class AmpliconStatistics(Statistics):
             passed_partial_uei_reads=amplicon_report["passed_partial_uei_reads"],  # type: ignore
             passed_missing_lbs1_anchor=amplicon_report["passed_missing_lbs1_anchor"],  # type: ignore
             failed_too_many_n_reads=self.filtered["too_many_n"],  # type: ignore
+            failed_lbs_detected_in_umi_reads=(
+                self.filtered["lbs_detected_in_umi"]
+                if "lbs_detected_in_umi" in self.filtered
+                else 0  # type: ignore
+            ),
+            failed_low_complexity_umi_reads=(
+                self.filtered["low_complexity_umi"]
+                if "low_complexity_umi" in self.filtered
+                else 0  # type: ignore
+            ),
             failed_partial_upi1_umi1_reads=amplicon_report[
                 "failed_partial_upi1_umi1_reads"
             ],  # type: ignore

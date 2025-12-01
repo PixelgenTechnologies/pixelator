@@ -261,7 +261,7 @@ def test_pna_edgelist_to_anndata(pixelconnection):
 def test_pna_edgelist_to_anndata_save_adata(pixelconnection, tmp_path):
     from pixelator.pna.config import pna_config
 
-    panel = load_antibody_panel(pna_config, "proxiome-immuno-155")
+    panel = load_antibody_panel(pna_config, "proxiome-immuno-155-v3")
     adata = pna_edgelist_to_anndata(pixelconnection, panel)
 
     adata.write_h5ad(tmp_path / "test.h5ad")

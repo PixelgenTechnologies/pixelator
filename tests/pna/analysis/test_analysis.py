@@ -32,6 +32,7 @@ MarkerB,MarkerC,9864156ed5c9eb6c,c925e4e5eeb989b9,0.0,1.0,0.0,0.061,0.062,0.001,
 """
 
 
+@pytest.mark.slow
 def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     manager = AnalysisManager(

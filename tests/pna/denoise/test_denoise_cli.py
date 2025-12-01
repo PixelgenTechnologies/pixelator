@@ -10,13 +10,14 @@ from pixelator import cli
 from pixelator.pna.pixeldataset import read
 
 
+@pytest.mark.slow
 def test_denoise_runs_ok(pxl_file):
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as output_dir:
         args = [
             "--cores",
-            "1",  # Notabene, using 1 thread here to make sure we actually use the mock
+            "1",
             "single-cell-pna",
             "denoise",
             str(pxl_file),

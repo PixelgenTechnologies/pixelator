@@ -62,6 +62,16 @@ def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
         PNAAntibodyPanel(df=panel_df, metadata=None)
 
 
+def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
+    panel_df.rename(index={"marker1": "marker 1"}, inplace=True)
+
+    with pytest.raises(
+        AssertionError,
+        match=r".*The marker_id column should not contain white-spaces.*Offending values:.*",
+    ):
+        PNAAntibodyPanel(df=panel_df, metadata=None)
+
+
 def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
     panel_df.loc["marker1", "uniprot_id"] = "PAAAAA"
 

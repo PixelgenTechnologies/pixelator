@@ -5,12 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0] - 2025-12-01
+
+### Important changes
+
+To avoid mistakes in choosing panels, the default panel alias `proxiome-immuno-155` has been removed.
+Users must now explicitly choose a panel version when using Pixelator with PNA data depending on
+which kit lot has been used to produce the data. See the table below for which panel version to use:
+
+| Kit lot        | Panel version           | Panel name                   |
+| -------------- | ----------------------- | ---------------------------- |
+| 2502–2506      | Immuno 155              | proxiome-immuno-155-v2       |
+| 2502–2506      | Immuno 155 + FMC63      | proxiome-immuno-156-FMC63-v2 |
+| 2507 and above | Immuno 155 v1.1         | proxiome-immuno-155-v3       |
+| 2507 and above | Immuno 155 v1.1 + FLAG  | proxiome-immuno-156-FLAG-v3  |
+| 2507 and above | Immuno 155 v1.1 + FMC63 | proxiome-immuno-156-FMC63-v3 |
+
+### Added
+
+-   Support for Python 3.13.
+-   Add a new filter controlled by the `--low-complexity` flag to `pixelator single-cell-pna amplicon`.
+    This filter removes reads with UMIs with low sequence complexity. The threshold can be controlled
+    using the `--umi-complexity-threshold` parameter. This filter is enabled by default.
+-   Add a new filter controlled by the `--lbs-filter` flag `pixelator single-cell-pna amplicon`.
+    This filter removes UMIs where a linker binding site (LBS) sequence is found within a UMI sequence.
+    The filtering behavior can be controlled using the `--lbs-filter-min-overlap` and
+    `--lbs-filter-error-rate` parameters. This filter is enabled by default.
+-   `proxiome-immuno-155-v3` panel added with new barcode sequences for CD49e, CD79a, and ICOS.
+-   Improve the panel file validation by checking for white-spaces in marker ids.
+
+### Changed
+
+-   Moved from using `poetry` to `uv` for dependency management and packaging.
+-   Better performance when reading adata from multiple pxl files.
+
+### Fixed
+
+-   Fix an issue with DuckDB connection initialization that caused configured memory limits for
+    `pixelator single-cell-pna combine-collapse` to be ignored.
+
 ## [0.22.1] - 2025-10-31
 
 ### Fixed
 
 -   Panel data can now be fetched from the `.pxl` file in the denoise step
--  `control` is now stored as boolean in the Panel object, instead of `yes`/`no`.
+-   `control` is now stored as boolean in the Panel object, instead of `yes`/`no`.
 -   Fix an error in the "Linker binding site 1" region of the `pna-2` assay config file
 
 ## [0.22.0] - 2025-10-23
@@ -46,6 +85,10 @@ marker names. To use the previous version, specify `--panel proxiome-immuno-155-
 -   Include panel data in `.pxl` file for PNA data
 -   Fix an issue where very large samples (3k cells) could not be collapsed
     due to the limits of the PyArrow string array type.
+
+### Changed
+
+-   Migrated from Poetry to a uv-based workflow (tooling and CI); packaging now uses Hatchling with VCS-based versioning.
 
 ## [0.21.4] - 2025-08-27
 

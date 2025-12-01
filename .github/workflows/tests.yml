@@ -37,7 +37,6 @@ jobs:
             python:
               paths:
                 - 'pyproject.toml'
-                - 'poetry.lock'
                 - 'src/**'
                 - 'tests/**'
               paths_ignore:
@@ -52,6 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         py:
+          - "3.13"
           - "3.12"
           - "3.11"
           - "3.10"
@@ -72,17 +72,16 @@ jobs:
           name: "fastp"
           version: "0.23.4"
 
-      - name: Install and configure Poetry
-        uses: snok/install-poetry@v1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install tox
-        run: python -m pip install tox-gh>=1.2
-
-      - name: Setup test suite
-        run: tox -vv --notest
+      - name: Sync dependencies
+        run: uv sync --group dev
 
       - name: Run test suite
-        run: tox --skip-pkg-install
+        run: uv run pytest
 
   test-coverage:
     name: "Check the test coverage"
@@ -99,18 +98,18 @@ jobs:
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
-      - name: Install and configure Poetry
-        uses: snok/install-poetry@v1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
 
-      - name: Install dependencies
-        run: |
-          poetry install --with dev
+      - name: Sync dependencies
+        run: uv sync --group dev
 
       - name: Run test suite
-        run: |
-          poetry run pytest --cov=src/
+        run: uv run pytest --cov=src/
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
@@ -137,7 +136,12 @@ jobs:
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
         with:
-          python-version: "3.12"
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
 
       - uses: supplypike/setup-bin@v3
         with:
@@ -145,13 +149,9 @@ jobs:
           name: "fastp"
           version: "0.23.2"
 
-      - name: Install and configure Poetry
-        uses: snok/install-poetry@v1
-
-      - name: Install dependencies
-        run: |
-          poetry install --with dev
+      - name: Sync dependencies
+        run: uv sync --group dev
 
       - name: Run workflow tests
         run: |
-          poetry run pytest -s -m "workflow_test" --basetemp=/tmp/pytest-results tests/mpx/integration/test_small_${{ matrix.case }}.yaml --log-cli-level=DEBUG
+          uv run pytest -s -m "workflow_test" --basetemp=/tmp/pytest-results tests/mpx/integration/test_small_${{ matrix.case }}.yaml --log-cli-level=DEBUG

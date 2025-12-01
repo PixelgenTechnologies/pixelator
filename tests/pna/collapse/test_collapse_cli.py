@@ -23,7 +23,7 @@ def test_collapse_run(mocker, testdata_paired_small_demux):
             "--design",
             "pna-2",
             "--panel",
-            "proxiome-immuno-155",
+            "proxiome-immuno-155-v3",
         ]
         cmd = runner.invoke(cli.main_cli, args)
 

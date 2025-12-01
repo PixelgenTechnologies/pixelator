@@ -2,8 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
 import pytest
 
 from pixelator.pna.demux.barcode_demuxer import DemuxRecordBatch
@@ -203,6 +201,7 @@ def send_random_batches(queue):
     queue.join_thread()
 
 
+@pytest.mark.slow
 def test_demux_writer_process(tmp_path, expected_df):
     output_dir = tmp_path
     policy = PartsFilenamePolicy("sample1")

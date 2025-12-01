@@ -27,7 +27,6 @@ jobs:
             pixelator:
               paths:
                 - 'pyproject.toml'
-                - 'poetry.lock'
                 - 'src/pixelator/**'
                 - '**/Taskfile.yml'
                 - '.github/**'

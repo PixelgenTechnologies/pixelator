@@ -5,6 +5,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 from io import StringIO
 from pathlib import Path
+from unittest import mock
 
 import networkx as nx
 import pandas as pd
@@ -18,6 +19,8 @@ from pixelator.pna.analysis.denoise import (
     get_stranded_nodes,
 )
 from pixelator.pna.analysis_engine import AnalysisManager
+from pixelator.pna.config import pna_config
+from pixelator.pna.config.panel import load_antibody_panel
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PixelDatasetSaver
 
@@ -274,8 +277,19 @@ def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
     pxl_file_target = PixelDatasetSaver(pxl_dataset=pna_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
-    manager = AnalysisManager([DenoiseOneCore()])
-    denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
+    with mock.patch(
+        "pixelator.pna.analysis.denoise.load_antibody_panel"
+    ) as mock_load_panel:
+        # This is a workaround to make sure that the correct panel is loaded
+        # eventhough we no longer set a default panel file.
+        def f(*args, **kwargs):
+            return load_antibody_panel(pna_config, "proxiome-immuno-155-v2")
+
+        mock_load_panel.side_effect = f
+
+        manager = AnalysisManager([DenoiseOneCore()])
+        denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
+
     assert "tau_type" in denoised_dataset.adata().obs.columns
     components = pna_pxl_dataset.adata().obs.index
     for comp in components:

@@ -429,8 +429,21 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         if len(read) > self._uei_region_end_pos:
             lbs2_alm = self._lbs2_aligner.locate(read.sequence)
             if lbs2_alm:
+                # The space between the LBS-1 end position and the start of the LBS-2 region might not
+                # have the expected length (UEI). Especially if the LBS-1 alignment was not found.
+                # If so, slice the expected length region anchored by the LBS-2 alignment.
+                uei_seq_len = lbs2_alm[2] - lbs1_end_pos
+                if uei_seq_len > self._uei_region_len:
+                    region_slices.uei = slice(
+                        lbs2_alm[2] - self._uei_region_len, lbs2_alm[2]
+                    )
+
                 # [lbs1 end pos, lbs2 start pos)
-                region_slices.uei = slice(lbs1_end_pos, lbs2_alm[2])
+                elif uei_seq_len == self._uei_region_len:
+                    region_slices.uei = slice(lbs1_end_pos, lbs2_alm[2])
+                else:
+                    # UEI region is too short, ignore and use the R2
+                    region_slices.uei = None
 
         # Check if we have the full pbs-2, umi-2 region after lbs-2 alignment
         if lbs2_alm:

@@ -36,7 +36,6 @@ jobs:
             python:
               paths:
                 - 'pyproject.toml'
-                - 'poetry.lock'
                 - 'src/**'
 
   build:
