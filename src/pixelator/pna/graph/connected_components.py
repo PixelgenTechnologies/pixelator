@@ -696,7 +696,8 @@ def _remove_umi_clashes_and_get_stats(input_edgelist, component_stats):
     component_stats.reads_input = raw_stat["read_count"][0]
     umi1_clashes, umi2_clashes = _find_clashing_umis(input_edgelist)
     no_clash_edgelist = input_edgelist.filter(
-        ~pl.col("umi1").is_in(umi1_clashes) & ~pl.col("umi2").is_in(umi2_clashes)
+        ~pl.col("umi1").is_in(set(umi1_clashes.to_list()))
+        & ~pl.col("umi2").is_in(set(umi2_clashes.to_list()))
     )
     post_collision_stat = (
         no_clash_edgelist.select(["read_count", "uei_count"]).sum().collect()
@@ -907,6 +908,8 @@ def _filter_connected_components_by_size(
         passing_components
     )
 
-    edgelist = edgelist.filter(pl.col("component").is_in(passing_components))
+    edgelist = edgelist.filter(
+        pl.col("component").is_in(set(passing_components.to_list()))
+    )
 
     return edgelist
