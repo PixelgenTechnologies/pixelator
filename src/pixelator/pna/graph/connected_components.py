@@ -428,9 +428,9 @@ def recover_multiplets(
 
 
 def filter_components_by_size_dynamic(
-    component_sizes: pd.DataFrame,
+    component_sizes: pl.DataFrame,
     lowest_passable_bound: int | None = MIN_PNA_COMPONENT_SIZE,
-) -> tuple[pd.DataFrame, int | None]:
+) -> tuple[pl.Series, int | None]:
     """Filter components by size using dynamic thresholds.
 
     :param component_sizes: A DataFrame with columns `component` and `n_umi`.
@@ -456,7 +456,7 @@ def filter_components_by_size_dynamic(
 
 def filter_components_by_size_hard_thresholds(
     component_sizes: pd.DataFrame, lower_bound: int | None, higher_bound: int | None
-) -> pd.DataFrame:
+) -> pl.Series:
     """Filter components by size using hard thresholds.
 
     :param component_sizes: A DataFrame with columns `component` and `n_umi`.
