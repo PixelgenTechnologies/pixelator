@@ -233,7 +233,7 @@ class AmpliconPipeline(Pipeline):
 
         n = 0  # no. of processed reads
         total1_bp = 0
-        total2_bp = 0 if self.paired else None
+        total2_bp = 0
         assert self._reader is not None
 
         post_modifiers_and_steps = self._post_modifiers + self._post_steps
