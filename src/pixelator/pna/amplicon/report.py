@@ -197,8 +197,6 @@ class AmpliconStatistics(Statistics):
             other.paired = self.paired
         if self.paired is None or len(self.filtered.values()) == 0:
             self.paired = other.paired
-
-        print(other.paired, self.paired)
         super().__iadd__(other)
         if hasattr(other, "_custom_stats"):
             for name, value in other._custom_stats.items():
