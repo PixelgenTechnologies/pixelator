@@ -193,8 +193,12 @@ class AmpliconStatistics(Statistics):
 
     def __iadd__(self, other: Any):
         """Merge statistics from another object into this one."""
-        if other.paired is None:
+        if other.paired is None or len(other.filtered.values()) == 0:
             other.paired = self.paired
+        if self.paired is None or len(self.filtered.values()) == 0:
+            self.paired = other.paired
+
+        print(other.paired, self.paired)
         super().__iadd__(other)
         if hasattr(other, "_custom_stats"):
             for name, value in other._custom_stats.items():
