@@ -254,13 +254,10 @@ class AmpliconPipeline(Pipeline):
                 final_read = self._combiner(read1, read2, info1, info2)
 
             else:
+                # Treat the single-end read as read 2
                 read, info, n_bp = self._pre_process_single(reads)
-                total1_bp += n_bp
-                # Figure out which read to pass as None, since the combiner expects two reads.
-                if read.name.endswith("/2") or read.name.endswith("_R2"):
-                    final_read = self._combiner(None, read, None, info)
-                else:
-                    final_read = self._combiner(read, None, info, None)
+                total2_bp += n_bp
+                final_read = self._combiner(None, read, None, info)
 
             final_read_info = ModificationInfo(final_read)
 
