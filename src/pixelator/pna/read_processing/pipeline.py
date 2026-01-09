@@ -203,11 +203,11 @@ class AmpliconPipeline(Pipeline):
         info = ModificationInfo(single_read)
 
         for modifier in pre_modifiers_and_steps:
-            out = modifier(single_read, info)
-            if out is None:
+            single_read = modifier(single_read, info)
+            if single_read is None:
                 break
 
-        return out, info, len(single_read)
+        return single_read, info, len(single_read)
 
     def process_reads(
         self,
