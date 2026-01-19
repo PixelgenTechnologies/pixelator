@@ -97,7 +97,7 @@ Pixelator is licensed under the [MIT](./LICENSE) license.
 
 Pixelator is developed and maintained by the [developers](https://github.com/PixelgenTechnologies) at [Pixelgen Technologies](https://pixelgen.com).
 
-When using pixelator in your research, please cite the following publications if you are working with Proximity Network Assay data:
+When using pixelator in your research, please cite the following publication if you are working with Proximity Network Assay data:
 
 > Filip Karlsson, Michele Simonetti, Christina Galonska, Max Karlsson, Hanna van Ooijen, Tomasz Kallas, Divya Thiagarajan, _et al._. "Single-Cell Protein Interactomes by the Proximity Network Assay". bioRxiv 2025.06.19.660329; doi: https://doi.org/10.1101/2025.06.19.660329
 
