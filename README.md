@@ -97,15 +97,19 @@ Pixelator is licensed under the [MIT](./LICENSE) license.
 
 Pixelator is developed and maintained by the [developers](https://github.com/PixelgenTechnologies) at [Pixelgen Technologies](https://pixelgen.com).
 
-When using pixelator in your research, please cite the following publication:
+When using pixelator in your research, please cite the following publication if you are working with Proximity Network Assay data:
+
+> Filip Karlsson, Michele Simonetti, Christina Galonska, Max Karlsson, Hanna van Ooijen, Tomasz Kallas, Divya Thiagarajan, _et al._. "Single-Cell Protein Interactomes by the Proximity Network Assay". bioRxiv 2025.06.19.660329; doi: https://doi.org/10.1101/2025.06.19.660329
+
+And for Molecular Pixelation data, please cite:
 
 > Karlsson, Filip, Tomasz Kallas, Divya Thiagarajan, Max Karlsson, Maud Schweitzer, Jose Fernandez Navarro, Louise Leijonancker, _et al._ "Molecular pixelation: spatial proteomics of single cells by sequencing." Nature Methods, May 8, 2024. https://doi.org/10.1038/s41592-024-02268-9.
 
 Main development happened thanks to:
 
--   Jose Fernandez Navarro ([@jfnavarro](https://github.com/jfnavarro))
--   Alvaro Martinez Barrio ([@ambarrio](https://github.com/ambarrio))
--   Johan Dahlberg ([@johandahlberg](https://github.com/johandahlberg))
--   Florian De Temmerman ([@fbdtemme](https://github.com/fbdtemme))
+- Jose Fernandez Navarro ([@jfnavarro](https://github.com/jfnavarro))
+- Alvaro Martinez Barrio ([@ambarrio](https://github.com/ambarrio))
+- Johan Dahlberg ([@johandahlberg](https://github.com/johandahlberg))
+- Florian De Temmerman ([@fbdtemme](https://github.com/fbdtemme))
 
 A huge thank you to all [code contributors](https://github.com/PixelgenTechnologies/pixelator/graphs/contributors)!
