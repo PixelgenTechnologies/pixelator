@@ -66,6 +66,52 @@ class CollapseSummaryStatistics(pydantic.BaseModel):
 
     read_counts_stats: SummaryStatistics | None = None
     uei_stats: SummaryStatistics | None = None
+    degree_distribution: dict[int, int] = pydantic.Field(
+        ..., description="Distributions of degrees (degree -> count)."
+    )
+
+    @staticmethod
+    def _compute_degree_distribution(df: pl.LazyFrame) -> dict[int, int]:
+        """Compute the degree distribution from a LazyFrame, combining the umi1 and umi2 degrees."""
+
+        def compute_umi_degrees(df: pl.LazyFrame, col: str) -> pl.DataFrame:
+            return (
+                df.group_by(col)
+                .agg(pl.len().alias("degree"))
+                .collect()
+                .group_by("degree")
+                .agg(pl.len().alias("count"))
+            )
+
+        def compute_combined_degrees(df: pl.LazyFrame) -> pl.DataFrame:
+            umi1_degreees = compute_umi_degrees(df, "umi1")
+            umi2_degreees = compute_umi_degrees(df, "umi2")
+            joined_degrees = (
+                umi1_degreees.join(
+                    umi2_degreees,
+                    left_on="degree",
+                    right_on="degree",
+                    how="full",
+                    suffix="_umi2",
+                    coalesce=True,
+                )
+                .fill_null(0)
+                .select(
+                    [
+                        pl.col("degree"),
+                        pl.col("count") + pl.col("count_umi2"),
+                    ]
+                )
+                .sort("degree")
+            )
+            return joined_degrees
+
+        def convert_to_dict(df: pl.DataFrame) -> dict[int, int]:
+            as_dicts = df.to_dict(as_series=False)
+            return dict(zip(as_dicts["degree"], as_dicts["count"]))
+
+        degree_df = compute_combined_degrees(df)
+        return convert_to_dict(degree_df)
 
     @staticmethod
     def from_lazy_frame(collapsed_lz_df: pl.LazyFrame):
@@ -73,10 +119,14 @@ class CollapseSummaryStatistics(pydantic.BaseModel):
         df = collapsed_lz_df.select("uei_count", "read_count").collect()
         uei_stats = SummaryStatistics.from_series(df.get_column("uei_count"))
         read_stats = SummaryStatistics.from_series(df.get_column("read_count"))
+        degree_distribution = CollapseSummaryStatistics._compute_degree_distribution(
+            collapsed_lz_df
+        )
 
         return CollapseSummaryStatistics(
             read_counts_stats=read_stats,
             uei_stats=uei_stats,
+            degree_distribution=degree_distribution,
         )
 
 
