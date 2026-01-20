@@ -4118,5 +4118,11 @@
     ],
     "output_reads": 201754,
     "corrected_umi1_reads": 1742,
-    "corrected_umi2_reads": 4682
+    "corrected_umi2_reads": 4682,
+    "degree_distribution": {
+        "1": 15045,
+        "2": 4323,
+        "3": 1860,
+        "4": 1125
+    }
 }
