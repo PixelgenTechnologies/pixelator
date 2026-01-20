@@ -555,25 +555,44 @@ def test_combine_independent_parquet(tmp_path, m1_collapsed_data, m2_collapsed_d
     assert combined_parquet.exists()
     assert stats.output_molecules == 118344
     assert stats.corrected_reads == 6409
-    assert stats.degree_distribution == {
-        1: 5942,
-        2: 4871,
-        3: 5073,
-        4: 4617,
-        5: 3758,
-        6: 2871,
-        7: 1872,
-        8: 1193,
-        9: 680,
-        10: 385,
-        11: 201,
-        12: 95,
-        13: 45,
-        14: 25,
-        15: 11,
-        16: 5,
+    assert stats.umi1_degree_distribution == {
+        1: 2899,
+        2: 2647,
+        3: 2700,
+        4: 2316,
+        5: 1778,
+        6: 1356,
+        7: 834,
+        8: 559,
+        9: 351,
+        10: 212,
+        11: 129,
+        12: 65,
+        13: 35,
+        14: 17,
+        15: 7,
+        16: 4,
         17: 3,
         19: 1,
+    }
+
+    assert stats.umi2_degree_distribution == {
+        1: 3043,
+        2: 2224,
+        3: 2373,
+        4: 2301,
+        5: 1980,
+        6: 1515,
+        7: 1038,
+        8: 634,
+        9: 329,
+        10: 173,
+        11: 72,
+        12: 30,
+        13: 10,
+        14: 8,
+        15: 4,
+        16: 1,
     }
 
     combined_df = pd.read_parquet(combined_parquet)
@@ -602,7 +621,8 @@ def test_combine_independent_reports(
         stats=CombineCollapseIndependentStats(
             output_molecules=70937,
             corrected_reads=1203,
-            degree_distribution={1: 50000, 2: 20000, 3: 10000},
+            umi1_degree_distribution={1: 50000, 2: 20000, 3: 10000},
+            umi2_degree_distribution={1: 60000, 2: 15000, 3: 5000},
         ),
         output_file=output_report_path,
     )

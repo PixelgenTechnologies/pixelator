@@ -4116,10 +4116,16 @@
             "corrected_unique_umis_fraction": 0.19727891156462585
         }
     ],
-    "degree_distribution": {
+    "umi1_degree_distribution": {
         "1": 15045,
         "2": 4323,
         "3": 1860,
+        "4": 1125
+    },
+    "umi2_degree_distribution": {
+        "1": 16045,
+        "2": 3000,
+        "3": 1200,
         "4": 1125
     },
     "output_reads": 201754,
