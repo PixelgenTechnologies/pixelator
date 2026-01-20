@@ -6,11 +6,10 @@ Copyright © 2025 Pixelgen Technologies AB
 """
 
 import dataclasses
-from collections import Counter
+from collections import Counter, OrderedDict
 from pathlib import Path
 from typing import Iterable, MutableMapping
 
-import duckdb as dd
 from duckdb import DuckDBPyConnection
 
 from pixelator.pna.collapse.independent import (
@@ -213,9 +212,9 @@ def combine_independent_parquet_files(
         GROUP BY count
         ORDER BY count DESC
         """)
-    degree_dist_dict = {
-        degree: count for degree, count in degree_distribution.fetchall()
-    }
+    degree_dist_dict = OrderedDict(
+        (degree, count) for degree, count in degree_distribution.fetchall()
+    )
 
     stats = CombineCollapseIndependentStats(
         output_molecules=int(output_molecules),
