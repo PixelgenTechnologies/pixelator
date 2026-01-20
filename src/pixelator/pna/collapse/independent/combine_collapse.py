@@ -62,11 +62,13 @@ class CombineCollapseIndependentStats:
     Attributes:
         output_molecules: Total number of unique output molecules
         corrected_reads: Total number of corrected reads
+        degree_distribution: The node degree distribution, degree->count
 
     """
 
     output_molecules: int
     corrected_reads: int
+    degree_distribution: dict[int, int]
 
 
 def combine_independent_parquet_files(
@@ -193,8 +195,32 @@ def combine_independent_parquet_files(
 
     output_molecules, corrected_reads = res.row(0)
 
+    logger.info("Calculating degree distribution.")
+    degree_distribution = conn.sql(f"""
+        WITH edgelist AS (SELECT * FROM read_parquet('{output_file}')),
+             all_umis AS (
+                 SELECT umi1 AS umi FROM edgelist
+                 UNION ALL
+                 SELECT umi2 AS umi FROM edgelist
+             ),
+             umi_counts AS (
+                 SELECT umi, COUNT(*) AS count
+                 FROM all_umis
+                 GROUP BY umi
+             )
+        SELECT count as degree, COUNT(*) AS count
+        FROM umi_counts
+        GROUP BY count
+        ORDER BY count DESC
+        """)
+    degree_dist_dict = {
+        degree: count for degree, count in degree_distribution.fetchall()
+    }
+
     stats = CombineCollapseIndependentStats(
-        output_molecules=int(output_molecules), corrected_reads=int(corrected_reads)
+        output_molecules=int(output_molecules),
+        corrected_reads=int(corrected_reads),
+        degree_distribution=degree_dist_dict,
     )
 
     # Sorted UMI files are only intermediates and can be removed
@@ -274,6 +300,7 @@ def combine_independent_report_files(
         input_molecules=umi1_summary_stats["input_molecules"],
         corrected_reads=stats.corrected_reads,
         output_molecules=stats.output_molecules,
+        degree_distribution=stats.degree_distribution,
     )
 
     report.write_json_file(output_file, indent=4)

@@ -64,3 +64,7 @@ class IndependentCollapseSampleReport(SampleReport):
     markers: list[MarkerCorrectionStats] = pydantic.Field(
         ..., description="The statistics for each marker pair."
     )
+
+    degree_distribution: dict[int, int] = pydantic.Field(
+        ..., description="The degree distribution of the UMIs."
+    )

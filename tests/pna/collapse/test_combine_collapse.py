@@ -555,6 +555,26 @@ def test_combine_independent_parquet(tmp_path, m1_collapsed_data, m2_collapsed_d
     assert combined_parquet.exists()
     assert stats.output_molecules == 118344
     assert stats.corrected_reads == 6409
+    assert stats.degree_distribution == {
+        1: 5942,
+        2: 4871,
+        3: 5073,
+        4: 4617,
+        5: 3758,
+        6: 2871,
+        7: 1872,
+        8: 1193,
+        9: 680,
+        10: 385,
+        11: 201,
+        12: 95,
+        13: 45,
+        14: 25,
+        15: 11,
+        16: 5,
+        17: 3,
+        19: 1,
+    }
 
     combined_df = pd.read_parquet(combined_parquet)
 
@@ -580,7 +600,9 @@ def test_combine_independent_reports(
         [m2_collapsed_report],
         sample_id=sample_name,
         stats=CombineCollapseIndependentStats(
-            output_molecules=70937, corrected_reads=1203
+            output_molecules=70937,
+            corrected_reads=1203,
+            degree_distribution={1: 50000, 2: 20000, 3: 10000},
         ),
         output_file=output_report_path,
     )
