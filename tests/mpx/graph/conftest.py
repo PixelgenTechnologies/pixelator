@@ -33,7 +33,7 @@ def input_edgelist_fixture(tmp_path, edgelist_with_communities: pd.DataFrame):
     """Fix an input edgelist."""
     input_edgelist = tmp_path / "tmp_edgelist.parquet"
     edgelist_with_communities.to_parquet(
-        input_edgelist, engine="fastparquet", compression="zstd", index=False
+        input_edgelist, compression="zstd", index=False
     )
     yield input_edgelist
 

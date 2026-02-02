@@ -182,7 +182,7 @@ class QCReportBuilder:
         if len(template_body) > 0:
             metrics_definition_file_el = template_body[0]
             parent = metrics_definition_file_el.getparent()
-            if parent:
+            if parent is not None:
                 parent.remove(metrics_definition_file_el)
 
         metrics_definition_file_el = E.SCRIPT(

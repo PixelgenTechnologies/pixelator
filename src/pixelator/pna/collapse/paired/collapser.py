@@ -320,6 +320,10 @@ class MoleculeCollapser:
 
         """
         vector_len = 32
+
+        if db_shm.buf is None:
+            raise ValueError(f"Could not read shared memory buffer")
+
         db = np.frombuffer(db_shm.buf, dtype=np.uint8, count=count * vector_len)
         db.shape = (count, vector_len)
         return db
@@ -336,6 +340,9 @@ class MoleculeCollapser:
             The numpy array.
 
         """
+        if counts_shm.buf is None:
+            raise ValueError(f"Could not read shared memory buffer")
+
         counts = np.frombuffer(counts_shm.buf, dtype=np.int64, count=count)
         return counts
 

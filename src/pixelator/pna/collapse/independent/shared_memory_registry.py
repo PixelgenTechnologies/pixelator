@@ -149,7 +149,7 @@ class SharedMemoryRegistry:
         desc = self._array_registry.get(name)
         shm = self.get_buffer(name)
 
-        if desc is None or shm is None:
+        if desc is None or shm is None or shm.buf is None:
             raise KeyError(f"No array with name '{name}' found in the registry")
 
         count = np.prod(desc.shape)
@@ -213,7 +213,7 @@ class ReadOnlySharedMemoryRegistry:
         desc = self._array_registry.get(name)
         shm = self.get_buffer(name)
 
-        if desc is None or shm is None:
+        if desc is None or shm is None or shm.buf is None:
             raise KeyError(f"No array with name '{name}' found in the registry")
 
         count = np.prod(desc.shape)
