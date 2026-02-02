@@ -294,7 +294,9 @@ def mark_potential_doublets(
     n_edges_to_split_doublet = pd.Series(
         index=edgelist["component"].unique(), dtype=int
     )
-    for component_id, component_edgelist in edgelist.groupby("component", observed=False):
+    for component_id, component_edgelist in edgelist.groupby(
+        "component", observed=False
+    ):
         is_potential_doublet[component_id], n_edges_to_split_doublet[component_id] = (
             _assess_doublet(component_edgelist)
         )
