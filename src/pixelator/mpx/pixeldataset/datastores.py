@@ -441,7 +441,7 @@ class ZipBasedPixelFile(PixelDataStore):
         self._set_to_read_mode()
         with self._file_system.open(self.ANNDATA_KEY, "rb") as af:
             with h5py.File(af, "r") as f:
-                data = ad.experimental.read_elem(f["/"])
+                data = ad.io.read_elem(f["/"])
         return data
 
     def write_anndata(self, anndata: AnnData) -> None:
@@ -451,7 +451,7 @@ class ZipBasedPixelFile(PixelDataStore):
         with self._file_system.open(self.ANNDATA_KEY, "wb", compression=None) as af:
             bio = io.BytesIO()
             with h5py.File(bio, "w") as f:
-                ad.experimental.write_elem(f, "/", anndata)
+                ad.io.write_elem(f, "/", anndata)
             af.write(bio.getbuffer())
 
     def read_edgelist(self) -> pd.DataFrame:
