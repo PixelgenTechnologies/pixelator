@@ -1,5 +1,6 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import os
 from pathlib import Path
 
 import pytest
@@ -81,3 +82,10 @@ def test_layout_from_path(pna_pxl_dataset: PNAPixelDataset, tmp_path):
     )
     assert "A" in set(result["pixel_type"].to_list())
     assert "B" in set(result["pixel_type"].to_list())
+
+    assert len(manager._temp_folders_used) == 1, (
+        "Expected one temporary folder to be used."
+    )
+    assert os.path.exists(manager._temp_folders_used[0]) is False, (
+        f"Temporary folder {manager._temp_folders_used[0]} was not cleaned up."
+    )

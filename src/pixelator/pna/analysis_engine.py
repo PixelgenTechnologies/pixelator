@@ -6,6 +6,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 import itertools
 import logging
 import multiprocessing
+import tempfile
 import typing
 from collections import defaultdict
 from dataclasses import dataclass
@@ -230,6 +231,7 @@ class AnalysisManager:
         if pxl_dataset_builder is None:
             pxl_dataset_builder = PNAPixelDataset.from_pxl_files
         self._pxl_dataset_builder = pxl_dataset_builder
+        self._temp_folders_used = []
 
     def _execute_computations_in_parallel(
         self, component_stream: Iterable[Component | str]
@@ -330,7 +332,15 @@ class AnalysisManager:
         self, input_pxl_file_path: Path, pxl_file_target: PxlFile
     ) -> PNAPixelDataset:
         """Execute the analysis on the provided pixel file path."""
-        self._set_path_to_dataset(input_pxl_file_path)
-        pixel_dataset = read(input_pxl_file_path)
-        iterator = pixel_dataset.components()
-        return self._execute_on_iterator(iterator, pxl_file_target)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            self._temp_folders_used.append(Path(tmpdir))
+            for analysis in self.analysis_to_run.values():
+                if hasattr(analysis, "_work_folder"):
+                    analysis._work_folder = Path(tmpdir)
+            try:
+                self._set_path_to_dataset(input_pxl_file_path)
+                pixel_dataset = read(input_pxl_file_path)
+                iterator = pixel_dataset.components()
+                return self._execute_on_iterator(iterator, pxl_file_target)
+            finally:
+                pass
