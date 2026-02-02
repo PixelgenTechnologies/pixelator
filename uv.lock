@@ -1753,7 +1753,7 @@ dev = [
 requires-dist = [
     { name = "anndata", specifier = ">=0.8.0" },
     { name = "annoy", specifier = "<=1.17.0" },
-    { name = "click" },
+    { name = "click", specifier = ">=8.3.1,<9" },
     { name = "cutadapt", specifier = ">=4.2" },
     { name = "duckdb", specifier = ">=1.4.2,<2" },
     { name = "faiss-cpu", specifier = ">=1.10.0,<2" },
