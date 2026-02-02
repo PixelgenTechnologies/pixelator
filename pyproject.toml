@@ -35,7 +35,6 @@ classifiers = [
 
 dependencies = [
     "click<8.3.0", # TODO update this once 8.3.1 is released
-    "yapf",
     "cutadapt>=4.2",
     "umi_tools>=1.1.4,<2.0.0",
     "pyfastx",
@@ -49,7 +48,6 @@ dependencies = [
     "numba>=0.56.4",
     "scanpy",
     "lxml",
-    "cssselect",
     "typing_extensions",
     "scipy>=1.0.0,<2.0.0",
     "pyarrow>=14",
@@ -59,12 +57,10 @@ dependencies = [
     "polars>=1.0.0,<1.27.0",
     "importlib-resources>=5.12.0,<6",
     "fsspec",
-    "fastparquet",
     "plotly",
     "graspologic-native>=1.2.4,<2",
     "duckdb>=1.4.2,<2",
     "faiss-cpu>=1.10.0,<2",
-    "zstandard>=0.23.0,<0.24",
 ]
 
 [project.urls]
