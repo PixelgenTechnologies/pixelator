@@ -91,7 +91,7 @@ class CreateLayout(PerComponentTask):
             results.append(layout)
 
         concatenated = pd.concat(results, axis=0).reset_index(drop=True)
-        if self._work_folder is None or not os.path.exists(self._work_folder):
+        if self._work_folder is None:
             tmp_file_path = Path(
                 tempfile.NamedTemporaryFile(suffix="_layout.parquet", delete=False).name
             )
