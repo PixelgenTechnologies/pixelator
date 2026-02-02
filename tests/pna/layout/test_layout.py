@@ -86,6 +86,6 @@ def test_layout_from_path(pna_pxl_dataset: PNAPixelDataset, tmp_path):
     assert len(manager._temp_folders_used) == 1, (
         "Expected one temporary folder to be used."
     )
-    assert os.path.exists(manager._temp_folders_used[0]) is False, (
+    assert not os.path.exists(manager._temp_folders_used[0]), (
         f"Temporary folder {manager._temp_folders_used[0]} was not cleaned up."
     )

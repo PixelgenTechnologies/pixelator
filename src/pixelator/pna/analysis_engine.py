@@ -231,7 +231,7 @@ class AnalysisManager:
         if pxl_dataset_builder is None:
             pxl_dataset_builder = PNAPixelDataset.from_pxl_files
         self._pxl_dataset_builder = pxl_dataset_builder
-        self._temp_folders_used = []
+        self._temp_folders_used: list[Path] = []
 
     def _execute_computations_in_parallel(
         self, component_stream: Iterable[Component | str]
@@ -342,5 +342,9 @@ class AnalysisManager:
                 pixel_dataset = read(input_pxl_file_path)
                 iterator = pixel_dataset.components()
                 return self._execute_on_iterator(iterator, pxl_file_target)
-            finally:
-                pass
+            except RuntimeError as e:
+                logger.error("An error occurred during analysis execution.")
+                logger.error(
+                    f"folder used for intermediate files (being deleted): {tmpdir}"
+                )
+                raise e
