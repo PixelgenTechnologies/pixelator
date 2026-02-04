@@ -9,9 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Use a temporary folder for intermediate files created during a PerComponentTask to ensure their cleanup in case of task failure.
 - Update README with proximity network assay citation information.
 - The degree distribution of UMIs is now included in the collapse report.
+
+### Fixed
+
+- Ensure temporary files are clean-up in the layout step
 
 ## [0.23.0] - 2025-12-01
 

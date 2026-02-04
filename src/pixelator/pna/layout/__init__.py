@@ -32,7 +32,6 @@ class CreateLayout(PerComponentTask):
         self,
         layout_algorithms: list[SupportedLayoutAlgorithm],
         algorithm_kwargs: dict | None = None,
-        work_folder: Path | None = None,
     ) -> None:
         """Create a new CreateLayout instance.
 
@@ -43,7 +42,22 @@ class CreateLayout(PerComponentTask):
         self._layout_algorithms = layout_algorithms
         self._algorithm_kwargs = algorithm_kwargs or {}
         self.pxl_dataset: PNAPixelDataset | None = None
-        self._work_folder = work_folder
+        self._work_folder: Path | None = None
+
+    def setup(self) -> None:
+        """Setup the analysis before running on any components."""  # noqa: D401
+        self._work_folder = Path(tempfile.mkdtemp(prefix="pixelator_layout_work_"))
+
+    def teardown(self) -> None:
+        """Teardown the analysis after running on all components."""
+        if self._work_folder and self._work_folder.exists():
+            for file in self._work_folder.iterdir():
+                file.unlink()
+            self._work_folder.rmdir()
+
+    def get_work_folder(self) -> Path | None:
+        """Get the work folder used for temporary files during analysis."""
+        return self._work_folder
 
     def set_dataset(self, pxl_file_path: Path):
         """Specify a dataset to enable analysis being run directly from component IDs."""
@@ -92,13 +106,12 @@ class CreateLayout(PerComponentTask):
 
         concatenated = pd.concat(results, axis=0).reset_index(drop=True)
         if self._work_folder is None:
-            tmp_file_path = Path(
-                tempfile.NamedTemporaryFile(suffix="_layout.parquet", delete=False).name
+            raise RuntimeError(
+                "Work folder is not set up. Clean call setup before running the task."
             )
-        else:
-            tmp_file_path = self._work_folder / f"{component_id}_layout.parquet"
-
+        tmp_file_path = self._work_folder / f"{component_id}_layout.parquet"
         concatenated.to_parquet(tmp_file_path)
+
         return [str(tmp_file_path)]
 
     def run_on_component_edgelist(

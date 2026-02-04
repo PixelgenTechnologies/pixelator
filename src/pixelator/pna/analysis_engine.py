@@ -6,7 +6,6 @@ Copyright © 2024 Pixelgen Technologies AB.
 import itertools
 import logging
 import multiprocessing
-import tempfile
 import typing
 from collections import defaultdict
 from dataclasses import dataclass
@@ -105,6 +104,14 @@ class PerComponentTask(Protocol, Generic[T]):
     """
 
     TASK_NAME: typing.ClassVar[str]
+
+    def setup(self) -> None:
+        """Setup the analysis before running on any components."""  # noqa: D401
+        pass
+
+    def teardown(self) -> None:
+        """Teardown the analysis after running on all components."""
+        pass
 
     def set_dataset(self, pxl_file_path: Path):
         """Specify a dataset to enable analysis being run directly from component IDs."""
@@ -231,7 +238,14 @@ class AnalysisManager:
         if pxl_dataset_builder is None:
             pxl_dataset_builder = PNAPixelDataset.from_pxl_files
         self._pxl_dataset_builder = pxl_dataset_builder
-        self._temp_folders_used: list[Path] = []
+
+    def _setup(self):
+        for analysis in self.analysis_to_run.values():
+            analysis.setup()
+
+    def _teardown(self):
+        for analysis in self.analysis_to_run.values():
+            analysis.teardown()
 
     def _execute_computations_in_parallel(
         self, component_stream: Iterable[Component | str]
@@ -307,14 +321,20 @@ class AnalysisManager:
         return self._pxl_dataset_builder(pxl_file_target)  # type: ignore
 
     def _execute_on_iterator(self, iterator, pxl_file_target: PxlFile):
-        if self._n_cores is None or self._n_cores > 1:
-            per_component_results = self._execute_computations_in_parallel(iterator)
-        else:
-            per_component_results = self._execute_computations_sequentially(iterator)
-        post_processed_data = self._post_process(per_component_results)
-        pxl_dataset_with_results = self._add_to_pixel_dataset(
-            post_processed_data, pxl_file_target=pxl_file_target
-        )
+        self._setup()
+        try:
+            if self._n_cores is None or self._n_cores > 1:
+                per_component_results = self._execute_computations_in_parallel(iterator)
+            else:
+                per_component_results = self._execute_computations_sequentially(
+                    iterator
+                )
+            post_processed_data = self._post_process(per_component_results)
+            pxl_dataset_with_results = self._add_to_pixel_dataset(
+                post_processed_data, pxl_file_target=pxl_file_target
+            )
+        finally:
+            self._teardown()
         return pxl_dataset_with_results
 
     def execute(
@@ -332,19 +352,7 @@ class AnalysisManager:
         self, input_pxl_file_path: Path, pxl_file_target: PxlFile
     ) -> PNAPixelDataset:
         """Execute the analysis on the provided pixel file path."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            self._temp_folders_used.append(Path(tmpdir))
-            for analysis in self.analysis_to_run.values():
-                if hasattr(analysis, "_work_folder"):
-                    analysis._work_folder = Path(tmpdir)
-            try:
-                self._set_path_to_dataset(input_pxl_file_path)
-                pixel_dataset = read(input_pxl_file_path)
-                iterator = pixel_dataset.components()
-                return self._execute_on_iterator(iterator, pxl_file_target)
-            except RuntimeError as e:
-                logger.error("An error occurred during analysis execution.")
-                logger.error(
-                    f"folder used for intermediate files (being deleted): {tmpdir}"
-                )
-                raise e
+        self._set_path_to_dataset(input_pxl_file_path)
+        pixel_dataset = read(input_pxl_file_path)
+        iterator = pixel_dataset.components()
+        return self._execute_on_iterator(iterator, pxl_file_target)

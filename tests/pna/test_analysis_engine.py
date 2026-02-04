@@ -1,3 +1,5 @@
+"""Copyright © 2026 Pixelgen Technologies AB."""
+
 from pathlib import Path
 
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
@@ -11,18 +13,22 @@ class FailingTask(PerComponentTask):
 
     def __init__(self, work_folder: Path | None = None):
         super().__init__()
-        self._work_folder = work_folder
+        self._setup_was_called = False
+        self._teardown_was_called = False
+
+    def setup(self) -> None:
+        self._setup_was_called = True
+
+    def teardown(self) -> None:
+        self._teardown_was_called = True
 
     def run_from_component_id(self, component_id: str):
         raise RuntimeError("Simulated failure")
 
 
 def test_tempfile_cleanup_on_failure(pna_pxl_dataset: PNAPixelDataset, tmp_path):
-    manager = AnalysisManager(
-        [
-            FailingTask(),
-        ]
-    )
+    mock_task = FailingTask()  # type: ignore
+    manager = AnalysisManager([mock_task])
     pna_pixel_filtered = pna_pxl_dataset.filter(
         components=pna_pxl_dataset.adata().obs.index[:2]
     )
@@ -33,9 +39,5 @@ def test_tempfile_cleanup_on_failure(pna_pxl_dataset: PNAPixelDataset, tmp_path)
     try:
         dataset = manager.execute_from_path(pxl_file_target.path, pxl_file_target)
     except RuntimeError as e:
-        assert str(e) == "Simulated failure", "Unexpected error message."
-        assert manager._temp_folders_used, "No temporary folders were used."
-        for temp_folder in manager._temp_folders_used:
-            assert not temp_folder.exists(), (
-                f"Temporary folder {temp_folder} was not cleaned up."
-            )
+        assert mock_task._setup_was_called, "Setup was not called before failure."
+        assert mock_task._teardown_was_called, "Teardown was not called after failure"
