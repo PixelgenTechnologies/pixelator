@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Ensure temporary files are clean-up in the layout step
+- Ensure temporary files are cleaned up in the layout step
 
 ## [0.23.0] - 2025-12-01
 
