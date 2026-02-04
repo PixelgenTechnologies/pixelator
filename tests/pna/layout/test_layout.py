@@ -1,5 +1,6 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import os
 from pathlib import Path
 
 import pytest
@@ -48,13 +49,10 @@ def test_layout(pna_pxl_dataset: PNAPixelDataset, tmp_path):
 
 @pytest.mark.slow
 def test_layout_from_path(pna_pxl_dataset: PNAPixelDataset, tmp_path):
-    manager = AnalysisManager(
-        [
-            CreateLayout(
-                ["wpmds_3d"],
-            )
-        ]
+    layout_task = CreateLayout(
+        ["wpmds_3d"],
     )
+    manager = AnalysisManager([layout_task])
 
     pna_pixel_filtered = pna_pxl_dataset.filter(
         components=pna_pxl_dataset.adata().obs.index[:2]
@@ -81,3 +79,6 @@ def test_layout_from_path(pna_pxl_dataset: PNAPixelDataset, tmp_path):
     )
     assert "A" in set(result["pixel_type"].to_list())
     assert "B" in set(result["pixel_type"].to_list())
+
+    # Make sure we have clean out the work directory
+    assert not layout_task.get_work_folder().exists()  # type: ignore

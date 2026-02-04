@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update README with proximity network assay citation information.
 - The degree distribution of UMIs is now included in the collapse report.
 
+### Fixed
+
+- Ensure temporary files are cleaned up in the layout step
+
 ## [0.23.0] - 2025-12-01
 
 ### Important changes
