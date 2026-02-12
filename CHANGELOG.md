@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update README with proximity network assay citation information.
 - The degree distribution of UMIs is now included in the collapse report.
 
+### Changed
+
+- Remove the warning when setting minimum size manually. It is observed that 8000 is a
+  reliable minimum size for components.
+
 ### Fixed
 
 - Ensure temporary files are cleaned up in the layout step
