@@ -37,7 +37,6 @@ dependencies = [
     "click<8.3", # Click 8.3 breaks `--output` in `test_cli_invocation_info`
     "cutadapt>=4.2",
     "xopen[zstd]", # Required by cutadapt
-    "umi_tools>=1.1.4,<2.0.0",
     "pyfastx",
     "yappi",
     "pandas>=2.0.0,<3.0.0",
@@ -62,6 +61,7 @@ dependencies = [
     "graspologic-native>=1.2.4,<2",
     "duckdb>=1.4.2,<2",
     "faiss-cpu>=1.10.0,<2",
+    "levenshtein>=0.27.3",
 ]
 
 [project.urls]
@@ -86,6 +86,7 @@ dev = [
     "pytest-benchmark>=4.0.0,<5",
     "pytest-playwright>=0.4.4,<0.5",
     "pytest-watcher>=0.4.3",
+    "ipython>=8.38.0",
 ]
 
 

@@ -10,8 +10,8 @@ import logging
 import os
 import tempfile
 import typing
-import warnings
 from collections import Counter, defaultdict
+from pathlib import Path
 from typing import (
     Generator,
     Iterable,
@@ -25,13 +25,7 @@ import numpy.typing as npt
 import pandas as pd
 import pyfastx
 from annoy import AnnoyIndex
-
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", module="umi_tools")
-    from umi_tools._dedup_umi import edit_distance
-    from umi_tools.network import breadth_first_search
-
-from pathlib import Path
+from Levenshtein import hamming
 
 from pixelator.common.utils import gz_size
 from pixelator.mpx.collapse.constants import SEED
@@ -43,6 +37,37 @@ np.random.seed(SEED)
 UniqueFragment = str
 UpiB = str
 UniqueFragmentToUpiB = dict[UniqueFragment, list[UpiB]]
+
+
+def breadth_first_search(node, adj_list):
+    """UMI tools breadth first search to get connected components.
+
+    This has been vendored since it is the only function we were using from
+    umi-tools, and we wanted to drop it as a dependency due to build issues.
+
+    Copied from https://github.com/CGATOxford/UMI-tools
+
+    Copyright (c) 2015 CGAT
+    Uses The MIT License (MIT).
+    """
+    searched = set()
+    queue = set()
+    queue.update((node,))
+    searched.update((node,))
+
+    while len(queue) > 0:
+        node = queue.pop()
+        for next_node in adj_list[node]:
+            if next_node not in searched:
+                queue.update((next_node,))
+                searched.update((next_node,))
+
+    return searched
+
+
+def edit_distance(seq1: bytes, seq2: bytes) -> int:
+    """Compute edit distance between two sequences."""
+    return hamming(seq1, seq2, pad=False)
 
 
 class FileFqGzEmpty(Exception):
