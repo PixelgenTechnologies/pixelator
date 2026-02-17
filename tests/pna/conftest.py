@@ -252,6 +252,7 @@ def uns_data_fixture():
 def adata_data_func():
     X = pd.read_csv(StringIO(ADATA_X), index_col="component")
     obs = pd.read_csv(StringIO(ADATA_OBS), index_col="component")
+    obs["dummy_column"] = "dummy_value"
     var = pd.read_csv(StringIO(ADATA_VAR), index_col="marker_id").fillna("")
     var["control"] = var["control"].map(lambda s: s.lower() == "yes")
 

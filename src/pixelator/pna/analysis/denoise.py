@@ -30,6 +30,16 @@ from pixelator.pna.pixeldataset.io import PixelFileWriter
 logger = logging.getLogger(__name__)
 
 
+def _add_missing_adata_info(new_adata, old_adata):
+    missing_obs = set(old_adata.obs.columns) - set(new_adata.obs.columns)
+    missing_var = set(old_adata.var.columns) - set(new_adata.var.columns)
+
+    new_adata.obs = new_adata.obs.join(old_adata.obs[list(missing_obs)], how="left")
+    new_adata.var = new_adata.var.join(old_adata.var[list(missing_var)], how="left")
+
+    return new_adata
+
+
 def _calculate_core_marker_counts(
     node_marker_counts: pd.DataFrame, node_core_numbers: pd.Series
 ) -> pd.DataFrame:
@@ -335,6 +345,7 @@ class DenoiseOneCore(PerComponentTask):
 
         """
         pxl = PNAPixelDataset.from_files(pxl_file_target)
+        old_adata = pxl.adata()
         try:
             panel = PNAAntibodyPanel.from_pxl(pxl_file_target.path)
         except KeyError:
@@ -355,6 +366,7 @@ class DenoiseOneCore(PerComponentTask):
                 writer.write_edgelist(Path(denoised_edgelist_path))
                 adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
                 call_aggregates(adata)
+                adata = _add_missing_adata_info(adata, old_adata)
                 denoise_info = pd.DataFrame(index=adata.obs.index)
                 denoise_info["disqualified_for_denoising"] = False
                 denoise_info.loc[
