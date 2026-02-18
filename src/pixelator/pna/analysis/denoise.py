@@ -20,7 +20,7 @@ from scipy.stats import fisher_exact
 
 from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import PerComponentTask
-from pixelator.pna.anndata import pna_edgelist_to_anndata
+from pixelator.pna.anndata import pna_edgelist_to_anndata, add_missing_adata_info
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.graph import PNAGraph

@@ -210,3 +210,14 @@ def pna_edgelist_to_anndata(
     adata.obs["intracellular_fraction"] = 0.0
 
     return adata
+
+
+def add_missing_adata_info(new_adata, old_adata):
+    """Add missing obs and var columns from old_adata to new_adata."""
+    missing_obs = set(old_adata.obs.columns) - set(new_adata.obs.columns)
+    missing_var = set(old_adata.var.columns) - set(new_adata.var.columns)
+
+    new_adata.obs = new_adata.obs.join(old_adata.obs[list(missing_obs)], how="left")
+    new_adata.var = new_adata.var.join(old_adata.var[list(missing_var)], how="left")
+
+    return new_adata
