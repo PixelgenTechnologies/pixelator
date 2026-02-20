@@ -65,10 +65,10 @@ def update_metrics_anndata(adata: AnnData, inplace: bool = True) -> Optional[Ann
     adata.var["components"] = (df != 0).sum()
     adata.var["antibody_pct"] = (
         adata.var["antibody_count"] / adata.var["antibody_count"].sum()
-    )
+    ).astype(np.float32)
 
     # update the obs layer (components metrics)
-    adata.obs["antibodies"] = np.sum(adata.X > 0, axis=1)
+    adata.obs["n_antibodies"] = np.sum(adata.X > 0, axis=1, dtype=np.uint32)
 
     logger.debug("Metrics in AnnData object updated")
     return None if inplace else adata

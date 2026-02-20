@@ -448,7 +448,6 @@ class PNAPixelDataset:
         self,
         view: PixelDataViewer,
         config: PixelDatasetConfig | None = None,
-        active_samples: Iterable[str] | str | None = None,
         active_components: Iterable[str] | str | None = None,
         active_markers: Iterable[str] | str | None = None,
     ):
@@ -459,7 +458,6 @@ class PNAPixelDataset:
 
         :param view: The PixelDataViewer instance to use for accessing the data.
         :param config: The configuration for the dataset.
-        :param active_samples: The samples to include in the dataset.
         :param active_components: The components to include in the dataset.
         :param active_markers: The markers to include in the dataset.
         """
@@ -468,11 +466,6 @@ class PNAPixelDataset:
             config = PixelDatasetConfig()
         self._config = config
 
-        self._active_samples = (
-            normalize_input_to_set(active_samples)
-            if active_samples
-            else set(self._view.sample_names())
-        )
         self._active_components = normalize_input_to_set(active_components)
         self._active_markers = normalize_input_to_set(active_markers)
 
@@ -545,7 +538,7 @@ class PNAPixelDataset:
 
     def sample_names(self) -> set[str]:
         """Return the set of sample names in the project."""
-        return set(self._active_samples)  # type: ignore
+        return set(self.adata().obs["sample"].unique().tolist())
 
     def components(self) -> set[str]:
         """Return the set of component names in the project."""
@@ -728,14 +721,13 @@ class PNAPixelDataset:
             message.extend(errors)
             raise ValueError("\n".join(message))
 
-        active_samples = samples or self._copy_or_none(self._active_samples)
         active_components = components or self._copy_or_none(self._active_components)
         active_markers = markers or self._copy_or_none(self._active_markers)
+        new_view = self._view.filter_samples(samples) if samples else self._view
 
         return PNAPixelDataset(
-            view=self._view,
+            view=new_view,
             config=copy.copy(self._config),
-            active_samples=active_samples,
             active_components=active_components,
             active_markers=active_markers,
         )

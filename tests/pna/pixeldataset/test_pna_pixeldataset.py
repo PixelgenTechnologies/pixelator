@@ -3,13 +3,12 @@
 from io import StringIO
 from pathlib import Path
 
-import anndata
 import pandas as pd
 import polars as pl
 import pytest
-from anndata.tests.helpers import assert_equal as adata_assert_equal
 from polars.testing import assert_frame_equal
 
+from pixelator.common.utils.testing import adata_assert_equal
 from pixelator.pna.pixeldataset import (
     PixelDatasetConfig,
     PNAPixelDataset,
@@ -71,23 +70,6 @@ class TestPNAPixelDataset:
     def test_adata(self, pxl_dataset: PNAPixelDataset, adata_data):
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
-        adata_data.uns = {
-            "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
-            "panel_metadata": {
-                "name": "test-pna-panel",
-                "aliases": ["test-pna"],
-                "description": "Test R&D panel for RNA",
-                "version": "0.1.0",
-                "panel_columns": [
-                    "control",
-                    "nuclear",
-                    "uniprot_id",
-                    "sequence_1",
-                    "conj_id",
-                    "sequence_2",
-                ],
-            },
-        }
 
         adata = pxl_dataset.adata(add_clr_transform=False, add_log1p_transform=False)
         adata_assert_equal(adata, adata_data)
@@ -353,6 +335,7 @@ def pixel_dataset_with_different_sample_names_fixture(
     edgelist_parquet_path,
     proximity_parquet_path,
     layout_parquet_path,
+    panel,
 ):
     sample_name = request.param
     target = tmp_path_factory.mktemp("data") / (sample_name + ".pxl")
@@ -362,6 +345,7 @@ def pixel_dataset_with_different_sample_names_fixture(
         edgelist_parquet_path=edgelist_parquet_path,
         proximity_parquet_path=proximity_parquet_path,
         layout_parquet_path=layout_parquet_path,
+        panel=panel,
     )
     return PNAPixelDataset.from_pxl_files([target]), sample_name
 
@@ -382,6 +366,7 @@ def pxl_file_with_sample_names_fixture(
     edgelist_parquet_path,
     proximity_parquet_path,
     layout_parquet_path,
+    panel,
 ):
     sample_name = request.param
     target = tmp_path_factory.mktemp("data") / (sample_name + ".pxl")
@@ -391,6 +376,7 @@ def pxl_file_with_sample_names_fixture(
         edgelist_parquet_path=edgelist_parquet_path,
         proximity_parquet_path=proximity_parquet_path,
         layout_parquet_path=layout_parquet_path,
+        panel=panel,
     )
     return target
 
@@ -425,3 +411,194 @@ def test_rewriting_anndata(pxl_file_w_sample_names):
 
     with PixelFileWriter(pxl_file) as writer:
         writer.write_adata(adata)
+
+
+@pytest.fixture(name="multi_sample_dataset", scope="module")
+def dataset_fixture(
+    tmp_path_factory,
+    edgelist_parquet_path,
+    proximity_parquet_path,
+    layout_parquet_path,
+    panel,
+):
+    tmp_path = tmp_path_factory.mktemp("multi_sample_dataset")
+
+    # Setup: Create two samples with different components
+    sample1_path = create_pxl_file(
+        target=tmp_path / "sample1.pxl",
+        sample_name="sample1",
+        edgelist_parquet_path=edgelist_parquet_path,
+        proximity_parquet_path=proximity_parquet_path,
+        layout_parquet_path=layout_parquet_path,
+        panel=panel,
+    )
+
+    # Rename the components in the second sample to have other component names
+    sample2_edgelist_path = tmp_path / "edgelist_sample2.parquet"
+    pl.scan_parquet(edgelist_parquet_path).with_columns(
+        (pl.col("component").str.replace("(.)", "${1}_sample2")).alias("component")
+    ).sink_parquet(sample2_edgelist_path)
+    sample2_proximity_path = tmp_path / "proximity_sample2.parquet"
+    pl.scan_parquet(proximity_parquet_path).with_columns(
+        (pl.col("component").str.replace("(.)", "${1}_sample2")).alias("component")
+    ).sink_parquet(sample2_proximity_path)
+    sample2_layout_path = tmp_path / "layout_sample2.parquet"
+    pl.scan_parquet(layout_parquet_path).with_columns(
+        (pl.col("component").str.replace("(.)", "${1}_sample2")).alias("component")
+    ).sink_parquet(sample2_layout_path)
+
+    sample2_path = create_pxl_file(
+        target=tmp_path / "sample2.pxl",
+        sample_name="sample2",
+        edgelist_parquet_path=sample2_edgelist_path,
+        proximity_parquet_path=sample2_proximity_path,
+        layout_parquet_path=sample2_layout_path,
+        panel=panel,
+    )
+    return PNAPixelDataset.from_pxl_files([sample1_path, sample2_path])
+
+
+class TestPNAPixelDatasetFilterBySample:
+    def test_filter_by_sample(
+        self,
+        multi_sample_dataset: PNAPixelDataset,
+    ):
+        dataset = multi_sample_dataset
+
+        # Verify we have both samples
+        assert dataset.sample_names() == {"sample1", "sample2"}
+
+        # 3. Filter by "sample1"
+        filtered_dataset = dataset.filter(samples=["sample1"])
+        assert filtered_dataset.sample_names() == {"sample1"}
+
+        # Check adata
+        adata = filtered_dataset.adata()
+        unique_samples_adata = set(adata.obs["sample"].unique())
+        assert "sample2" not in unique_samples_adata
+        assert unique_samples_adata == {"sample1"}
+
+        # Check proximity
+        proximity = filtered_dataset.proximity()
+        proximity_df = proximity.to_polars()
+        unique_samples = proximity_df["sample"].unique().to_list()
+        assert "sample2" not in unique_samples
+        assert unique_samples == ["sample1"]
+
+        # Check edgelist
+        edgelist_df = filtered_dataset.edgelist().to_polars()
+        unique_samples_edgelist = edgelist_df["sample"].unique().to_list()
+        assert "sample2" not in unique_samples_edgelist
+        assert unique_samples_edgelist == ["sample1"]
+
+        # Check layouts
+        layouts_df = filtered_dataset.precomputed_layouts(
+            add_marker_counts=False
+        ).to_polars()
+        unique_samples_layouts = layouts_df["sample"].unique().to_list()
+        assert "sample2" not in unique_samples_layouts
+        assert unique_samples_layouts == ["sample1"]
+
+    def test_filter_combinations(
+        self,
+        multi_sample_dataset: PNAPixelDataset,
+    ):
+        """Test filtering with combinations of sample, component, and marker."""
+        dataset = multi_sample_dataset
+
+        # Define targets
+        target_sample = "sample1"
+        target_component = "fc07dea9b679aca7"  # Known component in test data
+        target_marker = "MarkerA"  # Known marker in test data
+
+        # Apply combined filter
+        filtered_dataset = dataset.filter(
+            samples=[target_sample],
+            components=[target_component],
+            markers=[target_marker],
+        )
+
+        # 1. Verify Dataset metadata
+        assert filtered_dataset.sample_names() == {target_sample}
+        assert filtered_dataset.components() == {target_component}
+        assert filtered_dataset.markers() == {target_marker}
+
+        # 2. Verify Adata (filtered by all three)
+        adata = filtered_dataset.adata()
+        assert set(adata.obs["sample"].unique()) == {target_sample}
+        assert set(adata.obs.index) == {target_component}
+        assert set(adata.var.index) == {target_marker}
+        # Check explicit data presence
+        assert adata.shape[0] == 1  # 1 component
+        assert adata.shape[1] == 1  # 1 marker
+
+        # 3. Verify Proximity (filtered by all three)
+        proximity_df = filtered_dataset.proximity().to_polars()
+        assert set(proximity_df["sample"].unique()) == {target_sample}
+        assert set(proximity_df["component"].unique()) == {target_component}
+        # Markers should be filtered
+        markers_in_prox = set(proximity_df["marker_1"]) | set(proximity_df["marker_2"])
+        # It's possible proximity is empty if no edges exist for just MarkerA-MarkerA
+        # But if edges exist, they must be MarkerA.
+        if not proximity_df.is_empty():
+            assert markers_in_prox == {target_marker}
+
+        # 4. Verify Edgelist (filtered by sample & component, NOT marker)
+        edgelist_df = filtered_dataset.edgelist().to_polars()
+        assert set(edgelist_df["sample"].unique()) == {target_sample}
+        assert set(edgelist_df["component"].unique()) == {target_component}
+        # Should contain other markers too
+        markers_in_edgelist = set(edgelist_df["marker_1"]) | set(
+            edgelist_df["marker_2"]
+        )
+        # Since the test data has multiple markers for this component
+        assert len(markers_in_edgelist) > 1
+        assert target_marker in markers_in_edgelist
+
+        # 5. Verify Precomputed Layouts (filtered by sample & component)
+        layouts_df = filtered_dataset.precomputed_layouts(
+            add_marker_counts=False
+        ).to_polars()
+        assert set(layouts_df["sample"].unique()) == {target_sample}
+        assert set(layouts_df["component"].unique()) == {target_component}
+
+    def test_filter_by_component_multisample(
+        self,
+        multi_sample_dataset: PNAPixelDataset,
+    ):
+        """Test filtering only by component in a multisample scenario."""
+
+        dataset = multi_sample_dataset
+        # Pick a component that exists in only one of the samples
+        target_component = "fc07dea9b679aca7"
+
+        # Filter only by component
+        filtered_dataset = dataset.filter(components=[target_component])
+
+        # 1. Dataset metadata
+        # Should contain only the sample that has the target component
+        assert filtered_dataset.sample_names() == {"sample1"}
+        assert filtered_dataset.components() == {target_component}
+
+        # 2. Adata
+        adata = filtered_dataset.adata()
+        assert set(adata.obs["sample"].unique()) == {"sample1"}
+        assert set(adata.obs.index.unique()) == {target_component}
+        assert len(adata) == 1  # One row for the sample with this component
+
+        # 3. Proximity
+        proximity_df = filtered_dataset.proximity().to_polars()
+        assert set(proximity_df["sample"].unique()) == {"sample1"}
+        assert set(proximity_df["component"].unique()) == {target_component}
+
+        # 4. Edgelist
+        edgelist_df = filtered_dataset.edgelist().to_polars()
+        assert set(edgelist_df["sample"].unique()) == {"sample1"}
+        assert set(edgelist_df["component"].unique()) == {target_component}
+
+        # 5. Layouts
+        layouts_df = filtered_dataset.precomputed_layouts(
+            add_marker_counts=False
+        ).to_polars()
+        assert set(layouts_df["sample"].unique()) == {"sample1"}
+        assert set(layouts_df["component"].unique()) == {target_component}

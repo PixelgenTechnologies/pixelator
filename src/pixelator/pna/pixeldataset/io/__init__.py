@@ -407,6 +407,15 @@ class PixelDataViewer:
         """Create a PixelDataViewer from a dictionary mapping sample names to PxlFile objects."""
         return PixelDataViewer(sample_name_to_pxl_file_mapping)
 
+    def filter_samples(self, sample_names: set[str]) -> PixelDataViewer:
+        """Create a new PixelDataViewer with only a subset of the samples."""
+        filtered_mapping = {
+            sample_name: pxl_file
+            for sample_name, pxl_file in self._db_to_file_mapping.items()
+            if sample_name in sample_names
+        }
+        return PixelDataViewer.from_sample_to_file_mappings(filtered_mapping)
+
     @property
     def sample_to_file_mappings(self) -> dict[str, Path]:
         """Return a dictionary mapping sample names to PxlFile objects."""

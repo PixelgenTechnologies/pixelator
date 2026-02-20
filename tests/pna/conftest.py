@@ -12,12 +12,16 @@ from io import StringIO
 # pylint: disable=redefined-outer-name
 from pathlib import Path
 
+import duckdb
 import pandas as pd
 import polars as pl
 import pytest
 from anndata import AnnData
 
+from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.mpx.pixeldataset.utils import update_metrics_anndata
+from pixelator.pna.anndata import pna_edgelist_to_anndata
+from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from tests.pna.data.pxl_data import (
@@ -26,8 +30,8 @@ from tests.pna.data.pxl_data import (
     ADATA_X,
     EDGELIST_DATA,
     LAYOUT_DATA,
-    LAYOUT_DATA_WITH_MARKER_COUNTS,
     PROXIMITY_DATA,
+    TEST_PANEL,
     UNS_DATA,
 )
 
@@ -183,16 +187,40 @@ def proximity_parquet_path_fixture(tmp_path_factory, proximity_dataframe):
     return path
 
 
+@pytest.fixture(name="panel", scope="module")
+def panel_fixture():
+    panel_df = pd.read_csv(StringIO(TEST_PANEL)).set_index("marker_id")
+
+    panel_df = panel_df
+    panel_df["uniprot_id"] = panel_df["uniprot_id"].fillna("")
+    panel_df["control"] = (
+        panel_df["control"].astype(str).map(lambda s: s.lower() == "yes")
+    )
+
+    return PNAAntibodyPanel(
+        df=panel_df,
+        metadata=AntibodyPanelMetadata(
+            name="test-pna-panel",
+            version="0.1.0",
+            aliases=["test-pna"],
+            description="Test R&D panel for RNA",
+        ),
+    )
+
+
 def create_pxl_file(
     target,
     sample_name,
     edgelist_parquet_path,
     proximity_parquet_path,
     layout_parquet_path,
+    panel,
 ):
     with PixelFileWriter(target) as writer:
         writer.write_edgelist(edgelist_parquet_path)
-        writer.write_adata(adata_data_func())
+        con = writer.get_connection()
+        adata = pna_edgelist_to_anndata(con, panel=panel)
+        writer.write_adata(adata)
         writer.write_metadata(
             {
                 "sample_name": sample_name,
@@ -217,6 +245,7 @@ def pixel_file_fixture(
     edgelist_parquet_path,
     proximity_parquet_path,
     layout_parquet_path,
+    panel,
 ):
     target = tmp_path_factory.mktemp("data") / "file.pxl"
     target = create_pxl_file(
@@ -225,6 +254,7 @@ def pixel_file_fixture(
         edgelist_parquet_path=edgelist_parquet_path,
         proximity_parquet_path=proximity_parquet_path,
         layout_parquet_path=layout_parquet_path,
+        panel=panel,
     )
     return target
 
@@ -249,18 +279,13 @@ def uns_data_fixture():
     return UNS_DATA
 
 
-def adata_data_func():
-    X = pd.read_csv(StringIO(ADATA_X), index_col="component")
-    obs = pd.read_csv(StringIO(ADATA_OBS), index_col="component")
-    obs["dummy_column"] = "dummy_value"
-    var = pd.read_csv(StringIO(ADATA_VAR), index_col="marker_id").fillna("")
-    var["control"] = var["control"].map(lambda s: s.lower() == "yes")
-
-    adata = AnnData(X=X, obs=obs, var=var, uns=UNS_DATA)
-    adata = update_metrics_anndata(adata, inplace=False)
-    return adata
-
-
 @pytest.fixture(name="adata_data", scope="function")
-def adata_data_fixture():
-    return adata_data_func()
+def adata_data_fixture(edgelist_parquet_path, panel):
+    with duckdb.connect() as con:
+        con.execute(f"""
+                    CREATE TABLE edgelist AS SELECT *
+                    FROM read_parquet('{edgelist_parquet_path}')
+                    """)
+        adata = pna_edgelist_to_anndata(con, panel=panel)
+
+    return adata

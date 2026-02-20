@@ -1,3 +1,5 @@
+"""Copyright © 2026 Pixelgen Technologies AB."""
+
 EDGELIST_DATA = """umi1,umi2,read_count,uei_count,marker_1,marker_2,component
 16718381540940362211,4765690112321800547,10,2210194,MarkerC,MarkerB,fc07dea9b679aca7
 16718381540940362211,13496407243000087834,10,54146122,MarkerC,MarkerB,fc07dea9b679aca7
@@ -58,18 +60,26 @@ EDGELIST_DATA = """umi1,umi2,read_count,uei_count,marker_1,marker_2,component
 1657631243467327470,8754864093431251381,10,23064220,MarkerA,MarkerC,4920229146151c29
 """
 
+
+TEST_PANEL = """marker_id,control,uniprot_id,sequence_1,conj_id,sequence_2
+MarkerA,,P12345,ACTTCCTAGG,pna_rnd01,ACTTCCTAGG
+MarkerB,,P56890;P65470,CCAGGTTCCG,pna_rnd02,CCAGGTTCCG
+MarkerC,yes,,CAGCTATGGT,pna_rnd03,CAGCTATGGT
+"""
+
+
 ADATA_X = """component,MarkerA,MarkerB,MarkerC
+e7d82bca9694eea7,4,2,0
 3770519d30f36d18,3,1,3
 4920229146151c29,4,2,9
 fc07dea9b679aca7,3,7,4
-e7d82bca9694eea7,4,2,0
 """
 
-ADATA_OBS = """component,n_umi1,n_umi2,n_umi,antibody,tau_type,tau
-3770519d30f36d18,4,3,7,3,normal,0.33333333333333337
-4920229146151c29,11,4,15,3,normal,0.6666666666666667
-fc07dea9b679aca7,4,10,14,3,normal,0.5
-e7d82bca9694eea7,3,3,6,2,normal,0.75
+ADATA_OBS = """component,n_umi1,n_umi2,n_edges,reads_in_component,n_umi,n_antibodies,isotype_fraction,intracellular_fraction,sample,antibodies
+e7d82bca9694eea7,3,3,6,60,6,2,0.0,0.0,test_sample,2
+3770519d30f36d18,4,3,7,70,7,3,0.42857142857142855,0.0,test_sample,3
+4920229146151c29,11,4,21,210,15,3,0.6,0.0,test_sample,3
+fc07dea9b679aca7,4,10,23,230,14,3,0.2857142857142857,0.0,test_sample,3
 """
 
 ADATA_VAR = """marker_id,antibody_count,antibody_pct,components,control,nuclear,uniprot_id,sequence_1,conj_id,sequence_2
