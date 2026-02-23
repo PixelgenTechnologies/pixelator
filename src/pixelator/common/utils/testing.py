@@ -1,6 +1,6 @@
 """Utility functions used for testing.
 
-Copyright © 2024 Pixelgen Technologies AB.
+Copyright © 2026 Pixelgen Technologies AB.
 """
 
 from anndata import AnnData
