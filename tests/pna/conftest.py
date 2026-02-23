@@ -16,7 +16,6 @@ import duckdb
 import pandas as pd
 import polars as pl
 import pytest
-from anndata import AnnData
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import pna_edgelist_to_anndata
@@ -28,7 +27,6 @@ from tests.pna.data.pxl_data import (
     LAYOUT_DATA,
     PROXIMITY_DATA,
     TEST_PANEL,
-    UNS_DATA,
 )
 
 PNA_DATA_ROOT = Path(__file__).parent / "data"
@@ -268,11 +266,6 @@ def edgelist_data_fixture():
 @pytest.fixture(name="proximity_data", scope="module")
 def proximity_data_fixture():
     return PROXIMITY_DATA
-
-
-@pytest.fixture(name="uns_data", scope="module")
-def uns_data_fixture():
-    return UNS_DATA
 
 
 @pytest.fixture(name="adata_data", scope="function")

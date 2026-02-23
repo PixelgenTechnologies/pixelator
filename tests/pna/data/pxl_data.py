@@ -67,51 +67,11 @@ MarkerB,,P56890;P65470,CCAGGTTCCG,pna_rnd02,CCAGGTTCCG
 MarkerC,yes,,CAGCTATGGT,pna_rnd03,CAGCTATGGT
 """
 
-
-ADATA_X = """component,MarkerA,MarkerB,MarkerC
-e7d82bca9694eea7,4,2,0
-3770519d30f36d18,3,1,3
-4920229146151c29,4,2,9
-fc07dea9b679aca7,3,7,4
-"""
-
-ADATA_OBS = """component,n_umi1,n_umi2,n_edges,reads_in_component,n_umi,n_antibodies,isotype_fraction,intracellular_fraction,sample,antibodies
-e7d82bca9694eea7,3,3,6,60,6,2,0.0,0.0,test_sample,2
-3770519d30f36d18,4,3,7,70,7,3,0.42857142857142855,0.0,test_sample,3
-4920229146151c29,11,4,21,210,15,3,0.6,0.0,test_sample,3
-fc07dea9b679aca7,4,10,23,230,14,3,0.2857142857142857,0.0,test_sample,3
-"""
-
-ADATA_VAR = """marker_id,antibody_count,antibody_pct,components,control,nuclear,uniprot_id,sequence_1,conj_id,sequence_2
-MarkerA,14,0.33333334,4,no,yes,P12345,ACTTCCTAGG,pna_rnd01,ACTTCCTAGG
-MarkerB,12,0.2857143,4,no,no,P56890;P65470,CCAGGTTCCG,pna_rnd02,CCAGGTTCCG
-MarkerC,16,0.3809524,3,yes,no,,CAGCTATGGT,pna_rnd03,CAGCTATGGT
-"""
-
-
 PROXIMITY_DATA = """component,marker_1,marker_2,join_count,join_count_expected_mean,join_count_expected_sd,join_count_z,join_count_pvalue
 fc07dea9b679aca7,MarkerA,MarkerB,3,1.65,0.794,1.35,0.088
 fc07dea9b679aca7,MarkerA,MarkerA,87,86.5,9.96,0.062,0.575
 fc07dea9b679aca7,MarkerB,MarkerC,30,27.3,3.1,0.001,0.999
 """
-
-UNS_DATA = {
-    "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
-    "panel_metadata": {
-        "name": "test-pna-panel",
-        "aliases": ["test-pna"],
-        "description": "Test R&D panel for RNA",
-        "version": "0.1.0",
-        "panel_columns": [
-            "control",
-            "nuclear",
-            "uniprot_id",
-            "sequence_1",
-            "conj_id",
-            "sequence_2",
-        ],
-    },
-}
 
 LAYOUT_DATA = """
 component,layout,projection,index,pixel_type,x,y,z,x_norm,y_norm,z_norm

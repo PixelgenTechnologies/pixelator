@@ -1,6 +1,6 @@
 """Module for utilities for working with pixeldatasets.
 
-Copyright © 2023 Pixelgen Technologies AB.
+Copyright © 2026 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
