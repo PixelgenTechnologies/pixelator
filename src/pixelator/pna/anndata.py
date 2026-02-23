@@ -179,6 +179,7 @@ def pna_edgelist_to_anndata(
     logger.debug("Computing antibody metrics.")
     antibody_metrics_df = calculate_antibody_metrics(counts_df=node_counts_df)
     antibody_metrics_df = antibody_metrics_df.reindex(index=panel.markers, fill_value=0)
+    antibody_metrics_df.index.name = "marker_id"
     # Do a dtype conversion of the columns here since AnnData cannot handle
     # a pyarrow arrays.
     antibody_metrics_df = antibody_metrics_df.astype(

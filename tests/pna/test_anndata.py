@@ -169,6 +169,7 @@ def test_pna_edgelist_to_anndata(pixelconnection):
         orient="index",
     ).sort_index()
     expected_df.index.name = "component"
+    expected_df.columns.name = "marker_id"
     expected_df = expected_df.astype(np.uint32)
     assert_frame_equal(adata.to_df().sort_index(), expected_df)
 
@@ -204,6 +205,7 @@ def test_pna_edgelist_to_anndata(pixelconnection):
         },
         orient="index",
     )
+    expected_var.index.name = "marker_id"
     assert_frame_equal(adata.var, expected_var)
 
     expected_obs = pd.DataFrame.from_dict(

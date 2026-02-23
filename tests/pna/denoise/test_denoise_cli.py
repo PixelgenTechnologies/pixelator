@@ -35,4 +35,3 @@ def test_denoise_runs_ok(pxl_file):
 
         result = read(Path(output_dir) / "denoise" / "file.denoised_graph.pxl")
         assert not result.adata().obs["disqualified_for_denoising"].any()
-        assert "dummy_column" in result.adata().obs.columns

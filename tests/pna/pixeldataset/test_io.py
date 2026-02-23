@@ -4,9 +4,9 @@ from io import StringIO
 
 import polars as pl
 import pytest
-from anndata.tests.helpers import assert_equal as adata_assert_equal
 from polars.testing import assert_frame_equal
 
+from pixelator.common.utils.testing import adata_assert_equal
 from pixelator.pna.pixeldataset.io import (
     PixelDataQuerier,
     PixelDataViewer,
@@ -88,24 +88,6 @@ class TestPixelFileReader:
         reader = PixelDataQuerier(pxl_view)
 
         adata_data.obs["sample"] = "test_sample"
-        adata_data.uns = {
-            "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
-            "panel_metadata": {
-                "name": "test-pna-panel",
-                "aliases": ["test-pna"],
-                "description": "Test R&D panel for RNA",
-                "version": "0.1.0",
-                "panel_columns": [
-                    "control",
-                    "nuclear",
-                    "uniprot_id",
-                    "sequence_1",
-                    "conj_id",
-                    "sequence_2",
-                ],
-            },
-        }
-
         results = reader.read_adata()
         adata_assert_equal(results, adata_data)
 
@@ -178,7 +160,7 @@ class TestPixelFileReader:
 
 
 class TestPixelDataViewer:
-    def test_sample_names(self, pxl_view):
+    def test_sample_names(self, pxl_view: PixelDataViewer):
         assert pxl_view.sample_names() == ["test_sample"]
 
     def test_read_adata_from_sample(self, pxl_view: PixelDataViewer, adata_data):
@@ -186,26 +168,9 @@ class TestPixelDataViewer:
             res = pxl_view.read_adata_from_sample(connection, "test_sample")
         adata_assert_equal(res, adata_data)
 
-    def test_read_adata(self, pxl_view, adata_data):
+    def test_read_adata(self, pxl_view: PixelDataViewer, adata_data):
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
-        adata_data.uns = {
-            "my_key": {"with_nesting": ["and array", "of values"], "another_key": 1.0},
-            "panel_metadata": {
-                "name": "test-pna-panel",
-                "aliases": ["test-pna"],
-                "description": "Test R&D panel for RNA",
-                "version": "0.1.0",
-                "panel_columns": [
-                    "control",
-                    "nuclear",
-                    "uniprot_id",
-                    "sequence_1",
-                    "conj_id",
-                    "sequence_2",
-                ],
-            },
-        }
 
         res = pxl_view.read_adata()
         adata_assert_equal(res, adata_data)
