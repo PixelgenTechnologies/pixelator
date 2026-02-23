@@ -53,7 +53,7 @@ import pyarrow as pa
 from anndata import AnnData
 from anndata import concat as anndata_concat
 
-from pixelator.mpx.pixeldataset.utils import update_metrics_anndata
+from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.utils.utils import normalize_input_to_list
 
 logger = logging.getLogger(__name__)

@@ -19,15 +19,11 @@ import pytest
 from anndata import AnnData
 
 from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.mpx.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from tests.pna.data.pxl_data import (
-    ADATA_OBS,
-    ADATA_VAR,
-    ADATA_X,
     EDGELIST_DATA,
     LAYOUT_DATA,
     PROXIMITY_DATA,

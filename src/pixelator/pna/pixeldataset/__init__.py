@@ -36,6 +36,10 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
     :param path: path to the file to read
     :return: an instance of `PNAPixelDataset`
     """
+    if not paths:
+        raise ValueError(
+            "No paths provided to read function, did you pass an empty list?"
+        )
     if not isinstance(paths, list):
         paths = [paths]  # type: ignore
     normalized_paths = [Path(p) for p in paths]  # type: ignore
