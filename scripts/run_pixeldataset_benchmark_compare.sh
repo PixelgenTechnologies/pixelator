@@ -39,6 +39,7 @@ uv run pytest \
   --benchmark-enable \
   --benchmark-only \
   --benchmark-save=current-branch \
+  --benchmark-min-rounds 1 \
   -v \
   "$BENCHMARK_TEST"
 
@@ -52,6 +53,7 @@ uv run pytest \
   --benchmark-only \
   --benchmark-save=dev-branch \
   --benchmark-compare \
+  --benchmark-min-rounds 1 \
   -v \
   "$BENCHMARK_TEST"
 
