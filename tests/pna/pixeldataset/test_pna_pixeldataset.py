@@ -93,8 +93,10 @@ class TestPNAPixelDataset:
         assert "new_layer" in adata.layers.keys()
         assert "new_layer" not in pxl_dataset.adata().layers.keys()
 
-    def test_edgelist(self, pxl_dataset, edgelist_dataframe):
-        edgelist = pxl_dataset.edgelist().to_polars()
+    def test_edgelist(self, pxl_dataset: PNAPixelDataset, edgelist_dataframe):
+        edgelist_obj = pxl_dataset.edgelist()
+        edgelist = edgelist_obj.to_polars()
+        assert isinstance(edgelist, pl.DataFrame)
         edgelist_dataframe = edgelist_dataframe.with_columns(
             sample=pl.lit("test_sample")
         )
@@ -107,6 +109,7 @@ class TestPNAPixelDataset:
         assert len(proximity) == 3
 
         proximity_df = proximity.to_polars()
+        assert isinstance(proximity_df, pl.DataFrame)
         proximity_df = proximity_df.sort("component")
 
         result = StringIO()
@@ -119,6 +122,7 @@ class TestPNAPixelDataset:
         assert len(layouts.components) == 4
 
         layouts_df = layouts.to_polars()
+        assert isinstance(layouts_df, pl.DataFrame)
         layouts_df = layouts_df.sort("component").select(sorted(layouts_df.columns))
 
         result = StringIO()

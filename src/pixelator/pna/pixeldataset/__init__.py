@@ -90,16 +90,19 @@ class Edgelist:
         self, df: pl.DataFrame | pd.DataFrame
     ) -> pl.DataFrame | pd.DataFrame:
         # Handle legacy marker names
-        if isinstance(df, pl.DataFrame):
+        if isinstance(df, pd.DataFrame):
+            return df.rename(columns={"marker1": "marker_1", "marker2": "marker_2"})
+        else:
             return df.rename(
                 {"marker1": "marker_1", "marker2": "marker_2"}, strict=False
             )
-        else:
-            return df.rename(columns={"marker1": "marker_1", "marker2": "marker_2"})
 
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""
-        return self._querier.read_edgelist_len(components=self._components)
+        with self._querier.view as connection:
+            return self._querier.read_edgelist_len(
+                connection=connection, components=self._components
+            )
 
     def is_empty(self) -> bool:
         """Check if the edgelist is empty."""
@@ -107,27 +110,42 @@ class Edgelist:
 
     def to_df(self) -> pd.DataFrame:
         """Get the edgelist as a pandas DataFrame."""
-        df = self._querier.read_edgelist(components=self.components, as_pandas=True)
+        with self._querier.view as connection:
+            df = (
+                self._querier.read_edgelist(connection, components=self.components)
+                .collect()
+                .to_pandas()
+            )
         return self._handle_backwards_compatibility(df)
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
-        # TODO change this once we can get filtering pushdown in duckdb
-        # But for now this, somewhat counter-intuitively is the faster
-        df = pl.concat([df for _, df in self._iterator()])
+        with self._querier.view as connection:
+            df = self._querier.read_edgelist(
+                connection, components=self.components
+            ).collect()
         return self._handle_backwards_compatibility(df)
 
     def to_record_batches(
         self, batch_size: int = 1_000_000
     ) -> Iterable[pa.RecordBatch]:
         """Get the edgelist as a stream of pyarrow RecordBatches."""
-        return self._querier.read_edgelist_stream(
-            components=self.components, batch_size=batch_size
-        )
+        with self._querier.view as connection:
+            yield from self._querier.read_edgelist_stream(
+                connection=connection,
+                components=self.components,
+                batch_size=batch_size,
+            )
 
-    def _iterator(self) -> Iterable[tuple[str, pl.DataFrame]]:
-        for component in self.components:
-            yield component, self._querier.read_edgelist(components=component)
+    def _iterator(self) -> Iterable[tuple[str, pl.LazyFrame]]:
+        with self._querier.view as connection:
+            for component in self.components:
+                yield (
+                    component,
+                    self._querier.read_edgelist(
+                        connection=connection, components=component
+                    ),
+                )
 
     def iterator(self) -> Iterable[Component]:
         """Get a stream of components and their graphs.
@@ -136,7 +154,7 @@ class Edgelist:
         """
         for name, df in self._iterator():
             yield Component(
-                component_id=name, frame=self._handle_backwards_compatibility(df).lazy()
+                component_id=name, frame=self._handle_backwards_compatibility(df)
             )
 
     def __str__(self) -> str:
@@ -199,9 +217,12 @@ class Proximity:
 
     def __len__(self) -> int:
         """Get the number of proximity scores."""
-        return self._querier.read_proximity_len(
-            components=self._components, markers=self._markers
-        )
+        with self._querier.view as connection:
+            return self._querier.read_proximity_len(
+                connection=connection,
+                components=self._components,
+                markers=self._markers,
+            )
 
     def is_empty(self):
         """Check if the proximity data is empty."""
@@ -286,11 +307,13 @@ class Proximity:
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
-        return self._post_process(
-            self._querier.read_proximity(
-                components=self._components, markers=self._markers
-            )
-        )
+        with self._querier.view as connection:
+            df = self._querier.read_proximity(
+                connection=connection,
+                components=self._components,
+                markers=self._markers,
+            ).collect()
+        return self._post_process(df)
 
     def __str__(self) -> str:
         """Get a string representation of the Proximity."""
@@ -341,7 +364,10 @@ class PreComputedLayouts:
 
     def __len__(self) -> int:
         """Get the nodes in the layouts."""
-        return self._querier.read_layouts_len(components=self._components)
+        with self._querier.view as connection:
+            return self._querier.read_layouts_len(
+                connection=connection, components=self._components
+            )
 
     def is_empty(self) -> bool:
         """Check if the precomputed layouts are empty."""
@@ -375,11 +401,15 @@ class PreComputedLayouts:
 
     def to_polars(self) -> pl.DataFrame:
         """Get the precomputed layouts as a polars DataFrame."""
-        return self._post_process(
-            self._querier.read_layouts(
-                components=self._components, add_marker_counts=self._add_marker_counts
+        with self._querier.view as connection:
+            layouts = self._querier.read_layouts(
+                connection=connection,
+                components=self._components,
+                add_marker_counts=self._add_marker_counts,
             )
-        )
+            if isinstance(layouts, pl.LazyFrame):
+                layouts = layouts.collect()
+        return self._post_process(layouts)
 
     def iterator(
         self, return_polars_df: bool = False
@@ -394,16 +424,20 @@ class PreComputedLayouts:
 
         :return: A stream of layouts names and associated layout dataframes
         """
-        for component in self.components:
-            component_df = self._post_process(
-                self._querier.read_layouts(
-                    components=component, add_marker_counts=self._add_marker_counts
+        with self._querier.view as connection:
+            for component in self.components:
+                layouts = self._querier.read_layouts(
+                    connection=connection,
+                    components=component,
+                    add_marker_counts=self._add_marker_counts,
                 )
-            )
-            if return_polars_df:
-                yield (component, component_df)
-            else:
-                yield (component, component_df.to_pandas())
+                if isinstance(layouts, pl.LazyFrame):
+                    layouts = layouts.collect()
+                component_df = self._post_process(layouts)
+                if return_polars_df:
+                    yield (component, component_df)
+                else:
+                    yield (component, component_df.to_pandas())
 
     def describe(self) -> str:
         """Return a description of the PreComputedLayouts."""

@@ -55,7 +55,10 @@ class TestPixelFileReader:
     def test_read_edgelist(self, pxl_view, edgelist_dataframe):
         reader = PixelDataQuerier(pxl_view)
 
-        results = reader.read_edgelist()
+        with pxl_view as connection:
+            lazy = reader.read_edgelist(connection)
+            assert isinstance(lazy, pl.LazyFrame)
+            results = lazy.collect()
         assert_frame_equal(
             results, _add_sample_name_columns(edgelist_dataframe, "test_sample")
         )
@@ -63,7 +66,9 @@ class TestPixelFileReader:
     def test_read_edgelist_filter(self, pxl_view, edgelist_dataframe):
         reader = PixelDataQuerier(pxl_view)
 
-        results = reader.read_edgelist(components={"fc07dea9b679aca7"})
+        with pxl_view as connection:
+            lazy = reader.read_edgelist(connection, components={"fc07dea9b679aca7"})
+            results = lazy.collect()
         assert_frame_equal(
             results,
             _add_sample_name_columns(
@@ -75,7 +80,9 @@ class TestPixelFileReader:
     def test_read_edgelist_filter_str(self, pxl_view, edgelist_dataframe):
         reader = PixelDataQuerier(pxl_view)
 
-        results = reader.read_edgelist(components="fc07dea9b679aca7")
+        with pxl_view as connection:
+            lazy = reader.read_edgelist(connection, components="fc07dea9b679aca7")
+            results = lazy.collect()
         assert_frame_equal(
             results,
             _add_sample_name_columns(
@@ -106,7 +113,10 @@ class TestPixelFileReader:
     def test_read_proximity(self, pxl_view, proximity_dataframe):
         reader = PixelDataQuerier(pxl_view)
 
-        results = reader.read_proximity()
+        with pxl_view as connection:
+            lazy = reader.read_proximity(connection)
+            assert isinstance(lazy, pl.LazyFrame)
+            results = lazy.collect()
         assert_frame_equal(
             results, _add_sample_name_columns(proximity_dataframe, "test_sample")
         )
@@ -114,7 +124,9 @@ class TestPixelFileReader:
     def test_read_proximity_filter(self, pxl_view, proximity_dataframe):
         reader = PixelDataQuerier(pxl_view)
 
-        results = reader.read_proximity(components={"fc07dea9b679aca7"})
+        with pxl_view as connection:
+            lazy = reader.read_proximity(connection, components={"fc07dea9b679aca7"})
+            results = lazy.collect()
         assert_frame_equal(
             results,
             _add_sample_name_columns(
@@ -126,7 +138,10 @@ class TestPixelFileReader:
     def test_read_layouts(self, pxl_view, layout_dataframe):
         reader = PixelDataQuerier(pxl_view)
 
-        results = reader.read_layouts(add_marker_counts=False)
+        with pxl_view as connection:
+            lazy = reader.read_layouts(connection, add_marker_counts=False)
+            assert isinstance(lazy, pl.LazyFrame)
+            results = lazy.collect()
         assert_frame_equal(
             results,
             _add_sample_name_columns(layout_dataframe, "test_sample"),
@@ -136,7 +151,8 @@ class TestPixelFileReader:
     def test_read_layouts_add_marker_counts(self, snapshot, pxl_view):
         reader = PixelDataQuerier(pxl_view)
 
-        results_df = reader.read_layouts(add_marker_counts=True)
+        with pxl_view as connection:
+            results_df = reader.read_layouts(connection, add_marker_counts=True)
         results_df = results_df.select(sorted(results_df.columns))
 
         result = StringIO()
@@ -146,9 +162,13 @@ class TestPixelFileReader:
     def test_read_layouts_filter(self, pxl_view, layout_dataframe):
         reader = PixelDataQuerier(pxl_view)
 
-        results = reader.read_layouts(
-            components={"040b1570c7d0f28f"}, add_marker_counts=False
-        )
+        with pxl_view as connection:
+            lazy = reader.read_layouts(
+                connection,
+                components={"040b1570c7d0f28f"},
+                add_marker_counts=False,
+            )
+            results = lazy.collect()
         assert_frame_equal(
             results,
             _add_sample_name_columns(
@@ -190,14 +210,18 @@ class TestPixelDataViewer:
 class TestPxlDataQuerier:
     def test_read_edgelist(self, pxl_view, edgelist_dataframe):
         querier = PixelDataQuerier(pxl_view)
-        result = querier.read_edgelist()
+        with pxl_view as connection:
+            lazy = querier.read_edgelist(connection)
+            result = lazy.collect()
         assert_frame_equal(
             result, edgelist_dataframe.with_columns(sample=pl.lit("test_sample"))
         )
 
     def test_read_edgelist_filter(self, pxl_view, edgelist_dataframe):
         querier = PixelDataQuerier(pxl_view)
-        result = querier.read_edgelist(components={"fc07dea9b679aca7"})
+        with pxl_view as connection:
+            lazy = querier.read_edgelist(connection, components={"fc07dea9b679aca7"})
+            result = lazy.collect()
         assert_frame_equal(
             result,
             edgelist_dataframe.filter(
@@ -207,18 +231,23 @@ class TestPxlDataQuerier:
 
     def test_read_edgelist_len(self, pxl_view):
         querier = PixelDataQuerier(pxl_view)
-        result = querier.read_edgelist_len()
+        with pxl_view as connection:
+            result = querier.read_edgelist_len(connection)
         assert result == 57
 
     def test_read_edgelist_len_filter(self, pxl_view):
         querier = PixelDataQuerier(pxl_view)
-        result = querier.read_edgelist_len(components={"fc07dea9b679aca7"})
+        with pxl_view as connection:
+            result = querier.read_edgelist_len(
+                connection, components={"fc07dea9b679aca7"}
+            )
         assert result == 23
 
     def test_read_edgelist_stream(self, pxl_view, edgelist_dataframe):
         querier = PixelDataQuerier(pxl_view)
         # Turn the stream into a DataFrame for comparison
-        result = pl.from_arrow(querier.read_edgelist_stream())
+        with pxl_view as connection:
+            result = pl.from_arrow(querier.read_edgelist_stream(connection))
         assert_frame_equal(
             result, edgelist_dataframe.with_columns(sample=pl.lit("test_sample"))
         )
@@ -236,7 +265,10 @@ class TestPxlDataQuerier:
 
     def test_read_layouts(self, pxl_view, layout_dataframe):
         querier = PixelDataQuerier(pxl_view)
-        result = querier.read_layouts().sort(["component", "index"])
+        with pxl_view as connection:
+            result = (
+                querier.read_layouts(connection).collect().sort(["component", "index"])
+            )
         assert_frame_equal(
             result,
             layout_dataframe.with_columns(sample=pl.lit("test_sample")).sort(
@@ -246,7 +278,8 @@ class TestPxlDataQuerier:
 
     def test_read_layouts_add_marker_counts(self, snapshot, pxl_view, layout_dataframe):
         querier = PixelDataQuerier(pxl_view)
-        result_df = querier.read_layouts(add_marker_counts=True)
+        with pxl_view as connection:
+            result_df = querier.read_layouts(connection, add_marker_counts=True)
         result_df = result_df.sort("component").select(sorted(result_df.columns))
 
         result = StringIO()
@@ -255,24 +288,32 @@ class TestPxlDataQuerier:
 
     def test_read_layouts_len(self, pxl_view):
         querier = PixelDataQuerier(pxl_view)
-        result = querier.read_layouts_len()
+        with pxl_view as connection:
+            result = querier.read_layouts_len(connection)
         assert result == 34
 
     def test_read_layouts_len_filter(self, pxl_view):
         querier = PixelDataQuerier(pxl_view)
-        result = querier.read_layouts_len(components={"fc07dea9b679aca7"})
+        with pxl_view as connection:
+            result = querier.read_layouts_len(
+                connection, components={"fc07dea9b679aca7"}
+            )
         assert result == 11
 
     def test_read_proximity(self, pxl_view, proximity_dataframe):
         querier = PixelDataQuerier(pxl_view)
-        result = querier.read_proximity()
+        with pxl_view as connection:
+            lazy = querier.read_proximity(connection)
+            result = lazy.collect()
         assert_frame_equal(
             result, proximity_dataframe.with_columns(sample=pl.lit("test_sample"))
         )
 
     def test_read_proximity_filter(self, pxl_view, proximity_dataframe):
         querier = PixelDataQuerier(pxl_view)
-        result = querier.read_proximity(components={"fc07dea9b679aca7"})
+        with pxl_view as connection:
+            lazy = querier.read_proximity(connection, components={"fc07dea9b679aca7"})
+            result = lazy.collect()
         assert_frame_equal(
             result,
             proximity_dataframe.filter(
@@ -283,5 +324,6 @@ class TestPxlDataQuerier:
 
     def test_read_proximity_len(self, pxl_view):
         querier = PixelDataQuerier(pxl_view)
-        result = querier.read_proximity_len()
+        with pxl_view as connection:
+            result = querier.read_proximity_len(connection)
         assert result == 3
