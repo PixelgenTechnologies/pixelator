@@ -612,30 +612,27 @@ class PixelDataQuerier:
 
     def read_edgelist(
         self,
+        connection: duckdb.DuckDBPyConnection,
         components: Iterable[str] | str | None = None,
-        as_pandas=False,
-    ) -> pl.DataFrame | pd.DataFrame:
-        """Read the edgelist from the PXL file.
+    ) -> pl.LazyFrame:
+        """Read the edgelist from the PXL file as a Polars LazyFrame.
 
+        :param connection: An open DuckDB connection over this view's tables.
         :param components: The components to filter by.
-        :return: A DataFrame containing the edgelist.
+        :return: A LazyFrame containing the edgelist.
         """
-        with self.view as connection:
-            components = normalize_input_to_list(components)
-            query = f"""SELECT * FROM edgelist
-                        WHERE {self._optimized_component_where_condition(components)}
-                    """
-            params = {}
-            if components is not None:
-                params["components"] = (
-                    components if len(components) > 1 else components[0]
-                )
-            if as_pandas:
-                return connection.sql(query, params=params).df()
-            return connection.sql(query, params=params).pl()
+        components = normalize_input_to_list(components)
+        query = f"""SELECT * FROM edgelist
+                    WHERE {self._optimized_component_where_condition(components)}
+                """
+        params = {}
+        if components is not None:
+            params["components"] = components if len(components) > 1 else components[0]
+        return connection.sql(query, params=params).pl(lazy=True)
 
     def read_edgelist_len(
         self,
+        connection: duckdb.DuckDBPyConnection,
         components: Iterable[str] | str | None = None,
     ) -> int:
         """Get the length of the edgelist.
@@ -651,11 +648,11 @@ class PixelDataQuerier:
         params = {}
         if components is not None:
             params["components"] = components if len(components) > 1 else components[0]
-        with self.view as connection:
-            return connection.sql(query, params=params).execute().fetchone()[0]  # type: ignore
+        return connection.sql(query, params=params).execute().fetchone()[0]  # type: ignore
 
     def read_edgelist_stream(
         self,
+        connection: duckdb.DuckDBPyConnection,
         components: Iterable[str] | str | None = None,
         batch_size: int = 1_000_000,
     ) -> Iterable[pa.RecordBatch]:
@@ -674,11 +671,10 @@ class PixelDataQuerier:
         if components is not None:
             params["components"] = components if len(components) > 1 else components[0]
 
-        with self.view as connection:
-            result = connection.sql(query, params=params)
-            reader = result.fetch_arrow_reader(batch_size=batch_size)
-            for batch in reader:
-                yield batch
+        result = connection.sql(query, params=params)
+        reader = result.fetch_arrow_reader(batch_size=batch_size)
+        for batch in reader:
+            yield batch
 
     def read_metadata(self) -> dict:
         """Read the metadata from the PXL file.
@@ -702,9 +698,10 @@ class PixelDataQuerier:
 
     def read_layouts(
         self,
+        connection: duckdb.DuckDBPyConnection,
         components: str | Iterable[str] | None = None,
         add_marker_counts: bool = False,
-    ) -> pl.DataFrame:
+    ) -> pl.LazyFrame | pl.DataFrame:
         """Read the layouts from the PXL file.
 
         :param components: The components to filter by.
@@ -756,15 +753,20 @@ class PixelDataQuerier:
                 params["components"] = (
                     components if len(components) > 1 else components[0]
                 )
-            with self.view as connection:
+            if add_marker_counts:
+                # This path requires eager DataFrame for pivot
                 result = connection.sql(query, params=params).pl()
-                result = _pivot_marker_table(result) if add_marker_counts else result
+                result = _pivot_marker_table(result)
                 return result.drop(["umi", "marker"], strict=False)
+            else:
+                # Return LazyFrame for lazy path
+                return connection.sql(query, params=params).pl(lazy=True)
         except duckdb.CatalogException:
             return pl.DataFrame()
 
     def read_layouts_len(
         self,
+        connection: duckdb.DuckDBPyConnection,
         components: str | Iterable[str] | None = None,
     ) -> int:
         """Get the length of the layouts.
@@ -783,16 +785,16 @@ class PixelDataQuerier:
                 params["components"] = (
                     components if len(components) > 1 else components[0]  # type: ignore
                 )
-            with self.view as connection:
-                return connection.sql(query, params=params).execute().fetchone()[0]  # type: ignore
+            return connection.sql(query, params=params).execute().fetchone()[0]  # type: ignore
         except duckdb.CatalogException:
             return 0
 
     def read_proximity(
         self,
+        connection: duckdb.DuckDBPyConnection,
         components: str | Iterable[str] | None = None,
         markers: str | Iterable[str] | None = None,
-    ) -> pl.DataFrame:
+    ) -> pl.LazyFrame:
         """Read the proximity data from the PXL file.
 
         :param components: The components to filter by.
@@ -813,13 +815,13 @@ class PixelDataQuerier:
                 )
             if markers is not None:
                 params["markers"] = markers
-            with self.view as connection:
-                return connection.sql(query, params=params).pl()
+            return connection.sql(query, params=params).pl(lazy=True)
         except duckdb.CatalogException:
-            return pl.DataFrame()
+            return pl.LazyFrame()
 
     def read_proximity_len(
         self,
+        connection: duckdb.DuckDBPyConnection,
         components: str | Iterable[str] | None = None,
         markers: str | Iterable[str] | None = None,
     ) -> int:
@@ -836,13 +838,14 @@ class PixelDataQuerier:
                         WHERE {self._optimized_component_where_condition(components)} AND
                               {"(marker_1 IN $markers AND marker_2 IN $markers)" if markers else "TRUE"};
                     """
-            params = {}
+            params: dict[str, object] = {}
             if components is not None:
-                params["components"] = components
+                params["components"] = (
+                    components if len(components) > 1 else components[0]  # type: ignore
+                )
             if markers is not None:
                 params["markers"] = markers
-            with self.view as connection:
-                return connection.sql(query, params=params).execute().fetchone()[0]  # type: ignore
+            return connection.sql(query, params=params).execute().fetchone()[0]  # type: ignore
         except duckdb.CatalogException:
             return 0
 
