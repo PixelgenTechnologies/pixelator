@@ -86,16 +86,9 @@ class Edgelist:
         """Get the component names."""
         return self._components or set(self._querier.read_all_component_names())
 
-    def _handle_backwards_compatibility(
-        self, df: pl.DataFrame | pd.DataFrame
-    ) -> pl.DataFrame | pd.DataFrame:
+    def _handle_backwards_compatibility(self, df: pl.LazyFrame) -> pl.LazyFrame:
         # Handle legacy marker names
-        if isinstance(df, pd.DataFrame):
-            return df.rename(columns={"marker1": "marker_1", "marker2": "marker_2"})
-        else:
-            return df.rename(
-                {"marker1": "marker_1", "marker2": "marker_2"}, strict=False
-            )
+        return df.rename({"marker1": "marker_1", "marker2": "marker_2"}, strict=False)
 
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""
@@ -112,19 +105,21 @@ class Edgelist:
         """Get the edgelist as a pandas DataFrame."""
         with self._querier.view as connection:
             df = (
-                self._querier.read_edgelist(connection, components=self.components)
+                self._handle_backwards_compatibility(
+                    self._querier.read_edgelist(connection, components=self.components)
+                )
                 .collect()
                 .to_pandas()
             )
-        return self._handle_backwards_compatibility(df)
+        return df
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
         with self._querier.view as connection:
-            df = self._querier.read_edgelist(
-                connection, components=self.components
+            df = self._handle_backwards_compatibility(
+                self._querier.read_edgelist(connection, components=self.components)
             ).collect()
-        return self._handle_backwards_compatibility(df)
+        return df
 
     def to_record_batches(
         self, batch_size: int = 1_000_000
