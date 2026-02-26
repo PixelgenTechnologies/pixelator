@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Remove the warning when setting minimum size manually. It is observed that 8000 is a
   reliable minimum size for components.
+- Pixeldataset have been refactor yielding performance improvements of  1.1-2.0x faster
+  loading of data
 
 ### Fixed
 
