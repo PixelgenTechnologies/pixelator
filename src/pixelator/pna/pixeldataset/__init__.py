@@ -154,7 +154,11 @@ class Edgelist:
         """
         for name, df in self._iterator():
             yield Component(
-                component_id=name, frame=self._handle_backwards_compatibility(df)
+                # TODO Doing collect().lazy() does not really make sense. The reason that it is
+                # here is that otherwise the object is not pickable, and thus not handled
+                # well by the analysis manager. We should revisit this in the future.
+                component_id=name,
+                frame=self._handle_backwards_compatibility(df).collect().lazy(),
             )
 
     def __str__(self) -> str:
