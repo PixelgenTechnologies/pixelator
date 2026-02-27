@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add new panel proxiome-immuno-155-v4 that removes CX3CR1 and CD199, and adds CD98 and CD198. 
 - Update README with proximity network assay citation information.
 - The degree distribution of UMIs is now included in the collapse report.
 
