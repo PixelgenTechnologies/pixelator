@@ -19,6 +19,7 @@ from cutadapt.utils import DummyProgress, Progress
 
 from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.common.utils import get_sample_name
+from pixelator.common.utils.log_progress import LogProgress
 from pixelator.pna.config import PNAAntibodyPanel, PNAAssay
 from pixelator.pna.demux.barcode_demuxer import (
     BarcodeDemuxer,
@@ -116,7 +117,7 @@ def correct_marker_barcodes(
     if sys.stderr.isatty():
         progress = Progress()
     else:
-        progress = DummyProgress()
+        progress = LogProgress(logger)
 
     n_workers = max(1, threads - compression_threads)
     logger.info("Correcting barcodes using %s worker threads", n_workers)
@@ -227,7 +228,11 @@ def demux_barcode_groups(
         output_directory=output_dir,
         filename_policy=filename_policy,
     )
-    progress = Progress()
+
+    if sys.stderr.isatty():
+        progress = Progress()
+    else:
+        progress = LogProgress(logger)
 
     logger.info("Demuxing with %s worker threads", worker_threads)
 
