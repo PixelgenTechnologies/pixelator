@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add progress status updates to the log for `amplicon` and `demux` steps in case of non-tty runs, handled by `LogProgress` utility class.
 - Update README with proximity network assay citation information.
 - The degree distribution of UMIs is now included in the collapse report.
 
