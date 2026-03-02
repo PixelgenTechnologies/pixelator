@@ -19,16 +19,21 @@ class LogProgress:
         self,
         logger: Logger,
         min_update_intervall_seconds: float = 60.0,
+        min_update_intervall_items: int = 1,
         item_name: str = "read",
     ):
         """Initialize a LogProgress instance.
 
-        :param logger: Logger object to which progress messages will be written.
-        :param min_update_intervall_seconds: Minimum seconds between log updates (default: 60).
-        :param item_name: Name of the item being processed (default: "read").
+        Args:
+            logger (Logger): Logger object to which progress messages will be written.
+            min_update_intervall_seconds (float, optional): Minimum seconds between log updates. Defaults to 60.
+            min_update_intervall_items (int, optional): Minimum number of items between log updates. Defaults to 1.
+            item_name (str, optional): Name of the item being processed. Defaults to "read".
+
         """
         self.logger = logger
         self.min_update_intervall_seconds = min_update_intervall_seconds
+        self.min_update_intervall_items = min_update_intervall_items
         self.item_name = item_name
         self.n_items = 0
         self.start_time = time.time()
@@ -38,16 +43,16 @@ class LogProgress:
     def update(self, increment_items: int, final_update: bool = False):
         """Update the progress and log a message if enough time has passed or if final update.
 
-        :param increment_items: Number of items processed since the last update.
-        :param final_update: If True, forces a final log update regardless of interval (default: False).
+        Args:
+            increment_items (int): Number of items processed since the last update.
+            final_update (bool, optional): If True, forces a final log update regardless of interval. Defaults to False.
+
         """
         self.n_items += increment_items
         now = time.time()
         time_delta = now - (self.start_time if final_update else self.last_time)
         delta_items = self.n_items if final_update else self.n_items - self.last_n_items
-        if delta_items < 1:
-            return
-        if time_delta == 0:
+        if delta_items < self.min_update_intervall_items:
             return
         if not final_update:
             if time_delta < self.min_update_intervall_seconds:
