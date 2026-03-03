@@ -171,9 +171,9 @@ def combine_independent_parquet_files(
         """
         CREATE OR REPLACE TEMP VIEW combined_data AS
             SELECT marker_1, marker_2, umi1, umi2,
-                sum(read_count)::UINTEGER as read_count,
+                sum(read_count)::UINT64 as read_count,
                 count(DISTINCT uei)::USMALLINT as uei_count,
-                ifnull(sum("read_count") FILTER ( umi1_data.umi1_is_corrected OR umi2_data.umi2_is_corrected ), 0)::UINTEGER as corrected_read_count
+                ifnull(sum("read_count") FILTER ( umi1_data.umi1_is_corrected OR umi2_data.umi2_is_corrected ), 0)::UINT64 as corrected_read_count
             FROM umi1_data POSITIONAL JOIN umi2_data
             GROUP BY marker_1, marker_2, umi1, umi2
         """
@@ -188,8 +188,8 @@ def combine_independent_parquet_files(
     # Another pass to collect some stats needed for the reports
     res = conn.sql(
         f"""
-        SELECT sum(uei_count)::UINTEGER as output_molecules,
-               sum(corrected_read_count)::UINTEGER as corrected_reads
+        SELECT sum(uei_count)::UINT64 as output_molecules,
+               sum(corrected_read_count)::UINT64 as corrected_reads
         FROM read_parquet('{output_file}')
         """
     ).pl()
