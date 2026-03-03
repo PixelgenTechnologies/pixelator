@@ -61,7 +61,19 @@ class SharedMemoryRegistry:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> Self:
-        """Terminate the context."""
+        """Terminate the context.
+
+        Unlinks any buffers still in the registry (e.g. left after an exception
+        in _init_shared_memory) so shared memory is released before the manager exits.
+        """
+        buffers = list(self._buffer_registry.values())
+        self._buffer_registry.clear()
+        self._array_registry.clear()
+        for buf in buffers:
+            try:
+                buf.unlink()
+            except Exception:  # noqa: S110
+                pass  # best-effort; manager shutdown will release resources
         self._manager.__exit__(exc_type, exc_val, exc_tb)
         return self
 
@@ -165,6 +177,7 @@ class SharedMemoryRegistry:
 
         """
         buffer = self._buffer_registry.pop(name, None)
+        self._array_registry.pop(name, None)
         if buffer is not None:
             buffer.unlink()
 
