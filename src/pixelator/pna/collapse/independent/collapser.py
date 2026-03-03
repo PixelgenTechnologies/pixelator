@@ -576,6 +576,12 @@ class RegionCollapser:
             + num_unique_umis * np.dtype(np.uint16).itemsize
         )
         available = _get_shm_available_bytes()
+        logger.debug(
+            "Will request requested: %s MB of shared memory, the available shared memory is: %s MB",
+            _format_mb(shm_bytes),
+            _format_mb(available),
+        )
+
         if available is not None and shm_bytes > available:
             logger.warning(
                 "Collapse will allocate ~%s MB of shared memory for this marker but /dev/shm "
