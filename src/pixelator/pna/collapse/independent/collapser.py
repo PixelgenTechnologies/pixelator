@@ -577,9 +577,9 @@ class RegionCollapser:
         )
         available = _get_shm_available_bytes()
         logger.debug(
-            "Will request requested: %s MB of shared memory, the available shared memory is: %s MB",
+            "Will request %s MB of shared memory; available: %s",
             _format_mb(shm_bytes),
-            _format_mb(available),
+            f"{_format_mb(available)} MB" if available is not None else "unknown",
         )
 
         if available is not None and shm_bytes > available:
