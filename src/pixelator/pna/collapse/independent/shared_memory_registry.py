@@ -70,8 +70,9 @@ class SharedMemoryRegistry:
         for buf in buffers:
             try:
                 buf.unlink()
-            except Exception:  # noqa: S110
-                pass  # best-effort; manager shutdown will release resources
+            except Exception:
+                # Best-effort cleanup; manager shutdown will release any remaining resources.
+                pass
         self._manager.__exit__(exc_type, exc_val, exc_tb)
         return self
 
