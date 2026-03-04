@@ -1,5 +1,7 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+from unittest.mock import patch
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,6 +15,8 @@ from pixelator.pna.collapse.independent.collapser import (
 from pixelator.pna.config import pna_config
 from pixelator.pna.demux.barcode_demuxer import PNAEmbedding
 from pixelator.pna.utils import unpack_2bits
+
+COLLAPSER_MODULE = "pixelator.pna.collapse.independent.collapser"
 
 
 class TestRegionCollapserInternals:
@@ -57,6 +61,97 @@ class TestRegionCollapserInternals:
         umi2_seq2 = unpack_2bits(self.collapser._umi2_data[0], 28)
 
         assert umi2_seq == umi2_seq2
+
+
+def _fake_allocate_array(self, name, shape, dtype, zero_init=True):
+    """Return in-memory numpy arrays so tests don't need real shared memory."""
+    return np.zeros(shape, dtype=dtype)
+
+
+class TestSharedMemoryWarnings:
+    """Tests for shared memory size warnings (Docker /dev/shm, Bus error)."""
+
+    @patch(
+        "pixelator.pna.collapse.independent.shared_memory_registry"
+        ".SharedMemoryRegistry.allocate_array",
+        _fake_allocate_array,
+    )
+    @patch(f"{COLLAPSER_MODULE}._get_shm_available_bytes", return_value=None)
+    def test_no_warning_when_available_unknown(
+        self, mock_shm_available, caplog, umi1_partition
+    ):
+        """When shm available cannot be read, no warning is logged."""
+        assay = pna_config.get_assay("pna-2")
+        panel = pna_config.get_panel("proxiome-immuno-155-v3")
+        collapser = RegionCollapser(
+            assay=assay,
+            panel=panel,
+            region_id="umi-1",
+            threads=1,
+            max_mismatches=1,
+        )
+        with caplog.at_level("WARNING", logger="collapse"):
+            with collapser as c:
+                with c._init_shared_memory(umi1_partition) as _:
+                    pass
+        assert mock_shm_available.called
+        assert "Collapse will allocate" not in caplog.text
+
+    @patch(
+        "pixelator.pna.collapse.independent.shared_memory_registry"
+        ".SharedMemoryRegistry.allocate_array",
+        _fake_allocate_array,
+    )
+    @patch(
+        f"{COLLAPSER_MODULE}._get_shm_available_bytes", return_value=50 * 1024 * 1024
+    )
+    def test_no_warning_when_available_sufficient(
+        self, mock_shm_available, caplog, umi1_partition
+    ):
+        """When available shm exceeds required, no warning is logged."""
+        assay = pna_config.get_assay("pna-2")
+        panel = pna_config.get_panel("proxiome-immuno-155-v3")
+        collapser = RegionCollapser(
+            assay=assay,
+            panel=panel,
+            region_id="umi-1",
+            threads=1,
+            max_mismatches=1,
+        )
+        with caplog.at_level("WARNING", logger="collapse"):
+            with collapser as c:
+                with c._init_shared_memory(umi1_partition) as _:
+                    pass
+        assert "Collapse will allocate" not in caplog.text
+
+    @patch(
+        "pixelator.pna.collapse.independent.shared_memory_registry"
+        ".SharedMemoryRegistry.allocate_array",
+        _fake_allocate_array,
+    )
+    @patch(f"{COLLAPSER_MODULE}._get_shm_available_bytes", return_value=100)
+    def test_warning_when_required_exceeds_available(
+        self, mock_shm_available, caplog, umi1_partition
+    ):
+        """When required shm exceeds available, warning is logged with required and available."""
+        assay = pna_config.get_assay("pna-2")
+        panel = pna_config.get_panel("proxiome-immuno-155-v3")
+        collapser = RegionCollapser(
+            assay=assay,
+            panel=panel,
+            region_id="umi-1",
+            threads=1,
+            max_mismatches=1,
+        )
+        with caplog.at_level("WARNING", logger="collapse"):
+            with collapser as c:
+                with c._init_shared_memory(umi1_partition) as _:
+                    pass
+        assert "Collapse will allocate" in caplog.text
+        assert "has only 0 MB available" in caplog.text
+        assert "insufficient" in caplog.text
+        assert "Bus error" in caplog.text
+        assert "docker run --shm-size=4g" in caplog.text or "shm_size" in caplog.text
 
 
 @pytest.mark.slow
