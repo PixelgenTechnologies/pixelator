@@ -1,4 +1,4 @@
-"""Module for downloading pixel datasets, what can be used with e.g. tutorials.
+"""Module for downloading pixel datasets that can be used with e.g. tutorials.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Dataset:
-    """Class for a datasets."""
+    """Metadata for a downloadable dataset."""
 
     name: str
     description: str
@@ -61,9 +61,9 @@ class DownloadableDatasets:
             # See what datasets exist
             DownloadableDatasets.list_datasets()
 
-            # Download the latest version to the default folder (./pixelator-datasets)
+            # Download the latest version to the default folder (./pixelator-datasets/{dataset_name}.layout.pxl)
+            # i.e. in this case ./pixelator-datasets/pna062-pha-pbmcs.layout.pxl
             path = DownloadableDatasets.download_dataset("pna062-pha-pbmcs")
-            # path is now e.g. Path("./pixelator-datasets")
 
             # Download to a specific path
             path = DownloadableDatasets.download_dataset(
@@ -144,7 +144,7 @@ class DownloadableDatasets:
 
     def _ipython_display_(self):
         """Display the DownloadableDatasets in Jupyter notebooks."""
-        return print(self.list_datasets())
+        print(self.list_datasets())
 
 
 # Chunk size for streaming download (8 MB - good balance for large files)
@@ -202,41 +202,41 @@ def _download_pixel_dataset(url: str, output_path: Path) -> Path:
 
     _report_progress("Starting download from %s to %s", url, output_path)
 
-    response = requests.get(
+    with requests.get(
         url,
         stream=True,
         timeout=(_CONNECT_TIMEOUT, _READ_TIMEOUT),
-    )
-    response.raise_for_status()
+    ) as response:
+        response.raise_for_status()
 
-    total_size = response.headers.get("content-length")
-    total_bytes = int(total_size) if total_size else None
+        total_size = response.headers.get("content-length")
+        total_bytes = int(total_size) if total_size else None
 
-    bytes_downloaded = 0
-    last_logged_pct = -1
+        bytes_downloaded = 0
+        last_logged_pct = -1
 
-    with open(output_path, "wb") as f:
-        for chunk in response.iter_content(chunk_size=_DOWNLOAD_CHUNK_SIZE):
-            if chunk:
-                f.write(chunk)
-                bytes_downloaded += len(chunk)
+        with open(output_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=_DOWNLOAD_CHUNK_SIZE):
+                if chunk:
+                    f.write(chunk)
+                    bytes_downloaded += len(chunk)
 
-                if total_bytes and total_bytes > 0:
-                    pct = int(100 * bytes_downloaded / total_bytes)
-                    # Log progress every 5%
-                    if pct >= last_logged_pct + 5:
-                        _report_progress(
-                            "Download progress: %d%% (%d / %d MB)",
-                            pct,
-                            bytes_downloaded // (1024 * 1024),
-                            total_bytes // (1024 * 1024),
-                        )
-                        last_logged_pct = pct
-                else:
-                    mb = bytes_downloaded // (1024 * 1024)
-                    if mb > 0 and mb % 100 == 0 and mb != last_logged_pct:
-                        _report_progress("Download progress: %d MB downloaded", mb)
-                        last_logged_pct = mb
+                    if total_bytes and total_bytes > 0:
+                        pct = int(100 * bytes_downloaded / total_bytes)
+                        # Log progress every 5%
+                        if pct >= last_logged_pct + 5:
+                            _report_progress(
+                                "Download progress: %d%% (%d / %d MB)",
+                                pct,
+                                bytes_downloaded // (1024 * 1024),
+                                total_bytes // (1024 * 1024),
+                            )
+                            last_logged_pct = pct
+                    else:
+                        mb = bytes_downloaded // (1024 * 1024)
+                        if mb > 0 and mb % 100 == 0 and mb != last_logged_pct:
+                            _report_progress("Download progress: %d MB downloaded", mb)
+                            last_logged_pct = mb
 
     _report_progress(
         "Download complete: %s (%d MB)",
