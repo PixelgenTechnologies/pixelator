@@ -18,6 +18,12 @@ class FakeResponse:
         self._chunks = chunks
         self.headers = headers or {}
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return None
+
     def raise_for_status(self) -> None:
         return None
 
