@@ -281,7 +281,7 @@ class PxlFile:
     def is_pxl_file(self) -> bool:
         """Check if the file is a PXL file."""
         with duckdb.connect(self.path, read_only=True) as con:
-            tables = con.sql("SHOW ALL TABLES").to_df()
+            tables = con.execute("SHOW ALL TABLES").to_df()
             return len(
                 set(PXL_FILE_MANDATOR_TABLES).intersection(
                     set(tables["name"].to_list())
@@ -292,7 +292,7 @@ class PxlFile:
         """Read the metadata from the PXL file."""
         try:
             with duckdb.connect(self.path, read_only=True) as con:
-                metadata = con.sql("SELECT * FROM metadata").fetchone()
+                metadata = con.execute("SELECT * FROM metadata").fetchone()
                 return json.loads(metadata[0]) if metadata else {}
         except duckdb.CatalogException:
             return {}
@@ -451,22 +451,22 @@ class PixelDataViewer:
 
         :return: The AnnData object.
         """
-        X = connection.sql(
+        X = connection.execute(
             f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__X"
         ).to_df()
-        var = connection.sql(
+        var = connection.execute(
             f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__var"
         ).to_df()
-        obs = connection.sql(
+        obs = connection.execute(
             f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__obs"
         ).to_df()
 
-        maybe_uns = connection.sql(
+        maybe_uns = connection.execute(
             f"select * from {self._get_normalized_name(sample)}.__adata__uns"
         ).fetchone()
         uns = json.loads(maybe_uns[0]) if maybe_uns else None
 
-        tables = connection.sql("SHOW ALL TABLES")
+        tables = connection.execute("SHOW ALL TABLES").to_df()
 
         obsm_tables = (
             tables.pl()
@@ -486,7 +486,7 @@ class PixelDataViewer:
 
         obsm = {
             table.split("__adata__obsm_")[1]: (
-                connection.sql(f"SELECT * FROM {table}")
+                connection.execute(f"SELECT * FROM {table}")
                 .to_df()
                 .set_index("index")
                 .rename_axis(index={"index": "component"})
@@ -628,7 +628,7 @@ class PixelDataQuerier:
         params = {}
         if components is not None:
             params["components"] = components if len(components) > 1 else components[0]
-        return connection.sql(query, params=params).pl(lazy=True)
+        return connection.execute(query, parameters=params).pl(lazy=True)
 
     def read_edgelist_len(
         self,
@@ -648,7 +648,7 @@ class PixelDataQuerier:
         params = {}
         if components is not None:
             params["components"] = components if len(components) > 1 else components[0]
-        return connection.sql(query, params=params).execute().fetchone()[0]  # type: ignore
+        return connection.execute(query, parameters=params).fetchone()[0]  # type: ignore
 
     def read_edgelist_stream(
         self,
@@ -685,7 +685,7 @@ class PixelDataQuerier:
             maybe_metadata = list(
                 map(
                     lambda x: json.loads(x[0]),
-                    connection.sql("SELECT * FROM metadata").fetchall(),
+                    connection.execute("SELECT * FROM metadata").fetchall(),
                 )
             )
             if not maybe_metadata:
@@ -755,12 +755,12 @@ class PixelDataQuerier:
                 )
             if add_marker_counts:
                 # This path requires eager DataFrame for pivot
-                result = connection.sql(query, params=params).pl()
+                result = connection.execute(query, parameters=params).pl()
                 result = _pivot_marker_table(result)
                 return result.drop(["umi", "marker"], strict=False)
             else:
                 # Return LazyFrame for lazy path
-                return connection.sql(query, params=params).pl(lazy=True)
+                return connection.execute(query, parameters=params).pl(lazy=True)
         except duckdb.CatalogException:
             return pl.DataFrame()
 
@@ -785,7 +785,7 @@ class PixelDataQuerier:
                 params["components"] = (
                     components if len(components) > 1 else components[0]  # type: ignore
                 )
-            return connection.sql(query, params=params).execute().fetchone()[0]  # type: ignore
+            return connection.execute(query, parameters=params).fetchone()[0]  # type: ignore
         except duckdb.CatalogException:
             return 0
 
@@ -815,7 +815,7 @@ class PixelDataQuerier:
                 )
             if markers is not None:
                 params["markers"] = markers
-            return connection.sql(query, params=params).pl(lazy=True)
+            return connection.execute(query, parameters=params).pl(lazy=True)
         except duckdb.CatalogException:
             return pl.LazyFrame()
 
@@ -845,7 +845,7 @@ class PixelDataQuerier:
                 )
             if markers is not None:
                 params["markers"] = markers
-            return connection.sql(query, params=params).execute().fetchone()[0]  # type: ignore
+            return connection.execute(query, parameters=params).fetchone()[0]  # type: ignore
         except duckdb.CatalogException:
             return 0
 

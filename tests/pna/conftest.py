@@ -149,8 +149,8 @@ def edgelist_dataframe_fixture(edgelist_data):
         schema={
             "umi1": pl.UInt64,
             "umi2": pl.UInt64,
-            "read_count": pl.UInt32,
-            "uei_count": pl.UInt32,
+            "read_count": pl.UInt64,
+            "uei_count": pl.UInt64,
             "marker_1": pl.Utf8,
             "marker_2": pl.Utf8,
             "component": pl.Utf8,
