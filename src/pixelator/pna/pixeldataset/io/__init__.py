@@ -281,7 +281,7 @@ class PxlFile:
     def is_pxl_file(self) -> bool:
         """Check if the file is a PXL file."""
         with duckdb.connect(self.path, read_only=True) as con:
-            tables = con.execute("SHOW ALL TABLES").to_df()
+            tables = con.execute("SHOW ALL TABLES").df()
             return len(
                 set(PXL_FILE_MANDATOR_TABLES).intersection(
                     set(tables["name"].to_list())
@@ -453,20 +453,20 @@ class PixelDataViewer:
         """
         X = connection.execute(
             f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__X"
-        ).to_df()
+        ).df()
         var = connection.execute(
             f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__var"
-        ).to_df()
+        ).df()
         obs = connection.execute(
             f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__obs"
-        ).to_df()
+        ).df()
 
         maybe_uns = connection.execute(
             f"select * from {self._get_normalized_name(sample)}.__adata__uns"
         ).fetchone()
         uns = json.loads(maybe_uns[0]) if maybe_uns else None
 
-        tables = connection.execute("SHOW ALL TABLES").to_df()
+        tables = connection.execute("SHOW ALL TABLES")
 
         obsm_tables = (
             tables.pl()
@@ -487,7 +487,7 @@ class PixelDataViewer:
         obsm = {
             table.split("__adata__obsm_")[1]: (
                 connection.execute(f"SELECT * FROM {table}")
-                .to_df()
+                .df()
                 .set_index("index")
                 .rename_axis(index={"index": "component"})
             )
