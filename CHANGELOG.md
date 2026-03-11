@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update README with proximity network assay citation information.
 - The degree distribution of UMIs is now included in the collapse report.
 - New logging messages about the amount of shared memory requested and available from the collapse step
+- Add `DownloadableDatasets` helper to download example datasets
 
 ### Changed
 
