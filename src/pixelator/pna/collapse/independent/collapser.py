@@ -7,6 +7,7 @@ import dataclasses
 import logging
 import math
 import multiprocessing
+import os
 import time
 import typing
 from contextlib import contextmanager
@@ -46,6 +47,28 @@ from pixelator.pna.demux.barcode_demuxer import PNAEmbedding
 from pixelator.pna.report.models import SampleReport
 
 logger = logging.getLogger("collapse")
+
+
+def _get_shm_available_bytes() -> int | None:
+    """Return available bytes on /dev/shm (Linux), or None if not available.
+
+    On Linux, multiprocessing shared memory is backed by tmpfs at /dev/shm.
+    In Docker, this is often limited (e.g. 64MB default); insufficient size
+    can cause Bus error when collapse allocates large buffers.
+    """
+    if not os.path.exists("/dev/shm"):
+        return None
+    try:
+        st = os.statvfs("/dev/shm")
+        return st.f_bavail * st.f_frsize
+    except OSError:
+        return None
+
+
+def _format_mb(n_bytes: int) -> str:
+    """Format bytes as MB for logging."""
+    return f"{n_bytes / (1024 * 1024):.0f}"
+
 
 CollapsibleRegion = Literal["umi-1", "umi-2"]
 
@@ -546,6 +569,27 @@ class RegionCollapser:
         unique_umi1s, unique_umi2s = self._extract_unique_umis(data["molecule"])
         unique_umis = self._region_id_choice(unique_umi1s, unique_umi2s)
         num_unique_umis = len(unique_umis)
+
+        # Warn when required shared memory exceeds available (avoids Bus error in Docker).
+        shm_bytes = (
+            num_unique_umis * (vector_length * np.dtype(np.uint8).itemsize)
+            + num_unique_umis * np.dtype(np.uint16).itemsize
+        )
+        available = _get_shm_available_bytes()
+        logger.debug(
+            "Will request %s MB of shared memory; available: %s",
+            _format_mb(shm_bytes),
+            f"{_format_mb(available)} MB" if available is not None else "unknown",
+        )
+
+        if available is not None and shm_bytes > available:
+            logger.warning(
+                "Collapse will allocate ~%s MB of shared memory for this marker but /dev/shm "
+                "has only %s MB available (insufficient — can cause Bus error). "
+                "Increase shared memory: docker run --shm-size=4g or compose shm_size: '4gb'",
+                _format_mb(shm_bytes),
+                _format_mb(available),
+            )
 
         db = self._memory.allocate_array(
             "db", shape=(num_unique_umis, vector_length), dtype=np.uint8, zero_init=True

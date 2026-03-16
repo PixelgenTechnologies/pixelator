@@ -65,6 +65,7 @@ WORKDIR /
 
 RUN git clone https://github.com/OpenGene/fastp.git
 WORKDIR /fastp
+RUN git checkout v1.1.0
 RUN make -j${MAKEJOBS}
 RUN make install
 

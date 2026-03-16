@@ -298,12 +298,6 @@ def graph(
         else True
     )
 
-    if isinstance(component_size_threshold, tuple):
-        logger.warning(
-            "You have explicitly set component size thresholds. This is normally not needed. "
-            "Please make sure you know what you are doing."
-        )
-
     try:
         _, component_statics = build_pxl_file_with_components(
             molecules_lazy_frame=pl.scan_parquet(

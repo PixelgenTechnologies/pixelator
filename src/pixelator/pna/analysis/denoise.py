@@ -20,7 +20,7 @@ from scipy.stats import fisher_exact
 
 from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import PerComponentTask
-from pixelator.pna.anndata import pna_edgelist_to_anndata
+from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
@@ -335,6 +335,7 @@ class DenoiseOneCore(PerComponentTask):
 
         """
         pxl = PNAPixelDataset.from_files(pxl_file_target)
+        old_adata = pxl.adata()
         try:
             panel = PNAAntibodyPanel.from_pxl(pxl_file_target.path)
         except KeyError:
@@ -355,6 +356,7 @@ class DenoiseOneCore(PerComponentTask):
                 writer.write_edgelist(Path(denoised_edgelist_path))
                 adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
                 call_aggregates(adata)
+                adata = add_missing_adata_info(adata, old_adata)
                 denoise_info = pd.DataFrame(index=adata.obs.index)
                 denoise_info["disqualified_for_denoising"] = False
                 denoise_info.loc[

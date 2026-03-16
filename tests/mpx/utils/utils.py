@@ -9,7 +9,8 @@ import random
 from typing import List
 
 import numpy as np
-from umi_tools._dedup_umi import edit_distance
+
+from pixelator.mpx.collapse.process import edit_distance
 
 
 def add_mutations(

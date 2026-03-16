@@ -37,6 +37,7 @@ jobs:
               paths:
                 - 'pyproject.toml'
                 - 'src/**'
+                - 'containers/**'
 
   build:
     name: "Build"

@@ -6,11 +6,10 @@ Copyright © 2025 Pixelgen Technologies AB
 """
 
 import dataclasses
-from collections import Counter
+from collections import Counter, OrderedDict
 from pathlib import Path
 from typing import Iterable, MutableMapping
 
-import duckdb as dd
 from duckdb import DuckDBPyConnection
 
 from pixelator.pna.collapse.independent import (
@@ -62,11 +61,15 @@ class CombineCollapseIndependentStats:
     Attributes:
         output_molecules: Total number of unique output molecules
         corrected_reads: Total number of corrected reads
+        umi1_degree_distribution: The node degree distribution for umi1, degree->count
+        umi2_degree_distribution: The node degree distribution for umi2, degree->count
 
     """
 
     output_molecules: int
     corrected_reads: int
+    umi1_degree_distribution: dict[int, int]
+    umi2_degree_distribution: dict[int, int]
 
 
 def combine_independent_parquet_files(
@@ -168,9 +171,9 @@ def combine_independent_parquet_files(
         """
         CREATE OR REPLACE TEMP VIEW combined_data AS
             SELECT marker_1, marker_2, umi1, umi2,
-                sum(read_count)::UINTEGER as read_count,
+                sum(read_count)::UINT64 as read_count,
                 count(DISTINCT uei)::USMALLINT as uei_count,
-                ifnull(sum("read_count") FILTER ( umi1_data.umi1_is_corrected OR umi2_data.umi2_is_corrected ), 0)::UINTEGER as corrected_read_count
+                ifnull(sum("read_count") FILTER ( umi1_data.umi1_is_corrected OR umi2_data.umi2_is_corrected ), 0)::UINT64 as corrected_read_count
             FROM umi1_data POSITIONAL JOIN umi2_data
             GROUP BY marker_1, marker_2, umi1, umi2
         """
@@ -185,16 +188,23 @@ def combine_independent_parquet_files(
     # Another pass to collect some stats needed for the reports
     res = conn.sql(
         f"""
-        SELECT sum(uei_count)::UINTEGER as output_molecules,
-               sum(corrected_read_count)::UINTEGER as corrected_reads
+        SELECT sum(uei_count)::UINT64 as output_molecules,
+               sum(corrected_read_count)::UINT64 as corrected_reads
         FROM read_parquet('{output_file}')
         """
     ).pl()
 
     output_molecules, corrected_reads = res.row(0)
 
+    logger.info("Calculating degree distributions.")
+    umi1_degree_dist_dict = _compute_degree_distribution(conn, output_file, "umi1")
+    umi2_degree_dist_dict = _compute_degree_distribution(conn, output_file, "umi2")
+
     stats = CombineCollapseIndependentStats(
-        output_molecules=int(output_molecules), corrected_reads=int(corrected_reads)
+        output_molecules=int(output_molecules),
+        corrected_reads=int(corrected_reads),
+        umi1_degree_distribution=umi1_degree_dist_dict,
+        umi2_degree_distribution=umi2_degree_dist_dict,
     )
 
     # Sorted UMI files are only intermediates and can be removed
@@ -204,6 +214,28 @@ def combine_independent_parquet_files(
     conn.close()
 
     return stats
+
+
+def _compute_degree_distribution(
+    conn: DuckDBPyConnection, output_file: Path, umi_type: str
+):
+    umi1_degree_distribution = conn.sql(f"""
+        WITH edgelist AS (SELECT * FROM read_parquet('{output_file}')),
+             umi_counts AS (
+                 SELECT {umi_type} AS umi, COUNT(*) AS degree
+                 FROM edgelist
+                 GROUP BY {umi_type}
+             ),
+             umi_degree_dist AS (
+                 SELECT degree, COUNT(*) AS count
+                 FROM umi_counts
+                 GROUP BY degree
+             )
+        SELECT degree, count FROM umi_degree_dist ORDER BY degree ASC
+        """)
+    return OrderedDict(
+        (degree, count) for degree, count in umi1_degree_distribution.fetchall()
+    )
 
 
 def combine_independent_report_files(
@@ -274,6 +306,8 @@ def combine_independent_report_files(
         input_molecules=umi1_summary_stats["input_molecules"],
         corrected_reads=stats.corrected_reads,
         output_molecules=stats.output_molecules,
+        umi1_degree_distribution=stats.umi1_degree_distribution,
+        umi2_degree_distribution=stats.umi2_degree_distribution,
     )
 
     report.write_json_file(output_file, indent=4)

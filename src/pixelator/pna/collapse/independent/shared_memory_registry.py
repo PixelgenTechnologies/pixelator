@@ -62,6 +62,17 @@ class SharedMemoryRegistry:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> Self:
         """Terminate the context."""
+        # Unlinks any buffers still in the registry (e.g. left after an exception
+        # in _init_shared_memory) so shared memory is released before the manager exits.
+        buffers = list(self._buffer_registry.values())
+        self._buffer_registry.clear()
+        self._array_registry.clear()
+        for buf in buffers:
+            try:
+                buf.unlink()
+            except Exception:
+                # Best-effort cleanup; manager shutdown will release any remaining resources.
+                pass
         self._manager.__exit__(exc_type, exc_val, exc_tb)
         return self
 
@@ -149,7 +160,7 @@ class SharedMemoryRegistry:
         desc = self._array_registry.get(name)
         shm = self.get_buffer(name)
 
-        if desc is None or shm is None:
+        if desc is None or shm is None or shm.buf is None:
             raise KeyError(f"No array with name '{name}' found in the registry")
 
         count = np.prod(desc.shape)
@@ -165,6 +176,7 @@ class SharedMemoryRegistry:
 
         """
         buffer = self._buffer_registry.pop(name, None)
+        self._array_registry.pop(name, None)
         if buffer is not None:
             buffer.unlink()
 
@@ -213,7 +225,7 @@ class ReadOnlySharedMemoryRegistry:
         desc = self._array_registry.get(name)
         shm = self.get_buffer(name)
 
-        if desc is None or shm is None:
+        if desc is None or shm is None or shm.buf is None:
             raise KeyError(f"No array with name '{name}' found in the registry")
 
         count = np.prod(desc.shape)

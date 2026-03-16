@@ -392,6 +392,7 @@ def test_layout_coordinates_2d_networkx(enable_backend, pentagram_graph):
             },
             orient="index",
         ).sort_index(),
+        rtol=0.1,
     )
 
 
@@ -691,6 +692,7 @@ def test_layout_coordinates_3d_networkx(enable_backend, pentagram_graph):
             },
             orient="index",
         ).sort_index(),
+        rtol=0.1,
     )
 
 

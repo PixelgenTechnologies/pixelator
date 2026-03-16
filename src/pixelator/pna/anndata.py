@@ -179,6 +179,7 @@ def pna_edgelist_to_anndata(
     logger.debug("Computing antibody metrics.")
     antibody_metrics_df = calculate_antibody_metrics(counts_df=node_counts_df)
     antibody_metrics_df = antibody_metrics_df.reindex(index=panel.markers, fill_value=0)
+    antibody_metrics_df.index.name = "marker_id"
     # Do a dtype conversion of the columns here since AnnData cannot handle
     # a pyarrow arrays.
     antibody_metrics_df = antibody_metrics_df.astype(
@@ -210,3 +211,14 @@ def pna_edgelist_to_anndata(
     adata.obs["intracellular_fraction"] = 0.0
 
     return adata
+
+
+def add_missing_adata_info(new_adata, old_adata):
+    """Add missing obs and var columns from old_adata to new_adata."""
+    missing_obs = set(old_adata.obs.columns) - set(new_adata.obs.columns)
+    missing_var = set(old_adata.var.columns) - set(new_adata.var.columns)
+
+    new_adata.obs = new_adata.obs.join(old_adata.obs[list(missing_obs)], how="left")
+    new_adata.var = new_adata.var.join(old_adata.var[list(missing_var)], how="left")
+
+    return new_adata

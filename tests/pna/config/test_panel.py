@@ -102,7 +102,6 @@ def test_panel_from_pxl(pxl_file):
     expected_data = {
         "marker_id": ["MarkerA", "MarkerB", "MarkerC"],
         "control": [False, False, True],
-        "nuclear": ["yes", "no", "no"],
         "uniprot_id": ["P12345", "P56890;P65470", ""],
         "sequence_1": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
         "conj_id": ["pna_rnd01", "pna_rnd02", "pna_rnd03"],
