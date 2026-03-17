@@ -4,7 +4,6 @@ import itertools
 
 import numpy as np
 import pytest
-from six import ensure_binary
 
 from pixelator.pna.demux.barcode_demuxer import PNAEmbedding
 from pixelator.pna.utils import pack_2bits, unpack_2bits
@@ -113,7 +112,7 @@ def test_pack_unpack_2_and_4bits():
     i.e. we reduce the full 15 mer space to only 3876 sequences, so this test is not too slow.)
     """
     for dna in itertools.combinations_with_replacement(b"GTCAN", 15):
-        original_dna = ensure_binary("".join(chr(nt) for nt in dna))
+        original_dna = ("".join(chr(nt) for nt in dna)).encode()
         packed_unpacked_dna = unpack_4bits(pack_4bits(original_dna), 15)
         assert original_dna == packed_unpacked_dna, (
             f"4bit packing unpacking failed: {original_dna} != {packed_unpacked_dna}"
