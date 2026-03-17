@@ -19,13 +19,13 @@ _int2str: bytes = b"ACGT"
 
 
 _STR2INT_4: dict[int, np.uint64] = {
-    ord("A"): np.uint64(0b0011),
-    ord("C"): np.uint64(0b0010),
-    ord("T"): np.uint64(0b0001),
+    ord("A"): np.uint64(0b0110),
+    ord("C"): np.uint64(0b0101),
+    ord("T"): np.uint64(0b0011),
     ord("G"): np.uint64(0b0000),
-    ord("N"): np.uint64(0b0100),
+    ord("N"): np.uint64(0b1111),
 }
-_int2str_4: bytes = b"GTCAN"
+_int2str_4 = {v: k for k, v in _STR2INT_4.items()}
 
 
 def _int2chars(value: np.uint64) -> bytes:
@@ -75,7 +75,7 @@ def pack_4bits(kmer: bytes) -> np.uint64:
     assert len(kmer) <= 16
 
     value = np.uint64(0)
-    for c in kmer[16::-1]:
+    for c in kmer[:16]:
         value <<= np.uint(4)
         value |= _STR2INT_4[c]
     return np.uint64(value)
@@ -102,7 +102,7 @@ def unpack_4bits(packed: int, k: np.uint64) -> bytes:
     :param k: the length of the kmer
     """
     seq = bytearray(k)
-    for i in range(k):
-        seq[i] = _int2str_4[packed & 15]
+    for i in range(k - 1, -1, -1):
+        seq[i] = _int2str_4[packed & 15]  # type: ignore
         packed >>= 4
     return bytes(seq)
