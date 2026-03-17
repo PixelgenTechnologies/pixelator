@@ -1,10 +1,14 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import itertools
+
 import numpy as np
 import pytest
+from six import ensure_binary
 
 from pixelator.pna.demux.barcode_demuxer import PNAEmbedding
 from pixelator.pna.utils import pack_2bits, unpack_2bits
+from pixelator.pna.utils.two_bit_encoding import pack_4bits, unpack_4bits
 
 
 @pytest.fixture(scope="module")
