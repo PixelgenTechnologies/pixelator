@@ -105,15 +105,21 @@ def test_pack_2bits(umi, packed):
     assert packed_umi == packed
 
 
-def test_pack_unpack_4bits():
-    """Test that packing and unpacking with 4 bits per nucleotide is consistent.
+def test_pack_unpack_2_and_4bits():
+    """Test that packing and unpacking with 2 and 4 bits per nucleotide is consistent.
     itertools.combinations_with_replacement is used to generate all possible combinations of
     15 nucleotides (G, T, C, A, N) and test that packing and unpacking returns the original
     sequence. (Note that "all possible combinations" is NOT all possible orders of these combinations
     i.e. we reduce the full 15 mer space to only 3876 sequences, so this test is not too slow.)
     """
     for dna in itertools.combinations_with_replacement(b"GTCAN", 15):
-        dna = ensure_binary("".join(chr(nt) for nt in dna))
-        assert dna == unpack_4bits(pack_4bits(dna), 15), (
-            f"{dna} != {unpack_4bits(pack_4bits(dna), 15)}"
+        original_dna = ensure_binary("".join(chr(nt) for nt in dna))
+        packed_unpacked_dna = unpack_4bits(pack_4bits(original_dna), 15)
+        assert original_dna == packed_unpacked_dna, (
+            f"4bit packing unpacking failed: {original_dna} != {packed_unpacked_dna}"
+        )
+    if b"N" not in original_dna:
+        packed_unpacked_dna_2bits = unpack_2bits(pack_2bits(original_dna), 15)
+        assert original_dna == packed_unpacked_dna_2bits, (
+            f"2bit packing unpacking failed: {original_dna} != {packed_unpacked_dna_2bits}"
         )
