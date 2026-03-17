@@ -25,7 +25,7 @@ _STR2INT_4: dict[int, np.uint64] = {
     ord("G"): np.uint64(0b0000),
     ord("N"): np.uint64(0b1111),
 }
-_int2str_4: bytes = b"ACTG"
+_int2str_4 = {v: k for k, v in _STR2INT_4.items()}
 
 
 def _int2chars(value: np.uint64) -> bytes:
@@ -47,6 +47,7 @@ def pack_2bits(kmer: bytes) -> np.uint64:
 
     A kmer must be at most 32 nucleotides long.
     Any nucleotides beyond the 32nd are ignored.
+    N bases are not supported (will raise KeyError).
 
     :param kmer: the kmer to pack
     :return: the packed kmer as an integer
@@ -95,13 +96,13 @@ def unpack_2bits(packed: int, k: int) -> bytes:
 
 
 def unpack_4bits(packed: int, k: np.uint64) -> bytes:
-    """Unpack a kmer from an integer using two bits per nucleotides.
+    """Unpack a kmer from an integer using four bits per nucleotides.
 
     :param packed: the packed kmer as an integer
     :param k: the length of the kmer
     """
     seq = bytearray(k)
-    for i in range(k):
-        seq[i] = _int2str_4[packed & 15]
+    for i in range(k - 1, -1, -1):
+        seq[i] = _int2str_4[packed & 15]  # type: ignore
         packed >>= 4
     return bytes(seq)
