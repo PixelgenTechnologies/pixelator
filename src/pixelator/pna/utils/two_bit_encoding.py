@@ -19,13 +19,13 @@ _int2str: bytes = b"ACGT"
 
 
 _STR2INT_4: dict[int, np.uint64] = {
-    ord("A"): np.uint64(0b0110),
-    ord("C"): np.uint64(0b0101),
-    ord("T"): np.uint64(0b0011),
+    ord("A"): np.uint64(0b0011),
+    ord("C"): np.uint64(0b0010),
+    ord("T"): np.uint64(0b0001),
     ord("G"): np.uint64(0b0000),
-    ord("N"): np.uint64(0b1111),
+    ord("N"): np.uint64(0b0100),
 }
-_int2str_4: bytes = b"ACTG"
+_int2str_4: bytes = b"GTCAN"
 
 
 def _int2chars(value: np.uint64) -> bytes:
@@ -74,7 +74,7 @@ def pack_4bits(kmer: bytes) -> np.uint64:
     assert len(kmer) <= 16
 
     value = np.uint64(0)
-    for c in kmer[:16]:
+    for c in kmer[16::-1]:
         value <<= np.uint(4)
         value |= _STR2INT_4[c]
     return np.uint64(value)
