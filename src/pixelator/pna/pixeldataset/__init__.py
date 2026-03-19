@@ -388,21 +388,6 @@ class Proximity:
     def _ipython_display_(self):
         return print(str(self))
 
-    def calculate_proximity_from_edgelist(self) -> pl.DataFrame:
-        """Calculate proximity from edgelist data."""
-        with self._querier.view as connection:
-            components = normalize_input_to_list(self._components)
-            query = f"""SELECT * FROM edgelist
-                        WHERE {self._optimized_component_where_condition(components)}
-                    """
-            params = {}
-            if components is not None:
-                params["components"] = (
-                    components if len(components) > 1 else components[0]
-                )
-
-            return connection.execute(query, parameters=params).pl()
-
 
 class PreComputedLayouts:
     """Representation of precomputed layouts.
