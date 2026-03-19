@@ -138,12 +138,23 @@ def test_proximity_analysis_jcs_analytic(pna_pxl_file: Path, pna_data_root, tmp_
     expected_proximity = pd.read_csv(pna_data_root / "jcs_proximity.csv").set_index(
         ["component", "marker_1", "marker_2"], drop=True
     )
+
+    assert expected_proximity.shape[0] == proximity.shape[0]
+
     expected_proximity = expected_proximity.astype({"join_count": "uint32"})
-    matching = proximity[["log2_ratio"]].join(
-        expected_proximity[["log2_ratio"]].rename(
-            columns={"log2_ratio": "log2_ratio_expected"}
+    expected_proximity = expected_proximity[
+        expected_proximity["join_count_expected_mean"] > 100
+    ]
+    proximity = proximity[proximity["join_count_expected_mean"] > 100]
+    matching = proximity[["log2_ratio", "join_count_z"]].join(
+        expected_proximity[["log2_ratio", "join_count_z"]].rename(
+            columns={
+                "log2_ratio": "log2_ratio_expected",
+                "join_count_z": "join_count_z_expected",
+            }
         ),
         how="inner",
     )
-    assert expected_proximity.shape[0] == proximity.shape[0]
+
     assert matching.corr().loc["log2_ratio", "log2_ratio_expected"] > 0.98
+    assert matching.corr().loc["join_count_z", "join_count_z_expected"] > 0.98

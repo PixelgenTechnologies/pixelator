@@ -434,7 +434,8 @@ def jcs_with_analytical_stats(
                 t1.component,
                 LEAST(t1.marker_1, t2.marker_2) as marker_A,
                 GREATEST(t1.marker_1, t2.marker_2) as marker_B,
-                (t1.f_umi1 * t2.f_umi2 * ge.n_edges) as exp_count_raw
+                (t1.f_umi1 * t2.f_umi2 * ge.n_edges) as exp_count_raw,
+                (t1.f_umi1 * t2.f_umi2 * (1 - (t1.f_umi1 * t2.f_umi2)) * ge.n_edges) as exp_count_var
             FROM stats_m1 t1
             JOIN stats_m2 t2 
             ON t1.sample = t2.sample AND t1.component = t2.component
@@ -444,7 +445,7 @@ def jcs_with_analytical_stats(
             {and_marker2}
         ),
         expected_agg AS (
-            SELECT sample, component, marker_A, marker_B, SUM(exp_count_raw) as join_count_expected_mean
+            SELECT sample, component, marker_A, marker_B, SUM(exp_count_raw) as join_count_expected_mean, SQRT(SUM(exp_count_var)) as join_count_expected_sd
             FROM expected_calc
             GROUP BY sample, component, marker_A, marker_B
         )"""
@@ -473,7 +474,8 @@ def jcs_with_analytical_stats(
                 COALESCE(obs.marker_B, exp.marker_B) as marker_2,
                 COALESCE(obs.join_count, 0) as join_count,
                 COALESCE(exp.join_count_expected_mean, 0) as join_count_expected_mean,
-                LOG2(GREATEST(COALESCE(obs.join_count, 0), 1) / GREATEST(COALESCE(exp.join_count_expected_mean, 0), 1)) AS log2_ratio
+                LOG2(GREATEST(COALESCE(obs.join_count, 0), 1) / GREATEST(COALESCE(exp.join_count_expected_mean, 0), 1)) AS log2_ratio,
+                (COALESCE(obs.join_count, 0) - COALESCE(exp.join_count_expected_mean, 0)) / COALESCE(exp.join_count_expected_sd, 1) AS join_count_z,
             FROM observed_agg obs
             FULL OUTER JOIN expected_agg exp 
                 ON obs.sample = exp.sample
