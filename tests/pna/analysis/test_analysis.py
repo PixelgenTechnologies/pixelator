@@ -128,3 +128,22 @@ def test_calculate_differential_proximity():
         ["marker_1", "marker_2"], drop=True
     )
     assert_frame_equal(dpa, expected_dpa, check_like=True, atol=1e-3)
+
+
+def test_proximity_analysis_jcs_analytic(pna_pxl_file: Path, pna_data_root, tmp_path):
+    pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
+    proximity = pna_pxl_dataset.proximity(calculate_from_edgelist=True).to_df()
+    proximity = proximity.set_index(["component", "marker_1", "marker_2"], drop=True)
+
+    expected_proximity = pd.read_csv(pna_data_root / "jcs_proximity.csv").set_index(
+        ["component", "marker_1", "marker_2"], drop=True
+    )
+    expected_proximity = expected_proximity.astype({"join_count": "uint32"})
+    matching = proximity[["log2_ratio"]].join(
+        expected_proximity[["log2_ratio"]].rename(
+            columns={"log2_ratio": "log2_ratio_expected"}
+        ),
+        how="inner",
+    )
+    assert expected_proximity.shape[0] == proximity.shape[0]
+    assert matching.corr().loc["log2_ratio", "log2_ratio_expected"] > 0.98
