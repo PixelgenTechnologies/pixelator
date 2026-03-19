@@ -26,6 +26,7 @@ from pixelator import read_pna
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
+from pixelator.pna.pixeldataset import PNAPixelDataset
 
 if TYPE_CHECKING:
     from pixelator.pna.config.config_class import PNAConfig
@@ -101,10 +102,10 @@ class PNAAntibodyPanel:
         return cls(df, metadata, file_name=panel_file.name)
 
     @classmethod
-    def from_pxl(cls, filename: PathType) -> Self:
+    def from_pxl_file(cls, filename: PathType) -> Self:
         """Create an AntibodyPanel from a pxl file.
 
-        :param filename: The path to the panel file.
+        :param filename: The path to the pxl file.
         :returns: The AntibodyPanel object.
         :raises AssertionError: exception if panel file is missing,
         :rtype: AntibodyPanel
@@ -113,21 +114,43 @@ class PNAAntibodyPanel:
 
         if not pxl_file.is_file() or pxl_file.suffix != ".pxl":
             raise AssertionError(
-                f"Panel file {filename} not found or has an incorrect format"
+                f"Pixel file {filename} not found or has an incorrect format"
             )
 
         logger.debug("Creating Antibody panel from file %s", filename)
 
         pxl_data = read_pna(pxl_file)
+        return cls.from_pxl_dataset(pxl_data, file_name=pxl_file.name)
+
+    @classmethod
+    def from_pxl_dataset(
+        cls, pxl_data: PNAPixelDataset, file_name: Optional[str] = None
+    ) -> Self:
+        """Create an AntibodyPanel from a pxl dataset.
+
+        :param pxl_data: A PNAPixelDataset object.
+        :param file_name: The optional name of the file from which
+            the pxl dataset was loaded.
+        :returns: The AntibodyPanel object.
+        :raises KeyError: exception if panel information is missing in the pxl dataset,
+        :rtype: AntibodyPanel
+        """
+        logger.debug("Creating Antibody panel from PNAPixelDataset object")
         adata = pxl_data.adata()
-        panel_metadata = adata.uns["panel_metadata"]
+        try:
+            panel_metadata = adata.uns["panel_metadata"]
+        except KeyError as err:
+            logger.error(  # pylint: disable=logging-not-lazy
+                f"The provided PNAPixelDataset does not contain {err}. "
+                + "Please ensure that the pixel dataset contains panel information.",
+            )
+            raise
         panel_columns = panel_metadata.pop("panel_columns")
         df = adata.var[panel_columns]
         metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
 
-        logger.debug("Antibody panel from file %s created", filename)
-
-        return cls(df, metadata, file_name=pxl_file.name)
+        logger.debug("Antibody panel from PNAPixelDataset created")
+        return cls(df, metadata, file_name=file_name)
 
     @property
     def name(self) -> Optional[str]:

@@ -24,8 +24,6 @@ def test_runs_ok(mocker, pna_data_root):
             str(pna_data_root / "sample_calling/small_hashed_sample_1.pxl"),
             "--samplesheet",
             str(pna_data_root) + "/sample_calling/samplesheet.csv",
-            "--panel",
-            "sample-calling-test-panel",
             "--remove-incompatible",
             "--confidence-threshold",
             "0.96",

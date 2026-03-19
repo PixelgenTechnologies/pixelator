@@ -331,8 +331,7 @@ def sample_calling(
 
     """
     hash_info = collect_hash_info(input_pxl, hashing_antibody_mapping)
-    panel_name = input_pxl.metadata().popitem()[1]["panel_name"]
-    panel = load_antibody_panel(pna_config, panel_name)
+    panel = PNAAntibodyPanel.from_pxl_dataset(input_pxl)
 
     hash_info = _apply_confidence_threshold_to_hash_info(
         hash_info, save_undetermined, confidence_threshold

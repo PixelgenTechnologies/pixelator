@@ -93,7 +93,7 @@ def test_panel_validation_ok_uniprotid_empty(panel_df):
 
 
 def test_panel_from_pxl(pxl_file):
-    panel = PNAAntibodyPanel.from_pxl(pxl_file)
+    panel = PNAAntibodyPanel.from_pxl_file(pxl_file)
     assert panel.name == "test-pna-panel"
     assert panel.version == "0.1.0"
     assert panel.description == "Test R&D panel for RNA"

@@ -18,8 +18,7 @@ from pixelator.common.utils import (
 )
 from pixelator.pna import read
 from pixelator.pna.cli.common import output_option, panel_option
-from pixelator.pna.config import pna_config
-from pixelator.pna.config.panel import load_antibody_panel
+from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.sample_calling import sample_calling
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
 from pixelator.pna.sample_calling.report import SampleCallingSampleReport
@@ -63,7 +62,6 @@ from pixelator.pna.sample_calling.report import SampleCallingSampleReport
     "Components with a sample confidence below this threshold will be considered undetermined. "
     "Default is 0.9.",
 )
-@panel_option
 @output_option
 @click.pass_context
 @timer
@@ -74,7 +72,6 @@ def sample_calling_cli(
     remove_incompatible: bool,
     save_undetermined: bool,
     confidence_threshold: float,
-    panel: str | None,
     output,
 ):
     """Map components to samples in sample-hashed datasets."""
@@ -83,7 +80,6 @@ def sample_calling_cli(
         input_files=input_pxl_file,
         samplesheet=samplesheet,
         output=output,
-        panel=panel,
         remove_incompatible=remove_incompatible,
         save_undetermined=save_undetermined,
         confidence_threshold=confidence_threshold,
@@ -95,7 +91,7 @@ def sample_calling_cli(
 
     pool_name = Path(input_pxl_file).name.split(".")[0]
 
-    panel_info = load_antibody_panel(config=pna_config, panel=panel)  # type: ignore
+    panel_info = PNAAntibodyPanel.from_pxl_file(input_pxl_file)
     hashing_antibodies_in_panel = set(
         panel_info.df[panel_info.df["sample_hashing"] == "yes"].index.to_list()
     )

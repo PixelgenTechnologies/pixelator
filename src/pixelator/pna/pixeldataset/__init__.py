@@ -752,13 +752,13 @@ class PNAPixelDataset:
         """Return a description of the PixelDataset."""
         description = [f"""PixelDataset with {len(self.sample_names())} samples"""]
         description.append("")
-        description += [f"""Mapping the following samples to files:"""]
+        description += ["""Mapping the following samples to files:"""]
         for sample_name, file in self.view.sample_to_file_mappings.items():
             description.append(f"\tSample: {sample_name}, File: {file}")
 
         description.append("")
         adata = self.adata()
-        description += [f"""In total it contains:"""]
+        description += ["""In total it contains:"""]
         description.append(f"{len(adata.obs)} components, {len(adata.var)} markers")
         return "\n".join(description)
 

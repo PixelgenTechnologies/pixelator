@@ -337,7 +337,7 @@ class DenoiseOneCore(PerComponentTask):
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
         try:
-            panel = PNAAntibodyPanel.from_pxl(pxl_file_target.path)
+            panel = PNAAntibodyPanel.from_pxl_file(pxl_file_target.path)
         except KeyError:
             # If pxl file does not contain panel data, try to load it from
             # the panel name.
