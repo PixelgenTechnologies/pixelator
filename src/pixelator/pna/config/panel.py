@@ -142,7 +142,7 @@ class PNAAntibodyPanel:
         except KeyError as err:
             logger.error(  # pylint: disable=logging-not-lazy
                 f"The provided PNAPixelDataset does not contain {err}. "
-                + "Please ensure that the pixel dataset contains panel information.",
+                + "Please, regenerate your data with the most recent version of pixelator."
             )
             raise
         panel_columns = panel_metadata.pop("panel_columns")
