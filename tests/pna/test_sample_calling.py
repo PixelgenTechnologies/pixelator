@@ -3,6 +3,7 @@
 Copyright © 2025 Pixelgen Technologies AB.
 """
 
+import anndata
 import numpy as np
 import polars as pl
 import pytest
@@ -22,7 +23,6 @@ def test_add_original_hash_counts_includes_all_panel_antibodies():
     When the panel has more hashing antibodies than the samplesheet (or some antibodies
     have no counts), obs should still have a column for each; missing ones are 0.
     """
-    import anndata
 
     # adata has only h1, h2 in var (e.g. panel has h1, h2, h3)
     adata = anndata.AnnData(
@@ -45,7 +45,10 @@ def test_add_original_hash_counts_includes_all_panel_antibodies():
 
 
 def _samplesheet_and_hashing_for_three_samples():
-    """Samplesheet and full hashing list for PBMC/Raji/Jurkat (hash 1/2/3). Use for tests that need HashedAntibodyMapping."""
+    """Samplesheet and full hashing list for PBMC/Raji/Jurkat (hash 1/2/3).
+
+    Use for tests that need HashedAntibodyMapping.
+    """
     samplesheet = pl.DataFrame(
         {
             "pool": ["test_pool", "test_pool", "test_pool"],
@@ -69,9 +72,11 @@ def test_hashed_antibody_mapping_requires_samplesheet_and_all_hashing_antibodies
     assert mapping["Raji"] == ["B2M-2", "CD29-2"]
     assert mapping["Jurkat"] == ["B2M-3", "CD29-3"]
     assert mapping.hashing_antibodies == all_hashing
-    # Only from_samplesheet is supported; from_dict is removed so both samplesheet and all_hashing_antibodies are always required
+    # Only from_samplesheet is supported;
+    # from_dict is removed so both samplesheet and all_hashing_antibodies are always required
     assert not hasattr(HashedAntibodyMapping, "from_dict"), (
-        "from_dict must be removed; use from_samplesheet(samplesheet, all_hashing_antibodies, pool_name)"
+        "from_dict must be removed; "
+        + "use from_samplesheet(samplesheet, all_hashing_antibodies, pool_name)"
     )
 
 
@@ -88,7 +93,8 @@ def test_hashed_antibody_mapping_raises_when_antibody_in_multiple_samples():
 
 def test_unmapped_hashing_antibodies_returns_antibodies_not_mapped_to_any_sample():
     """unmapped_hashing_antibodies returns the subset of hashing antibodies not assigned to any sample."""
-    # Panel has 6 hashing antibodies (names ending with -1..-6); samplesheet only lists 2 samples (hash 1 and 2)
+    # Panel has 6 hashing antibodies (names ending with -1..-6);
+    # samplesheet only lists 2 samples (hash 1 and 2)
     samplesheet = pl.DataFrame(
         {
             "pool": ["p", "p"],
@@ -157,7 +163,8 @@ def test_collect_hash_info_should_use_all_hashing_antibodies(sample_hashed_pixel
             ],
         ),
     )
-    # called_sample can be PBMC, Raji, or "undetermined" (when undetermined_hash_count wins), so we get 3 groups
+    # called_sample can be PBMC, Raji, or "undetermined" (when undetermined_hash_count wins),
+    # so we get 3 groups
     comp_counts = cc.group_by("called_sample").len("count")
     assert comp_counts.shape[0] == 3
     assert "undetermined_hash_count" in cc.columns

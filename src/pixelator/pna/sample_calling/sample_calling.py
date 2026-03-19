@@ -189,7 +189,11 @@ def _build_post_sample_calling_anndata(
     panel: PNAAntibodyPanel,
     hashing_antibody_mapping: HashedAntibodyMapping,
 ):
-    """Build anndata after sample calling, including obs for all hashing antibodies from the mapping."""
+    """Build AnnData object after sample calling.
+
+    The new AnnData object has no panel hashing markers in var,
+    instead hashing antibodies are added to obs.
+    """
     _add_original_hash_counts_to_obs(
         old_adata, hashing_antibody_mapping.hashing_antibodies
     )
@@ -336,10 +340,10 @@ def sample_calling(
 
     dehashed = hash_info.group_by("called_sample")
     output_files: list[Path] = []
-    for _, g in dehashed:
-        sample_name = str(g["called_sample"].first())
+    for _, group in dehashed:
+        sample_name = str(group["called_sample"].first())
         logger.info("Running sample calling for sample: %s", sample_name)
-        comps = g["component"].to_list()
+        comps = group["component"].to_list()
         target_path = output_folder / (sample_name + ".dehashed.pxl")
         sample_data = input_pxl.filter(components=comps)
 
