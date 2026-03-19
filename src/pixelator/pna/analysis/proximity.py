@@ -8,6 +8,7 @@ from typing import Callable, List, Literal
 import numpy as np
 import pandas as pd
 import polars as pl
+from duckdb import DuckDBPyConnection
 from scipy.stats import mannwhitneyu, norm
 from statsmodels.stats.multitest import multipletests
 
@@ -316,3 +317,181 @@ def calculate_differential_proximity(
     )[1]
 
     return results_df
+
+
+def jcs_with_analytical_stats(
+    database_connection: DuckDBPyConnection,
+    components: str | list[str] | set[str] | None = None,
+    markers: str | list[str] | set[str] | None = None,
+) -> pl.DataFrame:
+    """Compute proximity results using analytical mean and standard deviation of join counts.
+
+    Args:
+        database_connection (DuckDBPyConnection): Used to submit database queries for pixel data.
+        components (str | list[str] | set[str] | None): A list of components to include in the analysis.
+        markers (str | list[str] | set[str] | None): A list of marker names to include in the analysis.
+
+    Returns:
+        pl.DataFrame: A DataFrame containing the proximity results with analytical statistics.
+
+    """
+    if isinstance(components, str):
+        components = [components]
+    if isinstance(markers, str):
+        markers = [markers]
+
+    if markers is not None:
+        marker_list = ", ".join(f"'{m}'" for m in markers) if markers else ""
+        where_marker1 = f"WHERE marker_1 IN ({marker_list})"
+        and_marker1 = f"AND marker_1 IN ({marker_list})"
+        and_marker2 = f"AND marker_2 IN ({marker_list})"
+    else:
+        where_marker1 = ""
+        and_marker1 = ""
+        and_marker2 = ""
+
+    if components is not None:
+        component_list = ", ".join(f"'{c}'" for c in components) if components else ""
+        where_component = f"WHERE component IN ({component_list})"
+    else:
+        where_component = ""
+
+    component_list_sql = ", ".join(f"'{c}'" for c in components) if components else ""
+
+    cte_group_edges = f"""
+        group_edges AS (
+            SELECT sample, component, COUNT(*) as n_edges 
+            FROM edgelist
+            {where_component}
+            GROUP BY sample, component
+        )"""
+
+    cte_all_markers = f"""
+        all_markers AS (
+            SELECT sample, component, marker_1 AS marker FROM edgelist
+            {where_component}
+            UNION
+            SELECT sample, component, marker_2 AS marker FROM edgelist
+            {where_component}
+        )"""
+
+    cte_marker1_stats = f"""
+        unique_m1 AS (
+            SELECT DISTINCT sample, component, umi1, marker_1 FROM edgelist
+            {where_component}
+        ),
+        raw_stats_m1 AS (
+            SELECT 
+                sample, component, marker_1, COUNT(*) as marker_1_count,
+                COUNT(*) * 1.0 / SUM(COUNT(*)) OVER (PARTITION BY sample, component) as f_umi1                
+            FROM unique_m1
+            GROUP BY sample, component, marker_1
+        ),
+        stats_m1 AS (
+            SELECT 
+                am.sample, 
+                am.component, 
+                am.marker AS marker_1, 
+                COALESCE(rm1.marker_1_count, 0) AS marker_1_count,
+                COALESCE(rm1.f_umi1, 0.0) AS f_umi1
+            FROM all_markers am
+            LEFT JOIN raw_stats_m1 rm1 
+                ON am.sample = rm1.sample 
+                AND am.component = rm1.component 
+                AND am.marker = rm1.marker_1
+        )"""
+
+    cte_marker2_stats = f"""
+        unique_m2 AS (
+            SELECT DISTINCT sample, component, umi2, marker_2 FROM edgelist
+            {where_component}
+        ),
+        raw_stats_m2 AS (
+            SELECT 
+                sample, component, marker_2, COUNT(*) as marker_2_count,
+                COUNT(*) * 1.0 / SUM(COUNT(*)) OVER (PARTITION BY sample, component) as f_umi2
+            FROM unique_m2
+            GROUP BY sample, component, marker_2
+        ),
+        stats_m2 AS (
+            SELECT 
+                am.sample, 
+                am.component, 
+                am.marker AS marker_2, 
+                COALESCE(rm2.marker_2_count, 0) AS marker_2_count,
+                COALESCE(rm2.f_umi2, 0.0) AS f_umi2
+            FROM all_markers am
+            LEFT JOIN raw_stats_m2 rm2 
+                ON am.sample = rm2.sample 
+                AND am.component = rm2.component 
+                AND am.marker = rm2.marker_2
+        )"""
+
+    cte_expected_counts = f"""
+        expected_calc AS (
+            SELECT
+                t1.sample,
+                t1.component,
+                LEAST(t1.marker_1, t2.marker_2) as marker_A,
+                GREATEST(t1.marker_1, t2.marker_2) as marker_B,
+                (t1.f_umi1 * t2.f_umi2 * ge.n_edges) as exp_count_raw
+            FROM stats_m1 t1
+            JOIN stats_m2 t2 
+            ON t1.sample = t2.sample AND t1.component = t2.component
+            JOIN group_edges ge 
+            ON t1.sample = ge.sample AND t1.component = ge.component
+            {where_marker1}
+            {and_marker2}
+        ),
+        expected_agg AS (
+            SELECT sample, component, marker_A, marker_B, SUM(exp_count_raw) as join_count_expected_mean
+            FROM expected_calc
+            GROUP BY sample, component, marker_A, marker_B
+        )"""
+
+    cte_observed_counts = f"""
+        observed_agg AS (
+            SELECT
+                sample,
+                component,
+                LEAST(marker_1, marker_2) as marker_A,
+                GREATEST(marker_1, marker_2) as marker_B,
+                COUNT(*) as join_count
+            FROM edgelist
+            {where_component}
+            {and_marker1 if components else where_marker1}
+            {and_marker2}
+            GROUP BY sample, component, marker_A, marker_B
+        )"""
+
+    cte_final_results = """
+        res AS (
+            SELECT
+                COALESCE(obs.sample, exp.sample) as sample,
+                COALESCE(obs.component, exp.component) as component,
+                COALESCE(obs.marker_A, exp.marker_A) as marker_1,
+                COALESCE(obs.marker_B, exp.marker_B) as marker_2,
+                COALESCE(obs.join_count, 0) as join_count,
+                COALESCE(exp.join_count_expected_mean, 0) as join_count_expected_mean,
+                LOG2(GREATEST(COALESCE(obs.join_count, 0), 1) / GREATEST(COALESCE(exp.join_count_expected_mean, 0), 1)) AS log2_ratio
+            FROM observed_agg obs
+            FULL OUTER JOIN expected_agg exp 
+                ON obs.sample = exp.sample
+                AND obs.component = exp.component
+                AND obs.marker_A = exp.marker_A 
+                AND obs.marker_B = exp.marker_B
+        )"""
+
+    analysis_query = f"""
+    WITH 
+    {cte_group_edges},
+    {cte_all_markers},
+    {cte_marker1_stats},
+    {cte_marker2_stats},
+    {cte_expected_counts},
+    {cte_observed_counts},
+    {cte_final_results}
+    SELECT * FROM res;
+    """
+    results = database_connection.execute(analysis_query).pl()
+    return results

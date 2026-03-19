@@ -66,6 +66,25 @@ from pixelator.pna.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pna.pixeldataset.proximity import Proximity
 from pixelator.pna.pixeldataset.saver import PixelDatasetSaver
 from pixelator.pna.pixeldataset.types import Component
+from typing import Iterable, Literal
+
+import numpy as np
+import pandas as pd
+import polars as pl
+import pyarrow as pa
+from anndata import AnnData, ImplicitModificationWarning
+
+from pixelator.common.statistics import clr_transformation, log1p_transformation
+from pixelator.pna.analysis.proximity import jcs_with_analytical_stats
+from pixelator.pna.graph import PNAGraph, PNAGraphBackend
+from pixelator.pna.pixeldataset.io import (
+    InplacePixelDataFilterer,
+    PixelDataQuerier,
+    PixelDataViewer,
+    PxlFile,
+    copy_databases,
+)
+from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
 
 def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
@@ -342,7 +361,10 @@ class Proximity:
                 components=self._components, markers=self._markers
             )
         else:
-            raw_proximity_df = self.calculate_proximity_from_edgelist()
+            with self._querier.view as connection:
+                raw_proximity_df = jcs_with_analytical_stats(
+                    connection, components=self._components, markers=self._markers
+                )
 
         return self._post_process(raw_proximity_df)
 
@@ -704,6 +726,7 @@ class PNAPixelDataset:
         self,
         add_marker_counts: bool = True,
         add_logratio: bool = True,
+        calculate_from_edgelist: bool = False,
     ) -> Proximity:
         """Return the Proximity instance for the dataset.
 
@@ -711,6 +734,7 @@ class PNAPixelDataset:
 
         :param add_marker_counts: If True, add the marker counts to the proximity data.
         :param add_logratio: If True, add the logratio to the proximity data.
+        :param calculate_from_edgelist: If True, calculate the proximity from the edgelist data instead of reading precomputed proximity data.
         :return: The Proximity instance for the dataset.
         """
         return Proximity(
@@ -719,6 +743,7 @@ class PNAPixelDataset:
             markers=self._active_markers,
             add_marker_counts=add_marker_counts,
             add_log2_ratio=add_logratio,
+            calculate_from_edgelist=calculate_from_edgelist,
         )
 
     def precomputed_layouts(
