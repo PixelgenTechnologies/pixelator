@@ -126,7 +126,7 @@ def validate_panel(ctx, param, value):
 
 
 def panel_option(func):
-    """Decorate a click command and add the --design option."""
+    """Decorate a click command and add the --panel option."""
     from pixelator.pna.config import pna_config
 
     # TODO: Support assay aliases here as well

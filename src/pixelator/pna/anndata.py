@@ -24,7 +24,7 @@ def calculate_antibody_metrics(counts_df):
     return pd.concat([total_antibody, relative_antibody, components_detected], axis=1)
 
 
-def add_panel_information(adata, panel):
+def add_panel_information(adata: AnnData, panel: PNAAntibodyPanel) -> AnnData:
     """Add panel data to var."""
     adata.var = adata.var.join(panel.df, how="left")
 
@@ -213,7 +213,7 @@ def pna_edgelist_to_anndata(
     return adata
 
 
-def add_missing_adata_info(new_adata, old_adata):
+def add_missing_adata_info(new_adata: AnnData, old_adata: AnnData) -> AnnData:
     """Add missing obs and var columns from old_adata to new_adata."""
     missing_obs = set(old_adata.obs.columns) - set(new_adata.obs.columns)
     missing_var = set(old_adata.var.columns) - set(new_adata.var.columns)

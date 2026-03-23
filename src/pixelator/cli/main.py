@@ -166,6 +166,7 @@ from pixelator.pna.cli.misc import (
     list_single_cell_pna_panels,
 )
 from pixelator.pna.cli.report import report
+from pixelator.pna.cli.sample_calling import sample_calling_cli
 
 
 @click.group()
@@ -201,6 +202,7 @@ single_cell_pna.add_command(amplicon)
 single_cell_pna.add_command(demux)
 single_cell_pna.add_command(collapse)
 single_cell_pna.add_command(graph)
+single_cell_pna.add_command(sample_calling_cli, name="sample-calling")
 single_cell_pna.add_command(denoise)
 single_cell_pna.add_command(analysis)
 single_cell_pna.add_command(layout)
