@@ -539,7 +539,7 @@ class PixelDataViewer:
         self, connection: duckdb.DuckDBPyConnection, table_name: str, view_name: str
     ):
         """Create a view that unions given table from all the underlying samples."""
-        # This will create a view tha unions the tables from all the samples,
+        # This will create a view that unions the tables from all the samples,
         # adding a new column that identifies the sample.
 
         try:
