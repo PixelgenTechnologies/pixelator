@@ -1,0 +1,721 @@
+sample_component,celltype_l2,celltype_l1
+Resting_PBMC_82c6f1502ceb578c,CD56dim NK,NK
+Resting_PBMC_9524c5af1f13409e,CD56dim NK,NK
+Resting_PBMC_1a72fb4c1ebd3edf,CD4 TCM,CD4 T
+Resting_PBMC_791355c983aed829,Platelets,Platelets
+Resting_PBMC_81415c5542195eff,Naive CD4 T,CD4 T
+Resting_PBMC_5ba613cb25de4e5c,Naive CD4 T,CD4 T
+Resting_PBMC_5e08b1ef86b8a4c9,Naive CD8 T,CD8 T
+Resting_PBMC_ef963c459c4a8cd6,CD56dim NK,NK
+Resting_PBMC_89d045aeb08b3401,CD8 TEM,CD8 T
+Resting_PBMC_ce389cbfa22fcb90,Platelets,Platelets
+Resting_PBMC_db51500e5c6b5b05,CD56dim NK,NK
+Resting_PBMC_cedcccd30eeb464f,gdT,Other T
+Resting_PBMC_a4a1cd8a923f7cf6,Classical Mono,Mono
+Resting_PBMC_e098ef6feac81d25,CD56dim NK,NK
+Resting_PBMC_0a7589f4f9d36d5b,Platelets,Platelets
+Resting_PBMC_a7c1fec8958d6b5d,Platelets,Platelets
+Resting_PBMC_3f18755c000c04df,CD8 TCM,CD8 T
+Resting_PBMC_fbe8d27ee3fe34df,CD4 TCM,CD4 T
+Resting_PBMC_62b40a2e93e73cfb,Classical Mono,Mono
+Resting_PBMC_89b01bb4f96cb691,Naive CD4 T,CD4 T
+Resting_PBMC_a70e33aebc50b631,gdT,Other T
+Resting_PBMC_105a4b0198923e06,CD4 TCM,CD4 T
+Resting_PBMC_08d99658f75a10f6,Naive CD4 T,CD4 T
+Resting_PBMC_dce5cb1836cf78b2,CD4 TCM,CD4 T
+Resting_PBMC_03caf4720b1cbba6,CD4 TCM,CD4 T
+Resting_PBMC_e96133e5c8049377,CD4 TCM,CD4 T
+Resting_PBMC_07cee6f5ef23f7f3,Treg,CD4 T
+Resting_PBMC_8cf652a83ab0c58d,Platelets,Platelets
+Resting_PBMC_06a04a1cbcb9d1e1,CD4 TCM,CD4 T
+Resting_PBMC_58f2558c99e6aa45,CD4 TCM,CD4 T
+Resting_PBMC_7eb8dd6197de28be,CD4 TCM,CD4 T
+Resting_PBMC_9e19e7eab6e918c9,CD4 TCM,CD4 T
+Resting_PBMC_b544d5479f73a4b3,CD8 TEM,CD8 T
+Resting_PBMC_41b3793d6151af97,CD56dim NK,NK
+Resting_PBMC_005b3d3e5db250a1,Classical Mono,Mono
+Resting_PBMC_2a82e855aeac3568,Treg,CD4 T
+Resting_PBMC_6334b6a78f3d6a7c,Naive B,B
+Resting_PBMC_e10969104ade215f,CD4 TCM,CD4 T
+Resting_PBMC_d233f6ae7fd432b7,MAIT,Other T
+Resting_PBMC_c5869ad6dd5749a7,CD4 TCM,CD4 T
+Resting_PBMC_579ab5850378ecbc,CD4 TCM,CD4 T
+Resting_PBMC_d13c0666c5c81299,CD4 TEM,CD4 T
+Resting_PBMC_faf1d70e18f6515a,Naive CD4 T,CD4 T
+Resting_PBMC_e8e8aba5f11cc75b,Naive CD4 T,CD4 T
+Resting_PBMC_7379c05389f1f536,CD4 TEM,CD4 T
+Resting_PBMC_29612aafa030f1a7,Classical Mono,Mono
+Resting_PBMC_d2483b25fa2c4e6e,CD56dim NK,NK
+Resting_PBMC_ae56e68e889a9499,Naive CD4 T,CD4 T
+Resting_PBMC_8003ad353d99da60,cDC1,DC
+Resting_PBMC_c64754cf575e7bbd,MAIT,Other T
+Resting_PBMC_e6318d19b40e8f8e,CD4 TCM,CD4 T
+Resting_PBMC_d5dea82b6cc8e806,CD4 TCM,CD4 T
+Resting_PBMC_e83cdceb77844f19,CD8 TCM,CD8 T
+Resting_PBMC_de480e7893e5a764,Classical Mono,Mono
+Resting_PBMC_0114ed63c699d521,Naive CD8 T,CD8 T
+Resting_PBMC_46a7be6209f03c6c,CD4 TCM,CD4 T
+Resting_PBMC_3f316f30dae3906e,CD8 TCM,CD8 T
+Resting_PBMC_6b2871657f59109a,CD4 TCM,CD4 T
+Resting_PBMC_66c11fab1f632b17,Naive CD4 T,CD4 T
+Resting_PBMC_7ad1e427d9d0fa39,Classical Mono,Mono
+Resting_PBMC_82bfcaa8aff0af56,CD4 TCM,CD4 T
+Resting_PBMC_1fbe95b4898d0670,pDC,DC
+Resting_PBMC_5743dc9b40b92fb9,Platelets,Platelets
+Resting_PBMC_30acd9025095490c,CD8 TEFF,CD8 T
+Resting_PBMC_9f8f3efcf3521d02,CD56dim NK,NK
+Resting_PBMC_8652714d0150f531,Classical Mono,Mono
+Resting_PBMC_c4f3829fdce0a571,CD8 TCM,CD8 T
+Resting_PBMC_b0579845ea7ec192,CD56dim NK,NK
+Resting_PBMC_97a0f2e87111d2ef,cDC1,DC
+Resting_PBMC_05b909411cdbeef3,CD4 TCM,CD4 T
+Resting_PBMC_56196506016d9bfc,CD4 TCM,CD4 T
+Resting_PBMC_7ba46d803a1e4f9d,Classical Mono,Mono
+Resting_PBMC_cd5fc78af9eeb243,CD4 TCM,CD4 T
+Resting_PBMC_9f9af2fc340dde22,CD4 TCM,CD4 T
+Resting_PBMC_8d8be22d6a2e4f9a,CD4 TCM,CD4 T
+Resting_PBMC_a6cc0cb4cd2fbc6f,Naive CD4 T,CD4 T
+Resting_PBMC_55cef146130ed4fd,CD56dim NK,NK
+Resting_PBMC_dba35a70d4da7a34,CD4 TCM,CD4 T
+Resting_PBMC_c8a05811965f5583,CD56dim NK,NK
+Resting_PBMC_f8f0c3648b2cdfaf,CD56dim NK,NK
+Resting_PBMC_b1310315d305f569,CD56dim NK,NK
+Resting_PBMC_16bae91041d28ef2,Treg,CD4 T
+Resting_PBMC_79d0aae60eb9d529,CD56bright NK,NK
+Resting_PBMC_fdc88ae5cd9a5b0e,CD56dim NK,NK
+Resting_PBMC_d66aad8815c025a3,Naive CD4 T,CD4 T
+Resting_PBMC_76e59e98d70bfc38,CD4 TEM,CD4 T
+Resting_PBMC_5bb788ca6a5e17f4,CD4 TCM,CD4 T
+Resting_PBMC_a4d78755a79a099a,MAIT,Other T
+Resting_PBMC_c2244e8cc64c6032,Platelets,Platelets
+Resting_PBMC_b0fb6ecb91a83e11,Platelets,Platelets
+Resting_PBMC_6dd0fadeb15e59a4,Non-classical Mono,Mono
+Resting_PBMC_47f0ae311acca70e,CD4 TCM,CD4 T
+Resting_PBMC_5c9a3429da479e2e,Classical Mono,Mono
+Resting_PBMC_dea24aedc315dd4b,CD56dim NK,NK
+Resting_PBMC_4382b173d26acaaa,CD8 TSCM,CD8 T
+Resting_PBMC_f91975ff7db2ba49,pDC,DC
+Resting_PBMC_f47439ccf39c0af1,pDC,DC
+Resting_PBMC_5507b1ddbf98d021,Classical Mono,Mono
+Resting_PBMC_949026f3189d0f53,CD4 TCM,CD4 T
+Resting_PBMC_26edb381ac2e0d07,Naive CD4 T,CD4 T
+Resting_PBMC_a722627d246393ca,CD4 TCM,CD4 T
+Resting_PBMC_9a1559ba03f3d749,CD56dim NK,NK
+Resting_PBMC_0bcdcb754121592d,CD4 TCM,CD4 T
+Resting_PBMC_690f1ae003c4f2f6,Platelets,Platelets
+Resting_PBMC_7c17ca085dbaa5a8,CD4 TCM,CD4 T
+Resting_PBMC_93fca24df8fd60f5,CD4 TCM,CD4 T
+Resting_PBMC_8217ace64d084a92,CD4 TCM,CD4 T
+Resting_PBMC_5f002a126f8bfa3f,CD8 TCM,CD8 T
+Resting_PBMC_6df5acb13824cde3,Treg,CD4 T
+Resting_PBMC_69c51eccef808045,Naive CD4 T,CD4 T
+Resting_PBMC_1d51df7a2f081204,Naive CD8 T,CD8 T
+Resting_PBMC_2135fb5b6bb7a544,CD4 TCM,CD4 T
+Resting_PBMC_ac8fd000cc4ae362,Classical Mono,Mono
+Resting_PBMC_6d98875d330a0d64,Non-classical Mono,Mono
+Resting_PBMC_f0ff864df066a0ae,CD4 TCM,CD4 T
+Resting_PBMC_1e91e4d1adf65900,CD56dim NK,NK
+Resting_PBMC_9923cb648c23b585,CD4 TEM,CD4 T
+Resting_PBMC_956608659e129130,CD4 TEM,CD4 T
+Resting_PBMC_b6b28a051b047e42,CD56dim NK,NK
+Resting_PBMC_d39c167fcbb6abd5,CD4 TCM,CD4 T
+Resting_PBMC_aaf6e157aa10f66b,Classical Mono,Mono
+Resting_PBMC_945e5d990b744455,CD4 TEM,CD4 T
+Resting_PBMC_adee669bb563ef88,CD8 TEM,CD8 T
+Resting_PBMC_e7f0f333a35c1e07,Naive CD4 T,CD4 T
+Resting_PBMC_04c54311032be6cd,MAIT,Other T
+Resting_PBMC_4bcffa64c498d3ab,Classical Mono,Mono
+Resting_PBMC_e7807c6d0bbfaeb3,CD4 TCM,CD4 T
+Resting_PBMC_fc8a331775463882,CD8 TEMRA,CD8 T
+Resting_PBMC_4d594e0e20f3357c,Classical Mono,Mono
+Resting_PBMC_0263863af3819d58,CD56dim NK,NK
+Resting_PBMC_466957bb1ace44ad,CD4 TCM,CD4 T
+Resting_PBMC_0458bc63b8135b9b,MAIT,Other T
+Resting_PBMC_f448c193007c454b,CD4 TEM,CD4 T
+Resting_PBMC_ac0832a84fa49d07,CD56dim NK,NK
+Resting_PBMC_e216eec709edd7ad,Platelets,Platelets
+Resting_PBMC_7d8193cbc6c17436,CD4 TCM,CD4 T
+Resting_PBMC_cbafb6c2d21c7467,CD4 TCM,CD4 T
+Resting_PBMC_0e1dc32749a766a9,CD4 TCM,CD4 T
+Resting_PBMC_7d6d47cbc5072a5c,Classical Mono,Mono
+Resting_PBMC_bbbe481676419e9f,Platelets,Platelets
+Resting_PBMC_73f9d8c913092564,CD56dim NK,NK
+Resting_PBMC_194a5eb74d179cb1,CD4 TCM,CD4 T
+Resting_PBMC_5228cdb5d4f6b0ca,Memory B,B
+Resting_PBMC_06dc78353c7426b0,CD4 TCM,CD4 T
+Resting_PBMC_272d65930116eb73,CD4 TEFF,CD4 T
+Resting_PBMC_a32b3b46bda883ac,Classical Mono,Mono
+Resting_PBMC_be17c78c47b6c28f,CD4 TCM,CD4 T
+Resting_PBMC_faac98f7de373850,CD4 TCM,CD4 T
+Resting_PBMC_b665d025ed0966c2,cDC1,DC
+Resting_PBMC_9de3b272f6ab5eda,CD8 TCM,CD8 T
+Resting_PBMC_855425dc394906d3,Treg,CD4 T
+Resting_PBMC_3fe962dac3056406,Naive CD4 T,CD4 T
+Resting_PBMC_d9816587a45615a8,CD4 TEM,CD4 T
+Resting_PBMC_c4edaf78bde5c50b,CD4 TEM,CD4 T
+Resting_PBMC_ce9b5745f5ea190b,CD56dim NK,NK
+Resting_PBMC_ecb78dc1d04a5875,CD4 TCM,CD4 T
+Resting_PBMC_c9406280a886773e,Naive CD4 T,CD4 T
+Resting_PBMC_0e0617bace1615fa,Naive CD4 T,CD4 T
+Resting_PBMC_00412f8ed19b2b22,CD4 TEM,CD4 T
+Resting_PBMC_627657c50703c102,Platelets,Platelets
+Resting_PBMC_721ac382ff24cfbc,Naive CD8 T,CD8 T
+Resting_PBMC_d3337dd83aeb0f4f,CD56bright NK,NK
+Resting_PBMC_2b282fdb93a27daa,CD4 TEM,CD4 T
+Resting_PBMC_1788a9a7b5b9a310,Platelets,Platelets
+Resting_PBMC_70f94e2d1c10c7a7,Classical Mono,Mono
+Resting_PBMC_7831e81cb70c823d,Treg,CD4 T
+Resting_PBMC_9604973beb91ecc0,CD4 TCM,CD4 T
+Resting_PBMC_3deb63ed94fe5e4d,Naive CD4 T,CD4 T
+Resting_PBMC_a402bd74d6612a0a,CD56dim NK,NK
+Resting_PBMC_df6a95d068dcbb71,Classical Mono,Mono
+Resting_PBMC_8e764a3ef0e484b9,Platelets,Platelets
+Resting_PBMC_d8806a5a0ae9eb80,CD56dim NK,NK
+Resting_PBMC_23887af630ec79e3,CD56dim NK,NK
+Resting_PBMC_5028032bd4e27f60,Non-classical Mono,Mono
+Resting_PBMC_9e513f2ea038eabf,Classical Mono,Mono
+Resting_PBMC_a1b0c5523c1ed7fb,Classical Mono,Mono
+Resting_PBMC_7bb74a25e306e73f,Naive CD8 T,CD8 T
+Resting_PBMC_642fb8a047b6842d,CD4 TCM,CD4 T
+Resting_PBMC_f4a8250f6a05fe12,CD8 TEM,CD8 T
+Resting_PBMC_b9d676cbb6068664,Classical Mono,Mono
+Resting_PBMC_25911693352c4677,CD56dim NK,NK
+Resting_PBMC_a782f4a4ab5a4a82,Platelets,Platelets
+Resting_PBMC_5ba4d7d69b75d101,CD4 TCM,CD4 T
+Resting_PBMC_4bfe31ebfe5d9889,CD4 TCM,CD4 T
+Resting_PBMC_0e571475b47cdd7b,Classical Mono,Mono
+Resting_PBMC_31bf2778004bebb3,CD4 TCM,CD4 T
+Resting_PBMC_3f4ad995b83cb5df,Naive CD8 T,CD8 T
+Resting_PBMC_68e12ed22f9feb17,CD4 TCM,CD4 T
+Resting_PBMC_8e0c8207784bbe72,CD4 TCM,CD4 T
+Resting_PBMC_1395b248b638b0cd,Naive CD8 T,CD8 T
+Resting_PBMC_640f00b6212f126a,Classical Mono,Mono
+Resting_PBMC_1363ad43cbe593be,Naive CD4 T,CD4 T
+Resting_PBMC_cdf87656c85e3e04,Platelets,Platelets
+Resting_PBMC_8925baa4a9ca5e8d,Naive CD4 T,CD4 T
+Resting_PBMC_d7bc84385fc74341,CD4 TCM,CD4 T
+Resting_PBMC_1bbf52d580899d53,Naive CD4 T,CD4 T
+Resting_PBMC_b2e2a66ee108e49f,gdT,Other T
+Resting_PBMC_85ed1303acae23e1,Memory B,B
+Resting_PBMC_7a900d1a336138f0,Classical Mono,Mono
+Resting_PBMC_5ac9956a999d9940,CD8 TSCM,CD8 T
+Resting_PBMC_3236863f457e989a,CD8 TCM,CD8 T
+Resting_PBMC_ac0ac75ac6792764,CD56dim NK,NK
+Resting_PBMC_c4f0d46d63210cbd,Memory B,B
+Resting_PBMC_2b3d29cb98f78cc7,Classical Mono,Mono
+Resting_PBMC_fc47e2ce1728d60c,CD56dim NK,NK
+Resting_PBMC_e4ce55b2e7dc5e93,CD4 TEM,CD4 T
+Resting_PBMC_b32003ed877c5c92,CD4 TCM,CD4 T
+Resting_PBMC_b9256f5f25744e6e,CD4 TCM,CD4 T
+Resting_PBMC_9da378faf5539242,CD4 TCM,CD4 T
+Resting_PBMC_6619f34fcaae3030,Classical Mono,Mono
+Resting_PBMC_574da148e3a037e8,CD4 TCM,CD4 T
+Resting_PBMC_6476117cddedeed8,Naive CD4 T,CD4 T
+Resting_PBMC_5db01db2bd4db10d,CD4 TCM,CD4 T
+Resting_PBMC_4a2a7eea21a6a2b6,CD56dim NK,NK
+Resting_PBMC_c9e8057182840c90,CD8 TEM,CD8 T
+Resting_PBMC_05334ca103dfcf5e,CD4 TCM,CD4 T
+Resting_PBMC_c0d8422210282a1b,Classical Mono,Mono
+Resting_PBMC_74bce4f7bb025955,CD4 TSCM,CD4 T
+Resting_PBMC_76800b21f755ec6d,CD4 TCM,CD4 T
+Resting_PBMC_745a98a7c20d9095,CD4 TCM,CD4 T
+Resting_PBMC_33859e97d4ced240,CD8 TSCM,CD8 T
+Resting_PBMC_99535fbc0d964ad9,CD4 TCM,CD4 T
+Resting_PBMC_4cebe94bfb317192,Classical Mono,Mono
+Resting_PBMC_4974d326083c8964,CD56dim NK,NK
+Resting_PBMC_0f0e3a0928e974bf,CD8 TSCM,CD8 T
+Resting_PBMC_9c3dbc7e70c47c77,Naive CD4 T,CD4 T
+Resting_PBMC_76dfe23b28a20483,CD4 TEM,CD4 T
+Resting_PBMC_6284e75624d0d530,Basophils,Granulocytes
+Resting_PBMC_b4c8ec20bf4d2098,CD4 TEM,CD4 T
+Resting_PBMC_d815ff78d1a7a634,CD4 TCM,CD4 T
+Resting_PBMC_eaea3fc06ad586e8,Naive CD8 T,CD8 T
+Resting_PBMC_ee213686192375df,CD4 TCM,CD4 T
+Resting_PBMC_31b2426269c798db,CD4 TCM,CD4 T
+Resting_PBMC_dfc6285792bdcf2a,gdT,Other T
+Resting_PBMC_c9327b5661832bba,DNT,Other T
+Resting_PBMC_9da801c0230a9d57,CD4 TEM,CD4 T
+Resting_PBMC_887e18c1583227a2,Naive CD8 T,CD8 T
+Resting_PBMC_ac6d4d50b533feac,CD4 TCM,CD4 T
+Resting_PBMC_7b2c42251fa98f70,MAIT,Other T
+Resting_PBMC_513daf31966e8c6f,CD56dim NK,NK
+Resting_PBMC_cabb0f7c39aeb960,Treg,CD4 T
+Resting_PBMC_a331e491de83bea3,CD56dim NK,NK
+Resting_PBMC_fa73d57ffa40ff0f,CD4 TCM,CD4 T
+Resting_PBMC_1b0a70c8ea52290f,CD4 TCM,CD4 T
+Resting_PBMC_1875b4770e2a2913,Intermediate Mono,Mono
+Resting_PBMC_b4799c79c2ce018e,CD4 TCM,CD4 T
+Resting_PBMC_0f5c7f4dba9e5577,NKT,Other T
+Resting_PBMC_f6064737abee19bb,CD4 TEM,CD4 T
+Resting_PBMC_3de81b683c00c381,CD4 TCM,CD4 T
+Resting_PBMC_2d740ff56d58107e,Naive CD4 T,CD4 T
+Resting_PBMC_ca4189685f81c91e,CD4 TSCM,CD4 T
+Resting_PBMC_75c6e7b5ea62bef9,Treg,CD4 T
+Resting_PBMC_09ab70ed205e740f,CD4 TCM,CD4 T
+Resting_PBMC_5e2f3c4c9d7af0db,Classical Mono,Mono
+Resting_PBMC_14bf98830c2d14f7,Naive CD4 T,CD4 T
+Resting_PBMC_61adc78270f978e0,CD4 TCM,CD4 T
+Resting_PBMC_49323faad43c6504,CD8 TCM,CD8 T
+Resting_PBMC_089cba2b4af59101,CD4 TCM,CD4 T
+Resting_PBMC_c32e29c07265c4d3,CD4 TEM,CD4 T
+Resting_PBMC_f7530c914bf7016b,CD8 TSCM,CD8 T
+Resting_PBMC_42768b7de0a613ca,Naive B,B
+Resting_PBMC_5bb5a0d68e78e604,CD4 TEM,CD4 T
+Resting_PBMC_56a0d591a133bbdc,CD4 TCM,CD4 T
+Resting_PBMC_cb159ae9041eeb1a,CD8 TSCM,CD8 T
+Resting_PBMC_4146f8abf22bc5c4,Naive B,B
+Resting_PBMC_73dff31df5a95b7f,CD8 TSCM,CD8 T
+Resting_PBMC_91c4a33a50add6b4,cDC1,DC
+Resting_PBMC_9f66adbe7c1ef058,CD56dim NK,NK
+Resting_PBMC_7e76e340ed66c0ef,CD4 TCM,CD4 T
+Resting_PBMC_45302d217c99c1ec,Memory B,B
+Resting_PBMC_ba53f305539d9d0d,CD56dim NK,NK
+Resting_PBMC_4cf956fa706e9d66,Platelets,Platelets
+Resting_PBMC_476930be1b030773,Basophils,Granulocytes
+Resting_PBMC_a23594f3be6ac266,CD4 TCM,CD4 T
+Resting_PBMC_46c44627447306ab,CD56dim NK,NK
+Resting_PBMC_bcfee2f022e060c8,Classical Mono,Mono
+Resting_PBMC_952f093c9cd062b1,CD4 TCM,CD4 T
+Resting_PBMC_fb5bfdda33763eb7,Classical Mono,Mono
+Resting_PBMC_7b1d79a722ed61df,CD8 TSCM,CD8 T
+Resting_PBMC_66c33e0dff21434b,CD4 TCM,CD4 T
+Resting_PBMC_0076744cbd66bbe9,CD4 TSCM,CD4 T
+Resting_PBMC_07dc8078b47ca3ec,Basophils,Granulocytes
+Resting_PBMC_60edc77760687266,CD56dim NK,NK
+Resting_PBMC_5ca017e0b4c1c9cd,CD4 TCM,CD4 T
+Resting_PBMC_a26b941f294b6a4a,CD4 TCM,CD4 T
+Resting_PBMC_ff465d669b39c431,CD8 TCM,CD8 T
+Resting_PBMC_3e8a85ab0c3b25b4,CD4 TCM,CD4 T
+Resting_PBMC_d63f9d82e799536f,CD4 TEM,CD4 T
+Resting_PBMC_42bf9b00bcd943dc,Treg,CD4 T
+Resting_PBMC_1d5b33cc4344d0ab,CD56dim NK,NK
+Resting_PBMC_8931255115b5ea1a,Memory B,B
+Resting_PBMC_47ff5b276bddc01c,Classical Mono,Mono
+Resting_PBMC_3e6f58016b120f32,CD56dim NK,NK
+Resting_PBMC_89eb8aaa0d9dfdaf,Treg,CD4 T
+Resting_PBMC_ed762ab22fd19d0a,CD56dim NK,NK
+Resting_PBMC_106072e6fef23738,CD56dim NK,NK
+Resting_PBMC_36c16c444baf6296,Naive CD8 T,CD8 T
+Resting_PBMC_a093595a4738da40,gdT,Other T
+Resting_PBMC_ec508686f48eba50,CD8 TSCM,CD8 T
+Resting_PBMC_b72dcec99a85439a,Naive CD8 T,CD8 T
+Resting_PBMC_e9e76535bf4c8671,CD4 TCM,CD4 T
+Resting_PBMC_a9904af74c11f2cc,CD4 TSCM,CD4 T
+Resting_PBMC_973afa9963e6ed3c,Platelets,Platelets
+Resting_PBMC_78bc2c623cc291a4,Classical Mono,Mono
+Resting_PBMC_5cd3ed52fedba431,CD56dim NK,NK
+Resting_PBMC_28a031187c065db0,Classical Mono,Mono
+Resting_PBMC_1e410841f2f00bc7,Memory B,B
+Resting_PBMC_0490fd941f874220,CD56dim NK,NK
+Resting_PBMC_bb4ab04af0745dab,Naive CD4 T,CD4 T
+Resting_PBMC_9c0be33bfb159dc8,Platelets,Platelets
+Resting_PBMC_b6d77d6800285ea4,CD4 TCM,CD4 T
+Resting_PBMC_da54a19bb224b8dc,CD56dim NK,NK
+Resting_PBMC_b04a566b92e62eaa,Classical Mono,Mono
+Resting_PBMC_8e185a6c42d5eea7,CD56dim NK,NK
+Resting_PBMC_501ab264c2854b21,Classical Mono,Mono
+Resting_PBMC_42e382184d5df069,Naive CD4 T,CD4 T
+Resting_PBMC_5b89c333148b1f2f,Naive CD8 T,CD8 T
+Resting_PBMC_ab725f8d3144dcdf,Naive CD8 T,CD8 T
+Resting_PBMC_dedea3dc460e3955,Platelets,Platelets
+Resting_PBMC_94a45d6fc011d4dc,CD56dim NK,NK
+Resting_PBMC_79ef5b98b7830a7c,CD4 TCM,CD4 T
+Resting_PBMC_f2ea0519b62f5a1f,Platelets,Platelets
+Resting_PBMC_6e35f85074bcb272,Treg,CD4 T
+Resting_PBMC_f2ed30faf480a1f7,CD4 TCM,CD4 T
+Resting_PBMC_31732aafc78bc47b,CD4 TEM,CD4 T
+Resting_PBMC_f2a59b950843eca5,Classical Mono,Mono
+Resting_PBMC_e33acdf900dba183,CD4 TEM,CD4 T
+Resting_PBMC_8fe95d936dbac2a8,CD4 TEM,CD4 T
+Resting_PBMC_9e7f38a61eb54817,Intermediate Mono,Mono
+Resting_PBMC_5dcbac6cb980e39b,Platelets,Platelets
+Resting_PBMC_1ebc202a2ecb7e44,CD4 TCM,CD4 T
+Resting_PBMC_d8fb0e302cc2f00f,CD56dim NK,NK
+Resting_PBMC_11837e99c96fbaa4,CD4 TCM,CD4 T
+Resting_PBMC_583de00c03e19314,Non-classical Mono,Mono
+Resting_PBMC_8e47d68911a04d7f,Platelets,Platelets
+Resting_PBMC_9b6a9f53a685cf4d,Naive CD4 T,CD4 T
+Resting_PBMC_5a7e600a3593d645,Platelets,Platelets
+Resting_PBMC_9d4deba229524e60,CD56dim NK,NK
+Resting_PBMC_774ef52aff436f33,Naive CD8 T,CD8 T
+Resting_PBMC_e98825b72b289ad7,Non-classical Mono,Mono
+Resting_PBMC_0ca1d24f9f0f676c,CD56dim NK,NK
+Resting_PBMC_bc815a40bc31caf9,Naive CD8 T,CD8 T
+Resting_PBMC_096350056ecb8b3f,cDC2,DC
+Resting_PBMC_9ee6332e55719f5e,MAIT,Other T
+Resting_PBMC_30a43029df342f90,CD4 TEM,CD4 T
+Resting_PBMC_43a28eff35cb233e,Classical Mono,Mono
+Resting_PBMC_1ffeb43d554ef02c,Naive CD8 T,CD8 T
+Resting_PBMC_896eede7969bd169,Classical Mono,Mono
+Resting_PBMC_53d77a27b9e0cb85,CD4 TEMRA,CD4 T
+Resting_PBMC_58f4e874b80cd5f9,CD56dim NK,NK
+Resting_PBMC_280d5d1c6bb26f25,Naive CD4 T,CD4 T
+Resting_PBMC_dbc6fcef94ceae88,Non-classical Mono,Mono
+Resting_PBMC_21c9a82ba1e18cd5,CD4 TCM,CD4 T
+Resting_PBMC_210e94cadbe9723c,CD4 TCM,CD4 T
+Resting_PBMC_4f594bbb4167beba,CD56bright NK,NK
+Resting_PBMC_835607aea3c9c2e3,CD4 TCM,CD4 T
+Resting_PBMC_642d7d084194e6b9,pDC,DC
+Resting_PBMC_f185434ca9dc774b,CD4 TEM,CD4 T
+Resting_PBMC_f8635e395064cb39,Basophils,Granulocytes
+Resting_PBMC_349f557ee1c07bbf,CD4 TCM,CD4 T
+Resting_PBMC_1897069d9bde3422,CD56dim NK,NK
+Resting_PBMC_a5b3c14cf6a71795,cDC1,DC
+Resting_PBMC_b8db1db974e2ff25,Platelets,Platelets
+Resting_PBMC_36c0570c336c2cf6,Platelets,Platelets
+Resting_PBMC_e9617d5b82fff471,CD4 TCM,CD4 T
+Resting_PBMC_2c8d9726517b56b6,CD56dim NK,NK
+Resting_PBMC_858109245de61583,CD56dim NK,NK
+Resting_PBMC_5d74d6ceceada575,pDC,DC
+Resting_PBMC_3402b33d2166365c,Treg,CD4 T
+Resting_PBMC_34f73996a9127618,Classical Mono,Mono
+Resting_PBMC_bc305ad2dbc51514,CD4 TCM,CD4 T
+Resting_PBMC_575fe4b48d7e5c9f,CD4 TCM,CD4 T
+Resting_PBMC_758b5c9de3a6282a,CD4 TCM,CD4 T
+Resting_PBMC_84073056e1fccd4c,gdT,Other T
+Resting_PBMC_b133466d002b119c,Naive CD8 T,CD8 T
+Resting_PBMC_5fc686c09a47d4e1,CD56dim NK,NK
+Resting_PBMC_4c660c50752124cf,Classical Mono,Mono
+Resting_PBMC_c1a8aced8e7f6824,Platelets,Platelets
+Resting_PBMC_fa96ecaf75ba029b,Naive CD4 T,CD4 T
+Resting_PBMC_c0586d7b34a61974,Memory B,B
+Resting_PBMC_3557a9a49397b96e,CD4 TEM,CD4 T
+Resting_PBMC_951618f5a5ab3bd0,CD4 TCM,CD4 T
+Resting_PBMC_382eca88ffdecdcb,Classical Mono,Mono
+Resting_PBMC_200e84eb3c35e4ae,Memory B,B
+Resting_PBMC_dabf88cdbb1909a2,CD4 TCM,CD4 T
+Resting_PBMC_588125553dbae689,CD4 TCM,CD4 T
+Resting_PBMC_cbdebe0af6618ad7,CD4 TCM,CD4 T
+Resting_PBMC_591ee91c116c03e6,Naive B,B
+Resting_PBMC_2433aeb45e9f7540,CD4 TCM,CD4 T
+Resting_PBMC_ef347aea616111b7,Platelets,Platelets
+Resting_PBMC_2a01a8842722db8b,cDC1,DC
+Resting_PBMC_32235fb58171c261,CD4 TCM,CD4 T
+Resting_PBMC_714911bec297dd4a,cDC2,DC
+Resting_PBMC_67087e8d14c48f44,CD4 TEFF,CD4 T
+Resting_PBMC_db9524c2d71f21eb,CD4 TCM,CD4 T
+Resting_PBMC_70bd34a5b6872096,Classical Mono,Mono
+Resting_PBMC_11ba6a40c6799306,MAIT,Other T
+Resting_PBMC_7afc20a3df194f9c,Platelets,Platelets
+Resting_PBMC_c93507ece87cd9de,CD4 TCM,CD4 T
+Resting_PBMC_908008bf29d574ff,CD4 TCM,CD4 T
+Resting_PBMC_c248850118b9993e,Naive CD4 T,CD4 T
+Resting_PBMC_9d1f0d13e349414d,Naive CD8 T,CD8 T
+Resting_PBMC_d0cbf69701014e6c,CD56dim NK,NK
+Resting_PBMC_2a36425d08495ae4,Memory B,B
+Resting_PBMC_515415d58a24ec54,CD4 TEM,CD4 T
+Resting_PBMC_e25113a6cf995ab7,CD4 TSCM,CD4 T
+Resting_PBMC_8f172f3344b7cba3,CD4 TEM,CD4 T
+Resting_PBMC_1da084f68a66a45c,Memory B,B
+Resting_PBMC_cd52a76a43fdfd0a,Naive CD4 T,CD4 T
+Resting_PBMC_ea2daf2c49375de5,Classical Mono,Mono
+Resting_PBMC_6103d5c306ab31d2,Classical Mono,Mono
+Resting_PBMC_81554a24df3cbf1a,CD4 TCM,CD4 T
+Resting_PBMC_7d0210b738d92903,CD56dim NK,NK
+Resting_PBMC_e983e143390351a2,Platelets,Platelets
+Resting_PBMC_69eb7faeb94d0d00,Platelets,Platelets
+Resting_PBMC_9b2b9ed3e505f3d5,pDC,DC
+Resting_PBMC_432c606685cac6f4,Naive CD8 T,CD8 T
+Resting_PBMC_3cb6f090a26c13cd,Classical Mono,Mono
+Resting_PBMC_b92fd2f774351413,CD4 TCM,CD4 T
+Resting_PBMC_8f59c7c0933c97d8,CD8 TSCM,CD8 T
+Resting_PBMC_cd20668b2dacc29e,Classical Mono,Mono
+Resting_PBMC_5662e064d080b04c,CD4 TCM,CD4 T
+Resting_PBMC_f15eda75d7666c95,CD4 TEM,CD4 T
+Resting_PBMC_85cbc607666464cf,NKT,Other T
+Resting_PBMC_381d52b3b9a23353,Classical Mono,Mono
+Resting_PBMC_7e6724d109cf2a7e,Classical Mono,Mono
+Resting_PBMC_a6dc981735f96afb,CD4 TSCM,CD4 T
+Resting_PBMC_5e62986742d67ce3,CD4 TCM,CD4 T
+Resting_PBMC_50b46b3e3c90f226,CD56dim NK,NK
+Resting_PBMC_225be937022a3d4c,CD8 TSCM,CD8 T
+Resting_PBMC_23f9cb2e06a87c64,CD4 TCM,CD4 T
+Resting_PBMC_bdcb65d02ed53c9b,CD4 TCM,CD4 T
+Resting_PBMC_f69c26cc98947a82,Platelets,Platelets
+Resting_PBMC_8d24e14ed7ff82b7,DNT,Other T
+Resting_PBMC_a0c6d1ae55f4637a,Classical Mono,Mono
+Resting_PBMC_8576f3e584b5406e,gdT,Other T
+Resting_PBMC_40c1b428ccfad326,CD4 TCM,CD4 T
+Resting_PBMC_73c00483bdfb6f8e,Classical Mono,Mono
+Resting_PBMC_e7775a820baac5b6,NKT,Other T
+Resting_PBMC_328a7884af505800,CD4 TCM,CD4 T
+Resting_PBMC_7687a153402f9fed,Classical Mono,Mono
+Resting_PBMC_acdf23c00fee6304,Memory B,B
+Resting_PBMC_8c8720403b1a2500,Platelets,Platelets
+Resting_PBMC_1c8aed43c83f539f,CD4 TCM,CD4 T
+Resting_PBMC_978e51f7722ffbb3,MAIT,Other T
+Resting_PBMC_afa4881934dafd6d,Naive CD4 T,CD4 T
+Resting_PBMC_1e2123f830436c4f,Non-classical Mono,Mono
+Resting_PBMC_122520e8760af58a,gdT,Other T
+Resting_PBMC_eefdf6c82d241bf6,Classical Mono,Mono
+Resting_PBMC_8cf19c98729f4269,Naive B,B
+Resting_PBMC_9c6a9adb75b383a2,CD56dim NK,NK
+Resting_PBMC_71f676fe223f9eef,Naive CD4 T,CD4 T
+Resting_PBMC_55f6db7cc7be42d1,CD56dim NK,NK
+Resting_PBMC_3261e7ef8e431cd9,NKT,Other T
+Resting_PBMC_ea3b3fec187cc5b8,CD4 TEM,CD4 T
+Resting_PBMC_ceb304d3e41de6ef,CD8 TEM,CD8 T
+Resting_PBMC_23df8841193cd159,CD4 TCM,CD4 T
+Resting_PBMC_3a877abe340d8c4a,CD56dim NK,NK
+Resting_PBMC_b319d8f1c53d1ff4,CD4 TEM,CD4 T
+Resting_PBMC_e3f6da4aab648e62,CD8 TSCM,CD8 T
+Resting_PBMC_d9c1551282431723,Naive CD4 T,CD4 T
+Resting_PBMC_c0b9d89ae2119b31,CD4 TCM,CD4 T
+Resting_PBMC_d7e58c2fb34d8fe8,CD4 TCM,CD4 T
+Resting_PBMC_437dad9e87517e04,Non-classical Mono,Mono
+Resting_PBMC_0c1d7123acb89cfe,CD4 TEM,CD4 T
+Resting_PBMC_b5ca925aed865f90,Naive CD8 T,CD8 T
+Resting_PBMC_d8a37c66fc4c01a0,CD4 TCM,CD4 T
+Resting_PBMC_c736b2af7897b316,CD4 TCM,CD4 T
+Resting_PBMC_d8a758e9b293b835,Platelets,Platelets
+Resting_PBMC_9102342517f6e7da,CD56dim NK,NK
+Resting_PBMC_afff5b6a2fac8b5d,Classical Mono,Mono
+Resting_PBMC_33de3e6e823095ad,CD56dim NK,NK
+Resting_PBMC_e28cd4fde3a72c32,CD4 TSCM,CD4 T
+Resting_PBMC_6146c6bc12e6dd10,CD4 TCM,CD4 T
+Resting_PBMC_fdf5bc92ed6b56e2,CD4 TCM,CD4 T
+Resting_PBMC_f2489a483f9ed639,Naive B,B
+Resting_PBMC_bf9f0ec7df895d70,CD8 TEFF,CD8 T
+Resting_PBMC_de7f43c3f69214cd,CD4 TCM,CD4 T
+Resting_PBMC_c015fd365e79876e,Platelets,Platelets
+Resting_PBMC_073ecadebb3f2053,Platelets,Platelets
+Resting_PBMC_c94216acb8c942ad,Classical Mono,Mono
+Resting_PBMC_aabaabdfc95914b5,CD56dim NK,NK
+Resting_PBMC_1fa048e0a0980242,MAIT,Other T
+Resting_PBMC_cdbac05c41369e7f,MAIT,Other T
+Resting_PBMC_1a6fe42e423f16fb,CD4 TCM,CD4 T
+Resting_PBMC_231bf2e7b26aa00f,Plasma cells,B
+Resting_PBMC_f479137f3d931871,Naive CD4 T,CD4 T
+Resting_PBMC_422a9ded522b1c7e,NKT,Other T
+Resting_PBMC_aa690bdd49a2f834,CD8 TCM,CD8 T
+Resting_PBMC_416e659481a72eb5,Non-classical Mono,Mono
+Resting_PBMC_455da4bd69b9937b,CD4 TEM,CD4 T
+Resting_PBMC_336fc8d56ae9ed1e,Platelets,Platelets
+Resting_PBMC_caffda78530daff4,CD4 TCM,CD4 T
+Resting_PBMC_3f9676a35165841e,CD56dim NK,NK
+Resting_PBMC_245978b5b633fec7,Naive CD4 T,CD4 T
+Resting_PBMC_a46562ec6e97a9a7,Treg,CD4 T
+Resting_PBMC_7e80a086fa9fc6c7,CD56bright NK,NK
+Resting_PBMC_fd4caaab05c6a722,CD8 TCM,CD8 T
+Resting_PBMC_1910cc862a3815f6,Naive CD4 T,CD4 T
+Resting_PBMC_6ea58780dca2dc8a,CD56dim NK,NK
+Resting_PBMC_dbad0c351e319f1b,CD4 TEM,CD4 T
+Resting_PBMC_2d388b392b6f7d06,CD4 TCM,CD4 T
+Resting_PBMC_d17ac348ae9b06e7,Naive CD4 T,CD4 T
+Resting_PBMC_90b16f8852f8baf4,CD4 TCM,CD4 T
+Resting_PBMC_cdf05bd6cc0ea7a1,Non-classical Mono,Mono
+Resting_PBMC_0bc02ed2eae3acdf,gdT,Other T
+Resting_PBMC_ed03fcaf3c7f9cee,Treg,CD4 T
+Resting_PBMC_984d43ce7a8851eb,CD4 TCM,CD4 T
+Resting_PBMC_d05f0203b9eaaa52,CD4 TCM,CD4 T
+Resting_PBMC_d819c868387cd612,Memory B,B
+Resting_PBMC_9a09c9db4077bd15,Memory B,B
+Resting_PBMC_2e283e913fd47d7f,Platelets,Platelets
+Resting_PBMC_3864a0e1dafbab5f,CD4 TCM,CD4 T
+Resting_PBMC_f44b25da237ae5d4,CD4 TCM,CD4 T
+Resting_PBMC_d0937bea5122aac6,CD4 TCM,CD4 T
+Resting_PBMC_f7550c98dc2bcc17,Classical Mono,Mono
+Resting_PBMC_801798560fe43bae,CD8 TSCM,CD8 T
+Resting_PBMC_4dc1cfabc849f12c,CD4 TCM,CD4 T
+Resting_PBMC_8c94761d937dce88,CD4 TCM,CD4 T
+Resting_PBMC_121e0dded2b48c0a,Platelets,Platelets
+Resting_PBMC_6dacde9a81a6a916,CD56dim NK,NK
+Resting_PBMC_ee642d3ecc62562f,CD4 TCM,CD4 T
+Resting_PBMC_4cf0d11a7f354287,CD8 TEM,CD8 T
+Resting_PBMC_1a8a9783e4ebb38d,Classical Mono,Mono
+Resting_PBMC_d34db115299041cb,CD4 TSCM,CD4 T
+Resting_PBMC_fbbb8596a176321d,CD4 TSCM,CD4 T
+Resting_PBMC_9489cedfb3d52a7b,CD56dim NK,NK
+Resting_PBMC_a21a5e14b6a0e621,CD4 TCM,CD4 T
+Resting_PBMC_67ee04768abc655f,Classical Mono,Mono
+Resting_PBMC_dfdf5611f820a69b,CD4 TCM,CD4 T
+Resting_PBMC_20574d85bcd9304c,Classical Mono,Mono
+Resting_PBMC_2a351a6b9d82d88d,CD4 TCM,CD4 T
+Resting_PBMC_7e8c317c643fe5a6,CD4 TCM,CD4 T
+Resting_PBMC_baa931de534669f6,CD56dim NK,NK
+Resting_PBMC_b54e4b239004f7f3,Memory B,B
+Resting_PBMC_d6c53f026df5da7f,Classical Mono,Mono
+Resting_PBMC_563edad4849e5832,CD4 TCM,CD4 T
+Resting_PBMC_50fcbc98b97adb56,CD4 TCM,CD4 T
+Resting_PBMC_ae9d1daf1ee44c60,CD4 TCM,CD4 T
+Resting_PBMC_1baa09245e0d1346,Naive CD4 T,CD4 T
+Resting_PBMC_460af1a38503231d,CD56dim NK,NK
+Resting_PBMC_145261f539a6cf42,CD56dim NK,NK
+Resting_PBMC_09abd2794ed855ad,Naive CD4 T,CD4 T
+Resting_PBMC_00087f170ed46087,gdT,Other T
+Resting_PBMC_74ab444b80ddba78,cDC1,DC
+Resting_PBMC_161f033c626ef91b,Naive CD8 T,CD8 T
+Resting_PBMC_04408ad2d2d872c2,CD4 TCM,CD4 T
+Resting_PBMC_6e59778e34e491de,CD56dim NK,NK
+Resting_PBMC_1daccaced0a3884f,CD4 TCM,CD4 T
+Resting_PBMC_4904d7af0cfa7193,Classical Mono,Mono
+Resting_PBMC_8c0776b25457056e,CD4 TCM,CD4 T
+Resting_PBMC_a30e963d732e6421,CD8 TCM,CD8 T
+Resting_PBMC_b64c11d707568c81,Naive CD8 T,CD8 T
+Resting_PBMC_dcad61c73b1737ac,MAIT,Other T
+Resting_PBMC_28ffa916d73d0c0f,CD4 TCM,CD4 T
+Resting_PBMC_391bc494c627b334,NKT,Other T
+Resting_PBMC_9c326eceb8646259,CD8 TEM,CD8 T
+Resting_PBMC_a7da0c2dae35058f,cDC2,DC
+Resting_PBMC_f2a211a5d6f5c2ab,CD8 TSCM,CD8 T
+Resting_PBMC_a25bcb21a8183bfe,Classical Mono,Mono
+Resting_PBMC_995702f234dffa7c,gdT,Other T
+Resting_PBMC_d135d2af58fa387c,CD56dim NK,NK
+Resting_PBMC_8e7f5a8b9c782691,CD4 TCM,CD4 T
+Resting_PBMC_bba87434c50b7e7f,CD8 TSCM,CD8 T
+Resting_PBMC_47ecad344e4dd092,Naive CD8 T,CD8 T
+Resting_PBMC_a7a351d7ea83b3cd,Platelets,Platelets
+Resting_PBMC_189966474efd8eaf,CD4 TCM,CD4 T
+Resting_PBMC_dc4f627de87bdc37,Treg,CD4 T
+Resting_PBMC_b4332433c9772ed3,CD4 TEM,CD4 T
+Resting_PBMC_b6d1fcc2de74e1cd,CD4 TCM,CD4 T
+Resting_PBMC_4634738de99d0913,CD56dim NK,NK
+Resting_PBMC_4d644f7651cb03ee,CD8 TSCM,CD8 T
+Resting_PBMC_96e0956bcd90fb02,Naive CD4 T,CD4 T
+Resting_PBMC_ae2c3152983d3899,Naive CD4 T,CD4 T
+Resting_PBMC_c1f64ec076c9df30,CD4 TCM,CD4 T
+Resting_PBMC_d2111ddb134e3695,CD4 TCM,CD4 T
+Resting_PBMC_80772d96a2c58f98,MAIT,Other T
+Resting_PBMC_df373b2ea71c4d88,Classical Mono,Mono
+Resting_PBMC_a9bb706f885d0a7b,Treg,CD4 T
+Resting_PBMC_2762d6703c5e0ed9,Naive CD8 T,CD8 T
+Resting_PBMC_a75ea6ecc40214c3,CD56dim NK,NK
+Resting_PBMC_d614bb11498c3561,Non-classical Mono,Mono
+Resting_PBMC_48a295205513bd88,CD8 TCM,CD8 T
+Resting_PBMC_75b24ac0535331fd,CD4 TEM,CD4 T
+Resting_PBMC_800d45ec79fae865,Classical Mono,Mono
+Resting_PBMC_8f017a9eea0a1070,Intermediate Mono,Mono
+Resting_PBMC_d2d202adc81d2a20,CD8 TEFF,CD8 T
+Resting_PBMC_b9c8397da2f9674b,CD56dim NK,NK
+Resting_PBMC_2fbd8cdb9a4c312b,Classical Mono,Mono
+Resting_PBMC_07e215bce6e6757a,Naive CD8 T,CD8 T
+Resting_PBMC_a120d36c7e447e6c,pDC,DC
+Resting_PBMC_9eedc3b9ab99c1ed,CD4 TCM,CD4 T
+Resting_PBMC_bb89e316cfbedd5e,Naive CD8 T,CD8 T
+Resting_PBMC_e7f3b83358a06249,Platelets,Platelets
+Resting_PBMC_0bbf39d6b4e6bb60,CD56dim NK,NK
+Resting_PBMC_3e412c1f4a4d7190,Platelets,Platelets
+Resting_PBMC_162f3dc31fa10145,Treg,CD4 T
+Resting_PBMC_32f577d78cd0d8fd,Naive CD4 T,CD4 T
+Resting_PBMC_30106dac7ccf3c48,Non-classical Mono,Mono
+Resting_PBMC_76fe1e8f9b8e37fd,Platelets,Platelets
+Resting_PBMC_2d415c49dbe31d3b,CD4 TCM,CD4 T
+Resting_PBMC_493edca22fe1fc1c,Non-classical Mono,Mono
+Resting_PBMC_9122bcecf9a5b2cf,CD4 TCM,CD4 T
+Resting_PBMC_26f5000487fffd3e,pDC,DC
+Resting_PBMC_63a25b2c22bb364a,CD56dim NK,NK
+Resting_PBMC_5b37cfde9615d7e8,Treg,CD4 T
+Resting_PBMC_f0440e0bc3c2a4ab,CD4 TCM,CD4 T
+Resting_PBMC_b18f23578e4e6dad,Platelets,Platelets
+Resting_PBMC_1a9e53a8e2cce7cd,CD56dim NK,NK
+Resting_PBMC_48423b811179bae9,Platelets,Platelets
+Resting_PBMC_283eb5dd55e8faea,Classical Mono,Mono
+Resting_PBMC_71b887c2d40c116d,CD4 TCM,CD4 T
+Resting_PBMC_f3c9e9d29c9ec2ff,CD56dim NK,NK
+Resting_PBMC_aface5e629e78a1e,CD8 TSCM,CD8 T
+Resting_PBMC_4915d8033f7e521c,CD4 TCM,CD4 T
+Resting_PBMC_93e2c295e213dece,CD4 TCM,CD4 T
+Resting_PBMC_51fdf0399843d14b,Naive CD8 T,CD8 T
+Resting_PBMC_5389415102be14ad,CD4 TSCM,CD4 T
+Resting_PBMC_b578a3647400b733,MAIT,Other T
+Resting_PBMC_be382951d223e6ff,CD4 TCM,CD4 T
+Resting_PBMC_274c6a2091ad2b88,Naive CD4 T,CD4 T
+Resting_PBMC_b56dd70d9de59165,Naive B,B
+Resting_PBMC_cd3df87583a2726f,CD4 TCM,CD4 T
+Resting_PBMC_0072d82b235efe80,CD4 TCM,CD4 T
+Resting_PBMC_2567912bd7212591,Platelets,Platelets
+Resting_PBMC_ca615a817bb11925,CD4 TCM,CD4 T
+Resting_PBMC_f80ca69ed91b3aa0,Platelets,Platelets
+Resting_PBMC_00fa830b2319d42c,Classical Mono,Mono
+Resting_PBMC_99ad7e56704514e8,Classical Mono,Mono
+Resting_PBMC_835d489e0c87a4da,CD4 TCM,CD4 T
+Resting_PBMC_61b2fab70ecd70b4,Classical Mono,Mono
+Resting_PBMC_9b526d75aaacec29,Naive CD4 T,CD4 T
+Resting_PBMC_a04a2cb58443b989,gdT,Other T
+Resting_PBMC_59a313dc520c14b9,CD4 TCM,CD4 T
+Resting_PBMC_15ef77e81f045baf,CD4 TCM,CD4 T
+Resting_PBMC_4140403cf9136fbc,CD4 TCM,CD4 T
+Resting_PBMC_91cec8379b8d7ca4,Platelets,Platelets
+Resting_PBMC_dd3cf5bf2e723ea7,Classical Mono,Mono
+Resting_PBMC_cd2165e179da4162,CD4 TCM,CD4 T
+Resting_PBMC_49b83e5bf25b7fb4,Memory B,B
+Resting_PBMC_71a8ba93d08c9baa,Naive CD8 T,CD8 T
+Resting_PBMC_08cdb19128a6de49,Classical Mono,Mono
+Resting_PBMC_890ea0ab1fb35081,Classical Mono,Mono
+Resting_PBMC_2fc3380f5d849662,CD4 TCM,CD4 T
+Resting_PBMC_91371c2402970481,CD56dim NK,NK
+Resting_PBMC_eefafdef757d232b,CD4 TEM,CD4 T
+Resting_PBMC_751f67c21a0dbca4,Platelets,Platelets
+Resting_PBMC_7da6af8628e4edaa,CD4 TEM,CD4 T
+Resting_PBMC_b980be7eb6c1bb9e,cDC2,DC
+Resting_PBMC_099b797008aa65de,cDC1,DC
+Resting_PBMC_3c50fb15c60b3f3c,pDC,DC
+Resting_PBMC_c3359e9a17db4a99,Classical Mono,Mono
+Resting_PBMC_1d1e7522bcfdb90c,gdT,Other T
+Resting_PBMC_799b9238287cc644,Platelets,Platelets
+Resting_PBMC_5e4721fc72e067b7,CD4 TCM,CD4 T
+Resting_PBMC_9d5d38053443f44b,Classical Mono,Mono
+Resting_PBMC_12e85276af0d550e,CD4 TCM,CD4 T
+Resting_PBMC_972c317809469fdf,Classical Mono,Mono
+Resting_PBMC_e5b360d86ac2fda4,Classical Mono,Mono
+Resting_PBMC_d1b6d2b23a121a9a,DNT,Other T
+Resting_PBMC_c268ea38f32e157a,CD4 TEFF,CD4 T
+Resting_PBMC_da10102887b5d5d9,CD4 TEM,CD4 T
+Resting_PBMC_5cf8134c32510fff,CD56dim NK,NK
+Resting_PBMC_d0c342e2c3c6bda8,Platelets,Platelets
+Resting_PBMC_2f6af0115d96f77a,CD8 TEMRA,CD8 T
+Resting_PBMC_a075cbc91a39a5e1,CD8 TSCM,CD8 T
+Resting_PBMC_ca1bf2728a31c146,Classical Mono,Mono
+Resting_PBMC_2d53557c95e39670,CD8 TSCM,CD8 T
+Resting_PBMC_4481e01416c4e587,CD4 TCM,CD4 T
+Resting_PBMC_c6fced78f8b52170,Naive CD4 T,CD4 T
+Resting_PBMC_5252ec34dde42048,Naive CD8 T,CD8 T
+Resting_PBMC_3dcc967046e75a6c,Non-classical Mono,Mono
+Resting_PBMC_913aeae8fff74bd0,CD4 TCM,CD4 T
+Resting_PBMC_31d7be303f2b31ac,CD4 TCM,CD4 T
+Resting_PBMC_288f9d425a3e3d01,Classical Mono,Mono
+Resting_PBMC_520308ed42cd56b2,Non-classical Mono,Mono
+Resting_PBMC_20a99c14a09d9179,Naive CD4 T,CD4 T
+Resting_PBMC_0ab39a0cb381f209,CD4 TSCM,CD4 T
+Resting_PBMC_c643f78d4494c774,Naive CD8 T,CD8 T
+Resting_PBMC_20d1c8f39a9f0c0e,Naive CD4 T,CD4 T
+Resting_PBMC_a588d8033e923ad0,Classical Mono,Mono
+Resting_PBMC_c7e4352e5492820a,CD56dim NK,NK
+Resting_PBMC_3f90aa333bb2b74c,CD8 TSCM,CD8 T
+Resting_PBMC_aeec635d235fb97f,CD8 TEM,CD8 T
+Resting_PBMC_bac1fddd9c955aab,CD4 TCM,CD4 T
+Resting_PBMC_f9fe903fff3cb86b,CD4 TEM,CD4 T
+Resting_PBMC_6e1e9ef780784912,Classical Mono,Mono
+Resting_PBMC_0ca2a3f86d645af3,CD4 TCM,CD4 T
+Resting_PBMC_7f28f9630c1594da,Naive CD4 T,CD4 T
+Resting_PBMC_385ff3cc43f64e4d,CD4 TCM,CD4 T
+Resting_PBMC_388eebb866e42bbe,CD4 TCM,CD4 T
+Resting_PBMC_67163c274724175b,CD56dim NK,NK
+Resting_PBMC_72eba7518a85d571,Platelets,Platelets
+Resting_PBMC_11cd770e1893d378,CD4 TCM,CD4 T
+Resting_PBMC_c0c7fea610cef22b,MAIT,Other T
+Resting_PBMC_82293360720f4801,CD4 TEM,CD4 T
+Resting_PBMC_ba7373fe5fdd78f9,CD4 TCM,CD4 T
+Resting_PBMC_37e9578179ea51f0,CD56dim NK,NK
+Resting_PBMC_93f8ab5ddb80394c,Naive CD4 T,CD4 T
+Resting_PBMC_982a8fb7a6adb455,Non-classical Mono,Mono
+Resting_PBMC_d4fae6688a02edf5,Platelets,Platelets
+Resting_PBMC_d85e4304431b371e,CD8 TEMRA,CD8 T
+Resting_PBMC_db03e69452debe3b,Naive CD8 T,CD8 T
+Resting_PBMC_b7cd2070de8730cc,CD56dim NK,NK
+Resting_PBMC_3fe18b7a13518c29,Platelets,Platelets
+Resting_PBMC_e90627cf88940b5e,Platelets,Platelets
+Resting_PBMC_35fa62a6e3fd80a9,Classical Mono,Mono
+Resting_PBMC_030d689b32a745d4,MAIT,Other T
+Resting_PBMC_71536d40b1ce1f4e,Platelets,Platelets
+Resting_PBMC_850a6c1a355d5969,CD4 TCM,CD4 T
+Resting_PBMC_9e7abbbe82ab16b3,CD4 TCM,CD4 T
+Resting_PBMC_5fe15e5db3b90341,CD4 TCM,CD4 T
+Resting_PBMC_26907ac81de57621,CD56dim NK,NK
+Resting_PBMC_c2b304636719a547,Naive CD8 T,CD8 T
+Resting_PBMC_68ea282bd10ee753,CD56dim NK,NK
+Resting_PBMC_28ccd55ce17ca4b5,CD4 TCM,CD4 T
+Resting_PBMC_8a9fcd240eb9236a,CD4 TCM,CD4 T
+Resting_PBMC_616addc0519663de,Naive CD8 T,CD8 T
+Resting_PBMC_cb00c99b9560ac1a,CD4 TCM,CD4 T
+Resting_PBMC_8e1675914a803df1,NKT,Other T
