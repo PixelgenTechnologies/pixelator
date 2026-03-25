@@ -4,6 +4,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 """
 
 import logging
+import re
 import tempfile
 from itertools import chain
 from pathlib import Path
@@ -370,19 +371,36 @@ def sample_calling(
             con.register("nodes_to_remove_tbl", nodes_to_remove[["umi"]])
             con.register("sample_components", pl.DataFrame({"component": comps}))
 
-            marker_1_sql = "REGEXP_REPLACE(marker_1, '-\\d+$', '') AS marker_1"
-            marker_2_sql = "REGEXP_REPLACE(marker_2, '-\\d+$', '') AS marker_2"
+            # Dehashing should only strip the `-<hash_index>` suffix for *known*
+            # hashing antibody names (e.g. `PD-1-1` -> `PD-1`), not for other
+            # biological marker IDs like `PD-1`.
+            hashed_markers = sorted(list(hashing_antibody_mapping.hashing_antibodies))
+            hash_marker_map = pl.DataFrame(
+                {
+                    "hashed_marker": hashed_markers,
+                    "base_marker": [
+                        re.sub(r"-\d+$", "", marker) for marker in hashed_markers
+                    ],
+                }
+            )
+            con.register("hash_marker_map", hash_marker_map)
+
+            marker_1_sql = "COALESCE(hm1.base_marker, e.marker_1) AS marker_1"
+            marker_2_sql = "COALESCE(hm2.base_marker, e.marker_2) AS marker_2"
             select_cols = (
-                f"* EXCLUDE (marker_1, marker_2), {marker_1_sql}, {marker_2_sql}"
+                "e.umi1, e.umi2, e.read_count, e.uei_count, "
+                f"{marker_1_sql}, {marker_2_sql}, e.component"
             )
 
             query = f"""COPY (
                             SELECT
                                 {select_cols}
-                            FROM edgelist
-                            WHERE umi1 NOT IN (SELECT umi FROM nodes_to_remove_tbl)
-                            AND umi2 NOT IN (SELECT umi FROM nodes_to_remove_tbl)
-                            AND component IN (SELECT component FROM sample_components)
+                            FROM edgelist e
+                            LEFT JOIN hash_marker_map hm1 ON e.marker_1 = hm1.hashed_marker
+                            LEFT JOIN hash_marker_map hm2 ON e.marker_2 = hm2.hashed_marker
+                            WHERE e.umi1 NOT IN (SELECT umi FROM nodes_to_remove_tbl)
+                            AND e.umi2 NOT IN (SELECT umi FROM nodes_to_remove_tbl)
+                            AND e.component IN (SELECT component FROM sample_components)
                         ) TO '{tmp_edgelist_parquet.name}' (FORMAT parquet);
                     """
             con.execute(query)
