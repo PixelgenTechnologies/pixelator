@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add the option to calculate proximity scores from edgelist using analytical expected join counts. 
+  `pixeldataset.Proximity(calculate_from_edgelist=True)` is used to compute these scores.
 - Add sample calling functionality
 - Add FLAG and FMC63 v3 panels
 
@@ -58,6 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix logging for log1p_transformation and clr_transformation to state that the stats correspond to components and not nodes.
+
+- Fix p values in the test proximity scores.
 - Fix bug in unpacking 4bit packed sequences.
 - Fix bug in sample calling that removed the ending of antibodies that ended with `-<digit>`.
 
