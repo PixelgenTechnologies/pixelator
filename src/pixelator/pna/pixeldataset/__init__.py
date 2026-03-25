@@ -269,9 +269,12 @@ class Proximity:
 
     def __len__(self) -> int:
         """Get the number of proximity scores."""
-        return self._querier.read_proximity_len(
-            components=self._components, markers=self._markers
-        )
+        if not self._calculate_from_edgelist:
+            return self._querier.read_proximity_len(
+                components=self._components, markers=self._markers
+            )
+        else:
+            return self._calculate_proximity_length_from_edgelist()
 
     def is_empty(self):
         """Check if the proximity data is empty."""
@@ -387,6 +390,28 @@ class Proximity:
 
     def _ipython_display_(self):
         return print(str(self))
+
+    def _calculate_proximity_length_from_edgelist(self) -> int:
+        components = normalize_input_to_list(self._components)  # type: ignore
+        markers = normalize_input_to_list(self._markers)  # type: ignore
+        query = f"""
+        SELECT CAST(SUM(marker_count * (marker_count+1) / 2) AS INTEGER) AS sum_proximity_counts
+        FROM (
+            SELECT component, COUNT(DISTINCT marker) AS marker_count
+            FROM (
+                SELECT component, marker_1 AS marker FROM edgelist
+                UNION
+                SELECT component, marker_2 AS marker FROM edgelist
+            )
+            WHERE {self._querier._optimized_component_where_condition(components)} AND
+                  {"(marker IN $markers)" if markers else "TRUE"}
+            GROUP BY component
+        )
+        """
+
+        with self._querier.view as connection:
+            result = connection.execute(query).pl()[0, "sum_proximity_counts"]
+            return result
 
 
 class PreComputedLayouts:
