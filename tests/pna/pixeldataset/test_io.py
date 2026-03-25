@@ -8,10 +8,10 @@ from polars.testing import assert_frame_equal
 
 from pixelator.common.utils.testing import adata_assert_equal
 from pixelator.pna.pixeldataset.io import (
-    PixelDataQuerier,
     PixelDataViewer,
     PixelFileWriter,
     PxlFile,
+    QueryBuilder,
 )
 
 
@@ -51,12 +51,26 @@ def _add_sample_name_columns(df, sample_name):
     return df.with_columns(sample=pl.lit(sample_name))
 
 
+def _pivot_marker_table(df: pl.DataFrame) -> pl.DataFrame:
+    """Pivot joined marker counts into marker columns (same logic as layouts+marker counts)."""
+    return (
+        df.select(pl.col("*"), val=pl.lit(1))
+        .pivot(
+            on="marker",
+            index=None,
+            values="val",
+            aggregate_function=pl.len().cast(pl.UInt8),
+        )
+        .fill_null(0)
+    )
+
+
 class TestPixelFileReader:
     def test_read_edgelist(self, pxl_view, edgelist_dataframe):
-        reader = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
 
         with pxl_view as connection:
-            lazy = reader.read_edgelist(connection)
+            lazy = pxl_view.execute_lazy(connection, builder.edgelist_query(None))
             assert isinstance(lazy, pl.LazyFrame)
             results = lazy.collect()
         assert_frame_equal(
@@ -64,44 +78,42 @@ class TestPixelFileReader:
         )
 
     def test_read_edgelist_filter(self, pxl_view, edgelist_dataframe):
-        reader = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
+        components = ["fc07dea9b679aca7"]
 
         with pxl_view as connection:
-            lazy = reader.read_edgelist(connection, components={"fc07dea9b679aca7"})
+            lazy = pxl_view.execute_lazy(connection, builder.edgelist_query(components))
             results = lazy.collect()
         assert_frame_equal(
             results,
             _add_sample_name_columns(
-                edgelist_dataframe.filter(pl.col("component") == "fc07dea9b679aca7"),
+                edgelist_dataframe.filter(pl.col("component") == components[0]),
                 "test_sample",
             ),
         )
 
     def test_read_edgelist_filter_str(self, pxl_view, edgelist_dataframe):
-        reader = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
+        components = ["fc07dea9b679aca7"]
 
         with pxl_view as connection:
-            lazy = reader.read_edgelist(connection, components="fc07dea9b679aca7")
+            lazy = pxl_view.execute_lazy(connection, builder.edgelist_query(components))
             results = lazy.collect()
         assert_frame_equal(
             results,
             _add_sample_name_columns(
-                edgelist_dataframe.filter(pl.col("component") == "fc07dea9b679aca7"),
+                edgelist_dataframe.filter(pl.col("component") == components[0]),
                 "test_sample",
             ),
         )
 
     def test_read_adata(self, pxl_view, adata_data):
-        reader = PixelDataQuerier(pxl_view)
-
         adata_data.obs["sample"] = "test_sample"
-        results = reader.read_adata()
+        results = pxl_view.read_adata()
         adata_assert_equal(results, adata_data)
 
     def test_read_metadata(self, pxl_view):
-        reader = PixelDataQuerier(pxl_view)
-
-        results = reader.read_metadata()
+        results = pxl_view.read_metadata()
         assert results == {
             "test_sample": {
                 "sample_name": "test_sample",
@@ -111,10 +123,12 @@ class TestPixelFileReader:
         }
 
     def test_read_proximity(self, pxl_view, proximity_dataframe):
-        reader = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
 
         with pxl_view as connection:
-            lazy = reader.read_proximity(connection)
+            lazy = pxl_view.execute_lazy(
+                connection, builder.proximity_query(None, None)
+            )
             assert isinstance(lazy, pl.LazyFrame)
             results = lazy.collect()
         assert_frame_equal(
@@ -122,24 +136,30 @@ class TestPixelFileReader:
         )
 
     def test_read_proximity_filter(self, pxl_view, proximity_dataframe):
-        reader = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
+        components = ["fc07dea9b679aca7"]
 
         with pxl_view as connection:
-            lazy = reader.read_proximity(connection, components={"fc07dea9b679aca7"})
+            lazy = pxl_view.execute_lazy(
+                connection, builder.proximity_query(components, None)
+            )
             results = lazy.collect()
         assert_frame_equal(
             results,
             _add_sample_name_columns(
-                proximity_dataframe.filter(pl.col("component") == "fc07dea9b679aca7"),
+                proximity_dataframe.filter(pl.col("component") == components[0]),
                 "test_sample",
             ),
         )
 
     def test_read_layouts(self, pxl_view, layout_dataframe):
-        reader = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
 
         with pxl_view as connection:
-            lazy = reader.read_layouts(connection, add_marker_counts=False)
+            lazy = pxl_view.execute_lazy(
+                connection,
+                builder.layouts_query(components=None, add_marker_counts=False),
+            )
             assert isinstance(lazy, pl.LazyFrame)
             results = lazy.collect()
         assert_frame_equal(
@@ -149,10 +169,16 @@ class TestPixelFileReader:
         )
 
     def test_read_layouts_add_marker_counts(self, snapshot, pxl_view):
-        reader = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
 
         with pxl_view as connection:
-            results_df = reader.read_layouts(connection, add_marker_counts=True)
+            results_df = pxl_view.execute_eager(
+                connection,
+                builder.layouts_query(components=None, add_marker_counts=True),
+            )
+        results_df = _pivot_marker_table(results_df).drop(
+            ["umi", "marker"], strict=False
+        )
         results_df = results_df.select(sorted(results_df.columns))
 
         result = StringIO()
@@ -160,19 +186,19 @@ class TestPixelFileReader:
         snapshot.assert_match(result.getvalue(), "layouts.csv")
 
     def test_read_layouts_filter(self, pxl_view, layout_dataframe):
-        reader = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
+        components = ["040b1570c7d0f28f"]
 
         with pxl_view as connection:
-            lazy = reader.read_layouts(
+            lazy = pxl_view.execute_lazy(
                 connection,
-                components={"040b1570c7d0f28f"},
-                add_marker_counts=False,
+                builder.layouts_query(components=components, add_marker_counts=False),
             )
             results = lazy.collect()
         assert_frame_equal(
             results,
             _add_sample_name_columns(
-                layout_dataframe.filter(pl.col("component") == "040b1570c7d0f28f"),
+                layout_dataframe.filter(pl.col("component") == components[0]),
                 "test_sample",
             ),
             check_row_order=False,
@@ -209,52 +235,61 @@ class TestPixelDataViewer:
 
 class TestPxlDataQuerier:
     def test_read_edgelist(self, pxl_view, edgelist_dataframe):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
         with pxl_view as connection:
-            lazy = querier.read_edgelist(connection)
+            lazy = pxl_view.execute_lazy(connection, builder.edgelist_query(None))
             result = lazy.collect()
         assert_frame_equal(
             result, edgelist_dataframe.with_columns(sample=pl.lit("test_sample"))
         )
 
     def test_read_edgelist_filter(self, pxl_view, edgelist_dataframe):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
+        components = ["fc07dea9b679aca7"]
         with pxl_view as connection:
-            lazy = querier.read_edgelist(connection, components={"fc07dea9b679aca7"})
+            lazy = pxl_view.execute_lazy(connection, builder.edgelist_query(components))
             result = lazy.collect()
         assert_frame_equal(
             result,
             edgelist_dataframe.filter(
-                pl.col("component") == "fc07dea9b679aca7"
+                pl.col("component") == components[0]
             ).with_columns(sample=pl.lit("test_sample")),
         )
 
     def test_read_edgelist_len(self, pxl_view):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
         with pxl_view as connection:
-            result = querier.read_edgelist_len(connection)
+            result = pxl_view.execute_scalar(
+                connection, builder.edgelist_len_query(None)
+            )
         assert result == 57
 
     def test_read_edgelist_len_filter(self, pxl_view):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
+        components = ["fc07dea9b679aca7"]
         with pxl_view as connection:
-            result = querier.read_edgelist_len(
-                connection, components={"fc07dea9b679aca7"}
+            result = pxl_view.execute_scalar(
+                connection, builder.edgelist_len_query(components)
             )
         assert result == 23
 
     def test_read_edgelist_stream(self, pxl_view, edgelist_dataframe):
-        querier = PixelDataQuerier(pxl_view)
         # Turn the stream into a DataFrame for comparison
+        builder = QueryBuilder()
         with pxl_view as connection:
-            result = pl.from_arrow(querier.read_edgelist_stream(connection))
+            result = pl.from_arrow(
+                pxl_view.execute_arrow_reader(
+                    connection,
+                    builder.edgelist_query(None),
+                    batch_size=1_000_000,
+                )
+            )
         assert_frame_equal(
             result, edgelist_dataframe.with_columns(sample=pl.lit("test_sample"))
         )
 
     def test_read_metadata(self, pxl_view):
-        querier = PixelDataQuerier(pxl_view)
-        result = querier.read_metadata()
+        result = pxl_view.read_metadata()
         assert result == {
             "test_sample": {
                 "sample_name": "test_sample",
@@ -264,10 +299,14 @@ class TestPxlDataQuerier:
         }
 
     def test_read_layouts(self, pxl_view, layout_dataframe):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
         with pxl_view as connection:
             result = (
-                querier.read_layouts(connection).collect().sort(["component", "index"])
+                pxl_view.execute_lazy(
+                    connection, builder.layouts_query(None, add_marker_counts=False)
+                )
+                .collect()
+                .sort(["component", "index"])
             )
         assert_frame_equal(
             result,
@@ -277,9 +316,13 @@ class TestPxlDataQuerier:
         )
 
     def test_read_layouts_add_marker_counts(self, snapshot, pxl_view, layout_dataframe):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
         with pxl_view as connection:
-            result_df = querier.read_layouts(connection, add_marker_counts=True)
+            result_df = pxl_view.execute_eager(
+                connection,
+                builder.layouts_query(None, add_marker_counts=True),
+            )
+        result_df = _pivot_marker_table(result_df).drop(["umi", "marker"], strict=False)
         result_df = result_df.sort("component").select(sorted(result_df.columns))
 
         result = StringIO()
@@ -287,43 +330,53 @@ class TestPxlDataQuerier:
         snapshot.assert_match(result.getvalue(), "read_view_layouts.csv")
 
     def test_read_layouts_len(self, pxl_view):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
         with pxl_view as connection:
-            result = querier.read_layouts_len(connection)
+            result = pxl_view.execute_scalar(
+                connection, builder.layouts_len_query(None)
+            )
         assert result == 34
 
     def test_read_layouts_len_filter(self, pxl_view):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
+        components = ["fc07dea9b679aca7"]
         with pxl_view as connection:
-            result = querier.read_layouts_len(
-                connection, components={"fc07dea9b679aca7"}
+            result = pxl_view.execute_scalar(
+                connection, builder.layouts_len_query(components)
             )
         assert result == 11
 
     def test_read_proximity(self, pxl_view, proximity_dataframe):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
         with pxl_view as connection:
-            lazy = querier.read_proximity(connection)
+            lazy = pxl_view.execute_lazy(
+                connection, builder.proximity_query(None, None)
+            )
             result = lazy.collect()
         assert_frame_equal(
             result, proximity_dataframe.with_columns(sample=pl.lit("test_sample"))
         )
 
     def test_read_proximity_filter(self, pxl_view, proximity_dataframe):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
+        components = ["fc07dea9b679aca7"]
         with pxl_view as connection:
-            lazy = querier.read_proximity(connection, components={"fc07dea9b679aca7"})
+            lazy = pxl_view.execute_lazy(
+                connection, builder.proximity_query(components, None)
+            )
             result = lazy.collect()
         assert_frame_equal(
             result,
             proximity_dataframe.filter(
-                pl.col("component") == "fc07dea9b679aca7"
+                pl.col("component") == components[0]
             ).with_columns(sample=pl.lit("test_sample")),
             check_column_order=False,
         )
 
     def test_read_proximity_len(self, pxl_view):
-        querier = PixelDataQuerier(pxl_view)
+        builder = QueryBuilder()
         with pxl_view as connection:
-            result = querier.read_proximity_len(connection)
+            result = pxl_view.execute_scalar(
+                connection, builder.proximity_len_query(None, None)
+            )
         assert result == 3

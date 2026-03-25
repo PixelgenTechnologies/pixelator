@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Literal
 
+import duckdb
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -22,9 +23,9 @@ from pixelator.common.statistics import clr_transformation, log1p_transformation
 from pixelator.pna.graph import PNAGraph, PNAGraphBackend
 from pixelator.pna.pixeldataset.io import (
     InplacePixelDataFilterer,
-    PixelDataQuerier,
     PixelDataViewer,
     PxlFile,
+    QueryBuilder,
     copy_databases,
 )
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
@@ -74,17 +75,18 @@ class Edgelist:
 
     def __init__(
         self,
-        querier: PixelDataQuerier,
+        view: PixelDataViewer,
         components: str | Iterable[str] | None = None,
     ):
         """Create a new instance of Edgelist."""
-        self._querier = querier
+        self._view = view
         self._components = normalize_input_to_set(components)
+        self._query_builder = QueryBuilder()
 
     @property
     def components(self) -> set[str]:
         """Get the component names."""
-        return self._components or set(self._querier.read_all_component_names())
+        return self._components or set(self._view.read_adata().obs.index.to_list())
 
     def _handle_backwards_compatibility(self, df: pl.LazyFrame) -> pl.LazyFrame:
         # Handle legacy marker names
@@ -92,10 +94,11 @@ class Edgelist:
 
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""
-        with self._querier.view as connection:
-            return self._querier.read_edgelist_len(
-                connection=connection, components=self._components
-            )
+        query = self._query_builder.edgelist_len_query(
+            normalize_input_to_list(self._components)
+        )
+        with self._view as connection:
+            return self._view.execute_scalar(connection, query)
 
     def is_empty(self) -> bool:
         """Check if the edgelist is empty."""
@@ -103,10 +106,13 @@ class Edgelist:
 
     def to_df(self) -> pd.DataFrame:
         """Get the edgelist as a pandas DataFrame."""
-        with self._querier.view as connection:
+        query = self._query_builder.edgelist_query(
+            normalize_input_to_list(self.components)
+        )
+        with self._view as connection:
             df = (
                 self._handle_backwards_compatibility(
-                    self._querier.read_edgelist(connection, components=self.components)
+                    self._view.execute_lazy(connection, query)
                 )
                 .collect()
                 .to_pandas()
@@ -115,9 +121,12 @@ class Edgelist:
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
-        with self._querier.view as connection:
+        query = self._query_builder.edgelist_query(
+            normalize_input_to_list(self.components)
+        )
+        with self._view as connection:
             df = self._handle_backwards_compatibility(
-                self._querier.read_edgelist(connection, components=self.components)
+                self._view.execute_lazy(connection, query)
             ).collect()
         return df
 
@@ -125,21 +134,21 @@ class Edgelist:
         self, batch_size: int = 1_000_000
     ) -> Iterable[pa.RecordBatch]:
         """Get the edgelist as a stream of pyarrow RecordBatches."""
-        with self._querier.view as connection:
-            yield from self._querier.read_edgelist_stream(
-                connection=connection,
-                components=self.components,
-                batch_size=batch_size,
+        query = self._query_builder.edgelist_query(
+            normalize_input_to_list(self.components)
+        )
+        with self._view as connection:
+            yield from self._view.execute_arrow_reader(
+                connection=connection, query=query, batch_size=batch_size
             )
 
     def _iterator(self) -> Iterable[tuple[str, pl.LazyFrame]]:
-        with self._querier.view as connection:
+        with self._view as connection:
             for component in self.components:
+                query = self._query_builder.edgelist_query([component])
                 yield (
                     component,
-                    self._querier.read_edgelist(
-                        connection=connection, components=component
-                    ),
+                    self._view.execute_lazy(connection, query),
                 )
 
     def iterator(self) -> Iterable[Component]:
@@ -183,18 +192,19 @@ class Proximity:
 
     def __init__(
         self,
-        querier: PixelDataQuerier,
+        view: PixelDataViewer,
         components: str | list[str] | set[str] | None = None,
         markers: str | list[str] | set[str] | None = None,
         add_marker_counts: bool = True,
         add_log2_ratio: bool = True,
     ):
         """Create a new instance of Proximity."""
-        self._querier = querier
+        self._view = view
         self._components = normalize_input_to_set(components)
         self._markers = normalize_input_to_set(markers)
         self._add_marker_counts = add_marker_counts
         self._add_log2_ratio_col = add_log2_ratio
+        self._query_builder = QueryBuilder()
 
     @property
     def components(self) -> set[str]:
@@ -202,7 +212,7 @@ class Proximity:
         return (
             self._components
             if self._components is not None
-            else set(self._querier.read_all_component_names())
+            else set(self._view.read_adata().obs.index.to_list())
         )
 
     @property
@@ -211,17 +221,17 @@ class Proximity:
         return (
             self._markers
             if self._markers is not None
-            else set(self._querier.read_all_marker_names())
+            else set(self._view.read_adata().var.index.to_list())
         )
 
     def __len__(self) -> int:
         """Get the number of proximity scores."""
-        with self._querier.view as connection:
-            return self._querier.read_proximity_len(
-                connection=connection,
-                components=self._components,
-                markers=self._markers,
-            )
+        query = self._query_builder.proximity_len_query(
+            normalize_input_to_list(self._components),
+            normalize_input_to_list(self._markers),
+        )
+        with self._view as connection:
+            return self._view.execute_scalar(connection, query)
 
     def is_empty(self):
         """Check if the proximity data is empty."""
@@ -292,7 +302,7 @@ class Proximity:
 
     def _post_process(self, df: pl.DataFrame) -> pl.DataFrame:
         if self._add_marker_counts:
-            adata = self._querier.read_adata()
+            adata = self._view.read_adata()
             df = self._add_marker_counts_to_proximity_df(adata, df)
 
         if self._add_log2_ratio_col:
@@ -306,12 +316,12 @@ class Proximity:
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
-        with self._querier.view as connection:
-            df = self._querier.read_proximity(
-                connection=connection,
-                components=self._components,
-                markers=self._markers,
-            ).collect()
+        query = self._query_builder.proximity_query(
+            normalize_input_to_list(self._components),
+            normalize_input_to_list(self._markers),
+        )
+        with self._view as connection:
+            df = self._view.execute_lazy(connection, query).collect()
         return self._post_process(df)
 
     def __str__(self) -> str:
@@ -341,16 +351,17 @@ class PreComputedLayouts:
 
     def __init__(
         self,
-        querier: PixelDataQuerier,
+        view: PixelDataViewer,
         components: str | Iterable[str] | None = None,
         add_marker_counts: bool = True,
         add_spherical_norm: bool = False,
     ):
         """Create a new instance of PreComputedLayouts."""
-        self._querier = querier
+        self._view = view
         self._components = normalize_input_to_set(components)
         self._add_marker_counts = add_marker_counts
         self._add_spherical_norm = add_spherical_norm
+        self._query_builder = QueryBuilder()
 
     @property
     def components(self) -> set[str]:
@@ -358,15 +369,32 @@ class PreComputedLayouts:
         return (
             self._components
             if self._components is not None
-            else set(self._querier.read_all_component_names())
+            else set(self._view.read_adata().obs.index.to_list())
+        )
+
+    def _pivot_marker_table(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Pivot the joined marker column into marker count columns."""
+        return (
+            df.select(pl.col("*"), val=pl.lit(1))
+            .pivot(
+                on="marker",
+                index=None,
+                values="val",
+                aggregate_function=pl.len().cast(pl.UInt8),
+            )
+            .fill_null(0)
         )
 
     def __len__(self) -> int:
         """Get the nodes in the layouts."""
-        with self._querier.view as connection:
-            return self._querier.read_layouts_len(
-                connection=connection, components=self._components
-            )
+        query = self._query_builder.layouts_len_query(
+            normalize_input_to_list(self._components)
+        )
+        with self._view as connection:
+            try:
+                return self._view.execute_scalar(connection, query)
+            except duckdb.CatalogException:
+                return 0
 
     def is_empty(self) -> bool:
         """Check if the precomputed layouts are empty."""
@@ -400,14 +428,22 @@ class PreComputedLayouts:
 
     def to_polars(self) -> pl.DataFrame:
         """Get the precomputed layouts as a polars DataFrame."""
-        with self._querier.view as connection:
-            layouts = self._querier.read_layouts(
-                connection=connection,
-                components=self._components,
-                add_marker_counts=self._add_marker_counts,
-            )
-            if isinstance(layouts, pl.LazyFrame):
-                layouts = layouts.collect()
+        query = self._query_builder.layouts_query(
+            components=normalize_input_to_list(self._components),
+            add_marker_counts=self._add_marker_counts,
+        )
+        with self._view as connection:
+            try:
+                if self._add_marker_counts:
+                    layouts = self._view.execute_eager(connection, query)
+                    layouts = self._pivot_marker_table(layouts)
+                    layouts = layouts.drop(["umi", "marker"], strict=False)
+                else:
+                    layouts = self._view.execute_lazy(connection, query)
+                    if isinstance(layouts, pl.LazyFrame):
+                        layouts = layouts.collect()
+            except duckdb.CatalogException:
+                layouts = pl.DataFrame()
         return self._post_process(layouts)
 
     def iterator(
@@ -423,15 +459,23 @@ class PreComputedLayouts:
 
         :return: A stream of layouts names and associated layout dataframes
         """
-        with self._querier.view as connection:
+        with self._view as connection:
             for component in self.components:
-                layouts = self._querier.read_layouts(
-                    connection=connection,
-                    components=component,
+                query = self._query_builder.layouts_query(
+                    components=[component],
                     add_marker_counts=self._add_marker_counts,
                 )
-                if isinstance(layouts, pl.LazyFrame):
-                    layouts = layouts.collect()
+                try:
+                    if self._add_marker_counts:
+                        layouts = self._view.execute_eager(connection, query)
+                        layouts = self._pivot_marker_table(layouts)
+                        layouts = layouts.drop(["umi", "marker"], strict=False)
+                    else:
+                        layouts = self._view.execute_lazy(connection, query)
+                        if isinstance(layouts, pl.LazyFrame):
+                            layouts = layouts.collect()
+                except duckdb.CatalogException:
+                    layouts = pl.DataFrame()
                 component_df = self._post_process(layouts)
                 if return_polars_df:
                     yield (component, component_df)
@@ -657,10 +701,7 @@ class PNAPixelDataset:
         This will be filtered to only include the active samples and components.
         :return: The Edgelist instance for the dataset.
         """
-        return Edgelist(
-            PixelDataQuerier(self.view),
-            components=self._active_components,
-        )
+        return Edgelist(self.view, components=self._active_components)
 
     def proximity(
         self,
@@ -676,7 +717,7 @@ class PNAPixelDataset:
         :return: The Proximity instance for the dataset.
         """
         return Proximity(
-            PixelDataQuerier(self.view),
+            self.view,
             components=self._active_components,
             markers=self._active_markers,
             add_marker_counts=add_marker_counts,
@@ -694,7 +735,7 @@ class PNAPixelDataset:
         :return: The PreComputedLayouts instance for the dataset.
         """
         return PreComputedLayouts(
-            PixelDataQuerier(self.view),
+            self.view,
             components=self._active_components,
             add_marker_counts=add_marker_counts,
             add_spherical_norm=add_spherical_norm,
@@ -704,7 +745,7 @@ class PNAPixelDataset:
         self,
     ) -> dict:
         """Return the metadata for the dataset."""
-        return PixelDataQuerier(self.view).read_metadata()
+        return self._view.read_metadata()
 
     @staticmethod
     def _copy_or_none(values_or_none):
