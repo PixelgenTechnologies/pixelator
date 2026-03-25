@@ -14,7 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+
 - Fix bug in unpacking 4bit packed sequences.
+- Fix bug in sample calling that removed the ending of antibodies that ended with `-<digit>`.
 
 ## [0.24.0] - 2026-03-16
 

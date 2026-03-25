@@ -3,12 +3,19 @@
 Copyright © 2025 Pixelgen Technologies AB.
 """
 
+from pathlib import Path
+
 import anndata
 import numpy as np
+import pandas as pd
 import polars as pl
 import pytest
 
+from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna import read
+from pixelator.pna.anndata import pna_edgelist_to_anndata
+from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling import collect_hash_info, sample_calling
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
 from pixelator.pna.sample_calling.sample_calling import (
@@ -231,6 +238,118 @@ def test_sample_calling(sample_hashed_pixel_files, tmp_path):
                 )
                 == set()
             )
+
+
+def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
+    tmp_path: Path,
+):
+    """Regression test for markers like `PD-1` being mangled to `PD`.
+
+    The dehashing step should only strip `-<hash_index>` for *known hashing*
+    antibodies, not for arbitrary biological marker IDs that happen to end
+    with `-<digits>`.
+    """
+    panel_df = pd.DataFrame(
+        [
+            {
+                "marker_id": "PD-1",
+                "control": False,
+                "uniprot_id": "P00001",
+                "sequence_1": "ATCGATCGAA",
+                "conj_id": "conj_pd1",
+                "sequence_2": "ATCGATCGAC",
+            },
+            {
+                "marker_id": "HashA",
+                "control": False,
+                "uniprot_id": "P00002",
+                "sequence_1": "ATCGATCGAT",
+                "conj_id": "conj_hashA",
+                "sequence_2": "ATCGATCGAG",
+            },
+            {
+                "marker_id": "HashA-1",
+                "control": False,
+                "uniprot_id": "P00003",
+                "sequence_1": "ATCGATCGTT",
+                "conj_id": "conj_hashA1",
+                "sequence_2": "ATCGATCGTG",
+            },
+            {
+                "marker_id": "HashB-2",
+                "control": False,
+                "uniprot_id": "P00004",
+                "sequence_1": "ATCGATCGTA",
+                "conj_id": "conj_hashB2",
+                "sequence_2": "ATCGATCGTC",
+            },
+        ]
+    ).set_index("marker_id")
+
+    panel = PNAAntibodyPanel(
+        df=panel_df,
+        metadata=AntibodyPanelMetadata(
+            name="test-panel",
+            version="0.1.0",
+            aliases=["test-panel"],
+            description="Synthetic panel for sample-calling dehashing regression test.",
+        ),
+    )
+
+    # Keep the edgelist graph connected so "stranded node" removal
+    # doesn't randomly drop unrelated marker counts in this unit test.
+    edgelist = pl.DataFrame(
+        {
+            "umi1": pl.Series([1, 2, 3], dtype=pl.UInt64),
+            "umi2": pl.Series([2, 3, 4], dtype=pl.UInt64),
+            "read_count": pl.Series([10, 10, 10], dtype=pl.UInt32),
+            "uei_count": pl.Series([5, 5, 5], dtype=pl.UInt32),
+            "marker_1": ["PD-1", "PD-1", "HashA-1"],
+            "marker_2": ["PD-1", "HashA-1", "HashA-1"],
+            "component": ["c1", "c1", "c1"],
+        }
+    )
+
+    target = tmp_path / "input.pxl"
+    with PixelFileWriter(target) as writer:
+        writer.write_edgelist(edgelist)
+        con = writer.get_connection()
+        adata = pna_edgelist_to_anndata(con, panel=panel)
+        writer.write_adata(adata)
+        writer.write_metadata(
+            {
+                "sample_name": "input",
+                "version": "0.1.0",
+                "panel_name": "custom_panel",
+            }
+        )
+
+    input_pxl = read(target)
+    original_counts = input_pxl.adata().to_df()
+
+    hashing_antibodies = HashedAntibodyMapping(
+        mapping={"S1": ["HashA-1"]},
+        all_hashing_antibodies=["HashA-1", "HashB-2"],
+    )
+
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    sample_calling(
+        input_pxl=input_pxl,
+        hashing_antibody_mapping=hashing_antibodies,
+        output_folder=out_dir,
+        remove_incompatible=True,
+        save_undetermined=False,
+        confidence_threshold=0.5,
+    )
+
+    output_files = list(out_dir.glob("*.dehashed.pxl"))
+    assert len(output_files) == 1
+
+    dehashed_pxl = read(output_files[0])
+    dehashed_counts = dehashed_pxl.adata().to_df()
+
+    assert dehashed_counts.loc["c1", "PD-1"] == original_counts.loc["c1", "PD-1"]
 
 
 @pytest.mark.slow
