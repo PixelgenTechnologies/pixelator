@@ -372,7 +372,7 @@ def sample_calling(
             con.register("sample_components", pl.DataFrame({"component": comps}))
 
             # Dehashing should only strip the `-<hash_index>` suffix for *known*
-            # hashing antibody names (e.g. `PD-1-1` -> `PD-1`), not for other
+            # hashing antibody names (e.g. `B2M-1` -> `B2M`), not for other
             # biological marker IDs like `PD-1`.
             hashed_markers = sorted(list(hashing_antibody_mapping.hashing_antibodies))
             hash_marker_map = pl.DataFrame(
