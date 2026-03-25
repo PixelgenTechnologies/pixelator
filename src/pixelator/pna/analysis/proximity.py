@@ -13,6 +13,7 @@ from scipy.stats import mannwhitneyu, norm
 from statsmodels.stats.multitest import multipletests
 
 from pixelator.pna.analysis.permute import edgelist_permutations
+from pixelator.pna.utils.utils import normalize_input_to_list
 
 
 def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
@@ -146,7 +147,7 @@ def proximity_with_permute_stats(
         results[f"{col}_z"] = (
             results[col] - results[f"{col}_expected_mean"]
         ) / np.maximum(results[f"{col}_expected_sd"], min_std)
-        results[f"{col}_p"] = norm.sf(np.abs(results[f"{col}_z"]))
+        results[f"{col}_p"] = 2 * norm.sf(np.abs(results[f"{col}_z"]))
 
     results = results.reset_index()
     results = results[
@@ -341,22 +342,20 @@ def jcs_with_analytical_stats(
         markers = [markers]
 
     if markers is not None:
-        marker_list = ", ".join(f"'{m}'" for m in markers) if markers else ""
-        where_marker1 = f"WHERE marker_1 IN ({marker_list})"
-        and_marker1 = f"AND marker_1 IN ({marker_list})"
-        and_marker2 = f"AND marker_2 IN ({marker_list})"
+        markers = normalize_input_to_list(markers)
+        where_marker1 = "WHERE marker_1 IN $markers"
+        and_marker1 = "AND marker_1 IN $markers"
+        and_marker2 = "AND marker_2 IN $markers"
     else:
         where_marker1 = ""
         and_marker1 = ""
         and_marker2 = ""
 
     if components is not None:
-        component_list = ", ".join(f"'{c}'" for c in components) if components else ""
-        where_component = f"WHERE component IN ({component_list})"
+        components = normalize_input_to_list(components)
+        where_component = "WHERE component IN $components"
     else:
         where_component = ""
-
-    component_list_sql = ", ".join(f"'{c}'" for c in components) if components else ""
 
     cte_group_edges = f"""
         group_edges AS (
@@ -474,8 +473,10 @@ def jcs_with_analytical_stats(
                 COALESCE(obs.marker_B, exp.marker_B) as marker_2,
                 COALESCE(obs.join_count, 0) as join_count,
                 COALESCE(exp.join_count_expected_mean, 0) as join_count_expected_mean,
+                COALESCE(exp.join_count_expected_sd, 1) as join_count_expected_sd,
                 LOG2(GREATEST(COALESCE(obs.join_count, 0), 1) / GREATEST(COALESCE(exp.join_count_expected_mean, 0), 1)) AS log2_ratio,
                 (COALESCE(obs.join_count, 0) - COALESCE(exp.join_count_expected_mean, 0)) / COALESCE(exp.join_count_expected_sd, 1) AS join_count_z,
+                2 * (1 - dist_normal_cdf(0.0, COALESCE(exp.join_count_expected_sd+0.0001, 1), ABS(COALESCE(obs.join_count, 0) - COALESCE(exp.join_count_expected_mean, 0)))) AS join_count_p
             FROM observed_agg obs
             FULL OUTER JOIN expected_agg exp 
                 ON obs.sample = exp.sample
@@ -495,5 +496,6 @@ def jcs_with_analytical_stats(
     {cte_final_results}
     SELECT * FROM res;
     """
+    database_connection.execute("INSTALL stochastic FROM community; LOAD stochastic;")
     results = database_connection.execute(analysis_query).pl()
     return results

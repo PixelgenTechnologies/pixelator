@@ -351,11 +351,11 @@ class Proximity:
         return df
 
     def to_df(self) -> pd.DataFrame:
-        """Get the edgelist as a pandas DataFrame."""
+        """Get proximity scores as a pandas DataFrame."""
         return self.to_polars().to_pandas()
 
     def to_polars(self) -> pl.DataFrame:
-        """Get the edgelist as a polars DataFrame."""
+        """Get proximity scores as a polars DataFrame."""
         if not self._calculate_from_edgelist:
             raw_proximity_df = self._querier.read_proximity(
                 components=self._components, markers=self._markers
