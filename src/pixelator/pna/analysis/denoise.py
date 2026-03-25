@@ -24,8 +24,8 @@ from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndat
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
-from pixelator.pna.pixeldataset import PNAPixelDataset, PxlFile
-from pixelator.pna.pixeldataset.io import PixelFileWriter
+from pixelator.pna.pixeldataset import PNAPixelDataset
+from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 
 logger = logging.getLogger(__name__)
 

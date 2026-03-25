@@ -22,7 +22,8 @@ from pixelator.pna.analysis_engine import (
 )
 from pixelator.pna.cli.common import output_option
 from pixelator.pna.layout import CreateLayout
-from pixelator.pna.pixeldataset import PxlFile, read
+from pixelator.pna.pixeldataset import read
+from pixelator.pna.pixeldataset.io import PxlFile
 from pixelator.pna.report.common import PixelatorPNAWorkdir
 from pixelator.pna.report.models.layout import LayoutSampleReport
 
