@@ -112,16 +112,6 @@ class TestPixelFileReader:
         results = pxl_view.read_adata()
         adata_assert_equal(results, adata_data)
 
-    def test_read_metadata(self, pxl_view):
-        results = pxl_view.read_metadata()
-        assert results == {
-            "test_sample": {
-                "sample_name": "test_sample",
-                "version": "0.1.0",
-                "panel_name": "custom_panel",
-            }
-        }
-
     def test_read_proximity(self, pxl_view, proximity_dataframe):
         builder = QueryBuilder()
 
@@ -287,16 +277,6 @@ class TestPxlDataQuerier:
         assert_frame_equal(
             result, edgelist_dataframe.with_columns(sample=pl.lit("test_sample"))
         )
-
-    def test_read_metadata(self, pxl_view):
-        result = pxl_view.read_metadata()
-        assert result == {
-            "test_sample": {
-                "sample_name": "test_sample",
-                "version": "0.1.0",
-                "panel_name": "custom_panel",
-            }
-        }
 
     def test_read_layouts(self, pxl_view, layout_dataframe):
         builder = QueryBuilder()

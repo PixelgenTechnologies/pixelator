@@ -6,6 +6,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import copy
+import json
 import tempfile
 import warnings
 from dataclasses import dataclass
@@ -745,7 +746,18 @@ class PNAPixelDataset:
         self,
     ) -> dict:
         """Return the metadata for the dataset."""
-        return self._view.read_metadata()
+        with self.view as connection:
+            maybe_metadata = [
+                json.loads(x[0])
+                for x in connection.sql("SELECT * FROM metadata").fetchall()
+            ]
+            if not maybe_metadata:
+                return {}
+
+            metadata: dict = {}
+            for metadata_dict in maybe_metadata:
+                metadata[metadata_dict["sample_name"]] = metadata_dict
+            return metadata
 
     @staticmethod
     def _copy_or_none(values_or_none):

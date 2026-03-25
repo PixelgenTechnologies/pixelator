@@ -679,24 +679,6 @@ class PixelDataViewer:
         update_metrics_anndata(concatenated, inplace=True)
         return concatenated
 
-    def read_metadata(self) -> dict:
-        """Read the metadata from all underlying pxl files.
-
-        Returns a mapping from `sample_name` to the per-sample metadata dict.
-        """
-        with self as connection:
-            maybe_metadata = [
-                json.loads(x[0])
-                for x in connection.sql("SELECT * FROM metadata").fetchall()
-            ]
-            if not maybe_metadata:
-                return {}
-
-            metadata: dict = {}
-            for metadata_dict in maybe_metadata:
-                metadata[metadata_dict["sample_name"]] = metadata_dict
-            return metadata
-
     def _attach_to_files(self, connection: duckdb.DuckDBPyConnection):
         query = ""
         for name, path in self._db_to_file_mapping.items():

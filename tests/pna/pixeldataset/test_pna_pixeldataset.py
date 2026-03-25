@@ -3,6 +3,7 @@
 from io import StringIO
 from pathlib import Path
 
+import duckdb
 import pandas as pd
 import polars as pl
 import pytest
@@ -14,7 +15,7 @@ from pixelator.pna.pixeldataset import (
     PNAPixelDataset,
     read,
 )
-from pixelator.pna.pixeldataset.io import PixelDataViewer, PixelFileWriter
+from pixelator.pna.pixeldataset.io import PixelDataViewer, PixelFileWriter, PxlFile
 from tests.pna.conftest import create_pxl_file
 
 
@@ -128,6 +129,41 @@ class TestPNAPixelDataset:
         result = StringIO()
         layouts_df.write_csv(result)
         snapshot.assert_match(result.getvalue(), "layouts.csv")
+
+    def test_metadata_returns_expected_mapping(self, pxl_dataset: PNAPixelDataset):
+        metadata = pxl_dataset.metadata()
+        assert metadata.keys() == {"test_sample"}
+        assert metadata["test_sample"]["sample_name"] == "test_sample"
+        assert metadata["test_sample"]["version"] == "0.1.0"
+        assert metadata["test_sample"]["panel_name"] == "custom_panel"
+
+    def test_metadata_returns_empty_dict_when_metadata_table_is_empty(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        proximity_parquet_path: Path,
+        layout_parquet_path: Path,
+        panel,
+    ):
+        target = tmp_path / "empty_metadata.pxl"
+        create_pxl_file(
+            target=target,
+            sample_name="test_sample",
+            edgelist_parquet_path=edgelist_parquet_path,
+            proximity_parquet_path=proximity_parquet_path,
+            layout_parquet_path=layout_parquet_path,
+            panel=panel,
+        )
+
+        # Replace the metadata table with an empty one so `PNAPixelDataset.metadata()`
+        # can return `{}` (without requiring any actual metadata rows).
+        with duckdb.connect(target, read_only=False) as con:
+            con.sql("DROP TABLE IF EXISTS metadata;")
+            con.sql("CREATE TABLE metadata (value JSON);")
+
+        pxl_file = PxlFile(target, sample_name="test_sample")
+        dataset = PNAPixelDataset.from_pxl_files(pxl_file)
+        assert dataset.metadata() == {}
 
     def test_filter_pixel_dataset_by_component(self, pxl_dataset):
         filtered = pxl_dataset.filter(components={"fc07dea9b679aca7"})
