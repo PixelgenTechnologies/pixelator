@@ -248,6 +248,7 @@ class Proximity:
         self._add_marker_counts = add_marker_counts
         self._add_log2_ratio_col = add_log2_ratio
         self._calculate_from_edgelist = calculate_from_edgelist
+        self._len_cache = None
 
     @property
     def components(self) -> set[str]:
@@ -269,12 +270,16 @@ class Proximity:
 
     def __len__(self) -> int:
         """Get the number of proximity scores."""
+        if self._len_cache is not None:
+            return self._len_cache
         if not self._calculate_from_edgelist:
-            return self._querier.read_proximity_len(
+            self._len_cache = self._querier.read_proximity_len(
                 components=self._components, markers=self._markers
             )
         else:
-            return self._calculate_proximity_length_from_edgelist()
+            self._len_cache = self._calculate_proximity_length_from_edgelist()
+
+        return self._len_cache
 
     def is_empty(self):
         """Check if the proximity data is empty."""
@@ -394,6 +399,11 @@ class Proximity:
     def _calculate_proximity_length_from_edgelist(self) -> int:
         components = normalize_input_to_list(self._components)  # type: ignore
         markers = normalize_input_to_list(self._markers)  # type: ignore
+        params = {}
+        if components:
+            params["components"] = components
+        if markers:
+            params["markers"] = markers
         query = f"""
         SELECT CAST(SUM(marker_count * (marker_count+1) / 2) AS INTEGER) AS sum_proximity_counts
         FROM (
@@ -410,7 +420,9 @@ class Proximity:
         """
 
         with self._querier.view as connection:
-            result = connection.execute(query).pl()[0, "sum_proximity_counts"]
+            result = connection.execute(query, parameters=params).pl()[
+                0, "sum_proximity_counts"
+            ]
             return result
 
 

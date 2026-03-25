@@ -130,16 +130,36 @@ def test_calculate_differential_proximity():
     assert_frame_equal(dpa, expected_dpa, check_like=True, atol=1e-3)
 
 
-def test_proximity_analysis_jcs_analytic(pna_pxl_file: Path, pna_data_root, tmp_path):
+@pytest.mark.parametrize(
+    "components,markers",
+    [
+        (None, None),
+        (["d4074c845bb62800", "c3c393e9a17c1981"], None),
+        (None, ["CD3e", "CD45RA", "CD44"]),
+    ],
+)
+def test_proximity_analysis_jcs_analytic(
+    pna_pxl_file: Path, pna_data_root, tmp_path, components, markers
+):
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
-    proximity = pna_pxl_dataset.proximity(calculate_from_edgelist=True).to_df()
-    assert (
-        pna_pxl_dataset.proximity(calculate_from_edgelist=True).__len__()
-        == proximity.shape[0]
-    )
+    proximity_obj = pna_pxl_dataset.filter(
+        components=components, markers=markers
+    ).proximity(calculate_from_edgelist=True)
+    proximity = proximity_obj.to_df()
+    assert len(proximity_obj) == proximity.shape[0]
     proximity = proximity.set_index(["component", "marker_1", "marker_2"], drop=True)
 
-    expected_proximity = pd.read_csv(pna_data_root / "jcs_proximity.csv").set_index(
+    expected_proximity = pd.read_csv(pna_data_root / "jcs_proximity.csv")
+    if components is not None:
+        expected_proximity = expected_proximity[
+            expected_proximity["component"].isin(components)
+        ]
+    if markers is not None:
+        expected_proximity = expected_proximity[
+            expected_proximity["marker_1"].isin(markers)
+            & expected_proximity["marker_2"].isin(markers)
+        ]
+    expected_proximity = expected_proximity.set_index(
         ["component", "marker_1", "marker_2"], drop=True
     )
 

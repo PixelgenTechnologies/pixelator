@@ -336,48 +336,38 @@ def jcs_with_analytical_stats(
         pl.DataFrame: A DataFrame containing the proximity results with analytical statistics.
 
     """
-    if isinstance(components, str):
-        components = [components]
-    if isinstance(markers, str):
-        markers = [markers]
+    markers = normalize_input_to_list(markers)
+    components = normalize_input_to_list(components)
+    params = {}
+    if components:
+        params["components"] = components
+    if markers:
+        params["markers"] = markers
 
-    if markers is not None:
-        markers = normalize_input_to_list(markers)
-        where_marker1 = "WHERE marker_1 IN $markers"
-        and_marker1 = "AND marker_1 IN $markers"
-        and_marker2 = "AND marker_2 IN $markers"
-    else:
-        where_marker1 = ""
-        and_marker1 = ""
-        and_marker2 = ""
-
-    if components is not None:
-        components = normalize_input_to_list(components)
-        where_component = "WHERE component IN $components"
-    else:
-        where_component = ""
+    get_current_edgelist = f"""
+        current_edgelist AS (
+            SELECT *
+            FROM edgelist
+            WHERE {"component IN $components" if components else "TRUE"}
+        )"""
 
     cte_group_edges = f"""
         group_edges AS (
             SELECT sample, component, COUNT(*) as n_edges 
-            FROM edgelist
-            {where_component}
+            FROM current_edgelist
             GROUP BY sample, component
         )"""
 
     cte_all_markers = f"""
         all_markers AS (
-            SELECT sample, component, marker_1 AS marker FROM edgelist
-            {where_component}
+            SELECT sample, component, marker_1 AS marker FROM current_edgelist
             UNION
-            SELECT sample, component, marker_2 AS marker FROM edgelist
-            {where_component}
+            SELECT sample, component, marker_2 AS marker FROM current_edgelist
         )"""
 
     cte_marker1_stats = f"""
         unique_m1 AS (
-            SELECT DISTINCT sample, component, umi1, marker_1 FROM edgelist
-            {where_component}
+            SELECT DISTINCT sample, component, umi1, marker_1 FROM current_edgelist
         ),
         raw_stats_m1 AS (
             SELECT 
@@ -402,8 +392,7 @@ def jcs_with_analytical_stats(
 
     cte_marker2_stats = f"""
         unique_m2 AS (
-            SELECT DISTINCT sample, component, umi2, marker_2 FROM edgelist
-            {where_component}
+            SELECT DISTINCT sample, component, umi2, marker_2 FROM current_edgelist
         ),
         raw_stats_m2 AS (
             SELECT 
@@ -440,8 +429,7 @@ def jcs_with_analytical_stats(
             ON t1.sample = t2.sample AND t1.component = t2.component
             JOIN group_edges ge 
             ON t1.sample = ge.sample AND t1.component = ge.component
-            {where_marker1}
-            {and_marker2}
+            WHERE {"marker_1 IN $markers AND marker_2 IN $markers" if markers else "TRUE"}
         ),
         expected_agg AS (
             SELECT sample, component, marker_A, marker_B, SUM(exp_count_raw) as join_count_expected_mean, SQRT(SUM(exp_count_var)) as join_count_expected_sd
@@ -457,10 +445,8 @@ def jcs_with_analytical_stats(
                 LEAST(marker_1, marker_2) as marker_A,
                 GREATEST(marker_1, marker_2) as marker_B,
                 COUNT(*) as join_count
-            FROM edgelist
-            {where_component}
-            {and_marker1 if components else where_marker1}
-            {and_marker2}
+            FROM current_edgelist
+            WHERE {"marker_1 IN $markers AND marker_2 IN $markers" if markers else "TRUE"}
             GROUP BY sample, component, marker_A, marker_B
         )"""
 
@@ -487,6 +473,7 @@ def jcs_with_analytical_stats(
 
     analysis_query = f"""
     WITH 
+    {get_current_edgelist},
     {cte_group_edges},
     {cte_all_markers},
     {cte_marker1_stats},
@@ -497,5 +484,5 @@ def jcs_with_analytical_stats(
     SELECT * FROM res;
     """
     database_connection.execute("INSTALL stochastic FROM community; LOAD stochastic;")
-    results = database_connection.execute(analysis_query).pl()
+    results = database_connection.execute(analysis_query, parameters=params).pl()
     return results
