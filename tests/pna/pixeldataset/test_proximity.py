@@ -1,0 +1,190 @@
+"""Tests for the Proximity wrapper class.
+
+Copyright © 2026 Pixelgen Technologies AB.
+"""
+
+import numpy as np
+import pandas as pd
+import polars as pl
+import pytest
+from anndata import AnnData
+
+from pixelator.pna.pixeldataset import PNAPixelDataset
+from pixelator.pna.pixeldataset.proximity import Proximity
+
+
+class StubAnnDataHelper:
+    def __init__(self, adata: AnnData):
+        self._adata = adata
+        self.read_adata_calls: int = 0
+
+    def read_adata(
+        self, *, add_log1p_transform: bool, add_clr_transform: bool
+    ) -> AnnData:
+        self.read_adata_calls += 1
+        return self._adata
+
+
+def _make_adata(components: list[str], markers: list[str], x: np.ndarray) -> AnnData:
+    obs = pd.DataFrame(index=pd.Index(components, name="component"))
+    var = pd.DataFrame(index=pd.Index(markers, name="marker_id"))
+    return AnnData(X=x, obs=obs, var=var)
+
+
+class TestProximityHelperInjection:
+    def test_components_derived_from_injected_helper(self):
+        components = ["c1", "c2"]
+        adata = _make_adata(components, ["m1", "m2"], x=np.array([[1, 2], [3, 4]]))
+        helper = StubAnnDataHelper(adata)
+
+        prox = Proximity(
+            view=None,
+            components=None,
+            markers=None,
+            adata_helper=helper,
+            add_marker_counts=False,
+            add_log2_ratio=False,
+        )
+
+        assert prox.components == set(components)
+        assert helper.read_adata_calls >= 1
+
+    def test_markers_derived_from_injected_helper(self):
+        markers = ["m1", "m2"]
+        adata = _make_adata(["c1"], markers, x=np.array([[1, 2]]))
+        helper = StubAnnDataHelper(adata)
+
+        prox = Proximity(
+            view=None,
+            components=None,
+            markers=None,
+            adata_helper=helper,
+            add_marker_counts=False,
+            add_log2_ratio=False,
+        )
+
+        assert prox.markers == set(markers)
+
+    def test_explicit_components_markers_bypass_helper(self):
+        adata = _make_adata(["c1", "c2"], ["m1", "m2"], x=np.array([[1, 2], [3, 4]]))
+        helper = StubAnnDataHelper(adata)
+
+        prox = Proximity(
+            view=None,
+            components={"c1"},
+            markers={"m2"},
+            adata_helper=helper,
+            add_marker_counts=False,
+            add_log2_ratio=False,
+        )
+
+        assert prox.components == {"c1"}
+        assert prox.markers == {"m2"}
+        assert helper.read_adata_calls == 0
+
+    def test_post_process_uses_helper_for_marker_counts(self):
+        adata = _make_adata(
+            ["c1"], ["m1", "m2"], x=np.array([[10, 5]], dtype=np.uint32)
+        )
+        helper = StubAnnDataHelper(adata)
+
+        prox = Proximity(
+            view=None,
+            components=None,
+            markers=None,
+            adata_helper=helper,
+            add_marker_counts=True,
+            add_log2_ratio=False,
+        )
+
+        input_df = pl.DataFrame(
+            {
+                "component": ["c1"],
+                "marker_1": ["m1"],
+                "marker_2": ["m2"],
+                "join_count": [1],
+                "join_count_expected_mean": [1],
+            }
+        )
+
+        out = prox._post_process(input_df)
+
+        assert helper.read_adata_calls == 1
+        for col in [
+            "marker_1_count",
+            "marker_1_freq",
+            "marker_2_count",
+            "marker_2_freq",
+            "min_count",
+        ]:
+            assert col in out.columns
+
+        assert out["marker_1_count"][0] == 10
+        assert out["marker_2_count"][0] == 5
+        assert out["min_count"][0] == 5
+        assert out["marker_1_freq"][0] == pytest.approx(10 / 15)
+        assert out["marker_2_freq"][0] == pytest.approx(5 / 15)
+
+    def test_post_process_adds_log2_ratio(self):
+        adata = _make_adata(["c1"], ["m1", "m2"], x=np.array([[10, 5]]))
+        helper = StubAnnDataHelper(adata)
+
+        prox = Proximity(
+            view=None,
+            components=None,
+            markers=None,
+            adata_helper=helper,
+            add_marker_counts=False,
+            add_log2_ratio=True,
+        )
+
+        input_df = pl.DataFrame(
+            {
+                "component": ["c1"],
+                "marker_1": ["m1"],
+                "marker_2": ["m2"],
+                "join_count": [4],
+                "join_count_expected_mean": [2],
+            }
+        )
+
+        out = prox._post_process(input_df)
+        assert "log2_ratio" in out.columns
+        assert out["log2_ratio"][0] == pytest.approx(np.log2(4 / 2))
+
+
+class TestProximityIntegration:
+    def test_to_polars_returns_dataframe(self, pxl_dataset: PNAPixelDataset):
+        df = pxl_dataset.proximity().to_polars()
+        assert isinstance(df, pl.DataFrame)
+        assert df.height > 0
+
+    def test_to_df_returns_pandas(self, pxl_dataset: PNAPixelDataset):
+        df = pxl_dataset.proximity().to_df()
+        assert isinstance(df, pd.DataFrame)
+        assert len(df) > 0
+
+    def test_len_returns_proximity_count(self, pxl_dataset: PNAPixelDataset):
+        prox = pxl_dataset.proximity()
+        assert len(prox) > 0
+
+    def test_is_empty_returns_false_for_populated(self, pxl_dataset: PNAPixelDataset):
+        assert not pxl_dataset.proximity().is_empty()
+
+    def test_marker_counts_columns_present(self, pxl_dataset: PNAPixelDataset):
+        df = pxl_dataset.proximity().to_polars()
+        for col in [
+            "marker_1_count",
+            "marker_2_count",
+            "marker_1_freq",
+            "marker_2_freq",
+            "min_count",
+        ]:
+            assert col in df.columns
+
+    def test_log2_ratio_column_present(self, pxl_dataset: PNAPixelDataset):
+        df = pxl_dataset.proximity().to_polars()
+        assert "log2_ratio" in df.columns
+
+    def test_str_representation(self, pxl_dataset: PNAPixelDataset):
+        assert "Proximity" in str(pxl_dataset.proximity())

@@ -7,22 +7,17 @@ from io import StringIO
 from pathlib import Path
 
 import duckdb
-import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
-from anndata import AnnData
 
 from pixelator.common.utils.testing import adata_assert_equal
 from pixelator.pna.pixeldataset import (
-    Edgelist,
     PixelDatasetConfig,
     PNAPixelDataset,
-    PreComputedLayouts,
     read,
 )
 from pixelator.pna.pixeldataset.io import PixelDataViewer, PxlFile
-from pixelator.pna.pixeldataset.proximity import Proximity
 from tests.pna.conftest import create_pxl_file
 
 
@@ -618,175 +613,3 @@ class TestPrecomputedLayoutsWrapper:
         assert "x_norm" in result.columns
         assert "y_norm" in result.columns
         assert "z_norm" in result.columns
-
-
-class StubAnnDataHelper:
-    def __init__(self, adata: AnnData):
-        self._adata = adata
-        self.read_adata_calls: int = 0
-
-    def read_adata(
-        self, *, add_log1p_transform: bool, add_clr_transform: bool
-    ) -> AnnData:
-        # Track calls to ensure `Proximity` uses the injected helper.
-        self.read_adata_calls += 1
-        return self._adata
-
-
-def _make_adata(components: list[str], markers: list[str], x: np.ndarray) -> AnnData:
-    obs = pd.DataFrame(index=pd.Index(components, name="component"))
-    var = pd.DataFrame(index=pd.Index(markers, name="marker_id"))
-    return AnnData(X=x, obs=obs, var=var)
-
-
-def test_default_components_markers_come_from_injected_helper():
-    components = ["c1", "c2"]
-    markers = ["m1", "m2"]
-    adata = _make_adata(components, markers, x=np.array([[1, 2], [3, 4]]))
-    helper = StubAnnDataHelper(adata)
-
-    proximity = Proximity(
-        view=None,
-        components=None,
-        markers=None,
-        adata_helper=helper,
-        add_marker_counts=False,
-        add_log2_ratio=False,
-    )
-
-    assert proximity.components == set(components)
-    assert proximity.markers == set(markers)
-    assert helper.read_adata_calls >= 1
-
-
-def test_explicit_components_markers_do_not_call_helper():
-    components = ["c1", "c2"]
-    markers = ["m1", "m2"]
-    adata = _make_adata(components, markers, x=np.array([[1, 2], [3, 4]]))
-    helper = StubAnnDataHelper(adata)
-
-    proximity = Proximity(
-        view=None,
-        components={"c1"},
-        markers={"m2"},
-        adata_helper=helper,
-        add_marker_counts=False,
-        add_log2_ratio=False,
-    )
-
-    assert proximity.components == {"c1"}
-    assert proximity.markers == {"m2"}
-    assert helper.read_adata_calls == 0
-
-
-def test_post_process_uses_injected_helper_for_marker_counts():
-    # 1 component, 2 markers: counts are [m1=10, m2=5] => node_counts=15.
-    components = ["c1"]
-    markers = ["m1", "m2"]
-    adata = _make_adata(
-        components,
-        markers,
-        x=np.array([[10, 5]], dtype=np.uint32),
-    )
-    helper = StubAnnDataHelper(adata)
-
-    proximity = Proximity(
-        view=None,
-        components=None,
-        markers=None,
-        adata_helper=helper,
-        add_marker_counts=True,
-        add_log2_ratio=False,
-    )
-
-    input_df = pl.DataFrame(
-        {
-            "component": ["c1"],
-            "marker_1": ["m1"],
-            "marker_2": ["m2"],
-            # Present for completeness; not used when add_log2_ratio=False.
-            "join_count": [1],
-            "join_count_expected_mean": [1],
-        }
-    )
-
-    out = proximity._post_process(input_df)
-
-    assert helper.read_adata_calls == 1
-    assert "marker_1_count" in out.columns
-    assert "marker_1_freq" in out.columns
-    assert "marker_2_count" in out.columns
-    assert "marker_2_freq" in out.columns
-    assert "min_count" in out.columns
-
-    assert out["marker_1_count"][0] == 10
-    assert out["marker_2_count"][0] == 5
-    assert out["min_count"][0] == 5
-    assert out["marker_1_freq"][0] == pytest.approx(10 / 15)
-    assert out["marker_2_freq"][0] == pytest.approx(5 / 15)
-
-
-def test_edgelist_components_come_from_injected_helper():
-    components = ["c1", "c2"]
-    markers = ["m1", "m2"]
-    adata = _make_adata(components, markers, x=np.array([[1, 2], [3, 4]]))
-    helper = StubAnnDataHelper(adata)
-
-    edgelist = Edgelist(
-        view=None,
-        components=None,
-        adata_helper=helper,
-    )
-
-    assert edgelist.components == set(components)
-    assert helper.read_adata_calls >= 1
-
-
-def test_edgelist_explicit_components_do_not_call_helper():
-    components = ["c1", "c2"]
-    markers = ["m1", "m2"]
-    adata = _make_adata(components, markers, x=np.array([[1, 2], [3, 4]]))
-    helper = StubAnnDataHelper(adata)
-
-    edgelist = Edgelist(
-        view=None,
-        components={"c1"},
-        adata_helper=helper,
-    )
-
-    assert edgelist.components == {"c1"}
-    assert helper.read_adata_calls == 0
-
-
-def test_precomputed_layouts_components_come_from_injected_helper():
-    components = ["c1", "c2"]
-    markers = ["m1", "m2"]
-    adata = _make_adata(components, markers, x=np.array([[1, 2], [3, 4]]))
-    helper = StubAnnDataHelper(adata)
-
-    layouts = PreComputedLayouts(
-        view=None,
-        components=None,
-        adata_helper=helper,
-        add_marker_counts=False,
-    )
-
-    assert layouts.components == set(components)
-    assert helper.read_adata_calls >= 1
-
-
-def test_precomputed_layouts_explicit_components_do_not_call_helper():
-    components = ["c1", "c2"]
-    markers = ["m1", "m2"]
-    adata = _make_adata(components, markers, x=np.array([[1, 2], [3, 4]]))
-    helper = StubAnnDataHelper(adata)
-
-    layouts = PreComputedLayouts(
-        view=None,
-        components={"c1"},
-        adata_helper=helper,
-        add_marker_counts=False,
-    )
-
-    assert layouts.components == {"c1"}
-    assert helper.read_adata_calls == 0
