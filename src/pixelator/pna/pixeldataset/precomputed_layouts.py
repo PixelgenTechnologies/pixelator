@@ -123,9 +123,7 @@ class PreComputedLayouts:
                     layouts = self._pivot_marker_table(layouts)
                     layouts = layouts.drop(["umi", "marker"], strict=False)
                 else:
-                    layouts = self._view.execute_lazy(connection, query)
-                    if isinstance(layouts, pl.LazyFrame):
-                        layouts = layouts.collect()
+                    layouts = self._view.execute_eager(connection, query)
             except duckdb.CatalogException:
                 layouts = pl.DataFrame()
         return self._post_process(layouts)
@@ -155,9 +153,7 @@ class PreComputedLayouts:
                         layouts = self._pivot_marker_table(layouts)
                         layouts = layouts.drop(["umi", "marker"], strict=False)
                     else:
-                        layouts = self._view.execute_lazy(connection, query)
-                        if isinstance(layouts, pl.LazyFrame):
-                            layouts = layouts.collect()
+                        layouts = self._view.execute_eager(connection, query)
                 except duckdb.CatalogException:
                     layouts = pl.DataFrame()
                 component_df = self._post_process(layouts)
