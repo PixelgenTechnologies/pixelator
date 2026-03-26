@@ -48,12 +48,11 @@ class TestAnnDataHelper:
         adata.layers["new_layer"] = adata.X + 1
 
         assert "new_layer" in adata.layers.keys()
-        assert (
-            "new_layer"
-            not in helper.read_adata(
-                add_clr_transform=False, add_log1p_transform=False
-            ).layers.keys()
-        )
+        # Each call should return an independent AnnData object; callers may
+        # mutate layers without affecting subsequent reads.
+        adata2 = helper.read_adata(add_clr_transform=False, add_log1p_transform=False)
+        assert adata is not adata2
+        assert "new_layer" not in adata2.layers.keys()
 
 
 @pytest.mark.parametrize(

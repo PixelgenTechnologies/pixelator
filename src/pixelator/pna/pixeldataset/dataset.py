@@ -66,6 +66,12 @@ class PNAPixelDataset:
 
         self._active_components = normalize_input_to_set(active_components)
         self._active_markers = normalize_input_to_set(active_markers)
+        self._adata_helper = AnnDataHelper(
+            view=self._view,
+            components=self._active_components,
+            markers=self._active_markers,
+            adata_join_strategy=self._config.adata_join_method,
+        )
 
     @staticmethod
     def from_files(
@@ -174,7 +180,6 @@ class PNAPixelDataset:
         """
         return self._view
 
-    @cache
     def adata(
         self,
         add_log1p_transform: bool = True,
@@ -187,12 +192,7 @@ class PNAPixelDataset:
         :param add_clr_transform: If True, add the clr transformation to the data.
         :return: The AnnData instance for the dataset.
         """
-        return AnnDataHelper(
-            view=self._view,
-            components=self._active_components,
-            markers=self._active_markers,
-            adata_join_strategy=self._config.adata_join_method,
-        ).read_adata(
+        return self._adata_helper.read_adata(
             add_log1p_transform=add_log1p_transform,
             add_clr_transform=add_clr_transform,
         )

@@ -1,12 +1,13 @@
 """Helper functions for materializing AnnData objects from PXL files.
 
-Copyright © 2025 Pixelgen Technologies AB.
+Copyright © 2026 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
 
 import json
 import warnings
+from functools import cache
 from typing import Literal
 
 import polars as pl
@@ -143,13 +144,20 @@ class AnnDataHelper:
                     adata.obsm["log1p"] = counts_df_log1p
         return adata
 
-    def read_adata(
+    @cache
+    def _read_adata_cached(
         self,
         *,
         add_log1p_transform: bool = True,
         add_clr_transform: bool = True,
     ) -> AnnData:
-        """Read the AnnData object from the PXL file."""
+        """Materialize the AnnData object once for the given options.
+
+        Note on caching + mutability:
+        `AnnData` is mutable (callers can add/remove layers and other fields).
+        Therefore, this *cached* method returns an internal "canonical" instance
+        that must never be returned directly to callers.
+        """
         adata = self._read_all_samples()
 
         if self._components:
@@ -162,4 +170,21 @@ class AnnDataHelper:
             add_log1p_transform=add_log1p_transform,
             add_clr_transform=add_clr_transform,
         )
+        # Return a fully-materialized canonical object for this cache key.
         return adata.copy()
+
+    def read_adata(
+        self,
+        *,
+        add_log1p_transform: bool = True,
+        add_clr_transform: bool = True,
+    ) -> AnnData:
+        """Return a filtered/transformed AnnData instance.
+
+        The returned object is always a defensive copy of the cached canonical
+        value, so caller mutations never leak back into the cache.
+        """
+        return self._read_adata_cached(
+            add_log1p_transform=add_log1p_transform,
+            add_clr_transform=add_clr_transform,
+        ).copy()

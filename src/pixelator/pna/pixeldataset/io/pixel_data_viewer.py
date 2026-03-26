@@ -138,13 +138,13 @@ class PixelDataViewer:
         self, connection: duckdb.DuckDBPyConnection, query: Query
     ) -> pl.LazyFrame:
         """Execute a query and return a Polars LazyFrame."""
-        return connection.sql(query.sql, params=query.params).pl(lazy=True)
+        return connection.execute(query.sql, parameters=query.params).pl(lazy=True)
 
     def execute_eager(
         self, connection: duckdb.DuckDBPyConnection, query: Query
     ) -> pl.DataFrame:
         """Execute a query and return a Polars DataFrame."""
-        return connection.sql(query.sql, params=query.params).pl()
+        return connection.execute(query.sql, parameters=query.params).pl()
 
     def execute_scalar(
         self, connection: duckdb.DuckDBPyConnection, query: Query
