@@ -28,6 +28,7 @@ class Proximity:
         view: PixelDataViewer,
         components: str | list[str] | set[str] | None = None,
         markers: str | list[str] | set[str] | None = None,
+        adata_helper: AnnDataHelper | None = None,
         add_marker_counts: bool = True,
         add_log2_ratio: bool = True,
     ):
@@ -35,6 +36,11 @@ class Proximity:
         self._view = view
         self._components = normalize_input_to_set(components)
         self._markers = normalize_input_to_set(markers)
+        self._adata_helper = (
+            adata_helper
+            if adata_helper is not None
+            else AnnDataHelper(view, components=self._components, markers=self._markers)
+        )
         self._add_marker_counts = add_marker_counts
         self._add_log2_ratio_col = add_log2_ratio
         self._query_builder = QueryBuilder()
@@ -46,9 +52,9 @@ class Proximity:
             self._components
             if self._components is not None
             else set(
-                AnnDataHelper(self._view)
-                .read_adata(add_clr_transform=False, add_log1p_transform=False)
-                .obs.index.to_list()
+                self._adata_helper.read_adata(
+                    add_clr_transform=False, add_log1p_transform=False
+                ).obs.index.to_list()
             )
         )
 
@@ -59,9 +65,9 @@ class Proximity:
             self._markers
             if self._markers is not None
             else set(
-                AnnDataHelper(self._view)
-                .read_adata(add_clr_transform=False, add_log1p_transform=False)
-                .var.index.to_list()
+                self._adata_helper.read_adata(
+                    add_clr_transform=False, add_log1p_transform=False
+                ).var.index.to_list()
             )
         )
 
@@ -143,7 +149,7 @@ class Proximity:
 
     def _post_process(self, df: pl.DataFrame) -> pl.DataFrame:
         if self._add_marker_counts:
-            adata = AnnDataHelper(self._view).read_adata(
+            adata = self._adata_helper.read_adata(
                 add_clr_transform=False, add_log1p_transform=False
             )
             df = self._add_marker_counts_to_proximity_df(adata, df)

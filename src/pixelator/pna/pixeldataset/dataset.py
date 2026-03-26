@@ -224,6 +224,7 @@ class PNAPixelDataset:
             self.view,
             components=self._active_components,
             markers=self._active_markers,
+            adata_helper=self._adata_helper,
             add_marker_counts=add_marker_counts,
             add_log2_ratio=add_logratio,
         )
