@@ -27,12 +27,18 @@ class PreComputedLayouts:
         self,
         view: PixelDataViewer,
         components: str | Iterable[str] | None = None,
+        adata_helper: AnnDataHelper | None = None,
         add_marker_counts: bool = True,
         add_spherical_norm: bool = False,
     ):
         """Create a new instance of PreComputedLayouts."""
         self._view = view
         self._components = normalize_input_to_set(components)
+        self._adata_helper = (
+            adata_helper
+            if adata_helper is not None
+            else AnnDataHelper(self._view, components=self._components)
+        )
         self._add_marker_counts = add_marker_counts
         self._add_spherical_norm = add_spherical_norm
         self._query_builder = QueryBuilder()
@@ -44,9 +50,9 @@ class PreComputedLayouts:
             self._components
             if self._components is not None
             else set(
-                AnnDataHelper(self._view)
-                .read_adata(add_clr_transform=False, add_log1p_transform=False)
-                .obs.index.to_list()
+                self._adata_helper.read_adata(
+                    add_clr_transform=False, add_log1p_transform=False
+                ).obs.index.to_list()
             )
         )
 

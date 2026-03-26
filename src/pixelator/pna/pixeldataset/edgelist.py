@@ -34,10 +34,16 @@ class Edgelist:
         self,
         view: PixelDataViewer,
         components: str | Iterable[str] | None = None,
+        adata_helper: AnnDataHelper | None = None,
     ):
         """Create a new instance of Edgelist."""
         self._view = view
         self._components = normalize_input_to_set(components)
+        self._adata_helper = (
+            adata_helper
+            if adata_helper is not None
+            else AnnDataHelper(self._view, components=self._components)
+        )
         self._query_builder = QueryBuilder()
 
     @property
@@ -45,7 +51,7 @@ class Edgelist:
         """Get the component names."""
         if self._components:
             return self._components
-        adata = AnnDataHelper(self._view).read_adata(
+        adata = self._adata_helper.read_adata(
             add_clr_transform=False, add_log1p_transform=False
         )
         return set(adata.obs.index.to_list())

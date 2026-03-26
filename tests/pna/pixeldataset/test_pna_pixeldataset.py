@@ -14,7 +14,13 @@ import pytest
 from anndata import AnnData
 
 from pixelator.common.utils.testing import adata_assert_equal
-from pixelator.pna.pixeldataset import PixelDatasetConfig, PNAPixelDataset, read
+from pixelator.pna.pixeldataset import (
+    Edgelist,
+    PixelDatasetConfig,
+    PNAPixelDataset,
+    PreComputedLayouts,
+    read,
+)
 from pixelator.pna.pixeldataset.io import PixelDataViewer, PxlFile
 from pixelator.pna.pixeldataset.proximity import Proximity
 from tests.pna.conftest import create_pxl_file
@@ -718,3 +724,69 @@ def test_post_process_uses_injected_helper_for_marker_counts():
     assert out["min_count"][0] == 5
     assert out["marker_1_freq"][0] == pytest.approx(10 / 15)
     assert out["marker_2_freq"][0] == pytest.approx(5 / 15)
+
+
+def test_edgelist_components_come_from_injected_helper():
+    components = ["c1", "c2"]
+    markers = ["m1", "m2"]
+    adata = _make_adata(components, markers, x=np.array([[1, 2], [3, 4]]))
+    helper = StubAnnDataHelper(adata)
+
+    edgelist = Edgelist(
+        view=None,
+        components=None,
+        adata_helper=helper,
+    )
+
+    assert edgelist.components == set(components)
+    assert helper.read_adata_calls >= 1
+
+
+def test_edgelist_explicit_components_do_not_call_helper():
+    components = ["c1", "c2"]
+    markers = ["m1", "m2"]
+    adata = _make_adata(components, markers, x=np.array([[1, 2], [3, 4]]))
+    helper = StubAnnDataHelper(adata)
+
+    edgelist = Edgelist(
+        view=None,
+        components={"c1"},
+        adata_helper=helper,
+    )
+
+    assert edgelist.components == {"c1"}
+    assert helper.read_adata_calls == 0
+
+
+def test_precomputed_layouts_components_come_from_injected_helper():
+    components = ["c1", "c2"]
+    markers = ["m1", "m2"]
+    adata = _make_adata(components, markers, x=np.array([[1, 2], [3, 4]]))
+    helper = StubAnnDataHelper(adata)
+
+    layouts = PreComputedLayouts(
+        view=None,
+        components=None,
+        adata_helper=helper,
+        add_marker_counts=False,
+    )
+
+    assert layouts.components == set(components)
+    assert helper.read_adata_calls >= 1
+
+
+def test_precomputed_layouts_explicit_components_do_not_call_helper():
+    components = ["c1", "c2"]
+    markers = ["m1", "m2"]
+    adata = _make_adata(components, markers, x=np.array([[1, 2], [3, 4]]))
+    helper = StubAnnDataHelper(adata)
+
+    layouts = PreComputedLayouts(
+        view=None,
+        components={"c1"},
+        adata_helper=helper,
+        add_marker_counts=False,
+    )
+
+    assert layouts.components == {"c1"}
+    assert helper.read_adata_calls == 0

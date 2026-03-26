@@ -205,7 +205,11 @@ class PNAPixelDataset:
         This will be filtered to only include the active samples and components.
         :return: The Edgelist instance for the dataset.
         """
-        return Edgelist(self.view, components=self._active_components)
+        return Edgelist(
+            self.view,
+            components=self._active_components,
+            adata_helper=self._adata_helper,
+        )
 
     def proximity(
         self,
@@ -242,6 +246,7 @@ class PNAPixelDataset:
         return PreComputedLayouts(
             self.view,
             components=self._active_components,
+            adata_helper=self._adata_helper,
             add_marker_counts=add_marker_counts,
             add_spherical_norm=add_spherical_norm,
         )
