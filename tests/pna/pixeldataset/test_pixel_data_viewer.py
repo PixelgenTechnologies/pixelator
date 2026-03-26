@@ -6,7 +6,6 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from pixelator.common.utils.testing import adata_assert_equal
 from pixelator.pna.pixeldataset.io import (
     PixelDataViewer,
     PxlFile,
@@ -78,11 +77,6 @@ class TestPixelFileReader:
                 "test_sample",
             ),
         )
-
-    def test_read_adata(self, pxl_view, adata_data):
-        adata_data.obs["sample"] = "test_sample"
-        results = pxl_view.read_adata()
-        adata_assert_equal(results, adata_data)
 
     def test_read_proximity(self, pxl_view, proximity_dataframe):
         builder = QueryBuilder()
@@ -170,18 +164,6 @@ class TestPixelFileReader:
 class TestPixelDataViewer:
     def test_sample_names(self, pxl_view: PixelDataViewer):
         assert pxl_view.sample_names() == ["test_sample"]
-
-    def test_read_adata_from_sample(self, pxl_view: PixelDataViewer, adata_data):
-        with pxl_view as connection:
-            res = pxl_view.read_adata_from_sample(connection, "test_sample")
-        adata_assert_equal(res, adata_data)
-
-    def test_read_adata(self, pxl_view: PixelDataViewer, adata_data):
-        adata_data = adata_data.copy()
-        adata_data.obs["sample"] = "test_sample"
-
-        res = pxl_view.read_adata()
-        adata_assert_equal(res, adata_data)
 
     def test_view_has_all_tables(self, pxl_view):
         with pxl_view as view:

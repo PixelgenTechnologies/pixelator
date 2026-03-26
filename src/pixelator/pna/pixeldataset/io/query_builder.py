@@ -21,6 +21,24 @@ class QueryBuilder:
     """Build `Query` objects for pixeldataset read operations."""
 
     @staticmethod
+    def _optimized_where_condition(
+        column_name: str, param_name: str, values: Sized | None
+    ) -> str:
+        if not values:
+            return "TRUE"
+        if len(values) == 1:
+            return f"{column_name} = ${param_name}"
+        return f"{column_name} IN ${param_name}"
+
+    @staticmethod
+    def _normalize_list_param(
+        param_name: str, values: list[str] | None
+    ) -> dict[str, object]:
+        if values is None:
+            return {}
+        return {param_name: values if len(values) > 1 else values[0]}
+
+    @staticmethod
     def _optimized_component_where_condition(components: Sized | None) -> str:
         if not components:
             return "TRUE"
@@ -37,6 +55,78 @@ class QueryBuilder:
         return {
             "components": components if len(components) > 1 else components[0],
         }
+
+    def adata_X_query(
+        self,
+        db_name: str,
+        components: list[str] | None = None,
+    ) -> Query:
+        """Build AnnData X query for a single underlying sample DB.
+
+        Note: marker filtering is intentionally not pushed down into SQL (column
+        selection); consumers can filter markers in-memory after materialization.
+        """
+        return Query(
+            sql=f"""SELECT * FROM {db_name}.__adata__X
+                    WHERE {self._optimized_where_condition("index", "components", components)}
+                """,
+            params=self._normalize_list_param("components", components),
+        )
+
+    def adata_obs_query(
+        self,
+        db_name: str,
+        components: list[str] | None = None,
+    ) -> Query:
+        """Build AnnData obs query for a single underlying sample DB."""
+        return Query(
+            sql=f"""SELECT * FROM {db_name}.__adata__obs
+                    WHERE {self._optimized_where_condition("index", "components", components)}
+                """,
+            params=self._normalize_list_param("components", components),
+        )
+
+    def adata_var_query(
+        self,
+        db_name: str,
+        markers: list[str] | None = None,
+    ) -> Query:
+        """Build AnnData var query for a single underlying sample DB."""
+        return Query(
+            sql=f"""SELECT * FROM {db_name}.__adata__var
+                    WHERE {self._optimized_where_condition("index", "markers", markers)}
+                """,
+            params=self._normalize_list_param("markers", markers),
+        )
+
+    def adata_uns_query(self, db_name: str) -> Query:
+        """Build AnnData uns query for a single underlying sample DB."""
+        return Query(
+            sql=f"SELECT * FROM {db_name}.__adata__uns",
+            params={},
+        )
+
+    def adata_obsm_table_names_query(self, db_name: str) -> Query:
+        """Build query listing available obsm tables for a sample DB."""
+        return Query(
+            sql="SHOW ALL TABLES",
+            params={},
+        )
+
+    def adata_obsm_query(
+        self,
+        db_name: str,
+        table_name: str,
+        components: list[str] | None = None,
+    ) -> Query:
+        """Build AnnData obsm query for a given obsm table in a sample DB."""
+        qualified = table_name if "." in table_name else f"{db_name}.main.{table_name}"
+        return Query(
+            sql=f"""SELECT * FROM {qualified}
+                    WHERE {self._optimized_where_condition("index", "components", components)}
+                """,
+            params=self._normalize_list_param("components", components),
+        )
 
     def edgelist_query(self, components: list[str] | None) -> Query:
         """Build an edgelist data query."""

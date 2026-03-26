@@ -5,17 +5,11 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-import json
-from functools import cache
 from pathlib import Path
-from typing import Iterable, Literal
+from typing import Iterable
 
 import duckdb
 import polars as pl
-from anndata import AnnData
-from anndata import concat as anndata_concat
-
-from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 
 from .pxl_file import PXL_FILE_MANDATOR_TABLES, PXL_FILE_OTHER_TABLES, PxlFile
 from .query_builder import Query
@@ -29,20 +23,17 @@ class PixelDataViewer:
     the tables in memory. Nota bene that this does not actually materialize any data
     in memory, so the operation is very light weight.
 
-    In addition to providing SQL views to run queries over, PixelDataViewer will
-    read and concatenate the adata objects from all the files, and cache the resulting
-    AnnData object.
+    PixelDataViewer is only responsible for providing the SQL view and
+    executing SQL queries against it.
     """
 
     def __init__(
         self,
         sample_name_to_pxl_file_mapping: dict[str, PxlFile],
-        adata_join_strategy: Literal["inner", "outer"] = "inner",
     ):
         """Initialize the PixelDataViewer.
 
         :param sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
-        :param adata_join_strategy: The strategy to use when joining the adata objects.
         :raises ValueError: If any of the files are not valid PXL files.
         """
         self._db_to_file_mapping = sample_name_to_pxl_file_mapping
@@ -58,7 +49,6 @@ class PixelDataViewer:
         if invalid_files:
             raise ValueError(f"{invalid_files} are not valid PXL files.")
 
-        self._adata_join_strategy = adata_join_strategy
         self._connection: duckdb.DuckDBPyConnection = None  # type: ignore
 
     def _map_sample_names_to_db_names(
@@ -176,90 +166,9 @@ class PixelDataViewer:
         """Return the list of sample names known to the view."""
         return list(self._db_to_file_mapping.keys())
 
-    def read_adata_from_sample(
-        self, connection: duckdb.DuckDBPyConnection, sample: str
-    ) -> AnnData:
-        """Read the AnnData object from the PXL file.
-
-        :return: The AnnData object.
-        """
-        X = connection.sql(
-            f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__X"
-        ).to_df()
-        var = connection.sql(
-            f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__var"
-        ).to_df()
-        obs = connection.sql(
-            f"SELECT * FROM {self._get_normalized_name(sample)}.__adata__obs"
-        ).to_df()
-
-        maybe_uns = connection.sql(
-            f"select * from {self._get_normalized_name(sample)}.__adata__uns"
-        ).fetchone()
-        uns = json.loads(maybe_uns[0]) if maybe_uns else None
-
-        tables = connection.sql("SHOW ALL TABLES")
-
-        obsm_tables = (
-            tables.pl()
-            .filter(
-                (pl.col("name").str.starts_with("__adata__obsm"))
-                & (pl.col("database") == self._get_normalized_name(sample))
-            )
-            .select(
-                pl.concat_str(
-                    [pl.col("database"), pl.col("schema"), pl.col("name")],
-                    separator=".",
-                ).alias("name")
-            )
-            .get_column("name")
-            .to_list()
-        )
-
-        obsm = {
-            table.split("__adata__obsm_")[1]: (
-                connection.sql(f"SELECT * FROM {table}")
-                .to_df()
-                .set_index("index")
-                .rename_axis(index={"index": "component"})
-            )
-            for table in obsm_tables
-        }
-
-        adata = AnnData(
-            X=X.set_index("index").rename_axis(index={"index": "component"}),
-            var=var.set_index("index").rename_axis(index={"index": "marker_id"}),
-            obs=obs.set_index("index").rename_axis(index={"index": "component"}),
-            uns=uns,
-            obsm=obsm,
-        )
-        return adata
-
-    @cache
-    def read_adata(self) -> AnnData:
-        """Read the AnnData object from the PXL file.
-
-        The result will be cached to avoid reading and concatenating
-        the anndata multiple times.
-
-        :return: The AnnData object
-        """
-
-        def underlying_data():
-            with self as connection:
-                for sample_name, _ in self._db_to_file_mapping.items():
-                    adata = self.read_adata_from_sample(
-                        connection=connection, sample=sample_name
-                    )
-                    adata.obs["sample"] = sample_name
-                    yield adata
-
-        adatas = list(underlying_data())
-        concatenated = anndata_concat(adatas, join=self._adata_join_strategy)
-        concatenated.var = adatas[0].var
-        concatenated.uns = adatas[0].uns
-        update_metrics_anndata(concatenated, inplace=True)
-        return concatenated
+    def normalized_sample_db_name(self, sample_name: str) -> str:
+        """Return the attached DuckDB database name for a sample."""
+        return self._get_normalized_name(sample_name)
 
     def _attach_to_files(self, connection: duckdb.DuckDBPyConnection):
         query = ""

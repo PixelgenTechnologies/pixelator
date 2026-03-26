@@ -7,21 +7,19 @@ from __future__ import annotations
 
 import copy
 import json
-import warnings
+from functools import cache
 from pathlib import Path
 from typing import Iterable
 
-import numpy as np
-import polars as pl
-from anndata import AnnData, ImplicitModificationWarning
+from anndata import AnnData
 
-from pixelator.common.statistics import clr_transformation, log1p_transformation
 from pixelator.pna.pixeldataset.config import PixelDatasetConfig
 from pixelator.pna.pixeldataset.edgelist import Edgelist
 from pixelator.pna.pixeldataset.io import PixelDataViewer, PxlFile
+from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pna.pixeldataset.proximity import Proximity
-from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
+from pixelator.pna.utils import normalize_input_to_set
 
 
 class PNAPixelDataset:
@@ -176,6 +174,7 @@ class PNAPixelDataset:
         """
         return self._view
 
+    @cache
     def adata(
         self,
         add_log1p_transform: bool = True,
@@ -188,31 +187,15 @@ class PNAPixelDataset:
         :param add_clr_transform: If True, add the clr transformation to the data.
         :return: The AnnData instance for the dataset.
         """
-        # TODO For performance reasons we might want to push down
-        # the component and marker filtering to the individual datasets
-        # but for now this should probably be fine
-        adata = self._view.read_adata()
-        if self._active_components:
-            adata = adata[normalize_input_to_list(self._active_components), :]
-        if self._active_markers:
-            adata = adata[:, normalize_input_to_list(self._active_markers)]
-
-        # add normalization layers if requested
-        if [add_clr_transform, add_log1p_transform].count(True) > 1:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=ImplicitModificationWarning)
-                counts_df = adata.to_df()
-                if add_clr_transform:
-                    counts_df_clr = clr_transformation(df=counts_df, axis=1)
-                    counts_df_clr.index = counts_df_clr.index.astype(str)
-                    adata.obsm["clr"] = counts_df_clr
-
-                if add_log1p_transform:
-                    counts_df_log1p = log1p_transformation(df=counts_df)
-                    counts_df_log1p.index = counts_df_log1p.index.astype(str)
-                    adata.obsm["log1p"] = counts_df_log1p
-
-        return adata.copy()
+        return AnnDataHelper(
+            view=self._view,
+            components=self._active_components,
+            markers=self._active_markers,
+            adata_join_strategy=self._config.adata_join_method,
+        ).read_adata(
+            add_log1p_transform=add_log1p_transform,
+            add_clr_transform=add_clr_transform,
+        )
 
     def edgelist(
         self,

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import duckdb
 
+from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.pixeldataset.io.pixel_data_viewer import PixelDataViewer
 from pixelator.pna.pixeldataset.io.pixel_file_writer import PixelFileWriter
 from pixelator.pna.pixeldataset.io.pxl_file import PxlFile
@@ -70,7 +71,9 @@ class InplacePixelDataFilterer:
             pass
 
     def _filter_adata(self, pxl_file: PxlFile, components: list[str]) -> None:
-        adata = PixelDataViewer.from_files([pxl_file]).read_adata()
+        adata = AnnDataHelper(PixelDataViewer.from_files([pxl_file])).read_adata(
+            add_clr_transform=False, add_log1p_transform=False
+        )
         adata = adata[adata.obs.index.isin(components)]
         with PixelFileWriter(pxl_file.path) as writer:
             writer.write_adata(adata)

@@ -12,6 +12,7 @@ import polars as pl
 import pyarrow as pa
 
 from pixelator.pna.pixeldataset.io import PixelDataViewer, QueryBuilder
+from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.pixeldataset.types import Component
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
@@ -42,7 +43,12 @@ class Edgelist:
     @property
     def components(self) -> set[str]:
         """Get the component names."""
-        return self._components or set(self._view.read_adata().obs.index.to_list())
+        if self._components:
+            return self._components
+        adata = AnnDataHelper(self._view).read_adata(
+            add_clr_transform=False, add_log1p_transform=False
+        )
+        return set(adata.obs.index.to_list())
 
     def _handle_backwards_compatibility(self, df: pl.LazyFrame) -> pl.LazyFrame:
         # Handle legacy marker names

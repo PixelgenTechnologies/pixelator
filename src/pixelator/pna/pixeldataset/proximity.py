@@ -11,6 +11,7 @@ import polars as pl
 from anndata import AnnData
 
 from pixelator.pna.pixeldataset.io import PixelDataViewer, QueryBuilder
+from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
 
@@ -44,7 +45,11 @@ class Proximity:
         return (
             self._components
             if self._components is not None
-            else set(self._view.read_adata().obs.index.to_list())
+            else set(
+                AnnDataHelper(self._view)
+                .read_adata(add_clr_transform=False, add_log1p_transform=False)
+                .obs.index.to_list()
+            )
         )
 
     @property
@@ -53,7 +58,11 @@ class Proximity:
         return (
             self._markers
             if self._markers is not None
-            else set(self._view.read_adata().var.index.to_list())
+            else set(
+                AnnDataHelper(self._view)
+                .read_adata(add_clr_transform=False, add_log1p_transform=False)
+                .var.index.to_list()
+            )
         )
 
     def __len__(self) -> int:
@@ -134,7 +143,9 @@ class Proximity:
 
     def _post_process(self, df: pl.DataFrame) -> pl.DataFrame:
         if self._add_marker_counts:
-            adata = self._view.read_adata()
+            adata = AnnDataHelper(self._view).read_adata(
+                add_clr_transform=False, add_log1p_transform=False
+            )
             df = self._add_marker_counts_to_proximity_df(adata, df)
 
         if self._add_log2_ratio_col:

@@ -22,3 +22,9 @@ def test_benchmark_load_precomputed_layouts(benchmark, pxl_file):
     dataset = PNAPixelDataset.from_pxl_files(pxl_file)
     result = benchmark(lambda: dataset.precomputed_layouts().to_polars())
     assert result.height > 0
+
+
+def test_benchmark_load_adata(benchmark, pxl_file):
+    dataset = PNAPixelDataset.from_pxl_files(pxl_file)
+    result = benchmark(lambda: dataset.adata())
+    assert result.n_obs > 0
