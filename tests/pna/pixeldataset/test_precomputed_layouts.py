@@ -103,5 +103,28 @@ class TestPreComputedLayoutsIntegration:
             assert isinstance(comp_id, str)
             assert isinstance(component_df, pd.DataFrame)
 
+    def test_iterator_returns_polars_when_requested(self, pxl_dataset: PNAPixelDataset):
+        layouts = pxl_dataset.precomputed_layouts()
+        for comp_id, component_df in layouts.iterator(return_polars_df=True):
+            assert isinstance(comp_id, str)
+            assert isinstance(component_df, pl.DataFrame)
+
     def test_str_representation(self, pxl_dataset: PNAPixelDataset):
         assert "PreComputedLayouts" in str(pxl_dataset.precomputed_layouts())
+
+    def test_describe(self, pxl_dataset: PNAPixelDataset):
+        layouts = pxl_dataset.precomputed_layouts()
+        desc = layouts.describe()
+        assert "PreComputedLayouts" in desc
+        assert "components" in desc
+        assert "datapoints" in desc
+
+    def test_repr(self, pxl_dataset: PNAPixelDataset):
+        layouts = pxl_dataset.precomputed_layouts()
+        assert repr(layouts) == str(layouts)
+
+    def test_ipython_display(self, pxl_dataset: PNAPixelDataset, capsys):
+        layouts = pxl_dataset.precomputed_layouts()
+        layouts._ipython_display_()
+        captured = capsys.readouterr()
+        assert "PreComputedLayouts" in captured.out

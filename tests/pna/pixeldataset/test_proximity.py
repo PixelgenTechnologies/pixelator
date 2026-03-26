@@ -188,3 +188,13 @@ class TestProximityIntegration:
 
     def test_str_representation(self, pxl_dataset: PNAPixelDataset):
         assert "Proximity" in str(pxl_dataset.proximity())
+
+    def test_repr(self, pxl_dataset: PNAPixelDataset):
+        prox = pxl_dataset.proximity()
+        assert repr(prox) == str(prox)
+
+    def test_ipython_display(self, pxl_dataset: PNAPixelDataset, capsys):
+        prox = pxl_dataset.proximity()
+        prox._ipython_display_()
+        captured = capsys.readouterr()
+        assert "Proximity" in captured.out
