@@ -459,10 +459,10 @@ def jcs_with_analytical_stats(
                 COALESCE(obs.marker_B, exp.marker_B) as marker_2,
                 COALESCE(obs.join_count, 0) as join_count,
                 COALESCE(exp.join_count_expected_mean, 0) as join_count_expected_mean,
-                COALESCE(exp.join_count_expected_sd, 1) as join_count_expected_sd,
+                GREATEST(COALESCE(exp.join_count_expected_sd, 0), 1e-6) as join_count_expected_sd,
                 LOG2(GREATEST(COALESCE(obs.join_count, 0), 1) / GREATEST(COALESCE(exp.join_count_expected_mean, 0), 1)) AS log2_ratio,
-                (COALESCE(obs.join_count, 0) - COALESCE(exp.join_count_expected_mean, 0)) / COALESCE(exp.join_count_expected_sd, 1) AS join_count_z,
-                2 * (1 - dist_normal_cdf(0.0, COALESCE(exp.join_count_expected_sd+0.0001, 1), ABS(COALESCE(obs.join_count, 0) - COALESCE(exp.join_count_expected_mean, 0)))) AS join_count_p
+                (COALESCE(obs.join_count, 0) - COALESCE(exp.join_count_expected_mean, 0)) / GREATEST(COALESCE(exp.join_count_expected_sd, 0), 1e-6) AS join_count_z,
+                2 * (1 - dist_normal_cdf(0.0, GREATEST(COALESCE(exp.join_count_expected_sd, 0), 1e-6), ABS(COALESCE(obs.join_count, 0) - COALESCE(exp.join_count_expected_mean, 0)))) AS join_count_p
             FROM observed_agg obs
             FULL OUTER JOIN expected_agg exp 
                 ON obs.sample = exp.sample
