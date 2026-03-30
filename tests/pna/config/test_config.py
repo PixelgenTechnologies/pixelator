@@ -163,6 +163,7 @@ def test_list_panel_names(pna_data_root):
             "proxiome-immuno-155-v3",
             "proxiome-immuno-155plex-v3",
             "proxiome-immuno-156-FLAG-v2",
+            "proxiome-immuno-156-FLAG-v3",
             "proxiome-immuno-156-FLAGplex-v2",
             "proxiome-immuno-156-FLAGplex-v3",
             "proxiome-immuno-156-FMC63-v1",
