@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add sample calling code.
-- Add missing FLAG and FMC63 v3 panels
+- Add FLAG and FMC63 v3 panels
 
 ### Changed
 
