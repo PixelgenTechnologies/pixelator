@@ -189,7 +189,9 @@ def test_from_samplesheet_raises_when_pool_has_no_matching_rows():
             "hash_index": [1],
         }
     )
-    with pytest.raises(ValueError, match="No matching entries found in samplesheet for pool"):
+    with pytest.raises(
+        ValueError, match="No matching entries found in samplesheet for pool"
+    ):
         HashedAntibodyMapping.from_samplesheet(
             df,
             all_hashing_antibodies=["X-1"],
