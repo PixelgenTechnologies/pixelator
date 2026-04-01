@@ -72,7 +72,10 @@ class HashedAntibodyMapping(dict[str, list[str]]):
                 "so each row matches the numeric suffix on hashing antibody names in your panel "
                 "(for example names ending in -1, -2)."
             )
-        if not samplesheet_df["hash_index"].dtype.is_integer() and not samplesheet_df.select((pl.col("hash_index") > 0).all()).item():
+        if not (
+            samplesheet_df["hash_index"].dtype.is_integer()
+            and samplesheet_df.select((pl.col("hash_index") > 0).all()).item()
+        ):
             raise ValueError(
                 "The 'hash_index' column must use an integer type (whole numbers such as 1, 2, 3, etc "
                 "not decimals or text). Fix your spreadsheet or CSV so values are plain integers "
