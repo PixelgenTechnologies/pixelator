@@ -6,6 +6,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 from collections import defaultdict
 
 import polars as pl
+from polars.datatypes import IntegerType
 
 
 def _verify_no_antibody_in_multiple_samples(mapping: dict[str, list[str]]) -> None:
@@ -71,11 +72,11 @@ class HashedAntibodyMapping(dict[str, list[str]]):
                 "so each row matches the numeric suffix on hashing antibody names in your panel "
                 "(for example names ending in -1, -2)."
             )
-        if samplesheet_df["hash_index"].dtype != pl.Int64:
+        if not samplesheet_df["hash_index"].dtype.is_integer() and not samplesheet_df.select((pl.col("hash_index") > 0).all()).item():
             raise ValueError(
-                "The 'hash_index' column must contain numbers as integers (i.e. 1 not 1.0). "
-                "Fix your spreadsheet or CSV so that column is plain integers (no quotes, no spaces "
-                "around digits, no decimal points). If you build the table in code"
+                "The 'hash_index' column must use an integer type (whole numbers such as 1, 2, 3, etc "
+                "not decimals or text). Fix your spreadsheet or CSV so values are plain integers "
+                "(no decimal points), or cast the column in code to an integer dtype."
             )
         if "pool" not in samplesheet_df.columns:
             raise ValueError(

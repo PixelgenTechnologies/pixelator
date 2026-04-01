@@ -98,6 +98,123 @@ def test_hashed_antibody_mapping_raises_when_antibody_in_multiple_samples():
         )
 
 
+def test_from_samplesheet_raises_when_hash_index_column_missing():
+    """from_samplesheet requires a column named exactly 'hash_index'."""
+    df = pl.DataFrame(
+        {
+            "pool": ["p"],
+            "sample": ["A"],
+        }
+    )
+    with pytest.raises(ValueError, match="missing the 'hash_index' column"):
+        HashedAntibodyMapping.from_samplesheet(
+            df,
+            all_hashing_antibodies=["X-1"],
+            pool_name="p",
+        )
+
+
+def test_from_samplesheet_raises_when_hash_index_not_integer_dtype():
+    """from_samplesheet rejects non-integer hash_index dtypes (e.g. floats from CSV)."""
+    df = pl.DataFrame(
+        {
+            "pool": ["p"],
+            "sample": ["A"],
+            "hash_index": pl.Series([1.0], dtype=pl.Float64),
+        }
+    )
+    with pytest.raises(ValueError, match="must use an integer type"):
+        HashedAntibodyMapping.from_samplesheet(
+            df,
+            all_hashing_antibodies=["X-1"],
+            pool_name="p",
+        )
+
+
+def test_from_samplesheet_accepts_int32_hash_index():
+    """Any Polars integer dtype (e.g. Int32 from Arrow/Parquet) is valid for hash_index."""
+    df = pl.DataFrame(
+        {
+            "pool": ["p"],
+            "sample": ["A"],
+            "hash_index": pl.Series([1], dtype=pl.Int32),
+        }
+    )
+    mapping = HashedAntibodyMapping.from_samplesheet(
+        df,
+        all_hashing_antibodies=["X-1"],
+        pool_name="p",
+    )
+    assert mapping["A"] == ["X-1"]
+
+
+def test_from_samplesheet_raises_when_pool_column_missing():
+    """from_samplesheet requires a column named exactly 'pool'."""
+    df = pl.DataFrame(
+        {
+            "sample": ["A"],
+            "hash_index": [1],
+        }
+    )
+    with pytest.raises(ValueError, match="missing the 'pool' column"):
+        HashedAntibodyMapping.from_samplesheet(
+            df,
+            all_hashing_antibodies=["X-1"],
+            pool_name="p",
+        )
+
+
+def test_from_samplesheet_raises_when_sample_column_missing():
+    """from_samplesheet requires a column named exactly 'sample'."""
+    df = pl.DataFrame(
+        {
+            "pool": ["p"],
+            "hash_index": [1],
+        }
+    )
+    with pytest.raises(ValueError, match="missing the 'sample' column"):
+        HashedAntibodyMapping.from_samplesheet(
+            df,
+            all_hashing_antibodies=["X-1"],
+            pool_name="p",
+        )
+
+
+def test_from_samplesheet_raises_when_pool_has_no_matching_rows():
+    """from_samplesheet fails clearly when the requested pool is absent from the sheet."""
+    df = pl.DataFrame(
+        {
+            "pool": ["other_pool"],
+            "sample": ["A"],
+            "hash_index": [1],
+        }
+    )
+    with pytest.raises(ValueError, match="No matching entries found in samplesheet for pool"):
+        HashedAntibodyMapping.from_samplesheet(
+            df,
+            all_hashing_antibodies=["X-1"],
+            pool_name="wanted_pool",
+        )
+
+
+def test_from_samplesheet_raises_when_duplicate_hash_index_maps_same_antibodies_to_two_samples():
+    """Two samples with the same hash_index receive the same antibodies; __init__ rejects that."""
+    df = pl.DataFrame(
+        {
+            "pool": ["p", "p"],
+            "sample": ["A", "B"],
+            "hash_index": [1, 1],
+        }
+    )
+    all_hashing = {"B2M-1", "CD29-1"}
+    with pytest.raises(ValueError, match="assigned to multiple samples"):
+        HashedAntibodyMapping.from_samplesheet(
+            df,
+            all_hashing_antibodies=all_hashing,
+            pool_name="p",
+        )
+
+
 def test_unmapped_hashing_antibodies_returns_antibodies_not_mapped_to_any_sample():
     """unmapped_hashing_antibodies returns the subset of hashing antibodies not assigned to any sample."""
     # Panel has 6 hashing antibodies (names ending with -1..-6);
