@@ -64,6 +64,32 @@ class HashedAntibodyMapping(dict[str, list[str]]):
             pool_name: Pool to filter by in the samplesheet.
 
         """
+        if "hash_index" not in samplesheet_df.columns:
+            raise ValueError(
+                "The samplesheet is missing the 'hash_index' column. "
+                "Add a column with that exact name and put one number per row (1, 2, 3, ...) "
+                "so each row matches the numeric suffix on hashing antibody names in your panel "
+                "(for example names ending in -1, -2)."
+            )
+        if samplesheet_df["hash_index"].dtype != pl.Int64:
+            raise ValueError(
+                "The 'hash_index' column must contain numbers as integers (i.e. 1 not 1.0). "
+                "Fix your spreadsheet or CSV so that column is plain integers (no quotes, no spaces "
+                "around digits, no decimal points). If you build the table in code"
+            )
+        if "pool" not in samplesheet_df.columns:
+            raise ValueError(
+                "The samplesheet is missing the 'pool' column. "
+                "Add a column named exactly 'pool' and fill it with the pool identifier for each row; "
+                "those values must include the pool name used for your run (the same pool you pass "
+                "or that is inferred from the input file)."
+            )
+        if "sample" not in samplesheet_df.columns:
+            raise ValueError(
+                "The samplesheet is missing the 'sample' column. "
+                "Add a column named exactly 'sample' and put the sample name for each row there."
+            )
+
         hash_antibodies = set(all_hashing_antibodies)
         mapping = {}
         for row in (
