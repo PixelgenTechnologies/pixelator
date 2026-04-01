@@ -126,7 +126,7 @@ def _collect_nodes_to_remove(
 
     Incompatible hashes are defined from the panel (all hashing antibodies minus
     the current sample's), so they do not depend on other samples being present
-    in the samplesheet (fixes one-sample-per-pool case).
+    in the samplesheet.
     """
     incompatible_hashes = all_hashing_in_panel - set(sample_antibodies)
     edgelist_df = edgelist.collect()
