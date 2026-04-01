@@ -102,7 +102,7 @@ def sample_calling_cli(
             "is reserved for undetermined components. Please edit your "
             "samplesheet to use a different sample name."
         )
-
+    samplesheet_df = samplesheet_df.rename({"hash_group": "hash_index"}, strict=False)
     hashed_antibodies = HashedAntibodyMapping.from_samplesheet(
         samplesheet_df,
         all_hashing_antibodies=hashing_antibodies_in_panel,
