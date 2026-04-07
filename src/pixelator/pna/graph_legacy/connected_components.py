@@ -103,6 +103,9 @@ def _label_connected_components(
         component_count,
         fraction_nodes_in_largest_component,
     ) = _calculate_component_stats(connected_components)
+    component_stats.stranded_nodes_pre_recovery = sum(
+        len(cc) for cc in connected_components if len(cc) < MIN_PNA_COMPONENT_SIZE
+    )
     del connected_components
 
     if component_count == 0:

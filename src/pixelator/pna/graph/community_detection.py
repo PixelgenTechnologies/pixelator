@@ -518,6 +518,7 @@ def find_components(
     )
     component_stats.node_count_pre_recovery = pre_recovery_stats.node_count
     component_stats.edge_count_pre_recovery = pre_recovery_stats.edge_weight_sum
+    component_stats.stranded_nodes_pre_recovery = pre_recovery_stats.stranded_nodes
 
     n_crossing_edges = (
         pre_recovery_stats.edge_weight_sum - post_recovery_stats.edge_weight_sum

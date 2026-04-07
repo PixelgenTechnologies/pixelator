@@ -159,6 +159,14 @@ class GraphSampleReport(SampleReport):
         description="The number of crossing edges removed in the initial step. Will be 0 if multiplet recovery was not enabled.",
     )
 
+    max_recursion_depth: int = pydantic.Field(
+        default=0,
+        description=(
+            "Maximum multiplet-recovery refinement depth reached. "
+            "Will be 0 if multiplet recovery was not enabled or no refinement ran."
+        ),
+    )
+
     component_size_min_filtering_threshold: int | None = pydantic.Field(
         ..., description="The minimum component size threshold used for filtering."
     )
@@ -202,6 +210,11 @@ class GraphSampleReport(SampleReport):
 
     edge_count_in_aggregates: int = pydantic.Field(
         ..., description="The number of edges in aggregates."
+    )
+
+    node_count_in_aggregates: int = pydantic.Field(
+        default=0,
+        description="The number of UMIs (nodes) in aggregate components.",
     )
 
     umis_input: int = pydantic.Field(
