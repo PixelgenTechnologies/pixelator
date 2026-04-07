@@ -31,3 +31,4 @@ jobs:
           allowlist: johandahlberg,fbdtemme,ptajvar,maxkarlsson,ludvigla,vincent-van-hoef,elhb,dependabot[bot]
           remote-organization-name: PixelgenTechnologies
           remote-repository-name: cla-signatures
+          lock-pullrequest-aftermerge: false
