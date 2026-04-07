@@ -1974,6 +1974,7 @@ dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pandas" },
+    { name = "pixelgen-pixelator-core" },
     { name = "plotly" },
     { name = "polars" },
     { name = "pyarrow" },
@@ -2032,6 +2033,7 @@ requires-dist = [
     { name = "numba", specifier = ">=0.56.4" },
     { name = "numpy", specifier = ">=2.0.0,<3.0.0" },
     { name = "pandas", specifier = ">=2.0.0,<3.0.0" },
+    { name = "pixelgen-pixelator-core", specifier = ">=0.1.0rc1,<0.2" },
     { name = "plotly" },
     { name = "polars", specifier = ">=1.0.0,<1.27.0" },
     { name = "pyarrow", specifier = ">=14" },
@@ -2067,6 +2069,33 @@ dev = [
     { name = "pytest-snapshot" },
     { name = "pytest-watcher" },
     { name = "ruff" },
+]
+
+[[package]]
+name = "pixelgen-pixelator-core"
+version = "0.1.0rc1"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/23/22/b02efe8b949577fc76a872ff23cee30c9475b23ad264d7d13b5c33c760d2/pixelgen_pixelator_core-0.1.0rc1-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:72525121f6ee7b0be3a65ce0d97ad915f0c5a029485ad772828a971c10fd0051", size = 4551243, upload-time = "2026-04-01T11:42:28.147Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/70/d462a12c91210a9edc8ecc36fa85afdc31c2bbf42acb769d125550d8ae56/pixelgen_pixelator_core-0.1.0rc1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:5440054c19a24b5a8c568f31a8821642a682d5741fca171d92339d7134d997c2", size = 4156659, upload-time = "2026-04-01T11:42:30.325Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/eb/d048ff79e79fb65c98f9b7ee77e45255eaa64d1114366605553c23db8d8f/pixelgen_pixelator_core-0.1.0rc1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:ddc9827a86ceeaeb0afe852fb50260870d27f69c72825f33ffc60fbb7c2b4674", size = 4414799, upload-time = "2026-04-01T11:42:32.136Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/a9/26ca534db93162b411b8fa1ac5c7f03283253b35d43e6e166c786f386a57/pixelgen_pixelator_core-0.1.0rc1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:7360817e40dce85579c24a574c2b42c93812300edbfdcc6b066934eb8d4eb643", size = 4687705, upload-time = "2026-04-01T11:42:34.186Z" },
+    { url = "https://files.pythonhosted.org/packages/22/01/6f565a87ca52929d44791444a340e8d3e3f21280d64edefdee69209e5db0/pixelgen_pixelator_core-0.1.0rc1-cp310-cp310-win_amd64.whl", hash = "sha256:dc17f900e72560fa4e9178837aa006778f33e363c17f4c6eb6e631920f5e2ba9", size = 4508258, upload-time = "2026-04-01T11:42:35.995Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/7e/d8adcc3ac20cc4e7a5c4c8c47e75aa473b104687d4fd14f5c4075b362f0b/pixelgen_pixelator_core-0.1.0rc1-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:2af379cd98f04fe46f267c30d87cfb47975fc10049c37b0855f4a33e66aeafa5", size = 4550682, upload-time = "2026-04-01T11:42:38.198Z" },
+    { url = "https://files.pythonhosted.org/packages/ad/0a/0c624f23b8189a94059f3e51f4a1b4ea2687964112fc124a2f527b75abb3/pixelgen_pixelator_core-0.1.0rc1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:a398c849cab71edb7a7fbe8e243d2f7d376178fdef2889a6baa66f14d5d910d2", size = 4155412, upload-time = "2026-04-01T11:42:40.32Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/4d/11ccee16b93dd45f068298349fd2a299c4a53ce80a6c436a823d85b98450/pixelgen_pixelator_core-0.1.0rc1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:58ffa08d17d98e869f0adc7fc9899c5f702d11a8acc72bb1a80239d5aad7438f", size = 4414279, upload-time = "2026-04-01T11:42:42.405Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/6b/7fbad862e33e84df3cd558de5e77b64b0d5a897878d49b278221f8c0ef9d/pixelgen_pixelator_core-0.1.0rc1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:6c5f36060835d2787d76fa2539b223a5f96792979a55e4a04a96017eb80d355e", size = 4687470, upload-time = "2026-04-01T11:42:44.563Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/a1/2c363db954ae77d043a67d6119ce096954d1b53ac5016e10c9a8a32bfc70/pixelgen_pixelator_core-0.1.0rc1-cp311-cp311-win_amd64.whl", hash = "sha256:365dded8f209c1676f0bddf6d384031f7f7f82d30283ae6190a08a971f31751c", size = 4508006, upload-time = "2026-04-01T11:42:46.365Z" },
+    { url = "https://files.pythonhosted.org/packages/77/c4/66fcb1b8dad4976548cf418d38478a76cf4484e8cb6f4ab9deb4369f4266/pixelgen_pixelator_core-0.1.0rc1-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:22cf4b832b59a4e86441ef6516e43247e364554353590eb42038a97039a9eaf1", size = 4550820, upload-time = "2026-04-01T11:42:48.244Z" },
+    { url = "https://files.pythonhosted.org/packages/97/93/1ad4d4d5ba55249e92433e5e451b64581a3ba3ce6fc80869bbf220b7bf02/pixelgen_pixelator_core-0.1.0rc1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:d58377a6b71cf46b978777b91d44c5b3b9abdd807172ccf45f0b476b27f5faad", size = 4155528, upload-time = "2026-04-01T11:42:50.39Z" },
+    { url = "https://files.pythonhosted.org/packages/78/41/fa40c13617e948fd3fe04c0135c66f2b37ba681c280acdbc53f93b5d1636/pixelgen_pixelator_core-0.1.0rc1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:a08cd5cc82ef30d2393c8099bb7fa354e9e714ce7aa15a103285c158a1b1fef8", size = 4411920, upload-time = "2026-04-01T11:42:52.208Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/ca/606f02bdbcaf40a9c6bc7058c116fc0d23d8da8562abeedca3b734a3348a/pixelgen_pixelator_core-0.1.0rc1-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:a4464660ad24ed58ed5e03dfc2cde3f3e70eccdc37bf5eedc425ae1d9d565bc8", size = 4684842, upload-time = "2026-04-01T11:42:53.952Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/be/ab119f34090adcd6341f330ae7cc7ad5d9a72496e733bdfb2e2585b32398/pixelgen_pixelator_core-0.1.0rc1-cp312-cp312-win_amd64.whl", hash = "sha256:55cffa5d617b512d7070e3f125c6befb37b6d7a8fe37dfb321a2591fcb54c820", size = 4508250, upload-time = "2026-04-01T11:42:55.827Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/a4/c47a5848e0de50ed09778514c9878159553023f3dc08576e1ace03da6382/pixelgen_pixelator_core-0.1.0rc1-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:f4c748abab8dfaa8955d256bfb4d7f523cb9a4e0ae3cf58390081ff0cf4f8550", size = 4550748, upload-time = "2026-04-01T11:42:57.925Z" },
+    { url = "https://files.pythonhosted.org/packages/e1/a0/b9efba65e99ac6e8326f9efeee96601c70f16162c4bac409a62588135597/pixelgen_pixelator_core-0.1.0rc1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:ca608bfcf2f74e5e4eda830b960d364a963410ba6c5a443d525224ef6e969941", size = 4155427, upload-time = "2026-04-01T11:42:59.708Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/6c/ad091af3737cf6ce02c2d2c4a36a1fc0d7b0b9f9c1b819a43efc262a5cf1/pixelgen_pixelator_core-0.1.0rc1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:9f4bec450c46634901aef76b6d3d49fb31cb89ea3a09234b18af3788ba482b10", size = 4410884, upload-time = "2026-04-01T11:43:01.787Z" },
+    { url = "https://files.pythonhosted.org/packages/06/bd/c66e0dc7bd90ce3c16bfae93603b388a4c3ac38e36fa1d6bba099c2be12f/pixelgen_pixelator_core-0.1.0rc1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:ad09abdd3283b85a25f86751c3bd5e8b02795c2b3e3d1cb7a8a11b52ccb01e2e", size = 4682751, upload-time = "2026-04-01T11:43:04.111Z" },
+    { url = "https://files.pythonhosted.org/packages/29/ee/fee2026812228a1d3efb4a4153d239c17cb114312af648745440287b307e/pixelgen_pixelator_core-0.1.0rc1-cp313-cp313-win_amd64.whl", hash = "sha256:722ff13dd680076f11f27dbcca35436739150d605992e99fdcfa59c837d09573", size = 4507238, upload-time = "2026-04-01T11:43:06.155Z" },
 ]
 
 [[package]]

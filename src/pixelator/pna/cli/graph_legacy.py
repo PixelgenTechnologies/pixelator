@@ -1,12 +1,13 @@
-"""Graph console script for pixelator.
+"""Legacy graph console script for pixelator.
 
-Copyright © 2025 Pixelgen Technologies AB.
+Copyright © 2024 Pixelgen Technologies AB.
 """
 
 import sys
-from pathlib import Path
+import warnings
 
 import click
+import polars as pl
 
 from pixelator.common.utils import (
     create_output_stage_dir,
@@ -18,19 +19,26 @@ from pixelator.common.utils import (
 )
 from pixelator.pna.cli.common import logger, output_option, panel_option
 from pixelator.pna.config import load_antibody_panel, pna_config
-from pixelator.pna.graph.community_detection import (
+from pixelator.pna.graph.report import GraphSampleReport
+from pixelator.pna.graph_legacy.connected_components import (
+    ConnectedComponentException,
     RefinementOptions,
     StagedRefinementOptions,
+    build_pxl_file_with_components,
 )
-from pixelator.pna.graph.component_recovery import build_pxl_file_with_components
-from pixelator.pna.graph.constants import MIN_PNA_COMPONENT_SIZE
-from pixelator.pna.graph.report import GraphSampleReport
-from pixelator.pna.graph_legacy.connected_components import ConnectedComponentException
+
+_GRAPH_LEGACY_DEPRECATION = (
+    "The `graph_legacy` command is retained only for backward compatibility with older "
+    "workflows and scripts. New analyses should use `pixelator single-cell-pna graph`, "
+    "which runs the supported graph and multiplet-recovery implementation."
+)
 
 
 @click.command(
-    "graph",
-    short_help=("compute graph, components and metrics from an edge list"),
+    "graph_legacy",
+    short_help=(
+        "[deprecated] legacy graph pipeline; prefer `graph` for the current implementation"
+    ),
     options_metavar="<options>",
 )
 @click.argument(
@@ -49,23 +57,14 @@ from pixelator.pna.graph_legacy.connected_components import ConnectedComponentEx
     help=("Activate the multiplet recovery using leiden community detection"),
 )
 @click.option(
-    "--edge-cycle-verification",
+    "--leiden-iterations",
+    default=1,
     required=False,
-    is_flag=True,
-    default=False,
-    type=click.BOOL,
+    type=click.IntRange(1, 100),
+    show_default=True,
     help=(
-        "Activate edge cycle verification to remove edges from well connected regions that are not part of cycles in the graph."
-    ),
-)
-@click.option(
-    "--remove-k1-suspect-nodes",
-    required=False,
-    is_flag=True,
-    default=False,
-    type=click.BOOL,
-    help=(
-        "Remove nodes in the k=1 core layer of the graph that are connected to a remove crossing edge."
+        "Number of iterations for the leiden algorithm, high values will decrease "
+        "the variance of the results but increase the runtime"
     ),
 )
 @click.option(
@@ -99,6 +98,14 @@ from pixelator.pna.graph_legacy.connected_components import ConnectedComponentEx
     help=(
         "Discard edges with a read count below given value. Set to 1 to disable filtering."
     ),
+)
+@click.option(
+    "--min-component-size-in-refinement",
+    default=1000,
+    required=False,
+    type=click.IntRange(min=1),
+    show_default=True,
+    help=("The minimum component size to consider for refinement"),
 )
 @click.option(
     "--max-refinement-recursion-depth",
@@ -157,6 +164,16 @@ from pixelator.pna.graph_legacy.connected_components import ConnectedComponentEx
     ),
 )
 @click.option(
+    "--min-component-size-to-prune",
+    default=100,
+    required=False,
+    type=click.IntRange(min=1, max=None),
+    show_default=True,
+    help=(
+        "The minimum number of nodes in an potential new components in order for it to be pruned."
+    ),
+)
+@click.option(
     "--component-size-max-threshold",
     default=None,
     required=False,
@@ -182,20 +199,21 @@ from pixelator.pna.graph_legacy.connected_components import ConnectedComponentEx
 @output_option
 @click.pass_context
 @timer
-def graph(
+def graph_legacy(
     ctx,
     parquet_file,
     multiplet_recovery,
-    edge_cycle_verification,
-    remove_k1_suspect_nodes,
+    leiden_iterations,
     initial_stage_leiden_resolution,
     refinement_stage_leiden_resolution,
     min_count,
+    min_component_size_in_refinement,
     max_refinement_recursion_depth,
     initial_stage_max_edges_to_remove,
     refinement_stage_max_edges_to_remove,
     initial_stage_max_edges_to_remove_relative,
     refinement_stage_max_edges_to_remove_relative,
+    min_component_size_to_prune,
     component_size_max_threshold,
     component_size_min_threshold,
     panel,
@@ -203,45 +221,45 @@ def graph(
 ):
     """Find connected components from the input molecules.
 
-    The graph stage will attempt to identify connected components from the input molecules.
-    When `--multiplet-recovery` is active we will try to break up components that are likely
-    not real cells. We do so in two main and two optional stages.
+    The graph stage will attempt to identify connected components from the input molecules
+    in two stages.
 
-    Main stages:
-    1) Fast label propagation: Used as a graph coarsening step to reduce the size of the graph.
-    2) Leiden community detection
-    2.1) Initial stage: Attempt to break up the mega cluster.
-    2.2) Refinement stage: Refine the connected components found in the initial stage.
+    When `--multiple-recovery` is active we will try to break up components that are likely
+    not real cells. We do so in two stages.
 
-    Optional stages:
-    A) Edge cycle verification: Remove edges, connecting highly connected nodes in the graph
-    (k-core number > 1) that are not part of any short cycles in the graph. Such nodes are likely
-    crossing edges connecting different components.
-    B) Removal of K1 suspect nodes: Remove nodes with core number 1 that are connected to
-    a removed edge. They are removed as one cannot be sure if they belong to either of the
-    components connected by the removed edge. This reduces bleed-over effects between cells
-    due to incorrect edge cuts.
+    In the initial stage will attempt to break up the so called mega cluster. This is a loosely
+    connected but very large component that is often present in the data.
+
+    In the subsequent refinement stage we inspect the resulting connected components and try
+    to find components that can be split further, by identifying well-connected communities
+    that have a low number of crossing edges between them. We will do so recursively until
+    no more reasonable splits are found, or the maximum recursion depth is reached.
+
 
     After the connected components have been identified we will create a pxl file that contains
     data for all of there putative cells.
     """
+    warnings.warn(_GRAPH_LEGACY_DEPRECATION, DeprecationWarning, stacklevel=1)
+    logger.warning(_GRAPH_LEGACY_DEPRECATION)
+
     # log input parameters
     input_files = [parquet_file]
     log_step_start(
-        "graph",
+        "graph_legacy",
         input_files=input_files,
         output=output,
         multiplet_recovery=multiplet_recovery,
-        edge_cycle_verification=edge_cycle_verification,
-        remove_k1_suspect_nodes=remove_k1_suspect_nodes,
+        leiden_iterations=leiden_iterations,
         initial_stage_leiden_resolution=initial_stage_leiden_resolution,
         refinement_stage_leiden_resolution=refinement_stage_leiden_resolution,
         min_count=min_count,
+        min_component_size_in_refinement=min_component_size_in_refinement,
         max_refinement_recursion_depth=max_refinement_recursion_depth,
         initial_stage_max_edges_to_remove=initial_stage_max_edges_to_remove,
         refinement_stage_max_edges_to_remove=refinement_stage_max_edges_to_remove,
         initial_stage_max_edges_to_remove_relative=initial_stage_max_edges_to_remove_relative,
         refinement_stage_max_edges_to_remove_relative=refinement_stage_max_edges_to_remove_relative,
+        min_component_size_to_prune=min_component_size_to_prune,
         component_size_max_threshold=component_size_max_threshold,
         component_size_min_threshold=component_size_min_threshold,
         panel=panel,
@@ -260,57 +278,59 @@ def graph(
     write_parameters_file(
         ctx,
         graph_output / f"{sample_name}.meta.json",
-        command_path="pixelator single-cell-pna graph",
+        command_path="pixelator single-cell-pna graph_legacy",
     )
     output_path = graph_output / f"{sample_name}.graph.pxl"
 
     panel = load_antibody_panel(pna_config, panel)
     initial_stage_refinement_options = RefinementOptions(
+        min_component_size=min_component_size_in_refinement,
         leiden_resolution=initial_stage_leiden_resolution,
         max_edges_to_remove=initial_stage_max_edges_to_remove,
         max_edges_to_remove_relative=initial_stage_max_edges_to_remove_relative,
-        min_component_size_to_prune=component_size_min_threshold
-        or MIN_PNA_COMPONENT_SIZE,
+        min_component_size_to_prune=min_component_size_to_prune,
     )
     refinement_stage_refinement_options = RefinementOptions(
+        min_component_size=min_component_size_in_refinement,
         leiden_resolution=refinement_stage_leiden_resolution,
         max_edges_to_remove=refinement_stage_max_edges_to_remove,
         max_edges_to_remove_relative=refinement_stage_max_edges_to_remove_relative,
-        min_component_size_to_prune=component_size_min_threshold
-        or MIN_PNA_COMPONENT_SIZE,
+        min_component_size_to_prune=min_component_size_to_prune,
     )
     refinement_options = StagedRefinementOptions(
         max_component_refinement_depth=max_refinement_recursion_depth,
-        initial_stage_options=initial_stage_refinement_options,
+        inital_stage_options=initial_stage_refinement_options,
         refinement_stage_options=refinement_stage_refinement_options,
     )
 
-    component_size_threshold = True
-    if any([component_size_min_threshold, component_size_max_threshold]):
-        component_size_threshold = (
+    component_size_threshold = (
+        (
             component_size_min_threshold,
             component_size_max_threshold,
         )
+        if any([component_size_min_threshold, component_size_max_threshold])
+        else True
+    )
 
-    n_cores = ctx.obj.get("CORES")
     try:
         _, component_statics = build_pxl_file_with_components(
-            parquet_file=Path(parquet_file),
+            molecules_lazy_frame=pl.scan_parquet(
+                parquet_file, low_memory=True, cache=False
+            ),
             panel=panel,
             sample_name=sample_name,
             path_output_pxl_file=output_path,
             multiplet_recovery=multiplet_recovery,
-            edge_cycle_verification=edge_cycle_verification,
-            remove_k1_suspect_nodes=remove_k1_suspect_nodes,
-            min_read_count=min_count,
+            leiden_iterations=leiden_iterations,
+            min_count=min_count,
             refinement_options=refinement_options,
             component_size_threshold=component_size_threshold,
-            n_cores=n_cores,
         )
     except ConnectedComponentException as e:
         logger.error(e)
         sys.exit(1)
 
+    # build_pxl_file(edgelist_with_components, adata)
     metrics_file = graph_output / f"{sample_name}.report.json"
     report = GraphSampleReport(
         sample_id=sample_name,

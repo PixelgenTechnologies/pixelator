@@ -9,7 +9,7 @@ import pytest
 from polars.testing.asserts import assert_frame_equal
 from scipy.spatial import distance_matrix
 
-from pixelator.pna.graph.connected_components import (
+from pixelator.pna.graph_legacy.connected_components import (
     RefinementOptions,
     StagedRefinementOptions,
     build_pxl_file_with_components,
