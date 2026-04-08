@@ -99,15 +99,13 @@ def random_graph_path():
         yield temp_file.name
 
 
-# (edge_cycle_verification=True, remove_k1_suspect_nodes=False) is omitted: on this
-# synthetic graph all components are below MIN_PNA_COMPONENT_SIZE, so cycle verification
-# does not run per-component processing and recovery can diverge from ground truth.
 @pytest.mark.parametrize(
     "edge_cycle_verification, remove_k1_suspect_nodes",
     [
         (False, False),
         (True, True),
         (False, True),
+        (True, True),
     ],
 )
 def test_new_graph_small(
@@ -306,6 +304,7 @@ def test_find_components_empty_parquet_file():
         (False, False),
         (True, True),
         (False, True),
+        (True, True),
     ],
 )
 def test_new_graph_big(
