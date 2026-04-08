@@ -4,12 +4,13 @@ from pathlib import Path
 
 import polars as pl
 import pytest
-from pixelator.pna.graph.connected_components_common import ConnectedComponentException
+
 from pixelator.pna.graph.community_detection import (
     RefinementOptions,
     StagedRefinementOptions,
     find_components,
 )
+from pixelator.pna.graph.connected_components_common import ConnectedComponentException
 
 
 @pytest.fixture

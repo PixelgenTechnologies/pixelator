@@ -625,6 +625,7 @@ def _add_post_recovery_stats(edgelist: pl.LazyFrame, component_stats: GraphStati
     )
     return component_stats
 
+
 def _remove_umi_clashes_and_get_stats(input_edgelist, component_stats):
     raw_stat = input_edgelist.select(["read_count", "uei_count"]).sum().collect()
     component_stats.molecules_input = raw_stat["uei_count"][0]

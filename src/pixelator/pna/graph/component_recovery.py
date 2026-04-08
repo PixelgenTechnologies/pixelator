@@ -24,9 +24,7 @@ from .community_detection import (
 from .report import GraphStatistics
 
 
-def update_stats_from_adata(
-    adata: AnnData, stats: GraphStatistics
-) -> GraphStatistics:
+def update_stats_from_adata(adata: AnnData, stats: GraphStatistics) -> GraphStatistics:
     """Update GraphStatistics from an AnnData object."""
     component_stats = copy(stats)
     component_stats.reads_output = int(adata.obs["reads_in_component"].sum())

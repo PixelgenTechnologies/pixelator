@@ -29,7 +29,6 @@ def hash_component(component: set[int]) -> str:
 
     Note: this preserves the historical hashing behavior used by the legacy pipeline.
     """
-
     hasher = xxhash.xxh3_64()
     for node in sorted(component):
         hasher.update(int(node).to_bytes(length=8, byteorder="little"))
