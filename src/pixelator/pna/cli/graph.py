@@ -22,10 +22,10 @@ from pixelator.pna.graph.community_detection import (
     RefinementOptions,
     StagedRefinementOptions,
 )
+from pixelator.pna.graph.connected_components_common import ConnectedComponentException
 from pixelator.pna.graph.component_recovery import build_pxl_file_with_components
 from pixelator.pna.graph.constants import MIN_PNA_COMPONENT_SIZE
 from pixelator.pna.graph.report import GraphSampleReport
-from pixelator.pna.graph_legacy.connected_components import ConnectedComponentException
 
 
 @click.command(

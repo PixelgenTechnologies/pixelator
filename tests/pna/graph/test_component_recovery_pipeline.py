@@ -4,7 +4,7 @@ from pathlib import Path
 
 import polars as pl
 import pytest
-from pixelator.pna.graph_legacy.connected_components import ConnectedComponentException
+from pixelator.pna.graph.connected_components_common import ConnectedComponentException
 from pixelator.pna.graph.community_detection import (
     RefinementOptions,
     StagedRefinementOptions,

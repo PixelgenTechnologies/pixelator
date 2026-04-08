@@ -16,14 +16,18 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import polars as pl
-import xxhash
 from graspologic_native import leiden
 
 from pixelator.common.annotate.aggregates import call_aggregates
-from pixelator.common.annotate.cell_calling import find_component_size_limits
-from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanel
+from pixelator.pna.graph.connected_components_common import (
+    ConnectedComponentException,
+    _name_components_with_umi_hashes,
+    filter_components_by_size_dynamic,
+    filter_components_by_size_hard_thresholds,
+    hash_component,
+)
 from pixelator.pna.graph.report import (
     GraphStatistics,
 )
@@ -34,10 +38,6 @@ LEIDEN_RANDOM_SEED = 1
 MIN_PNA_COMPONENT_SIZE = 8000
 
 logger = logging.getLogger(__name__)
-
-
-class ConnectedComponentException(PixelatorBaseException):
-    """Exception raised when there is an issue with connected components."""
 
 
 def _calculate_component_stats(
@@ -430,60 +430,6 @@ def recover_multiplets(
     )
 
 
-def filter_components_by_size_dynamic(
-    component_sizes: pd.DataFrame,
-    lowest_passable_bound: int | None = MIN_PNA_COMPONENT_SIZE,
-) -> tuple[pd.DataFrame, int | None]:
-    """Filter components by size using dynamic thresholds.
-
-    :param component_sizes: A DataFrame with columns `component` and `n_umi`.
-    :returns: only the 'component' column of with the components that pass the filter, and the lower bound.
-    """
-    if lowest_passable_bound is None:
-        lowest_passable_bound = MIN_PNA_COMPONENT_SIZE
-
-    lower_bound = find_component_size_limits(
-        component_sizes=component_sizes["n_umi"].to_numpy(), direction="lower"
-    )
-    if lower_bound is None or lower_bound < lowest_passable_bound:
-        lower_bound = lowest_passable_bound
-        logger.warning(
-            "Could not find a lower bound for component size filtering, will "
-            "set the lower bound to " + str(lowest_passable_bound),
-        )
-    return (
-        component_sizes.filter(pl.col("n_umi") >= lower_bound)["component"],
-        lower_bound,
-    )
-
-
-def filter_components_by_size_hard_thresholds(
-    component_sizes: pd.DataFrame, lower_bound: int | None, higher_bound: int | None
-) -> pd.DataFrame:
-    """Filter components by size using hard thresholds.
-
-    :param component_sizes: A DataFrame with columns `component` and `n_umi`.
-    :param lower_bound: The lower bound for the component size.
-    :param higher_bound: The higher bound for the component size.
-    :returns: only the 'component' column of with the components that pass the filter.
-    """
-    if lower_bound is None:
-        lower_bound = 0
-    if higher_bound is None:
-        higher_bound = np.iinfo(np.uint64).max
-    return component_sizes.filter(
-        (pl.col("n_umi") >= lower_bound) & (pl.col("n_umi") <= higher_bound)
-    )["component"]
-
-
-def hash_component(component: set[int]) -> str:
-    """Hash a component. Should yield the same hash if the components consists of the same nodes."""
-    hasher = xxhash.xxh3_64()
-    for node in sorted(component):
-        hasher.update(node.to_bytes(length=8, byteorder="little"))
-    return hasher.hexdigest()
-
-
 def _find_clashing_umis(
     molecules_lazy_frame: pl.LazyFrame,
 ) -> tuple[pl.Series, pl.Series]:
@@ -678,20 +624,6 @@ def _add_post_recovery_stats(edgelist: pl.LazyFrame, component_stats: GraphStati
         / connected_component_sizes["component_size"].sum()  # type: ignore
     )
     return component_stats
-
-
-def _name_components_with_umi_hashes(edgelist):
-    comp_umis = (
-        edgelist.group_by("component")
-        .agg(pl.col("umi1").unique(), pl.col("umi2").unique())
-        .collect()
-    )
-    comp_hashes = dict()
-    for comp, umi1, umi2 in comp_umis.rows():
-        comp_hashes[comp] = hash_component(set(umi1 + umi2))
-
-    return edgelist.with_columns(pl.col("component").replace_strict(comp_hashes))
-
 
 def _remove_umi_clashes_and_get_stats(input_edgelist, component_stats):
     raw_stat = input_edgelist.select(["read_count", "uei_count"]).sum().collect()

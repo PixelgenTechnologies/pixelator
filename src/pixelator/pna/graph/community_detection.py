@@ -19,10 +19,6 @@ from graspologic_native import leiden
 from pixelator_core import run_hybrid_community_detection
 
 from pixelator.pna.cli.common import logger
-from pixelator.pna.graph_legacy.connected_components import (
-    ConnectedComponentException,
-    _name_components_with_umi_hashes,
-)
 
 from .component_recovery_utils import (
     create_working_edgelist,
@@ -30,6 +26,10 @@ from .component_recovery_utils import (
     filter_edgelist_by_read_count,
     initialize_graph_statistics,
     remove_clashing_umis,
+)
+from .connected_components_common import (
+    ConnectedComponentException,
+    _name_components_with_umi_hashes,
 )
 from .constants import (
     LEIDEN_RANDOM_SEED,

@@ -11,7 +11,7 @@ import duckdb
 import numpy as np
 import polars as pl
 
-from pixelator.pna.graph_legacy.connected_components import (
+from pixelator.pna.graph.connected_components_common import (
     ConnectedComponentException,
     filter_components_by_size_dynamic,
     filter_components_by_size_hard_thresholds,
