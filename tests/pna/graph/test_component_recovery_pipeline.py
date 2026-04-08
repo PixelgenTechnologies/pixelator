@@ -108,7 +108,7 @@ def random_graph_path():
         (True, True),
     ],
 )
-def test_new_graph_small(
+def test_find_components_small(
     random_graph_path,
     edge_cycle_verification,
     remove_k1_suspect_nodes,
@@ -199,7 +199,7 @@ def test_new_graph_small(
         )
 
 
-def test_new_graph_no_components(random_graph_path):
+def test_find_no_components(random_graph_path):
     staged_refinement_options = StagedRefinementOptions(
         initial_stage_options=RefinementOptions(
             leiden_resolution=1.0,
@@ -227,7 +227,7 @@ def test_new_graph_no_components(random_graph_path):
             )
 
 
-def test_new_graph_prunes_small_clusters_leaving_one_large(random_graph_path):
+def test_find_compoments_prunes_small_clusters_leaving_one_large(random_graph_path):
     staged_refinement_options = StagedRefinementOptions(
         initial_stage_options=RefinementOptions(
             leiden_resolution=1.0,
@@ -307,7 +307,7 @@ def test_find_components_empty_parquet_file():
         (True, True),
     ],
 )
-def test_new_graph_big(
+def test_find_components_big(
     testdata_3pc_crossing_parquet,
     testdata_0pc_crossing_parquet,
     edge_cycle_verification,
