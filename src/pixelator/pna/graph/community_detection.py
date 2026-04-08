@@ -367,7 +367,8 @@ def run_leiden_refinement(
     mp_context = multiprocessing.get_context("spawn")
     n_total_crossing_edges = 0
     all_discard_sizes = []
-    for recursion_level in range(refinement_options.max_component_refinement_depth):
+    # Discard 1 to take into account first Leiden pass
+    for recursion_level in range(refinement_options.max_component_refinement_depth - 1):
         if not to_be_refined:
             logger.debug(
                 "No more components to refine, will break the refinement loop."
@@ -580,7 +581,6 @@ def find_components(
         if refinement_options.max_component_refinement_depth > 1:
             logger.info("Starting refinement stages on decoarsened edgelist.")
             time_start = time.time()
-            refinement_options.max_component_refinement_depth -= 1
             component_stats, new_discarded_sizes = run_leiden_refinement(
                 component_edgelists_path=latest_working_edgelist_path,
                 refinement_options=refinement_options,
