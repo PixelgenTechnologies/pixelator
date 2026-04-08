@@ -55,10 +55,22 @@ def get_single_thread_duckdb_config(n_threads: int) -> dict:
             .split(" ")[0]
         )
 
+    logger.debug(
+        "get_single_thread_duckdb_config: detected available memory %.2f GB "
+        "(from DuckDB memory_limit), n_threads=%d",
+        available_memory,
+        n_threads,
+    )
+
     duckdb_single_config = {
         "memory_limit": str(int(available_memory / n_threads)) + "GB",
         "threads": "1",
     }
+
+    logger.debug(
+        "get_single_thread_duckdb_config: resulting config %s",
+        duckdb_single_config,
+    )
 
     return duckdb_single_config
 
