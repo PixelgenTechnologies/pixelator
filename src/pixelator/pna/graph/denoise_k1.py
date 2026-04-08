@@ -50,15 +50,14 @@ def process_component(
         ).select("umi")
         con.execute(
             """
-            CREATE VIEW component_edge_list AS
-            SELECT * FROM read_parquet('{graph_edgelist_path}')
-            WHERE component = '{component_id}'
-        """.format(
-                graph_edgelist_path=str(graph_edgelist_path), component_id=component_id
-            )
+            CREATE TEMP TABLE component_edge_list AS
+            SELECT * FROM read_parquet(?)
+            WHERE component = ?
+            """,
+            [str(graph_edgelist_path), component_id],
         )
         component_edges = con.execute(
-            f"SELECT umi1, umi2 FROM component_edge_list"
+            "SELECT umi1, umi2 FROM component_edge_list"
         ).pl()
         # Build graph and compute core numbers
         graph = nx.from_edgelist(component_edges.rows())
@@ -94,13 +93,17 @@ def process_component(
                 crossing_components, on="id", how="inner"
             ).select("umi")
 
-        con.execute(f"""
+        out_parquet = str(tmpdir / f"component_{component_id}_full.parquet")
+        con.execute(
+            """
             COPY (
                 SELECT * FROM component_edge_list
                 WHERE umi1 NOT IN (SELECT umi FROM nodes_to_remove)
                 AND umi2 NOT IN (SELECT umi FROM nodes_to_remove)
-                ) TO '{str(tmpdir)}/component_{component_id}_full.parquet' (FORMAT PARQUET)
-        """)
+            ) TO ? (FORMAT PARQUET)
+            """,
+            [out_parquet],
+        )
 
     return nodes_to_remove.height
 

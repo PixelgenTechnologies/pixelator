@@ -213,11 +213,13 @@ def process_component(comp_name, edgelist_path, tmpdir):
     with duckdb.connect() as con:
         con.execute(
             """
-            CREATE VIEW comp_edgelist AS SELECT * FROM read_parquet('{edgelist_path}')
-            WHERE component = '{comp_name}'
-        """.format(edgelist_path=edgelist_path, comp_name=comp_name)
+            CREATE TEMP TABLE comp_edgelist AS
+            SELECT * FROM read_parquet(?)
+            WHERE component = ?
+            """,
+            [str(edgelist_path), comp_name],
         )
-        comp_edgelist = con.execute(f"SELECT umi1, umi2 FROM comp_edgelist").pl()
+        comp_edgelist = con.execute("SELECT umi1, umi2 FROM comp_edgelist").pl()
         graph = nx.from_edgelist(comp_edgelist.rows())
         core_numbers = pd.Series(nx.core_number(graph))
         high_cores = core_numbers[core_numbers > 1].index
@@ -225,11 +227,11 @@ def process_component(comp_name, edgelist_path, tmpdir):
             pl.col("umi1").is_in(high_cores) & pl.col("umi2").is_in(high_cores)
         )
         if edgelist_h.height == 0:
-            con.execute(f"""
-                COPY (
-                    SELECT * FROM comp_edgelist
-                ) TO '{tmpdir}/component_{comp_name}.parquet' (FORMAT PARQUET)
-            """)
+            out_parquet = str(Path(tmpdir) / f"component_{comp_name}.parquet")
+            con.execute(
+                "COPY (SELECT * FROM comp_edgelist) TO ? (FORMAT PARQUET)",
+                [out_parquet],
+            )
             empty_dist = pd.DataFrame(
                 {"cycle_length": pd.Series(dtype=int), "n_edges": pd.Series(dtype=int)}
             )
@@ -267,12 +269,17 @@ def process_component(comp_name, edgelist_path, tmpdir):
                 break
 
             nodes_df = pl.DataFrame({"umi": list(comp)})
-            con.execute(f"""
+            out_parquet = str(Path(tmpdir) / f"component_{comp_name}_{i}.parquet")
+            con.execute(
+                """
                 COPY (
                     SELECT * FROM comp_edgelist
-                    WHERE umi1 IN (SELECT umi FROM nodes_df) AND umi2 IN (SELECT umi FROM nodes_df)
-                ) TO '{tmpdir}/component_{comp_name}_{i}.parquet' (FORMAT PARQUET)
-            """)
+                    WHERE umi1 IN (SELECT umi FROM nodes_df)
+                    AND umi2 IN (SELECT umi FROM nodes_df)
+                ) TO ? (FORMAT PARQUET)
+                """,
+                [out_parquet],
+            )
 
         return n_removed_edges, edge_cycle_length_dist
 
@@ -295,26 +302,33 @@ def remove_no_cycle_edges(
     logger.info("Starting removal of no-cycle edges")
     with tempfile.TemporaryDirectory() as tmpdir:
         with duckdb.connect(tmpdir + "/temp_duckdb.db") as con:
-            con.execute(f"""
-                CREATE VIEW graph_edgelist AS SELECT * FROM read_parquet('{edgelist_path}')
-            """)
+            con.execute(
+                """
+                CREATE TEMP TABLE graph_edgelist AS
+                SELECT * FROM read_parquet(?)
+                """,
+                [str(edgelist_path)],
+            )
             con.execute(
                 """
                 CREATE TEMP TABLE tiny_components AS
                 SELECT component, COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2) AS n_nodes
                 FROM graph_edgelist
                 GROUP BY component
-                HAVING (COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)) < {min_size}
-            """.format(min_size=MIN_PNA_COMPONENT_SIZE)
+                HAVING (COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)) < ?
+                """,
+                [MIN_PNA_COMPONENT_SIZE],
             )
 
+            tiny_parquet_path = str(Path(tmpdir) / "tiny_components.parquet")
             con.execute(
                 """
                 COPY (
                     SELECT * FROM graph_edgelist
                     WHERE component IN (SELECT component FROM tiny_components)
-                ) TO '{output_path}' (FORMAT PARQUET)
-            """.format(output_path=tmpdir + "/tiny_components.parquet")
+                ) TO ? (FORMAT PARQUET)
+                """,
+                [tiny_parquet_path],
             )
             con.execute("""
                 CREATE VIEW filtered_graph_edgelist AS
@@ -356,12 +370,16 @@ def remove_no_cycle_edges(
                 f"Total removed edges in cycle verification: {total_removed_edges}"
             )
             out_paths = [
-                tmpdir + "/" + p
+                str(Path(tmpdir) / p)
                 for p in os.listdir(tmpdir)
                 if p.endswith(".parquet") and p.startswith("component_")
-            ] + [tmpdir + "/tiny_components.parquet"]
-            all_files = ",".join([f"'{p}'" for p in out_paths])
+            ] + [str(Path(tmpdir) / "tiny_components.parquet")]
             con.execute(
-                f"COPY (SELECT * FROM read_parquet([{all_files}])) TO '{output_path}' (FORMAT PARQUET)"
+                "CREATE TEMP TABLE merged_edgelist AS SELECT * FROM read_parquet(?)",
+                [out_paths],
+            )
+            con.execute(
+                "COPY merged_edgelist TO ? (FORMAT PARQUET)",
+                [str(output_path)],
             )
             return total_removed_edges, edge_cycle_length_dist
