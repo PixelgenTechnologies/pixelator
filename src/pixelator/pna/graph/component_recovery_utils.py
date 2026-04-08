@@ -82,21 +82,21 @@ def get_count_statistics(edgelist_path: Path) -> dict:
             - 'n_molecules': Total number of molecules in the edgelist.
 
     """
-    con = duckdb.connect()
-    con.execute(
-        f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(edgelist_path)}')"
-    )
-    n_edges = con.execute("SELECT COUNT(*) FROM edgelist").fetchone()[0]  # type: ignore
-    n_reads = con.execute("SELECT SUM(read_count) FROM edgelist").fetchone()[0]  # type: ignore
-    n_molecules = con.execute("SELECT SUM(uei_count) FROM edgelist").fetchone()[0]  # type: ignore
-    n_umi = con.execute("""
-        SELECT COUNT(DISTINCT umi)
-        FROM (
-            SELECT umi1 AS umi FROM edgelist
-            UNION ALL
-            SELECT umi2 AS umi FROM edgelist
+    with duckdb.connect() as con:
+        con.execute(
+            f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(edgelist_path)}')"
         )
-    """).fetchone()[0]  # type: ignore
+        n_edges = con.execute("SELECT COUNT(*) FROM edgelist").fetchone()[0]  # type: ignore
+        n_reads = con.execute("SELECT SUM(read_count) FROM edgelist").fetchone()[0]  # type: ignore
+        n_molecules = con.execute("SELECT SUM(uei_count) FROM edgelist").fetchone()[0]  # type: ignore
+        n_umi = con.execute("""
+            SELECT COUNT(DISTINCT umi)
+            FROM (
+                SELECT umi1 AS umi FROM edgelist
+                UNION ALL
+                SELECT umi2 AS umi FROM edgelist
+            )
+        """).fetchone()[0]  # type: ignore
 
     return {
         "n_edges": n_edges,
@@ -128,35 +128,34 @@ def find_clashing_umis(
         and the updated component statistics.
 
     """
-    con = duckdb.connect()
-    con.execute(
-        f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(input_file)}')"
-    )
-
-    umi1_clashes = con.execute("""
-        SELECT umi1 AS umi
-        FROM edgelist
-        GROUP BY umi1
-        HAVING COUNT(DISTINCT marker_1) > 1
-    """).pl()
-
-    umi2_clashes = con.execute("""
-        SELECT umi2 AS umi
-        FROM edgelist
-        GROUP BY umi2
-        HAVING COUNT(DISTINCT marker_2) > 1
-    """).pl()
-
-    umi1_umi2_clashes = con.execute("""
-        SELECT DISTINCT umi
-        FROM (
-            SELECT umi1 AS umi FROM edgelist
-            INTERSECT
-            SELECT umi2 AS umi FROM edgelist
+    with duckdb.connect() as con:
+        con.execute(
+            f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(input_file)}')"
         )
-    """).pl()
 
-    con.close()
+        umi1_clashes = con.execute("""
+            SELECT umi1 AS umi
+            FROM edgelist
+            GROUP BY umi1
+            HAVING COUNT(DISTINCT marker_1) > 1
+        """).pl()
+
+        umi2_clashes = con.execute("""
+            SELECT umi2 AS umi
+            FROM edgelist
+            GROUP BY umi2
+            HAVING COUNT(DISTINCT marker_2) > 1
+        """).pl()
+
+        umi1_umi2_clashes = con.execute("""
+            SELECT DISTINCT umi
+            FROM (
+                SELECT umi1 AS umi FROM edgelist
+                INTERSECT
+                SELECT umi2 AS umi FROM edgelist
+            )
+        """).pl()
+
     component_stats.umi1_clashes = umi1_clashes.shape[0]
     component_stats.umi2_clashes = umi2_clashes.shape[0]
     component_stats.umi1_umi2_clashes = umi1_umi2_clashes.shape[0]
@@ -250,45 +249,44 @@ def create_working_edgelist(
         None
 
     """
-    con = duckdb.connect()
-    con.execute(
-        f"CREATE VIEW input_edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
-    )
-
-    con.execute("""
-        CREATE VIEW node_map AS
-        WITH all_umis AS (
-            SELECT umi1 AS original_name FROM input_edgelist
-            UNION
-            SELECT umi2 AS original_name FROM input_edgelist
+    with duckdb.connect() as con:
+        con.execute(
+            f"CREATE VIEW input_edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
         )
-        SELECT
-            original_name,
-            CAST(ROW_NUMBER() OVER (ORDER BY original_name) - 1 AS UINT64) AS working_name
-        FROM all_umis
-    """)
 
-    con.execute("""
-        CREATE VIEW working_edgelist AS
-        SELECT
-            nm1.working_name AS umi1,
-            nm2.working_name AS umi2,
-            ie.read_count,
-            ie.uei_count,
-            ie.marker_1,
-            ie.marker_2
-        FROM input_edgelist ie
-        JOIN node_map nm1 ON ie.umi1 = nm1.original_name
-        JOIN node_map nm2 ON ie.umi2 = nm2.original_name
-    """)
+        con.execute("""
+            CREATE VIEW node_map AS
+            WITH all_umis AS (
+                SELECT umi1 AS original_name FROM input_edgelist
+                UNION
+                SELECT umi2 AS original_name FROM input_edgelist
+            )
+            SELECT
+                original_name,
+                CAST(ROW_NUMBER() OVER (ORDER BY original_name) - 1 AS UINT64) AS working_name
+            FROM all_umis
+        """)
 
-    con.execute(
-        f"COPY (SELECT * FROM node_map) TO '{str(node_map_path)}' (FORMAT PARQUET)"
-    )
-    con.execute(
-        f"COPY (SELECT * FROM working_edgelist) TO '{str(working_edgelist_path)}' (FORMAT PARQUET)"
-    )
-    con.close()
+        con.execute("""
+            CREATE VIEW working_edgelist AS
+            SELECT
+                nm1.working_name AS umi1,
+                nm2.working_name AS umi2,
+                ie.read_count,
+                ie.uei_count,
+                ie.marker_1,
+                ie.marker_2
+            FROM input_edgelist ie
+            JOIN node_map nm1 ON ie.umi1 = nm1.original_name
+            JOIN node_map nm2 ON ie.umi2 = nm2.original_name
+        """)
+
+        con.execute(
+            f"COPY (SELECT * FROM node_map) TO '{str(node_map_path)}' (FORMAT PARQUET)"
+        )
+        con.execute(
+            f"COPY (SELECT * FROM working_edgelist) TO '{str(working_edgelist_path)}' (FORMAT PARQUET)"
+        )
 
 
 def filter_edgelist_by_read_count(
@@ -312,16 +310,16 @@ def filter_edgelist_by_read_count(
         GraphStatistics: Updated graph statistics after filtering.
 
     """
-    con = duckdb.connect()
-    con.execute(
-        f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(edgelist_path)}')"
-    )
-    con.execute(
-        f"CREATE VIEW filtered_edgelist AS SELECT * FROM edgelist WHERE read_count >= {min_read_count}"
-    )
-    con.execute(
-        f"COPY (SELECT * FROM filtered_edgelist) TO '{str(target_path)}' (FORMAT PARQUET)"
-    )
+    with duckdb.connect() as con:
+        con.execute(
+            f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(edgelist_path)}')"
+        )
+        con.execute(
+            f"CREATE VIEW filtered_edgelist AS SELECT * FROM edgelist WHERE read_count >= {min_read_count}"
+        )
+        con.execute(
+            f"COPY (SELECT * FROM filtered_edgelist) TO '{str(target_path)}' (FORMAT PARQUET)"
+        )
 
     filtered_stats = get_count_statistics(target_path)
     component_stats.molecules_post_read_count_filtering = filtered_stats["n_molecules"]
