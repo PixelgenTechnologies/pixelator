@@ -597,6 +597,7 @@ def find_components(
                 component_edgelists_path=latest_working_edgelist_path,
                 refinement_options=refinement_options,
                 component_stats=component_stats,
+                max_workers=n_threads,
             )
             discard_sizes = pl.concat((discard_sizes, new_discarded_sizes))
             logger.info(
