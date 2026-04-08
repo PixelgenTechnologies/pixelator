@@ -10,7 +10,7 @@ from pixelator.pna.graph.community_detection import (
     StagedRefinementOptions,
     find_components,
 )
-from pixelator.pna.graph.connected_components_common import ConnectedComponentException
+from pixelator.pna.graph.component_recovery_utils import ConnectedComponentException
 
 
 @pytest.fixture

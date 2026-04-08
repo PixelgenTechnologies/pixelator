@@ -21,15 +21,13 @@ from pixelator_core import run_hybrid_community_detection
 from pixelator.pna.cli.common import logger
 
 from .component_recovery_utils import (
+    ConnectedComponentException,
+    _name_components_with_umi_hashes,
     create_working_edgelist,
     filter_connected_components_by_size,
     filter_edgelist_by_read_count,
     initialize_graph_statistics,
     remove_clashing_umis,
-)
-from .connected_components_common import (
-    ConnectedComponentException,
-    _name_components_with_umi_hashes,
 )
 from .constants import (
     LEIDEN_RANDOM_SEED,

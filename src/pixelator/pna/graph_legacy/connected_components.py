@@ -21,7 +21,7 @@ from graspologic_native import leiden
 from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanel
-from pixelator.pna.graph.connected_components_common import (
+from pixelator.pna.graph.component_recovery_utils import (
     ConnectedComponentException,
     _name_components_with_umi_hashes,
     filter_components_by_size_dynamic,
