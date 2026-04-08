@@ -104,7 +104,7 @@ def random_graph_path():
     "edge_cycle_verification, remove_k1_suspect_nodes",
     [
         (False, False),
-        (True, True),
+        (True, False),
         (False, True),
         (True, True),
     ],
@@ -303,7 +303,7 @@ def test_find_components_empty_parquet_file():
     "edge_cycle_verification, remove_k1_suspect_nodes",
     [
         (False, False),
-        (True, True),
+        (True, False),
         (False, True),
         (True, True),
     ],
