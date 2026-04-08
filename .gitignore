@@ -105,6 +105,7 @@ ENV/
 # IDE settings
 .vscode/
 .idea/
+.cursor/
 
 # MacOS files
 ## file that stores custom attributes of its containing folder
