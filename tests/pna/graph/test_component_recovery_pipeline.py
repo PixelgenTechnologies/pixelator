@@ -228,7 +228,7 @@ def test_find_no_components(random_graph_path):
             )
 
 
-def test_find_compoments_prunes_small_clusters_leaving_one_large(random_graph_path):
+def test_find_components_prunes_small_clusters_leaving_one_large(random_graph_path):
     staged_refinement_options = StagedRefinementOptions(
         initial_stage_options=RefinementOptions(
             leiden_resolution=1.0,

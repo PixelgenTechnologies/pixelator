@@ -56,9 +56,7 @@ def process_component(
             """,
             [str(graph_edgelist_path), component_id],
         )
-        component_edges = con.execute(
-            "SELECT umi1, umi2 FROM component_edge_list"
-        ).pl()
+        component_edges = con.execute("SELECT umi1, umi2 FROM component_edge_list").pl()
         # Build graph and compute core numbers
         graph = nx.from_edgelist(component_edges.rows())
         core_numbers = nx.core_number(graph)
@@ -120,7 +118,7 @@ def denoise_edgelist_core1(
         graph_edgelist_path (Path): Path to the graph edgelist parquet file.
         original_edgelist_path (Path): Path to the original edgelist parquet file.
         output_path (Path): Path to save the denoised edgelist parquet file.
-        n_threads (int): Number of threads to use. Default is 8.
+        n_threads (int): Number of threads to use. Default is 1.
 
     """
     with tempfile.TemporaryDirectory() as tmpdir:

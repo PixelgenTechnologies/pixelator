@@ -35,6 +35,4 @@ def test_calculate_post_recovery_component_statistics():
     assert out.component_count_post_recovery == 2
     assert out.edge_count_post_recovery == 3
     assert out.node_count_post_recovery == 5  # 3 + 2
-    assert out.fraction_nodes_in_largest_component_post_recovery == pytest.approx(
-        3 / 5
-    )
+    assert out.fraction_nodes_in_largest_component_post_recovery == pytest.approx(3 / 5)
