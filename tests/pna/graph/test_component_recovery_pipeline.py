@@ -19,8 +19,9 @@ def random_graph_path():
 
     n_clusters = 10
     n_nodes_per_cluster = 100
-    n_edges_per_cluster = 400
-    n_crossing_edges = int(0.03 * n_edges_per_cluster * n_clusters)
+    # Denser intra-community edges, fewer crossing edges (vs. 400 edges & 3% crossing).
+    n_edges_per_cluster = 800
+    n_crossing_edges = int(0.004 * n_edges_per_cluster * n_clusters)
 
     edges = []
     for cluster in range(n_clusters):
@@ -185,18 +186,18 @@ def test_find_components_small(
         assert component_stats.component_count_pre_recovery == 1
         assert component_stats.component_count_post_recovery == 11
 
-        assert component_stats.crossing_edges_removed_initial_stage == 106
-        assert component_stats.crossing_edges_removed == 106
-        assert component_stats.edge_count_pre_recovery == 4920
-        assert component_stats.edge_count_post_recovery == 4814
-        assert component_stats.node_count_pre_recovery == 1199
-        assert component_stats.node_count_post_recovery == 1199
+        assert component_stats.crossing_edges_removed_initial_stage == 29
+        assert component_stats.crossing_edges_removed == 29
+        assert component_stats.edge_count_pre_recovery == 9632
+        assert component_stats.edge_count_post_recovery == 9603
+        assert component_stats.node_count_pre_recovery == 1200
+        assert component_stats.node_count_post_recovery == 1200
         assert (
             sum(
                 size * count
                 for size, count in component_stats.post_flp_component_sizes.items()
             )
-            == 1199
+            == 1200
         )
 
 
