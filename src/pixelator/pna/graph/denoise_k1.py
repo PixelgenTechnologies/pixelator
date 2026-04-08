@@ -76,7 +76,7 @@ def process_component(
         core1_graph = nx.from_edgelist(core1_edges.select(["umi1", "umi2"]).rows())
         core1_cc = list(nx.connected_components(core1_graph))
         if len(core1_cc) == 0:
-            nodes_to_remove = pl.DataFrame({"umi": []}, schema={"umi": pl.UInt32})
+            nodes_to_remove = pl.DataFrame({"umi": []}, schema={"umi": pl.UInt64})
         else:
             # Build DataFrame of core1 connected components
             def generate_core1_cc_dfs():
