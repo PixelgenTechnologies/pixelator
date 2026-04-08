@@ -11,10 +11,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add sample calling functionality
 - Add FLAG and FMC63 v3 panels
+- New default graph step for `pixelator single-cell-pna graph`, using fast
+  label propagation plus native Leiden (`pixelgen-pixelator-core`) and optional
+  edge-cycle verification and K1 denoising.
+- Dependency: `pixelgen-pixelator-core` (Python bindings for the native graph pipeline).
 
 ### Changed
 - Change default value for parameter axis of function clr_transformation to be 1.
 - Refactor IO classes to handle .pxl files
+
+- **PNA graph command:** The previous implementation is exposed as `pixelator single-cell-pna graph_legacy`.
+
+#### `graph` (new) — flags vs `graph_legacy`
+
+Compared to `graph_legacy`, `graph` adds and drops the flags in the table
+below. `--initial-stage-leiden-resolution` and
+`--refinement-stage-leiden-resolution` exist on both commands; on `graph` they
+apply to the native staged pipeline instead of the legacy Leiden loop.
+Refinement and pruning sizes follow `--component-size-min-threshold` when set,
+otherwise `MIN_PNA_COMPONENT_SIZE`, instead of the legacy refinement and prune
+flags.
+
+| Topic | Parameters **added** on `graph` | Parameters **removed** from `graph` (still on `graph_legacy` only) |
+| ----- | ------------------------------ | ------------------------------------------------------------------- |
+| Leiden tuning | — | `--leiden-iterations` |
+| Refinement / pruning | — | `--min-component-size-in-refinement`, `--min-component-size-to-prune` |
+| Optional graph cleanup | `--edge-cycle-verification`, `--remove-k1-suspect-nodes` | — |
 
 ### Fixed
 
