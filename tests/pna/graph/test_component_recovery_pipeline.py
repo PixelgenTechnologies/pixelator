@@ -298,7 +298,7 @@ def test_find_components_empty_parquet_file():
             )
 
 
-@pytest.mark.heavy
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "edge_cycle_verification, remove_k1_suspect_nodes",
     [
