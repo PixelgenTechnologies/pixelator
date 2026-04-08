@@ -419,6 +419,7 @@ def run_leiden_refinement(
                 }
             )
         all_discard_sizes.append(iteration_discard_sizes_df)
+        component_stats.max_recursion_depth = recursion_level + 1
 
     if all_discard_sizes:
         discard_sizes_df = pl.concat(all_discard_sizes)
@@ -432,7 +433,6 @@ def run_leiden_refinement(
     component_stats.crossing_edges_removed = (
         component_stats.crossing_edges_removed_initial_stage + n_total_crossing_edges
     )
-    component_stats.max_recursion_depth = recursion_level + 1
     return component_stats, discard_sizes_df
 
 
