@@ -56,7 +56,7 @@ def clr_transformation(
         raise AssertionError("Axis is required to be 0 or 1")
 
     logger.debug(
-        "Computing CLR transformation for antibody counts with %i nodes and %i markers",
+        "Computing CLR transformation for antibody counts with %i components and %i markers",
         df.shape[0],
         df.shape[1],
     )
@@ -131,7 +131,7 @@ def log1p_transformation(df: pd.DataFrame) -> pd.DataFrame:
     logger.debug(
         (
             "Computing LOG1P normalization for antibody counts"
-            " with %i nodes and %i markers"
+            " with %i components and %i markers"
         ),
         df.shape[0],
         df.shape[1],
@@ -147,9 +147,9 @@ def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
     """Transform antibody counts as deviation from an expected baseline distribution.
 
     The baseline distribution refers to a fixed ratio of different antibody types
-    in each node. For example, if 10% of antibodies are HLA-ABC, in a node with
+    in each component. For example, if 10% of antibodies are HLA-ABC, in a component with
     120 antibodies, the expected count is 12. If the actual count is 8, the
-    transformation for HLA-ABC in this node will be -4.
+    transformation for HLA-ABC in this component will be -4.
 
     Args:
         df (pd.DataFrame): The dataframe of raw antibody counts (antibodies as columns).
@@ -158,11 +158,13 @@ def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: A dataframe with the counts difference from expected values.
 
     """
-    antibody_counts_per_node = df.sum(axis=1)
+    antibody_counts_per_component = df.sum(axis=1)
     antibody_rates = df.sum(axis=0)
     antibody_rates = antibody_rates / antibody_rates.sum()
 
-    expected_counts = antibody_counts_per_node.to_frame() @ antibody_rates.to_frame().T
+    expected_counts = (
+        antibody_counts_per_component.to_frame() @ antibody_rates.to_frame().T
+    )
     return df - expected_counts
 
 
@@ -190,7 +192,7 @@ def rel_normalization(df: pd.DataFrame, axis: Literal[0, 1] = 0) -> pd.DataFrame
         raise AssertionError("Axis is required to be 0 or 1")
 
     logger.debug(
-        "Computing REL normalization for antibody counts with %i nodes and %i markers",
+        "Computing REL normalization for antibody counts with %i components and %i markers",
         df.shape[0],
         df.shape[1],
     )
