@@ -1,4 +1,4 @@
-"""Constants used in the new graph step.
+"""Constants used in the graph step.
 
 Copyright (c) 2026 Pixelgen Technologies AB.
 """
