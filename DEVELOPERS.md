@@ -264,7 +264,7 @@ task test-benchmark
 ### Pytest markers
 
 Pixelator defines several additional markers for tests.
-These are usually disabled by default and can be enabled by running `pytest -m <marker> tests/`
+These are usually disabled by default and can be enabled by running `uv run pytest -m <marker> tests/`
 
 -   integration_test: Marks a test as an integration test, which is often slow
 -   workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow
@@ -274,7 +274,7 @@ These are usually disabled by default and can be enabled by running `pytest -m <
 
 All `external_workflow_test` tests are also `workflow_tests`.
 
-The default configuration that is applied when just running `pytest`,
+The default configuration that is applied when just running `uv run pytest`
 is to run all unmarked tests and `integration_tests`.
 
 You can use the pytest `-m` flag to select tests based on these markers.
@@ -282,16 +282,16 @@ e.g.
 
 ```shell
 # Only internal workflow_tests
-pytest -m "workflow_test and not external_workflow_test"
+uv run pytest -m "workflow_test and not external_workflow_test"
 
 # All test except external workflow tests
-pytest -m "not external_workflow_test"
+uv run pytest -m "not external_workflow_test"
 ```
 
 You can list all available markers using:
 
 ```shell
-pytest --markers
+uv run pytest --markers
 ```
 
 ## Understanding the pixelator plugin system
