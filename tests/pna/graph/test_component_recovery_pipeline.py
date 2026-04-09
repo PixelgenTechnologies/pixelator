@@ -19,7 +19,6 @@ def random_graph_path():
 
     n_clusters = 10
     n_nodes_per_cluster = 100
-    # Denser intra-community edges, fewer crossing edges (vs. 400 edges & 3% crossing).
     n_edges_per_cluster = 800
     n_crossing_edges = int(0.004 * n_edges_per_cluster * n_clusters)
 
