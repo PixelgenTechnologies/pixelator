@@ -15,16 +15,133 @@ from .pxl_file import PXL_FILE_MANDATOR_TABLES, PXL_FILE_OTHER_TABLES, PxlFile
 from .query_builder import Query
 
 
+class PixelDataViewerSession:
+    """Open DuckDB session for a :class:`PixelDataViewer`.
+
+    Use ``with viewer.open() as session:`` and call ``execute_*`` or
+    ``get_connection()`` on ``session``. Each session uses its own connection.
+    """
+
+    __slots__ = ("_connection", "_viewer")
+
+    def __init__(self, viewer: "PixelDataViewer") -> None:
+        """Wrap ``viewer`` as a not-yet-open session (open via ``with`` or ``__enter__``)."""
+        self._viewer = viewer
+        self._connection: duckdb.DuckDBPyConnection | None = None
+
+    def _create_open_connection(self) -> duckdb.DuckDBPyConnection:
+        """Create an in-memory DuckDB connection with PXL files attached."""
+        connection = duckdb.connect(":memory:")
+        self._attach_to_files(connection)
+        for table in PXL_FILE_OTHER_TABLES:
+            self._simple_union_table_view(connection, table, table)
+        return connection
+
+    def _attach_to_files(self, connection: duckdb.DuckDBPyConnection) -> None:
+        viewer = self._viewer
+        query = ""
+        for sample_name, path in viewer.sample_to_file_mappings.items():
+            db_name = viewer.normalized_sample_db_name(sample_name)
+            query += f"ATTACH DATABASE '{path}' AS {db_name} (READ_ONLY);\n"
+        connection.execute(query)
+
+    def _simple_union_table_view(
+        self,
+        connection: duckdb.DuckDBPyConnection,
+        table_name: str,
+        view_name: str,
+    ) -> None:
+        """Create a view that unions given table from all the underlying samples."""
+        viewer = self._viewer
+        try:
+            view_query = [f"""CREATE VIEW {view_name} AS"""]
+
+            table_queries = []
+            for sample_name in viewer.sample_names():
+                db_name = viewer.normalized_sample_db_name(sample_name)
+                table_queries.append(
+                    f"SELECT *, '{sample_name}' as 'sample' FROM {db_name}.{table_name}"
+                )
+            union_query = "\n UNION ALL \n".join(table_queries)
+
+            view_query.append(union_query)
+            view_query_str = "\n".join(view_query)
+
+            connection.execute(view_query_str)
+        except duckdb.CatalogException:
+            if table_name in PXL_FILE_MANDATOR_TABLES:
+                sample_names = viewer.sample_names()
+                ref_path = (
+                    viewer.sample_to_file_mappings[sample_names[0]]
+                    if sample_names
+                    else ""
+                )
+                raise ValueError(
+                    f"Mandatory table {table_name} is missing from {ref_path}- are you sure this is a pxl file?"
+                ) from None
+            # note that we are ignoring the exception here, since it is expected
+            # that some tables may not be present in all files.
+            pass
+
+    def __enter__(self) -> PixelDataViewerSession:
+        """Open the DuckDB connection and return this session for use in the block."""
+        self._connection = self._create_open_connection()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        """Close the DuckDB connection and clear the session handle."""
+        if self._connection is not None:
+            self._connection.close()
+            self._connection = None
+
+    @property
+    def viewer(self) -> "PixelDataViewer":
+        """The :class:`PixelDataViewer` this session was created from."""
+        return self._viewer
+
+    def get_connection(self) -> duckdb.DuckDBPyConnection:
+        """Return the DuckDB connection for this session."""
+        if self._connection is None:
+            raise RuntimeError(
+                "The viewer session is not open; use 'with viewer.open() as session:'."
+            )
+        return self._connection
+
+    def execute_lazy(self, query: Query) -> pl.LazyFrame:
+        """Execute a query and return a Polars LazyFrame."""
+        return (
+            self.get_connection()
+            .execute(query.sql, parameters=query.params)
+            .pl(lazy=True)
+        )
+
+    def execute_eager(self, query: Query) -> pl.DataFrame:
+        """Execute a query and return a Polars DataFrame."""
+        return self.get_connection().execute(query.sql, parameters=query.params).pl()
+
+    def execute_scalar(self, query: Query) -> int:
+        """Execute a scalar query and return first value."""
+        self.get_connection().execute(query.sql, parameters=query.params)
+        row = self.get_connection().fetchone()
+        if row is None:
+            raise RuntimeError("Scalar query returned no rows")
+        return row[0]  # type: ignore[return-value]
+
+    def execute_arrow_reader(self, query: Query, batch_size: int):
+        """Execute a query and return Arrow reader."""
+        result = self.get_connection().sql(query.sql, params=query.params)
+        return result.fetch_arrow_reader(batch_size=batch_size)
+
+
 class PixelDataViewer:
-    """PixelDataViewer is used to create virtual views over multiple pxl files.
+    """Maps sample names to PXL files and can open a :class:`PixelDataViewerSession`.
 
-    The `PixelDataViewer` provides a unified interface over multiple pxl files that
-    can be used to query the data in the files. It does this by creating SQL views over all
-    the tables in memory. Nota bene that this does not actually materialize any data
-    in memory, so the operation is very light weight.
+    Query execution requires an open session:
 
-    PixelDataViewer is only responsible for providing the SQL view and
-    executing SQL queries against it.
+    .. code-block:: python
+
+        with viewer.open() as session:
+            df = session.execute_eager(Query("SELECT * FROM edgelist", {}))
     """
 
     def __init__(
@@ -48,8 +165,6 @@ class PixelDataViewer:
         ]
         if invalid_files:
             raise ValueError(f"{invalid_files} are not valid PXL files.")
-
-        self._connection: duckdb.DuckDBPyConnection = None  # type: ignore
 
     def _map_sample_names_to_db_names(
         self, sample_name_to_pxl_file_mapping: dict[str, PxlFile]
@@ -118,49 +233,9 @@ class PixelDataViewer:
             for sample_name, file_ in self._db_to_file_mapping.items()
         }
 
-    def __enter__(self) -> duckdb.DuckDBPyConnection:
-        """Open the connection to the PXL files.
-
-        Attach all the files to the connection and create views over the tables.
-        :return: The connection object.
-        """
-        self._connection = duckdb.connect(":memory:")
-        self._attach_to_files(self._connection)
-        for table in PXL_FILE_OTHER_TABLES:
-            self._simple_union_table_view(self._connection, table, table)
-        return self._connection
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Close the connection to the PXL files."""
-        self._connection.close()
-
-    def execute_lazy(
-        self, connection: duckdb.DuckDBPyConnection, query: Query
-    ) -> pl.LazyFrame:
-        """Execute a query and return a Polars LazyFrame."""
-        return connection.execute(query.sql, parameters=query.params).pl(lazy=True)
-
-    def execute_eager(
-        self, connection: duckdb.DuckDBPyConnection, query: Query
-    ) -> pl.DataFrame:
-        """Execute a query and return a Polars DataFrame."""
-        return connection.execute(query.sql, parameters=query.params).pl()
-
-    def execute_scalar(
-        self, connection: duckdb.DuckDBPyConnection, query: Query
-    ) -> int:
-        """Execute a scalar query and return first value."""
-        return connection.sql(query.sql, params=query.params).execute().fetchone()[0]  # type: ignore
-
-    def execute_arrow_reader(
-        self,
-        connection: duckdb.DuckDBPyConnection,
-        query: Query,
-        batch_size: int,
-    ):
-        """Execute a query and return Arrow reader."""
-        result = connection.sql(query.sql, params=query.params)
-        return result.fetch_arrow_reader(batch_size=batch_size)
+    def open(self) -> PixelDataViewerSession:
+        """Return a context manager for a new open session."""
+        return PixelDataViewerSession(self)
 
     def sample_names(self) -> list[str]:
         """Return the list of sample names known to the view."""
@@ -169,38 +244,3 @@ class PixelDataViewer:
     def normalized_sample_db_name(self, sample_name: str) -> str:
         """Return the attached DuckDB database name for a sample."""
         return self._get_normalized_name(sample_name)
-
-    def _attach_to_files(self, connection: duckdb.DuckDBPyConnection):
-        query = ""
-        for name, path in self._db_to_file_mapping.items():
-            query += f"ATTACH DATABASE '{path}' AS {self._get_normalized_name(name)} (READ_ONLY);\n"
-        connection.execute(query)
-
-    def _simple_union_table_view(
-        self, connection: duckdb.DuckDBPyConnection, table_name: str, view_name: str
-    ):
-        """Create a view that unions given table from all the underlying samples."""
-        # This will create a view that unions the tables from all the samples,
-        # adding a new column that identifies the sample.
-        try:
-            view_query = [f"""CREATE VIEW {view_name} AS"""]
-
-            table_queries = []
-            for sample_name, _ in self._db_to_file_mapping.items():
-                table_queries.append(
-                    f"SELECT *, '{sample_name}' as 'sample' FROM {self._get_normalized_name(sample_name)}.{table_name}"
-                )
-            union_query = "\n UNION ALL \n".join(table_queries)
-
-            view_query.append(union_query)
-            view_query_str = "\n".join(view_query)
-
-            connection.execute(view_query_str)
-        except duckdb.CatalogException:
-            if table_name in PXL_FILE_MANDATOR_TABLES:
-                raise ValueError(
-                    f"Mandatory table {table_name} is missing from {self._db_to_file_mapping[sample_name]}- are you sure this is a pxl file?"
-                )
-            # note that we are ignoring the exception here, since it is expected
-            # that some tables may not be present in all files.
-            pass

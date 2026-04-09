@@ -248,8 +248,8 @@ def write_denoised_edgelist(
         output_edgelist_path (str): The file path where the filtered edgelist Parquet file will be saved.
 
     """
-    with pxl.view as con:
-        con.execute(
+    with pxl.view.open() as session:
+        session.get_connection().execute(
             f"""
             COPY(
                 SELECT *

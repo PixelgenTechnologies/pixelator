@@ -65,8 +65,8 @@ class Edgelist:
         query = self._query_builder.edgelist_len_query(
             normalize_input_to_list(self._components)
         )
-        with self._view as connection:
-            return self._view.execute_scalar(connection, query)
+        with self._view.open() as session:
+            return session.execute_scalar(query)
 
     def is_empty(self) -> bool:
         """Check if the edgelist is empty."""
@@ -77,11 +77,9 @@ class Edgelist:
         query = self._query_builder.edgelist_query(
             normalize_input_to_list(self.components)
         )
-        with self._view as connection:
+        with self._view.open() as session:
             df = (
-                self._handle_backwards_compatibility(
-                    self._view.execute_lazy(connection, query)
-                )
+                self._handle_backwards_compatibility(session.execute_lazy(query))
                 .collect()
                 .to_pandas()
             )
@@ -92,9 +90,9 @@ class Edgelist:
         query = self._query_builder.edgelist_query(
             normalize_input_to_list(self.components)
         )
-        with self._view as connection:
+        with self._view.open() as session:
             df = self._handle_backwards_compatibility(
-                self._view.execute_lazy(connection, query)
+                session.execute_lazy(query)
             ).collect()
         return df
 
@@ -105,18 +103,16 @@ class Edgelist:
         query = self._query_builder.edgelist_query(
             normalize_input_to_list(self.components)
         )
-        with self._view as connection:
-            yield from self._view.execute_arrow_reader(
-                connection=connection, query=query, batch_size=batch_size
-            )
+        with self._view.open() as session:
+            yield from session.execute_arrow_reader(query=query, batch_size=batch_size)
 
     def _iterator(self) -> Iterable[tuple[str, pl.LazyFrame]]:
-        with self._view as connection:
+        with self._view.open() as session:
             for component in self.components:
                 query = self._query_builder.edgelist_query([component])
                 yield (
                     component,
-                    self._view.execute_lazy(connection, query),
+                    session.execute_lazy(query),
                 )
 
     def iterator(self) -> Iterable[Component]:

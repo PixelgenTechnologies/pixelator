@@ -18,12 +18,12 @@ from pixelator.common.statistics import clr_transformation, log1p_transformation
 from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
-from .pixel_data_viewer import PixelDataViewer
+from .pixel_data_viewer import PixelDataViewer, PixelDataViewerSession
 from .query_builder import QueryBuilder
 
 
 class AnnDataHelper:
-    """Helper class to deal with materializing the AnnnData object from the pxl file."""
+    """Helper class to deal with materializing the AnnData object from the pxl file."""
 
     def __init__(
         self,
@@ -39,11 +39,11 @@ class AnnDataHelper:
         self._adata_join_strategy = adata_join_strategy
 
     def _read_all_samples(self) -> AnnData:
-        with self._view as connection:
+        with self._view.open() as session:
             adatas: list[AnnData] = []
             for sample_name in self._view.sample_names():
                 adata = self._read_adata_from_sample(
-                    connection=connection, sample=sample_name
+                    session=session, sample=sample_name
                 )
                 adatas.append(adata)
 
@@ -59,29 +59,21 @@ class AnnDataHelper:
     def _read_adata_from_sample(
         self,
         *,
-        connection,
+        session: PixelDataViewerSession,
         sample: str,
     ) -> AnnData:
         qb = QueryBuilder()
         db_name = self._view.normalized_sample_db_name(sample)
 
         # Read full AnnData contents (components/markers are filtered in-memory later).
-        X = self._view.execute_eager(
-            connection, qb.adata_X_query(db_name, None)
-        ).to_pandas()
-        var = self._view.execute_eager(
-            connection, qb.adata_var_query(db_name, None)
-        ).to_pandas()
-        obs = self._view.execute_eager(
-            connection, qb.adata_obs_query(db_name, None)
-        ).to_pandas()
+        X = session.execute_eager(qb.adata_X_query(db_name, None)).to_pandas()
+        var = session.execute_eager(qb.adata_var_query(db_name, None)).to_pandas()
+        obs = session.execute_eager(qb.adata_obs_query(db_name, None)).to_pandas()
 
-        maybe_uns = connection.sql(qb.adata_uns_query(db_name).sql).fetchone()
-        uns = json.loads(maybe_uns[0]) if maybe_uns else None
+        uns_df = session.execute_eager(qb.adata_uns_query(db_name))
+        uns = json.loads(uns_df.row(0)[0]) if not uns_df.is_empty() else None
 
-        tables = self._view.execute_eager(
-            connection, qb.adata_obsm_table_names_query(db_name)
-        )
+        tables = session.execute_eager(qb.adata_obsm_table_names_query(db_name))
         obsm_tables = (
             tables.lazy()
             .filter(
@@ -101,8 +93,7 @@ class AnnDataHelper:
 
         obsm = {
             table.split("__adata__obsm_")[1]: (
-                self._view.execute_eager(
-                    connection,
+                session.execute_eager(
                     qb.adata_obsm_query(db_name, table, None),
                 )
                 .to_pandas()

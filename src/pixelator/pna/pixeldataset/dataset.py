@@ -15,7 +15,7 @@ from anndata import AnnData
 
 from pixelator.pna.pixeldataset.config import PixelDatasetConfig
 from pixelator.pna.pixeldataset.edgelist import Edgelist
-from pixelator.pna.pixeldataset.io import PixelDataViewer, PxlFile
+from pixelator.pna.pixeldataset.io import PixelDataViewer, PxlFile, Query
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pna.pixeldataset.proximity import Proximity
@@ -158,8 +158,12 @@ class PNAPixelDataset:
     def view(self) -> PixelDataViewer:
         """Return the PixelDataViewer instance used by the dataset.
 
-        This can be used to write custom queries to the underlying data, using
-        the duckdb connection API.
+        This can be used to write custom queries to the underlying data via
+        :class:`~pixelator.pna.pixeldataset.io.query_builder.Query` and
+        :meth:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer.open`.
+
+        Alternatively, inside the same ``with`` block you can call
+        ``session.get_connection()`` and use the DuckDB Python API directly.
 
         You can find more information about the duckdb API here:
         https://duckdb.org/docs/api/python/overview
@@ -170,11 +174,14 @@ class PNAPixelDataset:
 
         .. code-block:: python
             from pixelator.pna.pixeldataset import PixelDataset
+            from pixelator.pna.pixeldataset.io import Query
 
             pxl_files = ...
             pxl_dataset = PixelDataset.from_pxl_files(pxl_files)
-            with pxl_dataset.view as connection:
-                df = connection.sql("SELECT * FROM edgelist WHERE markers = 'CD3'").to_df()
+            with pxl_dataset.view.open() as session:
+                df = session.execute_eager(
+                    Query("SELECT * FROM edgelist WHERE marker_1 = $m", {"m": "CD3"})
+                ).to_pandas()
 
         :return: The PixelDataViewer instance used by the dataset.
         """
@@ -255,11 +262,9 @@ class PNAPixelDataset:
         self,
     ) -> dict:
         """Return the metadata for the dataset."""
-        with self.view as connection:
-            maybe_metadata = [
-                json.loads(x[0])
-                for x in connection.sql("SELECT * FROM metadata").fetchall()
-            ]
+        with self.view.open() as session:
+            metadata_df = session.execute_eager(Query("SELECT * FROM metadata", {}))
+            maybe_metadata = [json.loads(x[0]) for x in metadata_df.iter_rows()]
             if not maybe_metadata:
                 return {}
 

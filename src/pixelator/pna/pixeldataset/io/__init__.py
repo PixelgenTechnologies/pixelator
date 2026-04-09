@@ -44,7 +44,7 @@ from pathlib import Path
 import duckdb
 
 from .inplace_pixel_data_filterer import InplacePixelDataFilterer
-from .pixel_data_viewer import PixelDataViewer
+from .pixel_data_viewer import PixelDataViewer, PixelDataViewerSession
 from .pixel_file_writer import PixelFileWriter
 from .pxl_file import (
     PXL_FILE_ADATA_TABLES,
@@ -59,6 +59,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "InplacePixelDataFilterer",
     "PixelDataViewer",
+    "PixelDataViewerSession",
     "PixelFileWriter",
     "PxlFile",
     "Query",

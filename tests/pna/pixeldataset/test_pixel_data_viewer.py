@@ -8,7 +8,9 @@ from polars.testing import assert_frame_equal
 
 from pixelator.pna.pixeldataset.io import (
     PixelDataViewer,
+    PixelDataViewerSession,
     PxlFile,
+    Query,
     QueryBuilder,
 )
 
@@ -40,8 +42,8 @@ class TestPixelFileReader:
     def test_read_edgelist(self, pxl_view, edgelist_dataframe):
         builder = QueryBuilder()
 
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(connection, builder.edgelist_query(None))
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(builder.edgelist_query(None))
             assert isinstance(lazy, pl.LazyFrame)
             results = lazy.collect()
         assert_frame_equal(
@@ -52,8 +54,8 @@ class TestPixelFileReader:
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
 
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(connection, builder.edgelist_query(components))
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(builder.edgelist_query(components))
             results = lazy.collect()
         assert_frame_equal(
             results,
@@ -67,8 +69,8 @@ class TestPixelFileReader:
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
 
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(connection, builder.edgelist_query(components))
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(builder.edgelist_query(components))
             results = lazy.collect()
         assert_frame_equal(
             results,
@@ -81,10 +83,8 @@ class TestPixelFileReader:
     def test_read_proximity(self, pxl_view, proximity_dataframe):
         builder = QueryBuilder()
 
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(
-                connection, builder.proximity_query(None, None)
-            )
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(builder.proximity_query(None, None))
             assert isinstance(lazy, pl.LazyFrame)
             results = lazy.collect()
         assert_frame_equal(
@@ -95,10 +95,8 @@ class TestPixelFileReader:
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
 
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(
-                connection, builder.proximity_query(components, None)
-            )
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(builder.proximity_query(components, None))
             results = lazy.collect()
         assert_frame_equal(
             results,
@@ -111,9 +109,8 @@ class TestPixelFileReader:
     def test_read_layouts(self, pxl_view, layout_dataframe):
         builder = QueryBuilder()
 
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(
-                connection,
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(
                 builder.layouts_query(components=None, add_marker_counts=False),
             )
             assert isinstance(lazy, pl.LazyFrame)
@@ -127,9 +124,8 @@ class TestPixelFileReader:
     def test_read_layouts_add_marker_counts(self, snapshot, pxl_view):
         builder = QueryBuilder()
 
-        with pxl_view as connection:
-            results_df = pxl_view.execute_eager(
-                connection,
+        with pxl_view.open() as session:
+            results_df = session.execute_eager(
                 builder.layouts_query(components=None, add_marker_counts=True),
             )
         results_df = _pivot_marker_table(results_df).drop(
@@ -145,9 +141,8 @@ class TestPixelFileReader:
         builder = QueryBuilder()
         components = ["040b1570c7d0f28f"]
 
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(
-                connection,
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(
                 builder.layouts_query(components=components, add_marker_counts=False),
             )
             results = lazy.collect()
@@ -166,8 +161,8 @@ class TestPixelDataViewer:
         assert pxl_view.sample_names() == ["test_sample"]
 
     def test_view_has_all_tables(self, pxl_view):
-        with pxl_view as view:
-            result = view.sql("SHOW ALL TABLES").pl()
+        with pxl_view.open() as session:
+            result = session.execute_eager(Query("SHOW ALL TABLES", {}))
 
         assert_frame_equal(
             result.filter(pl.col("database") == "memory").select("name").sort("name"),
@@ -176,12 +171,36 @@ class TestPixelDataViewer:
             ).sort("name"),
         )
 
+    def test_open_returns_session_context_manager(self, pxl_view):
+        unopened = pxl_view.open()
+        assert isinstance(unopened, PixelDataViewerSession)
+
+        builder = QueryBuilder()
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(builder.edgelist_query(None))
+            assert isinstance(lazy, pl.LazyFrame)
+            _ = lazy.collect()
+
+    def test_nested_open_sessions_are_independent(self, pxl_view):
+        builder = QueryBuilder()
+        with pxl_view.open() as outer:
+            outer_count = outer.execute_scalar(builder.edgelist_len_query(None))
+            with pxl_view.open() as inner:
+                inner_count = inner.execute_scalar(builder.edgelist_len_query(None))
+            assert outer.execute_scalar(builder.edgelist_len_query(None)) == outer_count
+        assert inner_count == outer_count == 57
+
+    def test_execute_without_open_session_raises(self, pxl_view):
+        session = pxl_view.open()
+        with pytest.raises(RuntimeError, match="not open"):
+            session.execute_eager(Query("SELECT 1", {}))
+
 
 class TestPxlDataQuerier:
     def test_read_edgelist(self, pxl_view, edgelist_dataframe):
         builder = QueryBuilder()
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(connection, builder.edgelist_query(None))
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(builder.edgelist_query(None))
             result = lazy.collect()
         assert_frame_equal(
             result, edgelist_dataframe.with_columns(sample=pl.lit("test_sample"))
@@ -190,8 +209,8 @@ class TestPxlDataQuerier:
     def test_read_edgelist_filter(self, pxl_view, edgelist_dataframe):
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(connection, builder.edgelist_query(components))
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(builder.edgelist_query(components))
             result = lazy.collect()
         assert_frame_equal(
             result,
@@ -202,28 +221,23 @@ class TestPxlDataQuerier:
 
     def test_read_edgelist_len(self, pxl_view):
         builder = QueryBuilder()
-        with pxl_view as connection:
-            result = pxl_view.execute_scalar(
-                connection, builder.edgelist_len_query(None)
-            )
+        with pxl_view.open() as session:
+            result = session.execute_scalar(builder.edgelist_len_query(None))
         assert result == 57
 
     def test_read_edgelist_len_filter(self, pxl_view):
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
-        with pxl_view as connection:
-            result = pxl_view.execute_scalar(
-                connection, builder.edgelist_len_query(components)
-            )
+        with pxl_view.open() as session:
+            result = session.execute_scalar(builder.edgelist_len_query(components))
         assert result == 23
 
     def test_read_edgelist_stream(self, pxl_view, edgelist_dataframe):
         # Turn the stream into a DataFrame for comparison
         builder = QueryBuilder()
-        with pxl_view as connection:
+        with pxl_view.open() as session:
             result = pl.from_arrow(
-                pxl_view.execute_arrow_reader(
-                    connection,
+                session.execute_arrow_reader(
                     builder.edgelist_query(None),
                     batch_size=1_000_000,
                 )
@@ -234,10 +248,10 @@ class TestPxlDataQuerier:
 
     def test_read_layouts(self, pxl_view, layout_dataframe):
         builder = QueryBuilder()
-        with pxl_view as connection:
+        with pxl_view.open() as session:
             result = (
-                pxl_view.execute_lazy(
-                    connection, builder.layouts_query(None, add_marker_counts=False)
+                session.execute_lazy(
+                    builder.layouts_query(None, add_marker_counts=False)
                 )
                 .collect()
                 .sort(["component", "index"])
@@ -251,9 +265,8 @@ class TestPxlDataQuerier:
 
     def test_read_layouts_add_marker_counts(self, snapshot, pxl_view, layout_dataframe):
         builder = QueryBuilder()
-        with pxl_view as connection:
-            result_df = pxl_view.execute_eager(
-                connection,
+        with pxl_view.open() as session:
+            result_df = session.execute_eager(
                 builder.layouts_query(None, add_marker_counts=True),
             )
         result_df = _pivot_marker_table(result_df).drop(["umi", "marker"], strict=False)
@@ -265,27 +278,21 @@ class TestPxlDataQuerier:
 
     def test_read_layouts_len(self, pxl_view):
         builder = QueryBuilder()
-        with pxl_view as connection:
-            result = pxl_view.execute_scalar(
-                connection, builder.layouts_len_query(None)
-            )
+        with pxl_view.open() as session:
+            result = session.execute_scalar(builder.layouts_len_query(None))
         assert result == 34
 
     def test_read_layouts_len_filter(self, pxl_view):
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
-        with pxl_view as connection:
-            result = pxl_view.execute_scalar(
-                connection, builder.layouts_len_query(components)
-            )
+        with pxl_view.open() as session:
+            result = session.execute_scalar(builder.layouts_len_query(components))
         assert result == 11
 
     def test_read_proximity(self, pxl_view, proximity_dataframe):
         builder = QueryBuilder()
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(
-                connection, builder.proximity_query(None, None)
-            )
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(builder.proximity_query(None, None))
             result = lazy.collect()
         assert_frame_equal(
             result, proximity_dataframe.with_columns(sample=pl.lit("test_sample"))
@@ -294,10 +301,8 @@ class TestPxlDataQuerier:
     def test_read_proximity_filter(self, pxl_view, proximity_dataframe):
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
-        with pxl_view as connection:
-            lazy = pxl_view.execute_lazy(
-                connection, builder.proximity_query(components, None)
-            )
+        with pxl_view.open() as session:
+            lazy = session.execute_lazy(builder.proximity_query(components, None))
             result = lazy.collect()
         assert_frame_equal(
             result,
@@ -309,8 +314,6 @@ class TestPxlDataQuerier:
 
     def test_read_proximity_len(self, pxl_view):
         builder = QueryBuilder()
-        with pxl_view as connection:
-            result = pxl_view.execute_scalar(
-                connection, builder.proximity_len_query(None, None)
-            )
+        with pxl_view.open() as session:
+            result = session.execute_scalar(builder.proximity_len_query(None, None))
         assert result == 3
