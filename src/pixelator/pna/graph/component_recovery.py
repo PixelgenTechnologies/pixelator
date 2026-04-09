@@ -59,7 +59,6 @@ def build_pxl_file_with_components(
     path_output_pxl_file: Path,
     multiplet_recovery: bool,
     edge_cycle_verification: bool,
-    remove_k1_suspect_nodes: bool,
     min_read_count: int,
     refinement_options: StagedRefinementOptions,
     component_size_threshold: bool | tuple[int, int],
@@ -79,7 +78,6 @@ def build_pxl_file_with_components(
         path_output_pxl_file: Path to the output PXL file.
         multiplet_recovery: Whether to perform multiplet recovery.
         edge_cycle_verification: Whether to perform edge cycle verification.
-        remove_k1_suspect_nodes: Whether to remove K1 suspect nodes.
         min_read_count: Minimum read count threshold for an edge to be retained.
         refinement_options: Options for staged refinement during community detection.
         component_size_threshold: Min/Max size threshold for components to be retained.
@@ -98,7 +96,6 @@ def build_pxl_file_with_components(
             working_dir=tmp_dir_path,
             multiplet_recovery=multiplet_recovery,
             edge_cycle_verification=edge_cycle_verification,
-            remove_k1_suspect_nodes=remove_k1_suspect_nodes,
             min_read_count=min_read_count,
             refinement_options=refinement_options,
             component_size_threshold=component_size_threshold,

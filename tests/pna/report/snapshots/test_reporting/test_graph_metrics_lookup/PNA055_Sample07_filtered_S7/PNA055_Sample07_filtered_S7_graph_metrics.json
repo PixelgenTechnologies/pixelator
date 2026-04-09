@@ -84,7 +84,6 @@
     "umi2_clashes": 0,
     "umi1_umi2_clashes": 0,
     "edges_removed_in_cycle_verification": 0,
-    "umis_removed_in_k1_denoising": 0,
     "stranded_nodes_pre_recovery": 0,
     "edge_cycle_length_distribution": {},
     "post_flp_component_sizes": {},
@@ -94,6 +93,5 @@
     "node_saturation": 0.8371584868818671,
     "discarded_reads": 8167,
     "discarded_molecules": 4805,
-    "fraction_umis_in_k1_denoising": 0.0,
     "fraction_stranded_nodes_pre_recovery": 0.0
 }

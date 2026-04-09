@@ -68,7 +68,6 @@ class GraphStatistics:
     umi2_clashes: int = 0
     umi1_umi2_clashes: int = 0
     edges_removed_in_cycle_verification: int = 0
-    umis_removed_in_k1_denoising: int = 0
     stranded_nodes_pre_recovery: int = 0
     edge_cycle_length_distribution: dict[int, int] = field(default_factory=dict)
     post_flp_component_sizes: dict[int, int] = field(default_factory=dict)
@@ -241,11 +240,6 @@ class GraphSampleReport(SampleReport):
         description="Number of edges removed during cycle verification step.",
     )
 
-    umis_removed_in_k1_denoising: int = pydantic.Field(
-        default=0,
-        description="Number of UMIs removed during K1 denoising step.",
-    )
-
     stranded_nodes_pre_recovery: int = pydantic.Field(
         default=0,
         description=(
@@ -326,16 +320,6 @@ class GraphSampleReport(SampleReport):
     def discarded_molecules(self) -> int:
         """Return the total number of discarded reads in the graph stage."""
         return self.molecules_input - self.molecules_output
-
-    @pydantic.computed_field(  # type: ignore
-        description="Fraction of nodes removed during K1 denoising step."
-    )
-    @property
-    def fraction_umis_in_k1_denoising(self) -> float:
-        """Return fraction of nodes removed during K1 denoising step."""
-        if self.umis_removed_in_k1_denoising == 0:
-            return 0.0
-        return self.umis_removed_in_k1_denoising / self.umis_input
 
     @pydantic.computed_field(  # type: ignore
         description="Fraction of nodes discarded due to being in small connected components."

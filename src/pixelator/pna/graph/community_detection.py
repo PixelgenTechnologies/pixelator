@@ -35,7 +35,6 @@ from .constants import (
     MIN_PNA_COMPONENT_SIZE,
 )
 from .cycle_analysis import remove_no_cycle_edges
-from .denoise_k1 import denoise_edgelist_core1
 from .report import GraphStatistics
 
 _DUCKDB_MEMORY_LIMIT_RE = re.compile(
@@ -538,7 +537,6 @@ def find_components(
     working_dir: Path,
     multiplet_recovery: bool = True,
     edge_cycle_verification: bool = False,
-    remove_k1_suspect_nodes: bool = False,
     min_read_count: int = 1,
     refinement_options: StagedRefinementOptions = StagedRefinementOptions(),
     component_size_threshold: bool | tuple[int, int] = (
@@ -554,7 +552,6 @@ def find_components(
         working_dir: Directory to use for temporary files and output.
         multiplet_recovery: Whether to perform multiplet recovery.
         edge_cycle_verification: Whether to perform edge cycle verification.
-        remove_k1_suspect_nodes: Whether to remove K1 suspect nodes.
         min_read_count: Minimum read count threshold for an edge to be retained.
         refinement_options: Options for staged refinement during community detection.
         component_size_threshold: Minimum size threshold for components to be retained.
@@ -716,21 +713,6 @@ def find_components(
         )
         logger.info(
             f"Edge cycle verification completed in {time.time() - time_start:.2f} seconds."
-        )
-
-    if remove_k1_suspect_nodes:
-        logger.info("Starting K1 suspect node removal.")
-        time_start = time.time()
-        n_nodes_removed = denoise_edgelist_core1(
-            graph_edgelist_path=latest_working_edgelist_path,
-            original_edgelist_path=working_dir / "working_edgelist.parquet",
-            output_path=working_dir / "k1_denoised_working_edgelist",
-            n_threads=n_threads,
-        )
-        latest_working_edgelist_path = working_dir / "k1_denoised_working_edgelist"
-        component_stats.umis_removed_in_k1_denoising = n_nodes_removed
-        logger.info(
-            f"K1 suspect node removal completed in {time.time() - time_start:.2f} seconds."
         )
 
     latest_edgelist = pl.scan_parquet(

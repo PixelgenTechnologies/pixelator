@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add FLAG and FMC63 v3 panels
 - New default graph step for `pixelator single-cell-pna graph`, using fast
   label propagation plus native Leiden (`pixelgen-pixelator-core`) and optional
-  edge-cycle verification and K1 denoising.
+  edge-cycle verification.
 - Dependency: `pixelgen-pixelator-core` (Python bindings for the native graph pipeline).
 
 ### Changed
@@ -36,7 +36,7 @@ flags.
 | ----- | ------------------------------ | ------------------------------------------------------------------- |
 | Leiden tuning | — | `--leiden-iterations` |
 | Refinement / pruning | — | `--min-component-size-in-refinement`, `--min-component-size-to-prune` |
-| Optional graph cleanup | `--edge-cycle-verification`, `--remove-k1-suspect-nodes` | — |
+| Optional graph cleanup | `--edge-cycle-verification` | — |
 
 ### Fixed
 

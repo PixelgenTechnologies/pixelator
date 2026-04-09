@@ -100,19 +100,10 @@ def random_graph_path():
         yield temp_file.name
 
 
-@pytest.mark.parametrize(
-    "edge_cycle_verification, remove_k1_suspect_nodes",
-    [
-        (False, False),
-        (True, False),
-        (False, True),
-        (True, True),
-    ],
-)
+@pytest.mark.parametrize("edge_cycle_verification", [False, True])
 def test_find_components_small(
     random_graph_path,
     edge_cycle_verification,
-    remove_k1_suspect_nodes,
 ):
     ground_truth_umi_map = (
         (
@@ -144,7 +135,6 @@ def test_find_components_small(
             working_dir=working_dir,
             multiplet_recovery=True,
             edge_cycle_verification=edge_cycle_verification,
-            remove_k1_suspect_nodes=remove_k1_suspect_nodes,
             min_read_count=1,
             component_size_threshold=(10, 1_000_000),
             n_threads=10,
@@ -220,7 +210,6 @@ def test_find_no_components(random_graph_path):
                 working_dir=working_dir,
                 multiplet_recovery=True,
                 edge_cycle_verification=False,
-                remove_k1_suspect_nodes=False,
                 min_read_count=1,
                 component_size_threshold=(10, 1_000_000),
                 n_threads=10,
@@ -247,7 +236,6 @@ def test_find_components_prunes_small_clusters_leaving_one_large(random_graph_pa
             working_dir=working_dir,
             multiplet_recovery=True,
             edge_cycle_verification=False,
-            remove_k1_suspect_nodes=False,
             min_read_count=1,
             component_size_threshold=(10, 1_000_000),
             n_threads=10,
@@ -290,7 +278,6 @@ def test_find_components_empty_parquet_file():
                 working_dir=working_dir,
                 multiplet_recovery=True,
                 edge_cycle_verification=False,
-                remove_k1_suspect_nodes=False,
                 min_read_count=1,
                 component_size_threshold=(10, 1_000_000),
                 n_threads=1,
@@ -299,20 +286,11 @@ def test_find_components_empty_parquet_file():
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize(
-    "edge_cycle_verification, remove_k1_suspect_nodes",
-    [
-        (False, False),
-        (True, False),
-        (False, True),
-        (True, True),
-    ],
-)
+@pytest.mark.parametrize("edge_cycle_verification", [False, True])
 def test_find_components_big(
     testdata_3pc_crossing_parquet,
     testdata_0pc_crossing_parquet,
     edge_cycle_verification,
-    remove_k1_suspect_nodes,
 ):
     ground_truth_umi_map = (
         pl.read_parquet(testdata_0pc_crossing_parquet)
@@ -341,7 +319,6 @@ def test_find_components_big(
             working_dir=working_dir,
             multiplet_recovery=True,
             edge_cycle_verification=edge_cycle_verification,
-            remove_k1_suspect_nodes=remove_k1_suspect_nodes,
             min_read_count=1,
             component_size_threshold=(10, 1_000_000_000),
             n_threads=10,

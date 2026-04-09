@@ -59,16 +59,6 @@ from pixelator.pna.graph.report import GraphSampleReport
     ),
 )
 @click.option(
-    "--remove-k1-suspect-nodes",
-    required=False,
-    is_flag=True,
-    default=False,
-    type=click.BOOL,
-    help=(
-        "Remove nodes in the k=1 core layer of the graph that are connected to a remove crossing edge."
-    ),
-)
-@click.option(
     "--initial-stage-leiden-resolution",
     default=1.0,
     required=False,
@@ -187,7 +177,6 @@ def graph(
     parquet_file,
     multiplet_recovery,
     edge_cycle_verification,
-    remove_k1_suspect_nodes,
     initial_stage_leiden_resolution,
     refinement_stage_leiden_resolution,
     min_count,
@@ -205,7 +194,7 @@ def graph(
 
     The graph stage will attempt to identify connected components from the input molecules.
     When `--multiplet-recovery` is active we will try to break up components that are likely
-    not real cells. We do so in two main and two optional stages.
+    not real cells. We do so in two main stages and one optional stage.
 
     Main stages:
     1) Fast label propagation: Used as a graph coarsening step to reduce the size of the graph.
@@ -213,14 +202,10 @@ def graph(
     2.1) Initial stage: Attempt to break up the mega cluster.
     2.2) Refinement stage: Refine the connected components found in the initial stage.
 
-    Optional stages:
-    A) Edge cycle verification: Remove edges, connecting highly connected nodes in the graph
+    Optional stage:
+    - Edge cycle verification: Remove edges, connecting highly connected nodes in the graph
     (k-core number > 1) that are not part of any short cycles in the graph. Such nodes are likely
     crossing edges connecting different components.
-    B) Removal of K1 suspect nodes: Remove nodes with core number 1 that are connected to
-    a removed edge. They are removed as one cannot be sure if they belong to either of the
-    components connected by the removed edge. This reduces bleed-over effects between cells
-    due to incorrect edge cuts.
 
     After the connected components have been identified we will create a pxl file that contains
     data for all of there putative cells.
@@ -233,7 +218,6 @@ def graph(
         output=output,
         multiplet_recovery=multiplet_recovery,
         edge_cycle_verification=edge_cycle_verification,
-        remove_k1_suspect_nodes=remove_k1_suspect_nodes,
         initial_stage_leiden_resolution=initial_stage_leiden_resolution,
         refinement_stage_leiden_resolution=refinement_stage_leiden_resolution,
         min_count=min_count,
@@ -301,7 +285,6 @@ def graph(
             path_output_pxl_file=output_path,
             multiplet_recovery=multiplet_recovery,
             edge_cycle_verification=edge_cycle_verification,
-            remove_k1_suspect_nodes=remove_k1_suspect_nodes,
             min_read_count=min_count,
             refinement_options=refinement_options,
             component_size_threshold=component_size_threshold,
