@@ -85,7 +85,7 @@ def build_pxl_file_with_components(
         n_cores: Number of CPU cores to use for parallel processing.
 
     Returns:
-        GraphStatistics: Statistics about the graph components.
+        Tuple of PNAPixelDataset and GraphStatistics
 
 
     """
