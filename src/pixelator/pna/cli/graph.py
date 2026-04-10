@@ -199,7 +199,7 @@ def graph(
     Main stages:
     1) Fast label propagation: Used as a graph coarsening step to reduce the size of the graph.
     2) Leiden community detection
-    2.1) Initial stage: Attempt to break up the mega cluster.
+    2.1) Initial stage: Attempt to break up the mega cluster that is formed due to random edges between cells.
     2.2) Refinement stage: Refine the connected components found in the initial stage.
 
     Optional stage:
