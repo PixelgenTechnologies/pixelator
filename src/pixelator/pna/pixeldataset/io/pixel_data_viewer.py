@@ -16,18 +16,19 @@ from .query_builder import Query
 
 
 class PixelDataViewerSession:
-    """Open DuckDB session for a :class:`PixelDataViewer`.
+    """DuckDB session for a :class:`PixelDataViewer`.
 
-    Use ``with viewer.open() as session:`` and call ``execute_*`` or
-    ``get_connection()`` on ``session``. Each session uses its own connection.
+    The connection is opened when the session is constructed. Close it with
+    ``session.close()`` or by using ``with viewer.open() as session:`` (exit
+    calls ``close()``). Each session uses its own connection.
     """
 
     __slots__ = ("_connection", "_viewer")
 
     def __init__(self, viewer: "PixelDataViewer") -> None:
-        """Wrap ``viewer`` as a not-yet-open session (open via ``with`` or ``__enter__``)."""
+        """Open a DuckDB connection for ``viewer``."""
         self._viewer = viewer
-        self._connection: duckdb.DuckDBPyConnection | None = None
+        self._connection = self._create_open_connection()
 
     def _create_open_connection(self) -> duckdb.DuckDBPyConnection:
         """Create an in-memory DuckDB connection with PXL files attached."""
@@ -83,16 +84,19 @@ class PixelDataViewerSession:
             # that some tables may not be present in all files.
             pass
 
-    def __enter__(self) -> PixelDataViewerSession:
-        """Open the DuckDB connection and return this session for use in the block."""
-        self._connection = self._create_open_connection()
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
-        """Close the DuckDB connection and clear the session handle."""
+    def close(self) -> None:
+        """Close the DuckDB connection. Safe to call more than once."""
         if self._connection is not None:
             self._connection.close()
             self._connection = None
+
+    def __enter__(self) -> PixelDataViewerSession:
+        """Return this session for use in the ``with`` block."""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        """Close the DuckDB connection."""
+        self.close()
 
     @property
     def viewer(self) -> "PixelDataViewer":
@@ -103,7 +107,7 @@ class PixelDataViewerSession:
         """Return the DuckDB connection for this session."""
         if self._connection is None:
             raise RuntimeError(
-                "The viewer session is not open; use 'with viewer.open() as session:'."
+                "The viewer session is closed; open a new session with viewer.open()."
             )
         return self._connection
 
@@ -136,12 +140,14 @@ class PixelDataViewerSession:
 class PixelDataViewer:
     """Maps sample names to PXL files and can open a :class:`PixelDataViewerSession`.
 
-    Query execution requires an open session:
+    Query execution uses a :class:`PixelDataViewerSession` from ``viewer.open()``:
 
     .. code-block:: python
 
         with viewer.open() as session:
             df = session.execute_eager(Query("SELECT * FROM edgelist", {}))
+
+        # or: session = viewer.open(); ...; session.close()
     """
 
     def __init__(
@@ -234,7 +240,7 @@ class PixelDataViewer:
         }
 
     def open(self) -> PixelDataViewerSession:
-        """Return a context manager for a new open session."""
+        """Return a new session with an open DuckDB connection (context manager or ``close()``)."""
         return PixelDataViewerSession(self)
 
     def sample_names(self) -> list[str]:

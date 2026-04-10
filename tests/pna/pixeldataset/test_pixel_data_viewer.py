@@ -186,10 +186,16 @@ class TestPixelDataViewer:
             ).sort("name"),
         )
 
-    def test_open_returns_session_context_manager(self, pxl_view):
-        unopened = pxl_view.open()
-        assert isinstance(unopened, PixelDataViewerSession)
+    def test_open_returns_open_session(self, pxl_view):
+        session = pxl_view.open()
+        assert isinstance(session, PixelDataViewerSession)
+        builder = QueryBuilder()
+        lazy = session.execute_lazy(builder.edgelist_query(None))
+        assert isinstance(lazy, pl.LazyFrame)
+        _ = lazy.collect()
+        session.close()
 
+    def test_open_context_manager_same_as_manual_close(self, pxl_view):
         builder = QueryBuilder()
         with pxl_view.open() as session:
             lazy = session.execute_lazy(builder.edgelist_query(None))
@@ -205,7 +211,13 @@ class TestPixelDataViewer:
             assert outer.execute_scalar(builder.edgelist_len_query(None)) == outer_count
         assert inner_count == outer_count == 57
 
-    def test_execute_without_open_session_raises(self, pxl_view):
+    def test_execute_after_close_raises(self, pxl_view):
         session = pxl_view.open()
-        with pytest.raises(RuntimeError, match="not open"):
+        session.close()
+        with pytest.raises(RuntimeError, match="closed"):
             session.execute_eager(Query("SELECT 1", {}))
+
+    def test_close_idempotent(self, pxl_view):
+        session = pxl_view.open()
+        session.close()
+        session.close()
