@@ -7,34 +7,19 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
-from anndata import AnnData
 
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.proximity import Proximity
-
-
-class StubAnnDataHelper:
-    def __init__(self, adata: AnnData):
-        self._adata = adata
-        self.read_adata_calls: int = 0
-
-    def read_adata(
-        self, *, add_log1p_transform: bool, add_clr_transform: bool
-    ) -> AnnData:
-        self.read_adata_calls += 1
-        return self._adata
-
-
-def _make_adata(components: list[str], markers: list[str], x: np.ndarray) -> AnnData:
-    obs = pd.DataFrame(index=pd.Index(components, name="component"))
-    var = pd.DataFrame(index=pd.Index(markers, name="marker_id"))
-    return AnnData(X=x, obs=obs, var=var)
+from tests.pna.pixeldataset.ann_data_test_helpers import (
+    StubAnnDataHelper,
+    make_test_adata,
+)
 
 
 class TestProximityHelperInjection:
     def test_components_derived_from_injected_helper(self):
         components = ["c1", "c2"]
-        adata = _make_adata(components, ["m1", "m2"], x=np.array([[1, 2], [3, 4]]))
+        adata = make_test_adata(components, ["m1", "m2"], x=np.array([[1, 2], [3, 4]]))
         helper = StubAnnDataHelper(adata)
 
         prox = Proximity(
@@ -51,7 +36,7 @@ class TestProximityHelperInjection:
 
     def test_markers_derived_from_injected_helper(self):
         markers = ["m1", "m2"]
-        adata = _make_adata(["c1"], markers, x=np.array([[1, 2]]))
+        adata = make_test_adata(["c1"], markers, x=np.array([[1, 2]]))
         helper = StubAnnDataHelper(adata)
 
         prox = Proximity(
@@ -66,7 +51,9 @@ class TestProximityHelperInjection:
         assert prox.markers == set(markers)
 
     def test_explicit_components_markers_bypass_helper(self):
-        adata = _make_adata(["c1", "c2"], ["m1", "m2"], x=np.array([[1, 2], [3, 4]]))
+        adata = make_test_adata(
+            ["c1", "c2"], ["m1", "m2"], x=np.array([[1, 2], [3, 4]])
+        )
         helper = StubAnnDataHelper(adata)
 
         prox = Proximity(
@@ -83,7 +70,7 @@ class TestProximityHelperInjection:
         assert helper.read_adata_calls == 0
 
     def test_post_process_uses_helper_for_marker_counts(self):
-        adata = _make_adata(
+        adata = make_test_adata(
             ["c1"], ["m1", "m2"], x=np.array([[10, 5]], dtype=np.uint32)
         )
         helper = StubAnnDataHelper(adata)
@@ -126,7 +113,7 @@ class TestProximityHelperInjection:
         assert out["marker_2_freq"][0] == pytest.approx(5 / 15)
 
     def test_post_process_adds_log2_ratio(self):
-        adata = _make_adata(["c1"], ["m1", "m2"], x=np.array([[10, 5]]))
+        adata = make_test_adata(["c1"], ["m1", "m2"], x=np.array([[10, 5]]))
         helper = StubAnnDataHelper(adata)
 
         prox = Proximity(
