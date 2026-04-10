@@ -245,8 +245,6 @@ def create_working_edgelist(
         node_map_path: Path where the node map will be saved.
         working_edgelist_path: Path where the working edgelist will be saved.
 
-    Returns:
-        None
 
     """
     with duckdb.connect() as con:
