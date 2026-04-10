@@ -194,7 +194,7 @@ def graph(
 
     The graph stage will attempt to identify connected components from the input molecules.
     When `--multiplet-recovery` is active we will try to break up components that are likely
-    not real cells. We do so in two main stages and one optional stage.
+    not single cells. We do so in two main stages and one optional stage.
 
     Main stages:
     1) Fast label propagation: Used as a graph coarsening step to reduce the size of the graph.

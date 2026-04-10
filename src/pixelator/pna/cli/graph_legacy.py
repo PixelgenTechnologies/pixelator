@@ -225,7 +225,7 @@ def graph_legacy(
     in two stages.
 
     When `--multiple-recovery` is active we will try to break up components that are likely
-    not real cells. We do so in two stages.
+    not single cells. We do so in two stages.
 
     In the initial stage will attempt to break up the so called mega cluster. This is a loosely
     connected but very large component that is often present in the data.
