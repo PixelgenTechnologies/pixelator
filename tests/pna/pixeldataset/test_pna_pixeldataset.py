@@ -318,37 +318,6 @@ def pixel_dataset_with_different_sample_names_fixture(
     return PNAPixelDataset.from_pxl_files([target]), sample_name
 
 
-@pytest.fixture(
-    name="pxl_file_w_sample_names",
-    scope="module",
-    params=[
-        "1-sample-starting-with-nbr",
-        "sample-containing-dash",
-        "sample_with_underscores",
-        "✅-sample-with-emoji",
-    ],
-)
-def pxl_file_with_sample_names_fixture(
-    request,
-    tmp_path_factory,
-    edgelist_parquet_path,
-    proximity_parquet_path,
-    layout_parquet_path,
-    panel,
-):
-    sample_name = request.param
-    target = tmp_path_factory.mktemp("data") / (sample_name + ".pxl")
-    target = create_pxl_file(
-        target=target,
-        sample_name=sample_name,
-        edgelist_parquet_path=edgelist_parquet_path,
-        proximity_parquet_path=proximity_parquet_path,
-        layout_parquet_path=layout_parquet_path,
-        panel=panel,
-    )
-    return target
-
-
 class TestPixelDatasetNames:
     """Test that pixel dataset can handle sample names that contain things like dashes, that are also keywords in duckdb."""
 
