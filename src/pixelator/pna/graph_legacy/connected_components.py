@@ -23,10 +23,10 @@ from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanel
 from pixelator.pna.graph.component_recovery_utils import (
     ConnectedComponentException,
-    _name_components_with_umi_hashes,
     filter_components_by_size_dynamic,
     filter_components_by_size_hard_thresholds,
     hash_component,
+    name_components_with_umi_hashes,
 )
 from pixelator.pna.graph.report import (
     GraphStatistics,
@@ -767,9 +767,7 @@ def find_components(
         component_stats,
         dynamic_lowest_passable_bound,
     )
-    edgelist_with_components = _name_components_with_umi_hashes(
-        edgelist_with_components
-    )
+    edgelist_with_components = name_components_with_umi_hashes(edgelist_with_components)
     if return_component_statistics:
         return edgelist_with_components, component_stats
     return edgelist_with_components

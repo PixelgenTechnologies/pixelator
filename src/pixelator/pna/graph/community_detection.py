@@ -23,11 +23,11 @@ from pixelator.pna.cli.common import logger
 
 from .component_recovery_utils import (
     ConnectedComponentException,
-    _name_components_with_umi_hashes,
     create_working_edgelist,
     filter_connected_components_by_size,
     filter_edgelist_by_read_count,
     initialize_graph_statistics,
+    name_components_with_umi_hashes,
     remove_clashing_umis,
 )
 from .constants import (
@@ -733,7 +733,7 @@ def find_components(
             umi_map["working_name"], umi_map["original_name"]
         ),
     )
-    final_edgelist_with_components = _name_components_with_umi_hashes(
+    final_edgelist_with_components = name_components_with_umi_hashes(
         final_edgelist_with_components
     )
 

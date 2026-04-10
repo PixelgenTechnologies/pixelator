@@ -41,7 +41,20 @@ def hash_component(component: set[int]) -> str:
     return hasher.hexdigest()
 
 
-def _name_components_with_umi_hashes(edgelist: pl.LazyFrame) -> pl.LazyFrame:
+def name_components_with_umi_hashes(edgelist: pl.LazyFrame) -> pl.LazyFrame:
+    """Map each ``component`` id to a stable hex hash from that component's UMIs.
+
+    Groups rows by ``component``, takes the distinct ``umi1`` and ``umi2`` values per group,
+    and replaces the ``component`` column with ``hash_component`` applied to their combined set.
+    Two components with the same UMI multiset get the same name.
+
+    Args:
+        edgelist: Lazy edgelist with ``component``, ``umi1``, and ``umi2`` columns.
+
+    Returns:
+        The edgelist with ``component`` rewritten to UMI-derived hash strings.
+
+    """
     comp_umis = (
         edgelist.group_by("component")
         .agg(pl.col("umi1").unique(), pl.col("umi2").unique())
