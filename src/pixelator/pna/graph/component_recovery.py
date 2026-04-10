@@ -14,14 +14,13 @@ from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.cli.common import logger
 from pixelator.pna.config import PNAAntibodyPanel
-from pixelator.pna.pixeldataset import PNAPixelDataset
-from pixelator.pna.pixeldataset.io import PixelFileWriter
-
-from .community_detection import (
+from pixelator.pna.graph.community_detection import (
     StagedRefinementOptions,
     find_components,
 )
-from .report import GraphStatistics
+from pixelator.pna.graph.report import GraphStatistics
+from pixelator.pna.pixeldataset import PNAPixelDataset
+from pixelator.pna.pixeldataset.io import PixelFileWriter
 
 
 def update_stats_from_adata(adata: AnnData, stats: GraphStatistics) -> GraphStatistics:

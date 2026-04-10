@@ -19,9 +19,8 @@ import xxhash
 
 from pixelator.common.annotate.cell_calling import find_component_size_limits
 from pixelator.common.exceptions import PixelatorBaseException
-
-from .constants import MIN_PNA_COMPONENT_SIZE
-from .report import GraphStatistics
+from pixelator.pna.graph.constants import MIN_PNA_COMPONENT_SIZE
+from pixelator.pna.graph.report import GraphStatistics
 
 logger = logging.getLogger(__name__)
 

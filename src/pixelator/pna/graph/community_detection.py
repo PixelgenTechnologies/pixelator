@@ -19,12 +19,7 @@ from graspologic_native import leiden
 from pixelator_core import run_hybrid_community_detection
 
 from pixelator.pna.cli.common import logger
-
-from ..utils.duckdb_utils import (
-    DuckdbPerThreadMemoryError,
-    get_single_thread_duckdb_config,
-)
-from .component_recovery_utils import (
+from pixelator.pna.graph.component_recovery_utils import (
     ConnectedComponentException,
     create_working_edgelist,
     filter_connected_components_by_size,
@@ -33,12 +28,16 @@ from .component_recovery_utils import (
     name_components_with_umi_hashes,
     remove_clashing_umis,
 )
-from .constants import (
+from pixelator.pna.graph.constants import (
     LEIDEN_RANDOM_SEED,
     MIN_PNA_COMPONENT_SIZE,
 )
-from .cycle_analysis import remove_no_cycle_edges
-from .report import GraphStatistics
+from pixelator.pna.graph.cycle_analysis import remove_no_cycle_edges
+from pixelator.pna.graph.report import GraphStatistics
+from pixelator.pna.utils.duckdb_utils import (
+    DuckdbPerThreadMemoryError,
+    get_single_thread_duckdb_config,
+)
 
 
 @dataclass

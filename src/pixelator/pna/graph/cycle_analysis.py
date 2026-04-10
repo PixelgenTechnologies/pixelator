@@ -22,7 +22,7 @@ import polars as pl
 from joblib import Parallel, delayed
 from scipy.sparse import csc_matrix
 
-from .constants import (
+from pixelator.pna.graph.constants import (
     MAX_CYCLE_SEARCH_STEPS,
     MAX_FRONTIER_SIZE_IN_CYCLE_SEARCH,
     MIN_PNA_COMPONENT_SIZE,
