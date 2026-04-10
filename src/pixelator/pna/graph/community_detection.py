@@ -637,7 +637,7 @@ def find_components(
 
     hive_partitioned_edgelist_path = working_dir / "hive_partitioned_edgelist.parquet"
     logger.debug("Filtering out small components from edge list")
-    with duckdb.connect(working_dir / "temp_hivepartition.duckddb") as conn:
+    with duckdb.connect(working_dir / "temp_hivepartition.duckdb") as conn:
         conn.execute(f"""
             CREATE TEMP TABLE component_counts AS
                 SELECT
