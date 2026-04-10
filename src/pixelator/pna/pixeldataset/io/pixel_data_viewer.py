@@ -28,7 +28,9 @@ class PixelDataViewerSession:
     def __init__(self, viewer: "PixelDataViewer") -> None:
         """Open a DuckDB connection for ``viewer``."""
         self._viewer = viewer
-        self._connection = self._create_open_connection()
+        self._connection: duckdb.DuckDBPyConnection | None = (
+            self._create_open_connection()
+        )
 
     def _create_open_connection(self) -> duckdb.DuckDBPyConnection:
         """Create an in-memory DuckDB connection with PXL files attached."""
