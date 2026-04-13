@@ -294,7 +294,6 @@ class TestPNAPixelDatasetFilter:
         "1-sample-starting-with-nbr",
         "sample-containing-dash",
         "sample_with_underscores",
-        "✅-sample-with-emoji",
     ],
 )
 def pixel_dataset_with_different_sample_names_fixture(

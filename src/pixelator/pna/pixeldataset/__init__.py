@@ -18,8 +18,6 @@ diagrams.
 :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer` that maps sample
 names to on-disk ``PxlFile`` instances, and it constructs an
 :class:`~pixelator.pna.pixeldataset.io.anndata_helper.AnnDataHelper` that shares that viewer.
-The helper applies active component and marker filters (plus ``PixelDatasetConfig`` join
-strategy) when materializing :class:`anndata.AnnData`.
 
 - ``read()`` / ``from_pxl_files()`` build a ``PixelDataViewer`` from paths or ``PxlFile``
   objects, then wrap it in ``PNAPixelDataset``.

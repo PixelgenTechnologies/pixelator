@@ -1,6 +1,8 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import shutil
 from io import StringIO
+from pathlib import Path
 
 import polars as pl
 import pytest
@@ -18,6 +20,11 @@ from pixelator.pna.pixeldataset.io import (
 @pytest.fixture(name="pxl_view")
 def pxl_view_fixture(pxl_file):
     return PixelDataViewer.from_files([PxlFile(pxl_file)])
+
+
+def _expected_normalized_db_name(sample_name: str) -> str:
+    """Mirror PixelDataViewer sample-name to DuckDB attach name normalization."""
+    return f"db_{sample_name.replace('-', '_').replace(' ', '_')}"
 
 
 def _with_sample(df: pl.DataFrame, sample_name: str = "test_sample") -> pl.DataFrame:
@@ -169,6 +176,63 @@ class TestPixelDataViewerQueries:
         with pxl_view.open() as session:
             result = session.execute_scalar(builder.layouts_len_query(components))
         assert result == 11
+
+
+class TestPixelDataViewerSession:
+    def test_session_from_source_tuples_matches_viewer_open_scalar(
+        self, pxl_file, pxl_view
+    ):
+        sample = "test_sample"
+        sources = [(sample, Path(pxl_file), _expected_normalized_db_name(sample))]
+        builder = QueryBuilder()
+        with PixelDataViewerSession(sources) as from_sources:
+            with pxl_view.open() as from_viewer:
+                assert from_sources.execute_scalar(
+                    builder.edgelist_len_query(None)
+                ) == from_viewer.execute_scalar(builder.edgelist_len_query(None))
+
+    def test_session_from_source_tuples_matches_viewer_open_eager(
+        self, pxl_file, pxl_view
+    ):
+        sample = "test_sample"
+        sources = [(sample, Path(pxl_file), _expected_normalized_db_name(sample))]
+        builder = QueryBuilder()
+        with PixelDataViewerSession(sources) as from_sources:
+            with pxl_view.open() as from_viewer:
+                assert_frame_equal(
+                    from_sources.execute_eager(builder.edgelist_query(None)),
+                    from_viewer.execute_eager(builder.edgelist_query(None)),
+                )
+
+
+class TestPixelDataViewerSessionSqlInjection:
+    """Malicious-looking session inputs are rejected when the session is built."""
+
+    def test_rejects_sample_name_with_quote_and_comment_payload(self, pxl_file):
+        with pytest.raises(ValueError, match="sample name"):
+            PixelDataViewerSession([("O'Brien' OR 1=1 --", Path(pxl_file), "db_safe")])
+
+    def test_rejects_db_alias_with_semicolon_and_quotes(self, pxl_file):
+        with pytest.raises(ValueError, match="database alias"):
+            PixelDataViewerSession(
+                [("clean_sample", Path(pxl_file), 'db_evil"; SELECT 1 -- x')]
+            )
+
+    def test_rejects_path_with_apostrophe_in_filename(self, pxl_file, tmp_path):
+        tricky_path = tmp_path / "evil'name.pxl"
+        shutil.copy2(pxl_file, tricky_path)
+        with pytest.raises(ValueError, match="PXL path"):
+            PixelDataViewerSession([("s", tricky_path, "db_ok")])
+
+    def test_rejects_db_alias_with_double_quote(self, pxl_file):
+        with pytest.raises(ValueError, match="database alias"):
+            PixelDataViewerSession([("s", Path(pxl_file), 'db_with_"quote')])
+
+    def test_accepts_safe_sample_db_and_path(self, pxl_file):
+        sources = [("test_sample", Path(pxl_file), "db_test_sample")]
+        builder = QueryBuilder()
+        with PixelDataViewerSession(sources) as session:
+            assert session.execute_scalar(builder.edgelist_len_query(None)) == 57
 
 
 class TestPixelDataViewer:
