@@ -116,8 +116,6 @@ def find_clashing_umis(
     1. Appear as `umi1` associated with multiple `marker_1` values.
     2. Appear as `umi2` associated with multiple `marker_2` values.
     3. Are present in both `umi1` and `umi2`.
-    The results are saved as a Parquet file called all_clashes.parquet in the target directory,
-    and the function returns the total number of UMIs and the number of clashing UMIs.
 
     Args:
         input_file (Path): Path to the input Parquet file containing the edgelist.
