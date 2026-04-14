@@ -13,10 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add FLAG and FMC63 v3 panels
 
 ### Changed
+- Change default value for parameter axis of function clr_transformation to be 1.
 
 ### Fixed
 
-- Fix logging for log1p_transformation and clr_transformation to state that the stats correspond to components and not nodes. 
+- Fix logging for log1p_transformation and clr_transformation to state that the stats correspond to components and not nodes.
 - Fix bug in unpacking 4bit packed sequences.
 - Fix bug in sample calling that removed the ending of antibodies that ended with `-<digit>`.
 
