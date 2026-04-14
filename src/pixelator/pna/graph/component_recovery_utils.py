@@ -98,17 +98,21 @@ def get_count_statistics(edgelist_path: Path) -> dict:
         con.execute(
             f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(edgelist_path)}')"
         )
-        n_edges = con.execute("SELECT COUNT(*) FROM edgelist").fetchone()[0]  # type: ignore
-        n_reads = con.execute("SELECT SUM(read_count) FROM edgelist").fetchone()[0]  # type: ignore
-        n_molecules = con.execute("SELECT SUM(uei_count) FROM edgelist").fetchone()[0]  # type: ignore
-        n_umi = con.execute("""
-            SELECT COUNT(DISTINCT umi)
-            FROM (
-                SELECT umi1 AS umi FROM edgelist
-                UNION ALL
-                SELECT umi2 AS umi FROM edgelist
-            )
-        """).fetchone()[0]  # type: ignore
+        n_edges, n_reads, n_molecules, n_umi = con.execute("""
+            SELECT
+                COUNT(*) AS n_edges,
+                SUM(read_count) AS n_reads,
+                SUM(uei_count) AS n_molecules,
+                (
+                    SELECT COUNT(DISTINCT umi)
+                    FROM (
+                        SELECT umi1 AS umi FROM edgelist
+                        UNION ALL
+                        SELECT umi2 AS umi FROM edgelist
+                    )
+                ) AS n_umi
+            FROM edgelist
+        """).fetchone()  # type: ignore
 
     return {
         "n_edges": n_edges,
