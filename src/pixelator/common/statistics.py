@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def clr_transformation(
     df: pd.DataFrame,
-    axis: Literal[0, 1] = 0,
+    axis: Literal[0, 1] = 1,
     non_negative: bool = True,
 ) -> pd.DataFrame:
     """Transform antibody counts data with CLR (centered log ratio).
@@ -37,7 +37,7 @@ def clr_transformation(
         axis (Literal[0, 1], optional): The axis on which to apply the
             transformation. `axis=0` applies the transformation by columns
             (antibody), and `axis=1` applies it by rows (component). Defaults
-            to 0.
+            to 1.
         non_negative (bool, optional): If `True`, the non-negative CLR
             transformation is used. If `False`, the zero-centered CLR
             transformation is used. Defaults to True.
