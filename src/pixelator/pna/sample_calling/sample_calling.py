@@ -366,8 +366,9 @@ def sample_calling(
             tempfile.NamedTemporaryFile(
                 suffix=".edgelist.tmp.parquet"
             ) as tmp_edgelist_parquet,
-            sample_data.view as con,
+            sample_data.view.open() as session,
         ):
+            con = session.get_connection()
             con.register("nodes_to_remove_tbl", nodes_to_remove[["umi"]])
             con.register("sample_components", pl.DataFrame({"component": comps}))
 

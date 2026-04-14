@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use 64-bit unsigned integers for counts in collapse step to support >4.2B reads.
 - Remove the warning when setting minimum size manually. It is observed that 8000 is a
   reliable minimum size for components.
+- Pixeldataset have been refactor to be more modularized
 
 ### Fixed
 

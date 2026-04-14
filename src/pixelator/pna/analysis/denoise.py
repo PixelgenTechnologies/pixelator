@@ -24,8 +24,8 @@ from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndat
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
-from pixelator.pna.pixeldataset import PNAPixelDataset, PxlFile
-from pixelator.pna.pixeldataset.io import PixelFileWriter
+from pixelator.pna.pixeldataset import PNAPixelDataset
+from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 
 logger = logging.getLogger(__name__)
 
@@ -248,8 +248,8 @@ def write_denoised_edgelist(
         output_edgelist_path (str): The file path where the filtered edgelist Parquet file will be saved.
 
     """
-    with pxl.view as con:
-        con.execute(
+    with pxl.view.open() as session:
+        session.get_connection().execute(
             f"""
             COPY(
                 SELECT *
