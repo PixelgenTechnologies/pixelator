@@ -484,7 +484,7 @@ def find_components(
         parquet_file=str(working_dir / "working_edgelist.parquet"),
         resolution=refinement_options.initial_stage_options.leiden_resolution,
         output=str(working_dir / "partitioned_edgelist.parquet"),
-        epochs=2,
+        flp_epochs=2,
         randomness=0.001,
         seed=LEIDEN_RANDOM_SEED,
         max_iteration=None,
