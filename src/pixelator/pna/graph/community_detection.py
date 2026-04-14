@@ -323,6 +323,11 @@ def run_leiden_refinement(
     Returns:
         tuple[GraphStatistics, pl.DataFrame]: Updated component statistics and DataFrame of discarded component sizes.
 
+    Raises:
+        ValueError: If ``max_workers`` is invalid.
+        DuckdbPerThreadMemoryError: If the configured memory split would give each thread
+            less than 1 MiB.
+
     """
     if component_sizes is None:
         component_sizes = get_component_sizes(component_edgelists_path)
@@ -333,19 +338,7 @@ def run_leiden_refinement(
     to_be_refined = component_sizes.filter(pl.col("n_umi") > min_size_to_prune)[
         "component"
     ].to_list()
-    try:
-        duckdb_config = get_single_thread_duckdb_config(max_workers)
-    except DuckdbPerThreadMemoryError as exc:
-        requested_workers = max_workers
-        max_workers = 1
-        logger.warning(
-            "DuckDB memory_limit is too small to give each of %d refinement workers "
-            "at least 1 MiB; running with max_workers=1 so the single worker can use "
-            "the full configured DuckDB memory limit. (%s)",
-            requested_workers,
-            exc,
-        )
-        duckdb_config = get_single_thread_duckdb_config(1)
+    duckdb_config = get_single_thread_duckdb_config(max_workers)
 
     worker_func = partial(
         refine_component,
