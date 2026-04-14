@@ -18,7 +18,7 @@ from pixelator.pna.demux import (
 @pytest.mark.slow
 def test_demux_writing_strategy_paired(tmp_path, testdata_amplicon_fastq):
     input_file = testdata_amplicon_fastq
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-immuno-155-v3")
     strategy = "paired"
 
@@ -80,7 +80,7 @@ def verify_demuxed_groups(files, marker_col):
 @pytest.mark.slow
 def test_demux_writing_independent(tmp_path, testdata_amplicon_fastq):
     input_file = testdata_amplicon_fastq
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-immuno-155-v3")
     strategy = "independent"
 

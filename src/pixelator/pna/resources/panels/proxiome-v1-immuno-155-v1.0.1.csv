@@ -1,10 +1,11 @@
 # ---
-# name: proxiome-immuno-155-v2
+# name: proxiome-v1-immuno-155-v1.0.1
 # aliases:
+#   - proxiome-immuno-155-v2
 #   - proxiome-immuno-155plex-v2
 # description: >-
 #     Panel for the Proxiome Immuno Kit with 155 markers + 3 control markers
-# version: 2.0.0
+# version: 1.0.1
 # ---
 marker_id,control,full_name,alt_id,uniprot_id,sequence_1,conj_id,sequence_2
 HLA-ABC,,HLA class I histocompatibility antigen,,P04439;P01889;P10321,ACTTCCTAGG,pna_rnd01,ACTTCCTAGG

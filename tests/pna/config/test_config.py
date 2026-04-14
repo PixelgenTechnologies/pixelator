@@ -26,10 +26,10 @@ def test_config_creation():
     config = PNAConfig()
     load_assays_package(config, "pixelator.pna.resources.assays")
 
-    assert {"pna-2"}.issubset(config.assays)
+    assert {"proxiome-v1"}.issubset(config.assays)
 
-    assay = config.get_assay("pna-2")
-    assert assay.name == "pna-2"
+    assay = config.get_assay("proxiome-v1")
+    assert assay.name == "proxiome-v1"
 
 
 def test_load_assays_dir(pna_data_root):
@@ -41,7 +41,7 @@ def test_load_assays_dir(pna_data_root):
 
 
 def test_assay_region_ids():
-    all_region_ids = pna_config.get_assay("pna-2").region_ids
+    all_region_ids = pna_config.get_assay("proxiome-v1").region_ids
 
     expected_region_ids = {
         "amplicon",
@@ -57,14 +57,14 @@ def test_assay_region_ids():
 
 
 def test_assay_get_region_by_id():
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
 
     region = assay.get_region_by_id("pid-2")
     assert region.region_id == "pid-2"
 
 
 def test_assay_get_regions_by_type():
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
 
     regions = assay.get_regions_by_type("lbs-1")
     for r in regions:
@@ -72,7 +72,7 @@ def test_assay_get_regions_by_type():
 
 
 def test_get_position_in_amplicon_pna_1():
-    design = pna_config.get_assay("pna-2")
+    design = pna_config.get_assay("proxiome-v1")
 
     umi1_pos = get_position_in_parent(design, "umi-1")
     pid1_pos = get_position_in_parent(design, "pid-1")
@@ -106,12 +106,12 @@ def test_loading_panel_from_config(config_with_multiple_versions):
 
 
 @pytest.mark.parametrize(
-    "panel_name", ["proxiome-immuno-155-v1", "proxiome-immuno-155-v2"]
+    "panel_name", ["proxiome-v1-immuno-155-v1.0.0", "proxiome-v1-immuno-155-v1.0.1"]
 )
 def test_loading_panel_from_config_alias(panel_name):
     panel = pna_config.get_panel(panel_name)
     assert panel.name == panel_name
-    assert panel.version == f"{panel_name[-1]}.0.0"
+    assert panel.version == panel_name[-5:]
 
 
 def test_loading_panel_from_config_specific_version(config_with_multiple_versions):
@@ -125,8 +125,8 @@ def test_loading_panel_from_config_specific_version(config_with_multiple_version
 
 
 def test_load_antibody_panel_util(pna_data_root):
-    cgf_panel = load_antibody_panel(pna_config, "proxiome-immuno-155-v2")
-    assert cgf_panel.name == "proxiome-immuno-155-v2"
+    cgf_panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0.1")
+    assert cgf_panel.name == "proxiome-v1-immuno-155-v1.0.1"
 
     path_panel = load_antibody_panel(
         pna_config, pna_data_root / "test-pna-panel-v2.csv"
@@ -157,10 +157,10 @@ def test_list_panel_names(pna_data_root):
     assert sorted(pna_config.list_panel_names(include_aliases=True)) == sorted(
         [
             "proxiome-immuno-155-v1",
-            "proxiome-immuno-155plex-v1",
             "proxiome-immuno-155-v2",
-            "proxiome-immuno-155plex-v2",
             "proxiome-immuno-155-v3",
+            "proxiome-immuno-155plex-v1",
+            "proxiome-immuno-155plex-v2",
             "proxiome-immuno-155plex-v3",
             "proxiome-immuno-156-FLAG-v2",
             "proxiome-immuno-156-FLAG-v3",
@@ -172,18 +172,26 @@ def test_list_panel_names(pna_data_root):
             "proxiome-immuno-156-FMC63plex-v1",
             "proxiome-immuno-156-FMC63plex-v2",
             "proxiome-immuno-156-FMC63plex-v3",
+            "proxiome-v1-immuno-155-v1.0.0",
+            "proxiome-v1-immuno-155-v1.0.1",
+            "proxiome-v1-immuno-155-v1.1.0",
+            "proxiome-v1-immuno-156-FLAG-v1.0.1",
+            "proxiome-v1-immuno-156-FLAG-v1.1.0",
+            "proxiome-v1-immuno-156-FMC63-v1.0.0",
+            "proxiome-v1-immuno-156-FMC63-v1.0.1",
+            "proxiome-v1-immuno-156-FMC63-v1.1.0",
         ]
     )
 
     assert sorted(pna_config.list_panel_names(include_aliases=False)) == [
-        "proxiome-immuno-155-v1",
-        "proxiome-immuno-155-v2",
-        "proxiome-immuno-155-v3",
-        "proxiome-immuno-156-FLAG-v2",
-        "proxiome-immuno-156-FLAG-v3",
-        "proxiome-immuno-156-FMC63-v1",
-        "proxiome-immuno-156-FMC63-v2",
-        "proxiome-immuno-156-FMC63-v3",
+        "proxiome-v1-immuno-155-v1.0.0",
+        "proxiome-v1-immuno-155-v1.0.1",
+        "proxiome-v1-immuno-155-v1.1.0",
+        "proxiome-v1-immuno-156-FLAG-v1.0.1",
+        "proxiome-v1-immuno-156-FLAG-v1.1.0",
+        "proxiome-v1-immuno-156-FMC63-v1.0.0",
+        "proxiome-v1-immuno-156-FMC63-v1.0.1",
+        "proxiome-v1-immuno-156-FMC63-v1.1.0",
     ]
 
 

@@ -73,7 +73,7 @@ def test_demux_record_batch():
 
 
 def test_independent_demuxing(testdata_demux_passed_reads):
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-immuno-155-v1")
 
     marker_counts = {
@@ -246,7 +246,7 @@ def test_barcode_identifier_statistics_accumulation():
 @pytest.mark.slow
 def test_marker_correction_pipeline(tmp_path, testdata_amplicon_fastq):
     input_file = testdata_amplicon_fastq
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-immuno-155-v3")
 
     input_files = [input_file]

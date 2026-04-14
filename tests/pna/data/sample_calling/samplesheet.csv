@@ -1,4 +1,4 @@
 pool,sample,sample_alias,condition,hash_index,design,panel,fastq_1,fastq_2
-small_hashed_sample_1,S1,S1,PBMC,1,pna-2,proxiome-rnd-hashing-2,fastq/PNA091_S10_selection1_R1.fastq.gz,fastq/PNA091_S10_selection1_R2.fastq.gz
-small_hashed_sample_1,S2,S2,Raji,2,pna-2,proxiome-rnd-hashing-2,fastq/PNA091_S10_selection1_R1.fastq.gz,fastq/PNA091_S10_selection1_R2.fastq.gz
-small_hashed_sample_1,S3,S3,Daudi,3,pna-2,proxiome-rnd-hashing-2,fastq/PNA091_S10_selection1_R1.fastq.gz,fastq/PNA091_S10_selection1_R2.fastq.gz
+small_hashed_sample_1,S1,S1,PBMC,1,proxiome-v1,proxiome-rnd-hashing-2,fastq/PNA091_S10_selection1_R1.fastq.gz,fastq/PNA091_S10_selection1_R2.fastq.gz
+small_hashed_sample_1,S2,S2,Raji,2,proxiome-v1,proxiome-rnd-hashing-2,fastq/PNA091_S10_selection1_R1.fastq.gz,fastq/PNA091_S10_selection1_R2.fastq.gz
+small_hashed_sample_1,S3,S3,Daudi,3,proxiome-v1,proxiome-rnd-hashing-2,fastq/PNA091_S10_selection1_R1.fastq.gz,fastq/PNA091_S10_selection1_R2.fastq.gz

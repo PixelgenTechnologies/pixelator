@@ -21,7 +21,7 @@ def test_collapse_run(mocker, testdata_paired_small_demux):
             "--output",
             str(d),
             "--design",
-            "pna-2",
+            "proxiome-v1",
             "--panel",
             "proxiome-immuno-155-v3",
         ]
@@ -45,7 +45,7 @@ def test_invalid_mismatch_param(mocker, testdata_paired_small_demux, panel_file)
             "--output",
             str(d),
             "--design",
-            "pna-2",
+            "proxiome-v1",
             "--panel",
             panel_file,
             "--mismatches",

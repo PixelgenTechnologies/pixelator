@@ -16,7 +16,7 @@ def test_demux_invalid_chunk_size(tmp_path, testdata_amplicon_fastq):
         "--output",
         str(tmp_path),
         "--design",
-        "pna-2",
+        "proxiome-v1",
         "--panel",
         "proxiome-immuno-155-v3",
         "--output-chunk-reads",
@@ -42,7 +42,7 @@ def test_demux_valid(tmp_path, testdata_amplicon_fastq, panel_file):
         "--output",
         str(tmp_path),
         "--design",
-        "pna-2",
+        "proxiome-v1",
         "--panel",
         panel_file,
     ]
@@ -62,7 +62,7 @@ def test_demux_custom_panel(tmp_path, testdata_amplicon_fastq, pna_data_root):
         "--output",
         str(tmp_path),
         "--design",
-        "pna-2",
+        "proxiome-v1",
         "--panel",
         str(pna_data_root / "panels/test-pna-panel.csv"),
     ]
