@@ -12,3 +12,12 @@ class SampleCallingSampleReport(SampleReport):
     report_type: str = "sample_calling"
     number_of_components: int
     number_of_incompatible_hashes_removed: int | None
+
+
+class SampleCallingTotalReport(SampleReport):
+    """Model for report data for all samples returned by the single-cell sample-calling stage."""
+
+    report_type: str = "sample_calling_total"
+    number_of_components: int
+    percentage_of_components_successfully_called: float
+    sample_confidences_per_sample: dict[str, list[float]]

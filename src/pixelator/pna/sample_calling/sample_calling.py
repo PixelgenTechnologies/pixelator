@@ -13,17 +13,19 @@ from typing import Tuple
 import anndata
 import duckdb
 import networkx as nx
+import numpy as np
+import pandas as pd
 import polars as pl
 
 from pixelator import __version__
 from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config import pna_config
-from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
+from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
+from pixelator.pna.sample_calling.report import SampleCallingTotalReport
 
 logger = logging.getLogger(__name__)
 
@@ -247,33 +249,25 @@ def _build_post_sample_calling_anndata(
 
 
 def _apply_confidence_threshold_to_hash_info(
-    hash_info: pl.DataFrame, save_undetermined: bool, confidence_threshold: float
+    hash_info: pl.DataFrame, confidence_threshold: float
 ) -> pl.DataFrame:
-    """Apply confidence threshold to hash info and possible filter out undetermined components.
+    """Apply confidence threshold to hash info and assign undetermined components.
 
-    If save_undetermined is True, components with confidence below the threshold are assigned to
-    undetermined.
-    Otherwise, components with confidence below the threshold are excluded from the output.
+    Components with confidence below the threshold are assigned to undetermined.
 
     Args:
         hash_info (pl.DataFrame): Hash info dataframe.
-        save_undetermined (bool): Whether to keep the undetermined components in the output.
         confidence_threshold (float): Confidence threshold.
 
     Returns:
         pl.DataFrame: Hash info dataframe where confidence levels have been applied.
 
     """
-    if save_undetermined:
-        return hash_info.with_columns(
-            pl.when((pl.col("sample_confidence") < confidence_threshold))
-            .then(pl.lit("undetermined"))
-            .otherwise(pl.col("called_sample"))
-            .alias("called_sample")
-        )
-    return hash_info.filter(
-        (pl.col("sample_confidence") >= confidence_threshold)
-        & (pl.col("called_sample") != "undetermined")
+    return hash_info.with_columns(
+        pl.when((pl.col("sample_confidence") < confidence_threshold))
+        .then(pl.lit("undetermined"))
+        .otherwise(pl.col("called_sample"))
+        .alias("called_sample")
     )
 
 
@@ -300,7 +294,6 @@ def sample_calling(
     output_folder: Path,
     confidence_threshold: float = 0.8,
     remove_incompatible: bool = True,
-    save_undetermined: bool = False,
 ) -> list[Path]:
     """Split components of a pixel dataset by their sample.
 
@@ -308,7 +301,8 @@ def sample_calling(
     separate pxl files for each sample. This function processes a
     PNAPixelDataset, assigns components to samples based on hash information
     and confidence thresholds, and writes out pxl files for each determined
-    sample. Optionally, it can also write a file for undetermined components.
+    sample. It will also write a file for undetermined components (under the name
+    "undetermined.dehashed.pxl").
     It supports removing incompatible hashes and renaming hash markers in the output.
 
     Args:
@@ -324,9 +318,6 @@ def sample_calling(
         remove_incompatible (bool, optional):
             Whether to remove hashes incompatible with the current sample from the edgelist.
             Defaults to True.
-        save_undetermined (bool, optional):
-            Whether to save components that could not be confidently assigned to any sample.
-            Defaults to False.
 
     Returns: List of all output pxl files created.
 
@@ -335,7 +326,7 @@ def sample_calling(
     panel = PNAAntibodyPanel.from_pxl_dataset(input_pxl)
 
     hash_info = _apply_confidence_threshold_to_hash_info(
-        hash_info, save_undetermined, confidence_threshold
+        hash_info, confidence_threshold
     )
 
     dehashed = hash_info.group_by("called_sample")
@@ -475,3 +466,64 @@ class HashedSampleAnalysisManager(AnalysisManager):
         post_processed_data = self._post_process(per_component_results)
         _, result = next(post_processed_data)
         return result
+
+
+def create_final_report(final_dataset: PNAPixelDataset) -> SampleCallingTotalReport:
+    """Create the final report for the sample calling.
+
+    Args:
+        final_dataset (PNAPixelDataset): The final dataset after sample calling.
+
+    Returns:
+        SampleCallingTotalReport: The final report for the sample calling.
+
+    """
+    n_components = len(final_dataset.components())
+
+    if n_components == 0:
+        raise ValueError(
+            "The final dataset has no components. This is likely due to an error in the samplesheet."
+        )
+
+    percentage_of_components_successfully_called = 1.0
+    if "undetermined" in final_dataset.sample_names():
+        n_undetermined_components = len(
+            final_dataset.filter(samples="undetermined").components()
+        )
+        percentage_of_components_successfully_called = 1.0 - (
+            n_undetermined_components / n_components
+        )
+
+    sample_confidences_per_sample = {
+        sample_name: final_dataset.filter(samples=sample_name)
+        .adata()
+        .obs["sample_confidence"]
+        for sample_name in final_dataset.sample_names()
+    }
+
+    total_report = SampleCallingTotalReport(
+        sample_id="all",
+        product_id="single-cell-pna",
+        number_of_components=n_components,
+        percentage_of_components_successfully_called=percentage_of_components_successfully_called,
+        sample_confidences_per_sample={
+            sample: confidences.to_list()
+            for sample, confidences in sample_confidences_per_sample.items()
+        },
+    )
+    return total_report
+
+
+def warn_if_undetermined_has_high_confidence(
+    undetermined_sample_confidences: pd.DataFrame, confidence_threshold: float
+) -> None:
+    """Warn if the undetermined sample has a high confidence score."""
+    if (
+        np.sum(undetermined_sample_confidences > confidence_threshold)
+        / len(undetermined_sample_confidences)
+        > 0.05
+    ):
+        logger.warning(
+            "There are more than 5% of components in undetermined have a high confidence score. "
+            "This may indicate that the samplesheet has the wrong sample indices."
+        )
