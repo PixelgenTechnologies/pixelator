@@ -18,6 +18,7 @@ import polars as pl
 from graspologic_native import leiden
 from pixelator_core import run_hybrid_community_detection
 
+from pixelator.common.utils import get_process_pool_executor
 from pixelator.pna.cli.common import logger
 from pixelator.pna.graph.component_recovery_utils import (
     ConnectedComponentException,
@@ -359,8 +360,9 @@ def run_leiden_refinement(
 
         all_new_component_sizes = []
         discard_sizes = []
-        with ProcessPoolExecutor(
-            max_workers=max_workers, mp_context=mp_context
+        with get_process_pool_executor(
+            max_workers=max_workers,
+            mp_context=mp_context,
         ) as executor:
             futures = []
             for component in to_be_refined:
