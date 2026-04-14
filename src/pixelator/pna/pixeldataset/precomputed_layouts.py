@@ -74,9 +74,9 @@ class PreComputedLayouts:
         query = self._query_builder.layouts_len_query(
             normalize_input_to_list(self._components)
         )
-        with self._view as connection:
+        with self._view.open() as session:
             try:
-                return self._view.execute_scalar(connection, query)
+                return session.execute_scalar(query)
             except duckdb.CatalogException:
                 return 0
 
@@ -116,14 +116,14 @@ class PreComputedLayouts:
             components=normalize_input_to_list(self._components),
             add_marker_counts=self._add_marker_counts,
         )
-        with self._view as connection:
+        with self._view.open() as session:
             try:
                 if self._add_marker_counts:
-                    layouts = self._view.execute_eager(connection, query)
+                    layouts = session.execute_eager(query)
                     layouts = self._pivot_marker_table(layouts)
                     layouts = layouts.drop(["umi", "marker"], strict=False)
                 else:
-                    layouts = self._view.execute_eager(connection, query)
+                    layouts = session.execute_eager(query)
             except duckdb.CatalogException:
                 layouts = pl.DataFrame()
         return self._post_process(layouts)
@@ -141,7 +141,7 @@ class PreComputedLayouts:
 
         :return: A stream of layouts names and associated layout dataframes
         """
-        with self._view as connection:
+        with self._view.open() as session:
             for component in self.components:
                 query = self._query_builder.layouts_query(
                     components=[component],
@@ -149,11 +149,11 @@ class PreComputedLayouts:
                 )
                 try:
                     if self._add_marker_counts:
-                        layouts = self._view.execute_eager(connection, query)
+                        layouts = session.execute_eager(query)
                         layouts = self._pivot_marker_table(layouts)
                         layouts = layouts.drop(["umi", "marker"], strict=False)
                     else:
-                        layouts = self._view.execute_eager(connection, query)
+                        layouts = session.execute_eager(query)
                 except duckdb.CatalogException:
                     layouts = pl.DataFrame()
                 component_df = self._post_process(layouts)

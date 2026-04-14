@@ -77,8 +77,8 @@ class Proximity:
             normalize_input_to_list(self._components),
             normalize_input_to_list(self._markers),
         )
-        with self._view as connection:
-            return self._view.execute_scalar(connection, query)
+        with self._view.open() as session:
+            return session.execute_scalar(query)
 
     def is_empty(self):
         """Check if the proximity data is empty."""
@@ -169,8 +169,8 @@ class Proximity:
             normalize_input_to_list(self._components),
             normalize_input_to_list(self._markers),
         )
-        with self._view as connection:
-            df = self._view.execute_lazy(connection, query).collect()
+        with self._view.open() as session:
+            df = session.execute_lazy(query).collect()
         return self._post_process(df)
 
     def __str__(self) -> str:

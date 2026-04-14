@@ -24,14 +24,81 @@ A full pxl file has (at least) the following tables:
     │ ---                 │
     │ str                 │
     ╞═════════════════════╡
+    │ Mandatory           │
+    │ ---------           │
     │ __adata__X          │
     │ __adata__obs        │
     │ __adata__var        │
     │ edgelist            │
-    │ layouts             │
-    │ metadata            │
-    │ proximity           │
+    ├─────────────────────┤
+    │ Optional            │
+    │ --------            │
+    │ (layouts)           │
+    │ (metadata)          │
+    │ (proximity)         │
     └─────────────────────┘
+
+## Architecture (IO types)
+
+- `QueryBuilder` builds immutable `Query` values (SQL text + bound parameters).
+- `PixelDataViewer` maps sample names to `PxlFile` instances; and gives a unified
+  view to run SQL queries over the edgelist, layouts and proximity tables. Use
+  ``with viewer.open() as session:`` and run `Query` instances via
+  `PixelDataViewerSession` (lazy or eager Polars).
+- `AnnDataHelper` holds a `PixelDataViewer` and uses `QueryBuilder` to join the
+  annotated data from all samples into a single object.
+- `PixelFileWriter` writes edgelist, AnnData-backed tables, and related data
+  to a `.pxl` path.
+- `InplacePixelDataFilterer` owns a `PxlFile` and trims components in place,
+  using `AnnDataHelper`, `PixelDataViewer`, and `PixelFileWriter` when
+  rewriting AnnData.
+
+### Class diagram (ASCII)
+
+.. code-block:: none
+
+    ┌──────────────────────────────────────────────────────────────────────────┐
+    │ pixeldataset.io — types and responsibilities                             │
+    └──────────────────────────────────────────────────────────────────────────┘
+
+    Query  (dataclass: sql: str, params: dict)
+         ▲
+         │ builds
+    ┌────┴────────────────────────────────────────────────────────────────────┐
+    │ QueryBuilder                                                            │
+    │   adata_X / obs / var / uns / obsm_* queries, edgelist_query → Query    │
+    └─────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────┐   maps sample → file   ┌──────────────────────────────┐
+    │ PixelDataViewer     │ ──────────────────────▶│ PxlFile                      │
+    │ open() → session    │                        │ path, sample_name, metadata… │
+    │ sample_names, …     │                        └──────────────────────────────┘
+    └──────────┬──────────┘
+               │
+               │ PixelDataViewerSession.execute_* (uses Query)
+               ▼
+            [ Query ]
+
+    ┌─────────────────────┐
+    │ AnnDataHelper       │──uses──▶ PixelDataViewer
+    │ read_adata(...)     │
+    └──────────┬──────────┘
+               │ builds queries via
+               ▼
+         QueryBuilder
+
+    ┌──────────────────────────────┐  owns   ┌────────────────────────────┐
+    │ InplacePixelDataFilterer     │────────▶│ PxlFile                    │
+    │ pxl_file, filter_components  │         └────────────────────────────┘
+    └──────────────┬───────────────┘
+                   │ uses when rewriting
+                   ├──▶ AnnDataHelper
+                   ├──▶ PixelDataViewer
+                   └──▶ PixelFileWriter
+                              │
+                              │ path; write_edgelist, write_adata
+                              ▼
+                         (.pxl file)
 
 Copyright © 2025 Pixelgen Technologies AB.
 """
@@ -44,7 +111,7 @@ from pathlib import Path
 import duckdb
 
 from .inplace_pixel_data_filterer import InplacePixelDataFilterer
-from .pixel_data_viewer import PixelDataViewer
+from .pixel_data_viewer import PixelDataViewer, PixelDataViewerSession
 from .pixel_file_writer import PixelFileWriter
 from .pxl_file import (
     PXL_FILE_ADATA_TABLES,
@@ -59,6 +126,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "InplacePixelDataFilterer",
     "PixelDataViewer",
+    "PixelDataViewerSession",
     "PixelFileWriter",
     "PxlFile",
     "Query",
