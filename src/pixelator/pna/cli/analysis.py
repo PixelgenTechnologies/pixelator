@@ -169,7 +169,7 @@ def analysis(
         svd_report = SvdReport(
             median_variance_explained_3d=pxl_dataset_with_analysis.adata()
             .obs.filter(regex="svd_var_expl_s3")
-            .median()
+            .median().iloc[0]
         )
 
     report = AnalysisSampleReport(
