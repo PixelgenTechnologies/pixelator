@@ -209,8 +209,8 @@ def remove_umis(edgelist_path: Path, umis_to_remove: pl.Series, target_path: Pat
 
 
 def remove_clashing_umis(
-    edgelist_path: Path,
-    target_path: Path,
+    input_edgelist_path: Path,
+    no_clash_edgelist_path: Path,
     component_stats: GraphStatistics,
 ) -> GraphStatistics:
     """Remove clashing UMIs from an edgelist and save the filtered edgelist.
@@ -220,8 +220,8 @@ def remove_clashing_umis(
     filtered_edgelist.parquet. It returns updated statistics about the filtering process.
 
     Args:
-        edgelist_path (str): Path to the input Parquet file containing the edgelist.
-        target_path (str): Path where the filtered edgelist will be saved.
+        input_edgelist_path (str): Path to the input Parquet file containing the edgelist.
+        no_clash_edgelist_path (str): Path where the filtered edgelist will be saved.
         component_stats (GraphStatistics): Statistics object to update with clash information.
 
     Returns:
@@ -229,15 +229,15 @@ def remove_clashing_umis(
 
     """
     umis_to_remove, updated_stats = find_clashing_umis(
-        input_file=edgelist_path, component_stats=component_stats
+        input_file=input_edgelist_path, component_stats=component_stats
     )
 
     remove_umis(
-        edgelist_path=edgelist_path,
+        edgelist_path=input_edgelist_path,
         umis_to_remove=umis_to_remove,
-        target_path=target_path,
+        target_path=no_clash_edgelist_path,
     )
-    no_collision_stats = get_count_statistics(target_path)
+    no_collision_stats = get_count_statistics(no_clash_edgelist_path)
 
     updated_stats.molecules_post_umi_collision_removal = no_collision_stats[
         "n_molecules"
@@ -302,9 +302,9 @@ def create_working_edgelist(
 
 
 def filter_edgelist_by_read_count(
-    edgelist_path: Path,
+    input_edgelist_path: Path,
     min_read_count: int,
-    target_path: Path,
+    filtered_edgelist_path: Path,
     component_stats: GraphStatistics,
 ) -> GraphStatistics:
     """Filter edges in the edgelist by minimum read count.
@@ -313,9 +313,9 @@ def filter_edgelist_by_read_count(
     below a specified threshold, and saves the filtered edgelist to a new Parquet file.
 
     Args:
-        edgelist_path (Path): Path to the input Parquet file containing the edgelist.
+        input_edgelist_path (Path): Path to the input Parquet file containing the edgelist.
         min_read_count (int): Minimum read count threshold for filtering edges.
-        target_path (Path): Path where the filtered edgelist will be saved.
+        filtered_edgelist_path (Path): Path where the filtered edgelist will be saved.
         component_stats (GraphStatistics): Statistics object to update with filtering information.
 
     Returns:
@@ -324,16 +324,16 @@ def filter_edgelist_by_read_count(
     """
     with duckdb.connect() as con:
         con.execute(
-            f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(edgelist_path)}')"
+            f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
         )
         con.execute(
             f"CREATE VIEW filtered_edgelist AS SELECT * FROM edgelist WHERE read_count >= {min_read_count}"
         )
         con.execute(
-            f"COPY (SELECT * FROM filtered_edgelist) TO '{str(target_path)}' (FORMAT PARQUET)"
+            f"COPY (SELECT * FROM filtered_edgelist) TO '{str(filtered_edgelist_path)}' (FORMAT PARQUET)"
         )
 
-    filtered_stats = get_count_statistics(target_path)
+    filtered_stats = get_count_statistics(filtered_edgelist_path)
     component_stats.molecules_post_read_count_filtering = filtered_stats["n_molecules"]
     component_stats.reads_post_read_count_filtering = filtered_stats["n_reads"]
 

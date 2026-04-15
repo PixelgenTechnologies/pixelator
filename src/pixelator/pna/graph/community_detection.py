@@ -455,23 +455,27 @@ def find_components(
         collapsed_edgelist_path=input_edgelist_path
     )
 
+    no_clash_edgelist_path = working_dir / "no_clash_edgelist.parquet"
     component_stats = remove_clashing_umis(
-        edgelist_path=input_edgelist_path,
-        target_path=working_dir / "no_clash_edgelist.parquet",
+        input_edgelist_path=input_edgelist_path,
+        no_clash_edgelist_path=no_clash_edgelist_path,
         component_stats=component_stats,
     )
 
+    filtered_edgelist_path = working_dir / "filtered_edgelist.parquet"
     component_stats = filter_edgelist_by_read_count(
-        edgelist_path=working_dir / "no_clash_edgelist.parquet",
-        target_path=working_dir / "filtered_edgelist.parquet",
+        input_edgelist_path=no_clash_edgelist_path,
+        filtered_edgelist_path=filtered_edgelist_path,
         min_read_count=min_read_count,
         component_stats=component_stats,
     )
 
+    node_map_path = working_dir / "node_map.parquet"
+    working_edgelist_path = working_dir / "working_edgelist.parquet"
     create_working_edgelist(
-        input_edgelist_path=working_dir / "filtered_edgelist.parquet",
-        node_map_path=working_dir / "node_map.parquet",
-        working_edgelist_path=working_dir / "working_edgelist.parquet",
+        input_edgelist_path=filtered_edgelist_path,
+        node_map_path=node_map_path,
+        working_edgelist_path=working_edgelist_path,
     )
 
     logger.info("Running FLP + Leiden native step")
@@ -481,7 +485,7 @@ def find_components(
         post_flp_stats,
         post_recovery_stats,
     ) = run_hybrid_community_detection(
-        parquet_file=str(working_dir / "working_edgelist.parquet"),
+        parquet_file=str(working_edgelist_path),
         resolution=refinement_options.initial_stage_options.leiden_resolution,
         output=str(working_dir / "partitioned_edgelist.parquet"),
         flp_epochs=2,
