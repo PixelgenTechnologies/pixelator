@@ -48,7 +48,7 @@ class PixelatorWorkflowTest(
 
     So for a test case testing annotate output:
 
-    @pytest.mark.dependency(depends=["test_annotate_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_annotate_run"])
     def test_some_annotate_output(self):
         pass
 
