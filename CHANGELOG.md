@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Change default value for parameter axis of function clr_transformation to be 1.
+- Refactor IO classes to handle .pxl files
 
 ### Fixed
 
