@@ -27,7 +27,9 @@ from pixelator.pna.graph.component_recovery_utils import (
     filter_edgelist_by_read_count,
     initialize_graph_statistics,
     name_components_with_umi_hashes,
+    populate_component_stats_from_hybrid_detection,
     remove_clashing_umis,
+    write_hive_partitioned_edgelist_without_small_components,
 )
 from pixelator.pna.graph.constants import (
     LEIDEN_RANDOM_SEED,
@@ -495,25 +497,6 @@ def find_components(
         multiplet_recovery=multiplet_recovery,
     )
 
-    component_stats.component_count_pre_recovery = (
-        pre_recovery_stats.n_connected_components
-    )
-    component_stats.fraction_nodes_in_largest_component_pre_recovery = (
-        pre_recovery_stats.fraction_in_largest_component
-    )
-    component_stats.node_count_pre_recovery = pre_recovery_stats.node_count
-    component_stats.edge_count_pre_recovery = pre_recovery_stats.edge_weight_sum
-    component_stats.stranded_nodes_pre_recovery = pre_recovery_stats.stranded_nodes
-
-    n_crossing_edges = (
-        pre_recovery_stats.edge_weight_sum - post_recovery_stats.edge_weight_sum
-    )
-    component_stats.crossing_edges_removed_initial_stage = n_crossing_edges
-    component_stats.crossing_edges_removed = n_crossing_edges
-    component_stats.post_flp_component_sizes = (
-        post_flp_stats.component_size_distribution
-    )
-
     max_post_recovery_component_size = max(
         post_recovery_stats.component_size_distribution.keys(),
         default=0,
@@ -528,36 +511,20 @@ def find_components(
         )
         raise ConnectedComponentException(msg)
 
-    hive_partitioned_edgelist_path = working_dir / "hive_partitioned_edgelist.parquet"
-    logger.debug("Filtering out small components from edge list")
-    with duckdb.connect(working_dir / "temp_hivepartition.duckdb") as conn:
-        conn.execute(f"""
-            CREATE TEMP TABLE component_counts AS
-                SELECT
-                    component,
-                    CAST(
-                        COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)
-                        AS UINT32
-                    ) AS n_umi
-                FROM parquet_scan('{str(partitioned_edgelist_path)}')
-                GROUP BY component;
+    populate_component_stats_from_hybrid_detection(
+        component_stats=component_stats,
+        pre_recovery_stats=pre_recovery_stats,
+        post_flp_stats=post_flp_stats,
+        post_recovery_stats=post_recovery_stats,
+    )
 
-            CREATE TABLE discarded_components AS
-                SELECT component, n_umi
-                FROM component_counts
-                WHERE n_umi < {refinement_options.initial_stage_options.min_component_size_to_prune};
-
-            CREATE TABLE edgelist AS
-                SELECT e.*
-                FROM parquet_scan('{str(partitioned_edgelist_path)}') e
-                JOIN component_counts c ON e.component = c.component
-                WHERE c.n_umi >= {refinement_options.initial_stage_options.min_component_size_to_prune}
-                ORDER BY e.component;
-
-            COPY edgelist TO '{str(hive_partitioned_edgelist_path)}'
-            (FORMAT PARQUET, PARTITION_BY (component), OVERWRITE_OR_IGNORE);
-        """)
-        discard_sizes = conn.execute("SELECT * FROM discarded_components").pl()
+    hive_partitioned_edgelist_path, discard_sizes = (
+        write_hive_partitioned_edgelist_without_small_components(
+            partitioned_edgelist_path=partitioned_edgelist_path,
+            working_dir=working_dir,
+            min_component_size_to_prune=refinement_options.initial_stage_options.min_component_size_to_prune,
+        )
+    )
 
     latest_working_edgelist_path = hive_partitioned_edgelist_path
 

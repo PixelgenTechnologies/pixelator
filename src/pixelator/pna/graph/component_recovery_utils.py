@@ -16,6 +16,7 @@ import duckdb
 import numpy as np
 import polars as pl
 import xxhash
+from pixelator_core import PyGraphProperties
 
 from pixelator.common.annotate.cell_calling import find_component_size_limits
 from pixelator.common.exceptions import PixelatorBaseException
@@ -27,6 +28,33 @@ logger = logging.getLogger(__name__)
 
 class ConnectedComponentException(PixelatorBaseException):
     """Raised when connected-component computation or filtering fails."""
+
+
+def populate_component_stats_from_hybrid_detection(
+    component_stats: GraphStatistics,
+    pre_recovery_stats: PyGraphProperties,
+    post_flp_stats: PyGraphProperties,
+    post_recovery_stats: PyGraphProperties,
+) -> None:
+    """Fill graph statistics from hybrid (FLP + Leiden) community-detection outputs."""
+    component_stats.component_count_pre_recovery = (
+        pre_recovery_stats.n_connected_components
+    )
+    component_stats.fraction_nodes_in_largest_component_pre_recovery = (
+        pre_recovery_stats.fraction_in_largest_component
+    )
+    component_stats.node_count_pre_recovery = pre_recovery_stats.node_count
+    component_stats.edge_count_pre_recovery = pre_recovery_stats.edge_weight_sum
+    component_stats.stranded_nodes_pre_recovery = pre_recovery_stats.stranded_nodes
+
+    n_crossing_edges = (
+        pre_recovery_stats.edge_weight_sum - post_recovery_stats.edge_weight_sum
+    )
+    component_stats.crossing_edges_removed_initial_stage = n_crossing_edges
+    component_stats.crossing_edges_removed = n_crossing_edges
+    component_stats.post_flp_component_sizes = (
+        post_flp_stats.component_size_distribution
+    )
 
 
 def hash_component(component: set[int]) -> str:
@@ -120,6 +148,60 @@ def get_count_statistics(edgelist_path: Path) -> dict:
         "n_reads": n_reads,
         "n_molecules": n_molecules,
     }
+
+
+def write_hive_partitioned_edgelist_without_small_components(
+    partitioned_edgelist_path: Path,
+    working_dir: Path,
+    min_component_size_to_prune: int,
+) -> tuple[Path, pl.DataFrame]:
+    """Remove components below a UMI score threshold and write a hive-partitioned edgelist.
+
+    The per-component score matches hybrid community detection:
+    ``COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)``. Rows from components that pass the
+    threshold are written as Parquet with ``PARTITION_BY (component)``.
+
+    Args:
+        partitioned_edgelist_path: Parquet file produced after community assignment.
+        working_dir: Directory for a temporary DuckDB file and the hive-partition output.
+        min_component_size_to_prune: Components with a score strictly below this are dropped.
+
+    Returns:
+        Path to the hive-partitioned output and a frame of discarded ``component`` / ``n_umi``.
+
+    """
+    hive_partitioned_edgelist_path = working_dir / "hive_partitioned_edgelist.parquet"
+    min_sz = int(min_component_size_to_prune)
+    logger.debug("Filtering out small components from edge list")
+    with duckdb.connect(working_dir / "temp_hivepartition.duckdb") as conn:
+        conn.execute(f"""
+            CREATE TEMP TABLE component_counts AS
+                SELECT
+                    component,
+                    CAST(
+                        COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)
+                        AS UINT32
+                    ) AS n_umi
+                FROM parquet_scan('{str(partitioned_edgelist_path)}')
+                GROUP BY component;
+
+            CREATE TABLE discarded_components AS
+                SELECT component, n_umi
+                FROM component_counts
+                WHERE n_umi < {min_sz};
+
+            CREATE TABLE edgelist AS
+                SELECT e.*
+                FROM parquet_scan('{str(partitioned_edgelist_path)}') e
+                JOIN component_counts c ON e.component = c.component
+                WHERE c.n_umi >= {min_sz}
+                ORDER BY e.component;
+
+            COPY edgelist TO '{str(hive_partitioned_edgelist_path)}'
+            (FORMAT PARQUET, PARTITION_BY (component), OVERWRITE_OR_IGNORE);
+        """)
+        discard_sizes = conn.execute("SELECT * FROM discarded_components").pl()
+    return hive_partitioned_edgelist_path, discard_sizes
 
 
 def find_clashing_umis(
