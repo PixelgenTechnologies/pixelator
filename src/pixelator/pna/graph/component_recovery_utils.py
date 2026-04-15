@@ -20,7 +20,7 @@ from pixelator_core import PyGraphProperties
 
 from pixelator.common.annotate.cell_calling import find_component_size_limits
 from pixelator.common.exceptions import PixelatorBaseException
-from pixelator.pna.graph.constants import MIN_PNA_COMPONENT_SIZE
+from pixelator.pna.graph.constants import DEFAULT_WORKING_DIR, MIN_PNA_COMPONENT_SIZE
 from pixelator.pna.graph.report import GraphStatistics
 
 logger = logging.getLogger(__name__)
@@ -151,9 +151,9 @@ def get_count_statistics(edgelist_path: Path) -> dict:
 
 
 def write_hive_partitioned_edgelist_without_small_components(
-    partitioned_edgelist_path: Path,
-    working_dir: Path,
+    input_edgelist_path: Path,
     min_component_size_to_prune: int,
+    working_dir: Path = DEFAULT_WORKING_DIR,
 ) -> tuple[Path, pl.DataFrame]:
     """Remove components below a UMI score threshold and write a hive-partitioned edgelist.
 
@@ -162,9 +162,10 @@ def write_hive_partitioned_edgelist_without_small_components(
     threshold are written as Parquet with ``PARTITION_BY (component)``.
 
     Args:
-        partitioned_edgelist_path: Parquet file produced after community assignment.
-        working_dir: Directory for a temporary DuckDB file and the hive-partition output.
+        input_edgelist_path: Parquet file with component assignments (e.g. after hybrid detection).
         min_component_size_to_prune: Components with a score strictly below this are dropped.
+        working_dir: Directory for a temporary DuckDB file and the hive-partition output.
+            Defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     Returns:
         Path to the hive-partitioned output and a frame of discarded ``component`` / ``n_umi``.
@@ -182,7 +183,7 @@ def write_hive_partitioned_edgelist_without_small_components(
                         COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)
                         AS UINT32
                     ) AS n_umi
-                FROM parquet_scan('{str(partitioned_edgelist_path)}')
+                FROM parquet_scan('{str(input_edgelist_path)}')
                 GROUP BY component;
 
             CREATE TABLE discarded_components AS
@@ -192,7 +193,7 @@ def write_hive_partitioned_edgelist_without_small_components(
 
             CREATE TABLE edgelist AS
                 SELECT e.*
-                FROM parquet_scan('{str(partitioned_edgelist_path)}') e
+                FROM parquet_scan('{str(input_edgelist_path)}') e
                 JOIN component_counts c ON e.component = c.component
                 WHERE c.n_umi >= {min_sz}
                 ORDER BY e.component;
@@ -260,22 +261,26 @@ def find_clashing_umis(
     return umi_clashes["umi"], component_stats
 
 
-def remove_umis(edgelist_path: Path, umis_to_remove: pl.Series, target_path: Path):
-    """Remove specified UMIs from an edgelist and save the filtered edgelist.
-
-    This function reads an edgelist from a Parquet file and removes any edges that contain
-    UMIs listed in another Parquet file. The filtered edgelist is then saved to a new Parquet file
-    called filtered_edgelist.parquet. It returns statistics about the filtering process.
+def remove_umis(
+    input_edgelist_path: Path,
+    umis_to_remove: pl.Series,
+    working_dir: Path = DEFAULT_WORKING_DIR,
+) -> Path:
+    """Remove specified UMIs from an edgelist and write the filtered edgelist under ``working_dir``.
 
     Args:
-        edgelist_path (Path): Path to the input Parquet file containing the edgelist.
-        umis_to_remove (pl.Series): Series containing UMIs to be removed.
-        target_path (Path): Path where the filtered edgelist will be saved.
+        input_edgelist_path: Input Parquet edgelist.
+        umis_to_remove: UMIs whose edges should be dropped.
+        working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+    Returns:
+        Path to the written Parquet file (``no_clash_edgelist.parquet`` in ``working_dir``).
 
     """
+    target_path = working_dir / "no_clash_edgelist.parquet"
     with duckdb.connect() as con:
         con.execute(
-            f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(edgelist_path)}')"
+            f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
         )
         umis_to_remove_df = umis_to_remove.to_frame()
         con.execute("""
@@ -288,36 +293,36 @@ def remove_umis(edgelist_path: Path, umis_to_remove: pl.Series, target_path: Pat
         con.execute(
             f"COPY (SELECT * FROM filtered_edgelist) TO '{str(target_path)}' (FORMAT PARQUET)"
         )
+    return target_path
 
 
 def remove_clashing_umis(
     input_edgelist_path: Path,
-    no_clash_edgelist_path: Path,
     component_stats: GraphStatistics,
-) -> GraphStatistics:
+    working_dir: Path = DEFAULT_WORKING_DIR,
+) -> tuple[Path, GraphStatistics]:
     """Remove clashing UMIs from an edgelist and save the filtered edgelist.
 
     This function identifies clashing UMIs in the edgelist and removes any edges that contain
-    these UMIs. The filtered edgelist is then saved to a new Parquet file called
-    filtered_edgelist.parquet. It returns updated statistics about the filtering process.
+    these UMIs. The filtered edgelist is written under ``working_dir``.
 
     Args:
-        input_edgelist_path (str): Path to the input Parquet file containing the edgelist.
-        no_clash_edgelist_path (str): Path where the filtered edgelist will be saved.
-        component_stats (GraphStatistics): Statistics object to update with clash information.
+        input_edgelist_path: Path to the input Parquet file containing the edgelist.
+        component_stats: Statistics object to update with clash information.
+        working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     Returns:
-        GraphStatistics: Updated component statistics after removing clashing UMIs.
+        Path to the filtered edgelist and updated component statistics.
 
     """
     umis_to_remove, updated_stats = find_clashing_umis(
         input_file=input_edgelist_path, component_stats=component_stats
     )
 
-    remove_umis(
-        edgelist_path=input_edgelist_path,
+    no_clash_edgelist_path = remove_umis(
+        input_edgelist_path=input_edgelist_path,
         umis_to_remove=umis_to_remove,
-        target_path=no_clash_edgelist_path,
+        working_dir=working_dir,
     )
     no_collision_stats = get_count_statistics(no_clash_edgelist_path)
 
@@ -326,23 +331,26 @@ def remove_clashing_umis(
     ]
     updated_stats.reads_post_umi_collision_removal = no_collision_stats["n_reads"]
 
-    return updated_stats
+    return no_clash_edgelist_path, updated_stats
 
 
 def create_working_edgelist(
     input_edgelist_path: Path,
-    node_map_path: Path,
-    working_edgelist_path: Path,
-):
-    """Get a working edgelist and a map from original to working node names.
+    working_dir: Path = DEFAULT_WORKING_DIR,
+) -> tuple[Path, Path]:
+    """Build a dense node-id edgelist and a map from original to working node names.
 
     Args:
         input_edgelist_path: Path to the input edgelist in Parquet format.
-        node_map_path: Path where the node map will be saved.
-        working_edgelist_path: Path where the working edgelist will be saved.
+        working_dir: Directory for ``node_map.parquet`` and ``working_edgelist.parquet``;
+            defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
+    Returns:
+        ``(working_edgelist_path, node_map_path)``.
 
     """
+    node_map_path = working_dir / "node_map.parquet"
+    working_edgelist_path = working_dir / "working_edgelist.parquet"
     with duckdb.connect() as con:
         con.execute(
             f"CREATE VIEW input_edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
@@ -382,28 +390,31 @@ def create_working_edgelist(
             f"COPY (SELECT * FROM working_edgelist) TO '{str(working_edgelist_path)}' (FORMAT PARQUET)"
         )
 
+    return working_edgelist_path, node_map_path
+
 
 def filter_edgelist_by_read_count(
     input_edgelist_path: Path,
     min_read_count: int,
-    filtered_edgelist_path: Path,
     component_stats: GraphStatistics,
-) -> GraphStatistics:
+    working_dir: Path = DEFAULT_WORKING_DIR,
+) -> tuple[Path, GraphStatistics]:
     """Filter edges in the edgelist by minimum read count.
 
     This function reads an edgelist from a Parquet file, filters out edges with read counts
-    below a specified threshold, and saves the filtered edgelist to a new Parquet file.
+    below a specified threshold, and saves the filtered edgelist under ``working_dir``.
 
     Args:
-        input_edgelist_path (Path): Path to the input Parquet file containing the edgelist.
-        min_read_count (int): Minimum read count threshold for filtering edges.
-        filtered_edgelist_path (Path): Path where the filtered edgelist will be saved.
-        component_stats (GraphStatistics): Statistics object to update with filtering information.
+        input_edgelist_path: Path to the input Parquet file containing the edgelist.
+        min_read_count: Minimum read count threshold for filtering edges.
+        component_stats: Statistics object to update with filtering information.
+        working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     Returns:
-        GraphStatistics: Updated graph statistics after filtering.
+        Path to the filtered edgelist and updated graph statistics.
 
     """
+    filtered_edgelist_path = working_dir / "filtered_edgelist.parquet"
     with duckdb.connect() as con:
         con.execute(
             f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
@@ -419,32 +430,35 @@ def filter_edgelist_by_read_count(
     component_stats.molecules_post_read_count_filtering = filtered_stats["n_molecules"]
     component_stats.reads_post_read_count_filtering = filtered_stats["n_reads"]
 
-    return component_stats
+    return filtered_edgelist_path, component_stats
 
 
 def save_new_working_edgelist(
-    working_edgelist_path: str,
-    new_assignments_path: str,
+    input_working_edgelist_path: Path,
+    new_assignments_path: Path,
     component_column_name: str,
-    output_path: str,
-) -> dict:
+    working_dir: Path = DEFAULT_WORKING_DIR,
+) -> tuple[Path, dict[str, int]]:
     """Save a new working edgelist with updated component assignments.
 
     This function reads a working edgelist and new component assignments from Parquet files,
     merges them to update the component assignments in the edgelist, and saves the resulting
-    edgelist to a new Parquet file. It also computes statistics about the number of crossing
-    edges and remaining edges after the update.
+    edgelist under ``working_dir``. It also computes statistics about crossing vs remaining edges.
 
     Args:
-        working_edgelist_path (str): Path to the input working edgelist Parquet file.
-        new_assignments_path (str): Path to the Parquet file containing new component assignments.
-        component_column_name (str): Name of the component column in the assignments file.
-        output_path (str): Path where the updated edgelist will be saved.
+        input_working_edgelist_path: Path to the input working edgelist Parquet file.
+        new_assignments_path: Path to the Parquet file containing new component assignments.
+        component_column_name: Name of the component column in the assignments file.
+        working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     Returns:
-        dict: A dictionary containing statistics about the number of crossing and remaining edges.
+        Path to the updated edgelist and a dict with ``n_crossing_edges`` and
+        ``n_remaining_edges``.
 
     """
+    output_path = working_dir / "working_edgelist_with_new_assignments.parquet"
+    w = str(input_working_edgelist_path)
+    a = str(new_assignments_path)
     with duckdb.connect() as con:
         c1 = component_column_name + "_1"
         c2 = component_column_name + "_2"
@@ -454,9 +468,9 @@ def save_new_working_edgelist(
                 e.*,
                 a1.{component_column_name} AS {c1},
                 a2.{component_column_name} AS {c2}
-            FROM read_parquet('{working_edgelist_path}') e
-            JOIN read_parquet('{new_assignments_path}') a1 ON e.umi1 = a1.umi
-            JOIN read_parquet('{new_assignments_path}') a2 ON e.umi2 = a2.umi
+            FROM read_parquet('{w}') e
+            JOIN read_parquet('{a}') a1 ON e.umi1 = a1.umi
+            JOIN read_parquet('{a}') a2 ON e.umi2 = a2.umi
         """)
 
         stats = con.execute(f"""
@@ -477,10 +491,10 @@ def save_new_working_edgelist(
                 {c1} AS {component_column_name}
             FROM working_view
             WHERE {c1} = {c2}
-        ) TO '{output_path}' (FORMAT PARQUET)
+        ) TO '{str(output_path)}' (FORMAT PARQUET)
         """)
 
-    return {
+    return output_path, {
         "n_crossing_edges": n_crossing_edges,
         "n_remaining_edges": n_remaining_edges,
     }

@@ -46,9 +46,9 @@ def test_write_hive_partitioned_edgelist_without_small_components_prunes(
     ).write_parquet(partitioned)
 
     out_path, discarded = write_hive_partitioned_edgelist_without_small_components(
-        partitioned_edgelist_path=partitioned,
-        working_dir=tmp_path,
+        input_edgelist_path=partitioned,
         min_component_size_to_prune=3,
+        working_dir=tmp_path,
     )
 
     assert out_path == tmp_path / "hive_partitioned_edgelist.parquet"
@@ -75,9 +75,9 @@ def test_write_hive_partitioned_edgelist_without_small_components_nothing_discar
     ).write_parquet(partitioned)
 
     _, discarded = write_hive_partitioned_edgelist_without_small_components(
-        partitioned_edgelist_path=partitioned,
-        working_dir=tmp_path,
+        input_edgelist_path=partitioned,
         min_component_size_to_prune=2,
+        working_dir=tmp_path,
     )
 
     assert discarded.height == 0

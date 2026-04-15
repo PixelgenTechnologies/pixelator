@@ -23,6 +23,7 @@ from joblib import Parallel, delayed
 from scipy.sparse import csc_matrix
 
 from pixelator.pna.graph.constants import (
+    DEFAULT_WORKING_DIR,
     MAX_CYCLE_SEARCH_STEPS,
     MAX_FRONTIER_SIZE_IN_CYCLE_SEARCH,
     MIN_PNA_COMPONENT_SIZE,
@@ -285,20 +286,24 @@ def process_component(comp_name, edgelist_path, tmpdir):
 
 
 def remove_no_cycle_edges(
-    edgelist_path: Path, output_path: Path, n_threads: int = 1
-) -> tuple[int, pd.DataFrame]:
+    input_edgelist_path: Path,
+    n_threads: int = 1,
+    working_dir: Path = DEFAULT_WORKING_DIR,
+) -> tuple[int, pd.DataFrame, Path]:
     """Remove edges that do not participate in any cycles from the edgelist.
 
     Args:
-        edgelist_path (Path): Path to the input edgelist parquet file.
-        output_path (Path): Path to the output edgelist parquet file.
-        n_threads (int): Number of parallel threads to use.
+        input_edgelist_path: Path to the input edgelist Parquet file (hive layout supported).
+        n_threads: Number of parallel threads to use.
+        working_dir: Directory for the merged output (``working_edgelist_with_cycle_verification``);
+            defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     Returns:
-        total_removed_edges (int): Total number of edges removed.
-        edge_cycle_length_dist (pd.DataFrame): Distribution of cycle lengths for edges remaining after cycle verification step.
+        Total number of edges removed, the distribution of cycle lengths for remaining edges,
+        and the path to the written output (hive-style Parquet under ``working_edgelist_with_cycle_verification``).
 
     """
+    output_path = working_dir / "working_edgelist_with_cycle_verification"
     logger.info("Starting removal of no-cycle edges")
     with tempfile.TemporaryDirectory() as tmpdir:
         with duckdb.connect(tmpdir + "/temp_duckdb.db") as con:
@@ -307,7 +312,7 @@ def remove_no_cycle_edges(
                 CREATE TEMP TABLE graph_edgelist AS
                 SELECT * FROM read_parquet(?)
                 """,
-                [str(edgelist_path)],
+                [str(input_edgelist_path)],
             )
             con.execute(
                 """
@@ -345,7 +350,7 @@ def remove_no_cycle_edges(
                 f"Processing {len(components)} components in parallel using {n_threads} threads."
             )
             n_removed_edges_list = Parallel(n_jobs=n_threads)(
-                delayed(process_component)(comp_name, edgelist_path, tmpdir)
+                delayed(process_component)(comp_name, input_edgelist_path, tmpdir)
                 for comp_name in components
             )
             if len(n_removed_edges_list) == 0:
@@ -382,4 +387,4 @@ def remove_no_cycle_edges(
                 "COPY merged_edgelist TO ? (FORMAT PARQUET)",
                 [str(output_path)],
             )
-            return total_removed_edges, edge_cycle_length_dist
+            return total_removed_edges, edge_cycle_length_dist, output_path

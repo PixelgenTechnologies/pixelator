@@ -457,27 +457,22 @@ def find_components(
         collapsed_edgelist_path=input_edgelist_path
     )
 
-    no_clash_edgelist_path = working_dir / "no_clash_edgelist.parquet"
-    component_stats = remove_clashing_umis(
+    no_clash_edgelist_path, component_stats = remove_clashing_umis(
         input_edgelist_path=input_edgelist_path,
-        no_clash_edgelist_path=no_clash_edgelist_path,
         component_stats=component_stats,
+        working_dir=working_dir,
     )
 
-    filtered_edgelist_path = working_dir / "filtered_edgelist.parquet"
-    component_stats = filter_edgelist_by_read_count(
+    filtered_edgelist_path, component_stats = filter_edgelist_by_read_count(
         input_edgelist_path=no_clash_edgelist_path,
-        filtered_edgelist_path=filtered_edgelist_path,
         min_read_count=min_read_count,
         component_stats=component_stats,
+        working_dir=working_dir,
     )
 
-    node_map_path = working_dir / "node_map.parquet"
-    working_edgelist_path = working_dir / "working_edgelist.parquet"
-    create_working_edgelist(
+    working_edgelist_path, node_map_path = create_working_edgelist(
         input_edgelist_path=filtered_edgelist_path,
-        node_map_path=node_map_path,
-        working_edgelist_path=working_edgelist_path,
+        working_dir=working_dir,
     )
 
     logger.info("Running FLP + Leiden native step")
@@ -520,9 +515,9 @@ def find_components(
 
     hive_partitioned_edgelist_path, discard_sizes = (
         write_hive_partitioned_edgelist_without_small_components(
-            partitioned_edgelist_path=partitioned_edgelist_path,
-            working_dir=working_dir,
+            input_edgelist_path=partitioned_edgelist_path,
             min_component_size_to_prune=refinement_options.initial_stage_options.min_component_size_to_prune,
+            working_dir=working_dir,
         )
     )
 
@@ -559,13 +554,12 @@ def find_components(
     if edge_cycle_verification:
         logger.info("Starting edge cycle verification.")
         time_start = time.time()
-        n_edges_removed, edge_cycle_length_dist = remove_no_cycle_edges(
-            edgelist_path=latest_working_edgelist_path,
-            output_path=working_dir / "working_edgelist_with_cycle_verification",
-            n_threads=n_threads,
-        )
-        latest_working_edgelist_path = (
-            working_dir / "working_edgelist_with_cycle_verification"
+        n_edges_removed, edge_cycle_length_dist, latest_working_edgelist_path = (
+            remove_no_cycle_edges(
+                input_edgelist_path=latest_working_edgelist_path,
+                n_threads=n_threads,
+                working_dir=working_dir,
+            )
         )
         component_stats.edges_removed_in_cycle_verification = n_edges_removed
         component_stats.edge_cycle_length_distribution = (
@@ -584,7 +578,7 @@ def find_components(
         component_size_threshold=component_size_threshold,
         component_stats=component_stats,
     )
-    umi_map = pl.read_parquet(working_dir / "node_map.parquet")
+    umi_map = pl.read_parquet(node_map_path)
     final_edgelist_with_components = latest_edgelist_filtered.with_columns(
         umi1=pl.col("umi1").replace_strict(
             umi_map["working_name"], umi_map["original_name"]
