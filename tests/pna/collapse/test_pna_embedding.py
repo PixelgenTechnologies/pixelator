@@ -1,10 +1,13 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import itertools
+
 import numpy as np
 import pytest
 
 from pixelator.pna.demux.barcode_demuxer import PNAEmbedding
 from pixelator.pna.utils import pack_2bits, unpack_2bits
+from pixelator.pna.utils.two_bit_encoding import pack_4bits, unpack_4bits
 
 
 @pytest.fixture(scope="module")
@@ -99,3 +102,23 @@ def test_unpack_2bits(umi, packed):
 def test_pack_2bits(umi, packed):
     packed_umi = pack_2bits(umi)
     assert packed_umi == packed
+
+
+def test_pack_unpack_2_and_4bits():
+    """Test that packing and unpacking with 2 and 4 bits per nucleotide is consistent.
+    itertools.combinations_with_replacement is used to generate all possible combinations of
+    15 nucleotides (G, T, C, A, N) and test that packing and unpacking returns the original
+    sequence. (Note that "all possible combinations" is NOT all possible orders of these combinations
+    i.e. we reduce the full 15 mer space to only 3876 sequences, so this test is not too slow.)
+    """
+    for dna in itertools.combinations_with_replacement(b"GTCAN", 15):
+        original_dna = ("".join(chr(nt) for nt in dna)).encode()
+        packed_unpacked_dna = unpack_4bits(pack_4bits(original_dna), 15)
+        assert original_dna == packed_unpacked_dna, (
+            f"4bit packing unpacking failed: {original_dna} != {packed_unpacked_dna}"
+        )
+    if b"N" not in original_dna:
+        packed_unpacked_dna_2bits = unpack_2bits(pack_2bits(original_dna), 15)
+        assert original_dna == packed_unpacked_dna_2bits, (
+            f"2bit packing unpacking failed: {original_dna} != {packed_unpacked_dna_2bits}"
+        )

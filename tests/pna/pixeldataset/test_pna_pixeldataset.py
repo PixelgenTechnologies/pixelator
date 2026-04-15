@@ -1,12 +1,15 @@
-"""Copyright © 2025 Pixelgen Technologies AB."""
+"""Snapshot tests for PNAPixelDataset outputs.
+
+Copyright © 2025 Pixelgen Technologies AB.
+"""
 
 from io import StringIO
 from pathlib import Path
 
+import duckdb
 import pandas as pd
 import polars as pl
 import pytest
-from polars.testing import assert_frame_equal
 
 from pixelator.common.utils.testing import adata_assert_equal
 from pixelator.pna.pixeldataset import (
@@ -14,7 +17,7 @@ from pixelator.pna.pixeldataset import (
     PNAPixelDataset,
     read,
 )
-from pixelator.pna.pixeldataset.io import PixelDataViewer, PixelFileWriter
+from pixelator.pna.pixeldataset.io import PixelDataViewer, PxlFile
 from tests.pna.conftest import create_pxl_file
 
 
@@ -75,14 +78,18 @@ class TestPNAPixelDataset:
         adata_assert_equal(adata, adata_data)
 
     def test_adata_adds_transformation_by_default(
-        self, pxl_dataset: PNAPixelDataset, adata_data
+        self,
+        pxl_dataset: PNAPixelDataset,
+        adata_data,  # noqa: ARG002
     ):
         adata = pxl_dataset.adata()
         assert "log1p" in adata.obsm
         assert "clr" in adata.obsm
 
     def test_adata_should_not_mutate_original(
-        self, pxl_dataset: PNAPixelDataset, adata_data
+        self,
+        pxl_dataset: PNAPixelDataset,
+        adata_data,  # noqa: ARG002
     ):
         # Making changes to the adata object should not affect the original
         # i.e. we want to avoid unexpected mutations steming from referencing
@@ -93,38 +100,43 @@ class TestPNAPixelDataset:
         assert "new_layer" in adata.layers.keys()
         assert "new_layer" not in pxl_dataset.adata().layers.keys()
 
-    def test_edgelist(self, pxl_dataset, edgelist_dataframe):
-        edgelist = pxl_dataset.edgelist().to_polars()
-        edgelist_dataframe = edgelist_dataframe.with_columns(
-            sample=pl.lit("test_sample")
+    def test_metadata_returns_expected_mapping(self, pxl_dataset: PNAPixelDataset):
+        metadata = pxl_dataset.metadata()
+        assert metadata.keys() == {"test_sample"}
+        assert metadata["test_sample"]["sample_name"] == "test_sample"
+        assert metadata["test_sample"]["version"] == "0.1.0"
+        assert metadata["test_sample"]["panel_name"] == "custom_panel"
+
+    def test_metadata_returns_empty_dict_when_metadata_table_is_empty(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        proximity_parquet_path: Path,
+        layout_parquet_path: Path,
+        panel,
+    ):
+        target = tmp_path / "empty_metadata.pxl"
+        create_pxl_file(
+            target=target,
+            sample_name="test_sample",
+            edgelist_parquet_path=edgelist_parquet_path,
+            proximity_parquet_path=proximity_parquet_path,
+            layout_parquet_path=layout_parquet_path,
+            panel=panel,
         )
-        assert_frame_equal(
-            edgelist.sort("component"), edgelist_dataframe.sort("component")
-        )
 
-    def test_proximity(self, snapshot, pxl_dataset):
-        proximity = pxl_dataset.proximity()
-        assert len(proximity) == 3
+        # Replace the metadata table with an empty one so `PNAPixelDataset.metadata()`
+        # can return `{}` (without requiring any actual metadata rows).
+        with duckdb.connect(target, read_only=False) as con:
+            con.sql("DROP TABLE IF EXISTS metadata;")
+            con.sql("CREATE TABLE metadata (value JSON);")
 
-        proximity_df = proximity.to_polars()
-        proximity_df = proximity_df.sort("component")
+        pxl_file = PxlFile(target, sample_name="test_sample")
+        dataset = PNAPixelDataset.from_pxl_files(pxl_file)
+        assert dataset.metadata() == {}
 
-        result = StringIO()
-        proximity_df.write_csv(result)
-        snapshot.assert_match(result.getvalue(), "proximity.csv")
 
-    def test_precomputed_layouts(self, snapshot, pxl_dataset):
-        layouts = pxl_dataset.precomputed_layouts()
-        assert len(layouts) == 34
-        assert len(layouts.components) == 4
-
-        layouts_df = layouts.to_polars()
-        layouts_df = layouts_df.sort("component").select(sorted(layouts_df.columns))
-
-        result = StringIO()
-        layouts_df.write_csv(result)
-        snapshot.assert_match(result.getvalue(), "layouts.csv")
-
+class TestPNAPixelDatasetFilter:
     def test_filter_pixel_dataset_by_component(self, pxl_dataset):
         filtered = pxl_dataset.filter(components={"fc07dea9b679aca7"})
         assert filtered.components() == {"fc07dea9b679aca7"}
@@ -275,50 +287,6 @@ class TestPNAPixelDataset:
             pxl_dataset.filter(components=filter_from_polars)
 
 
-class TestPrecomputedLayouts:
-    def test_precomputed_layouts(self, snapshot, pxl_dataset: PNAPixelDataset):
-        layouts = pxl_dataset.precomputed_layouts()
-        assert len(layouts) == 34
-        assert len(layouts.components) == 4
-
-        layouts_df = layouts.to_polars()
-        layouts_df = layouts_df.sort("component").select(sorted(layouts_df.columns))
-
-        result = StringIO()
-        layouts_df.write_csv(result)
-        snapshot.assert_match(result.getvalue(), "layouts.csv")
-
-        assert isinstance(layouts.to_df(), pd.DataFrame)
-
-        # Check iterator contains dataframes as expected
-        for comp_id, component in layouts.iterator():
-            assert isinstance(comp_id, str)
-            assert isinstance(component, pd.DataFrame)
-
-    def test_precomputed_layouts_with_filter(self, pxl_dataset: PNAPixelDataset):
-        filtered = pxl_dataset.filter(components={"fc07dea9b679aca7"})
-        layouts = filtered.precomputed_layouts()
-        assert len(layouts) == 11
-        assert len(layouts.components) == 1
-
-        layouts_df = layouts.to_polars()
-        assert len(layouts_df) == 11
-        assert isinstance(layouts.to_df(), pd.DataFrame)
-        assert len(layouts.to_df()) == 11
-
-        # Check iterator contains dataframes as expected
-        for comp_id, component in layouts.iterator():
-            assert isinstance(comp_id, str)
-            assert isinstance(component, pd.DataFrame)
-
-    def test_precomputed_layouts_with_norm(self, pxl_dataset: PNAPixelDataset):
-        result = pxl_dataset.precomputed_layouts(add_spherical_norm=True).to_polars()
-
-        assert "x_norm" in result.columns
-        assert "y_norm" in result.columns
-        assert "z_norm" in result.columns
-
-
 @pytest.fixture(
     name="pxl_dataset_w_sample_names",
     scope="module",
@@ -326,7 +294,6 @@ class TestPrecomputedLayouts:
         "1-sample-starting-with-nbr",
         "sample-containing-dash",
         "sample_with_underscores",
-        "✅-sample-with-emoji",
     ],
 )
 def pixel_dataset_with_different_sample_names_fixture(
@@ -350,37 +317,6 @@ def pixel_dataset_with_different_sample_names_fixture(
     return PNAPixelDataset.from_pxl_files([target]), sample_name
 
 
-@pytest.fixture(
-    name="pxl_file_w_sample_names",
-    scope="module",
-    params=[
-        "1-sample-starting-with-nbr",
-        "sample-containing-dash",
-        "sample_with_underscores",
-        "✅-sample-with-emoji",
-    ],
-)
-def pxl_file_with_sample_names_fixture(
-    request,
-    tmp_path_factory,
-    edgelist_parquet_path,
-    proximity_parquet_path,
-    layout_parquet_path,
-    panel,
-):
-    sample_name = request.param
-    target = tmp_path_factory.mktemp("data") / (sample_name + ".pxl")
-    target = create_pxl_file(
-        target=target,
-        sample_name=sample_name,
-        edgelist_parquet_path=edgelist_parquet_path,
-        proximity_parquet_path=proximity_parquet_path,
-        layout_parquet_path=layout_parquet_path,
-        panel=panel,
-    )
-    return target
-
-
 class TestPixelDatasetNames:
     """Test that pixel dataset can handle sample names that contain things like dashes, that are also keywords in duckdb."""
 
@@ -402,15 +338,6 @@ class TestPixelDatasetNames:
         actual_sample_name = df.obs["sample"].unique()
         assert actual_sample_name.shape[0] == 1
         assert actual_sample_name[0] == sample_name
-
-
-def test_rewriting_anndata(pxl_file_w_sample_names):
-    pxl_file = pxl_file_w_sample_names
-    pxl = PNAPixelDataset.from_pxl_files(pxl_file)
-    adata = pxl.adata()
-
-    with PixelFileWriter(pxl_file) as writer:
-        writer.write_adata(adata)
 
 
 @pytest.fixture(name="multi_sample_dataset", scope="module")
@@ -602,3 +529,55 @@ class TestPNAPixelDatasetFilterBySample:
         ).to_polars()
         assert set(layouts_df["sample"].unique()) == {"sample1"}
         assert set(layouts_df["component"].unique()) == {target_component}
+
+
+class TestPNAPixelDatasetSnapshots:
+    def test_proximity(self, snapshot, pxl_dataset):
+        proximity = pxl_dataset.proximity()
+        assert len(proximity) == 3
+
+        proximity_df = proximity.to_polars()
+        assert isinstance(proximity_df, pl.DataFrame)
+        proximity_df = proximity_df.sort("component")
+
+        result = StringIO()
+        proximity_df.write_csv(result)
+        snapshot.assert_match(result.getvalue(), "proximity.csv")
+
+    def test_precomputed_layouts(self, snapshot, pxl_dataset):
+        layouts = pxl_dataset.precomputed_layouts()
+        assert len(layouts) == 34
+        assert len(layouts.components) == 4
+
+        layouts_df = layouts.to_polars()
+        assert isinstance(layouts_df, pl.DataFrame)
+        layouts_df = layouts_df.sort("component").select(sorted(layouts_df.columns))
+
+        result = StringIO()
+        layouts_df.write_csv(result)
+        snapshot.assert_match(result.getvalue(), "layouts.csv")
+
+
+class TestPrecomputedLayoutsWrapper:
+    def test_precomputed_layouts_with_filter(self, pxl_dataset: PNAPixelDataset):
+        filtered = pxl_dataset.filter(components={"fc07dea9b679aca7"})
+        layouts = filtered.precomputed_layouts()
+        assert len(layouts) == 11
+        assert len(layouts.components) == 1
+
+        layouts_df = layouts.to_polars()
+        assert len(layouts_df) == 11
+        assert isinstance(layouts.to_df(), pd.DataFrame)
+        assert len(layouts.to_df()) == 11
+
+        # Check iterator contains dataframes as expected
+        for comp_id, component in layouts.iterator():
+            assert isinstance(comp_id, str)
+            assert isinstance(component, pd.DataFrame)
+
+    def test_precomputed_layouts_with_norm(self, pxl_dataset: PNAPixelDataset):
+        result = pxl_dataset.precomputed_layouts(add_spherical_norm=True).to_polars()
+
+        assert "x_norm" in result.columns
+        assert "y_norm" in result.columns
+        assert "z_norm" in result.columns

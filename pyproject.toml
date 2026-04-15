@@ -74,21 +74,21 @@ Documentation = "https://software.pixelgen.com"
 [dependency-groups]
 dev = [
     "ruff",
-    "pre-commit>=3.2.2,<4",
+    "pre-commit",
     "coverage",
     "invoke",
     "isort",
-    "pytest>=7.0.0,<8",
-    "pytest-mpl>=0.17.0,<0.18",
+    "pytest",
+    "pytest-mpl",
     "mypy",
     "pytest-snapshot",
     "pytest-cov",
     "pytest-mock",
     "pytest-dependency",
-    "pytest-benchmark>=4.0.0,<5",
-    "pytest-playwright>=0.4.4,<0.5",
-    "pytest-watcher>=0.4.3",
-    "ipython>=8.38.0",
+    "pytest-benchmark",
+    "pytest-playwright",
+    "pytest-watcher",
+    "ipython",
 ]
 
 

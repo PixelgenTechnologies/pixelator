@@ -24,8 +24,8 @@ from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndat
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
-from pixelator.pna.pixeldataset import PNAPixelDataset, PxlFile
-from pixelator.pna.pixeldataset.io import PixelFileWriter
+from pixelator.pna.pixeldataset import PNAPixelDataset
+from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 
 logger = logging.getLogger(__name__)
 
@@ -248,8 +248,8 @@ def write_denoised_edgelist(
         output_edgelist_path (str): The file path where the filtered edgelist Parquet file will be saved.
 
     """
-    with pxl.view as con:
-        con.execute(
+    with pxl.view.open() as session:
+        session.get_connection().execute(
             f"""
             COPY(
                 SELECT *
@@ -337,7 +337,7 @@ class DenoiseOneCore(PerComponentTask):
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
         try:
-            panel = PNAAntibodyPanel.from_pxl(pxl_file_target.path)
+            panel = PNAAntibodyPanel.from_pxl_file(pxl_file_target.path)
         except KeyError:
             # If pxl file does not contain panel data, try to load it from
             # the panel name.

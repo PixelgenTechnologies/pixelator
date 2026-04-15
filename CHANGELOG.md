@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.25.0] - 2026-04-15
+
+### Added
+
+- Add sample calling functionality
+- Add FLAG and FMC63 v3 panels
+
+### Changed
+- Change default value for parameter axis of function clr_transformation to be 1.
+- Refactor IO classes to handle .pxl files
+
+### Fixed
+
+- Fix logging for log1p_transformation and clr_transformation to state that the stats correspond to components and not nodes.
+- Fix bug in unpacking 4bit packed sequences.
+- Fix bug in sample calling that removed the ending of antibodies that ended with `-<digit>`.
+
 ## [0.24.0] - 2026-03-16
 
 ### Added
@@ -20,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use 64-bit unsigned integers for counts in collapse step to support >4.2B reads.
 - Remove the warning when setting minimum size manually. It is observed that 8000 is a
   reliable minimum size for components.
+- Pixeldataset have been refactor to be more modularized
 
 ### Fixed
 

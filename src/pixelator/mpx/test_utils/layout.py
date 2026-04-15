@@ -15,13 +15,15 @@ class BaseLayoutTestsMixin(BaseWorkflowTestMixin):
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
     ```
-    @pytest.mark.dependency(depends=["test_layout_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_layout_run"])
     ```
     """
 
     __stage_key__ = "layout"
 
-    @pytest.mark.dependency(name="test_layout_run", depends=["test_annotate_run"])
+    @pytest.mark.dependency(
+        scope="class", name="test_layout_run", depends=["test_annotate_run"]
+    )
     def test_layout_run(self):
         params = self.__get_parameters()
         verbose = self.__get_options("common").get("verbose")
@@ -52,13 +54,13 @@ class BaseLayoutTestsMixin(BaseWorkflowTestMixin):
         self.context.run_command("layout", command, input_files)
         assert self.__this_result.exit_code == 0
 
-    @pytest.mark.dependency(depends=["test_layout_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_layout_run"])
     def test_layout_dataset_exists(self):
         pxl_files = (self.workdir / "layout").glob("*.layout.dataset.pxl")
         for f in pxl_files:
             assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_layout_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_layout_run"])
     def test_layout_report_exists(self):
         json_files = (self.workdir / "layout").glob("*.report.json")
         for f in json_files:
