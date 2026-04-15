@@ -5,38 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [x.x.x] - TBD
+
+### Added
+- New implementation of `pixelator single-cell-pna graph`,
+  This version introduces a new workflow, combining a pre-processing step
+  using the fast label propagation algorithm, a main step using the Leiden
+  algorithm, and a second Leiden refinement pass on the remaining cell
+  clusters.
+
+  Finally, this introduces an optional crossing edge filter step using cycle verification.
+
+  This replaces the old graph command, which has been renamed into `graph_legacy`.
+
+  Instead of parameters `--min-component-size-in-refinement` and
+  `--min-component-size-to-prune`, this new implementation uses a common
+  threshold set by `--component-size-min-threshold`, or 8000 by default.
+- Dependency: `pixelgen-pixelator-core` (Python bindings for the native graph step).
+
+### Changed
+- The previous implementation has been renamed and is available with `pixelator single-cell-pna graph_legacy`.
+
+### Parameters
+
+- `pixelator single-cell-pna graph`
+
+| Old parameter                        | New parameter               |
+| ------------------------------------ | --------------------------- |
+|                                      | `--edge-cycle-verification` |
+| `--leiden-iterations`                |                             |
+| `--min-component-size-in-refinement` |                             |
+| `--min-component-size-to-prune`      |                             |
+
+> [!NOTE]
+> Parameter has been **updated** if both old and new parameter information is present.
+> Parameter has been **added** if just the new parameter information is present.
+> Parameter has been **removed** if new parameter information isn't present.
+
+### Fixed
+
 ## [0.25.0] - 2026-04-15
 
 ### Added
 
 - Add sample calling functionality
 - Add FLAG and FMC63 v3 panels
-- New default graph step for `pixelator single-cell-pna graph`, using fast
-  label propagation plus native Leiden (`pixelgen-pixelator-core`) and optional
-  edge-cycle verification.
-- Dependency: `pixelgen-pixelator-core` (Python bindings for the native graph pipeline).
 
 ### Changed
 - Change default value for parameter axis of function clr_transformation to be 1.
 - Refactor IO classes to handle .pxl files
-
-- **PNA graph command:** The previous implementation is exposed as `pixelator single-cell-pna graph_legacy`.
-
-#### `graph` (new) — flags vs `graph_legacy`
-
-Compared to `graph_legacy`, `graph` adds and drops the flags in the table
-below. `--initial-stage-leiden-resolution` and
-`--refinement-stage-leiden-resolution` exist on both commands; on `graph` they
-apply to the native staged pipeline instead of the legacy Leiden loop.
-Refinement and pruning sizes follow `--component-size-min-threshold` when set,
-otherwise `MIN_PNA_COMPONENT_SIZE`, instead of the legacy refinement and prune
-flags.
-
-| Topic | Parameters **added** on `graph` | Parameters **removed** from `graph` (still on `graph_legacy` only) |
-| ----- | ------------------------------ | ------------------------------------------------------------------- |
-| Leiden tuning | — | `--leiden-iterations` |
-| Refinement / pruning | — | `--min-component-size-in-refinement`, `--min-component-size-to-prune` |
-| Optional graph cleanup | `--edge-cycle-verification` | — |
 
 ### Fixed
 
