@@ -3,6 +3,7 @@
 Copyright © 2025 Pixelgen Technologies AB.
 """
 
+import logging
 from pathlib import Path
 
 import anndata
@@ -16,7 +17,12 @@ from pixelator.pna import read
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset.io import PixelFileWriter
-from pixelator.pna.sample_calling import collect_hash_info, sample_calling
+from pixelator.pna.sample_calling import (
+    collect_hash_info,
+    create_final_report,
+    sample_calling,
+    warn_if_undetermined_has_high_confidence,
+)
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
 from pixelator.pna.sample_calling.sample_calling import (
     _add_original_hash_counts_to_obs,
@@ -308,6 +314,7 @@ def test_collect_hash_info_should_use_all_hashing_antibodies(sample_hashed_pixel
     # Check the sample calling confidence
 
 
+@pytest.mark.slow
 def test_sample_calling(sample_hashed_pixel_files, tmp_path):
     """Test the sample calling functionality."""
     pxl = read(sample_hashed_pixel_files)
@@ -359,6 +366,7 @@ def test_sample_calling(sample_hashed_pixel_files, tmp_path):
             )
 
 
+@pytest.mark.slow
 def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
     tmp_path: Path,
 ):
@@ -458,7 +466,6 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
         hashing_antibody_mapping=hashing_antibodies,
         output_folder=out_dir,
         remove_incompatible=True,
-        save_undetermined=False,
         confidence_threshold=0.5,
     )
 
@@ -488,7 +495,6 @@ def test_sample_calling_with_undetermined(sample_hashed_pixel_files, tmp_path):
         hashing_antibody_mapping=hashed_antibodies,
         output_folder=output_folder,
         remove_incompatible=True,
-        save_undetermined=True,
         confidence_threshold=confidence_threshold,
     )
 
@@ -557,3 +563,196 @@ def test_collect_nodes_to_remove_one_sample_in_pool():
     assert "cause" in result.columns
     # Incompatible = {h2, h3}; no edges use those; single edge (1,2) stays, no stranded. No crash.
     assert result.shape[1] == 2
+
+
+class _FakeFilteredDataset:
+    """Minimal stand-in for ``PNAPixelDataset`` after ``filter()`` for ``create_final_report`` tests."""
+
+    def __init__(
+        self,
+        *,
+        component_ids: set[str],
+        sample_confidences: list[float] | None = None,
+    ):
+        self._component_ids = component_ids
+        self._sample_confidences = sample_confidences
+
+    def components(self) -> set[str]:
+        return self._component_ids
+
+    def adata(
+        self,
+        add_log1p_transform: bool = True,
+        add_clr_transform: bool = True,
+    ) -> anndata.AnnData:
+        assert self._sample_confidences is not None
+        n = len(self._sample_confidences)
+        # Explicit string obs index avoids AnnData ImplicitModificationWarning on index coercion.
+        obs_index = [f"comp_{i}" for i in range(n)]
+        return anndata.AnnData(
+            X=np.zeros((n, 1)),
+            obs=pd.DataFrame(
+                {"sample_confidence": self._sample_confidences},
+                index=obs_index,
+            ),
+        )
+
+
+class _FakeMergedDataset:
+    """Mimics a merged post-sample-calling ``PNAPixelDataset`` for unit-testing ``create_final_report``."""
+
+    def __init__(
+        self,
+        *,
+        all_components: set[str],
+        undetermined_components: set[str] | None,
+        confidences_per_sample: dict[str, list[float]],
+    ):
+        self._all_components = all_components
+        self._undetermined_components = undetermined_components
+        self._confidences_per_sample = confidences_per_sample
+
+    def components(self) -> set[str]:
+        return self._all_components
+
+    def sample_names(self) -> set[str]:
+        return set(self._confidences_per_sample.keys())
+
+    def filter(
+        self,
+        samples=None,
+        components=None,
+        markers=None,
+    ) -> _FakeFilteredDataset:
+        if samples == "undetermined":
+            if self._undetermined_components is None:
+                raise ValueError(
+                    "One or more of the specified samples do not exist in the dataset."
+                )
+            return _FakeFilteredDataset(
+                component_ids=self._undetermined_components,
+                sample_confidences=self._confidences_per_sample.get("undetermined"),
+            )
+        if samples not in self._confidences_per_sample:
+            raise ValueError(
+                "One or more of the specified samples do not exist in the dataset."
+            )
+        return _FakeFilteredDataset(
+            component_ids=set(),
+            sample_confidences=self._confidences_per_sample[samples],
+        )
+
+
+def test_create_final_report_works_when_no_undetermined_sample():
+    """When ``undetermined`` is not a sample, the success rate is 100%."""
+    ds = _FakeMergedDataset(
+        all_components={"c1", "c2", "c3"},
+        undetermined_components=None,
+        confidences_per_sample={
+            "PBMC": [0.99, 0.98],
+            "Raji": [0.97],
+        },
+    )
+    report = create_final_report(ds)  # type: ignore[arg-type]
+
+    assert report.sample_id == "all"
+    assert report.product_id == "single-cell-pna"
+    assert report.report_type == "sample_calling_total"
+    assert report.number_of_components == 3
+    assert report.percentage_of_components_successfully_called == 1.0
+    assert report.sample_confidences_per_sample == {
+        "PBMC": [0.99, 0.98],
+        "Raji": [0.97],
+    }
+
+
+def test_create_final_report_percentage_excludes_undetermined_components():
+    """Success rate is 1 minus the fraction of components in the undetermined sample."""
+    ds = _FakeMergedDataset(
+        all_components={"a", "b", "c", "d"},
+        undetermined_components={"d"},
+        confidences_per_sample={
+            "PBMC": [1.0, 1.0, 1.0],
+            "undetermined": [0.2],
+        },
+    )
+    report = create_final_report(ds)  # type: ignore[arg-type]
+
+    assert report.number_of_components == 4
+    assert report.percentage_of_components_successfully_called == pytest.approx(0.75)
+    assert report.sample_confidences_per_sample["PBMC"] == [1.0, 1.0, 1.0]
+    assert report.sample_confidences_per_sample["undetermined"] == [0.2]
+
+
+def test_create_final_report_zero_success_when_all_components_undetermined():
+    """When every component belongs to ``undetermined``, the success rate is 0."""
+    ds = _FakeMergedDataset(
+        all_components={"x", "y"},
+        undetermined_components={"x", "y"},
+        confidences_per_sample={"undetermined": [0.1, 0.2]},
+    )
+    report = create_final_report(ds)  # type: ignore[arg-type]
+
+    assert report.number_of_components == 2
+    assert report.percentage_of_components_successfully_called == 0.0
+    assert report.sample_confidences_per_sample["undetermined"] == [0.1, 0.2]
+
+
+def test_warn_if_undetermined_has_high_confidence_logs_when_fraction_above_five_percent(
+    caplog,
+):
+    """More than 5% strictly above the threshold should emit one WARNING."""
+    with caplog.at_level(
+        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
+    ):
+        warn_if_undetermined_has_high_confidence(
+            undetermined_sample_confidences=np.array([0.95] * 6 + [0.1] * 94),
+            confidence_threshold=0.9,
+        )
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelname == "WARNING"
+    assert "samplesheet" in caplog.text
+
+
+def test_warn_if_undetermined_has_high_confidence_no_log_when_fraction_is_exactly_five_percent(
+    caplog,
+):
+    """The check uses ``> 0.05``, so exactly 5% above threshold must not warn."""
+    with caplog.at_level(
+        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
+    ):
+        warn_if_undetermined_has_high_confidence(
+            undetermined_sample_confidences=np.array([0.95] * 5 + [0.1] * 95),
+            confidence_threshold=0.9,
+        )
+    assert caplog.records == []
+
+
+def test_warn_if_undetermined_has_high_confidence_no_log_when_all_at_or_below_threshold(
+    caplog,
+):
+    """Values equal to the threshold are not counted as high confidence (strict ``>``)."""
+    with caplog.at_level(
+        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
+    ):
+        warn_if_undetermined_has_high_confidence(
+            undetermined_sample_confidences=np.full(50, 0.9),
+            confidence_threshold=0.9,
+        )
+        warn_if_undetermined_has_high_confidence(
+            undetermined_sample_confidences=np.array([0.1, 0.2, 0.5]),
+            confidence_threshold=0.9,
+        )
+    assert caplog.records == []
+
+
+def test_warn_if_undetermined_has_high_confidence_logs_for_single_high_value(caplog):
+    """One component above threshold is 100% of the undetermined set, which is > 5%."""
+    with caplog.at_level(
+        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
+    ):
+        warn_if_undetermined_has_high_confidence(
+            undetermined_sample_confidences=np.array([0.99]),
+            confidence_threshold=0.9,
+        )
+    assert len(caplog.records) == 1
