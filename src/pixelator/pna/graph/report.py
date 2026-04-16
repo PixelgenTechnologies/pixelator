@@ -70,7 +70,7 @@ class GraphStatistics:
     edges_removed_in_cycle_verification: int = 0
     stranded_nodes_pre_recovery: int = 0
     edge_cycle_length_distribution: dict[int, int] = field(default_factory=dict)
-    post_flp_component_sizes: dict[int, int] = field(default_factory=dict)
+    post_flp_community_sizes: dict[int, int] = field(default_factory=dict)
 
     def to_dict(self):
         """Convert the object to a dictionary."""
@@ -254,7 +254,7 @@ class GraphSampleReport(SampleReport):
         ),
     )
 
-    post_flp_component_sizes: dict[int, int] = pydantic.Field(
+    post_flp_community_sizes: dict[int, int] = pydantic.Field(
         default_factory=dict,
         description="Component size distribution after Fast label propagation.",
     )

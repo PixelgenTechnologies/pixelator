@@ -184,7 +184,7 @@ def test_find_components_small(
         assert (
             sum(
                 size * count
-                for size, count in component_stats.post_flp_component_sizes.items()
+                for size, count in component_stats.post_flp_community_sizes.items()
             )
             == 1200
         )

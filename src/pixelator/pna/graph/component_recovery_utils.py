@@ -52,7 +52,7 @@ def populate_component_stats_from_hybrid_detection(
     )
     component_stats.crossing_edges_removed_initial_stage = n_crossing_edges
     component_stats.crossing_edges_removed = n_crossing_edges
-    component_stats.post_flp_component_sizes = (
+    component_stats.post_flp_community_sizes = (
         post_flp_stats.component_size_distribution
     )
 

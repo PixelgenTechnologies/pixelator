@@ -49,7 +49,7 @@
     "edges_removed_in_cycle_verification": 0,
     "stranded_nodes_pre_recovery": 0,
     "edge_cycle_length_distribution": {},
-    "post_flp_component_sizes": {},
+    "post_flp_community_sizes": {},
     "fraction_of_discarded_components": 0.25,
     "fraction_of_aggregate_components": 16.666666666666668,
     "edge_saturation": 0.0,
