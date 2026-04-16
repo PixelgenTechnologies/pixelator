@@ -5,7 +5,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 
 import pydantic
 
@@ -62,6 +62,15 @@ class GraphStatistics:
     read_count_in_aggregates: int = 0
     edge_count_in_aggregates: int = 0
     node_count_in_aggregates: int = 0
+
+    umis_input: int = 0
+    umi1_clashes: int = 0
+    umi2_clashes: int = 0
+    umi1_umi2_clashes: int = 0
+    edges_removed_in_cycle_verification: int = 0
+    stranded_nodes_pre_recovery: int = 0
+    edge_cycle_length_distribution: dict[int, int] = field(default_factory=dict)
+    post_flp_community_sizes: dict[int, int] = field(default_factory=dict)
 
     def to_dict(self):
         """Convert the object to a dictionary."""
@@ -149,6 +158,14 @@ class GraphSampleReport(SampleReport):
         description="The number of crossing edges removed in the initial step. Will be 0 if multiplet recovery was not enabled.",
     )
 
+    max_recursion_depth: int = pydantic.Field(
+        default=0,
+        description=(
+            "Maximum multiplet-recovery refinement depth reached. "
+            "Will be 0 if multiplet recovery was not enabled or no refinement ran."
+        ),
+    )
+
     component_size_min_filtering_threshold: int | None = pydantic.Field(
         ..., description="The minimum component size threshold used for filtering."
     )
@@ -192,6 +209,54 @@ class GraphSampleReport(SampleReport):
 
     edge_count_in_aggregates: int = pydantic.Field(
         ..., description="The number of edges in aggregates."
+    )
+
+    node_count_in_aggregates: int = pydantic.Field(
+        default=0,
+        description="The number of UMIs (nodes) in aggregate components.",
+    )
+
+    umis_input: int = pydantic.Field(
+        default=0, description="Number of UMIs in the input edgelist."
+    )
+
+    umi1_clashes: int = pydantic.Field(
+        default=0,
+        description="Number of UMI1 appearing with multiple markers in the input edgelist.",
+    )
+
+    umi2_clashes: int = pydantic.Field(
+        default=0,
+        description="Number of UMI2 appearing with multiple markers in the input edgelist.",
+    )
+
+    umi1_umi2_clashes: int = pydantic.Field(
+        default=0,
+        description="Number of UMIs appearing as both UMI1 and UMI2 in the input edgelist.",
+    )
+
+    edges_removed_in_cycle_verification: int = pydantic.Field(
+        default=0,
+        description="Number of edges removed during cycle verification step.",
+    )
+
+    stranded_nodes_pre_recovery: int = pydantic.Field(
+        default=0,
+        description=(
+            "Number of nodes in connected components smaller than MIN_PNA_COMPONENT_SIZE."
+        ),
+    )
+
+    edge_cycle_length_distribution: dict[int, int] = pydantic.Field(
+        default_factory=dict,
+        description=(
+            "Distribution of cycle lengths for edges remaining after cycle verification step."
+        ),
+    )
+
+    post_flp_community_sizes: dict[int, int] = pydantic.Field(
+        default_factory=dict,
+        description="Component size distribution after Fast label propagation.",
     )
 
     @pydantic.computed_field(  # type: ignore
@@ -255,3 +320,13 @@ class GraphSampleReport(SampleReport):
     def discarded_molecules(self) -> int:
         """Return the total number of discarded reads in the graph stage."""
         return self.molecules_input - self.molecules_output
+
+    @pydantic.computed_field(  # type: ignore
+        description="Fraction of nodes discarded due to being in small connected components."
+    )
+    @property
+    def fraction_stranded_nodes_pre_recovery(self) -> float:
+        """Return fraction of nodes discarded due to being in small connected components."""
+        if self.umis_input == 0:
+            return 0.0
+        return self.stranded_nodes_pre_recovery / self.umis_input

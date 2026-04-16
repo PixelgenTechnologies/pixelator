@@ -155,7 +155,9 @@ def test_cli_invocation_info(sample_name, all_stages_all_reports_and_meta, snaps
 
     assert amplicon_cmd1 == amplicon_cmd2 == amplicon_cmd3
 
-    snapshot.assert_match(r.to_json(), f"{sample_name}_cli_invocation_info.json")
+    snapshot.assert_match(
+        r.to_json(indent=2), f"{sample_name}_cli_invocation_info.json"
+    )
 
 
 @pytest.mark.parametrize("sample_name", ["PNA055_Sample07_filtered_S7"])

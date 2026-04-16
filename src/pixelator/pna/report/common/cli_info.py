@@ -33,7 +33,10 @@ _SINGLE_CELL_STAGES_TO_CACHE_KEY_MAPPING: dict[
     "collapse": [
         "pixelator single-cell-pna collapse",
     ],
-    "graph": ["pixelator single-cell-pna graph"],
+    "graph": [
+        "pixelator single-cell-pna graph",
+        "pixelator single-cell-pna graph_legacy",
+    ],
     "layout": [
         "pixelator single-cell-pna layout",
     ],
