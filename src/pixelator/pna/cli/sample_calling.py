@@ -151,7 +151,7 @@ def sample_calling_cli(
         final_dataset=final_dataset,
     )
     total_report.write_json_file(
-        sample_calling_output / "sample_calling.report.json", indent=4
+        sample_calling_output / f"{pool_name}.sample_calling.report.json", indent=4
     )
 
     if undetermined_sample_name in final_dataset.sample_names():
