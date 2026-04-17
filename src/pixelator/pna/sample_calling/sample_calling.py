@@ -267,7 +267,10 @@ def _apply_confidence_threshold_to_hash_info(
 
     """
     return hash_info.with_columns(
-        pl.when((pl.col("sample_confidence") < confidence_threshold))
+        pl.when(
+            (pl.col("sample_confidence") < confidence_threshold)
+            | (pl.col("called_sample") == "undetermined")
+        )
         .then(pl.lit(undetermined_sample_name))
         .otherwise(pl.col("called_sample"))
         .alias("called_sample")
