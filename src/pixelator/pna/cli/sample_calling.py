@@ -149,6 +149,7 @@ def sample_calling_cli(
     final_dataset = read(output_files)
     total_report = create_final_report(
         final_dataset=final_dataset,
+        undetermined_sample_name=undetermined_sample_name,
     )
     total_report.write_json_file(
         sample_calling_output / f"{pool_name}.sample_calling.report.json", indent=4
