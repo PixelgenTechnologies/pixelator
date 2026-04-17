@@ -307,7 +307,7 @@ def sample_calling(
     PNAPixelDataset, assigns components to samples based on hash information
     and confidence thresholds, and writes out pxl files for each determined
     sample. It will also write a file for undetermined components (under the name
-    f"{undetermined_sample_name}.dehashed.pxl").
+    "{undetermined_sample_name}.dehashed.pxl").
     It supports removing incompatible hashes and renaming hash markers in the output.
 
     Args:
@@ -528,7 +528,7 @@ def create_final_report(
 
 
 def warn_if_undetermined_has_high_confidence(
-    undetermined_sample_confidences: pd.DataFrame,
+    undetermined_sample_confidences: pd.Series | np.ndarray,
     confidence_threshold: float,
     undetermined_sample_name: str = "undetermined",
 ) -> None:
@@ -539,6 +539,6 @@ def warn_if_undetermined_has_high_confidence(
         > 0.05
     ):
         logger.warning(
-            f"There are more than 5% of components in {undetermined_sample_name} have a high confidence score. "
+            f"There are more than 5% of components in {undetermined_sample_name} that have a high confidence score. "
             "This may indicate that the samplesheet has the wrong sample indices."
         )

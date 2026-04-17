@@ -163,6 +163,7 @@ def sample_calling_cli(
             .adata()
             .obs["sample_confidence"],
             confidence_threshold=confidence_threshold,
+            undetermined_sample_name=undetermined_sample_name,
         )
 
     if not save_undetermined:

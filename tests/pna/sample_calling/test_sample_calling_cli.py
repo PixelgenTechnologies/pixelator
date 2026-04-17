@@ -7,6 +7,7 @@ import json
 import tempfile
 from pathlib import Path
 
+import numpy as np
 import pytest
 from click.testing import CliRunner
 
@@ -69,7 +70,11 @@ def test_runs_ok(pna_data_root):
         assert total_data["report_type"] == "sample_calling_total"
         assert total_data["sample_id"] == "all"
         assert "sample_confidences_per_sample" in total_data
-
+        assert "percentage_of_components_successfully_called" in total_data
+        assert (
+            np.abs(total_data["percentage_of_components_successfully_called"] - 14 / 15)
+            < 1e-6
+        )
         total_components = 0
         for output in outputs:
             pxl = read(output)
