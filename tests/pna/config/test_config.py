@@ -162,16 +162,16 @@ def test_list_panel_names(pna_data_root):
             "proxiome-immuno-155plex-v2",
             "proxiome-immuno-155-v3",
             "proxiome-immuno-155plex-v3",
-            "proxiome-immuno-156-FLAG",
             "proxiome-immuno-156-FLAG-v2",
-            "proxiome-immuno-156-FLAGplex",
+            "proxiome-immuno-156-FLAG-v3",
             "proxiome-immuno-156-FLAGplex-v2",
-            "proxiome-immuno-156-FMC63",
-            "proxiome-immuno-156-FMC63plex",
+            "proxiome-immuno-156-FLAGplex-v3",
             "proxiome-immuno-156-FMC63-v1",
             "proxiome-immuno-156-FMC63-v2",
+            "proxiome-immuno-156-FMC63-v3",
             "proxiome-immuno-156-FMC63plex-v1",
             "proxiome-immuno-156-FMC63plex-v2",
+            "proxiome-immuno-156-FMC63plex-v3",
         ]
     )
 
@@ -180,8 +180,10 @@ def test_list_panel_names(pna_data_root):
         "proxiome-immuno-155-v2",
         "proxiome-immuno-155-v3",
         "proxiome-immuno-156-FLAG-v2",
+        "proxiome-immuno-156-FLAG-v3",
         "proxiome-immuno-156-FMC63-v1",
         "proxiome-immuno-156-FMC63-v2",
+        "proxiome-immuno-156-FMC63-v3",
     ]
 
 

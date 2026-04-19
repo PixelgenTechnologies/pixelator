@@ -16,13 +16,15 @@ class BaseCollapseTestsMixin(BaseWorkflowTestMixin):
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
     ```
-    @pytest.mark.dependency(depends=["test_collapse_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_collapse_run"])
     ```
     """
 
     __stage_key__ = "collapse"
 
-    @pytest.mark.dependency(name="test_collapse_run", depends=["test_demux_run"])
+    @pytest.mark.dependency(
+        scope="class", name="test_collapse_run", depends=["test_demux_run"]
+    )
     def test_collapse_run(self):
         input_files = [
             str(f) for f in (self.workdir / "demux").glob("*processed*fastq.gz")
@@ -61,10 +63,10 @@ class BaseCollapseTestsMixin(BaseWorkflowTestMixin):
         self.context.run_command("collapse", command, file_deps)
         assert self.__this_result.exit_code == 0
 
-    @pytest.mark.dependency(depends=["test_collapse_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_collapse_run"])
     def test_collapse_logfile_exist(self):
         assert (self.workdir / "collapse-pixelator.log").is_file()
 
-    @pytest.mark.dependency(depends=["test_collapse_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_collapse_run"])
     def test_collapse_results_folder_exists(self):
         assert (self.workdir / "collapse").is_dir()

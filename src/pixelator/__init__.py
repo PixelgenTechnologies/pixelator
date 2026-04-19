@@ -24,5 +24,12 @@ from pixelator.mpx.pixeldataset.aggregation import (
 )  # noqa
 
 from pixelator.pna import read as read_pna
+from pixelator.pna import DownloadableDatasets
 
-__all__ = ["read_mpx", "simple_aggregate_mpx", "MPXPixelDataset", "read_pna"]
+__all__ = [
+    "read_mpx",
+    "simple_aggregate_mpx",
+    "MPXPixelDataset",
+    "read_pna",
+    "DownloadableDatasets",
+]

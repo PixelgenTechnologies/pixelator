@@ -573,6 +573,11 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
                 read2, region2_slice, is_reversed=True, as_bytearray=True
             )
 
+            # At this point both `region1_slice` and `region2_slice` are present,
+            # so `_get_region_sequence()` cannot return `None`.
+            assert s1 is not None and q1 is not None
+            assert s2 is not None and q2 is not None
+
             assert len(s1) == len(s2)  # type: ignore
             assert len(q1) == len(q2)  # type: ignore
 

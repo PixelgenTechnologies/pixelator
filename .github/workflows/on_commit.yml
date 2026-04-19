@@ -1,0 +1,17 @@
+name: on_commit
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  dispatch:
+    name: send_commit_hash
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Post commit hash
+        run: |
+            curl -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Authorization: token ${{ secrets.DISPATCH_TOKEN }}" \
+            --request POST \
+            --data '{"event_type": "new-pixelator-commit", "client_payload": { "commit_hash": "${{ github.sha }}" }}' ${{ secrets.SEND_COMMIT_URL }}

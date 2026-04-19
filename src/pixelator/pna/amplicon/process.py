@@ -17,6 +17,7 @@ from cutadapt.modifiers import (
 from cutadapt.steps import PairedEndStep, SingleEndFilter, SingleEndSink, SingleEndStep
 from cutadapt.utils import DummyProgress, Progress
 
+from pixelator.common.utils.log_progress import LogProgress
 from pixelator.pna.amplicon.build_amplicon import (
     PairedEndAmpliconBuilder,
     SingleEndAmpliconBuilder,
@@ -218,7 +219,7 @@ def amplicon_fastq(
     if sys.stderr.isatty():
         progress = Progress()
     else:
-        progress = DummyProgress()
+        progress = LogProgress(logger)
 
     n_workers = max(1, threads - write_threads)
     logging.info("Running pipeline with %s worker threads", n_workers)

@@ -16,6 +16,9 @@ def test_get_array():
         arr[0:10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         same_arr = r.get_array("db")
         assert np.all(arr == same_arr)
+        # Release array references before context exit so SharedMemory can close
+        # (otherwise BufferError: cannot close exported pointers exist)
+        del arr, same_arr
 
 
 def test_get_array_zero_init():
@@ -23,6 +26,7 @@ def test_get_array_zero_init():
     with registry as r:
         arr = r.allocate_array("db", (1024,), dtype=np.uint8, zero_init=True)
         assert np.all(arr == 0)
+        del arr  # release buffer reference before context exit
 
 
 def test_shared_memory_pickler():
