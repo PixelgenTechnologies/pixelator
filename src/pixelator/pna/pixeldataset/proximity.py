@@ -174,6 +174,9 @@ class Proximity:
             calculate_from_edgelist=self._calculate_from_edgelist,
         )
         with self._view.open() as session:
+            # Only load the stochastic extension since it is needed
+            # to execute the analytical proximity query.
+            session.load_stochastic_extension()
             df = session.execute_lazy(query).collect()
         return self._post_process(df)
 

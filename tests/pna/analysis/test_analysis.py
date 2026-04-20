@@ -140,7 +140,7 @@ def test_calculate_differential_proximity():
     ],
 )
 def test_proximity_analysis_jcs_analytic(
-    pna_pxl_file: Path, pna_data_root, tmp_path, components, markers
+    pna_pxl_file: Path, pna_data_root, components, markers
 ):
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     proximity_obj = pna_pxl_dataset.filter(

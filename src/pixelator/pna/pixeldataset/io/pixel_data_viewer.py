@@ -195,17 +195,6 @@ class PixelDataViewerSession:
         self._connection: duckdb.DuckDBPyConnection | None = (
             self._create_open_connection()
         )
-        self._load_stochastic_extension()
-
-    def _load_stochastic_extension(self) -> None:
-        """Load the DuckDB stochastic extension, installing it only if needed."""
-        if self._connection is None:
-            return
-        try:
-            self._connection.execute("LOAD stochastic;")
-        except duckdb.Error:
-            self._connection.execute("INSTALL stochastic FROM community;")
-            self._connection.execute("LOAD stochastic;")
 
     def _create_open_connection(self) -> duckdb.DuckDBPyConnection:
         """Create an in-memory DuckDB connection with PXL files attached."""
@@ -302,3 +291,13 @@ class PixelDataViewerSession:
         """Execute a query and return Arrow reader."""
         result = self.get_connection().sql(query.sql, params=query.params)
         return result.fetch_arrow_reader(batch_size=batch_size)
+
+    def load_stochastic_extension(self) -> None:
+        """Load the DuckDB stochastic extension, installing it only if needed."""
+        if self._connection is None:
+            return
+        try:
+            self._connection.execute("LOAD stochastic;")
+        except duckdb.Error:
+            self._connection.execute("INSTALL stochastic FROM community;")
+            self._connection.execute("LOAD stochastic;")
