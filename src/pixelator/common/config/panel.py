@@ -133,7 +133,7 @@ class AntibodyPanel:
         return self._metadata.aliases
 
     @classmethod
-    def validate_antibody_panel(self, panel_df: pd.DataFrame) -> list[str]:
+    def validate_antibody_panel(cls, panel_df: pd.DataFrame) -> list[str]:
         """Perform validation on an antibody panel file.
 
         Will try to find as many issues as possible.
@@ -155,8 +155,8 @@ class AntibodyPanel:
         errors = []
 
         # some basic sanity check on the panel size and columns
-        if not set(self._REQUIRED_COLUMNS).issubset(set(panel_df.columns)):
-            missing_columns = set(self._REQUIRED_COLUMNS) - set(panel_df.columns)
+        if not set(cls._REQUIRED_COLUMNS).issubset(set(panel_df.columns)):
+            missing_columns = set(cls._REQUIRED_COLUMNS) - set(panel_df.columns)
             errors.append(f"Panel has missing required columns: {missing_columns}")
             return errors
 
@@ -165,7 +165,7 @@ class AntibodyPanel:
             return errors
 
         # sanity check on the unique columns
-        for col in self._UNIQUE_COLUMNS:
+        for col in cls._UNIQUE_COLUMNS:
             if not len(panel_df[col].unique()) == len(panel_df[col]):
                 errors.append(f"All values in column: {col} were not unique")
 
