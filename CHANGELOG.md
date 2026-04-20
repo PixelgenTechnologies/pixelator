@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [x.x.x] - TBD
 
 ### Added
+- Add the option to calculate proximity scores from edgelist using analytical expected join counts. 
+  `PNAPixelDataset.proximity(calculate_from_edgelist=True)` is used to compute these scores.
+
 - New implementation of `pixelator single-cell-pna graph`,
   This version introduces a new workflow, combining a pre-processing step
   using the fast label propagation algorithm, a main step using the Leiden
