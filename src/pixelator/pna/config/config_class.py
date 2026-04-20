@@ -53,6 +53,10 @@ class PNAConfig:
     def load_assay(self, path: PathType) -> None:
         """Load an assay from a yaml file."""
         assay = PNAAssay.from_yaml(path)
+        if assay.name in self.assays:
+            raise ValueError(
+                f"Assay with name {assay.name} ({str(path)}) already exists in the config. "
+            )
         self.assays[assay.name] = assay
 
     def load_panel_file(self, path: PathType) -> None:
