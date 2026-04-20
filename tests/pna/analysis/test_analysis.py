@@ -178,7 +178,8 @@ def test_proximity_analysis_jcs_analytic(
         how="inner",
         rsuffix="_expected",
     )
+    matching_corr = matching.corr()
 
-    assert matching.corr().loc["log2_ratio", "log2_ratio_expected"] > 0.98
-    assert matching.corr().loc["join_count_z", "join_count_z_expected"] > 0.98
-    assert matching.corr().loc["join_count_p", "join_count_p_expected"] > 0.9
+    assert matching_corr.loc["log2_ratio", "log2_ratio_expected"] > 0.98
+    assert matching_corr.loc["join_count_z", "join_count_z_expected"] > 0.98
+    assert matching_corr.loc["join_count_p", "join_count_p_expected"] > 0.9

@@ -426,7 +426,7 @@ def jcs_with_analytical_stats(
             ON t1.sample = t2.sample AND t1.component = t2.component
             JOIN group_edges ge 
             ON t1.sample = ge.sample AND t1.component = ge.component
-            WHERE {"marker_1 IN $markers AND marker_2 IN $markers" if markers else "TRUE"}
+            WHERE {"t1.marker_1 IN $markers AND t2.marker_2 IN $markers" if markers else "TRUE"}
         ),
         expected_agg AS (
             SELECT sample, component, marker_A, marker_B, SUM(exp_count_raw) as join_count_expected_mean, SQRT(SUM(exp_count_var)) as join_count_expected_sd
