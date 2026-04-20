@@ -128,3 +128,57 @@ def test_calculate_differential_proximity():
         ["marker_1", "marker_2"], drop=True
     )
     assert_frame_equal(dpa, expected_dpa, check_like=True, atol=1e-3)
+
+
+@pytest.mark.parametrize(
+    "components,markers",
+    [
+        (None, None),
+        (["d4074c845bb62800", "c3c393e9a17c1981"], None),
+        (None, ["CD3e", "CD45RA", "CD44"]),
+        (["d4074c845bb62800", "c3c393e9a17c1981"], ["CD3e", "CD45RA", "CD44"]),
+    ],
+)
+def test_proximity_analysis_jcs_analytic(
+    pna_pxl_file: Path, pna_data_root, tmp_path, components, markers
+):
+    pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
+    proximity_obj = pna_pxl_dataset.filter(
+        components=components, markers=markers
+    ).proximity(calculate_from_edgelist=True)
+    proximity = proximity_obj.to_df()
+    proximity_len = proximity_obj.__len__()
+    assert proximity_len == proximity.shape[0]
+    assert len(proximity_obj) == proximity.shape[0]
+    proximity = proximity.set_index(["component", "marker_1", "marker_2"], drop=True)
+
+    expected_proximity = pd.read_csv(pna_data_root / "jcs_proximity.csv")
+    if components is not None:
+        expected_proximity = expected_proximity[
+            expected_proximity["component"].isin(components)
+        ]
+    if markers is not None:
+        expected_proximity = expected_proximity[
+            expected_proximity["marker_1"].isin(markers)
+            & expected_proximity["marker_2"].isin(markers)
+        ]
+    expected_proximity = expected_proximity.set_index(
+        ["component", "marker_1", "marker_2"], drop=True
+    )
+
+    assert expected_proximity.shape == proximity.shape
+
+    expected_proximity = expected_proximity.astype({"join_count": "uint32"})
+    expected_proximity = expected_proximity[
+        expected_proximity["join_count_expected_mean"] > 100
+    ]
+    proximity = proximity[proximity["join_count_expected_mean"] > 100]
+    matching = proximity[["log2_ratio", "join_count_z", "join_count_p"]].join(
+        expected_proximity[["log2_ratio", "join_count_z", "join_count_p"]],
+        how="inner",
+        rsuffix="_expected",
+    )
+
+    assert matching.corr().loc["log2_ratio", "log2_ratio_expected"] > 0.98
+    assert matching.corr().loc["join_count_z", "join_count_z_expected"] > 0.98
+    assert matching.corr().loc["join_count_p", "join_count_p_expected"] > 0.9

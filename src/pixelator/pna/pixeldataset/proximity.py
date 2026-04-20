@@ -31,6 +31,7 @@ class Proximity:
         adata_helper: AnnDataHelper | None = None,
         add_marker_counts: bool = True,
         add_log2_ratio: bool = True,
+        calculate_from_edgelist: bool = False,
     ):
         """Create a new instance of Proximity."""
         self._view = view
@@ -43,6 +44,7 @@ class Proximity:
         )
         self._add_marker_counts = add_marker_counts
         self._add_log2_ratio_col = add_log2_ratio
+        self._calculate_from_edgelist = calculate_from_edgelist
         self._query_builder = QueryBuilder()
 
     @property
@@ -76,6 +78,7 @@ class Proximity:
         query = self._query_builder.proximity_len_query(
             normalize_input_to_list(self._components),
             normalize_input_to_list(self._markers),
+            calculate_from_edgelist=self._calculate_from_edgelist,
         )
         with self._view.open() as session:
             return session.execute_scalar(query)
@@ -168,6 +171,7 @@ class Proximity:
         query = self._query_builder.proximity_query(
             normalize_input_to_list(self._components),
             normalize_input_to_list(self._markers),
+            calculate_from_edgelist=self._calculate_from_edgelist,
         )
         with self._view.open() as session:
             df = session.execute_lazy(query).collect()
@@ -180,7 +184,9 @@ class Proximity:
             [
                 f"Proximity({n_proximity:,} elements",
                 f"add_marker_counts={self._add_marker_counts}",
-                f"add_logratio={self._add_log2_ratio_col})",
+                f"add_logratio={self._add_log2_ratio_col}",
+                f"calculate_from_edgelist={self._calculate_from_edgelist}",
+                ")",
             ]
         )
 

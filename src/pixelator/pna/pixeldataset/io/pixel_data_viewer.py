@@ -195,6 +195,7 @@ class PixelDataViewerSession:
         self._connection: duckdb.DuckDBPyConnection | None = (
             self._create_open_connection()
         )
+        self._connection.execute("INSTALL stochastic FROM community; LOAD stochastic;")
 
     def _create_open_connection(self) -> duckdb.DuckDBPyConnection:
         """Create an in-memory DuckDB connection with PXL files attached."""

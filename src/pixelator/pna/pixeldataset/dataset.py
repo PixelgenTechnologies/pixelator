@@ -222,6 +222,7 @@ class PNAPixelDataset:
         self,
         add_marker_counts: bool = True,
         add_logratio: bool = True,
+        calculate_from_edgelist: bool = False,
     ) -> Proximity:
         """Return the Proximity instance for the dataset.
 
@@ -238,6 +239,7 @@ class PNAPixelDataset:
             adata_helper=self._adata_helper,
             add_marker_counts=add_marker_counts,
             add_log2_ratio=add_logratio,
+            calculate_from_edgelist=calculate_from_edgelist,
         )
 
     def precomputed_layouts(
