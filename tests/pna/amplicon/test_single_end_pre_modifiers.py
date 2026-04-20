@@ -1,6 +1,6 @@
-"""Tests for the AmpliconPipeline.
+"""Tests for the AmpliconPipeline single-end pre-modifiers.
 
-Copyright © 2025 Pixelgen Technologies AB.
+Copyright © 2026 Pixelgen Technologies AB.
 """
 
 import pytest
@@ -84,18 +84,14 @@ class TestPreProcessSingle:
         assert n_bp == 8
 
     def test_n_bp_reflects_original_length_not_trimmed(self):
-        """n_bp returned by _pre_process_single must be the *input* length,
-        matching the semantics of _pre_process_paired."""
         pipeline = self._make_pipeline(_TrimFrontModifier(5))
         read = _make_read("ACGTACGT")  # 8 bases
 
         _result_read, _info, n_bp = pipeline._pre_process_single(read)
-
-        assert n_bp == 8  # original length, not 3
+        assert len(_result_read.sequence) == 3  # 8 - 5 = 3 bases remain
+        assert n_bp == 8
 
     def test_modifier_returning_none_stops_chain_and_returns_original_n_bp(self):
-        """When a modifier returns None the loop should stop and n_bp must
-        still be the original read length (not call len(None))."""
         pipeline = self._make_pipeline(
             _TrimFrontModifier(1),
             _ReturnNoneModifier(),
