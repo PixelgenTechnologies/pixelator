@@ -6,8 +6,9 @@ Copyright © 2025 Pixelgen Technologies AB.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pixelator.pna.analysis.proximity import jcs_with_analytical_stats
 from typing import Sized
+
+from pixelator.pna.analysis.proximity import jcs_with_analytical_stats
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,7 +198,6 @@ class QueryBuilder:
         calculate_from_edgelist: bool = False,
     ) -> Query:
         """Build a proximity data query."""
-
         if calculate_from_edgelist:
             sql, params = jcs_with_analytical_stats(
                 components=components,
@@ -237,12 +237,11 @@ class QueryBuilder:
 
     def _calculate_proximity_length_from_edgelist(
         self, components: list[str] | None, markers: list[str] | None
-    ) -> int:
-        params = {}
-        if components:
-            params["components"] = components
-        if markers:
+    ) -> Query:
+        params = self._normalize_components_param(components)
+        if markers is not None:
             params["markers"] = markers
+
         query = f"""
         SELECT CAST(SUM(marker_count * (marker_count+1) / 2) AS INTEGER) AS count
         FROM (
