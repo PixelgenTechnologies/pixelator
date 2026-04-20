@@ -80,8 +80,8 @@ class PNAConfig:
                 p.name for p in self.panel_aliases[alias]
             ):
                 raise PanelException(
-                    f'Panel alias "{alias}" for panel.name "{panel.name}" already exists in the '
-                    + "config for and points to a different panel name panel "
+                    f'Panel alias "{alias}" for panel name "{panel.name}" already exists in the '
+                    + "config and points to a different panel name "
                     + f"({', '.join(p.name for p in self.panel_aliases[alias])})."
                     + "If you provided your own panel file, please "
                     + "ensure the panel name an aliases are unique "
