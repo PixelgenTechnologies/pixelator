@@ -153,12 +153,12 @@ class PNAAntibodyPanel:
         return cls(df, metadata, file_name=file_name)
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str:
         """The name defined in the panel metadata."""
         return self._metadata.name
 
     @property
-    def version(self) -> Optional[str]:
+    def version(self) -> str:
         """Return the panel file version."""
         return self._metadata.version
 

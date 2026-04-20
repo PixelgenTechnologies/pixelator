@@ -8,15 +8,18 @@ from __future__ import annotations
 import importlib
 import importlib.resources
 import itertools
+import re
 import typing
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import semver
+from packaging.specifiers import SpecifierSet
 
 from pixelator.common.config.config_class import Config, PanelException
 from pixelator.common.types import PathType
+from pixelator.common.utils import logger
 from pixelator.pna.config.assay import PNAAssay
 from pixelator.pna.config.panel import PNAAntibodyPanel
 
@@ -40,7 +43,9 @@ class PNAConfig:
         self.panels: typing.MutableMapping[str, List[PNAAntibodyPanel]] = defaultdict(
             list
         )
-        self.panel_aliases: Dict[str, str] = {}
+        self.panel_aliases: typing.MutableMapping[str, List[PNAAntibodyPanel]] = (
+            defaultdict(list)
+        )
 
         if assays is not None:
             self.assays.update({a.name: a for a in assays})
@@ -71,17 +76,18 @@ class PNAConfig:
 
         # Enable panel lookup by aliases
         for alias in panel.aliases:
-            if (alias in self.panel_aliases) and (key != self.panel_aliases[alias]):
+            if alias in self.panel_aliases and panel.name not in set(
+                p.name for p in self.panel_aliases[alias]
+            ):
                 raise PanelException(
-                    f'Panel alias "{alias}" already exists in the '
-                    f'config for panel "{self.panel_aliases[alias]}".'
-                    "If you provided your own panel file, please "
-                    "ensure the panel name an aliases are unique "
-                    "in the header of the file."
+                    f'Panel alias "{alias}" for panel.name "{panel.name}" already exists in the '
+                    + "config for and points to a different panel name panel "
+                    + f"({', '.join(p.name for p in self.panel_aliases[alias])})."
+                    + "If you provided your own panel file, please "
+                    + "ensure the panel name an aliases are unique "
+                    + "in the header of the file."
                 )
-                continue
-
-            self.panel_aliases[alias] = key
+            self.panel_aliases[alias].append(panel)
 
     def load_assays(self, path: PathType):
         """Load all assays from a directory containing yaml files."""
@@ -136,16 +142,78 @@ class PNAConfig:
         :param version: The optional version of a panel to return
         :param allow_aliases: Allow panel aliases to be used
         """
+        if match := re.search(
+            # here we allow panel names matching [A-Za-z0-9-.]+)
+            # followed by a version specifier ==, >=, <= ... etc
+            "^(?P<name>[A-Za-z0-9-.]+)(?P<spec>([<>=]{1,2}))(?P<major>\d)(?P<minor>\.\d)?(?P<patch>\.\d)?$",
+            panel_name,
+        ):
+            version_stripped_name = match.group("name")
+            specified_version = (
+                match.group("spec")
+                + match.group("major")
+                + (match.group("minor") or ".*")
+                + ((match.group("patch") or ".*") if match.group("minor") else "")
+            )
+            logger.debug(
+                'Parsed panel name "%s" into name "%s" and version specifier "%s".',
+                panel_name,
+                version_stripped_name,
+                specified_version,
+            )
+        else:
+            version_stripped_name = None
+            specified_version = None
+
         panels_with_key = self.panels.get(panel_name)
+        if panels_with_key is None and version_stripped_name is not None:
+            panels_with_key = self.panels.get(version_stripped_name)
 
         # Try to load using an alias if no name matches are found
         if panels_with_key is None and allow_aliases:
-            panel_alias = self.panel_aliases.get(panel_name)
-            if panel_alias is not None:
-                panels_with_key = self.panels.get(panel_alias)
+            logger.debug(
+                'No panel found with name "%s". Trying to find it among panel aliases...',
+                panel_name,
+            )
+            panels_with_key = self.panel_aliases.get(panel_name)
+            if panels_with_key is None and version_stripped_name is not None:
+                panels_with_key = self.panel_aliases.get(version_stripped_name)
 
         if panels_with_key is None:
             return None
+
+        # if the version is specified, filter the panels
+        if specified_version:
+            panel_versions = set(
+                SpecifierSet(specified_version).filter(
+                    [p.version for p in panels_with_key]
+                )
+            )
+            panels_with_key = [
+                p for p in panels_with_key if p.version in panel_versions
+            ]
+
+        # If there are multiple panels with the same name and version, raise an error
+        if len(set(p.version.split(".")[0] for p in panels_with_key)) > 1:
+            raise PanelException(
+                f"Multiple major versions found for panel {panel_name} with specified version "
+                + f"{specified_version}. Please specify the major version in the panel name or "
+                + "alias to disambiguate."
+            )
+
+        # If there are multiple panels with the same name and major version but different minor
+        # versions, raise a warning and automatically select the latest minor version
+        elif len(set(p.version.split(".")[1] for p in panels_with_key)) > 1:
+            logger.warning(
+                "Multiple minor versions found for panel %s with specified version %s. "
+                + "Automatically selecting the latest out of multiple minor version. "
+                + "Minor versions usually means there was a change in clones used for one or "
+                + "more markers. Panels might not be fully compatible. Proceed with caution!\n"
+                + "To silence this warning, please specify the minor version in the panel name or "
+                + "alias to disambiguate.",
+                panel_name,
+                specified_version,
+            )
 
         def keyfunc(p):
             version = p.version
