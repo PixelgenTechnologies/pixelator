@@ -103,6 +103,12 @@ def sample_calling_cli(
         panel_info.df[panel_info.df["sample_hashing"] == "yes"].index.to_list()
     )
     samplesheet_df = pl.read_csv(samplesheet)
+    if "undetermined" in samplesheet_df["sample"].to_list():
+        raise ValueError(
+            f"The sample 'undetermined' is not allowed in the samplesheet as it "
+            "is reserved for undetermined components. Please edit your "
+            "samplesheet to use a different sample name."
+        )
     if undetermined_sample_name in samplesheet_df["sample"].to_list():
         raise ValueError(
             f"The sample '{undetermined_sample_name}' is not allowed in the samplesheet as it "
