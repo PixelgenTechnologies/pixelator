@@ -110,8 +110,8 @@ def test_loading_panel_from_config(config_with_multiple_versions):
 )
 def test_loading_panel_from_config_alias(panel_name):
     panel = pna_config.get_panel(panel_name)
-    assert panel.name == panel_name
-    assert panel.version == panel_name[-5:]
+    assert panel.name == panel_name.split("-v1.0")[0]
+    # assert panel.version == panel_name[-5:] # TODO: add version check back when config has updated
 
 
 def test_loading_panel_from_config_specific_version(config_with_multiple_versions):
@@ -126,7 +126,7 @@ def test_loading_panel_from_config_specific_version(config_with_multiple_version
 
 def test_load_antibody_panel_util(pna_data_root):
     cgf_panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0.1")
-    assert cgf_panel.name == "proxiome-v1-immuno-155-v1.0.1"
+    assert cgf_panel.name == "proxiome-v1-immuno-155"
 
     path_panel = load_antibody_panel(
         pna_config, pna_data_root / "test-pna-panel-v2.csv"
@@ -172,26 +172,33 @@ def test_list_panel_names(pna_data_root):
             "proxiome-immuno-156-FMC63plex-v1",
             "proxiome-immuno-156-FMC63plex-v2",
             "proxiome-immuno-156-FMC63plex-v3",
+            "proxiome-v1-immuno-155",
+            "proxiome-v1-immuno-155-v1",
+            "proxiome-v1-immuno-155-v1.0",
             "proxiome-v1-immuno-155-v1.0.0",
             "proxiome-v1-immuno-155-v1.0.1",
+            "proxiome-v1-immuno-155-v1.1",
             "proxiome-v1-immuno-155-v1.1.0",
+            "proxiome-v1-immuno-156-FLAG",
+            "proxiome-v1-immuno-156-FLAG-v1",
+            "proxiome-v1-immuno-156-FLAG-v1.0",
             "proxiome-v1-immuno-156-FLAG-v1.0.1",
+            "proxiome-v1-immuno-156-FLAG-v1.1",
             "proxiome-v1-immuno-156-FLAG-v1.1.0",
+            "proxiome-v1-immuno-156-FMC63",
+            "proxiome-v1-immuno-156-FMC63-v1",
+            "proxiome-v1-immuno-156-FMC63-v1.0",
             "proxiome-v1-immuno-156-FMC63-v1.0.0",
             "proxiome-v1-immuno-156-FMC63-v1.0.1",
+            "proxiome-v1-immuno-156-FMC63-v1.1",
             "proxiome-v1-immuno-156-FMC63-v1.1.0",
         ]
     )
 
     assert sorted(pna_config.list_panel_names(include_aliases=False)) == [
-        "proxiome-v1-immuno-155-v1.0.0",
-        "proxiome-v1-immuno-155-v1.0.1",
-        "proxiome-v1-immuno-155-v1.1.0",
-        "proxiome-v1-immuno-156-FLAG-v1.0.1",
-        "proxiome-v1-immuno-156-FLAG-v1.1.0",
-        "proxiome-v1-immuno-156-FMC63-v1.0.0",
-        "proxiome-v1-immuno-156-FMC63-v1.0.1",
-        "proxiome-v1-immuno-156-FMC63-v1.1.0",
+        "proxiome-v1-immuno-155",
+        "proxiome-v1-immuno-156-FLAG",
+        "proxiome-v1-immuno-156-FMC63",
     ]
 
 

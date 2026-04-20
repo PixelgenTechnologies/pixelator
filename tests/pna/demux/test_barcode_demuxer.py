@@ -74,7 +74,7 @@ def test_demux_record_batch():
 
 def test_independent_demuxing(testdata_demux_passed_reads):
     assay = pna_config.get_assay("proxiome-v1")
-    panel = pna_config.get_panel("proxiome-immuno-155-v1")
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.0.0", allow_aliases=True)
 
     marker_counts = {
         ("CD18", "CD45"): 1,
