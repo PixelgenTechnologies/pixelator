@@ -16,7 +16,6 @@ except ImportError:
     from typing_extensions import Self
 
 import re
-from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
 import polars as pl
@@ -26,10 +25,10 @@ from pixelator import read_pna
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
-from pixelator.pna.pixeldataset import PNAPixelDataset
 
 if TYPE_CHECKING:
     from pixelator.pna.config.config_class import PNAConfig
+    from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
 
 
 class PNAAntibodyPanel:
