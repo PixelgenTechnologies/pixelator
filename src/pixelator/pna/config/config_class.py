@@ -148,18 +148,35 @@ class PNAConfig:
             "^(?P<name>[A-Za-z0-9-.]+)(?P<spec>([<>=]{1,2}))(?P<major>\d)(?P<minor>\.\d)?(?P<patch>\.\d)?$",
             panel_name,
         ):
-            version_stripped_name = match.group("name")
-            specified_version = (
-                match.group("spec")
-                + match.group("major")
-                + (match.group("minor") or ".*")
-                + ((match.group("patch") or ".*") if match.group("minor") else "")
-            )
             if version is not None:
                 raise ValueError(
                     "Version specified both in panel_name and as a separate argument. "
                     + "Please specify the version in only one place."
                 )
+            version_stripped_name = match.group("name")
+            specified_version = (
+                match.group("spec")
+                + match.group("major")
+                + (
+                    match.group("minor")
+                    or (
+                        ".*"
+                        if ">" not in match.group("spec")
+                        and "<" not in match.group("spec")
+                        else ""
+                    )
+                )
+                + (
+                    match.group("patch")
+                    or (
+                        ".*"
+                        if match.group("minor")
+                        and ">" not in match.group("spec")
+                        and "<" not in match.group("spec")
+                        else ""
+                    )
+                )
+            )
             logger.debug(
                 'Parsed panel name "%s" into name "%s" and version specifier "%s".',
                 panel_name,
