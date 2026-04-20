@@ -8,7 +8,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sized
 
-from pixelator.pna.analysis.proximity import jcs_with_analytical_stats
+from pixelator.pna.analysis.analytical_proximity_query_helper import (
+    jcs_with_analytical_stats,
+)
 
 
 @dataclass(frozen=True, slots=True)

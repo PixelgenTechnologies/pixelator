@@ -185,8 +185,7 @@ class Proximity:
                 f"Proximity({n_proximity:,} elements",
                 f"add_marker_counts={self._add_marker_counts}",
                 f"add_logratio={self._add_log2_ratio_col}",
-                f"calculate_from_edgelist={self._calculate_from_edgelist}",
-                ")",
+                f"calculate_from_edgelist={self._calculate_from_edgelist})",
             ]
         )
 
