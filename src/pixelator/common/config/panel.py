@@ -26,8 +26,8 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
 
     model_config = pydantic.ConfigDict(extra="ignore")
 
-    version: Optional[str] = None
-    name: Optional[str] = None
+    version: str
+    name: str
     description: Optional[str] = None
     aliases: List[str] = []
 
