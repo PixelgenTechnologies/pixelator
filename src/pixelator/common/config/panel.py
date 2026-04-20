@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, List, Optional
 import pandas as pd
 import pydantic
 import ruamel.yaml as yaml
+from packaging.version import Version
 
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
@@ -30,6 +31,13 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
     name: str
     description: Optional[str] = None
     aliases: List[str] = []
+
+    @pydantic.field_validator("version")
+    @classmethod
+    def check_version(cls, v: str) -> str:
+        """Validate that the version string is a valid version string."""
+        Version(v)  # will raise if not a valid version string
+        return v
 
 
 class AntibodyPanel:
@@ -232,7 +240,7 @@ class AntibodyPanel:
 
         if len(raw_config) == 0:
             warnings.warn(f"Expected a YAML frontmatter in {file}")
-            return AntibodyPanelMetadata(version=None, name=None, description=None)
+            return AntibodyPanelMetadata(version="", name="", description=None)
 
         frontmatter = raw_config[0]
         return AntibodyPanelMetadata.model_validate(frontmatter)
