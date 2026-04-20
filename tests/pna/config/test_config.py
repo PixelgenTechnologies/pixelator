@@ -95,14 +95,33 @@ def test_get_position_in_amplicon_pna_1():
 def config_with_multiple_versions(pna_data_root):
     new_config = copy.deepcopy(pna_config)
     new_config = load_panels_package(new_config, "tests.pna.data.panels")
-    new_config.load_panel_file(pna_data_root / "test-pna-panel-v2.csv")
+    new_config.load_panel_file(pna_data_root / "test-pna-panel-v1.1.0.csv")
+    new_config.load_panel_file(pna_data_root / "test-pna-panel-v2.0.0.csv")
     return new_config
 
 
-def test_loading_panel_from_config(config_with_multiple_versions):
-    panel = config_with_multiple_versions.get_panel("test-pna-panel")
+def test_loading_panel_from_config(config_with_multiple_versions, caplog):
+    panel_name = "test-pna-panel==1"
+    panel = config_with_multiple_versions.get_panel(panel_name)
+    assert (
+        f"Multiple minor versions found for panel {panel_name}. "
+        + "Automatically selecting the latest out of multiple minor version. "
+        + "Minor versions usually means there was a change in clones used for one or "
+        + "more markers. Panels might not be fully compatible. Proceed with caution!\n"
+        + "To silence this warning, please specify the minor version in the panel name or "
+        + "alias to disambiguate."
+    ) in caplog.text
     assert panel.name == "test-pna-panel"
-    assert panel.version == "0.2.0"
+    assert panel.version == "1.1.0"
+
+
+def test_loading_multiple_major_version(config_with_multiple_versions):
+    panel_name = "test-pna-panel>=0.0.1"
+    with pytest.raises(
+        ValueError,
+        match=f"Multiple major versions found for panel {panel_name}. Please specify the major version in the panel name or alias to disambiguate.",
+    ):
+        config_with_multiple_versions.get_panel(panel_name)
 
 
 @pytest.mark.parametrize(
@@ -115,13 +134,13 @@ def test_loading_panel_from_config_alias(panel_name):
 
 
 def test_loading_panel_from_config_specific_version(config_with_multiple_versions):
-    panel = config_with_multiple_versions.get_panel("test-pna-panel", version="0.1.0")
+    panel = config_with_multiple_versions.get_panel("test-pna-panel", version="1.1.0")
     assert panel.name == "test-pna-panel"
-    assert panel.version == "0.1.0"
+    assert panel.version == "1.1.0"
 
-    panel = config_with_multiple_versions.get_panel("test-pna-panel", version="0.2.0")
+    panel = config_with_multiple_versions.get_panel("test-pna-panel", version="2.0.0")
     assert panel.name == "test-pna-panel"
-    assert panel.version == "0.2.0"
+    assert panel.version == "2.0.0"
 
 
 def test_load_antibody_panel_util(pna_data_root):
@@ -129,10 +148,10 @@ def test_load_antibody_panel_util(pna_data_root):
     assert cgf_panel.name == "proxiome-immuno-155-v2"
 
     path_panel = load_antibody_panel(
-        pna_config, pna_data_root / "test-pna-panel-v2.csv"
+        pna_config, pna_data_root / "test-pna-panel-v1.1.0.csv"
     )
     assert path_panel.name == "test-pna-panel"
-    assert path_panel.filename == "test-pna-panel-v2.csv"
+    assert path_panel.filename == "test-pna-panel-v1.1.0.csv"
 
     with pytest.raises(AssertionError):
         load_antibody_panel(pna_config, "human-qwdqwdqwdqdw-proteomics")
@@ -140,7 +159,7 @@ def test_load_antibody_panel_util(pna_data_root):
 
 def test_panel_with_non_dna_sequences(pna_data_root):
     panel_df = pd.read_csv(
-        pna_data_root / "test-pna-panel-v2.csv", skiprows=9, index_col="marker_id"
+        pna_data_root / "test-pna-panel-v1.1.0.csv", skiprows=9, index_col="marker_id"
     ).fillna("")
     panel_df["control"] = panel_df["control"].map(lambda s: s.lower() == "yes")
     panel_df.loc["CD45", "sequence_1"] = "PPPPPP"

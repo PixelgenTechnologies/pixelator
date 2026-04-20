@@ -155,6 +155,11 @@ class PNAConfig:
                 + (match.group("minor") or ".*")
                 + ((match.group("patch") or ".*") if match.group("minor") else "")
             )
+            if version is not None:
+                raise ValueError(
+                    "Version specified both in panel_name and as a separate argument. "
+                    + "Please specify the version in only one place."
+                )
             logger.debug(
                 'Parsed panel name "%s" into name "%s" and version specifier "%s".',
                 panel_name,
@@ -179,25 +184,27 @@ class PNAConfig:
             if panels_with_key is None and version_stripped_name is not None:
                 panels_with_key = self.panel_aliases.get(version_stripped_name)
 
-        if panels_with_key is None:
+        if panels_with_key is None or not panels_with_key:
             return None
 
         # if the version is specified, filter the panels
-        if specified_version:
+        if specified_version or version:
             panel_versions = set(
-                SpecifierSet(specified_version).filter(
+                SpecifierSet(specified_version or "==" + version).filter(  # type: ignore
                     [p.version for p in panels_with_key]
                 )
             )
             panels_with_key = [
                 p for p in panels_with_key if p.version in panel_versions
             ]
+            if not panels_with_key:
+                return None
 
         # If there are multiple panels with the same name and version, raise an error
         if len(set(p.version.split(".")[0] for p in panels_with_key)) > 1:
-            raise PanelException(
-                f"Multiple major versions found for panel {panel_name} with specified version "
-                + f"{specified_version}. Please specify the major version in the panel name or "
+            raise ValueError(
+                f"Multiple major versions found for panel {panel_name}. "
+                + "Please specify the major version in the panel name or "
                 + "alias to disambiguate."
             )
 
@@ -205,14 +212,13 @@ class PNAConfig:
         # versions, raise a warning and automatically select the latest minor version
         elif len(set(p.version.split(".")[1] for p in panels_with_key)) > 1:
             logger.warning(
-                "Multiple minor versions found for panel %s with specified version %s. "
+                "Multiple minor versions found for panel %s. "
                 + "Automatically selecting the latest out of multiple minor version. "
                 + "Minor versions usually means there was a change in clones used for one or "
                 + "more markers. Panels might not be fully compatible. Proceed with caution!\n"
                 + "To silence this warning, please specify the minor version in the panel name or "
                 + "alias to disambiguate.",
                 panel_name,
-                specified_version,
             )
 
         def keyfunc(p):
