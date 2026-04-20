@@ -1,4 +1,4 @@
-"""Marker panel management for different Molecular Pixelation assays.
+"""Marker panel management for different PNA assays.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 
 class PNAAntibodyPanel:
-    """Class representing a Molecular Pixelation antibody panel."""
+    """Class representing a PNA antibody panel."""
 
     # required columns
     _INDEX_COLUMN = "marker_id"
