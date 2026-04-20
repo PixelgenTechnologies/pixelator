@@ -102,7 +102,12 @@ def collect_hash_info(
             pl.col("value").max().alias("max_value"),
             pl.col("value").sum().alias("total_value"),
         )
-        .with_columns(sample_confidence=pl.col("max_value") / pl.col("total_value"))
+        .with_columns(
+            pl.when(pl.col("total_value") == 0)
+            .then(pl.lit(0.0))
+            .otherwise(pl.col("max_value") / pl.col("total_value"))
+            .alias("sample_confidence")
+        )
         .with_columns(
             pl.when(pl.col("sample_confidence") < confidence_threshold)
             .then(pl.lit(undetermined_sample_name))
