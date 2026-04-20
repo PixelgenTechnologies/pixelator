@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > Parameter has been **removed** if new parameter information isn't present.
 
 ### Fixed
+- Calculate double-sided p-values instead of single-sided for proximity scores.
 
 ## [0.25.0] - 2026-04-15
 
