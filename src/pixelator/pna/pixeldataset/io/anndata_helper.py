@@ -51,7 +51,12 @@ class AnnDataHelper:
             return AnnData()
 
         concatenated = anndata_concat(adatas, join=self._adata_join_strategy)
-        concatenated.var = adatas[0].var
+        try:
+            concatenated.var = adatas[0].var
+        except ValueError as err:
+            raise ValueError(
+                "Failed to concatenate AnnData var - check that all samples have the same set of markers."
+            ) from err
         concatenated.uns = adatas[0].uns
         update_metrics_anndata(concatenated, inplace=True)
         return concatenated
