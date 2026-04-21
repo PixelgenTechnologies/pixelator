@@ -158,6 +158,11 @@ class PNAAntibodyPanel:
         return self._metadata.name
 
     @property
+    def product(self) -> Optional[str]:
+        """The product defined in the panel metadata."""
+        return self._metadata.product
+
+    @property
     def version(self) -> str:
         """Return the panel file version."""
         return self._metadata.version

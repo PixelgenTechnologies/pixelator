@@ -29,6 +29,7 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
 
     version: str
     name: str
+    product: Optional[str] = None
     description: Optional[str] = None
     aliases: List[str] = []
 

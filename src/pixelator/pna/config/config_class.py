@@ -44,6 +44,9 @@ class PNAConfig:
             list
         )
         self.panel_aliases: Dict[str, str] = {}
+        self.products: typing.MutableMapping[str, List[PNAAntibodyPanel]] = defaultdict(
+            list
+        )
 
         if assays is not None:
             self.assays.update({a.name: a for a in assays})
@@ -74,6 +77,10 @@ class PNAConfig:
         """Add a panel to the config."""
         key = panel.name if panel.name is not None else str(panel.filename)
         self.panels[key].append(panel)
+
+        # allow to also get panel by product name if provided in the panel file
+        if panel.product is not None:
+            self.products[panel.product].append(panel)
 
         # Enable panel lookup by aliases
         for alias in panel.aliases:
@@ -155,6 +162,12 @@ class PNAConfig:
         # try to load using the version stripped name if the panel name contains a version specifier
         if panels_with_key is None and version_stripped_name is not None:
             panels_with_key = self.panels.get(version_stripped_name)
+
+        # try to load the provided panel_name as a product name if no panel name matches are found
+        if panels_with_key is None:
+            panels_with_key = self.products.get(panel_name)
+        if panels_with_key is None and version_stripped_name is not None:
+            panels_with_key = self.products.get(version_stripped_name)
 
         # Try to load using an alias if no name matches are found
         if panels_with_key is None and allow_aliases:
