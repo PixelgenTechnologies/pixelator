@@ -188,21 +188,20 @@ class PNAConfig:
         if len(set(p.version.split(".")[0] for p in panels_with_key)) > 1:
             raise ValueError(
                 f"Multiple major versions found for panel {panel_name}. "
-                + "Please specify the major version in the panel name or "
+                + "Please specify the major and minor version in the panel name or "
                 + "alias to disambiguate."
             )
 
         # If there are multiple panels with the same name and major version but different minor
-        # versions, raise a warning and automatically select the latest minor version
+        # versions, raise a error and promt for more fine grained specification
         elif len(set(p.version.split(".")[1] for p in panels_with_key)) > 1:
-            logger.warning(
-                "Multiple minor versions found for panel %s. "
-                + "Automatically selecting the latest out of multiple minor version. "
+            raise ValueError(
+                f"Multiple minor versions found for panel {panel_name}. "
+                + "Refusing to automatically select the latest out of multiple minor versions. "
                 + "Minor versions usually means there was a change in clones used for one or "
-                + "more markers. Panels might not be fully compatible. Proceed with caution!\n"
-                + "To silence this warning, please specify the minor version in the panel name or "
+                + "more markers. Panels might not be fully compatible!\n"
+                + "Please specify the minor version in the panel name or "
                 + "alias to disambiguate.",
-                panel_name,
             )
 
         def keyfunc(p):
