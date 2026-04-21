@@ -239,8 +239,7 @@ class AntibodyPanel:
         raw_config = list(yaml_loader.load_all(metadata))
 
         if len(raw_config) == 0:
-            warnings.warn(f"Expected a YAML frontmatter in {file}")
-            return AntibodyPanelMetadata(version="", name="", description=None)
+            raise ValueError(f"No header / metadata found in panel file {file}")
 
         frontmatter = raw_config[0]
         return AntibodyPanelMetadata.model_validate(frontmatter)
