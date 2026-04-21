@@ -214,13 +214,7 @@ class PNAConfig:
             return v
 
         panels_with_key = sorted(panels_with_key, key=keyfunc, reverse=True)
-        if version is None:
-            return panels_with_key[0]
-
-        selected_panel = next(
-            (p for p in panels_with_key if p.version == version), None
-        )
-        return selected_panel
+        return panels_with_key[0]
 
 
 ConfigType = typing.TypeVar("ConfigType", Config, PNAConfig)
