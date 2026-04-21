@@ -142,50 +142,14 @@ class PNAConfig:
         :param version: The optional version of a panel to return
         :param allow_aliases: Allow panel aliases to be used
         """
-        if match := re.search(
-            # here we allow panel names matching [A-Za-z0-9-.]+)
-            # followed by a version specifier ==, >=, <= ... etc
-            "^(?P<name>[A-Za-z0-9-.]+)(?P<spec>([<>=]{1,2}))(?P<major>\d)(?P<minor>\.\d)?(?P<patch>\.\d)?$",
-            panel_name,
-        ):
-            if version is not None:
-                raise ValueError(
-                    "Version specified both in panel_name and as a separate argument. "
-                    + "Please specify the version in only one place."
-                )
-            version_stripped_name = match.group("name")
-            specified_version = (
-                match.group("spec")
-                + match.group("major")
-                + (
-                    match.group("minor")
-                    or (
-                        ".*"
-                        if ">" not in match.group("spec")
-                        and "<" not in match.group("spec")
-                        else ""
-                    )
-                )
-                + (
-                    match.group("patch")
-                    or (
-                        ".*"
-                        if match.group("minor")
-                        and ">" not in match.group("spec")
-                        and "<" not in match.group("spec")
-                        else ""
-                    )
-                )
+        version_stripped_name, specified_version = parse_versioned_panel_name(
+            panel_name
+        )
+        if version is not None and specified_version is not None:
+            raise ValueError(
+                "Version specified both in panel_name and as a separate argument. "
+                + "Please specify the version in only one place."
             )
-            logger.debug(
-                'Parsed panel name "%s" into name "%s" and version specifier "%s".',
-                panel_name,
-                version_stripped_name,
-                specified_version,
-            )
-        else:
-            version_stripped_name = None
-            specified_version = None
 
         panels_with_key = self.panels.get(panel_name)
         if panels_with_key is None and version_stripped_name is not None:
@@ -287,3 +251,51 @@ def load_panels_package(config: ConfigType, package_name: str) -> ConfigType:
                 config.load_panel_file(file_path)
 
     return config
+
+
+def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional[str]]:
+    """Parse a panel name that may contain a version specifier.
+
+    :param panel_name: The panel name to parse
+    :return: A tuple containing the stripped panel name and the version specifier (if any)
+    """
+    if match := re.search(
+        # here we allow panel names matching [A-Za-z0-9-.]+)
+        # followed by a version specifier ==, >=, <= ... etc
+        "^(?P<name>[A-Za-z0-9-.]+)(?P<spec>([<>=]{1,2}))(?P<major>\d)(?P<minor>\.\d)?(?P<patch>\.\d)?$",
+        panel_name,
+    ):
+        version_stripped_name = match.group("name")
+        specified_version = (
+            match.group("spec")
+            + match.group("major")
+            + (
+                match.group("minor")
+                or (
+                    ".*"
+                    if ">" not in match.group("spec") and "<" not in match.group("spec")
+                    else ""
+                )
+            )
+            + (
+                match.group("patch")
+                or (
+                    ".*"
+                    if match.group("minor")
+                    and ">" not in match.group("spec")
+                    and "<" not in match.group("spec")
+                    else ""
+                )
+            )
+        )
+        logger.debug(
+            'Parsed panel name "%s" into name "%s" and version specifier "%s".',
+            panel_name,
+            version_stripped_name,
+            specified_version,
+        )
+    else:
+        version_stripped_name = None
+        specified_version = None
+
+    return version_stripped_name, specified_version
