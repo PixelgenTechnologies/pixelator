@@ -50,8 +50,7 @@ class PNAConfig:
 
         if panels is not None:
             for p in panels:
-                key = p.name if p.name is not None else str(p.filename)
-                self.panels[key].append(p)
+                self.add_panel(p)
 
     def load_assay(self, path: PathType) -> None:
         """Load an assay from a yaml file."""
@@ -69,6 +68,10 @@ class PNAConfig:
         :raises PanelException: If the panel alias already exists in the config.
         """
         panel = PNAAntibodyPanel.from_csv(path)
+        self.add_panel(panel)
+
+    def add_panel(self, panel: PNAAntibodyPanel) -> None:
+        """Add a panel to the config."""
         key = panel.name if panel.name is not None else str(panel.filename)
         self.panels[key].append(panel)
 
@@ -83,7 +86,6 @@ class PNAConfig:
                     "in the header of the file."
                 )
             self.panel_aliases[alias] = key
-
             # TODO: add test for panel with non uniqe alias to see we hit this error
 
     def load_assays(self, path: PathType):
