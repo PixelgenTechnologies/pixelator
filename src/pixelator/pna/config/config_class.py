@@ -43,9 +43,7 @@ class PNAConfig:
         self.panels: typing.MutableMapping[str, List[PNAAntibodyPanel]] = defaultdict(
             list
         )
-        self.panel_aliases: typing.MutableMapping[str, List[PNAAntibodyPanel]] = (
-            defaultdict(list)
-        )
+        self.panel_aliases: Dict[str, str] = {}
 
         if assays is not None:
             self.assays.update({a.name: a for a in assays})
@@ -76,18 +74,17 @@ class PNAConfig:
 
         # Enable panel lookup by aliases
         for alias in panel.aliases:
-            if alias in self.panel_aliases and panel.name not in set(
-                p.name for p in self.panel_aliases[alias]
-            ):
+            if (alias in self.panel_aliases) and (key != self.panel_aliases[alias]):
                 raise PanelException(
-                    f'Panel alias "{alias}" for panel name "{panel.name}" already exists in the '
-                    + "config and points to a different panel name "
-                    + f"({', '.join(p.name for p in self.panel_aliases[alias])})."
-                    + "If you provided your own panel file, please "
-                    + "ensure the panel name an aliases are unique "
-                    + "in the header of the file."
+                    f'Panel alias "{alias}" already exists in the '
+                    f'config for panel "{self.panel_aliases[alias]}".'
+                    "If you provided your own panel file, please "
+                    "ensure the panel name an aliases are unique "
+                    "in the header of the file."
                 )
-            self.panel_aliases[alias].append(panel)
+            self.panel_aliases[alias] = key
+
+            # TODO: add test for panel with non uniqe alias to see we hit this error
 
     def load_assays(self, path: PathType):
         """Load all assays from a directory containing yaml files."""
@@ -151,7 +148,9 @@ class PNAConfig:
                 + "Please specify the version in only one place."
             )
 
+        # First try to load the provided panel_name
         panels_with_key = self.panels.get(panel_name)
+        # try to load using the version stripped name if the panel name contains a version specifier
         if panels_with_key is None and version_stripped_name is not None:
             panels_with_key = self.panels.get(version_stripped_name)
 
@@ -161,11 +160,13 @@ class PNAConfig:
                 'No panel found with name "%s". Trying to find it among panel aliases...',
                 panel_name,
             )
-            panels_with_key = self.panel_aliases.get(panel_name)
-            if panels_with_key is None and version_stripped_name is not None:
-                panels_with_key = self.panel_aliases.get(version_stripped_name)
+            panel_alias = self.panel_aliases.get(panel_name)
+            if panel_alias is None and version_stripped_name is not None:
+                panel_alias = self.panel_aliases.get(version_stripped_name)
+            if panel_alias is not None:
+                panels_with_key = self.panels.get(panel_alias)
 
-        if panels_with_key is None or not panels_with_key:
+        if panels_with_key is None:
             return None
 
         # if the version is specified, filter the panels
