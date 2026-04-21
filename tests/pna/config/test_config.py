@@ -100,26 +100,32 @@ def config_with_multiple_versions(pna_data_root):
     return new_config
 
 
-def test_loading_panel_from_config(config_with_multiple_versions, caplog):
-    panel_name = "test-pna-panel==1"
+def test_loading_panel_from_config(config_with_multiple_versions):
+    panel_name = "test-pna-panel==1.1.0"
     panel = config_with_multiple_versions.get_panel(panel_name)
-    assert (
-        f"Multiple minor versions found for panel {panel_name}. "
-        + "Automatically selecting the latest out of multiple minor version. "
-        + "Minor versions usually means there was a change in clones used for one or "
-        + "more markers. Panels might not be fully compatible. Proceed with caution!\n"
-        + "To silence this warning, please specify the minor version in the panel name or "
-        + "alias to disambiguate."
-    ) in caplog.text
     assert panel.name == "test-pna-panel"
     assert panel.version == "1.1.0"
+
+
+def test_loading_multiple_minor_version(config_with_multiple_versions):
+    panel_name = "test-pna-panel==1"
+    with pytest.raises(
+        ValueError,
+        match=f"Multiple minor versions found for panel {panel_name}. "
+        + "Refusing to automatically select the latest out of multiple minor versions. "
+        + "Minor versions usually means there was a change in clones used for one or "
+        + "more markers. Panels might not be fully compatible!\n"
+        + "Please specify the minor version in the panel name or "
+        + "alias to disambiguate.",
+    ):
+        config_with_multiple_versions.get_panel(panel_name)
 
 
 def test_loading_multiple_major_version(config_with_multiple_versions):
     panel_name = "test-pna-panel>=0.0.1"
     with pytest.raises(
         ValueError,
-        match=f"Multiple major versions found for panel {panel_name}. Please specify the major version in the panel name or alias to disambiguate.",
+        match=f"Multiple major versions found for panel {panel_name}. Please specify the major and minor version in the panel name or alias to disambiguate.",
     ):
         config_with_multiple_versions.get_panel(panel_name)
 
