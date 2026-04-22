@@ -30,6 +30,7 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     aliases: List[str] = []
+    archived: Optional[bool] = False
 
 
 class AntibodyPanel:
