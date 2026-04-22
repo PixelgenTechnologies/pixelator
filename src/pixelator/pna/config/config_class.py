@@ -106,19 +106,26 @@ class PNAConfig:
         """Get an assay by name."""
         return self.assays.get(assay_name)
 
-    def list_panel_names(self, include_aliases: bool = False) -> List[str]:
+    def list_panel_names(
+        self, include_aliases: bool = False, include_archived: bool = False
+    ) -> List[str]:
         """Return a list of all panel names.
 
         :param include_aliases: Include panel aliases in the list
+        :param include_archived: Include archived panels in the list
         :returns: A list of panel names
         """
-        out = sorted(list(self.panels.keys()))
+        out = []
+        for panel in itertools.chain.from_iterable(self.panels.values()):
+            if not panel.archived or include_archived:
+                if panel.name in self.panels:
+                    out.append(panel.name)
+                if include_aliases:
+                    for alias in panel.aliases:
+                        if alias in self.panel_aliases:
+                            out.append(alias)
 
-        if not include_aliases:
-            return out
-
-        out += sorted(list(self.panel_aliases.keys()))
-        return out
+        return sorted(out)  # type: ignore[arg-type]
 
     def get_panel(
         self,

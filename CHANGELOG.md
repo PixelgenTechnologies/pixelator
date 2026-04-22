@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [x.x.x] - TBD
 
 ### Added
-- Add the option to calculate proximity scores from edgelist using analytical expected join counts. 
+- Add the option to calculate proximity scores from edgelist using analytical expected join counts.
   `PNAPixelDataset.proximity(calculate_from_edgelist=True)` is used to compute these scores.
 
 - New implementation of `pixelator single-cell-pna graph`,
@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--min-component-size-to-prune`, this new implementation uses a common
   threshold set by `--component-size-min-threshold`, or 8000 by default.
 - Dependency: `pixelgen-pixelator-core` (Python bindings for the native graph step).
+- Add new optional field `archived` to panel metadata.
+- The parameter `--list-panels` now lists panels without the archived metadata field.
+- Add new option `--list-panels-including-archived` to list all panels including archived ones.
 
 ### Changed
 - The previous implementation has been renamed and is available with `pixelator single-cell-pna graph_legacy`.
