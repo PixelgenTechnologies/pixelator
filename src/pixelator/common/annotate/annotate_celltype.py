@@ -13,19 +13,21 @@ from anndata import AnnData
 from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsClassifier
 
+from pixelator.common.utils import logger
+
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def annotate_cells(
-    query: AnnData,
+    query: AnnData | pd.DataFrame,
     reference: AnnData | None = None,
     summarize_by_column: str | None = None,
     reference_groups: List[str] = ["celltype_l1", "celltype_l2"],
     method: str = "nmf",
     min_prediction_score: float = 0.3,
+    min_cells_per_celltype: int | None = None,
+    n_cells_per_group: int | None = None,
     skip_normalization: bool = False,
-    verbose: bool = False,
 ) -> AnnData:
     """Annotate cell types transferring labels from a reference to a query.
 
@@ -36,23 +38,32 @@ def annotate_cells(
     reference_groups (List[str]): The columns in `reference.obs` containing the ground truth labels.
     method (str): Either 'scanpy' (PCA + KNN, mimics Seurat) or 'nmf' (Seeded Non-Negative Matrix Factorization).
     min_prediction_score (float): Cells with prediction probabilities below this are labeled "Unknown".
+    min_cells_per_celltype (int | None): Minimum number of cells required per cell type for annotation.
+    n_cells_per_group (int | None): Number of cells to sample per group for annotation.
     skip_normalization (bool): If True, skips the library size normalization and log1p steps.
-    verbose (bool): If True, logs progress.
 
     Returns:
     AnnData: The query object with added annotations in `.obs`.
 
     """
     if reference is None:
-        reference = read_adata_from_csv(
-            counts_path="src/pixelator/common/resources/PBMC_cell_counts.csv",
-            meta_path="src/pixelator/common/resources/PBMC_cell_annotation.csv",
+        reference = sc.read_h5ad(
+            "src/pixelator/common/resources/pbmc_reference_celltype_annotations.h5ad"
         )
 
-    if not isinstance(query, AnnData) or not isinstance(reference, AnnData):
-        raise TypeError("query and reference must be AnnData objects.")
-    if method not in ["scanpy", "nmf"]:
-        raise ValueError("method must be either 'scanpy' or 'nmf'.")
+    if not isinstance(reference, AnnData):
+        raise TypeError("reference must be an AnnData object.")
+
+    if isinstance(query, pd.DataFrame):
+        query = AnnData(
+            X=query.values,
+            obs=pd.DataFrame(index=query.index),
+            var=pd.DataFrame(index=query.columns),
+        )
+
+    if not isinstance(query, AnnData):
+        raise TypeError("query must be an AnnData object or a Pandas DataFrame.")
+
     if not 0 <= min_prediction_score <= 1:
         raise ValueError("min_prediction_score must be between 0 and 1.")
 
@@ -62,38 +73,53 @@ def annotate_cells(
 
     shared_features = list(set(query.var_names).intersection(reference.var_names))
 
-    if verbose:
-        logger.info(f"Found {len(shared_features)} overlapping features.")
+    logger.debug(f"Found {len(shared_features)} overlapping features.")
 
     query_tmp = query[:, shared_features].copy()
     ref_tmp = reference[:, shared_features].copy()
 
     if not skip_normalization:
-        if verbose:
-            logger.info("Applying LogNormalize.")
+        logger.debug("Applying LogNormalize.")
         sc.pp.normalize_total(query_tmp, target_sum=1e4)
         sc.pp.log1p(query_tmp)
         sc.pp.normalize_total(ref_tmp, target_sum=1e4)
         sc.pp.log1p(ref_tmp)
 
-    if method == "scanpy":
-        query = _scanpy_annotation(
-            query=query_tmp,
-            reference=ref_tmp,
-            groups=reference_groups,
-            skip_normalization=skip_normalization,
-            min_prediction_score=min_prediction_score,
-            verbose=verbose,
-        )
-    elif method == "nmf":
-        query = _seeded_nmf_annotation(
-            query=query_tmp,
-            reference=ref_tmp,
-            groups=reference_groups,
-            skip_normalization=skip_normalization,
-            min_prediction_score=min_prediction_score,
-            verbose=verbose,
-        )
+    match method:
+        case "scanpy":
+            if min_cells_per_celltype is not None:
+                logger.warning(
+                    "min_cells_per_celltype is not applicable for 'scanpy' method and will be ignored."
+                )
+            if n_cells_per_group is not None:
+                logger.warning(
+                    "n_cells_per_group is not applicable for 'scanpy' method and will be ignored."
+                )
+            query = _scanpy_annotation(
+                query=query_tmp,
+                reference=ref_tmp,
+                groups=reference_groups,
+                skip_normalization=skip_normalization,
+                min_prediction_score=min_prediction_score,
+            )
+        case "nmf":
+            if n_cells_per_group is None:
+                n_cells_per_group = 50
+            if min_cells_per_celltype is None:
+                min_cells_per_celltype = 10
+            query = _seeded_nmf_annotation(
+                query=query_tmp,
+                reference=ref_tmp,
+                groups=reference_groups,
+                skip_normalization=skip_normalization,
+                min_prediction_score=min_prediction_score,
+                n_cells_per_group=n_cells_per_group,
+                min_cells_per_celltype=min_cells_per_celltype,
+            )
+        case _:
+            raise ValueError(
+                f"Unsupported method: {method}. Supported methods are 'scanpy' and 'nmf'."
+            )
 
     if summarize_by_column is not None:
         if summarize_by_column not in query.obs.columns:
@@ -121,11 +147,11 @@ def annotate_cells(
 
 
 def _scanpy_annotation(
-    query, reference, groups, skip_normalization, min_prediction_score, verbose
+    query, reference, groups, skip_normalization, min_prediction_score
 ):
     """Mimic Seurat's integration and label transfer (PCA + KNN)."""
-    if verbose:
-        logger.info("Running PCA and mapping query to reference space.")
+
+    logger.debug("Running PCA and mapping query to reference space.")
     sc.tl.pca(reference, svd_solver="arpack")
 
     X_ref_pca = reference.obsm["X_pca"]
@@ -133,8 +159,7 @@ def _scanpy_annotation(
     X_query_pca = query.X.dot(reference.varm["PCs"])
 
     for group in groups:
-        if verbose:
-            logger.info(f"Transferring labels for '{group}'.")
+        logger.debug(f"Transferring labels for '{group}'.")
 
         knn = KNeighborsClassifier(n_neighbors=30, weights="distance", metric="l1")
         knn.fit(X_ref_pca, reference.obs[group].astype(str))
@@ -152,7 +177,13 @@ def _scanpy_annotation(
 
 
 def _seeded_nmf_annotation(
-    query, reference, groups, skip_normalization, min_prediction_score, verbose
+    query,
+    reference,
+    groups,
+    skip_normalization,
+    min_prediction_score,
+    n_cells_per_group=100,
+    min_cells_per_celltype=10,
 ):
     """Seeded NMF using enrichment matrices and Non-Negative Least Squares."""
     ref_data = (
@@ -161,18 +192,16 @@ def _seeded_nmf_annotation(
     target_data = query.X.toarray() if pd.api.types.is_sparse(query.X) else query.X
 
     for group in groups:
-        if verbose:
-            logger.info(f"Running Seeded NMF for '{group}'.")
+        logger.debug(f"Running Seeded NMF for '{group}'.")
 
         labels = reference.obs[group].astype(str).values
 
         W, unique_groups = _get_w_matrix(
             ref_data=ref_data.T,
             groups=labels,
-            n_cells_per_group=100,
-            min_cells_per_celltype=10,
+            n_cells_per_group=n_cells_per_group,
+            min_cells_per_celltype=min_cells_per_celltype,
             seed=123,
-            verbose=verbose,
         )
 
         nnls_solver = LinearRegression(fit_intercept=False, positive=True)
@@ -198,20 +227,18 @@ def _seeded_nmf_annotation(
 def _get_w_matrix(
     ref_data,
     groups,
-    n_cells_per_group=50,
-    min_cells_per_celltype=10,
+    n_cells_per_group=20,
+    min_cells_per_celltype=20,
     seed=123,
-    verbose=True,
 ):
     """Compute an enrichment matrix to be used as a seed for NMF.
 
     Args:
     ref_data (np.ndarray): The reference data matrix (Features x Cells).
     groups (np.ndarray):Array of group labels for each cell.
-    n_cells_per_group (int): Number of cells to sample per group. Default is 50.
-    min_cells_per_celltype (int): Minimum number of cells required per group. Default is 10.
+    n_cells_per_group (int): Number of cells to sample per group. Default is 20.
+    min_cells_per_celltype (int): Minimum number of cells required per group. Default is 20.
     seed (int): Random seed for reproducibility. Default is 123.
-    verbose (bool): Whether to print progress messages. Default is True.
 
     Returns:
     np.ndarray: The enrichment matrix (Features x Groups).
@@ -223,9 +250,9 @@ def _get_w_matrix(
 
     counts = df_groups["group"].value_counts()
     valid_groups = counts[counts >= min_cells_per_celltype].index
-    if verbose and len(valid_groups) < len(counts):
-        logger.info(
-            f"Excluded {len(counts) - len(valid_groups)} groups with < {min_cells_per_celltype} cells."
+    for excluded_group in set(counts.index) - set(valid_groups):
+        logger.debug(
+            f"Excluding group '{excluded_group}' with only {counts[excluded_group]} cells. Minimum required number of cells is {min_cells_per_celltype}."
         )
 
     sampled_indices = []
@@ -256,28 +283,3 @@ def _get_w_matrix(
     W = W / max_vals
 
     return W, unique_groups
-
-
-def read_adata_from_csv(counts_path: str, meta_path: str) -> AnnData:
-    """Read single cell counts data and obs (meta-data) to an AnnData object.
-
-    Args:
-    counts_path (str): Path to the counts csv file.
-    meta_path (str): Path to the obs csv file.
-
-    Returns:
-    AnnData: The AnnData object.
-
-    """
-    counts = pd.read_csv(counts_path, index_col=0)
-    meta = pd.read_csv(meta_path, index_col=0)
-
-    common_indices = meta.index.intersection(counts.index)
-    counts = counts.loc[common_indices]
-    meta = meta.loc[common_indices]
-
-    adata = AnnData(X=counts.values, obs=meta)
-    adata.var_names = counts.columns
-    adata.obs_names = counts.index
-
-    return adata
