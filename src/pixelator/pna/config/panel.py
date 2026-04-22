@@ -44,7 +44,10 @@ class PNAAntibodyPanel:
     ]
 
     # and these should have unique values
-    _UNIQUE_COLUMNS = ["sequence_1", "sequence_2", "conj_id"]
+    _UNIQUE_COLUMNS = [
+        "sequence_1",
+        "sequence_2",
+    ]
 
     def __init__(
         self,

@@ -30,7 +30,6 @@ def mock_panel_fixture(request):
             "nuclear": ["yes", "no", "no"],
             "sequence_1": ["AAAA", "CCCC", "GGGG"],
             "sequence_2": ["TTTT", "AAAA", "CCCC"],
-            "conj_id": ["C001", "C002", "C003"],
         }
     )
     mock_antibody_panel.df.index = mock_antibody_panel.df.marker_id
