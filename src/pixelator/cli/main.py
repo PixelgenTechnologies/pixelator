@@ -165,6 +165,7 @@ from pixelator.pna.cli.layout import layout
 from pixelator.pna.cli.misc import (
     list_single_cell_pna_designs,
     list_single_cell_pna_panels,
+    list_single_cell_pna_panels_including_archived,
 )
 from pixelator.pna.cli.report import report
 from pixelator.pna.cli.sample_calling import sample_calling_cli
@@ -180,6 +181,16 @@ from pixelator.pna.cli.sample_calling import sample_calling_cli
     required=False,
     callback=list_single_cell_pna_designs,
     help="List available designs and exit.",
+)
+@click.option(
+    "--list-panels-including-archived",
+    is_flag=True,
+    metavar="",
+    is_eager=True,
+    expose_value=False,
+    required=False,
+    callback=list_single_cell_pna_panels_including_archived,
+    help="List all panels, including panels marked as archived, and exit.",
 )
 @click.option(
     "--list-panels",

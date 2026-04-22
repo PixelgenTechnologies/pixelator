@@ -30,7 +30,9 @@ def list_single_cell_pna_designs(ctx: click.Context, param: Any, value: Any) -> 
     ctx.exit()
 
 
-def list_single_cell_pna_panels(ctx: click.Context, param: Any, value: Any) -> None:
+def list_single_cell_pna_panels(
+    ctx: click.Context, param: Any, value: Any, include_archived: bool = False
+) -> None:
     """Return a list of single cell panels supported by the config.
 
     :param ctx: The click context
@@ -42,8 +44,22 @@ def list_single_cell_pna_panels(ctx: click.Context, param: Any, value: Any) -> N
     if not value or ctx.resilient_parsing:
         return
 
-    options = pna_config.list_panel_names(include_aliases=True)
+    options = pna_config.list_panel_names(
+        include_aliases=True, include_archived=include_archived
+    )
     for option in options:
         click_echo(option)
 
     ctx.exit()
+
+
+def list_single_cell_pna_panels_including_archived(
+    ctx: click.Context, param: Any, value: Any
+) -> None:
+    """Return a list of single cell panels supported by the config, including archived panels.
+
+    :param ctx: The click context
+    :param param: The click parameter
+    :param value: The click value
+    """
+    list_single_cell_pna_panels(ctx, param, value, include_archived=True)
