@@ -1,7 +1,9 @@
 # ---
 # name: test-pna-panel
+# product: test-product
 # aliases:
 #   - test-pna
+#   - test-pna-v3
 # description: >-
 #     Test R&D panel for PNA.
 #     V2 version to test specific version loading

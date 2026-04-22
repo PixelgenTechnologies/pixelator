@@ -149,6 +149,39 @@ def test_loading_panel_from_config_specific_version(config_with_multiple_version
     assert panel.version == "2.0.0"
 
 
+def test_loading_panel_from_config_product_and_specific_version(
+    config_with_multiple_versions,
+):
+    panel = config_with_multiple_versions.get_panel("test-product", version="1.1.0")
+    assert panel.name == "test-pna-panel"
+    assert panel.version == "1.1.0"
+
+
+def test_loading_panel_from_config_alias_and_specific_version(
+    config_with_multiple_versions,
+):
+    # NOTE: Panel aliases is a DEPRECATED feature and should not be used for new panels.
+    #
+    # When trying to specify the version using "v1", "v3" etc within the panel_name, alias or
+    # product name, as shown below, this is still only interpretated as part of the name.
+    #
+    # For example the alias "test-pna-panel-v3" points to the panel_name "test-pna-panel" which has
+    # versions 1.0.0, 1.1.0 and 2.0.0 available.
+    #
+    # When used with an alias this leads to a somewhat weird situation where, in this case, the
+    # alias "test-pna-panel-v3" can be used to load any of the versions of the panel even though the
+    # alias was specified in the 2.0.0 version of the panel.
+    # This was accepted behaviour as the alias was mainly be used for backwards compability
+    # when a panel had been renamed and as such points to panel_name and not a specific version.
+    #
+    # For new panels use the panel_name alternatively the product name together with the version
+    # speciefied as a parameter to config.get_panel or appended to the end of the product name.
+
+    panel = config_with_multiple_versions.get_panel("test-pna-v3", version="1.1.0")
+    assert panel.name == "test-pna-panel"
+    assert panel.version == "1.1.0"
+
+
 def test_load_antibody_panel_util(pna_data_root):
     cgf_panel = load_antibody_panel(pna_config, "proxiome-immuno-155-v2")
     assert cgf_panel.name == "proxiome-immuno-155-v2"
@@ -165,7 +198,7 @@ def test_load_antibody_panel_util(pna_data_root):
 
 def test_panel_with_non_dna_sequences(pna_data_root):
     panel_df = pd.read_csv(
-        pna_data_root / "test-pna-panel-v1.1.0.csv", skiprows=9, index_col="marker_id"
+        pna_data_root / "test-pna-panel-v1.1.0.csv", index_col="marker_id", comment="#"
     ).fillna("")
     panel_df["control"] = panel_df["control"].map(lambda s: s.lower() == "yes")
     panel_df.loc["CD45", "sequence_1"] = "PPPPPP"
