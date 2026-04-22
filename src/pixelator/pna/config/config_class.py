@@ -165,9 +165,13 @@ class PNAConfig:
 
         # try to load the provided panel_name as a product name if no panel name matches are found
         if panels_with_key is None:
+            logger.debug(
+                'No panel found with name "%s". Trying to find it among panel product names...',
+                panel_name,
+            )
             panels_with_key = self.products.get(panel_name)
-        if panels_with_key is None and version_stripped_name is not None:
-            panels_with_key = self.products.get(version_stripped_name)
+            if panels_with_key is None and version_stripped_name is not None:
+                panels_with_key = self.products.get(version_stripped_name)
 
         # Try to load using an alias if no name matches are found
         if panels_with_key is None and allow_aliases:
@@ -182,10 +186,16 @@ class PNAConfig:
                 panels_with_key = self.panels.get(panel_alias)
 
         if panels_with_key is None:
+            logger.debug('No panel found with name "%s".', panel_name)
             return None
 
         # if the version is specified, filter the panels
         if specified_version or version:
+            logger.debug(
+                'Filtering panels with name "%s" for version specifier "%s".',
+                version_stripped_name or panel_name,
+                specified_version or version,
+            )
             panel_versions = set(
                 SpecifierSet(specified_version or "==" + version).filter(  # type: ignore
                     [p.version for p in panels_with_key]
