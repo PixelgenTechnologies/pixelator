@@ -75,7 +75,8 @@ def test_demux_record_batch():
 def test_independent_demuxing(testdata_demux_passed_reads):
     assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel(
-        "proxiome-immuno-155-v1", allow_aliases=True, version="1.0.0"
+        "proxiome-v1-immuno-155-v1.0",
+        allow_aliases=True,
     )
 
     marker_counts = {
@@ -148,6 +149,58 @@ def test_independent_demuxing(testdata_demux_passed_reads):
         ("CD43", "CD45"): 1,
         ("CD29", "HLA-DR-DP-DQ"): 1,
     }
+    trans = {
+        "CD35": "CR1",
+        "CD49D": "CD49d",
+        "CD274": "PD-L1",
+        "CD328": "Siglec-7",
+        "CD279": "PD-1",
+        "CD335": "NKp46",
+        "CD152": "CTLA-4",
+        "CD156c": "ADAM10",
+        "CD158a": "KIR2DL1",
+        "CD158b": "KIR2DL2/DL3",
+        "CD159a": "NKG2A",
+        "CD159c": "NKG2C",
+        "CD226": "DNAM-1",
+        "CD273": "PD-L2",
+        "CD352": "SLAMF6",
+        "CD85j": "LILRB1",
+        "CD199": "CCR9",
+        "CD231": "TALLA",
+        "CD305": "LAIR1",
+        "TCRva7.2": "TCRVa7.2",
+        "CD95": "Fas",
+        "CD366": "TIM-3",
+        "CD357": "GITR",
+        "CD193": "CCR3",
+        "CD319": "SLAMF7",
+        "CD134": "OX40",
+        "CD102": "ICAM-2",
+        "CD154": "CD40L",
+        "CD158": "KIR",
+        "CD191": "CCR1",
+        "CD192": "CCR2",
+        "CD229": "Ly9",
+        "CD244": "2B4",
+        "CD268": "BAFF-R",
+        "CD278": "ICOS",
+        "CD337": "NKp30",
+        "CD50": "ICAM-3",
+        "TCRVB5": "TCRVb5",
+        "CD269": "BCMA",
+        "CD137": "4-1BB",
+        "CD326": "EpCAM",
+        "CD209": "DC-SIGN",
+        "CD369": "Dectin-1",
+        "CD54": "ICAM-1",
+        "CD117": "c-Kit",
+        "CD314": "NKG2D",
+    }
+    marker_counts = {
+        (trans.get(m1, m1), trans.get(m2, m2)): count
+        for (m1, m2), count in marker_counts.items()
+    }
 
     m1_group_map, m2_group_map = independent_marker_groups_mapping(marker_counts, 10)
     barcode_demuxer = IndependentBarcodeDemuxer(
@@ -160,6 +213,8 @@ def test_independent_demuxing(testdata_demux_passed_reads):
     chunks = []
     # only check the first 100 reads
     for read in dnaio.open(testdata_demux_passed_reads):
+        m1, m2 = read.name.split(" ")[-1].split(":")
+        read.name = f"{read.name.split(' ')[0]} {trans.get(m1, m1)}:{trans.get(m2, m2)}"
         r = barcode_demuxer(read)
         if r:
             chunks.extend(r)
