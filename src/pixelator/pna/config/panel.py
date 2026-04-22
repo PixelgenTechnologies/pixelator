@@ -41,7 +41,6 @@ class PNAAntibodyPanel:
         "control",
         "sequence_1",
         "sequence_2",
-        "conj_id",
     ]
 
     # and these should have unique values
