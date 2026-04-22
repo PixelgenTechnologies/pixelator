@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--min-component-size-to-prune`, this new implementation uses a common
   threshold set by `--component-size-min-threshold`, or 8000 by default.
 - Dependency: `pixelgen-pixelator-core` (Python bindings for the native graph step).
-- Add new optional field archived to panel metadata.
+- Add new optional field `archived` to panel metadata.
   The parameter `--list-panels` now lists panels without the archived metadata field.
   Add new option `--list-panels-including-archived` to list all panels including archived ones.
 
