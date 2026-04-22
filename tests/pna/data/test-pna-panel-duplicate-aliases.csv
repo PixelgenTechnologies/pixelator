@@ -1,7 +1,7 @@
 # ---
 # name: test-pna-panel-duplicate-aliases
 # aliases:
-#   - proxiome-immuno-155plex-v2
+#   - test-pna
 # description: >-
 #     Test R&D panel for PNA.
 #     V2 version to test specific version loading

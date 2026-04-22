@@ -249,7 +249,7 @@ def test_barcode_identifier_statistics_accumulation():
 def test_marker_correction_pipeline(tmp_path, testdata_amplicon_fastq):
     input_file = testdata_amplicon_fastq
     assay = pna_config.get_assay("proxiome-v1")
-    panel = pna_config.get_panel("proxiome-immuno-155-v3")
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
 
     input_files = [input_file]
     demux_output = create_output_stage_dir(tmp_path, "demux")

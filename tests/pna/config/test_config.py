@@ -108,12 +108,13 @@ def test_loading_panel_from_config(config_with_multiple_versions):
 @pytest.mark.parametrize(
     "panel_alias,panel_name,panel_version",
     [
-        ("proxiome-immuno-155-v1", "proxiome-v1-immuno-155-v1.0", "1.0.1"),
-        ("proxiome-immuno-155-v3", "proxiome-v1-immuno-155-v1.1", "1.1.0"),
+        ("test-pna", "test-pna-panel", "0.2.0"),
     ],
 )
-def test_loading_panel_from_config_alias(panel_alias, panel_name, panel_version):
-    panel = pna_config.get_panel(panel_alias)
+def test_loading_panel_from_config_alias(
+    config_with_multiple_versions, panel_alias, panel_name, panel_version
+):
+    panel = config_with_multiple_versions.get_panel(panel_alias)
     assert panel.name == panel_name
     assert panel.version == panel_version
 
@@ -160,22 +161,6 @@ def test_panel_with_non_dna_sequences(pna_data_root):
 def test_list_panel_names(pna_data_root):
     assert sorted(pna_config.list_panel_names(include_aliases=True)) == sorted(
         [
-            "proxiome-immuno-155-v1",
-            "proxiome-immuno-155-v2",
-            "proxiome-immuno-155-v3",
-            "proxiome-immuno-155plex-v1",
-            "proxiome-immuno-155plex-v2",
-            "proxiome-immuno-155plex-v3",
-            "proxiome-immuno-156-FLAG-v2",
-            "proxiome-immuno-156-FLAG-v3",
-            "proxiome-immuno-156-FLAGplex-v2",
-            "proxiome-immuno-156-FLAGplex-v3",
-            "proxiome-immuno-156-FMC63-v1",
-            "proxiome-immuno-156-FMC63-v2",
-            "proxiome-immuno-156-FMC63-v3",
-            "proxiome-immuno-156-FMC63plex-v1",
-            "proxiome-immuno-156-FMC63plex-v2",
-            "proxiome-immuno-156-FMC63plex-v3",
             "proxiome-v1-immuno-155-v1.0",
             "proxiome-v1-immuno-155-v1.1",
             "proxiome-v1-immuno-156-FLAG-v1.0",
@@ -195,8 +180,8 @@ def test_list_panel_names(pna_data_root):
     ]
 
 
-def test_loading_duplicate_aliases(pna_data_root):
-    this_config = copy.deepcopy(pna_config)
+def test_loading_duplicate_aliases(config_with_multiple_versions, pna_data_root):
+    this_config = copy.deepcopy(config_with_multiple_versions)
     from pixelator.common.config.config_class import PanelException
 
     with pytest.raises(PanelException):

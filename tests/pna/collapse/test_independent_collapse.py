@@ -23,7 +23,7 @@ class TestRegionCollapserInternals:
     @pytest.fixture(autouse=True, scope="function")
     def _setup_collapser(self, umi1_partition):
         self.assay = pna_config.get_assay("proxiome-v1")
-        self.panel = pna_config.get_panel("proxiome-immuno-155-v3")
+        self.panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
         self.collapser = RegionCollapser(
             assay=self.assay,
             panel=self.panel,
@@ -82,7 +82,7 @@ class TestSharedMemoryWarnings:
     ):
         """When shm available cannot be read, no warning is logged."""
         assay = pna_config.get_assay("proxiome-v1")
-        panel = pna_config.get_panel("proxiome-immuno-155-v3")
+        panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
         collapser = RegionCollapser(
             assay=assay,
             panel=panel,
@@ -110,7 +110,7 @@ class TestSharedMemoryWarnings:
     ):
         """When available shm exceeds required, no warning is logged."""
         assay = pna_config.get_assay("proxiome-v1")
-        panel = pna_config.get_panel("proxiome-immuno-155-v3")
+        panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
         collapser = RegionCollapser(
             assay=assay,
             panel=panel,
@@ -135,7 +135,7 @@ class TestSharedMemoryWarnings:
     ):
         """When required shm exceeds available, warning is logged with required and available."""
         assay = pna_config.get_assay("proxiome-v1")
-        panel = pna_config.get_panel("proxiome-immuno-155-v3")
+        panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
         collapser = RegionCollapser(
             assay=assay,
             panel=panel,
@@ -157,7 +157,7 @@ class TestSharedMemoryWarnings:
 @pytest.mark.slow
 def test_region_collapser_umi1(tmp_path, m1_demuxed_data_part0):
     assay = pna_config.get_assay("proxiome-v1")
-    panel = pna_config.get_panel("proxiome-immuno-155-v3")
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
     output1 = tmp_path / "PNA055_Sample07_filtered_S7.collapse.m1.part_000.parquet"
 
     collapser = RegionCollapser(
@@ -183,7 +183,7 @@ def test_region_collapser_umi1(tmp_path, m1_demuxed_data_part0):
 @pytest.mark.slow
 def test_region_collapser_umi2(tmp_path, m1_demuxed_data_part0):
     assay = pna_config.get_assay("proxiome-v1")
-    panel = pna_config.get_panel("proxiome-immuno-155-v3")
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
     output1 = tmp_path / "PNA055_Sample07_filtered_S7.collapse.m1.part_000.parquet"
 
     collapser = RegionCollapser(
@@ -209,7 +209,7 @@ def test_region_collapser_umi2(tmp_path, m1_demuxed_data_part0):
 @pytest.mark.slow
 def test_process_independent_files(tmp_path, m1_demuxed_data, m2_demuxed_data):
     assay = pna_config.get_assay("proxiome-v1")
-    panel = pna_config.get_panel("proxiome-immuno-155-v3")
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
     output1 = tmp_path / "PNA055_Sample07_filtered_S7.collapse.m1.part_000.parquet"
     output2 = tmp_path / "PNA055_Sample07_filtered_S7.collapse.m2.part_000.parquet"
 
