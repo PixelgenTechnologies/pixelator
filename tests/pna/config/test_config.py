@@ -160,7 +160,7 @@ def test_loading_multiple_major_version(config_with_multiple_versions):
 @pytest.mark.parametrize(
     "panel_alias,panel_name,panel_version",
     [
-        ("test-pna", "test-pna-panel", "0.2.0"),
+        ("test-pna==1.1.0", "test-pna-panel", "1.1.0"),
     ],
 )
 def test_loading_panel_from_config_alias(
