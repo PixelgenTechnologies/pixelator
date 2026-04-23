@@ -1,11 +1,13 @@
 # ---
 # name: test-pna-panel
+# product: test-product
 # aliases:
 #   - test-pna
+#   - test-pna-v2
 # description: >-
 #     Test R&D panel for PNA.
 #     V2 version to test specific version loading
-# version: 0.2.0
+# version: 1.1.0
 # ---
 marker_id,control,nuclear,full_name,alt_id,sequence_1,sequence_2
 HLA-ABC,,,,,ACTTCCTAGG,ACTTCCTAGG

@@ -93,22 +93,74 @@ def test_get_position_in_amplicon_pna_1():
 
 @pytest.fixture()
 def config_with_multiple_versions(pna_data_root):
+    """Create a config fixture with multiple versions of the same panel.
+
+    Args:
+        pna_data_root: Root path to PNA test data files.
+
+    Returns:
+        A PNA config object populated with panel version variants.
+
+    """
     new_config = copy.deepcopy(pna_config)
     new_config = load_panels_package(new_config, "tests.pna.data.panels")
-    new_config.load_panel_file(pna_data_root / "test-pna-panel-v2.csv")
+    new_config.load_panel_file(pna_data_root / "test-pna-panel-v1.1.0.csv")
+    new_config.load_panel_file(pna_data_root / "test-pna-panel-v2.0.0.csv")
     return new_config
 
 
 def test_loading_panel_from_config(config_with_multiple_versions):
-    panel = config_with_multiple_versions.get_panel("test-pna-panel")
+    """Verify resolving a panel by inline exact version specifier.
+
+    Args:
+        config_with_multiple_versions: Config fixture with multiple panel versions.
+
+    """
+    panel_name = "test-pna-panel==1.1.0"
+    panel = config_with_multiple_versions.get_panel(panel_name)
     assert panel.name == "test-pna-panel"
-    assert panel.version == "0.2.0"
+    assert panel.version == "1.1.0"
+
+
+def test_loading_multiple_minor_version(config_with_multiple_versions):
+    """Verify ambiguous minor-version requests raise a descriptive error.
+
+    Args:
+        config_with_multiple_versions: Config fixture with multiple panel versions.
+
+    """
+    panel_name = "test-pna-panel==1"
+    with pytest.raises(
+        ValueError,
+        match=f"Multiple minor versions found for panel {panel_name}. "
+        + "Refusing to automatically select the latest out of multiple minor versions. "
+        + "Minor versions usually means there was a change in clones used for one or "
+        + "more markers. Panels might not be fully compatible!\n"
+        + "Please specify the minor version in the panel name or "
+        + "alias to disambiguate.",
+    ):
+        config_with_multiple_versions.get_panel(panel_name)
+
+
+def test_loading_multiple_major_version(config_with_multiple_versions):
+    """Verify ambiguous major-version requests raise a descriptive error.
+
+    Args:
+        config_with_multiple_versions: Config fixture with multiple panel versions.
+
+    """
+    panel_name = "test-pna-panel>=0.0.1"
+    with pytest.raises(
+        ValueError,
+        match=f"Multiple major versions found for panel {panel_name}. Please specify the major and minor version in the panel name or alias to disambiguate.",
+    ):
+        config_with_multiple_versions.get_panel(panel_name)
 
 
 @pytest.mark.parametrize(
     "panel_alias,panel_name,panel_version",
     [
-        ("test-pna", "test-pna-panel", "0.2.0"),
+        ("test-pna==1.1.0", "test-pna-panel", "1.1.0"),
     ],
 )
 def test_loading_panel_from_config_alias(
@@ -120,32 +172,94 @@ def test_loading_panel_from_config_alias(
 
 
 def test_loading_panel_from_config_specific_version(config_with_multiple_versions):
-    panel = config_with_multiple_versions.get_panel("test-pna-panel", version="0.1.0")
-    assert panel.name == "test-pna-panel"
-    assert panel.version == "0.1.0"
+    """Verify resolving a named panel using the explicit version argument.
 
-    panel = config_with_multiple_versions.get_panel("test-pna-panel", version="0.2.0")
+    Args:
+        config_with_multiple_versions: Config fixture with multiple panel versions.
+
+    """
+    panel = config_with_multiple_versions.get_panel("test-pna-panel", version="1.1.0")
     assert panel.name == "test-pna-panel"
-    assert panel.version == "0.2.0"
+    assert panel.version == "1.1.0"
+
+    panel = config_with_multiple_versions.get_panel("test-pna-panel", version="2.0.0")
+    assert panel.name == "test-pna-panel"
+    assert panel.version == "2.0.0"
+
+
+def test_loading_panel_from_config_product_and_specific_version(
+    config_with_multiple_versions,
+):
+    """Verify resolving a panel by product name plus explicit version.
+
+    Args:
+        config_with_multiple_versions: Config fixture with multiple panel versions.
+
+    """
+    panel = config_with_multiple_versions.get_panel("test-product", version="1.1.0")
+    assert panel.name == "test-pna-panel"
+    assert panel.version == "1.1.0"
+
+
+def test_loading_panel_from_config_alias_and_specific_version(
+    config_with_multiple_versions,
+):
+    """Verify alias lookup can still be filtered by explicit version.
+
+    Args:
+        config_with_multiple_versions: Config fixture with multiple panel versions.
+
+    """
+    # NOTE: Panel aliases are deprecated and should not be used for new panels.
+    #
+    # Version-like suffixes such as "v1" or "v3" in panel names, aliases, or product names are
+    # treated as part of the identifier, not as a version constraint.
+    #
+    # Example: the alias "test-pna-panel-v3" maps to the panel name "test-pna-panel", which has
+    # versions 1.0.0, 1.1.0, and 2.0.0.
+    #
+    # As a result, this alias can resolve to any of those versions when combined with an explicit
+    # version argument, even though the alias itself was introduced with version 2.0.0.
+    # This legacy behavior exists for backward compatibility, because aliases map to panel names,
+    # not to specific panel versions.
+    #
+    # For new panels, use the panel name (or product name) together with an explicit version,
+    # either via config.get_panel(..., version=...) or by appending a version specifier to the name.
+
+    panel = config_with_multiple_versions.get_panel("test-pna-v3", version="1.1.0")
+    assert panel.name == "test-pna-panel"
+    assert panel.version == "1.1.0"
 
 
 def test_load_antibody_panel_util(pna_data_root):
+    """Verify utility loading works for config names and filesystem paths.
+
+    Args:
+        pna_data_root: Root path to PNA test data files.
+
+    """
     cgf_panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")
     assert cgf_panel.name == "proxiome-v1-immuno-155-v1.0"
 
     path_panel = load_antibody_panel(
-        pna_config, pna_data_root / "test-pna-panel-v2.csv"
+        pna_config, pna_data_root / "test-pna-panel-v1.1.0.csv"
     )
     assert path_panel.name == "test-pna-panel"
-    assert path_panel.filename == "test-pna-panel-v2.csv"
+    assert path_panel.filename == "test-pna-panel-v1.1.0.csv"
 
     with pytest.raises(AssertionError):
         load_antibody_panel(pna_config, "human-qwdqwdqwdqdw-proteomics")
 
 
 def test_panel_with_non_dna_sequences(pna_data_root):
+    """Verify non-DNA sequence content yields validation errors.
+
+    Args:
+        pna_data_root: Root path to PNA test data files.
+
+    """
     panel_df = pd.read_csv(
-        pna_data_root / "test-pna-panel-v2.csv", skiprows=9, index_col="marker_id"
+        pna_data_root / "test-pna-panel-v1.1.0.csv", index_col="marker_id", comment="#"
     ).fillna("")
     panel_df["control"] = panel_df["control"].map(lambda s: s.lower() == "yes")
     panel_df.loc["CD45", "sequence_1"] = "PPPPPP"

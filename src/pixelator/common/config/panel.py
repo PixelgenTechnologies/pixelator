@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, List, Optional
 import pandas as pd
 import pydantic
 import ruamel.yaml as yaml
+from packaging.version import Version
 
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
@@ -26,10 +27,29 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
 
     model_config = pydantic.ConfigDict(extra="ignore")
 
-    version: Optional[str] = None
-    name: Optional[str] = None
+    version: str
+    name: str
+    product: Optional[str] = None
     description: Optional[str] = None
     aliases: List[str] = []
+
+    @pydantic.field_validator("version")
+    @classmethod
+    def check_version(cls, v: str) -> str:
+        """Validate that the panel version string is parseable.
+
+        Args:
+            v: Version string from panel metadata.
+
+        Returns:
+            The input version string when validation succeeds.
+
+        Raises:
+            packaging.version.InvalidVersion: If the value is not a valid version.
+
+        """
+        Version(v)  # will raise if not a valid version string
+        return v
 
 
 class AntibodyPanel:
@@ -125,7 +145,7 @@ class AntibodyPanel:
         return self._metadata.aliases
 
     @classmethod
-    def validate_antibody_panel(self, panel_df: pd.DataFrame) -> list[str]:
+    def validate_antibody_panel(cls, panel_df: pd.DataFrame) -> list[str]:
         """Perform validation on an antibody panel file.
 
         Will try to find as many issues as possible.
@@ -141,14 +161,18 @@ class AntibodyPanel:
         ...     AssertionError("There was a problem with the panel data!")
         ````
 
-        :param panel_df: DataFrame with data of the panel to validate
-        :returns list[str]: a list of errors (str)
+        Args:
+            panel_df: Panel dataframe to validate.
+
+        Returns:
+            A list of validation error messages. An empty list means valid input.
+
         """
         errors = []
 
         # some basic sanity check on the panel size and columns
-        if not set(self._REQUIRED_COLUMNS).issubset(set(panel_df.columns)):
-            missing_columns = set(self._REQUIRED_COLUMNS) - set(panel_df.columns)
+        if not set(cls._REQUIRED_COLUMNS).issubset(set(panel_df.columns)):
+            missing_columns = set(cls._REQUIRED_COLUMNS) - set(panel_df.columns)
             errors.append(f"Panel has missing required columns: {missing_columns}")
             return errors
 
@@ -157,7 +181,7 @@ class AntibodyPanel:
             return errors
 
         # sanity check on the unique columns
-        for col in self._UNIQUE_COLUMNS:
+        for col in cls._UNIQUE_COLUMNS:
             if not len(panel_df[col].unique()) == len(panel_df[col]):
                 errors.append(f"All values in column: {col} were not unique")
 
@@ -212,10 +236,17 @@ class AntibodyPanel:
 
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
-        """Parse front-matter YAML from a file.
+        """Parse front-matter YAML metadata from a panel file.
 
-        :param file: the file to parse
-        :return AntibodyPanelMetadata: a pydantic model with the metadata
+        Args:
+            file: Panel CSV file whose leading comment block contains YAML metadata.
+
+        Returns:
+            Parsed panel metadata.
+
+        Raises:
+            ValueError: If no metadata header is present in the file.
+
         """
         yaml_loader = yaml.YAML(typ="safe")
 
@@ -231,8 +262,7 @@ class AntibodyPanel:
         raw_config = list(yaml_loader.load_all(metadata))
 
         if len(raw_config) == 0:
-            warnings.warn(f"Expected a YAML frontmatter in {file}")
-            return AntibodyPanelMetadata(version=None, name=None, description=None)
+            raise ValueError(f"No header / metadata found in panel file {file}")
 
         frontmatter = raw_config[0]
         return AntibodyPanelMetadata.model_validate(frontmatter)

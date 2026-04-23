@@ -333,7 +333,7 @@ class Assay:
             if r.regions:
                 child_regions = cls._parse_regions(r.regions, level=level + 1)
 
-            opts = r.dict()
+            opts = r.model_dump()
             opts.update({"regions": child_regions})
             region_obj = Region(**opts)
 
