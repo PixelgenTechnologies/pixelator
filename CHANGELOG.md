@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Important changes
 The assay and panel names have been migrated to the new naming scheme.
 
-Use `proxiome-v1` instead of `pna-2` for the --design commandline argument.
+Use `proxiome-v1` instead of `pna-2` for the `--design` command-line argument.
 
 See the updated table below for which panel version to use:
 | Kit lot        | Panel version           | Old panel name               | New panel name                    |
@@ -20,7 +20,7 @@ See the updated table below for which panel version to use:
 | 2507 and above | Immuno 155 v1.1         | proxiome-immuno-155-v3       | proxiome-v1-immuno-155-v1.1       |
 | 2507 and above | Immuno 155 v1.1 + FLAG  | proxiome-immuno-156-FLAG-v3  | proxiome-v1-immuno-156-FLAG-v1.1  |
 | 2507 and above | Immuno 155 v1.1 + FMC63 | proxiome-immuno-156-FMC63-v3 | proxiome-v1-immuno-156-FMC63-v1.1 |
-The old panel names no longer work please specify the new panel name instead.
+The old panel names no longer work; please specify the new panel name instead.
 
 ### Added
 - Add the option to calculate proximity scores from edgelist using analytical expected join counts.
@@ -49,10 +49,10 @@ The old panel names no longer work please specify the new panel name instead.
 
 ### Changed
 - The previous implementation has been renamed and is available with `pixelator single-cell-pna graph_legacy`.
-- Rename bundled PNA v1 resources to `proxiome-v1-*` naming for assays and panels. IMPORTANT: the old panel names no longer works, to rerun old data update relevant scripts to the new panel name(s).
-- Removed all panel aliases. Use correct panel name alteratively productname with a version specifier to specify the panel to be used.
+- Rename bundled PNA v1 resources to `proxiome-v1-*` naming for assays and panels. IMPORTANT: the old panel names no longer work. To rerun old data, update relevant scripts to the new panel name(s).
+- Remove all panel aliases. Use the correct panel name, or alternatively use a product name with a version specifier to select the panel.
 - Panel selection is now stricter when multiple versions exist: ambiguous major/minor requests raise errors and require explicit version disambiguation.
-- Panel metadata validation now requires frontmatter with `name` and a parseable `version`.
+- Panel metadata validation now requires front matter with `name` and a parseable `version`.
 
 ### Parameters
 

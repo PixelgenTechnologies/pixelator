@@ -261,12 +261,12 @@ class PNAConfig:
             )
 
         # If there are multiple panels with the same name and major version but different minor
-        # versions, raise a error and promt for more fine grained specification
+        # versions, raise an error and prompt for a more fine-grained specification.
         elif len(set(p.version.split(".")[1] for p in panels_with_key)) > 1:
             raise ValueError(
                 f"Multiple minor versions found for panel {panel_name}. "
                 + "Refusing to automatically select the latest out of multiple minor versions. "
-                + "Minor versions usually means there was a change in clones used for one or "
+                + "Minor versions usually mean that there was a change in clones used for one or "
                 + "more markers. Panels might not be fully compatible!\n"
                 + "Please specify the minor version in the panel name or "
                 + "alias to disambiguate.",
@@ -330,8 +330,8 @@ def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional
 
     """
     if match := re.search(
-        # here we allow panel names matching [A-Za-z0-9-.]+)
-        # followed by a version specifier ==, >=, <= ... etc
+        # Allow panel names matching [A-Za-z0-9-.]+,
+        # followed by a version specifier (==, >=, <=, etc.).
         r"^(?P<name>[A-Za-z0-9-.]+)(?P<spec>([<>=]{1,2}))(?P<major>\d)(?P<minor>\.\d)?(?P<patch>\.\d)?$",
         panel_name,
     ):

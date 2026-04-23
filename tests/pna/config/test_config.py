@@ -134,7 +134,7 @@ def test_loading_multiple_minor_version(config_with_multiple_versions):
         ValueError,
         match=f"Multiple minor versions found for panel {panel_name}. "
         + "Refusing to automatically select the latest out of multiple minor versions. "
-        + "Minor versions usually means there was a change in clones used for one or "
+        + "Minor versions usually mean that there was a change in clones used for one or "
         + "more markers. Panels might not be fully compatible!\n"
         + "Please specify the minor version in the panel name or "
         + "alias to disambiguate.",
