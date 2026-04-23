@@ -122,7 +122,6 @@ class PNAConfig:
                     "in the header of the file."
                 )
             self.panel_aliases[alias] = key
-            # TODO: add test for panel with non uniqe alias to see we hit this error
 
     def load_assays(self, path: PathType):
         """Load all assays from a directory containing yaml files."""
