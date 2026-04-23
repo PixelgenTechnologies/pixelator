@@ -36,7 +36,18 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
     @pydantic.field_validator("version")
     @classmethod
     def check_version(cls, v: str) -> str:
-        """Validate that the version string is a valid version string."""
+        """Validate that the panel version string is parseable.
+
+        Args:
+            v: Version string from panel metadata.
+
+        Returns:
+            The input version string when validation succeeds.
+
+        Raises:
+            packaging.version.InvalidVersion: If the value is not a valid version.
+
+        """
         Version(v)  # will raise if not a valid version string
         return v
 
@@ -150,8 +161,12 @@ class AntibodyPanel:
         ...     AssertionError("There was a problem with the panel data!")
         ````
 
-        :param panel_df: DataFrame with data of the panel to validate
-        :returns list[str]: a list of errors (str)
+        Args:
+            panel_df: Panel dataframe to validate.
+
+        Returns:
+            A list of validation error messages. An empty list means valid input.
+
         """
         errors = []
 
@@ -221,10 +236,17 @@ class AntibodyPanel:
 
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
-        """Parse front-matter YAML from a file.
+        """Parse front-matter YAML metadata from a panel file.
 
-        :param file: the file to parse
-        :return AntibodyPanelMetadata: a pydantic model with the metadata
+        Args:
+            file: Panel CSV file whose leading comment block contains YAML metadata.
+
+        Returns:
+            Parsed panel metadata.
+
+        Raises:
+            ValueError: If no metadata header is present in the file.
+
         """
         yaml_loader = yaml.YAML(typ="safe")
 

@@ -38,7 +38,13 @@ class PNAConfig:
         assays: Optional[List[PNAAssay]] = None,
         panels: Optional[List[PNAAntibodyPanel]] = None,
     ) -> None:
-        """Initialize the config object."""
+        """Initialize a PNA configuration container.
+
+        Args:
+            assays: Optional assays to pre-populate the config with.
+            panels: Optional panels to pre-populate the config with.
+
+        """
         self.assays: Dict[str, PNAAssay] = {}
         self.panels: typing.MutableMapping[str, List[PNAAntibodyPanel]] = defaultdict(
             list
@@ -56,7 +62,15 @@ class PNAConfig:
                 self.add_panel(p)
 
     def load_assay(self, path: PathType) -> None:
-        """Load an assay from a yaml file."""
+        """Load one assay definition from a YAML file.
+
+        Args:
+            path: Path to an assay YAML file.
+
+        Raises:
+            ValueError: If an assay with the same name already exists in the config.
+
+        """
         assay = PNAAssay.from_yaml(path)
         if assay.name in self.assays:
             raise ValueError(
@@ -65,16 +79,31 @@ class PNAConfig:
         self.assays[assay.name] = assay
 
     def load_panel_file(self, path: PathType) -> None:
-        """Load the panel file.
+        """Load one panel CSV file into the config.
 
-        :param path: The path to the panel file.
-        :raises PanelException: If the panel alias already exists in the config.
+        Args:
+            path: Path to a panel CSV file.
+
+        Raises:
+            PanelException: If loading introduces a conflicting alias mapping.
+
         """
         panel = PNAAntibodyPanel.from_csv(path)
         self.add_panel(panel)
 
     def add_panel(self, panel: PNAAntibodyPanel) -> None:
-        """Add a panel to the config."""
+        """Register a panel and its lookup keys in the config.
+
+        The panel is indexed by panel name (or filename fallback), optional product,
+        and aliases.
+
+        Args:
+            panel: Panel object to add.
+
+        Raises:
+            PanelException: If an alias already maps to a different panel key.
+
+        """
         key = panel.name if panel.name is not None else str(panel.filename)
         self.panels[key].append(panel)
 
@@ -142,11 +171,21 @@ class PNAConfig:
         version: Optional[str] = None,
         allow_aliases: bool = True,
     ) -> Optional[PNAAntibodyPanel]:
-        """Get a panel by name.
+        """Resolve a panel by name/product/alias and optional version constraint.
 
-        :param panel_name: The name of the panel
-        :param version: The optional version of a panel to return
-        :param allow_aliases: Allow panel aliases to be used
+        Args:
+            panel_name: Panel name, product name, or alias. May include an inline
+                version specifier (for example "panel==1.2.0").
+            version: Optional version specifier supplied separately.
+            allow_aliases: If True, also resolve through configured aliases.
+
+        Returns:
+            The resolved panel, or None if no matching panel is found.
+
+        Raises:
+            ValueError: If version is specified both inline and in ``version``, or if
+                multiple ambiguous major/minor versions match.
+
         """
         version_stripped_name, specified_version = parse_versioned_panel_name(
             panel_name
@@ -273,10 +312,16 @@ def load_panels_package(config: ConfigType, package_name: str) -> ConfigType:
 
 
 def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional[str]]:
-    """Parse a panel name that may contain a version specifier.
+    """Parse a panel identifier that may include a version expression.
 
-    :param panel_name: The panel name to parse
-    :return: A tuple containing the stripped panel name and the version specifier (if any)
+    Args:
+        panel_name: Panel identifier, optionally suffixed with a comparator and
+            version fragment (for example ``panel>=1.2`` or ``panel==1``).
+
+    Returns:
+        A tuple ``(name, specifier)`` where both values are None when no version
+        expression is detected.
+
     """
     if match := re.search(
         # here we allow panel names matching [A-Za-z0-9-.]+)

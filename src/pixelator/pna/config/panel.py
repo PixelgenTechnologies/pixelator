@@ -154,17 +154,32 @@ class PNAAntibodyPanel:
 
     @property
     def name(self) -> str:
-        """The name defined in the panel metadata."""
+        """Panel name from metadata.
+
+        Returns:
+            The panel name.
+
+        """
         return self._metadata.name
 
     @property
     def product(self) -> Optional[str]:
-        """The product defined in the panel metadata."""
+        """Product identifier from metadata, if present.
+
+        Returns:
+            Product name, or None when not provided in panel metadata.
+
+        """
         return self._metadata.product
 
     @property
     def version(self) -> str:
-        """Return the panel file version."""
+        """Panel version from metadata.
+
+        Returns:
+            Semantic version string for this panel.
+
+        """
         return self._metadata.version
 
     @property
@@ -179,10 +194,17 @@ class PNAAntibodyPanel:
 
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
-        """Parse front-matter YAML from a file.
+        """Parse front-matter YAML metadata from a panel file.
 
-        :param file: the file to parse
-        :return AntibodyPanelMetadata: a pydantic model with the metadata
+        Args:
+            file: Panel CSV file whose leading comment block contains YAML metadata.
+
+        Returns:
+            Parsed panel metadata.
+
+        Raises:
+            ValueError: If no metadata header is present in the file.
+
         """
         yaml_loader = yaml.YAML(typ="safe")
 
@@ -281,11 +303,15 @@ class PNAAntibodyPanel:
     def validate_antibody_panel(
         cls, panel_df: pd.DataFrame, validate_types: bool = True
     ) -> list[str]:
-        """Validate the antibody panel dataframe.
+        """Validate antibody panel schema and content.
 
-        :param panel_df: The dataframe containing the panel information.
-        :param validate_types: Whether to validate the types of the columns
-        :returns: A list of errors found in the panel.
+        Args:
+            panel_df: Dataframe containing panel markers and sequences.
+            validate_types: If True, validate dataframe column types.
+
+        Returns:
+            A list of validation error messages. Empty means valid input.
+
         """
         errors = []
 
