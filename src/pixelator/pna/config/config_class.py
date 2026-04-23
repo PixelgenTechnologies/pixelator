@@ -38,7 +38,7 @@ class PNAConfig:
         assays: Optional[List[PNAAssay]] = None,
         panels: Optional[List[PNAAntibodyPanel]] = None,
     ) -> None:
-        """Initialize a PNA configuration container.
+        """Initialize a PNA configuration object.
 
         Args:
             assays: Optional assays to pre-populate the config with.
@@ -174,7 +174,7 @@ class PNAConfig:
 
         Args:
             panel_name: Panel name, product name, or alias. May include an inline
-                version specifier (for example "panel==1.2.0").
+                version specifier (for example "product==1.2.0").
             version: Optional version specifier supplied separately.
             allow_aliases: If True, also resolve through configured aliases.
 
@@ -325,7 +325,7 @@ def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional
     if match := re.search(
         # here we allow panel names matching [A-Za-z0-9-.]+)
         # followed by a version specifier ==, >=, <= ... etc
-        "^(?P<name>[A-Za-z0-9-.]+)(?P<spec>([<>=]{1,2}))(?P<major>\d)(?P<minor>\.\d)?(?P<patch>\.\d)?$",
+        r"^(?P<name>[A-Za-z0-9-.]+)(?P<spec>([<>=]{1,2}))(?P<major>\d)(?P<minor>\.\d)?(?P<patch>\.\d)?$",
         panel_name,
     ):
         version_stripped_name = match.group("name")
