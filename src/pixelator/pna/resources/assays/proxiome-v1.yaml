@@ -1,4 +1,4 @@
-name: pna-2
+name: proxiome-v1
 assay_spec:
   - region_id: amplicon
     region_type: amplicon

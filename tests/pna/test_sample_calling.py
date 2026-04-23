@@ -375,7 +375,6 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
                 "control": False,
                 "uniprot_id": "P00001",
                 "sequence_1": "ATCGATCGAA",
-                "conj_id": "conj_pd1",
                 "sequence_2": "ATCGATCGAC",
             },
             {
@@ -383,7 +382,6 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
                 "control": False,
                 "uniprot_id": "P00002",
                 "sequence_1": "ATCGATCGAT",
-                "conj_id": "conj_hashA",
                 "sequence_2": "ATCGATCGAG",
             },
             {
@@ -391,7 +389,6 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
                 "control": False,
                 "uniprot_id": "P00003",
                 "sequence_1": "ATCGATCGTT",
-                "conj_id": "conj_hashA1",
                 "sequence_2": "ATCGATCGTG",
             },
             {
@@ -399,7 +396,6 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
                 "control": False,
                 "uniprot_id": "P00004",
                 "sequence_1": "ATCGATCGTA",
-                "conj_id": "conj_hashB2",
                 "sequence_2": "ATCGATCGTC",
             },
         ]

@@ -21,18 +21,16 @@ def test_collapse_run(mocker, testdata_paired_small_demux):
             "--output",
             str(d),
             "--design",
-            "pna-2",
+            "proxiome-v1",
             "--panel",
-            "proxiome-immuno-155-v3",
+            "proxiome-v1-immuno-155-v1.1",
         ]
         cmd = runner.invoke(cli.main_cli, args)
 
         assert cmd.exit_code == 0
 
 
-@pytest.mark.parametrize(
-    "panel_file", ["proxiome-immuno-155-v1", "proxiome-immuno-155-v2"]
-)
+@pytest.mark.parametrize("panel_file", ["proxiome-v1-immuno-155-v1.0"])
 def test_invalid_mismatch_param(mocker, testdata_paired_small_demux, panel_file):
     runner = CliRunner()
     mocker.patch("pixelator.pna.cli.amplicon.amplicon_fastq")
@@ -45,7 +43,7 @@ def test_invalid_mismatch_param(mocker, testdata_paired_small_demux, panel_file)
             "--output",
             str(d),
             "--design",
-            "pna-2",
+            "proxiome-v1",
             "--panel",
             panel_file,
             "--mismatches",

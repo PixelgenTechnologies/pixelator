@@ -8,7 +8,7 @@ from pixelator.pna.config import pna_config
 
 
 def test_amplicon_builder_no_mismatches():
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
     r1 = SequenceRecord(
@@ -52,7 +52,7 @@ def test_amplicon_builder_no_mismatches():
 
 
 def test_amplicon_builder_shift():
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.2)
 
     r1 = SequenceRecord(
@@ -89,7 +89,7 @@ def test_amplicon_builder_shift():
 
 
 def test_amplicon_builder_large_shift():
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
     r1 = SequenceRecord(
@@ -112,7 +112,7 @@ def test_amplicon_builder_large_shift():
 
 
 def test_uei_deletion():
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
 
     r1 = SequenceRecord(
         name="VH00725:177:AAFHGNGM5:1:1101:29157:1511 1:N:0:AGGTCTTG+GATGAGGA",
@@ -146,7 +146,7 @@ def test_uei_deletion():
 
 
 def test_bad_lbs2():
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
 
     r1 = SequenceRecord(
         name="@VH00725:177:AAFHGNGM5:1:1101:27434:1038 1:N:0:AGGTCTTG+GATGAGGA",
@@ -170,7 +170,7 @@ def test_bad_lbs2():
 
 
 def test_lbs2_insertion():
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
 
     r1 = SequenceRecord(
         name="VH00725:177:AAFHGNGM5:1:1102:59037:42783 2:N:0:AGGTCTTG+GATGAGGA",
@@ -204,7 +204,7 @@ def test_lbs2_insertion():
 
 
 def test_amplicon_crappy_lbs1():
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
     r1 = SequenceRecord(
@@ -230,7 +230,7 @@ def test_amplicon_crappy_lbs1():
 
 def test_amplicon_uei_length_mismatch():
     """Test case where the UEI region is sequenced in both R1 and R2 but with different lengths."""
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
     # The expected UEI region here is 16 bases. The LBS-1 is degenerate and the LBS-2 anchoring is of by one base.
@@ -261,7 +261,7 @@ def test_amplicon_uei_length_mismatch():
 
 
 def test_amplicon_intersecting_reads():
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
     r1 = SequenceRecord(
