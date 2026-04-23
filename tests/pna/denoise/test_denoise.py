@@ -283,7 +283,7 @@ def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
         # This is a workaround to make sure that the correct panel is loaded
         # eventhough we no longer set a default panel file.
         def f(*args, **kwargs):
-            return load_antibody_panel(pna_config, "proxiome-immuno-155-v2")
+            return load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")
 
         mock_load_panel.side_effect = f
 

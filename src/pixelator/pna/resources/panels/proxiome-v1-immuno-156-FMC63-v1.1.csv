@@ -1,10 +1,10 @@
 # ---
-# name: proxiome-immuno-155-v2
-# aliases:
-#   - proxiome-immuno-155plex-v2
+# name: proxiome-v1-immuno-156-FMC63-v1.1
+# product: proxiome-v1-immuno-156-FMC63-v1
 # description: >-
-#     Panel for the Proxiome Immuno Kit with 155 markers + 3 control markers
-# version: 2.0.0
+#     Panel for the with the 155 markers + 3 control markers
+#     of the Proximome Immuno 155 panel, plus the FMC63 marker
+# version: 1.1.0
 # ---
 marker_id,control,full_name,alt_id,uniprot_id,sequence_1,sequence_2
 HLA-ABC,,HLA class I histocompatibility antigen,,P04439;P01889;P10321,ACTTCCTAGG,ACTTCCTAGG
@@ -65,9 +65,9 @@ PD-L2,,Programmed cell death 1 ligand 2 (PDL2),CD273,Q9BQ51,ATCGCGAAGC,ATCGCGAAG
 CD28,,T cell-specific surface glycoprotein CD28,,P10747,CATAACAATC,CATAACAATC
 SLAMF6,,SLAM family member 6,CD352;NTB-A,Q96DU3,TCGGAGACAC,TCGGAGACAC
 CD45RO,,"Receptor-type tyrosine-protein phosphatase C. Isoform (ABC, AB, BC, and B)",,P08575,TTGATGACTC,TTGATGACTC
-CD49e,,Integrin α-5,Integrin α5,P08648,TCTTTAGAAG,TCTTTAGAAG
+CD49e,,Integrin α-5,Integrin α5,P08648,AACTCCTGAA,AACTCCTGAA
 CD56,,Neural cell adhesion molecule 1,NCAM,P13591,GTGCGTAAGC,GTGCGTAAGC
-CD79a,,B-cell antigen receptor complex-associated protein alpha chain,MB-1,P11912,TCTCTCTGTT,TCTCTCTGTT
+CD79a,,B-cell antigen receptor complex-associated protein alpha chain,MB-1,P11912,AGATCGACAG,AGATCGACAG
 CD80,,T-lymphocyte activation antigen CD80,B7-1,P33681,AAGACGCGGA,AAGACGCGGA
 CD81,,CD81 antigen,Tetraspanin-28,P60033,TGGGTTATGT,TGGGTTATGT
 LILRB1,,Leukocyte immunoglobulin-like receptor subfamily B member 1,CD85j;ILT-2,Q8NHL6,CCTAAGTCTA,CCTAAGTCTA
@@ -125,7 +125,7 @@ Ly9,,T-lymphocyte surface antigen Ly-9,CD229;SLAMF3,Q9HBG7,TCGACGAGTG,TCGACGAGTG
 CD24,,Signal transducer CD24,HSA,P25063,TCTTGTTCCC,TCTTGTTCCC
 2B4,,Natural killer cell receptor 2B4,CD244;SLAMF4,Q9BZW8,TCTCAATCAA,TCTCAATCAA
 BAFF-R,,Tumor necrosis factor receptor superfamily member 13C (BAFFR),CD268,Q96RJ3,ACGTAACCGC,ACGTAACCGC
-ICOS,,Inducible T cell co-stimulator,CD278,Q9Y6W8,TTTCGGACAG,TTTCGGACAG
+ICOS,,Inducible T cell co-stimulator,CD278,Q9Y6W8,CAGGCACCTG,CAGGCACCTG
 CD32,,Low-affinity immunoglobulin gamma Fc region receptor II-b,FcγRII,P31994,GATTTCCAGC,GATTTCCAGC
 CD33,,Myeloid cell surface antigen CD33,Siglec-3,P20138,GCGATATAGT,GCGATATAGT
 NKp30,,Natural cytotoxicity triggering receptor 3 (NKp30),CD337,O14931,CTTATCTCTT,CTTATCTCTT
@@ -165,3 +165,4 @@ CD71,,Transferrin receptor protein 1,Transferrin receptor,P02786,TCAGGACAGA,TCAG
 CD47,,Leukocyte surface antigen CD47,Integrin associated protein,Q08722,AGCTACTATT,AGCTACTATT
 c-Kit,,Mast/Stem cell growth factor receptor Kit,CD117,P10721,GCTATAATTG,GCTATAATTG
 NKG2D,,NKG2-D type II integral membrane protein,CD314;KG2DN,P26718,TGGCGCACAC,TGGCGCACAC
+FMC63,,,,,CGATTGGCAC,CGATTGGCAC
