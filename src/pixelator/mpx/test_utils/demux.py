@@ -19,13 +19,15 @@ class BaseDemuxTestsMixin(BaseWorkflowTestMixin):
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
     ```
-    @pytest.mark.dependency(depends=["test_demux_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     ```
     """
 
     __stage_key__ = "demux"
 
-    @pytest.mark.dependency(name="test_demux_run", depends=["test_adapterqc_run"])
+    @pytest.mark.dependency(
+        scope="class", name="test_demux_run", depends=["test_adapterqc_run"]
+    )
     def test_demux_run(self):
         design = self.__get_data("design")
         panel = self.__get_data("panel")
@@ -67,15 +69,15 @@ class BaseDemuxTestsMixin(BaseWorkflowTestMixin):
         self.context.run_command("demux", command, file_deps)
         assert self.__this_result.exit_code == 0
 
-    @pytest.mark.dependency(depends=["test_demux_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     def test_demux_logfile_exist(self):
         assert (self.workdir / "adapterqc-pixelator.log").is_file()
 
-    @pytest.mark.dependency(depends=["test_demux_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     def test_demux_results_folder_exists(self):
         assert (self.workdir / "preqc").is_dir()
 
-    @pytest.mark.dependency(depends=["test_demux_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     def test_demux_processed_output_exists(self):
         panel_key_or_file = self.__get_data("panel") or self.__get_options(
             "common"
@@ -89,13 +91,13 @@ class BaseDemuxTestsMixin(BaseWorkflowTestMixin):
             for f in processed_files:
                 assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_demux_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     def test_demux_failed_output_exists(self):
         failed_files = (self.workdir / "demux").glob("*.failed.fastq.gz")
         for f in failed_files:
             assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_demux_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     def test_demux_json_output_exists(self):
         json_files = (self.workdir / "demux").glob("*.report.json")
         for f in json_files:

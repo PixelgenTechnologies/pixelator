@@ -194,6 +194,11 @@ class PNAAntibodyPanel:
         """Return the (optional) list of panel file aliases."""
         return self._metadata.aliases
 
+    @property
+    def archived(self) -> Optional[bool]:
+        """Return whether the panel is marked as archived."""
+        return self._metadata.archived
+
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
         """Parse front-matter YAML metadata from a panel file.

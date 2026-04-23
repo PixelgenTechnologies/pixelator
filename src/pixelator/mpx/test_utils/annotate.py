@@ -19,13 +19,15 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
     ```
-    @pytest.mark.dependency(depends=["test_annotate_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_annotate_run"])
     ```
     """
 
     __stage_key__ = "annotate"
 
-    @pytest.mark.dependency(name="test_annotate_run", depends=["test_graph_run"])
+    @pytest.mark.dependency(
+        scope="class", name="test_annotate_run", depends=["test_graph_run"]
+    )
     def test_annotate_run(self):
         """Run method for the test."""
         params = self.__get_parameters()
@@ -66,21 +68,21 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
 
         assert self.__this_result.exit_code == 0
 
-    @pytest.mark.dependency(depends=["test_annotate_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_annotate_run"])
     def test_annotate_dataset_exists(self):
         """Check that the pixel file is created."""
         dataset_files = (self.workdir / "annotate").glob("*.annotate.dataset.pxl")
         for f in dataset_files:
             assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_annotate_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_annotate_run"])
     def test_annotate_report_exists(self):
         """Check that the json report exists."""
         json_files = (self.workdir / "annotate").glob("*.report.json")
         for f in json_files:
             assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_annotate_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_annotate_run"])
     def test_annotate_images_exist(self):
         """Check that the rank size plot has been created."""
         png_files = (self.workdir / "annotate").glob("*.rank_vs_size.png")
@@ -93,7 +95,7 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
         for f in png_files:
             assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_annotate_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_annotate_run"])
     def test_raw_component_metrics_exist(self):
         """Check that the raw metrics exists."""
         metric_files = (self.workdir / "annotate").glob(
@@ -108,7 +110,7 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
         for f in metric_files:
             assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_annotate_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_annotate_run"])
     def test_doublet_calling_vertex_communities_exists(self):
         """Check that the vertex community file has been created."""
         vertex_files = (self.workdir / "annotate").glob("*.vertex_communities.csv.gz")
@@ -127,7 +129,7 @@ class BaseAnnotateTestsMixin(BaseWorkflowTestMixin):
         for f in vertex_files:
             assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_annotate_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_annotate_run"])
     def test_umap_png_exists(self):
         """Check that the umap png exists."""
         png_files = (self.workdir / "annotate").glob("*.umap.png")

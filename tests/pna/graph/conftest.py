@@ -1,5 +1,6 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+from pathlib import Path
 from unittest.mock import create_autospec
 
 import networkx as nx
@@ -73,3 +74,24 @@ def edgelist_karate_graph_fixture():
         edge.update({"umi2": edge["umi2"] + len(multiple_graph.nodes())})
 
     return edges
+
+
+PNA_TEST_DATA = Path(__file__).resolve().parent.parent / "data"
+
+
+@pytest.fixture(scope="module")
+def testdata_3pc_crossing_parquet():
+    """Simulated edgelist with crossing edges (optional large test file)."""
+    p = PNA_TEST_DATA / "mix_40cells_3pc.parquet"
+    if not p.is_file():
+        pytest.skip(f"Missing test fixture: {p.name}")
+    return p
+
+
+@pytest.fixture(scope="module")
+def testdata_0pc_crossing_parquet():
+    """Ground-truth edgelist without crossing edges (optional large test file)."""
+    p = PNA_TEST_DATA / "mix_40cells_0pc.parquet"
+    if not p.is_file():
+        pytest.skip(f"Missing test fixture: {p.name}")
+    return p

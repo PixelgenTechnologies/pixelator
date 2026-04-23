@@ -18,13 +18,15 @@ class BasePreQCTestsMixin(BaseWorkflowTestMixin):
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
     ```
-    @pytest.mark.dependency(depends=["test_preqc_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_preqc_run"])
     ```
     """
 
     __stage_key__ = "preqc"
 
-    @pytest.mark.dependency(name="test_preqc_run", depends=["test_amplicon_run"])
+    @pytest.mark.dependency(
+        scope="class", name="test_preqc_run", depends=["test_amplicon_run"]
+    )
     def test_preqc_run(self):
         """Test and run the preqc command."""
         design = self.__get_data("design")
@@ -60,38 +62,38 @@ class BasePreQCTestsMixin(BaseWorkflowTestMixin):
         self.context.run_command("preqc", command, input_files)
         assert self.__this_result.exit_code == 0
 
-    @pytest.mark.dependency(depends=["test_preqc_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_preqc_run"])
     def test_preqc_logfile_exist(self):
         """Check if the log file exists."""
         assert (self.workdir / "preqc-pixelator.log").is_file()
 
-    @pytest.mark.dependency(depends=["test_preqc_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_preqc_run"])
     def test_preqc_results_folder_exists(self):
         """Check if the output directory is created."""
         assert (self.workdir / "preqc").is_dir()
 
-    @pytest.mark.dependency(depends=["test_preqc_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_preqc_run"])
     def test_preqc_processed_output_exists(self):
         """Check if the per antibody "processed" fastq files exist."""
         processed_files = (self.workdir / "preqc").glob("*.processed.fastq.gz")
         for f in processed_files:
             assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_preqc_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_preqc_run"])
     def test_preqc_failed_output_exists(self):
         """Check if the "failed" fastq files exist."""
         failed_files = (self.workdir / "preqc").glob("*.failed.fastq.gz")
         for f in failed_files:
             assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_preqc_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_preqc_run"])
     def test_preqc_html_output_exists(self):
         """Check if the fastp html report exist."""
         html_files = (self.workdir / "preqc").glob("*.report.html")
         for f in html_files:
             assert f.is_file()
 
-    @pytest.mark.dependency(depends=["test_preqc_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_preqc_run"])
     def test_preqc_json_output_exists(self):
         """Check if the report.json summary exist."""
         json_files = (self.workdir / "preqc").glob("*.report.json")

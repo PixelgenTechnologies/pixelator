@@ -19,13 +19,15 @@ class BaseReportTestsMixin(BaseWorkflowTestMixin):
     Test cases (defined in this class or in subclasses)
     that depend on the output should be marked with:
     ```
-    @pytest.mark.dependency(depends=["test_report_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_report_run"])
     ```
     """
 
     __stage_key__ = "report"
 
-    @pytest.mark.dependency(name="test_report_run", depends=["test_analysis_run"])
+    @pytest.mark.dependency(
+        scope="class", name="test_report_run", depends=["test_analysis_run"]
+    )
     def test_report_run(self):
         """Test and run the report command."""
         params = self.__get_parameters()
@@ -59,7 +61,7 @@ class BaseReportTestsMixin(BaseWorkflowTestMixin):
 
         assert self.__this_result.exit_code == 0
 
-    @pytest.mark.dependency(depends=["test_report_run"])
+    @pytest.mark.dependency(scope="class", depends=["test_report_run"])
     def test_report_qc_report_exists(self):
         """Check if the qc report html exists."""
         report_files = list((self.workdir / "report").glob("*.qc-report.html"))

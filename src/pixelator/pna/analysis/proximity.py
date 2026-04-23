@@ -12,6 +12,7 @@ from scipy.stats import mannwhitneyu, norm
 from statsmodels.stats.multitest import multipletests
 
 from pixelator.pna.analysis.permute import edgelist_permutations
+from pixelator.pna.utils.utils import normalize_input_to_list
 
 
 def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
@@ -145,7 +146,7 @@ def proximity_with_permute_stats(
         results[f"{col}_z"] = (
             results[col] - results[f"{col}_expected_mean"]
         ) / np.maximum(results[f"{col}_expected_sd"], min_std)
-        results[f"{col}_p"] = norm.sf(np.abs(results[f"{col}_z"]))
+        results[f"{col}_p"] = 2 * norm.sf(np.abs(results[f"{col}_z"]))
 
     results = results.reset_index()
     results = results[
