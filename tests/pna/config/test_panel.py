@@ -17,7 +17,6 @@ def panel_df():
         "nuclear": [True, False, True],
         "sequence_1": ["ATCG", "GCTA", "ATCC"],
         "sequence_2": ["ATCG", "GCTA", "ATCC"],
-        "conj_id": ["conj1", "conj2", "conj3"],
     }
     return pd.DataFrame(data).set_index("marker_id")
 
@@ -104,7 +103,6 @@ def test_panel_from_pxl(pxl_file):
         "control": [False, False, True],
         "uniprot_id": ["P12345", "P56890;P65470", ""],
         "sequence_1": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
-        "conj_id": ["pna_rnd01", "pna_rnd02", "pna_rnd03"],
         "sequence_2": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
     }
     expected_df = pd.DataFrame(expected_data).set_index("marker_id")
