@@ -210,22 +210,21 @@ def test_loading_panel_from_config_alias_and_specific_version(
         config_with_multiple_versions: Config fixture with multiple panel versions.
 
     """
-    # NOTE: Panel aliases is a DEPRECATED feature and should not be used for new panels.
+    # NOTE: Panel aliases are deprecated and should not be used for new panels.
     #
-    # When trying to specify the version using "v1", "v3" etc within the panel_name, alias or
-    # product name, as shown below, this is still only interpretated as part of the name.
+    # Version-like suffixes such as "v1" or "v3" in panel names, aliases, or product names are
+    # treated as part of the identifier, not as a version constraint.
     #
-    # For example the alias "test-pna-panel-v3" points to the panel_name "test-pna-panel" which has
-    # versions 1.0.0, 1.1.0 and 2.0.0 available.
+    # Example: the alias "test-pna-panel-v3" maps to the panel name "test-pna-panel", which has
+    # versions 1.0.0, 1.1.0, and 2.0.0.
     #
-    # When used with an alias this leads to a somewhat weird situation where, in this case, the
-    # alias "test-pna-panel-v3" can be used to load any of the versions of the panel even though the
-    # alias was specified in the 2.0.0 version of the panel.
-    # This was accepted behaviour as the alias was mainly be used for backwards compability
-    # when a panel had been renamed and as such points to panel_name and not a specific version.
+    # As a result, this alias can resolve to any of those versions when combined with an explicit
+    # version argument, even though the alias itself was introduced with version 2.0.0.
+    # This legacy behavior exists for backward compatibility, because aliases map to panel names,
+    # not to specific panel versions.
     #
-    # For new panels use the panel_name alternatively the product name together with the version
-    # speciefied as a parameter to config.get_panel or appended to the end of the product name.
+    # For new panels, use the panel name (or product name) together with an explicit version,
+    # either via config.get_panel(..., version=...) or by appending a version specifier to the name.
 
     panel = config_with_multiple_versions.get_panel("test-pna-v3", version="1.1.0")
     assert panel.name == "test-pna-panel"
