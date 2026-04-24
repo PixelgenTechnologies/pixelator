@@ -437,6 +437,17 @@ class DenoiseACE(PerComponentTask):
         nodes_to_move_threshold: int = 10,
         select_LCC: bool = True,
     ):
+        """Initialize a DenoiseACE instance.
+
+        Args:
+            k: Neighborhood radius (steps) for the transition matrix in ACE.
+            max_k_core: Maximum k-core layer used for seeding in ACE.
+            max_iter: Maximum expansion iterations per binding threshold in ACE.
+            min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
+            nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
+            select_LCC: Whether to restrict the ACE seed to the largest k-core component.
+
+        """
         self.k = k
         self.max_k_core = max_k_core
         self.max_iter = max_iter
