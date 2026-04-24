@@ -13,7 +13,9 @@ import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 from pixelator.pna.analysis.denoise import (
+    DenoiseACE,
     DenoiseOneCore,
+    denoise_ace_layer,
     denoise_one_core_layer,
     get_overexpressed_markers_in_one_core,
     get_stranded_nodes,
@@ -314,3 +316,66 @@ def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
             denoised_node_core_numbers[denoised_node_core_numbers > 1],
             check_like=True,
         )
+
+
+REFERENCE_ACE_COMPONENT = "0a45497c6bfbfb22"
+REFERENCE_ACE_LOW_NODE_COUNT = 399
+
+
+@pytest.mark.slow
+def test_denoise_ace_layer_reference_component(pna_pxl_dataset):
+    """ACE layer removal list matches peripheral partition on reference component."""
+    comp_graph = PNAGraph.from_edgelist(
+        pna_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        .edgelist()
+        .to_polars()
+        .lazy()
+    )
+    removed = denoise_ace_layer(comp_graph)
+    assert removed != [None]
+    assert len(removed) == REFERENCE_ACE_LOW_NODE_COUNT
+    partitions = nx.get_node_attributes(comp_graph.raw, "partition")
+    low_ids = {n for n, p in partitions.items() if p == "low"}
+    assert set(removed) == low_ids
+
+
+@pytest.mark.slow
+def test_denoise_ace_analysis(pna_pxl_dataset, tmp_path):
+    """DenoiseACE analysis writes fewer nodes and records ACE removal counts."""
+    pxl_file_target = PixelDatasetSaver(pxl_dataset=pna_pxl_dataset).save(
+        "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
+    )
+    with mock.patch(
+        "pixelator.pna.analysis.denoise.load_antibody_panel"
+    ) as mock_load_panel:
+
+        def f(*args, **kwargs):
+            return load_antibody_panel(pna_config, "proxiome-immuno-155-v2")
+
+        mock_load_panel.side_effect = f
+
+        manager = AnalysisManager([DenoiseACE()])
+        denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
+
+    obs = denoised_dataset.adata().obs
+    assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
+    assert int(obs.loc[REFERENCE_ACE_COMPONENT, "number_of_nodes_removed_in_denoise_ace"]) == (
+        REFERENCE_ACE_LOW_NODE_COUNT
+    )
+    assert int(obs.loc[REFERENCE_ACE_COMPONENT, "number_of_nodes_removed_in_denoise"]) == (
+        REFERENCE_ACE_LOW_NODE_COUNT
+    )
+
+    orig_graph = PNAGraph.from_edgelist(
+        pna_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        .edgelist()
+        .to_polars()
+        .lazy()
+    )
+    denoised_graph = PNAGraph.from_edgelist(
+        denoised_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        .edgelist()
+        .to_polars()
+        .lazy()
+    )
+    assert denoised_graph.vcount() == orig_graph.vcount() - REFERENCE_ACE_LOW_NODE_COUNT
