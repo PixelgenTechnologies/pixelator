@@ -19,6 +19,7 @@ import polars as pl
 from scipy.stats import fisher_exact
 
 from pixelator.common.annotate.aggregates import call_aggregates
+from pixelator.common.graph.adaptive_core_expansion import adaptive_core_expansion
 from pixelator.pna.analysis_engine import PerComponentTask
 from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
 from pixelator.pna.config import pna_config
@@ -181,6 +182,53 @@ def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list = []) -> list:
     connected_components = sorted(nx.connected_components(graph), key=len, reverse=True)
     stranded_nodes = list(chain.from_iterable(connected_components[1:]))
     return stranded_nodes
+
+
+def denoise_ace_layer(
+    component: PNAGraph,
+    k: int = 3,
+    max_k_core: int = 4,
+    max_iter: int = 200,
+    min_seed_pct: float = 0.1,
+    nodes_to_move_threshold: int = 10,
+    select_LCC: bool = True,
+) -> list:
+    """Partition the graph with ACE and return nodes in the peripheral-like ("low") partition.
+
+    Nodes in the ``low`` partition are candidates for removal to retain a denser core-like graph.
+
+    Args:
+        component: The graph component to process.
+        k: Neighborhood radius (steps) for the transition matrix in ACE.
+        max_k_core: Maximum k-core layer used for seeding in ACE.
+        max_iter: Maximum expansion iterations per binding threshold in ACE.
+        min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
+        nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
+        select_LCC: Whether to restrict the ACE seed to the largest k-core component.
+
+    Returns:
+        List of node identifiers to remove, or ``[None]`` if the component is
+        disqualified (ACE cannot be applied).
+
+    """
+    try:
+        adaptive_core_expansion(
+            component,
+            k=k,
+            max_k_core=max_k_core,
+            max_iter=max_iter,
+            min_seed_pct=min_seed_pct,
+            nodes_to_move_threshold=nodes_to_move_threshold,
+            select_LCC=select_LCC,
+            verbose=False,
+        )
+    except ValueError as exc:
+        logger.debug("ACE denoising skipped for component: %s", exc)
+        return [None]
+
+    partitions = nx.get_node_attributes(component.raw, "partition")
+    low_nodes = [n for n, part in partitions.items() if part == "low"]
+    return low_nodes
 
 
 def denoise_one_core_layer(
@@ -370,6 +418,113 @@ class DenoiseOneCore(PerComponentTask):
                 denoise_info["number_of_nodes_removed_in_denoise"] = denoise_info[
                     "number_of_nodes_removed_in_denoise"
                 ].fillna(0)
+                adata.obs = adata.obs.join(denoise_info, how="left")
+
+                writer.write_adata(adata)
+
+
+class DenoiseACE(PerComponentTask):
+    """Remove peripheral-like nodes identified by adaptive core expansion (ACE)."""
+
+    TASK_NAME = "denoise-ace"
+
+    def __init__(
+        self,
+        k: int = 3,
+        max_k_core: int = 4,
+        max_iter: int = 200,
+        min_seed_pct: float = 0.1,
+        nodes_to_move_threshold: int = 10,
+        select_LCC: bool = True,
+    ):
+        self.k = k
+        self.max_k_core = max_k_core
+        self.max_iter = max_iter
+        self.min_seed_pct = min_seed_pct
+        self.nodes_to_move_threshold = nodes_to_move_threshold
+        self.select_LCC = select_LCC
+
+    def run_on_component_graph(
+        self, component: PNAGraph, component_id: str
+    ) -> pd.DataFrame:
+        logger.debug("Running ACE denoising on component %s", component_id)
+        nodes_to_remove = pd.DataFrame(
+            denoise_ace_layer(
+                component,
+                k=self.k,
+                max_k_core=self.max_k_core,
+                max_iter=self.max_iter,
+                min_seed_pct=self.min_seed_pct,
+                nodes_to_move_threshold=self.nodes_to_move_threshold,
+                select_LCC=self.select_LCC,
+            ),
+            columns=["umi"],
+        )
+        nodes_to_remove["component"] = component_id
+        return nodes_to_remove
+
+    def add_to_pixel_file(self, data: pd.DataFrame, pxl_file_target: PxlFile):
+        """Update the pixel file by removing ACE ``low`` partition nodes and recording metrics."""
+        pxl = PNAPixelDataset.from_files(pxl_file_target)
+        old_adata = pxl.adata()
+        try:
+            panel = PNAAntibodyPanel.from_pxl_file(pxl_file_target.path)
+        except KeyError:
+            panel_name = pxl.metadata().popitem()[1]["panel_name"]
+            panel = load_antibody_panel(pna_config, panel_name)
+        nodes_to_remove = (
+            data.loc[~data["umi"].isna(), "umi"].astype(np.uint64).tolist()
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            denoised_edgelist_path = temp_dir + "/denoised_edgelist.parquet"
+            write_denoised_edgelist(pxl, nodes_to_remove, denoised_edgelist_path)
+            with PixelFileWriter(pxl_file_target.path) as writer:
+                writer.write_edgelist(Path(denoised_edgelist_path))
+                adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
+                call_aggregates(adata)
+                adata = add_missing_adata_info(adata, old_adata)
+                denoise_info = pd.DataFrame(index=adata.obs.index)
+                denoise_info["disqualified_for_denoising"] = False
+                denoise_info.loc[
+                    data.loc[data["umi"].isna(), "component"],
+                    "disqualified_for_denoising",
+                ] = True
+                n_ace_removed = (
+                    data.loc[~data["umi"].isna(), :].groupby("component").size()
+                )
+                denoise_info["number_of_nodes_removed_in_denoise_ace"] = n_ace_removed
+                denoise_info["number_of_nodes_removed_in_denoise_ace"] = denoise_info[
+                    "number_of_nodes_removed_in_denoise_ace"
+                ].fillna(0)
+                if "number_of_nodes_removed_in_denoise" in old_adata.obs.columns:
+                    prev = (
+                        old_adata.obs["number_of_nodes_removed_in_denoise"]
+                        .reindex(denoise_info.index)
+                        .fillna(0)
+                        .astype(int)
+                    )
+                    denoise_info["number_of_nodes_removed_in_denoise"] = (
+                        prev + denoise_info["number_of_nodes_removed_in_denoise_ace"]
+                    )
+                else:
+                    denoise_info["number_of_nodes_removed_in_denoise"] = denoise_info[
+                        "number_of_nodes_removed_in_denoise_ace"
+                    ]
+                if "disqualified_for_denoising" in old_adata.obs.columns:
+                    denoise_info["disqualified_for_denoising"] = (
+                        old_adata.obs["disqualified_for_denoising"]
+                        .reindex(denoise_info.index)
+                        .fillna(False)
+                        | denoise_info["disqualified_for_denoising"]
+                    )
+                for col in (
+                    "disqualified_for_denoising",
+                    "number_of_nodes_removed_in_denoise",
+                    "number_of_nodes_removed_in_denoise_ace",
+                ):
+                    if col in adata.obs.columns:
+                        adata.obs = adata.obs.drop(columns=[col])
                 adata.obs = adata.obs.join(denoise_info, how="left")
 
                 writer.write_adata(adata)
