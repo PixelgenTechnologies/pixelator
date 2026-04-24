@@ -49,7 +49,7 @@ dependencies = [
     "lxml",
     "cssselect>=1.4.0", # Required by lxml
     "typing_extensions",
-    "scipy>=1.0.0,<2.0.0",
+    "scipy>=1.11.0,<2.0.0",
     "pyarrow>=14",
     "semver>=3.0.0,<4",
     "ruamel-yaml>=0.17.21,<0.18",
