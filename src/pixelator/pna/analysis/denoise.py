@@ -458,6 +458,23 @@ class DenoiseACE(PerComponentTask):
     def run_on_component_graph(
         self, component: PNAGraph, component_id: str
     ) -> pd.DataFrame:
+        """Execute ACE denoising on a given component graph and return nodes to remove.
+
+        This function performs denoising on the provided PNAGraph component by
+        identifying nodes to be removed based on a single core layer denoising
+        process. The resulting nodes are returned in a DataFrame along with
+        their associated component ID.
+
+        Args:
+            component (PNAGraph): The graph component to be denoised.
+            component_id (str): The identifier for the graph component.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the nodes to be removed with the following columns:
+                - "umi": The unique identifier of the node to be removed.
+                - "component": The ID of the component the node belongs to.
+
+        """
         logger.debug("Running ACE denoising on component %s", component_id)
         nodes_to_remove = pd.DataFrame(
             denoise_ace_layer(
