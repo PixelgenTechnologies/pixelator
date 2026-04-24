@@ -2038,7 +2038,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.32.5" },
     { name = "ruamel-yaml", specifier = ">=0.17.21,<0.18" },
     { name = "scanpy" },
-    { name = "scipy", specifier = ">=1.0.0,<2.0.0" },
+    { name = "scipy", specifier = ">=1.11.0,<2.0.0" },
     { name = "semver", specifier = ">=3.0.0,<4" },
     { name = "types-requests", specifier = ">=2.32.4.20260107" },
     { name = "typing-extensions" },
