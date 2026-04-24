@@ -4,7 +4,7 @@ from pixelator.pna.cli.common import validate_panel
 
 
 def test_validate_panel():
-    panel = "proxiome-immuno-155-v3"
+    panel = "proxiome-v1-immuno-155-v1.0"
     assert validate_panel(None, None, panel) == panel
 
 

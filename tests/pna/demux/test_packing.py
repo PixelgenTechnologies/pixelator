@@ -12,7 +12,7 @@ def test_bitvector_roundtrip():
     umi2 = b"TACGGCCTACACCCCTCATTGACACTTT"
     uei = b"GATAAGATAGTGTGA"
 
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     embedding = PNAEmbedding(assay)
     vector = embedding.encode(umi1, umi2, uei)
 

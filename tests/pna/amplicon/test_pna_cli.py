@@ -42,7 +42,7 @@ def test_fastq_valid_inputs(testdata_300k):
             "--output",
             str(d),
             "--design",
-            "pna-2",
+            "proxiome-v1",
         ]
         cmd = runner.invoke(cli.main_cli, args)
         assert cmd.exit_code == 0
@@ -60,7 +60,7 @@ def test_fastq_swapped_read_input(testdata_300k):
             "--output",
             str(d),
             "--design",
-            "pna-2",
+            "proxiome-v1",
         ]
         cmd = runner.invoke(cli.main_cli, args)
 
@@ -83,7 +83,7 @@ def test_fastq_sample_name_mismatch(testdata_300k_sample_mismatch):
             "--output",
             str(d),
             "--design",
-            "pna-2",
+            "proxiome-v1",
         ]
         cmd = runner.invoke(cli.main_cli, args)
 
@@ -118,7 +118,7 @@ def test_can_skip_input_checks(mocker, testdata_300k_sample_mismatch):
             "--output",
             str(d),
             "--design",
-            "pna-2",
+            "proxiome-v1",
             "--skip-input-checks",
         ]
         cmd = runner.invoke(cli.main_cli, args)
@@ -137,7 +137,7 @@ def test_fastq_single_end(testdata_unbalanced_r12):
             "--output",
             str(d),
             "--design",
-            "pna-2",
+            "proxiome-v1",
         ]
         cmd = runner.invoke(cli.main_cli, args)
 

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [x.x.x] - TBD
 
+### Important changes
+The assay and panel names have been migrated to the new naming scheme.
+
+Use `proxiome-v1` instead of `pna-2` for the `--design` command-line argument.
+
+See the updated table below for which panel version to use:
+| Kit lot        | Panel version           | Old panel name               | New panel name                    |
+| -------------- | ----------------------- | ---------------------------- |-----------------------------------|
+| 2502–2506      | Immuno 155              | proxiome-immuno-155-v2       | proxiome-v1-immuno-155-v1.0       |
+| 2502–2506      | Immuno 155 + FMC63      | proxiome-immuno-156-FMC63-v2 | proxiome-v1-immuno-156-FMC63-v1.0 |
+| 2507 and above | Immuno 155 v1.1         | proxiome-immuno-155-v3       | proxiome-v1-immuno-155-v1.1       |
+| 2507 and above | Immuno 155 v1.1 + FLAG  | proxiome-immuno-156-FLAG-v3  | proxiome-v1-immuno-156-FLAG-v1.1  |
+| 2507 and above | Immuno 155 v1.1 + FMC63 | proxiome-immuno-156-FMC63-v3 | proxiome-v1-immuno-156-FMC63-v1.1 |
+The old panel names no longer work; please specify the new panel name instead.
+
 ### Added
 - Add the option to calculate proximity scores from edgelist using analytical expected join counts.
   `PNAPixelDataset.proximity(calculate_from_edgelist=True)` is used to compute these scores.
@@ -28,9 +43,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add new optional field `archived` to panel metadata.
 - The parameter `--list-panels` now lists panels without the archived metadata field.
 - Add new option `--list-panels-including-archived` to list all panels including archived ones.
+- Add bundled `proxiome-v2` assay design and `proxiome-v2-immuno-155-v1.0` panel resources.
+- Add support for resolving PNA panels by product name in config lookup.
+- Add support for inline panel version specifiers in panel identifiers (for example `panel==1.1.0`).
 
 ### Changed
 - The previous implementation has been renamed and is available with `pixelator single-cell-pna graph_legacy`.
+- Rename bundled PNA v1 resources to `proxiome-v1-*` naming for assays and panels. IMPORTANT: the old panel names no longer work. To rerun old data, update relevant scripts to the new panel name(s).
+- Remove all panel aliases. Use the correct panel name, or alternatively use a product name with a version specifier to select the panel.
+- Panel selection is now stricter when multiple versions exist: ambiguous major/minor requests raise errors and require explicit version disambiguation.
+- Panel metadata validation now requires front matter with `name` and a parseable `version`.
 
 ### Parameters
 
@@ -53,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - sample calling will now use the pool name in the file name of undetermined
   components to avoid file name collisions in the pipeline.
+- Improve the error message when concatenating AnnData objects with incompatible marker (`var`) schemas.
 
 ## [0.25.0] - 2026-04-15
 

@@ -61,10 +61,10 @@ EDGELIST_DATA = """umi1,umi2,read_count,uei_count,marker_1,marker_2,component
 """
 
 
-TEST_PANEL = """marker_id,control,uniprot_id,sequence_1,conj_id,sequence_2
-MarkerA,,P12345,ACTTCCTAGG,pna_rnd01,ACTTCCTAGG
-MarkerB,,P56890;P65470,CCAGGTTCCG,pna_rnd02,CCAGGTTCCG
-MarkerC,yes,,CAGCTATGGT,pna_rnd03,CAGCTATGGT
+TEST_PANEL = """marker_id,control,uniprot_id,sequence_1,sequence_2
+MarkerA,,P12345,ACTTCCTAGG,ACTTCCTAGG
+MarkerB,,P56890;P65470,CCAGGTTCCG,CCAGGTTCCG
+MarkerC,yes,,CAGCTATGGT,CAGCTATGGT
 """
 
 PROXIMITY_DATA = """component,marker_1,marker_2,join_count,join_count_expected_mean,join_count_expected_sd,join_count_z,join_count_pvalue
