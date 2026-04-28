@@ -220,7 +220,6 @@ def denoise_ace_layer(
             min_seed_pct=min_seed_pct,
             nodes_to_move_threshold=nodes_to_move_threshold,
             select_LCC=select_LCC,
-            verbose=False,
         )
     except ValueError as exc:
         logger.debug("ACE denoising skipped for component: %s", exc)
