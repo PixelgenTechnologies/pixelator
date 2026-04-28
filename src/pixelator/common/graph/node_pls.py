@@ -6,7 +6,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import logging
-from typing import List, Literal, Optional, Sequence, Union
+from typing import List, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -188,7 +188,9 @@ def node_pls(
             for node_id in counts.index:
                 node_data = v_attr_dict.get(node_id)
                 if node_data is None or y not in node_data:
-                    raise ValueError(f"Variable '{y}' not found in counts or graph attributes for node {node_id}.")
+                    raise ValueError(
+                        f"Variable '{y}' not found in counts or graph attributes for node {node_id}."
+                    )
                 y_col.append(node_data[y])
             Y_data[y] = y_col
 
@@ -202,7 +204,9 @@ def node_pls(
     if x_vars is not None:
         missing_x = [x for x in x_vars if x not in X_expanded.columns]
         if missing_x:
-            raise ValueError(f"The following x_vars are not found: {', '.join(missing_x)}")
+            raise ValueError(
+                f"The following x_vars are not found: {', '.join(missing_x)}"
+            )
         X = X_expanded[x_vars].values
     else:
         X = X_expanded.values

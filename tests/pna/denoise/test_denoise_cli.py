@@ -80,8 +80,14 @@ def test_denoise_ace_cli_runs_ok(pna_pxl_file):
         result = read(out_pxl)
         obs = result.adata().obs
         assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
-        assert int(obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise_ace"]) == ACE_LOW_NODE_COUNT
-        assert int(obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise"]) == ACE_LOW_NODE_COUNT
+        assert (
+            int(obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise_ace"])
+            == ACE_LOW_NODE_COUNT
+        )
+        assert (
+            int(obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise"])
+            == ACE_LOW_NODE_COUNT
+        )
 
 
 @pytest.mark.slow
@@ -111,8 +117,12 @@ def test_denoise_one_core_and_ace_cli_runs_ok(pna_pxl_file):
         result = read(out_pxl)
         obs = result.adata().obs
         assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
-        ace_removed = int(obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise_ace"])
-        total_removed = int(obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise"])
+        ace_removed = int(
+            obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise_ace"]
+        )
+        total_removed = int(
+            obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise"]
+        )
         assert ace_removed == ACE_LOW_NODE_COUNT
         assert total_removed >= ace_removed
         assert total_removed > 0

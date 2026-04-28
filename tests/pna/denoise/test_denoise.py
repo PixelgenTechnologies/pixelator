@@ -359,12 +359,12 @@ def test_denoise_ace_analysis(pna_pxl_dataset, tmp_path):
 
     obs = denoised_dataset.adata().obs
     assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
-    assert int(obs.loc[REFERENCE_ACE_COMPONENT, "number_of_nodes_removed_in_denoise_ace"]) == (
-        REFERENCE_ACE_LOW_NODE_COUNT
-    )
-    assert int(obs.loc[REFERENCE_ACE_COMPONENT, "number_of_nodes_removed_in_denoise"]) == (
-        REFERENCE_ACE_LOW_NODE_COUNT
-    )
+    assert int(
+        obs.loc[REFERENCE_ACE_COMPONENT, "number_of_nodes_removed_in_denoise_ace"]
+    ) == (REFERENCE_ACE_LOW_NODE_COUNT)
+    assert int(
+        obs.loc[REFERENCE_ACE_COMPONENT, "number_of_nodes_removed_in_denoise"]
+    ) == (REFERENCE_ACE_LOW_NODE_COUNT)
 
     orig_graph = PNAGraph.from_edgelist(
         pna_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])

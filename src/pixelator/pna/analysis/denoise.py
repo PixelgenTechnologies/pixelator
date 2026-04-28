@@ -11,11 +11,9 @@ import tempfile
 from itertools import chain
 from pathlib import Path
 
-import duckdb
 import networkx as nx
 import numpy as np
 import pandas as pd
-import polars as pl
 from scipy.stats import fisher_exact
 
 from pixelator.common.annotate.aggregates import call_aggregates
