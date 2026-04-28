@@ -35,7 +35,7 @@ def graph_from_pxl():
 def test_adaptive_core_expansion_works_as_expected(graph_from_pxl):
     """Test that adaptive_core_expansion works for various valid inputs."""
     # Basic execution and exact count check
-    res = adaptive_core_expansion(graph_from_pxl, verbose=False)
+    res = adaptive_core_expansion(graph_from_pxl)
     partitions = list(nx.get_node_attributes(res.raw, "partition").values())
     partition_counts = {
         "high": partitions.count("high"),
@@ -45,11 +45,11 @@ def test_adaptive_core_expansion_works_as_expected(graph_from_pxl):
     assert partition_counts == {"high": 43144, "low": 399}
 
     # Test with different valid parameter combinations (expect no errors)
-    adaptive_core_expansion(graph_from_pxl, k=2, verbose=False)
-    adaptive_core_expansion(graph_from_pxl, max_iter=10, verbose=False)
-    adaptive_core_expansion(graph_from_pxl, min_seed_pct=0.2, verbose=False)
-    adaptive_core_expansion(graph_from_pxl, nodes_to_move_threshold=100, verbose=False)
-    adaptive_core_expansion(graph_from_pxl, select_LCC=False, verbose=False)
+    adaptive_core_expansion(graph_from_pxl, k=2)
+    adaptive_core_expansion(graph_from_pxl, max_iter=10)
+    adaptive_core_expansion(graph_from_pxl, min_seed_pct=0.2)
+    adaptive_core_expansion(graph_from_pxl, nodes_to_move_threshold=100)
+    adaptive_core_expansion(graph_from_pxl, select_LCC=False)
 
 
 def test_adaptive_core_expansion_fails_with_invalid_input(graph_from_pxl):
@@ -72,14 +72,14 @@ def test_adaptive_core_expansion_fails_with_invalid_input(graph_from_pxl):
         adaptive_core_expansion(graph_from_pxl, nodes_to_move_threshold="Invalid")
 
     # Out of bounds numerical values
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         adaptive_core_expansion(graph_from_pxl, max_iter=0)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         adaptive_core_expansion(graph_from_pxl, max_iter=1001)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         adaptive_core_expansion(graph_from_pxl, min_seed_pct=2.0)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         adaptive_core_expansion(graph_from_pxl, nodes_to_move_threshold=-1)
