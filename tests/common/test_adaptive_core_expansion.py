@@ -14,7 +14,11 @@ from pixelator import read_pna as read
 from pixelator.common.graph.adaptive_core_expansion import adaptive_core_expansion
 
 PXL_FILE = (
-    Path(__file__).parents[2] / "tests" / "pna" / "data" / "PNA055_Sample07_S7.layout.pxl"
+    Path(__file__).parents[2]
+    / "tests"
+    / "pna"
+    / "data"
+    / "PNA055_Sample07_S7.layout.pxl"
 )
 COMPONENT_ID = "0a45497c6bfbfb22"
 
