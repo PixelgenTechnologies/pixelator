@@ -14,7 +14,7 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 
 from pixelator.pna.analysis.denoise import (
     DenoiseGraph,
-    denoise_ace_layer,
+    denoise_ace,
     denoise_one_core_layer,
     get_overexpressed_markers_in_one_core,
     get_stranded_nodes,
@@ -327,7 +327,7 @@ REFERENCE_ACE_LOW_NODE_COUNT = 399
 
 
 @pytest.mark.slow
-def test_denoise_ace_layer_reference_component(pna_pxl_dataset):
+def test_denoise_ace_reference_component(pna_pxl_dataset):
     """ACE layer removal list matches peripheral partition on reference component."""
     comp_graph = PNAGraph.from_edgelist(
         pna_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
@@ -335,7 +335,7 @@ def test_denoise_ace_layer_reference_component(pna_pxl_dataset):
         .to_polars()
         .lazy()
     )
-    removed = denoise_ace_layer(comp_graph)
+    removed = denoise_ace(comp_graph)
     assert removed != [None]
     assert len(removed) == REFERENCE_ACE_LOW_NODE_COUNT
     partitions = nx.get_node_attributes(comp_graph.raw, "partition")

@@ -103,6 +103,79 @@ logger = logging.getLogger(__name__)
     show_default=True,
     help="How much to inflate number of noise markers in the one-core layer to remove.",
 )
+@click.option(
+    "--run-pls-denoising",
+    required=False,
+    is_flag=True,
+    help=(
+        "PLS-on-coreness denoise: retain the largest connected component after filtering nodes "
+        "by significant PLS score components (defaults match the R intracellular script). "
+        "Uses the full graph like ACE and one-core; removals are merged with other methods."
+    ),
+)
+@click.option(
+    "--pls-ncomp",
+    default=5,
+    type=click.IntRange(1, 50),
+    show_default=True,
+    help="Requested PLS components when --run-pls-denoising is set (capped per component).",
+)
+@click.option(
+    "--pls-model-k",
+    default=2,
+    type=click.IntRange(0, 6),
+    show_default=True,
+    help="Neighborhood steps for fitting the PLS X matrix when --run-pls-denoising is set.",
+)
+@click.option(
+    "--pls-pred-k",
+    default=1,
+    type=click.IntRange(0, 6),
+    show_default=True,
+    help="Neighborhood steps for PLS scores (prediction X) when --run-pls-denoising is set.",
+)
+@click.option(
+    "--pls-use-weights/--pls-no-weights",
+    default=True,
+    show_default=True,
+    help="Use edge weights in PLS neighborhood expansion when --run-pls-denoising is set.",
+)
+@click.option(
+    "--pls-normalization",
+    default="L1",
+    type=click.Choice(["L1", "CLR", "LogNormalize", "none"], case_sensitive=True),
+    show_default=True,
+    help="Normalization for the PLS neighborhood matrix when --run-pls-denoising is set.",
+)
+@click.option(
+    "--pls-residualize",
+    is_flag=True,
+    help=(
+        "Residualize the PLS neighborhood matrix against pixel_type (A/B) when "
+        "--run-pls-denoising is set."
+    ),
+)
+@click.option(
+    "--pls-component-p-threshold",
+    default=0.01,
+    type=click.FloatRange(0.0, 1.0, min_open=True),
+    show_default=True,
+    help="Pearson vs coreness: keep PLS components with p-value below this when --run-pls-denoising is set.",
+)
+@click.option(
+    "--pls-min-coreness-correlation",
+    default=0.0,
+    type=click.FloatRange(-1.0, 1.0),
+    show_default=True,
+    help="Keep PLS components whose Pearson correlation with coreness exceeds this.",
+)
+@click.option(
+    "--pls-score-threshold",
+    default=-3.0,
+    type=float,
+    show_default=True,
+    help="All retained PLS score columns must exceed this value when --run-pls-denoising is set.",
+)
 @output_option
 @click.pass_context
 @timer
@@ -116,6 +189,16 @@ def denoise(
     one_core_ratio_threshold,
     pval_threshold,
     inflate_factor,
+    run_pls_denoising,
+    pls_ncomp,
+    pls_model_k,
+    pls_pred_k,
+    pls_use_weights,
+    pls_normalization,
+    pls_residualize,
+    pls_component_p_threshold,
+    pls_min_coreness_correlation,
+    pls_score_threshold,
     output,
 ):
     """Denoise components of a PXL file."""
@@ -125,11 +208,21 @@ def denoise(
         input_files=input_files,
         run_one_core_graph_denoising=run_one_core_graph_denoising,
         run_ace_denoising=run_ace_denoising,
+        run_pls_denoising=run_pls_denoising,
         ace_k=ace_k,
         ace_max_k_core=ace_max_k_core,
         one_core_ratio_threshold=one_core_ratio_threshold,
         pval_threshold=pval_threshold,
         inflate_factor=inflate_factor,
+        pls_ncomp=pls_ncomp,
+        pls_model_k=pls_model_k,
+        pls_pred_k=pls_pred_k,
+        pls_use_weights=pls_use_weights,
+        pls_normalization=pls_normalization,
+        pls_residualize=pls_residualize,
+        pls_component_p_threshold=pls_component_p_threshold,
+        pls_min_coreness_correlation=pls_min_coreness_correlation,
+        pls_score_threshold=pls_score_threshold,
         output=output,
     )
 
@@ -149,7 +242,11 @@ def denoise(
     )
     metrics = denoise_output / f"{sample_name}.report.json"
 
-    if not run_one_core_graph_denoising and not run_ace_denoising:
+    if (
+        not run_one_core_graph_denoising
+        and not run_ace_denoising
+        and not run_pls_denoising
+    ):
         report = DenoiseSampleReport(
             sample_id=sample_name,
             product_id="single-cell-pna",
@@ -165,11 +262,21 @@ def denoise(
         DenoiseGraph(
             run_one_core=run_one_core_graph_denoising,
             run_ace=run_ace_denoising,
+            run_pls=run_pls_denoising,
             pval_significance_threshold=pval_threshold,
             inflate_factor=inflate_factor,
             one_core_ratio_threshold=one_core_ratio_threshold,
             k=ace_k,
             max_k_core=ace_max_k_core,
+            pls_ncomp=pls_ncomp,
+            pls_model_k=pls_model_k,
+            pls_pred_k=pls_pred_k,
+            pls_use_weights=pls_use_weights,
+            pls_normalization=pls_normalization,
+            pls_residualize=pls_residualize,
+            pls_component_p_threshold=pls_component_p_threshold,
+            min_pls_coreness_correlation=pls_min_coreness_correlation,
+            pls_score_threshold=pls_score_threshold,
         )
     ]
     logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
