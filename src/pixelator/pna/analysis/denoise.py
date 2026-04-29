@@ -275,25 +275,23 @@ def denoise_pls(
 ) -> list:
     """PLS-on-coreness denoise: significant components, score gate, then largest connected set.
 
-    Fits PLS with neighborhood radius ``model_k`` (as in R ``node_pls``) and scores nodes
-    using radius ``pred_k``. Defaults match the R intracellular script (``ncomp=5``,
-    ``model_k=2``, ``pred_k=1``, weighted L1, no residualization, ``cor > 0``,
-    ``p < 0.01``, all retained scores ``> -3``).
+    Fits PLS with neighborhood radius ``model_k`` and scores nodes
+    using radius ``pred_k``.
 
-    Unlike the R script, filtering uses **all** nodes (not only ACE ``high``); removals
-    are returned for merging with other denoise methods like ACE and one-core.
+    Filtering uses **all** nodes (not only ACE ``high``); removals
+    are returned for merging with other denoise methods.
 
     Args:
         component: Component graph (mutates ``coreness`` on nodes temporarily).
         ncomp: Requested PLS components (capped by sample size and feature count).
-        model_k: Neighborhood steps for fitting X (R ``model_k``).
-        pred_k: Neighborhood steps for prediction / scores (R ``pred_k``).
-        use_weights: Use edge weights in neighborhood expansion (R ``weighted``).
-        normalization: Neighborhood matrix normalization (R ``normalization``).
+        model_k: Neighborhood steps for fitting X.
+        pred_k: Neighborhood steps for prediction / scores.
+        use_weights: Use edge weights in neighborhood expansion.
+        normalization: Neighborhood matrix normalization.
         residualize: If True, residualize X against a ``pixel_type`` design matrix.
-        pls_component_p_threshold: Per-component Pearson test vs coreness (R ``0.01``).
-        min_pls_coreness_correlation: Minimum positive correlation (R ``cor > 0``).
-        pls_score_threshold: All selected score columns must exceed this (R ``-3``).
+        pls_component_p_threshold: Per-component Pearson test vs coreness.
+        min_pls_coreness_correlation: Minimum positive correlation.
+        pls_score_threshold: All selected score columns must exceed this.
 
     Returns:
         Nodes to remove, ``[]`` if no PLS-based removal applies, or ``[None]`` if the

@@ -109,7 +109,7 @@ logger = logging.getLogger(__name__)
     is_flag=True,
     help=(
         "PLS-on-coreness denoise: retain the largest connected component after filtering nodes "
-        "by significant PLS score components (defaults match the R intracellular script). "
+        "by significant PLS score components. "
         "Uses the full graph like ACE and one-core; removals are merged with other methods."
     ),
 )
