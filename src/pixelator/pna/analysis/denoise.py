@@ -298,6 +298,7 @@ def denoise_pls(
     Returns:
         Nodes to remove, ``[]`` if no PLS-based removal applies, or ``[None]`` if the
         component is disqualified (fit/scoring failed).
+
     """
     idx = component.node_marker_counts.index
     n_samples = len(idx)
