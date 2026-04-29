@@ -17,7 +17,7 @@ from pixelator.common.utils import (
     write_parameters_file,
 )
 from pixelator.pna import read
-from pixelator.pna.analysis.denoise import DenoiseACE, DenoiseOneCore
+from pixelator.pna.analysis.denoise import DenoiseGraph
 from pixelator.pna.analysis.report import DenoiseSampleReport
 from pixelator.pna.analysis_engine import AnalysisManager, LoggingSetup
 from pixelator.pna.cli.common import output_option
@@ -49,7 +49,8 @@ logger = logging.getLogger(__name__)
     is_flag=True,
     help=(
         "Remove nodes in the peripheral-like ('low') partition from adaptive core expansion (ACE). "
-        "Can be combined with --run-one-core-graph-denoising (one-core runs first, then ACE)."
+        "Can be combined with --run-one-core-graph-denoising: both use the full component graph; "
+        "marked nodes are merged and stranded nodes are removed once at the end."
     ),
 )
 @click.option(
@@ -160,13 +161,17 @@ def denoise(
         report.write_json_file(metrics, indent=4)
         return
 
-    analysis_to_run = []
-    if run_one_core_graph_denoising:
-        analysis_to_run.append(
-            DenoiseOneCore(pval_threshold, inflate_factor, one_core_ratio_threshold)
+    analysis_to_run = [
+        DenoiseGraph(
+            run_one_core=run_one_core_graph_denoising,
+            run_ace=run_ace_denoising,
+            pval_significance_threshold=pval_threshold,
+            inflate_factor=inflate_factor,
+            one_core_ratio_threshold=one_core_ratio_threshold,
+            k=ace_k,
+            max_k_core=ace_max_k_core,
         )
-    if run_ace_denoising:
-        analysis_to_run.append(DenoiseACE(k=ace_k, max_k_core=ace_max_k_core))
+    ]
     logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
     manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
     pxl_dataset = read(pxl_file.path)

@@ -49,7 +49,6 @@ def test_adaptive_core_expansion_works_as_expected(graph_from_pxl):
     adaptive_core_expansion(graph_from_pxl, max_iter=10)
     adaptive_core_expansion(graph_from_pxl, min_seed_pct=0.2)
     adaptive_core_expansion(graph_from_pxl, nodes_to_move_threshold=100)
-    adaptive_core_expansion(graph_from_pxl, select_LCC=False)
 
 
 def test_adaptive_core_expansion_fails_with_invalid_input(graph_from_pxl):

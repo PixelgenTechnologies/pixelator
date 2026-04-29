@@ -13,8 +13,7 @@ import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 from pixelator.pna.analysis.denoise import (
-    DenoiseACE,
-    DenoiseOneCore,
+    DenoiseGraph,
     denoise_ace_layer,
     denoise_one_core_layer,
     get_overexpressed_markers_in_one_core,
@@ -265,17 +264,22 @@ def test_denoise_one_core_layer(pna_pxl_dataset):
             pna_pxl_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
         )
         nodes_to_be_removed = denoise_one_core_layer(comp_graph)
+        if nodes_to_be_removed == [None]:
+            continue
         node_core_numbers = pd.Series(nx.core_number(comp_graph.raw))
         assert all(node_core_numbers[nodes_to_be_removed] == 1)
 
+        with_stranded = nodes_to_be_removed + get_stranded_nodes(
+            comp_graph, nodes_to_be_removed
+        )
         denoised_graph = comp_graph.raw.copy()
-        denoised_graph.remove_nodes_from(nodes_to_be_removed)
+        denoised_graph.remove_nodes_from(with_stranded)
         assert nx.is_connected(denoised_graph)
 
 
 @pytest.mark.slow
 def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
-    """Test the DenoiseOneCore analysis."""
+    """Test graph denoising with one-core only."""
     pxl_file_target = PixelDatasetSaver(pxl_dataset=pna_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
@@ -289,7 +293,7 @@ def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
 
         mock_load_panel.side_effect = f
 
-        manager = AnalysisManager([DenoiseOneCore()])
+        manager = AnalysisManager([DenoiseGraph(run_one_core=True, run_ace=False)])
         denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
 
     assert "tau_type" in denoised_dataset.adata().obs.columns
@@ -341,7 +345,7 @@ def test_denoise_ace_layer_reference_component(pna_pxl_dataset):
 
 @pytest.mark.slow
 def test_denoise_ace_analysis(pna_pxl_dataset, tmp_path):
-    """DenoiseACE analysis writes fewer nodes and records ACE removal counts."""
+    """ACE-only graph denoising records ACE removal counts."""
     pxl_file_target = PixelDatasetSaver(pxl_dataset=pna_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
@@ -354,7 +358,7 @@ def test_denoise_ace_analysis(pna_pxl_dataset, tmp_path):
 
         mock_load_panel.side_effect = f
 
-        manager = AnalysisManager([DenoiseACE()])
+        manager = AnalysisManager([DenoiseGraph(run_one_core=False, run_ace=True)])
         denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
 
     obs = denoised_dataset.adata().obs

@@ -189,7 +189,6 @@ def denoise_ace_layer(
     max_iter: int = 200,
     min_seed_pct: float = 0.1,
     nodes_to_move_threshold: int = 10,
-    select_LCC: bool = True,
 ) -> list:
     """Partition the graph with ACE and return nodes in the peripheral-like ("low") partition.
 
@@ -202,7 +201,6 @@ def denoise_ace_layer(
         max_iter: Maximum expansion iterations per binding threshold in ACE.
         min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
         nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
-        select_LCC: Whether to restrict the ACE seed to the largest k-core component.
 
     Returns:
         List of node identifiers to remove, or ``[None]`` if the component is
@@ -217,7 +215,6 @@ def denoise_ace_layer(
             max_iter=max_iter,
             min_seed_pct=min_seed_pct,
             nodes_to_move_threshold=nodes_to_move_threshold,
-            select_LCC=select_LCC,
         )
     except ValueError as exc:
         logger.debug("ACE denoising skipped for component: %s", exc)
@@ -234,13 +231,11 @@ def denoise_one_core_layer(
     inflate_factor: float = 1.5,
     one_core_ratio_threshold: float = 0.9,
 ) -> list:
-    """Identify and remove markers over-expressed in the one-core layer of a graph.
+    """Identify markers over-expressed in the one-core layer and sample nodes to remove.
 
     This function analyzes the one-core layer of a graph, identifies markers
     that are over-expressed using a statistical significance threshold, and
-    removes nodes associated with those markers. Additionally, it ensures
-    that stranded nodes (nodes disconnected from the graph due to removal)
-    are also removed.
+    samples nodes associated with those markers for removal (bleed-over candidates).
 
     Args:
         component (PNAGraph): The graph component to process, containing
@@ -253,7 +248,9 @@ def denoise_one_core_layer(
                                                    their one-core layer are not denoised.
 
     Returns:
-        list: A list of nodes to be removed from the one-core layer of the graph.
+        list: Node ids sampled for removal from the one-core layer (bleed-over
+        candidates). Does not include stranded nodes; callers merge with other
+        denoise steps and then call ``get_stranded_nodes`` once on the combined set.
 
     """
     node_marker_counts = component.node_marker_counts
@@ -272,8 +269,6 @@ def denoise_one_core_layer(
         ((node_core_numbers[node_marker_counts.index] == 1).values)
     ]
     nodes_to_remove = _sample_nodes_to_be_removed(one_core_layer, markers_to_remove)
-    stranded_nodes = get_stranded_nodes(component, nodes_to_remove)
-    nodes_to_remove += stranded_nodes
     return nodes_to_remove
 
 
@@ -307,189 +302,117 @@ def write_denoised_edgelist(
         )
 
 
-class DenoiseOneCore(PerComponentTask):
-    """Denoise bleed-over markers in parts of the component with low coreness."""
+class DenoiseGraph(PerComponentTask):
+    """Graph denoising: one-core and/or ACE on the full graph, then merged removal plus stranding."""
 
-    TASK_NAME = "denoise-one-core"
+    TASK_NAME = "denoise-graph"
 
     def __init__(
         self,
+        *,
+        run_one_core: bool = False,
+        run_ace: bool = False,
         pval_significance_threshold: float = 0.05,
         inflate_factor: float = 1.5,
         one_core_ratio_threshold: float = 0.9,
-    ):
-        """Initialize a DenoiseOneCore instance.
-
-        Args:
-            pval_significance_threshold (float): The p-value threshold for considering
-            a marker over-expressed in the one-core layer.
-            inflate_factor: A factor used to inflate the excess count of markers.
-            one_core_ratio_threshold: Components with higher nodes in their one-core
-                                      layer are not denoised.
-
-        """
-        self.pval_significance_threshold = pval_significance_threshold
-        self.inflate_factor = inflate_factor
-        self.one_core_ratio_threshold = one_core_ratio_threshold
-
-    def run_on_component_graph(
-        self, component: PNAGraph, component_id: str
-    ) -> pd.DataFrame:
-        """Execute one-core denoising on a given component graph and return nodes to remove.
-
-        This function performs denoising on the provided PNAGraph component by
-        identifying nodes to be removed based on a single core layer denoising
-        process. The resulting nodes are returned in a DataFrame along with
-        their associated component ID.
-
-        Args:
-            component (PNAGraph): The graph component to be denoised.
-            component_id (str): The identifier for the graph component.
-
-        Returns:
-            pd.DataFrame: A DataFrame containing the nodes to be removed with the following columns:
-                - "umi": The unique identifier of the node to be removed.
-                - "component": The ID of the component the node belongs to.
-
-        """
-        logger.debug(f"Running low-core denoising on component {component_id}")
-        nodes_to_remove = pd.DataFrame(
-            denoise_one_core_layer(
-                component,
-                pval_significance_threshold=self.pval_significance_threshold,
-                inflate_factor=self.inflate_factor,
-                one_core_ratio_threshold=self.one_core_ratio_threshold,
-            ),
-            columns=["umi"],
-        )
-        nodes_to_remove["component"] = component_id
-        return nodes_to_remove
-
-    def add_to_pixel_file(self, data: pd.DataFrame, pxl_file_target: PxlFile):
-        """Add denoised component to a pixel file by updating the edgelist and adata.
-
-        This function reads an existing pixel file, filters its edgelist
-        based on the provided data, and updates the file with the modified
-        edgelist and corresponding AnnData object.
-
-        Args:
-            data (pd.DataFrame): A DataFrame containing the data to be used
-                for filtering.
-            pxl_file_target (PxlFile): The target pixel file to which
-                the data will be added.
-
-        """
-        pxl = PNAPixelDataset.from_files(pxl_file_target)
-        old_adata = pxl.adata()
-        try:
-            panel = PNAAntibodyPanel.from_pxl_file(pxl_file_target.path)
-        except KeyError:
-            # If pxl file does not contain panel data, try to load it from
-            # the panel name.
-            # This will happen when old pxl files generated before v0.22.0
-            # are used.
-            panel_name = pxl.metadata().popitem()[1]["panel_name"]
-            panel = load_antibody_panel(pna_config, panel_name)
-        nodes_to_remove = (
-            data.loc[~data["umi"].isna(), "umi"].astype(np.uint64).tolist()
-        )
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            denoised_edgelist_path = temp_dir + "/denoised_edgelist.parquet"
-            write_denoised_edgelist(pxl, nodes_to_remove, denoised_edgelist_path)
-            with PixelFileWriter(pxl_file_target.path) as writer:
-                writer.write_edgelist(Path(denoised_edgelist_path))
-                adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
-                call_aggregates(adata)
-                adata = add_missing_adata_info(adata, old_adata)
-                denoise_info = pd.DataFrame(index=adata.obs.index)
-                denoise_info["disqualified_for_denoising"] = False
-                denoise_info.loc[
-                    data.loc[data["umi"].isna(), "component"],
-                    "disqualified_for_denoising",
-                ] = True
-                n_umis_removed = (
-                    data.loc[~data["umi"].isna(), :].groupby("component").size()
-                )
-                denoise_info["number_of_nodes_removed_in_denoise"] = n_umis_removed
-                denoise_info["number_of_nodes_removed_in_denoise"] = denoise_info[
-                    "number_of_nodes_removed_in_denoise"
-                ].fillna(0)
-                adata.obs = adata.obs.join(denoise_info, how="left")
-
-                writer.write_adata(adata)
-
-
-class DenoiseACE(PerComponentTask):
-    """Remove peripheral-like nodes identified by adaptive core expansion (ACE)."""
-
-    TASK_NAME = "denoise-ace"
-
-    def __init__(
-        self,
         k: int = 3,
         max_k_core: int = 4,
         max_iter: int = 200,
         min_seed_pct: float = 0.1,
         nodes_to_move_threshold: int = 10,
-        select_LCC: bool = True,
     ):
-        """Initialize a DenoiseACE instance.
-
-        Args:
-            k: Neighborhood radius (steps) for the transition matrix in ACE.
-            max_k_core: Maximum k-core layer used for seeding in ACE.
-            max_iter: Maximum expansion iterations per binding threshold in ACE.
-            min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
-            nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
-            select_LCC: Whether to restrict the ACE seed to the largest k-core component.
-
-        """
+        """Configure which denoise steps run and their hyperparameters."""
+        if not run_one_core and not run_ace:
+            raise ValueError("At least one of run_one_core or run_ace must be True.")
+        self.run_one_core = run_one_core
+        self.run_ace = run_ace
+        self.pval_significance_threshold = pval_significance_threshold
+        self.inflate_factor = inflate_factor
+        self.one_core_ratio_threshold = one_core_ratio_threshold
         self.k = k
         self.max_k_core = max_k_core
         self.max_iter = max_iter
         self.min_seed_pct = min_seed_pct
         self.nodes_to_move_threshold = nodes_to_move_threshold
-        self.select_LCC = select_LCC
 
     def run_on_component_graph(
         self, component: PNAGraph, component_id: str
     ) -> pd.DataFrame:
-        """Execute ACE denoising on a given component graph and return nodes to remove.
+        """Return nodes to remove (including stranded) and per-method metadata columns.
 
-        This function performs denoising on the provided PNAGraph component by
-        identifying nodes to be removed based on a single core layer denoising
-        process. The resulting nodes are returned in a DataFrame along with
-        their associated component ID.
-
-        Args:
-            component (PNAGraph): The graph component to be denoised.
-            component_id (str): The identifier for the graph component.
-
-        Returns:
-            pd.DataFrame: A DataFrame containing the nodes to be removed with the following columns:
-                - "umi": The unique identifier of the node to be removed.
-                - "component": The ID of the component the node belongs to.
-
+        One-core and ACE each see the same full ``component`` graph; removals are
+        merged afterward so neither step is conditioned on the other's output.
         """
-        logger.debug("Running ACE denoising on component %s", component_id)
-        nodes_to_remove = pd.DataFrame(
-            denoise_ace_layer(
+        one_core_marked: list = []
+        ace_marked: list = []
+        disqualified = False
+
+        if self.run_one_core:
+            logger.debug("Running one-core denoising on component %s", component_id)
+            oc = denoise_one_core_layer(
+                component,
+                pval_significance_threshold=self.pval_significance_threshold,
+                inflate_factor=self.inflate_factor,
+                one_core_ratio_threshold=self.one_core_ratio_threshold,
+            )
+            if oc == [None]:
+                disqualified = True
+            else:
+                one_core_marked = oc
+
+        if self.run_ace:
+            logger.debug("Running ACE denoising on component %s", component_id)
+            ace_result = denoise_ace_layer(
                 component,
                 k=self.k,
                 max_k_core=self.max_k_core,
                 max_iter=self.max_iter,
                 min_seed_pct=self.min_seed_pct,
                 nodes_to_move_threshold=self.nodes_to_move_threshold,
-                select_LCC=self.select_LCC,
-            ),
-            columns=["umi"],
-        )
-        nodes_to_remove["component"] = component_id
-        return nodes_to_remove
+            )
+            if ace_result == [None]:
+                disqualified = True
+            else:
+                ace_marked = ace_result
+
+        combined: list = []
+        seen: set = set()
+        for n in one_core_marked + ace_marked:
+            if n not in seen:
+                seen.add(n)
+                combined.append(n)
+
+        if combined:
+            stranded = get_stranded_nodes(component, combined)
+            for n in stranded:
+                if n not in seen:
+                    seen.add(n)
+                    combined.append(n)
+
+        rows: list[dict] = []
+        ace_only_count = len(ace_marked)
+        for umi in combined:
+            rows.append(
+                {
+                    "umi": umi,
+                    "component": component_id,
+                    "ace_marked_count": ace_only_count,
+                }
+            )
+        if disqualified:
+            rows.append(
+                {
+                    "umi": np.nan,
+                    "component": component_id,
+                    "ace_marked_count": ace_only_count,
+                }
+            )
+        if not rows:
+            return pd.DataFrame(columns=["umi", "component", "ace_marked_count"])
+        return pd.DataFrame(rows)
 
     def add_to_pixel_file(self, data: pd.DataFrame, pxl_file_target: PxlFile):
-        """Update the pixel file by removing ACE ``low`` partition nodes and recording metrics."""
+        """Filter edgelist by removed nodes and write denoise metrics to AnnData."""
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
         try:
@@ -511,31 +434,27 @@ class DenoiseACE(PerComponentTask):
                 adata = add_missing_adata_info(adata, old_adata)
                 denoise_info = pd.DataFrame(index=adata.obs.index)
                 denoise_info["disqualified_for_denoising"] = False
-                denoise_info.loc[
-                    data.loc[data["umi"].isna(), "component"],
-                    "disqualified_for_denoising",
-                ] = True
-                n_ace_removed = (
+                disq_components = data.loc[data["umi"].isna(), "component"].unique()
+                denoise_info.loc[disq_components, "disqualified_for_denoising"] = True
+
+                n_total_removed = (
                     data.loc[~data["umi"].isna(), :].groupby("component").size()
                 )
-                denoise_info["number_of_nodes_removed_in_denoise_ace"] = n_ace_removed
-                denoise_info["number_of_nodes_removed_in_denoise_ace"] = denoise_info[
-                    "number_of_nodes_removed_in_denoise_ace"
-                ].fillna(0)
-                if "number_of_nodes_removed_in_denoise" in old_adata.obs.columns:
-                    prev = (
-                        old_adata.obs["number_of_nodes_removed_in_denoise"]
-                        .reindex(denoise_info.index)
-                        .fillna(0)
-                        .astype(int)
+                denoise_info["number_of_nodes_removed_in_denoise"] = (
+                    pd.to_numeric(
+                        n_total_removed.reindex(denoise_info.index), errors="coerce"
                     )
-                    denoise_info["number_of_nodes_removed_in_denoise"] = (
-                        prev + denoise_info["number_of_nodes_removed_in_denoise_ace"]
-                    )
-                else:
-                    denoise_info["number_of_nodes_removed_in_denoise"] = denoise_info[
-                        "number_of_nodes_removed_in_denoise_ace"
-                    ]
+                    .fillna(0)
+                    .astype("int64")
+                )
+
+                n_ace = data.groupby("component")["ace_marked_count"].first()
+                denoise_info["number_of_nodes_removed_in_denoise_ace"] = (
+                    pd.to_numeric(n_ace.reindex(denoise_info.index), errors="coerce")
+                    .fillna(0)
+                    .astype("int64")
+                )
+
                 if "disqualified_for_denoising" in old_adata.obs.columns:
                     denoise_info["disqualified_for_denoising"] = (
                         old_adata.obs["disqualified_for_denoising"]

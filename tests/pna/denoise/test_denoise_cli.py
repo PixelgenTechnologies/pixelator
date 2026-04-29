@@ -92,7 +92,7 @@ def test_denoise_ace_cli_runs_ok(pna_pxl_file):
 
 @pytest.mark.slow
 def test_denoise_one_core_and_ace_cli_runs_ok(pna_pxl_file):
-    """One-core then ACE (CLI order) produces cumulative removal stats."""
+    """One-core plus ACE: ACE counts match full-graph ACE; total includes one-core and stranding."""
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as output_dir, _patch_denoise_panel_loader():
         args = [
