@@ -45,10 +45,7 @@ class PNAAntibodyPanel:
     }
 
     # and these should have unique values
-    _UNIQUE_COLUMNS = [
-        "sequence_1",
-        "sequence_2",
-    ]
+    _UNIQUE_COLUMNS = ["sequence_1", "sequence_2"]
 
     def __init__(
         self,
@@ -556,6 +553,14 @@ class PNAAntibodyPanelDiff:
                 f"Expected panel {self.panel_2.name} v{self.panel_2.version}, but got panel {adata_panel.name} v{adata_panel.version}."
             )
 
+        non_panel_columns = adata.var.copy()[
+            [
+                col
+                for col in adata.var.columns
+                if col not in adata.uns["panel_metadata"]["panel_columns"]
+            ]
+            + self.join_on_columns
+        ]
         adata.var = (
             self.joined.select(
                 list(
@@ -577,6 +582,15 @@ class PNAAntibodyPanelDiff:
             .to_pandas()
             .set_index("marker_id")
         )
+        if adata.var.shape[0] != non_panel_columns.shape[0]:
+            raise ValueError(
+                "Row count mismatch in automatic patch panel patch version bump."
+            )
+        adata.var = adata.var.join(
+            non_panel_columns.set_index(self.join_on_columns),
+            how="outer",
+            on=self.join_on_columns,
+        )
         adata.uns["panel_metadata"] = self.panel_2.metadata.model_dump()
-        adata.uns["panel_metadata"]["panel_columns"] = adata.var.columns.tolist()
+        adata.uns["panel_metadata"]["panel_columns"] = self.panel_2.df.columns.tolist()
         return adata

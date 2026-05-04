@@ -152,7 +152,10 @@ def test_loading_multiple_major_version(config_with_multiple_versions):
     panel_name = "test-pna-panel>=0.0.1"
     with pytest.raises(
         ValueError,
-        match=f"Multiple major versions found for panel {panel_name}. Please specify the major and minor version in the panel name or alias to disambiguate.",
+        match=(
+            f"Multiple major versions found for panel {panel_name}. Please specify the major and "
+            + "minor version in the panel name or alias to disambiguate."
+        ),
     ):
         config_with_multiple_versions.get_panel(panel_name)
 
@@ -185,6 +188,14 @@ def test_loading_panel_from_config_specific_version(config_with_multiple_version
     panel = config_with_multiple_versions.get_panel("test-pna-panel", version="2.0.0")
     assert panel.name == "test-pna-panel"
     assert panel.version == "2.0.0"
+
+    panel = config_with_multiple_versions.get_panel("test-pna-panel==1.1.0")
+    assert panel.name == "test-pna-panel"
+    assert panel.version == "1.1.0"
+
+    panel = config_with_multiple_versions.get_panel("test-pna-panel==1.0.0")
+    assert panel.name == "test-pna-panel"
+    assert panel.version == "1.0.0"
 
 
 def test_loading_panel_from_config_product_and_specific_version(
