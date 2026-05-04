@@ -87,6 +87,7 @@ def _create_node_neighborhood_abundance_matrix(
     Raises:
         ValueError: If the number of rows in model_mat does not match the
             number of nodes in the graph.
+
     """
     counts = cg.node_marker_counts
     X = counts.values.astype(np.float64)
