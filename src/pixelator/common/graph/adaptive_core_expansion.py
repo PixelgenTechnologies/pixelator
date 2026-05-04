@@ -41,6 +41,7 @@ def adaptive_core_expansion(
     max_iter: int = 200,
     min_seed_pct: float = 0.1,
     nodes_to_move_threshold: int = 10,
+    select_LCC: bool = True,
 ) -> Graph:
     """Perform Adaptive Core Expansion (ACE) graph partitioning.
 
@@ -59,6 +60,7 @@ def adaptive_core_expansion(
         max_iter: Maximum iterations per binding threshold.
         min_seed_pct: Minimum fraction of nodes required to form the initial seed partition.
         nodes_to_move_threshold: Convergence limit; stops iteration if fewer nodes move.
+        select_LCC: Restricts the initial seed to the Largest Connected Component (LCC).
 
     Returns:
         The original graph object with an additional `partition` node attribute ("high" or "low").
@@ -141,6 +143,21 @@ def adaptive_core_expansion(
     row_sums = np.ravel(P_step.sum(axis=1))
     D_inv = sp.diags_array(1 / row_sums, format="csr")
     P_step = D_inv @ P_step
+
+    if select_LCC:
+        seed_nodes = [node_list[i] for i, k_val in enumerate(k_cores) if k_val == max_k]
+        subgraph = raw_graph.subgraph(seed_nodes)
+        components = list(nx.connected_components(subgraph))
+        if len(components) > 1:
+            logger.debug(
+                f"The high k-core layer has {len(components)} connected components. "
+                f"Selecting the largest connected component."
+            )
+            largest_comp = max(components, key=len)
+            largest_comp_set = set(largest_comp)
+            for i, k_val in enumerate(k_cores):
+                if k_val == max_k and node_list[i] not in largest_comp_set:
+                    k_cores[i] = max_k - 1
 
     partitions = []
     current_partition = (k_cores == max_k).astype(int)
