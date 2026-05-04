@@ -86,6 +86,12 @@ class AnnDataHelper:
         Only try to upgrade to the latest version available in the view,
         if the panels differ in patch version and have the same product.
         """
+        if any("panel_metadata" not in adata.uns for adata in adatas):
+            logger.debug(
+                "Missing panel metadata in one or more samples, "
+                + "skipping automatic panel version upgrade."
+            )
+            return adatas
         panel_versions = [
             semver.Version.parse(adata.uns["panel_metadata"]["version"])
             for adata in adatas

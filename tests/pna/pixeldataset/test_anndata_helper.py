@@ -5,6 +5,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 from pathlib import Path
 
+import numpy as np
 import polars as pl
 import pytest
 
@@ -182,6 +183,10 @@ class TestTryBumpAdataPanelVersion:
                 session=session, sample="sample_new"
             )
 
+        # allso test non panel columns are kept as is during the bump
+        positive_cells_count = np.random.randint(0, 100, adata_old.var.shape[0])
+        adata_old.var["positive_cells_count"] = positive_cells_count
+
         assert adata_old.var.loc["MarkerA", "uniprot_id"] == "P12345"
         assert adata_new.var.loc["MarkerA", "uniprot_id"] == "Q9UPN0"
         assert "target_class" not in adata_old.var.columns
@@ -191,8 +196,21 @@ class TestTryBumpAdataPanelVersion:
 
         assert "target_class" in bumped[0].var.columns
         assert bumped[0].var.loc["MarkerA", "target_class"] == "new-value"
+        assert bumped[0].var.loc["MarkerA", "uniprot_id"] == "Q9UPN0"
+
         assert "target_class" in bumped[1].var.columns
+        assert bumped[1].var.loc["MarkerA", "uniprot_id"] == "Q9UPN0"
         assert bumped[1].var.loc["MarkerA", "target_class"] == "new-value"
+
+        assert "positive_cells_count" in bumped[0].var.columns
+        assert "positive_cells_count" not in bumped[1].var.columns
+        assert (
+            adata_old.var["positive_cells_count"]
+            == bumped[0].var["positive_cells_count"]
+        ).all()
+
+        assert (adata_old[:, "MarkerC"].X == bumped[0][:, "MarkerC"].X).all()
+        assert (adata_new[:, "MarkerC"].X == bumped[1][:, "MarkerC"].X).all()
 
     @pytest.mark.parametrize(
         "new_version,new_product",
@@ -244,3 +262,6 @@ class TestTryBumpAdataPanelVersion:
         not_bumped = helper._try_bump_adata_panel_version([adata_old, adata_new])
 
         assert "target_class" not in not_bumped[0].var.columns
+
+        assert (adata_old[:, "MarkerC"].X == not_bumped[0][:, "MarkerC"].X).all()
+        assert (adata_new[:, "MarkerC"].X == not_bumped[1][:, "MarkerC"].X).all()

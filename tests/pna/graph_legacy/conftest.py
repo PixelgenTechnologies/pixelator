@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from pixelator.common.config.panel import AntibodyPanelMetadata
 from pixelator.pna.config import PNAAntibodyPanel
 
 
@@ -37,10 +38,18 @@ def mock_panel_fixture(request):
     if version.startswith("2"):
         mock_antibody_panel.df.drop(columns=["nuclear"], inplace=True)
 
-    mock_antibody_panel.name = "mock-panel"
-    mock_antibody_panel.version = version
-    mock_antibody_panel.description = "Dummy panel data"
-    mock_antibody_panel.aliases = ["mock_alias"]
+    mock_antibody_panel.metadata = AntibodyPanelMetadata.model_validate(
+        {
+            "name": "mock-panel",
+            "version": version,
+            "description": "Dummy panel data",
+            "aliases": ["mock_alias"],
+        }
+    )
+    mock_antibody_panel.name = mock_antibody_panel.metadata.name
+    mock_antibody_panel.version = mock_antibody_panel.metadata.version
+    mock_antibody_panel.aliases = mock_antibody_panel.metadata.aliases
+    mock_antibody_panel.description = mock_antibody_panel.metadata.description
     return mock_antibody_panel
 
 
