@@ -194,6 +194,7 @@ def denoise_ace(
     max_iter: int = 200,
     min_seed_pct: float = 0.1,
     nodes_to_move_threshold: int = 10,
+    select_lcc: bool = True,
 ) -> list:
     """Partition the graph with ACE and return nodes in the peripheral-like ("low") partition.
 
@@ -206,6 +207,7 @@ def denoise_ace(
         max_iter: Maximum expansion iterations per binding threshold in ACE.
         min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
         nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
+        select_lcc: If True, restrict the initial ACE seed to the largest connected component.
 
     Returns:
         List of node identifiers to remove, or ``[None]`` if the component is
@@ -220,6 +222,7 @@ def denoise_ace(
             max_iter=max_iter,
             min_seed_pct=min_seed_pct,
             nodes_to_move_threshold=nodes_to_move_threshold,
+            select_LCC=select_lcc,
         )
     except ValueError as exc:
         logger.debug("ACE denoising skipped for component: %s", exc)
@@ -463,6 +466,7 @@ class DenoiseGraph(PerComponentTask):
         max_iter: int = 200,
         min_seed_pct: float = 0.1,
         nodes_to_move_threshold: int = 10,
+        ace_select_lcc: bool = True,
         pls_ncomp: int = 5,
         pls_model_k: int = 2,
         pls_pred_k: int = 1,
@@ -489,6 +493,7 @@ class DenoiseGraph(PerComponentTask):
         self.max_iter = max_iter
         self.min_seed_pct = min_seed_pct
         self.nodes_to_move_threshold = nodes_to_move_threshold
+        self.ace_select_lcc = ace_select_lcc
         self.pls_ncomp = pls_ncomp
         self.pls_model_k = pls_model_k
         self.pls_pred_k = pls_pred_k
@@ -534,6 +539,7 @@ class DenoiseGraph(PerComponentTask):
                 max_iter=self.max_iter,
                 min_seed_pct=self.min_seed_pct,
                 nodes_to_move_threshold=self.nodes_to_move_threshold,
+                select_lcc=self.ace_select_lcc,
             )
             if ace_result == [None]:
                 disqualified = True

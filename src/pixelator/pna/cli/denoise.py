@@ -68,6 +68,15 @@ logger = logging.getLogger(__name__)
     help="Maximum k-core layer used for ACE seeding when --run-ace-denoising is set.",
 )
 @click.option(
+    "--ace-no-select-lcc",
+    is_flag=True,
+    default=False,
+    help=(
+        "When --run-ace-denoising is set, do not restrict the ACE initial seed to the "
+        "largest connected component (default: seed uses the LCC)."
+    ),
+)
+@click.option(
     "--one-core-ratio-threshold",
     default=0.9,
     required=False,
@@ -186,6 +195,7 @@ def denoise(
     run_ace_denoising,
     ace_k,
     ace_max_k_core,
+    ace_no_select_lcc,
     one_core_ratio_threshold,
     pval_threshold,
     inflate_factor,
@@ -211,6 +221,7 @@ def denoise(
         run_pls_denoising=run_pls_denoising,
         ace_k=ace_k,
         ace_max_k_core=ace_max_k_core,
+        ace_select_lcc=not ace_no_select_lcc,
         one_core_ratio_threshold=one_core_ratio_threshold,
         pval_threshold=pval_threshold,
         inflate_factor=inflate_factor,
@@ -268,6 +279,7 @@ def denoise(
             one_core_ratio_threshold=one_core_ratio_threshold,
             k=ace_k,
             max_k_core=ace_max_k_core,
+            ace_select_lcc=not ace_no_select_lcc,
             pls_ncomp=pls_ncomp,
             pls_model_k=pls_model_k,
             pls_pred_k=pls_pred_k,
