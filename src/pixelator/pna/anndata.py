@@ -28,13 +28,8 @@ def add_panel_information(adata: AnnData, panel: PNAAntibodyPanel) -> AnnData:
     """Add panel data to var."""
     adata.var = adata.var.join(panel.df, how="left")
 
-    adata.uns["panel_metadata"] = {
-        "name": panel.name,
-        "aliases": panel.aliases,
-        "description": panel.description,
-        "version": panel.version,
-        "panel_columns": list(panel.df.columns),
-    }
+    adata.uns["panel_metadata"] = panel.metadata.model_dump()
+    adata.uns["panel_metadata"]["panel_columns"] = list(panel.df.columns)
 
     return adata
 
