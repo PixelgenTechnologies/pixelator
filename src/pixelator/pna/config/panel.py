@@ -10,6 +10,8 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
+from anndata import AnnData
+
 try:
     from typing import Self
 except ImportError:
@@ -21,7 +23,6 @@ import pandas as pd
 import polars as pl
 import ruamel.yaml as yaml
 
-from pixelator import read_pna
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
@@ -104,27 +105,6 @@ class PNAAntibodyPanel:
         return cls(df, metadata, file_name=panel_file.name)
 
     @classmethod
-    def from_pxl_file(cls, filename: PathType) -> Self:
-        """Create an AntibodyPanel from a pxl file.
-
-        :param filename: The path to the pxl file.
-        :returns: The AntibodyPanel object.
-        :raises AssertionError: exception if panel file is missing,
-        :rtype: AntibodyPanel
-        """
-        pxl_file = Path(filename)
-
-        if not pxl_file.is_file() or pxl_file.suffix != ".pxl":
-            raise AssertionError(
-                f"Pixel file {filename} not found or has an incorrect format"
-            )
-
-        logger.debug("Creating Antibody panel from file %s", filename)
-
-        pxl_data = read_pna(pxl_file)
-        return cls.from_pxl_dataset(pxl_data, file_name=pxl_file.name)
-
-    @classmethod
     def from_pxl_dataset(
         cls, pxl_data: PNAPixelDataset, file_name: Optional[str] = None
     ) -> Self:
@@ -139,19 +119,40 @@ class PNAAntibodyPanel:
         """
         logger.debug("Creating Antibody panel from PNAPixelDataset object")
         adata = pxl_data.adata()
+        panel = cls.from_adata(adata, file_name=file_name)
+        logger.debug("Antibody panel from PNAPixelDataset created")
+        return panel
+
+    @classmethod
+    def from_adata(cls, adata: AnnData, file_name: Optional[str] = None) -> Self:
+        """Create an AntibodyPanel from an AnnData object.
+
+        :param adata: An AnnData object containing panel information.
+        :param file_name: The optional name of the file from which
+            the AnnData object was loaded.
+        :returns: The AntibodyPanel object.
+        :raises KeyError: exception if panel information is missing in the AnnData object.
+        :rtype: AntibodyPanel
+        """
+        logger.debug("Creating Antibody panel from AnnData object")
         try:
             panel_metadata = adata.uns["panel_metadata"]
         except KeyError as err:
             logger.error(  # pylint: disable=logging-not-lazy
-                f"The provided PNAPixelDataset does not contain {err}. "
+                f"The provided AnnData object does not contain {err}. "
                 + "Please, regenerate your data with the most recent version of pixelator."
             )
             raise
-        panel_columns = panel_metadata.pop("panel_columns")
+        panel_columns = panel_metadata.get("panel_columns")
+        if not panel_columns:
+            raise KeyError(
+                "The provided AnnData object does not contain panel columns information in the metadata. "
+                + "Please, regenerate your data with the most recent version of pixelator."
+            )
         df = adata.var[panel_columns]
         metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
 
-        logger.debug("Antibody panel from PNAPixelDataset created")
+        logger.debug("Antibody panel from AnnData object created")
         return cls(df, metadata, file_name=file_name)
 
     @property

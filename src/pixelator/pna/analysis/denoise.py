@@ -24,7 +24,7 @@ from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndat
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
-from pixelator.pna.pixeldataset import PNAPixelDataset
+from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 
 logger = logging.getLogger(__name__)
@@ -337,7 +337,7 @@ class DenoiseOneCore(PerComponentTask):
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
         try:
-            panel = PNAAntibodyPanel.from_pxl_file(pxl_file_target.path)
+            panel = PNAAntibodyPanel.from_pxl_dataset(read(pxl_file_target.path))
         except KeyError:
             # If pxl file does not contain panel data, try to load it from
             # the panel name.

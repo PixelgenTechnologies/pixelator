@@ -6,6 +6,7 @@ from pandas.testing import assert_frame_equal
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.pixeldataset import read
 
 
 @pytest.fixture
@@ -92,7 +93,7 @@ def test_panel_validation_ok_uniprotid_empty(panel_df):
 
 
 def test_panel_from_pxl(pxl_file):
-    panel = PNAAntibodyPanel.from_pxl_file(pxl_file)
+    panel = PNAAntibodyPanel.from_pxl_dataset(read(pxl_file))
     assert panel.name == "test-pna-panel"
     assert panel.version == "0.1.0"
     assert panel.description == "Test R&D panel for RNA"
