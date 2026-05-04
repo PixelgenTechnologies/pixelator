@@ -82,3 +82,26 @@ def test_adaptive_core_expansion_fails_with_invalid_input(graph_from_pxl):
 
     with pytest.raises(ValueError):
         adaptive_core_expansion(graph_from_pxl, nodes_to_move_threshold=-1)
+
+    with pytest.raises(ValueError):
+        adaptive_core_expansion(graph_from_pxl, min_allowed_nodes_pct=1.0)
+
+    with pytest.raises(ValueError):
+        adaptive_core_expansion(graph_from_pxl, min_allowed_nodes_pct=-0.1)
+
+
+def test_adaptive_core_expansion_min_allowed_nodes_pct(graph_from_pxl):
+    """Test that min_allowed_nodes_pct correctly influences partition selection."""
+    # Run with a high min_allowed_nodes_pct that the best BC score partition
+    # might not meet, forcing a different selection or fallback.
+    # From previous tests, the default high count is ~43k out of ~43.5k (~99%).
+    # We'll set a very high threshold to see if it responds.
+    res = adaptive_core_expansion(graph_from_pxl, min_allowed_nodes_pct=0.999)
+    partitions = list(nx.get_node_attributes(res.raw, "partition").values())
+    partition_counts = {
+        "high": partitions.count("high"),
+        "low": partitions.count("low"),
+    }
+    # If no partition meets 99.9%, it should set all to "high"
+    assert partition_counts["low"] == 0
+    assert partition_counts["high"] == len(res.raw.nodes())

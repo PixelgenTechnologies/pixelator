@@ -41,29 +41,51 @@ def adaptive_core_expansion(
     max_iter: int = 200,
     min_seed_pct: float = 0.1,
     nodes_to_move_threshold: int = 10,
+    min_allowed_nodes_pct: float = 0.8,
     select_LCC: bool = True,
 ) -> Graph:
     """Perform Adaptive Core Expansion (ACE) graph partitioning.
 
-    Adaptive Core Expansion (ACE) is a topology-aware graph partitioning by
-    identifying a high-density k-core "seed" and iteratively expanding it.
-    The algorithm uses transition probabilities to recruit nodes from the
-    periphery ("low" layer) into the core ("high" layer) and selects the
-    final partition that maximizes phenotypic dissimilarity (Bray-Curtis)
-    between the two groups.
+    ACE performs a topology-aware graph partitioning by identifying a high-density
+    k-core "seed" and iteratively expanding it. The algorithm uses transition
+    probabilities to recruit nodes from the periphery ("low" layer) into the
+    core ("high" layer) and selects the final partition that maximizes
+    phenotypic dissimilarity (Bray-Curtis) between the two groups.
+
+    The algorithm proceeds in four main stages:
+    1. Seed Identification: Computes node k-coreness and identifies the maximum
+       core layer (k_max). To ensure a robust starting point, the seed is capped
+       at max_k_core and automatically downgraded to lower core levels until it
+       meets the min_seed_pct threshold.
+    2. k-Step Influence Modeling: Constructs a transition probability matrix P
+       derived from a k-step reachability matrix. This captures the cumulative
+       "binding strength" of a node based on its connectivity within a k-distance
+       radius, accounting for indirect paths and local density.
+    3. Iterative Expansion: For a range of binding_thresholds, nodes are moved
+       from the "low" to the "high" partition if their total transition probability
+       to the current "high" set exceeds the threshold.
+    4. Dissimilarity Optimization: Evaluates each result using the Bray-Curtis
+       dissimilarity score. The partition with the highest score that meets the
+       min_allowed_nodes_pct requirement is selected.
 
     Args:
-        cg: A `Graph` object containing the cell graph and node counts.
-        k: The neighborhood radius (number of steps) used to calculate reachability
-        max_k_core: Integer to cap the maximum k-core layer used for seeding.
-        binding_thresholds: Sequence of thresholds for moving nodes from the low to high partition.
+        cg: A `Graph` object containing the cell graph and node count data.
+        k: The neighborhood radius (number of steps) used for reachability.
+            Larger values increase the "reach" of the core.
+        max_k_core: Cap for the maximum k-core layer used for seeding.
+        binding_thresholds: Thresholds for moving nodes to the high partition.
+                               If None, a default sequence from 0.5 to 0.3 is used.
         max_iter: Maximum iterations per binding threshold.
-        min_seed_pct: Minimum fraction of nodes required to form the initial seed partition.
-        nodes_to_move_threshold: Convergence limit; stops iteration if fewer nodes move.
-        select_LCC: Restricts the initial seed to the Largest Connected Component (LCC).
+        min_seed_pct: Minimum fraction of nodes required for the initial seed.
+        nodes_to_move_threshold: Convergence limit; iteration stops if fewer
+                                    nodes move.
+        min_allowed_nodes_pct: Minimum fraction of nodes required in the final
+                                  "high" core partition.
+        select_LCC:  If True, restricts the initial seed to the Largest
+                       Connected Component.
 
     Returns:
-        The original graph object with an additional `partition` node attribute ("high" or "low").
+        The original Graph object with an additional `partition` node attribute ("high" or "low").
 
     Raises:
         ValueError: If the graph does not contain any k-core layers above 1.
@@ -75,6 +97,7 @@ def adaptive_core_expansion(
         ValueError: If the 'max_iter' parameter is not between 1 and 1000 inclusive.
         ValueError: If the 'min_seed_pct' parameter is not between 0 and 1 inclusive.
         ValueError: If the 'nodes_to_move_threshold' parameter is not between 0 and 1000 inclusive.
+        ValueError: If the 'min_allowed_nodes_pct' parameter is not between 0 and 1 (exclusive).
         TypeError: If the 'binding_thresholds' parameter is not a sequence of floats between 0 and 1.
 
     """
@@ -85,6 +108,7 @@ def adaptive_core_expansion(
         max_iter=max_iter,
         min_seed_pct=min_seed_pct,
         nodes_to_move_threshold=nodes_to_move_threshold,
+        min_allowed_nodes_pct=min_allowed_nodes_pct,
     )
 
     try:
@@ -194,17 +218,52 @@ def adaptive_core_expansion(
 
         logger.debug("Completed")
 
-        partitions.append((current_partition.copy(), bc_score))
+        partitions.append(
+            {
+                "partition": current_partition.copy(),
+                "bc_score": bc_score,
+                "nodes_pct": float(num_high / len(current_partition)),
+                "binding_threshold": binding_threshold,
+            }
+        )
 
-    best_idx = int(np.argmax([p[1] for p in partitions]))
-    best_partition_vec, best_score = partitions[best_idx]
-    best_binding_threshold = sorted_thresholds[best_idx]
+    best_idx = int(np.argmax([p["bc_score"] for p in partitions]))
+    best_candidate = partitions[best_idx]
 
-    logger.debug(
-        f"Selected partition seeded with k-core layer >= {max_k} "
-        f"and a binding threshold of {best_binding_threshold}. "
-        f"Bray-Curtis dissimilarity score: {best_score:.4f}."
-    )
+    if best_candidate["nodes_pct"] < min_allowed_nodes_pct:
+        logger.warning(
+            f"The selected partition has less than {min_allowed_nodes_pct * 100:.2f}% "
+            f"of nodes in the 'high' core layer. Selecting the partition with the highest "
+            f"binding threshold that has at least {min_allowed_nodes_pct * 100:.2f}% "
+            f"of nodes in the 'high' core layer instead."
+        )
+
+        # Select partitions that meet the minimum node percentage
+        valid_partitions = [
+            p for p in partitions if p["nodes_pct"] >= min_allowed_nodes_pct
+        ]
+
+        if valid_partitions:
+            # Pick the one with the highest BC score among those that meet the threshold
+            best_candidate = max(valid_partitions, key=lambda x: x["bc_score"])
+        else:
+            logger.warning(
+                f"Found no partition with at least {min_allowed_nodes_pct * 100:.2f}% of "
+                f"nodes in the 'high' core layer. Setting all nodes as 'high'."
+            )
+            best_candidate = None
+
+    if best_candidate is not None:
+        best_partition_vec = best_candidate["partition"]
+        logger.info(
+            f"Selected partition seeded with k-core layer >= {max_k} "
+            f"and a binding threshold of {best_candidate['binding_threshold']}. "
+            f"Bray-Curtis dissimilarity score: {best_candidate['bc_score']:.4f}. "
+            f"Percent of nodes in 'high' core layer: {best_candidate['nodes_pct'] * 100:.2f}%."
+        )
+    else:
+        best_partition_vec = np.ones(len(node_list), dtype=int)
+        logger.info("No suitable partition found. All nodes set to 'high'.")
 
     pixel_type_dict = {
         node_list[i]: ("high" if best_partition_vec[i] == 1 else "low")
@@ -242,7 +301,13 @@ def _adaptive_core_expansion_inner(
 
 
 def _validate_ace_parameters(
-    k, max_k_core, binding_thresholds, max_iter, min_seed_pct, nodes_to_move_threshold
+    k,
+    max_k_core,
+    binding_thresholds,
+    max_iter,
+    min_seed_pct,
+    nodes_to_move_threshold,
+    min_allowed_nodes_pct,
 ):
     if not 1 <= k <= 6:
         raise ValueError(f"'k' must be between 1 and 6 inclusive, got {k}.")
@@ -269,5 +334,9 @@ def _validate_ace_parameters(
     if not 0 <= nodes_to_move_threshold <= 1000:
         raise ValueError(
             f"'nodes_to_move_threshold' must be between 0 and 1000 inclusive, got {nodes_to_move_threshold}."
+        )
+    if not 0 <= min_allowed_nodes_pct < 1:
+        raise ValueError(
+            f"'min_allowed_nodes_pct' must be between 0 and 1 (exclusive), got {min_allowed_nodes_pct}."
         )
     return True
