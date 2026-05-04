@@ -8,7 +8,7 @@ from __future__ import annotations
 import warnings
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Set
 
 from anndata import AnnData
 
@@ -382,6 +382,16 @@ class PNAAntibodyPanel:
 
         return errors
 
+    def to_polars(self) -> pl.DataFrame:
+        """Convert the panel to a Polars DataFrame."""
+        return pl.from_pandas(self.df, include_index=True)
+
+    def __eq__(self, other: object) -> bool:
+        """Check if two panels are equal based on their dataframes and metadata."""
+        if not isinstance(other, PNAAntibodyPanel):
+            raise ValueError("Can only compare with another PNAAntibodyPanel")
+        return self.df.equals(other.df) and self.metadata == other.metadata
+
 
 def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
     """Load an antibody panel from a file or from the config file.
@@ -402,3 +412,137 @@ def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
 
     panel_obj = PNAAntibodyPanel.from_csv(panel)
     return panel_obj
+
+
+class PNAAntibodyPanelDiff:
+    """Class representing the differences between two PNAAntibodyPanel objects."""
+
+    join_on_columns: list[str] = ["sequence_1", "sequence_2"]
+
+    def __init__(self, panel_1: PNAAntibodyPanel, panel_2: PNAAntibodyPanel) -> None:
+        """Initialize the PNAAntibodyPanelDiff object.
+
+        :param panel_1: The first panel to compare.
+        :param panel_2: The second panel to compare.
+        """
+        self.panel_1 = panel_1
+        self.panel_2 = panel_2
+
+        self.joined = self.panel_1.to_polars().join(
+            self.panel_2.to_polars(),
+            on=self.join_on_columns,
+            how="full",
+            suffix="_panel_2",
+            # coalesce=True,
+        )
+
+        self._identical_columns: List[str] | None = None
+        self._changed_columns: List[str] | None = None
+        self._removed_columns: Set[str] | None = None
+        self._added_columns: Set[str] | None = None
+
+    @property
+    def identical_columns(self) -> List[str]:
+        """Return a list of columns that are identical between the two panels."""
+        if self._identical_columns is None:
+            self._identical_columns = [
+                col_name
+                for col_name in set(self.panel_1.to_polars().columns).union(
+                    set(self.panel_2.to_polars().columns)
+                )
+                if col_name in self.joined
+                and col_name + "_panel_2" in self.joined
+                and self.joined[col_name]
+                .eq_missing(self.joined[col_name + "_panel_2"])
+                .all()
+            ]
+        return self._identical_columns
+
+    @property
+    def changed_columns(self) -> List[str]:
+        """Return a list of columns that are different between the two panels."""
+        if self._changed_columns is None:
+            self._changed_columns = [
+                col_name
+                for col_name in set(self.panel_1.to_polars().columns).union(
+                    set(self.panel_2.to_polars().columns)
+                )
+                if col_name in self.joined
+                and col_name + "_panel_2" in self.joined
+                and not self.joined[col_name]
+                .eq_missing(self.joined[col_name + "_panel_2"])
+                .all()
+            ]
+            for col_name in self.changed_columns:
+                diff_count = self.joined.filter(
+                    pl.col(col_name).ne_missing(pl.col(col_name + "_panel_2"))
+                ).shape[0]
+                logger.info(
+                    f"Column {col_name} is different between the two panels {self.panel_1.name} and {self.panel_2.name} ({diff_count} differing entries)."
+                )
+        return self._changed_columns
+
+    @property
+    def removed_columns(self) -> List[str]:
+        """Return a list of columns that are present in panel 1 but not in panel 2."""
+        if self._removed_columns is None:
+            self._removed_columns = set(self.panel_1.to_polars().columns).difference(
+                set(self.panel_2.to_polars().columns)
+            )
+            for col_name in self.removed_columns:
+                logger.info(
+                    f"Column {col_name} is present in panel {self.panel_1.name} but not in panel {self.panel_2.name}."
+                )
+        return sorted(self._removed_columns)
+
+    @property
+    def added_columns(self) -> List[str]:
+        """Return a list of columns that are present in panel 2 but not in panel 1."""
+        if self._added_columns is None:
+            self._added_columns = set(self.panel_2.to_polars().columns).difference(
+                set(self.panel_1.to_polars().columns)
+            )
+            for col_name in self.added_columns:
+                logger.info(
+                    f"Column {col_name} is present in panel {self.panel_2.name} but not in panel {self.panel_1.name}."
+                )
+        return sorted(self._added_columns)
+
+    @property
+    def added_clones(self) -> pl.DataFrame:
+        """Return a dataframe with the clones that are present in panel 2 but not in panel 1."""
+        return (
+            self.joined.filter(
+                pl.any_horizontal(
+                    pl.col(col_name).is_null()
+                    & pl.col(col_name + "_panel_2").is_not_null()
+                    for col_name in self.join_on_columns
+                )
+            )
+            .drop([col_name for col_name in self.panel_1.to_polars().columns])
+            .rename(
+                {
+                    col_name + "_panel_2": col_name
+                    for col_name in self.panel_2.to_polars().columns
+                    if col_name + "_panel_2" in self.joined.columns
+                }
+            )
+        )
+
+    @property
+    def removed_clones(self) -> pl.DataFrame:
+        """Return a dataframe with the clones that are present in panel 1 but not in panel 2."""
+        return self.joined.filter(
+            pl.any_horizontal(
+                pl.col(col_name).is_not_null() & pl.col(col_name + "_panel_2").is_null()
+                for col_name in self.join_on_columns
+            )
+        ).drop(
+            [
+                col_name + "_panel_2"
+                if col_name in self.joined.columns
+                and col_name not in self.added_columns
+                else col_name
+                for col_name in self.panel_2.to_polars().columns
+            ]
+        )
