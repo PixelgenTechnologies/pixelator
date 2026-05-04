@@ -67,7 +67,7 @@ class PNAAntibodyPanel:
                                 invalid or with incorrect format
         """
         self._filename = file_name
-        self._metadata = metadata
+        self.metadata = metadata
         self._df = df
 
         # validate the panel
@@ -162,7 +162,7 @@ class PNAAntibodyPanel:
             The panel name.
 
         """
-        return self._metadata.name
+        return self.metadata.name
 
     @property
     def product(self) -> Optional[str]:
@@ -172,7 +172,7 @@ class PNAAntibodyPanel:
             Product name, or None when not provided in panel metadata.
 
         """
-        return self._metadata.product
+        return self.metadata.product
 
     @property
     def version(self) -> str:
@@ -182,22 +182,22 @@ class PNAAntibodyPanel:
             Semantic version string for this panel.
 
         """
-        return self._metadata.version
+        return self.metadata.version
 
     @property
     def description(self) -> Optional[str]:
         """Return the panel file description."""
-        return self._metadata.description
+        return self.metadata.description
 
     @property
     def aliases(self) -> list[str]:
         """Return the (optional) list of panel file aliases."""
-        return self._metadata.aliases
+        return self.metadata.aliases
 
     @property
     def archived(self) -> Optional[bool]:
         """Return whether the panel is marked as archived."""
-        return self._metadata.archived
+        return self.metadata.archived
 
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
