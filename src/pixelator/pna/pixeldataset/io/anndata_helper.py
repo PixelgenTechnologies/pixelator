@@ -11,10 +11,13 @@ from functools import cache
 from typing import Literal
 
 import polars as pl
+import semver
 from anndata import AnnData, ImplicitModificationWarning
 from anndata import concat as anndata_concat
 
 from pixelator.common.statistics import clr_transformation, log1p_transformation
+from pixelator.common.utils import logger
+from pixelator.pna.config.panel import PNAAntibodyPanel, PNAAntibodyPanelDiff
 from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
@@ -58,6 +61,8 @@ class AnnDataHelper:
                 )
                 adatas.append(adata)
 
+        self._try_bump_adata_panel_version(adatas)
+
         if not adatas:
             return AnnData()
 
@@ -71,6 +76,43 @@ class AnnDataHelper:
         concatenated.uns = adatas[0].uns
         update_metrics_anndata(concatenated, inplace=True)
         return concatenated
+
+    def _try_bump_adata_panel_version(
+        self,
+        adatas: list[AnnData],
+    ) -> list[AnnData]:
+        """Try to bump the panel version of the given AnnData.
+
+        Only try to upgrade to the latest version available in the view,
+        if the panels differ in patch version and have the same product.
+        """
+        panel_versions = [
+            semver.Version.parse(adata.uns["panel_metadata"]["version"])
+            for adata in adatas
+        ]
+        panel_products = [
+            adata.uns["panel_metadata"].get("product") for adata in adatas
+        ]
+        latest_panel_version = max(panel_versions)
+        if (
+            all(ver.major == latest_panel_version.major for ver in panel_versions)
+            and all(ver.minor == latest_panel_version.minor for ver in panel_versions)
+            and len(set(panel_products)) == 1
+            and panel_products[0] is not None
+        ):
+            logger.info(
+                "Multiple panel patch versions for same product detected across samples. "
+                + "Attempting to upgrade to the latest."
+            )
+            latest_panel = PNAAntibodyPanel.from_adata(
+                adatas[panel_versions.index(latest_panel_version)]
+            )
+            for i, adata in enumerate(adatas):
+                panel = PNAAntibodyPanel.from_adata(adata)
+                if panel.version != latest_panel.version:
+                    diff = PNAAntibodyPanelDiff(panel, latest_panel)
+                    adatas[i] = diff.upgrade_adata(adata)
+        return adatas
 
     def _read_adata_from_sample(
         self,
