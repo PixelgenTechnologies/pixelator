@@ -546,3 +546,37 @@ class PNAAntibodyPanelDiff:
                 for col_name in self.panel_2.to_polars().columns
             ]
         )
+
+    def upgrade_adata(self, adata: AnnData) -> AnnData:
+        """Upgrade an AnnData object with the changes between the two panels."""
+        adata_panel = PNAAntibodyPanel.from_adata(adata)
+        if self.panel_1 != adata_panel:
+            raise ValueError(
+                "The provided AnnData object does not match the panel. Cannot upgrade."
+                f"Expected panel {self.panel_2.name} v{self.panel_2.version}, but got panel {adata_panel.name} v{adata_panel.version}."
+            )
+
+        adata.var = (
+            self.joined.select(
+                list(
+                    set(
+                        self.join_on_columns
+                        + self.identical_columns
+                        + [f"{col}_panel_2" for col in self.changed_columns]
+                        + self.added_columns
+                    )
+                )
+            )
+            .rename({f"{col}_panel_2": col for col in self.changed_columns})
+            # keep order and append new to the end
+            .select(
+                ["marker_id"]  # index not in panel_metadata panel_columns below
+                + adata.uns["panel_metadata"]["panel_columns"]
+                + self.added_columns
+            )
+            .to_pandas()
+            .set_index("marker_id")
+        )
+        adata.uns["panel_metadata"] = self.panel_2.metadata.model_dump()
+        adata.uns["panel_metadata"]["panel_columns"] = adata.var.columns.tolist()
+        return adata
