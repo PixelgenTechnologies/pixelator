@@ -223,6 +223,7 @@ def node_pls(
     Raises:
         ValueError: If variables are not found or if the input matrices are
             incompatible.
+
     """
     if isinstance(y_vars, str):
         y_vars = [y_vars]
