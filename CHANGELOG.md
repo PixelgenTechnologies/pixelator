@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [x.x.x] - TBD
+## [0.26.0] - 2026-05-04
 
 ### Important changes
 The assay and panel names have been migrated to the new naming scheme.
@@ -20,6 +20,7 @@ See the updated table below for which panel version to use:
 | 2507 and above | Immuno 155 v1.1         | proxiome-immuno-155-v3       | proxiome-v1-immuno-155-v1.1       |
 | 2507 and above | Immuno 155 v1.1 + FLAG  | proxiome-immuno-156-FLAG-v3  | proxiome-v1-immuno-156-FLAG-v1.1  |
 | 2507 and above | Immuno 155 v1.1 + FMC63 | proxiome-immuno-156-FMC63-v3 | proxiome-v1-immuno-156-FMC63-v1.1 |
+
 The old panel names no longer work; please specify the new panel name instead.
 
 ### Added
@@ -72,7 +73,6 @@ The old panel names no longer work; please specify the new panel name instead.
 
 ### Fixed
 - Calculate double-sided p-values instead of single-sided for proximity scores.
-
 - sample calling will now use the pool name in the file name of undetermined
   components to avoid file name collisions in the pipeline.
 - Improve the error message when concatenating AnnData objects with incompatible marker (`var`) schemas.
