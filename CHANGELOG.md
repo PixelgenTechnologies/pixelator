@@ -73,7 +73,7 @@ The old panel names no longer work; please specify the new panel name instead.
 
 ### Fixed
 - Calculate double-sided p-values instead of single-sided for proximity scores.
-- sample calling will now use the pool name in the file name of undetermined
+- Sample calling will now use the pool name in the file name of undetermined
   components to avoid file name collisions in the pipeline.
 - Improve the error message when concatenating AnnData objects with incompatible marker (`var`) schemas.
 
