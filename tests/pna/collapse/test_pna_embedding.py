@@ -14,7 +14,7 @@ from pixelator.pna.utils.two_bit_encoding import pack_4bits, unpack_4bits
 def pna2_embedding():
     from pixelator.pna.config import pna_config
 
-    assay = pna_config.get_assay("pna-2")
+    assay = pna_config.get_assay("proxiome-v1")
     embedding = PNAEmbedding(assay)
     return embedding
 

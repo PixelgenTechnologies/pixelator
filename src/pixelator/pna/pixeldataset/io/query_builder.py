@@ -8,6 +8,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sized
 
+from pixelator.pna.analysis.analytical_proximity_query_helper import (
+    jcs_with_analytical_stats,
+)
+
 
 @dataclass(frozen=True, slots=True)
 class Query:
@@ -190,31 +194,68 @@ class QueryBuilder:
         )
 
     def proximity_query(
-        self, components: list[str] | None, markers: list[str] | None
+        self,
+        components: list[str] | None,
+        markers: list[str] | None,
+        calculate_from_edgelist: bool = False,
     ) -> Query:
         """Build a proximity data query."""
-        params = self._normalize_components_param(components)
-        if markers is not None:
-            params["markers"] = markers
-        return Query(
-            sql=f"""SELECT * FROM proximity
-                         WHERE  {self._optimized_component_where_condition(components)} AND
+        if calculate_from_edgelist:
+            sql, params = jcs_with_analytical_stats(
+                components=components,
+                markers=markers,
+            )
+        else:
+            sql = f"""SELECT * FROM proximity
+                        WHERE  {self._optimized_component_where_condition(components)} AND
                                 {"(marker_1 IN $markers AND marker_2 IN $markers)" if markers else "TRUE"};
-                    """,
-            params=params,
-        )
+                    """
+            params = self._normalize_components_param(components)
+            if markers is not None:
+                params["markers"] = markers
+        return Query(sql=sql, params=params)
 
     def proximity_len_query(
-        self, components: list[str] | None, markers: list[str] | None
+        self,
+        components: list[str] | None,
+        markers: list[str] | None,
+        calculate_from_edgelist: bool = False,
     ) -> Query:
         """Build a proximity count query."""
+        if calculate_from_edgelist:
+            return self._calculate_proximity_length_from_edgelist(components, markers)
+
+        else:
+            params = self._normalize_components_param(components)
+            if markers is not None:
+                params["markers"] = markers
+            return Query(
+                sql=f"""SELECT COUNT(*) FROM proximity
+                            WHERE {self._optimized_component_where_condition(components)} AND
+                                {"(marker_1 IN $markers AND marker_2 IN $markers)" if markers else "TRUE"};
+                        """,
+                params=params,
+            )
+
+    def _calculate_proximity_length_from_edgelist(
+        self, components: list[str] | None, markers: list[str] | None
+    ) -> Query:
         params = self._normalize_components_param(components)
         if markers is not None:
             params["markers"] = markers
-        return Query(
-            sql=f"""SELECT COUNT(*) FROM proximity
-                        WHERE {self._optimized_component_where_condition(components)} AND
-                              {"(marker_1 IN $markers AND marker_2 IN $markers)" if markers else "TRUE"};
-                    """,
-            params=params,
+
+        query = f"""
+        SELECT CAST(SUM(marker_count * (marker_count+1) / 2) AS INTEGER) AS count
+        FROM (
+            SELECT component, COUNT(DISTINCT marker) AS marker_count
+            FROM (
+                SELECT component, marker_1 AS marker FROM edgelist
+                UNION
+                SELECT component, marker_2 AS marker FROM edgelist
+            )
+            WHERE {self._optimized_component_where_condition(components)} AND
+                    {"(marker IN $markers)" if markers else "TRUE"}
+            GROUP BY component
         )
+        """
+        return Query(sql=query, params=params)

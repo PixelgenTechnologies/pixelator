@@ -9,7 +9,7 @@ from pixelator.pna.config import pna_config
 class TestLowComplexityUMI:
     @classmethod
     def setup_class(cls):
-        assay = pna_config.get_assay("pna-2")
+        assay = pna_config.get_assay("proxiome-v1")
         cls.predicate = LowComplexityUMI(assay, proportion=0.80)
 
     def test_low_complexity_predicate(self):
@@ -59,7 +59,7 @@ class TestLowComplexityUMI:
 class TestLBSDetectedInUMI:
     @classmethod
     def setup_class(cls):
-        assay = pna_config.get_assay("pna-2")
+        assay = pna_config.get_assay("proxiome-v1")
         cls.predicate = LBSDetectedInUMI(assay, max_error_rate=0.125, min_overlap=8)
 
     def test_correct_sequence(self):
@@ -97,7 +97,7 @@ class TestLBSDetectedInUMI:
         )
 
     def test_umi1_lbs2_match_start(self):
-        umi_filter = LBSDetectedInUMI(pna_config.get_assay("pna-2"))
+        umi_filter = LBSDetectedInUMI(pna_config.get_assay("proxiome-v1"))
         #                     UMI1                                                                                                           UMI2
         #       ----------------------------|                                                                                     |----------------------------
         #       NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNCAAGTGACGCTGGGCATGTCAAACACTCATGTCNNNNNNNNNNNNNNNGCTTCGCTTAGATGTCGGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN

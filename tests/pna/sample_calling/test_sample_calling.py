@@ -269,7 +269,9 @@ def test_collect_hash_info(sample_hashed_pixel_files):
                 "B2M-3",
             ],
         ),
+        confidence_threshold=0.8,
     )
+
     comp_counts = cc.group_by("called_sample").len("count")
     assert comp_counts.shape[0] == 3
     assert all(comp_counts["count"] == 10)
@@ -294,24 +296,50 @@ def test_collect_hash_info_should_use_all_hashing_antibodies(sample_hashed_pixel
                 "B2M-3",
             ],
         ),
+        confidence_threshold=0.8,
+        undetermined_sample_name="test",
     )
-    # called_sample can be PBMC, Raji, or "undetermined" (when undetermined_hash_count wins),
+    # called_sample can be PBMC, Raji, or "test" (when undetermined_hash_count wins),
     # so we get 3 groups
     comp_counts = cc.group_by("called_sample").len("count")
+
     assert comp_counts.shape[0] == 3
-    assert "undetermined_hash_count" in cc.columns
+    assert "test_hash_count" in cc.columns
+    assert "undetermined_hash_count" not in cc.columns
     assert comp_counts["count"].sum() == 30  # all components assigned to one of the two
     assert set(comp_counts["called_sample"].to_list()) == {
         "PBMC",
         "Raji",
-        "undetermined",
+        "test",
     }
-    assert (
-        comp_counts.filter(pl.col("called_sample") == "undetermined")["count"].item()
-        == 10
+    assert comp_counts.filter(pl.col("called_sample") == "test")["count"].item() == 10
+
+
+def test_collect_hash_info_all_undetermined(sample_hashed_pixel_files):
+    """Test is undetermined when confidence is below threshold"""
+    pxl = read(sample_hashed_pixel_files)
+    cc = collect_hash_info(
+        pxl,
+        hashed_antibody_mapping=HashedAntibodyMapping(
+            mapping={
+                "PBMC": ["CD29-1", "B2M-1"],
+                "Raji": ["CD29-2", "B2M-2"],
+                "Jurkat": ["CD29-3", "B2M-3"],
+            },
+            all_hashing_antibodies=[
+                "CD29-1",
+                "CD29-2",
+                "CD29-3",
+                "B2M-1",
+                "B2M-2",
+                "B2M-3",
+            ],
+        ),
+        confidence_threshold=1.0,
+        undetermined_sample_name="test",
     )
 
-    # Check the sample calling confidence
+    assert all(cc["called_sample"] == "test")
 
 
 @pytest.mark.slow
@@ -383,7 +411,6 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
                 "control": False,
                 "uniprot_id": "P00001",
                 "sequence_1": "ATCGATCGAA",
-                "conj_id": "conj_pd1",
                 "sequence_2": "ATCGATCGAC",
             },
             {
@@ -391,7 +418,6 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
                 "control": False,
                 "uniprot_id": "P00002",
                 "sequence_1": "ATCGATCGAT",
-                "conj_id": "conj_hashA",
                 "sequence_2": "ATCGATCGAG",
             },
             {
@@ -399,7 +425,6 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
                 "control": False,
                 "uniprot_id": "P00003",
                 "sequence_1": "ATCGATCGTT",
-                "conj_id": "conj_hashA1",
                 "sequence_2": "ATCGATCGTG",
             },
             {
@@ -407,7 +432,6 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
                 "control": False,
                 "uniprot_id": "P00004",
                 "sequence_1": "ATCGATCGTA",
-                "conj_id": "conj_hashB2",
                 "sequence_2": "ATCGATCGTC",
             },
         ]

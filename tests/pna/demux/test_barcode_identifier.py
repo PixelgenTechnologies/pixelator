@@ -18,8 +18,8 @@ from pixelator.pna.demux.barcode_identifier import BarcodeIdentifier
 
 
 def test_barcode_identifier_exact_match():
-    assay = pna_config.get_assay("pna-2")
-    panel = pna_config.get_panel("proxiome-immuno-155-v3")
+    assay = pna_config.get_assay("proxiome-v1")
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
 
     barcodes_id = BarcodeIdentifier(assay=assay, panel=panel, mismatches=1)
     #                                             PID1                                                                    PID2
@@ -50,8 +50,8 @@ def test_barcode_identifier_exact_match():
 
 
 def test_barcode_identifier_one_mismatch():
-    assay = pna_config.get_assay("pna-2")
-    panel = pna_config.get_panel("proxiome-immuno-155-v3")
+    assay = pna_config.get_assay("proxiome-v1")
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
 
     barcodes_id = BarcodeIdentifier(assay=assay, panel=panel, mismatches=1)
     #                                             PID1                                                                    PID2
@@ -82,8 +82,8 @@ def test_barcode_identifier_one_mismatch():
 
 
 def test_barcode_identifier_failed():
-    assay = pna_config.get_assay("pna-2")
-    panel = pna_config.get_panel("proxiome-immuno-155-v3")
+    assay = pna_config.get_assay("proxiome-v1")
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
 
     with tempfile.NamedTemporaryFile() as buffer:
         failed_writer = ProxyRecordWriter([buffer.name], fileformat="fastq")

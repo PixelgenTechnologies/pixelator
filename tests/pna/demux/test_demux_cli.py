@@ -16,9 +16,9 @@ def test_demux_invalid_chunk_size(tmp_path, testdata_amplicon_fastq):
         "--output",
         str(tmp_path),
         "--design",
-        "pna-2",
+        "proxiome-v1",
         "--panel",
-        "proxiome-immuno-155-v3",
+        "proxiome-v1-immuno-155-v1.1",
         "--output-chunk-reads",
         "123239KB",
     ]
@@ -29,9 +29,7 @@ def test_demux_invalid_chunk_size(tmp_path, testdata_amplicon_fastq):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize(
-    "panel_file", ["proxiome-immuno-155-v1", "proxiome-immuno-155-v2"]
-)
+@pytest.mark.parametrize("panel_file", ["proxiome-v1-immuno-155-v1.0"])
 def test_demux_valid(tmp_path, testdata_amplicon_fastq, panel_file):
     runner = CliRunner()
 
@@ -42,7 +40,7 @@ def test_demux_valid(tmp_path, testdata_amplicon_fastq, panel_file):
         "--output",
         str(tmp_path),
         "--design",
-        "pna-2",
+        "proxiome-v1",
         "--panel",
         panel_file,
     ]
@@ -62,7 +60,7 @@ def test_demux_custom_panel(tmp_path, testdata_amplicon_fastq, pna_data_root):
         "--output",
         str(tmp_path),
         "--design",
-        "pna-2",
+        "proxiome-v1",
         "--panel",
         str(pna_data_root / "panels/test-pna-panel.csv"),
     ]

@@ -9,7 +9,7 @@ import pytest
 from polars.testing.asserts import assert_frame_equal
 from scipy.spatial import distance_matrix
 
-from pixelator.pna.graph.connected_components import (
+from pixelator.pna.graph_legacy.connected_components import (
     RefinementOptions,
     StagedRefinementOptions,
     build_pxl_file_with_components,
@@ -511,7 +511,6 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
         "nuclear",
         "sequence_1",
         "sequence_2",
-        "conj_id",
     ]
     if mock_panel.version.startswith("2"):
         expected_columns.pop(expected_columns.index("nuclear"))

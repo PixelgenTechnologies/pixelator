@@ -96,6 +96,7 @@ def sample_calling_cli(
     sample_calling_output = create_output_stage_dir(output, "sample_calling")
 
     pool_name = Path(input_pxl_file).name.split(".")[0]
+    undetermined_sample_name = f"{pool_name}_undetermined"
 
     panel_info = PNAAntibodyPanel.from_pxl_file(input_pxl_file)
     hashing_antibodies_in_panel = set(
@@ -104,7 +105,13 @@ def sample_calling_cli(
     samplesheet_df = pl.read_csv(samplesheet)
     if "undetermined" in samplesheet_df["sample"].to_list():
         raise ValueError(
-            "The sample 'undetermined' is not allowed in the samplesheet as it "
+            f"The sample 'undetermined' is not allowed in the samplesheet as it "
+            "is reserved for undetermined components. Please edit your "
+            "samplesheet to use a different sample name."
+        )
+    if undetermined_sample_name in samplesheet_df["sample"].to_list():
+        raise ValueError(
+            f"The sample '{undetermined_sample_name}' is not allowed in the samplesheet as it "
             "is reserved for undetermined components. Please edit your "
             "samplesheet to use a different sample name."
         )
@@ -122,6 +129,7 @@ def sample_calling_cli(
         output_folder=sample_calling_output,
         remove_incompatible=remove_incompatible,
         confidence_threshold=confidence_threshold,
+        undetermined_sample_name=undetermined_sample_name,
     )
 
     for pxl_file in output_files:
@@ -147,19 +155,25 @@ def sample_calling_cli(
     final_dataset = read(output_files)
     total_report = create_final_report(
         final_dataset=final_dataset,
+        undetermined_sample_name=undetermined_sample_name,
     )
     total_report.write_json_file(
-        sample_calling_output / "sample_calling.report.json", indent=4
+        sample_calling_output / f"{pool_name}.sample_calling.report.json", indent=4
     )
 
-    if "undetermined" in final_dataset.sample_names():
+    if undetermined_sample_name in final_dataset.sample_names():
         warn_if_undetermined_has_high_confidence(
-            undetermined_sample_confidences=final_dataset.filter(samples="undetermined")
+            undetermined_sample_confidences=final_dataset.filter(
+                samples=undetermined_sample_name
+            )
             .adata()
             .obs["sample_confidence"],
             confidence_threshold=confidence_threshold,
+            undetermined_sample_name=undetermined_sample_name,
         )
 
     if not save_undetermined:
-        undetermined_pxl = sample_calling_output / "undetermined.dehashed.pxl"
+        undetermined_pxl = (
+            sample_calling_output / f"{undetermined_sample_name}.dehashed.pxl"
+        )
         undetermined_pxl.unlink(missing_ok=True)

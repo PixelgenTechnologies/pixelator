@@ -39,6 +39,17 @@ class AnnDataHelper:
         self._adata_join_strategy = adata_join_strategy
 
     def _read_all_samples(self) -> AnnData:
+        """Read and concatenate AnnData from all samples in the current view.
+
+        Returns:
+            A concatenated AnnData object. Returns an empty AnnData when no
+            samples are available.
+
+        Raises:
+            ValueError: If sample-level ``var`` tables cannot be aligned during
+                concatenation.
+
+        """
         with self._view.open() as session:
             adatas: list[AnnData] = []
             for sample_name in self._view.sample_names():
@@ -51,7 +62,12 @@ class AnnDataHelper:
             return AnnData()
 
         concatenated = anndata_concat(adatas, join=self._adata_join_strategy)
-        concatenated.var = adatas[0].var
+        try:
+            concatenated.var = adatas[0].var
+        except ValueError as err:
+            raise ValueError(
+                "Failed to concatenate AnnData var - check that all samples have the same set of markers."
+            ) from err
         concatenated.uns = adatas[0].uns
         update_metrics_anndata(concatenated, inplace=True)
         return concatenated

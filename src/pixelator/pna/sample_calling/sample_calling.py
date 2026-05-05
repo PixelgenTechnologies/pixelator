@@ -31,7 +31,10 @@ logger = logging.getLogger(__name__)
 
 
 def collect_hash_info(
-    input_pxl_file: PNAPixelDataset, hashed_antibody_mapping: HashedAntibodyMapping
+    input_pxl_file: PNAPixelDataset,
+    hashed_antibody_mapping: HashedAntibodyMapping,
+    confidence_threshold: float,
+    undetermined_sample_name: str = "undetermined",
 ) -> pl.DataFrame:
     """Map components to samples in an sample-hashed dataset.
 
@@ -47,12 +50,14 @@ def collect_hash_info(
         input_pxl_file (PNAPixelDataset): The input pixel dataset.
         hashed_antibody_mapping (HashedAntibodyMapping): Mapping of sample names
             to hashed antibody names and the full list of hashing antibodies (from panel).
+        confidence_threshold (float): Confidence threshold.
+        undetermined_sample_name (str, optional): Name to use for undetermined components. Defaults to "undetermined".
 
     Returns:
         pl.DataFrame: A Polars DataFrame containing the following columns:
             - 'component': The component identifier.
             - '{sample}_hash_count': The summed hash count for each sample.
-            - 'undetermined_hash_count': The summed hash count for antibodies not mapped to any
+            - '{undetermined_sample_name}_hash_count': The summed hash count for antibodies not mapped to any
                 sample.
             - 'called_sample': The sample with the highest hash count for each component
                 (may be "undetermined").
@@ -63,9 +68,11 @@ def collect_hash_info(
     samples = hashed_antibody_mapping.keys()
     unmapped = hashed_antibody_mapping.unmapped_hashing_antibodies
     undetermined_col = (
-        pl.sum_horizontal(list(unmapped)).alias("undetermined_hash_count")
+        pl.sum_horizontal(list(unmapped)).alias(
+            f"{undetermined_sample_name}_hash_count"
+        )
         if unmapped
-        else pl.lit(0).alias("undetermined_hash_count")
+        else pl.lit(0).alias(f"{undetermined_sample_name}_hash_count")
     )
 
     hash_counts_per_sample = ab_count_data.select(
@@ -80,7 +87,7 @@ def collect_hash_info(
         undetermined_col,
     )
     unpivot_cols = [f"{sample}_hash_count" for sample in samples] + [
-        "undetermined_hash_count"
+        f"{undetermined_sample_name}_hash_count"
     ]
     called_sample = (
         hash_counts_per_sample.select(["component"] + unpivot_cols)
@@ -95,15 +102,32 @@ def collect_hash_info(
             pl.col("value").max().alias("max_value"),
             pl.col("value").sum().alias("total_value"),
         )
-    ).with_columns(sample_confidence=pl.col("max_value") / pl.col("total_value"))
+        .with_columns(
+            pl.when(pl.col("total_value") == 0)
+            .then(pl.lit(0.0))
+            .otherwise(pl.col("max_value") / pl.col("total_value"))
+            .alias("sample_confidence")
+        )
+        .with_columns(
+            pl.when(pl.col("sample_confidence") < confidence_threshold)
+            .then(pl.lit(undetermined_sample_name))
+            .otherwise(pl.col("called_sample"))
+            .alias("called_sample")
+        )
+    )
 
     result = hash_counts_per_sample.join(
         called_sample, on="component", how="left"
     ).select(
         ["component"]
         + [pl.col(f"{sample}_hash_count") for sample in samples]
-        + ["undetermined_hash_count", "called_sample", "sample_confidence"]
+        + [
+            f"{undetermined_sample_name}_hash_count",
+            "called_sample",
+            "sample_confidence",
+        ]
     )
+
     return result.collect()
 
 
@@ -248,36 +272,14 @@ def _build_post_sample_calling_anndata(
     return new_adata
 
 
-def _apply_confidence_threshold_to_hash_info(
-    hash_info: pl.DataFrame, confidence_threshold: float
-) -> pl.DataFrame:
-    """Apply confidence threshold to hash info and assign undetermined components.
-
-    Components with confidence below the threshold are assigned to undetermined.
-
-    Args:
-        hash_info (pl.DataFrame): Hash info dataframe.
-        confidence_threshold (float): Confidence threshold.
-
-    Returns:
-        pl.DataFrame: Hash info dataframe where confidence levels have been applied.
-
-    """
-    return hash_info.with_columns(
-        pl.when((pl.col("sample_confidence") < confidence_threshold))
-        .then(pl.lit("undetermined"))
-        .otherwise(pl.col("called_sample"))
-        .alias("called_sample")
-    )
-
-
 def _find_nodes_to_remove(
     hashing_antibody_mapping: HashedAntibodyMapping,
     remove_incompatible: bool,
     sample_name: str,
     sample_data: PNAPixelDataset,
+    undetermined_sample_name: str = "undetermined",
 ):
-    if remove_incompatible and (sample_name != "undetermined"):
+    if remove_incompatible and (sample_name != undetermined_sample_name):
         task = FindHashedNodesToRemove(  # type: ignore[abstract]
             hashing_antibody_mapping=hashing_antibody_mapping,
             sample_name=sample_name,
@@ -294,6 +296,7 @@ def sample_calling(
     output_folder: Path,
     confidence_threshold: float = 0.8,
     remove_incompatible: bool = True,
+    undetermined_sample_name: str = "undetermined",
 ) -> list[Path]:
     """Split components of a pixel dataset by their sample.
 
@@ -302,7 +305,7 @@ def sample_calling(
     PNAPixelDataset, assigns components to samples based on hash information
     and confidence thresholds, and writes out pxl files for each determined
     sample. It will also write a file for undetermined components (under the name
-    "undetermined.dehashed.pxl").
+    "{undetermined_sample_name}.dehashed.pxl").
     It supports removing incompatible hashes and renaming hash markers in the output.
 
     Args:
@@ -318,16 +321,19 @@ def sample_calling(
         remove_incompatible (bool, optional):
             Whether to remove hashes incompatible with the current sample from the edgelist.
             Defaults to True.
+        undetermined_sample_name (str, optional):
+            Name to use for undetermined components. Defaults to "undetermined".
 
     Returns: List of all output pxl files created.
 
     """
-    hash_info = collect_hash_info(input_pxl, hashing_antibody_mapping)
-    panel = PNAAntibodyPanel.from_pxl_dataset(input_pxl)
-
-    hash_info = _apply_confidence_threshold_to_hash_info(
-        hash_info, confidence_threshold
+    hash_info = collect_hash_info(
+        input_pxl,
+        hashing_antibody_mapping,
+        confidence_threshold,
+        undetermined_sample_name,
     )
+    panel = PNAAntibodyPanel.from_pxl_dataset(input_pxl)
 
     dehashed = hash_info.group_by("called_sample")
     output_files: list[Path] = []
@@ -351,6 +357,7 @@ def sample_calling(
             remove_incompatible,
             sample_name,
             sample_data,
+            undetermined_sample_name,
         )
 
         with (
@@ -468,11 +475,14 @@ class HashedSampleAnalysisManager(AnalysisManager):
         return result
 
 
-def create_final_report(final_dataset: PNAPixelDataset) -> SampleCallingTotalReport:
+def create_final_report(
+    final_dataset: PNAPixelDataset, undetermined_sample_name: str = "undetermined"
+) -> SampleCallingTotalReport:
     """Create the final report for the sample calling.
 
     Args:
         final_dataset (PNAPixelDataset): The final dataset after sample calling.
+        undetermined_sample_name (str, optional): Name to use for undetermined components. Defaults to "undetermined".
 
     Returns:
         SampleCallingTotalReport: The final report for the sample calling.
@@ -486,9 +496,9 @@ def create_final_report(final_dataset: PNAPixelDataset) -> SampleCallingTotalRep
         )
 
     percentage_of_components_successfully_called = 1.0
-    if "undetermined" in final_dataset.sample_names():
+    if undetermined_sample_name in final_dataset.sample_names():
         n_undetermined_components = len(
-            final_dataset.filter(samples="undetermined").components()
+            final_dataset.filter(samples=undetermined_sample_name).components()
         )
         percentage_of_components_successfully_called = 1.0 - (
             n_undetermined_components / n_components
@@ -515,7 +525,9 @@ def create_final_report(final_dataset: PNAPixelDataset) -> SampleCallingTotalRep
 
 
 def warn_if_undetermined_has_high_confidence(
-    undetermined_sample_confidences: pd.DataFrame, confidence_threshold: float
+    undetermined_sample_confidences: pd.Series | np.ndarray,
+    confidence_threshold: float,
+    undetermined_sample_name: str = "undetermined",
 ) -> None:
     """Warn if the undetermined sample has a high confidence score."""
     if (
@@ -524,6 +536,6 @@ def warn_if_undetermined_has_high_confidence(
         > 0.05
     ):
         logger.warning(
-            "There are more than 5% of components in undetermined have a high confidence score. "
+            f"There are more than 5% of components in {undetermined_sample_name} that have a high confidence score. "
             "This may indicate that the samplesheet has the wrong sample indices."
         )

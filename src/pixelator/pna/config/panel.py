@@ -1,4 +1,4 @@
-"""Marker panel management for different Molecular Pixelation assays.
+"""Marker panel management for different PNA assays.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """
@@ -15,37 +15,39 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-
 import re
-from typing import TYPE_CHECKING, Optional
 
 import pandas as pd
+import polars as pl
 import ruamel.yaml as yaml
 
 from pixelator import read_pna
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
-from pixelator.pna.pixeldataset import PNAPixelDataset
 
 if TYPE_CHECKING:
     from pixelator.pna.config.config_class import PNAConfig
+    from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
 
 
 class PNAAntibodyPanel:
-    """Class representing a Molecular Pixelation antibody panel."""
+    """Class representing a PNA antibody panel."""
 
     # required columns
     _INDEX_COLUMN = "marker_id"
-    _REQUIRED_COLUMNS = [
-        "control",
-        "sequence_1",
-        "sequence_2",
-        "conj_id",
-    ]
+    _INDEX_COLUMN_TYPE = str
+    _REQUIRED_COLUMNS = {
+        "control": bool,
+        "sequence_1": str,
+        "sequence_2": str,
+    }
 
     # and these should have unique values
-    _UNIQUE_COLUMNS = ["sequence_1", "sequence_2", "conj_id"]
+    _UNIQUE_COLUMNS = [
+        "sequence_1",
+        "sequence_2",
+    ]
 
     def __init__(
         self,
@@ -153,13 +155,33 @@ class PNAAntibodyPanel:
         return cls(df, metadata, file_name=file_name)
 
     @property
-    def name(self) -> Optional[str]:
-        """The name defined in the panel metadata."""
+    def name(self) -> str:
+        """Panel name from metadata.
+
+        Returns:
+            The panel name.
+
+        """
         return self._metadata.name
 
     @property
-    def version(self) -> Optional[str]:
-        """Return the panel file version."""
+    def product(self) -> Optional[str]:
+        """Product identifier from metadata, if present.
+
+        Returns:
+            Product name, or None when not provided in panel metadata.
+
+        """
+        return self._metadata.product
+
+    @property
+    def version(self) -> str:
+        """Panel version from metadata.
+
+        Returns:
+            Semantic version string for this panel.
+
+        """
         return self._metadata.version
 
     @property
@@ -172,12 +194,24 @@ class PNAAntibodyPanel:
         """Return the (optional) list of panel file aliases."""
         return self._metadata.aliases
 
+    @property
+    def archived(self) -> Optional[bool]:
+        """Return whether the panel is marked as archived."""
+        return self._metadata.archived
+
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
-        """Parse front-matter YAML from a file.
+        """Parse front-matter YAML metadata from a panel file.
 
-        :param file: the file to parse
-        :return AntibodyPanelMetadata: a pydantic model with the metadata
+        Args:
+            file: Panel CSV file whose leading comment block contains YAML metadata.
+
+        Returns:
+            Parsed panel metadata.
+
+        Raises:
+            ValueError: If no metadata header is present in the file.
+
         """
         yaml_loader = yaml.YAML(typ="safe")
 
@@ -193,8 +227,7 @@ class PNAAntibodyPanel:
         raw_config = list(yaml_loader.load_all(metadata))
 
         if len(raw_config) == 0:
-            warnings.warn(f"Expected a YAML frontmatter in {file}")
-            return AntibodyPanelMetadata(version=None, name=None, description=None)
+            raise ValueError(f"No header / metadata found in panel file {file}")
 
         frontmatter = raw_config[0]
         return AntibodyPanelMetadata.model_validate(frontmatter)
@@ -274,11 +307,18 @@ class PNAAntibodyPanel:
         return errors
 
     @classmethod
-    def validate_antibody_panel(cls, panel_df: pd.DataFrame) -> list[str]:
-        """Validate the antibody panel dataframe.
+    def validate_antibody_panel(
+        cls, panel_df: pd.DataFrame, validate_types: bool = True
+    ) -> list[str]:
+        """Validate antibody panel schema and content.
 
-        :param panel_df: The dataframe containing the panel information.
-        :returns: A list of errors found in the panel.
+        Args:
+            panel_df: Dataframe containing panel markers and sequences.
+            validate_types: If True, validate dataframe column types.
+
+        Returns:
+            A list of validation error messages. Empty means valid input.
+
         """
         errors = []
 
@@ -287,6 +327,17 @@ class PNAAntibodyPanel:
             missing_columns = set(cls._REQUIRED_COLUMNS) - set(panel_df.columns)
             errors.append(f"Panel has missing required columns: {missing_columns}")
             return errors
+
+        if validate_types:
+            panel_pl_df = pl.from_pandas(panel_df, include_index=True)
+            for col, expected_type in (
+                cls._REQUIRED_COLUMNS | {cls._INDEX_COLUMN: cls._INDEX_COLUMN_TYPE}
+            ).items():
+                found_type = panel_pl_df[col].dtype.to_python()
+                if not found_type == expected_type:
+                    errors.append(
+                        f"Column {col} has incorrect type. Expected {expected_type}, got {found_type}"
+                    )
 
         if panel_df.shape[0] == 0:
             errors.append("Panel file is empty")

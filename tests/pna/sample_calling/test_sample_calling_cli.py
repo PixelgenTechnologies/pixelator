@@ -7,6 +7,7 @@ import json
 import tempfile
 from pathlib import Path
 
+import numpy as np
 import pytest
 from click.testing import CliRunner
 
@@ -20,10 +21,11 @@ def test_runs_ok(pna_data_root):
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as d:
+        pool_name = "small_hashed_sample_1"
         args = [
             "single-cell-pna",
             "sample-calling",
-            str(pna_data_root / "sample_calling/small_hashed_sample_1.pxl"),
+            str(pna_data_root / f"sample_calling/{pool_name}.pxl"),
             "--samplesheet",
             str(pna_data_root) + "/sample_calling/samplesheet.csv",
             "--remove-incompatible",
@@ -41,6 +43,7 @@ def test_runs_ok(pna_data_root):
         outputs = list(sorted(out_dir.glob("*.dehashed.pxl")))
         # One per sample + one for undetermined
         assert len(outputs) == 4
+        assert f"{pool_name}_undetermined.dehashed.pxl" in [o.name for o in outputs]
 
         for pxl_path in outputs:
             sample_name = get_sample_name(pxl_path)
@@ -60,14 +63,18 @@ def test_runs_ok(pna_data_root):
                 == "pixelator single-cell-pna sample-calling"
             )
 
-        total_report = out_dir / "sample_calling.report.json"
+        total_report = out_dir / f"{pool_name}.sample_calling.report.json"
         assert total_report.is_file(), "missing aggregated sample_calling.report.json"
 
         total_data = json.loads(total_report.read_text())
         assert total_data["report_type"] == "sample_calling_total"
         assert total_data["sample_id"] == "all"
         assert "sample_confidences_per_sample" in total_data
-
+        assert "percentage_of_components_successfully_called" in total_data
+        assert (
+            np.abs(total_data["percentage_of_components_successfully_called"] - 14 / 15)
+            < 1e-6
+        )
         total_components = 0
         for output in outputs:
             pxl = read(output)
