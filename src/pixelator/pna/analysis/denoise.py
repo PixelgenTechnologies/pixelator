@@ -357,6 +357,12 @@ def denoise_pls(
         r, p = pearsonr(coreness_arr, scores[:, j])
         if np.isnan(p) or np.isnan(r):
             continue
+        # If r is negative, flip the score direction for consistent interpretation
+        # (higher score = more core-like) This is required to match the R implementation
+        # (rpls) where scores are oriented by positive correlation with coreness.
+        if r < 0:
+            r = -r
+            scores[:, j] = -scores[:, j]
         if r > min_pls_coreness_correlation and p < pls_component_p_threshold:
             comps_to_use.append(j)
 
