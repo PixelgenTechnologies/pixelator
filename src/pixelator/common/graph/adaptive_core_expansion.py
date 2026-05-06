@@ -3,6 +3,7 @@
 Copyright © 2026 Pixelgen Technologies AB
 """
 
+from dataclasses import dataclass
 from typing import Sequence
 
 import networkx as nx
@@ -12,6 +13,14 @@ import scipy.sparse as sp
 from pixelator.common.graph import Graph
 from pixelator.common.graph.backends.implementations._networkx import _mat_pow
 from pixelator.common.utils import logger
+
+
+@dataclass(frozen=True)
+class _PartitionCandidate:
+    partition: np.ndarray
+    bc_score: float
+    nodes_pct: float
+    binding_threshold: float
 
 
 def normalize_counts(x):
@@ -183,7 +192,7 @@ def adaptive_core_expansion(
                 if k_val == max_k and node_list[i] not in largest_comp_set:
                     k_cores[i] = max_k - 1
 
-    partitions = []
+    partitions: list[_PartitionCandidate] = []
     current_partition = (k_cores == max_k).astype(int)
     # Sort thresholds descending to allow reuse of the partition vector
     sorted_thresholds = sorted(binding_thresholds, reverse=True)
@@ -219,18 +228,18 @@ def adaptive_core_expansion(
         logger.debug("Completed")
 
         partitions.append(
-            {
-                "partition": current_partition.copy(),
-                "bc_score": bc_score,
-                "nodes_pct": float(num_high / len(current_partition)),
-                "binding_threshold": binding_threshold,
-            }
+            _PartitionCandidate(
+                partition=current_partition.copy(),
+                bc_score=bc_score,
+                nodes_pct=float(num_high / len(current_partition)),
+                binding_threshold=binding_threshold,
+            )
         )
 
-    best_idx = int(np.argmax([p["bc_score"] for p in partitions]))
-    best_candidate = partitions[best_idx]
+    best_idx = int(np.argmax([p.bc_score for p in partitions]))
+    best_candidate: _PartitionCandidate | None = partitions[best_idx]
 
-    if best_candidate["nodes_pct"] < min_allowed_nodes_pct:
+    if best_candidate is not None and best_candidate.nodes_pct < min_allowed_nodes_pct:
         logger.warning(
             f"The selected partition has less than {min_allowed_nodes_pct * 100:.2f}% "
             f"of nodes in the 'high' core layer. Selecting the partition with the highest "
@@ -239,13 +248,13 @@ def adaptive_core_expansion(
         )
 
         # Select partitions that meet the minimum node percentage
-        valid_partitions = [
-            p for p in partitions if p["nodes_pct"] >= min_allowed_nodes_pct
+        valid_partitions: list[_PartitionCandidate] = [
+            p for p in partitions if p.nodes_pct >= min_allowed_nodes_pct
         ]
 
         if valid_partitions:
             # Pick the one with the highest BC score among those that meet the threshold
-            best_candidate = max(valid_partitions, key=lambda x: x["bc_score"])
+            best_candidate = max(valid_partitions, key=lambda x: x.bc_score)
         else:
             logger.warning(
                 f"Found no partition with at least {min_allowed_nodes_pct * 100:.2f}% of "
@@ -254,12 +263,12 @@ def adaptive_core_expansion(
             best_candidate = None
 
     if best_candidate is not None:
-        best_partition_vec = best_candidate["partition"]
+        best_partition_vec = best_candidate.partition
         logger.info(
             f"Selected partition seeded with k-core layer >= {max_k} "
-            f"and a binding threshold of {best_candidate['binding_threshold']}. "
-            f"Bray-Curtis dissimilarity score: {best_candidate['bc_score']:.4f}. "
-            f"Percent of nodes in 'high' core layer: {best_candidate['nodes_pct'] * 100:.2f}%."
+            f"and a binding threshold of {best_candidate.binding_threshold}. "
+            f"Bray-Curtis dissimilarity score: {best_candidate.bc_score:.4f}. "
+            f"Percent of nodes in 'high' core layer: {best_candidate.nodes_pct * 100:.2f}%."
         )
     else:
         best_partition_vec = np.ones(len(node_list), dtype=int)
@@ -301,14 +310,14 @@ def _adaptive_core_expansion_inner(
 
 
 def _validate_ace_parameters(
-    k,
-    max_k_core,
-    binding_thresholds,
-    max_iter,
-    min_seed_pct,
-    nodes_to_move_threshold,
-    min_allowed_nodes_pct,
-):
+    k: int,
+    max_k_core: int,
+    binding_thresholds: Sequence[float],
+    max_iter: int,
+    min_seed_pct: float,
+    nodes_to_move_threshold: int,
+    min_allowed_nodes_pct: float,
+) -> bool:
     if not 1 <= k <= 6:
         raise ValueError(f"'k' must be between 1 and 6 inclusive, got {k}.")
     if not 2 <= max_k_core <= 10:
