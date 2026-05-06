@@ -349,17 +349,9 @@ def test_denoise_ace_analysis(pna_pxl_dataset, tmp_path):
     pxl_file_target = PixelDatasetSaver(pxl_dataset=pna_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
-    with mock.patch(
-        "pixelator.pna.analysis.denoise.load_antibody_panel"
-    ) as mock_load_panel:
 
-        def f(*args, **kwargs):
-            return load_antibody_panel(pna_config, "proxiome-immuno-155-v2")
-
-        mock_load_panel.side_effect = f
-
-        manager = AnalysisManager([DenoiseGraph(run_one_core=False, run_ace=True)])
-        denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
+    manager = AnalysisManager([DenoiseGraph(run_one_core=False, run_ace=True)])
+    denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
 
     obs = denoised_dataset.adata().obs
     assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
