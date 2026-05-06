@@ -144,7 +144,7 @@ def test_adaptive_core_expansion_isotype_reduction(graph_from_pxl):
     low_isotype_sum = isotype_counts.get("low", 0)
     total_isotype_sum = high_isotype_sum + low_isotype_sum
 
-    # Check that high core isotype percentage is below 50%
+    # Check that high core isotype percentage is below 25%
     high_pct = high_isotype_sum / total_isotype_sum if total_isotype_sum > 0 else 0
 
     assert high_pct < 0.25
