@@ -342,6 +342,11 @@ def denoise_pls(
             normalization=normalization,
             model_mat=model_mat,
         )
+        # Save model scores for correlation testing and potential score flipping
+        # to match R PLS orientation (positive correlation with coreness = more core-like).
+        # Use the model scores to avoid discrepancies from different neighborhood expansion
+        # in prediction vs model fitting.
+        scores_model = pls_model.x_scores_.copy()
         scores = pls_model.transform(X_pred.values)
     except (ValueError, np.linalg.LinAlgError) as exc:
         logger.debug("PLS denoising skipped for component: %s", exc)
@@ -355,12 +360,13 @@ def denoise_pls(
     comps_to_use: list[int] = []
     for j in range(n_scores):
         r, p = pearsonr(coreness_arr, scores[:, j])
+        r_model, p_model = pearsonr(coreness_arr, scores_model[:, j])
         if np.isnan(p) or np.isnan(r):
             continue
-        # If r is negative, flip the score direction for consistent interpretation
-        # (higher score = more core-like) This is required to match the R implementation
+        # If r_model is negative, flip the score direction for consistent interpretation
+        # (higher score = more core-like). This is required to match the R implementation
         # (rpls) where scores are oriented by positive correlation with coreness.
-        if r < 0:
+        if r_model < 0:
             r = -r
             scores[:, j] = -scores[:, j]
         if r > min_pls_coreness_correlation and p < pls_component_p_threshold:
