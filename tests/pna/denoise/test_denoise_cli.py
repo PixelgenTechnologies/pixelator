@@ -17,7 +17,7 @@ ACE_LOW_NODE_COUNT = 399
 
 
 @pytest.mark.slow
-def test_denoise_runs_ok(pxl_file):
+def test_denoise_runs_ok(pna_pxl_file):
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as output_dir:
@@ -26,7 +26,7 @@ def test_denoise_runs_ok(pxl_file):
             "1",
             "single-cell-pna",
             "denoise",
-            str(pxl_file),
+            str(pna_pxl_file),
             "--output",
             output_dir,
             "--run-one-core-graph-denoising",
@@ -39,26 +39,18 @@ def test_denoise_runs_ok(pxl_file):
 
         assert cmd.exit_code == 0
 
-        result = read(Path(output_dir) / "denoise" / "file.denoised_graph.pxl")
+        result = read(
+            Path(output_dir) / "denoise" / "PNA055_Sample07_S7.denoised_graph.pxl"
+        )
         assert not result.adata().obs["disqualified_for_denoising"].any()
-
-
-def _patch_denoise_panel_loader():
-    """Layout test PXLs may lack ``panel_metadata``; mirror ``test_denoise_one_core_analysis``."""
-
-    def _load(*args, **kwargs):
-        return load_antibody_panel(pna_config, "proxiome-immuno-155-v2")
-
-    return mock.patch(
-        "pixelator.pna.analysis.denoise.load_antibody_panel", side_effect=_load
-    )
 
 
 @pytest.mark.slow
 def test_denoise_ace_cli_runs_ok(pna_pxl_file):
     """ACE-only denoise completes and records ACE-specific removal counts."""
     runner = CliRunner()
-    with tempfile.TemporaryDirectory() as output_dir, _patch_denoise_panel_loader():
+
+    with tempfile.TemporaryDirectory() as output_dir:
         args = [
             "--cores",
             "1",
@@ -94,7 +86,7 @@ def test_denoise_ace_cli_runs_ok(pna_pxl_file):
 def test_denoise_one_core_and_ace_cli_runs_ok(pna_pxl_file):
     """One-core plus ACE: ACE counts match full-graph ACE; total includes one-core and stranding."""
     runner = CliRunner()
-    with tempfile.TemporaryDirectory() as output_dir, _patch_denoise_panel_loader():
+    with tempfile.TemporaryDirectory() as output_dir:
         args = [
             "--cores",
             "1",
