@@ -97,24 +97,21 @@ def _create_node_neighborhood_abundance_matrix(
         # Add self-loops to represent "at most k steps"
         A = A + sp.eye(A.shape[0], format="csr")
 
-        if not use_weights:
-            # Set all positive weights to 1
-            A.data = np.ones_like(A.data)
-
-        # Apply min_weight threshold
-        if min_weight > 0:
-            A.data[A.data < min_weight] = 0
-            A.eliminate_zeros()
+        if use_weights:
+            # Divide by row sum to get the stochastic matrix
+            D = sp.diags_array(1 / A.sum(axis=1), format="csr")
+            A = (D @ A).T
 
         if k > 1:
             # Expand to k-step neighborhood
             W = _mat_pow(A, k, prune_threshold=min_weight if min_weight > 0 else None)
+
+            if not use_weights:
+                # Set all non-zero entries to 1 to get unweighted neighborhood counts
+                W.data = np.ones_like(W.data)
+
         else:
             W = A
-
-        # Set all positive weights in the expanded matrix to 1 if not using weights
-        if not use_weights:
-            W.data = np.ones_like(W.data)
 
         # Neighborhood abundance is W @ X
         X = (W @ X).astype(np.float64)
