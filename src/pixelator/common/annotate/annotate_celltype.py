@@ -150,7 +150,6 @@ def _scanpy_annotation(
     query, reference, groups, skip_normalization, min_prediction_score
 ):
     """Mimic Seurat's integration and label transfer (PCA + KNN)."""
-
     logger.debug("Running PCA and mapping query to reference space.")
     sc.tl.pca(reference, svd_solver="arpack")
 
