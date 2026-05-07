@@ -183,7 +183,7 @@ class TestTryBumpAdataPanelVersion:
                 session=session, sample="sample_new"
             )
 
-        # allso test non panel columns are kept as is during the bump
+        # Also test non panel columns are kept as is during the bump
         positive_cells_count = np.random.randint(0, 100, adata_old.var.shape[0])
         adata_old.var["positive_cells_count"] = positive_cells_count
 
