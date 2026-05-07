@@ -22,12 +22,15 @@ def _panel_with_version_product_and_uniprot(
     version: str,
     product: str | None,
     marker_a_uniprot: str,
+    marker_a_new_name: str | None = None,
     added_column_name: str | None = None,
     added_column_value: str | None = None,
 ) -> PNAAntibodyPanel:
     """Clone a panel while tweaking version/product and marker metadata for tests."""
     panel_df = panel.df.copy()
     panel_df.loc["MarkerA", "uniprot_id"] = marker_a_uniprot
+    if marker_a_new_name is not None:
+        panel_df = panel_df.rename(index={"MarkerA": marker_a_new_name})
     if added_column_name is not None and added_column_value is not None:
         panel_df[added_column_name] = added_column_value
     metadata = panel.metadata.model_copy(
@@ -164,6 +167,7 @@ class TestTryBumpAdataPanelVersion:
             version="0.1.1",
             product="test-product",
             marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
             added_column_name="target_class",
             added_column_value="new-value",
         )
@@ -188,19 +192,19 @@ class TestTryBumpAdataPanelVersion:
         adata_old.var["positive_cells_count"] = positive_cells_count
 
         assert adata_old.var.loc["MarkerA", "uniprot_id"] == "P12345"
-        assert adata_new.var.loc["MarkerA", "uniprot_id"] == "Q9UPN0"
+        assert adata_new.var.loc["MarkerANew", "uniprot_id"] == "Q9UPN0"
         assert "target_class" not in adata_old.var.columns
         assert "target_class" in adata_new.var.columns
 
         bumped = helper._try_bump_adata_panel_version([adata_old, adata_new])
 
         assert "target_class" in bumped[0].var.columns
-        assert bumped[0].var.loc["MarkerA", "target_class"] == "new-value"
-        assert bumped[0].var.loc["MarkerA", "uniprot_id"] == "Q9UPN0"
+        assert bumped[0].var.loc["MarkerANew", "target_class"] == "new-value"
+        assert bumped[0].var.loc["MarkerANew", "uniprot_id"] == "Q9UPN0"
 
         assert "target_class" in bumped[1].var.columns
-        assert bumped[1].var.loc["MarkerA", "uniprot_id"] == "Q9UPN0"
-        assert bumped[1].var.loc["MarkerA", "target_class"] == "new-value"
+        assert bumped[1].var.loc["MarkerANew", "uniprot_id"] == "Q9UPN0"
+        assert bumped[1].var.loc["MarkerANew", "target_class"] == "new-value"
 
         assert "positive_cells_count" in bumped[0].var.columns
         assert "positive_cells_count" not in bumped[1].var.columns
