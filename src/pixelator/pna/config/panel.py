@@ -8,7 +8,9 @@ from __future__ import annotations
 import warnings
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Set
+
+from anndata import AnnData
 
 try:
     from typing import Self
@@ -21,7 +23,6 @@ import pandas as pd
 import polars as pl
 import ruamel.yaml as yaml
 
-from pixelator import read_pna
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
@@ -44,10 +45,7 @@ class PNAAntibodyPanel:
     }
 
     # and these should have unique values
-    _UNIQUE_COLUMNS = [
-        "sequence_1",
-        "sequence_2",
-    ]
+    _UNIQUE_COLUMNS = ["sequence_1", "sequence_2"]
 
     def __init__(
         self,
@@ -67,7 +65,7 @@ class PNAAntibodyPanel:
                                 invalid or with incorrect format
         """
         self._filename = file_name
-        self._metadata = metadata
+        self.metadata = metadata
         self._df = df
 
         # validate the panel
@@ -104,27 +102,6 @@ class PNAAntibodyPanel:
         return cls(df, metadata, file_name=panel_file.name)
 
     @classmethod
-    def from_pxl_file(cls, filename: PathType) -> Self:
-        """Create an AntibodyPanel from a pxl file.
-
-        :param filename: The path to the pxl file.
-        :returns: The AntibodyPanel object.
-        :raises AssertionError: exception if panel file is missing,
-        :rtype: AntibodyPanel
-        """
-        pxl_file = Path(filename)
-
-        if not pxl_file.is_file() or pxl_file.suffix != ".pxl":
-            raise AssertionError(
-                f"Pixel file {filename} not found or has an incorrect format"
-            )
-
-        logger.debug("Creating Antibody panel from file %s", filename)
-
-        pxl_data = read_pna(pxl_file)
-        return cls.from_pxl_dataset(pxl_data, file_name=pxl_file.name)
-
-    @classmethod
     def from_pxl_dataset(
         cls, pxl_data: PNAPixelDataset, file_name: Optional[str] = None
     ) -> Self:
@@ -139,19 +116,40 @@ class PNAAntibodyPanel:
         """
         logger.debug("Creating Antibody panel from PNAPixelDataset object")
         adata = pxl_data.adata()
+        panel = cls.from_adata(adata, file_name=file_name)
+        logger.debug("Antibody panel from PNAPixelDataset created")
+        return panel
+
+    @classmethod
+    def from_adata(cls, adata: AnnData, file_name: Optional[str] = None) -> Self:
+        """Create an AntibodyPanel from an AnnData object.
+
+        :param adata: An AnnData object containing panel information.
+        :param file_name: The optional name of the file from which
+            the AnnData object was loaded.
+        :returns: The AntibodyPanel object.
+        :raises KeyError: exception if panel information is missing in the AnnData object.
+        :rtype: AntibodyPanel
+        """
+        logger.debug("Creating Antibody panel from AnnData object")
         try:
             panel_metadata = adata.uns["panel_metadata"]
         except KeyError as err:
             logger.error(  # pylint: disable=logging-not-lazy
-                f"The provided PNAPixelDataset does not contain {err}. "
+                f"The provided AnnData object does not contain {err}. "
                 + "Please, regenerate your data with the most recent version of pixelator."
             )
             raise
-        panel_columns = panel_metadata.pop("panel_columns")
+        panel_columns = panel_metadata.get("panel_columns")
+        if not panel_columns:
+            raise KeyError(
+                "The provided AnnData object does not contain panel columns information in the metadata. "
+                + "Please, regenerate your data with the most recent version of pixelator."
+            )
         df = adata.var[panel_columns]
         metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
 
-        logger.debug("Antibody panel from PNAPixelDataset created")
+        logger.debug("Antibody panel from AnnData object created")
         return cls(df, metadata, file_name=file_name)
 
     @property
@@ -162,7 +160,7 @@ class PNAAntibodyPanel:
             The panel name.
 
         """
-        return self._metadata.name
+        return self.metadata.name
 
     @property
     def product(self) -> Optional[str]:
@@ -172,7 +170,7 @@ class PNAAntibodyPanel:
             Product name, or None when not provided in panel metadata.
 
         """
-        return self._metadata.product
+        return self.metadata.product
 
     @property
     def version(self) -> str:
@@ -182,22 +180,22 @@ class PNAAntibodyPanel:
             Semantic version string for this panel.
 
         """
-        return self._metadata.version
+        return self.metadata.version
 
     @property
     def description(self) -> Optional[str]:
         """Return the panel file description."""
-        return self._metadata.description
+        return self.metadata.description
 
     @property
     def aliases(self) -> list[str]:
         """Return the (optional) list of panel file aliases."""
-        return self._metadata.aliases
+        return self.metadata.aliases
 
     @property
     def archived(self) -> Optional[bool]:
         """Return whether the panel is marked as archived."""
-        return self._metadata.archived
+        return self.metadata.archived
 
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
@@ -381,6 +379,16 @@ class PNAAntibodyPanel:
 
         return errors
 
+    def to_polars(self) -> pl.DataFrame:
+        """Convert the panel to a Polars DataFrame."""
+        return pl.from_pandas(self.df, include_index=True)
+
+    def __eq__(self, other: object) -> bool:
+        """Check if two panels are equal based on their dataframes and metadata."""
+        if not isinstance(other, PNAAntibodyPanel):
+            raise ValueError("Can only compare with another PNAAntibodyPanel")
+        return self.df.equals(other.df) and self.metadata == other.metadata
+
 
 def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
     """Load an antibody panel from a file or from the config file.
@@ -401,3 +409,203 @@ def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
 
     panel_obj = PNAAntibodyPanel.from_csv(panel)
     return panel_obj
+
+
+class PNAAntibodyPanelDiff:
+    """Class representing the differences between two PNAAntibodyPanel objects."""
+
+    join_on_columns: list[str] = ["sequence_1", "sequence_2"]
+
+    def __init__(self, panel_1: PNAAntibodyPanel, panel_2: PNAAntibodyPanel) -> None:
+        """Initialize the PNAAntibodyPanelDiff object.
+
+        :param panel_1: The first panel to compare.
+        :param panel_2: The second panel to compare.
+        """
+        self.panel_1 = panel_1
+        self.panel_2 = panel_2
+
+        logger.debug(
+            "Comparing panels %s v%s and %s v%s",
+            panel_1.name,
+            panel_1.version,
+            panel_2.name,
+            panel_2.version,
+        )
+
+        self.joined = self.panel_1.to_polars().join(
+            self.panel_2.to_polars(),
+            on=self.join_on_columns,
+            how="full",
+            suffix="_panel_2",
+        )
+
+        self._identical_columns: List[str] | None = None
+        self._changed_columns: List[str] | None = None
+        self._removed_columns: Set[str] | None = None
+        self._added_columns: Set[str] | None = None
+
+    @property
+    def col_names_in_both_panels(self) -> List[str]:
+        """Return a list of column names that are present in both panels."""
+        return list(
+            set(self.panel_1.to_polars().columns).intersection(
+                set(self.panel_2.to_polars().columns)
+            )
+        )
+
+    @property
+    def identical_columns(self) -> List[str]:
+        """Return a list of columns that are identical between the two panels."""
+        return [
+            col_name
+            for col_name in self.col_names_in_both_panels
+            if self.joined[col_name]
+            .eq_missing(self.joined[col_name + "_panel_2"])
+            .all()
+        ]
+
+    @cached_property
+    def changed_columns(self) -> List[str]:
+        """Return a list of columns that are different between the two panels."""
+        changed_columns = [
+            col_name
+            for col_name in set(self.col_names_in_both_panels).difference(
+                set(self.join_on_columns)
+            )
+            if not self.joined[col_name]
+            .eq_missing(self.joined[col_name + "_panel_2"])
+            .all()
+        ]
+        for col_name in changed_columns:
+            diff_count = self.joined.filter(
+                pl.col(col_name).ne_missing(pl.col(col_name + "_panel_2"))
+            ).shape[0]
+            logger.debug(
+                "Column %s is different between the two panels %s and %s (%d differing entries).",
+                col_name,
+                self.panel_1.name,
+                self.panel_2.name,
+                diff_count,
+            )
+        return changed_columns
+
+    @cached_property
+    def removed_columns(self) -> List[str]:
+        """Return a list of columns that are present in panel 1 but not in panel 2."""
+        removed_columns = set(self.panel_1.to_polars().columns).difference(
+            set(self.panel_2.to_polars().columns)
+        )
+        for col_name in removed_columns:
+            logger.debug(
+                "Column %s is present in panel %s but not in panel %s.",
+                col_name,
+                self.panel_1.name,
+                self.panel_2.name,
+            )
+        return sorted(removed_columns)
+
+    @cached_property
+    def added_columns(self) -> List[str]:
+        """Return a list of columns that are present in panel 2 but not in panel 1."""
+        added_columns = set(self.panel_2.to_polars().columns).difference(
+            set(self.panel_1.to_polars().columns)
+        )
+        for col_name in added_columns:
+            logger.debug(
+                "Column %s is present in panel %s but not in panel %s.",
+                col_name,
+                self.panel_2.name,
+                self.panel_1.name,
+            )
+        return sorted(added_columns)
+
+    @property
+    def added_clones(self) -> pl.DataFrame:
+        """Return a dataframe with the clones that are present in panel 2 but not in panel 1."""
+        return (
+            self.joined.filter(
+                pl.any_horizontal(
+                    pl.col(col_name).is_null()
+                    & pl.col(col_name + "_panel_2").is_not_null()
+                    for col_name in self.join_on_columns
+                )
+            )
+            .drop([col_name for col_name in self.panel_1.to_polars().columns])
+            .rename(
+                {
+                    col_name + "_panel_2": col_name
+                    for col_name in self.panel_2.to_polars().columns
+                    if col_name + "_panel_2" in self.joined.columns
+                }
+            )
+        )
+
+    @property
+    def removed_clones(self) -> pl.DataFrame:
+        """Return a dataframe with the clones that are present in panel 1 but not in panel 2."""
+        return self.joined.filter(
+            pl.any_horizontal(
+                pl.col(col_name).is_not_null() & pl.col(col_name + "_panel_2").is_null()
+                for col_name in self.join_on_columns
+            )
+        ).drop(
+            [
+                col_name + "_panel_2"
+                if col_name in self.joined.columns
+                and col_name not in self.added_columns
+                else col_name
+                for col_name in self.panel_2.to_polars().columns
+            ]
+        )
+
+    def upgrade_adata(self, adata: AnnData) -> AnnData:
+        """Upgrade an AnnData object with the changes between the two panels."""
+        adata_panel = PNAAntibodyPanel.from_adata(adata)
+        if self.panel_1 != adata_panel:
+            raise ValueError(
+                "The provided AnnData object does not match the panel. Cannot upgrade."
+                f"Expected panel {self.panel_2.name} v{self.panel_2.version}, but got panel {adata_panel.name} v{adata_panel.version}."
+            )
+
+        non_panel_columns = adata.var.copy()[
+            [
+                col
+                for col in adata.var.columns
+                if col not in adata.uns["panel_metadata"]["panel_columns"]
+            ]
+            + self.join_on_columns
+        ]
+        adata.var = (
+            self.joined.select(
+                list(
+                    set(
+                        self.join_on_columns
+                        + self.identical_columns
+                        + [f"{col}_panel_2" for col in self.changed_columns]
+                        + self.added_columns
+                    )
+                )
+            )
+            .rename({f"{col}_panel_2": col for col in self.changed_columns})
+            # keep order and append new to the end
+            .select(
+                ["marker_id"]  # index not in panel_metadata panel_columns below
+                + adata.uns["panel_metadata"]["panel_columns"]
+                + self.added_columns
+            )
+            .to_pandas()
+            .set_index("marker_id")
+        )
+        if adata.var.shape[0] != non_panel_columns.shape[0]:
+            raise ValueError(
+                "Row count mismatch in automatic patch panel patch version bump."
+            )
+        adata.var = adata.var.join(
+            non_panel_columns.set_index(self.join_on_columns),
+            how="outer",
+            on=self.join_on_columns,
+        )
+        adata.uns["panel_metadata"] = self.panel_2.metadata.model_dump()
+        adata.uns["panel_metadata"]["panel_columns"] = self.panel_2.df.columns.tolist()
+        return adata
