@@ -425,12 +425,19 @@ class PNAAntibodyPanelDiff:
         self.panel_1 = panel_1
         self.panel_2 = panel_2
 
+        logger.debug(
+            "Comparing panels %s v%s and %s v%s",
+            panel_1.name,
+            panel_1.version,
+            panel_2.name,
+            panel_2.version,
+        )
+
         self.joined = self.panel_1.to_polars().join(
             self.panel_2.to_polars(),
             on=self.join_on_columns,
             how="full",
             suffix="_panel_2",
-            # coalesce=True,
         )
 
         self._identical_columns: List[str] | None = None
@@ -439,71 +446,79 @@ class PNAAntibodyPanelDiff:
         self._added_columns: Set[str] | None = None
 
     @property
-    def identical_columns(self) -> List[str]:
-        """Return a list of columns that are identical between the two panels."""
-        if self._identical_columns is None:
-            self._identical_columns = [
-                col_name
-                for col_name in set(self.panel_1.to_polars().columns).union(
-                    set(self.panel_2.to_polars().columns)
-                )
-                if col_name in self.joined
-                and col_name + "_panel_2" in self.joined
-                and self.joined[col_name]
-                .eq_missing(self.joined[col_name + "_panel_2"])
-                .all()
-            ]
-        return self._identical_columns
-
-    @property
-    def changed_columns(self) -> List[str]:
-        """Return a list of columns that are different between the two panels."""
-        if self._changed_columns is None:
-            self._changed_columns = [
-                col_name
-                for col_name in set(self.panel_1.to_polars().columns).union(
-                    set(self.panel_2.to_polars().columns)
-                )
-                if col_name in self.joined
-                and col_name + "_panel_2" in self.joined
-                and not self.joined[col_name]
-                .eq_missing(self.joined[col_name + "_panel_2"])
-                .all()
-            ]
-            for col_name in self.changed_columns:
-                diff_count = self.joined.filter(
-                    pl.col(col_name).ne_missing(pl.col(col_name + "_panel_2"))
-                ).shape[0]
-                logger.info(
-                    f"Column {col_name} is different between the two panels {self.panel_1.name} and {self.panel_2.name} ({diff_count} differing entries)."
-                )
-        return self._changed_columns
-
-    @property
-    def removed_columns(self) -> List[str]:
-        """Return a list of columns that are present in panel 1 but not in panel 2."""
-        if self._removed_columns is None:
-            self._removed_columns = set(self.panel_1.to_polars().columns).difference(
+    def col_names_in_both_panels(self) -> List[str]:
+        """Return a list of column names that are present in both panels."""
+        return list(
+            set(self.panel_1.to_polars().columns).intersection(
                 set(self.panel_2.to_polars().columns)
             )
-            for col_name in self.removed_columns:
-                logger.info(
-                    f"Column {col_name} is present in panel {self.panel_1.name} but not in panel {self.panel_2.name}."
-                )
-        return sorted(self._removed_columns)
+        )
 
     @property
+    def identical_columns(self) -> List[str]:
+        """Return a list of columns that are identical between the two panels."""
+        return [
+            col_name
+            for col_name in self.col_names_in_both_panels
+            if self.joined[col_name]
+            .eq_missing(self.joined[col_name + "_panel_2"])
+            .all()
+        ]
+
+    @cached_property
+    def changed_columns(self) -> List[str]:
+        """Return a list of columns that are different between the two panels."""
+        changed_columns = [
+            col_name
+            for col_name in set(self.col_names_in_both_panels).difference(
+                set(self.join_on_columns)
+            )
+            if not self.joined[col_name]
+            .eq_missing(self.joined[col_name + "_panel_2"])
+            .all()
+        ]
+        for col_name in changed_columns:
+            diff_count = self.joined.filter(
+                pl.col(col_name).ne_missing(pl.col(col_name + "_panel_2"))
+            ).shape[0]
+            logger.debug(
+                "Column %s is different between the two panels %s and %s (%d differing entries).",
+                col_name,
+                self.panel_1.name,
+                self.panel_2.name,
+                diff_count,
+            )
+        return changed_columns
+
+    @cached_property
+    def removed_columns(self) -> List[str]:
+        """Return a list of columns that are present in panel 1 but not in panel 2."""
+        removed_columns = set(self.panel_1.to_polars().columns).difference(
+            set(self.panel_2.to_polars().columns)
+        )
+        for col_name in removed_columns:
+            logger.debug(
+                "Column %s is present in panel %s but not in panel %s.",
+                col_name,
+                self.panel_1.name,
+                self.panel_2.name,
+            )
+        return sorted(removed_columns)
+
+    @cached_property
     def added_columns(self) -> List[str]:
         """Return a list of columns that are present in panel 2 but not in panel 1."""
-        if self._added_columns is None:
-            self._added_columns = set(self.panel_2.to_polars().columns).difference(
-                set(self.panel_1.to_polars().columns)
+        added_columns = set(self.panel_2.to_polars().columns).difference(
+            set(self.panel_1.to_polars().columns)
+        )
+        for col_name in added_columns:
+            logger.debug(
+                "Column %s is present in panel %s but not in panel %s.",
+                col_name,
+                self.panel_2.name,
+                self.panel_1.name,
             )
-            for col_name in self.added_columns:
-                logger.info(
-                    f"Column {col_name} is present in panel {self.panel_2.name} but not in panel {self.panel_1.name}."
-                )
-        return sorted(self._added_columns)
+        return sorted(added_columns)
 
     @property
     def added_clones(self) -> pl.DataFrame:
