@@ -142,7 +142,7 @@ def test_denoise_ace_pls_cli_runs_ok(denoise_pxl_file):
         markers = result.adata().var.index
         isotype_controls = markers[markers.str.contains("mIgG")]
         original_isotype_levels = (
-            read(pna_pxl_file).adata().obsm["clr"].loc[:, isotype_controls]
+            read(denoise_pxl_file).adata().obsm["clr"].loc[:, isotype_controls]
         ).mean(axis=1)
         result_isotype_levels = (
             result.adata().obsm["clr"].loc[:, isotype_controls].mean(axis=1)
