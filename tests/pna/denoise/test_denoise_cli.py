@@ -12,12 +12,12 @@ from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import load_antibody_panel
 from pixelator.pna.pixeldataset import read
 
-REFERENCE_COMPONENT = "0a45497c6bfbfb22"
-ACE_LOW_NODE_COUNT = 399
+REFERENCE_COMPONENT = "57129a8b0fff38c6"
+ACE_LOW_NODE_COUNT = 5436
 
 
 @pytest.mark.slow
-def test_denoise_runs_ok(pna_pxl_file):
+def test_denoise_runs_ok(denoise_pxl_file):
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as output_dir:
@@ -26,7 +26,7 @@ def test_denoise_runs_ok(pna_pxl_file):
             "1",
             "single-cell-pna",
             "denoise",
-            str(pna_pxl_file),
+            str(denoise_pxl_file),
             "--output",
             output_dir,
             "--run-one-core-graph-denoising",
@@ -46,7 +46,7 @@ def test_denoise_runs_ok(pna_pxl_file):
 
 
 @pytest.mark.slow
-def test_denoise_ace_cli_runs_ok(pna_pxl_file):
+def test_denoise_ace_cli_runs_ok(denoise_pxl_file):
     """ACE-only denoise completes and records ACE-specific removal counts."""
     runner = CliRunner()
 
@@ -56,7 +56,7 @@ def test_denoise_ace_cli_runs_ok(pna_pxl_file):
             "1",
             "single-cell-pna",
             "denoise",
-            str(pna_pxl_file),
+            str(denoise_pxl_file),
             "--output",
             output_dir,
             "--run-ace-denoising",
@@ -83,7 +83,7 @@ def test_denoise_ace_cli_runs_ok(pna_pxl_file):
 
 
 @pytest.mark.slow
-def test_denoise_one_core_and_ace_cli_runs_ok(pna_pxl_file):
+def test_denoise_one_core_and_ace_cli_runs_ok(denoise_pxl_file):
     """One-core plus ACE: ACE counts match full-graph ACE; total includes one-core and stranding."""
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as output_dir:
@@ -92,7 +92,7 @@ def test_denoise_one_core_and_ace_cli_runs_ok(pna_pxl_file):
             "1",
             "single-cell-pna",
             "denoise",
-            str(pna_pxl_file),
+            str(denoise_pxl_file),
             "--output",
             output_dir,
             "--run-one-core-graph-denoising",
@@ -118,3 +118,38 @@ def test_denoise_one_core_and_ace_cli_runs_ok(pna_pxl_file):
         assert ace_removed == ACE_LOW_NODE_COUNT
         assert total_removed >= ace_removed
         assert total_removed > 0
+
+
+@pytest.mark.slow
+def test_denoise_ace_pls_cli_runs_ok(denoise_pxl_file):
+    """One-core plus ACE: ACE counts match full-graph ACE; total includes one-core and stranding."""
+    runner = CliRunner()
+    with tempfile.TemporaryDirectory() as output_dir:
+        args = [
+            "--cores",
+            "1",
+            "single-cell-pna",
+            "denoise",
+            str(denoise_pxl_file),
+            "--output",
+            output_dir,
+            "--run-ace-denoising",
+            "--run-pls-denoising",
+        ]
+        cmd = runner.invoke(cli.main_cli, args)
+        assert cmd.exit_code == 0, cmd.output
+
+        out_pxl = Path(output_dir) / "denoise" / "PNA055_Sample07_S7.denoised_graph.pxl"
+        result = read(out_pxl)
+        markers = result.adata().var.index
+        isotype_controls = markers[markers.str.contains("mIgG")]
+        original_isotype_levels = (
+            read(pna_pxl_file).adata().obsm["clr"].loc[:, isotype_controls]
+        ).mean(axis=1)
+        result_isotype_levels = (
+            result.adata().obsm["clr"].loc[:, isotype_controls].mean(axis=1)
+        )
+        assert (
+            result_isotype_levels
+            < original_isotype_levels.reindex(result_isotype_levels.index)
+        ).all()

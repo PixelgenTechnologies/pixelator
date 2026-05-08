@@ -26,185 +26,361 @@ from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PixelDatasetSaver
 
 OVER_EXPRESSED_MARKERS = """name,count,component
-CD48,11,0a45497c6bfbfb22
-CD45,27,0a45497c6bfbfb22
-CD44,50,0a45497c6bfbfb22
-CD319,8,0a45497c6bfbfb22
-CD6,8,0a45497c6bfbfb22
-HLA-DR-DP-DQ,15,0a45497c6bfbfb22
-CD45RA,14,0a45497c6bfbfb22
-CD95,8,0a45497c6bfbfb22
-CD66b,203,0a45497c6bfbfb22
-CD3e,6,0a45497c6bfbfb22
-CD8,6,0a45497c6bfbfb22
-CD2,5,0a45497c6bfbfb22
-CD302,11,0a45497c6bfbfb22
-CD335,8,0a45497c6bfbfb22
-CD274,5,0a45497c6bfbfb22
-CD357,5,0a45497c6bfbfb22
-CD44,104,2708240b908e2eba
-CD56,8,2708240b908e2eba
-TCRab,15,2708240b908e2eba
-CD19,12,2708240b908e2eba
-CD73,9,2708240b908e2eba
-mIgG1,11,2708240b908e2eba
-CD357,17,2708240b908e2eba
-mIgG2a,14,2708240b908e2eba
-CD319,30,2708240b908e2eba
-CD3e,17,2708240b908e2eba
-CD45RB,15,2708240b908e2eba
-CD335,8,2708240b908e2eba
-IgM,14,2708240b908e2eba
-CD62P,11,2708240b908e2eba
-CD150,14,2708240b908e2eba
-CD72,9,2708240b908e2eba
-CD154,11,2708240b908e2eba
-CD27,9,2708240b908e2eba
-CD95,17,2708240b908e2eba
-CD49e,23,2708240b908e2eba
-CD37,24,2708240b908e2eba
-CD117,14,2708240b908e2eba
-CD89,15,2708240b908e2eba
-CD158a,11,2708240b908e2eba
-CD279,6,2708240b908e2eba
-NKp80,8,2708240b908e2eba
-CD169,9,2708240b908e2eba
-CD8,9,2708240b908e2eba
-CD127,8,2708240b908e2eba
-CD9,12,2708240b908e2eba
-CD66b,8,2708240b908e2eba
-IgE,8,2708240b908e2eba
-CD273,39,2708240b908e2eba
-CD226,12,2708240b908e2eba
-CD41,12,2708240b908e2eba
-VISTA,17,2708240b908e2eba
-CD268,8,2708240b908e2eba
-CD158b,11,2708240b908e2eba
-CD57,6,2708240b908e2eba
-TCRgd,15,2708240b908e2eba
-CD192,17,2708240b908e2eba
-CD137,6,2708240b908e2eba
-CD21,20,2708240b908e2eba
-CD159a,12,2708240b908e2eba
-CD200,8,2708240b908e2eba
-CD229,11,2708240b908e2eba
-CD24,11,2708240b908e2eba
-CD5,17,2708240b908e2eba
-CD314,15,2708240b908e2eba
-CD90,12,2708240b908e2eba
-CD70,9,2708240b908e2eba
-CD163,18,2708240b908e2eba
-CD326,9,2708240b908e2eba
-CD138,8,2708240b908e2eba
-CD1b,6,2708240b908e2eba
-CD28,9,2708240b908e2eba
-CD6,12,2708240b908e2eba
-TCRVB5,9,2708240b908e2eba
-CD11b,8,2708240b908e2eba
-CD269,8,2708240b908e2eba
-CD206,9,2708240b908e2eba
-CD103,15,2708240b908e2eba
-CD22,14,2708240b908e2eba
-CD69,15,2708240b908e2eba
-CD1c,9,2708240b908e2eba
-CD94,9,2708240b908e2eba
-CD134,6,2708240b908e2eba
-CD159c,9,2708240b908e2eba
-CD209,6,2708240b908e2eba
-VISTA,21,c3c393e9a17c1981
-CD16,26,c3c393e9a17c1981
-CD44,269,c3c393e9a17c1981
-CD95,23,c3c393e9a17c1981
-CD58,39,c3c393e9a17c1981
-CD18,35,c3c393e9a17c1981
-CD69,12,c3c393e9a17c1981
-CD8,9,c3c393e9a17c1981
-CD49e,18,c3c393e9a17c1981
-CD9,15,c3c393e9a17c1981
-CD7,35,c3c393e9a17c1981
-IgM,18,c3c393e9a17c1981
-CD85j,32,c3c393e9a17c1981
-CD21,14,c3c393e9a17c1981
-CD277,21,c3c393e9a17c1981
-CD319,36,c3c393e9a17c1981
-CD366,14,c3c393e9a17c1981
-CD273,17,c3c393e9a17c1981
-CD199,20,c3c393e9a17c1981
-CD169,17,c3c393e9a17c1981
-CD1a,12,c3c393e9a17c1981
-CD357,35,c3c393e9a17c1981
-CD13,18,c3c393e9a17c1981
-NKp80,5,c3c393e9a17c1981
-CD328,12,c3c393e9a17c1981
-CD73,12,c3c393e9a17c1981
-CD335,9,c3c393e9a17c1981
-CD231,6,c3c393e9a17c1981
-CD28,15,c3c393e9a17c1981
-CD79a,6,c3c393e9a17c1981
-CD44,297,d4074c845bb62800
-CD2,114,d4074c845bb62800
-CD45,95,d4074c845bb62800
-CD36,17,d4074c845bb62800
-CD328,14,d4074c845bb62800
-CD154,6,d4074c845bb62800
-CD55,21,d4074c845bb62800
-CD20,9,d4074c845bb62800
-CD274,9,d4074c845bb62800
-CD16,17,d4074c845bb62800
-mIgG1,6,d4074c845bb62800
-mIgG2b,6,d4074c845bb62800
-CD357,99,d4074c845bb62800
-CD319,21,d4074c845bb62800
-CD27,21,d4074c845bb62800
-CD72,12,d4074c845bb62800
-CD45RA,18,d4074c845bb62800
-CD13,11,d4074c845bb62800
-CD200,6,d4074c845bb62800
-CD7,14,d4074c845bb62800
-CD137,6,d4074c845bb62800
-CD21,11,d4074c845bb62800
-CD35,8,d4074c845bb62800
-TCRva7.2,8,d4074c845bb62800
-CD117,12,d4074c845bb62800
-CD123,6,d4074c845bb62800
-CX3CR1,5,d4074c845bb62800
-CD369,6,d4074c845bb62800
-CD89,11,d4074c845bb62800
-CD314,6,d4074c845bb62800
-CD62P,5,d4074c845bb62800
-CD41,5,d4074c845bb62800
-VISTA,8,d4074c845bb62800
-CD57,11,d4074c845bb62800
-CD158,6,d4074c845bb62800
-CD66b,6,d4074c845bb62800
-CD44,350,efe0ed189cb499fc
-CD2,95,efe0ed189cb499fc
-HLA-DR-DP-DQ,23,efe0ed189cb499fc
-CD22,6,efe0ed189cb499fc
-CD357,59,efe0ed189cb499fc
-CD7,23,efe0ed189cb499fc
-CD29,42,efe0ed189cb499fc
-CD36,15,efe0ed189cb499fc
-CD319,14,efe0ed189cb499fc
-CD191,6,efe0ed189cb499fc
-CD45RA,12,efe0ed189cb499fc
-CD8,6,efe0ed189cb499fc
-CD328,6,efe0ed189cb499fc
-CD35,8,efe0ed189cb499fc
-CD16,5,efe0ed189cb499fc
-CX3CR1,5,efe0ed189cb499fc
+CD156c,17,1a3afa30f0a90a83
+CD18,29,1a3afa30f0a90a83
+CD2,24,1a3afa30f0a90a83
+CD24,8,1a3afa30f0a90a83
+CD371,8,1a3afa30f0a90a83
+CD43,63,1a3afa30f0a90a83
+CD44,110,1a3afa30f0a90a83
+HLA-ABC,102,1a3afa30f0a90a83
+HLA-DR-DP-DQ,29,1a3afa30f0a90a83
+KLRG1,9,1a3afa30f0a90a83
+B2M,825,2084eed04807d6c5
+CD162,23,2084eed04807d6c5
+CD20,8,2084eed04807d6c5
+CD226,9,2084eed04807d6c5
+CD27,17,2084eed04807d6c5
+CD44,60,2084eed04807d6c5
+CD47,27,2084eed04807d6c5
+CD58,12,2084eed04807d6c5
+CD80,15,2084eed04807d6c5
+HLA-ABC,299,2084eed04807d6c5
+TIGIT,6,2084eed04807d6c5
+CD18,45,2f8e1e63d7f5ee08
+CD2,47,2f8e1e63d7f5ee08
+CD33,11,2f8e1e63d7f5ee08
+CD3e,137,2f8e1e63d7f5ee08
+CD41,14,2f8e1e63d7f5ee08
+CD43,86,2f8e1e63d7f5ee08
+CD44,186,2f8e1e63d7f5ee08
+CD45,357,2f8e1e63d7f5ee08
+CD49e,15,2f8e1e63d7f5ee08
+CD84,12,2f8e1e63d7f5ee08
+CD89,12,2f8e1e63d7f5ee08
+HLA-ABC,89,2f8e1e63d7f5ee08
+IgD,14,2f8e1e63d7f5ee08
+IgM,15,2f8e1e63d7f5ee08
+B2M,618,31180b6c8ba952c2
+CD103,9,31180b6c8ba952c2
+CD141,8,31180b6c8ba952c2
+CD154,17,31180b6c8ba952c2
+CD158,12,31180b6c8ba952c2
+CD158b,11,31180b6c8ba952c2
+CD159a,11,31180b6c8ba952c2
+CD16,18,31180b6c8ba952c2
+CD161,23,31180b6c8ba952c2
+CD169,14,31180b6c8ba952c2
+CD1a,11,31180b6c8ba952c2
+CD206,14,31180b6c8ba952c2
+CD209,8,31180b6c8ba952c2
+CD21,18,31180b6c8ba952c2
+CD26,8,31180b6c8ba952c2
+CD278,9,31180b6c8ba952c2
+CD45,59,31180b6c8ba952c2
+CD52,45,31180b6c8ba952c2
+CD54,11,31180b6c8ba952c2
+CD64,8,31180b6c8ba952c2
+CD73,15,31180b6c8ba952c2
+CD80,17,31180b6c8ba952c2
+CD90,20,31180b6c8ba952c2
+CD93,8,31180b6c8ba952c2
+CD95,18,31180b6c8ba952c2
+HLA-ABC,621,31180b6c8ba952c2
+IgE,11,31180b6c8ba952c2
+TCRVB5,9,31180b6c8ba952c2
+mIgG2a,14,31180b6c8ba952c2
+mIgG2b,12,31180b6c8ba952c2
+CD11b,11,57129a8b0fff38c6
+CD156c,17,57129a8b0fff38c6
+CD158,11,57129a8b0fff38c6
+CD369,11,57129a8b0fff38c6
+CD40,14,57129a8b0fff38c6
+CD43,81,57129a8b0fff38c6
+CD44,230,57129a8b0fff38c6
+CD45,225,57129a8b0fff38c6
+CD45RB,107,57129a8b0fff38c6
+CD54,9,57129a8b0fff38c6
+CD57,14,57129a8b0fff38c6
+CD58,15,57129a8b0fff38c6
+CD6,26,57129a8b0fff38c6
+CD79a,8,57129a8b0fff38c6
+CD81,20,57129a8b0fff38c6
+CD82,35,57129a8b0fff38c6
+GPR56,9,57129a8b0fff38c6
+IgD,12,57129a8b0fff38c6
+IgE,8,57129a8b0fff38c6
+B2M,357,6796966160a5b359
+CD117,11,6796966160a5b359
+CD13,15,6796966160a5b359
+CD14,14,6796966160a5b359
+CD154,15,6796966160a5b359
+CD192,9,6796966160a5b359
+CD26,11,6796966160a5b359
+CD33,9,6796966160a5b359
+CD357,8,6796966160a5b359
+CD45,110,6796966160a5b359
+CD45RA,57,6796966160a5b359
+CD48,33,6796966160a5b359
+CD52,51,6796966160a5b359
+CD53,20,6796966160a5b359
+CD54,8,6796966160a5b359
+CD62P,5,6796966160a5b359
+CD82,47,6796966160a5b359
+CD90,17,6796966160a5b359
+HLA-ABC,279,6796966160a5b359
+CD102,27,6e420e5c92a14c35
+CD103,11,6e420e5c92a14c35
+CD11b,8,6e420e5c92a14c35
+CD127,20,6e420e5c92a14c35
+CD156c,18,6e420e5c92a14c35
+CD159a,11,6e420e5c92a14c35
+CD159c,9,6e420e5c92a14c35
+CD16,20,6e420e5c92a14c35
+CD161,15,6e420e5c92a14c35
+CD226,8,6e420e5c92a14c35
+CD229,15,6e420e5c92a14c35
+CD26,11,6e420e5c92a14c35
+CD302,17,6e420e5c92a14c35
+CD38,20,6e420e5c92a14c35
+CD45,108,6e420e5c92a14c35
+CD45RB,51,6e420e5c92a14c35
+CD56,9,6e420e5c92a14c35
+CD59,42,6e420e5c92a14c35
+CD7,12,6e420e5c92a14c35
+CD71,8,6e420e5c92a14c35
+CD82,65,6e420e5c92a14c35
+CD85j,9,6e420e5c92a14c35
+CD89,15,6e420e5c92a14c35
+CD90,14,6e420e5c92a14c35
+CD94,15,6e420e5c92a14c35
+GPR56,6,6e420e5c92a14c35
+HLA-ABC,173,6e420e5c92a14c35
+KLRG1,12,6e420e5c92a14c35
+TCRab,20,6e420e5c92a14c35
+VISTA,24,6e420e5c92a14c35
+B2M,263,70f73b946d989e86
+CD11a,21,70f73b946d989e86
+CD158b,6,70f73b946d989e86
+CD163,6,70f73b946d989e86
+CD302,9,70f73b946d989e86
+CD369,6,70f73b946d989e86
+CD45,198,70f73b946d989e86
+CD48,26,70f73b946d989e86
+CD49D,14,70f73b946d989e86
+CD49e,9,70f73b946d989e86
+CD56,6,70f73b946d989e86
+CD59,27,70f73b946d989e86
+GPR56,6,70f73b946d989e86
+HLA-ABC,344,70f73b946d989e86
+CD103,8,85078d2392036eb1
+CD13,21,85078d2392036eb1
+CD150,12,85078d2392036eb1
+CD156c,18,85078d2392036eb1
+CD16,12,85078d2392036eb1
+CD200,18,85078d2392036eb1
+CD277,14,85078d2392036eb1
+CD305,11,85078d2392036eb1
+CD328,14,85078d2392036eb1
+CD38,12,85078d2392036eb1
+CD47,23,85078d2392036eb1
+CD49D,12,85078d2392036eb1
+CD58,17,85078d2392036eb1
+CD59,45,85078d2392036eb1
+CD7,9,85078d2392036eb1
+CD79a,11,85078d2392036eb1
+CD80,14,85078d2392036eb1
+CD84,12,85078d2392036eb1
+CD89,12,85078d2392036eb1
+CD90,18,85078d2392036eb1
+CD93,6,85078d2392036eb1
+HLA-ABC,122,85078d2392036eb1
+TCRVd2,6,85078d2392036eb1
+CD14,14,929e5c4405c4033e
+CD169,15,929e5c4405c4033e
+CD19,20,929e5c4405c4033e
+CD319,15,929e5c4405c4033e
+CD37,20,929e5c4405c4033e
+CD43,180,929e5c4405c4033e
+CD44,191,929e5c4405c4033e
+CD45,254,929e5c4405c4033e
+CD55,29,929e5c4405c4033e
+CD69,17,929e5c4405c4033e
+CD80,20,929e5c4405c4033e
+CD95,18,929e5c4405c4033e
+HLA-ABC,173,929e5c4405c4033e
+KLRG1,11,929e5c4405c4033e
+TCRVd2,9,929e5c4405c4033e
+VISTA,17,929e5c4405c4033e
+mIgG2a,14,929e5c4405c4033e
+B2M,404,9728fca62445e41b
+CD158,9,9728fca62445e41b
+CD159a,9,9728fca62445e41b
+CD192,11,9728fca62445e41b
+CD44,167,9728fca62445e41b
+CD45,143,9728fca62445e41b
+CD49e,14,9728fca62445e41b
+CD52,54,9728fca62445e41b
+CD72,9,9728fca62445e41b
+CD79a,6,9728fca62445e41b
+HLA-ABC,353,9728fca62445e41b
+IgE,9,9728fca62445e41b
+mIgG2a,12,9728fca62445e41b
+B2M,441,a824ef9068d65a0a
+CD117,14,a824ef9068d65a0a
+CD152,8,a824ef9068d65a0a
+CD193,11,a824ef9068d65a0a
+CD26,12,a824ef9068d65a0a
+CD28,11,a824ef9068d65a0a
+CD305,17,a824ef9068d65a0a
+CD357,12,a824ef9068d65a0a
+CD41,20,a824ef9068d65a0a
+CD45,122,a824ef9068d65a0a
+CD48,44,a824ef9068d65a0a
+CD55,21,a824ef9068d65a0a
+CD57,11,a824ef9068d65a0a
+CD7,12,a824ef9068d65a0a
+CD93,12,a824ef9068d65a0a
+CD94,11,a824ef9068d65a0a
+HLA-ABC,495,a824ef9068d65a0a
+KLRG1,14,a824ef9068d65a0a
+TCRVB5,11,a824ef9068d65a0a
+CD11a,18,c00d7cb4851e7bfd
+CD200,11,c00d7cb4851e7bfd
+CD305,12,c00d7cb4851e7bfd
+CD4,6,c00d7cb4851e7bfd
+CD43,80,c00d7cb4851e7bfd
+CD44,81,c00d7cb4851e7bfd
+CD45,255,c00d7cb4851e7bfd
+CD64,6,c00d7cb4851e7bfd
+CD81,24,c00d7cb4851e7bfd
+CD94,12,c00d7cb4851e7bfd
+HLA-ABC,126,c00d7cb4851e7bfd
+TCRva7.2,6,c00d7cb4851e7bfd
+B2M,227,c4c3ef9497b3746d
+CD14,3,c4c3ef9497b3746d
+CD158a,3,c4c3ef9497b3746d
+CD1b,3,c4c3ef9497b3746d
+CD20,3,c4c3ef9497b3746d
+CD209,3,c4c3ef9497b3746d
+CD37,6,c4c3ef9497b3746d
+CD38,6,c4c3ef9497b3746d
+CD45RO,3,c4c3ef9497b3746d
+CD49e,6,c4c3ef9497b3746d
+CD57,3,c4c3ef9497b3746d
+CD79a,3,c4c3ef9497b3746d
+CD89,5,c4c3ef9497b3746d
+HLA-ABC,209,c4c3ef9497b3746d
+HLA-DQ,3,c4c3ef9497b3746d
+mIgG2a,5,c4c3ef9497b3746d
+CD192,15,c771a99bb8f21eb3
+CD2,36,c771a99bb8f21eb3
+CD21,14,c771a99bb8f21eb3
+CD319,18,c771a99bb8f21eb3
+CD37,17,c771a99bb8f21eb3
+CD38,12,c771a99bb8f21eb3
+CD44,140,c771a99bb8f21eb3
+CD45,158,c771a99bb8f21eb3
+CD47,36,c771a99bb8f21eb3
+CD59,36,c771a99bb8f21eb3
+CD95,15,c771a99bb8f21eb3
+HLA-ABC,98,c771a99bb8f21eb3
+TCRVg9,8,c771a99bb8f21eb3
+CD117,12,cd321b7b45c40ac9
+CD14,12,cd321b7b45c40ac9
+CD159a,8,cd321b7b45c40ac9
+CD180,14,cd321b7b45c40ac9
+CD2,86,cd321b7b45c40ac9
+CD27,26,cd321b7b45c40ac9
+CD302,15,cd321b7b45c40ac9
+CD319,18,cd321b7b45c40ac9
+CD33,12,cd321b7b45c40ac9
+CD366,12,cd321b7b45c40ac9
+CD40,12,cd321b7b45c40ac9
+CD44,98,cd321b7b45c40ac9
+CD45,216,cd321b7b45c40ac9
+CD49D,15,cd321b7b45c40ac9
+CD53,17,cd321b7b45c40ac9
+CD54,9,cd321b7b45c40ac9
+CD8,21,cd321b7b45c40ac9
+CD89,14,cd321b7b45c40ac9
+CD90,14,cd321b7b45c40ac9
+TCRgd,9,cd321b7b45c40ac9
+TIGIT,9,cd321b7b45c40ac9
+B2M,114,ce4ff26a68bae7c3
+CD103,11,ce4ff26a68bae7c3
+CD162,21,ce4ff26a68bae7c3
+CD268,9,ce4ff26a68bae7c3
+CD337,6,ce4ff26a68bae7c3
+CD3e,110,ce4ff26a68bae7c3
+CD41,12,ce4ff26a68bae7c3
+CD45,218,ce4ff26a68bae7c3
+CD69,9,ce4ff26a68bae7c3
+HLA-ABC,210,ce4ff26a68bae7c3
+TCRVB5,8,ce4ff26a68bae7c3
+TCRgd,8,ce4ff26a68bae7c3
+VISTA,14,ce4ff26a68bae7c3
+mIgG2b,11,ce4ff26a68bae7c3
+CD117,9,dd219965cf12498f
+CD14,14,dd219965cf12498f
+CD156c,23,dd219965cf12498f
+CD161,17,dd219965cf12498f
+CD162,24,dd219965cf12498f
+CD199,18,dd219965cf12498f
+CD206,8,dd219965cf12498f
+CD244,6,dd219965cf12498f
+CD25,9,dd219965cf12498f
+CD274,12,dd219965cf12498f
+CD31,15,dd219965cf12498f
+CD328,11,dd219965cf12498f
+CD44,126,dd219965cf12498f
+CD45,242,dd219965cf12498f
+CD53,26,dd219965cf12498f
+CD79a,8,dd219965cf12498f
+CD94,6,dd219965cf12498f
+HLA-ABC,239,dd219965cf12498f
+CD11b,9,ed9c2a47db840b3d
+CD13,17,ed9c2a47db840b3d
+CD191,11,ed9c2a47db840b3d
+CD199,20,ed9c2a47db840b3d
+CD32,12,ed9c2a47db840b3d
+CD328,12,ed9c2a47db840b3d
+CD4,8,ed9c2a47db840b3d
+CD43,90,ed9c2a47db840b3d
+CD45,129,ed9c2a47db840b3d
+CD49e,18,ed9c2a47db840b3d
+CD73,12,ed9c2a47db840b3d
+HLA-ABC,246,ed9c2a47db840b3d
+CD156c,15,fe6336721ae34f6c
+CD1c,8,fe6336721ae34f6c
+CD273,9,fe6336721ae34f6c
+CD366,9,fe6336721ae34f6c
+CD3e,135,fe6336721ae34f6c
+CD40,9,fe6336721ae34f6c
+CD43,158,fe6336721ae34f6c
+CD44,236,fe6336721ae34f6c
+CD45,188,fe6336721ae34f6c
+CD80,14,fe6336721ae34f6c
+CD81,18,fe6336721ae34f6c
+CD90,14,fe6336721ae34f6c
+CD94,9,fe6336721ae34f6c
+HLA-ABC,147,fe6336721ae34f6c
+TCRab,17,fe6336721ae34f6c
 """
 
 
 @pytest.mark.slow
-def test_get_overexpressed_markers_in_one_core(pna_pxl_dataset):
+def test_get_overexpressed_markers_in_one_core(denoise_pxl_dataset):
     """Test the get_overexpressed_markers_in_one_core function."""
-    components = pna_pxl_dataset.adata().obs.index
+    components = denoise_pxl_dataset.adata().obs.index
 
     def over_expressed_markers_per_component():
         for comp in components:
             comp_graph = PNAGraph.from_edgelist(
-                pna_pxl_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
+                denoise_pxl_dataset.filter(components=[comp])
+                .edgelist()
+                .to_polars()
+                .lazy()
             )
             node_marker_counts = comp_graph.node_marker_counts
             node_core_numbers = pd.Series(nx.core_number(comp_graph.raw))
@@ -255,13 +431,13 @@ def test_get_stranded_nodes():
 
 
 @pytest.mark.slow
-def test_denoise_one_core_layer(pna_pxl_dataset):
+def test_denoise_one_core_layer(denoise_pxl_dataset):
     """Test the denoise_one_core_layer function."""
-    components = pna_pxl_dataset.adata().obs.index
+    components = denoise_pxl_dataset.adata().obs.index
 
     for comp in components:
         comp_graph = PNAGraph.from_edgelist(
-            pna_pxl_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
+            denoise_pxl_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
         )
         nodes_to_be_removed = denoise_one_core_layer(comp_graph)
         if nodes_to_be_removed == [None]:
@@ -278,9 +454,9 @@ def test_denoise_one_core_layer(pna_pxl_dataset):
 
 
 @pytest.mark.slow
-def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
+def test_denoise_one_core_analysis(denoise_pxl_dataset, tmp_path):
     """Test graph denoising with one-core only."""
-    pxl_file_target = PixelDatasetSaver(pxl_dataset=pna_pxl_dataset).save(
+    pxl_file_target = PixelDatasetSaver(pxl_dataset=denoise_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
     with mock.patch(
@@ -294,13 +470,13 @@ def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
         mock_load_panel.side_effect = f
 
         manager = AnalysisManager([DenoiseGraph(run_one_core=True, run_ace=False)])
-        denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
+        denoised_dataset = manager.execute(denoise_pxl_dataset, pxl_file_target)
 
     assert "tau_type" in denoised_dataset.adata().obs.columns
-    components = pna_pxl_dataset.adata().obs.index
+    components = denoise_pxl_dataset.adata().obs.index
     for comp in components:
         graph = PNAGraph.from_edgelist(
-            pna_pxl_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
+            denoise_pxl_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
         )
         denoised_graph = PNAGraph.from_edgelist(
             denoised_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
@@ -322,15 +498,15 @@ def test_denoise_one_core_analysis(pna_pxl_dataset, tmp_path):
         )
 
 
-REFERENCE_ACE_COMPONENT = "0a45497c6bfbfb22"
-REFERENCE_ACE_LOW_NODE_COUNT = 399
+REFERENCE_ACE_COMPONENT = "57129a8b0fff38c6"
+REFERENCE_ACE_LOW_NODE_COUNT = 5436
 
 
 @pytest.mark.slow
-def test_denoise_ace_reference_component(pna_pxl_dataset):
+def test_denoise_ace_reference_component(denoise_pxl_dataset):
     """ACE layer removal list matches peripheral partition on reference component."""
     comp_graph = PNAGraph.from_edgelist(
-        pna_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
         .edgelist()
         .to_polars()
         .lazy()
@@ -344,14 +520,14 @@ def test_denoise_ace_reference_component(pna_pxl_dataset):
 
 
 @pytest.mark.slow
-def test_denoise_ace_analysis(pna_pxl_dataset, tmp_path):
+def test_denoise_ace_analysis(denoise_pxl_dataset, tmp_path):
     """ACE-only graph denoising records ACE removal counts."""
-    pxl_file_target = PixelDatasetSaver(pxl_dataset=pna_pxl_dataset).save(
+    pxl_file_target = PixelDatasetSaver(pxl_dataset=denoise_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
 
     manager = AnalysisManager([DenoiseGraph(run_one_core=False, run_ace=True)])
-    denoised_dataset = manager.execute(pna_pxl_dataset, pxl_file_target)
+    denoised_dataset = manager.execute(denoise_pxl_dataset, pxl_file_target)
 
     obs = denoised_dataset.adata().obs
     assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
@@ -363,7 +539,7 @@ def test_denoise_ace_analysis(pna_pxl_dataset, tmp_path):
     ) == (REFERENCE_ACE_LOW_NODE_COUNT)
 
     orig_graph = PNAGraph.from_edgelist(
-        pna_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
         .edgelist()
         .to_polars()
         .lazy()
