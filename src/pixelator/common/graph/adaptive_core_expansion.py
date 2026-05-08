@@ -264,7 +264,7 @@ def adaptive_core_expansion(
 
     if best_candidate is not None:
         best_partition_vec = best_candidate.partition
-        logger.info(
+        logger.debug(
             f"Selected partition seeded with k-core layer >= {max_k} "
             f"and a binding threshold of {best_candidate.binding_threshold}. "
             f"Bray-Curtis dissimilarity score: {best_candidate.bc_score:.4f}. "
@@ -272,7 +272,7 @@ def adaptive_core_expansion(
         )
     else:
         best_partition_vec = np.ones(len(node_list), dtype=int)
-        logger.info("No suitable partition found. All nodes set to 'high'.")
+        logger.debug("No suitable partition found. All nodes set to 'high'.")
 
     pixel_type_dict = {
         node_list[i]: ("high" if best_partition_vec[i] == 1 else "low")

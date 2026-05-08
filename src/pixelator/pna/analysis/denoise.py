@@ -628,8 +628,12 @@ class DenoiseGraph(PerComponentTask):
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
         try:
-            panel = PNAAntibodyPanel.from_pxl_file(pxl_file_target.path)
+            panel = PNAAntibodyPanel.from_pxl_dataset(read(pxl_file_target.path))
         except KeyError:
+            # If pxl file does not contain panel data, try to load it from
+            # the panel name.
+            # This will happen when old pxl files generated before v0.22.0
+            # are used.
             panel_name = pxl.metadata().popitem()[1]["panel_name"]
             panel = load_antibody_panel(pna_config, panel_name)
         nodes_to_remove = (
