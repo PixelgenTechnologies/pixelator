@@ -39,9 +39,7 @@ def test_denoise_runs_ok(denoise_pxl_file):
 
         assert cmd.exit_code == 0
 
-        result = read(
-            Path(output_dir) / "denoise" / "PNA055_Sample07_S7.denoised_graph.pxl"
-        )
+        result = read(Path(output_dir) / "denoise" / "test_denoise.denoised_graph.pxl")
         assert not result.adata().obs["disqualified_for_denoising"].any()
 
 
@@ -68,7 +66,7 @@ def test_denoise_ace_cli_runs_ok(denoise_pxl_file):
         cmd = runner.invoke(cli.main_cli, args)
         assert cmd.exit_code == 0, cmd.output
 
-        out_pxl = Path(output_dir) / "denoise" / "PNA055_Sample07_S7.denoised_graph.pxl"
+        out_pxl = Path(output_dir) / "denoise" / "test_denoise.denoised_graph.pxl"
         result = read(out_pxl)
         obs = result.adata().obs
         assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
@@ -105,7 +103,7 @@ def test_denoise_one_core_and_ace_cli_runs_ok(denoise_pxl_file):
         cmd = runner.invoke(cli.main_cli, args)
         assert cmd.exit_code == 0, cmd.output
 
-        out_pxl = Path(output_dir) / "denoise" / "PNA055_Sample07_S7.denoised_graph.pxl"
+        out_pxl = Path(output_dir) / "denoise" / "test_denoise.denoised_graph.pxl"
         result = read(out_pxl)
         obs = result.adata().obs
         assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
@@ -139,7 +137,7 @@ def test_denoise_ace_pls_cli_runs_ok(denoise_pxl_file):
         cmd = runner.invoke(cli.main_cli, args)
         assert cmd.exit_code == 0, cmd.output
 
-        out_pxl = Path(output_dir) / "denoise" / "PNA055_Sample07_S7.denoised_graph.pxl"
+        out_pxl = Path(output_dir) / "denoise" / "test_denoise.denoised_graph.pxl"
         result = read(out_pxl)
         markers = result.adata().var.index
         isotype_controls = markers[markers.str.contains("mIgG")]
