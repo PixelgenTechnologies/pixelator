@@ -24,6 +24,8 @@ See the updated table below for which panel version to use:
 The old panel names no longer work; please specify the new panel name instead.
 
 ### Added
+- Add adaptive core expansion (ACE) and partial least squares (PLS) as graph denoise method options.
+
 - Add the option to calculate proximity scores from edgelist using analytical expected join counts.
   `PNAPixelDataset.proximity(calculate_from_edgelist=True)` is used to compute these scores.
 
@@ -49,6 +51,7 @@ The old panel names no longer work; please specify the new panel name instead.
 - Add support for inline panel version specifiers in panel identifiers (for example `panel==1.1.0`).
 
 ### Changed
+- Collect metrics for each denoise method in adata.obs and remove disqualified_for_denoise from the corresponding json report.
 - The previous implementation has been renamed and is available with `pixelator single-cell-pna graph_legacy`.
 - Rename bundled PNA v1 resources to `proxiome-v1-*` naming for assays and panels. IMPORTANT: the old panel names no longer work. To rerun old data, update relevant scripts to the new panel name(s).
 - Remove all panel aliases. Use the correct panel name, or alternatively use a product name with a version specifier to select the panel.
