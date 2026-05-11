@@ -189,7 +189,7 @@ def node_pls(
             expand the neighborhood for creating the predictor matrix X. If `k > 0`,
             the counts will be expanded to include neighborhood counts up to `k`
             steps away using the adjacency matrix of the Graph. Defaults to 2.
-        use_weights: Logical indicating whether to use edge weights when
+        use_weights: Boolean indicating whether to use edge weights when
             expanding the adjacency matrix for creating the predictor matrix X.
             Defaults to False.
         min_weight: A numeric value specifying the minimum edge weight to

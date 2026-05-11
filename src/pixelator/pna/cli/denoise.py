@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
     required=False,
     is_flag=True,
     help=(
-        "Remove nodes in the peripheral-like ('low') partition from adaptive core expansion (ACE). "
+        "Remove nodes in the peripheral-like partition from adaptive core expansion (ACE). "
         "Can be combined with --run-one-core-graph-denoising: both use the full component graph; "
         "marked nodes are merged and stranded nodes are removed once at the end."
     ),

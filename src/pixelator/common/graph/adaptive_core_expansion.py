@@ -25,7 +25,6 @@ class _PartitionCandidate:
 
 def normalize_counts(x):
     """Normalize counts using log-mean-exp normalization."""
-    # counts_mat: shape (n_nodes, n_markers)
     x_log1p = np.log1p(x)
     x_mean = np.mean(x_log1p)
     norm = np.exp(x_mean)
@@ -140,10 +139,12 @@ def adaptive_core_expansion(
             "The graph does not contain any k-core layers above 1. The graph has too low connectivity."
         )
 
+    # Cap max k-cores to max_k_core if higher k-core layers are identified.
     if max_k > max_k_core:
         k_cores[k_cores > max_k_core] = max_k_core
         max_k = max_k_core
 
+    # Expand the k-core layer if it is smaller than the minimum seed percentage.
     pct_k_max = np.mean(k_cores == max_k)
     while pct_k_max < min_seed_pct and max_k > 1:
         max_k -= 1

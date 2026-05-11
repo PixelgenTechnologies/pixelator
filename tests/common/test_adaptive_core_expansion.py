@@ -112,7 +112,7 @@ def test_adaptive_core_expansion_min_allowed_nodes_pct(graph_from_pxl, caplog):
 
 
 @pytest.mark.slow
-def test_adaptive_core_expansion_isotype_reduction(graph_from_pxl):
+def test_adaptive_core_expansion_isotype_reduction():
     """Test that the core partition has fewer isotype controls."""
     # Use the requested COMPONENT_ID
     comp_id = "c3c393e9a17c1981"
