@@ -440,7 +440,7 @@ def test_denoise_one_core_layer(denoise_pxl_dataset):
             denoise_pxl_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
         )
         nodes_to_be_removed = denoise_one_core_layer(comp_graph)
-        if nodes_to_be_removed == [None]:
+        if not nodes_to_be_removed:
             continue
         node_core_numbers = pd.Series(nx.core_number(comp_graph.raw))
         assert all(node_core_numbers[nodes_to_be_removed] == 1)
