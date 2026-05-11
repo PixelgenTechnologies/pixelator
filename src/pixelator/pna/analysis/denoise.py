@@ -618,6 +618,10 @@ class DenoiseGraph(PerComponentTask):
                 writer.write_edgelist(Path(denoised_edgelist_path))
                 adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
                 call_aggregates(adata)
+                old_adata.obs.rename(
+                    columns={"isotype_fraction": "pre_denoise_isotype_fraction"},
+                    inplace=True,
+                )
                 adata = add_missing_adata_info(adata, old_adata)
 
                 denoise_info = _collect_denoise_summary_info(

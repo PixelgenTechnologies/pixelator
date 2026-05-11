@@ -156,19 +156,8 @@ def test_denoise_ace_pls_cli_runs_ok(denoise_pxl_file):
 
         out_pxl = Path(output_dir) / "denoise" / "test_denoise.denoised_graph.pxl"
         result = read(out_pxl)
-        markers = result.adata().var.index
-        isotype_controls = markers[markers.str.contains("mIgG")]
-        original_isotype_levels = (
-            read(denoise_pxl_file).adata().obsm["clr"].loc[:, isotype_controls]
-        ).mean(axis=1)
-        result_isotype_levels = (
-            result.adata().obsm["clr"].loc[:, isotype_controls].mean(axis=1)
-        )
-        assert (
-            result_isotype_levels
-            < original_isotype_levels.reindex(result_isotype_levels.index)
-        ).all()
         obs = result.adata().obs
+        assert (obs["isotype_fraction"] < obs["pre_denoise_isotype_fraction"]).all()
         summary_cols = [
             "denoised_nodes_marked_only_by_ace",
             "denoised_nodes_marked_only_by_pls",
