@@ -210,8 +210,7 @@ def denoise_ace(
         select_lcc: If True, restrict the initial ACE seed to the largest connected component.
 
     Returns:
-        List of node identifiers to remove, or ``[None]`` if the component is
-        disqualified (ACE cannot be applied).
+        List of node identifiers to remove.
 
     """
     try:
@@ -226,7 +225,7 @@ def denoise_ace(
         )
     except ValueError as exc:
         logger.debug("ACE denoising skipped for component: %s", exc)
-        return [None]
+        return []
 
     partitions = nx.get_node_attributes(component.raw, "partition")
     low_nodes = [n for n, part in partitions.items() if part == "low"]
@@ -297,8 +296,7 @@ def denoise_pls(
         pls_score_threshold: All selected score columns must exceed this.
 
     Returns:
-        Nodes to remove, ``[]`` if no PLS-based removal applies, or ``[None]`` if the
-        component is disqualified (fit/scoring failed).
+        Nodes to remove, ``[]`` if no PLS-based removal applies.
 
     """
     idx = component.node_marker_counts.index
@@ -307,12 +305,12 @@ def denoise_pls(
     max_comp = min(ncomp, n_features, max(1, n_samples - 1))
     if max_comp < 1:
         logger.debug("PLS denoising skipped: insufficient samples or features.")
-        return [None]
+        return []
 
     coreness_series = pd.Series(nx.core_number(component.raw)).reindex(idx)
     if coreness_series.isna().any():
         logger.debug("PLS denoising skipped: missing coreness for some nodes.")
-        return [None]
+        return []
 
     nx.set_node_attributes(component.raw, coreness_series.to_dict(), "coreness")
     model_mat: Optional[np.ndarray] = None
@@ -351,7 +349,7 @@ def denoise_pls(
     except (ValueError, np.linalg.LinAlgError) as exc:
         logger.debug("PLS denoising skipped for component: %s", exc)
         _cleanup_coreness()
-        return [None]
+        return []
 
     _cleanup_coreness()
 
@@ -416,7 +414,7 @@ def denoise_one_core_layer(
         logger.debug(
             "Too many low core number nodes. Skipping denoising for this component."
         )
-        return [None]  # Marking component as unqualified for denoising
+        return []  # Marking component as unqualified for denoising
     markers_to_remove = get_overexpressed_markers_in_one_core(
         node_marker_counts=node_marker_counts,
         node_core_numbers=node_core_numbers,
@@ -527,24 +525,43 @@ class DenoiseGraph(PerComponentTask):
         one_core_marked: list = []
         ace_marked: list = []
         pls_marked: list = []
-        disqualified = False
+
+        nodes_to_remove = pd.DataFrame(
+            columns=[
+                "umi",
+                "component",
+                "marked_by",
+            ]
+        )
+
+        def _append_marked_count(
+            old_nodes_to_remove: pd.DataFrame, new_nodes: list, method_name: str
+        ) -> pd.DataFrame:
+            n_new = len(new_nodes) if new_nodes and new_nodes != [None] else 0
+            new_marked_df = pd.DataFrame(
+                {
+                    "umi": new_nodes if new_nodes and new_nodes != [None] else [],
+                    "component": [component_id] * n_new,
+                    "marked_by": [method_name] * n_new,
+                }
+            )
+            return pd.concat([old_nodes_to_remove, new_marked_df], ignore_index=True)
 
         if self.run_one_core:
             logger.debug("Running one-core denoising on component %s", component_id)
-            oc = denoise_one_core_layer(
+            one_core_marked = denoise_one_core_layer(
                 component,
                 pval_significance_threshold=self.pval_significance_threshold,
                 inflate_factor=self.inflate_factor,
                 one_core_ratio_threshold=self.one_core_ratio_threshold,
             )
-            if oc == [None]:
-                disqualified = True
-            else:
-                one_core_marked = oc
+            nodes_to_remove = _append_marked_count(
+                nodes_to_remove, one_core_marked, "one_core"
+            )
 
         if self.run_ace:
             logger.debug("Running ACE denoising on component %s", component_id)
-            ace_result = denoise_ace(
+            ace_marked = denoise_ace(
                 component,
                 k=self.k,
                 max_k_core=self.max_k_core,
@@ -553,14 +570,11 @@ class DenoiseGraph(PerComponentTask):
                 nodes_to_move_threshold=self.nodes_to_move_threshold,
                 select_lcc=self.ace_select_lcc,
             )
-            if ace_result == [None]:
-                disqualified = True
-            else:
-                ace_marked = ace_result
+            nodes_to_remove = _append_marked_count(nodes_to_remove, ace_marked, "ace")
 
         if self.run_pls:
             logger.debug("Running PLS denoising on component %s", component_id)
-            pls_result = denoise_pls(
+            pls_marked = denoise_pls(
                 component,
                 ncomp=self.pls_ncomp,
                 model_k=self.pls_model_k,
@@ -572,56 +586,13 @@ class DenoiseGraph(PerComponentTask):
                 min_pls_coreness_correlation=self.min_pls_coreness_correlation,
                 pls_score_threshold=self.pls_score_threshold,
             )
-            if pls_result == [None]:
-                disqualified = True
-            else:
-                pls_marked = pls_result
+            nodes_to_remove = _append_marked_count(nodes_to_remove, pls_marked, "pls")
 
-        combined: list = []
-        seen: set = set()
-        for n in one_core_marked + ace_marked + pls_marked:
-            if n not in seen:
-                seen.add(n)
-                combined.append(n)
+        combined = list(set(one_core_marked + ace_marked + pls_marked))
+        stranded = get_stranded_nodes(component, combined)
+        nodes_to_remove = _append_marked_count(nodes_to_remove, stranded, "stranded")
 
-        if combined:
-            stranded = get_stranded_nodes(component, combined)
-            for n in stranded:
-                if n not in seen:
-                    seen.add(n)
-                    combined.append(n)
-
-        rows: list[dict] = []
-        ace_only_count = len(ace_marked)
-        pls_only_count = len(pls_marked)
-        for umi in combined:
-            rows.append(
-                {
-                    "umi": umi,
-                    "component": component_id,
-                    "ace_marked_count": ace_only_count,
-                    "pls_marked_count": pls_only_count,
-                }
-            )
-        if disqualified:
-            rows.append(
-                {
-                    "umi": np.nan,
-                    "component": component_id,
-                    "ace_marked_count": ace_only_count,
-                    "pls_marked_count": pls_only_count,
-                }
-            )
-        if not rows:
-            return pd.DataFrame(
-                columns=[
-                    "umi",
-                    "component",
-                    "ace_marked_count",
-                    "pls_marked_count",
-                ]
-            )
-        return pd.DataFrame(rows)
+        return nodes_to_remove
 
     def add_to_pixel_file(self, data: pd.DataFrame, pxl_file_target: PxlFile):
         """Filter edgelist by removed nodes and write denoise metrics to AnnData."""
@@ -648,56 +619,77 @@ class DenoiseGraph(PerComponentTask):
                 adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
                 call_aggregates(adata)
                 adata = add_missing_adata_info(adata, old_adata)
-                denoise_info = pd.DataFrame(index=adata.obs.index)
-                denoise_info["disqualified_for_denoising"] = False
-                disq_components = data.loc[data["umi"].isna(), "component"].unique()
-                denoise_info.loc[disq_components, "disqualified_for_denoising"] = True
 
-                n_total_removed = (
-                    data.loc[~data["umi"].isna(), :].groupby("component").size()
-                )
-                denoise_info["number_of_nodes_removed_in_denoise"] = (
-                    pd.to_numeric(
-                        n_total_removed.reindex(denoise_info.index), errors="coerce"
-                    )
-                    .fillna(0)
-                    .astype("int64")
+                denoise_info = _collect_denoise_summary_info(
+                    data, comp_index=adata.obs.index
                 )
 
-                n_ace = data.groupby("component")["ace_marked_count"].first()
-                denoise_info["number_of_nodes_removed_in_denoise_ace"] = (
-                    pd.to_numeric(n_ace.reindex(denoise_info.index), errors="coerce")
-                    .fillna(0)
-                    .astype("int64")
-                )
-
-                if "pls_marked_count" in data.columns:
-                    n_pls = data.groupby("component")["pls_marked_count"].first()
-                    denoise_info["number_of_nodes_removed_in_denoise_pls"] = (
-                        pd.to_numeric(
-                            n_pls.reindex(denoise_info.index), errors="coerce"
-                        )
-                        .fillna(0)
-                        .astype("int64")
-                    )
-                else:
-                    denoise_info["number_of_nodes_removed_in_denoise_pls"] = 0
-
-                if "disqualified_for_denoising" in old_adata.obs.columns:
-                    denoise_info["disqualified_for_denoising"] = (
-                        old_adata.obs["disqualified_for_denoising"]
-                        .reindex(denoise_info.index)
-                        .fillna(False)
-                        | denoise_info["disqualified_for_denoising"]
-                    )
-                for col in (
-                    "disqualified_for_denoising",
-                    "number_of_nodes_removed_in_denoise",
-                    "number_of_nodes_removed_in_denoise_ace",
-                    "number_of_nodes_removed_in_denoise_pls",
-                ):
+                for col in denoise_info.columns:
                     if col in adata.obs.columns:
                         adata.obs = adata.obs.drop(columns=[col])
                 adata.obs = adata.obs.join(denoise_info, how="left")
 
                 writer.write_adata(adata)
+
+
+def _collect_denoise_summary_info(
+    data: pd.DataFrame, comp_index: pd.Index
+) -> pd.DataFrame:
+    """Collect summary information about the denoising process for each component."""
+    denoise_info = pd.DataFrame(index=comp_index)
+
+    n_total_removed = (
+        data[["component", "umi"]].drop_duplicates().groupby("component").size()
+    )
+    denoise_info["number_of_nodes_removed_in_denoise"] = (
+        pd.to_numeric(n_total_removed.reindex(denoise_info.index), errors="coerce")
+        .fillna(0)
+        .astype("int64")
+    )
+    summary_cols = [
+        "denoised_nodes_marked_only_by_ace",
+        "denoised_nodes_marked_only_by_pls",
+        "denoised_nodes_marked_only_by_one_core",
+        "denoised_nodes_marked_stranded",
+        "denoised_nodes_marked_ace_and_pls",
+        "denoised_nodes_marked_ace_and_one_core",
+        "denoised_nodes_marked_pls_and_one_core",
+        "denoised_nodes_marked_ace_pls_and_one_core",
+    ]
+    mark_summary = (
+        data.groupby(["component", "umi"])["marked_by"].apply(list).reset_index()
+    )
+    mark_summary["denoised_nodes_marked_only_by_ace"] = mark_summary["marked_by"].apply(
+        lambda x: x == ["ace"]
+    )
+    mark_summary["denoised_nodes_marked_only_by_pls"] = mark_summary["marked_by"].apply(
+        lambda x: x == ["pls"]
+    )
+    mark_summary["denoised_nodes_marked_only_by_one_core"] = mark_summary[
+        "marked_by"
+    ].apply(lambda x: x == ["one_core"])
+    mark_summary["denoised_nodes_marked_stranded"] = mark_summary["marked_by"].apply(
+        lambda x: "stranded" in x
+    )
+    mark_summary["denoised_nodes_marked_ace_and_pls"] = mark_summary["marked_by"].apply(
+        lambda x: set(x) == {"ace", "pls"}
+    )
+    mark_summary["denoised_nodes_marked_ace_and_one_core"] = mark_summary[
+        "marked_by"
+    ].apply(lambda x: set(x) == {"ace", "one_core"})
+    mark_summary["denoised_nodes_marked_pls_and_one_core"] = mark_summary[
+        "marked_by"
+    ].apply(lambda x: set(x) == {"pls", "one_core"})
+    mark_summary["denoised_nodes_marked_ace_pls_and_one_core"] = mark_summary[
+        "marked_by"
+    ].apply(lambda x: set(x) == {"ace", "pls", "one_core"})
+    for col in summary_cols:
+        col_summary = (
+            mark_summary.groupby("component")[col]
+            .sum()
+            .reindex(comp_index)
+            .fillna(0)
+            .astype("int64")
+        )
+        denoise_info[col] = col_summary
+    return denoise_info

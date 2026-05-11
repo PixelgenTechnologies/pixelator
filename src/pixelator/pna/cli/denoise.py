@@ -87,7 +87,7 @@ logger = logging.getLogger(__name__)
     show_default=True,
     help=(
         "ratio of the number of nodes in the one-core layer to the total number of nodes in a component. "
-        "If the ratio is above this threshold, the component is marked as disqualified for denoising."
+        "If the ratio is above this threshold, the component is not denoised."
     ),
 )
 @click.option(
@@ -263,8 +263,6 @@ def denoise(
             product_id="single-cell-pna",
             number_of_umis_removed=None,
             ratio_of_umis_removed=None,
-            number_of_disqualified_components=None,
-            ratio_of_disqualified_components=None,
         )
         report.write_json_file(metrics, indent=4)
         return
@@ -304,19 +302,11 @@ def denoise(
         number_of_umis_removed
         / (pxl_dataset.adata().obs["n_umi"].sum() + number_of_umis_removed)
     )
-    number_of_disqualified_components = int(
-        pxl_dataset_denoised.adata().obs["disqualified_for_denoising"].sum()
-    )
-    ratio_of_disqualified_components = float(
-        pxl_dataset_denoised.adata().obs["disqualified_for_denoising"].mean()
-    )
     report = DenoiseSampleReport(
         sample_id=sample_name,
         product_id="single-cell-pna",
         number_of_umis_removed=number_of_umis_removed,
         ratio_of_umis_removed=ratio_of_umis_removed,
-        number_of_disqualified_components=number_of_disqualified_components,
-        ratio_of_disqualified_components=ratio_of_disqualified_components,
     )
 
     report.write_json_file(metrics, indent=4)

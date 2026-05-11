@@ -530,13 +530,18 @@ def test_denoise_ace_analysis(denoise_pxl_dataset, tmp_path):
     denoised_dataset = manager.execute(denoise_pxl_dataset, pxl_file_target)
 
     obs = denoised_dataset.adata().obs
-    assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
+
+    assert (
+        obs["denoised_nodes_marked_only_by_ace"]
+        == obs["number_of_nodes_removed_in_denoise"]
+    ).all()
     assert int(
-        obs.loc[REFERENCE_ACE_COMPONENT, "number_of_nodes_removed_in_denoise_ace"]
+        obs.loc[REFERENCE_ACE_COMPONENT, "denoised_nodes_marked_only_by_ace"]
     ) == (REFERENCE_ACE_LOW_NODE_COUNT)
-    assert int(
-        obs.loc[REFERENCE_ACE_COMPONENT, "number_of_nodes_removed_in_denoise"]
-    ) == (REFERENCE_ACE_LOW_NODE_COUNT)
+
+    assert (
+        obs.loc[:, "denoised_nodes_marked_stranded"].sum() == 0
+    )  # ACE-only denoising with LCC seed should not produce stranded nodes
 
     orig_graph = PNAGraph.from_edgelist(
         denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
@@ -551,3 +556,38 @@ def test_denoise_ace_analysis(denoise_pxl_dataset, tmp_path):
         .lazy()
     )
     assert denoised_graph.vcount() == orig_graph.vcount() - REFERENCE_ACE_LOW_NODE_COUNT
+
+
+@pytest.mark.slow
+def test_denoise_ace_pls_one_core(denoise_pxl_dataset, tmp_path):
+    """ACE, PLS, and One Core graph denoising records removal counts."""
+
+    pxl_file_target = PixelDatasetSaver(pxl_dataset=denoise_pxl_dataset).save(
+        "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
+    )
+
+    manager = AnalysisManager(
+        [DenoiseGraph(run_one_core=True, run_ace=True, run_pls=True)]
+    )
+    denoised_dataset = manager.execute(denoise_pxl_dataset, pxl_file_target)
+
+    obs = denoised_dataset.adata().obs
+
+    summary_cols = [
+        "denoised_nodes_marked_only_by_ace",
+        "denoised_nodes_marked_only_by_pls",
+        "denoised_nodes_marked_only_by_one_core",
+        "denoised_nodes_marked_stranded",
+        "denoised_nodes_marked_ace_and_pls",
+        "denoised_nodes_marked_ace_and_one_core",
+        "denoised_nodes_marked_pls_and_one_core",
+        "denoised_nodes_marked_ace_pls_and_one_core",
+    ]
+
+    assert all(col in obs.columns for col in summary_cols)
+    pd.testing.assert_frame_equal(
+        obs.loc[:, summary_cols]
+        .sum(axis=1)
+        .to_frame("number_of_nodes_removed_in_denoise"),
+        obs.loc[:, ["number_of_nodes_removed_in_denoise"]],
+    )

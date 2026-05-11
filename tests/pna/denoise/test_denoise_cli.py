@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 from unittest import mock
 
+import pandas as pd
 import pytest
 from click.testing import CliRunner
 
@@ -39,9 +40,6 @@ def test_denoise_runs_ok(denoise_pxl_file):
 
         assert cmd.exit_code == 0
 
-        result = read(Path(output_dir) / "denoise" / "test_denoise.denoised_graph.pxl")
-        assert not result.adata().obs["disqualified_for_denoising"].any()
-
 
 @pytest.mark.slow
 def test_denoise_ace_cli_runs_ok(denoise_pxl_file):
@@ -69,14 +67,26 @@ def test_denoise_ace_cli_runs_ok(denoise_pxl_file):
         out_pxl = Path(output_dir) / "denoise" / "test_denoise.denoised_graph.pxl"
         result = read(out_pxl)
         obs = result.adata().obs
-        assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
         assert (
-            int(obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise_ace"])
+            int(obs.loc[REFERENCE_COMPONENT, "denoised_nodes_marked_only_by_ace"])
             == ACE_LOW_NODE_COUNT
         )
-        assert (
-            int(obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise"])
-            == ACE_LOW_NODE_COUNT
+        summary_cols = [
+            "denoised_nodes_marked_only_by_ace",
+            "denoised_nodes_marked_only_by_pls",
+            "denoised_nodes_marked_only_by_one_core",
+            "denoised_nodes_marked_stranded",
+            "denoised_nodes_marked_ace_and_pls",
+            "denoised_nodes_marked_ace_and_one_core",
+            "denoised_nodes_marked_pls_and_one_core",
+            "denoised_nodes_marked_ace_pls_and_one_core",
+        ]
+        assert set(summary_cols).issubset(obs.columns)
+        pd.testing.assert_frame_equal(
+            obs.loc[:, summary_cols]
+            .sum(axis=1)
+            .to_frame("number_of_nodes_removed_in_denoise"),
+            obs.loc[:, ["number_of_nodes_removed_in_denoise"]],
         )
 
 
@@ -106,21 +116,28 @@ def test_denoise_one_core_and_ace_cli_runs_ok(denoise_pxl_file):
         out_pxl = Path(output_dir) / "denoise" / "test_denoise.denoised_graph.pxl"
         result = read(out_pxl)
         obs = result.adata().obs
-        assert "number_of_nodes_removed_in_denoise_ace" in obs.columns
-        ace_removed = int(
-            obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise_ace"]
+        summary_cols = [
+            "denoised_nodes_marked_only_by_ace",
+            "denoised_nodes_marked_only_by_pls",
+            "denoised_nodes_marked_only_by_one_core",
+            "denoised_nodes_marked_stranded",
+            "denoised_nodes_marked_ace_and_pls",
+            "denoised_nodes_marked_ace_and_one_core",
+            "denoised_nodes_marked_pls_and_one_core",
+            "denoised_nodes_marked_ace_pls_and_one_core",
+        ]
+        assert set(summary_cols).issubset(obs.columns)
+        pd.testing.assert_frame_equal(
+            obs.loc[:, summary_cols]
+            .sum(axis=1)
+            .to_frame("number_of_nodes_removed_in_denoise"),
+            obs.loc[:, ["number_of_nodes_removed_in_denoise"]],
         )
-        total_removed = int(
-            obs.loc[REFERENCE_COMPONENT, "number_of_nodes_removed_in_denoise"]
-        )
-        assert ace_removed == ACE_LOW_NODE_COUNT
-        assert total_removed >= ace_removed
-        assert total_removed > 0
 
 
 @pytest.mark.slow
 def test_denoise_ace_pls_cli_runs_ok(denoise_pxl_file):
-    """One-core plus ACE: ACE counts match full-graph ACE; total includes one-core and stranding."""
+    """One-core plus ACE: ACE counts match full-graph ACE; total includes one-core and stranded."""
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as output_dir:
         args = [
@@ -151,3 +168,21 @@ def test_denoise_ace_pls_cli_runs_ok(denoise_pxl_file):
             result_isotype_levels
             < original_isotype_levels.reindex(result_isotype_levels.index)
         ).all()
+        obs = result.adata().obs
+        summary_cols = [
+            "denoised_nodes_marked_only_by_ace",
+            "denoised_nodes_marked_only_by_pls",
+            "denoised_nodes_marked_only_by_one_core",
+            "denoised_nodes_marked_stranded",
+            "denoised_nodes_marked_ace_and_pls",
+            "denoised_nodes_marked_ace_and_one_core",
+            "denoised_nodes_marked_pls_and_one_core",
+            "denoised_nodes_marked_ace_pls_and_one_core",
+        ]
+        assert set(summary_cols).issubset(obs.columns)
+        pd.testing.assert_frame_equal(
+            obs.loc[:, summary_cols]
+            .sum(axis=1)
+            .to_frame("number_of_nodes_removed_in_denoise"),
+            obs.loc[:, ["number_of_nodes_removed_in_denoise"]],
+        )
