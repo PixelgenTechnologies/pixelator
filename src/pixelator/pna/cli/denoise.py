@@ -87,7 +87,7 @@ logger = logging.getLogger(__name__)
     show_default=True,
     help=(
         "ratio of the number of nodes in the one-core layer to the total number of nodes in a component. "
-        "If the ratio is above this threshold, the component is not denoised."
+        "If the ratio is above this threshold, one-core denoising is skipped for that component."
     ),
 )
 @click.option(

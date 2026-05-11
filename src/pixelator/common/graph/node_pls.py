@@ -99,7 +99,8 @@ def _create_node_neighborhood_abundance_matrix(
 
         if use_weights:
             # Divide by row sum to get the stochastic matrix
-            D = sp.diags_array(1 / A.sum(axis=1), format="csr")
+            row_sums = np.ravel(A.sum(axis=1))
+            D = sp.diags_array(1 / row_sums, format="csr")
             A = (D @ A).T
 
         if k > 1:

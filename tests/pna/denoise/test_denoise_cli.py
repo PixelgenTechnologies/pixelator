@@ -137,7 +137,7 @@ def test_denoise_one_core_and_ace_cli_runs_ok(denoise_pxl_file):
 
 @pytest.mark.slow
 def test_denoise_ace_pls_cli_runs_ok(denoise_pxl_file):
-    """One-core plus ACE: ACE counts match full-graph ACE; total includes one-core and stranded."""
+    """ACE + PLS denoise completes and summary counts account for the applied methods."""
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as output_dir:
         args = [
