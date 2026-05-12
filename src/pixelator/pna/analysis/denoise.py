@@ -10,15 +10,19 @@ import random
 import tempfile
 from itertools import chain
 from pathlib import Path
+from typing import Literal, Optional
 
-import duckdb
 import networkx as nx
 import numpy as np
 import pandas as pd
-import polars as pl
-from scipy.stats import fisher_exact
+from scipy.stats import fisher_exact, pearsonr
 
 from pixelator.common.annotate.aggregates import call_aggregates
+from pixelator.common.graph.adaptive_core_expansion import adaptive_core_expansion
+from pixelator.common.graph.node_pls import (
+    _create_node_neighborhood_abundance_matrix,
+    node_pls,
+)
 from pixelator.pna.analysis_engine import PerComponentTask
 from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
 from pixelator.pna.config import pna_config
@@ -183,19 +187,210 @@ def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list = []) -> list:
     return stranded_nodes
 
 
+def denoise_ace(
+    component: PNAGraph,
+    k: int = 3,
+    max_k_core: int = 4,
+    max_iter: int = 200,
+    min_seed_pct: float = 0.1,
+    nodes_to_move_threshold: int = 10,
+    select_lcc: bool = True,
+) -> list:
+    """Partition the graph with ACE and return nodes in the peripheral-like ("low") partition.
+
+    Nodes in the ``low`` partition are candidates for removal to retain a denser core-like graph.
+
+    Args:
+        component: The graph component to process.
+        k: Neighborhood radius (steps) for the transition matrix in ACE.
+        max_k_core: Maximum k-core layer used for seeding in ACE.
+        max_iter: Maximum expansion iterations per binding threshold in ACE.
+        min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
+        nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
+        select_lcc: If True, restrict the initial ACE seed to the largest connected component.
+
+    Returns:
+        List of node identifiers to remove.
+
+    """
+    try:
+        adaptive_core_expansion(
+            component,
+            k=k,
+            max_k_core=max_k_core,
+            max_iter=max_iter,
+            min_seed_pct=min_seed_pct,
+            nodes_to_move_threshold=nodes_to_move_threshold,
+            select_lcc=select_lcc,
+        )
+    except ValueError as exc:
+        logger.debug("ACE denoising skipped for component: %s", exc)
+        return []
+
+    partitions = nx.get_node_attributes(component.raw, "partition")
+    low_nodes = [n for n, part in partitions.items() if part == "low"]
+    return low_nodes
+
+
+def _pixel_type_design_matrix(component: PNAGraph, node_index: pd.Index) -> np.ndarray:
+    """Build a 2-column design matrix [intercept, B-side dummy] matching R treatment coding.
+
+    PNA graphs store bipartite side in the ``pixel_type`` node attribute (``A`` / ``B``).
+    """
+    pixel_type = nx.get_node_attributes(component.raw, "pixel_type")
+    n = len(node_index)
+    mat = np.zeros((n, 2), dtype=np.float64)
+    mat[:, 0] = 1.0
+    for i, node_id in enumerate(node_index):
+        mat[i, 1] = 1.0 if pixel_type.get(node_id) == "B" else 0.0
+    return mat
+
+
+def _nodes_outside_largest_cc_after_pls_scores(
+    raw: nx.Graph,
+    node_index: pd.Index,
+    passing_mask: np.ndarray,
+) -> list:
+    """Return nodes to drop: fail score filter or lie outside the largest CC among passers."""
+    keep_candidates = [node_index[i] for i in range(len(node_index)) if passing_mask[i]]
+    if not keep_candidates:
+        return list(raw.nodes)
+
+    sub = raw.subgraph(keep_candidates)
+    largest = max(nx.connected_components(sub), key=len)
+    largest_set = set(largest)
+    return [n for n in raw.nodes if n not in largest_set]
+
+
+def denoise_pls(
+    component: PNAGraph,
+    *,
+    ncomp: int = 5,
+    model_k: int = 2,
+    pred_k: int = 1,
+    use_weights: bool = True,
+    normalization: Literal["L1", "CLR", "LogNormalize", "none"] = "L1",
+    residualize: bool = False,
+    pls_component_p_threshold: float = 0.01,
+    min_pls_coreness_correlation: float = 0.0,
+    pls_score_threshold: float = -3.0,
+) -> list:
+    """PLS-on-coreness denoise: significant components, score gate, then largest connected set.
+
+    Fits PLS with neighborhood radius ``model_k`` and scores nodes
+    using radius ``pred_k``.
+
+    Filtering uses **all** nodes (not only ACE ``high``); removals
+    are returned for merging with other denoise methods.
+
+    Args:
+        component: Component graph (mutates ``coreness`` on nodes temporarily).
+        ncomp: Requested PLS components (capped by sample size and feature count).
+        model_k: Neighborhood steps for fitting X.
+        pred_k: Neighborhood steps for prediction / scores.
+        use_weights: Use edge weights in neighborhood expansion.
+        normalization: Neighborhood matrix normalization.
+        residualize: If True, residualize X against a ``pixel_type`` design matrix.
+        pls_component_p_threshold: Per-component Pearson test vs coreness.
+        min_pls_coreness_correlation: Minimum positive correlation.
+        pls_score_threshold: All selected score columns must exceed this.
+
+    Returns:
+        Nodes to remove, ``[]`` if no PLS-based removal applies.
+
+    """
+    idx = component.node_marker_counts.index
+    n_samples = len(idx)
+    n_features = component.node_marker_counts.shape[1]
+    max_comp = min(ncomp, n_features, max(1, n_samples - 1))
+    if max_comp < 1:
+        logger.debug("PLS denoising skipped: insufficient samples or features.")
+        return []
+
+    coreness_series = pd.Series(nx.core_number(component.raw)).reindex(idx)
+    if coreness_series.isna().any():
+        logger.debug("PLS denoising skipped: missing coreness for some nodes.")
+        return []
+
+    nx.set_node_attributes(component.raw, coreness_series.to_dict(), "coreness")
+    model_mat: Optional[np.ndarray] = None
+    if residualize:
+        model_mat = _pixel_type_design_matrix(component, idx)
+
+    def _cleanup_coreness() -> None:
+        for n in list(component.raw.nodes):
+            data = component.raw.nodes[n]
+            if isinstance(data, dict) and "coreness" in data:
+                del data["coreness"]
+
+    try:
+        pls_model = node_pls(
+            component,
+            y_vars="coreness",
+            k=model_k,
+            use_weights=use_weights,
+            ncomp=max_comp,
+            normalization=normalization,
+            model_mat=model_mat,
+        )
+        X_pred = _create_node_neighborhood_abundance_matrix(
+            component,
+            k=pred_k,
+            use_weights=use_weights,
+            normalization=normalization,
+            model_mat=model_mat,
+        )
+        # Save model scores for correlation testing and potential score flipping
+        # to match R PLS orientation (positive correlation with coreness = more core-like).
+        # Use the model scores to avoid discrepancies from different neighborhood expansion
+        # in prediction vs model fitting.
+        scores_model = pls_model.x_scores_.copy()
+        scores = pls_model.transform(X_pred.values)
+    except (ValueError, np.linalg.LinAlgError) as exc:
+        logger.debug("PLS denoising skipped for component: %s", exc)
+        _cleanup_coreness()
+        return []
+
+    _cleanup_coreness()
+
+    n_scores = scores.shape[1]
+    coreness_arr = coreness_series.astype(float).values
+    comps_to_use: list[int] = []
+    for j in range(n_scores):
+        r, p = pearsonr(coreness_arr, scores[:, j])
+        r_model, p_model = pearsonr(coreness_arr, scores_model[:, j])
+        if np.isnan(p) or np.isnan(r):
+            continue
+        # If r_model is negative, flip the score direction for consistent interpretation
+        # (higher score = more core-like). This is required to match the R implementation
+        # (rpls) where scores are oriented by positive correlation with coreness.
+        if r_model < 0:
+            r = -r
+            scores[:, j] = -scores[:, j]
+        if r > min_pls_coreness_correlation and p < pls_component_p_threshold:
+            comps_to_use.append(j)
+
+    if not comps_to_use:
+        return []
+
+    passing = np.ones(n_samples, dtype=bool)
+    for j in comps_to_use:
+        passing &= scores[:, j] > pls_score_threshold
+
+    return _nodes_outside_largest_cc_after_pls_scores(component.raw, idx, passing)
+
+
 def denoise_one_core_layer(
     component: PNAGraph,
     pval_significance_threshold: float = 0.05,
     inflate_factor: float = 1.5,
     one_core_ratio_threshold: float = 0.9,
 ) -> list:
-    """Identify and remove markers over-expressed in the one-core layer of a graph.
+    """Identify markers over-expressed in the one-core layer and sample nodes to remove.
 
     This function analyzes the one-core layer of a graph, identifies markers
     that are over-expressed using a statistical significance threshold, and
-    removes nodes associated with those markers. Additionally, it ensures
-    that stranded nodes (nodes disconnected from the graph due to removal)
-    are also removed.
+    samples nodes associated with those markers for removal (bleed-over candidates).
 
     Args:
         component (PNAGraph): The graph component to process, containing
@@ -208,7 +403,9 @@ def denoise_one_core_layer(
                                                    their one-core layer are not denoised.
 
     Returns:
-        list: A list of nodes to be removed from the one-core layer of the graph.
+        list: Node ids sampled for removal from the one-core layer (bleed-over
+        candidates). Does not include stranded nodes; callers merge with other
+        denoise steps and then call ``get_stranded_nodes`` once on the combined set.
 
     """
     node_marker_counts = component.node_marker_counts
@@ -217,7 +414,7 @@ def denoise_one_core_layer(
         logger.debug(
             "Too many low core number nodes. Skipping denoising for this component."
         )
-        return [None]  # Marking component as unqualified for denoising
+        return []  # Marking component as unqualified for denoising
     markers_to_remove = get_overexpressed_markers_in_one_core(
         node_marker_counts=node_marker_counts,
         node_core_numbers=node_core_numbers,
@@ -227,8 +424,6 @@ def denoise_one_core_layer(
         ((node_core_numbers[node_marker_counts.index] == 1).values)
     ]
     nodes_to_remove = _sample_nodes_to_be_removed(one_core_layer, markers_to_remove)
-    stranded_nodes = get_stranded_nodes(component, nodes_to_remove)
-    nodes_to_remove += stranded_nodes
     return nodes_to_remove
 
 
@@ -262,78 +457,145 @@ def write_denoised_edgelist(
         )
 
 
-class DenoiseOneCore(PerComponentTask):
-    """Denoise bleed-over markers in parts of the component with low coreness."""
+class DenoiseGraph(PerComponentTask):
+    """Graph denoising: one-core, ACE, and/or PLS on the full graph, merged removal plus stranding."""
 
-    TASK_NAME = "denoise-one-core"
+    TASK_NAME = "denoise-graph"
 
     def __init__(
         self,
+        *,
+        run_one_core: bool = False,
+        run_ace: bool = False,
+        run_pls: bool = False,
         pval_significance_threshold: float = 0.05,
         inflate_factor: float = 1.5,
         one_core_ratio_threshold: float = 0.9,
+        k: int = 3,
+        max_k_core: int = 4,
+        max_iter: int = 200,
+        min_seed_pct: float = 0.1,
+        nodes_to_move_threshold: int = 10,
+        ace_select_lcc: bool = True,
+        pls_ncomp: int = 5,
+        pls_model_k: int = 2,
+        pls_pred_k: int = 1,
+        pls_use_weights: bool = True,
+        pls_normalization: Literal["L1", "CLR", "LogNormalize", "none"] = "L1",
+        pls_residualize: bool = False,
+        pls_component_p_threshold: float = 0.01,
+        min_pls_coreness_correlation: float = 0.0,
+        pls_score_threshold: float = -3.0,
     ):
-        """Initialize a DenoiseOneCore instance.
-
-        Args:
-            pval_significance_threshold (float): The p-value threshold for considering
-            a marker over-expressed in the one-core layer.
-            inflate_factor: A factor used to inflate the excess count of markers.
-            one_core_ratio_threshold: Components with higher nodes in their one-core
-                                      layer are not denoised.
-
-        """
+        """Configure which denoise steps run and their hyperparameters."""
+        if not run_one_core and not run_ace and not run_pls:
+            raise ValueError(
+                "At least one of run_one_core, run_ace, or run_pls must be True."
+            )
+        self.run_one_core = run_one_core
+        self.run_ace = run_ace
+        self.run_pls = run_pls
         self.pval_significance_threshold = pval_significance_threshold
         self.inflate_factor = inflate_factor
         self.one_core_ratio_threshold = one_core_ratio_threshold
+        self.k = k
+        self.max_k_core = max_k_core
+        self.max_iter = max_iter
+        self.min_seed_pct = min_seed_pct
+        self.nodes_to_move_threshold = nodes_to_move_threshold
+        self.ace_select_lcc = ace_select_lcc
+        self.pls_ncomp = pls_ncomp
+        self.pls_model_k = pls_model_k
+        self.pls_pred_k = pls_pred_k
+        self.pls_use_weights = pls_use_weights
+        self.pls_normalization = pls_normalization
+        self.pls_residualize = pls_residualize
+        self.pls_component_p_threshold = pls_component_p_threshold
+        self.min_pls_coreness_correlation = min_pls_coreness_correlation
+        self.pls_score_threshold = pls_score_threshold
 
     def run_on_component_graph(
         self, component: PNAGraph, component_id: str
     ) -> pd.DataFrame:
-        """Execute one-core denoising on a given component graph and return nodes to remove.
+        """Return nodes to remove (including stranded) and per-method metadata columns.
 
-        This function performs denoising on the provided PNAGraph component by
-        identifying nodes to be removed based on a single core layer denoising
-        process. The resulting nodes are returned in a DataFrame along with
-        their associated component ID.
-
-        Args:
-            component (PNAGraph): The graph component to be denoised.
-            component_id (str): The identifier for the graph component.
-
-        Returns:
-            pd.DataFrame: A DataFrame containing the nodes to be removed with the following columns:
-                - "umi": The unique identifier of the node to be removed.
-                - "component": The ID of the component the node belongs to.
-
+        One-core, ACE, and PLS each see the same full ``component`` graph; removals are
+        merged afterward so no step is conditioned on another's output.
         """
-        logger.debug(f"Running low-core denoising on component {component_id}")
+        one_core_marked: list = []
+        ace_marked: list = []
+        pls_marked: list = []
+
         nodes_to_remove = pd.DataFrame(
-            denoise_one_core_layer(
+            columns=[
+                "umi",
+                "component",
+                "marked_by",
+            ]
+        )
+
+        def _append_marked_count(
+            old_nodes_to_remove: pd.DataFrame, new_nodes: list, method_name: str
+        ) -> pd.DataFrame:
+            n_new = len(new_nodes) if new_nodes and new_nodes != [None] else 0
+            new_marked_df = pd.DataFrame(
+                {
+                    "umi": new_nodes if new_nodes and new_nodes != [None] else [],
+                    "component": [component_id] * n_new,
+                    "marked_by": [method_name] * n_new,
+                }
+            )
+            return pd.concat([old_nodes_to_remove, new_marked_df], ignore_index=True)
+
+        if self.run_one_core:
+            logger.debug("Running one-core denoising on component %s", component_id)
+            one_core_marked = denoise_one_core_layer(
                 component,
                 pval_significance_threshold=self.pval_significance_threshold,
                 inflate_factor=self.inflate_factor,
                 one_core_ratio_threshold=self.one_core_ratio_threshold,
-            ),
-            columns=["umi"],
-        )
-        nodes_to_remove["component"] = component_id
+            )
+            nodes_to_remove = _append_marked_count(
+                nodes_to_remove, one_core_marked, "one_core"
+            )
+
+        if self.run_ace:
+            logger.debug("Running ACE denoising on component %s", component_id)
+            ace_marked = denoise_ace(
+                component,
+                k=self.k,
+                max_k_core=self.max_k_core,
+                max_iter=self.max_iter,
+                min_seed_pct=self.min_seed_pct,
+                nodes_to_move_threshold=self.nodes_to_move_threshold,
+                select_lcc=self.ace_select_lcc,
+            )
+            nodes_to_remove = _append_marked_count(nodes_to_remove, ace_marked, "ace")
+
+        if self.run_pls:
+            logger.debug("Running PLS denoising on component %s", component_id)
+            pls_marked = denoise_pls(
+                component,
+                ncomp=self.pls_ncomp,
+                model_k=self.pls_model_k,
+                pred_k=self.pls_pred_k,
+                use_weights=self.pls_use_weights,
+                normalization=self.pls_normalization,
+                residualize=self.pls_residualize,
+                pls_component_p_threshold=self.pls_component_p_threshold,
+                min_pls_coreness_correlation=self.min_pls_coreness_correlation,
+                pls_score_threshold=self.pls_score_threshold,
+            )
+            nodes_to_remove = _append_marked_count(nodes_to_remove, pls_marked, "pls")
+
+        combined = list(set(one_core_marked + ace_marked + pls_marked))
+        stranded = get_stranded_nodes(component, combined)
+        nodes_to_remove = _append_marked_count(nodes_to_remove, stranded, "stranded")
+
         return nodes_to_remove
 
     def add_to_pixel_file(self, data: pd.DataFrame, pxl_file_target: PxlFile):
-        """Add denoised component to a pixel file by updating the edgelist and adata.
-
-        This function reads an existing pixel file, filters its edgelist
-        based on the provided data, and updates the file with the modified
-        edgelist and corresponding AnnData object.
-
-        Args:
-            data (pd.DataFrame): A DataFrame containing the data to be used
-                for filtering.
-            pxl_file_target (PxlFile): The target pixel file to which
-                the data will be added.
-
-        """
+        """Filter edgelist by removed nodes and write denoise metrics to AnnData."""
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
         try:
@@ -356,20 +618,82 @@ class DenoiseOneCore(PerComponentTask):
                 writer.write_edgelist(Path(denoised_edgelist_path))
                 adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
                 call_aggregates(adata)
-                adata = add_missing_adata_info(adata, old_adata)
-                denoise_info = pd.DataFrame(index=adata.obs.index)
-                denoise_info["disqualified_for_denoising"] = False
-                denoise_info.loc[
-                    data.loc[data["umi"].isna(), "component"],
-                    "disqualified_for_denoising",
-                ] = True
-                n_umis_removed = (
-                    data.loc[~data["umi"].isna(), :].groupby("component").size()
+                old_adata.obs.rename(
+                    columns={"isotype_fraction": "pre_denoise_isotype_fraction"},
+                    inplace=True,
                 )
-                denoise_info["number_of_nodes_removed_in_denoise"] = n_umis_removed
-                denoise_info["number_of_nodes_removed_in_denoise"] = denoise_info[
-                    "number_of_nodes_removed_in_denoise"
-                ].fillna(0)
+                adata = add_missing_adata_info(adata, old_adata)
+
+                denoise_info = _collect_denoise_summary_info(
+                    data, comp_index=adata.obs.index
+                )
+
+                for col in denoise_info.columns:
+                    if col in adata.obs.columns:
+                        adata.obs = adata.obs.drop(columns=[col])
                 adata.obs = adata.obs.join(denoise_info, how="left")
 
                 writer.write_adata(adata)
+
+
+def _collect_denoise_summary_info(
+    data: pd.DataFrame, comp_index: pd.Index
+) -> pd.DataFrame:
+    """Collect summary information about the denoising process for each component."""
+    denoise_info = pd.DataFrame(index=comp_index)
+
+    n_total_removed = (
+        data[["component", "umi"]].drop_duplicates().groupby("component").size()
+    )
+    denoise_info["number_of_nodes_removed_in_denoise"] = (
+        pd.to_numeric(n_total_removed.reindex(denoise_info.index), errors="coerce")
+        .fillna(0)
+        .astype("int64")
+    )
+    summary_cols = [
+        "denoised_nodes_marked_only_by_ace",
+        "denoised_nodes_marked_only_by_pls",
+        "denoised_nodes_marked_only_by_one_core",
+        "denoised_nodes_marked_stranded",
+        "denoised_nodes_marked_ace_and_pls",
+        "denoised_nodes_marked_ace_and_one_core",
+        "denoised_nodes_marked_pls_and_one_core",
+        "denoised_nodes_marked_ace_pls_and_one_core",
+    ]
+    mark_summary = (
+        data.groupby(["component", "umi"])["marked_by"].apply(list).reset_index()
+    )
+    mark_summary["denoised_nodes_marked_only_by_ace"] = mark_summary["marked_by"].apply(
+        lambda x: x == ["ace"]
+    )
+    mark_summary["denoised_nodes_marked_only_by_pls"] = mark_summary["marked_by"].apply(
+        lambda x: x == ["pls"]
+    )
+    mark_summary["denoised_nodes_marked_only_by_one_core"] = mark_summary[
+        "marked_by"
+    ].apply(lambda x: x == ["one_core"])
+    mark_summary["denoised_nodes_marked_stranded"] = mark_summary["marked_by"].apply(
+        lambda x: "stranded" in x
+    )
+    mark_summary["denoised_nodes_marked_ace_and_pls"] = mark_summary["marked_by"].apply(
+        lambda x: set(x) == {"ace", "pls"}
+    )
+    mark_summary["denoised_nodes_marked_ace_and_one_core"] = mark_summary[
+        "marked_by"
+    ].apply(lambda x: set(x) == {"ace", "one_core"})
+    mark_summary["denoised_nodes_marked_pls_and_one_core"] = mark_summary[
+        "marked_by"
+    ].apply(lambda x: set(x) == {"pls", "one_core"})
+    mark_summary["denoised_nodes_marked_ace_pls_and_one_core"] = mark_summary[
+        "marked_by"
+    ].apply(lambda x: set(x) == {"ace", "pls", "one_core"})
+    for col in summary_cols:
+        col_summary = (
+            mark_summary.groupby("component")[col]
+            .sum()
+            .reindex(comp_index)
+            .fillna(0)
+            .astype("int64")
+        )
+        denoise_info[col] = col_summary
+    return denoise_info

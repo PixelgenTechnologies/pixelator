@@ -39,6 +39,7 @@ from pixelator.common.graph.backends.protocol import (
     VertexClustering,
     VertexSequence,
 )
+from pixelator.common.graph.math import _mat_pow
 
 if TYPE_CHECKING:
     from pixelator.mpx.graph import Graph
@@ -932,13 +933,3 @@ def _prob_edge_weights(
     edge_probs = np.asarray(P_step_bidirectional[row_indices, col_indices])
 
     return edge_probs
-
-
-def _mat_pow(mat, power, prune_threshold: float | None = None):
-    mat_power = mat.copy()
-    for _ in range(power - 1):
-        if prune_threshold:
-            mat_power.data[np.abs(mat_power.data) < prune_threshold] = 0
-            mat_power.eliminate_zeros()
-        mat_power = mat @ mat_power
-    return mat_power
