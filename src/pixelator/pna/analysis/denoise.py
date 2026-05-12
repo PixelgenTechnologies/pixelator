@@ -10,7 +10,7 @@ import random
 import tempfile
 from itertools import chain
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Optional
 
 import networkx as nx
 import numpy as np
@@ -18,16 +18,17 @@ import pandas as pd
 from scipy.stats import fisher_exact, pearsonr
 
 from pixelator.common.annotate.aggregates import call_aggregates
-from pixelator.common.graph.adaptive_core_expansion import adaptive_core_expansion
-from pixelator.common.graph.node_pls import (
-    _create_node_neighborhood_abundance_matrix,
-    node_pls,
-)
 from pixelator.pna.analysis_engine import PerComponentTask
 from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
+from pixelator.pna.graph.adaptive_core_expansion import adaptive_core_expansion
+from pixelator.pna.graph.node_pls import (
+    GraphNormalizationOptions,
+    create_node_neighborhood_abundance_matrix,
+    node_pls,
+)
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 
@@ -269,7 +270,7 @@ def denoise_pls(
     model_k: int = 2,
     pred_k: int = 1,
     use_weights: bool = True,
-    normalization: Literal["L1", "CLR", "LogNormalize", "none"] = "L1",
+    normalization: GraphNormalizationOptions = "L1",
     residualize: bool = False,
     pls_component_p_threshold: float = 0.01,
     min_pls_coreness_correlation: float = 0.0,
@@ -299,9 +300,10 @@ def denoise_pls(
         Nodes to remove, ``[]`` if no PLS-based removal applies.
 
     """
-    idx = component.node_marker_counts.index
+    node_marker_counts = component.node_marker_counts
+    idx = node_marker_counts.index
     n_samples = len(idx)
-    n_features = component.node_marker_counts.shape[1]
+    n_features = node_marker_counts.shape[1]
     max_comp = min(ncomp, n_features, max(1, n_samples - 1))
     if max_comp < 1:
         logger.debug("PLS denoising skipped: insufficient samples or features.")
@@ -333,7 +335,7 @@ def denoise_pls(
             normalization=normalization,
             model_mat=model_mat,
         )
-        X_pred = _create_node_neighborhood_abundance_matrix(
+        X_pred = create_node_neighborhood_abundance_matrix(
             component,
             k=pred_k,
             use_weights=use_weights,
@@ -481,7 +483,7 @@ class DenoiseGraph(PerComponentTask):
         pls_model_k: int = 2,
         pls_pred_k: int = 1,
         pls_use_weights: bool = True,
-        pls_normalization: Literal["L1", "CLR", "LogNormalize", "none"] = "L1",
+        pls_normalization: GraphNormalizationOptions = "L1",
         pls_residualize: bool = False,
         pls_component_p_threshold: float = 0.01,
         min_pls_coreness_correlation: float = 0.0,

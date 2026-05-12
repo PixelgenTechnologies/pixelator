@@ -6,7 +6,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import logging
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -14,9 +14,46 @@ import scipy.sparse as sp
 from sklearn.cross_decomposition import PLSRegression
 
 from pixelator.common.graph import Graph
-from pixelator.common.graph.math import _mat_pow
+from pixelator.common.graph.math import mat_pow
 
 logger = logging.getLogger(__name__)
+
+
+GraphNormalizationOptions = Literal["L1", "CLR", "LogNormalize"] | None
+
+
+def _expand_neighborhood_matrix(
+    g: Graph,
+    node_ordering: pd.Index,
+    X: np.ndarray,
+    k: int,
+    use_weights: bool,
+    min_weight: float,
+) -> np.ndarray:
+    """Expand node abundance matrix with k-step neighborhood information."""
+    A = g.get_adjacency_sparse(node_ordering=node_ordering)
+    # Add self-loops to represent "at most k steps"
+    A = A + sp.eye(A.shape[0], format="csr")
+
+    if use_weights:
+        # Divide by row sum to get the stochastic matrix
+        row_sums = np.ravel(A.sum(axis=1))
+        D = sp.diags_array(1 / row_sums, format="csr")
+        A = (D @ A).T
+
+    if k > 1:
+        # Expand to k-step neighborhood
+        W = mat_pow(A, k, prune_threshold=min_weight if min_weight > 0 else None)
+
+        if not use_weights:
+            # Set all non-zero entries to 1 to get unweighted neighborhood counts
+            W.data = np.ones_like(W.data)
+
+    else:
+        W = A
+
+    # Neighborhood abundance is W @ X
+    return (W @ X).astype(np.float64)
 
 
 def _residualize_matrix(X: np.ndarray, model_mat: np.ndarray) -> np.ndarray:
@@ -31,14 +68,14 @@ def _residualize_matrix(X: np.ndarray, model_mat: np.ndarray) -> np.ndarray:
     return X - model_mat @ B
 
 
-def _create_node_neighborhood_abundance_matrix(
+def create_node_neighborhood_abundance_matrix(
     g: Graph,
     k: int = 2,
     use_weights: bool = False,
     min_weight: float = 0.0,
-    normalization: Literal["L1", "CLR", "LogNormalize", "none"] = "L1",
+    normalization: GraphNormalizationOptions = "L1",
     scale: bool = True,
-    model_mat: Optional[np.ndarray] = None,
+    model_mat: np.ndarray | None = None,
 ) -> pd.DataFrame:
     """Create a node neighborhood abundance matrix.
 
@@ -69,7 +106,7 @@ def _create_node_neighborhood_abundance_matrix(
             to apply to the predictor matrix X before fitting the PLS model.
             Options are "L1" for L1 normalization (scaling rows to sum to 1),
             "CLR" for centered log-ratio transformation, "LogNormalize" for log
-            normalization, and "none" for no normalization. Defaults to "L1".
+            normalization. Use None for no normalization. Defaults to "L1".
         scale: Logical indicating whether to scale the predictor matrix X
             by centering and scaling the columns to have mean 0 and standard
             deviation 1. Defaults to True.
@@ -91,31 +128,11 @@ def _create_node_neighborhood_abundance_matrix(
     """
     counts = g.node_marker_counts
     X = counts.values.astype(np.float64)
-
-    if k > 0:
-        A = g.get_adjacency_sparse(node_ordering=counts.index)
-        # Add self-loops to represent "at most k steps"
-        A = A + sp.eye(A.shape[0], format="csr")
-
-        if use_weights:
-            # Divide by row sum to get the stochastic matrix
-            row_sums = np.ravel(A.sum(axis=1))
-            D = sp.diags_array(1 / row_sums, format="csr")
-            A = (D @ A).T
-
-        if k > 1:
-            # Expand to k-step neighborhood
-            W = _mat_pow(A, k, prune_threshold=min_weight if min_weight > 0 else None)
-
-            if not use_weights:
-                # Set all non-zero entries to 1 to get unweighted neighborhood counts
-                W.data = np.ones_like(W.data)
-
-        else:
-            W = A
-
-        # Neighborhood abundance is W @ X
-        X = (W @ X).astype(np.float64)
+    X = (
+        _expand_neighborhood_matrix(g, counts.index, X, k, use_weights, min_weight)
+        if k > 0
+        else X
+    )
 
     # Transform/Normalize X
     if normalization == "CLR":
@@ -151,15 +168,15 @@ def _create_node_neighborhood_abundance_matrix(
 
 def node_pls(
     g: Graph,
-    y_vars: Union[str, List[str]],
-    x_vars: Optional[List[str]] = None,
+    y_vars: str | list[str],
+    x_vars: list[str] | None = None,
     k: int = 2,
     use_weights: bool = False,
     min_weight: float = 0.0,
     ncomp: int = 1,
-    normalization: Literal["L1", "CLR", "LogNormalize", "none"] = "L1",
+    normalization: GraphNormalizationOptions = "L1",
     scale: bool = True,
-    model_mat: Optional[np.ndarray] = None,
+    model_mat: np.ndarray | None = None,
 ) -> PLSRegression:
     """Perform Partial Least Squares (PLS) regression on a Graph object.
 
@@ -202,7 +219,7 @@ def node_pls(
             to apply to the predictor matrix X before fitting the PLS model.
             Options are "L1" for L1 normalization (scaling rows to sum to 1),
             "CLR" for centered log-ratio transformation, "LogNormalize" for log
-            normalization, and "none" for no normalization. Defaults to "L1".
+            normalization. Use None for no normalization. Defaults to "L1".
         scale: Logical indicating whether to scale the predictor matrix X
             by centering and scaling the columns to have mean 0 and standard
             deviation 1. Defaults to True.
@@ -227,7 +244,7 @@ def node_pls(
         y_vars = [y_vars]
 
     # Create expanded and normalized matrix
-    X_expanded = _create_node_neighborhood_abundance_matrix(
+    X_expanded = create_node_neighborhood_abundance_matrix(
         g=g,
         k=k,
         use_weights=use_weights,

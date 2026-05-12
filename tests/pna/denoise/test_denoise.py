@@ -16,6 +16,7 @@ from pixelator.pna.analysis.denoise import (
     DenoiseGraph,
     denoise_ace,
     denoise_one_core_layer,
+    denoise_pls,
     get_overexpressed_markers_in_one_core,
     get_stranded_nodes,
 )
@@ -502,6 +503,58 @@ REFERENCE_ACE_COMPONENT = "57129a8b0fff38c6"
 REFERENCE_ACE_LOW_NODE_COUNT = 5436
 
 
+def test_denoise_pls_reference_component_runs_and_cleans_coreness(denoise_pxl_dataset):
+    """denoise_pls should return removable nodes and clean temporary coreness attrs."""
+    comp_graph = PNAGraph.from_edgelist(
+        denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        .edgelist()
+        .to_polars()
+        .lazy()
+    )
+    original_nodes = set(comp_graph.raw.nodes())
+
+    removed = denoise_pls(comp_graph)
+
+    assert removed != [None]
+    assert set(removed).issubset(original_nodes)
+    # Temporary "coreness" should always be cleaned up.
+    assert all("coreness" not in data for _, data in comp_graph.raw.nodes(data=True))
+
+
+def test_denoise_pls_returns_empty_with_impossible_correlation_threshold(
+    denoise_pxl_dataset,
+):
+    """No components can pass when min correlation is set above 1.0."""
+    comp_graph = PNAGraph.from_edgelist(
+        denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        .edgelist()
+        .to_polars()
+        .lazy()
+    )
+
+    removed = denoise_pls(comp_graph, min_pls_coreness_correlation=1.01)
+
+    assert removed == []
+    assert all("coreness" not in data for _, data in comp_graph.raw.nodes(data=True))
+
+
+def test_denoise_pls_residualized_path_runs(denoise_pxl_dataset):
+    """Residualized PLS denoising path should execute and return node ids."""
+    comp_graph = PNAGraph.from_edgelist(
+        denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        .edgelist()
+        .to_polars()
+        .lazy()
+    )
+    original_nodes = set(comp_graph.raw.nodes())
+
+    removed = denoise_pls(comp_graph, residualize=True)
+
+    assert removed != [None]
+    assert set(removed).issubset(original_nodes)
+    assert all("coreness" not in data for _, data in comp_graph.raw.nodes(data=True))
+
+
 @pytest.mark.slow
 def test_denoise_ace_reference_component(denoise_pxl_dataset):
     """ACE layer removal list matches peripheral partition on reference component."""
@@ -526,7 +579,9 @@ def test_denoise_ace_analysis(denoise_pxl_dataset, tmp_path):
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
 
-    manager = AnalysisManager([DenoiseGraph(run_one_core=False, run_ace=True)])
+    manager = AnalysisManager(
+        [DenoiseGraph(run_one_core=False, run_ace=True)], n_cores=4
+    )
     denoised_dataset = manager.execute(denoise_pxl_dataset, pxl_file_target)
 
     obs = denoised_dataset.adata().obs
@@ -567,7 +622,7 @@ def test_denoise_ace_pls_one_core(denoise_pxl_dataset, tmp_path):
     )
 
     manager = AnalysisManager(
-        [DenoiseGraph(run_one_core=True, run_ace=True, run_pls=True)]
+        [DenoiseGraph(run_one_core=True, run_ace=True, run_pls=True)], n_cores=4
     )
     denoised_dataset = manager.execute(denoise_pxl_dataset, pxl_file_target)
 
