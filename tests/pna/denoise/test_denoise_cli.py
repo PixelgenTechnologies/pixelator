@@ -9,8 +9,6 @@ import pytest
 from click.testing import CliRunner
 
 from pixelator import cli
-from pixelator.pna.config import pna_config
-from pixelator.pna.config.panel import load_antibody_panel
 from pixelator.pna.pixeldataset import read
 
 
@@ -46,7 +44,7 @@ def test_denoise_ace_cli_runs_ok(denoise_pxl_file):
     with tempfile.TemporaryDirectory() as output_dir:
         args = [
             "--cores",
-            "1",
+            "4",
             "single-cell-pna",
             "denoise",
             str(denoise_pxl_file),
@@ -94,7 +92,7 @@ def test_denoise_one_core_and_ace_cli_runs_ok(denoise_pxl_file):
     with tempfile.TemporaryDirectory() as output_dir:
         args = [
             "--cores",
-            "1",
+            "4",
             "single-cell-pna",
             "denoise",
             str(denoise_pxl_file),
@@ -139,7 +137,7 @@ def test_denoise_ace_pls_cli_runs_ok(denoise_pxl_file):
     with tempfile.TemporaryDirectory() as output_dir:
         args = [
             "--cores",
-            "1",
+            "4",
             "single-cell-pna",
             "denoise",
             str(denoise_pxl_file),

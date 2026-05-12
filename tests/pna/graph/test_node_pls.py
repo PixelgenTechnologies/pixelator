@@ -9,9 +9,9 @@ import pytest
 from sklearn.cross_decomposition import PLSRegression
 
 from pixelator.common.graph import Graph
-from pixelator.common.graph.node_pls import (
-    _create_node_neighborhood_abundance_matrix,
+from pixelator.pna.graph.node_pls import (
     _residualize_matrix,
+    create_node_neighborhood_abundance_matrix,
     node_pls,
 )
 
@@ -66,14 +66,14 @@ def test_create_node_neighborhood_abundance_matrix(mock_graph):
     # To test this unit properly, we need a graph with known counts.
 
     # Let's just check if it runs without error first
-    X_exp = _create_node_neighborhood_abundance_matrix(
+    X_exp = create_node_neighborhood_abundance_matrix(
         mock_graph, k=1, normalization="none", scale=False
     )
     assert isinstance(X_exp, pd.DataFrame)
     assert X_exp.shape[0] == mock_graph.vcount()
 
     # Check L1 normalization
-    X_l1 = _create_node_neighborhood_abundance_matrix(
+    X_l1 = create_node_neighborhood_abundance_matrix(
         mock_graph, k=0, normalization="L1", scale=False
     )
     row_sums = X_l1.sum(axis=1)

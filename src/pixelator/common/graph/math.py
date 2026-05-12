@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 
 
-def _mat_pow(mat, power: int, prune_threshold: float | None = None):
+def mat_pow(mat, power: int, prune_threshold: float | None = None):
     """Compute sparse matrix power with optional pruning.
 
     Args:

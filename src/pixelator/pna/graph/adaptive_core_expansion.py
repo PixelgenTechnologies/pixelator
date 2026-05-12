@@ -11,7 +11,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from pixelator.common.graph import Graph
-from pixelator.common.graph.math import _mat_pow
+from pixelator.common.graph.math import mat_pow
 from pixelator.common.utils import logger
 
 
@@ -29,6 +29,176 @@ def normalize_counts(x):
     x_mean = np.mean(x_log1p)
     norm = np.exp(x_mean)
     return np.log1p(x / norm)
+
+
+def _expand_k_core_layer_until_min_seed_pct(
+    k_cores: np.ndarray, max_k: int, min_seed_pct: float
+) -> tuple[np.ndarray, int]:
+    """Expand the k-core layer to lower k-core layers until the minimum seed percentage is reached."""
+    pct_k_max = np.mean(k_cores == max_k)
+    while pct_k_max < min_seed_pct and max_k > 1:
+        max_k -= 1
+        pct_k_max = np.mean(k_cores == max_k)
+
+    if pct_k_max < min_seed_pct:
+        raise ValueError(
+            f"No k-core layer meets the required 'min_seed_pct' threshold of {min_seed_pct}."
+        )
+
+    k_cores[k_cores > max_k] = max_k
+    logger.debug(
+        f"Seed 'high' core layer contains {np.mean(k_cores == max_k) * 100:.2f}% of all nodes."
+    )
+
+    return k_cores, max_k
+
+
+def _get_k_cores(
+    graph: nx.Graph, node_list: list[str], max_k_core: int, min_seed_pct: float
+) -> tuple[np.ndarray, int]:
+    """Get the k-cores of the graph."""
+    k_cores_dict = nx.core_number(graph)
+    k_cores = np.array([k_cores_dict[n] for n in node_list])
+    max_k = k_cores.max()
+
+    if max_k == 1:
+        raise ValueError(
+            "The graph does not contain any k-core layers above 1. The graph has too low connectivity."
+        )
+
+    # Cap max k-cores to max_k_core if higher k-core layers are identified.
+    if max_k > max_k_core:
+        k_cores[k_cores > max_k_core] = max_k_core
+        max_k = max_k_core
+
+    return k_cores, max_k
+
+
+def _build_p_step_matrix(g: Graph, node_list: list[str], k: int) -> sp.csr_matrix:
+    """Build the k-step transition probability matrix used by ACE."""
+    A = g.get_adjacency_sparse(node_ordering=node_list)
+    A = A + sp.diags_array([1] * A.shape[0], format="csr", dtype=None)
+
+    row_sums = np.ravel(A.sum(axis=1))
+    D_inv = sp.diags_array(1 / row_sums, format="csr")
+    P = D_inv @ A
+
+    min_weight = 1e-5  # To avoid having the sparse matrix grow too dense
+    P_step = mat_pow(P, k, prune_threshold=min_weight).T
+
+    P_step.setdiag(0)
+
+    row_sums = np.ravel(P_step.sum(axis=1))
+    D_inv = sp.diags_array(1 / row_sums, format="csr")
+    return D_inv @ P_step
+
+
+def _find_largets_connect_component_of_k_core(
+    raw_graph: nx.Graph, node_list: list[str], k_cores: np.ndarray, max_k: int
+) -> np.ndarray:
+    """Downgrade k-core seed nodes outside the largest connected component."""
+    seed_nodes = [node_list[i] for i, k_val in enumerate(k_cores) if k_val == max_k]
+    subgraph = raw_graph.subgraph(seed_nodes)
+    components = list(nx.connected_components(subgraph))
+    if len(components) > 1:
+        logger.debug(
+            f"The high k-core layer has {len(components)} connected components. "
+            f"Selecting the largest connected component."
+        )
+        largest_comp = max(components, key=len)
+        largest_comp_set = set(largest_comp)
+        for i, k_val in enumerate(k_cores):
+            if k_val == max_k and node_list[i] not in largest_comp_set:
+                k_cores[i] = max_k - 1
+    return k_cores
+
+
+def _find_partitions(
+    counts,
+    k_cores: np.ndarray,
+    max_k: int,
+    binding_thresholds: Sequence[float],
+    P_step: sp.csr_matrix,
+    max_iter: int,
+    nodes_to_move_threshold: int,
+) -> list[_PartitionCandidate]:
+    """Compute candidate partitions and their Bray-Curtis scores."""
+    partitions: list[_PartitionCandidate] = []
+    current_partition = (k_cores == max_k).astype(int)
+    # Sort thresholds descending to allow reuse of the partition vector
+    sorted_thresholds = sorted(binding_thresholds, reverse=True)
+
+    for binding_threshold in sorted_thresholds:
+        logger.debug(
+            f"Finding partition seeded with k-core layer >= {max_k} and a binding threshold of {binding_threshold}."
+        )
+
+        current_partition = _adaptive_core_expansion_inner(
+            current_partition,
+            P_step,
+            max_iter,
+            nodes_to_move_threshold,
+            binding_threshold,
+        )
+
+        min_nodes_in_core = max(nodes_to_move_threshold, 10)
+        num_high = current_partition.sum()
+
+        if num_high < min_nodes_in_core or num_high == len(current_partition):
+            bc_score = 0.0
+        else:
+            high_mask = current_partition == 1
+            low_mask = ~high_mask
+
+            # Use pandas direct indexing since node_marker_counts indices ordered same as node_list
+            x = normalize_counts(counts[high_mask].sum(axis=0).values)
+            y = normalize_counts(counts[low_mask].sum(axis=0).values)
+
+            bc_score = float(np.sum(np.abs(x - y)) / np.sum(x + y))
+
+        logger.debug("Completed")
+
+        partitions.append(
+            _PartitionCandidate(
+                partition=current_partition.copy(),
+                bc_score=bc_score,
+                nodes_pct=float(num_high / len(current_partition)),
+                binding_threshold=binding_threshold,
+            )
+        )
+    return partitions
+
+
+def validate_best_candidate(
+    best_candidate: _PartitionCandidate | None,
+    partitions: list[_PartitionCandidate],
+    min_allowed_nodes_pct: float,
+) -> _PartitionCandidate | None:
+    """Validate selected partition against minimum high-core node percentage."""
+    if best_candidate is not None and best_candidate.nodes_pct < min_allowed_nodes_pct:
+        logger.warning(
+            f"The selected partition has less than {min_allowed_nodes_pct * 100:.2f}% "
+            f"of nodes in the 'high' core layer. Selecting the partition with the highest "
+            f"binding threshold that has at least {min_allowed_nodes_pct * 100:.2f}% "
+            f"of nodes in the 'high' core layer instead."
+        )
+
+        # Select partitions that meet the minimum node percentage
+        valid_partitions: list[_PartitionCandidate] = [
+            p for p in partitions if p.nodes_pct >= min_allowed_nodes_pct
+        ]
+
+        if valid_partitions:
+            # Pick the one with the highest BC score among those that meet the threshold
+            best_candidate = max(valid_partitions, key=lambda x: x.bc_score)
+        else:
+            logger.warning(
+                f"Found no partition with at least {min_allowed_nodes_pct * 100:.2f}% of "
+                f"nodes in the 'high' core layer. Setting all nodes as 'high'."
+            )
+            best_candidate = None
+
+    return best_candidate
 
 
 def adaptive_core_expansion(
@@ -130,140 +300,41 @@ def adaptive_core_expansion(
     raw_graph = g.raw
     node_list = list(raw_graph.nodes())
 
-    k_cores_dict = nx.core_number(raw_graph)
-    k_cores = np.array([k_cores_dict[n] for n in node_list])
-    max_k = k_cores.max()
-
-    if max_k == 1:
-        raise ValueError(
-            "The graph does not contain any k-core layers above 1. The graph has too low connectivity."
-        )
-
-    # Cap max k-cores to max_k_core if higher k-core layers are identified.
-    if max_k > max_k_core:
-        k_cores[k_cores > max_k_core] = max_k_core
-        max_k = max_k_core
-
-    # Expand the k-core layer if it is smaller than the minimum seed percentage.
-    pct_k_max = np.mean(k_cores == max_k)
-    while pct_k_max < min_seed_pct and max_k > 1:
-        max_k -= 1
-        pct_k_max = np.mean(k_cores == max_k)
-
-    if pct_k_max < min_seed_pct:
-        raise ValueError(
-            f"No k-core layer meets the required 'min_seed_pct' threshold of {min_seed_pct}."
-        )
-
-    k_cores[k_cores > max_k] = max_k
-
-    logger.debug(
-        f"Seed 'high' core layer contains {np.mean(k_cores == max_k) * 100:.2f}% of all nodes."
+    inital_k_cores, initial_max_k = _get_k_cores(
+        graph=raw_graph,
+        node_list=node_list,
+        max_k_core=max_k_core,
+        min_seed_pct=min_seed_pct,
+    )
+    k_cores, max_k = _expand_k_core_layer_until_min_seed_pct(
+        inital_k_cores, initial_max_k, min_seed_pct
     )
 
-    # Compute transition probability matrix P from the adjacency matrix
-    A = g.get_adjacency_sparse(node_ordering=node_list)
-    A = A + sp.diags_array([1] * A.shape[0], format="csr", dtype=None)
-
-    row_sums = np.ravel(A.sum(axis=1))
-    D_inv = sp.diags_array(1 / row_sums, format="csr")
-    P = D_inv @ A
-
-    min_weight = 1e-5  # To avoid having the sparse matrix grow too dense
-    P_step = _mat_pow(P, k, prune_threshold=min_weight).T
-
-    P_step.setdiag(0)
-
-    row_sums = np.ravel(P_step.sum(axis=1))
-    D_inv = sp.diags_array(1 / row_sums, format="csr")
-    P_step = D_inv @ P_step
+    P_step = _build_p_step_matrix(g=g, node_list=node_list, k=k)
 
     if select_lcc:
-        seed_nodes = [node_list[i] for i, k_val in enumerate(k_cores) if k_val == max_k]
-        subgraph = raw_graph.subgraph(seed_nodes)
-        components = list(nx.connected_components(subgraph))
-        if len(components) > 1:
-            logger.debug(
-                f"The high k-core layer has {len(components)} connected components. "
-                f"Selecting the largest connected component."
-            )
-            largest_comp = max(components, key=len)
-            largest_comp_set = set(largest_comp)
-            for i, k_val in enumerate(k_cores):
-                if k_val == max_k and node_list[i] not in largest_comp_set:
-                    k_cores[i] = max_k - 1
-
-    partitions: list[_PartitionCandidate] = []
-    current_partition = (k_cores == max_k).astype(int)
-    # Sort thresholds descending to allow reuse of the partition vector
-    sorted_thresholds = sorted(binding_thresholds, reverse=True)
-
-    for binding_threshold in sorted_thresholds:
-        logger.debug(
-            f"Finding partition seeded with k-core layer >= {max_k} and a binding threshold of {binding_threshold}."
+        k_cores = _find_largets_connect_component_of_k_core(
+            raw_graph=raw_graph, node_list=node_list, k_cores=k_cores, max_k=max_k
         )
 
-        current_partition = _adaptive_core_expansion_inner(
-            current_partition,
-            P_step,
-            max_iter,
-            nodes_to_move_threshold,
-            binding_threshold,
-        )
+    partitions = _find_partitions(
+        counts=counts,
+        k_cores=k_cores,
+        max_k=max_k,
+        binding_thresholds=binding_thresholds,
+        P_step=P_step,
+        max_iter=max_iter,
+        nodes_to_move_threshold=nodes_to_move_threshold,
+    )
 
-        min_nodes_in_core = max(nodes_to_move_threshold, 10)
-        num_high = current_partition.sum()
+    potential_best_candidate = max(partitions, key=lambda x: x.bc_score)
+    best_candidate: _PartitionCandidate | None = validate_best_candidate(
+        best_candidate=potential_best_candidate,
+        partitions=partitions,
+        min_allowed_nodes_pct=min_allowed_nodes_pct,
+    )
 
-        if num_high < min_nodes_in_core or num_high == len(current_partition):
-            bc_score = 0.0
-        else:
-            high_mask = current_partition == 1
-            low_mask = ~high_mask
-
-            # Use pandas direct indexing since node_marker_counts indices ordered same as node_list
-            x = normalize_counts(counts[high_mask].sum(axis=0).values)
-            y = normalize_counts(counts[low_mask].sum(axis=0).values)
-
-            bc_score = float(np.sum(np.abs(x - y)) / np.sum(x + y))
-
-        logger.debug("Completed")
-
-        partitions.append(
-            _PartitionCandidate(
-                partition=current_partition.copy(),
-                bc_score=bc_score,
-                nodes_pct=float(num_high / len(current_partition)),
-                binding_threshold=binding_threshold,
-            )
-        )
-
-    best_idx = int(np.argmax([p.bc_score for p in partitions]))
-    best_candidate: _PartitionCandidate | None = partitions[best_idx]
-
-    if best_candidate is not None and best_candidate.nodes_pct < min_allowed_nodes_pct:
-        logger.warning(
-            f"The selected partition has less than {min_allowed_nodes_pct * 100:.2f}% "
-            f"of nodes in the 'high' core layer. Selecting the partition with the highest "
-            f"binding threshold that has at least {min_allowed_nodes_pct * 100:.2f}% "
-            f"of nodes in the 'high' core layer instead."
-        )
-
-        # Select partitions that meet the minimum node percentage
-        valid_partitions: list[_PartitionCandidate] = [
-            p for p in partitions if p.nodes_pct >= min_allowed_nodes_pct
-        ]
-
-        if valid_partitions:
-            # Pick the one with the highest BC score among those that meet the threshold
-            best_candidate = max(valid_partitions, key=lambda x: x.bc_score)
-        else:
-            logger.warning(
-                f"Found no partition with at least {min_allowed_nodes_pct * 100:.2f}% of "
-                f"nodes in the 'high' core layer. Setting all nodes as 'high'."
-            )
-            best_candidate = None
-
-    if best_candidate is not None:
+    if best_candidate:
         best_partition_vec = best_candidate.partition
         logger.debug(
             f"Selected partition seeded with k-core layer >= {max_k} "

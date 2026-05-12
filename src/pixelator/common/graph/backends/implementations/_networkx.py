@@ -39,7 +39,7 @@ from pixelator.common.graph.backends.protocol import (
     VertexClustering,
     VertexSequence,
 )
-from pixelator.common.graph.math import _mat_pow
+from pixelator.common.graph.math import mat_pow
 
 if TYPE_CHECKING:
     from pixelator.mpx.graph import Graph
@@ -902,7 +902,7 @@ def _prob_edge_weights(
 
     # Compute the transition probabilities for a k-step walk
     min_weight = 0.001  # To avoid having the sparse matrix grow too dense
-    P_step = _mat_pow(P, k, prune_threshold=min_weight)
+    P_step = mat_pow(P, k, prune_threshold=min_weight)
     P_step = (P_step + min_weight * P) / (
         1 + min_weight
     )  # Ensure that the original values are not pruned
