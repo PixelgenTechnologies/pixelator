@@ -14,7 +14,7 @@ import scipy.sparse as sp
 from sklearn.cross_decomposition import PLSRegression
 
 from pixelator.common.graph import Graph
-from pixelator.common.graph.backends.implementations._networkx import _mat_pow
+from pixelator.common.graph.math import _mat_pow
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def _residualize_matrix(X: np.ndarray, model_mat: np.ndarray) -> np.ndarray:
 
 
 def _create_node_neighborhood_abundance_matrix(
-    cg: Graph,
+    g: Graph,
     k: int = 2,
     use_weights: bool = False,
     min_weight: float = 0.0,
@@ -53,7 +53,7 @@ def _create_node_neighborhood_abundance_matrix(
     analyses that require a neighborhood-expanded and normalized node abundance matrix.
 
     Args:
-        cg: A Graph object for which to create the node abundance matrix.
+        g: A Graph object for which to create the node abundance matrix.
         k: An integer value specifying the maximum steps from each node to
             expand the neighborhood for creating the predictor matrix X. If `k > 0`,
             the counts will be expanded to include neighborhood counts up to `k`
@@ -89,11 +89,11 @@ def _create_node_neighborhood_abundance_matrix(
             number of nodes in the graph.
 
     """
-    counts = cg.node_marker_counts
+    counts = g.node_marker_counts
     X = counts.values.astype(np.float64)
 
     if k > 0:
-        A = cg.get_adjacency_sparse(node_ordering=counts.index)
+        A = g.get_adjacency_sparse(node_ordering=counts.index)
         # Add self-loops to represent "at most k steps"
         A = A + sp.eye(A.shape[0], format="csr")
 
@@ -150,7 +150,7 @@ def _create_node_neighborhood_abundance_matrix(
 
 
 def node_pls(
-    cg: Graph,
+    g: Graph,
     y_vars: Union[str, List[str]],
     x_vars: Optional[List[str]] = None,
     k: int = 2,
@@ -171,7 +171,7 @@ def node_pls(
     returns the fitted model object.
 
     Args:
-        cg: A Graph object.
+        g: A Graph object.
         y_vars: A string or list of variable names to use as responses (Y).
             These can be column names from the counts matrix or node variables from
             the graph data. The function will check for the presence of these
@@ -228,7 +228,7 @@ def node_pls(
 
     # Create expanded and normalized matrix
     X_expanded = _create_node_neighborhood_abundance_matrix(
-        cg=cg,
+        g=g,
         k=k,
         use_weights=use_weights,
         min_weight=min_weight,
@@ -237,7 +237,7 @@ def node_pls(
         model_mat=model_mat,
     )
 
-    counts = cg.node_marker_counts
+    counts = g.node_marker_counts
     y_in_counts = [y for y in y_vars if y in counts.columns]
     y_not_in_counts = [y for y in y_vars if y not in counts.columns]
 
@@ -251,7 +251,7 @@ def node_pls(
 
     # Extract Y from graph attributes if not in counts
     if y_not_in_counts:
-        v_attr_dict = {v.index: v.data for v in cg.vs}
+        v_attr_dict = {v.index: v.data for v in g.vs}
         for y in y_not_in_counts:
             # Reindex to match counts.index
             y_col = []

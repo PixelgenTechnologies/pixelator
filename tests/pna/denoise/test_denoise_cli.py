@@ -13,9 +13,6 @@ from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import load_antibody_panel
 from pixelator.pna.pixeldataset import read
 
-REFERENCE_COMPONENT = "57129a8b0fff38c6"
-ACE_LOW_NODE_COUNT = 5436
-
 
 @pytest.mark.slow
 def test_denoise_runs_ok(denoise_pxl_file):
@@ -68,8 +65,8 @@ def test_denoise_ace_cli_runs_ok(denoise_pxl_file):
         result = read(out_pxl)
         obs = result.adata().obs
         assert (
-            int(obs.loc[REFERENCE_COMPONENT, "denoised_nodes_marked_only_by_ace"])
-            == ACE_LOW_NODE_COUNT
+            int(obs.loc["57129a8b0fff38c6", "denoised_nodes_marked_only_by_ace"])
+            == 5436
         )
         summary_cols = [
             "denoised_nodes_marked_only_by_ace",

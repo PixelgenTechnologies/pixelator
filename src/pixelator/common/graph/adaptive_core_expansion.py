@@ -11,7 +11,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from pixelator.common.graph import Graph
-from pixelator.common.graph.backends.implementations._networkx import _mat_pow
+from pixelator.common.graph.math import _mat_pow
 from pixelator.common.utils import logger
 
 
@@ -32,7 +32,7 @@ def normalize_counts(x):
 
 
 def adaptive_core_expansion(
-    cg: Graph,
+    g: Graph,
     k: int = 3,
     max_k_core: int = 4,
     binding_thresholds: Sequence[float] = (
@@ -50,7 +50,7 @@ def adaptive_core_expansion(
     min_seed_pct: float = 0.1,
     nodes_to_move_threshold: int = 10,
     min_allowed_nodes_pct: float = 0.8,
-    select_LCC: bool = True,
+    select_lcc: bool = True,
 ) -> Graph:
     """Perform Adaptive Core Expansion (ACE) graph partitioning.
 
@@ -77,7 +77,7 @@ def adaptive_core_expansion(
        min_allowed_nodes_pct requirement is selected.
 
     Args:
-        cg: A `Graph` object containing the cell graph and node count data.
+        g: A `Graph` object containing the cell graph and node count data.
         k: The neighborhood radius (number of steps) used for reachability.
             Larger values increase the "reach" of the core.
         max_k_core: Cap for the maximum k-core layer used for seeding.
@@ -89,7 +89,7 @@ def adaptive_core_expansion(
                                     nodes move.
         min_allowed_nodes_pct: Minimum fraction of nodes required in the final
                                   "high" core partition.
-        select_LCC:  If True, restricts the initial seed to the Largest
+        select_lcc:  If True, restricts the initial seed to the Largest
                        Connected Component.
 
     Returns:
@@ -120,14 +120,14 @@ def adaptive_core_expansion(
     )
 
     try:
-        counts = cg.node_marker_counts
+        counts = g.node_marker_counts
     except AssertionError:
         raise ValueError("The Graph object must contain count data.")
 
     if counts.shape[1] < 2:
         raise ValueError("The 'counts' slot must contain at least two features.")
 
-    raw_graph = cg.raw
+    raw_graph = g.raw
     node_list = list(raw_graph.nodes())
 
     k_cores_dict = nx.core_number(raw_graph)
@@ -162,7 +162,7 @@ def adaptive_core_expansion(
     )
 
     # Compute transition probability matrix P from the adjacency matrix
-    A = cg.get_adjacency_sparse(node_ordering=node_list)
+    A = g.get_adjacency_sparse(node_ordering=node_list)
     A = A + sp.diags_array([1] * A.shape[0], format="csr", dtype=None)
 
     row_sums = np.ravel(A.sum(axis=1))
@@ -178,7 +178,7 @@ def adaptive_core_expansion(
     D_inv = sp.diags_array(1 / row_sums, format="csr")
     P_step = D_inv @ P_step
 
-    if select_LCC:
+    if select_lcc:
         seed_nodes = [node_list[i] for i, k_val in enumerate(k_cores) if k_val == max_k]
         subgraph = raw_graph.subgraph(seed_nodes)
         components = list(nx.connected_components(subgraph))
@@ -281,7 +281,7 @@ def adaptive_core_expansion(
     }
     nx.set_node_attributes(raw_graph, pixel_type_dict, "partition")
 
-    return cg
+    return g
 
 
 def _adaptive_core_expansion_inner(
@@ -318,7 +318,7 @@ def _validate_ace_parameters(
     min_seed_pct: float,
     nodes_to_move_threshold: int,
     min_allowed_nodes_pct: float,
-) -> bool:
+) -> None:
     if not 1 <= k <= 6:
         raise ValueError(f"'k' must be between 1 and 6 inclusive, got {k}.")
     if not 2 <= max_k_core <= 10:
@@ -349,4 +349,4 @@ def _validate_ace_parameters(
         raise ValueError(
             f"'min_allowed_nodes_pct' must be between 0 and 1 (exclusive), got {min_allowed_nodes_pct}."
         )
-    return True
+    return
