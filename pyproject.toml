@@ -150,7 +150,6 @@ ignore = ["E501", "E402", "E203", "D213", "D203"]
 exclude = ["docs/conf.py"]
 
 [tool.ruff.lint.per-file-ignores]
-"pixelator/mpx/report/__init__.py" = ["E501"]
 "**/tests/**" = [
     "D100",
     "D101",
