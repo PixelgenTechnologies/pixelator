@@ -6,7 +6,5 @@ from .base import SampleReport
 
 __all__ = [
     "SampleReport",
-    "CommandInfo",
-    "CommandOption",
     "SummaryStatistics",
 ]
