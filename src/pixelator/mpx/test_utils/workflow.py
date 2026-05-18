@@ -15,7 +15,6 @@ from . import (
     BaseGraphTestsMixin,
     BaseLayoutTestsMixin,
     BasePreQCTestsMixin,
-    BaseReportTestsMixin,
 )
 
 if typing.TYPE_CHECKING:
@@ -27,7 +26,6 @@ if typing.TYPE_CHECKING:
 # A mixin with dependencies on test cases defined in other mixins must be
 # listed **before** the dependent mixins.
 class PixelatorWorkflowTest(
-    BaseReportTestsMixin,
     BaseAnalysisTestsMixin,
     BaseLayoutTestsMixin,
     BaseAnnotateTestsMixin,
