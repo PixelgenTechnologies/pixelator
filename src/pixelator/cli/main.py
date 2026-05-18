@@ -26,7 +26,6 @@ from pixelator.mpx.cli.layout import layout
 from pixelator.mpx.cli.misc import list_single_cell_designs, list_single_cell_panels
 from pixelator.mpx.cli.plugin import add_cli_plugins
 from pixelator.mpx.cli.preqc import preqc
-from pixelator.mpx.cli.report import report
 from pixelator.mpx.logging import LoggingSetup
 
 
@@ -146,7 +145,6 @@ single_cell_mpx.add_command(graph)
 single_cell_mpx.add_command(annotate)
 single_cell_mpx.add_command(layout)
 single_cell_mpx.add_command(analysis)
-single_cell_mpx.add_command(report)
 
 
 # Note that the import order here is intentional.

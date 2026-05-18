@@ -69,8 +69,8 @@ def test_reporting_molecules_flow_summary(
 def test_sorted_pixelator_commands():
     commands = _ordered_pixelator_commands()
 
-    assert len(commands) >= 10
-    assert commands[:10] == [
+    assert len(commands) >= 9
+    assert commands[:9] == [
         "pixelator single-cell-mpx amplicon",
         "pixelator single-cell-mpx preqc",
         "pixelator single-cell-mpx adapterqc",
@@ -80,5 +80,4 @@ def test_sorted_pixelator_commands():
         "pixelator single-cell-mpx annotate",
         "pixelator single-cell-mpx layout",
         "pixelator single-cell-mpx analysis",
-        "pixelator single-cell-mpx report",
     ]
