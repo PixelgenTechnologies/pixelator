@@ -165,7 +165,6 @@ from pixelator.pna.cli.misc import (
     list_single_cell_pna_panels,
     list_single_cell_pna_panels_including_archived,
 )
-from pixelator.pna.cli.report import report
 from pixelator.pna.cli.sample_calling import sample_calling_cli
 
 
@@ -217,7 +216,6 @@ single_cell_pna.add_command(sample_calling_cli, name="sample-calling")
 single_cell_pna.add_command(denoise)
 single_cell_pna.add_command(analysis)
 single_cell_pna.add_command(layout)
-single_cell_pna.add_command(report)
 single_cell_pna.add_command(combine_collapse, name="combine-collapse")
 
 # Add cli plugins as commands on top level
