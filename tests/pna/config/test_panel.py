@@ -1,7 +1,10 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+from tempfile import NamedTemporaryFile
+
 import pandas as pd
 import pytest
+import ruamel.yaml as yaml
 from pandas.testing import assert_frame_equal
 
 from pixelator.common.config import AntibodyPanelMetadata
@@ -108,3 +111,44 @@ def test_panel_from_pxl(pxl_file):
     }
     expected_df = pd.DataFrame(expected_data).set_index("marker_id")
     assert_frame_equal(panel.df, expected_df)
+
+
+def test_panel_header_trailing_commas_warns_and_recovers(caplog):
+    panel_content = """# ---
+# name: test-pna-panel,
+# product: test-product,
+# aliases:
+#   - test-pna
+# description: Test R&D panel for PNA,
+# version: 1.0.0,
+# ---
+marker_id,control,sequence_1,sequence_2
+MarkerA,no,ACTTCCTAGG,ACTTCCTAGG
+"""
+    with NamedTemporaryFile(suffix=".csv", mode="w", encoding="utf-8") as tmp_file:
+        tmp_file.write(panel_content)
+        tmp_file.flush()
+
+        with caplog.at_level("WARNING"):
+            panel = PNAAntibodyPanel.from_csv(tmp_file.name)
+
+    assert panel.name == "test-pna-panel"
+    assert panel.version == "1.0.0"
+    assert "trailing comma" in caplog.text.lower()
+
+
+def test_panel_header_non_recoverable_yaml_still_fails():
+    panel_content = """# ---
+# name: test panel
+# aliases: [test-alias
+# version: 0.1.0
+# ---
+marker_id,control,nuclear,sequence,conj_id
+CD45,no,no,TCCCTTGCGATTTAC,test001
+"""
+    with NamedTemporaryFile(suffix=".csv", mode="w", encoding="utf-8") as tmp_file:
+        tmp_file.write(panel_content)
+        tmp_file.flush()
+
+        with pytest.raises(yaml.YAMLError):
+            PNAAntibodyPanel.from_csv(tmp_file.name)

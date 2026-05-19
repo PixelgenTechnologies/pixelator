@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [x.x.x] - 2026-MM-DD
+## [xx.xx.xx] - 2026-MM-DD
 
 ### Added
 - Two new denoising methods to `pixelator single-cell-pna denoise`:
@@ -13,7 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Partial Least Squares (PLS) denoising: filters nodes using PLS components associated with coreness.
 - Automatically bump panel patch version when possible, when creating an reading Anndata object.
 
+### Changed
+- When parsing panel files, trailing commas in the header will now give a warning and ignore the trailing commas,
+  instead of raising an error.
 
+### Removed
+- Remove the `report` command for both PNA and MPX.
 
 ### Parameters
 
