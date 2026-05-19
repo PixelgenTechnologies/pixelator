@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [x.x.x] - 2026-MM-DD
+
+### Added
+- Two new denoising methods to `pixelator single-cell-pna denoise`:
+  - Adaptive Core Denoising (ACE) denoising: removes peripheral-like nodes around the graph core.
+  - Partial Least Squares (PLS) denoising: filters nodes using PLS components associated with coreness.
+
+
+
+### Parameters
+
+- `pixelator single-cell-pna denoise`
+
+| Old parameter                        | New parameter               |
+| ------------------------------------ | --------------------------- |
+|                                      | `--run-ace-denoising`       |
+|                                      | `--ace-k`                   |
+|                                      | `--ace-max-k-core`          |
+|                                      | `--ace-no-select-lcc`       |
+|                                      | `--one-core-ratio-threshold`|
+|                                      | `--pval-threshold`          |
+|                                      | `--inflate-factor`          |
+|                                      | `--run-pls-denoising`       |
+|                                      | `--pls-ncomp`               |
+|                                      | `--pls-model-k`             |
+|                                      | `--pls-pred-k`              |
+|                                      | `--pls-use-weights / --pls-no-weights` |
+|                                      | `--pls-normalization`       |
+|                                      | `--pls-residualize`         |
+|                                      | `--pls-component-p-threshold` |
+|                                      | `--pls-min-coreness-correlation` |
+|                                      | `--pls-score-threshold`     |
+
+> [!NOTE]
+> Parameter has been **updated** if both old and new parameter information is present.
+> Parameter has been **added** if just the new parameter information is present.
+> Parameter has been **removed** if new parameter information isn't present.
+
 ## [0.26.0] - 2026-05-04
 
 ### Important changes
