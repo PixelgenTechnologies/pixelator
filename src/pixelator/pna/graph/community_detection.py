@@ -1,12 +1,12 @@
 """Community detection and refinement functions for graph analysis.
 
-Copyright (c) 2025 Pixelgen Technologies AB.
+Copyright © 2025 Pixelgen Technologies AB.
 """
 
 import multiprocessing
 import shutil
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import as_completed
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
@@ -457,12 +457,14 @@ def find_components(
         collapsed_edgelist_path=input_edgelist_path
     )
 
+    logger.info("Removing clashing UMIs.")
     no_clash_edgelist_path, component_stats = remove_clashing_umis(
         input_edgelist_path=input_edgelist_path,
         component_stats=component_stats,
         working_dir=working_dir,
     )
 
+    logger.info("Filtering edgelist by read count.")
     filtered_edgelist_path, component_stats = filter_edgelist_by_read_count(
         input_edgelist_path=no_clash_edgelist_path,
         min_read_count=min_read_count,
@@ -470,6 +472,7 @@ def find_components(
         working_dir=working_dir,
     )
 
+    logger.info("Starting component finding process.")
     working_edgelist_path, node_map_path = create_working_edgelist(
         input_edgelist_path=filtered_edgelist_path,
         working_dir=working_dir,
@@ -506,6 +509,7 @@ def find_components(
         )
         raise ConnectedComponentException(msg)
 
+    logger.debug("Populating component statistics from hybrid detection.")
     populate_component_stats_from_hybrid_detection(
         component_stats=component_stats,
         pre_recovery_stats=pre_recovery_stats,
@@ -513,6 +517,7 @@ def find_components(
         post_recovery_stats=post_recovery_stats,
     )
 
+    logger.info("Writing hive partitioned edgelist without small components.")
     hive_partitioned_edgelist_path, discard_sizes = (
         write_hive_partitioned_edgelist_without_small_components(
             input_edgelist_path=partitioned_edgelist_path,
@@ -545,6 +550,7 @@ def find_components(
             component_stats=component_stats,
         )
 
+    logger.debug("Writing unified edgelist.")
     new_edgelist_path = working_dir / "unified_edge_list.parquet"
     pl.scan_parquet(
         latest_working_edgelist_path, hive_schema={"component": pl.String}
@@ -569,6 +575,7 @@ def find_components(
             f"Edge cycle verification completed in {time.time() - time_start:.2f} seconds."
         )
 
+    logger.info("Filtering connected components by size.")
     latest_edgelist = pl.scan_parquet(
         latest_working_edgelist_path, hive_schema={"component": pl.String}
     )
@@ -591,6 +598,7 @@ def find_components(
         final_edgelist_with_components
     )
 
+    logger.info("Writing resolved edgelist.")
     resolved_edgelist_path = working_dir / "edgelist_with_resolved_components.parquet"
     final_edgelist_with_components.sink_parquet(resolved_edgelist_path)
 

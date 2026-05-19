@@ -8,6 +8,7 @@ from tempfile import NamedTemporaryFile
 
 import pandas as pd
 import pytest
+import ruamel.yaml as yaml
 
 from pixelator.common.config import AntibodyPanel
 
@@ -70,4 +71,42 @@ def test_panel_raise_when_there_is_issue(panel: pd.DataFrame):
         duplicated_panel.to_csv(tmp_file.name)
 
         with pytest.raises(AssertionError):
+            AntibodyPanel.from_csv(tmp_file.name)
+
+
+def test_panel_header_trailing_commas_warns_and_recovers(caplog):
+    panel_content = """# ---
+# name: test panel,
+# description: test description,
+# version: 0.1.0,
+# ---
+marker_id,control,nuclear,sequence,conj_id
+CD45,no,no,TCCCTTGCGATTTAC,test001
+"""
+    with NamedTemporaryFile(suffix=".csv", mode="w", encoding="utf-8") as tmp_file:
+        tmp_file.write(panel_content)
+        tmp_file.flush()
+
+        with caplog.at_level("WARNING"):
+            panel = AntibodyPanel.from_csv(tmp_file.name)
+
+    assert panel.name == "test panel"
+    assert panel.version == "0.1.0"
+    assert "trailing comma" in caplog.text.lower()
+
+
+def test_panel_header_non_recoverable_yaml_still_fails():
+    panel_content = """# ---
+# name: test panel
+# aliases: [test-alias
+# version: 0.1.0
+# ---
+marker_id,control,nuclear,sequence,conj_id
+CD45,no,no,TCCCTTGCGATTTAC,test001
+"""
+    with NamedTemporaryFile(suffix=".csv", mode="w", encoding="utf-8") as tmp_file:
+        tmp_file.write(panel_content)
+        tmp_file.flush()
+
+        with pytest.raises(yaml.YAMLError):
             AntibodyPanel.from_csv(tmp_file.name)
