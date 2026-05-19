@@ -45,7 +45,7 @@ dependencies = [
     "xxhash",
     "anndata>=0.8.0",
     "numba>=0.56.4",
-    "scanpy", # Required by lxml
+    "scanpy",
     "typing_extensions",
     "scipy>=1.11.0,<2.0.0",
     "pyarrow>=14",
