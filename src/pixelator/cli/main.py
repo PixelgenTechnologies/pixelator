@@ -26,7 +26,6 @@ from pixelator.mpx.cli.layout import layout
 from pixelator.mpx.cli.misc import list_single_cell_designs, list_single_cell_panels
 from pixelator.mpx.cli.plugin import add_cli_plugins
 from pixelator.mpx.cli.preqc import preqc
-from pixelator.mpx.cli.report import report
 from pixelator.mpx.logging import LoggingSetup
 
 
@@ -146,7 +145,6 @@ single_cell_mpx.add_command(graph)
 single_cell_mpx.add_command(annotate)
 single_cell_mpx.add_command(layout)
 single_cell_mpx.add_command(analysis)
-single_cell_mpx.add_command(report)
 
 
 # Note that the import order here is intentional.
@@ -167,7 +165,6 @@ from pixelator.pna.cli.misc import (
     list_single_cell_pna_panels,
     list_single_cell_pna_panels_including_archived,
 )
-from pixelator.pna.cli.report import report
 from pixelator.pna.cli.sample_calling import sample_calling_cli
 
 
@@ -219,7 +216,6 @@ single_cell_pna.add_command(sample_calling_cli, name="sample-calling")
 single_cell_pna.add_command(denoise)
 single_cell_pna.add_command(analysis)
 single_cell_pna.add_command(layout)
-single_cell_pna.add_command(report)
 single_cell_pna.add_command(combine_collapse, name="combine-collapse")
 
 # Add cli plugins as commands on top level

@@ -10,6 +10,7 @@ from pathlib import Path
 import click
 
 from pixelator.common.utils import (
+    create_output_stage_dir,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -22,10 +23,9 @@ from pixelator.pna.analysis_engine import (
 )
 from pixelator.pna.cli.common import output_option
 from pixelator.pna.layout import CreateLayout
+from pixelator.pna.layout.report import LayoutSampleReport
 from pixelator.pna.pixeldataset import read
 from pixelator.pna.pixeldataset.io import PxlFile
-from pixelator.pna.report.common import PixelatorPNAWorkdir
-from pixelator.pna.report.models.layout import LayoutSampleReport
 
 logger = logging.getLogger(__name__)
 
@@ -91,8 +91,7 @@ def layout(
     sanity_check_inputs(pxl_file, allowed_extensions="pxl")
 
     # create output folder if it does not exist
-    workdir = PixelatorPNAWorkdir(output)
-    layout_output_dir = workdir.stage_dir("layout")
+    layout_output_dir = create_output_stage_dir(output, "layout")
 
     logger.info(f"Computing layout(s) for file {pxl_file}")
 
@@ -110,14 +109,13 @@ def layout(
     ]
 
     pxl_file = PxlFile(Path(pxl_file))
-    pxl_dataset = read(pxl_file.path)
 
     logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
     analysis_manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
     pxl_file_target = PxlFile.copy_pxl_file(
         pxl_file, layout_output_dir / f"{clean_name}.layout.pxl"
     )
-    pxl_dataset = analysis_manager.execute_from_path(
+    analysis_manager.execute_from_path(
         input_pxl_file_path=pxl_file.path, pxl_file_target=pxl_file_target
     )
 

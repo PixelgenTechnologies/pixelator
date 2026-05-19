@@ -10,6 +10,7 @@ import click
 
 from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.common.utils import (
+    create_output_stage_dir,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -21,7 +22,6 @@ from pixelator.mpx.cli.common import logger, output_option
 from pixelator.mpx.pixeldataset.precomputed_layouts import (
     generate_precomputed_layouts_for_components,
 )
-from pixelator.mpx.report.common import PixelatorWorkdir
 from pixelator.mpx.report.models.layout import LayoutSampleReport
 
 
@@ -77,8 +77,7 @@ def layout(
     sanity_check_inputs(pxl_file, allowed_extensions="pxl")
 
     # create output folder if it does not exist
-    workdir = PixelatorWorkdir(output)
-    layout_output_dir = workdir.stage_dir("layout")
+    layout_output_dir = create_output_stage_dir(output, "layout")
 
     logger.info(f"Computing layout(s) for file {pxl_file}")
 

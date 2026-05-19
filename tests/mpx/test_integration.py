@@ -66,10 +66,6 @@ def test_command_line_interface():
     result = runner.invoke(single_cell_mpx, ["analysis", "--help"])
     assert result.exit_code == 0
 
-    # report
-    result = runner.invoke(single_cell_mpx, ["report", "--help"])
-    assert result.exit_code == 0
-
 
 def test_single_cell_list_designs():
     """Test that the list designs command works."""
