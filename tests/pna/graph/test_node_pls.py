@@ -67,7 +67,7 @@ def test_create_node_neighborhood_abundance_matrix(mock_graph):
 
     # Let's just check if it runs without error first
     X_exp = create_node_neighborhood_abundance_matrix(
-        mock_graph, k=1, normalization="none", scale=False
+        mock_graph, k=1, normalization=None, scale=False
     )
     assert isinstance(X_exp, pd.DataFrame)
     assert X_exp.shape[0] == mock_graph.vcount()
