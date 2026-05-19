@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Two new denoising methods to `pixelator single-cell-pna denoise`:
   - Adaptive Core Denoising (ACE) denoising: removes peripheral-like nodes around the graph core.
   - Partial Least Squares (PLS) denoising: filters nodes using PLS components associated with coreness.
+- Automatically bump panel patch version when possible, when creating an reading Anndata object.
 
 
 
