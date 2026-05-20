@@ -7,12 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [xx.xx.xx] - 2026-MM-DD
 
+### Added
+- Two new denoising methods to `pixelator single-cell-pna denoise`:
+  - Adaptive Core Denoising (ACE) denoising: removes peripheral-like nodes around the graph core.
+  - Partial Least Squares (PLS) denoising: filters nodes using PLS components associated with coreness.
+- Automatically bump panel patch version when possible, when creating an reading Anndata object.
+
 ### Changed
 - When parsing panel files, trailing commas in the header will now give a warning and ignore the trailing commas,
   instead of raising an error.
 
 ### Removed
 - Remove the `report` command for both PNA and MPX.
+
+### Parameters
+
+- `pixelator single-cell-pna denoise`
+
+| Old parameter                        | New parameter               |
+| ------------------------------------ | --------------------------- |
+|                                      | `--run-ace-denoising`       |
+|                                      | `--ace-k`                   |
+|                                      | `--ace-max-k-core`          |
+|                                      | `--ace-no-select-lcc`       |
+|                                      | `--one-core-ratio-threshold`|
+|                                      | `--pval-threshold`          |
+|                                      | `--inflate-factor`          |
+|                                      | `--run-pls-denoising`       |
+|                                      | `--pls-ncomp`               |
+|                                      | `--pls-model-k`             |
+|                                      | `--pls-pred-k`              |
+|                                      | `--pls-use-weights / --pls-no-weights` |
+|                                      | `--pls-normalization`       |
+|                                      | `--pls-residualize`         |
+|                                      | `--pls-component-p-threshold` |
+|                                      | `--pls-min-coreness-correlation` |
+|                                      | `--pls-score-threshold`     |
+
+> [!NOTE]
+> Parameter has been **updated** if both old and new parameter information is present.
+> Parameter has been **added** if just the new parameter information is present.
+> Parameter has been **removed** if new parameter information isn't present.
 
 ## [0.26.0] - 2026-05-04
 

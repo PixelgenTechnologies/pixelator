@@ -147,6 +147,10 @@ def create_node_neighborhood_abundance_matrix(
         row_sums[row_sums == 0] = 1
         X = (X / row_sums) * 1e4
         X = np.log1p(X)
+    elif normalization is None:
+        pass
+    else:
+        raise ValueError(f"Invalid normalization method: {normalization}")
 
     # Residualize X
     if model_mat is not None:

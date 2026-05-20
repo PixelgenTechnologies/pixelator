@@ -152,7 +152,7 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--pls-normalization",
     default="L1",
-    type=click.Choice(["L1", "CLR", "LogNormalize", "none"], case_sensitive=True),
+    type=click.Choice(["L1", "CLR", "LogNormalize", None], case_sensitive=True),
     show_default=True,
     help="Normalization for the PLS neighborhood matrix when --run-pls-denoising is set.",
 )
