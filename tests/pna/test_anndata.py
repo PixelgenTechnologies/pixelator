@@ -9,11 +9,13 @@ import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
 
+from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 
 mock_antibody_panel = create_autospec(PNAAntibodyPanel)
+mock_antibody_panel.metadata = create_autospec(AntibodyPanelMetadata)
 mock_antibody_panel.markers = ["A", "B", "C"]
 # Each marker is duplicated in the panel,
 # on these parameters so this accounts for that.

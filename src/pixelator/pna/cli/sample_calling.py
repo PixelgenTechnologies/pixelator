@@ -98,7 +98,7 @@ def sample_calling_cli(
     pool_name = Path(input_pxl_file).name.split(".")[0]
     undetermined_sample_name = f"{pool_name}_undetermined"
 
-    panel_info = PNAAntibodyPanel.from_pxl_file(input_pxl_file)
+    panel_info = PNAAntibodyPanel.from_pxl_dataset(read(input_pxl_file))
     hashing_antibodies_in_panel = set(
         panel_info.df[panel_info.df["sample_hashing"] == "yes"].index.to_list()
     )

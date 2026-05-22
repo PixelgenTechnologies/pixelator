@@ -66,6 +66,19 @@ def pna_pxl_dataset_fixture(pna_pxl_file):
     return pixel
 
 
+@pytest.fixture(name="denoise_pxl_file", scope="module")
+def denoise_pxl_file_fixture(pna_data_root):
+    """Load an example pna pixel from disk."""
+    return pna_data_root / "test_denoise.pxl"
+
+
+@pytest.fixture(name="denoise_pxl_dataset", scope="module")
+def denoise_pxl_dataset_fixture(denoise_pxl_file):
+    """Load an example pna pixel from disk."""
+    pixel = read(denoise_pxl_file)
+    return pixel
+
+
 @pytest.fixture(name="pna_pxl_panel_dataset", scope="module")
 def pna_pxl_panel_dataset_fixture(pna_data_root):
     return read(pna_data_root / "pxl_file_with_panel.pxl")
