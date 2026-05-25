@@ -294,6 +294,53 @@ You can list all available markers using:
 uv run pytest --markers
 ```
 
+## Docstring conventions
+
+Pixelator uses [Google-style docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
+for modules, classes, functions, methods, and test helpers.
+
+### Summary line
+
+- Start with a single-line summary in the imperative mood (for example, "Build a graph from an edgelist.").
+- Add a blank line before section headers when additional detail is needed.
+
+### Sections
+
+Use these section headers when relevant:
+
+- `Args:` for parameters
+- `Returns:` for return values
+- `Yields:` for generators
+- `Raises:` for exceptions
+- `Attributes:` for class or instance attributes (including Pydantic models)
+- `Examples:` and `References:` when they add clarity
+
+Do not use Sphinx/reST field lists such as `:param`, `:returns`, `:rtype`, or `:raises`.
+
+### Types
+
+Prefer type hints in signatures as the source of truth. Repeat types in docstrings only when they clarify
+accepted values, shapes, or domain-specific constraints.
+
+### Module docstrings
+
+Every module should include:
+
+1. A short description of the module's role in the pipeline or library surface.
+2. A blank line.
+3. The copyright line: `Copyright © YYYY Pixelgen Technologies AB.` (preserve dual-license text where present).
+
+### Tests and fixtures
+
+Document the scenario under test, fixture data shape, or helper purpose. Avoid documenting obvious
+assertions when the test name is already descriptive.
+
+### Tooling
+
+- `uv run ruff check src tests utils` enforces pydocstyle rules on production code.
+- `utils/convert_sphinx_to_google.py` can assist bulk conversion from legacy Sphinx-style docstrings.
+- `utils/docstring_audit.py` reports Sphinx markers and missing public docstrings.
+
 ## Understanding the pixelator plugin system
 
 Pixelator has a plugin system that allows you to extend the functionality of pixelator.
@@ -358,7 +405,8 @@ def extend_config(config: "Config"):
     A config object will be passed in from pixelator
     at import time and can be extended here.
 
-    :param config: The config object to extend
+    Args:
+        config: The config object to extend.
     """
     assay_basedir = Path(__file__).parent / "resources" / "assays"
     config.load_assays(assay_basedir)
