@@ -33,10 +33,14 @@ class Graph:
     def __init__(self, backend: GraphBackend):
         """Create a new Graph instance.
 
-        Create a Graph instance (as an end-user this is probably not the interface
-        you are looking for). Try `Graph.from_edgelist`.
+                Create a Graph instance (as an end-user this is probably not the interface
+                you are looking for). Try `Graph.from_edgelist`.
 
-        :param backend: The backend used to represent the graph
+
+
+        Args:
+                backend: The backend used to represent the graph
+
         """
         self._backend = backend
         self._connected_components_needs_recompute = False
@@ -52,27 +56,31 @@ class Graph:
     ) -> Graph:
         """Build a graph from an edgelist.
 
-        Build a Graph from an edge list (pd.DataFrame). Multiple options are available
-        to build the graph, `add_marker_counts` will add a dictionary of marker counts
-        to each node, `simplify` will remove redundant edges and `use_full_bipartite`
-        will not project the graph (UPIA).
+                Build a Graph from an edge list (pd.DataFrame). Multiple options are available
+                to build the graph, `add_marker_counts` will add a dictionary of marker counts
+                to each node, `simplify` will remove redundant edges and `use_full_bipartite`
+                will not project the graph (UPIA).
 
-        The graph will contain the edge attributes present in the edge list when
-        `use_full_bipartite` is True and a dictionary of marker counts in each
-        vertex (node) when `add_marker_counts` is True. If `use_full_bipartite` is
-        False or `simplify` is True the edge attributes will be lost.
+                The graph will contain the edge attributes present in the edge list when
+                `use_full_bipartite` is True and a dictionary of marker counts in each
+                vertex (node) when `add_marker_counts` is True. If `use_full_bipartite` is
+                False or `simplify` is True the edge attributes will be lost.
 
-        :param edgelist: the edge list (dataframe) corresponding to the graph either as
-                         a pandas data frame or as a polars LazyFrame. To minimize the
-                         memory usage the LazyFrame is preferred.
-        :param add_marker_counts: add a dictionary of marker counts to each node
-        :param simplify: simplifies the graph (remove redundant edges)
-        :param use_full_bipartite: use the bipartite graph instead of the projection
-                                  (UPIA)
-        :param convert_indices_to_integers: convert the indices to integers (this is the default)
-        :returns: a Graph instance
-        :rtype: Graph
-        :raises: AssertionError when the input edge list is not valid
+
+
+        Args:
+                edgelist: the edge list (dataframe) corresponding to the graph either as a pandas data frame or as a polars LazyFrame. To minimize the memory usage the LazyFrame is preferred.
+                add_marker_counts: add a dictionary of marker counts to each node
+                simplify: simplifies the graph (remove redundant edges)
+                use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+                convert_indices_to_integers: convert the indices to integers (this is the default)
+
+        Returns:
+                a Graph instance (Graph)
+
+        Raises:
+                AssertionError when the input edge list is not valid
+
         """
         backend = graph_backend().from_edgelist(
             edgelist=edgelist,
@@ -88,14 +96,21 @@ class Graph:
     def from_raw(graph: Any) -> Graph:
         """Generate a Graph from a graph object.
 
-        Which graph object is valid depends on the underlying
-        graph implementation. In general end users should use
-        the `from_edgelist` method instead.
+                Which graph object is valid depends on the underlying
+                graph implementation. In general end users should use
+                the `from_edgelist` method instead.
 
-        :param graph: input graph to use
-        :return: A pixelator Graph object
-        :rtype: Graph
-        :raises ValueError: if type of `graph` is not recognized.
+
+
+        Args:
+                graph: input graph to use
+
+        Returns:
+                A pixelator Graph object (Graph)
+
+        Raises:
+                ValueError: if type of `graph` is not recognized.
+
         """
         Backend = graph_backend_from_graph_type(graph)
         return Graph(backend=Backend(graph))
@@ -139,8 +154,12 @@ class Graph:
     ) -> csr_matrix:
         """Get the sparse adjacency matrix.
 
-        :param node_ordering: Control the node ordering in the adjacency matrix
-        :return: a sparse adjacency matrix
+        Args:
+                node_ordering: Control the node ordering in the adjacency matrix
+
+        Returns:
+                a sparse adjacency matrix
+
         """
         return self._backend.get_adjacency_sparse(node_ordering=node_ordering)
 
@@ -168,39 +187,39 @@ class Graph:
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
-        Generate a dataframe with coordinates, and (optionally) node marker
-        counts to use that can be used for plotting.
+                Generate a dataframe with coordinates, and (optionally) node marker
+                counts to use that can be used for plotting.
 
-        The layout options are:
-          - fruchterman_reingold
-          - fruchterman_reingold_3d
-          - kamada_kawai
-          - kamada_kawai_3d
-          - pmds
-          - pmds_3d
-          - wpmds_3d
+                The layout options are:
+                  - fruchterman_reingold
+                  - fruchterman_reingold_3d
+                  - kamada_kawai
+                  - kamada_kawai_3d
+                  - pmds
+                  - pmds_3d
+                  - wpmds_3d
 
 
-        The `pmds` options are much faster than the force-directed algorithms fruchterman_reingold
-        and kamada_kawai. The `wpmds_3d` option is a weighted version of the `pmds_3d` algorithm.
+                The `pmds` options are much faster than the force-directed algorithms fruchterman_reingold
+                and kamada_kawai. The `wpmds_3d` option is a weighted version of the `pmds_3d` algorithm.
 
-        :param layout_algorithm: the layout algorithm to use to generate the coordinates
-        :param only_keep_a_pixels: If true, only keep the a-pixels
-        :param get_node_marker_matrix: Add a matrix of marker counts to each
-                                       node if True.
-        :param cache: set to `True` in order to cache one call of this this method.
-                      It will make subsequent calls to the layout method
-                      with the same settings much faster, at the cost of additional
-                      memory usage. This can speed things up a lot when plotting
-                      e.g. different markers across multiple markers.
-        :param random_seed: used as the seed for graph layouts with a stochastic
-                            element. Useful to get deterministic layouts across
-                            method calls.
-        :param **kwargs: will be passed to the underlying layout implementation
-        :return: the coordinates and markers (if activated) as a dataframe
-        :rtype: pd.DataFrame
-        :raises: AssertionError if the provided `layout_algorithm` is not valid
-        :raises: ValueError if the provided current graph instance is empty
+
+
+        Args:
+                layout_algorithm: the layout algorithm to use to generate the coordinates
+                only_keep_a_pixels: If true, only keep the a-pixels
+                get_node_marker_matrix: Add a matrix of marker counts to each node if True.
+                cache: set to `True` in order to cache one call of this this method. It will make subsequent calls to the layout method with the same settings much faster, at the cost of additional memory usage. This can speed things up a lot when plotting e.g. different markers across multiple markers.
+                random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
+                **kwargs: will be passed to the underlying layout implementation
+
+        Returns:
+                the coordinates and markers (if activated) as a dataframe (pd.DataFrame)
+
+        Raises:
+                AssertionError if the provided `layout_algorithm` is not valid
+                ValueError if the provided current graph instance is empty
+
         """
         if cache:
             return self._cached_layout_coordinates(
@@ -234,7 +253,9 @@ class Graph:
     def add_edges(self, edges: Iterable[Tuple[int]]) -> None:
         """Add edges to the graph instance.
 
-        :param edges: Add the following edges to the graph instance.
+        Args:
+                edges: Add the following edges to the graph instance.
+
         """
         self._backend.add_edges(edges)
         self._connected_components_needs_recompute = True
@@ -242,12 +263,16 @@ class Graph:
     def add_vertices(self, n_vertices: int, attrs: Dict[str, List]) -> None:
         """Add some number of vertices to the graph instance.
 
-        :param n_vertices: the number of vertices to be added to the graph instance.
-        :param attrs: dict of sequences, all of length equal to the number of vertices
-                      to be added, containing the attributes of the new vertices. If
-                      `n_vertices=1` then they have to be lists of length 1.
-        :raises IndexError: if the number of graph vertices to add and lists of
-                            attributes are of different lengths
+                                    attributes are of different lengths
+
+
+        Args:
+                n_vertices: the number of vertices to be added to the graph instance.
+                attrs: dict of sequences, all of length equal to the number of vertices to be added, containing the attributes of the new vertices. If `n_vertices=1` then they have to be lists of length 1.
+
+        Raises:
+                IndexError: if the number of graph vertices to add and lists of
+
         """
         self._backend.add_vertices(n_vertices=n_vertices, attrs=attrs)
         self._connected_components_needs_recompute = True
@@ -255,10 +280,16 @@ class Graph:
     def add_names_to_vertexes(self, vs_names: List[str]) -> None:
         """Rename the current vertices on the graph instance.
 
-        :param vs_names: Add the following vertices to the graph instance.
-        :raises ValueError: if the graph is empty
-        :raises IndexError: if the number of graph vertices and list of names are
-                            of different length
+                                    of different length
+
+
+        Args:
+                vs_names: Add the following vertices to the graph instance.
+
+        Raises:
+                ValueError: if the graph is empty
+                IndexError: if the number of graph vertices and list of names are
+
         """
         self._backend.add_names_to_vertexes(vs_names=vs_names)
 
@@ -276,22 +307,20 @@ class Graph:
     ) -> pd.DataFrame:
         """Compute the local G metric for each node in the graph.
 
-        The local G metric is a measure of the local clustering of a node in the graph.
+                The local G metric is a measure of the local clustering of a node in the graph.
 
-        :param k: The number of steps in the k-step random walk. Default is 1.
-        :param use_weights: Whether to use weights in the computation. When turned off, all
-        edge weights will be equal to 1. Default is True.
-        :param normalize_counts: Whether to normalize counts to proportions. Default is True.
-        :param W: A sparse matrix of custom edge weights. This will override the automated
-        computation of edge weights. `W` must have the same dimensions as A. Note that weights can
-        be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
-        :param method: The method to use for computing local G. Must be one of 'gi' or 'gstari'.
-        'gi' is the original local G metric, which does not consider self-loops, meaning that the
-        local marker expression for a node is computed by aggregating the weighted expression of
-        its neighbors. 'gstari' is a simplified version of local G that does consider self-loops.
-        In other words, the local marker expression of a node also includes the weighted marker
-        expression of the node itself. Default is 'gi'.
-        :return: A DataFrame of local G-scores for each node and marker.
+
+
+        Args:
+                k: The number of steps in the k-step random walk. Default is 1.
+                use_weights: Whether to use weights in the computation. When turned off, all edge weights will be equal to 1. Default is True.
+                normalize_counts: Whether to normalize counts to proportions. Default is True.
+                W: A sparse matrix of custom edge weights. This will override the automated computation of edge weights. `W` must have the same dimensions as A. Note that weights can be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
+                method: The method to use for computing local G. Must be one of 'gi' or 'gstari'. 'gi' is the original local G metric, which does not consider self-loops, meaning that the local marker expression for a node is computed by aggregating the weighted expression of its neighbors. 'gstari' is a simplified version of local G that does consider self-loops. In other words, the local marker expression of a node also includes the weighted marker expression of the node itself. Default is 'gi'.
+
+        Returns:
+                A DataFrame of local G-scores for each node and marker.
+
         """
         counts = self.node_marker_counts
         A = self.get_adjacency_sparse(node_ordering=counts.index)
