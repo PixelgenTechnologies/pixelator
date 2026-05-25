@@ -92,21 +92,20 @@ class ReaderProcess(mpctx_Process):
         buffer_size: int,
         stdin_fd,
     ):
-        """Initialize a ReaderProcess.
+        """Initialize a reader process that streams chunks to worker connections.
 
-        :param queue to notify the reader that it is ready to receive more data.
-
-        .. note::
-            This expects the paths to the input files as strings because these can be pickled
-            while file-like objects such as BufferedReader cannot. When using multiprocessing with
-            the "spawn" method, which is the default method on macOS, function arguments must be
-            picklable.
+        Note:
+            Input paths are passed as strings because they must be picklable when
+            multiprocessing uses the ``spawn`` start method (default on macOS).
 
         Args:
-        connections: a list of Connection objects, one for each worker.
-        queue: a Queue of worker indices. A worker writes its own index into this
-        buffer_size:
-        stdin_fd:
+            paths: One or more input FASTA/FASTQ paths.
+            file_format_connection: Connection used to communicate detected file format.
+            connections: One connection per worker process.
+            queue: Queue of worker indices ready to receive another chunk.
+            buffer_size: Number of reads to load per chunk.
+            stdin_fd: Optional stdin file descriptor when reading from a pipe.
+
         file_format_connection: File format connection.
         paths: Paths.
         """
