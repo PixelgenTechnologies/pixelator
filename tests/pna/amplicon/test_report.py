@@ -11,6 +11,7 @@ from pixelator.pna.amplicon.report import AmpliconSampleReport, AmpliconStatisti
 
 @pytest.fixture(name="amplicon_report")
 def amplicon_report_fixture():
+    """Amplicon report fixture."""
     return {
         "sample_id": "PNA055_Sample07_300k_S7_001",
         "product_id": "single-cell-pna",
@@ -53,6 +54,12 @@ def amplicon_report_fixture():
 
 
 def test_amplicon_sample_report(amplicon_report):
+    """Verify amplicon sample report.
+
+    Args:
+    amplicon_report: amplicon report.
+
+    """
     report = AmpliconSampleReport(**amplicon_report)
     assert report.sample_id == "PNA055_Sample07_300k_S7_001"
     assert report.product_id == "single-cell-pna"
@@ -89,13 +96,17 @@ def test_amplicon_sample_report(amplicon_report):
 
 
 def test_amplicon_sample_report_from_amplicon_stats():
+    """Verify amplicon sample report from amplicon stats."""
     statistics = AmpliconStatistics()
     statistics.collect(
         n=300000, total_bp1=13200000, total_bp2=23400000, steps=[], modifiers=[]
     )
 
     class MockReadLengths:
+        """Represent mock read lengths."""
+
         def written_lengths(self):
+            """Written lengths."""
             return (Counter({142: 222095}), Counter({}))
 
     read_stats = MockReadLengths()

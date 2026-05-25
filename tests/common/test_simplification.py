@@ -25,5 +25,13 @@ from pixelator.common.utils.simplification import simplify_line_rdp
     ],
 )
 def test_simplification_mask(input, expected, epsilon):
+    """Verify simplification mask.
+
+    Args:
+    input: input.
+    expected: expected.
+    epsilon: epsilon.
+
+    """
     mask = simplify_line_rdp(input, epsilon, return_mask=True)
     assert np.array_equal(mask, expected)

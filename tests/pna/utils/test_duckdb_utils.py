@@ -24,10 +24,23 @@ from pixelator.pna.utils.duckdb_utils import (
     ],
 )
 def test_parse_duckdb_memory_limit_to_bytes(setting: str, expected_bytes: int) -> None:
+    """Verify parse duckdb memory limit to bytes.
+
+    Args:
+        setting: Setting.
+        expected_bytes: Expected bytes.
+
+    """
     assert parse_duckdb_memory_limit_to_bytes(setting) == expected_bytes
 
 
 def test_parse_duckdb_memory_limit_to_bytes_rejects_unknown() -> None:
+    """Verify parse duckdb memory limit to bytes rejects unknown.
+
+    Returns:
+            Result (None).
+
+    """
     with pytest.raises(ValueError, match="Unrecognized"):
         parse_duckdb_memory_limit_to_bytes("12.5 XY")
 
@@ -36,6 +49,12 @@ def test_parse_duckdb_memory_limit_to_bytes_rejects_unknown() -> None:
 def test_get_single_thread_duckdb_config_raises_when_per_thread_below_1mib(
     mock_connect: MagicMock,
 ) -> None:
+    """Verify get single thread duckdb config raises when per thread below 1mib.
+
+    Args:
+        mock_connect: Mock connect.
+
+    """
     mock_con = MagicMock()
     mock_connect.return_value.__enter__.return_value = mock_con
     mock_connect.return_value.__exit__.return_value = None
@@ -51,6 +70,12 @@ def test_get_single_thread_duckdb_config_raises_when_per_thread_below_1mib(
 def test_get_single_thread_duckdb_config_allows_exactly_1_mib_per_thread(
     mock_connect: MagicMock,
 ) -> None:
+    """Verify get single thread duckdb config allows exactly 1 mib per thread.
+
+    Args:
+        mock_connect: Mock connect.
+
+    """
     mock_con = MagicMock()
     mock_connect.return_value.__enter__.return_value = mock_con
     mock_connect.return_value.__exit__.return_value = None
@@ -66,6 +91,12 @@ def test_get_single_thread_duckdb_config_allows_exactly_1_mib_per_thread(
 def test_get_single_thread_duckdb_config_splits_total_bytes(
     mock_connect: MagicMock,
 ) -> None:
+    """Verify get single thread duckdb config splits total bytes.
+
+    Args:
+        mock_connect: Mock connect.
+
+    """
     mock_con = MagicMock()
     mock_connect.return_value.__enter__.return_value = mock_con
     mock_connect.return_value.__exit__.return_value = None
@@ -77,5 +108,11 @@ def test_get_single_thread_duckdb_config_splits_total_bytes(
 
 
 def test_get_single_thread_duckdb_config_rejects_zero_threads() -> None:
+    """Verify get single thread duckdb config rejects zero threads.
+
+    Returns:
+            Result (None).
+
+    """
     with pytest.raises(ValueError, match="n_threads"):
         get_single_thread_duckdb_config(0)

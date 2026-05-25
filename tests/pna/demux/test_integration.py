@@ -17,6 +17,13 @@ from pixelator.pna.demux import (
 
 @pytest.mark.slow
 def test_demux_writing_strategy_paired(tmp_path, testdata_amplicon_fastq):
+    """Verify demux writing strategy paired.
+
+    Args:
+    tmp_path: tmp path.
+    testdata_amplicon_fastq: testdata amplicon fastq.
+
+    """
     input_file = testdata_amplicon_fastq
     assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
@@ -66,7 +73,13 @@ def test_demux_writing_strategy_paired(tmp_path, testdata_amplicon_fastq):
 
 
 def verify_demuxed_groups(files, marker_col):
-    """Helper function to verify that there are no common markers between partitions"""
+    """Helper function to verify that there are no common markers between partitions
+
+    Args:
+        files: Files.
+        marker_col: Marker col.
+
+    """
     marker_sets = {}
     for f in files:
         df = pd.read_parquet(f)
@@ -79,6 +92,13 @@ def verify_demuxed_groups(files, marker_col):
 
 @pytest.mark.slow
 def test_demux_writing_independent(tmp_path, testdata_amplicon_fastq):
+    """Verify demux writing independent.
+
+    Args:
+    tmp_path: tmp path.
+    testdata_amplicon_fastq: testdata amplicon fastq.
+
+    """
     input_file = testdata_amplicon_fastq
     assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")

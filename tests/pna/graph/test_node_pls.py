@@ -46,6 +46,7 @@ def mock_graph():
 
 
 def test_residualize_matrix():
+    """Verify residualize matrix."""
     X = np.array([[1.0, 2.0], [2.0, 4.0], [3.0, 6.0]])
     # model_mat is exactly correlated with X
     model_mat = np.array([[1.0], [2.0], [3.0]])
@@ -66,6 +67,12 @@ def test_create_node_neighborhood_abundance_matrix(mock_graph):
     # To test this unit properly, we need a graph with known counts.
 
     # Let's just check if it runs without error first
+    """Verify create node neighborhood abundance matrix.
+
+    Args:
+    mock_graph: mock graph.
+
+    """
     X_exp = create_node_neighborhood_abundance_matrix(
         mock_graph, k=1, normalization=None, scale=False
     )
@@ -86,6 +93,12 @@ def test_create_node_neighborhood_abundance_matrix(mock_graph):
 
 def test_node_pls_basic(mock_graph):
     # Add a node attribute to the raw networkx graph for testing y_not_in_counts
+    """Verify node pls basic.
+
+    Args:
+    mock_graph: mock graph.
+
+    """
     import networkx as nx
 
     nx.set_node_attributes(
@@ -103,5 +116,11 @@ def test_node_pls_basic(mock_graph):
 
 
 def test_node_pls_invalid_y(mock_graph):
+    """Verify node pls invalid y.
+
+    Args:
+    mock_graph: mock graph.
+
+    """
     with pytest.raises(ValueError, match="not found in counts or graph attributes"):
         node_pls(mock_graph, y_vars="non_existent_var")

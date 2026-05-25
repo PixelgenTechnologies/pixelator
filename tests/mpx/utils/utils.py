@@ -19,6 +19,12 @@ def add_mutations(
     """
     add mutations to a list of DNA sequences, n_mutations will be added
     to n_sequences in the list
+
+    Args:
+        sequences: Sequences.
+        n_sequences: N sequences.
+        n_mutations: N mutations.
+
     """
     new_list = copy.deepcopy(sequences)
     seqs = np.random.choice(new_list, size=n_sequences, replace=False)
@@ -35,6 +41,12 @@ def dna_seqs(length: int, min_dist: int, n_sequences: int) -> List[str]:
     """
     create a list of n_sequences random DNA sequences of length (length)
     where a minimum hamming distance of min_dist is guarantee
+
+    Args:
+        length: Length.
+        min_dist: Min dist.
+        n_sequences: N sequences.
+
     """
     seq_list: List[str] = []
     for _ in range(n_sequences):

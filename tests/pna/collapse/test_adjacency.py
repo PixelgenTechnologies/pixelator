@@ -70,6 +70,10 @@ def test_build_network_directional(umitools_example_matrix):
     90 (AAAT)                72 (ACAT)
                               ↓
                             1 (ACAG)
+
+    Args:
+        umitools_example_matrix: Umitools example matrix.
+
     """
     distances, indices, counts = umitools_example_matrix
 
@@ -107,6 +111,10 @@ def test_build_network_cluster(umitools_example_matrix):
     90 (AAAT)             1 (ACAG)
 
 
+
+
+    Args:
+        umitools_example_matrix: Umitools example matrix.
 
     """
     distances, indices, counts = umitools_example_matrix

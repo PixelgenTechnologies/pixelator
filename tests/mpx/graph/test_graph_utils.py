@@ -22,7 +22,12 @@ from pixelator.mpx.graph.utils import (
 
 
 def test_components_metrics(full_graph_edgelist: pd.DataFrame):
-    """Test generating component metrics."""
+    """Test generating component metrics.
+
+    Args:
+    full_graph_edgelist: Full graph edgelist.
+
+    """
     # test component metrics
     metrics = components_metrics(edgelist=full_graph_edgelist)
     assert_frame_equal(
@@ -53,7 +58,12 @@ def test_components_metrics(full_graph_edgelist: pd.DataFrame):
 
 
 def _create_df_with_expected_types(df):
-    """Make sure that the dataframe gets the correct types and names."""
+    """Make sure that the dataframe gets the correct types and names.
+
+    Args:
+    df: Df.
+
+    """
     df.columns.name = "markers"
     df.columns = df.columns.astype("string[pyarrow]")
     df.index.name = "node"
@@ -62,7 +72,13 @@ def _create_df_with_expected_types(df):
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_create_node_markers_counts_k_eq_0(enable_backend, pentagram_graph):
-    """Test build a node marker matrix with a neigbourhood of 0."""
+    """Test build a node marker matrix with a neigbourhood of 0.
+
+    Args:
+    enable_backend: Enable backend.
+    pentagram_graph: Pentagram graph.
+
+    """
     result = create_node_markers_counts(graph=pentagram_graph, k=0)
 
     expected = pd.DataFrame(
@@ -83,7 +99,13 @@ def test_create_node_markers_counts_k_eq_0(enable_backend, pentagram_graph):
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_create_node_markers_counts_k_eq_1(enable_backend, pentagram_graph):
-    """Test build a node marker matrix with a neigbourhood of 1."""
+    """Test build a node marker matrix with a neigbourhood of 1.
+
+    Args:
+    enable_backend: Enable backend.
+    pentagram_graph: Pentagram graph.
+
+    """
     result = create_node_markers_counts(graph=pentagram_graph, k=1)
 
     expected = pd.DataFrame(
@@ -102,7 +124,13 @@ def test_create_node_markers_counts_k_eq_1(enable_backend, pentagram_graph):
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_create_node_markers_counts_k_eq_2(enable_backend, pentagram_graph):
-    """Test build a node marker matrix with a neigbourhood of 2."""
+    """Test build a node marker matrix with a neigbourhood of 2.
+
+    Args:
+    enable_backend: Enable backend.
+    pentagram_graph: Pentagram graph.
+
+    """
     result = create_node_markers_counts(graph=pentagram_graph, k=2)
 
     expected = pd.DataFrame(
@@ -121,7 +149,13 @@ def test_create_node_markers_counts_k_eq_2(enable_backend, pentagram_graph):
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_create_node_markers_counts_k_eq_2_with_mean(enable_backend, pentagram_graph):
-    """Test build a node marker matrix with a neigbourhood of 2, mean values."""
+    """Test build a node marker matrix with a neigbourhood of 2, mean values.
+
+    Args:
+    enable_backend: Enable backend.
+    pentagram_graph: Pentagram graph.
+
+    """
     result = create_node_markers_counts(
         graph=pentagram_graph, k=2, normalization="mean"
     )
@@ -144,7 +178,13 @@ def test_create_node_markers_counts_k_eq_2_with_mean(enable_backend, pentagram_g
 def test_create_node_markers_counts(
     enable_backend, random_graph_edgelist: pd.DataFrame
 ):
-    """Test build a node marker matrix with a neigbourhood of 0."""
+    """Test build a node marker matrix with a neigbourhood of 0.
+
+    Args:
+    enable_backend: Enable backend.
+    random_graph_edgelist: Random graph edgelist.
+
+    """
     graph = Graph.from_edgelist(
         edgelist=random_graph_edgelist,
         add_marker_counts=True,
@@ -164,7 +204,13 @@ def test_create_node_markers_counts(
 def test_create_node_markers_counts_with_neighbourhood_1_with_mean_normalization(
     enable_backend, random_graph_edgelist: pd.DataFrame
 ):
-    """Test build a node marker matrix with a neigbourhood of 1, with the mean value."""
+    """Test build a node marker matrix with a neigbourhood of 1, with the mean value.
+
+    Args:
+    enable_backend: Enable backend.
+    random_graph_edgelist: Random graph edgelist.
+
+    """
     graph = Graph.from_edgelist(
         edgelist=random_graph_edgelist,
         add_marker_counts=True,
@@ -181,7 +227,13 @@ def test_create_node_markers_counts_with_neighbourhood_1_with_mean_normalization
 def test_create_node_markers_counts_with_neighbourhood_2(
     enable_backend, random_graph_edgelist: pd.DataFrame
 ):
-    """Test build a node marker matrix with a neigbourhood of 2."""
+    """Test build a node marker matrix with a neigbourhood of 2.
+
+    Args:
+    enable_backend: Enable backend.
+    random_graph_edgelist: Random graph edgelist.
+
+    """
     graph = Graph.from_edgelist(
         edgelist=random_graph_edgelist,
         add_marker_counts=True,
@@ -198,7 +250,13 @@ def test_create_node_markers_counts_with_neighbourhood_2(
 def test_create_node_markers_counts_column_order(
     enable_backend, random_graph_edgelist: pd.DataFrame
 ):
-    """Columns should always be returned in alphabetical sort order."""
+    """Columns should always be returned in alphabetical sort order.
+
+    Args:
+    enable_backend: Enable backend.
+    random_graph_edgelist: Random graph edgelist.
+
+    """
     graph = Graph.from_edgelist(
         edgelist=random_graph_edgelist,
         add_marker_counts=True,
@@ -211,7 +269,13 @@ def test_create_node_markers_counts_column_order(
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_create_node_markers_counts_k_eq_1_with_mean(enable_backend, pentagram_graph):
-    """Test build a node marker matrix with a neigbourhood of 1, with the mean value."""
+    """Test build a node marker matrix with a neigbourhood of 1, with the mean value.
+
+    Args:
+    enable_backend: Enable backend.
+    pentagram_graph: Pentagram graph.
+
+    """
     result = create_node_markers_counts(
         graph=pentagram_graph, k=1, normalization="mean"
     )
@@ -234,7 +298,13 @@ def test_create_node_markers_counts_k_eq_1_with_mean(enable_backend, pentagram_g
 def test_create_node_markers_counts_with_neighbourhood_1(
     enable_backend, random_graph_edgelist: pd.DataFrame
 ):
-    """Test build a node marker matrix with a neigbourhood of 1."""
+    """Test build a node marker matrix with a neigbourhood of 1.
+
+    Args:
+    enable_backend: Enable backend.
+    random_graph_edgelist: Random graph edgelist.
+
+    """
     graph = Graph.from_edgelist(
         edgelist=random_graph_edgelist,
         add_marker_counts=True,
@@ -248,7 +318,13 @@ def test_create_node_markers_counts_with_neighbourhood_1(
 
 
 def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame, snapshot):
-    """Test generating edgelist metrics."""
+    """Test generating edgelist metrics.
+
+    Args:
+    full_graph_edgelist: Full graph edgelist.
+    snapshot: Snapshot.
+
+    """
     metrics = edgelist_metrics(full_graph_edgelist)
 
     snapshot.assert_match(
@@ -259,6 +335,13 @@ def test_edgelist_metrics(full_graph_edgelist: pd.DataFrame, snapshot):
 def test_edgelist_metrics_on_lazy_dataframe(
     full_graph_edgelist: pd.DataFrame, snapshot
 ):
+    """Verify edgelist metrics on lazy dataframe.
+
+    Args:
+    snapshot: snapshot.
+    full_graph_edgelist: Full graph edgelist.
+
+    """
     full_graph_edgelist = pl.DataFrame(full_graph_edgelist).lazy()
     metrics = edgelist_metrics(full_graph_edgelist)
 
@@ -269,7 +352,12 @@ def test_edgelist_metrics_on_lazy_dataframe(
 
 
 def test_update_edgelist_membership(data_root):
-    """Test updating the edgelist membership."""
+    """Test updating the edgelist membership.
+
+    Args:
+    data_root: Data root.
+
+    """
     edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
     result = update_edgelist_membership(edgelist.copy())
 
@@ -285,7 +373,14 @@ def test_update_edgelist_membership(data_root):
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_update_edgelist_membership_benchmark(benchmark, enable_backend, data_root):
-    """Test updating the edgelist membership."""
+    """Test updating the edgelist membership.
+
+    Args:
+    benchmark: Benchmark.
+    enable_backend: Enable backend.
+    data_root: Data root.
+
+    """
     edgelist = pd.read_csv(str(data_root / "test_edge_list.csv"))
     result = benchmark(update_edgelist_membership, edgelist.copy())
 
@@ -301,6 +396,13 @@ def test_update_edgelist_membership_benchmark(benchmark, enable_backend, data_ro
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_update_edgelist_membership_lazyframe(enable_backend, data_root):
+    """Verify update edgelist membership lazyframe.
+
+    Args:
+    enable_backend: enable backend.
+    data_root: data root.
+
+    """
     edgelist = pl.read_csv(str(data_root / "test_edge_list.csv")).lazy()
     assert "component" not in edgelist.columns
 

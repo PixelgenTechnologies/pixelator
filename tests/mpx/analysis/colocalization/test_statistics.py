@@ -27,6 +27,7 @@ def _assert_df_equal(results, expected):
 
 
 def test_pearson():
+    """Verify pearson."""
     df = pd.DataFrame(
         [[1, 2, 3, 4], [2, 3, 5, 6], [10, 5, 3, 8]],
         columns=["marker1", "marker2", "marker3", "marker4"],
@@ -50,6 +51,7 @@ def test_pearson():
 def test_pearson_no_variation():
     # Pearson will return NaN if a column has no variation, i.e.
     # we set marker 3, 4 to 3 and 4 for all observations here to test that
+    """Verify pearson no variation."""
     df = pd.DataFrame(
         [[1, 2, 3, 4], [2, 3, 3, 4], [10, 5, 3, 4]],
         columns=["marker1", "marker2", "marker3", "marker4"],
@@ -72,6 +74,7 @@ def test_pearson_no_variation():
 
 
 def test_jaccard():
+    """Verify jaccard."""
     df = pd.DataFrame(
         [[0, -1, 3, 4], [2, 3, 0, 6], [0, 5, 3, 8]],
         columns=["marker1", "marker2", "marker3", "marker4"],
@@ -92,6 +95,7 @@ def test_jaccard():
 
 
 def test_apply_multiple_stats():
+    """Verify apply multiple stats."""
     df = pd.DataFrame(
         [[0, 0, 3, 4], [2, 3, 0, 6], [0, 5, 3, 8]],
         columns=["marker1", "marker2", "marker3", "marker4"],

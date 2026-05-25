@@ -172,6 +172,7 @@ batch3 = [
 
 @pytest.fixture(scope="module")
 def expected_df():
+    """Expected df."""
     marker_1 = []
     marker_2 = []
     molecule = []
@@ -188,7 +189,12 @@ def expected_df():
 
 
 def send_random_batches(queue):
-    """Send a bunch of single row batches."""
+    """Send a bunch of single row batches.
+
+    Args:
+        queue: Queue.
+
+    """
     batch = DemuxRecordBatch()
     for b in [batch1, batch2, batch3]:
         for m1, m2, mol in b:
@@ -203,6 +209,13 @@ def send_random_batches(queue):
 
 @pytest.mark.slow
 def test_demux_writer_process(tmp_path, expected_df):
+    """Verify demux writer process.
+
+    Args:
+    tmp_path: tmp path.
+    expected_df: expected df.
+
+    """
     output_dir = tmp_path
     policy = PartsFilenamePolicy("sample1")
 

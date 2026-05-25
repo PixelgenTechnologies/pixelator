@@ -23,12 +23,19 @@ from tests.pna.conftest import PNA_DATA_ROOT
 
 @pytest.fixture
 def report_files():
+    """Report files."""
     report_files_dir = PNA_DATA_ROOT / "combine_collapse"
     return list(report_files_dir.glob("*.json"))
 
 
 @pytest.fixture
 def report_file_1(tmp_path):
+    """Report file 1.
+
+    Args:
+    tmp_path: tmp path.
+
+    """
     data = {
         "reads_input": 115,
         "molecules_output": 90,
@@ -122,6 +129,12 @@ def report_file_1(tmp_path):
 
 @pytest.fixture
 def report_file_2(tmp_path):
+    """Report file 2.
+
+    Args:
+    tmp_path: tmp path.
+
+    """
     data = {
         "reads_input": 69,
         "molecules_output": 59,
@@ -258,6 +271,14 @@ def report_file_2(tmp_path):
 
 
 def test_combine_collapse_reports(report_file_1, report_file_2, snapshot):
+    """Verify combine collapse reports.
+
+    Args:
+    report_file_1: report file 1.
+    report_file_2: report file 2.
+    snapshot: snapshot.
+
+    """
     combined_stats = combine_report_files([report_file_1, report_file_2])
     combined_dict = combined_stats.to_dict()
 
@@ -270,6 +291,13 @@ def test_combine_collapse_reports(report_file_1, report_file_2, snapshot):
 
 
 def test_combine_collapse_report_to_model(report_file_1, report_file_2):
+    """Verify combine collapse report to model.
+
+    Args:
+    report_file_1: report file 1.
+    report_file_2: report file 2.
+
+    """
     combined_stats = combine_report_files([report_file_1, report_file_2])
     combined_dict = combined_stats.to_dict()
 
@@ -282,6 +310,12 @@ def test_combine_collapse_report_to_model(report_file_1, report_file_2):
 
 @pytest.fixture
 def parquet_files(tmp_path):
+    """Parquet files.
+
+    Args:
+    tmp_path: tmp path.
+
+    """
     df1_data = rec.array(
         [
             (0, "HLA-ABC", "HLA-ABC", 30675668146128039, 71192993612974932, 1, 1),
@@ -329,6 +363,13 @@ def parquet_files(tmp_path):
 
 
 def test_combine_parquet(tmp_path, parquet_files):
+    """Verify combine parquet.
+
+    Args:
+    tmp_path: tmp path.
+    parquet_files: parquet files.
+
+    """
     combined_parquet = tmp_path / "combined.parquet"
     combine_parquet_files(parquet_files, combined_parquet)
 
@@ -345,6 +386,7 @@ def test_combine_parquet(tmp_path, parquet_files):
 
 @pytest.fixture
 def marker1_parquet():
+    """Marker1 parquet."""
     m1_data = rec.array(
         [
             (
@@ -444,6 +486,7 @@ def marker1_parquet():
 
 @pytest.fixture
 def marker2_parquet():
+    """Marker2 parquet."""
     m1_data = rec.array(
         [
             (
@@ -542,6 +585,14 @@ def marker2_parquet():
 
 
 def test_combine_independent_parquet(tmp_path, m1_collapsed_data, m2_collapsed_data):
+    """Verify combine independent parquet.
+
+    Args:
+    tmp_path: tmp path.
+    m1_collapsed_data: m1 collapsed data.
+    m2_collapsed_data: m2 collapsed data.
+
+    """
     combined_parquet = tmp_path / "combined.parquet"
     stats = combine_independent_parquet_files(
         m1_collapsed_data,
@@ -612,6 +663,15 @@ def test_combine_independent_parquet(tmp_path, m1_collapsed_data, m2_collapsed_d
 def test_combine_independent_reports(
     tmp_path, m1_collapsed_report, m2_collapsed_report, snapshot
 ):
+    """Verify combine independent reports.
+
+    Args:
+    tmp_path: tmp path.
+    m1_collapsed_report: m1 collapsed report.
+    m2_collapsed_report: m2 collapsed report.
+    snapshot: snapshot.
+
+    """
     sample_name = "PNA055_Sample07_filtered_S7"
     output_report_path = tmp_path / f"{sample_name}.collapse.report.json"
     combine_independent_report_files(

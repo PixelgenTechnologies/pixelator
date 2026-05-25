@@ -14,7 +14,16 @@ import pixelator.pna.pixeldataset.download as dl
 
 
 class FakeResponse:
+    """Represent fake response."""
+
     def __init__(self, *, chunks: list[bytes], headers: dict[str, str] | None = None):
+        """Initialize the instance.
+
+        Args:
+            chunks: Chunks.
+            headers: Headers.
+
+        """
         self._chunks = chunks
         self.headers = headers or {}
 
@@ -25,13 +34,26 @@ class FakeResponse:
         return None
 
     def raise_for_status(self) -> None:
+        """Raise for status.
+
+        Returns:
+                Result (None).
+
+        """
         return None
 
     def iter_content(self, *, chunk_size: int):  # noqa: ARG002
+        """Iter content.
+
+        Args:
+            chunk_size: Chunk size.
+
+        """
         yield from self._chunks
 
 
 def test_download_dataset_raises_for_unknown_dataset():
+    """Verify download dataset raises for unknown dataset."""
     with pytest.raises(ValueError, match=r"Dataset does-not-exist not found"):
         dl.DownloadableDatasets.download_dataset("does-not-exist")
 
@@ -39,6 +61,13 @@ def test_download_dataset_raises_for_unknown_dataset():
 def test_download_dataset_picks_latest_version_by_default_and_default_output_path(
     monkeypatch, run_in_tmpdir
 ):
+    """Verify download dataset picks latest version by default and default output path.
+
+    Args:
+    monkeypatch: monkeypatch.
+    run_in_tmpdir: run in tmpdir.
+
+    """
     dataset_v1 = dl.Dataset(
         name="example",
         description="Example dataset",
@@ -73,6 +102,12 @@ def test_download_dataset_picks_latest_version_by_default_and_default_output_pat
 
 
 def test_download_dataset_respects_explicit_version(monkeypatch):
+    """Verify download dataset respects explicit version.
+
+    Args:
+    monkeypatch: monkeypatch.
+
+    """
     dataset_v1 = dl.Dataset(
         name="example",
         description="Example dataset",
@@ -112,6 +147,13 @@ def test_download_dataset_respects_explicit_version(monkeypatch):
 def test_download_dataset_skips_if_file_exists_and_overwrite_is_false(
     monkeypatch, tmp_path
 ):
+    """Verify download dataset skips if file exists and overwrite is false.
+
+    Args:
+    monkeypatch: monkeypatch.
+    tmp_path: tmp path.
+
+    """
     dataset_v1 = dl.Dataset(
         name="example",
         description="Example dataset",
@@ -139,6 +181,13 @@ def test_download_dataset_skips_if_file_exists_and_overwrite_is_false(
 
 
 def test_download_dataset_overwrites_if_overwrite_true(monkeypatch, tmp_path):
+    """Verify download dataset overwrites if overwrite true.
+
+    Args:
+    monkeypatch: monkeypatch.
+    tmp_path: tmp path.
+
+    """
     dataset_v1 = dl.Dataset(
         name="example",
         description="Example dataset",
@@ -173,6 +222,13 @@ def test_download_dataset_overwrites_if_overwrite_true(monkeypatch, tmp_path):
 def test_download_pixel_dataset_writes_file_and_calls_requests_get(
     monkeypatch, tmp_path
 ):
+    """Verify download pixel dataset writes file and calls requests get.
+
+    Args:
+    monkeypatch: monkeypatch.
+    tmp_path: tmp path.
+
+    """
     called: dict[str, object] = {}
 
     def fake_get(url: str, *, stream: bool, timeout: tuple[int, int]):
@@ -204,6 +260,13 @@ def test_download_pixel_dataset_writes_file_and_calls_requests_get(
 
 
 def test_report_progress_prints_in_interactive_mode(monkeypatch, capsys):
+    """Verify report progress prints in interactive mode.
+
+    Args:
+    monkeypatch: monkeypatch.
+    capsys: capsys.
+
+    """
     monkeypatch.setattr(dl, "_is_interactive", lambda: True)
     dl._report_progress("Hello %s", "world")
     out = capsys.readouterr().out
@@ -211,6 +274,13 @@ def test_report_progress_prints_in_interactive_mode(monkeypatch, capsys):
 
 
 def test_report_progress_logs_in_non_interactive_mode(monkeypatch, mocker):
+    """Verify report progress logs in non interactive mode.
+
+    Args:
+    monkeypatch: monkeypatch.
+    mocker: mocker.
+
+    """
     monkeypatch.setattr(dl, "_is_interactive", lambda: False)
     info = mocker.Mock()
     monkeypatch.setattr(dl.logger, "info", info)
@@ -220,6 +290,12 @@ def test_report_progress_logs_in_non_interactive_mode(monkeypatch, mocker):
 
 
 def test_is_interactive_detects_ipython(monkeypatch):
+    """Verify is interactive detects ipython.
+
+    Args:
+    monkeypatch: monkeypatch.
+
+    """
     monkeypatch.setattr(dl.sys.stdout, "isatty", lambda: False)
     monkeypatch.setitem(
         dl.sys.modules,

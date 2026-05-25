@@ -7,24 +7,52 @@ from pixelator.pna.pixeldataset import PNAPixelDataset
 
 
 def test_benchmark_load_edgelist(benchmark, pxl_file):
+    """Verify benchmark load edgelist.
+
+    Args:
+    benchmark: benchmark.
+    pxl_file: pxl file.
+
+    """
     dataset = PNAPixelDataset.from_pxl_files(pxl_file)
     result = benchmark(lambda: dataset.edgelist().to_polars())
     assert result.height > 0
 
 
 def test_benchmark_load_proximity(benchmark, pxl_file):
+    """Verify benchmark load proximity.
+
+    Args:
+    benchmark: benchmark.
+    pxl_file: pxl file.
+
+    """
     dataset = PNAPixelDataset.from_pxl_files(pxl_file)
     result = benchmark(lambda: dataset.proximity().to_polars())
     assert result.height > 0
 
 
 def test_benchmark_load_precomputed_layouts(benchmark, pxl_file):
+    """Verify benchmark load precomputed layouts.
+
+    Args:
+    benchmark: benchmark.
+    pxl_file: pxl file.
+
+    """
     dataset = PNAPixelDataset.from_pxl_files(pxl_file)
     result = benchmark(lambda: dataset.precomputed_layouts().to_polars())
     assert result.height > 0
 
 
 def test_benchmark_load_adata(benchmark, pxl_file):
+    """Verify benchmark load adata.
+
+    Args:
+    benchmark: benchmark.
+    pxl_file: pxl file.
+
+    """
     dataset = PNAPixelDataset.from_pxl_files(pxl_file)
     result = benchmark(lambda: dataset.adata())
     assert result.n_obs > 0

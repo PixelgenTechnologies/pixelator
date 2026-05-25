@@ -22,6 +22,7 @@ from pixelator.mpx.analysis.permute import permutations
 
 
 def test_estimate_observation_statistics():
+    """Verify estimate observation statistics."""
     random_number_generator = default_rng(seed=12)
     df = pd.DataFrame(
         random_number_generator.negative_binomial(n=50, p=0.9, size=(4, 4)),
@@ -130,6 +131,7 @@ def test_estimate_observation_statistics():
 
 
 def test_permutation_analysis_results():
+    """Verify permutation analysis results."""
     random_number_generator = default_rng(seed=12)
     for _ in range(0, 5):
         df = pd.DataFrame(
@@ -151,6 +153,7 @@ def test_permutation_analysis_results():
 
 
 def test_permutation_analysis_results_example():
+    """Verify permutation analysis results example."""
     df = pd.DataFrame().from_records(
         [[6, 3, 7, 4], [4, 4, 6, 3], [8, 8, 6, 10], [6, 2, 3, 8]]
     )
@@ -166,6 +169,7 @@ def test_permutation_analysis_results_example():
 
 
 def test_permutation_analysis_results_multiple_functions():
+    """Verify permutation analysis results multiple functions."""
     random_number_generator = default_rng(seed=12)
     for _ in range(0, 5):
         df = pd.DataFrame(

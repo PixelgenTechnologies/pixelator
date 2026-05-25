@@ -14,6 +14,12 @@ from pixelator.pna.pixeldataset import read
 
 @pytest.mark.slow
 def test_denoise_runs_ok(denoise_pxl_file):
+    """Verify denoise runs ok.
+
+    Args:
+    denoise_pxl_file: denoise pxl file.
+
+    """
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as output_dir:
@@ -38,7 +44,12 @@ def test_denoise_runs_ok(denoise_pxl_file):
 
 @pytest.mark.slow
 def test_denoise_ace_cli_runs_ok(denoise_pxl_file):
-    """ACE-only denoise completes and records ACE-specific removal counts."""
+    """ACE-only denoise completes and records ACE-specific removal counts.
+
+    Args:
+        denoise_pxl_file: Denoise pxl file.
+
+    """
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as output_dir:
@@ -87,7 +98,12 @@ def test_denoise_ace_cli_runs_ok(denoise_pxl_file):
 
 @pytest.mark.slow
 def test_denoise_one_core_and_ace_cli_runs_ok(denoise_pxl_file):
-    """One-core plus ACE: ACE counts match full-graph ACE; total includes one-core and stranding."""
+    """One-core plus ACE: ACE counts match full-graph ACE; total includes one-core and stranding.
+
+    Args:
+        denoise_pxl_file: Denoise pxl file.
+
+    """
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as output_dir:
         args = [
@@ -132,7 +148,12 @@ def test_denoise_one_core_and_ace_cli_runs_ok(denoise_pxl_file):
 
 @pytest.mark.slow
 def test_denoise_ace_pls_cli_runs_ok(denoise_pxl_file):
-    """ACE + PLS denoise completes and summary counts account for the applied methods."""
+    """ACE + PLS denoise completes and summary counts account for the applied methods.
+
+    Args:
+        denoise_pxl_file: Denoise pxl file.
+
+    """
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as output_dir:
         args = [

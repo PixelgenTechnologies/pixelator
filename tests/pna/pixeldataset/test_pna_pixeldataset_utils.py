@@ -24,7 +24,12 @@ def mock_adata():
 
 
 def test_update_metrics_anndata_inplace(mock_adata):
-    """Test updating metrics inplace."""
+    """Test updating metrics inplace.
+
+    Args:
+        mock_adata: Mock adata.
+
+    """
     result = update_metrics_anndata(mock_adata, inplace=True)
     assert result is None
 
@@ -83,7 +88,12 @@ def test_update_metrics_anndata_inplace(mock_adata):
 
 
 def test_update_metrics_anndata_not_inplace(mock_adata):
-    """Test updating metrics not inplace."""
+    """Test updating metrics not inplace.
+
+    Args:
+        mock_adata: Mock adata.
+
+    """
     result = update_metrics_anndata(mock_adata, inplace=False)
 
     # Original object should be unchanged (at least for the new columns)
@@ -100,7 +110,12 @@ def test_update_metrics_anndata_not_inplace(mock_adata):
 
 
 def test_update_metrics_anndata_empty(mock_adata):
-    """Test updating metrics with empty data."""
+    """Test updating metrics with empty data.
+
+    Args:
+        mock_adata: Mock adata.
+
+    """
     # Create empty AnnData
     empty_adata = anndata.AnnData(
         X=np.zeros((0, 0)),
@@ -113,7 +128,12 @@ def test_update_metrics_anndata_empty(mock_adata):
 
 
 def test_update_metrics_anndata_sparse(mock_adata):
-    """Test updating metrics with sparse matrix."""
+    """Test updating metrics with sparse matrix.
+
+    Args:
+        mock_adata: Mock adata.
+
+    """
     from scipy import sparse
 
     # Convert mock_adata.X to sparse format

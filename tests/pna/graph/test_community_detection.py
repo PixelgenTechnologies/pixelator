@@ -46,7 +46,12 @@ def test_calculate_post_recovery_component_statistics():
 def test_run_leiden_refinement_raises_when_not_enough_memory_for_duckdb_workers(
     mock_connect: MagicMock,
 ) -> None:
-    """DuckDB memory split across workers must leave at least 1 MiB per thread."""
+    """DuckDB memory split across workers must leave at least 1 MiB per thread.
+
+    Args:
+        mock_connect: Mock connect.
+
+    """
     mock_con = MagicMock()
     mock_connect.return_value.__enter__.return_value = mock_con
     mock_connect.return_value.__exit__.return_value = None

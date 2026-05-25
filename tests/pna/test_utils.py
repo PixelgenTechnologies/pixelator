@@ -7,6 +7,7 @@ from pixelator.pna.utils.units import parse_size
 
 
 def test_parse_size():
+    """Verify parse size."""
     assert parse_size("123") == 123
     assert parse_size("123K") == 123000
     assert parse_size("123M") == 123000000
@@ -34,6 +35,7 @@ def test_parse_size():
 
 
 def test_get_demux_filename_info():
+    """Verify get demux filename info."""
     f1 = "Sample01_ABC_blah.part_000.demux.parquet"
     assert get_demux_filename_info(f1) == ("Sample01_ABC_blah", 0)
 

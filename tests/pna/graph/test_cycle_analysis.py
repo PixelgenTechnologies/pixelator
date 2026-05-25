@@ -7,6 +7,7 @@ from pixelator.pna.graph.cycle_analysis import process_component
 
 
 def test_process_component():
+    """Verify process component."""
     with tempfile.TemporaryDirectory() as tmpdir:
         edgelist = pl.DataFrame(
             {

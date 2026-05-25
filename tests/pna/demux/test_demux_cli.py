@@ -7,6 +7,13 @@ from pixelator import cli
 
 
 def test_demux_invalid_chunk_size(tmp_path, testdata_amplicon_fastq):
+    """Verify demux invalid chunk size.
+
+    Args:
+    tmp_path: tmp path.
+    testdata_amplicon_fastq: testdata amplicon fastq.
+
+    """
     runner = CliRunner()
 
     args = [
@@ -31,6 +38,14 @@ def test_demux_invalid_chunk_size(tmp_path, testdata_amplicon_fastq):
 @pytest.mark.slow
 @pytest.mark.parametrize("panel_file", ["proxiome-v1-immuno-155-v1.0"])
 def test_demux_valid(tmp_path, testdata_amplicon_fastq, panel_file):
+    """Verify demux valid.
+
+    Args:
+    tmp_path: tmp path.
+    testdata_amplicon_fastq: testdata amplicon fastq.
+    panel_file: panel file.
+
+    """
     runner = CliRunner()
 
     args = [
@@ -51,6 +66,14 @@ def test_demux_valid(tmp_path, testdata_amplicon_fastq, panel_file):
 
 @pytest.mark.slow
 def test_demux_custom_panel(tmp_path, testdata_amplicon_fastq, pna_data_root):
+    """Verify demux custom panel.
+
+    Args:
+    tmp_path: tmp path.
+    testdata_amplicon_fastq: testdata amplicon fastq.
+    pna_data_root: pna data root.
+
+    """
     runner = CliRunner()
 
     args = [

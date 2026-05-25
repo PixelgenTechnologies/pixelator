@@ -15,4 +15,11 @@ from pixelator.common.utils import flatten
     ),
 )
 def test_flatten(input, expected):
+    """Verify flatten.
+
+    Args:
+    input: input.
+    expected: expected.
+
+    """
     assert list(flatten(input)) == expected

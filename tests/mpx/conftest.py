@@ -38,7 +38,6 @@ def pytest_addoption(parser: pytest.Parser):
     """Register a command line option for pytest.
     This flag is used in workflow integration tests defined in
     tests/integration.
-    
 
     Args:
     parser: the pytest parser instance
@@ -54,7 +53,13 @@ def pytest_addoption(parser: pytest.Parser):
 
 @pytest.fixture(name="adata", scope="module")
 def adata_fixture(edgelist: pd.DataFrame, panel: AntibodyPanel):
-    """Create an anndata instance."""
+    """Create an anndata instance.
+
+    Args:
+        edgelist: Edgelist.
+        panel: Panel.
+
+    """
     adata = edgelist_to_anndata(edgelist=edgelist, panel=panel)
     return adata
 
@@ -67,7 +72,12 @@ def data_root_fixture():
 
 @pytest.fixture(name="edgelist", scope="module")
 def edgelist_fixture(data_root):
-    """Load an example edgelist from disk."""
+    """Load an example edgelist from disk.
+
+    Args:
+        data_root: Data root.
+
+    """
     edgelist = pl.read_csv(str(data_root / "test_edge_list.csv")).to_pandas()
     g = nx.from_pandas_edgelist(edgelist, source="upia", target="upib")
     node_component_map = pd.Series(index=g.nodes())
@@ -126,14 +136,25 @@ def full_graph_edgelist_fixture():
 
 @pytest.fixture(name="panel", scope="module")
 def panel_fixture(data_root):
-    """Return a panel."""
+    """Return a panel.
+
+    Args:
+        data_root: Data root.
+
+    """
     panel = AntibodyPanel.from_csv(str(data_root / "test_panel.csv"))
     return panel
 
 
 @pytest.fixture(name="pixel_dataset_file")
 def pixel_dataset_file(setup_basic_pixel_dataset, tmp_path) -> Path:
-    """Create pxl file."""
+    """Create pxl file.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+        tmp_path: Tmp path.
+
+    """
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
     dataset.save(str(file_target))
@@ -168,6 +189,12 @@ def full_random_graph_edgelist_fixture():
 
 @pytest.fixture(name="layout_df")
 def layout_df_fixture() -> pd.DataFrame:
+    """Layout df fixture.
+
+    Returns:
+            Result (pd.DataFrame).
+
+    """
     nbr_of_rows = 300
     components = [
         "2ac2ca983a4b82dd",
@@ -203,6 +230,12 @@ def layout_df_fixture() -> pd.DataFrame:
 
 @pytest.fixture(name="precomputed_layouts")
 def precomputed_layouts_fixture(layout_df) -> pd.DataFrame:
+    """Precomputed layouts fixture.
+
+    Args:
+    layout_df: layout df.
+
+    """
     yield PreComputedLayouts(pl.DataFrame(layout_df).lazy())
 
 
@@ -210,7 +243,14 @@ def precomputed_layouts_fixture(layout_df) -> pd.DataFrame:
 def setup_basic_pixel_dataset(
     edgelist: pd.DataFrame, adata: AnnData, precomputed_layouts: PreComputedLayouts
 ):
-    """Create basic pixel dataset, with some dummy data."""
+    """Create basic pixel dataset, with some dummy data.
+
+    Args:
+        edgelist: Edgelist.
+        adata: Adata.
+        precomputed_layouts: Precomputed layouts.
+
+    """
     # TODO make these dataframes more realistic
     # Right now the edgelist does line up with the polarization
     # and colocalization dataframes, and they do not contain all the
@@ -268,6 +308,12 @@ def setup_basic_pixel_dataset(
 
 @pytest.fixture
 def enable_backend(request):
+    """Enable backend.
+
+    Args:
+    request: request.
+
+    """
     previous_environment = os.environ
     if request.param == "networkx":
         new_environment = previous_environment.copy()

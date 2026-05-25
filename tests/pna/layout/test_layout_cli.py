@@ -12,6 +12,12 @@ from pixelator.pna.pixeldataset import read
 
 @pytest.mark.slow
 def test_runs_ok(pna_data_root):
+    """Verify runs ok.
+
+    Args:
+    pna_data_root: pna data root.
+
+    """
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as d:

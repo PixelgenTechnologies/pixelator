@@ -18,6 +18,12 @@ from pixelator.mpx.pixeldataset.utils import read_anndata
 
 
 def test_filter_components_no_filters(adata: AnnData):
+    """Verify filter components no filters.
+
+    Args:
+        adata: Adata.
+
+    """
     sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
         component_sizes=sizes,
@@ -36,6 +42,12 @@ def test_filter_components_min_size(adata: AnnData):
     # 0000002        1996   6000        7  ...         1.0          6.018054  6.018054
     # 0000003        1995   6000        7  ...         1.0          6.024096  6.024096
     # 0000004        1996   6000        7  ...         1.0          6.000000  6.000000
+    """Verify filter components min size.
+
+    Args:
+        adata: Adata.
+
+    """
     sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
         component_sizes=sizes,
@@ -55,6 +67,12 @@ def test_filter_components_max_size(adata: AnnData):
     # 0000002        1996   6000        7  ...         1.0          6.018054  6.018054
     # 0000003        1995   6000        7  ...         1.0          6.024096  6.024096
     # 0000004        1996   6000        7  ...         1.0          6.000000  6.000000
+    """Verify filter components max size.
+
+    Args:
+        adata: Adata.
+
+    """
     sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
         component_sizes=sizes,
@@ -73,7 +91,12 @@ def test_filter_components_all_active(adata: AnnData):
     # PXLCMP0000002 1998    999 999 7   6000    6000    1.0 1.0 6.006006    6.0 6.006006    6.0 1.000000    6.006006    6.0
     # PXLCMP0000003 1996    1000    996 7   6000    6000    1.0 1.0 6.000000    6.0 6.000000    6.0 1.004016    6.000000    6.0
     # PXLCMP0000004 1995    997 998 7   6000    6000    1.0 1.0 6.018054    6.0 6.018054    6.0 0.998998    6.018054    6.0
+    """Verify filter components all active.
 
+    Args:
+        adata: Adata.
+
+    """
     sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
         component_sizes=sizes,
@@ -86,6 +109,12 @@ def test_filter_components_all_active(adata: AnnData):
 
 @pytest.mark.integration_test
 def test_cluster_components(data_root):
+    """Verify cluster components.
+
+    Args:
+    data_root: data root.
+
+    """
     adata = read_anndata(
         str(data_root / "Sample01_human_pbmcs_unstimulated.adata.h5ad")
     )
@@ -112,6 +141,14 @@ def test_cluster_components(data_root):
 
 @pytest.mark.integration_test
 def test_annotate_adata(edgelist: pd.DataFrame, tmp_path: Path, panel: AntibodyPanel):
+    """Verify annotate adata.
+
+    Args:
+        edgelist: Edgelist.
+        tmp_path: Tmp path.
+        panel: Panel.
+
+    """
     output_prefix = "test_filtered"
     metrics_file = tmp_path / "metrics.json"
     assert not metrics_file.is_file()
@@ -142,6 +179,14 @@ def test_annotate_adata(edgelist: pd.DataFrame, tmp_path: Path, panel: AntibodyP
 def test_annotate_adata_should_raise_no_cells_count_exception(
     edgelist: pd.DataFrame, tmp_path: Path, panel: AntibodyPanel
 ):
+    """Verify annotate adata should raise no cells count exception.
+
+    Args:
+        edgelist: Edgelist.
+        tmp_path: Tmp path.
+        panel: Panel.
+
+    """
     with pytest.raises(NoCellsFoundException) as expected_exception:
         output_prefix = "test_filtered"
         metrics_file = tmp_path / "metrics.json"
