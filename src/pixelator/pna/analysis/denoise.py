@@ -142,9 +142,7 @@ def get_overexpressed_markers_in_one_core(
         inflate_factor: A factor used to inflate the excess count of markers identified as overexpressed. Defaults to 1.5.
 
     Returns:
-        pd.DataFrame: A DataFrame with two columns:
-        - "name": The names of the overexpressed markers.
-        - "count": The inflated excess count of each overexpressed marker.
+        DataFrame with columns ``name`` (overexpressed marker) and ``count`` (inflated excess count).
     """
     marker_counts = _calculate_core_marker_counts(node_marker_counts, node_core_numbers)
 

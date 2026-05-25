@@ -53,14 +53,7 @@ def collect_hash_info(
         undetermined_sample_name: Name to use for undetermined components. Defaults to "undetermined".
 
     Returns:
-        pl.DataFrame: A Polars DataFrame containing the following columns:
-        - 'component': The component identifier.
-        - '{sample}_hash_count': The summed hash count for each sample.
-        - '{undetermined_sample_name}_hash_count': The summed hash count for antibodies not mapped to any
-        sample.
-        - 'called_sample': The sample with the highest hash count for each component
-        (may be "undetermined").
-        - 'sample_confidence': The confidence score for the sample assignment.
+        Polars DataFrame with component id, per-sample hash counts, called sample, and confidence score.
     """
     ab_count_data = pl.from_pandas(input_pxl_file.adata().to_df().reset_index()).lazy()
     samples = hashed_antibody_mapping.keys()

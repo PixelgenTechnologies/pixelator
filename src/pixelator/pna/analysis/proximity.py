@@ -22,11 +22,7 @@ def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
         edgelist: A DataFrame representing the edgelist with columns "marker_1" and "marker_2".
 
     Returns:
-        pd.DataFrame: A DataFrame containing the number of edges for each
-        marker pair. The resulting DataFrame includes the columns:
-        - "marker_1": The first marker in the pair.
-        - "marker_2": The second marker in the pair.
-        - "join_count": The number of edges between the marker pair.
+        DataFrame with columns ``marker_1``, ``marker_2``, and ``join_count`` for each marker pair.
     """
     pair_cnt = edgelist.group_by(["marker_1", "marker_2"]).len().to_pandas()
     m1 = pair_cnt["marker_1"].astype(str)

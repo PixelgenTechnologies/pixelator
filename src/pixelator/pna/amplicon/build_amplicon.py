@@ -854,9 +854,8 @@ class PairedEndAmpliconBuilder(AmpliconBuilder):
             info2: Additional modification information for read2. Defaults to None.
 
         Returns:
-            tuple[Amplicon, AmpliconBuilderFailureReason | None]:
             A tuple containing the constructed Amplicon object and a failure reason if applicable.
-            If both reads are None, returns None.
+            Returns None if both reads are None.
         """
         r1_regions = self._scan_forward_read(read1)
         r2_regions = self._scan_reverse_read(read2)
@@ -941,7 +940,6 @@ class SingleEndAmpliconBuilder(AmpliconBuilder):
             info2: Modification info for the reverse read (ignored).
 
         Returns:
-            tuple[Amplicon, AmpliconBuilderFailureReason | None]:
             A tuple containing the constructed Amplicon and an optional failure reason.
         """
         is_read1 = read1 is not None
