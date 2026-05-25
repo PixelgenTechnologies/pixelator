@@ -155,8 +155,6 @@ class DemuxRecordBatch:
 
     Batches are used to collect records before they are serialized and sent to the writer process.
     A batch uses a pre-allocated fixed length numpy array per field to store the records.
-
-    :params batch_size: the maximum number of records in the batch
     """
 
     # TODO: Make this modular by using the assay design

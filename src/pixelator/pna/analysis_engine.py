@@ -114,7 +114,8 @@ def with_logging(f):
 class PerComponentTask(Protocol, Generic[T]):
     """Protocol for tasks that are run on each component in a PixelDataset.
 
-    :var TASK_NAME: The name of the analysis.
+    Attributes:
+        TASK_NAME: The name of the analysis task.
     """
 
     TASK_NAME: typing.ClassVar[str]

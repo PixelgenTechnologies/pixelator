@@ -93,7 +93,7 @@ class FileFqGzEmpty(Exception):
         """Initialize the exception.
 
         Args:
-            msg: Msg.
+            msg: printf-style format string.
             fname: Fname.
             size: Size.
         """
@@ -105,11 +105,10 @@ class FileFqGzEmpty(Exception):
 class CollapsedFragment(typing.NamedTuple):
     """A collapsed fragment.
 
-    :attr sequence: the consensus sequence for a list of similar fragments
-    :attr unique_molecules_count: the number of unique fragments that are
-        represented by this collapsed fragment.
-    :attr read_count: the number of reads that are represented
-        by this collapsed fragment
+    Attributes:
+        sequence: Consensus sequence for a list of similar fragments.
+        unique_molecules_count: Number of unique fragments represented by this collapsed fragment.
+        reads_count: Number of reads represented by this collapsed fragment.
     """
 
     sequence: str
