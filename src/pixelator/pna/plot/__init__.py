@@ -15,13 +15,13 @@ def molecule_rank_plot(
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot the number of molecules (n_umi) per component against its n_umi rank.
 
+    Args:
+    data: Data.
+    group_by: Group by.
+
     Raises:
     AssertionError: If the required column(s) are not present in the DataFrame.
     ValueError: If the data types are invalid.
-
-    Args:
-        data: Data.
-        group_by: Group by.
 
     """
     if "n_umi" not in data.columns:

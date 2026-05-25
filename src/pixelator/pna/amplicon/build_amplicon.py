@@ -866,10 +866,10 @@ class PairedEndAmpliconBuilder(AmpliconBuilder):
         it returns an Amplicon object with all regions set to None and an appropriate failure reason.
 
         Args:
-            read1: Read1.
-            read2: Read2.
-            info1: Info1.
-            info2: Info2.
+        read1: Read1.
+        read2: Read2.
+        info1: Info1.
+        info2: Info2.
 
         """
         r1_regions = self._scan_forward_read(read1)
@@ -949,10 +949,10 @@ class SingleEndAmpliconBuilder(AmpliconBuilder):
         """Process a single read or a pair of reads to construct an amplicon.
 
         Args:
-            read1: Read1.
-            read2: Read2.
-            info1: Info1.
-            info2: Info2.
+        read1: Read1.
+        read2: Read2.
+        info1: Info1.
+        info2: Info2.
 
         """
         is_read1 = read1 is not None

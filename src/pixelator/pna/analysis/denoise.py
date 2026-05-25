@@ -139,10 +139,10 @@ def get_overexpressed_markers_in_one_core(
     marker to be removed from the one-core layer.
 
     Args:
-        node_marker_counts: Node marker counts.
-        node_core_numbers: Node core numbers.
-        pval_significance_threshold: Pval significance threshold.
-        inflate_factor: Inflate factor.
+    node_marker_counts: Node marker counts.
+    node_core_numbers: Node core numbers.
+    pval_significance_threshold: Pval significance threshold.
+    inflate_factor: Inflate factor.
 
     """
     marker_counts = _calculate_core_marker_counts(node_marker_counts, node_core_numbers)
@@ -179,12 +179,12 @@ def _sample_nodes_to_be_removed(
 def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list = []) -> list:
     """Identify nodes that become stranded after removing nodes_to_remove.
 
+    Args:
+    component: Component.
+    nodes_to_remove: Nodes to remove.
+
     Returns:
     list: A list of stranded nodes that are disconnected from the largest connected component after nodes_to_remove are removed.
-
-    Args:
-        component: Component.
-        nodes_to_remove: Nodes to remove.
 
     """
     graph = component.raw.copy()
@@ -406,14 +406,14 @@ def denoise_one_core_layer(
     that are over-expressed using a statistical significance threshold, and
     samples nodes associated with those markers for removal (bleed-over candidates).
 
+    Args:
+    component: Component.
+    pval_significance_threshold: Pval significance threshold.
+    inflate_factor: Inflate factor.
+    one_core_ratio_threshold: One core ratio threshold.
+
     Returns:
     list: Node ids sampled for removal from the one-core layer (bleed-over candidates). Does not include stranded nodes; callers merge with other denoise steps and then call ``get_stranded_nodes`` once on the combined set.
-
-    Args:
-        component: Component.
-        pval_significance_threshold: Pval significance threshold.
-        inflate_factor: Inflate factor.
-        one_core_ratio_threshold: One core ratio threshold.
 
     """
     node_marker_counts = component.node_marker_counts
@@ -446,9 +446,9 @@ def write_denoised_edgelist(
     any AnnData object.
 
     Args:
-        pxl: Pxl.
-        umis_to_remove: Umis to remove.
-        output_edgelist_path: Output edgelist path.
+    pxl: Pxl.
+    umis_to_remove: Umis to remove.
+    output_edgelist_path: Output edgelist path.
 
     """
     with pxl.view.open() as session:

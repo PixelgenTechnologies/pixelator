@@ -31,6 +31,7 @@ def output_option(func):
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Invoke the wrapped Click callback."""
         return func(*args, **kwargs)
 
     return wrapper
@@ -53,6 +54,7 @@ def threads_option(func):
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Invoke the wrapped Click callback."""
         return func(*args, **kwargs)
 
     return wrapper
@@ -87,6 +89,7 @@ def memory_option(func):
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Invoke the wrapped Click callback."""
         return func(*args, **kwargs)
 
     return wrapper
@@ -114,6 +117,7 @@ def design_option(func):
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Invoke the wrapped Click callback."""
         return func(*args, **kwargs)
 
     return wrapper
@@ -171,6 +175,7 @@ def panel_option(func):
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Invoke the wrapped Click callback."""
         return func(*args, **kwargs)
 
     return wrapper

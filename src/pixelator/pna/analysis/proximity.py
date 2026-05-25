@@ -19,7 +19,7 @@ def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
     """Compute the number of edges for each marker pair in the given edgelist.
 
     Args:
-        edgelist: Edgelist.
+    edgelist: Edgelist.
 
     """
     pair_cnt = edgelist.group_by(["marker_1", "marker_2"]).len().to_pandas()
@@ -46,8 +46,8 @@ def _get_markers_above_min_count(edgelist: pl.DataFrame, min_count: int = 0) -> 
     """Filter out markers with low counts from the edgelist.
 
     Args:
-        edgelist: Edgelist.
-        min_count: Min count.
+    edgelist: Edgelist.
+    min_count: Min count.
 
     """
     umi1_counts = (
@@ -91,19 +91,20 @@ def proximity_with_permute_stats(
     supports computing z-scores and p-values for specified result columns.
 
     Args:
-        edgelist: Edgelist.
-        proximity_function: Proximity function.
-        result_columns: Result columns.
-        n_permutations: N permutations.
-        seed: Seed.
-        min_std: Min std.
-        min_marker_count: Min marker count.
+    edgelist: Edgelist.
+    proximity_function: Proximity function.
+    result_columns: Result columns.
+    n_permutations: N permutations.
+    seed: Seed.
+    min_std: Min std.
+    min_marker_count: Min marker count.
 
     """
     passing_markers = _get_markers_above_min_count(edgelist, min_marker_count)
     results = proximity_function(edgelist).set_index(["marker_1", "marker_2"])
 
     def compute_permuted_results():
+        """Compute permuted results."""
         permutations = edgelist_permutations(edgelist, n_permutations, seed)
         for idx, perm in enumerate(permutations):
             perm_results = proximity_function(perm)
@@ -143,9 +144,9 @@ def jcs_with_permute_stats(
     """Compute proximity results augmented with statistics based on permutation tests.
 
     Args:
-        edgelist: Edgelist.
-        n_permutations: N permutations.
-        min_marker_count: Min marker count.
+    edgelist: Edgelist.
+    n_permutations: N permutations.
+    min_marker_count: Min marker count.
 
     """
     return proximity_with_permute_stats(
@@ -202,19 +203,19 @@ def calculate_differential_proximity(
 ) -> pd.DataFrame:
     """Perform differential analysis on marker-pair proximity data.
 
+    Args:
+    proximity_df: Proximity df.
+    contrast_column: Contrast column.
+    reference: Reference.
+    targets: Targets.
+    metric: Metric.
+    metric_type: Metric type.
+    min_n_obs: Min n obs.
+    p_adjust_method: P adjust method.
+
     Raises:
     ValueError: If `contrast_column` is not in `proximity_df`.
     ValueError: If no data is found for the specified `metric_type`.
-
-    Args:
-        proximity_df: Proximity df.
-        contrast_column: Contrast column.
-        reference: Reference.
-        targets: Targets.
-        metric: Metric.
-        metric_type: Metric type.
-        min_n_obs: Min n obs.
-        p_adjust_method: P adjust method.
 
     """
     if contrast_column not in proximity_df.columns:
@@ -237,6 +238,7 @@ def calculate_differential_proximity(
         raise ValueError("No data found for the specified metric type.")
 
     def calc_targets_differential():
+        """Calc targets differential."""
         for target in targets:
             target_data = _filter_target_data(
                 proximity_df, contrast_column, reference, target, metric, min_n_obs

@@ -90,12 +90,12 @@ def calculate_post_recovery_component_statistics(
 ) -> GraphStatistics:
     """Calculate and update graph statistics after multiplet recovery.
 
+    Args:
+    edgelist_with_components_path: Edgelist with components path.
+    component_stats: Component stats.
+
     Returns:
     GraphStatistics: Updated graph statistics.
-
-    Args:
-        edgelist_with_components_path: Edgelist with components path.
-        component_stats: Component stats.
 
     """
     edgelist = pl.scan_parquet(

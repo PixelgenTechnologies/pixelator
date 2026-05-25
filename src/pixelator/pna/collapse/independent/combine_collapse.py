@@ -111,7 +111,7 @@ def combine_independent_parquet_files(
     threads: The number of threads to use for DuckDB. If None, the default is used (all available cores).
     memory_limit: The memory limit to use for DuckDB in MB eg: '1024MiB' for 1GiB. If None, the default is used (80% of the system memory).
     temp_directory: The directory used by DuckDB for disk spilling
-    max_temp_directory_size:  The maximum size in bytes that DuckDB is allowed to use for temporary files. If None, the default is used (90% of the system disk space).
+    max_temp_directory_size: The maximum size in bytes that DuckDB is allowed to use for temporary files. If None, the default is used (90% of the system disk space).
     verbose: If True, enable DuckDB stdout logging.
 
     """

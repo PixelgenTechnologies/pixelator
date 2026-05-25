@@ -284,6 +284,12 @@ class PNAConfig:
             )
 
         def keyfunc(p):
+            """Keyfunc.
+
+            Args:
+            p: p.
+
+            """
             version = p.version
             if version is None:
                 v = semver.Version.parse("0.0.0")

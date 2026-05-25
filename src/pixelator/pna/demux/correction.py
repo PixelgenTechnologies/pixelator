@@ -14,6 +14,7 @@ class BKTreeItem:
     __slots__ = ["id", "sequence"]
 
     def __init__(self, id: int, sequence: bytes):
+        """Initialize the instance."""
         self.id = id
         self.sequence = sequence
 

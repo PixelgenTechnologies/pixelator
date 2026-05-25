@@ -118,6 +118,7 @@ class PNAGraphBackend(NetworkXGraphBackend):
         node_type: dict[str, str] = defaultdict(str)
 
         def create_edges():
+            """Create edges."""
             for row in row_iterator:
                 node1, node2 = row["umi1"], row["umi2"]
                 read_count_per_node[node1] += row["read_count"]

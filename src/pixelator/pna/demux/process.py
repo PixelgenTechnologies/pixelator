@@ -156,15 +156,15 @@ def demux_barcode_groups(
     Sequence records will be streamed into Arrow IPC files given a target batch size.
 
     Args:
-        corrected_reads: Corrected reads.
-        assay: Assay.
-        panel: Panel.
-        stats: Stats.
-        output_dir: Output dir.
-        reads_per_chunk: Reads per chunk.
-        max_chunks: Max chunks.
-        threads: Threads.
-        stategy: Stategy.
+    corrected_reads: Corrected reads.
+    assay: Assay.
+    panel: Panel.
+    stats: Stats.
+    output_dir: Output dir.
+    reads_per_chunk: Reads per chunk.
+    max_chunks: Max chunks.
+    threads: Threads.
+    stategy: Stategy.
 
     """
     # Open file handles for input files

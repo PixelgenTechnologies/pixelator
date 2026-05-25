@@ -487,6 +487,12 @@ class MoleculeCollapser:
         bitvector = self._bitvector
 
         def work_fn_parallel(subrange):
+            """Work fn parallel.
+
+            Args:
+            subrange: subrange.
+
+            """
             start, stop = subrange
             res = MoleculeCollapser._record_group_worker_fn(
                 subrange, groups[start:stop], db_mem, rc_mem, n_molecules, bitvector

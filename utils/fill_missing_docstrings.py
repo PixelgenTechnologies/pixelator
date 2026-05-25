@@ -120,6 +120,7 @@ def process_file(path: Path) -> bool:
 
     updated = source
     changed = False
+    parent_map = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
     nodes: list[tuple[ast.AST, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef):
@@ -128,6 +129,9 @@ def process_file(path: Path) -> bool:
             nodes.append((node, "class"))
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             if node.name.startswith("_") and node.name != "__init__":
+                continue
+            parent = parent_map.get(node)
+            if not isinstance(parent, (ast.Module, ast.ClassDef)):
                 continue
             nodes.append((node, "function"))
 

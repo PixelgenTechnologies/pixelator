@@ -60,6 +60,7 @@ def _add_handlers_to_root_logger(logging_setup):
 
 class _ParallelWithLogging(Parallel):
     def __init__(self, **kwargs):
+        """Initialize the instance."""
         super().__init__(**kwargs)
 
     def _print(self, mgs):
@@ -103,6 +104,7 @@ def with_logging(f):
     @wraps(f)
     def wrapper(*args, **kwds):
         # Turn this into a dectorator
+        """Execute the wrapped function with optional logging setup."""
         logging_setup = kwds.pop("logging_setup", None)
         if logging_setup:
             _add_handlers_to_root_logger(logging_setup)
@@ -303,6 +305,13 @@ class AnalysisManager:
         ) as parallel:
 
             def func(component, analysis_to_run):
+                """Func.
+
+                Args:
+                component: component.
+                analysis_to_run: analysis to run.
+
+                """
                 results = []
                 for analysis_name, analysis in analysis_to_run.items():
                     logger.debug(

@@ -61,15 +61,15 @@ def parse_duckdb_memory_limit_to_bytes(setting: str) -> int:
 def get_single_thread_duckdb_config(n_threads: int) -> dict:
     """Get a DuckDB configuration that limits memory usage for multi-threaded processing.
 
+    Args:
+    n_threads: N threads.
+
     Returns:
     dict: DuckDB configuration dictionary with memory limit and single thread setting.
 
     Raises:
     ValueError: If ``n_threads`` is invalid.
     DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than 1 MiB.
-
-    Args:
-        n_threads: N threads.
 
     """
     if n_threads < 1:

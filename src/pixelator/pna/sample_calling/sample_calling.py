@@ -47,10 +47,10 @@ def collect_hash_info(
     the component is assigned to the "undetermined" sample.
 
     Args:
-        input_pxl_file: Input pxl file.
-        hashed_antibody_mapping: Hashed antibody mapping.
-        confidence_threshold: Confidence threshold.
-        undetermined_sample_name: Undetermined sample name.
+    input_pxl_file: Input pxl file.
+    hashed_antibody_mapping: Hashed antibody mapping.
+    confidence_threshold: Confidence threshold.
+    undetermined_sample_name: Undetermined sample name.
 
     """
     ab_count_data = pl.from_pandas(input_pxl_file.adata().to_df().reset_index()).lazy()
@@ -318,15 +318,12 @@ def sample_calling(
     It supports removing incompatible hashes and renaming hash markers in the output.
 
     Args:
-        input_pxl: Input pixel dataset to dehash into per-sample outputs.
-        hashing_antibody_mapping: Mapping from hash markers to sample identities.
-        output_folder: Directory where per-sample ``.pxl`` files are written.
-        confidence_threshold: Minimum confidence required to assign a sample.
-        remove_incompatible: Whether to drop incompatible hash assignments.
-        undetermined_sample_name: Sample name used for undetermined components.
-
-    Returns:
-        Paths to all output pixel files that were created.
+    input_pxl: Input pixel dataset to dehash into per-sample outputs.
+    hashing_antibody_mapping: Mapping from hash markers to sample identities.
+    output_folder: Directory where per-sample ``.pxl`` files are written.
+    confidence_threshold: Minimum confidence required to assign a sample.
+    remove_incompatible: Whether to drop incompatible hash assignments.
+    undetermined_sample_name: Sample name used for undetermined components.
 
     """
     hash_info = collect_hash_info(
@@ -504,12 +501,12 @@ def create_final_report(
 ) -> SampleCallingTotalReport:
     """Create the final report for the sample calling.
 
+    Args:
+    final_dataset: Final dataset.
+    undetermined_sample_name: Undetermined sample name.
+
     Returns:
     SampleCallingTotalReport: The final report for the sample calling.
-
-    Args:
-        final_dataset: Final dataset.
-        undetermined_sample_name: Undetermined sample name.
 
     """
     n_components = len(final_dataset.components())

@@ -125,11 +125,11 @@ def get_count_statistics(edgelist_path: Path) -> dict:
     as well as the total number of distinct UMIs present in the edgelist. It returns these statistics
     in a dictionary.
 
+    Args:
+    edgelist_path: Edgelist path.
+
     Returns:
     dict: A dictionary containing the following keys: - 'n_edges': Total number of edges in the edgelist. - 'n_umi': Total number of distinct UMIs in the edgelist. - 'n_reads': Total number of reads in the edgelist. - 'n_molecules': Total number of molecules in the edgelist.
-
-    Args:
-        edgelist_path: Edgelist path.
 
     """
     with duckdb.connect() as con:
@@ -223,8 +223,8 @@ def find_clashing_umis(
     3. Are present in both `umi1` and `umi2`.
 
     Args:
-        input_file: Input file.
-        component_stats: Component stats.
+    input_file: Input file.
+    component_stats: Component stats.
 
     """
     with duckdb.connect() as con:
@@ -526,15 +526,15 @@ def filter_connected_components_by_size(
     applies size thresholds (either dynamic or hard thresholds), and filters out components that do not meet the criteria.
     It also updates the component statistics with information about the filtering process.
 
+    Args:
+    edgelist: Edgelist.
+    component_size_threshold: Component size threshold.
+    discard_sizes: Discard sizes.
+    component_stats: Component stats.
+    dynamic_lowest_passable_bound: Dynamic lowest passable bound.
+
     Raises:
     ConnectedComponentException: If no components remain after filtering.
-
-    Args:
-        edgelist: Edgelist.
-        component_size_threshold: Component size threshold.
-        discard_sizes: Discard sizes.
-        component_stats: Component stats.
-        dynamic_lowest_passable_bound: Dynamic lowest passable bound.
 
     """
     component_sizes = combine_component_sizes(edgelist, discard_sizes)

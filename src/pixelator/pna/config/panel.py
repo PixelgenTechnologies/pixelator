@@ -346,6 +346,12 @@ class PNAAntibodyPanel:
             pattern = r"^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}|$"
 
             def check_id(id_str):
+                """Check id.
+
+                Args:
+                id_str: id str.
+
+                """
                 return all(
                     bool(re.match(pattern, id_)) for id_ in str(id_str).split(";")
                 )
