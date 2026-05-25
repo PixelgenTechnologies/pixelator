@@ -114,7 +114,6 @@ def demux(
     design: Design.
     anchored: Anchored.
     rev_complement: Rev complement.
-
     """
     # log input parameters
     input_files = [fastq_file]

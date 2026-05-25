@@ -23,8 +23,8 @@ class BaseWorkflowTestMixin:
                 2. Common data
                 3. Test config data
 
-Args:
-    key: Key.
+        Args:
+        key: Key.
         """
         ...
 
@@ -35,16 +35,16 @@ Args:
     def __get_options(self, key: str) -> Any:  # type: ignore
         """Retrieve a key from the options objects.
 
-Args:
-    key: Key.
+        Args:
+        key: Key.
         """
         ...
 
     def __get_common_data(self, key: str) -> Any:  # type: ignore
         """Retrieve a key from the common data.
 
-Args:
-    key: Key.
+        Args:
+        key: Key.
         """
         ...
 
@@ -66,8 +66,8 @@ Args:
     def __init_subclass__(cls, **kwargs):
         """Some hackery to bind data access functions.
 
-Args:
-    kwargs: Kwargs.
+        Args:
+        kwargs: Kwargs.
         """
         super().__init_subclass__(**kwargs)
         thisclass = BaseWorkflowTestMixin
@@ -110,17 +110,17 @@ Args:
     def __base_get_data(self, name: str, *, data_key=None) -> Any:
         """Retrieve undefined attributes from the class variable dicts.
 
-Args:
-    name: Name.
-    data_key: Data key.
+        Args:
+        name: Name.
+        data_key: Data key.
         """
         return getattr(self, name, None)
 
     def __base_get_options(self, key: str):
         """Retrieve test config data from the class variables defined in the test class.
 
-Args:
-    key: Key.
+        Args:
+        key: Key.
         """
         if not hasattr(self, "options"):
             raise ValueError("No options section found in test config.")

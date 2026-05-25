@@ -28,7 +28,6 @@ class BarcodeCorrectionStatistics(Statistics):
 
         Args:
         other: Other.
-
         """
         super().__iadd__(other)
         if hasattr(other, "_custom_stats"):
@@ -55,7 +54,6 @@ class BarcodeCorrectionStatistics(Statistics):
         Args:
         gc_content: Gc content.
         one_line: One line.
-
         """
         demux_report = None
 
@@ -90,7 +88,6 @@ class BarcodeCorrectionStatistics(Statistics):
         modifiers: Modifiers.
         steps: Steps.
         set_paired_to_none: Set paired to none.
-
         """
         stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
         if set_paired_to_none:

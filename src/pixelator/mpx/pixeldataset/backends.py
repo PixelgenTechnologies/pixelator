@@ -47,7 +47,6 @@ class PixelDatasetBackend(Protocol):
 
         Args:
         value: Value.
-
         """
 
     @property
@@ -60,7 +59,6 @@ class PixelDatasetBackend(Protocol):
 
         Args:
         value: Value.
-
         """
 
     @property
@@ -77,7 +75,6 @@ class PixelDatasetBackend(Protocol):
 
         Args:
         value: Value.
-
         """
 
     @property
@@ -90,7 +87,6 @@ class PixelDatasetBackend(Protocol):
 
         Args:
         value: Value.
-
         """
 
     @property
@@ -103,7 +99,6 @@ class PixelDatasetBackend(Protocol):
 
         Args:
         value: Value.
-
         """
 
     @property
@@ -121,7 +116,6 @@ class PixelDatasetBackend(Protocol):
 
         Args:
         value: Value.
-
         """
         ...
 
@@ -161,7 +155,6 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
         Raises:
         AssertionError: if `adata` or `edgelist` contains no data.
-
         """
         if adata is None or adata.n_obs == 0:
             raise AssertionError("adata cannot be empty")
@@ -198,7 +191,6 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
         Args:
         value: Value.
-
         """
         self._adata = value
 
@@ -213,7 +205,6 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
         Args:
         value: Value.
-
         """
         self._edgelist = value
 
@@ -233,7 +224,6 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
         Args:
         value: Value.
-
         """
         self._metadata = value
 
@@ -248,7 +238,6 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
         Args:
         value: Value.
-
         """
         self._polarization = value
 
@@ -263,7 +252,6 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
         Args:
         value: Value.
-
         """
         self._colocalization = value
 
@@ -280,7 +268,6 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
         Args:
         value: Value.
-
         """
         if value is None:
             self._precomputed_layouts = PreComputedLayouts.create_empty()
@@ -306,7 +293,6 @@ class FileBasedPixelDatasetBackend(PixelDatasetBackend):
         Args:
         path: Path to the ``.pxl`` file.
         datastore: Optional datastore implementation; guessed from ``path`` when omitted.
-
         """
         self._path = path
         if not datastore:
@@ -363,7 +349,6 @@ class FileBasedPixelDatasetBackend(PixelDatasetBackend):
 
         Args:
         value: Value.
-
         """
         if value is None:
             self._precomputed_layouts = PreComputedLayouts.create_empty()

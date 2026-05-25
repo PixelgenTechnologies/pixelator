@@ -54,7 +54,6 @@ def _alphanumeric_sort_marker_columns(
 
     Args:
     data: Data.
-
     """
     data.index = pd.MultiIndex.from_tuples(
         map(sorted, data.index.values), names=data.index.names
@@ -69,7 +68,6 @@ def _drop_self_correlation(
 
     Args:
     data: Data.
-
     """
     return data[data.index.get_level_values(0) != data.index.get_level_values(1)]
 
@@ -83,7 +81,6 @@ def pearson(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
 
     Args:
     df: the RegionByCountsDataFrame to compute Pearson correlation on
-
     """
     pearson_matrix = df.corr(method="pearson")
     pearson_values = _alphanumeric_sort_marker_columns(
@@ -108,7 +105,6 @@ def jaccard(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
 
     Args:
     df: the RegionByCountsDataFrame to compute Jaccard indexes on
-
     """
     jaccard_matrix = pd.DataFrame(
         1 - pairwise_distances((df.T > 0).to_numpy(dtype=bool), metric="jaccard"),
@@ -136,6 +132,5 @@ def apply_multiple_stats(
     Args:
     df: data to compute statistics on
     funcs: a list of functions to use to compute the statistics
-
     """
     return pd.concat([func.func(df) for func in funcs], axis=1)

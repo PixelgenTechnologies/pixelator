@@ -51,7 +51,6 @@ def collect_hash_info(
     hashed_antibody_mapping: Hashed antibody mapping.
     confidence_threshold: Confidence threshold.
     undetermined_sample_name: Undetermined sample name.
-
     """
     ab_count_data = pl.from_pandas(input_pxl_file.adata().to_df().reset_index()).lazy()
     samples = hashed_antibody_mapping.keys()
@@ -147,7 +146,6 @@ def _collect_nodes_to_remove(
     edgelist: Edgelist.
     all_hashing_in_panel: All hashing in panel.
     sample_antibodies: Sample antibodies.
-
     """
     incompatible_hashes = all_hashing_in_panel - set(sample_antibodies)
     edgelist_df = edgelist.collect()
@@ -188,7 +186,6 @@ def _add_original_hash_counts_to_obs(
     Args:
     old_adata: Old adata.
     antibodies_for_obs: Antibodies for obs.
-
     """
     old_anndata_counts = old_adata.to_df()
     for ab in sorted(list(antibodies_for_obs)):
@@ -228,7 +225,6 @@ def _build_post_sample_calling_anndata(
     hash_info: Hash info.
     panel: Panel.
     hashing_antibody_mapping: Hashing antibody mapping.
-
     """
     _add_original_hash_counts_to_obs(
         old_adata, hashing_antibody_mapping.hashing_antibodies
@@ -324,7 +320,6 @@ def sample_calling(
     confidence_threshold: Minimum confidence required to assign a sample.
     remove_incompatible: Whether to drop incompatible hash assignments.
     undetermined_sample_name: Sample name used for undetermined components.
-
     """
     hash_info = collect_hash_info(
         input_pxl,
@@ -440,7 +435,6 @@ class FindHashedNodesToRemove(PerComponentTask):
         Args:
         hashing_antibody_mapping: Hashing antibody mapping.
         sample_name: Sample name.
-
         """
         self.hashing_antibody_mapping = hashing_antibody_mapping
         self.sample_name = sample_name
@@ -453,7 +447,6 @@ class FindHashedNodesToRemove(PerComponentTask):
         Args:
         component: Component.
         component_id: Component id.
-
         """
         sample_antibodies = self.hashing_antibody_mapping.get(self.sample_name, [])
         nodes_to_remove = _collect_nodes_to_remove(
@@ -468,7 +461,6 @@ class FindHashedNodesToRemove(PerComponentTask):
 
         Args:
         data: Data.
-
         """
         return pl.concat(data)
 
@@ -481,7 +473,6 @@ class HashedSampleAnalysisManager(AnalysisManager):
 
         Args:
         pixel_dataset: Pixel dataset.
-
         """
         if self._n_cores is None or self._n_cores > 1:
             per_component_results = self._execute_computations_in_parallel(
@@ -507,7 +498,6 @@ def create_final_report(
 
     Returns:
     SampleCallingTotalReport: The final report for the sample calling.
-
     """
     n_components = len(final_dataset.components())
 
@@ -556,7 +546,6 @@ def warn_if_undetermined_has_high_confidence(
     undetermined_sample_confidences: Undetermined sample confidences.
     confidence_threshold: Confidence threshold.
     undetermined_sample_name: Undetermined sample name.
-
     """
     if (
         np.sum(undetermined_sample_confidences > confidence_threshold)

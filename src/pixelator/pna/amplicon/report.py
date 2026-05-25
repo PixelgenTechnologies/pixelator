@@ -196,7 +196,6 @@ class AmpliconStatistics(Statistics):
 
         Args:
         other: Other.
-
         """
         if other.paired is None:
             other.paired = self.paired
@@ -216,7 +215,6 @@ class AmpliconStatistics(Statistics):
         Args:
         gc_content: Gc content.
         one_line: One line.
-
         """
         return self.as_dict()
 
@@ -323,7 +321,6 @@ class AmpliconStatistics(Statistics):
         modifiers: Modifiers.
         steps: Steps.
         set_paired_to_none: Set paired to none.
-
         """
         stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
         if set_paired_to_none:

@@ -96,7 +96,6 @@ def calculate_post_recovery_component_statistics(
 
     Returns:
     GraphStatistics: Updated graph statistics.
-
     """
     edgelist = pl.scan_parquet(
         edgelist_with_components_path,
@@ -147,7 +146,6 @@ def merge_communities_with_many_crossing_edges(
     n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
     max_edges_to_remove: Max edges to remove.
     max_edges_to_remove_relative: Max edges to remove relative.
-
     """
     community_serie = pd.Series(node_community_dict)
     if max_edges_to_remove is None and max_edges_to_remove_relative is None:
@@ -213,7 +211,6 @@ def refine_component(
 
     Returns:
     int: Number of crossing edges removed during refinement. pd.Series: Sizes of discarded components after refinement.
-
     """
     with duckdb.connect(config=duckdb_config) as con:
         edgelist = con.execute(f"""
@@ -297,7 +294,6 @@ def get_component_sizes(
 
     Args:
     component_edgelists_path: Component edgelists path.
-
     """
     with duckdb.connect() as con:
         component_sizes = con.execute(f"""
@@ -331,7 +327,6 @@ def run_leiden_refinement(
     Raises:
     ValueError: If ``max_workers`` is invalid.
     DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than 1 MiB.
-
     """
     if component_sizes is None:
         component_sizes = get_component_sizes(component_edgelists_path)
@@ -448,7 +443,6 @@ def find_components(
     refinement_options: Options for staged refinement during community detection.
     component_size_threshold: Minimum size threshold for components to be retained.
     n_threads: Number of threads to use for parallel processing.
-
     """
     logger.info("Starting component finding process.")
     component_stats = initialize_graph_statistics(

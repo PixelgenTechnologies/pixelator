@@ -33,14 +33,8 @@ def specificity_tau(matrix: np.ndarray) -> np.ndarray:
             2005 Mar 1;21(5):650-9.
             doi: 10.1093/bioinformatics/bti042. Epub 2004 Sep 23. PMID: 15388519.
 
-
-
     Args:
-        matrix: a numpy matrix of marker counts
-
-    Returns:
-        a vector of the computed tau values
-
+    matrix: a numpy matrix of marker counts
     """
     max_count = np.max(matrix, axis=1)
     _, nbr_markers = matrix.shape
@@ -86,15 +80,9 @@ def call_aggregates(adata: AnnData, inplace: bool = True) -> Optional[AnnData]:
             - `uns["tau_thresholds"]["tau_lower_iqr_limit]` the lower limit
                based on IQR used to set `tau_type` as low
 
-
-
     Args:
-        adata: an AnnData object to call aggregates on
-        inplace: If `True` performs the operation inplace
-
-    Returns:
-        the updated AnnData object or None if inplace is True.
-
+    adata: an AnnData object to call aggregates on
+    inplace: If `True` performs the operation inplace
     """
     logging.debug("Calling aggregates based on tau specificity scores")
 

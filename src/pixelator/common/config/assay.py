@@ -161,8 +161,7 @@ class Region:
         """Set the parent id of this region.
 
         Args:
-                parent_id: parent id to set
-
+        parent_id: parent id to set
         """
         self.parent_id = parent_id
 
@@ -391,11 +390,7 @@ class Assay:
         """Parse an assay from a yaml file.
 
         Args:
-                filename: path to a design config file
-
-        Returns:
-                an Assay instance loaded from the design config
-
+        filename: path to a design config file
         """
         yaml_obj = load_yaml_file(filename)
         checked_obj = AssayModel.model_validate(yaml_obj)
@@ -417,11 +412,7 @@ class Assay:
         """Retrieve a region by its id.
 
         Args:
-                region_id: id of the region to retrieve
-
-        Returns:
-                region with the given id or None if not found
-
+        region_id: id of the region to retrieve
         """
         for r in self.assay_spec:
             maybe_r = r.get_region_by_id(region_id)
@@ -435,11 +426,7 @@ class Assay:
         """Retrieve all regions of a given type.
 
         Args:
-                region_type: region type to retrieve
-
-        Returns:
-                list of regions with the given type
-
+        region_type: region type to retrieve
         """
         regions = []
         for r in self.assay_spec:
@@ -458,20 +445,14 @@ def get_position_in_parent(assay: Assay, region_id: str) -> Tuple[int, int]:
         This assumes the amplicon consists of only fixed length regions in the path
         from the start of the amplicon up until the region of interest.
 
-
-
     Args:
-        assay: assay design
-        region_id: region id of the amplicon
-
-    Returns:
-        tuple with start and end position of the region in the parent region
+    assay: assay design
+    region_id: region id of the amplicon
 
     Raises:
-        ValueError: if the region_id is not found in the assay
-        ValueError: if the region has no parent
-        ValueError: if the parent_region is not found in the assay
-
+    ValueError: if the region_id is not found in the assay
+    ValueError: if the region has no parent
+    ValueError: if the parent_region is not found in the assay
     """
     region = assay.get_region_by_id(region_id)
     if region is None:

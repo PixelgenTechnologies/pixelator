@@ -39,7 +39,6 @@ class OrderedGroup(click.Group):
 
         Args:
         ctx: Ctx.
-
         """
         return self.commands
 
@@ -58,7 +57,6 @@ class AliasedOrderedGroup(OrderedGroup):
         Args:
         args: Args.
         kwargs: Kwargs.
-
         """
 
         def decorator(f):
@@ -97,7 +95,6 @@ def output_option(func):
 
     Args:
     func: Func.
-
     """
 
     @click.option(
@@ -121,7 +118,6 @@ def design_option(func):
 
     Args:
     func: Func.
-
     """
     from pixelator.mpx.config import config
 

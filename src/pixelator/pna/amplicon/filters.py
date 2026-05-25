@@ -37,7 +37,6 @@ class SingleEndFilterWithFailureReason(SingleEndFilter):
         Args:
         predicate: Predicate.
         writer: Writer.
-
         """
         self._filtered = 0
         self._predicate = predicate
@@ -67,7 +66,6 @@ class SingleEndFilterWithFailureReason(SingleEndFilter):
         Args:
         read: The read to filter.
         info: The modification info.
-
         """
         if self._predicate.test(read, info):
             self._filtered += 1
@@ -90,7 +88,6 @@ class TooManyN(Predicate):
         Args:
         count: the cutoff for the N count. If it is below 1.0, it will be considered a proportion, and above and equal to 1 will be considered as discarding reads with a number of N's greater than this cutoff.
         assay: the assay configuration.
-
         """
         assert count >= 0
         self.is_proportion = count < 1.0
@@ -117,7 +114,6 @@ class TooManyN(Predicate):
         Args:
         read: The read to test.
         info: The modification info.
-
         """
         r = read.sequence.lower()
         region1 = r[self._region1]
@@ -148,7 +144,6 @@ class LowComplexityUMI(Predicate):
         Args:
         assay: the assay configuration.
         proportion: the proportion of a single base that defines low complexity.
-
         """
         if not 0.0 < proportion < 1.0:
             raise ValueError(
@@ -179,7 +174,6 @@ class LowComplexityUMI(Predicate):
         Args:
         read: The read to test.
         info: The modification info.
-
         """
         umi1 = np.frombuffer(
             read.sequence[self._umi1_region_slice].encode("ascii"), dtype="S1"
@@ -215,7 +209,6 @@ class LBSDetectedInUMI(Predicate):
     assay: The assay configuration.
     min_overlap: Minimum overlap for alignment.
     max_error_rate: Maximum error rate for alignment.
-
     """
 
     def __init__(self, assay, min_overlap=8, max_error_rate=0.2) -> None:
@@ -225,7 +218,6 @@ class LBSDetectedInUMI(Predicate):
         assay: Assay.
         min_overlap: Min overlap.
         max_error_rate: Max error rate.
-
         """
         self.assay = assay
         self.min_overlap = min_overlap
@@ -274,7 +266,6 @@ class LBSDetectedInUMI(Predicate):
         Args:
         read: The read to test.
         info: The modification info.
-
         """
         umi1 = read.sequence[self._umi1_region_slice]
         umi2 = read.sequence[self._umi2_region_slice]

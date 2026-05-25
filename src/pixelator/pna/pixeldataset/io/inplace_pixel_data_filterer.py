@@ -26,7 +26,6 @@ class InplacePixelDataFilterer:
 
         Args:
         pxl_file: Pxl file.
-
         """
         self.pxl_file = pxl_file
 
@@ -94,7 +93,6 @@ class InplacePixelDataFilterer:
         Args:
         components: The components to keep.
         metadata: The metadata to write to the PXL
-
         """
         # If there are not components provided, do nothing.
         if not components:

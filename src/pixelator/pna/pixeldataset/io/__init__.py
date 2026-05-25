@@ -143,7 +143,6 @@ def copy_databases(src_db: Path, target_db: Path) -> None:
     Args:
     src_db: The source PXL file.
     target_db: The target PXL file.
-
     """
     query = f"""
     ATTACH '{str(src_db)}' AS src (READ_ONLY);

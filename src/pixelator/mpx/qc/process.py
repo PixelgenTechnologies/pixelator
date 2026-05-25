@@ -63,7 +63,6 @@ def qc_fastq(
 
     Raises:
     ValueError: raises an exception
-
     """
     args = [
         "fastp",
@@ -175,7 +174,6 @@ def adapter_qc_fastq(
 
     Raises:
     ValueError: raises an exception
-
     """
     min_overlap_pbs1 = len(pbs1) - int(mismatches * len(pbs1))
     min_overlap_pbs2 = len(pbs2) - int(mismatches * len(pbs2))

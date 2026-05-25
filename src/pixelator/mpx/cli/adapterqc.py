@@ -59,7 +59,6 @@ def adapterqc(
     mismatches: Mismatches.
     output: Output.
     design: Design.
-
     """
     from pixelator.mpx.config.config_instance import config
 

@@ -76,7 +76,6 @@ class DemuxPipeline:
         Args:
         demuxer: The barcode demuxer to use
         writer_queue: The queue to send the processed reads to
-
         """
         self._demuxer = demuxer
         self._writer_queue = writer_queue
@@ -86,7 +85,6 @@ class DemuxPipeline:
 
         Args:
         writer_queue: Writer queue.
-
         """
         self._writer_queue = writer_queue
 
@@ -100,7 +98,6 @@ class DemuxPipeline:
         Args:
         infiles: Input chunks of data as a file-like object
         progress: A progress object to update
-
         """
         assert self._writer_queue is not None
 
@@ -182,7 +179,6 @@ class RecordBatchList:
 
         Args:
         batch: Batch.
-
         """
         self._batches.append(batch)
         self._total_num_rows += batch.num_rows
@@ -212,7 +208,6 @@ class DemuxFilenamePolicy(Protocol):
 
         Args:
         group_index: The index of the group to write the data to
-
         """
         ...
 
@@ -229,7 +224,6 @@ class PartsFilenamePolicy(DemuxFilenamePolicy):
 
         Args:
         prefix: The prefix to use for the output files.
-
         """
         super().__init__()
         self.prefix = prefix
@@ -239,7 +233,6 @@ class PartsFilenamePolicy(DemuxFilenamePolicy):
 
         Args:
         group_index: Group index.
-
         """
         return f"{self.prefix}.part_{group_index:03d}.parquet"
 
@@ -262,7 +255,6 @@ class IndependentMarkersFilenamePolicy(DemuxFilenamePolicy):
         prefix: The prefix to use for the output files.
         m1_map: M1 map.
         m2_map: M2 map.
-
         """
         super().__init__()
         self.prefix = prefix
@@ -285,7 +277,6 @@ class IndependentMarkersFilenamePolicy(DemuxFilenamePolicy):
 
         Args:
         group_index: Group index.
-
         """
         if group_index in self._m1_groups:
             idx = self._rescaled_m1(group_index)
@@ -318,7 +309,6 @@ class DemuxWriterProcess(mpctx_Process):
         connection: The connection to the parent process
         schema: The schema of the arrow Tables received from the worker nodes
         filename_policy: Filename policy.
-
         """
         super().__init__()
 
@@ -345,7 +335,6 @@ class DemuxWriterProcess(mpctx_Process):
 
         Args:
         group_index: Group index.
-
         """
         name = self.filename_policy.get_filename(group_index)
         output_file_path = str(self.output_directory / name)
@@ -401,7 +390,6 @@ class DemuxWriterProcess(mpctx_Process):
         Args:
         group_index: The index of the group to write the data to
         buf: The serialized bytes of a RecordBatch received from a worker process
-
         """
         # Convert the raw buffer back into a RecordBatch
         group_batch = pa.ipc.read_record_batch(buf, self._schema)
@@ -418,7 +406,6 @@ class DemuxWriterProcess(mpctx_Process):
         Args:
         group_index: The index of the group to write the data to
         group_data: The RecordBatchList containing the data to write
-
         """
         table = pa.Table.from_batches(group_data.batches())
         writer = self._batch_writers.get(group_index)
@@ -474,7 +461,6 @@ class DemuxWorkerProcess(mpctx_Process):
         writer_queue: The queue to send the processed reads to
         need_work_queue: The queue to notify the reader process that work is needed
         statistics_class: Statistics class.
-
         """
         super().__init__()
         self._id = id_
@@ -556,7 +542,6 @@ class WorkerException(Exception):
         Args:
         wrapped_exception: The original exception
         tb_str: The traceback string
-
         """
         self.e = wrapped_exception
         self.tb_str = tb_str
@@ -605,7 +590,6 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
         output_directory: The directory to write the output files to.
         filename_policy: The policy to determine the filename of the output files.
         buffer_size: The size of the buffer to use for reading data.
-
         """
         self._n_workers = n_workers
         self._need_work_queue: multiprocessing.Queue = mpctx.Queue()
@@ -666,7 +650,6 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
 
         Args:
         pipeline: Pipeline.
-
         """
         workers = []
         out_connection_parent: list[Connection] = []
@@ -697,7 +680,6 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
         Args:
         pipeline: The pipeline to run.
         progress: A progress object to update with the number of processed reads.
-
         """
         workers, connections = self._start_workers(pipeline)
 
@@ -789,7 +771,6 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
 
         Args:
         connection: Connection.
-
         """
         result = connection.recv()
         if result == -2:

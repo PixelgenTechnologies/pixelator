@@ -92,7 +92,6 @@ def graph(
     max_edges_to_split: Max edges to split.
     min_count: Min count.
     output: Output.
-
     """
     # log input parameters
     input_files = [parquet_file]

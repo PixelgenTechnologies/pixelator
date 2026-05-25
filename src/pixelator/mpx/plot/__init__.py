@@ -41,7 +41,6 @@ def scatter_umi_per_upia_vs_tau(
     Args:
     data: a pandas DataFrame with the columns 'umi_per_upia', 'tau', and 'tau_type'.
     group_by: a column in the DataFrame to group the plot by.
-
     """
     # Validate data
     required_columns = ["umi_per_upia", "tau", "tau_type"]
@@ -101,7 +100,6 @@ def molecule_rank_plot(
     Args:
     data: a pandas DataFrame with a column 'molecules' containing edge counts for MPX components.
     group_by: a column in the DataFrame to group the plot by.
-
     """
     if "molecules" not in data.columns and "edges" in data.columns:
         data["molecules"] = data["edges"]
@@ -151,7 +149,6 @@ def edge_rank_plot(
     Args:
     data: a pandas DataFrame with a column 'edges' containing edge counts for MPX components.
     group_by: a column in the DataFrame to group the plot by.
-
     """
     warnings.warn(
         "edge_rank_plot is deprecated and will be removed in a future version. Use molecule_rank_plot instead.",
@@ -207,7 +204,6 @@ def cell_count_plot(
     color_by: Column used to color bars (and group when ``group_by`` is omitted).
     group_by: Optional column used to group bars.
     flip_axes: Plot counts on the x-axis instead of the y-axis.
-
     """
     # Validate inputs
     if group_by is not None:
@@ -391,7 +387,6 @@ def density_scatter_plot(
     facet_column: The column to use for faceting the plot by columns. Defaults to None.
     gate: The gate to use for marking a range of interest. Defaults to None.
     show_marginal: Whether to show marginal distributions. Defaults to False.
-
     """
     layer_data = adata.to_df(layer)
     data = layer_data.loc[:, [marker1, marker2]]
@@ -452,7 +447,6 @@ def abundance_colocalization_plot(
     markers_y: List of markers for the y-axis.
     layer: The anndata layer (e.g. transformation) to use for the marker data.
     colocalization_column: The column in the colocalization table to use for colocalization values. Defaults to "pearson_z".
-
     """
     data = pixel.adata.to_df(layer)
     merged_data = pd.DataFrame()

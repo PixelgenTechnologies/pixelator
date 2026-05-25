@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Add Google-style docstrings to public symbols missing documentation."""
+"""Add Google-style docstrings to public symbols missing documentation.
+
+Copyright © 2025 Pixelgen Technologies AB.
+"""
 
 from __future__ import annotations
 
@@ -72,7 +75,13 @@ def _build_docstring(node: ast.AST, kind: str) -> str:
 
         if node.returns:
             ret = _annotation_name(node.returns)
-            sections.extend(["Returns:", f"        Result ({ret})." if ret else "        Result.", ""])
+            sections.extend(
+                [
+                    "Returns:",
+                    f"        Result ({ret})." if ret else "        Result.",
+                    "",
+                ]
+            )
 
     while sections and sections[-1] == "":
         sections.pop()
@@ -84,7 +93,11 @@ def _build_docstring(node: ast.AST, kind: str) -> str:
 def _insert_docstring(source: str, node: ast.AST, kind: str) -> str | None:
     if ast.get_docstring(node, clean=False):
         return None
-    if isinstance(node, ast.FunctionDef) and node.name.startswith("_") and node.name != "__init__":
+    if (
+        isinstance(node, ast.FunctionDef)
+        and node.name.startswith("_")
+        and node.name != "__init__"
+    ):
         return None
     if isinstance(node, ast.ClassDef) and node.name.startswith("_"):
         return None
@@ -112,6 +125,7 @@ def _insert_docstring(source: str, node: ast.AST, kind: str) -> str | None:
 
 
 def process_file(path: Path) -> bool:
+    """Process file."""
     source = path.read_text(encoding="utf-8")
     try:
         tree = ast.parse(source)
@@ -120,7 +134,11 @@ def process_file(path: Path) -> bool:
 
     updated = source
     changed = False
-    parent_map = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
+    parent_map = {
+        child: parent
+        for parent in ast.walk(tree)
+        for child in ast.iter_child_nodes(parent)
+    }
     nodes: list[tuple[ast.AST, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef):
@@ -133,11 +151,15 @@ def process_file(path: Path) -> bool:
             parent = parent_map.get(node)
             if not isinstance(parent, (ast.Module, ast.ClassDef)):
                 continue
-            if node.body and isinstance(node.body[-1], ast.Expr) and isinstance(
-                node.body[-1].value, ast.Constant
+            if (
+                node.body
+                and isinstance(node.body[-1], ast.Expr)
+                and isinstance(node.body[-1].value, ast.Constant)
             ):
                 if node.body[-1].value.value is ...:
                     continue
+            if node.decorator_list:
+                continue
             nodes.append((node, "function"))
 
     for node, kind in sorted(nodes, key=lambda item: item[0].lineno, reverse=True):
@@ -153,6 +175,7 @@ def process_file(path: Path) -> bool:
 
 
 def iter_targets(targets: list[str]) -> list[Path]:
+    """Iter targets."""
     paths: list[Path] = []
     for target in targets:
         base = ROOT / target
@@ -160,14 +183,14 @@ def iter_targets(targets: list[str]) -> list[Path]:
             paths.append(base)
         elif base.is_dir():
             paths.extend(
-                p
-                for p in sorted(base.rglob("*.py"))
-                if ".venv" not in p.parts
+                p for p in sorted(base.rglob("*.py")) if ".venv" not in p.parts
             )
     return paths
 
 
 def main(targets: list[str]) -> int:
+    """Fill missing docstrings for the given paths and print changed files."""
+    """Main."""
     changed = 0
     for path in iter_targets(targets):
         if process_file(path):

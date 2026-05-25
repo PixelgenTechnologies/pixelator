@@ -138,7 +138,6 @@ class Region:
         max_len: Max len.
         regions: Regions.
         data: Data.
-
         """
         self.parent_id: str | None = None
         self.region_id = region_id
@@ -176,7 +175,6 @@ class Region:
 
         Args:
         parent_id: parent id to set
-
         """
         self.parent_id = parent_id
 
@@ -254,7 +252,6 @@ class Region:
 
         Args:
         region_id: Region id.
-
         """
         if self.region_id == region_id:
             return self
@@ -271,7 +268,6 @@ class Region:
 
         Args:
         region_type: Region type.
-
         """
         found = []
 
@@ -289,7 +285,6 @@ class Region:
 
         Args:
         sequence_type: Sequence type.
-
         """
         found = []
 
@@ -374,7 +369,6 @@ class PNAAssay:
         Args:
         name: Name.
         assay_spec: Assay spec.
-
         """
         self.name = name
         self.assay_spec: List[Region] = assay_spec or []
@@ -468,7 +462,6 @@ class PNAAssay:
 
         Args:
         filename: path to a design config file
-
         """
         yaml_obj = load_yaml_file(filename)
         checked_obj = AssayModel.model_validate(yaml_obj)
@@ -497,7 +490,6 @@ class PNAAssay:
 
         Args:
         region_id: id of the region to retrieve
-
         """
         for r in self.assay_spec:
             maybe_r = r.get_region_by_id(region_id)
@@ -512,7 +504,6 @@ class PNAAssay:
 
         Args:
         region_type: region type to retrieve
-
         """
         regions = []
         for r in self.assay_spec:
@@ -527,7 +518,6 @@ class PNAAssay:
         Args:
         region_type: region type to retrieve
         sequence_type: Sequence type.
-
         """
         regions = []
         for r in self.assay_spec:
@@ -556,7 +546,6 @@ def get_position_in_parent(
     ValueError: if the region_id is not found in the assay
     ValueError: if the region has no parent
     ValueError: if the parent_region is not found in the assay
-
     """
     region = assay.get_region_by_id(region_id)
     if region is None:

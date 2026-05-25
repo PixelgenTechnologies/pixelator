@@ -91,7 +91,6 @@ def polarization_scores_component_graph(
     n_permutations: the number of permutations to use to estimate the null-hypothesis for the Moran's I statistic
     min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
     random_seed: the random seed to use to ensure that the permutations are reproducible across runs
-
     """
     if graph.vcount() < MIN_VERTICES_REQUIRED:
         logger.debug(
@@ -191,7 +190,6 @@ def polarization_scores_component_df(
     n_permutations: the number of permutations to use to estimate the null-hypothesis for the Moran's I statistic
     min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
     random_seed: the random seed to use to ensure that the permutations are reproducible across runs
-
     """
     graph = Graph.from_edgelist(
         edgelist=component_df,
@@ -238,7 +236,6 @@ def polarization_scores(
     n_permutations: the number of permutations for simulated Z-score (z_sim) estimation (if n_permutations>0)
     min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
     random_seed: the random seed to use for reproducibility
-
     """
     if transformation not in get_args(PolarizationTransformationTypes):
         raise AssertionError(
@@ -315,7 +312,6 @@ class PolarizationAnalysis(PerComponentAnalysis):
         n_permutations: Permutations used to estimate the null distribution.
         min_marker_count: Minimum marker count required to compute statistics.
         random_seed: Optional seed for reproducible permutation tests.
-
         """
         if transformation_type not in get_args(PolarizationTransformationTypes):
             raise AssertionError(
@@ -332,7 +328,6 @@ class PolarizationAnalysis(PerComponentAnalysis):
         Args:
         component: Component.
         component_id: Component id.
-
         """
         logger.debug("Running polarization analysis on component %s", component_id)
         return polarization_scores_component_graph(
@@ -351,7 +346,6 @@ class PolarizationAnalysis(PerComponentAnalysis):
 
         Args:
         data: Data.
-
         """
         logger.debug("Post processing polarization analysis data")
         if data.empty:
@@ -371,7 +365,6 @@ class PolarizationAnalysis(PerComponentAnalysis):
         Args:
         data: Data.
         pxl_dataset: Pxl dataset.
-
         """
         logger.debug("Adding polarization analysis data to PixelDataset")
         pxl_dataset.polarization = data
@@ -393,7 +386,6 @@ def get_differential_polarity(
     targets: Target sample labels; defaults to all non-reference labels.
     contrast_column: Column containing sample labels. Defaults to ``"sample"``.
     value_column: Polarity metric column. Defaults to ``"morans_z"``.
-
     """
     if targets is None:
         targets = polarity_data[contrast_column].unique()

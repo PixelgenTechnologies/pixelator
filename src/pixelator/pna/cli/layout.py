@@ -86,7 +86,6 @@ def layout(
     pmds_pivots: Pmds pivots.
     wpmds_k: Wpmds k.
     output: Output.
-
     """
     log_step_start(
         "layout",

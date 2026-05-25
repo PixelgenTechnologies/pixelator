@@ -31,7 +31,6 @@ class PerComponentAnalysis(Protocol):
         Args:
         component: Component.
         component_id: Component id.
-
         """
         ...
 
@@ -40,7 +39,6 @@ class PerComponentAnalysis(Protocol):
 
         Args:
         data: Data.
-
         """
         try:
             scores = pd.concat(data, axis=0)
@@ -54,7 +52,6 @@ class PerComponentAnalysis(Protocol):
 
         Args:
         data: Data.
-
         """
         return data
 
@@ -66,7 +63,6 @@ class PerComponentAnalysis(Protocol):
         Args:
         data: Data.
         pxl_dataset: Pxl dataset.
-
         """
         ...
 
@@ -153,7 +149,6 @@ class _AnalysisManager:
 
         Args:
         pixel_dataset: Pixel dataset.
-
         """
         prepared_computations = self._prepare_computation()
         per_component_results = self._execute_computations_in_parallel(
@@ -174,7 +169,6 @@ def edgelist_to_component_stream(
     Args:
     dataset: Dataset.
     use_full_bipartite: Use full bipartite.
-
     """
     for component_id, component_df in (
         dataset.edgelist_lazy.collect()
@@ -203,7 +197,6 @@ def run_analysis(
     pxl_dataset: The PixelDataset to run the analysis on.
     analysis_to_run: A list of `PerComponentAnalysis` to run on the components in the `pxl_dataset`.
     use_full_bipartite: Whether to use the full bipartite graph when creating the components.
-
     """
     if not analysis_to_run:
         logger.warning("No analysis functions were provided")

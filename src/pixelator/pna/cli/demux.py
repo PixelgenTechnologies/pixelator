@@ -123,7 +123,6 @@ def demux(
     threads: Threads.
     memory: Memory.
     strategy: Strategy.
-
     """
     # log input parameters
     input_files = [fastq_file]

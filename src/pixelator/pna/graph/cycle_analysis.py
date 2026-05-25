@@ -40,7 +40,6 @@ class ShortestPathState:
 
         Args:
         edgelist: Edgelist.
-
         """
         frontier_x = []
         frontier_y = []
@@ -64,7 +63,6 @@ class ShortestPathState:
 
         Args:
         edgelist: Edgelist.
-
         """
         nnodes = max(edgelist["node1_id"].max(), edgelist["node2_id"].max()) + 1
         nedges = len(edgelist)
@@ -92,7 +90,6 @@ class ShortestPathFinder:
         Args:
         edgelist: Edgelist.
         explore_limit: Explore limit.
-
         """
         self.node_map = (
             pl.concat(
@@ -197,7 +194,6 @@ class ShortestPathFinder:
 
         Args:
         max_steps: Max steps.
-
         """
         cycle_distribution = pd.Series(dtype=int)
         for step in range(max_steps):
@@ -237,7 +233,6 @@ def process_component(comp_name, edgelist_path, tmpdir):
     comp_name: Comp name.
     edgelist_path: Edgelist path.
     tmpdir: Tmpdir.
-
     """
     with duckdb.connect() as con:
         con.execute(
@@ -324,7 +319,6 @@ def remove_no_cycle_edges(
     input_edgelist_path: Path to the input edgelist Parquet file (hive layout supported).
     n_threads: Number of parallel threads to use.
     working_dir: Directory for the merged output (``working_edgelist_with_cycle_verification``); defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
-
     """
     output_path = working_dir / "working_edgelist_with_cycle_verification"
     logger.info("Starting removal of no-cycle edges")

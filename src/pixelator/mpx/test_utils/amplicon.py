@@ -24,8 +24,7 @@ class BaseAmpliconTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(scope="class", name="test_amplicon_run")
     def test_amplicon_run(self):
-        """Verify amplicon run.
-        """
+        """Verify amplicon run."""
         input_files = self.__get_data("input_files")
         params = self.__get_parameters()
         verbose = self.__get_options("common").get("verbose")
@@ -56,28 +55,24 @@ class BaseAmpliconTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(scope="class", depends=["test_amplicon_run"])
     def test_amplicon_logfile_exist(self):
-        """Verify amplicon logfile exist.
-        """
+        """Verify amplicon logfile exist."""
         assert (self.workdir / "amplicon-pixelator.log").exists()
 
     @pytest.mark.dependency(scope="class", depends=["test_amplicon_run"])
     def test_amplicon_results_folder_exists(self):
-        """Verify amplicon results folder exists.
-        """
+        """Verify amplicon results folder exists."""
         assert (self.workdir / "amplicon").exists()
 
     @pytest.mark.dependency(scope="class", depends=["test_amplicon_run"])
     def test_amplicon_results_file_exists(self):
-        """Verify amplicon results file exists.
-        """
+        """Verify amplicon results file exists."""
         exists_files = (self.workdir / "amplicon").glob("*.merged.fastq.gz")
         for f in exists_files:
             assert f.is_file()
 
     @pytest.mark.dependency(scope="class", depends=["test_amplicon_run"])
     def test_amplicon_results_file_not_empty(self):
-        """Verify amplicon results file not empty.
-        """
+        """Verify amplicon results file not empty."""
         not_empty_files = (self.workdir / "amplicon").glob("*.merged.fastq.gz")
         for f in not_empty_files:
             assert f.stat().st_size > 0

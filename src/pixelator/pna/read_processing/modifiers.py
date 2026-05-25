@@ -30,6 +30,5 @@ class CombiningModifier(ABC):
         read2: Read2.
         info1: Info1.
         info2: Info2.
-
         """
         pass

@@ -36,7 +36,6 @@ class SampleReport(pydantic.BaseModel):
 
         Returns:
         A: class:`SampleReport` object.
-
         """
         with open(p) as fp:
             json_data = json.load(fp)
@@ -48,7 +47,6 @@ class SampleReport(pydantic.BaseModel):
 
         Args:
         kwargs: Additional arguments to pass to `json.dumps`.
-
         """
         return json.dumps(self.model_dump(mode="json"), **kwargs)
 
@@ -60,7 +58,6 @@ class SampleReport(pydantic.BaseModel):
         Args:
         p: The path to the file to write.
         kwargs: Additional arguments to pass to pydantics `model_dump_json`.
-
         """
         Path(p).resolve().parent.mkdir(parents=True, exist_ok=True)
 

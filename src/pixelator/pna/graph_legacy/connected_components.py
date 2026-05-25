@@ -69,7 +69,6 @@ def _filter_edgelist(
     edgelist: Edgelist.
     min_read_count: Min read count.
     component_stats: Component stats.
-
     """
     edgelist = edgelist.filter(pl.col("read_count") >= min_read_count)
     post_filter_stat = edgelist.select(
@@ -101,7 +100,6 @@ def _label_connected_components(
     Args:
     edgelist: Edgelist.
     component_stats: Component stats.
-
     """
     logger.debug("Finding connected components")
 
@@ -199,7 +197,6 @@ def merge_communities_with_many_crossing_edges(
     n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
     max_edges_to_remove: Max edges to remove.
     max_edges_to_remove_relative: Max edges to remove relative.
-
     """
     community_serie = pd.Series(node_community_dict)
     if max_edges_to_remove is None and max_edges_to_remove_relative is None:
@@ -254,7 +251,6 @@ def _get_umi_component_map_from_edgelist(edgelist: pl.LazyFrame) -> dict:
 
     Args:
     edgelist: Edgelist.
-
     """
     umi_component_map = dict()
     if "component1" in edgelist.collect_schema().names():
@@ -282,7 +278,6 @@ def _update_components_column(
     Args:
     edgelist: Edgelist.
     umi_component_map: Umi component map.
-
     """
     return edgelist.with_columns(
         component1=pl.col("umi1").replace_strict(umi_component_map),
@@ -298,7 +293,6 @@ def make_edgelist_with_component_column(
     Args:
     edgelist: The edgelist to add the component column to.
     umi_component_map: A dictionary mapping nodes to components.
-
     """
     return (
         _update_components_column(edgelist, umi_component_map)
@@ -392,7 +386,6 @@ def recover_multiplets(
     umi_component_map: Umi component map.
     leiden_iterations: Leiden iterations.
     refinement_options: Refinement options.
-
     """
     if umi_component_map is None:
         umi_component_map = _get_umi_component_map_from_edgelist(edgelist)
@@ -528,7 +521,6 @@ def build_pxl_file_with_components(
     min_count: Min count.
     refinement_options: Refinement options.
     component_size_threshold: Component size threshold.
-
     """
     with TemporaryDirectory(prefix="pixelator-") as tmp_dir:
         tmp_dir_path = Path(tmp_dir)
@@ -620,7 +612,6 @@ def _get_working_edgelist(
 
     Args:
     input_edgelist: Input edgelist.
-
     """
     node_map = (
         pl.concat(
@@ -653,7 +644,6 @@ def _add_post_recovery_stats(edgelist: pl.LazyFrame, component_stats: GraphStati
     Args:
     edgelist: Edgelist.
     component_stats: Component stats.
-
     """
     post_recovery_stats = edgelist.select(
         [
@@ -766,7 +756,6 @@ def find_components(
     refinement_options: options for component refinement
     return_component_statistics: if True, return a component statistics object
     dynamic_lowest_passable_bound: Dynamic lowest passable bound.
-
     """
     component_stats = GraphStatistics()
     no_clash_edgelist, component_stats = _remove_umi_clashes_and_get_stats(
@@ -845,7 +834,6 @@ def _filter_connected_components_by_size(
     component_size_threshold: Component size threshold.
     component_stats: Component stats.
     dynamic_lowest_passable_bound: Dynamic lowest passable bound.
-
     """
     component_sizes = (
         edgelist.group_by("component")

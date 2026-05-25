@@ -1,3 +1,8 @@
+"""Tests for cycle analysis utilities in PNA graph processing.
+
+Copyright © 2025 Pixelgen Technologies AB.
+"""
+
 import tempfile
 from pathlib import Path
 

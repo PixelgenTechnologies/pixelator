@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Copyright © 2023 Pixelgen Technologies AB.
+"""Verify that Python modules include the Pixelgen copyright notice.
 
-This is a general copyright checker for python files committed to pixelator
+Copyright © 2023 Pixelgen Technologies AB.
 
-Do not delete the shebang on top of the file or it will stop working
+Do not delete the shebang on top of the file or it will stop working.
 """
 
 import ast

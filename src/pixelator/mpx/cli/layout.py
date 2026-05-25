@@ -71,7 +71,6 @@ def layout(
     no_node_marker_counts: No node marker counts.
     layout_algorithm: Layout algorithm.
     output: Output.
-
     """
     log_step_start(
         "layout",

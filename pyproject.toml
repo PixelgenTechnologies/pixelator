@@ -149,7 +149,14 @@ unfixable = []
 ignore = ["E501", "E402", "E203", "D213", "D203"]
 exclude = ["docs/conf.py"]
 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
 [tool.ruff.lint.per-file-ignores]
+# Click command modules keep short help strings for CLI generation.
+"src/pixelator/mpx/cli/**" = ["D200", "D212", "D400", "D415"]
+"src/pixelator/pna/cli/**" = ["D200", "D212", "D400", "D415"]
+# Tests document fixtures in conftest; keep lint focused on production code.
 "**/tests/**" = [
     "D100",
     "D101",
@@ -166,8 +173,5 @@ exclude = ["docs/conf.py"]
     "D403",
     "D404",
     "D415",
+    "D417",
 ]
-# Since click uses a different layout for the docs strings to generate the
-# cli docs, we ignore these rules here.
-"src/pixelator/mpx/cli/**" = ["D200", "D212", "D400", "D415"]
-"src/pixelator/mpx/test_utils/**" = ["D"]

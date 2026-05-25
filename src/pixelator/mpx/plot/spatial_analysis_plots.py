@@ -80,7 +80,6 @@ def plot_colocalization_heatmap(
     markers: The markers to include in the heatmap. Defaults to None.
     cmap: The colormap to use for the heatmap. Defaults to "vlag".
     value_column: What colocalization metric to use. Defaults to "pearson_z".
-
     """
     colocalization_data = _make_colocalization_symmetric(
         colocalization_data, value_column
@@ -125,7 +124,6 @@ def plot_colocalization_diff_heatmap(
     min_log_p: The minimum log10 p-value. Pairs with lower log10 p-value are assigned 0.
     cmap: The colormap to use for the heatmap. Defaults to "vlag".
     value_column: What colocalization metric to use. Defaults to "pearson_z".
-
     """
     if isinstance(targets, str):
         targets = [targets]
@@ -286,7 +284,6 @@ def plot_colocalization_diff_volcano(
     n_top_pairs: Number of marker pairs to annotate on each side.
     min_log_p: Minimum ``-log10(p)`` required to annotate a marker pair.
     targets: Targets.
-
     """
     if isinstance(targets, str):
         targets = [targets]
@@ -376,7 +373,6 @@ def plot_polarity_diff_volcano(
     value_column: Metric plotted on the x-axis. Defaults to ``"morans_z"``.
     n_top_pairs: Number of markers to annotate on each side.
     min_log_p: Minimum ``-log10(p)`` required to annotate a marker.
-
     """
     if isinstance(targets, str):
         targets = [targets]

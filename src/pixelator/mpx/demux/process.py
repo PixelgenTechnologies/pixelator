@@ -61,7 +61,6 @@ def demux_fastq(
 
     Raises:
     ValueError: raises an exception
-
     """
     args = [
         "cutadapt",
@@ -139,7 +138,6 @@ def check_demux_results_are_ok(report_data: dict, sample_id: str) -> bool:
     Args:
     report_data: Report data.
     sample_id: Sample id.
-
     """
     read_counts = report_data["read_counts"]
     input_reads = read_counts["input"]

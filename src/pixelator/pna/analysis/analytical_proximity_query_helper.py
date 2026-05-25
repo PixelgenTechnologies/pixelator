@@ -15,7 +15,6 @@ def jcs_with_analytical_stats(
     Args:
     components: Components.
     markers: Markers.
-
     """
     markers = normalize_input_to_list(markers)
     components = normalize_input_to_list(components)

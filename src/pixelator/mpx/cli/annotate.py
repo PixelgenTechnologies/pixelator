@@ -102,7 +102,6 @@ def annotate(
     dynamic_filter: Dynamic filter.
     aggregate_calling: Aggregate calling.
     output: Output.
-
     """
     input_files = [parquet_file]
     # log input parameters

@@ -65,7 +65,6 @@ def colocalization_from_component_edgelist(
     min_region_count: minimum number of counts in region to consider, defaults to 5
     min_marker_count: the minimum number of counts of a marker to calculate colocalization
     random_seed: Set the random seed for the permutation tests, defaults to None
-
     """
     graph = Graph.from_edgelist(
         edgelist=edgelist,
@@ -122,7 +121,6 @@ def colocalization_from_component_graph(
     min_region_count: minimum number of counts in region to consider, defaults to 5
     min_marker_count: the minimum number of counts of a marker to calculate colocalization
     random_seed: Set the random seed for the permutation tests, defaults to None
-
     """
     logger.debug("Computing colocalization for component: %s", component_id)
     logger.debug("Prepare the graph data for computing colocalization")
@@ -236,7 +234,6 @@ def colocalization_scores(
     Raises:
     AssertionError: when the input is not valid
     ValueError: when no components were found to be valid for
-
     """
     if "component" not in edgelist.columns:
         raise AssertionError("edge list is missing the membership column")
@@ -319,7 +316,6 @@ def get_differential_colocalization(
     targets: Target sample labels; defaults to all non-reference labels.
     contrast_column: Column containing sample labels. Defaults to ``"sample"``.
     value_column: Colocalization metric column. Defaults to ``"pearson_z"``.
-
     """
     if targets is None:
         targets = colocalization_data_frame[contrast_column].unique()
@@ -395,7 +391,6 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         n_permutations: Select number of permutations used to calculate empirical z-scores and p-values of the colocalization values
         min_region_count: The minimum size of the region (e.g. number of counts in the neighbourhood) required for it to be considered for colocalization analysis
         min_marker_count: the minimum number of counts of a marker to calculate colocalization
-
         """
         self.transformation_type = transformation_type
         self.neighbourhood_size = neighbourhood_size
@@ -409,7 +404,6 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         Args:
         component: Component.
         component_id: Component id.
-
         """
         logger.debug("Running colocalization analysis on component %s", component_id)
         return colocalization_from_component_graph(
@@ -429,7 +423,6 @@ class ColocalizationAnalysis(PerComponentAnalysis):
 
         Args:
         data: Data.
-
         """
         logger.debug("Post processing colocalization analysis data")
         if data.empty:
@@ -451,7 +444,6 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         Args:
         data: Data.
         pxl_dataset: Pxl dataset.
-
         """
         logger.debug("Adding colocalization analysis data to PixelDataset")
         pxl_dataset.colocalization = data

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Add missing Args entries to Google-style docstrings from function signatures."""
+"""Add missing Args entries to Google-style docstrings from function signatures.
+
+Copyright © 2025 Pixelgen Technologies AB.
+"""
 
 from __future__ import annotations
 
@@ -13,7 +16,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def _signature_args(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
     names: list[str] = []
-    args = list(node.args.posonlyargs) + list(node.args.args) + list(node.args.kwonlyargs)
+    args = (
+        list(node.args.posonlyargs) + list(node.args.args) + list(node.args.kwonlyargs)
+    )
     for arg in args:
         if arg.arg in {"self", "cls"}:
             continue
@@ -36,7 +41,10 @@ def _existing_arg_names(doc: str) -> set[str]:
             in_args = True
             continue
         if in_args:
-            if re.match(r"^(Returns|Raises|Yields|Note|Examples|References|Attributes):", line.strip()):
+            if re.match(
+                r"^(Returns|Raises|Yields|Note|Examples|References|Attributes):",
+                line.strip(),
+            ):
                 break
             match = re.match(r"^\s+(\*?\*?\w+)", line)
             if match:
@@ -54,11 +62,12 @@ def _add_missing_args(doc: str, missing: list[str], indent: str) -> str:
     if not missing:
         return doc
     lines = doc.splitlines()
-    args_index = next((i for i, line in enumerate(lines) if line.strip() == "Args:"), None)
+    args_index = next(
+        (i for i, line in enumerate(lines) if line.strip() == "Args:"), None
+    )
     arg_indent = indent + "    "
     entries = [
-        f"{arg_indent}{name}: {_humanize(name).capitalize()}."
-        for name in missing
+        f"{arg_indent}{name}: {_humanize(name).capitalize()}." for name in missing
     ]
     if args_index is None:
         if lines and lines[-1].strip():
@@ -77,6 +86,7 @@ def _add_missing_args(doc: str, missing: list[str], indent: str) -> str:
 
 
 def process_file(path: Path) -> bool:
+    """Process file."""
     source = path.read_text(encoding="utf-8")
     try:
         tree = ast.parse(source)
@@ -102,7 +112,9 @@ def process_file(path: Path) -> bool:
         missing = [name for name in required if name not in existing]
         if not missing:
             continue
-        indent = " " * ((node.body[0].col_offset if node.body else node.col_offset + 4) or 4)
+        indent = " " * (
+            (node.body[0].col_offset if node.body else node.col_offset + 4) or 4
+        )
         new_doc = _add_missing_args(doc, missing, indent)
         if new_doc == doc:
             continue
@@ -115,7 +127,7 @@ def process_file(path: Path) -> bool:
             continue
         old_lines = lines[start:end_line]
         quote = '"""' if '"""' in "".join(old_lines) else "'''"
-        new_block = [f'{indent}{quote}{new_doc}\n{indent}{quote}\n']
+        new_block = [f"{indent}{quote}{new_doc}\n{indent}{quote}\n"]
         lines[start:end_line] = new_block
         changed = True
 
@@ -125,6 +137,7 @@ def process_file(path: Path) -> bool:
 
 
 def main(targets: list[str]) -> int:
+    """Synchronize docstring Args sections with function signatures."""
     from fill_missing_docstrings import iter_targets
 
     count = 0

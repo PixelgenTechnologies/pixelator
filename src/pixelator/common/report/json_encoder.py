@@ -22,14 +22,8 @@ class PixelatorJSONEncoder(json.JSONEncoder):
                 Dump pydantic models to json or calls the base class implementation
                 for other types.
 
-
-
         Args:
-                obj: object to serialize
-
-        Returns:
-                a serializable object
-
+        obj: object to serialize
         """
         if isinstance(obj, BaseModel):
             return obj.model_dump(mode="json")

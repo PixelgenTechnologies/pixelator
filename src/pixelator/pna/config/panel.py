@@ -66,7 +66,6 @@ class PNAAntibodyPanel:
 
         Raises:
         AssertionError: exception if panel file is missing,
-
         """
         self._filename = file_name
         self.metadata = metadata
@@ -89,7 +88,6 @@ class PNAAntibodyPanel:
 
         Raises:
         AssertionError: exception if panel file is missing,
-
         """
         panel_file = Path(filename)
 
@@ -119,7 +117,6 @@ class PNAAntibodyPanel:
 
         Raises:
         KeyError: exception if panel information is missing in the pxl dataset,
-
         """
         logger.debug("Creating Antibody panel from PNAPixelDataset object")
         adata = pxl_data.adata()
@@ -137,7 +134,6 @@ class PNAAntibodyPanel:
 
         Raises:
         KeyError: exception if panel information is missing in the AnnData object.
-
         """
         logger.debug("Creating Antibody panel from AnnData object")
         try:
@@ -214,7 +210,6 @@ class PNAAntibodyPanel:
 
         Raises:
         ValueError: If no metadata header is present in the file.
-
         """
         return parse_panel_header_metadata(file)
 
@@ -301,7 +296,6 @@ class PNAAntibodyPanel:
         Args:
         panel_df: Dataframe containing panel markers and sequences.
         validate_types: If True, validate dataframe column types.
-
         """
         errors = []
 
@@ -350,7 +344,6 @@ class PNAAntibodyPanel:
 
                 Args:
                 id_str: id str.
-
                 """
                 return all(
                     bool(re.match(pattern, id_)) for id_ in str(id_str).split(";")
@@ -379,7 +372,6 @@ class PNAAntibodyPanel:
 
         Args:
         other: Other.
-
         """
         if not isinstance(other, PNAAntibodyPanel):
             raise ValueError("Can only compare with another PNAAntibodyPanel")
@@ -392,7 +384,6 @@ def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
     Args:
     config: the config object
     panel: the path to the panel file or the name of the panel in the config file
-
     """
     panel_str = str(panel)
     panel_from_config = config.get_panel(panel_str)
@@ -416,7 +407,6 @@ class PNAAntibodyPanelDiff:
         Args:
         panel_1: The first panel to compare.
         panel_2: The second panel to compare.
-
         """
         self.panel_1 = panel_1
         self.panel_2 = panel_2
@@ -560,7 +550,6 @@ class PNAAntibodyPanelDiff:
 
         Args:
         adata: Adata.
-
         """
         adata_panel = PNAAntibodyPanel.from_adata(adata)
         if self.panel_1 != adata_panel:

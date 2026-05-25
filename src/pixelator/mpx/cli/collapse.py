@@ -165,7 +165,6 @@ def collapse(
     panel: Panel.
     output: Output.
     design: Design.
-
     """
     # log input parameters
     log_step_start(

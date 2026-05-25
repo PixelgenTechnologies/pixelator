@@ -35,13 +35,9 @@ def _pldist(
     """Calculate the perpendicular distance from a point to a line segment.
 
     Args:
-        point: Point coordinates.
-        start: Start point of the segment.
-        end: End point of the segment.
-
-    Returns:
-        Distance from the point to the segment.
-
+    point: Point coordinates.
+    start: Start point of the segment.
+    end: End point of the segment.
     """
     if np.all(start == end):
         return np.linalg.norm(point - start)  # type: ignore
@@ -113,17 +109,9 @@ def simplify_line_rdp(
     """Simplify a line using the Ramer-Douglas-Peucker algorithm.
 
     Args:
-        coordinates: Array of shape ``(n, d)`` with ``n`` points in ``d`` dimensions.
-        epsilon: Maximum perpendicular distance for point removal.
-        return_mask: If True, return the boolean mask instead of simplified coordinates.
-
-    Returns:
-        Simplified coordinates, or the boolean mask when ``return_mask`` is True.
-
-    Examples:
-        >>> simplify_line_rdp(np.array([[1, 1], [2, 2], [3, 3], [4, 4]]))
-        array([[1, 1], [4, 4]])
-
+    coordinates: Array of shape ``(n, d)`` with ``n`` points in ``d`` dimensions.
+    epsilon: Maximum perpendicular distance for point removal.
+    return_mask: If True, return the boolean mask instead of simplified coordinates.
     """
     mask = _ramer_douglas_peucker_iterative(
         coordinates, 0, len(coordinates) - 1, epsilon

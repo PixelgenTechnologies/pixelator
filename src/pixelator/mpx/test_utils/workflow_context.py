@@ -33,20 +33,17 @@ class PixelatorWorkflowContext:
         self.logs: Dict[str, str] = {}
 
     def set_logs(self, key: str, logs: str):
-        """Set logs.
-        """
+        """Set logs."""
         self.logs[key] = logs
 
     def get_logs(self, key: str) -> str:
-        """Get logs.
-        """
+        """Get logs."""
         return self.logs[key]
 
     def run_command(
         self, key: str, command: List[str], link_files: Optional[List[str]] = None
     ) -> CliRunnerResult:
-        """Run command.
-        """
+        """Run command."""
         runner = CliRunner()
 
         command = [str(s) for s in command]
@@ -87,12 +84,12 @@ class PixelatorWorkflowContext:
 
                 If no suffix is given files will be linked directly into the working directory.
 
-Args:
-    files: list of files to link
-    suffix: path relative to the workflow working directory to link the files in.
+        Args:
+        files: list of files to link
+        suffix: path relative to the workflow working directory to link the files in.
 
-Raises:
-    ValueError: if a file is not absolute
+        Raises:
+        ValueError: if a file is not absolute
         """
         for f in files:
             f_path = Path(f)
@@ -121,7 +118,7 @@ def use_workflow_context(request, tmp_path_factory):
         The working directory is cleaned up after the test class has run unless the
         `--keep_workdirs` is passed on the commandline, which can be useful for debugging.
 
-Args:
+    Args:
     request: Request.
     tmp_path_factory: Tmp path factory.
     """

@@ -65,12 +65,10 @@ def build_barcodes_file(
 
         :returns str: a path to the barcodes file
 
-
     Args:
-        panel: an Antibody panel object
-        anchored: make the sequences anchored if True
-        rev_complement: reverse complement the sequence column if True
-
+    panel: an Antibody panel object
+    anchored: make the sequences anchored if True
+    rev_complement: reverse complement the sequence column if True
     """
     logger.debug("Creating barcodes file from antibody panel")
 
@@ -94,9 +92,8 @@ def click_echo(msg: str, multiline: bool = False):
     """Print a line to the console with optional long-line wrapping.
 
     Args:
-        msg: the message to print
-        multiline: True to use text wrapping or False otherwise (default)
-
+    msg: the message to print
+    multiline: True to use text wrapping or False otherwise (default)
     """
     if multiline:
         click.echo(textwrap.fill(textwrap.dedent(msg), width=100))
@@ -109,11 +106,9 @@ def create_output_stage_dir(root: PathType, name: str) -> Path:
 
         :returns Path: the created folder (Path)
 
-
     Args:
-        root: the parent directory
-        name: the name of the directory to create
-
+    root: the parent directory
+    name: the name of the directory to create
     """
     output = Path(root) / name
     if not output.is_dir():
@@ -138,11 +133,9 @@ def get_extension(filename: PathType, len_ext: int = 2) -> str:
 
         :returns str: the file extension (str)
 
-
     Args:
-        filename: the file name
-        len_ext: the number of expected extensions parts e.g.: fq.gz gives len_ext=2
-
+    filename: the file name
+    len_ext: the number of expected extensions parts e.g.: fq.gz gives len_ext=2
     """
     return "".join(PurePath(filename).suffixes[-len_ext:]).lstrip(".")
 
@@ -155,10 +148,8 @@ def get_sample_name(filename: PathType) -> str:
 
         :returns str: the sample name
 
-
     Args:
-        filename: path to the file
-
+    filename: path to the file
     """
     return Path(filename).stem.split(".")[0]
 
@@ -170,15 +161,13 @@ def group_input_reads(
 
         :returns Dict[str, List[Path]]: a dictionary with the grouped reads
 
-
     Args:
-        inputs: list of input files
-        input1_pattern: pattern to match read1 files
-        input2_pattern: pattern to match read2 files
+    inputs: list of input files
+    input1_pattern: pattern to match read1 files
+    input2_pattern: pattern to match read2 files
 
     Raises:
-        ValueError: if the number of reads for a sample is more than 2
-
+    ValueError: if the number of reads for a sample is more than 2
     """
 
     def group_fn(s):
@@ -224,10 +213,8 @@ def gz_size(filename: str) -> int:
 
         :returns int: size of the file uncompressed (in bits)
 
-
     Args:
-        filename: file name
-
+    filename: file name
     """
     with gzip.open(filename, "rb") as f:
         return f.seek(0, whence=2)
@@ -242,14 +229,10 @@ def log_step_start(
     """Add information about the start of a pixelator step to the logs.
 
     Args:
-        step_name: name of the step that is starting
-        input_files: collection of input file paths
-        output: optional path to output
-        **kwargs: any additional parameters that you wish to log
-
-    Returns:
-        None
-
+    step_name: name of the step that is starting
+    input_files: collection of input file paths
+    output: optional path to output
+    **kwargs: any additional parameters that you wish to log
     """
     from pixelator import __version__
 
@@ -288,11 +271,7 @@ def reverse_complement(seq: str) -> str:
     """Compute the reverse complement of a DNA seq.
 
     Args:
-        seq: the DNA sequence
-
-    Returns:
-        the reverse complement of the input sequence (str)
-
+    seq: the DNA sequence
     """
     return seq.translate(_TRTABLE)[::-1]
 
@@ -305,14 +284,12 @@ def sanity_check_inputs(
 
         :returns None:
 
-
     Args:
-        input_files: the files to sanity check
-        allowed_extensions: the expected file extension of the files, e.g. 'fastq.gz' or a tuple of allowed types eg. ('fastq.gz', 'fq.gz')
+    input_files: the files to sanity check
+    allowed_extensions: the expected file extension of the files, e.g. 'fastq.gz' or a tuple of allowed types eg. ('fastq.gz', 'fq.gz')
 
     Raises:
-        AssertionError: when any of validation fails
-
+    AssertionError: when any of validation fails
     """
     input_files_: list[PathType] = (
         input_files if not isinstance(input_files, PathType) else [input_files]  # type: ignore
@@ -352,13 +329,11 @@ def single_value(xs: Union[List[T], Set[T]]) -> T:
 
         :returns T: the first value in the collection
 
-
     Args:
-        xs: a collection of values
+    xs: a collection of values
 
     Raises:
-        AssertionError: if the collection is empty or has more than one value
-
+    AssertionError: if the collection is empty or has more than one value
     """
     if len(xs) == 0:
         raise AssertionError("Empty collection")
@@ -388,10 +363,9 @@ def write_parameters_file(
     """Write the parameters used in for a command to a JSON file.
 
     Args:
-        click_context: the click context object
-        output_file: the output file
-        command_path: the command to use as command name
-
+    click_context: the click context object
+    output_file: the output file
+    command_path: the command to use as command name
     """
     command_path_fixed = command_path or click_context.command_path
     parameters = click_context.command.params
@@ -497,10 +471,8 @@ def get_read_sample_name(read: str) -> str:
         :return str: sample name
         :raise ValueError: if the read file does not have a valid extension
 
-
     Args:
-        read: filename of a fastq read file
-
+    read: filename of a fastq read file
     """
     # group input file by sample id and order reads by R1 and R2
     if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
@@ -538,11 +510,9 @@ def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> 
         :raise ValueError: if the read file does not have a valid extension
         :raise AssertionError: if the read_type is not 'r1' or 'r2'
 
-
     Args:
-        read: filename of a fastq read file
-        read_type: the read type to check for (r1 or r2)
-
+    read: filename of a fastq read file
+    read_type: the read type to check for (r1 or r2)
     """
     read = Path(read).name
 
@@ -577,10 +547,8 @@ def flatten(iterable: Iterable[Iterable[Any] | Any]) -> Generator[Any, None, Non
         :return Generator[Any, None, None]: A generator yielding the flattened items
         :yield Any: the flattened items
 
-
     Args:
-        iterable: list of lists or list of sets
-
+    iterable: list of lists or list of sets
     """
     for item in iterable:
         if isinstance(item, (str, bytes)):

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Read-only audit of docstring styles and coverage gaps."""
+"""Read-only audit of docstring styles and coverage gaps.
+
+Copyright © 2025 Pixelgen Technologies AB.
+"""
 
 from __future__ import annotations
 
@@ -15,6 +18,7 @@ SKIP_DIRS = {".venv", ".git", "__pycache__"}
 
 
 def iter_py_files(base: Path) -> list[Path]:
+    """Iter py files."""
     files: list[Path] = []
     for path in base.rglob("*.py"):
         if any(part in SKIP_DIRS for part in path.parts):
@@ -24,6 +28,7 @@ def iter_py_files(base: Path) -> list[Path]:
 
 
 def audit_file(path: Path) -> dict[str, int]:
+    """Audit file."""
     text = path.read_text(encoding="utf-8")
     sphinx_hits = len(SPHINX_MARKERS.findall(text))
     missing_public = 0
@@ -55,6 +60,8 @@ def audit_file(path: Path) -> dict[str, int]:
 
 
 def main(paths: list[str]) -> int:
+    """Print docstring audit statistics for the given paths."""
+    """Main."""
     totals = {"files": 0, "sphinx": 0, "missing": 0, "no_module_doc": 0}
     for arg in paths:
         base = ROOT / arg

@@ -179,7 +179,6 @@ def analysis(
     colocalization_min_region_count: Colocalization min region count.
     colocalization_min_marker_count: Colocalization min marker count.
     output: Output.
-
     """
     # log input parameters
     input_files = [pxl_file]

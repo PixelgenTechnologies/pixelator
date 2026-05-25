@@ -25,8 +25,7 @@ class BaseAnalysisTestsMixin(BaseWorkflowTestMixin):
         scope="class", name="test_analysis_run", depends=["test_annotate_run"]
     )
     def test_analysis_run(self):
-        """Verify analysis run.
-        """
+        """Verify analysis run."""
         params = self.__get_parameters()
         verbose = self.__get_options("common").get("verbose")
         input_files = list(
@@ -58,16 +57,14 @@ class BaseAnalysisTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(scope="class", depends=["test_analysis_run"])
     def test_analysis_dataset_exists(self):
-        """Verify analysis dataset exists.
-        """
+        """Verify analysis dataset exists."""
         pxl_files = (self.workdir / "analysis").glob("*.analysis.dataset.pxl")
         for f in pxl_files:
             assert f.is_file()
 
     @pytest.mark.dependency(scope="class", depends=["test_analysis_run"])
     def test_analysis_report_exists(self):
-        """Verify analysis report exists.
-        """
+        """Verify analysis report exists."""
         json_files = (self.workdir / "analysis").glob("*.report.json")
         for f in json_files:
             assert f.is_file()

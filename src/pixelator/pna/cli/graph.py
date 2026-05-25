@@ -227,7 +227,6 @@ def graph(
     component_size_min_threshold: Component size min threshold.
     panel: Panel.
     output: Output.
-
     """
     # log input parameters
     input_files = [parquet_file]

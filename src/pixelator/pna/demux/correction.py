@@ -41,7 +41,6 @@ def hamming_distance(x, y):
     Args:
     x: X.
     y: Y.
-
     """
     return bin(x ^ y).count("1")
 
@@ -84,7 +83,6 @@ class BKTree:
         Args:
         distance_func: The distance function to use.
         items: An optional list of items to add on initialization.
-
         """
         self.distance_func = distance_func
         self.tree = None
@@ -108,7 +106,6 @@ class BKTree:
 
         Args:
         item: Item.
-
         """
         node = self.tree
         if node is None:
@@ -152,7 +149,6 @@ class BKTree:
         Args:
         item: The item to find matches for.
         n: The maximum distance to consider a match.
-
         """
         if self.tree is None:
             return []
@@ -229,7 +225,6 @@ def hamming_distance_i8(s1: BKTreeItem, s2: BKTreeItem | bytes) -> int:
     Args:
     s1: S1.
     s2: S2.
-
     """
     b1 = np.frombuffer(s1.sequence, dtype=np.int8)
     b2 = np.frombuffer(s2.sequence if isinstance(s2, BKTreeItem) else s2, dtype=np.int8)
@@ -245,7 +240,6 @@ def build_bktree(panel: PNAAntibodyPanel, sequence_key: str) -> BKTree:
     Args:
     panel: The panel to build the tree from
     sequence_key: The key in the panel dataframe that contains the sequences
-
     """
     tree = BKTree(hamming_distance_i8)
 
@@ -266,7 +260,6 @@ def build_exact_dict_lookup(
     Args:
     panel: The panel to build the lookup from
     sequence_key: The key in the panel dataframe that contains the sequences
-
     """
     lut = dict()
 

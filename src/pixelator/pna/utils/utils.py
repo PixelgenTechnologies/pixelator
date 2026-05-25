@@ -60,7 +60,6 @@ def get_read_sample_name(read: str | Path) -> str:
 
     Args:
     read: filename of a fastq read file
-
     """
     # group input file by sample id and order reads by R1 and R2
     _check_extensions(read)
@@ -100,7 +99,6 @@ def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> 
     Args:
     read: filename of a fastq read file
     read_type: the read type to check for (r1 or r2)
-
     """
     read = Path(read).name
 
@@ -131,7 +129,6 @@ def clean_suffixes(path: PurePath) -> PurePath:
 
     Args:
     path: The path to clean
-
     """
     while path.suffix in _KNOWN_COMPRESSION:
         path = path.with_suffix("")
@@ -152,7 +149,6 @@ def get_demux_filename_info(filename: str | Path | PurePath) -> tuple[str, int]:
 
     Args:
     filename: path to the file
-
     """
     sample_name = get_sample_name(filename)
     filename_str = str(filename)
@@ -173,7 +169,6 @@ def timer(command_name: str | None = None):
 
     Args:
     command_name: Command name.
-
     """
 
     def wrapper(func):
@@ -198,7 +193,6 @@ def normalize_input_to_set(
 
     Args:
     one_or_more_values: One or more values.
-
     """
     if one_or_more_values is None:
         return None
@@ -225,7 +219,6 @@ def normalize_input_to_list(
 
     Args:
     one_or_more_values: One or more values.
-
     """
     if one_or_more_values is None:
         return None
@@ -262,7 +255,6 @@ def init_duckdb_conn(
     threads: The number of threads to use. If None, duckdb will decide. Defaults to None.
     temp_dir: The directory to use for temporary files. If None, duckdb will decide (defaults to /tmp). Defaults to None.
     temp_dir_size_limit: The maximum size of the temporary directory. If None, no limit is set. Defaults to None.
-
     """
     conn = dd.connect(database=str(path), read_only=read_only)
 

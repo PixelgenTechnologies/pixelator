@@ -100,7 +100,6 @@ class DownloadableDatasets:
 
         Raises:
         ValueError: If the dataset is not found.
-
         """
         if dataset_name not in _DATASET_MAPPINGS:
             raise ValueError(
@@ -172,7 +171,6 @@ def _report_progress(msg: str, *args: object) -> None:
     Args:
     msg: Msg.
     args: Args.
-
     """
     formatted = msg % args if args else msg
     if _is_interactive():
@@ -190,7 +188,6 @@ def _download_pixel_dataset(url: str, output_path: Path) -> Path:
     Args:
     url: The URL of the pixel dataset to download.
     output_path: The path to save the pixel dataset to.
-
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)

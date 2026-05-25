@@ -66,7 +66,6 @@ def analyse_pixels(
 
     Raises:
     AssertionError: the input arguments are not valid
-
     """
     logger.debug("Parsing PixelDataset from %s", input)
 

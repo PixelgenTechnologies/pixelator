@@ -28,7 +28,6 @@ def normalize_counts(x):
 
     Args:
     x: X.
-
     """
     x_log1p = np.log1p(x)
     x_mean = np.mean(x_log1p)
@@ -45,7 +44,6 @@ def _expand_k_core_layer_until_min_seed_pct(
     k_cores: K cores.
     max_k: Max k.
     min_seed_pct: Min seed pct.
-
     """
     pct_k_max = np.mean(k_cores == max_k)
     while pct_k_max < min_seed_pct and max_k > 1:
@@ -75,7 +73,6 @@ def _get_k_cores(
     node_list: Node list.
     max_k_core: Max k core.
     min_seed_pct: Min seed pct.
-
     """
     k_cores_dict = nx.core_number(graph)
     k_cores = np.array([k_cores_dict[n] for n in node_list])
@@ -101,7 +98,6 @@ def _build_p_step_matrix(g: Graph, node_list: list[str], k: int) -> sp.csr_matri
     g: G.
     node_list: Node list.
     k: K.
-
     """
     A = g.get_adjacency_sparse(node_ordering=node_list)
     A = A + sp.diags_array([1] * A.shape[0], format="csr", dtype=None)
@@ -130,7 +126,6 @@ def _find_largets_connect_component_of_k_core(
     node_list: Node list.
     k_cores: K cores.
     max_k: Max k.
-
     """
     seed_nodes = [node_list[i] for i, k_val in enumerate(k_cores) if k_val == max_k]
     subgraph = raw_graph.subgraph(seed_nodes)
@@ -167,7 +162,6 @@ def _find_partitions(
     P_step: P step.
     max_iter: Max iter.
     nodes_to_move_threshold: Nodes to move threshold.
-
     """
     partitions: list[_PartitionCandidate] = []
     current_partition = (k_cores == max_k).astype(int)
@@ -226,7 +220,6 @@ def validate_best_candidate(
     best_candidate: Best candidate.
     partitions: Partitions.
     min_allowed_nodes_pct: Min allowed nodes pct.
-
     """
     if best_candidate is not None and best_candidate.nodes_pct < min_allowed_nodes_pct:
         logger.warning(
@@ -322,7 +315,6 @@ def adaptive_core_expansion(
     ValueError: If the 'nodes_to_move_threshold' parameter is not between 0 and 1000 inclusive.
     ValueError: If the 'min_allowed_nodes_pct' parameter is not between 0 and 1 (exclusive).
     TypeError: If the 'binding_thresholds' parameter is not a sequence of floats between 0 and 1.
-
     """
     _validate_ace_parameters(
         k=k,

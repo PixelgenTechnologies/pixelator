@@ -241,7 +241,6 @@ def plot_2d_graph(
     alpha: The alpha value for the nodes. Defaults to 0.7.
     cache_layout: Whether to cache the layout coordinates. Defaults to False.
     random_seed: The random seed to use for the layout algorithm. Defaults to None.
-
     """
     if isinstance(component, str):
         component = [component]
@@ -326,7 +325,6 @@ def plot_3d_from_coordinates(
     opacity: The opacity of the nodes. Defaults to 0.4.
     cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
     suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
-
     """
     fig = go.Figure(
         data=[
@@ -380,7 +378,6 @@ def plot_3d_graph(
     cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
     cache_layout: Whether to cache the layout coordinates. Defaults to False.
     suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
-
     """
     coordinates, _, _ = _get_coordinates(
         pxl_data=pxl_data,
@@ -437,7 +434,6 @@ def plot_3d_heatmap(
     distance_cutoff: a distance cutoff to use for determining size of area to consider as close in the density calculation.
     layout_algorithm: (Layout algorithm to use. Options are):  "fruchterman_reingold_3d" and "kamada_kawai_3d"
     cache_layout: set this to `True` to cache the layout or faster computations on subsequent calls. This comes at the cost of additional memory usage.
-
     """
     coordinates = component_graph.layout_coordinates(
         layout_algorithm=layout_algorithm, cache=cache_layout

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Convert Sphinx/reST docstring sections to Google style (format-only pass)."""
+"""Convert Sphinx/reST docstring sections to Google style (format-only pass).
+
+Copyright © 2025 Pixelgen Technologies AB.
+"""
 
 from __future__ import annotations
 
@@ -35,9 +38,18 @@ def _indent_for_section(line: str) -> str:
 
 
 def convert_docstring_body(body: str) -> str:
+    """Convert docstring body."""
     if not any(
         marker in body
-        for marker in (":param", ":return", ":returns", ":rtype", ":raises", ":ivar", ":yields")
+        for marker in (
+            ":param",
+            ":return",
+            ":returns",
+            ":rtype",
+            ":raises",
+            ":ivar",
+            ":yields",
+        )
     ):
         return body
 
@@ -158,8 +170,13 @@ def convert_docstring_body(body: str) -> str:
 
 
 def convert_file(path: Path) -> bool:
+    """Convert file."""
     original = path.read_text(encoding="utf-8")
-    if ":param" not in original and ":return" not in original and ":raises" not in original:
+    if (
+        ":param" not in original
+        and ":return" not in original
+        and ":raises" not in original
+    ):
         if ":ivar" not in original and ":rtype" not in original:
             return False
 
@@ -205,6 +222,7 @@ def convert_file(path: Path) -> bool:
 
 
 def iter_targets(targets: list[str]) -> list[Path]:
+    """Iter targets."""
     paths: list[Path] = []
     for target in targets:
         base = ROOT / target
@@ -212,14 +230,14 @@ def iter_targets(targets: list[str]) -> list[Path]:
             paths.append(base)
         elif base.is_dir():
             paths.extend(
-                p
-                for p in sorted(base.rglob("*.py"))
-                if ".venv" not in p.parts
+                p for p in sorted(base.rglob("*.py")) if ".venv" not in p.parts
             )
     return paths
 
 
 def main(targets: list[str]) -> int:
+    """Convert Sphinx-style docstrings under the given paths."""
+    """Main."""
     changed_files = 0
     for path in iter_targets(targets):
         if convert_file(path):

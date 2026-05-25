@@ -182,7 +182,6 @@ def amplicon(
     skip_input_checks: Skip input checks.
     force_run: Force run.
     threads: Threads.
-
     """
     # log input parameters
 

@@ -13,7 +13,6 @@ def parse_size(s: str) -> int | float:
 
     Args:
     s: The string to parse
-
     """
     match = re.match(r"(?P<value>\d+(?:.\d+)?)(?P<unit>[KMGkmg])?$", s)
     if not match:

@@ -43,7 +43,6 @@ class Proximity:
         add_marker_counts: Add marker counts.
         add_log2_ratio: Add log2 ratio.
         calculate_from_edgelist: Calculate from edgelist.
-
         """
         self._view = view
         self._components = normalize_input_to_set(components)

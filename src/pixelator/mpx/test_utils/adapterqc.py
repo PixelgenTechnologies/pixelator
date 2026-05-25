@@ -25,8 +25,7 @@ class BaseAdapterQCTestsMixin(BaseWorkflowTestMixin):
         scope="class", name="test_adapterqc_run", depends=["test_preqc_run"]
     )
     def test_adapterqc_run(self):
-        """Verify adapterqc run.
-        """
+        """Verify adapterqc run."""
         input_files = (self.workdir / "preqc").glob("*.processed.fastq.gz")
 
         params = self.__get_parameters()
@@ -54,36 +53,31 @@ class BaseAdapterQCTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(scope="class", depends=["test_adapterqc_run"])
     def test_adapterqc_logfile_exist(self):
-        """Verify adapterqc logfile exist.
-        """
+        """Verify adapterqc logfile exist."""
         assert (self.workdir / "adapterqc-pixelator.log").is_file()
 
     @pytest.mark.dependency(scope="class", depends=["test_adapterqc_run"])
     def test_adapterqc_results_folder_exists(self):
-        """Verify adapterqc results folder exists.
-        """
+        """Verify adapterqc results folder exists."""
         assert (self.workdir / "preqc").is_dir()
 
     @pytest.mark.dependency(scope="class", depends=["test_adapterqc_run"])
     def test_adapterqc_processed_output_exists(self):
-        """Verify adapterqc processed output exists.
-        """
+        """Verify adapterqc processed output exists."""
         processed_files = (self.workdir / "adapterqc").glob("*.processed.fastq.gz")
         for f in processed_files:
             assert f.is_file()
 
     @pytest.mark.dependency(scope="class", depends=["test_adapterqc_run"])
     def test_adapterqc_failed_output_exists(self):
-        """Verify adapterqc failed output exists.
-        """
+        """Verify adapterqc failed output exists."""
         failed_files = (self.workdir / "adapterqc").glob("*.failed.fastq.gz")
         for f in failed_files:
             assert f.is_file()
 
     @pytest.mark.dependency(scope="class", depends=["test_adapterqc_run"])
     def test_adapterqc_json_output_exists(self):
-        """Verify adapterqc json output exists.
-        """
+        """Verify adapterqc json output exists."""
         json_files = (self.workdir / "adapterqc").glob("*.report.fastq.gz")
         for f in json_files:
             assert f.is_file()

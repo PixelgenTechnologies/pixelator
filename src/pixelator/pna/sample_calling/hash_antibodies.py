@@ -14,7 +14,6 @@ def _verify_no_antibody_in_multiple_samples(mapping: dict[str, list[str]]) -> No
 
     Args:
     mapping: Mapping.
-
     """
     antibody_to_samples: dict[str, list[str]] = defaultdict(list)
     for sample, antibodies in mapping.items():
@@ -49,7 +48,6 @@ class HashedAntibodyMapping(dict[str, list[str]]):
 
         Raises:
         ValueError: If any antibody is assigned to more than one sample.
-
         """
         _verify_no_antibody_in_multiple_samples(mapping)
         self._hashing_antibodies = set(all_hashing_antibodies)
@@ -68,7 +66,6 @@ class HashedAntibodyMapping(dict[str, list[str]]):
         samplesheet_df: Must have columns pool, sample, hash_index.
         all_hashing_antibodies: Full list/set of hashing antibodies (e.g. from panel). Required.
         pool_name: Pool to filter by in the samplesheet.
-
         """
         if "hash_index" not in samplesheet_df.columns:
             raise ValueError(

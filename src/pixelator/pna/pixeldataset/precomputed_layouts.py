@@ -39,7 +39,6 @@ class PreComputedLayouts:
         adata_helper: Adata helper.
         add_marker_counts: Add marker counts.
         add_spherical_norm: Add spherical norm.
-
         """
         self._view = view
         self._components = normalize_input_to_set(components)
@@ -70,7 +69,6 @@ class PreComputedLayouts:
 
         Args:
         df: Df.
-
         """
         return (
             df.select(pl.col("*"), val=pl.lit(1))
@@ -153,7 +151,6 @@ class PreComputedLayouts:
 
         Args:
         return_polars_df: If True, return polars DataFrames, otherwise return pandas DataFrames
-
         """
         with self._view.open() as session:
             for component in self.components:

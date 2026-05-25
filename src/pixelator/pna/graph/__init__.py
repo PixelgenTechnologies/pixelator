@@ -35,7 +35,6 @@ class PNAGraph(BaseGraph):
 
         Args:
         backend: Backend.
-
         """
         self._backend = backend
         self._connected_components_needs_recompute = False
@@ -47,7 +46,6 @@ class PNAGraph(BaseGraph):
         Args:
         edgelist: Edgelist.
         kwargs: Kwargs.
-
         """
         return PNAGraph(PNAGraphBackend.from_record_batches(edgelist, **kwargs))
 
@@ -57,7 +55,6 @@ class PNAGraph(BaseGraph):
         Args:
         edgelist: Edgelist.
         kwargs: Kwargs.
-
         """
         return PNAGraph(PNAGraphBackend.from_edgelist(edgelist, **kwargs))
 
@@ -96,7 +93,6 @@ class PNAGraph(BaseGraph):
         get_node_marker_matrix: Add a matrix of marker counts to each node if True.
         random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
         **kwargs: will be passed to the underlying layout implementation
-
         """
         return self._backend.layout_coordinates(
             layout_algorithm=layout_algorithm,
@@ -157,7 +153,6 @@ class PNAGraphBackend(NetworkXGraphBackend):
         Args:
         edgelist: Edgelist.
         kwargs: Kwargs.
-
         """
         g: nx.Graph = nx.empty_graph(0, nx.Graph)
         if isinstance(edgelist, pl.LazyFrame):
@@ -174,7 +169,6 @@ class PNAGraphBackend(NetworkXGraphBackend):
         Args:
         batches: Batches.
         kwargs: Kwargs.
-
         """
         # TODO This is completely untested!
         g: nx.Graph = nx.empty_graph(0, nx.Graph)
@@ -230,7 +224,6 @@ class PNAGraphBackend(NetworkXGraphBackend):
         get_node_marker_matrix: Add a matrix of marker counts to each node if True.
         random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
         **kwargs: will be passed to the underlying layout implementation
-
         """
         start_time = timer()
         coordinates = self._layout_coordinates(

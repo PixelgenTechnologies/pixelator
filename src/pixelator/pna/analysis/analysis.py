@@ -36,7 +36,6 @@ class ProximityAnalysis(PerComponentTask):
         Args:
         n_permutations: the number of permutations to use for the method (only used with methods that use permutations).
         min_marker_count: Min marker count.
-
         """
         self.method = "join_count_statistics"
         self._proxmimity_function = partial(
@@ -54,7 +53,6 @@ class ProximityAnalysis(PerComponentTask):
         component: a Graph for a component to run the analysis on.
         component_id: the id of the component.
         component_df: Component df.
-
         """
         result = self._proxmimity_function(component_df.collect())
         result["component"] = component_id
@@ -67,7 +65,6 @@ class ProximityAnalysis(PerComponentTask):
         data: a pandas DataFrame containing proximity data for all components.
         pxl_dataset: the PixelDataset to add the data to.
         pxl_file_target: Pxl file target.
-
         """
         logger.debug("Adding proximity data to PixelDataset")
         with tempfile.NamedTemporaryFile(suffix=".parquet") as tmp_file:
@@ -85,7 +82,6 @@ class ProximityAnalysis(PerComponentTask):
         Args:
         component: Component.
         component_id: Component id.
-
         """
         raise NotImplementedError
 

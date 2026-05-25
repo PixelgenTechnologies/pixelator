@@ -10,7 +10,6 @@ def polarity_score(pxl_dataset: PNALegacyPixelDataset) -> pd.DataFrame:
 
     Args:
     pxl_dataset: Pxl dataset.
-
     """
     return pxl_dataset._backend._datastore.read_polarization()
 
@@ -20,6 +19,5 @@ def colocalization_score(pxl_dataset: PNALegacyPixelDataset) -> pd.DataFrame:
 
     Args:
     pxl_dataset: Pxl dataset.
-
     """
     return pxl_dataset._backend._datastore.read_colocalization()

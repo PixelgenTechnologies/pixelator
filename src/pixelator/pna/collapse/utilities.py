@@ -24,7 +24,6 @@ def build_binary_index(data) -> faiss.IndexBinary:
 
     Args:
     data: The data to build the index for.
-
     """
     """Build a binary index for the given data."""
     db_len = data.shape[0]
@@ -49,7 +48,6 @@ class FAISSBackend:
 
         Args:
         threads: The number of threads to use. -1 or None will use all available threads
-
         """
         if threads is not None and threads >= 1:
             faiss.omp_set_num_threads(threads)
@@ -59,7 +57,6 @@ class FAISSBackend:
 
         Args:
         data: The data to build the index for.
-
         """
         return build_binary_index(data)
 
@@ -70,7 +67,6 @@ class FAISSBackend:
         index: The index to search.
         data: The data to search for.
         k: The number of nearest neighbors to find.
-
         """
         return index.search(data, k)
 
@@ -83,7 +79,6 @@ def _collect_label_array_indices(
     Args:
     labels: the labels for each item
     n_components: Number of labels in the label array
-
     """
     # Single pass over the labels to collect the indices of each connected component
     groups = np.ndarray(shape=(n_components,), dtype=object)  # type: ignore
@@ -111,7 +106,6 @@ def _split_chunks(
     Args:
     n_components: The size of the input range
     chunk_size: The size of each chunk
-
     """
     pos = 0
     complete_chunks = n_components // chunk_size
@@ -136,7 +130,6 @@ def _split_files_per_marker_files(inputs: Iterable[Path | str]) -> SplitFilesRes
 
     Args:
     inputs: The input files to split.
-
     """
     umi1_files: list[Path] = []
     umi2_files: list[Path] = []
@@ -166,7 +159,6 @@ def split_collapse_inputs(
 
     Raises:
     ValueError: If the input data contains a mix of independent and paired collapsed data.
-
     """
     # Check parquet files first
     umi1_files, umi2_files, paired_files = _split_files_per_marker_files(parquet_files)
@@ -195,7 +187,6 @@ def _find_connected_components_directional(
 
     Args:
     csgraph: The sparse adjacency matrix of the connected components
-
     """
     # Return the (weakly) connected components in a directed sparse graph
     n_components, labels = scipy.sparse.csgraph.connected_components(
@@ -211,7 +202,6 @@ def _find_connected_components_cluster(
 
     Args:
     csgraph: The sparse adjacency matrix of the connected components
-
     """
     # Return the (weakly) connected components in a directed sparse graph
     n_components, labels = scipy.sparse.csgraph.connected_components(
@@ -241,7 +231,6 @@ def check_collapse_strategy_inputs(
 
     Raises:
     ValueError: If the input data contains a mix of independent and paired collapsed data.
-
     """
     # Check parquet input files
     umi1_files, umi2_files, paired_files = _split_files_per_marker_files(parquet_files)

@@ -41,14 +41,7 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
         """Validate that the panel version string is parseable.
 
         Args:
-            v: Version string from panel metadata.
-
-        Returns:
-            The input version string when validation succeeds.
-
-        Raises:
-            packaging.version.InvalidVersion: If the value is not a valid version.
-
+        v: Version string from panel metadata.
         """
         Version(v)  # will raise if not a valid version string
         return v
@@ -137,18 +130,13 @@ class AntibodyPanel:
 
                                         invalid or with incorrect format
 
-
         Args:
-                df: The dataframe containing the panel information.
-                metadata: The metadata for the panel.
-                file_name: The optional basename of the file from which the panel is loaded.
-
-        Returns:
-                None
+        df: The dataframe containing the panel information.
+        metadata: The metadata for the panel.
+        file_name: The optional basename of the file from which the panel is loaded.
 
         Raises:
-                AssertionError: exception if panel file is missing,
-
+        AssertionError: exception if panel file is missing,
         """
         self._filename = file_name
         self._metadata = metadata
@@ -167,14 +155,10 @@ class AntibodyPanel:
         """Create an AntibodyPanel from a csv panel file.
 
         Args:
-                filename: The path to the panel file.
-
-        Returns:
-                The AntibodyPanel object. (AntibodyPanel)
+        filename: The path to the panel file.
 
         Raises:
-                AssertionError: exception if panel file is missing,
-
+        AssertionError: exception if panel file is missing,
         """
         panel_file = Path(filename)
 
@@ -230,11 +214,7 @@ class AntibodyPanel:
         ````
 
         Args:
-            panel_df: Panel dataframe to validate.
-
-        Returns:
-            A list of validation error messages. An empty list means valid input.
-
+        panel_df: Panel dataframe to validate.
         """
         errors = []
 
@@ -281,10 +261,8 @@ class AntibodyPanel:
 
                 :returns pd.DataFrame: The in-place modified input dataframe
 
-
         Args:
-                df: DataFrame with data of the panel to validate
-
+        df: DataFrame with data of the panel to validate
         """
         # update control and nuclear column to boolean
         TR_TABLE = {"(?i)yes": "True", "(?i)no": "False"}
@@ -311,14 +289,10 @@ class AntibodyPanel:
         """Parse front-matter YAML metadata from a panel file.
 
         Args:
-            file: Panel CSV file whose leading comment block contains YAML metadata.
-
-        Returns:
-            Parsed panel metadata.
+        file: Panel CSV file whose leading comment block contains YAML metadata.
 
         Raises:
-            ValueError: If no metadata header is present in the file.
-
+        ValueError: If no metadata header is present in the file.
         """
         return parse_panel_header_metadata(file)
 
@@ -356,12 +330,8 @@ def load_antibody_panel(config: Config, panel: PathType) -> AntibodyPanel:
     """Load an antibody panel from a file or from the config file.
 
     Args:
-        config: the config object
-        panel: the path to the panel file or the name of the panel in the config file
-
-    Returns:
-        the antibody panel (AntibodyPanel)
-
+    config: the config object
+    panel: the path to the panel file or the name of the panel in the config file
     """
     panel_str = str(panel)
     panel_from_config = config.get_panel(panel_str)

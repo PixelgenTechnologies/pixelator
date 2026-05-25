@@ -105,7 +105,6 @@ def analysis(
     compute_svd_var_explained: Compute svd var explained.
     svd_nbr_of_pivots: Svd nbr of pivots.
     output: Output.
-
     """
     input_files = [pxl_file]
     log_step_start(

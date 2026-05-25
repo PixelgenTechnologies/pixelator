@@ -1,3 +1,8 @@
+"""Integration tests for the PNA component recovery pipeline.
+
+Copyright © 2025 Pixelgen Technologies AB.
+"""
+
 import random
 import tempfile
 from pathlib import Path

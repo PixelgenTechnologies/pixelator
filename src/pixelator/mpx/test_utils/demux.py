@@ -29,8 +29,7 @@ class BaseDemuxTestsMixin(BaseWorkflowTestMixin):
         scope="class", name="test_demux_run", depends=["test_adapterqc_run"]
     )
     def test_demux_run(self):
-        """Verify demux run.
-        """
+        """Verify demux run."""
         design = self.__get_data("design")
         panel = self.__get_data("panel")
         panel_file = self.__get_data("panel_file")
@@ -73,20 +72,17 @@ class BaseDemuxTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     def test_demux_logfile_exist(self):
-        """Verify demux logfile exist.
-        """
+        """Verify demux logfile exist."""
         assert (self.workdir / "adapterqc-pixelator.log").is_file()
 
     @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     def test_demux_results_folder_exists(self):
-        """Verify demux results folder exists.
-        """
+        """Verify demux results folder exists."""
         assert (self.workdir / "preqc").is_dir()
 
     @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     def test_demux_processed_output_exists(self):
-        """Verify demux processed output exists.
-        """
+        """Verify demux processed output exists."""
         panel_key_or_file = self.__get_data("panel") or self.__get_options(
             "common"
         ).get("panel_file")
@@ -101,16 +97,14 @@ class BaseDemuxTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     def test_demux_failed_output_exists(self):
-        """Verify demux failed output exists.
-        """
+        """Verify demux failed output exists."""
         failed_files = (self.workdir / "demux").glob("*.failed.fastq.gz")
         for f in failed_files:
             assert f.is_file()
 
     @pytest.mark.dependency(scope="class", depends=["test_demux_run"])
     def test_demux_json_output_exists(self):
-        """Verify demux json output exists.
-        """
+        """Verify demux json output exists."""
         json_files = (self.workdir / "demux").glob("*.report.json")
         for f in json_files:
             assert f.is_file()

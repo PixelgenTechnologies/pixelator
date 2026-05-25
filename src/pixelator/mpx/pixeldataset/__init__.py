@@ -49,7 +49,6 @@ def read(path: PathType) -> PixelDataset:
 
     Args:
     path: path to the file to read
-
     """
     return PixelDataset.from_file(path)
 
@@ -87,7 +86,6 @@ class PixelDataset:
 
         Args:
         backend: an instance of `PixelDatasetBackend`
-
         """
         self._backend = backend
 
@@ -97,7 +95,6 @@ class PixelDataset:
 
         Args:
         path: path to a .pxl file
-
         """
         # We can ignore the error here, since while MyPy thinks that the
         # @cached_property decorators that we use on FileBasedPixelDatasetBackend
@@ -127,7 +124,6 @@ class PixelDataset:
         precomputed_layouts: a PreComputedLayouts object, defaults to None
         copy: specify if the input data should be copied or not. Defaults to True.
         allow_empty_edgelist: allow the edgelist to be empty. Defaults to False.
-
         """
         return PixelDataset(
             backend=ObjectBasedPixelDatasetBackend(
@@ -153,7 +149,6 @@ class PixelDataset:
 
         Args:
         value: Value.
-
         """
         self._backend.adata = value
 
@@ -168,7 +163,6 @@ class PixelDataset:
 
         Args:
         value: Value.
-
         """
         self._backend.edgelist = _enforce_edgelist_types(value)
 
@@ -195,7 +189,6 @@ class PixelDataset:
 
         Args:
         value: Value.
-
         """
         self._backend.polarization = value
 
@@ -210,7 +203,6 @@ class PixelDataset:
 
         Args:
         value: Value.
-
         """
         self._backend.colocalization = value
 
@@ -228,7 +220,6 @@ class PixelDataset:
 
         Args:
         value: Value.
-
         """
         self._backend.metadata = value
 
@@ -245,7 +236,6 @@ class PixelDataset:
 
         Args:
         value: Value.
-
         """
         # Note that the type ignore here is to handle the fact that the setter
         # needs to be able to take None (in order to make it easier to the user)
@@ -267,7 +257,6 @@ class PixelDataset:
         add_node_marker_counts: Add marker counts to the nodes of the graph
         simplify: If True, removes self-loops and multiple edges between nodes from the graph
         use_full_bipartite: If True, the full bipartite graph will be used, otherwise it will return the A-node projection
-
         """
         if component_id:
             potential_component = self.edgelist_lazy.filter(
@@ -363,7 +352,6 @@ class PixelDataset:
         path: the path where to save the dataset as a .pxl
         file_format: should be 'csv' or 'parquet'. Default is 'parquet'. This indicates what file-format is used to serialize the data frames in the .pxl file.
         force_overwrite: By default pixelator will not overwrite existing .pxl files, set this to true to force an overwrite of the existing file.
-
         """
         logger.debug("Saving PixelDataset to %s", path)
 
@@ -394,7 +382,6 @@ class PixelDataset:
         Args:
         components: The components you want to keep, defaults to None
         markers: The markers you want to keep, defaults to None
-
         """
         change_components = components is not None
         change_markers = markers is not None

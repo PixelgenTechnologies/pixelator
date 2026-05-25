@@ -43,7 +43,6 @@ class PNAConfig:
         Args:
         assays: Optional assays to pre-populate the config with.
         panels: Optional panels to pre-populate the config with.
-
         """
         self.assays: Dict[str, PNAAssay] = {}
         self.panels: typing.MutableMapping[str, List[PNAAntibodyPanel]] = defaultdict(
@@ -69,7 +68,6 @@ class PNAConfig:
 
         Raises:
         ValueError: If an assay with the same name already exists in the config.
-
         """
         assay = PNAAssay.from_yaml(path)
         if assay.name in self.assays:
@@ -86,7 +84,6 @@ class PNAConfig:
 
         Raises:
         PanelException: If loading introduces a conflicting alias mapping.
-
         """
         panel = PNAAntibodyPanel.from_csv(path)
         self.add_panel(panel)
@@ -102,7 +99,6 @@ class PNAConfig:
 
         Raises:
         PanelException: If an alias already maps to a different panel key.
-
         """
         key = panel.name if panel.name is not None else str(panel.filename)
         self.panels[key].append(panel)
@@ -128,7 +124,6 @@ class PNAConfig:
 
         Args:
         path: Path.
-
         """
         search_path = Path(path)
 
@@ -147,7 +142,6 @@ class PNAConfig:
 
         Args:
         path: Path.
-
         """
         search_path = Path(path)
 
@@ -161,7 +155,6 @@ class PNAConfig:
 
         Args:
         assay_name: Assay name.
-
         """
         return self.assays.get(assay_name)
 
@@ -173,7 +166,6 @@ class PNAConfig:
         Args:
         include_aliases: Include panel aliases in the list
         include_archived: Include archived panels in the list
-
         """
         out = []
         for panel in itertools.chain.from_iterable(self.panels.values()):
@@ -202,7 +194,6 @@ class PNAConfig:
 
         Raises:
         ValueError: If version is specified both inline and in ``version``, or if multiple ambiguous major/minor versions match.
-
         """
         version_stripped_name, specified_version = parse_versioned_panel_name(
             panel_name
@@ -288,7 +279,6 @@ class PNAConfig:
 
             Args:
             p: p.
-
             """
             version = p.version
             if version is None:
@@ -310,7 +300,6 @@ def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
     Args:
     config: The config object to load assays into
     package_name: The name of the package to load assays from
-
     """
     for resource in importlib.resources.files(package_name).iterdir():
         if resource.is_file():
@@ -326,7 +315,6 @@ def load_panels_package(config: ConfigType, package_name: str) -> ConfigType:
     Args:
     config: The config object to load panel files into
     package_name: The name of the package to load panels from
-
     """
     for resource in importlib.resources.files(package_name).iterdir():
         if resource.is_file():
@@ -341,7 +329,6 @@ def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional
 
     Args:
     panel_name: Panel identifier, optionally suffixed with a comparator and version fragment (for example ``panel>=1.2`` or ``panel==1``).
-
     """
     if match := re.search(
         # Allow panel names matching [A-Za-z0-9-.]+,

@@ -101,7 +101,6 @@ def annotate_components(
     dynamic_filter: use a rank based approach to define the min and or max size
     aggregate_calling: activate aggregate calling
     verbose: run if verbose mode when true
-
     """
     logger.debug("Parsing edge list %s", input)
 
@@ -246,7 +245,6 @@ def _cluster_components_using_leiden(
     adata: Adata.
     resolution: Resolution.
     random_seed: Random seed.
-
     """
     # It should be ok to run this over all vs all even on a dense matrix
     # since it shouldn't apply to more than a few thousande components.
@@ -297,7 +295,6 @@ def cluster_components(
     obsmkey: Key to access the values `obsm` layer of `adata`
     inplace: If `True` performs the operation inplace on `adata`
     random_seed: If set this seed will be used to seed the random number generators used when calculating neighbors, building the umap and for the leiden clustering.
-
     """
     # Import here as it is a slow import
     import scanpy as sc
@@ -360,7 +357,6 @@ def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
 
     Args:
     adata: the AnnData object
-
     """
     molecule_count = adata.obs["molecules"].sum()
     read_count = adata.obs["reads"].sum()

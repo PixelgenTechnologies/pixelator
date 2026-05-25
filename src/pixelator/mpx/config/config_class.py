@@ -46,7 +46,6 @@ class Config:
         Args:
         assays: Assays.
         panels: Panels.
-
         """
         self.assays: Dict[str, Assay] = {}
         self.panels: typing.MutableMapping[str, List[AntibodyPanel]] = defaultdict(list)
@@ -65,7 +64,6 @@ class Config:
 
         Args:
         path: Path.
-
         """
         assay = Assay.from_yaml(path)
         self.assays[assay.name] = assay
@@ -78,7 +76,6 @@ class Config:
 
         Raises:
         PanelException: If the panel alias already exists in the config.
-
         """
         panel = AntibodyPanel.from_csv(path)
         key = panel.name if panel.name is not None else str(panel.filename)
@@ -103,7 +100,6 @@ class Config:
 
         Args:
         path: Path.
-
         """
         search_path = Path(path)
 
@@ -122,7 +118,6 @@ class Config:
 
         Args:
         path: Path.
-
         """
         search_path = Path(path)
 
@@ -136,7 +131,6 @@ class Config:
 
         Args:
         assay_name: Assay name.
-
         """
         return self.assays.get(assay_name)
 
@@ -145,7 +139,6 @@ class Config:
 
         Args:
         include_aliases: Include panel aliases in the list
-
         """
         out = sorted(list(self.panels.keys()))
 
@@ -167,7 +160,6 @@ class Config:
         panel_name: The name of the panel
         version: The optional version of a panel to return
         allow_aliases: Allow panel aliases to be used
-
         """
         panels_with_key = self.panels.get(panel_name)
 
@@ -204,7 +196,6 @@ def load_assays_package(config: Config, package_name: str) -> Config:
     Args:
     config: The config object to load assays into
     package_name: The name of the package to load assays from
-
     """
     # TODO: Consider switching to base importlib.resources after
     #       dropping python3.8 support.
@@ -222,7 +213,6 @@ def load_panels_package(config: Config, package_name: str) -> Config:
     Args:
     config: The config object to load panel files into
     package_name: The name of the package to load panels from
-
     """
     # TODO: Consider switching to base importlib.resources after
     #       dropping python3.8 support.

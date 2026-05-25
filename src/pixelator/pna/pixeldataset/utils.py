@@ -26,7 +26,6 @@ def update_metrics_anndata(adata: AnnData, inplace: bool = True) -> Optional[Ann
     Args:
     adata: an AnnData object
     inplace: If `True` performs the operation inplace
-
     """
     logger.debug(
         "Updating metrics in AnnData object with %i components and %i markers",

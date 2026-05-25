@@ -69,7 +69,6 @@ class BarcodeIdentifierStatistics:
 
         Args:
         other: Other.
-
         """
         if isinstance(other, BarcodeIdentifierStatistics):
             self.exact += other.exact
@@ -140,7 +139,6 @@ class BarcodeIdentifier(SingleEndStep, HasFilterStatistics, HasCustomStatistics)
         panel: the antibody panel
         mismatches: the maximum number of mismatches allowed when aligning the LBS sequences
         writer: a writer to save failed reads to
-
         """
         self.assay = assay
         self.panel = panel
@@ -176,7 +174,6 @@ class BarcodeIdentifier(SingleEndStep, HasFilterStatistics, HasCustomStatistics)
         Args:
         read: the read to process
         info: Info.
-
         """
         # Extract the barcode sequence
         _stats = self._stats

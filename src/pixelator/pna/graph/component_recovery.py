@@ -29,7 +29,6 @@ def update_stats_from_adata(adata: AnnData, stats: GraphStatistics) -> GraphStat
     Args:
     adata: Adata.
     stats: Stats.
-
     """
     component_stats = copy(stats)
     component_stats.reads_output = int(adata.obs["reads_in_component"].sum())
@@ -87,7 +86,6 @@ def build_pxl_file_with_components(
     refinement_options: Options for staged refinement during community detection.
     component_size_threshold: Min/Max size threshold for components to be retained. Can be a boolean for dynamic sizing or a tuple of two integers (Min, Max).
     n_cores: Number of CPU cores to use for parallel processing.
-
     """
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_dir_path = Path(tmp_dir)

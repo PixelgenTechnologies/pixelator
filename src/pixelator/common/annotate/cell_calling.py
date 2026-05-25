@@ -60,19 +60,13 @@ def find_component_size_limits(
         .. [1] Lun, A., Riesenfeld, S., Andrews, T. et al. EmptyDrops: distinguishing
             cells from empty droplets in droplet-based single-cell RNA sequencing
 
-
-
     Args:
-        component_sizes: a numpy array of component sizes
-        direction: the direction of the cutoff, either "lower" or "upper"
-
-    Returns:
-        the lower or upper bound cutoff
+    component_sizes: a numpy array of component sizes
+    direction: the direction of the cutoff, either "lower" or "upper"
 
     Raises:
-        AssertionError: if the direction is not lower or upper
-        AssertionError: if component_sizes contain NaNs or zeros
-
+    AssertionError: if the direction is not lower or upper
+    AssertionError: if component_sizes contain NaNs or zeros
     """
 
     def log_size_and_rank(df: pd.DataFrame) -> pd.DataFrame:

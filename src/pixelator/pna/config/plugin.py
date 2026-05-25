@@ -55,7 +55,6 @@ def load_config_plugins(config: PNAConfig) -> PNAConfig:
 
     Args:
     config: Config.
-
     """
     new_config = config
 

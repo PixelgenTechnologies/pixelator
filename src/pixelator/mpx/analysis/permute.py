@@ -34,7 +34,6 @@ def permutations(
     df: dataframe to use as basis of permutations
     n: number of permutations to generate, defaults to 50
     random_seed: set a seed to the random number generator needed to make results deterministic, defaults to None
-
     """
     random_number_generator = _get_random_number_generator(random_seed)
     for _ in range(n):
@@ -57,7 +56,6 @@ def permute(
     Args:
     df: input dataframe to permute
     random_number_generator: Set a random number generator to make results reproducible, defaults to None
-
     """
     if not random_number_generator:
         random_number_generator = _get_random_number_generator()

@@ -66,7 +66,6 @@ class ColorFormatter(logging.Formatter):
 
         Args:
         record: The record to format.
-
         """
         if not record.exc_info:
             level = record.levelname.lower()
@@ -90,7 +89,6 @@ class DefaultCliFormatter(logging.Formatter):
 
         Args:
         record: Record.
-
         """
         if not record.exc_info:
             level = record.levelname.lower()
@@ -115,7 +113,6 @@ class ClickHandler(logging.Handler):
         Args:
         level: The logging level.
         use_stderr: Log to sys.stderr instead of sys.stdout.
-
         """
         super().__init__(level=level)
         self._use_stderr = use_stderr
@@ -125,7 +122,6 @@ class ClickHandler(logging.Handler):
 
         Args:
         record: The record to log.
-
         """
         try:
             msg = self.format(record)
@@ -155,7 +151,6 @@ class LoggingSetup:
         log_file: the filename of the log output
         verbose: enable verbose logging and console output
         logger: the logger to configure, default is the root logger
-
         """
         self.log_file = Path(log_file) if log_file is not None else None
         self.verbose = verbose
@@ -223,7 +218,6 @@ class LoggingSetup:
         exc_type: Exc type.
         exc_value: Exc value.
         traceback_obj: Traceback obj.
-
         """
 
         def log_exception(exc_type, exc_value, traceback_obj):
@@ -297,7 +291,6 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
 
         Args:
         record: Record.
-
         """
         logger = logging.getLogger(LogRecordSocketReceiver.LISTENER_LOGGER)
         logger.handle(record)
@@ -339,7 +332,6 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
         handler: Handler.
         log_file: Log file.
         console_log_formatter: Console log formatter.
-
         """
         self.timeout = 0.1
         self.log_file = log_file

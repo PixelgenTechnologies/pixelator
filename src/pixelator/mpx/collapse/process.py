@@ -53,7 +53,6 @@ def breadth_first_search(node, adj_list):
     Args:
     node: Node.
     adj_list: Adj list.
-
     """
     searched = set()
     queue = set()
@@ -76,7 +75,6 @@ def edit_distance(seq1: bytes, seq2: bytes) -> int:
     Args:
     seq1: Seq1.
     seq2: Seq2.
-
     """
     return hamming(seq1, seq2, pad=False)
 
@@ -84,7 +82,7 @@ def edit_distance(seq1: bytes, seq2: bytes) -> int:
 class FileFqGzEmpty(Exception):
     """Class to manage empty fastq.gz file exceptions.
 
-    Attributes
+    Attributes:
     ----------
         msg: the error message to output
         fname: the name of the file
@@ -99,7 +97,6 @@ class FileFqGzEmpty(Exception):
         msg: Msg.
         fname: Fname.
         size: Size.
-
         """
         self.msg = msg
         self.fname = os.fspath(fname)
@@ -136,7 +133,6 @@ def build_annoytree(data: npt.NDArray[np.uint8], n_trees: int = 10) -> AnnoyInde
     Args:
     data: the array of sequences (n_ele, n_features) in binary format
     n_trees: (the number of Annoy trees to build. Default): 10
-
     """
     logger.debug("Building annoy tree of shape %i,%i", data.shape[0], data.shape[1])
 
@@ -159,7 +155,6 @@ def build_binary_data(seqs: list[str]) -> npt.NDArray[np.uint8]:
 
     Args:
     seqs: a list of DNA sequences
-
     """
     logger.debug("Transforming %i sequences to binary form", len(seqs))
 
@@ -194,7 +189,6 @@ def get_collapsed_fragments_for_component(  # noqa: DOC402,DOC404
     Args:
     components: a list of components as produced from `get_connected_components`
     counts: a dictionary of the counts of each unique fragment
-
     """
     for component in components:
         # get the most common sequence in the component and use
@@ -243,7 +237,6 @@ def get_connected_components(
     Args:
     graph: a dictionary of sequence to sequences (within same distance)
     counts: a dictionary of counts (copies) for each sequence in `graph`
-
     """
     found = set()
     components = []
@@ -281,7 +274,6 @@ def identify_fragments_to_collapse(
     seqs: a list of sequences to be grouped
     min_dist: the hamming distance threshold (i.e. the mismatches between two sequences)
     max_neighbours: the number of neighbours to use in the Annoy index
-
     """
     logger.debug("Computing adjacency sequences from %i elements", len(seqs))
 
@@ -345,7 +337,6 @@ def collapse_sequences_unique(
 
     Args:
     seq_dict: the fragment to upib dict
-
     """
     logger.debug("Picking all unique sequences (i.e. no collapsing is carried out)")
 
@@ -375,7 +366,6 @@ def collapse_sequences_adjacency(
     seq_dict: a dictionary mapping unique fragments to their corresponding upib's
     max_neighbours: the maximum number of neighbours to search in the approximate nearest neighbour search
     min_dist: the hamming distance threshold (i.e. the mismatches between two sequences)
-
     """
     logger.debug("Collapsing %i sequences", len(seq_dict))
 
@@ -423,7 +413,6 @@ def create_fragment_to_upib_dict(
     Raises:
     FileFqGzEmpty: when the file is empty
     RuntimeError: when there is a error parsing the file
-
     """
     logger.debug("Extracting umi-upi sequences from %s", input_file)
 
@@ -472,7 +461,6 @@ def filter_by_minimum_upib_count(
     Args:
     unique_reads: a dictionary of fragments and their corresponding upib's
     min_count: the minimum number of upib's per fragment required to keep it
-
     """
     unique_reads = {k: v for k, v in unique_reads.items() if len(v) >= min_count}
     # in case there are no reads after filtering
@@ -522,7 +510,6 @@ def create_edgelist(
     umib_end: the end position of upib
     marker: the marker
     sequence: (the sequence of the marker):
-
     """
     # get the umi sizes to do the split
     if umia_start is not None and umia_end is not None:
@@ -573,7 +560,6 @@ def write_tmp_feather_file(df: pd.DataFrame) -> Path:
 
     Args:
     df: the data frame to write
-
     """
     # create a temporary edge list and save it to a temp file
     tmp_file = tempfile.mkstemp(suffix=".feather")[1]
@@ -645,7 +631,6 @@ def collapse_fastq(
     Raises:
     AssertionError: invalid input
     RuntimeError: raises an exception
-
     """
     if algorithm not in ["unique", "adjacency"]:
         raise AssertionError(f"Invalid value {algorithm} for algorithm")

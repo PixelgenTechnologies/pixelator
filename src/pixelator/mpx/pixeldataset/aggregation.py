@@ -88,7 +88,6 @@ def simple_aggregate(
 
     Raises:
     AssertionError: If not all pre-conditions are meet.
-
     """
     if not (len(datasets)) > 1:
         raise AssertionError(

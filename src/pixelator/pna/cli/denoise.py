@@ -235,7 +235,6 @@ def denoise(
     pls_min_coreness_correlation: Pls min coreness correlation.
     pls_score_threshold: Pls score threshold.
     output: Output.
-
     """
     input_files = [pxl_file]
     log_step_start(

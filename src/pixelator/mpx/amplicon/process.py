@@ -31,7 +31,6 @@ def trim_amplicon(record1: FastxReadTuple, amplicon: Region) -> FastxReadTuple:
     Args:
     record1: the forward fastq record
     amplicon: the amplicon region from the assay specification
-
     """
     n1, s1, q1 = record1
     s1_len = len(s1)
@@ -60,7 +59,6 @@ def generate_amplicon(
 
     Raises:
     ValueError: if the headers of the two records are different
-
     """
     n1, s1, q1 = record1
     n2, s2, q2 = record2
@@ -110,7 +108,6 @@ def write_record(f: BinaryIO, header: str, sequence: str, quality: str) -> None:
     header: the header of the record
     sequence: the sequence of the record
     quality: the quality of the record
-
     """
     # Do not generate intermediate strings here to avoid unneeded copies
     f.write(b"@")
@@ -145,7 +142,6 @@ def amplicon_fastq(
 
     Raises:
     RuntimeError: raises an exception
-
     """
     logger.debug("Using design %s", design)
     assay = config.get_assay(design)

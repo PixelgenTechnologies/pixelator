@@ -337,7 +337,8 @@ assertions when the test name is already descriptive.
 
 ### Tooling
 
-- `uv run ruff check src tests utils` enforces pydocstyle rules on production code.
+- `uv run ruff check src tests utils` enforces Google-style pydocstyle on production code under `src/`.
+- Test modules keep relaxed docstring rules; document shared fixtures in `conftest.py` files.
 - `utils/convert_sphinx_to_google.py` can assist bulk conversion from legacy Sphinx-style docstrings.
 - `utils/docstring_audit.py` reports Sphinx markers and missing public docstrings.
 

@@ -74,7 +74,6 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
     Args:
     path: path to the file to read
     paths: Paths.
-
     """
     if not paths:
         raise ValueError(

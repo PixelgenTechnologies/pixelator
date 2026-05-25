@@ -42,7 +42,6 @@ class AnnDataHelper:
         components: Components.
         markers: Markers.
         adata_join_strategy: Adata join strategy.
-
         """
         self._view = view
         self._components = normalize_input_to_set(components)
@@ -96,7 +95,6 @@ class AnnDataHelper:
 
         Args:
         adatas: Adatas.
-
         """
         if any("panel_metadata" not in adata.uns for adata in adatas):
             logger.debug(
@@ -228,7 +226,6 @@ class AnnDataHelper:
         Args:
         add_log1p_transform: Add log1p transform.
         add_clr_transform: Add clr transform.
-
         """
         adata = self._read_all_samples()
 
@@ -259,7 +256,6 @@ class AnnDataHelper:
         Args:
         add_log1p_transform: Add log1p transform.
         add_clr_transform: Add clr transform.
-
         """
         return self._read_adata_cached(
             add_log1p_transform=add_log1p_transform,

@@ -88,7 +88,6 @@ def amplicon(
     skip_input_checks: Skip input checks.
     output: Output.
     design: Design.
-
     """
     # log input parameters
 

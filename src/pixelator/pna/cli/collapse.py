@@ -42,7 +42,6 @@ def validate_mismatches(ctx, param, value):
     ctx: The click context
     param: The click parameter name
     value: The click value
-
     """
     try:
         value = int(value)
@@ -119,7 +118,6 @@ def collapse(
     mismatches: Mismatches.
     algorithm: Algorithm.
     threads: Threads.
-
     """
     # log input parameters
     log_step_start(
@@ -179,7 +177,6 @@ def process_paired_input(
     threads: The number of threads to use.
     assay: The assay configuration.
     collapse_output: The output filename for the collapsed data.
-
     """
     if len(input_files) == 1:
         logger.info("Detected single input file.")
@@ -265,7 +262,6 @@ def process_independent_files(
     algorithm: The collapse strategy to use.
     threads: The number of threads to use.
     ctx: The click context.
-
     """
     umi1_outputs = []
     umi2_outputs = []

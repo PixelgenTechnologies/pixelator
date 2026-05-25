@@ -17,7 +17,6 @@ def output_option(func):
 
     Args:
     func: Func.
-
     """
 
     @click.option(
@@ -42,7 +41,6 @@ def threads_option(func):
 
     Args:
     func: Func.
-
     """
 
     @click.option(
@@ -76,7 +74,6 @@ def memory_option(func):
 
     Args:
     func: Func.
-
     """
 
     @click.option(
@@ -100,7 +97,6 @@ def design_option(func):
 
     Args:
     func: Func.
-
     """
     from pixelator.pna.config import pna_config
 
@@ -130,7 +126,6 @@ def validate_panel(ctx, param, value):
     ctx: The click context
     param: The click parameter
     value: The click value
-
     """
     try:
         if Path(value).exists():
@@ -157,7 +152,6 @@ def panel_option(func):
 
     Args:
     func: Func.
-
     """
     from pixelator.pna.config import pna_config
 

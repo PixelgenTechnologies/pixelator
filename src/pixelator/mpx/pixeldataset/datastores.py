@@ -91,7 +91,6 @@ class PixelDataStore(Protocol):
 
         Raises:
         CannotGuessPixelDatastoreError: If the datastore format cannot be guessed from the path.
-
         """
         return PixelDataStore.guess_datastore_from_path(path)
 
@@ -104,7 +103,6 @@ class PixelDataStore(Protocol):
 
         Raises:
         CannotGuessPixelDatastoreError: If the datastore format cannot be guessed from the path.
-
         """
         if str(path).endswith(".pxl"):
             return ZipBasedPixelFile.guess_file_format(path)
@@ -130,7 +128,6 @@ class PixelDataStore(Protocol):
 
         Args:
         anndata: The AnnData object to write.
-
         """
         ...
 
@@ -148,7 +145,6 @@ class PixelDataStore(Protocol):
 
         Args:
         metadata: The metadata to write.
-
         """
         ...
 
@@ -157,7 +153,6 @@ class PixelDataStore(Protocol):
 
         Args:
         key: The key of the dataframe to read.
-
         """
         ...
 
@@ -166,7 +161,6 @@ class PixelDataStore(Protocol):
 
         Args:
         key: The key of the dataframe to read.
-
         """
         ...
 
@@ -186,7 +180,6 @@ class PixelDataStore(Protocol):
         dataframe: The dataframe to write.
         key: The key to write the dataframe to.
         partitioning: The (optional) partitioning to use when writing the dataframe.
-
         """
         ...
 
@@ -238,7 +231,6 @@ class PixelDataStore(Protocol):
         Args:
         edgelist: The edgelist to write.
         partitioning: The (optional) partitioning to use when writing the dataframe.
-
         """
         ...
 
@@ -247,7 +239,6 @@ class PixelDataStore(Protocol):
 
         Args:
         polarization: The polarization data to write.
-
         """
         ...
 
@@ -256,7 +247,6 @@ class PixelDataStore(Protocol):
 
         Args:
         colocalization: The colocalization data to write.
-
         """
         ...
 
@@ -266,7 +256,6 @@ class PixelDataStore(Protocol):
         Args:
         dataset: The PixelDataset to save.
         force_overwrite: Whether to force overwrite an existing file.
-
         """
         ...
 
@@ -285,7 +274,6 @@ class PixelDataStore(Protocol):
         Args:
         layouts: The pre-computed layouts to write.
         collapse_to_single_dataframe: Whether to collapse the layouts into a single dataframe before writing.
-
         """
         ...
 
@@ -299,12 +287,11 @@ class _CustomZipFileSystem(ZipFileSystem):
         """List files in the zip archive using fsspec discovery semantics.
 
         Args:
-            path: Path prefix to search within the archive.
-            maxdepth: Maximum directory depth to traverse.
-            withdirs: Include directories in the result mapping.
-            detail: Return detailed file metadata instead of paths only.
-            **kwargs: Additional arguments forwarded to the base implementation.
-
+        path: Path prefix to search within the archive.
+        maxdepth: Maximum directory depth to traverse.
+        withdirs: Include directories in the result mapping.
+        detail: Return detailed file metadata instead of paths only.
+        **kwargs: Additional arguments forwarded to the base implementation.
         """
         if maxdepth is not None and maxdepth < 1:
             raise ValueError("maxdepth must be at least 1")
@@ -380,7 +367,6 @@ class ZipBasedPixelFile(PixelDataStore):
 
         Args:
         path: Path.
-
         """
         self.path = path
         self._file_system_handle = None
@@ -397,7 +383,6 @@ class ZipBasedPixelFile(PixelDataStore):
         exc_type: Exc type.
         exc_value: Exc value.
         traceback: Traceback.
-
         """
         self.close()
 
@@ -462,7 +447,6 @@ class ZipBasedPixelFile(PixelDataStore):
 
         Args:
         path: Path.
-
         """
         return ZipBasedPixelFile.guess_file_format(path)
 
@@ -472,7 +456,6 @@ class ZipBasedPixelFile(PixelDataStore):
 
         Args:
         path: Path.
-
         """
         file_system = ZipFileSystem(fo=path, mode="r")
         members = [file_["name"] for file_ in file_system.ls("/")]
@@ -505,7 +488,6 @@ class ZipBasedPixelFile(PixelDataStore):
 
         Args:
         anndata: Anndata.
-
         """
         self._set_to_write_mode()
         self._check_if_writeable(self.ANNDATA_KEY)
@@ -560,7 +542,6 @@ class ZipBasedPixelFile(PixelDataStore):
 
         Args:
         metadata: Metadata.
-
         """
         self._set_to_write_mode()
         self._check_if_writeable(self.METADATA_KEY)
@@ -575,7 +556,6 @@ class ZipBasedPixelFile(PixelDataStore):
         Args:
         edgelist: Edgelist.
         partitioning: Partitioning.
-
         """
         self.write_dataframe(edgelist, self.EDGELIST_KEY, partitioning)
 
@@ -584,7 +564,6 @@ class ZipBasedPixelFile(PixelDataStore):
 
         Args:
         polarization: Polarization.
-
         """
         self.write_dataframe(polarization, self.POLARIZATION_KEY)
 
@@ -593,7 +572,6 @@ class ZipBasedPixelFile(PixelDataStore):
 
         Args:
         colocalization: Colocalization.
-
         """
         self.write_dataframe(colocalization, self.COLOCALIZATION_KEY)
 
@@ -605,7 +583,6 @@ class ZipBasedPixelFile(PixelDataStore):
 
         Args:
         layouts: Layouts.
-
         """
         if layouts is None:
             logger.debug("No layouts to write, will skip.")
@@ -641,7 +618,6 @@ class ZipBasedPixelFile(PixelDataStore):
         Args:
         dataset: Dataset.
         force_overwrite: Force overwrite.
-
         """
         path = Path(self.path)
         if path.exists():
@@ -699,7 +675,6 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
 
         Args:
         path: Path.
-
         """
         super().__init__(path)
 
@@ -715,7 +690,6 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         dataframe: Dataframe.
         key: Key.
         partitioning: Partitioning.
-
         """
         # Note that partitioning will be ignored here
         self._set_to_write_mode()
@@ -730,7 +704,6 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
 
         Args:
         key: Key.
-
         """
         self._set_to_read_mode()
         return self._read_dataframe_from_zip(key)
@@ -740,7 +713,6 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
 
         Args:
         key: Key.
-
         """
         raise NotImplementedError(
             "You are trying to read data lazily from a csv-based pxl file. "
@@ -757,7 +729,6 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
 
         Args:
         layouts: Layouts.
-
         """
         raise NotImplementedError(
             "You are trying to write precomputed layouts to a csv-based pxl file. "
@@ -788,7 +759,6 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
 
         Args:
         path: Path.
-
         """
         super().__init__(path)
 
@@ -808,7 +778,6 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         dataframe: The dataframe to write.
         key: The key of the dataframe to write.
         partitioning: The partitioning to use when writing the dataframe.
-
         """
         DEFAULT_COMPRESSION = "zstd"
 
@@ -850,7 +819,6 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
 
         Args:
         key: Key.
-
         """
         self._set_to_read_mode()
         return self._read_dataframe_from_zip(key)
@@ -860,7 +828,6 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
 
         Args:
         key: Key.
-
         """
         self._set_to_read_mode()
         return self._read_dataframe_from_zip_lazy(key)

@@ -258,7 +258,6 @@ def graph_legacy(
     component_size_min_threshold: Component size min threshold.
     panel: Panel.
     output: Output.
-
     """
     warnings.warn(_GRAPH_LEGACY_DEPRECATION, DeprecationWarning, stacklevel=1)
     logger.warning(_GRAPH_LEGACY_DEPRECATION)

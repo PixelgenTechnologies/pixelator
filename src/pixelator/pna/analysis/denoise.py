@@ -43,7 +43,6 @@ def _calculate_core_marker_counts(
     Args:
     node_marker_counts: Node marker counts.
     node_core_numbers: Node core numbers.
-
     """
     one_core_counts = node_marker_counts[
         (node_core_numbers[node_marker_counts.index] == 1).values
@@ -69,7 +68,6 @@ def _perform_fishers_exact_test(
     Args:
     marker_counts: Marker counts.
     pval_significance_threshold: Pval significance threshold.
-
     """
     overexpressed_markers = []
     total_one_core_markers = marker_counts["one_core"].sum()
@@ -102,7 +100,6 @@ def _calculate_excess_counts(
     marker_counts: Marker counts.
     overexpressed_markers: Overexpressed markers.
     inflate_factor: Inflate factor.
-
     """
     results = []
     total_one_core_markers = marker_counts["one_core"].sum()
@@ -143,7 +140,6 @@ def get_overexpressed_markers_in_one_core(
     node_core_numbers: Node core numbers.
     pval_significance_threshold: Pval significance threshold.
     inflate_factor: Inflate factor.
-
     """
     marker_counts = _calculate_core_marker_counts(node_marker_counts, node_core_numbers)
 
@@ -185,7 +181,6 @@ def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list = []) -> list:
 
     Returns:
     list: A list of stranded nodes that are disconnected from the largest connected component after nodes_to_remove are removed.
-
     """
     graph = component.raw.copy()
     graph.remove_nodes_from(nodes_to_remove)
@@ -215,7 +210,6 @@ def denoise_ace(
     min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
     nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
     select_lcc: If True, restrict the initial ACE seed to the largest connected component.
-
     """
     try:
         adaptive_core_expansion(
@@ -244,7 +238,6 @@ def _pixel_type_design_matrix(component: PNAGraph, node_index: pd.Index) -> np.n
     Args:
     component: Component.
     node_index: Node index.
-
     """
     pixel_type = nx.get_node_attributes(component.raw, "pixel_type")
     n = len(node_index)
@@ -266,7 +259,6 @@ def _nodes_outside_largest_cc_after_pls_scores(
     raw: Raw.
     node_index: Node index.
     passing_mask: Passing mask.
-
     """
     keep_candidates = [node_index[i] for i in range(len(node_index)) if passing_mask[i]]
     if not keep_candidates:
@@ -310,7 +302,6 @@ def denoise_pls(
     pls_component_p_threshold: Per-component Pearson test vs coreness.
     min_pls_coreness_correlation: Minimum positive correlation.
     pls_score_threshold: All selected score columns must exceed this.
-
     """
     node_marker_counts = component.node_marker_counts
     idx = node_marker_counts.index
@@ -414,7 +405,6 @@ def denoise_one_core_layer(
 
     Returns:
     list: Node ids sampled for removal from the one-core layer (bleed-over candidates). Does not include stranded nodes; callers merge with other denoise steps and then call ``get_stranded_nodes`` once on the combined set.
-
     """
     node_marker_counts = component.node_marker_counts
     node_core_numbers = pd.Series(nx.core_number(component.raw))
@@ -449,7 +439,6 @@ def write_denoised_edgelist(
     pxl: Pxl.
     umis_to_remove: Umis to remove.
     output_edgelist_path: Output edgelist path.
-
     """
     with pxl.view.open() as session:
         session.get_connection().execute(
@@ -519,7 +508,6 @@ class DenoiseGraph(PerComponentTask):
         pls_component_p_threshold: Pls component p threshold.
         min_pls_coreness_correlation: Min pls coreness correlation.
         pls_score_threshold: Pls score threshold.
-
         """
         if not run_one_core and not run_ace and not run_pls:
             raise ValueError(
@@ -558,7 +546,6 @@ class DenoiseGraph(PerComponentTask):
         Args:
         component: Component.
         component_id: Component id.
-
         """
         one_core_marked: list = []
         ace_marked: list = []
@@ -638,7 +625,6 @@ class DenoiseGraph(PerComponentTask):
         Args:
         data: Data.
         pxl_file_target: Pxl file target.
-
         """
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
@@ -688,7 +674,6 @@ def _collect_denoise_summary_info(
     Args:
     data: Data.
     comp_index: Comp index.
-
     """
     denoise_info = pd.DataFrame(index=comp_index)
 

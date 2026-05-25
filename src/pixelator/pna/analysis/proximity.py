@@ -20,7 +20,6 @@ def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
 
     Args:
     edgelist: Edgelist.
-
     """
     pair_cnt = edgelist.group_by(["marker_1", "marker_2"]).len().to_pandas()
     m1 = pair_cnt["marker_1"].astype(str)
@@ -48,7 +47,6 @@ def _get_markers_above_min_count(edgelist: pl.DataFrame, min_count: int = 0) -> 
     Args:
     edgelist: Edgelist.
     min_count: Min count.
-
     """
     umi1_counts = (
         edgelist.select(["umi1", "marker_1"])
@@ -98,7 +96,6 @@ def proximity_with_permute_stats(
     seed: Seed.
     min_std: Min std.
     min_marker_count: Min marker count.
-
     """
     passing_markers = _get_markers_above_min_count(edgelist, min_marker_count)
     results = proximity_function(edgelist).set_index(["marker_1", "marker_2"])
@@ -147,7 +144,6 @@ def jcs_with_permute_stats(
     edgelist: Edgelist.
     n_permutations: N permutations.
     min_marker_count: Min marker count.
-
     """
     return proximity_with_permute_stats(
         edgelist,
@@ -216,7 +212,6 @@ def calculate_differential_proximity(
     Raises:
     ValueError: If `contrast_column` is not in `proximity_df`.
     ValueError: If no data is found for the specified `metric_type`.
-
     """
     if contrast_column not in proximity_df.columns:
         raise ValueError(f"{contrast_column} must be a column in the data.")

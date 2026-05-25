@@ -59,7 +59,6 @@ class PNAPixelDataset:
         config: The configuration for the dataset.
         active_components: The components to include in the dataset.
         active_markers: The markers to include in the dataset.
-
         """
         self._view = view
         if config is None:
@@ -89,7 +88,6 @@ class PNAPixelDataset:
         Args:
         pxl_files: Pxl files.
         config: Config.
-
         """
         return PNAPixelDataset.from_pxl_files(pxl_files, config)
 
@@ -112,7 +110,6 @@ class PNAPixelDataset:
         Args:
         pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a dictionary with sample names as keys and paths as values.
         config: The configuration for the dataset.
-
         """
         if isinstance(pxl_files, Path):
             return PNAPixelDataset(
@@ -211,7 +208,6 @@ class PNAPixelDataset:
         Args:
         add_log1p_transform: If True, add the log1p transformation to the data.
         add_clr_transform: If True, add the clr transformation to the data.
-
         """
         return self._adata_helper.read_adata(
             add_log1p_transform=add_log1p_transform,
@@ -250,7 +246,6 @@ class PNAPixelDataset:
         add_marker_counts: If True, add the marker counts to the proximity data.
         add_logratio: If True, add the logratio to the proximity data.
         calculate_from_edgelist: Calculate from edgelist.
-
         """
         return Proximity(
             self.view,
@@ -270,7 +265,6 @@ class PNAPixelDataset:
         Args:
         add_marker_counts: If True, add the marker counts to the precomputed layouts.
         add_spherical_norm: If True, add spherical coordinates to dataframe This will be filtered to only include the active samples and components.
-
         """
         return PreComputedLayouts(
             self.view,
@@ -323,7 +317,6 @@ class PNAPixelDataset:
 
         Raises:
         ValueError: if all of the specified samples, components, or markers do not exist in the dataset.
-
         """
         samples = normalize_input_to_set(samples)
         components = normalize_input_to_set(components)

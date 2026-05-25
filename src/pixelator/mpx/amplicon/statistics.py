@@ -58,7 +58,6 @@ class SequenceQualityStatsCollector:
 
         Args:
         design_name: The name of the design of the reads for which to statistics.
-
         """
         design = config.get_assay(design_name)
 
@@ -99,7 +98,6 @@ class SequenceQualityStatsCollector:
 
         Args:
         region_id: id of the region
-
         """
         r = self._positions.get(region_id)
         if r is None:
@@ -196,7 +194,6 @@ class SequenceQualityStatsCollector:
 
         Args:
         qualities: Qualities.
-
         """
         # Use numpy for vectorized operations
         # Reinterpret cast to integers (same as ord)

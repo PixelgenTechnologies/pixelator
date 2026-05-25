@@ -36,7 +36,6 @@ def validate_mismatches(ctx, param, value):
     ctx: The click context
     param: The click parameter name
     value: The click value
-
     """
     try:
         value = int(value)
@@ -100,7 +99,6 @@ def combine_collapse(
     parquet_pattern: Parquet pattern.
     report_pattern: Report pattern.
     memory: Memory.
-
     """
     # log input parameters
     log_step_start(

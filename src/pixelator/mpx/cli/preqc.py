@@ -142,7 +142,6 @@ def preqc(
     remove_polyg: Remove polyg.
     output: Output.
     design: Design.
-
     """
     # log input parameters
     input_files = [fastq_file]

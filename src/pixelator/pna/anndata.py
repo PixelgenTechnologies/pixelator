@@ -18,7 +18,6 @@ def calculate_antibody_metrics(counts_df):
 
     Args:
     counts_df: Counts df.
-
     """
     total_antibody = pd.Series(counts_df.sum(axis=0), name="antibody_count")
     relative_antibody = pd.Series(
@@ -35,7 +34,6 @@ def add_panel_information(adata: AnnData, panel: PNAAntibodyPanel) -> AnnData:
     Args:
     adata: Adata.
     panel: Panel.
-
     """
     adata.var = adata.var.join(panel.df, how="left")
 
@@ -58,19 +56,12 @@ def pna_edgelist_to_anndata(
     panel : PNAAntibodyPanel
         The antibody panel object containing marker metadata.
 
-    Returns
-    -------
-    AnnData
-        An AnnData object with counts and panel information.
-
-    Notes
-    -----
-    Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
-
     Args:
     pixel_connection: Pixel connection.
     panel: Panel.
 
+    Returns:
+    Notes:  ----- Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
     """
     logger.debug("Constructing counts matrix.")
 
@@ -229,7 +220,6 @@ def add_missing_adata_info(new_adata: AnnData, old_adata: AnnData) -> AnnData:
     Args:
     new_adata: New adata.
     old_adata: Old adata.
-
     """
     missing_obs = set(old_adata.obs.columns) - set(new_adata.obs.columns)
     missing_var = set(old_adata.var.columns) - set(new_adata.var.columns)

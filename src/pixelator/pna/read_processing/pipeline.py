@@ -65,7 +65,6 @@ class AmpliconPipeline(Pipeline):
     pre_steps: A list of steps that are applied to the reads before the combining step.
     post_modifiers: A list of modifiers that are applied to the reads after the combining step.
     post_steps: A list of steps that are applied to the reads after the combining step.
-
     """
 
     paired: bool | None = None
@@ -96,7 +95,6 @@ class AmpliconPipeline(Pipeline):
         pre_steps: A list of steps that are applied to the reads before the combining step.
         post_modifiers: A list of modifiers that are applied to the reads after the combining step.
         post_steps: A list of steps that are applied to the reads after the combining step.
-
         """
         self._combiner = combiner
         self._pre_modifiers: list[
@@ -161,7 +159,6 @@ class AmpliconPipeline(Pipeline):
         modifier1: The modifier for read 1.
         modifier2: The modifier for read 2.
         stage: The stage in which to apply the modifiers
-
         """
         assert stage in ("pre", "post")
 
@@ -179,7 +176,6 @@ class AmpliconPipeline(Pipeline):
         Args:
         modifier: Modifier.
         stage: Stage.
-
         """
         assert stage in ("pre", "post")
 
@@ -193,7 +189,6 @@ class AmpliconPipeline(Pipeline):
 
         Args:
         reads: Reads.
-
         """
         pre_modifiers_and_steps = self._pre_modifiers + self._pre_steps
         read1, read2 = reads
@@ -217,7 +212,6 @@ class AmpliconPipeline(Pipeline):
 
         Args:
         single_read: Single read.
-
         """
         pre_modifiers_and_steps = self._pre_modifiers + self._pre_steps
         info = ModificationInfo(single_read)
@@ -240,7 +234,6 @@ class AmpliconPipeline(Pipeline):
         Args:
         infiles: A list of input files to process.
         progress: Progress.
-
         """
         self._infiles = infiles
         self._reader = infiles.open()

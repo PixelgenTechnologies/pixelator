@@ -38,7 +38,6 @@ class PixelFileWriter:
         path: The path to the PXL file.
         exists_ok: Whether to remove the file if it exists.
         exits_ok: Exits ok.
-
         """
         self.path = path
         self.exists_ok = exits_ok
@@ -78,7 +77,6 @@ class PixelFileWriter:
         exc_type: Exc type.
         exc_value: Exc value.
         traceback: Traceback.
-
         """
         self.close()
 
@@ -102,7 +100,6 @@ class PixelFileWriter:
 
         Args:
         edgelist: The path to the edgelist parquet file.
-
         """
         if isinstance(edgelist, Path):
             self._write_parquet_file_to_table("edgelist", edgelist)
@@ -129,7 +126,6 @@ class PixelFileWriter:
 
         Args:
         adata: The AnnData object to write.
-
         """
         self._clean_existing_adata_tables()
 
@@ -163,7 +159,6 @@ class PixelFileWriter:
 
         Args:
         metadata: The metadata dictionary to write.
-
         """
         self._connection.sql(
             """
@@ -179,7 +174,6 @@ class PixelFileWriter:
 
         Args:
         layouts: The path to the layouts parquet file.
-
         """
         try:
             if isinstance(layouts, list) or layouts.is_file():  # type: ignore
@@ -201,7 +195,6 @@ class PixelFileWriter:
 
         Args:
         proximity: The path to the proximity parquet file.
-
         """
         try:
             if proximity.is_file():  # type: ignore

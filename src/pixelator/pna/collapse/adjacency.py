@@ -25,7 +25,6 @@ def build_network_directional(
     indices: The indices of the k-nearest neighbors. A 2D array with shape (n_queries, k).
     read_counts: The read support for each molecule. A 1D array with shape (n_queries,).
     cutoff: The distance cutoff to consider an edge between two nodes.
-
     """
     if distances.shape != indices.shape:
         raise ValueError(
@@ -87,7 +86,6 @@ def build_network_cluster(
     indices: The indices of the k-nearest neighbors. A 2D array with shape (n_queries, k).
     read_counts: The read support for each molecule. A 1D array with shape (n_queries,).
     cutoff: The distance cutoff to consider an edge between two nodes.
-
     """
     n_queries = distances.shape[0]
 
@@ -121,7 +119,6 @@ def build_network_cluster_from_range_query(lims, distances, indices, index_map=N
     distances: The distances of the neighbors.
     indices: The indices of the neighbors.
     index_map: A transformation of the indices
-
     """
     indices = indices
 

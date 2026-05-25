@@ -17,7 +17,6 @@ def list_single_cell_designs(ctx: click.Context, param: Any, value: Any) -> None
     ctx: The click context
     param: The click parameter
     value: The click value
-
     """
     from pixelator.mpx.config import config
 
@@ -38,7 +37,6 @@ def list_single_cell_panels(ctx: click.Context, param: Any, value: Any) -> None:
     ctx: The click context
     param: The click parameter
     value: The click value
-
     """
     from pixelator.mpx.config import config
 

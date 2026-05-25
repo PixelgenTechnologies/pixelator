@@ -59,11 +59,8 @@ class NetworkXGraphBackend(GraphBackend):
                 Create a Graph instance (as an end-user this is probably not the interface
                 you are looking for). Try `Graph.from_edgelist`.
 
-
-
         Args:
-                raw: The underlying raw representation of the graph, defaults to None
-
+        raw: The underlying raw representation of the graph, defaults to None
         """
         self._raw = raw
 
@@ -202,21 +199,12 @@ class NetworkXGraphBackend(GraphBackend):
                 vertex (node) when `add_marker_counts` is True. If `use_full_bipartite` is
                 False or `simplify` is True the edge attributes will be lost.
 
-
-
         Args:
-                edgelist: the edge list (dataframe) corresponding to the graph
-                add_marker_counts: add a dictionary of marker counts to each node
-                simplify: simplifies the graph (remove redundant edges)
-                use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-                convert_indices_to_integers: convert the indices to integers (this is the default)
-
-        Returns:
-                a GraphBackend instance (NetworkXGraphBackend)
-
-        Raises:
-                AssertionError when the input edge list is not valid
-
+        edgelist: the edge list (dataframe) corresponding to the graph
+        add_marker_counts: add a dictionary of marker counts to each node
+        simplify: simplifies the graph (remove redundant edges)
+        use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+        convert_indices_to_integers: convert the indices to integers (this is the default)
         """
         if isinstance(edgelist, pd.DataFrame):
             edgelist: pl.LazyFrame = pl.LazyFrame(edgelist)  # type: ignore
@@ -243,11 +231,7 @@ class NetworkXGraphBackend(GraphBackend):
         """Generate a Graph from an networkx.Graph object.
 
         Args:
-                graph: input networkx graph to use
-
-        Returns:
-                A pixelator Graph object (NetworkXGraphBackend)
-
+        graph: input networkx graph to use
         """
         return NetworkXGraphBackend(graph)
 
@@ -285,11 +269,7 @@ class NetworkXGraphBackend(GraphBackend):
         """Get the sparse adjacency matrix.
 
         Args:
-                node_ordering: Control the node ordering in the adjacency matrix
-
-        Returns:
-                a sparse adjacency matrix
-
+        node_ordering: Control the node ordering in the adjacency matrix
         """
         return nx.to_scipy_sparse_array(self._raw, nodelist=node_ordering)
 
@@ -411,22 +391,12 @@ class NetworkXGraphBackend(GraphBackend):
                 `wpmds_3d` method uses edge weights to improve the layout, but is slightly
                 slower than `pmds_3d`.
 
-
-
         Args:
-                layout_algorithm: the layout algorithm to use to generate the coordinates
-                only_keep_a_pixels: If true, only keep the a-pixels
-                get_node_marker_matrix: Add a matrix of marker counts to each node if True.
-                random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
-                **kwargs: will be passed to the underlying layout implementation
-
-        Returns:
-                the coordinates and markers (if activated) as a dataframe (pd.DataFrame)
-
-        Raises:
-                AssertionError if the provided `layout_algorithm` is not valid
-                ValueError if the provided current graph instance is empty
-
+        layout_algorithm: the layout algorithm to use to generate the coordinates
+        only_keep_a_pixels: If true, only keep the a-pixels
+        get_node_marker_matrix: Add a matrix of marker counts to each node if True.
+        random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
+        **kwargs: will be passed to the underlying layout implementation
         """
         start_time = timer()
         coordinates = self._layout_coordinates(
@@ -473,8 +443,7 @@ class NetworkXGraphBackend(GraphBackend):
         """Add edges to the graph instance.
 
         Args:
-                edges: Add the following edges to the graph instance.
-
+        edges: Add the following edges to the graph instance.
         """
         self.raw.add_edges_from(edges)
 
@@ -483,14 +452,12 @@ class NetworkXGraphBackend(GraphBackend):
 
                                     attributes are of different lengths
 
-
         Args:
-                n_vertices: the number of vertices to be added to the graph instance.
-                attrs: dict of sequences, all of length equal to the number of vertices to be added, containing the attributes of the new vertices. If `n_vertices=1` then they have to be lists of length 1.
+        n_vertices: the number of vertices to be added to the graph instance.
+        attrs: dict of sequences, all of length equal to the number of vertices to be added, containing the attributes of the new vertices. If `n_vertices=1` then they have to be lists of length 1.
 
         Raises:
-                IndexError: if the number of graph vertices to add and lists of
-
+        IndexError: if the number of graph vertices to add and lists of
         """
         raise NotImplementedError()
 
@@ -499,14 +466,12 @@ class NetworkXGraphBackend(GraphBackend):
 
                                     of different length
 
-
         Args:
-                vs_names: Add the following vertices to the graph instance.
+        vs_names: Add the following vertices to the graph instance.
 
         Raises:
-                ValueError: if the graph is empty
-                IndexError: if the number of graph vertices and list of names are
-
+        ValueError: if the graph is empty
+        IndexError: if the number of graph vertices and list of names are
         """
         raise NotImplementedError()
 
@@ -779,20 +744,15 @@ def pmds_layout(
             that all transitions are possible.
         * None to use unweighted shortest path lengths
 
-
     Args:
-        g: A networkx graph object
-        pivots: The number of pivot nodes to use
-        dim: The dimension of the layout
-        weights: Edge weights to use for the layout computation. Options are:
-        seed: Set seed for reproducibility
-
-    Returns:
-        A dataframe with layout coordinates (pd.DataFrame)
+    g: A networkx graph object
+    pivots: The number of pivot nodes to use
+    dim: The dimension of the layout
+    weights: Edge weights to use for the layout computation. Options are:
+    seed: Set seed for reproducibility
 
     Raises:
-        ValueError: if conditions are not met
-
+    ValueError: if conditions are not met
     """
     if not nx.is_connected(g):
         raise ValueError("Only connected graphs are supported.")
@@ -925,18 +885,12 @@ def _prob_edge_weights(
         connected (if there are many possible k-step paths between them), this
         probability should be high.
 
-
-
     Args:
-        g: A networkx graph object
-        k: The number of steps in the random walk
-
-    Returns:
-        An array of edge weights (np.array)
+    g: A networkx graph object
+    k: The number of steps in the random walk
 
     Raises:
-        ValueError: if conditions are not met
-
+    ValueError: if conditions are not met
     """
     # Check that k is an integer between 1 and 10
     if not isinstance(k, int) and k < 1 or k > 10:

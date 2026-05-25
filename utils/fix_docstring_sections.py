@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Normalize Google docstring section indentation inside docstrings."""
+"""Normalize Google docstring section indentation inside docstrings.
+
+Copyright © 2025 Pixelgen Technologies AB.
+"""
 
 from __future__ import annotations
 
@@ -9,10 +12,20 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SECTIONS = ("Args", "Returns", "Raises", "Yields", "Attributes", "Examples", "References", "Note")
+SECTIONS = (
+    "Args",
+    "Returns",
+    "Raises",
+    "Yields",
+    "Attributes",
+    "Examples",
+    "References",
+    "Note",
+)
 
 
 def normalize_docstring(doc: str) -> str:
+    """Normalize docstring."""
     lines = [line.rstrip() for line in doc.splitlines()]
     if not lines:
         return doc
@@ -61,6 +74,7 @@ def normalize_docstring(doc: str) -> str:
 
 
 def process_file(path: Path) -> bool:
+    """Process file."""
     source = path.read_text(encoding="utf-8")
     try:
         tree = ast.parse(source)
@@ -108,6 +122,8 @@ def process_file(path: Path) -> bool:
 
 
 def main(targets: list[str]) -> int:
+    """Normalize Google docstring sections for the given paths."""
+    """Main."""
     from fill_missing_docstrings import iter_targets
 
     count = 0

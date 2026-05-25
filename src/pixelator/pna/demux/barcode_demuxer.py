@@ -35,7 +35,6 @@ def create_barcode_group_to_batch_mapping(
     group_sizes: the mapping of (PID1, PID2) pairs to the number of reads
     reads_per_chunk: the target number of reads per chunk
     max_chunks: the maximum number of groups
-
     """
     # We can initialize the group mapping already with a default batch index of 0
 
@@ -68,7 +67,6 @@ def partition_greedy(items: Sequence[int], n: int) -> npt.NDArray[np.int32]:
     counts: a dictionary of items and their weights
     n: the number of subsets
     items: Items.
-
     """
     # Initialize a priority queue with n empty subsets
     subset_sums = [(0, i) for i in range(n)]
@@ -112,7 +110,6 @@ def independent_marker_groups_mapping(
     group_sizes: Group sizes.
     reads_per_chunk: Reads per chunk.
     max_chunks: Max chunks.
-
     """
     marker1_counts: typing.Counter[str] = Counter()
     marker2_counts: typing.Counter[str] = Counter()
@@ -174,7 +171,6 @@ class DemuxRecordBatch:
 
         Args:
         capacity: the maximum number of records in the batch
-
         """
         self._batch_size = capacity
         self._size = 0
@@ -194,7 +190,6 @@ class DemuxRecordBatch:
         marker1: the first marker index
         marker2: the second marker index
         molecule: the molecule embedding
-
         """
         _size = self._size
 
@@ -226,7 +221,6 @@ class DemuxRecordBatch:
 
         Args:
         allowed_ids: Allowed ids.
-
         """
         mask = np.isin(self.marker1[: self._size], allowed_ids)
         return bool(np.all(mask))
@@ -236,7 +230,6 @@ class DemuxRecordBatch:
 
         Args:
         allowed_ids: Allowed ids.
-
         """
         mask = np.isin(self.marker2[: self._size], allowed_ids)
         return bool(np.all(mask))
@@ -319,7 +312,6 @@ class PNAEmbedding:
 
         Args:
         assay: the assay design
-
         """
         self.assay = assay
 
@@ -343,7 +335,6 @@ class PNAEmbedding:
 
         Args:
         embedded: Embedded.
-
         """
         return embedded[0:12]
 
@@ -352,7 +343,6 @@ class PNAEmbedding:
 
         Args:
         embedded: Embedded.
-
         """
         return embedded[12:24]
 
@@ -361,7 +351,6 @@ class PNAEmbedding:
 
         Args:
         embedded: Embedded.
-
         """
         return embedded[24:32]
 
@@ -408,7 +397,6 @@ class PNAEmbedding:
         umi1: Umi1.
         umi2: Umi2.
         uei: Uei.
-
         """
         vec = np.zeros(256, dtype=np.uint8)
 
@@ -439,7 +427,6 @@ class PNAEmbedding:
         Args:
         bitvector: the 256-bit vector to unpack
         skip_uei: whether to skip unpacking the UEI
-
         """
         if isinstance(bitvector, bytes):
             array_view = np.frombuffer(bitvector, dtype=np.uint8, count=len(bitvector))
@@ -480,7 +467,6 @@ class PNAEmbedding:
 
         Raises:
         ValueError: if the UMI is longer than 32 nucleotides
-
         """
         if len(umi) > 40:
             raise ValueError("UMI cannot be longer than 40 nucleotides")
@@ -501,7 +487,6 @@ class PNAEmbedding:
 
         Raises:
         ValueError: if the input vector is not 128 bits long
-
         """
         if isinstance(umi_bytes, bytes):
             bytes_view = np.frombuffer(umi_bytes, dtype=np.uint8, count=len(umi_bytes))
@@ -528,7 +513,6 @@ class PNAEmbedding:
 
         Raises:
         ValueError: if the input vector is not 128 bits long
-
         """
         return self._compress_3bit_embedding(bitvector, 12, 28)
 
@@ -539,7 +523,6 @@ class PNAEmbedding:
 
         Args:
         bitvector: Bitvector.
-
         """
         return self._compress_3bit_embedding(bitvector, 8, 15)
 
@@ -557,7 +540,6 @@ class PNAEmbedding:
 
         Raises:
         ValueError: if the input vector is not 128 bits long
-
         """
         array_view: npt.NDArray[np.uint8]
 
@@ -595,7 +577,6 @@ class BarcodeDemuxer(abc.ABC):
         Args:
         assay: the assay design
         panel: the antibody panel
-
         """
         self.assay = assay
         self.panel = panel
@@ -630,7 +611,6 @@ class BarcodeDemuxer(abc.ABC):
         Args:
         group_id: Group id.
         group: Group.
-
         """
         serialized_batch = group.serialize()
         self._records_written += len(group)
@@ -656,7 +636,6 @@ class BarcodeDemuxer(abc.ABC):
 
         Args:
         read: the input read to process
-
         """
         raise NotImplementedError
 
@@ -682,7 +661,6 @@ class IndependentBarcodeDemuxer(BarcodeDemuxer):
         panel: the antibody panel
         marker1_groups: the mapping of marker1 to group id
         marker2_groups: the mapping of marker2 to group id
-
         """
         super().__init__(assay, panel)
         self.marker1_groups = marker1_groups
@@ -693,7 +671,6 @@ class IndependentBarcodeDemuxer(BarcodeDemuxer):
 
         Args:
         read: the read to process
-
         """
         if read.comment is None:
             raise BarcodeDemuxingError("No comment found in read")
@@ -761,7 +738,6 @@ class PairedBarcodeDemuxer(BarcodeDemuxer):
         assay: the assay design
         panel: the antibody panel
         supergroups: the mapping of (PID1, PID2) pairs to supergroup ids
-
         """
         super().__init__(assay, panel)
         self._supergroups = supergroups
@@ -772,7 +748,6 @@ class PairedBarcodeDemuxer(BarcodeDemuxer):
 
         Args:
         read: the read to process
-
         """
         if read.comment is None:
             raise BarcodeDemuxingError("No comment found in read")

@@ -39,7 +39,6 @@ def _expand_neighborhood_matrix(
     k: K.
     use_weights: Use weights.
     min_weight: Min weight.
-
     """
     A = g.get_adjacency_sparse(node_ordering=node_ordering)
     # Add self-loops to represent "at most k steps"
@@ -72,7 +71,6 @@ def _residualize_matrix(X: np.ndarray, model_mat: np.ndarray) -> np.ndarray:
     Args:
     X: Matrix to residualize (n_samples, n_features)
     model_mat: Covariates matrix (n_samples, n_covariates)
-
     """
     # Solve M @ B = X for B
     B, _, _, _ = np.linalg.lstsq(model_mat, X, rcond=None)
@@ -111,7 +109,6 @@ def create_node_neighborhood_abundance_matrix(
 
     Raises:
     ValueError: If the number of rows in model_mat does not match the number of nodes in the graph.
-
     """
     counts = g.node_marker_counts
     X = counts.values.astype(np.float64)
@@ -195,7 +192,6 @@ def node_pls(
 
     Raises:
     ValueError: If variables are not found or if the input matrices are incompatible.
-
     """
     if isinstance(y_vars, str):
         y_vars = [y_vars]

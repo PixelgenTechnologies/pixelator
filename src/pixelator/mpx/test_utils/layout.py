@@ -25,8 +25,7 @@ class BaseLayoutTestsMixin(BaseWorkflowTestMixin):
         scope="class", name="test_layout_run", depends=["test_annotate_run"]
     )
     def test_layout_run(self):
-        """Verify layout run.
-        """
+        """Verify layout run."""
         params = self.__get_parameters()
         verbose = self.__get_options("common").get("verbose")
         input_files = list(
@@ -58,16 +57,14 @@ class BaseLayoutTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(scope="class", depends=["test_layout_run"])
     def test_layout_dataset_exists(self):
-        """Verify layout dataset exists.
-        """
+        """Verify layout dataset exists."""
         pxl_files = (self.workdir / "layout").glob("*.layout.dataset.pxl")
         for f in pxl_files:
             assert f.is_file()
 
     @pytest.mark.dependency(scope="class", depends=["test_layout_run"])
     def test_layout_report_exists(self):
-        """Verify layout report exists.
-        """
+        """Verify layout report exists."""
         json_files = (self.workdir / "layout").glob("*.report.json")
         for f in json_files:
             assert f.is_file()

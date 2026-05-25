@@ -42,7 +42,6 @@ class Edgelist:
         view: View.
         components: Components.
         adata_helper: Adata helper.
-
         """
         self._view = view
         self._components = normalize_input_to_set(components)
@@ -110,7 +109,6 @@ class Edgelist:
 
         Args:
         batch_size: Batch size.
-
         """
         query = self._query_builder.edgelist_query(
             normalize_input_to_list(self.components)

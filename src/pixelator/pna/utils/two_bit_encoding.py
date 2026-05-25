@@ -51,7 +51,6 @@ def pack_2bits(kmer: bytes) -> np.uint64:
 
     Args:
     kmer: the kmer to pack
-
     """
     # pack the kmer into an int
     assert len(kmer) <= 32
@@ -72,7 +71,6 @@ def pack_4bits(kmer: bytes) -> np.uint64:
 
     Args:
     kmer: the kmer to pack
-
     """
     assert len(kmer) <= 16
 
@@ -89,7 +87,6 @@ def unpack_2bits(packed: int, k: int) -> bytes:
     Args:
     packed: the packed kmer as an integer
     k: the length of the kmer
-
     """
     np_packed = np.uint64(packed)
     seq = bytearray(k)
@@ -105,7 +102,6 @@ def unpack_4bits(packed: int, k: np.uint64) -> bytes:
     Args:
     packed: the packed kmer as an integer
     k: the length of the kmer
-
     """
     seq = bytearray(k)
     for i in range(k - 1, -1, -1):

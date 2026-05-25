@@ -17,7 +17,6 @@ def load_yaml_file(path: PathType) -> Any:
     Raises:
     FileExistsError: If the path does not exist
     TypeError: If the path is not a yaml file
-
     """
     path = Path(path)
     if not path.is_file():

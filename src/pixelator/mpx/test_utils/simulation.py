@@ -38,14 +38,14 @@ class ReadSimulator:
     ) -> None:
         """Create a ReadSimulator instance.
 
-Args:
-    assay: an `Assay` to use will use D21 if None is passed, defaults to None
-    nbr_of_a_pixels: The number of A pixels to sample molecules from, defaults to 1000
-    nbr_of_b_pixels: The number of B pixels to sample molecules from, defaults to 1000
-    random_seed: Set the random seed, defaults to 42
-    markers: A list of marker barcodes to use in generating the reads, defaults to ["AAAAAAAA"]
-    upia_pool_size: Upia pool size.
-    upib_pool_size: Upib pool size.
+        Args:
+        assay: an `Assay` to use will use D21 if None is passed, defaults to None
+        nbr_of_a_pixels: The number of A pixels to sample molecules from, defaults to 1000
+        nbr_of_b_pixels: The number of B pixels to sample molecules from, defaults to 1000
+        random_seed: Set the random seed, defaults to 42
+        markers: A list of marker barcodes to use in generating the reads, defaults to ["AAAAAAAA"]
+        upia_pool_size: Upia pool size.
+        upib_pool_size: Upib pool size.
         """
         if not assay:
             assay = config.assays["D21"]
@@ -58,8 +58,8 @@ Args:
     def random_seq(self, length: int) -> str:
         """Generate a random DNA sequence of size length.
 
-Args:
-    length: length of the sequence to generate
+        Args:
+        length: length of the sequence to generate
         """
         return "".join([self.rng.choice(["A", "T", "C", "G"]) for _ in range(length)])
 
@@ -68,8 +68,8 @@ Args:
 
                 :yields str: An iterator of DNA sequences
 
-Args:
-    nbr_of_molecules: number of molecules to generate
+        Args:
+        nbr_of_molecules: number of molecules to generate
         """
 
         def build_fragment():
@@ -104,10 +104,10 @@ Args:
 
                 :yields str: an iterator of "sequenced" reads
 
-Args:
-    molecules: the underlying molecules to "sequence"
-    mean_nbr_of_reads_per_molecule: the mean number of reads to generate per molecule
-    std_nbr_of_reads_per_molecule: the standard deviation in the number of reads generated per molecule
+        Args:
+        molecules: the underlying molecules to "sequence"
+        mean_nbr_of_reads_per_molecule: the mean number of reads to generate per molecule
+        std_nbr_of_reads_per_molecule: the standard deviation in the number of reads generated per molecule
         """
         for molecule in molecules:
             nbr_of_times_sequences = int(
@@ -128,9 +128,9 @@ Args:
 
                 :yields str: an iterator of DNA sequences with errors added to it
 
-Args:
-    reads: reads to add errors to
-    error_prob_per_base: (probability of adding an error, range): [0,1)
+        Args:
+        reads: reads to add errors to
+        error_prob_per_base: (probability of adding an error, range): [0,1)
         """
         if error_prob_per_base < 0 or error_prob_per_base > 1:
             raise AssertionError("`error_prob_per_base` must be between 0 and 1.")
@@ -157,11 +157,11 @@ Args:
     ) -> Iterator[str]:
         """Simulate a reads from a pool n molecules, adding sequencing errors.
 
-Args:
-    n_molecules: number of molecules to start from
-    mean_reads_per_molecule: mean number of molecules to generate per molecule
-    std_reads_per_molecule: the standard deviation of the number of molecules to generate
-    prob_of_seq_error: probability of base substitutions errors per base sequenced. Default: 0.
+        Args:
+        n_molecules: number of molecules to start from
+        mean_reads_per_molecule: mean number of molecules to generate per molecule
+        std_reads_per_molecule: the standard deviation of the number of molecules to generate
+        prob_of_seq_error: probability of base substitutions errors per base sequenced. Default: 0.
         """
         fragments = self.build_molecule(n_molecules)
         reads = self.sequence_molecule(

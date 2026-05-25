@@ -1,6 +1,7 @@
 """Configuration models and loaders for PNA assays and panels.
 
-Copyright © 2023 Pixelgen Technologies AB."""
+Copyright © 2023 Pixelgen Technologies AB.
+"""
 
 from pixelator.common.config.panel import AntibodyPanelMetadata
 from pixelator.common.config.utils import load_yaml_file

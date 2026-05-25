@@ -61,21 +61,12 @@ class GraphBackend(Protocol):
                 vertex (node) when `add_marker_counts` is True. If `use_full_bipartite` is
                 False or `simplify` is True the edge attributes will be lost.
 
-
-
         Args:
-                edgelist: the edge list (dataframe) corresponding to the graph
-                add_marker_counts: add a dictionary of marker counts to each node
-                simplify: simplifies the graph (remove redundant edges)
-                use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-                convert_indices_to_integers: convert the indices to integers (this is the default)
-
-        Returns:
-                a Graph instance (GraphBackend)
-
-        Raises:
-                AssertionError when the input edge list is not valid
-
+        edgelist: the edge list (dataframe) corresponding to the graph
+        add_marker_counts: add a dictionary of marker counts to each node
+        simplify: simplifies the graph (remove redundant edges)
+        use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+        convert_indices_to_integers: convert the indices to integers (this is the default)
         """
         ...
 
@@ -88,14 +79,8 @@ class GraphBackend(Protocol):
 
                 Typically what you want to use is `from_edgelist`.
 
-
-
         Args:
-                graph: input graph to use
-
-        Returns:
-                A pixelator GraphBackend object (GraphBackend)
-
+        graph: input graph to use
         """
         ...
 
@@ -128,11 +113,7 @@ class GraphBackend(Protocol):
         """Get the sparse adjacency matrix.
 
         Args:
-                node_ordering: Control the node ordering in the adjacency matrix
-
-        Returns:
-                a sparse adjacency matrix
-
+        node_ordering: Control the node ordering in the adjacency matrix
         """
         ...
 
@@ -181,22 +162,12 @@ class GraphBackend(Protocol):
                 `wpmds_3d` method uses edge weights to improve the layout, but is slightly
                 slower than `pmds_3d`.
 
-
-
         Args:
-                layout_algorithm: the layout algorithm to use to generate the coordinates
-                only_keep_a_pixels: If true, only keep the a-pixels
-                get_node_marker_matrix: Add a matrix of marker counts to each node if True.
-                random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
-                **kwargs: will be passed to the underlying layout implementation
-
-        Returns:
-                the coordinates and markers (if activated) as a dataframe (pd.DataFrame)
-
-        Raises:
-                AssertionError if the provided `layout_algorithm` is not valid
-                ValueError if the provided current graph instance is empty
-
+        layout_algorithm: the layout algorithm to use to generate the coordinates
+        only_keep_a_pixels: If true, only keep the a-pixels
+        get_node_marker_matrix: Add a matrix of marker counts to each node if True.
+        random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
+        **kwargs: will be passed to the underlying layout implementation
         """
         ...
 
@@ -212,8 +183,7 @@ class GraphBackend(Protocol):
         """Add edges to the graph instance.
 
         Args:
-                edges: Add the following edges to the graph instance.
-
+        edges: Add the following edges to the graph instance.
         """
         ...
 
@@ -222,14 +192,12 @@ class GraphBackend(Protocol):
 
                                     attributes are of different lengths
 
-
         Args:
-                n_vertices: the number of vertices to be added to the graph instance.
-                attrs: dict of sequences, all of length equal to the number of vertices to be added, containing the attributes of the new vertices. If `n_vertices=1` then they have to be lists of length 1.
+        n_vertices: the number of vertices to be added to the graph instance.
+        attrs: dict of sequences, all of length equal to the number of vertices to be added, containing the attributes of the new vertices. If `n_vertices=1` then they have to be lists of length 1.
 
         Raises:
-                IndexError: if the number of graph vertices to add and lists of
-
+        IndexError: if the number of graph vertices to add and lists of
         """
         ...
 
@@ -238,14 +206,12 @@ class GraphBackend(Protocol):
 
                                     of different length
 
-
         Args:
-                vs_names: Add the following vertices to the graph instance.
+        vs_names: Add the following vertices to the graph instance.
 
         Raises:
-                ValueError: if the graph is empty
-                IndexError: if the number of graph vertices and list of names are
-
+        ValueError: if the graph is empty
+        IndexError: if the number of graph vertices and list of names are
         """
         ...
 

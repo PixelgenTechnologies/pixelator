@@ -90,7 +90,6 @@ def sample_calling_cli(
     save_undetermined: Save undetermined.
     confidence_threshold: Confidence threshold.
     output: Output.
-
     """
     log_step_start(
         "sample-calling",

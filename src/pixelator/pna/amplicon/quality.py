@@ -37,7 +37,6 @@ class QualityStatistics:
 
         Args:
         data: A dictionary with the quality statistics for each region.
-
         """
         self._region_counters = {}
         for region_id, region_data in data.items():
@@ -48,7 +47,6 @@ class QualityStatistics:
 
         Args:
         region_id: Region id.
-
         """
         return self._region_counters[region_id]["total_bases"]
 
@@ -57,7 +55,6 @@ class QualityStatistics:
 
         Args:
         region_id: Region id.
-
         """
         return self._region_counters[region_id]["sequenced_bases"]
 
@@ -66,7 +63,6 @@ class QualityStatistics:
 
         Args:
         region_id: Region id.
-
         """
         return self._region_counters[region_id]["q30_bases"]
 
@@ -78,7 +74,6 @@ class QualityStatistics:
 
         Args:
         region_id: Region id.
-
         """
         r = self._region_counters[region_id]
         if (bases := r["total_bases"]) == 0:
@@ -94,7 +89,6 @@ class QualityStatistics:
 
         Args:
         region_id: Region id.
-
         """
         r = self._region_counters[region_id]
         if (bases := r["sequenced_bases"]) == 0:
@@ -107,7 +101,6 @@ class QualityStatistics:
 
         Args:
         other: Other.
-
         """
         for region_id, region_data in other._region_counters.items():
             if region_id not in self._region_counters:
@@ -139,7 +132,6 @@ class QualityProfileStep(SingleEndStep, HasCustomStatistics):
 
         Args:
         assay: The assay object
-
         """
         super().__init__()
         self.assay = assay
@@ -171,7 +163,6 @@ class QualityProfileStep(SingleEndStep, HasCustomStatistics):
         Args:
         read: Read.
         info: Info.
-
         """
         # Create a view into the original quality array
         qual = np.frombuffer(read.qualities_as_bytes(), dtype=np.int8)

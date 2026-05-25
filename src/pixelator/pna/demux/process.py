@@ -69,7 +69,6 @@ def correct_marker_barcodes(
     save_failed: Save failed reads to a separate file.
     mismatches: The number of mismatches allowed when correcting towards known markers.
     threads: The number of threads to use for processing. By default all available cores are used.
-
     """
     threads = threads if threads > 0 else mp.cpu_count()
 
@@ -165,7 +164,6 @@ def demux_barcode_groups(
     max_chunks: Max chunks.
     threads: Threads.
     stategy: Stategy.
-
     """
     # Open file handles for input files
 
@@ -270,7 +268,6 @@ def finalize_batched_groups(
     memory: Memory.
     threads: Threads.
     temp_dir: Temp dir.
-
     """
     if strategy == "independent":
         return _finalize_batched_groups_independent(
@@ -330,7 +327,6 @@ def _finalize_batched_groups_paired(
 
     Raises:
     ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
-
     """
     parquet_files = []
     tmp_parquet_files = list(input_dir.glob("*.parquet"))
@@ -398,7 +394,6 @@ def _finalize_batched_groups_independent(
 
     Raises:
     ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
-
     """
     parquet_files = []
     tmp_files = list(input_dir.glob("*.parquet"))

@@ -31,7 +31,6 @@ def union(graphs: List[Graph]) -> Graph:
 
     Args:
     graphs: the graphs to create the union from
-
     """
     backends = [type(g._backend) for g in graphs]
     if not all(map(lambda b: backends[0] == b, backends)):
@@ -60,7 +59,6 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
 
     Args:
     edgelist: an edge list dataframe with a membership column
-
     """
     if "component" not in edgelist.columns:
         raise AssertionError("Edge list is missing the membership column")
@@ -207,7 +205,6 @@ def create_node_markers_counts(
     graph: a graph (preferably a connected component)
     k: number of neighbors to include per node (0 no neighbors, 1 first level, ...)
     normalization: selects a normalization method to apply when building neighborhoods
-
     """
     if k == 0 and normalization:
         warnings.warn(
@@ -322,7 +319,6 @@ def edgelist_metrics(
 
     Raises:
     TypeError: if edgelist is not either a pl.LazyFrame
-
     """
     if isinstance(edgelist, pl.LazyFrame):
         logger.debug("Computing edgelist metrics where edgelist type is pl.LazyFrame")
@@ -390,7 +386,6 @@ def map_upis_to_components(
 
     Raises:
     TypeError: If ``edgelist`` is not a ``pl.LazyFrame`` or ``pd.DataFrame``.
-
     """
     # Create a mapping of the components to a hash of its UPIs
     node_component_map = node_component_map.astype(str)
@@ -456,7 +451,6 @@ def update_edgelist_membership(
 
     Raises:
     TypeError: if edgelist is not either a pl.LazyFrame or a pd.DataFrame
-
     """
     if isinstance(edgelist, pd.DataFrame):
         was_dataframe = True
@@ -511,7 +505,6 @@ def split_remaining_and_removed_edgelist(
 
     Args:
     edgelist: the edge list
-
     """
     if "component" in edgelist.collect_schema().names():
         logger.info("The input edge list already contains a component column")

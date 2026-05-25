@@ -22,7 +22,6 @@ def molecule_rank_plot(
     Raises:
     AssertionError: If the required column(s) are not present in the DataFrame.
     ValueError: If the data types are invalid.
-
     """
     if "n_umi" not in data.columns:
         raise AssertionError("column 'n_umi' is missing from DataFrame")

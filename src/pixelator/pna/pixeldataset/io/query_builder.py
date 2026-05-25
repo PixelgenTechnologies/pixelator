@@ -73,7 +73,6 @@ class QueryBuilder:
         Args:
         db_name: Db name.
         components: Components.
-
         """
         return Query(
             sql=f"""SELECT * FROM {db_name}.__adata__X
@@ -92,7 +91,6 @@ class QueryBuilder:
         Args:
         db_name: Db name.
         components: Components.
-
         """
         return Query(
             sql=f"""SELECT * FROM {db_name}.__adata__obs
@@ -111,7 +109,6 @@ class QueryBuilder:
         Args:
         db_name: Db name.
         markers: Markers.
-
         """
         return Query(
             sql=f"""SELECT * FROM {db_name}.__adata__var
@@ -125,7 +122,6 @@ class QueryBuilder:
 
         Args:
         db_name: Db name.
-
         """
         return Query(
             sql=f"SELECT * FROM {db_name}.__adata__uns",
@@ -137,7 +133,6 @@ class QueryBuilder:
 
         Args:
         db_name: Db name.
-
         """
         return Query(
             sql="SHOW ALL TABLES",
@@ -156,7 +151,6 @@ class QueryBuilder:
         db_name: Db name.
         table_name: Table name.
         components: Components.
-
         """
         qualified = table_name if "." in table_name else f"{db_name}.main.{table_name}"
         return Query(
@@ -171,7 +165,6 @@ class QueryBuilder:
 
         Args:
         components: Components.
-
         """
         return Query(
             sql=f"""SELECT * FROM edgelist
@@ -185,7 +178,6 @@ class QueryBuilder:
 
         Args:
         components: Components.
-
         """
         return Query(
             sql=f"""SELECT COUNT(*) FROM edgelist
@@ -202,7 +194,6 @@ class QueryBuilder:
         Args:
         components: Components.
         add_marker_counts: Add marker counts.
-
         """
         if add_marker_counts:
             return Query(
@@ -238,7 +229,6 @@ class QueryBuilder:
 
         Args:
         components: Components.
-
         """
         return Query(
             sql=f"""SELECT COUNT(*)
@@ -260,7 +250,6 @@ class QueryBuilder:
         components: Components.
         markers: Markers.
         calculate_from_edgelist: Calculate from edgelist.
-
         """
         if calculate_from_edgelist:
             sql, params = jcs_with_analytical_stats(
@@ -289,7 +278,6 @@ class QueryBuilder:
         components: Components.
         markers: Markers.
         calculate_from_edgelist: Calculate from edgelist.
-
         """
         if calculate_from_edgelist:
             return self._calculate_proximity_length_from_edgelist(components, markers)

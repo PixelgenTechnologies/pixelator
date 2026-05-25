@@ -17,7 +17,6 @@ def prepare_from_graph(graph: Graph, n_neighbours: int = 1) -> RegionByCountsDat
     Args:
     graph: the graph to prepare from
     n_neighbours: size of the neighbourhood, defaults to 1
-
     """
     counts_df = create_node_markers_counts(graph=graph, k=n_neighbours)
     return counts_df
@@ -34,7 +33,6 @@ def filter_by_region_counts(
     Args:
     df: dataframe to filter
     min_region_counts: minimum number of counts in region > min_region_counts, defaults to 5
-
     """
     return df[df.sum(axis="columns") > min_region_counts]
 
@@ -50,7 +48,6 @@ def filter_by_marker_counts(
     Args:
     df: dataframe to filter
     min_marker_counts: marker > min_marker_counts, defaults to 10
-
     """
     return df.loc[:, df.sum(axis="index") > min_marker_counts]
 
@@ -66,6 +63,5 @@ def filter_by_unique_values(
     Args:
     df: dataframe to filter
     at_least_n_unique: minimum number of unique values >= at_least_n_unique, defaults to 1
-
     """
     return df.loc[:, df.nunique() >= at_least_n_unique]

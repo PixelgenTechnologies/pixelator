@@ -29,7 +29,6 @@ def estimate_observation_statistics(
     observations: The observed data.
     permutation_results: The permutation results.
     funcs: Tuple of colocalization functions.
-
     """
 
     def estimates():
@@ -80,7 +79,6 @@ def permutation_analysis_results(
     transformer: A function to transform the permuted data before analysis. (optional)
     n: The number of permutations to perform. Default is 50.
     random_seed: The random seed for reproducibility. Default is None.
-
     """
 
     def constuct_permutation_data(data, n):

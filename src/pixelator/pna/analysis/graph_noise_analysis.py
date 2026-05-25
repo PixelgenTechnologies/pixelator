@@ -75,7 +75,6 @@ def non_backtracking_transition_probabilities(
     Raises:
     ValueError: if the deadend_action is not one of the valid options.
     ValueError: if the number of steps is less than 3.
-
     """
     valid_deadend_actions = ["remove", "ignore", "self-loop"]
     if deadend_action not in valid_deadend_actions:
@@ -164,7 +163,6 @@ def svd_pivot_distances(
 
     Raises:
     ValueError: the number of pivots must be less than the number of nodes in the graph
-
     """
     if pivots >= len(g.nodes):
         raise SvdAnalysisError(
@@ -217,7 +215,6 @@ def summarize_k_cores(g: nx.Graph) -> pd.DataFrame:
 
     Raises:
     AssertionError: the input arguments are incorrect
-
     """
     if not isinstance(g, nx.Graph):
         raise AssertionError("g must be a networkx graph object")
@@ -261,7 +258,6 @@ class KcoreAnalysis(PerComponentTask):
         Args:
         component: a networkx graph for a component to run the analysis on.
         component_id: the id of the component.
-
         """
         logger.debug(f"Running k-core analysis on component {component_id}")
         k_core_summary = summarize_k_cores(
@@ -276,7 +272,6 @@ class KcoreAnalysis(PerComponentTask):
         Args:
         data: a pandas DataFrame containing k-core counts for all components.
         pxl_file_target: the PxlFile to add the data to.
-
         """
         logger.debug("Adding k-core analysis data to PNAPixelDataset")
         data.fillna(0, inplace=True)
@@ -304,7 +299,6 @@ class SvdAnalysis(PerComponentTask):
 
         Args:
         pivots: the number of pivot points to use for SVD analysis.
-
         """
         self.pivots = pivots
 
@@ -322,7 +316,6 @@ class SvdAnalysis(PerComponentTask):
         Args:
         component: a networkx graph for a component to run the analysis on.
         component_id: the id of the component.
-
         """
         logger.debug(f"Running SVD analysis on component {component_id}")
 
@@ -367,7 +360,6 @@ class SvdAnalysis(PerComponentTask):
         data: a pandas DataFrame containing svd variance explained for the first three singular vectors across all components.
         pxl_dataset: the PNAPixelDataset to add the data to.
         pxl_file_target: Pxl file target.
-
         """
         logger.debug("Adding SVD analysis data to PNAPixelDataset")
         adata = PNAPixelDataset.from_files(pxl_file_target.path).adata()
