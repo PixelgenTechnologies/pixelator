@@ -12,13 +12,16 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SPHINX_MARKERS = re.compile(r":(?:param|returns?|rtype|raises|ivar|vartype)\b")
+SPHINX_FIELD_RE = re.compile(
+    r":(?:param(?:s)?|returns?|rtype|raises|ivar|vartype|attr|var|yield|meta|cvar|type)\b",
+    re.IGNORECASE,
+)
 
 SKIP_DIRS = {".venv", ".git", "__pycache__"}
 
 
 def iter_py_files(base: Path) -> list[Path]:
-    """Iter py files."""
+    """Yield Python file paths under base, skipping common cache directories."""
     files: list[Path] = []
     for path in base.rglob("*.py"):
         if any(part in SKIP_DIRS for part in path.parts):
@@ -27,24 +30,34 @@ def iter_py_files(base: Path) -> list[Path]:
     return sorted(files)
 
 
+def iter_docstrings(tree: ast.AST) -> list[str]:
+    """Collect docstrings attached to module, class, and function nodes."""
+    docs: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(
+            node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+        ):
+            doc = ast.get_docstring(node, clean=False)
+            if doc is not None:
+                docs.append(doc)
+    return docs
+
+
 def audit_file(path: Path) -> dict[str, int]:
-    """Audit file."""
+    """Return sphinx-marker and missing-docstring counts for one file."""
     text = path.read_text(encoding="utf-8")
-    sphinx_hits = len(SPHINX_MARKERS.findall(text))
     missing_public = 0
     module_doc = False
+    sphinx_hits = 0
     try:
         tree = ast.parse(text)
     except SyntaxError:
-        return {"sphinx": sphinx_hits, "missing": 0, "module_doc": False}
+        return {"sphinx": 0, "missing": 0, "module_doc": False}
 
-    if (
-        tree.body
-        and isinstance(tree.body[0], ast.Expr)
-        and isinstance(tree.body[0].value, ast.Constant)
-        and isinstance(tree.body[0].value.value, str)
-    ):
-        module_doc = True
+    docs = iter_docstrings(tree)
+    sphinx_hits = sum(len(SPHINX_FIELD_RE.findall(doc)) for doc in docs)
+
+    module_doc = ast.get_docstring(tree) is not None
 
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -61,7 +74,6 @@ def audit_file(path: Path) -> dict[str, int]:
 
 def main(paths: list[str]) -> int:
     """Print docstring audit statistics for the given paths."""
-    """Main."""
     totals = {"files": 0, "sphinx": 0, "missing": 0, "no_module_doc": 0}
     for arg in paths:
         base = ROOT / arg
