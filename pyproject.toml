@@ -155,7 +155,6 @@ convention = "google"
 [tool.ruff.lint.per-file-ignores]
 # Click command modules keep short help strings for CLI generation.
 "src/pixelator/mpx/cli/**" = ["D200", "D212", "D400", "D415"]
-"src/pixelator/pna/cli/**" = ["D200", "D212", "D400", "D415"]
 # Tests document fixtures in conftest; keep lint focused on production code.
 "**/tests/**" = [
     "D100",
