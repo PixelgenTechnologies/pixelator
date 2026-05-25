@@ -311,10 +311,10 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """Initialize polarization analysis.
 
         Args:
-            transformation_type: Count transformation applied before Moran's I (``raw`` or ``log1p``).
-            n_permutations: Permutations used to estimate the null distribution.
-            min_marker_count: Minimum marker count required to compute statistics.
-            random_seed: Optional seed for reproducible permutation tests.
+        transformation_type: Count transformation applied before Moran's I (``raw`` or ``log1p``).
+        n_permutations: Permutations used to estimate the null distribution.
+        min_marker_count: Minimum marker count required to compute statistics.
+        random_seed: Optional seed for reproducible permutation tests.
 
         """
         if transformation_type not in get_args(PolarizationTransformationTypes):
@@ -330,8 +330,8 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """Run polarization analysis on component.
 
         Args:
-            component: Component.
-            component_id: Component id.
+        component: Component.
+        component_id: Component id.
 
         """
         logger.debug("Running polarization analysis on component %s", component_id)
@@ -350,7 +350,7 @@ class PolarizationAnalysis(PerComponentAnalysis):
         This will adjust the calculated p-values for the calculate Moran's I statistics.
 
         Args:
-            data: Data.
+        data: Data.
 
         """
         logger.debug("Post processing polarization analysis data")
@@ -369,8 +369,8 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """Add data to the polarization field of the PixelDataset.
 
         Args:
-            data: Data.
-            pxl_dataset: Pxl dataset.
+        data: Data.
+        pxl_dataset: Pxl dataset.
 
         """
         logger.debug("Adding polarization analysis data to PixelDataset")
@@ -388,11 +388,11 @@ def get_differential_polarity(
     """Calculate the differential polarity.
 
     Args:
-        polarity_data: Polarity measurements to compare.
-        reference: Label for reference samples in ``contrast_column``.
-        targets: Target sample labels; defaults to all non-reference labels.
-        contrast_column: Column containing sample labels. Defaults to ``"sample"``.
-        value_column: Polarity metric column. Defaults to ``"morans_z"``.
+    polarity_data: Polarity measurements to compare.
+    reference: Label for reference samples in ``contrast_column``.
+    targets: Target sample labels; defaults to all non-reference labels.
+    contrast_column: Column containing sample labels. Defaults to ``"sample"``.
+    value_column: Polarity metric column. Defaults to ``"morans_z"``.
 
     """
     if targets is None:

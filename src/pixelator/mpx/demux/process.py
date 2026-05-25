@@ -137,8 +137,8 @@ def check_demux_results_are_ok(report_data: dict, sample_id: str) -> bool:
     """Check if the demultiplexing results are ok.
 
     Args:
-        report_data: Report data.
-        sample_id: Sample id.
+    report_data: Report data.
+    sample_id: Sample id.
 
     """
     read_counts = report_data["read_counts"]

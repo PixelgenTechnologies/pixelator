@@ -40,4 +40,10 @@ class CollapseSampleReport(SampleReport):
     )
     @property
     def fraction_duplicate_reads(self) -> float:  # noqa: D102
+        """Fraction duplicate reads.
+
+        Returns:
+                Result (float).
+
+        """
         return 1.0 - (self.molecule_count / self.output_read_count)

@@ -105,15 +105,15 @@ def demux(
     Demultiplex Molecular Pixelation data (FASTQ) to generate one file per antibody
 
     Args:
-        ctx: Ctx.
-        fastq_file: Fastq file.
-        mismatches: Mismatches.
-        min_length: Min length.
-        panel: Panel.
-        output: Output.
-        design: Design.
-        anchored: Anchored.
-        rev_complement: Rev complement.
+    ctx: Ctx.
+    fastq_file: Fastq file.
+    mismatches: Mismatches.
+    min_length: Min length.
+    panel: Panel.
+    output: Output.
+    design: Design.
+    anchored: Anchored.
+    rev_complement: Rev complement.
 
     """
     # log input parameters

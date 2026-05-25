@@ -203,10 +203,10 @@ def cell_count_plot(
     """Create a bar plot showing component counts grouped by sample metadata.
 
     Args:
-        data: DataFrame containing counts and grouping columns.
-        color_by: Column used to color bars (and group when ``group_by`` is omitted).
-        group_by: Optional column used to group bars.
-        flip_axes: Plot counts on the x-axis instead of the y-axis.
+    data: DataFrame containing counts and grouping columns.
+    color_by: Column used to color bars (and group when ``group_by`` is omitted).
+    group_by: Optional column used to group bars.
+    flip_axes: Plot counts on the x-axis instead of the y-axis.
 
     """
     # Validate inputs

@@ -85,13 +85,13 @@ def graph(
     """Compute graph, components and other metrics from an edge list.
 
     Args:
-        ctx: Ctx.
-        parquet_file: Parquet file.
-        multiplet_recovery: Multiplet recovery.
-        max_refinement_recursion_depth: Max refinement recursion depth.
-        max_edges_to_split: Max edges to split.
-        min_count: Min count.
-        output: Output.
+    ctx: Ctx.
+    parquet_file: Parquet file.
+    multiplet_recovery: Multiplet recovery.
+    max_refinement_recursion_depth: Max refinement recursion depth.
+    max_edges_to_split: Max edges to split.
+    min_count: Min count.
+    output: Output.
 
     """
     # log input parameters

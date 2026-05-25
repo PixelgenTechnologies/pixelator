@@ -292,9 +292,20 @@ class PixelDataStore(Protocol):
 
 class _CustomZipFileSystem(ZipFileSystem):
     def __init__(self, *args, **kwargs):
+        """Initialize the zip filesystem wrapper."""
         super().__init__(*args, **kwargs)
 
     def find(self, path, maxdepth=None, withdirs=False, detail=False, **kwargs):
+        """List files in the zip archive using fsspec discovery semantics.
+
+        Args:
+            path: Path prefix to search within the archive.
+            maxdepth: Maximum directory depth to traverse.
+            withdirs: Include directories in the result mapping.
+            detail: Return detailed file metadata instead of paths only.
+            **kwargs: Additional arguments forwarded to the base implementation.
+
+        """
         if maxdepth is not None and maxdepth < 1:
             raise ValueError("maxdepth must be at least 1")
 
@@ -368,7 +379,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Create a zip-based pixel data store.
 
         Args:
-            path: Path.
+        path: Path.
 
         """
         self.path = path
@@ -383,9 +394,9 @@ class ZipBasedPixelFile(PixelDataStore):
         """Exit the context manager.
 
         Args:
-            exc_type: Exc type.
-            exc_value: Exc value.
-            traceback: Traceback.
+        exc_type: Exc type.
+        exc_value: Exc value.
+        traceback: Traceback.
 
         """
         self.close()
@@ -450,7 +461,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Guess the file format of the given path and returns the a PixelDataStore.
 
         Args:
-            path: Path.
+        path: Path.
 
         """
         return ZipBasedPixelFile.guess_file_format(path)
@@ -460,7 +471,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Guess the file format of the given path and returns the a PixelDataStore.
 
         Args:
-            path: Path.
+        path: Path.
 
         """
         file_system = ZipFileSystem(fo=path, mode="r")
@@ -493,7 +504,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write the given AnnData object to the .pxl file.
 
         Args:
-            anndata: Anndata.
+        anndata: Anndata.
 
         """
         self._set_to_write_mode()
@@ -548,7 +559,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write the given metadata to the .pxl file.
 
         Args:
-            metadata: Metadata.
+        metadata: Metadata.
 
         """
         self._set_to_write_mode()
@@ -562,8 +573,8 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write the given edgelist to the .pxl file.
 
         Args:
-            edgelist: Edgelist.
-            partitioning: Partitioning.
+        edgelist: Edgelist.
+        partitioning: Partitioning.
 
         """
         self.write_dataframe(edgelist, self.EDGELIST_KEY, partitioning)
@@ -572,7 +583,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write the given polarization data to the .pxl file.
 
         Args:
-            polarization: Polarization.
+        polarization: Polarization.
 
         """
         self.write_dataframe(polarization, self.POLARIZATION_KEY)
@@ -581,7 +592,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write the given colocalization data to the .pxl file.
 
         Args:
-            colocalization: Colocalization.
+        colocalization: Colocalization.
 
         """
         self.write_dataframe(colocalization, self.COLOCALIZATION_KEY)
@@ -593,7 +604,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write pre-computed layouts to the data store.
 
         Args:
-            layouts: Layouts.
+        layouts: Layouts.
 
         """
         if layouts is None:
@@ -628,8 +639,8 @@ class ZipBasedPixelFile(PixelDataStore):
         """Save the given PixelDataset to the .pxl file.
 
         Args:
-            dataset: Dataset.
-            force_overwrite: Force overwrite.
+        dataset: Dataset.
+        force_overwrite: Force overwrite.
 
         """
         path = Path(self.path)
@@ -687,7 +698,7 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         """Create a zip-based pixel file using csv files to store dataframes.
 
         Args:
-            path: Path.
+        path: Path.
 
         """
         super().__init__(path)
@@ -701,9 +712,9 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         """Write the given dataframe to the .pxl file.
 
         Args:
-            dataframe: Dataframe.
-            key: Key.
-            partitioning: Partitioning.
+        dataframe: Dataframe.
+        key: Key.
+        partitioning: Partitioning.
 
         """
         # Note that partitioning will be ignored here
@@ -718,7 +729,7 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         """Read a dataframe from the .pxl file.
 
         Args:
-            key: Key.
+        key: Key.
 
         """
         self._set_to_read_mode()
@@ -728,7 +739,7 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         """Read a dataframe lazily from a zip file (NB: Not implemented!).
 
         Args:
-            key: Key.
+        key: Key.
 
         """
         raise NotImplementedError(
@@ -745,7 +756,7 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         """Write pre-computed layouts to the data store (NB: Not implemented!).
 
         Args:
-            layouts: Layouts.
+        layouts: Layouts.
 
         """
         raise NotImplementedError(
@@ -776,7 +787,7 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         """Create a zip-based pixel file using parquet files to store dataframes.
 
         Args:
-            path: Path.
+        path: Path.
 
         """
         super().__init__(path)
@@ -838,7 +849,7 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         """Read a dataframe from the .pxl file.
 
         Args:
-            key: Key.
+        key: Key.
 
         """
         self._set_to_read_mode()
@@ -848,7 +859,7 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         """Read a dataframe lazily from a zip file.
 
         Args:
-            key: Key.
+        key: Key.
 
         """
         self._set_to_read_mode()

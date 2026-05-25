@@ -53,7 +53,7 @@ def _alphanumeric_sort_marker_columns(
     """Make sure that the markers are always sorted in the same order.
 
     Args:
-        data: Data.
+    data: Data.
 
     """
     data.index = pd.MultiIndex.from_tuples(
@@ -68,7 +68,7 @@ def _drop_self_correlation(
     """Drop the self-correlation values from the data.
 
     Args:
-        data: Data.
+    data: Data.
 
     """
     return data[data.index.get_level_values(0) != data.index.get_level_values(1)]

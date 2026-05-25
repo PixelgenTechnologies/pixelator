@@ -44,8 +44,8 @@ class Config:
         """Initialize the config object.
 
         Args:
-            assays: Assays.
-            panels: Panels.
+        assays: Assays.
+        panels: Panels.
 
         """
         self.assays: Dict[str, Assay] = {}
@@ -64,7 +64,7 @@ class Config:
         """Load an assay from a yaml file.
 
         Args:
-            path: Path.
+        path: Path.
 
         """
         assay = Assay.from_yaml(path)
@@ -102,7 +102,7 @@ class Config:
         """Load all assays from a directory containing yaml files.
 
         Args:
-            path: Path.
+        path: Path.
 
         """
         search_path = Path(path)
@@ -121,7 +121,7 @@ class Config:
         """Load all panel files from a directory containing csv files.
 
         Args:
-            path: Path.
+        path: Path.
 
         """
         search_path = Path(path)
@@ -135,7 +135,7 @@ class Config:
         """Get an assay by name.
 
         Args:
-            assay_name: Assay name.
+        assay_name: Assay name.
 
         """
         return self.assays.get(assay_name)

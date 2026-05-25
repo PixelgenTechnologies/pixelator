@@ -26,6 +26,8 @@ class BaseCollapseTestsMixin(BaseWorkflowTestMixin):
         scope="class", name="test_collapse_run", depends=["test_demux_run"]
     )
     def test_collapse_run(self):
+        """Verify collapse run.
+        """
         input_files = [
             str(f) for f in (self.workdir / "demux").glob("*processed*fastq.gz")
         ]
@@ -65,8 +67,12 @@ class BaseCollapseTestsMixin(BaseWorkflowTestMixin):
 
     @pytest.mark.dependency(scope="class", depends=["test_collapse_run"])
     def test_collapse_logfile_exist(self):
+        """Verify collapse logfile exist.
+        """
         assert (self.workdir / "collapse-pixelator.log").is_file()
 
     @pytest.mark.dependency(scope="class", depends=["test_collapse_run"])
     def test_collapse_results_folder_exists(self):
+        """Verify collapse results folder exists.
+        """
         assert (self.workdir / "collapse").is_dir()

@@ -54,7 +54,7 @@ def load_config_plugins(config: Config) -> Config:
     """Load all config plugins.
 
     Args:
-        config: Config.
+    config: Config.
 
     """
     new_config = config

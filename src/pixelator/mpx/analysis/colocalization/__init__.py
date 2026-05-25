@@ -314,11 +314,11 @@ def get_differential_colocalization(
     """Calculate the differential colocalization.
 
     Args:
-        colocalization_data_frame: Colocalization measurements to compare.
-        reference: Label for reference samples in ``contrast_column``.
-        targets: Target sample labels; defaults to all non-reference labels.
-        contrast_column: Column containing sample labels. Defaults to ``"sample"``.
-        value_column: Colocalization metric column. Defaults to ``"pearson_z"``.
+    colocalization_data_frame: Colocalization measurements to compare.
+    reference: Label for reference samples in ``contrast_column``.
+    targets: Target sample labels; defaults to all non-reference labels.
+    contrast_column: Column containing sample labels. Defaults to ``"sample"``.
+    value_column: Colocalization metric column. Defaults to ``"pearson_z"``.
 
     """
     if targets is None:
@@ -407,8 +407,8 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         """Run colocalization analysis on the component.
 
         Args:
-            component: Component.
-            component_id: Component id.
+        component: Component.
+        component_id: Component id.
 
         """
         logger.debug("Running colocalization analysis on component %s", component_id)
@@ -428,7 +428,7 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         This will adjust the p-values using the Benjamini-Hochberg method.
 
         Args:
-            data: Data.
+        data: Data.
 
         """
         logger.debug("Post processing colocalization analysis data")
@@ -449,8 +449,8 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         """Add the colocalization data to the PixelDataset.
 
         Args:
-            data: Data.
-            pxl_dataset: Pxl dataset.
+        data: Data.
+        pxl_dataset: Pxl dataset.
 
         """
         logger.debug("Adding colocalization analysis data to PixelDataset")

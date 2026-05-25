@@ -78,7 +78,7 @@ def _enforce_edgelist_types(edgelist: pd.DataFrame) -> pd.DataFrame:
     """Enforce the data types of the edgelist.
 
     Args:
-        edgelist: Edgelist.
+    edgelist: Edgelist.
 
     """
     # Enforcing the types of the edgelist reduces the memory
@@ -262,9 +262,8 @@ def _assess_doublet(component_edgelist: pd.DataFrame) -> tuple[bool, int]:
     compared to the component recovery in the graph phase. The reduction factor in
     annotate resolution is set by RELATIVE_ANNOTATE_RESOLUTION (default is 0.5).
 
-
     Args:
-        component_edgelist: Component edgelist.
+    component_edgelist: Component edgelist.
 
     """
     component_communities = _compute_sub_communities(component_edgelist)

@@ -53,27 +53,34 @@ class PreComputedLayoutsEmpty(PixelatorBaseException):
 
 
 class _DataProvider(Protocol):
-    def is_empty(self) -> bool: ...
+    """Protocol for reading and writing precomputed layout tables."""
 
-    def to_df(self, columns: list[str] | None = None) -> pd.DataFrame: ...
+    def is_empty(self) -> bool:
+        """Return whether the provider contains any layout rows."""
 
-    def lazy(self): ...
+    def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
+        """Materialize layouts as a pandas DataFrame."""
 
-    def unique_components(self): ...
+    def lazy(self):
+        """Return a Polars lazy frame view of the layouts."""
+
+    def unique_components(self):
+        """Return the set of component identifiers present in the data."""
 
     def filter(
         self,
         component_ids: str | set[str] | None = None,
         graph_projections: str | set[str] | None = None,
         layout_methods: str | set[str] | None = None,
-    ) -> pl.LazyFrame | list[pl.LazyFrame]: ...
+    ) -> pl.LazyFrame | list[pl.LazyFrame]:
+        """Filter layouts by component, projection, and layout method."""
 
     def write_parquet(self, path: Path, partitioning: list[str]) -> None:
-        """Write a parquet file to the provided path.
+        """Write layouts to parquet using hive-style partitioning.
 
         Args:
-            path: Path.
-            partitioning: Partitioning.
+            path: Output directory or file prefix.
+            partitioning: Hive partition columns written into the path.
 
         """
         ...

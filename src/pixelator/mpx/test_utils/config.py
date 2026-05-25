@@ -10,6 +10,7 @@ class WorkflowConfig:
     """Class used to load and query the workflow tests configuration file."""
 
     def __init__(self, config_file: Path):
+        """Initialize the test configuration helper."""
         self.config_file = config_file
         self._config = self._parse(self.config_file)
 
@@ -23,12 +24,14 @@ class WorkflowConfig:
                 :class:`PixelatorWorkfklowTest` subclass to the test name in the config file
                 by defining the class variable :attr:`test_id` on the subclass.
 
-        Args:
-            test_name: name of the test case as given in the config.
+Args:
+    test_name: name of the test case as given in the config.
         """
         return self._config[test_name]
 
     def keys(self):
+        """Keys.
+        """
         return self._config.keys()
 
     @classmethod
@@ -37,8 +40,8 @@ class WorkflowConfig:
 
                 :return dict[str, Any]: the config object parsed from the `config_file`
 
-        Args:
-            config_file: path to the config file
+Args:
+    config_file: path to the config file
         """
         yaml_loader = yaml.YAML(typ="safe")
         with open(str(config_file), "r") as f:
@@ -54,9 +57,9 @@ class WorkflowConfig:
                 All relative paths in the config file are resolved relative to the parent
                 directory of the config file.
 
-        Args:
-            config_file: path to the config file
-            config: the config object parsed from the `config_file`
+Args:
+    config_file: path to the config file
+    config: the config object parsed from the `config_file`
         """
         for test_id, test_config in config.items():
             panel_file = test_config.get("panel_file")

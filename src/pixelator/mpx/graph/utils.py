@@ -384,12 +384,12 @@ def map_upis_to_components(
     the nodes in that component.
 
     Args:
-        edgelist: Edge list to annotate with component identifiers.
-        node_component_map: Mapping from node identifiers to component ids.
-        node_depth_map: Optional mapping used to filter nodes by depth.
+    edgelist: Edge list to annotate with component identifiers.
+    node_component_map: Mapping from node identifiers to component ids.
+    node_depth_map: Optional mapping used to filter nodes by depth.
 
     Raises:
-        TypeError: If ``edgelist`` is not a ``pl.LazyFrame`` or ``pd.DataFrame``.
+    TypeError: If ``edgelist`` is not a ``pl.LazyFrame`` or ``pd.DataFrame``.
 
     """
     # Create a mapping of the components to a hash of its UPIs

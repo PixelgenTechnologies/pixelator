@@ -80,6 +80,12 @@ class AnnotateSampleReport(SampleReport):
         description="The total number of unique pixels in the graph.",
     )
     def pixel_count(self) -> int:  # noqa: D102
+        """Pixel count.
+
+        Returns:
+                Result (int).
+
+        """
         return self.a_pixel_count + self.b_pixel_count
 
     read_count: int = pydantic.Field(

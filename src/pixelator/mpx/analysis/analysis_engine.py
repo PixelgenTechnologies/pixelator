@@ -29,8 +29,8 @@ class PerComponentAnalysis(Protocol):
         """Run the analysis on this component.
 
         Args:
-            component: Component.
-            component_id: Component id.
+        component: Component.
+        component_id: Component id.
 
         """
         ...
@@ -39,7 +39,7 @@ class PerComponentAnalysis(Protocol):
         """Concatenate the data. Override this if you need custom concatenation behavior.
 
         Args:
-            data: Data.
+        data: Data.
 
         """
         try:
@@ -53,7 +53,7 @@ class PerComponentAnalysis(Protocol):
         """Post process the data (e.g. adjust p-values). Override this if your data needs post processing.
 
         Args:
-            data: Data.
+        data: Data.
 
         """
         return data
@@ -64,8 +64,8 @@ class PerComponentAnalysis(Protocol):
         """Add the data in the right place in the pxl_dataset.
 
         Args:
-            data: Data.
-            pxl_dataset: Pxl dataset.
+        data: Data.
+        pxl_dataset: Pxl dataset.
 
         """
         ...
@@ -92,6 +92,7 @@ class _AnalysisManager:
         analysis_to_run: Iterable[PerComponentAnalysis],
         component_stream: Iterable[tuple[str, Graph]],
     ):
+        """Initialize the analysis engine with the analyses to execute."""
         self.analysis_to_run = {
             analysis.ANALYSIS_NAME: analysis for analysis in analysis_to_run
         }
@@ -151,7 +152,7 @@ class _AnalysisManager:
         """Execute the analysis on the provided pixel dataset.
 
         Args:
-            pixel_dataset: Pixel dataset.
+        pixel_dataset: Pixel dataset.
 
         """
         prepared_computations = self._prepare_computation()
@@ -171,8 +172,8 @@ def edgelist_to_component_stream(
     """Convert the edgelist in the dataset to a stream component ids and their component graphs.
 
     Args:
-        dataset: Dataset.
-        use_full_bipartite: Use full bipartite.
+    dataset: Dataset.
+    use_full_bipartite: Use full bipartite.
 
     """
     for component_id, component_df in (

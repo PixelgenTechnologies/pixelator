@@ -133,6 +133,11 @@ def process_file(path: Path) -> bool:
             parent = parent_map.get(node)
             if not isinstance(parent, (ast.Module, ast.ClassDef)):
                 continue
+            if node.body and isinstance(node.body[-1], ast.Expr) and isinstance(
+                node.body[-1].value, ast.Constant
+            ):
+                if node.body[-1].value.value is ...:
+                    continue
             nodes.append((node, "function"))
 
     for node, kind in sorted(nodes, key=lambda item: item[0].lineno, reverse=True):

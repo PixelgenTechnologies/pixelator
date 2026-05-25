@@ -277,15 +277,15 @@ def plot_colocalization_diff_volcano(
     Example usage: `plot_colocalization_diff_volcano(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample")`.
 
     Args:
-        colocalization_data: Colocalization table (for example ``pxl.colocalization``).
-        reference: Reference label in ``contrast_column``.
-        targets: Target labels to compare against ``reference``.
-        contrast_column: Sample label column. Defaults to ``"sample"``.
-        cmap: Matplotlib colormap name.
-        value_column: Metric plotted on the x-axis. Defaults to ``"pearson_z"``.
-        n_top_pairs: Number of marker pairs to annotate on each side.
-        min_log_p: Minimum ``-log10(p)`` required to annotate a marker pair.
-        targets: Targets.
+    colocalization_data: Colocalization table (for example ``pxl.colocalization``).
+    reference: Reference label in ``contrast_column``.
+    targets: Target labels to compare against ``reference``.
+    contrast_column: Sample label column. Defaults to ``"sample"``.
+    cmap: Matplotlib colormap name.
+    value_column: Metric plotted on the x-axis. Defaults to ``"pearson_z"``.
+    n_top_pairs: Number of marker pairs to annotate on each side.
+    min_log_p: Minimum ``-log10(p)`` required to annotate a marker pair.
+    targets: Targets.
 
     """
     if isinstance(targets, str):
@@ -368,14 +368,14 @@ def plot_polarity_diff_volcano(
                                                 )`.
 
     Args:
-        polarity_data: Polarity table (for example ``pxl.polarization``).
-        reference: Reference label in ``contrast_column``.
-        targets: Target labels to compare against ``reference``.
-        contrast_column: Sample label column. Defaults to ``"sample"``.
-        cmap: Matplotlib colormap name.
-        value_column: Metric plotted on the x-axis. Defaults to ``"morans_z"``.
-        n_top_pairs: Number of markers to annotate on each side.
-        min_log_p: Minimum ``-log10(p)`` required to annotate a marker.
+    polarity_data: Polarity table (for example ``pxl.polarization``).
+    reference: Reference label in ``contrast_column``.
+    targets: Target labels to compare against ``reference``.
+    contrast_column: Sample label column. Defaults to ``"sample"``.
+    cmap: Matplotlib colormap name.
+    value_column: Metric plotted on the x-axis. Defaults to ``"morans_z"``.
+    n_top_pairs: Number of markers to annotate on each side.
+    min_log_p: Minimum ``-log10(p)`` required to annotate a marker.
 
     """
     if isinstance(targets, str):

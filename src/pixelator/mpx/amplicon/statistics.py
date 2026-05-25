@@ -195,7 +195,7 @@ class SequenceQualityStatsCollector:
         """Update the statistics with the given read qualities.
 
         Args:
-            qualities: Qualities.
+        qualities: Qualities.
 
         """
         # Use numpy for vectorized operations

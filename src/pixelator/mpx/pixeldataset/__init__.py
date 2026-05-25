@@ -152,7 +152,7 @@ class PixelDataset:
         """Set the AnnData object.
 
         Args:
-            value: Value.
+        value: Value.
 
         """
         self._backend.adata = value
@@ -167,7 +167,7 @@ class PixelDataset:
         """Set the edge list.
 
         Args:
-            value: Value.
+        value: Value.
 
         """
         self._backend.edgelist = _enforce_edgelist_types(value)
@@ -194,7 +194,7 @@ class PixelDataset:
         """Set the polarization object.
 
         Args:
-            value: Value.
+        value: Value.
 
         """
         self._backend.polarization = value
@@ -209,7 +209,7 @@ class PixelDataset:
         """Set the colocalization object.
 
         Args:
-            value: Value.
+        value: Value.
 
         """
         self._backend.colocalization = value
@@ -227,7 +227,7 @@ class PixelDataset:
         """Set the metadata object.
 
         Args:
-            value: Value.
+        value: Value.
 
         """
         self._backend.metadata = value
@@ -244,7 +244,7 @@ class PixelDataset:
         """Set the precomputed layouts.
 
         Args:
-            value: Value.
+        value: Value.
 
         """
         # Note that the type ignore here is to handle the fact that the setter

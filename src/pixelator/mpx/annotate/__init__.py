@@ -243,9 +243,9 @@ def _cluster_components_using_leiden(
     """Carry out a leiden clustering on the components.
 
     Args:
-        adata: Adata.
-        resolution: Resolution.
-        random_seed: Random seed.
+    adata: Adata.
+    resolution: Resolution.
+    random_seed: Random seed.
 
     """
     # It should be ok to run this over all vs all even on a dense matrix

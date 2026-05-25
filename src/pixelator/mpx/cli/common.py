@@ -28,6 +28,7 @@ class OrderedGroup(click.Group):
         commands: Optional[Dict[str, click.Command]] = None,
         **kwargs,
     ):
+        """Initialize the ordered Click command group."""
         super(OrderedGroup, self).__init__(name, commands, **kwargs)
         self.commands = commands or collections.OrderedDict()
 
@@ -37,7 +38,7 @@ class OrderedGroup(click.Group):
         """Return a list of subcommands.
 
         Args:
-            ctx: Ctx.
+        ctx: Ctx.
 
         """
         return self.commands
@@ -55,8 +56,8 @@ class AliasedOrderedGroup(OrderedGroup):
         """Attach a click group that supports aliases.
 
         Args:
-            args: Args.
-            kwargs: Kwargs.
+        args: Args.
+        kwargs: Kwargs.
 
         """
 
@@ -95,7 +96,7 @@ def output_option(func):
     """Wrap a Click entrypoint to add the --output option.
 
     Args:
-        func: Func.
+    func: Func.
 
     """
 
@@ -119,7 +120,7 @@ def design_option(func):
     """Decorate a click command and add the --design option.
 
     Args:
-        func: Func.
+    func: Func.
 
     """
     from pixelator.mpx.config import config

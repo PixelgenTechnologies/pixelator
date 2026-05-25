@@ -89,7 +89,7 @@ class DefaultCliFormatter(logging.Formatter):
         """Format a record for CLI output.
 
         Args:
-            record: Record.
+        record: Record.
 
         """
         if not record.exc_info:
@@ -220,9 +220,9 @@ class LoggingSetup:
         This will shut down the logging process if needed.
 
         Args:
-            exc_type: Exc type.
-            exc_value: Exc value.
-            traceback_obj: Traceback obj.
+        exc_type: Exc type.
+        exc_value: Exc value.
+        traceback_obj: Traceback obj.
 
         """
 
@@ -296,7 +296,7 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
         """Handle a log record.
 
         Args:
-            record: Record.
+        record: Record.
 
         """
         logger = logging.getLogger(LogRecordSocketReceiver.LISTENER_LOGGER)
@@ -334,11 +334,11 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
         """Initialize the log record socket receiver.
 
         Args:
-            host: Host.
-            port: Port.
-            handler: Handler.
-            log_file: Log file.
-            console_log_formatter: Console log formatter.
+        host: Host.
+        port: Port.
+        handler: Handler.
+        log_file: Log file.
+        console_log_formatter: Console log formatter.
 
         """
         self.timeout = 0.1

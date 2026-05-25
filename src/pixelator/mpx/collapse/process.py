@@ -51,8 +51,8 @@ def breadth_first_search(node, adj_list):
     Uses The MIT License (MIT).
 
     Args:
-        node: Node.
-        adj_list: Adj list.
+    node: Node.
+    adj_list: Adj list.
 
     """
     searched = set()
@@ -74,8 +74,8 @@ def edit_distance(seq1: bytes, seq2: bytes) -> int:
     """Compute edit distance between two sequences.
 
     Args:
-        seq1: Seq1.
-        seq2: Seq2.
+    seq1: Seq1.
+    seq2: Seq2.
 
     """
     return hamming(seq1, seq2, pad=False)
@@ -96,9 +96,9 @@ class FileFqGzEmpty(Exception):
         """Initialize the exception.
 
         Args:
-            msg: Msg.
-            fname: Fname.
-            size: Size.
+        msg: Msg.
+        fname: Fname.
+        size: Size.
 
         """
         self.msg = msg
