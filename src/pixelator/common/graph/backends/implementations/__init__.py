@@ -29,6 +29,9 @@ def graph_backend(
     Args:
         graph_backend_class: name of the graph backend class to try to pickup.
 
+    Returns:
+        A concrete graph backend instance (GraphBackend)
+
     Raises:
         ValueError: when `graph_backend_class` is not recognized
     """

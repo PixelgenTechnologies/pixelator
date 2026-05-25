@@ -42,6 +42,12 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
 
         Args:
             v: Version string from panel metadata.
+
+        Returns:
+            The input version string when validation succeeds.
+
+        Raises:
+            packaging.version.InvalidVersion: If the value is not a valid version.
         """
         Version(v)  # will raise if not a valid version string
         return v
@@ -135,6 +141,9 @@ class AntibodyPanel:
             metadata: The metadata for the panel.
             file_name: The optional basename of the file from which the panel is loaded.
 
+        Returns:
+            None
+
         Raises:
             AssertionError: exception if panel file is missing,
         """
@@ -156,6 +165,9 @@ class AntibodyPanel:
 
         Args:
             filename: The path to the panel file.
+
+        Returns:
+            The AntibodyPanel object. (AntibodyPanel)
 
         Raises:
             AssertionError: exception if panel file is missing,
@@ -215,6 +227,9 @@ class AntibodyPanel:
 
         Args:
             panel_df: Panel dataframe to validate.
+
+        Returns:
+            A list of validation error messages. An empty list means valid input.
         """
         errors = []
 
@@ -291,6 +306,9 @@ class AntibodyPanel:
         Args:
             file: Panel CSV file whose leading comment block contains YAML metadata.
 
+        Returns:
+            Parsed panel metadata.
+
         Raises:
             ValueError: If no metadata header is present in the file.
         """
@@ -332,6 +350,9 @@ def load_antibody_panel(config: Config, panel: PathType) -> AntibodyPanel:
     Args:
         config: the config object
         panel: the path to the panel file or the name of the panel in the config file
+
+    Returns:
+        the antibody panel (AntibodyPanel)
     """
     panel_str = str(panel)
     panel_from_config = config.get_panel(panel_str)

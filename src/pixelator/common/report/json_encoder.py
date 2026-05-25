@@ -24,6 +24,9 @@ class PixelatorJSONEncoder(json.JSONEncoder):
 
         Args:
             obj: object to serialize
+
+        Returns:
+            a serializable object
         """
         if isinstance(obj, BaseModel):
             return obj.model_dump(mode="json")

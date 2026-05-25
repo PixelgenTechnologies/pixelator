@@ -64,6 +64,9 @@ def find_component_size_limits(
         component_sizes: a numpy array of component sizes
         direction: the direction of the cutoff, either "lower" or "upper"
 
+    Returns:
+        the lower or upper bound cutoff
+
     Raises:
         AssertionError: if the direction is not lower or upper
         AssertionError: if component_sizes contain NaNs or zeros

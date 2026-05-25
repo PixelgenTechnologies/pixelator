@@ -32,6 +32,9 @@ def clr_transformation(
     then subtract the geometric mean (log), centering the transformed counts
     around zero (which may include negative values).
 
+    Returns:
+        pd.DataFrame: A dataframe with the antibody counts transformed.
+
     Raises:
         AssertionError: If the input axis is not 0 or 1.
 
@@ -71,6 +74,9 @@ def correct_pvalues(pvalues: np.ndarray) -> np.ndarray:
 
     An outline of the method can be found here:
     https://en.wikipedia.org/wiki/False_discovery_rate#Benjamini%E2%80%93Hochberg_procedure
+
+    Returns:
+        np.ndarray: The array of adjusted p-values in the same order as the input array.
     """
     # Most descriptions of the BH method states that p-values should
     # first be ordered in ascending order an ranked, however doing so
@@ -99,6 +105,9 @@ def log1p_transformation(df: pd.DataFrame) -> pd.DataFrame:
 
     This function applies the natural logarithm of (1 + x) to the count of each
     marker or component, element-wise.
+
+    Returns:
+        pd.DataFrame: A dataframe with the counts normalized.
     """
     logger.debug(
         (
@@ -122,6 +131,9 @@ def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
     in each component. For example, if 10% of antibodies are HLA-ABC, in a component with
     120 antibodies, the expected count is 12. If the actual count is 8, the
     transformation for HLA-ABC in this component will be -4.
+
+    Returns:
+        pd.DataFrame: A dataframe with the counts difference from expected values.
     """
     antibody_counts_per_component = df.sum(axis=1)
     antibody_rates = df.sum(axis=0)
@@ -140,6 +152,9 @@ def rel_normalization(df: pd.DataFrame, axis: Literal[0, 1] = 0) -> pd.DataFrame
     count of each marker or component is divided by its total sum. Use `axis=0`
     to apply the normalization by column (antibody) and `axis=1` to apply it by
     row (component).
+
+    Returns:
+        pd.DataFrame: A dataframe with the counts normalized.
 
     Raises:
         AssertionError: If the input axis is not 0 or 1.
@@ -166,7 +181,11 @@ def wilcoxon_test(
     contrast_column: str,
     value_column: str,
 ) -> pd.Series:
-    """Perform a Wilcoxon rank-sum test between two groups."""
+    """Perform a Wilcoxon rank-sum test between two groups.
+
+    Returns:
+        pd.Series: A series containing the test statistic, p-value, and median difference.
+    """
     reference_df = df.loc[df[contrast_column] == reference, :]
     target_df = df.loc[df[contrast_column] == target, :]
 
@@ -225,6 +244,9 @@ def dsb_normalize(
     1. Log1p transformation.
     2. Remove background abundance per marker.
     3. Regularize abundance per component.
+
+    Returns:
+        pd.DataFrame: Normalized abundance data.
 
     Raises:
         ValueError: If no isotype controls are provided.

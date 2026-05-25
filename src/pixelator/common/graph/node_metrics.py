@@ -59,6 +59,9 @@ def local_g(
         normalize_counts: Whether to normalize counts to proportions. Default is False.
         W: A sparse matrix of custom edge weights. This will override the automated computation of edge weights. `W` must have the same dimensions as A. Note that weights can be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
         method: The method to use for computing local G. Must be one of 'gi' or 'gstari'. 'gi' is the original local G metric, which does not consider self-loops, meaning that the local marker expression for a node is computed by aggregating the weighted expression of its neighbors. 'gstari' is a simplified version of local G that does consider self-loops. In other words, the local marker expression of a node also includes the weighted marker expression of the node itself. Default is 'gi'.
+
+    Returns:
+        A DataFrame of local G-scores for each node and marker. (pd.DataFrame)
     """
     # Check that type is one of 'gi' or 'gstari'
     if method not in ["gi", "gstari"]:
@@ -198,6 +201,9 @@ def compute_transition_probabilities(
         A: A sparse adjacency matrix representing the graph.
         k: The number of steps in the random walk. Default is 1.
         remove_self_loops: Whether to remove self-loops from the transition probability matrix. Default is False.
+
+    Returns:
+        A sparse matrix with transition probabilities. (sp.sparse.csr_matrix)
     """
     # Check that k is a positive integer
     if not isinstance(k, int) or k < 1:

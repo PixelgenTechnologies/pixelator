@@ -69,6 +69,12 @@ class Graph:
             simplify: simplifies the graph (remove redundant edges)
             use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
             convert_indices_to_integers: convert the indices to integers (this is the default)
+
+        Returns:
+            a Graph instance (Graph)
+
+        Raises:
+            AssertionError when the input edge list is not valid
         """
         backend = graph_backend().from_edgelist(
             edgelist=edgelist,
@@ -90,6 +96,9 @@ class Graph:
 
         Args:
             graph: input graph to use
+
+        Returns:
+            A pixelator Graph object (Graph)
 
         Raises:
             ValueError: if type of `graph` is not recognized.
@@ -138,6 +147,9 @@ class Graph:
 
         Args:
             node_ordering: Control the node ordering in the adjacency matrix
+
+        Returns:
+            a sparse adjacency matrix
         """
         return self._backend.get_adjacency_sparse(node_ordering=node_ordering)
 
@@ -188,6 +200,13 @@ class Graph:
             cache: set to `True` in order to cache one call of this this method. It will make subsequent calls to the layout method with the same settings much faster, at the cost of additional memory usage. This can speed things up a lot when plotting e.g. different markers across multiple markers.
             random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
             **kwargs: will be passed to the underlying layout implementation
+
+        Returns:
+            the coordinates and markers (if activated) as a dataframe (pd.DataFrame)
+
+        Raises:
+            AssertionError if the provided `layout_algorithm` is not valid
+            ValueError if the provided current graph instance is empty
         """
         if cache:
             return self._cached_layout_coordinates(
@@ -278,6 +297,9 @@ class Graph:
             normalize_counts: Whether to normalize counts to proportions. Default is True.
             W: A sparse matrix of custom edge weights. This will override the automated computation of edge weights. `W` must have the same dimensions as A. Note that weights can be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
             method: The method to use for computing local G. Must be one of 'gi' or 'gstari'. 'gi' is the original local G metric, which does not consider self-loops, meaning that the local marker expression for a node is computed by aggregating the weighted expression of its neighbors. 'gstari' is a simplified version of local G that does consider self-loops. In other words, the local marker expression of a node also includes the weighted marker expression of the node itself. Default is 'gi'.
+
+        Returns:
+            A DataFrame of local G-scores for each node and marker.
         """
         counts = self.node_marker_counts
         A = self.get_adjacency_sparse(node_ordering=counts.index)

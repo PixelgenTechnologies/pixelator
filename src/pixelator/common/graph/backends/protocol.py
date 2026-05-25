@@ -67,6 +67,12 @@ class GraphBackend(Protocol):
             simplify: simplifies the graph (remove redundant edges)
             use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
             convert_indices_to_integers: convert the indices to integers (this is the default)
+
+        Returns:
+            a Graph instance (GraphBackend)
+
+        Raises:
+            AssertionError when the input edge list is not valid
         """
         ...
 
@@ -81,6 +87,9 @@ class GraphBackend(Protocol):
 
         Args:
             graph: input graph to use
+
+        Returns:
+            A pixelator GraphBackend object (GraphBackend)
         """
         ...
 
@@ -114,6 +123,9 @@ class GraphBackend(Protocol):
 
         Args:
             node_ordering: Control the node ordering in the adjacency matrix
+
+        Returns:
+            a sparse adjacency matrix
         """
         ...
 
@@ -167,6 +179,13 @@ class GraphBackend(Protocol):
             get_node_marker_matrix: Add a matrix of marker counts to each node if True.
             random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
             **kwargs: will be passed to the underlying layout implementation
+
+        Returns:
+            the coordinates and markers (if activated) as a dataframe (pd.DataFrame)
+
+        Raises:
+            AssertionError if the provided `layout_algorithm` is not valid
+            ValueError if the provided current graph instance is empty
         """
         ...
 

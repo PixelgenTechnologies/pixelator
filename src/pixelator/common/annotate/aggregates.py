@@ -35,6 +35,9 @@ def specificity_tau(matrix: np.ndarray) -> np.ndarray:
 
     Args:
         matrix: a numpy matrix of marker counts
+
+    Returns:
+        a vector of the computed tau values
     """
     max_count = np.max(matrix, axis=1)
     _, nbr_markers = matrix.shape
@@ -83,6 +86,9 @@ def call_aggregates(adata: AnnData, inplace: bool = True) -> Optional[AnnData]:
     Args:
         adata: an AnnData object to call aggregates on
         inplace: If `True` performs the operation inplace
+
+    Returns:
+        the updated AnnData object or None if inplace is True.
     """
     logging.debug("Calling aggregates based on tau specificity scores")
 

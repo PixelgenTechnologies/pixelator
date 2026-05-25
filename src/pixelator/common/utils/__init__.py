@@ -233,6 +233,9 @@ def log_step_start(
         input_files: collection of input file paths
         output: optional path to output
         **kwargs: any additional parameters that you wish to log
+
+    Returns:
+        None
     """
     from pixelator import __version__
 
@@ -272,6 +275,9 @@ def reverse_complement(seq: str) -> str:
 
     Args:
         seq: the DNA sequence
+
+    Returns:
+        the reverse complement of the input sequence (str)
     """
     return seq.translate(_TRTABLE)[::-1]
 

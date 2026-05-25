@@ -50,6 +50,9 @@ class SummaryStatistics(pydantic.BaseModel):
 
         Args:
             distribution: The series to summarize.
+
+        Returns:
+            A SummaryStatistics object from given series.
         """
         distribution = distribution.to_numpy()
 

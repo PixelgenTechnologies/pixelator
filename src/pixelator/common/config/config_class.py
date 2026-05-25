@@ -117,6 +117,9 @@ class Config:
 
         Args:
             include_aliases: Include panel aliases in the list
+
+        Returns:
+            A list of panel names
         """
         out = sorted(list(self.panels.keys()))
 
@@ -175,6 +178,9 @@ def load_assays_package(config: Config, package_name: str) -> Config:
     Args:
         config: The config object to load assays into
         package_name: The name of the package to load assays from
+
+    Returns:
+        The updated config object
     """
     # TODO: Consider switching to base importlib.resources after
     #       dropping python3.8 support.
@@ -192,6 +198,9 @@ def load_panels_package(config: Config, package_name: str) -> Config:
     Args:
         config: The config object to load panel files into
         package_name: The name of the package to load panels from
+
+    Returns:
+        The updated config object
     """
     # TODO: Consider switching to base importlib.resources after
     #       dropping python3.8 support.

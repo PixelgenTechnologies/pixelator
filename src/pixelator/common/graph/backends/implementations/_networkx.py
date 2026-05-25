@@ -205,6 +205,12 @@ class NetworkXGraphBackend(GraphBackend):
             simplify: simplifies the graph (remove redundant edges)
             use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
             convert_indices_to_integers: convert the indices to integers (this is the default)
+
+        Returns:
+            a GraphBackend instance (NetworkXGraphBackend)
+
+        Raises:
+            AssertionError when the input edge list is not valid
         """
         if isinstance(edgelist, pd.DataFrame):
             edgelist: pl.LazyFrame = pl.LazyFrame(edgelist)  # type: ignore
@@ -232,6 +238,9 @@ class NetworkXGraphBackend(GraphBackend):
 
         Args:
             graph: input networkx graph to use
+
+        Returns:
+            A pixelator Graph object (NetworkXGraphBackend)
         """
         return NetworkXGraphBackend(graph)
 
@@ -270,6 +279,9 @@ class NetworkXGraphBackend(GraphBackend):
 
         Args:
             node_ordering: Control the node ordering in the adjacency matrix
+
+        Returns:
+            a sparse adjacency matrix
         """
         return nx.to_scipy_sparse_array(self._raw, nodelist=node_ordering)
 
@@ -396,6 +408,13 @@ class NetworkXGraphBackend(GraphBackend):
             get_node_marker_matrix: Add a matrix of marker counts to each node if True.
             random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
             **kwargs: will be passed to the underlying layout implementation
+
+        Returns:
+            the coordinates and markers (if activated) as a dataframe (pd.DataFrame)
+
+        Raises:
+            AssertionError if the provided `layout_algorithm` is not valid
+            ValueError if the provided current graph instance is empty
         """
         start_time = timer()
         coordinates = self._layout_coordinates(
@@ -750,6 +769,9 @@ def pmds_layout(
         weights: Edge weights to use for the layout computation. Options are:
         seed: Set seed for reproducibility
 
+    Returns:
+        A dataframe with layout coordinates (pd.DataFrame)
+
     Raises:
         ValueError: if conditions are not met
     """
@@ -887,6 +909,9 @@ def _prob_edge_weights(
     Args:
         g: A networkx graph object
         k: The number of steps in the random walk
+
+    Returns:
+        An array of edge weights (np.array)
 
     Raises:
         ValueError: if conditions are not met

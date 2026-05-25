@@ -387,6 +387,9 @@ class Assay:
 
         Args:
             filename: path to a design config file
+
+        Returns:
+            an Assay instance loaded from the design config
         """
         yaml_obj = load_yaml_file(filename)
         checked_obj = AssayModel.model_validate(yaml_obj)
@@ -409,6 +412,9 @@ class Assay:
 
         Args:
             region_id: id of the region to retrieve
+
+        Returns:
+            region with the given id or None if not found
         """
         for r in self.assay_spec:
             maybe_r = r.get_region_by_id(region_id)
@@ -423,6 +429,9 @@ class Assay:
 
         Args:
             region_type: region type to retrieve
+
+        Returns:
+            list of regions with the given type
         """
         regions = []
         for r in self.assay_spec:
@@ -444,6 +453,9 @@ def get_position_in_parent(assay: Assay, region_id: str) -> Tuple[int, int]:
     Args:
         assay: assay design
         region_id: region id of the amplicon
+
+    Returns:
+        tuple with start and end position of the region in the parent region
 
     Raises:
         ValueError: if the region_id is not found in the assay
