@@ -38,7 +38,7 @@ class OrderedGroup(click.Group):
         """Return a list of subcommands.
 
         Args:
-            ctx: Ctx.
+            ctx: Click context from the command decorator.
         """
         return self.commands
 
@@ -55,8 +55,8 @@ class AliasedOrderedGroup(OrderedGroup):
         """Attach a click group that supports aliases.
 
         Args:
-            args: Args.
-            kwargs: Kwargs.
+            args: Positional arguments passed to ``click.group``.
+            kwargs: Keyword arguments passed to ``click.group``.
         """
 
         def decorator(f):

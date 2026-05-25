@@ -83,7 +83,7 @@ def sample_calling_cli(
     """Map components to samples in sample-hashed datasets.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         input_pxl_file: Input pxl file.
         samplesheet: Samplesheet.
         remove_incompatible: Remove incompatible.

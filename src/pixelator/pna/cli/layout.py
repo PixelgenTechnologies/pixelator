@@ -80,7 +80,7 @@ def layout(
     """Compute graph layouts that can be used to visualize components.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         pxl_file: Pxl file.
         layout_algorithm: Layout algorithm.
         pmds_pivots: Pmds pivots.

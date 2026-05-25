@@ -214,7 +214,7 @@ def denoise(
     """Denoise components of a PXL file.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         pxl_file: Pxl file.
         run_one_core_graph_denoising: Run one core graph denoising.
         run_ace_denoising: Run ace denoising.

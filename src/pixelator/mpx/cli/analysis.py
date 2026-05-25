@@ -164,7 +164,7 @@ def analysis(
     """Perform different analyses on a PixelDataset from pixelator annotate
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         pxl_file: Pxl file.
         compute_polarization: Compute polarization.
         compute_colocalization: Compute colocalization.

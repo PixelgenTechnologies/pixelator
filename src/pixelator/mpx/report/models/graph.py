@@ -102,6 +102,6 @@ class GraphSampleReport(SampleReport):
         """Pixel count.
 
         Returns:
-            Result (int).
+            Number of graph components in the report.
         """
         return self.a_pixel_count + self.b_pixel_count

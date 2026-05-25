@@ -63,7 +63,7 @@ class BarcodeIdentifierStatistics:
         """Merge statistics from another object into this one.
 
         Args:
-            other: Other.
+            other: Statistics instance to merge into this one.
         """
         if isinstance(other, BarcodeIdentifierStatistics):
             self.exact += other.exact
@@ -168,7 +168,7 @@ class BarcodeIdentifier(SingleEndStep, HasFilterStatistics, HasCustomStatistics)
 
         Args:
             read: the read to process
-            info: Info.
+            info: Modification info from earlier pipeline steps (unused).
         """
         # Extract the barcode sequence
         _stats = self._stats

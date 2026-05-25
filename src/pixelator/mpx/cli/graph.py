@@ -85,7 +85,7 @@ def graph(
     """Compute graph, components and other metrics from an edge list.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         parquet_file: Parquet file.
         multiplet_recovery: Multiplet recovery.
         max_refinement_recursion_depth: Max refinement recursion depth.

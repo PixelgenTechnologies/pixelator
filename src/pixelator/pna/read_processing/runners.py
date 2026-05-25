@@ -352,7 +352,7 @@ class PipelineRunner(ABC):
         """Close the runner.
 
         Args:
-            args: Args.
+            args: Exception info from the context manager protocol (unused).
         """
         self.close()
 

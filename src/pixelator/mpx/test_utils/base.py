@@ -67,7 +67,7 @@ class BaseWorkflowTestMixin:
         """Some hackery to bind data access functions.
 
         Args:
-            kwargs: Kwargs.
+            kwargs: Additional keyword arguments.
         """
         super().__init_subclass__(**kwargs)
         thisclass = BaseWorkflowTestMixin

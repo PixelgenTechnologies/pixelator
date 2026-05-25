@@ -110,7 +110,7 @@ def collapse(
     """Collapse Molecular Pixelation data (FASTQ) to remove duplicates and perform error correction.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         input_files: Input files.
         design: Design.
         panel: Panel.

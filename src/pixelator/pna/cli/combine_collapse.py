@@ -92,7 +92,7 @@ def combine_collapse(
     """Collapse Molecular Pixelation data (FASTQ) by umi-upi to remove duplicates and perform error correction.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         parquet: Parquet.
         reports: Reports.
         output: Output.

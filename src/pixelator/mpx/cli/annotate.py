@@ -93,7 +93,7 @@ def annotate(
     """Filter, annotate and call cells from an edge list
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         parquet_file: Parquet file.
         panel: Panel.
         min_size: Min size.

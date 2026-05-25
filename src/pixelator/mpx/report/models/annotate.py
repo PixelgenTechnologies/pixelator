@@ -83,7 +83,7 @@ class AnnotateSampleReport(SampleReport):
         """Pixel count.
 
         Returns:
-            Result (int).
+            Number of cells called in the report.
         """
         return self.a_pixel_count + self.b_pixel_count
 

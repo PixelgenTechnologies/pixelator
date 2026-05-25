@@ -54,7 +54,7 @@ def adapterqc(
     """Check for the presence of PBS1/2 sequences in FASTQ input files.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         fastq_file: Fastq file.
         mismatches: Mismatches.
         output: Output.

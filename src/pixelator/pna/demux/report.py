@@ -27,7 +27,7 @@ class BarcodeCorrectionStatistics(Statistics):
         """Merge statistics from another object into this one.
 
         Args:
-            other: Other.
+            other: Statistics instance to merge into this one.
         """
         super().__iadd__(other)
         if hasattr(other, "_custom_stats"):

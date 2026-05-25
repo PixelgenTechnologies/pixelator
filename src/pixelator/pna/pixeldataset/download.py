@@ -172,8 +172,8 @@ def _report_progress(msg: str, *args: object) -> None:
     """Report progress to stdout in interactive environments, otherwise to logger.
 
     Args:
-        msg: Msg.
-        args: Args.
+        msg: printf-style format string.
+        args: Values interpolated into the format string.
     """
     formatted = msg % args if args else msg
     if _is_interactive():

@@ -59,7 +59,7 @@ def _add_handlers_to_root_logger(logging_setup):
 
 class _ParallelWithLogging(Parallel):
     def __init__(self, **kwargs):
-        """Initialize the instance."""
+        """Initialize a joblib ``Parallel`` executor that logs via the root logger."""
         super().__init__(**kwargs)
 
     def _print(self, mgs):
@@ -70,8 +70,8 @@ def _get_joblib_executor(nbr_cores=None, **kwargs) -> Parallel:
     """Return a joblib executor with some default settings.
 
     Args:
-        nbr_cores: Nbr cores.
-        kwargs: Kwargs.
+        nbr_cores: Number of worker processes to use.
+        kwargs: Keyword arguments forwarded to ``joblib.Parallel``.
     """
     current_click_context = click.get_current_context(silent=True)
     click_nbr_cores = None

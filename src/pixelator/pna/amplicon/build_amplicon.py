@@ -63,7 +63,7 @@ class AmpliconBuilderStatistics:
         """Merge statistics from another object into this one.
 
         Args:
-            other: Other.
+            other: Statistics instance to merge into this one.
         """
         if not isinstance(other, self.__class__):
             raise ValueError("Cannot compare")
@@ -740,10 +740,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         before building the amplicon.
 
         Args:
-            read1: Read1.
-            read2: Read2.
-            info1: Info1.
-            info2: Info2.
+            read1: Forward read (or None).
+            read2: Reverse read (or None).
+            info1: Modification info for the forward read (unused).
+            info2: Modification info for the reverse read (unused).
         """
         raise NotImplementedError("This method should be implemented in subclasses.")
 

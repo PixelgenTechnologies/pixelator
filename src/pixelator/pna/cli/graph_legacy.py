@@ -240,7 +240,7 @@ def graph_legacy(
     data for all of there putative cells.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         parquet_file: Parquet file.
         multiplet_recovery: Multiplet recovery.
         leiden_iterations: Leiden iterations.

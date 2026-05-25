@@ -44,8 +44,8 @@ class PNAGraph(BaseGraph):
         """Create a graph from record batches.
 
         Args:
-            edgelist: Edgelist.
-            kwargs: Kwargs.
+            edgelist: Edge list used to build the graph.
+            kwargs: Additional keyword arguments passed to the graph backend.
         """
         return PNAGraph(PNAGraphBackend.from_record_batches(edgelist, **kwargs))
 
@@ -53,8 +53,8 @@ class PNAGraph(BaseGraph):
         """Create a graph from an edgelist.
 
         Args:
-            edgelist: Edgelist.
-            kwargs: Kwargs.
+            edgelist: Edge list used to build the graph.
+            kwargs: Additional keyword arguments passed to the graph backend.
         """
         return PNAGraph(PNAGraphBackend.from_edgelist(edgelist, **kwargs))
 
@@ -151,8 +151,8 @@ class PNAGraphBackend(NetworkXGraphBackend):
         """Create a graph from an edgelist.
 
         Args:
-            edgelist: Edgelist.
-            kwargs: Kwargs.
+            edgelist: Edge list used to build the graph.
+            kwargs: Additional keyword arguments passed to the graph backend.
         """
         g: nx.Graph = nx.empty_graph(0, nx.Graph)
         if isinstance(edgelist, pl.LazyFrame):
@@ -167,8 +167,8 @@ class PNAGraphBackend(NetworkXGraphBackend):
         """Create a graph from an edgelist.
 
         Args:
-            batches: Batches.
-            kwargs: Kwargs.
+            batches: PyArrow record batches containing edge rows.
+            kwargs: Additional keyword arguments passed to the graph backend.
         """
         # TODO This is completely untested!
         g: nx.Graph = nx.empty_graph(0, nx.Graph)

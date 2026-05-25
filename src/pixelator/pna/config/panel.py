@@ -372,7 +372,7 @@ class PNAAntibodyPanel:
         """Check if two panels are equal based on their dataframes and metadata.
 
         Args:
-            other: Other.
+            other: Panel to compare for equality.
         """
         if not isinstance(other, PNAAntibodyPanel):
             raise ValueError("Can only compare with another PNAAntibodyPanel")

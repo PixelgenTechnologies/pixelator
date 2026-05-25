@@ -100,7 +100,7 @@ class QualityStatistics:
         """Merge statistics from another object into this one.
 
         Args:
-            other: Other.
+            other: Statistics instance to merge into this one.
         """
         for region_id, region_data in other._region_counters.items():
             if region_id not in self._region_counters:
@@ -161,8 +161,8 @@ class QualityProfileStep(SingleEndStep, HasCustomStatistics):
         """Create a quality profile on each read position for the amplicon.
 
         Args:
-            read: Read.
-            info: Info.
+            read: Amplicon read to annotate with per-position quality.
+            info: Modification info from earlier pipeline steps (unused).
         """
         # Create a view into the original quality array
         qual = np.frombuffer(read.qualities_as_bytes(), dtype=np.int8)

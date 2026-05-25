@@ -65,7 +65,7 @@ def layout(
     """Compute graph layouts that can be used to visualize components
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         pxl_file: Pxl file.
         no_node_marker_counts: No node marker counts.
         layout_algorithm: Layout algorithm.

@@ -195,7 +195,7 @@ class AmpliconStatistics(Statistics):
         """Merge statistics from another object into this one.
 
         Args:
-            other: Other.
+            other: Statistics instance to merge into this one.
         """
         if other.paired is None:
             other.paired = self.paired

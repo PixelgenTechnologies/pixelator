@@ -97,7 +97,7 @@ def analysis(
     """Add analysis results to a PXL file.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         pxl_file: Pxl file.
         compute_proximity: Compute proximity.
         proximity_nbr_of_permutations: Proximity nbr of permutations.

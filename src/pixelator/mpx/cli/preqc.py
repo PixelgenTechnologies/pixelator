@@ -130,7 +130,7 @@ def preqc(
     """Process raw FASTQ reads with QC, trimming, and duplicate removal.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         fastq_file: Fastq file.
         trim_front: Trim front.
         trim_tail: Trim tail.

@@ -165,7 +165,7 @@ def amplicon(
     """Process diverse raw pixel data (FASTQ) formats into common amplicon.
 
     Args:
-        ctx: Ctx.
+        ctx: Click context from the command decorator.
         fastq_1: Fastq 1.
         fastq_2: Fastq 2.
         sample_name: Sample name.
