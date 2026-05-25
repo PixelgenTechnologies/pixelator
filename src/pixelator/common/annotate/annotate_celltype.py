@@ -15,8 +15,6 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from pixelator.common.utils import logger
 
-logging.basicConfig(level=logging.INFO)
-
 
 def annotate_cells(
     query: AnnData | pd.DataFrame,
@@ -24,10 +22,11 @@ def annotate_cells(
     summarize_by_column: str | None = None,
     reference_groups: List[str] = ["celltype_l1", "celltype_l2"],
     method: str = "nmf",
-    min_prediction_score: float = 0.3,
+    min_prediction_score: float = 0.2,
     min_cells_per_celltype: int | None = None,
     n_cells_per_group: int | None = None,
     skip_normalization: bool = False,
+    nmf_seed: int = 123,
 ) -> AnnData:
     """Annotate cell types transferring labels from a reference to a query.
 
@@ -99,7 +98,6 @@ def annotate_cells(
                 query=query_tmp,
                 reference=ref_tmp,
                 groups=reference_groups,
-                skip_normalization=skip_normalization,
                 min_prediction_score=min_prediction_score,
             )
         case "nmf":
@@ -115,6 +113,7 @@ def annotate_cells(
                 min_prediction_score=min_prediction_score,
                 n_cells_per_group=n_cells_per_group,
                 min_cells_per_celltype=min_cells_per_celltype,
+                seed=nmf_seed,
             )
         case _:
             raise ValueError(
@@ -146,9 +145,7 @@ def annotate_cells(
     return query
 
 
-def _scanpy_annotation(
-    query, reference, groups, skip_normalization, min_prediction_score
-):
+def _scanpy_annotation(query, reference, groups, min_prediction_score):
     """Mimic Seurat's integration and label transfer (PCA + KNN)."""
     logger.debug("Running PCA and mapping query to reference space.")
     sc.tl.pca(reference, svd_solver="arpack")
@@ -183,6 +180,7 @@ def _seeded_nmf_annotation(
     min_prediction_score,
     n_cells_per_group=100,
     min_cells_per_celltype=10,
+    seed=123,
 ):
     """Seeded NMF using enrichment matrices and Non-Negative Least Squares."""
     ref_data = (
@@ -200,7 +198,7 @@ def _seeded_nmf_annotation(
             groups=labels,
             n_cells_per_group=n_cells_per_group,
             min_cells_per_celltype=min_cells_per_celltype,
-            seed=123,
+            seed=seed,
         )
 
         nnls_solver = LinearRegression(fit_intercept=False, positive=True)
