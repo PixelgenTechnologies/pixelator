@@ -29,11 +29,16 @@ def handle_unhandled_exception(
 
     Otherwise, raise with `logger.critical`
 
-    :param exc_type: type of the exception
-    :param exc_value: the exception exit code
-    :param exc_traceback: traceback instance of the exception
-    :return: system exception call or `logger.critical`
-    :rtype: None
+    
+
+    Args:
+    exc_type: type of the exception
+    exc_value: the exception exit code
+    exc_traceback: traceback instance of the exception
+
+    Returns:
+    system exception call or `logger.critical` (None)
+
     """
     if issubclass(exc_type, KeyboardInterrupt):
         # Will call default excepthook
@@ -56,10 +61,15 @@ def pytest_collect_file(
 ) -> Optional[YamlIntegrationTestsCollector]:
     """Collect test into a specific instance of :class:`YamlIntegrationTestsCollector`.
 
-    :param parent: the parent object
-    :param file_path: path to the yaml file with test definitions
-    :return: A custom pytest collector that generates tests from yaml files.
-    :rtype: YamlIntegrationTestsCollector
+    
+
+    Args:
+    parent: the parent object
+    file_path: path to the yaml file with test definitions
+
+    Returns:
+    A custom pytest collector that generates tests from yaml files. (YamlIntegrationTestsCollector)
+
     """
     file_path = Path(file_path)
 

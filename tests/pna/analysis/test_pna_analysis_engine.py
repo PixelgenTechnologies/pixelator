@@ -32,8 +32,12 @@ class MockAnalysis(PerComponentTask):
     def run_on_component_graph(self, component: PNAGraph, component_id: str):
         """Run the analysis on this component.
 
-        :param component: The graph of the component.
-        :param component_id: The id of the component.
+        
+
+        Args:
+        component: The graph of the component.
+        component_id: The id of the component.
+
         """
         raise NotImplementedError
 

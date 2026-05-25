@@ -43,9 +43,14 @@ from pixelator.mpx.plot.layout_plots import (
 def test_plot_3d_graph(
     snapshot: Snapshot, component, marker, setup_basic_pixel_dataset
 ):
-    """Test `plot_3d_graph` function.
+    """Verify ``plot_3d_graph`` renders a figure for parametrized components.
 
-    :param snapshot: testing snapshot directory
+    Args:
+        snapshot: Snapshot helper used for regression comparisons.
+        component: Component id passed to the plotting function.
+        marker: Optional marker name highlighted in the plot.
+        setup_basic_pixel_dataset: Fixture providing a minimal ``PixelDataset``.
+
     """
     np.random.seed(0)
     snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"
@@ -72,9 +77,14 @@ def test_plot_3d_graph(
 def test_plot_3d_graph_precomputed(
     snapshot: Snapshot, component, marker, setup_basic_pixel_dataset
 ):
-    """Test `plot_3d_graph` function.
+    """Verify ``plot_3d_graph`` uses precomputed layouts when available.
 
-    :param snapshot: testing snapshot directory
+    Args:
+        snapshot: Snapshot helper used for regression comparisons.
+        component: Component id passed to the plotting function.
+        marker: Optional marker name highlighted in the plot.
+        setup_basic_pixel_dataset: Fixture providing a minimal ``PixelDataset``.
+
     """
     np.random.seed(0)
     snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"

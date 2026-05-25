@@ -38,7 +38,11 @@ def pytest_addoption(parser: pytest.Parser):
     """Register a command line option for pytest.
     This flag is used in workflow integration tests defined in
     tests/integration.
-    :param parser: the pytest parser instance
+    
+
+    Args:
+    parser: the pytest parser instance
+
     """
     parser.addoption(
         "--keep-workdirs",
