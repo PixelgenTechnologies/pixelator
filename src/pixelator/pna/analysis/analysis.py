@@ -33,8 +33,10 @@ class ProximityAnalysis(PerComponentTask):
     ) -> None:
         """Initialize a ProximityAnalysis instance.
 
-        :param n_permutations: the number of permutations to use for the method (only used with methods
-                               that use permutations).
+        Args:
+        n_permutations: the number of permutations to use for the method (only used with methods that use permutations).
+        min_marker_count: Min marker count.
+
         """
         self.method = "join_count_statistics"
         self._proxmimity_function = partial(
@@ -48,9 +50,11 @@ class ProximityAnalysis(PerComponentTask):
     ) -> pd.DataFrame:
         """Run proximity analysis on a single component.
 
-        :param component: a Graph for a component to run the analysis on.
-        :param component_id: the id of the component.
-        :return: a pandas DataFrame containing average_node degrees per type counts.
+        Args:
+        component: a Graph for a component to run the analysis on.
+        component_id: the id of the component.
+        component_df: Component df.
+
         """
         result = self._proxmimity_function(component_df.collect())
         result["component"] = component_id
@@ -59,8 +63,11 @@ class ProximityAnalysis(PerComponentTask):
     def add_to_pixel_file(self, data: pd.DataFrame, pxl_file_target: PxlFile) -> None:
         """Add proximity data for all components to the pixeldataset.
 
-        :param data: a pandas DataFrame containing proximity data for all components.
-        :param pxl_dataset: the PixelDataset to add the data to.
+        Args:
+        data: a pandas DataFrame containing proximity data for all components.
+        pxl_dataset: the PixelDataset to add the data to.
+        pxl_file_target: Pxl file target.
+
         """
         logger.debug("Adding proximity data to PixelDataset")
         with tempfile.NamedTemporaryFile(suffix=".parquet") as tmp_file:
@@ -73,7 +80,13 @@ class ProximityAnalysis(PerComponentTask):
     def run_on_component_graph(
         self, component: PNAGraph, component_id: str
     ) -> pd.DataFrame:
-        """Run proximity analysis on a single component."""
+        """Run proximity analysis on a single component.
+
+        Args:
+        component: Component.
+        component_id: Component id.
+
+        """
         raise NotImplementedError
 
     def parameters(self) -> dict:

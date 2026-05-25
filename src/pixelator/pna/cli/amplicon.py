@@ -162,7 +162,28 @@ def amplicon(
     force_run: bool,
     threads: int,
 ):
-    """Process diverse raw pixel data (FASTQ) formats into common amplicon."""
+    """Process diverse raw pixel data (FASTQ) formats into common amplicon.
+
+    Args:
+    ctx: Ctx.
+    fastq_1: Fastq 1.
+    fastq_2: Fastq 2.
+    sample_name: Sample name.
+    output: Output.
+    design: Design.
+    mismatches: Mismatches.
+    remove_polyg: Remove polyg.
+    quality_cutoff: Quality cutoff.
+    low_complexity_filter: Low complexity filter.
+    low_complexity_threshold: Low complexity threshold.
+    lbs_filter: Lbs filter.
+    lbs_filter_min_overlap: Lbs filter min overlap.
+    lbs_filter_error_rate: Lbs filter error rate.
+    skip_input_checks: Skip input checks.
+    force_run: Force run.
+    threads: Threads.
+
+    """
     # log input parameters
 
     error_level = logging.WARNING if skip_input_checks else logging.ERROR

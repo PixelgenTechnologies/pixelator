@@ -192,7 +192,12 @@ class AmpliconStatistics(Statistics):
         self._custom_stats: dict[str, Any] = dict()
 
     def __iadd__(self, other: Any):
-        """Merge statistics from another object into this one."""
+        """Merge statistics from another object into this one.
+
+        Args:
+        other: Other.
+
+        """
         if other.paired is None:
             other.paired = self.paired
         super().__iadd__(other)
@@ -206,7 +211,13 @@ class AmpliconStatistics(Statistics):
         return self
 
     def as_json(self, gc_content: float = 0.5, one_line: bool = False) -> Dict:
-        """Return a dict representation suitable for dumping in JSON format."""
+        """Return a dict representation suitable for dumping in JSON format.
+
+        Args:
+        gc_content: Gc content.
+        one_line: One line.
+
+        """
         return self.as_dict()
 
     def as_dict(self) -> Dict:
@@ -303,7 +314,17 @@ class AmpliconStatistics(Statistics):
         steps,
         set_paired_to_none: bool = False,
     ):
-        """Enable stats.paired to be set to None when unknown."""
+        """Enable stats.paired to be set to None when unknown.
+
+        Args:
+        n: N.
+        total_bp1: Total bp1.
+        total_bp2: Total bp2.
+        modifiers: Modifiers.
+        steps: Steps.
+        set_paired_to_none: Set paired to none.
+
+        """
         stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
         if set_paired_to_none:
             stats.paired = None

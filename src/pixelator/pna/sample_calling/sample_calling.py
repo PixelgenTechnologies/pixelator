@@ -47,21 +47,10 @@ def collect_hash_info(
     the component is assigned to the "undetermined" sample.
 
     Args:
-        input_pxl_file (PNAPixelDataset): The input pixel dataset.
-        hashed_antibody_mapping (HashedAntibodyMapping): Mapping of sample names
-            to hashed antibody names and the full list of hashing antibodies (from panel).
-        confidence_threshold (float): Confidence threshold.
-        undetermined_sample_name (str, optional): Name to use for undetermined components. Defaults to "undetermined".
-
-    Returns:
-        pl.DataFrame: A Polars DataFrame containing the following columns:
-            - 'component': The component identifier.
-            - '{sample}_hash_count': The summed hash count for each sample.
-            - '{undetermined_sample_name}_hash_count': The summed hash count for antibodies not mapped to any
-                sample.
-            - 'called_sample': The sample with the highest hash count for each component
-                (may be "undetermined").
-            - 'sample_confidence': The confidence score for the sample assignment.
+        input_pxl_file: Input pxl file.
+        hashed_antibody_mapping: Hashed antibody mapping.
+        confidence_threshold: Confidence threshold.
+        undetermined_sample_name: Undetermined sample name.
 
     """
     ab_count_data = pl.from_pandas(input_pxl_file.adata().to_df().reset_index()).lazy()
@@ -153,6 +142,12 @@ def _collect_nodes_to_remove(
     Incompatible hashes are defined from the panel (all hashing antibodies minus
     the current sample's), so they do not depend on other samples being present
     in the samplesheet.
+
+    Args:
+    edgelist: Edgelist.
+    all_hashing_in_panel: All hashing in panel.
+    sample_antibodies: Sample antibodies.
+
     """
     incompatible_hashes = all_hashing_in_panel - set(sample_antibodies)
     edgelist_df = edgelist.collect()
@@ -189,6 +184,11 @@ def _add_original_hash_counts_to_obs(
     Antibodies present in the adata matrix get their counts; those not present
     (e.g. not in samplesheet or zero counts) get 0 so all panel hashing antibodies
     are represented in obs.
+
+    Args:
+    old_adata: Old adata.
+    antibodies_for_obs: Antibodies for obs.
+
     """
     old_anndata_counts = old_adata.to_df()
     for ab in sorted(list(antibodies_for_obs)):
@@ -220,6 +220,15 @@ def _build_post_sample_calling_anndata(
 
     The new AnnData object has no panel hashing markers in var,
     instead hashing antibodies are added to obs.
+
+    Args:
+    con: Con.
+    old_adata: Old adata.
+    nodes_to_remove: Nodes to remove.
+    hash_info: Hash info.
+    panel: Panel.
+    hashing_antibody_mapping: Hashing antibody mapping.
+
     """
     _add_original_hash_counts_to_obs(
         old_adata, hashing_antibody_mapping.hashing_antibodies
@@ -309,22 +318,15 @@ def sample_calling(
     It supports removing incompatible hashes and renaming hash markers in the output.
 
     Args:
-        input_pxl (PNAPixelDataset):
-            The input pixel dataset to be split by sample.
-        hashing_antibody_mapping (HashedAntibodyMapping):
-            Information about hashing antibodies, including a mapping from sample names to lists of
-            hashed antibody names.
-        output_folder (Path):
-            Directory where output pxl files will be written.
-        confidence_threshold (float, optional):
-            Minimum confidence required to assign a component to a sample. Defaults to 0.8.
-        remove_incompatible (bool, optional):
-            Whether to remove hashes incompatible with the current sample from the edgelist.
-            Defaults to True.
-        undetermined_sample_name (str, optional):
-            Name to use for undetermined components. Defaults to "undetermined".
+        input_pxl: Input pixel dataset to dehash into per-sample outputs.
+        hashing_antibody_mapping: Mapping from hash markers to sample identities.
+        output_folder: Directory where per-sample ``.pxl`` files are written.
+        confidence_threshold: Minimum confidence required to assign a sample.
+        remove_incompatible: Whether to drop incompatible hash assignments.
+        undetermined_sample_name: Sample name used for undetermined components.
 
-    Returns: List of all output pxl files created.
+    Returns:
+        Paths to all output pixel files that were created.
 
     """
     hash_info = collect_hash_info(
@@ -436,14 +438,26 @@ class FindHashedNodesToRemove(PerComponentTask):
         hashing_antibody_mapping: HashedAntibodyMapping,
         sample_name: str,
     ):
-        """Initialize the task with hashing antibody mapping and sample name."""
+        """Initialize the task with hashing antibody mapping and sample name.
+
+        Args:
+        hashing_antibody_mapping: Hashing antibody mapping.
+        sample_name: Sample name.
+
+        """
         self.hashing_antibody_mapping = hashing_antibody_mapping
         self.sample_name = sample_name
 
     def run_on_component_edgelist(
         self, component: pl.LazyFrame, component_id: str
     ) -> pl.DataFrame:
-        """Find nodes to remove for one component."""
+        """Find nodes to remove for one component.
+
+        Args:
+        component: Component.
+        component_id: Component id.
+
+        """
         sample_antibodies = self.hashing_antibody_mapping.get(self.sample_name, [])
         nodes_to_remove = _collect_nodes_to_remove(
             component,
@@ -453,7 +467,12 @@ class FindHashedNodesToRemove(PerComponentTask):
         return nodes_to_remove
 
     def concatenate_data(self, data: Tuple[pl.DataFrame]) -> pl.DataFrame:  # type: ignore[override]
-        """Concatenate the results from all components."""
+        """Concatenate the results from all components.
+
+        Args:
+        data: Data.
+
+        """
         return pl.concat(data)
 
 
@@ -461,7 +480,12 @@ class HashedSampleAnalysisManager(AnalysisManager):
     """Manager for sample calling analysis on hashed samples."""
 
     def execute(self, pixel_dataset: PNAPixelDataset) -> pl.DataFrame:  # type: ignore[override]
-        """Execute the analysis on the provided pixel dataset."""
+        """Execute the analysis on the provided pixel dataset.
+
+        Args:
+        pixel_dataset: Pixel dataset.
+
+        """
         if self._n_cores is None or self._n_cores > 1:
             per_component_results = self._execute_computations_in_parallel(
                 pixel_dataset.edgelist().iterator()
@@ -480,12 +504,12 @@ def create_final_report(
 ) -> SampleCallingTotalReport:
     """Create the final report for the sample calling.
 
-    Args:
-        final_dataset (PNAPixelDataset): The final dataset after sample calling.
-        undetermined_sample_name (str, optional): Name to use for undetermined components. Defaults to "undetermined".
-
     Returns:
-        SampleCallingTotalReport: The final report for the sample calling.
+    SampleCallingTotalReport: The final report for the sample calling.
+
+    Args:
+        final_dataset: Final dataset.
+        undetermined_sample_name: Undetermined sample name.
 
     """
     n_components = len(final_dataset.components())
@@ -529,7 +553,14 @@ def warn_if_undetermined_has_high_confidence(
     confidence_threshold: float,
     undetermined_sample_name: str = "undetermined",
 ) -> None:
-    """Warn if the undetermined sample has a high confidence score."""
+    """Warn if the undetermined sample has a high confidence score.
+
+    Args:
+    undetermined_sample_confidences: Undetermined sample confidences.
+    confidence_threshold: Confidence threshold.
+    undetermined_sample_name: Undetermined sample name.
+
+    """
     if (
         np.sum(undetermined_sample_confidences > confidence_threshold)
         / len(undetermined_sample_confidences)

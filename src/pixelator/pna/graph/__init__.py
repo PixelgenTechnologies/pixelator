@@ -31,17 +31,34 @@ class PNAGraph(BaseGraph):
     """Graph class for PNA data."""
 
     def __init__(self, backend: NetworkXGraphBackend):
-        """Create a new graph instance."""
+        """Create a new graph instance.
+
+        Args:
+        backend: Backend.
+
+        """
         self._backend = backend
         self._connected_components_needs_recompute = False
         self._connected_components: VertexClustering | None = None
 
     def from_record_batches(edgelist: Iterable[pa.RecordBatch], **kwargs) -> "PNAGraph":
-        """Create a graph from record batches."""
+        """Create a graph from record batches.
+
+        Args:
+        edgelist: Edgelist.
+        kwargs: Kwargs.
+
+        """
         return PNAGraph(PNAGraphBackend.from_record_batches(edgelist, **kwargs))
 
     def from_edgelist(edgelist: pl.LazyFrame, **kwargs):  # type: ignore
-        """Create a graph from an edgelist."""
+        """Create a graph from an edgelist.
+
+        Args:
+        edgelist: Edgelist.
+        kwargs: Kwargs.
+
+        """
         return PNAGraph(PNAGraphBackend.from_edgelist(edgelist, **kwargs))
 
     @property
@@ -74,17 +91,12 @@ class PNAGraph(BaseGraph):
         The `pmds` options are much faster than the force-directed algorithms fruchterman_reingold
         and kamada_kawai. The `wpmds_3d` option is a weighted version of the `pmds_3d` algorithm.
 
-        :param layout_algorithm: the layout algorithm to use to generate the coordinates
-        :param get_node_marker_matrix: Add a matrix of marker counts to each
-                                       node if True.
-        :param random_seed: used as the seed for graph layouts with a stochastic
-                            element. Useful to get deterministic layouts across
-                            method calls.
-        :param **kwargs: will be passed to the underlying layout implementation
-        :return: the coordinates and markers (if activated) as a dataframe
-        :rtype: pd.DataFrame
-        :raises: AssertionError if the provided `layout_algorithm` is not valid
-        :raises: ValueError if the provided current graph instance is empty
+        Args:
+        layout_algorithm: the layout algorithm to use to generate the coordinates
+        get_node_marker_matrix: Add a matrix of marker counts to each node if True.
+        random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
+        **kwargs: will be passed to the underlying layout implementation
+
         """
         return self._backend.layout_coordinates(
             layout_algorithm=layout_algorithm,
@@ -139,7 +151,13 @@ class PNAGraphBackend(NetworkXGraphBackend):
 
     @staticmethod
     def from_edgelist(edgelist: pl.LazyFrame | pd.DataFrame, **kwargs):  # type: ignore
-        """Create a graph from an edgelist."""
+        """Create a graph from an edgelist.
+
+        Args:
+        edgelist: Edgelist.
+        kwargs: Kwargs.
+
+        """
         g: nx.Graph = nx.empty_graph(0, nx.Graph)
         if isinstance(edgelist, pl.LazyFrame):
             g = PNAGraphBackend._build_graph_from_lazy_frame(g, edgelist, **kwargs)
@@ -150,7 +168,13 @@ class PNAGraphBackend(NetworkXGraphBackend):
 
     @staticmethod
     def from_record_batches(batches: Iterable[pa.RecordBatch], **kwargs):
-        """Create a graph from an edgelist."""
+        """Create a graph from an edgelist.
+
+        Args:
+        batches: Batches.
+        kwargs: Kwargs.
+
+        """
         # TODO This is completely untested!
         g: nx.Graph = nx.empty_graph(0, nx.Graph)
         for batch in batches:
@@ -200,17 +224,12 @@ class PNAGraphBackend(NetworkXGraphBackend):
         `wpmds_3d` method uses edge weights to improve the layout, but is slightly
         slower than `pmds_3d`.
 
-        :param layout_algorithm: the layout algorithm to use to generate the coordinates
-        :param get_node_marker_matrix: Add a matrix of marker counts to each
-                                       node if True.
-        :param random_seed: used as the seed for graph layouts with a stochastic
-                            element. Useful to get deterministic layouts across
-                            method calls.
-        :param **kwargs: will be passed to the underlying layout implementation
-        :return: the coordinates and markers (if activated) as a dataframe
-        :rtype: pd.DataFrame
-        :raises: AssertionError if the provided `layout_algorithm` is not valid
-        :raises: ValueError if the provided current graph instance is empty
+        Args:
+        layout_algorithm: the layout algorithm to use to generate the coordinates
+        get_node_marker_matrix: Add a matrix of marker counts to each node if True.
+        random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
+        **kwargs: will be passed to the underlying layout implementation
+
         """
         start_time = timer()
         coordinates = self._layout_coordinates(

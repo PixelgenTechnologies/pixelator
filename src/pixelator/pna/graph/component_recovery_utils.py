@@ -36,7 +36,15 @@ def populate_component_stats_from_hybrid_detection(
     post_flp_stats: PyGraphProperties,
     post_recovery_stats: PyGraphProperties,
 ) -> None:
-    """Fill graph statistics from hybrid (FLP + Leiden) community-detection outputs."""
+    """Fill graph statistics from hybrid (FLP + Leiden) community-detection outputs.
+
+    Args:
+    component_stats: Component stats.
+    pre_recovery_stats: Pre recovery stats.
+    post_flp_stats: Post flp stats.
+    post_recovery_stats: Post recovery stats.
+
+    """
     component_stats.component_count_pre_recovery = (
         pre_recovery_stats.n_connected_components
     )
@@ -61,6 +69,10 @@ def hash_component(component: set[int]) -> str:
     """Hash a component deterministically based on its nodes.
 
     Note: this preserves the historical hashing behavior used by the legacy pipeline.
+
+    Args:
+    component: Component.
+
     """
     hasher = xxhash.xxh3_64()
     for node in sorted(component):
@@ -76,10 +88,7 @@ def name_components_with_umi_hashes(edgelist: pl.LazyFrame) -> pl.LazyFrame:
     Two components with the same UMI multiset get the same name.
 
     Args:
-        edgelist: Lazy edgelist with ``component``, ``umi1``, and ``umi2`` columns.
-
-    Returns:
-        The edgelist with ``component`` rewritten to UMI-derived hash strings.
+    edgelist: Lazy edgelist with ``component``, ``umi1``, and ``umi2`` columns.
 
     """
     comp_umis = (
@@ -95,7 +104,12 @@ def name_components_with_umi_hashes(edgelist: pl.LazyFrame) -> pl.LazyFrame:
 
 
 def initialize_graph_statistics(collapsed_edgelist_path: Path) -> GraphStatistics:
-    """Initialize and return a GraphStatistics object with all fields set to zero."""
+    """Initialize and return a GraphStatistics object with all fields set to zero.
+
+    Args:
+    collapsed_edgelist_path: Collapsed edgelist path.
+
+    """
     component_stats = GraphStatistics()
     raw_stats = get_count_statistics(collapsed_edgelist_path)
     component_stats.molecules_input = raw_stats["n_molecules"]
@@ -111,15 +125,11 @@ def get_count_statistics(edgelist_path: Path) -> dict:
     as well as the total number of distinct UMIs present in the edgelist. It returns these statistics
     in a dictionary.
 
-    Args:
-        edgelist_path (str): Path to the input Parquet file containing the edgelist.
-
     Returns:
-        dict: A dictionary containing the following keys:
-            - 'n_edges': Total number of edges in the edgelist.
-            - 'n_umi': Total number of distinct UMIs in the edgelist.
-            - 'n_reads': Total number of reads in the edgelist.
-            - 'n_molecules': Total number of molecules in the edgelist.
+    dict: A dictionary containing the following keys: - 'n_edges': Total number of edges in the edgelist. - 'n_umi': Total number of distinct UMIs in the edgelist. - 'n_reads': Total number of reads in the edgelist. - 'n_molecules': Total number of molecules in the edgelist.
+
+    Args:
+        edgelist_path: Edgelist path.
 
     """
     with duckdb.connect() as con:
@@ -162,13 +172,9 @@ def write_hive_partitioned_edgelist_without_small_components(
     threshold are written as Parquet with ``PARTITION_BY (component)``.
 
     Args:
-        input_edgelist_path: Parquet file with component assignments (e.g. after hybrid detection).
-        min_component_size_to_prune: Components with a score strictly below this are dropped.
-        working_dir: Directory for a temporary DuckDB file and the hive-partition output.
-            Defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
-
-    Returns:
-        Path to the hive-partitioned output and a frame of discarded ``component`` / ``n_umi``.
+    input_edgelist_path: Parquet file with component assignments (e.g. after hybrid detection).
+    min_component_size_to_prune: Components with a score strictly below this are dropped.
+    working_dir: Directory for a temporary DuckDB file and the hive-partition output. Defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     """
     hive_partitioned_edgelist_path = working_dir / "hive_partitioned_edgelist.parquet"
@@ -217,12 +223,8 @@ def find_clashing_umis(
     3. Are present in both `umi1` and `umi2`.
 
     Args:
-        input_file (Path): Path to the input Parquet file containing the edgelist.
-        component_stats (GraphStatistics): Statistics object to update with clash information.
-
-    Returns:
-        (pl.Series, GraphStatistics): A tuple containing a Polars Series of clashing UMIs
-        and the updated component statistics.
+        input_file: Input file.
+        component_stats: Component stats.
 
     """
     with duckdb.connect() as con:
@@ -269,12 +271,9 @@ def remove_umis(
     """Remove specified UMIs from an edgelist and write the filtered edgelist under ``working_dir``.
 
     Args:
-        input_edgelist_path: Input Parquet edgelist.
-        umis_to_remove: UMIs whose edges should be dropped.
-        working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
-
-    Returns:
-        Path to the written Parquet file (``no_clash_edgelist.parquet`` in ``working_dir``).
+    input_edgelist_path: Input Parquet edgelist.
+    umis_to_remove: UMIs whose edges should be dropped.
+    working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     """
     target_path = working_dir / "no_clash_edgelist.parquet"
@@ -307,12 +306,9 @@ def remove_clashing_umis(
     these UMIs. The filtered edgelist is written under ``working_dir``.
 
     Args:
-        input_edgelist_path: Path to the input Parquet file containing the edgelist.
-        component_stats: Statistics object to update with clash information.
-        working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
-
-    Returns:
-        Path to the filtered edgelist and updated component statistics.
+    input_edgelist_path: Path to the input Parquet file containing the edgelist.
+    component_stats: Statistics object to update with clash information.
+    working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     """
     umis_to_remove, updated_stats = find_clashing_umis(
@@ -341,12 +337,8 @@ def create_working_edgelist(
     """Build a dense node-id edgelist and a map from original to working node names.
 
     Args:
-        input_edgelist_path: Path to the input edgelist in Parquet format.
-        working_dir: Directory for ``node_map.parquet`` and ``working_edgelist.parquet``;
-            defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
-
-    Returns:
-        ``(working_edgelist_path, node_map_path)``.
+    input_edgelist_path: Path to the input edgelist in Parquet format.
+    working_dir: Directory for ``node_map.parquet`` and ``working_edgelist.parquet``; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     """
     node_map_path = working_dir / "node_map.parquet"
@@ -405,13 +397,10 @@ def filter_edgelist_by_read_count(
     below a specified threshold, and saves the filtered edgelist under ``working_dir``.
 
     Args:
-        input_edgelist_path: Path to the input Parquet file containing the edgelist.
-        min_read_count: Minimum read count threshold for filtering edges.
-        component_stats: Statistics object to update with filtering information.
-        working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
-
-    Returns:
-        Path to the filtered edgelist and updated graph statistics.
+    input_edgelist_path: Path to the input Parquet file containing the edgelist.
+    min_read_count: Minimum read count threshold for filtering edges.
+    component_stats: Statistics object to update with filtering information.
+    working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     """
     filtered_edgelist_path = working_dir / "filtered_edgelist.parquet"
@@ -446,14 +435,10 @@ def save_new_working_edgelist(
     edgelist under ``working_dir``. It also computes statistics about crossing vs remaining edges.
 
     Args:
-        input_working_edgelist_path: Path to the input working edgelist Parquet file.
-        new_assignments_path: Path to the Parquet file containing new component assignments.
-        component_column_name: Name of the component column in the assignments file.
-        working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
-
-    Returns:
-        Path to the updated edgelist and a dict with ``n_crossing_edges`` and
-        ``n_remaining_edges``.
+    input_working_edgelist_path: Path to the input working edgelist Parquet file.
+    new_assignments_path: Path to the Parquet file containing new component assignments.
+    component_column_name: Name of the component column in the assignments file.
+    working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     """
     output_path = working_dir / "working_edgelist_with_new_assignments.parquet"
@@ -504,7 +489,13 @@ def combine_component_sizes(
     edgelist: pl.LazyFrame,
     discard_sizes: pl.DataFrame,
 ) -> pl.DataFrame:
-    """Add pre-filtering connected component size statistics to the component stats."""
+    """Add pre-filtering connected component size statistics to the component stats.
+
+    Args:
+    edgelist: Edgelist.
+    discard_sizes: Discard sizes.
+
+    """
     component_sizes = (
         edgelist.group_by("component")
         .agg(
@@ -535,20 +526,15 @@ def filter_connected_components_by_size(
     applies size thresholds (either dynamic or hard thresholds), and filters out components that do not meet the criteria.
     It also updates the component statistics with information about the filtering process.
 
-    Args:
-        edgelist (pl.LazyFrame): The input edgelist as a Polars LazyFrame.
-        component_size_threshold (bool | tuple[int, int]): Size threshold for filtering components.
-            If True, dynamic thresholds are used. If False, no filtering is applied.
-            If a tuple, it specifies (min_size, max_size) for hard thresholds.
-        discard_sizes (pl.DataFrame): DataFrame containing sizes of discarded components.
-        component_stats (GraphStatistics): Statistics object to update with filtering information.
-        dynamic_lowest_passable_bound (int, optional): Lowest passable bound for dynamic thresholding. Defaults to None.
-
-    Returns:
-        pl.LazyFrame: The filtered edgelist as a Polars LazyFrame.
-
     Raises:
-        ConnectedComponentException: If no components remain after filtering.
+    ConnectedComponentException: If no components remain after filtering.
+
+    Args:
+        edgelist: Edgelist.
+        component_size_threshold: Component size threshold.
+        discard_sizes: Discard sizes.
+        component_stats: Component stats.
+        dynamic_lowest_passable_bound: Dynamic lowest passable bound.
 
     """
     component_sizes = combine_component_sizes(edgelist, discard_sizes)
@@ -619,8 +605,10 @@ def filter_components_by_size_dynamic(
 ) -> tuple[pl.Series, int | None]:
     """Filter components by size using dynamic thresholds.
 
-    :param component_sizes: DataFrame with columns `component` and `n_umi`.
-    :returns: Components that pass the filter, and the computed lower bound.
+    Args:
+    component_sizes: DataFrame with columns `component` and `n_umi`.
+    lowest_passable_bound: Lowest passable bound.
+
     """
     if lowest_passable_bound is None:
         lowest_passable_bound = MIN_PNA_COMPONENT_SIZE
@@ -647,10 +635,11 @@ def filter_components_by_size_hard_thresholds(
 ) -> pl.Series:
     """Filter components by size using hard thresholds.
 
-    :param component_sizes: DataFrame with columns `component` and `n_umi`.
-    :param lower_bound: The lower bound for the component size.
-    :param higher_bound: The higher bound for the component size.
-    :returns: The `component` column for components that pass the filter.
+    Args:
+    component_sizes: DataFrame with columns `component` and `n_umi`.
+    lower_bound: The lower bound for the component size.
+    higher_bound: The higher bound for the component size.
+
     """
     if lower_bound is None:
         lower_bound = 0

@@ -67,8 +67,12 @@ class RegionModel(BaseModel):
     def check_valid_dna_string(self) -> Self:
         """Validate DNA strings.
 
-        :return: the validated model
-        :raises ValueError: if the string contains non DNA characters
+        Returns:
+        the validated model
+
+        Raises:
+        ValueError: if the string contains non DNA characters
+
         """
         if self.region_type is PNARegionType.LBS:
             is_valid = True
@@ -83,8 +87,10 @@ class RegionModel(BaseModel):
 class AssayModel(BaseModel):
     """Validation model for assay configuration.
 
-    :ivar name: Name of the assay
-    :ivar assay_spec: List of assay regions
+    Attributes:
+    name: Name of the assay
+    assay_spec: List of assay regions
+
     """
 
     # TODO: Add more metadata fields
@@ -95,15 +101,17 @@ class AssayModel(BaseModel):
 class Region:
     """Class representing a region in an assay.
 
-    :ivar region_id: unique ID of the region
-    :ivar region_type: type of the region
-    :ivar name: name of the region
-    :ivar sequence_type: type of the sequence
-    :ivar sequence: string representation of the region
-    :ivar min_len: minimum length of the region
-    :ivar max_len: maximum length of the region
-    :ivar regions: list of sub-regions
-    :ivar data: additional user-defined region properties
+    Attributes:
+    region_id: unique ID of the region
+    region_type: type of the region
+    name: name of the region
+    sequence_type: type of the sequence
+    sequence: string representation of the region
+    min_len: minimum length of the region
+    max_len: maximum length of the region
+    regions: list of sub-regions
+    data: additional user-defined region properties
+
     """
 
     def __init__(
@@ -118,7 +126,20 @@ class Region:
         regions: Optional[List["Region"]] = None,
         data: Optional[Mapping[str, Any]] = None,
     ) -> None:
-        """Initialize a Region."""
+        """Initialize a Region.
+
+        Args:
+        region_id: Region id.
+        region_type: Region type.
+        name: Name.
+        sequence_type: Sequence type.
+        sequence: Sequence.
+        min_len: Min len.
+        max_len: Max len.
+        regions: Regions.
+        data: Data.
+
+        """
         self.parent_id: str | None = None
         self.region_id = region_id
         self.region_type = region_type
@@ -153,7 +174,9 @@ class Region:
     def set_parent_id(self, parent_id: str) -> None:
         """Set the parent id of this region.
 
-        :param parent_id: parent id to set
+        Args:
+        parent_id: parent id to set
+
         """
         self.parent_id = parent_id
 
@@ -227,7 +250,12 @@ class Region:
         return d
 
     def get_region_by_id(self, region_id: str) -> Optional["Region"]:
-        """Lookup a region by the region_id field."""
+        """Lookup a region by the region_id field.
+
+        Args:
+        region_id: Region id.
+
+        """
         if self.region_id == region_id:
             return self
 
@@ -239,7 +267,12 @@ class Region:
         return None
 
     def get_regions_by_type(self, region_type: str) -> List["Region"]:
-        """Return all regions with specified region_type."""
+        """Return all regions with specified region_type.
+
+        Args:
+        region_type: Region type.
+
+        """
         found = []
 
         if self.region_type == region_type:
@@ -252,7 +285,12 @@ class Region:
         return found
 
     def get_regions_by_sequence_type(self, sequence_type: SequenceType | str):
-        """Return all regions with specified sequence_type."""
+        """Return all regions with specified sequence_type.
+
+        Args:
+        sequence_type: Sequence type.
+
+        """
         found = []
 
         if self.sequence_type == sequence_type:
@@ -311,8 +349,12 @@ class PNAAssay:
     An assay contains metadata and a list of (possible nested regions) defining
     the structure of the assay reads.
 
-    :ivar name: Name of the assay
-    :ivar assay_spec: List of regions defining the assay structure
+
+
+    Attributes:
+    name: Name of the assay
+    assay_spec: List of regions defining the assay structure
+
     """
 
     _REQUIRED_REGIONS = {
@@ -327,7 +369,13 @@ class PNAAssay:
     }
 
     def __init__(self, name: str, assay_spec: Optional[List[Region]] = None):
-        """Initialize an assay."""
+        """Initialize an assay.
+
+        Args:
+        name: Name.
+        assay_spec: Assay spec.
+
+        """
         self.name = name
         self.assay_spec: List[Region] = assay_spec or []
 
@@ -418,8 +466,9 @@ class PNAAssay:
     def from_yaml(cls, filename: PathType) -> "PNAAssay":
         """Parse an assay from a yaml file.
 
-        :return: an Assay instance loaded from the design config
-        :param filename: path to a design config file
+        Args:
+        filename: path to a design config file
+
         """
         yaml_obj = load_yaml_file(filename)
         checked_obj = AssayModel.model_validate(yaml_obj)
@@ -446,8 +495,9 @@ class PNAAssay:
     def get_region_by_id(self, region_id: str | PNARequiredRegions) -> Optional[Region]:
         """Retrieve a region by its id.
 
-        :param region_id: id of the region to retrieve
-        :return: region with the given id or None if not found
+        Args:
+        region_id: id of the region to retrieve
+
         """
         for r in self.assay_spec:
             maybe_r = r.get_region_by_id(region_id)
@@ -460,8 +510,9 @@ class PNAAssay:
     def get_regions_by_type(self, region_type: PNARegionType) -> List[Region]:
         """Retrieve all regions of a given type.
 
-        :param region_type: region type to retrieve
-        :return: list of regions with the given type
+        Args:
+        region_type: region type to retrieve
+
         """
         regions = []
         for r in self.assay_spec:
@@ -473,8 +524,10 @@ class PNAAssay:
     def get_regions_by_sequence_type(self, sequence_type: SequenceType) -> List[Region]:
         """Retrieve all regions of a given type.
 
-        :param region_type: region type to retrieve
-        :return: list of regions with the given type
+        Args:
+        region_type: region type to retrieve
+        sequence_type: Sequence type.
+
         """
         regions = []
         for r in self.assay_spec:
@@ -495,12 +548,15 @@ def get_position_in_parent(
     This assumes the amplicon consists of only fixed length regions in the path
     from the start of the amplicon up until the region of interest.
 
-    :param assay: assay design
-    :param region_id: region id of the amplicon
-    :return: tuple with start and end position of the region in the parent region
-    :raises ValueError: if the region_id is not found in the assay
-    :raises ValueError: if the region has no parent
-    :raises ValueError: if the parent_region is not found in the assay
+    Args:
+    assay: assay design
+    region_id: region id of the amplicon
+
+    Raises:
+    ValueError: if the region_id is not found in the assay
+    ValueError: if the region has no parent
+    ValueError: if the parent_region is not found in the assay
+
     """
     region = assay.get_region_by_id(region_id)
     if region is None:

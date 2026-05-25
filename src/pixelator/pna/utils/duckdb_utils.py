@@ -42,13 +42,10 @@ def parse_duckdb_memory_limit_to_bytes(setting: str) -> int:
     ``49.5 GiB`` or ``953.6 MiB``.
 
     Args:
-        setting: Raw setting string from DuckDB.
-
-    Returns:
-        Total limit in bytes (non-negative integer).
+    setting: Raw setting string from DuckDB.
 
     Raises:
-        ValueError: If the string does not match DuckDB's expected format.
+    ValueError: If the string does not match DuckDB's expected format.
 
     """
     m = _DUCKDB_MEMORY_LIMIT_RE.match(setting.strip())
@@ -64,16 +61,15 @@ def parse_duckdb_memory_limit_to_bytes(setting: str) -> int:
 def get_single_thread_duckdb_config(n_threads: int) -> dict:
     """Get a DuckDB configuration that limits memory usage for multi-threaded processing.
 
-    Args:
-        n_threads (int): Number of threads to be used in the multi-threaded processing.
-
     Returns:
-        dict: DuckDB configuration dictionary with memory limit and single thread setting.
+    dict: DuckDB configuration dictionary with memory limit and single thread setting.
 
     Raises:
-        ValueError: If ``n_threads`` is invalid.
-        DuckdbPerThreadMemoryError: If the configured memory split would give each thread
-            less than 1 MiB.
+    ValueError: If ``n_threads`` is invalid.
+    DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than 1 MiB.
+
+    Args:
+        n_threads: N threads.
 
     """
     if n_threads < 1:

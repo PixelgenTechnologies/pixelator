@@ -33,9 +33,9 @@ BytesOrString = typing.TypeVar("BytesOrString", str, bytes)
 def reverse_complement(seq: BytesOrString) -> BytesOrString:
     """Compute the reverse complement of a DNA seq.
 
-    :param seq: the DNA sequence
-    :return: the reverse complement of the input sequence
-    :rtype: Bytes or Str depending on the input
+    Args:
+    seq: the DNA sequence
+
     """
     if isinstance(seq, bytes):
         return seq.translate(_TRTABLE_BYTES)[::-1]
@@ -61,7 +61,12 @@ class AmpliconBuilderStatistics:
         self.failed_missing_upi2_umi2_reads = 0
 
     def __iadd__(self, other):
-        """Merge statistics from another object into this one."""
+        """Merge statistics from another object into this one.
+
+        Args:
+        other: Other.
+
+        """
         if not isinstance(other, self.__class__):
             raise ValueError("Cannot compare")
 
@@ -115,7 +120,9 @@ class AmpliconCombiner:
     def __init__(self, assay: PNAAssay):
         """Initialize the AmpliconCombiner.
 
-        :param assay: the assay design
+        Args:
+        assay: the assay design
+
         """
         self.assay = assay
         self._template = (
@@ -151,9 +158,11 @@ class AmpliconCombiner:
     ) -> bytes:
         """Build the amplicon sequence from the different regions.
 
-        :param pid1_umi1_region: the PBS-1 and UMI-1 region
-        :param uei_region: the UEI region
-        :param pid2_umi2_region: the PBS-2 and UMI-2 region
+        Args:
+        pid1_umi1_region: the PBS-1 and UMI-1 region
+        uei_region: the UEI region
+        pid2_umi2_region: the PBS-2 and UMI-2 region
+
         """
         # We are using bytearray here since strings are immutable
         s = bytearray(self._template)
@@ -189,11 +198,13 @@ class AmpliconCombiner:
 
         All regions are assumed to have the correct length.
 
-        :param pid1_umi1_region: the PBS-1 and UMI-1 region qualities
-        :param uei_region: the UEI region qualities
-        :param pid2_umi2_region: the PBS-2 and UMI-2 region qualities
-        :param lbs1_region: the LBS-1 region qualities
-        :param lbs2_region: the LBS-2 region qualities
+        Args:
+        pid1_umi1_region: the PBS-1 and UMI-1 region qualities
+        uei_region: the UEI region qualities
+        pid2_umi2_region: the PBS-2 and UMI-2 region qualities
+        lbs1_region: the LBS-1 region qualities
+        lbs2_region: the LBS-2 region qualities
+
         """
         # We are using bytearray here since strings are immutable
         s = bytearray(self._qualities_template)
@@ -242,7 +253,12 @@ class AmpliconRegionSlices:
         self.lbs2 = None
 
     def __getitem__(self, item):
-        """Provide tuple like access to the slices."""
+        """Provide tuple like access to the slices.
+
+        Args:
+        item: Item.
+
+        """
         if isinstance(item, int):
             key = self.__slots__[item]
             return getattr(self, key)
@@ -270,19 +286,21 @@ class AmpliconBuilderFailureReason(enum.Enum):
 class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistics):
     """Construct an amplicon from a pair of reads.
 
-    :param assay: the assay design
-    :param mismatches: the maximum number of mismatches allowed when aligning the LBS sequences
-    :param writer: a writer to save failed reads to
+    Args:
+    assay: the assay design
+    mismatches: the maximum number of mismatches allowed when aligning the LBS sequences
+    writer: a writer to save failed reads to
+
     """
 
     def __init__(self, assay: PNAAssay, mismatches: int | float = 0.2, writer=None):
         """Initialize the AmpliconBuilder.
 
-        :param assay: the assay design
-        :param mismatches: the maximum number of mismatches allowed when aligning the LBS sequences.
-            If a float, it is interpreted as a fraction of the template length. Otherwise, it is
-            the maximum number of mismatches allowed.
-        :param writer: a writer to save failed reads to.
+        Args:
+        assay: the assay design
+        mismatches: the maximum number of mismatches allowed when aligning the LBS sequences. If a float, it is interpreted as a fraction of the template length. Otherwise, it is the maximum number of mismatches allowed.
+        writer: a writer to save failed reads to.
+
         """
         self._assay = assay
         self._writer = writer
@@ -403,8 +421,9 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
     def _scan_forward_read(self, read: SequenceRecord) -> AmpliconRegionSlices:
         """Scan the forward read for the different regions of the amplicon.
 
-        :param read: the forward read
-        :return: the slices for the different regions of the amplicon in the read
+        Args:
+        read: the forward read
+
         """
         region_slices = AmpliconRegionSlices()
 
@@ -461,8 +480,9 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
     def _scan_reverse_read(self, read: SequenceRecord) -> AmpliconRegionSlices:
         """Scan the reverse read for the different regions of the amplicon.
 
-        :param read: the reverse read
-        :return: the slices for the different regions of the amplicon in the read
+        Args:
+        read: the reverse read
+
         """
         region_slices = AmpliconRegionSlices()
 
@@ -508,11 +528,13 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
     ) -> tuple[bytes | None, bytes | None]:
         """Get the sequence of a region from a read.
 
-        :param read: the read to extract the region from
-        :param region_slice: the slice for the region
-        :param is_reversed: whether the region is reversed (e.g. LBS-2)
-        :param return_ascii: whether to return the sequence as ASCII bytes
-        :return: the sequence  and quality of the region as a tuple, or None if the slice is empty
+        Args:
+        read: the read to extract the region from
+        region_slice: the slice for the region
+        is_reversed: whether the region is reversed (e.g. LBS-2)
+        return_ascii: whether to return the sequence as ASCII bytes
+        as_bytearray: As bytearray.
+
         """
         if not region_slice:
             return None, None
@@ -538,10 +560,12 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         If one of the slices is None, the other slice is returned.
         If two slices are present they are combined based on the quality scores.
 
-        :param read1: the forward read
-        :param read2: the reverse read
-        :param region1_slice: the slice from the forward read
-        :param region2_slice: the slice from the reverse read
+        Args:
+        read1: the forward read
+        read2: the reverse read
+        region1_slice: the slice from the forward read
+        region2_slice: the slice from the reverse read
+
         """
         if region1_slice is None and region2_slice is None:
             return None, None
@@ -595,10 +619,12 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
     ):
         """Combine the quality scores of the LBS-1 region from forward and reverse reads.
 
-        :param read1: the forward read
-        :param read2: the reverse read
-        :param region1_slice: the slice from the forward read
-        :param region2_slice: the slice from the reverse read
+        Args:
+        read1: the forward read
+        read2: the reverse read
+        region1_slice: the slice from the forward read
+        region2_slice: the slice from the reverse read
+
         """
         return self._consensus_qual_lbs(
             read1, read2, region1_slice, region2_slice, self._lbs1_qual
@@ -613,10 +639,12 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
     ):
         """Combine the quality scores of the LBS-2 region from forward and reverse reads.
 
-        :param read1: the forward read
-        :param read2: the reverse read
-        :param region1_slice: the slice from the forward read
-        :param region2_slice: the slice from the reverse read
+        Args:
+        read1: the forward read
+        read2: the reverse read
+        region1_slice: the slice from the forward read
+        region2_slice: the slice from the reverse read
+
         """
         return self._consensus_qual_lbs(
             read1, read2, region1_slice, region2_slice, self._lbs2_qual
@@ -632,11 +660,13 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
     ) -> bytes:
         """Combine the quality scores of an LBS region from forward and reverse reads.
 
-        :param read1: the forward read
-        :param read2: the reverse read
-        :param region1_slice: the slice from the forward read
-        :param region2_slice: the slice from the reverse read
-        :param template_qual: the quality template for the region
+        Args:
+        read1: the forward read
+        read2: the reverse read
+        region1_slice: the slice from the forward read
+        region2_slice: the slice from the reverse read
+        template_qual: the quality template for the region
+
         """
         # We cap the length of the quality string to the length of the template
         # Due to indels the quality string can be longer than the template
@@ -685,10 +715,11 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         Return True if all regions are valid, False otherwise.
         Failure counters are incremented in the statistics object.
 
-        :param pid1_umi1_region: the PID-1 and UMI-1 region
-        :param uei_region: the UEI region
-        :param pid2_umi2_region: the PID-2 and UMI-2 region
-        :return: None if all regions are valid, a failure reason otherwise
+        Args:
+        pid1_umi1_region: the PID-1 and UMI-1 region
+        uei_region: the UEI region
+        pid2_umi2_region: the PID-2 and UMI-2 region
+
         """
         if not pid1_umi1_region:
             self._custom_stats.failed_missing_upi1_umi1_reads += 1
@@ -723,6 +754,13 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
         This method is a placeholder for any additional processing that might be needed
         before building the amplicon.
+
+        Args:
+        read1: Read1.
+        read2: Read2.
+        info1: Info1.
+        info2: Info2.
+
         """
         raise NotImplementedError("This method should be implemented in subclasses.")
 
@@ -739,11 +777,12 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         "consumed" (filtered or written to an output file)
         and should thus not be passed on to subsequent steps.
 
-        :param read1: the forward read (or None)
-        :param read2: the reverse read (or None)
-        :param info1: the modification info for the forward read, (ignored)
-        :param info2: the modification info for the reverse read, (ignored)
-        :return: the created amplicon as a new SequenceRecord or None if filtered out
+        Args:
+        read1: the forward read (or None)
+        read2: the reverse read (or None)
+        info1: the modification info for the forward read, (ignored)
+        info2: the modification info for the reverse read, (ignored)
+
         """
         if read1 is None and read2 is None:
             return None
@@ -827,15 +866,10 @@ class PairedEndAmpliconBuilder(AmpliconBuilder):
         it returns an Amplicon object with all regions set to None and an appropriate failure reason.
 
         Args:
-            read1 (SequenceRecord): The forward sequencing read.
-            read2 (SequenceRecord): The reverse sequencing read.
-            info1 (ModificationInfo | None, optional): Additional modification information for read1. Defaults to None.
-            info2 (ModificationInfo | None, optional): Additional modification information for read2. Defaults to None.
-
-        Returns:
-            tuple[Amplicon, AmpliconBuilderFailureReason | None]:
-                A tuple containing the constructed Amplicon object and a failure reason if applicable.
-                If both reads are None, returns None.
+            read1: Read1.
+            read2: Read2.
+            info1: Info1.
+            info2: Info2.
 
         """
         r1_regions = self._scan_forward_read(read1)
@@ -915,14 +949,10 @@ class SingleEndAmpliconBuilder(AmpliconBuilder):
         """Process a single read or a pair of reads to construct an amplicon.
 
         Args:
-            read1 (SequenceRecord | None): The forward read, or None if not available.
-            read2 (SequenceRecord | None): The reverse read, or None if not available.
-            info1 (ModificationInfo | None, optional): Modification info for the forward read (ignored).
-            info2 (ModificationInfo | None, optional): Modification info for the reverse read (ignored).
-
-        Returns:
-            tuple[Amplicon, AmpliconBuilderFailureReason | None]:
-                A tuple containing the constructed Amplicon and an optional failure reason.
+            read1: Read1.
+            read2: Read2.
+            info1: Info1.
+            info2: Info2.
 
         """
         is_read1 = read1 is not None

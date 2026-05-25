@@ -18,9 +18,11 @@ from pixelator.common.report.models import SummaryStatistics
 class CollapseInputFile:
     """Keep track of the input file to collapse.
 
-    :param path: Path to the input file.
-    :param file_size: The total size of the input file.
-    :param molecule_count: The number of rows in the dataframe.
+    Args:
+    path: Path to the input file.
+    file_size: The total size of the input file.
+    molecule_count: The number of rows in the dataframe.
+
     """
 
     path: str
@@ -69,7 +71,12 @@ class CollapseSummaryStatistics(pydantic.BaseModel):
 
     @staticmethod
     def from_lazy_frame(collapsed_lz_df: pl.LazyFrame):
-        """Create a CollapseSummaryStatistics from a collapsed LazyFrame."""
+        """Create a CollapseSummaryStatistics from a collapsed LazyFrame.
+
+        Args:
+        collapsed_lz_df: Collapsed lz df.
+
+        """
         df = collapsed_lz_df.select("uei_count", "read_count").collect()
         uei_stats = SummaryStatistics.from_series(df.get_column("uei_count"))
         read_stats = SummaryStatistics.from_series(df.get_column("read_count"))
@@ -107,9 +114,13 @@ class CollapseStatistics:
     ) -> None:
         """Collect file statistics for an input file to the MoleculeCollapser.
 
-        :param input_file: The input file to collapse.
-        :param molecule_count: The number of molecules in the input file
         :raise TypeError: If file_size is not provided when input_file is a PurePath.
+
+        Args:
+        input_file: The input file to collapse.
+        molecule_count: The number of molecules in the input file
+        file_size: File size.
+
         """
         if file_size is None and isinstance(input_file, Path):
             file_size = input_file.stat(follow_symlinks=True).st_size
@@ -134,12 +145,14 @@ class CollapseStatistics:
     ) -> None:
         """Add statistics for a marker pair.
 
-        :param marker1: The first marker in the pair.
-        :param marker2: The second marker in the pair.
-        :param input_molecules_count: The number of unique molecules (UMI1+UMI2+UEI) before error correction.
-        :param input_reads_count: The number of reads in unique molecules before error correction.
-        :param cluster_stats: The statistics for the marker pair.
-        :param elapsed_time: The time taken to process the marker pair.
+        Args:
+        marker1: The first marker in the pair.
+        marker2: The second marker in the pair.
+        input_molecules_count: The number of unique molecules (UMI1+UMI2+UEI) before error correction.
+        input_reads_count: The number of reads in unique molecules before error correction.
+        cluster_stats: The statistics for the marker pair.
+        elapsed_time: The time taken to process the marker pair.
+
         """
         key = (marker1, marker2)
         if key in self._marker_pair_data:
@@ -155,7 +168,9 @@ class CollapseStatistics:
     def add_summary_statistics(self, collapsed_lz_df: pl.LazyFrame) -> None:
         """Add summary statistics for the entire collapse process.
 
-        :param collapsed_lz_df: The collapsed dataframe.
+        Args:
+        collapsed_lz_df: The collapsed dataframe.
+
         """
         self._summary_statistics = CollapseSummaryStatistics.from_lazy_frame(
             collapsed_lz_df

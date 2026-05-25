@@ -25,12 +25,11 @@ def edgelist_permutations(
 ) -> Generator[pl.DataFrame, None, None]:
     """Generate `n` permutations of the markers in `edgelist_df`.
 
-    :param edgelist_df: dataframe to use as basis of permutations
-    :param n: number of permutations to generate, defaults to 50
-    :param random_seed: set a seed to the random number generator
-                        needed to make results deterministic, defaults to None
-    :return: a generator that yields `n` permutations of the input dataframe
-    :rtype: Generator[pl.DataFrame, None, None]
+    Args:
+    edgelist_df: dataframe to use as basis of permutations
+    n: number of permutations to generate, defaults to 50
+    random_seed: set a seed to the random number generator needed to make results deterministic, defaults to None
+
     """
     random_number_generator = _get_random_number_generator(random_seed)
     for _ in range(n):
@@ -46,9 +45,11 @@ def permute_edgelist(
     This function permutes the edgelist by shuffling the corresponding
     markers to umi1 and umi2 columns.
 
-    :param edgelist: A DataFrame representing the edgelist
-    :param n_permutations: The number of permutations to perform
-    :returns: A DataFrame containing the permuted edgelist
+    Args:
+    edgelist: A DataFrame representing the edgelist
+    n_permutations: The number of permutations to perform
+    random_number_generator: Random number generator.
+
     """
     if random_number_generator is None:
         random_number_generator = _get_random_number_generator()
@@ -96,10 +97,11 @@ def permute_node_markers(
     markers to umi column. If node_a_rows is provided, markers from COa nodes
     and COb nodes will be shuffled separately.
 
-    :param node_markers: A DataFrame representing the node_markers (nodes as rows and markers as columns)
-    :param random_number_generator: A RandomNumberGenerator instance
-    :param node_a_rows: A boolean Series indicating which rows are COa nodes
-    :returns: A DataFrame containing the permuted node_markers
+    Args:
+    node_markers: A DataFrame representing the node_markers (nodes as rows and markers as columns)
+    random_number_generator: A RandomNumberGenerator instance
+    node_a_rows: A boolean Series indicating which rows are COa nodes
+
     """
     if random_number_generator is None:
         random_number_generator = _get_random_number_generator()

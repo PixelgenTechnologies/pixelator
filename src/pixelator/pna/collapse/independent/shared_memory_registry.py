@@ -61,7 +61,14 @@ class SharedMemoryRegistry:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> Self:
-        """Terminate the context."""
+        """Terminate the context.
+
+        Args:
+        exc_type: Exc type.
+        exc_val: Exc val.
+        exc_tb: Exc tb.
+
+        """
         # Unlinks any buffers still in the registry (e.g. left after an exception
         # in _init_shared_memory) so shared memory is released before the manager exits.
         buffers = list(self._buffer_registry.values())
@@ -87,11 +94,8 @@ class SharedMemoryRegistry:
         """Allocates a new SharedMemory buffer.
 
         Args:
-            name: The name of the buffer.
-            n_bytes: The number of bytes to allocate.
-
-        Returns:
-            A SharedMemory object representing the allocated buffer.
+        name: The name of the buffer.
+        n_bytes: The number of bytes to allocate.
 
         """
         buffer = self._manager.SharedMemory(n_bytes)
@@ -115,13 +119,10 @@ class SharedMemoryRegistry:
         """Allocates a new SharedMemory buffer and creates a numpy array backed by this memory.
 
         Args:
-            name: The name to register the array under in the registry.
-            shape: The shape of the array.
-            dtype: The data type of the array.
-            zero_init: Whether to initialize the array with zeros.
-
-        Returns:
-            A numpy array backed by shared memory.
+        name: The name to register the array under in the registry.
+        shape: The shape of the array.
+        dtype: The data type of the array.
+        zero_init: Whether to initialize the array with zeros.
 
         """
         assert 1 <= len(shape) <= 2
@@ -143,7 +144,7 @@ class SharedMemoryRegistry:
         """Query the registry for a shared memory buffer by name.
 
         Args:
-            name: The name of the buffer
+        name: The name of the buffer
 
         """
         return self._buffer_registry.get(name)
@@ -154,7 +155,7 @@ class SharedMemoryRegistry:
         The array will be recreated from the registered shared memory buffer.
 
         Args:
-            name: The name of the array
+        name: The name of the array
 
         """
         desc = self._array_registry.get(name)
@@ -172,7 +173,7 @@ class SharedMemoryRegistry:
         """Unlink a shared memory buffer by name.
 
         Args:
-            name: The name of the buffer
+        name: The name of the buffer
 
         """
         buffer = self._buffer_registry.pop(name, None)
@@ -192,7 +193,7 @@ class ReadOnlySharedMemoryRegistry:
         """Initialize the read-only view.
 
         Args:
-            registry: The SharedMemoryRegistry to create a read-only view of.
+        registry: The SharedMemoryRegistry to create a read-only view of.
 
         """
         self._buffer_registry = registry._buffer_registry.copy()
@@ -202,10 +203,7 @@ class ReadOnlySharedMemoryRegistry:
         """Query the registry for a shared memory buffer by name.
 
         Args:
-            name: The name of the buffer
-
-        Returns:
-            The shared memory buffer or None if no buffer with the given name is found.
+        name: The name of the buffer
 
         """
         return self._buffer_registry.get(name)
@@ -216,10 +214,7 @@ class ReadOnlySharedMemoryRegistry:
         The array will be recreated from the registered shared memory buffer.
 
         Args:
-            name: The name of the array
-
-        Returns:
-            The numpy array backed by shared memory.
+        name: The name of the array
 
         """
         desc = self._array_registry.get(name)

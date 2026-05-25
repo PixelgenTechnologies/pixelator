@@ -211,7 +211,32 @@ def denoise(
     pls_score_threshold,
     output,
 ):
-    """Denoise components of a PXL file."""
+    """Denoise components of a PXL file.
+
+    Args:
+    ctx: Ctx.
+    pxl_file: Pxl file.
+    run_one_core_graph_denoising: Run one core graph denoising.
+    run_ace_denoising: Run ace denoising.
+    ace_k: Ace k.
+    ace_max_k_core: Ace max k core.
+    ace_no_select_lcc: Ace no select lcc.
+    one_core_ratio_threshold: One core ratio threshold.
+    pval_threshold: Pval threshold.
+    inflate_factor: Inflate factor.
+    run_pls_denoising: Run pls denoising.
+    pls_ncomp: Pls ncomp.
+    pls_model_k: Pls model k.
+    pls_pred_k: Pls pred k.
+    pls_use_weights: Pls use weights.
+    pls_normalization: Pls normalization.
+    pls_residualize: Pls residualize.
+    pls_component_p_threshold: Pls component p threshold.
+    pls_min_coreness_correlation: Pls min coreness correlation.
+    pls_score_threshold: Pls score threshold.
+    output: Output.
+
+    """
     input_files = [pxl_file]
     log_step_start(
         "denoise",

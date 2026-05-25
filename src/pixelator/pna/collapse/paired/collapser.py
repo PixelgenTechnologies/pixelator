@@ -53,11 +53,8 @@ def _collect_label_array_indices(
     """Collect an array with a label for each item into an array of indices for each label.
 
     Args:
-        labels: The labels for each item.
-        n_components: Number of labels in the label array.
-
-    Returns:
-        An array of indices for each label.
+    labels: The labels for each item.
+    n_components: Number of labels in the label array.
 
     """
     # Single pass over the labels to collect the indices of each connected component
@@ -82,11 +79,8 @@ def _split_chunks(
     The last chunk may be smaller than chunk_size.
 
     Args:
-        n_components: The size of the input range.
-        chunk_size: The size of each chunk.
-
-    Yields:
-        A tuple of (start, stop) indices for each chunk.
+    n_components: The size of the input range.
+    chunk_size: The size of each chunk.
 
     """
     pos = 0
@@ -157,16 +151,14 @@ class MoleculeCollapser:
         """Initialize a MoleculeCollapser.
 
         Args:
-            assay: The assay configuration.
-            panel: The antibody panel configuration.
-            output: The output path for the collapsed molecules.
-            max_mismatches: The maximum number of mismatches allowed when collapsing molecules.
-                Either an integer >= 1 or a float in the range [0, 1).
-            algorithm: The algorithm to use for collapsing molecules. Either "directional" or "cluster".
-            threads: The number of threads to use for parallel processing.
-            logger: The logger to use for output. The default is a logger named "collapse".
-            min_parallel_chunk_size: The minimum number of connected components to process in parallel.
-                Components below this size will be processed serially.
+        assay: The assay configuration.
+        panel: The antibody panel configuration.
+        output: The output path for the collapsed molecules.
+        max_mismatches: The maximum number of mismatches allowed when collapsing molecules. Either an integer >= 1 or a float in the range [0, 1).
+        algorithm: The algorithm to use for collapsing molecules. Either "directional" or "cluster".
+        threads: The number of threads to use for parallel processing.
+        logger: The logger to use for output. The default is a logger named "collapse".
+        min_parallel_chunk_size: The minimum number of connected components to process in parallel. Components below this size will be processed serially.
 
         """
         self.assay = assay
@@ -222,6 +214,12 @@ class MoleculeCollapser:
 
         This wraps the context managers for the shared memory manager, parallel worker pool,
         and the parquet writer.
+
+        Args:
+        exc_type: Exc type.
+        exc_val: Exc val.
+        exc_tb: Exc tb.
+
         """
         self._memory_manager.__exit__(exc_type, exc_val, exc_tb)
         self._parallel_worker.__exit__(exc_type, exc_val, exc_tb)
@@ -255,10 +253,7 @@ class MoleculeCollapser:
         """Return a contextmanager for the shared memory containing embeddings.
 
         Args:
-            data: The data to initialize the binary vectors with.
-
-        Yields:
-            The binary vectors.
+        data: The data to initialize the binary vectors with.
 
         """
         vector_length = 32
@@ -283,10 +278,7 @@ class MoleculeCollapser:
         """Return a contextmanager for the shared memory containing read counts.
 
         Args:
-            data: The data to initialize the read counts with.
-
-        Yields:
-            The read counts.
+        data: The data to initialize the read counts with.
 
         """
         n_molecules = len(data)
@@ -312,11 +304,8 @@ class MoleculeCollapser:
         """Return a numpy array backed by a shared memory buffer for the embeddings.
 
         Args:
-            db_shm: the shared memory buffer.
-            count: the number of vectors in the buffer
-
-        Returns:
-            A numpy array containing the embeddings.
+        db_shm: the shared memory buffer.
+        count: the number of vectors in the buffer
 
         """
         vector_len = 32
@@ -333,11 +322,8 @@ class MoleculeCollapser:
         """Return a numpy array backed by a shared memory buffer for the read counts.
 
         Args:
-            counts_shm: The shared memory buffer.
-            count: The number of read counts in the buffer.
-
-        Returns:
-            The numpy array.
+        counts_shm: The shared memory buffer.
+        count: The number of read counts in the buffer.
 
         """
         if counts_shm.buf is None:
@@ -359,16 +345,13 @@ class MoleculeCollapser:
         """Record a group of connected components serially.
 
         Args:
-            output_idx: The output index.
-            component_indices: The indices of the components.
-            db_shm: The shared memory buffer for the database.
-            read_counts_shm: The shared memory buffer for the read counts.
-            db_size: The size of the database.
-            outputs: The outputs.
-            n_components: The number of components.
-
-        Returns:
-            The number of corrected reads.
+        output_idx: The output index.
+        component_indices: The indices of the components.
+        db_shm: The shared memory buffer for the database.
+        read_counts_shm: The shared memory buffer for the read counts.
+        db_size: The size of the database.
+        outputs: The outputs.
+        n_components: The number of components.
 
         """
         db = self._get_db_from_shared_memory(db_shm, db_size)
@@ -411,17 +394,12 @@ class MoleculeCollapser:
         python multiprocessing IPC overhead.
 
         Args:
-            subrange: The range of connected components to process.
-                A tuple with the start and stop indices.
-            component_indices: A list of lists containing the indices
-                in the database and read counts vector for each connected component.
-            db_shm: The shared memory buffer containing the binary vectors.
-            read_counts_shm: The shared memory buffer containing the read counts.
-            db_size: The size of the binary vectors memory buffer in bytes.
-            embedding: The PNAEmbedding instance for encoding/decoding vectors.
-
-        Returns:
-            The distributed results.
+        subrange: The range of connected components to process. A tuple with the start and stop indices.
+        component_indices: A list of lists containing the indices in the database and read counts vector for each connected component.
+        db_shm: The shared memory buffer containing the binary vectors.
+        read_counts_shm: The shared memory buffer containing the read counts.
+        db_size: The size of the binary vectors memory buffer in bytes.
+        embedding: The PNAEmbedding instance for encoding/decoding vectors.
 
         """
         cls = MoleculeCollapser
@@ -480,12 +458,8 @@ class MoleculeCollapser:
         """Determine connected components and collapse the molecules in each component.
 
         Args:
-            csgraph: The sparse adjacency matrix of the connected components.
-            local_stats: The statistics object for this marker pair.
-
-        Returns:
-            A tuple with a pyarrow Table with the collapsed molecules
-            and the updated statistics object.
+        csgraph: The sparse adjacency matrix of the connected components.
+        local_stats: The statistics object for this marker pair.
 
         """
         _logger = self._logger
@@ -594,10 +568,10 @@ class MoleculeCollapser:
         """Process a group of markers.
 
         Args:
-            idx: The index of the group.
-            num_groups: The total number of groups.
-            markers: The markers in the group.
-            data: The data for the group.
+        idx: The index of the group.
+        num_groups: The total number of groups.
+        markers: The markers in the group.
+        data: The data for the group.
 
         """
         starttime = time.time()
@@ -724,7 +698,7 @@ class MoleculeCollapser:
         """Collapse molecules from a single parquet file containing molecular data.
 
         Args:
-            path: The path to the parquet file.
+        path: The path to the parquet file.
 
         """
         _logger = self._logger

@@ -27,7 +27,13 @@ class PxlFile:
     """PxlFile represents a a pxl file on disk and provides basic utility methods."""
 
     def __init__(self, path: Path, sample_name: str | None = None):
-        """Initialize the PxlFile."""
+        """Initialize the PxlFile.
+
+        Args:
+        path: Path.
+        sample_name: Sample name.
+
+        """
         if not path.exists():
             raise FileNotFoundError(f"File {path} does not exist.")
 
@@ -77,9 +83,10 @@ class PxlFile:
     def copy_pxl_file(src: PxlFile, target: Path) -> PxlFile:
         """Copy a PxlFile to a new location.
 
-        :param src: The source PxlFile.
-        :param target: The target path.
-        :return: The new PxlFile.
+        Args:
+        src: The source PxlFile.
+        target: The target path.
+
         """
         shutil.copy(src.path, target)
         return PxlFile(target)

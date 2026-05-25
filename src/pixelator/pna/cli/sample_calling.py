@@ -80,7 +80,18 @@ def sample_calling_cli(
     confidence_threshold: float,
     output,
 ):
-    """Map components to samples in sample-hashed datasets."""
+    """Map components to samples in sample-hashed datasets.
+
+    Args:
+    ctx: Ctx.
+    input_pxl_file: Input pxl file.
+    samplesheet: Samplesheet.
+    remove_incompatible: Remove incompatible.
+    save_undetermined: Save undetermined.
+    confidence_threshold: Confidence threshold.
+    output: Output.
+
+    """
     log_step_start(
         "sample-calling",
         input_files=input_pxl_file,

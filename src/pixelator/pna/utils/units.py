@@ -11,8 +11,9 @@ units = {"K": 10**3, "M": 10**6, "G": 10**9}
 def parse_size(s: str) -> int | float:
     """Parse a string as a number with optional unit suffix [K, M, G].
 
-    :param s: The string to parse
-    :return: The parsed number as a float
+    Args:
+    s: The string to parse
+
     """
     match = re.match(r"(?P<value>\d+(?:.\d+)?)(?P<unit>[KMGkmg])?$", s)
     if not match:

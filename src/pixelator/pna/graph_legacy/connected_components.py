@@ -63,7 +63,14 @@ def _filter_edgelist(
     min_read_count: int,
     component_stats: GraphStatistics,
 ):
-    """Filter the edgelist by read count."""
+    """Filter the edgelist by read count.
+
+    Args:
+    edgelist: Edgelist.
+    min_read_count: Min read count.
+    component_stats: Component stats.
+
+    """
     edgelist = edgelist.filter(pl.col("read_count") >= min_read_count)
     post_filter_stat = edgelist.select(
         [
@@ -89,7 +96,13 @@ def _label_connected_components(
     edgelist: pl.LazyFrame,
     component_stats: GraphStatistics,
 ):
-    """Build the graph and calculate some statistics."""
+    """Build the graph and calculate some statistics.
+
+    Args:
+    edgelist: Edgelist.
+    component_stats: Component stats.
+
+    """
     logger.debug("Finding connected components")
 
     graph = nx.from_edgelist(edgelist.select(["umi1", "umi2"]).collect().rows())
@@ -180,11 +193,13 @@ def merge_communities_with_many_crossing_edges(
     If one of them is None, only the other one is considered and if they are
     both None, the split communities are not considered for merging.
 
-    :param edgelist: The edge list to process
-    :param node_community_dict: A dictionary mapping each node to a community
-    :param n_edges: The threshold for the number of edges to be found between
-    communities to merge or None to avoid merging
-    :returns: The updated community mapping
+    Args:
+    edgelist: The edge list to process
+    node_community_dict: A dictionary mapping each node to a community
+    n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
+    max_edges_to_remove: Max edges to remove.
+    max_edges_to_remove_relative: Max edges to remove relative.
+
     """
     community_serie = pd.Series(node_community_dict)
     if max_edges_to_remove is None and max_edges_to_remove_relative is None:
@@ -235,7 +250,12 @@ def merge_communities_with_many_crossing_edges(
 
 
 def _get_umi_component_map_from_edgelist(edgelist: pl.LazyFrame) -> dict:
-    """Get a umi component map from an edgelist."""
+    """Get a umi component map from an edgelist.
+
+    Args:
+    edgelist: Edgelist.
+
+    """
     umi_component_map = dict()
     if "component1" in edgelist.collect_schema().names():
         component_umis = (
@@ -257,7 +277,13 @@ def _get_umi_component_map_from_edgelist(edgelist: pl.LazyFrame) -> dict:
 def _update_components_column(
     edgelist: pl.LazyFrame, umi_component_map: dict
 ) -> pl.LazyFrame:
-    """Update the component column in an edgelist."""
+    """Update the component column in an edgelist.
+
+    Args:
+    edgelist: Edgelist.
+    umi_component_map: Umi component map.
+
+    """
     return edgelist.with_columns(
         component1=pl.col("umi1").replace_strict(umi_component_map),
         component2=pl.col("umi2").replace_strict(umi_component_map),
@@ -269,10 +295,10 @@ def make_edgelist_with_component_column(
 ) -> pl.LazyFrame:
     """Add a component column to an edgelist using a node map and remove crossing edges.
 
-    :param edgelist: The edgelist to add the component column to.
-    :param umi_component_map: A dictionary mapping nodes to components.
-    :returns: The edgelist with crossing edges removed and the component column
-    added.
+    Args:
+    edgelist: The edgelist to add the component column to.
+    umi_component_map: A dictionary mapping nodes to components.
+
     """
     return (
         _update_components_column(edgelist, umi_component_map)
@@ -359,7 +385,15 @@ def recover_multiplets(
     leiden_iterations: int = 1,
     refinement_options: StagedRefinementOptions | None = None,
 ) -> tuple[nx.Graph, MultipletRecoveryStats]:
-    """Recovery multiplets by leiden community detection, removing crossing edges between communities."""
+    """Recovery multiplets by leiden community detection, removing crossing edges between communities.
+
+    Args:
+    edgelist: Edgelist.
+    umi_component_map: Umi component map.
+    leiden_iterations: Leiden iterations.
+    refinement_options: Refinement options.
+
+    """
     if umi_component_map is None:
         umi_component_map = _get_umi_component_map_from_edgelist(edgelist)
 
@@ -482,7 +516,20 @@ def build_pxl_file_with_components(
     refinement_options: StagedRefinementOptions | None = None,
     component_size_threshold: tuple[int, int] | bool = True,
 ) -> tuple[PNAPixelDataset, GraphStatistics]:
-    """Create a pxl file after having created components and removed crossing edges."""
+    """Create a pxl file after having created components and removed crossing edges.
+
+    Args:
+    molecules_lazy_frame: Molecules lazy frame.
+    panel: Panel.
+    sample_name: Sample name.
+    path_output_pxl_file: Path output pxl file.
+    multiplet_recovery: Multiplet recovery.
+    leiden_iterations: Leiden iterations.
+    min_count: Min count.
+    refinement_options: Refinement options.
+    component_size_threshold: Component size threshold.
+
+    """
     with TemporaryDirectory(prefix="pixelator-") as tmp_dir:
         tmp_dir_path = Path(tmp_dir)
 
@@ -569,7 +616,12 @@ def build_pxl_file_with_components(
 def _get_working_edgelist(
     input_edgelist: pl.LazyFrame,
 ) -> tuple[pl.LazyFrame, pl.DataFrame]:
-    """Get a working edgelist and a map from original to working node names."""
+    """Get a working edgelist and a map from original to working node names.
+
+    Args:
+    input_edgelist: Input edgelist.
+
+    """
     node_map = (
         pl.concat(
             (
@@ -596,7 +648,13 @@ def _get_working_edgelist(
 
 
 def _add_post_recovery_stats(edgelist: pl.LazyFrame, component_stats: GraphStatistics):
-    """Add post recovery statistics to the component statistics object."""
+    """Add post recovery statistics to the component statistics object.
+
+    Args:
+    edgelist: Edgelist.
+    component_stats: Component stats.
+
+    """
     post_recovery_stats = edgelist.select(
         [
             pl.col("umi1").n_unique().alias("umi1_count"),
@@ -699,15 +757,16 @@ def find_components(
         well-connected communities. Sci Rep 9, 5233 (2019).
         https://doi.org/10.1038/s4q:598-019-41695-z
 
-    :param input_edgelist: The input edgelist
-    :param multiplet_recovery: if True run multiplet recovery, otherwise skip it
-    :param leiden_iterations: number of Leiden iterations to run
-    :param min_read_count: minimum number of supporting reads for an edge to be considered part of the graph
-    :param component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple, filter by hard thresholds as (min, max)
-    :param refinement_options: options for component refinement
-    :param return_component_statistics: if True, return a component statistics object
+    Args:
+    input_edgelist: The input edgelist
+    multiplet_recovery: if True run multiplet recovery, otherwise skip it
+    leiden_iterations: number of Leiden iterations to run
+    min_read_count: minimum number of supporting reads for an edge to be considered part of the graph
+    component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple, filter by hard thresholds as (min, max)
+    refinement_options: options for component refinement
+    return_component_statistics: if True, return a component statistics object
+    dynamic_lowest_passable_bound: Dynamic lowest passable bound.
 
-    :returns: an edgelist with components added to it, and a component statistics object if return_component_statistics is True
     """
     component_stats = GraphStatistics()
     no_clash_edgelist, component_stats = _remove_umi_clashes_and_get_stats(
@@ -779,7 +838,15 @@ def _filter_connected_components_by_size(
     component_stats: GraphStatistics,
     dynamic_lowest_passable_bound=None,
 ):
-    """Filter connected components by size and get statistics."""
+    """Filter connected components by size and get statistics.
+
+    Args:
+    edgelist: Edgelist.
+    component_size_threshold: Component size threshold.
+    component_stats: Component stats.
+    dynamic_lowest_passable_bound: Dynamic lowest passable bound.
+
+    """
     component_sizes = (
         edgelist.group_by("component")
         .agg(

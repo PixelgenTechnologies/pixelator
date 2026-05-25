@@ -31,9 +31,11 @@ def create_barcode_group_to_batch_mapping(
 
     The total number of reads in a supergroup can be less or more than the target_chunk_size.
 
-    :param group_sizes: the mapping of (PID1, PID2) pairs to the number of reads
-    :param reads_per_chunk: the target number of reads per chunk
-    :param max_chunks: the maximum number of groups
+    Args:
+    group_sizes: the mapping of (PID1, PID2) pairs to the number of reads
+    reads_per_chunk: the target number of reads per chunk
+    max_chunks: the maximum number of groups
+
     """
     # We can initialize the group mapping already with a default batch index of 0
 
@@ -62,8 +64,11 @@ def partition_greedy(items: Sequence[int], n: int) -> npt.NDArray[np.int32]:
 
     Each subset has an approximately equal sum of weights.
 
-    :param counts: a dictionary of items and their weights
-    :param n: the number of subsets
+    Args:
+    counts: a dictionary of items and their weights
+    n: the number of subsets
+    items: Items.
+
     """
     # Initialize a priority queue with n empty subsets
     subset_sums = [(0, i) for i in range(n)]
@@ -103,8 +108,10 @@ def independent_marker_groups_mapping(
         group_sizes: the mapping of (marker1, marker2) pairs to the number of reads
         target_chunk_count: the number of chunks to partition the markers into
 
-    Returns:
-        A tuple with a dict for marker1 and marker2. The dict map the marker to the group index.
+    Args:
+    group_sizes: Group sizes.
+    reads_per_chunk: Reads per chunk.
+    max_chunks: Max chunks.
 
     """
     marker1_counts: typing.Counter[str] = Counter()
@@ -165,7 +172,9 @@ class DemuxRecordBatch:
     def __init__(self, capacity=10_000):
         """Initialize the DemuxRecordBatch object.
 
-        :param capacity: the maximum number of records in the batch
+        Args:
+        capacity: the maximum number of records in the batch
+
         """
         self._batch_size = capacity
         self._size = 0
@@ -181,9 +190,11 @@ class DemuxRecordBatch:
     def add_record(self, marker1: int, marker2: int, molecule: bytes):
         """Add a new record to the batch.
 
-        :param marker1: the first marker index
-        :param marker2: the second marker index
-        :param molecule: the molecule embedding
+        Args:
+        marker1: the first marker index
+        marker2: the second marker index
+        molecule: the molecule embedding
+
         """
         _size = self._size
 
@@ -211,12 +222,22 @@ class DemuxRecordBatch:
         self._size = 0
 
     def _verify_m1_markers(self, allowed_ids: Sequence[int]) -> bool:
-        """Check if all markers are in the allowed set."""
+        """Check if all markers are in the allowed set.
+
+        Args:
+        allowed_ids: Allowed ids.
+
+        """
         mask = np.isin(self.marker1[: self._size], allowed_ids)
         return bool(np.all(mask))
 
     def _verify_m2_markers(self, allowed_ids: Sequence[int]) -> bool:
-        """Check if all markers are in the allowed set."""
+        """Check if all markers are in the allowed set.
+
+        Args:
+        allowed_ids: Allowed ids.
+
+        """
         mask = np.isin(self.marker2[: self._size], allowed_ids)
         return bool(np.all(mask))
 
@@ -296,7 +317,9 @@ class PNAEmbedding:
     def __init__(self, assay: PNAAssay):
         """Initialize the PNAEmbedding object.
 
-        :param assay: the assay design
+        Args:
+        assay: the assay design
+
         """
         self.assay = assay
 
@@ -316,15 +339,30 @@ class PNAEmbedding:
         self._uei_slice = slice(192, 192 + self._uei_len * 3)
 
     def get_umi1_bytes(self, embedded: bytes):
-        """Return the bytes of the UMI1 from the molecule embedding."""
+        """Return the bytes of the UMI1 from the molecule embedding.
+
+        Args:
+        embedded: Embedded.
+
+        """
         return embedded[0:12]
 
     def get_umi2_bytes(self, embedded: bytes):
-        """Return the bytes of the UMI2 from the molecule embedding."""
+        """Return the bytes of the UMI2 from the molecule embedding.
+
+        Args:
+        embedded: Embedded.
+
+        """
         return embedded[12:24]
 
     def get_uei_bytes(self, embedded: bytes):
-        """Return the bytes of the UEI from the molecule embedding."""
+        """Return the bytes of the UEI from the molecule embedding.
+
+        Args:
+        embedded: Embedded.
+
+        """
         return embedded[24:32]
 
     def _encode_umi1(self, umi1: bytes, output):
@@ -365,6 +403,12 @@ class PNAEmbedding:
 
         256 bits is a common length for SIMD instructions (eg. 1 AVX-2 register or 2 Arm NEON registers)
         and thus commonly used for efficient similarity search. (eg. in FAISS).
+
+        Args:
+        umi1: Umi1.
+        umi2: Umi2.
+        uei: Uei.
+
         """
         vec = np.zeros(256, dtype=np.uint8)
 
@@ -392,8 +436,10 @@ class PNAEmbedding:
     ) -> tuple[bytes, bytes] | tuple[bytes, bytes, bytes]:
         """Unpack the 84-bit UMI1 bitvector from a byte array.
 
-        :param bitvector: the 256-bit vector to unpack
-        :param skip_uei: whether to skip unpacking the UEI
+        Args:
+        bitvector: the 256-bit vector to unpack
+        skip_uei: whether to skip unpacking the UEI
+
         """
         if isinstance(bitvector, bytes):
             array_view = np.frombuffer(bitvector, dtype=np.uint8, count=len(bitvector))
@@ -429,8 +475,12 @@ class PNAEmbedding:
         The output is padded to 128 bits since that is a common SIMD vector length
         and thus commonly used for efficient similarity search. (eg. in FAISS).
 
-        :returns: a 16-byte/128-bits array of packed nucleotides
-        :raises ValueError: if the UMI is longer than 32 nucleotides
+        Args:
+        umi: Umi.
+
+        Raises:
+        ValueError: if the UMI is longer than 32 nucleotides
+
         """
         if len(umi) > 40:
             raise ValueError("UMI cannot be longer than 40 nucleotides")
@@ -446,9 +496,12 @@ class PNAEmbedding:
     def decode_umi(self, umi_bytes: npt.NDArray[np.uint8] | bytes) -> bytes:
         """Decode a 3-bit encoded 128-bit umi vector into a nucleotide sequence.
 
-        :param umi_bytes: the 128-bit umi vector
-        :returns: the decoded nucleotide sequence
-        :raises ValueError: if the input vector is not 128 bits long
+        Args:
+        umi_bytes: the 128-bit umi vector
+
+        Raises:
+        ValueError: if the input vector is not 128 bits long
+
         """
         if isinstance(umi_bytes, bytes):
             bytes_view = np.frombuffer(umi_bytes, dtype=np.uint8, count=len(umi_bytes))
@@ -470,16 +523,24 @@ class PNAEmbedding:
 
         The nucleotides encoded in this space are not equidistant anymore, but it is more compact.
 
-        :param bitvector: the 128-bit umi vector
-        :returns: the new 2-bit embedding for given input
-        :raises ValueError: if the input vector is not 128 bits long
+        Args:
+        bitvector: the 128-bit umi vector
+
+        Raises:
+        ValueError: if the input vector is not 128 bits long
+
         """
         return self._compress_3bit_embedding(bitvector, 12, 28)
 
     def compress_uei_embedding(
         self, bitvector: npt.NDArray[np.uint8] | bytes
     ) -> np.uint64:
-        """Compress the 3-bit per nucleotide embedded UEI into a 2-bit embedding."""
+        """Compress the 3-bit per nucleotide embedded UEI into a 2-bit embedding.
+
+        Args:
+        bitvector: Bitvector.
+
+        """
         return self._compress_3bit_embedding(bitvector, 8, 15)
 
     def _compress_3bit_embedding(
@@ -490,15 +551,12 @@ class PNAEmbedding:
         The nucleotides encoded in this space are not equidistant anymore, but it is more compact.
 
         Args:
-            bitvector: A 3bit encoded byte array
-            n: The length of encoded bytes without padding.
-            decoded_len: The length of the uncompressed sequence
-
-        Returns:
-            the new 2-bit embedding for given input
+        bitvector: A 3bit encoded byte array
+        n: The length of encoded bytes without padding.
+        decoded_len: The length of the uncompressed sequence
 
         Raises:
-            ValueError: if the input vector is not 128 bits long
+        ValueError: if the input vector is not 128 bits long
 
         """
         array_view: npt.NDArray[np.uint8]
@@ -534,8 +592,10 @@ class BarcodeDemuxer(abc.ABC):
     def __init__(self, assay: PNAAssay, panel: PNAAntibodyPanel):
         """Initialize a BarcodeDemuxer object.
 
-        :param assay: the assay design
-        :param panel: the antibody panel
+        Args:
+        assay: the assay design
+        panel: the antibody panel
+
         """
         self.assay = assay
         self.panel = panel
@@ -565,7 +625,13 @@ class BarcodeDemuxer(abc.ABC):
     def _serialize_group(
         self, group_id: int, group: DemuxRecordBatch
     ) -> tuple[int, bytes]:
-        """Serialize and send a group to the writer process."""
+        """Serialize and send a group to the writer process.
+
+        Args:
+        group_id: Group id.
+        group: Group.
+
+        """
         serialized_batch = group.serialize()
         self._records_written += len(group)
         group.clear()
@@ -588,9 +654,9 @@ class BarcodeDemuxer(abc.ABC):
     ) -> list[tuple[int, bytes]] | tuple[int, bytes] | None:
         """Find the nearest antibody for a given barcode.
 
-        :param read: the input read to process
-        :returns: A tuple or list of tuples with a barcode_group_id and a serialized batch of records
-            The serialized batch is encoded in the pyarrow RecordBatch ipc format.
+        Args:
+        read: the input read to process
+
         """
         raise NotImplementedError
 
@@ -611,10 +677,12 @@ class IndependentBarcodeDemuxer(BarcodeDemuxer):
     ):
         """Initialize the BarcodeIdentifier object.
 
-        :param assay: the assay design
-        :param panel: the antibody panel
-        :param marker1_groups: the mapping of marker1 to group id
-        :param marker2_groups: the mapping of marker2 to group id
+        Args:
+        assay: the assay design
+        panel: the antibody panel
+        marker1_groups: the mapping of marker1 to group id
+        marker2_groups: the mapping of marker2 to group id
+
         """
         super().__init__(assay, panel)
         self.marker1_groups = marker1_groups
@@ -623,8 +691,9 @@ class IndependentBarcodeDemuxer(BarcodeDemuxer):
     def __call__(self, read: SequenceRecord) -> list[tuple[int, bytes]] | None:
         """Find the nearest antibody for a given barcode.
 
-        :param read: the read to process
-        :return: the read with the antibody information added
+        Args:
+        read: the read to process
+
         """
         if read.comment is None:
             raise BarcodeDemuxingError("No comment found in read")
@@ -688,9 +757,11 @@ class PairedBarcodeDemuxer(BarcodeDemuxer):
     ):
         """Initialize the PairedBarcodeDemuxer object.
 
-        :param assay: the assay design
-        :param panel: the antibody panel
-        :param supergroups: the mapping of (PID1, PID2) pairs to supergroup ids
+        Args:
+        assay: the assay design
+        panel: the antibody panel
+        supergroups: the mapping of (PID1, PID2) pairs to supergroup ids
+
         """
         super().__init__(assay, panel)
         self._supergroups = supergroups
@@ -699,8 +770,9 @@ class PairedBarcodeDemuxer(BarcodeDemuxer):
     def __call__(self, read: SequenceRecord) -> tuple[int, bytes] | None:
         """Find the nearest antibody for a given barcode.
 
-        :param read: the read to process
-        :return: the read with the antibody information added
+        Args:
+        read: the read to process
+
         """
         if read.comment is None:
             raise BarcodeDemuxingError("No comment found in read")

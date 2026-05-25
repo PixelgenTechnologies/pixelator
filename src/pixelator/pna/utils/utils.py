@@ -55,9 +55,12 @@ def get_read_sample_name(read: str | Path) -> str:
 
     _R1,_R2 | _r1, _r2 | _1, _2 | .R1, .R2 | .r1, .r2
 
-    :param read: filename of a fastq read file
     :return str: sample name
     :raise ValueError: if the read file does not have a valid extension
+
+    Args:
+    read: filename of a fastq read file
+
     """
     # group input file by sample id and order reads by R1 and R2
     _check_extensions(read)
@@ -90,11 +93,14 @@ def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> 
 
     Detects the presence of a common read 1 or read 2 suffix in the filename.
 
-    :param read: filename of a fastq read file
-    :param read_type: the read type to check for (r1 or r2)
     :return bool: True if the read file is a read 1 or 2 file
     :raise ValueError: if the read file does not have a valid extension
     :raise AssertionError: if the read_type is not 'r1' or 'r2'
+
+    Args:
+    read: filename of a fastq read file
+    read_type: the read type to check for (r1 or r2)
+
     """
     read = Path(read).name
 
@@ -123,8 +129,9 @@ def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> 
 def clean_suffixes(path: PurePath) -> PurePath:
     """Remove known suffixes and compression extensions from a path.
 
-    :param path: The path to clean
-    :return: The path without fasta/fastq suffixes or compression extensions
+    Args:
+    path: The path to clean
+
     """
     while path.suffix in _KNOWN_COMPRESSION:
         path = path.with_suffix("")
@@ -141,8 +148,11 @@ def get_demux_filename_info(filename: str | Path | PurePath) -> tuple[str, int]:
     The demux output file are expeted to use following schema:
     <sample_name>.demux.part_<part_number>.parquet
 
-    :param filename: path to the file
     :returns str: the demux part
+
+    Args:
+    filename: path to the file
+
     """
     sample_name = get_sample_name(filename)
     filename_str = str(filename)
@@ -159,7 +169,12 @@ def get_demux_filename_info(filename: str | Path | PurePath) -> tuple[str, int]:
 
 
 def timer(command_name: str | None = None):
-    """Time the different steps of a function."""
+    """Time the different steps of a function.
+
+    Args:
+    command_name: Command name.
+
+    """
 
     def wrapper(func):
         @wraps(func)
@@ -179,7 +194,12 @@ def timer(command_name: str | None = None):
 def normalize_input_to_set(
     one_or_more_values: Iterable[str] | str | None,
 ) -> set[str] | None:
-    """Normalize input to a set of strings."""
+    """Normalize input to a set of strings.
+
+    Args:
+    one_or_more_values: One or more values.
+
+    """
     if one_or_more_values is None:
         return None
     if isinstance(one_or_more_values, str):
@@ -201,7 +221,12 @@ def normalize_input_to_set(
 def normalize_input_to_list(
     one_or_more_values: Iterable[str] | str | None,
 ) -> list[str] | None:
-    """Normalize input to a list of strings."""
+    """Normalize input to a list of strings.
+
+    Args:
+    one_or_more_values: One or more values.
+
+    """
     if one_or_more_values is None:
         return None
     if isinstance(one_or_more_values, str):
@@ -231,15 +256,12 @@ def init_duckdb_conn(
     """Initialize a duckdb connection with resource limits.
 
     Args:
-        path: The path to the duckdb database file. Defaults to ":memory:" for in-memory database.
-        read_only: Whether to open the database in read-only mode. Defaults to False.
-        memory_limit: The memory limit in bytes. If None, no limit is set. Defaults to None.
-        threads: The number of threads to use. If None, duckdb will decide. Defaults to None.
-        temp_dir: The directory to use for temporary files. If None, duckdb will decide (defaults to /tmp). Defaults to None.
-        temp_dir_size_limit: The maximum size of the temporary directory. If None, no limit is set. Defaults to None.
-
-    Returns:
-        A duckdb connection object.
+    path: The path to the duckdb database file. Defaults to ":memory:" for in-memory database.
+    read_only: Whether to open the database in read-only mode. Defaults to False.
+    memory_limit: The memory limit in bytes. If None, no limit is set. Defaults to None.
+    threads: The number of threads to use. If None, duckdb will decide. Defaults to None.
+    temp_dir: The directory to use for temporary files. If None, duckdb will decide (defaults to /tmp). Defaults to None.
+    temp_dir_size_limit: The maximum size of the temporary directory. If None, no limit is set. Defaults to None.
 
     """
     conn = dd.connect(database=str(path), read_only=read_only)

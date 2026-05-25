@@ -35,8 +35,10 @@ class CreateLayout(PerComponentTask):
     ) -> None:
         """Create a new CreateLayout instance.
 
-        :param layout_algorithms: The layout algorithms to run.
-        :param algorithm_kwargs: Additional keyword arguments to pass to the layout algorithms.
+        Args:
+        layout_algorithms: The layout algorithms to run.
+        algorithm_kwargs: Additional keyword arguments to pass to the layout algorithms.
+
         """
         super().__init__()
         self._layout_algorithms = layout_algorithms
@@ -60,7 +62,12 @@ class CreateLayout(PerComponentTask):
         return self._work_folder
 
     def set_dataset(self, pxl_file_path: Path):
-        """Specify a dataset to enable analysis being run directly from component IDs."""
+        """Specify a dataset to enable analysis being run directly from component IDs.
+
+        Args:
+        pxl_file_path: Pxl file path.
+
+        """
         self.pxl_dataset = read(pxl_file_path)
 
     def run_from_component_id(self, component_id: str):
@@ -69,8 +76,9 @@ class CreateLayout(PerComponentTask):
         This only works when the pxl_dataset is set so that components
         are directly accessible through their IDs.
 
-        :param component_id: The id of the component.
-        :return: a LazyFrame containing the layout data.
+        Args:
+        component_id: The id of the component.
+
         """
         edgelist = (
             self.pxl_dataset.filter(components=[component_id])  # type: ignore
@@ -85,9 +93,13 @@ class CreateLayout(PerComponentTask):
     ) -> list[str]:
         """Run the layout on a component.
 
-        :param component: The component graph to run the analysis on.
-        :return: Name of the parquet file containing the layout data.
-        :raises TypeError: If the component is not a Graph or a LazyFrame.
+        Args:
+        component: The component graph to run the analysis on.
+        component_id: Component id.
+
+        Raises:
+        TypeError: If the component is not a Graph or a LazyFrame.
+
         """
         results = []
         for algo in self._layout_algorithms:
@@ -119,9 +131,10 @@ class CreateLayout(PerComponentTask):
     ) -> list[str]:
         """Run the layout on a component.
 
-        :param component: The component to run the analysis on. Either a Graph or a LazyFrame.
-        :param component_id: The id of the component.
-        :return: Name of the parquet file containing the layout data.
+        Args:
+        component: The component to run the analysis on. Either a Graph or a LazyFrame.
+        component_id: The id of the component.
+
         """
         if isinstance(component, pl.LazyFrame):
             graph = PNAGraph.from_edgelist(component)
@@ -132,11 +145,22 @@ class CreateLayout(PerComponentTask):
         return result
 
     def concatenate_data(self, data: Iterable[str]) -> list[str]:
-        """Concatenate the data. Override this if you need custom concatenation behavior."""
+        """Concatenate the data. Override this if you need custom concatenation behavior.
+
+        Args:
+        data: Data.
+
+        """
         return list(itertools.chain.from_iterable(data))
 
     def add_to_pixel_file(self, data: list[str], pxl_file_target: PxlFile) -> None:
-        """Add the data in the right place in the pxl_dataset."""
+        """Add the data in the right place in the pxl_dataset.
+
+        Args:
+        data: Data.
+        pxl_file_target: Pxl file target.
+
+        """
         paths = [Path(fname) for fname in data]
         with PixelFileWriter(pxl_file_target.path) as writer:
             writer.write_layouts(paths)

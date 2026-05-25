@@ -36,6 +36,11 @@ def hamming_distance(x, y):
 
     >>> [hamming_distance(x, 15) for x in [0, 8, 10, 12, 14, 15]]
     [4, 3, 2, 2, 1, 0]
+
+    Args:
+    x: X.
+    y: Y.
+
     """
     return bin(x ^ y).count("1")
 
@@ -62,8 +67,6 @@ class BKTree:
         The distance function should be a callable that takes two items
         and returns a non-negative distance integer,
 
-        :param distance_func: The distance function to use.
-        :param items: An optional list of items to add on initialization.
 
         >>> tree = BKTree(hamming_distance)
         >>> list(tree)
@@ -76,6 +79,11 @@ class BKTree:
         >>> tree = BKTree(hamming_distance, [0, 4, 5])
         >>> sorted(tree)
         [0, 4, 5]
+
+        Args:
+        distance_func: The distance function to use.
+        items: An optional list of items to add on initialization.
+
         """
         self.distance_func = distance_func
         self.tree = None
@@ -96,6 +104,10 @@ class BKTree:
         >>> tree.add(15)
         >>> sorted(tree)
         [4, 15]
+
+        Args:
+        item: Item.
+
         """
         node = self.tree
         if node is None:
@@ -118,8 +130,6 @@ class BKTree:
 
          Return list of (distance, item) tuples ordered by distance.
 
-        :param item: The item to find matches for.
-        :param n: The maximum distance to consider a match.
 
         >>> tree = BKTree(hamming_distance)
         >>> tree.find(13, 1)
@@ -137,6 +147,11 @@ class BKTree:
         [(1, 5), (1, 15), (2, 4), (2, 14)]
         >>> sorted(tree.find(0, 1000)) == [(hamming_distance(x, 0), x) for x in tree]
         True
+
+        Args:
+        item: The item to find matches for.
+        n: The maximum distance to consider a match.
+
         """
         if self.tree is None:
             return []
@@ -208,7 +223,13 @@ class BKTree:
 
 
 def hamming_distance_i8(s1: BKTreeItem, s2: BKTreeItem | bytes) -> int:
-    """Calculate the byte-wise Hamming distance between two sequences."""
+    """Calculate the byte-wise Hamming distance between two sequences.
+
+    Args:
+    s1: S1.
+    s2: S2.
+
+    """
     b1 = np.frombuffer(s1.sequence, dtype=np.int8)
     b2 = np.frombuffer(s2.sequence if isinstance(s2, BKTreeItem) else s2, dtype=np.int8)
     return int(np.sum(b1 != b2))
@@ -220,9 +241,10 @@ def build_bktree(panel: PNAAntibodyPanel, sequence_key: str) -> BKTree:
     This allows us to quickly find the closest sequence to a given query sequence with up to a given distance.
     The distance function is the edit distance
 
-    :param panel: The panel to build the tree from
-    :param sequence_key: The key in the panel dataframe that contains the sequences
-    :return: The BKTree
+    Args:
+    panel: The panel to build the tree from
+    sequence_key: The key in the panel dataframe that contains the sequences
+
     """
     tree = BKTree(hamming_distance_i8)
 
@@ -240,9 +262,10 @@ def build_exact_dict_lookup(
 
     This allows us to quickly find exact matches for a sequence in the panel.
 
-    :param panel: The panel to build the lookup from
-    :param sequence_key: The key in the panel dataframe that contains the sequences
-    :return: The lookup table
+    Args:
+    panel: The panel to build the lookup from
+    sequence_key: The key in the panel dataframe that contains the sequences
+
     """
     lut = dict()
 

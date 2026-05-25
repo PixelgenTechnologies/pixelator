@@ -35,22 +35,39 @@ class QualityStatistics:
     def __init__(self, data):
         """Initialize the QualityStatistics object.
 
-        :param data: A dictionary with the quality statistics for each region.
+        Args:
+        data: A dictionary with the quality statistics for each region.
+
         """
         self._region_counters = {}
         for region_id, region_data in data.items():
             self._region_counters[region_id] = Counter(region_data)
 
     def total_bases(self, region_id: str):
-        """Return the total number of bases for a region."""
+        """Return the total number of bases for a region.
+
+        Args:
+        region_id: Region id.
+
+        """
         return self._region_counters[region_id]["total_bases"]
 
     def sequences_bases(self, region_id: str):
-        """Return the number of sequenced bases for a region."""
+        """Return the number of sequenced bases for a region.
+
+        Args:
+        region_id: Region id.
+
+        """
         return self._region_counters[region_id]["sequenced_bases"]
 
     def q30_bases(self, region_id: str):
-        """Return the number of bases with quality above 30 for a region."""
+        """Return the number of bases with quality above 30 for a region.
+
+        Args:
+        region_id: Region id.
+
+        """
         return self._region_counters[region_id]["q30_bases"]
 
     def get_q30_fraction_total_bases(self, region_id: str):
@@ -58,6 +75,10 @@ class QualityStatistics:
 
         The fraction is calculated as the number of bases with quality above
         30 divided by the total number bases in the region, even those that were not sequenced.
+
+        Args:
+        region_id: Region id.
+
         """
         r = self._region_counters[region_id]
         if (bases := r["total_bases"]) == 0:
@@ -70,6 +91,10 @@ class QualityStatistics:
 
         The fraction is calculated as the number of bases with quality above
         30 divided by the total number of sequenced bases.
+
+        Args:
+        region_id: Region id.
+
         """
         r = self._region_counters[region_id]
         if (bases := r["sequenced_bases"]) == 0:
@@ -78,7 +103,12 @@ class QualityStatistics:
         return r["q30_bases"] / bases
 
     def __iadd__(self, other):
-        """Merge statistics from another object into this one."""
+        """Merge statistics from another object into this one.
+
+        Args:
+        other: Other.
+
+        """
         for region_id, region_data in other._region_counters.items():
             if region_id not in self._region_counters:
                 self._region_counters[region_id] = other._region_counters[region_id]
@@ -107,7 +137,9 @@ class QualityProfileStep(SingleEndStep, HasCustomStatistics):
     def __init__(self, assay: PNAAssay):
         """Initialize the QualityProfileStep object.
 
-        :param assay: The assay object
+        Args:
+        assay: The assay object
+
         """
         super().__init__()
         self.assay = assay
@@ -134,7 +166,13 @@ class QualityProfileStep(SingleEndStep, HasCustomStatistics):
         return region_slices
 
     def __call__(self, read: SequenceRecord, info: ModificationInfo) -> SequenceRecord:
-        """Create a quality profile on each read position for the amplicon."""
+        """Create a quality profile on each read position for the amplicon.
+
+        Args:
+        read: Read.
+        info: Info.
+
+        """
         # Create a view into the original quality array
         qual = np.frombuffer(read.qualities_as_bytes(), dtype=np.int8)
         # Convert the vector to integers

@@ -22,7 +22,12 @@ class InplacePixelDataFilterer:
     """
 
     def __init__(self, pxl_file: PxlFile):
-        """Initialize the InplacePixelDataFilterer."""
+        """Initialize the InplacePixelDataFilterer.
+
+        Args:
+        pxl_file: Pxl file.
+
+        """
         self.pxl_file = pxl_file
 
     def _update_metadata(
@@ -86,8 +91,10 @@ class InplacePixelDataFilterer:
         Note that if you provide metadata it will overwrite the existing metadata.
         If you do not provide metadata, the existing metadata will be kept.
 
-        :param components: The components to keep.
-        :param metadata: The metadata to write to the PXL
+        Args:
+        components: The components to keep.
+        metadata: The metadata to write to the PXL
+
         """
         # If there are not components provided, do nothing.
         if not components:

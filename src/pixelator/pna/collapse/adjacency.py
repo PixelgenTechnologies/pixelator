@@ -20,15 +20,12 @@ def build_network_directional(
 
     Uses the "Directional" approach as described by UMI-tools.
 
-    :param distances: The distances of the k-nearest neighbors.
-        A 2D array with shape (n_queries, k).
-    :param indices: The indices of the k-nearest neighbors.
-        A 2D array with shape (n_queries, k).
-    :param read_counts: The read support for each molecule.
-        A 1D array with shape (n_queries,).
-    :param cutoff: The distance cutoff to consider an edge between two nodes.
-    :return: A sparse directed adjacency matrix in CSR format.
-    :rtype: scipy.sparse.csr_matrix
+    Args:
+    distances: The distances of the k-nearest neighbors. A 2D array with shape (n_queries, k).
+    indices: The indices of the k-nearest neighbors. A 2D array with shape (n_queries, k).
+    read_counts: The read support for each molecule. A 1D array with shape (n_queries,).
+    cutoff: The distance cutoff to consider an edge between two nodes.
+
     """
     if distances.shape != indices.shape:
         raise ValueError(
@@ -85,13 +82,12 @@ def build_network_cluster(
 
     Use the "Cluster" approach as described by UMI-tools.
 
-    :param distances: The distances of the k-nearest neighbors.
-        A 2D array with shape (n_queries, k).
-    :param indices: The indices of the k-nearest neighbors.
-        A 2D array with shape (n_queries, k).
-    :param read_counts: The read support for each molecule.
-        A 1D array with shape (n_queries,).
-    :param cutoff: The distance cutoff to consider an edge between two nodes.
+    Args:
+    distances: The distances of the k-nearest neighbors. A 2D array with shape (n_queries, k).
+    indices: The indices of the k-nearest neighbors. A 2D array with shape (n_queries, k).
+    read_counts: The read support for each molecule. A 1D array with shape (n_queries,).
+    cutoff: The distance cutoff to consider an edge between two nodes.
+
     """
     n_queries = distances.shape[0]
 
@@ -120,11 +116,12 @@ def build_network_cluster_from_range_query(lims, distances, indices, index_map=N
      - I[lims[i]:lims[i+1]] are the indices from the database vectors
      - D[lims[i]:lims[i+1]] are the corresponding distances
 
+    Args:
+    lims: The range limits for the neighbors of each query.
+    distances: The distances of the neighbors.
+    indices: The indices of the neighbors.
+    index_map: A transformation of the indices
 
-    :param lims: The range limits for the neighbors of each query.
-    :param distances: The distances of the neighbors.
-    :param indices: The indices of the neighbors.
-    :param index_map: A transformation of the indices
     """
     indices = indices
 

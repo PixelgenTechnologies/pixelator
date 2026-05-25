@@ -24,7 +24,12 @@ class BarcodeCorrectionStatistics(Statistics):
         self._custom_stats: dict[str, Any] = dict()
 
     def __iadd__(self, other: Any):
-        """Merge statistics from another object into this one."""
+        """Merge statistics from another object into this one.
+
+        Args:
+        other: Other.
+
+        """
         super().__iadd__(other)
         if hasattr(other, "_custom_stats"):
             for name, value in other._custom_stats.items():
@@ -46,6 +51,11 @@ class BarcodeCorrectionStatistics(Statistics):
         To achieve a more compact representation, set one_line to True, which
         will wrap some items in a `cutadapt.json.OneLine` object, and use
         `cutadapt.json.dumps` instead of `json.dumps` to dump the dict.
+
+        Args:
+        gc_content: Gc content.
+        one_line: One line.
+
         """
         demux_report = None
 
@@ -71,7 +81,17 @@ class BarcodeCorrectionStatistics(Statistics):
         steps,
         set_paired_to_none: bool = False,
     ):
-        """Enable stats.paired to be set to None when unknown."""
+        """Enable stats.paired to be set to None when unknown.
+
+        Args:
+        n: N.
+        total_bp1: Total bp1.
+        total_bp2: Total bp2.
+        modifiers: Modifiers.
+        steps: Steps.
+        set_paired_to_none: Set paired to none.
+
+        """
         stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
         if set_paired_to_none:
             stats.paired = None

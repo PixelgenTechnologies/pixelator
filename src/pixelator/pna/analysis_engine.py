@@ -40,7 +40,12 @@ class LoggingSetup:
 
     @staticmethod
     def from_logger(logger: logging.Logger):
-        """Create a LoggingSetup from a logger."""
+        """Create a LoggingSetup from a logger.
+
+        Args:
+        logger: Logger.
+
+        """
         return LoggingSetup(port=logger.port, log_level=logger.log_level)  # type: ignore
 
 
@@ -62,7 +67,13 @@ class _ParallelWithLogging(Parallel):
 
 
 def _get_joblib_executor(nbr_cores=None, **kwargs) -> Parallel:
-    """Return a joblib executor with some default settings."""
+    """Return a joblib executor with some default settings.
+
+    Args:
+    nbr_cores: Nbr cores.
+    kwargs: Kwargs.
+
+    """
     current_click_context = click.get_current_context(silent=True)
     click_nbr_cores = None
     if current_click_context:
@@ -83,6 +94,10 @@ def with_logging(f):
     This is necessary to deal with the fact that for out of process workers
     like the ones used by joblib we need to set up logging in each worker.
     This decorator makes this slightly easier.
+
+    Args:
+    f: F.
+
     """
 
     @wraps(f)
@@ -114,7 +129,12 @@ class PerComponentTask(Protocol, Generic[T]):
         pass
 
     def set_dataset(self, pxl_file_path: Path):
-        """Specify a dataset to enable analysis being run directly from component IDs."""
+        """Specify a dataset to enable analysis being run directly from component IDs.
+
+        Args:
+        pxl_file_path: Pxl file path.
+
+        """
         ...
 
     @with_logging
@@ -124,7 +144,9 @@ class PerComponentTask(Protocol, Generic[T]):
         This method assumes that the dataset is stored internally
         and the component is directly accessible from its id.
 
-        :param component_id: The id of the component.
+        Args:
+        component_id: The id of the component.
+
         """
         raise NotImplementedError
 
@@ -132,8 +154,10 @@ class PerComponentTask(Protocol, Generic[T]):
     def run_on_component_graph(self, component: PNAGraph, component_id: str) -> T:
         """Run the analysis on this component.
 
-        :param component: The graph of the component.
-        :param component_id: The id of the component.
+        Args:
+        component: The graph of the component.
+        component_id: The id of the component.
+
         """
         raise NotImplementedError
 
@@ -143,8 +167,10 @@ class PerComponentTask(Protocol, Generic[T]):
     ) -> T:
         """Run the analysis on this component.
 
-        :param component: The edgelist of the component.
-        :param component_id: The id of the component.
+        Args:
+        component: The edgelist of the component.
+        component_id: The id of the component.
+
         """
         raise NotImplementedError
 
@@ -158,9 +184,13 @@ class PerComponentTask(Protocol, Generic[T]):
         The default implementation will first try the graph based analysis and then fall back
         to the edgelist based analysis if the graph based analysis raises NotImplementedError.
 
-        :param component: The component to run the analysis on. Either a Graph, a LazyFrame or the name of a component.
-        :param logging_setup: The logging setup to use.
-        :raises TypeError: If the component is not a Graph or a LazyFrame.
+        Args:
+        component: The component to run the analysis on. Either a Graph, a LazyFrame or the name of a component.
+        logging_setup: The logging setup to use.
+
+        Raises:
+        TypeError: If the component is not a Graph or a LazyFrame.
+
         """
         if isinstance(component, str):
             return self.run_from_component_id(component)
@@ -180,7 +210,12 @@ class PerComponentTask(Protocol, Generic[T]):
             raise e
 
     def concatenate_data(self, data: Iterable[T]) -> T:
-        """Concatenate the data. Override this if you need custom concatenation behavior."""
+        """Concatenate the data. Override this if you need custom concatenation behavior.
+
+        Args:
+        data: Data.
+
+        """
         try:
             scores = pd.concat(data, axis=0)
             return scores
@@ -189,11 +224,22 @@ class PerComponentTask(Protocol, Generic[T]):
             raise error
 
     def post_process_data(self, data: T) -> T:
-        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing."""
+        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing.
+
+        Args:
+        data: Data.
+
+        """
         return data
 
     def add_to_pixel_file(self, data: T, pxl_file_target: PxlFile) -> None:
-        """Add the data in the right place in the pxl_dataset."""
+        """Add the data in the right place in the pxl_dataset.
+
+        Args:
+        data: Data.
+        pxl_file_target: Pxl file target.
+
+        """
         ...
 
     def parameters(self) -> dict[str, typing.Any]:
@@ -223,10 +269,12 @@ class AnalysisManager:
     ):
         """Initialize the analysis manager.
 
-        :param analysis_to_run: The analysis to run on each component.
-        :param logging_setup: The logging setup to use.
-        :param n_cores: The number of cores to use for parallel processing (set to 1 to disable parallel processing).
-        :param pxl_dataset_builder: A function that can build a PixelDataset from an iterable of PxlFiles.
+        Args:
+        analysis_to_run: The analysis to run on each component.
+        logging_setup: The logging setup to use.
+        n_cores: The number of cores to use for parallel processing (set to 1 to disable parallel processing).
+        pxl_dataset_builder: A function that can build a PixelDataset from an iterable of PxlFiles.
+
         """
         self.analysis_to_run = {
             analysis.TASK_NAME: analysis for analysis in analysis_to_run
@@ -340,7 +388,13 @@ class AnalysisManager:
     def execute(
         self, pixel_dataset: PNAPixelDataset, pxl_file_target: PxlFile
     ) -> PNAPixelDataset:
-        """Execute the analysis on the provided pixel dataset."""
+        """Execute the analysis on the provided pixel dataset.
+
+        Args:
+        pixel_dataset: Pixel dataset.
+        pxl_file_target: Pxl file target.
+
+        """
         iterator = pixel_dataset.edgelist().iterator()
         return self._execute_on_iterator(iterator, pxl_file_target)
 
@@ -351,7 +405,13 @@ class AnalysisManager:
     def execute_from_path(
         self, input_pxl_file_path: Path, pxl_file_target: PxlFile
     ) -> PNAPixelDataset:
-        """Execute the analysis on the provided pixel file path."""
+        """Execute the analysis on the provided pixel file path.
+
+        Args:
+        input_pxl_file_path: Input pxl file path.
+        pxl_file_target: Pxl file target.
+
+        """
         self._set_path_to_dataset(input_pxl_file_path)
         pixel_dataset = read(input_pxl_file_path)
         iterator = pixel_dataset.components()

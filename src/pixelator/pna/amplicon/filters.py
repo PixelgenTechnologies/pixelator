@@ -32,7 +32,13 @@ class SingleEndFilterWithFailureReason(SingleEndFilter):
         predicate: Predicate,
         writer=None,
     ):
-        """Initialize a SingleEndFilterWithFailureReason pipeline step."""
+        """Initialize a SingleEndFilterWithFailureReason pipeline step.
+
+        Args:
+        predicate: Predicate.
+        writer: Writer.
+
+        """
         self._filtered = 0
         self._predicate = predicate
         self._writer = writer
@@ -59,8 +65,8 @@ class SingleEndFilterWithFailureReason(SingleEndFilter):
         is modified by appending the `descriptive_identifier` of the filter step.
 
         Args:
-            read: The read to filter.
-            info: The modification info.
+        read: The read to filter.
+        info: The modification info.
 
         """
         if self._predicate.test(read, info):
@@ -81,10 +87,10 @@ class TooManyN(Predicate):
     def __init__(self, count: float, assay: PNAAssay):
         """Initialize a TooManyN pipeline predicate.
 
-        :param count: the cutoff for the N count.
-            If it is below 1.0, it will be considered a proportion, and above and equal to
-            1 will be considered as discarding reads with a number of N's greater than this cutoff.
-        :param assay: the assay configuration.
+        Args:
+        count: the cutoff for the N count. If it is below 1.0, it will be considered a proportion, and above and equal to 1 will be considered as discarding reads with a number of N's greater than this cutoff.
+        assay: the assay configuration.
+
         """
         assert count >= 0
         self.is_proportion = count < 1.0
@@ -109,11 +115,8 @@ class TooManyN(Predicate):
         """Return True if the read has too many N bases.
 
         Args:
-            read: The read to test.
-            info: The modification info.
-
-        Returns:
-            True if the read has too many N bases, False otherwise.
+        read: The read to test.
+        info: The modification info.
 
         """
         r = read.sequence.lower()
@@ -143,8 +146,8 @@ class LowComplexityUMI(Predicate):
         """Initialize a LowComplexityFilter pipeline predicate.
 
         Args:
-            assay: the assay configuration.
-            proportion: the proportion of a single base that defines low complexity.
+        assay: the assay configuration.
+        proportion: the proportion of a single base that defines low complexity.
 
         """
         if not 0.0 < proportion < 1.0:
@@ -174,11 +177,8 @@ class LowComplexityUMI(Predicate):
         """Return True if the read has low complexity.
 
         Args:
-            read: The read to test.
-            info: The modification info.
-
-        Returns:
-            True if the read has low complexity, False otherwise.
+        read: The read to test.
+        info: The modification info.
 
         """
         umi1 = np.frombuffer(
@@ -212,14 +212,21 @@ class LBSDetectedInUMI(Predicate):
     This filtering step expects the full amplicon sequence as input.
 
     Args:
-        assay: The assay configuration.
-        min_overlap: Minimum overlap for alignment.
-        max_error_rate: Maximum error rate for alignment.
+    assay: The assay configuration.
+    min_overlap: Minimum overlap for alignment.
+    max_error_rate: Maximum error rate for alignment.
 
     """
 
     def __init__(self, assay, min_overlap=8, max_error_rate=0.2) -> None:
-        """Initialize a LBSDetectedInUMI pipeline predicate."""
+        """Initialize a LBSDetectedInUMI pipeline predicate.
+
+        Args:
+        assay: Assay.
+        min_overlap: Min overlap.
+        max_error_rate: Max error rate.
+
+        """
         self.assay = assay
         self.min_overlap = min_overlap
         self.max_error_rate = max_error_rate
@@ -265,11 +272,8 @@ class LBSDetectedInUMI(Predicate):
         """Return True if the read contains any fixed region substrings.
 
         Args:
-            read: The read to test.
-            info: The modification info.
-
-        Returns:
-            True if the read contains any fixed region substrings, False otherwise.
+        read: The read to test.
+        info: The modification info.
 
         """
         umi1 = read.sequence[self._umi1_region_slice]

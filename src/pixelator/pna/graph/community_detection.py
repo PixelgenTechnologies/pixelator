@@ -90,12 +90,12 @@ def calculate_post_recovery_component_statistics(
 ) -> GraphStatistics:
     """Calculate and update graph statistics after multiplet recovery.
 
-    Args:
-        edgelist_with_components_path (Path): Path to the edgelist with components in Parquet format.
-        component_stats (GraphStatistics): Graph statistics to be updated.
-
     Returns:
-        GraphStatistics: Updated graph statistics.
+    GraphStatistics: Updated graph statistics.
+
+    Args:
+        edgelist_with_components_path: Edgelist with components path.
+        component_stats: Component stats.
 
     """
     edgelist = pl.scan_parquet(
@@ -141,11 +141,13 @@ def merge_communities_with_many_crossing_edges(
     If one of them is None, only the other one is considered and if they are
     both None, the split communities are not considered for merging.
 
-    :param edgelist: The edge list to process
-    :param node_community_dict: A dictionary mapping each node to a community
-    :param n_edges: The threshold for the number of edges to be found between
-    communities to merge or None to avoid merging
-    :returns: The updated community mapping
+    Args:
+    edgelist: The edge list to process
+    node_community_dict: A dictionary mapping each node to a community
+    n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
+    max_edges_to_remove: Max edges to remove.
+    max_edges_to_remove_relative: Max edges to remove relative.
+
     """
     community_serie = pd.Series(node_community_dict)
     if max_edges_to_remove is None and max_edges_to_remove_relative is None:
@@ -204,15 +206,13 @@ def refine_component(
     """Refine a component by running Leiden community detection and removing crossing edges.
 
     Args:
-        component_id: ID of the component to refine.
-        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
-        refinement_options: Options for refinement during community detection.
-        duckdb_config: Configuration for DuckDB connection.
+    component_id: ID of the component to refine.
+    component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
+    refinement_options: Options for refinement during community detection.
+    duckdb_config: Configuration for DuckDB connection.
 
     Returns:
-        pd.Series: Sizes of new components after refinement.
-        int: Number of crossing edges removed during refinement.
-        pd.Series: Sizes of discarded components after refinement.
+    int: Number of crossing edges removed during refinement. pd.Series: Sizes of discarded components after refinement.
 
     """
     with duckdb.connect(config=duckdb_config) as con:
@@ -293,7 +293,12 @@ def refine_component(
 def get_component_sizes(
     component_edgelists_path: Path,
 ) -> pd.Series:
-    """Get sizes of components from edgelist with components."""
+    """Get sizes of components from edgelist with components.
+
+    Args:
+    component_edgelists_path: Component edgelists path.
+
+    """
     with duckdb.connect() as con:
         component_sizes = con.execute(f"""
             SELECT component, COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2) AS n_umi
@@ -317,19 +322,15 @@ def run_leiden_refinement(
     """Recovery multiplets by leiden community detection, removing crossing edges between communities.
 
     Args:
-        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
-        refinement_options: Options for refinement during community detection.
-        component_stats: Statistics about the components.
-        component_sizes: Optional precomputed sizes of components.
-        max_workers: Maximum number of worker processes to use.
-
-    Returns:
-        tuple[GraphStatistics, pl.DataFrame]: Updated component statistics and DataFrame of discarded component sizes.
+    component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
+    refinement_options: Options for refinement during community detection.
+    component_stats: Statistics about the components.
+    component_sizes: Optional precomputed sizes of components.
+    max_workers: Maximum number of worker processes to use.
 
     Raises:
-        ValueError: If ``max_workers`` is invalid.
-        DuckdbPerThreadMemoryError: If the configured memory split would give each thread
-            less than 1 MiB.
+    ValueError: If ``max_workers`` is invalid.
+    DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than 1 MiB.
 
     """
     if component_sizes is None:
@@ -439,17 +440,14 @@ def find_components(
     """Find components in the given edgelist.
 
     Args:
-        input_edgelist_path: Path to the input edgelist in Parquet format.
-        working_dir: Directory to use for temporary files and output.
-        multiplet_recovery: Whether to perform multiplet recovery.
-        edge_cycle_verification: Whether to perform edge cycle verification.
-        min_read_count: Minimum read count threshold for an edge to be retained.
-        refinement_options: Options for staged refinement during community detection.
-        component_size_threshold: Minimum size threshold for components to be retained.
-        n_threads: Number of threads to use for parallel processing.
-
-    Returns:
-        tuple[GraphStatistics, Path]: Component statistics and path to the edgelist with components.
+    input_edgelist_path: Path to the input edgelist in Parquet format.
+    working_dir: Directory to use for temporary files and output.
+    multiplet_recovery: Whether to perform multiplet recovery.
+    edge_cycle_verification: Whether to perform edge cycle verification.
+    min_read_count: Minimum read count threshold for an edge to be retained.
+    refinement_options: Options for staged refinement during community detection.
+    component_size_threshold: Minimum size threshold for components to be retained.
+    n_threads: Number of threads to use for parallel processing.
 
     """
     logger.info("Starting component finding process.")
