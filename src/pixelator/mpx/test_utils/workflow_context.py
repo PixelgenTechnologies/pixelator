@@ -78,12 +78,14 @@ class PixelatorWorkflowContext:
     def _link_files(self, files: List[str], suffix: str = ""):
         """Symlink test files into the temporary working directory.
 
-        If no suffix is given files will be linked directly into the working directory.
+                If no suffix is given files will be linked directly into the working directory.
 
-        :param files: list of files to link
-        :param suffix: path relative to the workflow working directory to link
-            the files in.
-        :raises ValueError: if a file is not absolute
+        Args:
+            files: list of files to link
+            suffix: path relative to the workflow working directory to link the files in.
+
+        Raises:
+            ValueError: if a file is not absolute
         """
         for f in files:
             f_path = Path(f)
@@ -106,11 +108,16 @@ class PixelatorWorkflowContext:
 def use_workflow_context(request, tmp_path_factory):
     """Fixture to set up a working directory and WorkflowContext helper.
 
-    This fixture is class scoped so that the working directory is reused across
-    individual pixelator commands in a single BasePixelatorWorkflow subclass.
+        This fixture is class scoped so that the working directory is reused across
+        individual pixelator commands in a single BasePixelatorWorkflow subclass.
 
-    The working directory is cleaned up after the test class has run unless the
-    `--keep_workdirs` is passed on the commandline, which can be useful for debugging.
+        The working directory is cleaned up after the test class has run unless the
+        `--keep_workdirs` is passed on the commandline, which can be useful for debugging.
+
+    Args:
+            request: Request.
+            tmp_path_factory: Tmp path factory.
+
     """
     keep_workdirs = request.config.getoption("--keep-workdirs", default=False)
     cls = request.cls

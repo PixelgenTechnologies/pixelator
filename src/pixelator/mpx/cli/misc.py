@@ -13,9 +13,11 @@ from pixelator.common.utils import click_echo
 def list_single_cell_designs(ctx: click.Context, param: Any, value: Any) -> None:
     """Return a list of single cell designs supported by the config.
 
-    :param ctx: The click context
-    :param param: The click parameter
-    :param value: The click value
+    Args:
+    ctx: The click context
+    param: The click parameter
+    value: The click value
+
     """
     from pixelator.mpx.config import config
 
@@ -32,9 +34,11 @@ def list_single_cell_designs(ctx: click.Context, param: Any, value: Any) -> None
 def list_single_cell_panels(ctx: click.Context, param: Any, value: Any) -> None:
     """Return a list of single cell panels supported by the config.
 
-    :param ctx: The click context
-    :param param: The click parameter
-    :param value: The click value
+    Args:
+    ctx: The click context
+    param: The click parameter
+    value: The click value
+
     """
     from pixelator.mpx.config import config
 

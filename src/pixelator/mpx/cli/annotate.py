@@ -92,6 +92,17 @@ def annotate(
 ):
     """
     Filter, annotate and call cells from an edge list
+
+    Args:
+        ctx: Ctx.
+        parquet_file: Parquet file.
+        panel: Panel.
+        min_size: Min size.
+        max_size: Max size.
+        dynamic_filter: Dynamic filter.
+        aggregate_calling: Aggregate calling.
+        output: Output.
+
     """
     input_files = [parquet_file]
     # log input parameters

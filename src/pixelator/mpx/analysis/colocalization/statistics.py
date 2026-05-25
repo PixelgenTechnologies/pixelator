@@ -50,7 +50,12 @@ def _wide_correlation_matrix_to_long_correlation_results(
 def _alphanumeric_sort_marker_columns(
     data: MarkerColocalizationResults,
 ) -> MarkerColocalizationResults:
-    """Make sure that the markers are always sorted in the same order."""
+    """Make sure that the markers are always sorted in the same order.
+
+    Args:
+        data: Data.
+
+    """
     data.index = pd.MultiIndex.from_tuples(
         map(sorted, data.index.values), names=data.index.names
     )
@@ -60,7 +65,12 @@ def _alphanumeric_sort_marker_columns(
 def _drop_self_correlation(
     data: MarkerColocalizationResults,
 ) -> MarkerColocalizationResults:
-    """Drop the self-correlation values from the data."""
+    """Drop the self-correlation values from the data.
+
+    Args:
+        data: Data.
+
+    """
     return data[data.index.get_level_values(0) != data.index.get_level_values(1)]
 
 
@@ -71,9 +81,9 @@ def pearson(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
     in the RegionByCountsDataFrame. Since these values are symmetrical only
     one of the combination of each marker pair is returned
 
-    :param df: the RegionByCountsDataFrame to compute Pearson correlation on
-    :rtype: MarkerColocalizationResults
-    :return: MarkerColocalizationResults with Pearson correlations
+    Args:
+    df: the RegionByCountsDataFrame to compute Pearson correlation on
+
     """
     pearson_matrix = df.corr(method="pearson")
     pearson_values = _alphanumeric_sort_marker_columns(
@@ -96,9 +106,9 @@ def jaccard(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
     in the RegionByCountsDataFrame. Since these values are symmetrical only
     one of the combination of each marker pair is returned
 
-    :param df: the RegionByCountsDataFrame to compute Jaccard indexes on
-    :rtype: MarkerColocalizationResults
-    :return: MarkerColocalizationResults with Jaccard indexes
+    Args:
+    df: the RegionByCountsDataFrame to compute Jaccard indexes on
+
     """
     jaccard_matrix = pd.DataFrame(
         1 - pairwise_distances((df.T > 0).to_numpy(dtype=bool), metric="jaccard"),
@@ -123,10 +133,9 @@ def apply_multiple_stats(
 ) -> pd.DataFrame:
     """Compute multiple statistics on the same dataframe.
 
-    :param df: data to compute statistics on
-    :param funcs: a list of functions to use to compute the
-                  statistics
-    :return: a dataframe with all the statistics computed for the dataframe
-    :rtype: pd.DataFrame
+    Args:
+    df: data to compute statistics on
+    funcs: a list of functions to use to compute the statistics
+
     """
     return pd.concat([func.func(df) for func in funcs], axis=1)

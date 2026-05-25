@@ -43,7 +43,12 @@ class PixelDatasetBackend(Protocol):
 
     @adata.setter
     def adata(self, value: AnnData) -> None:
-        """Set the AnnData instance."""
+        """Set the AnnData instance.
+
+        Args:
+            value: Value.
+
+        """
 
     @property
     def edgelist(self) -> pd.DataFrame:
@@ -51,7 +56,12 @@ class PixelDatasetBackend(Protocol):
 
     @edgelist.setter
     def edgelist(self, value: pd.DataFrame) -> None:
-        """Set the edge list instance."""
+        """Set the edge list instance.
+
+        Args:
+            value: Value.
+
+        """
 
     @property
     def edgelist_lazy(self) -> pl.LazyFrame:
@@ -63,7 +73,12 @@ class PixelDatasetBackend(Protocol):
 
     @polarization.setter
     def polarization(self, value: pd.DataFrame) -> None:
-        """Set the polarization data frame."""
+        """Set the polarization data frame.
+
+        Args:
+            value: Value.
+
+        """
 
     @property
     def colocalization(self) -> Optional[pd.DataFrame]:
@@ -71,7 +86,12 @@ class PixelDatasetBackend(Protocol):
 
     @colocalization.setter
     def colocalization(self, value: pd.DataFrame) -> None:
-        """Set the colocalization data frame."""
+        """Set the colocalization data frame.
+
+        Args:
+            value: Value.
+
+        """
 
     @property
     def metadata(self) -> Optional[Dict]:
@@ -79,7 +99,12 @@ class PixelDatasetBackend(Protocol):
 
     @metadata.setter
     def metadata(self, value: Dict) -> Optional[Dict]:
-        """Set the metadata object."""
+        """Set the metadata object.
+
+        Args:
+            value: Value.
+
+        """
 
     @property
     def precomputed_layouts(self) -> PreComputedLayouts:
@@ -92,7 +117,12 @@ class PixelDatasetBackend(Protocol):
 
     @precomputed_layouts.setter
     def precomputed_layouts(self, value: PreComputedLayouts | None) -> None:
-        """Set the precomputed layouts for the component graphs."""
+        """Set the precomputed layouts for the component graphs.
+
+        Args:
+            value: Value.
+
+        """
         ...
 
 
@@ -119,15 +149,19 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
     ) -> None:
         """Create a new instance of ObjectBasedPixelDatasetBackend.
 
-        :param adata: an AnnData instance
-        :param edgelist: an edgelist dataframe
-        :param metadata: a dict with metadata, defaults to None
-        :param polarization: a polarization dataframe, defaults to None
-        :param colocalization: a colocalization dataframe, defaults to None
-        :param copy: decide if the input data should be copied or not. Defaults to True.
-        :param allow_edgelist_to_be_empty: allow the edgelist to be empty.
-                                           Defaults to False.
-        :raises AssertionError: if `adata` or `edgelist` contains no data.
+        Args:
+            adata: AnnData object backing the dataset.
+            edgelist: Edge list dataframe for the dataset.
+            metadata: Optional metadata dictionary.
+            polarization: Optional polarization results dataframe.
+            colocalization: Optional colocalization results dataframe.
+            precomputed_layouts: Optional cached layout coordinates.
+            copy: Whether input objects are copied on construction.
+            allow_edgelist_to_be_empty: Allow constructing datasets with empty edgelists.
+
+        Raises:
+        AssertionError: if `adata` or `edgelist` contains no data.
+
         """
         if adata is None or adata.n_obs == 0:
             raise AssertionError("adata cannot be empty")
@@ -160,7 +194,12 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
     @adata.setter
     def adata(self, value: AnnData) -> None:
-        """Set the AnnData object for the pixel dataset."""
+        """Set the AnnData object for the pixel dataset.
+
+        Args:
+            value: Value.
+
+        """
         self._adata = value
 
     @property
@@ -170,7 +209,12 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
     @edgelist.setter
     def edgelist(self, value: pd.DataFrame) -> None:
-        """Set the edge list for the pixel dataset."""
+        """Set the edge list for the pixel dataset.
+
+        Args:
+            value: Value.
+
+        """
         self._edgelist = value
 
     @property
@@ -185,7 +229,12 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
     @metadata.setter
     def metadata(self, value: Dict[str, Any]) -> None:
-        """Set the metadata for the pixel dataset."""
+        """Set the metadata for the pixel dataset.
+
+        Args:
+            value: Value.
+
+        """
         self._metadata = value
 
     @property
@@ -195,7 +244,12 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
     @polarization.setter
     def polarization(self, value: pd.DataFrame) -> None:
-        """Set the polarization scores for the pixel dataset."""
+        """Set the polarization scores for the pixel dataset.
+
+        Args:
+            value: Value.
+
+        """
         self._polarization = value
 
     @property
@@ -205,7 +259,12 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
     @colocalization.setter
     def colocalization(self, value: pd.DataFrame) -> None:
-        """Set the co-localization scores for the pixel dataset."""
+        """Set the co-localization scores for the pixel dataset.
+
+        Args:
+            value: Value.
+
+        """
         self._colocalization = value
 
     @property
@@ -217,7 +276,12 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
 
     @precomputed_layouts.setter
     def precomputed_layouts(self, value: PreComputedLayouts | None) -> None:
-        """Set the precomputed layouts."""
+        """Set the precomputed layouts.
+
+        Args:
+            value: Value.
+
+        """
         if value is None:
             self._precomputed_layouts = PreComputedLayouts.create_empty()
         self._precomputed_layouts = value
@@ -239,7 +303,10 @@ class FileBasedPixelDatasetBackend(PixelDatasetBackend):
         Create a backend, fetching information from the .pxl file
         in `path`.
 
-        :param path: Path to the .pxl file
+        Args:
+            path: Path to the ``.pxl`` file.
+            datastore: Optional datastore implementation; guessed from ``path`` when omitted.
+
         """
         self._path = path
         if not datastore:
@@ -292,7 +359,12 @@ class FileBasedPixelDatasetBackend(PixelDatasetBackend):
 
     @precomputed_layouts.setter
     def precomputed_layouts(self, value: PreComputedLayouts | None) -> None:
-        """Set the precomputed layouts."""
+        """Set the precomputed layouts.
+
+        Args:
+            value: Value.
+
+        """
         if value is None:
             self._precomputed_layouts = PreComputedLayouts.create_empty()
             return

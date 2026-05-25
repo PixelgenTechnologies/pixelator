@@ -55,21 +55,17 @@ def colocalization_from_component_edgelist(
 ) -> pd.DataFrame:
     """Get the colocalization scores for the component in the given `edgelist`.
 
-    :param edgelist: edgelist to compute colocalization scores for
-    :param component_id: name of the component
-    :param transformation: transformation method to use, defaults to "raw"
-    :param neighbourhood_size: size of the neighbourhood to consider, defaults to 0
-    :param n_permutations: number of permutations used to calculate the
-                           p-values and z-scores, defaults to 50
-    :param use_full_bipartite: use the full bipartiate graph, if false use A-node
-                               projection, defaults to True
-    :param min_region_count: minimum number of counts in region to consider, defaults
-                             to 5
-    :param min_marker_count: the minimum number of counts of a marker to calculate
-                             colocalization
-    :param random_seed: Set the random seed for the permutation tests, defaults to None
-    :return: a dataframe with computed colocalization scores
-    :rtype: pd.DataFrame
+    Args:
+    edgelist: edgelist to compute colocalization scores for
+    component_id: name of the component
+    transformation: transformation method to use, defaults to "raw"
+    neighbourhood_size: size of the neighbourhood to consider, defaults to 0
+    n_permutations: number of permutations used to calculate the p-values and z-scores, defaults to 50
+    use_full_bipartite: use the full bipartiate graph, if false use A-node projection, defaults to True
+    min_region_count: minimum number of counts in region to consider, defaults to 5
+    min_marker_count: the minimum number of counts of a marker to calculate colocalization
+    random_seed: Set the random seed for the permutation tests, defaults to None
+
     """
     graph = Graph.from_edgelist(
         edgelist=edgelist,
@@ -117,19 +113,16 @@ def colocalization_from_component_graph(
 ) -> pd.DataFrame:
     """Compute the colocalization scores for this component graph.
 
-    :param graph: graph to compute scores for
-    :param component_id: name of the component
-    :param transformation: transformation method to use, defaults to "raw"
-    :param neighbourhood_size: size of the neighbourhood to consider, defaults to 0
-    :param n_permutations: number of permutations used to calculate the
-                           p-values and z-scores, defaults to 50
-    :param min_region_count: minimum number of counts in region to consider, defaults
-                             to 5
-    :param min_marker_count: the minimum number of counts of a marker to calculate
-                             colocalization
-    :param random_seed: Set the random seed for the permutation tests, defaults to None
-    :return: a dataframe containing colocalization scores for this component
-    :rtype: pd.DataFrame
+    Args:
+    graph: graph to compute scores for
+    component_id: name of the component
+    transformation: transformation method to use, defaults to "raw"
+    neighbourhood_size: size of the neighbourhood to consider, defaults to 0
+    n_permutations: number of permutations used to calculate the p-values and z-scores, defaults to 50
+    min_region_count: minimum number of counts in region to consider, defaults to 5
+    min_marker_count: the minimum number of counts of a marker to calculate colocalization
+    random_seed: Set the random seed for the permutation tests, defaults to None
+
     """
     logger.debug("Computing colocalization for component: %s", component_id)
     logger.debug("Prepare the graph data for computing colocalization")
@@ -228,25 +221,21 @@ def colocalization_scores(
     consideration size differences) and their expression is similar (Pearson).
     It also does permutation testing of each colocalizaiton measure to compute
     emprical p-values, corrected p-values, and z-score for each measure.
-    :param edgelist: an edge list dataframe with a membership column
-    :param use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    :param transformation: Select a transformation method to use for the colocalization
-    :param neighbourhood_size: Set the size of the neighbourhood to
-                               consider when computing the colocalization
-    :param n_permutations: Select number of permutations used to
-                           calculate empirical p-values of the
-                           colocalization values
-    :param min_region_count: The minimum size of the region (e.g. number
-                             of counts in the neighbourhood) required
-                             for it to be considered
-    :param min_marker_count: the minimum number of counts of a marker to calculate
-                             colocalization
-    :param random_seed: Set a random seed for the permutation function
-    :returns: a pd.DataFrame of scores
-    :rtype: pd.DataFrame
-    :raises AssertionError: when the input is not valid
-    :raises ValueError: when no components were found to be valid for
                         computing colocalization.
+
+    Args:
+    edgelist: an edge list dataframe with a membership column
+    use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+    transformation: Select a transformation method to use for the colocalization
+    neighbourhood_size: Set the size of the neighbourhood to consider when computing the colocalization
+    n_permutations: Select number of permutations used to calculate empirical p-values of the colocalization values
+    min_region_count: The minimum size of the region (e.g. number of counts in the neighbourhood) required for it to be considered
+    min_marker_count: the minimum number of counts of a marker to calculate colocalization
+    random_seed: Set a random seed for the permutation function
+
+    Raises:
+    AssertionError: when the input is not valid
+    ValueError: when no components were found to be valid for
 
     """
     if "component" not in edgelist.columns:
@@ -324,14 +313,13 @@ def get_differential_colocalization(
 ) -> pd.DataFrame:
     """Calculate the differential colocalization.
 
-    :param colocalization_data_frame: The colocalization data frame.
-    :param target: The label for target components in the contrast_column.
-    :param reference: The label for reference components in the contrast_column.
-    :param contrast_column: The column to use for the contrast. Defaults to "sample".
-    :param value_column: What colocalization metric to use. Defaults to "pearson_z".
+    Args:
+        colocalization_data_frame: Colocalization measurements to compare.
+        reference: Label for reference samples in ``contrast_column``.
+        targets: Target sample labels; defaults to all non-reference labels.
+        contrast_column: Column containing sample labels. Defaults to ``"sample"``.
+        value_column: Colocalization metric column. Defaults to ``"pearson_z"``.
 
-    :return: The differential colocalization.
-    :rtype: pd.DataFrame
     """
     if targets is None:
         targets = colocalization_data_frame[contrast_column].unique()
@@ -401,16 +389,13 @@ class ColocalizationAnalysis(PerComponentAnalysis):
     ):
         """Initialize the ColocalizationAnalysis.
 
-        :param transformation_type: transformation method to use
-        :param neighbourhood_size: size of the neighbourhood to consider
-        :param n_permutations: Select number of permutations used to
-                               calculate empirical z-scores and p-values of the
-                               colocalization values
-        :param min_region_count: The minimum size of the region (e.g. number
-                             of counts in the neighbourhood) required
-                             for it to be considered for colocalization analysis
-        :param min_marker_count: the minimum number of counts of a marker to calculate
-                             colocalization
+        Args:
+        transformation_type: transformation method to use
+        neighbourhood_size: size of the neighbourhood to consider
+        n_permutations: Select number of permutations used to calculate empirical z-scores and p-values of the colocalization values
+        min_region_count: The minimum size of the region (e.g. number of counts in the neighbourhood) required for it to be considered for colocalization analysis
+        min_marker_count: the minimum number of counts of a marker to calculate colocalization
+
         """
         self.transformation_type = transformation_type
         self.neighbourhood_size = neighbourhood_size
@@ -419,7 +404,13 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         self.min_marker_count = min_marker_count
 
     def run_on_component(self, component: Graph, component_id: str) -> pd.DataFrame:
-        """Run colocalization analysis on the component."""
+        """Run colocalization analysis on the component.
+
+        Args:
+            component: Component.
+            component_id: Component id.
+
+        """
         logger.debug("Running colocalization analysis on component %s", component_id)
         return colocalization_from_component_graph(
             graph=component,
@@ -435,6 +426,10 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         """Post process the colocalization data.
 
         This will adjust the p-values using the Benjamini-Hochberg method.
+
+        Args:
+            data: Data.
+
         """
         logger.debug("Post processing colocalization analysis data")
         if data.empty:
@@ -451,7 +446,13 @@ class ColocalizationAnalysis(PerComponentAnalysis):
     def add_to_pixel_dataset(
         self, data: pd.DataFrame, pxl_dataset: PixelDataset
     ) -> PixelDataset:
-        """Add the colocalization data to the PixelDataset."""
+        """Add the colocalization data to the PixelDataset.
+
+        Args:
+            data: Data.
+            pxl_dataset: Pxl dataset.
+
+        """
         logger.debug("Adding colocalization analysis data to PixelDataset")
         pxl_dataset.colocalization = data
         return pxl_dataset

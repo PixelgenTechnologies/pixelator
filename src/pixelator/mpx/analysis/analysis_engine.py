@@ -26,11 +26,22 @@ class PerComponentAnalysis(Protocol):
     ANALYSIS_NAME: str
 
     def run_on_component(self, component: Graph, component_id: str) -> pd.DataFrame:
-        """Run the analysis on this component."""
+        """Run the analysis on this component.
+
+        Args:
+            component: Component.
+            component_id: Component id.
+
+        """
         ...
 
     def concatenate_data(self, data: Iterable[pd.DataFrame]) -> pd.DataFrame:
-        """Concatenate the data. Override this if you need custom concatenation behavior."""
+        """Concatenate the data. Override this if you need custom concatenation behavior.
+
+        Args:
+            data: Data.
+
+        """
         try:
             scores = pd.concat(data, axis=0)
             return scores
@@ -39,13 +50,24 @@ class PerComponentAnalysis(Protocol):
             raise error
 
     def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing."""
+        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing.
+
+        Args:
+            data: Data.
+
+        """
         return data
 
     def add_to_pixel_dataset(
         self, data: pd.DataFrame, pxl_dataset: PixelDataset
     ) -> PixelDataset:
-        """Add the data in the right place in the pxl_dataset."""
+        """Add the data in the right place in the pxl_dataset.
+
+        Args:
+            data: Data.
+            pxl_dataset: Pxl dataset.
+
+        """
         ...
 
     def parameters(self) -> dict:
@@ -126,7 +148,12 @@ class _AnalysisManager:
         return pxl_dataset
 
     def execute(self, pixel_dataset) -> PixelDataset:
-        """Execute the analysis on the provided pixel dataset."""
+        """Execute the analysis on the provided pixel dataset.
+
+        Args:
+            pixel_dataset: Pixel dataset.
+
+        """
         prepared_computations = self._prepare_computation()
         per_component_results = self._execute_computations_in_parallel(
             prepared_computations
@@ -141,7 +168,13 @@ class _AnalysisManager:
 def edgelist_to_component_stream(
     dataset: PixelDataset, use_full_bipartite: bool
 ) -> Iterable[tuple[str, Graph]]:
-    """Convert the edgelist in the dataset to a stream component ids and their component graphs."""
+    """Convert the edgelist in the dataset to a stream component ids and their component graphs.
+
+    Args:
+        dataset: Dataset.
+        use_full_bipartite: Use full bipartite.
+
+    """
     for component_id, component_df in (
         dataset.edgelist_lazy.collect()
         .partition_by(by="component", as_dict=True)
@@ -165,10 +198,11 @@ def run_analysis(
 ) -> PixelDataset:
     """Run the provided list of `PerComponentAnalysis` on the components in the `pxl_dataset`.
 
-    :param pxl_dataset: The PixelDataset to run the analysis on.
-    :param analysis_to_run: A list of `PerComponentAnalysis` to run on the components in the `pxl_dataset`.
-    :param use_full_bipartite: Whether to use the full bipartite graph when creating the components.
-    :returns: A `PixelDataset` instance with the provided analysis added to it.
+    Args:
+    pxl_dataset: The PixelDataset to run the analysis on.
+    analysis_to_run: A list of `PerComponentAnalysis` to run on the components in the `pxl_dataset`.
+    use_full_bipartite: Whether to use the full bipartite graph when creating the components.
+
     """
     if not analysis_to_run:
         logger.warning("No analysis functions were provided")

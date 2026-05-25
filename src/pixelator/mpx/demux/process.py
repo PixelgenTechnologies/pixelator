@@ -42,22 +42,26 @@ def demux_fastq(
     will be generated (containing the reads that matched). Another single
     file with the reads that failed to demultiplex will also be created.
 
-    :param input: the path to the fastq file (must contain the barcode)
-    :param output: the path to the output file (processed)
-    :param failed: the path to the failed file (discarded)
-    :param report: the path to the json report
-    :param panel: the path to the panel used for demultiplexing
-    :param mismatches: the number of mismatches allowed (a percentage)
-    :param barcodes: the fasta file containing the barcodes (reference)
-    :param min_length: the minimum overlap required in the barcode
-    :param cores: the number of cores to use
-    :param verbose: run in verbose mode when true
-    :param sample_id: the sample id
-    :returns: true if demux results were ok
-    :raises ValueError: raises an exception
             OSError: raises an exception
             CalledProcessError: raises an exception
             RuntimeError: raises an exception
+
+    Args:
+    input: the path to the fastq file (must contain the barcode)
+    output: the path to the output file (processed)
+    failed: the path to the failed file (discarded)
+    report: the path to the json report
+    panel: the path to the panel used for demultiplexing
+    mismatches: the number of mismatches allowed (a percentage)
+    barcodes: the fasta file containing the barcodes (reference)
+    min_length: the minimum overlap required in the barcode
+    cores: the number of cores to use
+    verbose: run in verbose mode when true
+    sample_id: the sample id
+
+    Raises:
+    ValueError: raises an exception
+
     """
     args = [
         "cutadapt",
@@ -130,7 +134,13 @@ def demux_fastq(
 
 
 def check_demux_results_are_ok(report_data: dict, sample_id: str) -> bool:
-    """Check if the demultiplexing results are ok."""
+    """Check if the demultiplexing results are ok.
+
+    Args:
+        report_data: Report data.
+        sample_id: Sample id.
+
+    """
     read_counts = report_data["read_counts"]
     input_reads = read_counts["input"]
     output_reads = read_counts["output"]

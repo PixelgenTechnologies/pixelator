@@ -18,13 +18,13 @@ class WorkflowConfig:
     def get_test_config(self, test_name: str) -> Any:
         """Retrieve config data for a specific test case.
 
-        Currently only "small", "single-cell" and "tissue" are implemented.
-        You can use arbitrary names for your own tests, and then link your
-        :class:`PixelatorWorkfklowTest` subclass to the test name in the config file
-        by defining the class variable :attr:`test_id` on the subclass.
+                Currently only "small", "single-cell" and "tissue" are implemented.
+                You can use arbitrary names for your own tests, and then link your
+                :class:`PixelatorWorkfklowTest` subclass to the test name in the config file
+                by defining the class variable :attr:`test_id` on the subclass.
 
-        :param test_name: name of the test case as given in the config.
-        :returns: the config object for the test case
+        Args:
+            test_name: name of the test case as given in the config.
         """
         return self._config[test_name]
 
@@ -35,8 +35,10 @@ class WorkflowConfig:
     def _parse(cls, config_file: Path) -> dict[str, Any]:
         """Load and resolve relative paths in the config file.
 
-        :param config_file: path to the config file
-        :return dict[str, Any]: the config object parsed from the `config_file`
+                :return dict[str, Any]: the config object parsed from the `config_file`
+
+        Args:
+            config_file: path to the config file
         """
         yaml_loader = yaml.YAML(typ="safe")
         with open(str(config_file), "r") as f:
@@ -49,12 +51,12 @@ class WorkflowConfig:
     def _resolve_relative_paths(cls, config_file: Path, config: Dict[str, Any]):
         """Resolve relative paths in the config file.
 
-        All relative paths in the config file are resolved relative to the parent
-        directory of the config file.
+                All relative paths in the config file are resolved relative to the parent
+                directory of the config file.
 
-        :param config_file: path to the config file
-        :param config: the config object parsed from the `config_file`
-        :returns: the config object with relative paths resolved
+        Args:
+            config_file: path to the config file
+            config: the config object parsed from the `config_file`
         """
         for test_id, test_config in config.items():
             panel_file = test_config.get("panel_file")

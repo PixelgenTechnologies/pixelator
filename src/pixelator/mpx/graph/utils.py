@@ -29,10 +29,9 @@ def union(graphs: List[Graph]) -> Graph:
     Create a union of the provided graphs, merging any vertices
     which share the same name.
 
-    :param graphs: the graphs to create the union from
-    :return: a new graph that is the union of the input `graphs`
-    :rtype: Graph
-    :raises: AssertionError if not all underlying graphs have the same backend type.
+    Args:
+    graphs: the graphs to create the union from
+
     """
     backends = [type(g._backend) for g in graphs]
     if not all(map(lambda b: backends[0] == b, backends)):
@@ -58,10 +57,10 @@ def components_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
     each component in the data present in the edge list given
     as input (component column). The metrics include: vertices,
     edges, markers, upis, degree mean and max.
-    :param edgelist: an edge list dataframe with a membership column
-    :returns: a pd.DataFrame with the metrics per component
-    :rtype: pd.DataFrame
-    :raises: AssertionError when the input edge list is not valid
+
+    Args:
+    edgelist: an edge list dataframe with a membership column
+
     """
     if "component" not in edgelist.columns:
         raise AssertionError("Edge list is missing the membership column")
@@ -204,14 +203,11 @@ def create_node_markers_counts(
     when searching neighbors. The graph must contain a vertex attribute called 'markers'
     which is dictionary of marker counts per vertex.
 
-    :param graph: a graph (preferably a connected component)
-    :param k: number of neighbors to include per node (0 no neighbors,
-              1 first level, ...)
-    :param normalization: selects a normalization method to apply when
-                          building neighborhoods
+    Args:
+    graph: a graph (preferably a connected component)
+    k: number of neighbors to include per node (0 no neighbors, 1 first level, ...)
+    normalization: selects a normalization method to apply when building neighborhoods
 
-    :returns: a pd.DataFrame with the antibody counts per node
-    :rtype: pd.DataFrame
     """
     if k == 0 and normalization:
         warnings.warn(
@@ -318,13 +314,15 @@ def edgelist_metrics(
     A simple function that computes a dictionary of basic metrics
     from an edge list (pl.DataFrame).
 
-    :param edgelist: the edge list (pl.DataFrame)
-    :param graph: optionally add the graph instance that corresponds to the
-                  edgelist (to not have to re-compute it)
-    :returns: a dataclass of metrics
-    :rtype: EdgelistMetrics
-    :raises TypeError: if edgelist is not either a pl.LazyFrame
     , pl.DataFrame or a pd.DataFrame
+
+    Args:
+    edgelist: the edge list (pl.DataFrame)
+    graph: optionally add the graph instance that corresponds to the edgelist (to not have to re-compute it)
+
+    Raises:
+    TypeError: if edgelist is not either a pl.LazyFrame
+
     """
     if isinstance(edgelist, pl.LazyFrame):
         logger.debug("Computing edgelist metrics where edgelist type is pl.LazyFrame")
@@ -385,11 +383,14 @@ def map_upis_to_components(
     The component names are then determined by calculating a hash of
     the nodes in that component.
 
-    :param edgelist: the edge list
-    :param node_component_map: a pd.Series mapping the nodes to their components
-    :returns: the remaining_edgelist and the removed_edgelist
-    :rtype: pl.LazyFrame
-    :raises TypeError: if edgelist is not either a pl.LazyFrame or a pd.DataFrame
+    Args:
+        edgelist: Edge list to annotate with component identifiers.
+        node_component_map: Mapping from node identifiers to component ids.
+        node_depth_map: Optional mapping used to filter nodes by depth.
+
+    Raises:
+        TypeError: If ``edgelist`` is not a ``pl.LazyFrame`` or ``pd.DataFrame``.
+
     """
     # Create a mapping of the components to a hash of its UPIs
     node_component_map = node_component_map.astype(str)
@@ -449,13 +450,13 @@ def update_edgelist_membership(
     is missing, it will be constructed based on the connected component
     in the graph made from the edgelist.
 
-    :param edgelist: the edge list
-    :param node_component_map: a pd.Series mapping the nodes to their components
-    if missing, it will be constructed based on the connected components in the
-    graph made from the edgelist.
-    :returns: the remaining_edgelist and the removed_edgelist
-    :rtype: pl.LazyFrame | pd.DataFrame
-    :raises TypeError: if edgelist is not either a pl.LazyFrame or a pd.DataFrame
+    Args:
+    edgelist: the edge list
+    node_component_map: a pd.Series mapping the nodes to their components if missing, it will be constructed based on the connected components in the graph made from the edgelist.
+
+    Raises:
+    TypeError: if edgelist is not either a pl.LazyFrame or a pd.DataFrame
+
     """
     if isinstance(edgelist, pd.DataFrame):
         was_dataframe = True
@@ -508,8 +509,9 @@ def split_remaining_and_removed_edgelist(
     i.e. empty string. They will be added to the remaining_edgelist.
     Otherwise they will be added to the removed_edgelist.
 
-    :param edgelist: the edge list
-    :returns: the remaining_edgelist and the removed_edgelist
+    Args:
+    edgelist: the edge list
+
     """
     if "component" in edgelist.collect_schema().names():
         logger.info("The input edge list already contains a component column")

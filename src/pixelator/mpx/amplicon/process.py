@@ -28,10 +28,10 @@ FastxReadTuple = Tuple[str, str, str]
 def trim_amplicon(record1: FastxReadTuple, amplicon: Region) -> FastxReadTuple:
     """Trim a single-end fastq record to match the amplicon length.
 
-    :param record1: the forward fastq record
-    :param amplicon: the amplicon region from the assay specification
-    :returns: a tuple with the sequence id, sequence and quality
-    :rtype: FastxReadTuple
+    Args:
+    record1: the forward fastq record
+    amplicon: the amplicon region from the assay specification
+
     """
     n1, s1, q1 = record1
     s1_len = len(s1)
@@ -53,12 +53,14 @@ def generate_amplicon(
 ) -> FastxReadTuple:
     """Generate a read from paired end fastq records.
 
-    :param record1: a tuple with name, sequence and quality of the forward reads
-    :param record2: a tuple with name, sequence and quality of the reverse read
-    :param amplicon: the amplicon region from the assay specification
-    :return: a tuple with the name, sequence and quality
-    :rtype: FastxReadTuple
-    :raises ValueError: if the headers of the two records are different
+    Args:
+    record1: a tuple with name, sequence and quality of the forward reads
+    record2: a tuple with name, sequence and quality of the reverse read
+    amplicon: the amplicon region from the assay specification
+
+    Raises:
+    ValueError: if the headers of the two records are different
+
     """
     n1, s1, q1 = record1
     n2, s2, q2 = record2
@@ -103,11 +105,12 @@ def generate_amplicon(
 def write_record(f: BinaryIO, header: str, sequence: str, quality: str) -> None:
     """Write a fastq record to a file.
 
-    :param f: the file to write to
-    :param header: the header of the record
-    :param sequence: the sequence of the record
-    :param quality: the quality of the record
-    :rtype: None
+    Args:
+    f: the file to write to
+    header: the header of the record
+    sequence: the sequence of the record
+    quality: the quality of the record
+
     """
     # Do not generate intermediate strings here to avoid unneeded copies
     f.write(b"@")
@@ -133,14 +136,16 @@ def amplicon_fastq(
     contents of the MPX fastq files and generate a new one based on the designed
     amplicon.
 
-    :param inputs: a list of path to the fastq reads
-    :param design: the design used in the config file
-    :param metrics: the path to the json metrics file
-    :param sample_id: the sample id
-    :param output: the path to the output file (processed)
-    :returns: None
-    :rtype: None
-    :raises RuntimeError: raises an exception
+    Args:
+    inputs: a list of path to the fastq reads
+    design: the design used in the config file
+    metrics: the path to the json metrics file
+    sample_id: the sample id
+    output: the path to the output file (processed)
+
+    Raises:
+    RuntimeError: raises an exception
+
     """
     logger.debug("Using design %s", design)
     assay = config.get_assay(design)

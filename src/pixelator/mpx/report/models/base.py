@@ -20,7 +20,9 @@ except ImportError:
 class SampleReport(pydantic.BaseModel):
     """Base class for all pixelator reports of `single-cell` subcommands.
 
-    :ivar sample_id: The sample id for which the report is generated.
+    Attributes:
+    sample_id: The sample id for which the report is generated.
+
     """
 
     sample_id: str
@@ -29,8 +31,12 @@ class SampleReport(pydantic.BaseModel):
     def from_json(cls, p: Path) -> Self:
         """Initialize an :class:`SampleReport` from a report file.
 
-        :param p: The path to the report file.
-        :return: A :class:`SampleReport` object.
+        Args:
+        p: The path to the report file.
+
+        Returns:
+        A: class:`SampleReport` object.
+
         """
         with open(p) as fp:
             json_data = json.load(fp)
@@ -40,8 +46,9 @@ class SampleReport(pydantic.BaseModel):
     def to_json(self, **kwargs: Any) -> str:  # noqa: DOC103
         """Dump the report to a json string.
 
-        :param kwargs: Additional arguments to pass to `json.dumps`.
-        :return: The report serialized to JSON as a string.
+        Args:
+        kwargs: Additional arguments to pass to `json.dumps`.
+
         """
         return json.dumps(self.model_dump(mode="json"), **kwargs)
 
@@ -50,8 +57,10 @@ class SampleReport(pydantic.BaseModel):
 
         Non-existing intermediate directories in the path will be created.
 
-        :param p: The path to the file to write.
-        :param kwargs: Additional arguments to pass to pydantics `model_dump_json`.
+        Args:
+        p: The path to the file to write.
+        kwargs: Additional arguments to pass to pydantics `model_dump_json`.
+
         """
         Path(p).resolve().parent.mkdir(parents=True, exist_ok=True)
 

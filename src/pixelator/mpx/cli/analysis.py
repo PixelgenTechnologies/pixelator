@@ -163,6 +163,23 @@ def analysis(
 ):
     """
     Perform different analyses on a PixelDataset from pixelator annotate
+
+    Args:
+        ctx: Ctx.
+        pxl_file: Pxl file.
+        compute_polarization: Compute polarization.
+        compute_colocalization: Compute colocalization.
+        use_full_bipartite: Use full bipartite.
+        polarization_transformation: Polarization transformation.
+        polarization_n_permutations: Polarization n permutations.
+        polarization_min_marker_count: Polarization min marker count.
+        colocalization_transformation: Colocalization transformation.
+        colocalization_neighbourhood_size: Colocalization neighbourhood size.
+        colocalization_n_permutations: Colocalization n permutations.
+        colocalization_min_region_count: Colocalization min region count.
+        colocalization_min_marker_count: Colocalization min marker count.
+        output: Output.
+
     """
     # log input parameters
     input_files = [pxl_file]

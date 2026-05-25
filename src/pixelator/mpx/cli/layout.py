@@ -64,6 +64,14 @@ def layout(
 ):
     """
     Compute graph layouts that can be used to visualize components
+
+    Args:
+        ctx: Ctx.
+        pxl_file: Pxl file.
+        no_node_marker_counts: No node marker counts.
+        layout_algorithm: Layout algorithm.
+        output: Output.
+
     """
     log_step_start(
         "layout",

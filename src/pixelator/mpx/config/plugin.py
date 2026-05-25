@@ -26,7 +26,11 @@ def fetch_config_plugins() -> Generator[EntryPoint, None, None]:
     """Find plugins and return them as in a generator.
 
     :yields EntryPoint: The entrypoint object
-    :returns: A generator of the loaded plugins
+
+
+    Returns:
+    A generator of the loaded plugins
+
     """
     eps = importlib.metadata.entry_points()
     group = "pixelator.config_plugin"
@@ -47,7 +51,12 @@ def fetch_config_plugins() -> Generator[EntryPoint, None, None]:
 
 
 def load_config_plugins(config: Config) -> Config:
-    """Load all config plugins."""
+    """Load all config plugins.
+
+    Args:
+        config: Config.
+
+    """
     new_config = config
 
     for entry_point in fetch_config_plugins():

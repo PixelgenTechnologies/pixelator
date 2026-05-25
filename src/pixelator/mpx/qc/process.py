@@ -39,27 +39,31 @@ def qc_fastq(
     are trimmed. Some filters are used to discard reads (maximum and minimum
     read length and the maximum number of Ns in a read).
 
-    :param input: the path to the fastq file
-    :param output: the path to the output file (processed)
-    :param failed: the path to the failed file (discarded reads)
-    :param report: the path to the html report file
-    :param metrics: the path to the json metrics file
-    :param design: the design used in the config file
-    :param n_limit: the number of Ns to use a cutoff to discard a read
-    :param trim_front: the number of bases to trim in the front
-    :param trim_tail: the number of bases to trim in the tail
-    :param min_length: the minimum length for the reads
-    :param max_length: the maximum length for the reads
-    :param threads: the number of threads to use
-    :param avg_qual: the minimum avg quality of a read
-    :param dedup: remove duplicated reads when true
-    :param remove_polyg: remove PolyG sequences (length 10 or more)
-    :param verbose: run in verbose mode when true
-    :returns: None
-    :raises ValueError: raises an exception
             OSError: raises an exception
             CalledProcessError: raises an exception
             RuntimeError: raises an exception
+
+    Args:
+    input: the path to the fastq file
+    output: the path to the output file (processed)
+    failed: the path to the failed file (discarded reads)
+    report: the path to the html report file
+    metrics: the path to the json metrics file
+    design: the design used in the config file
+    n_limit: the number of Ns to use a cutoff to discard a read
+    trim_front: the number of bases to trim in the front
+    trim_tail: the number of bases to trim in the tail
+    min_length: the minimum length for the reads
+    max_length: the maximum length for the reads
+    threads: the number of threads to use
+    avg_qual: the minimum avg quality of a read
+    dedup: remove duplicated reads when true
+    remove_polyg: remove PolyG sequences (length 10 or more)
+    verbose: run in verbose mode when true
+
+    Raises:
+    ValueError: raises an exception
+
     """
     args = [
         "fastp",
@@ -154,20 +158,24 @@ def adapter_qc_fastq(
     will be searched in the reads and only the reads that contain both
     sequences will be kept.
 
-    :param input: the path to the fastq file (must contain PBS1/2 sequences)
-    :param output: the path to the output file (processed)
-    :param failed: the path to the failed file (discarded)
-    :param report: the path to the json report
-    :param mismatches: the number of mismatches allowed (0.1 - 0.9)
-    :param pbs1: the PBS1 sequence
-    :param pbs2: the PBS2 sequence
-    :param cores: the number of threads to use
-    :param verbose: run in verbose mode when true
-    :returns: None
-    :raises ValueError: raises an exception
             OSError: raises an exception
             CalledProcessError: raises an exception
             RuntimeError: raises an exception
+
+    Args:
+    input: the path to the fastq file (must contain PBS1/2 sequences)
+    output: the path to the output file (processed)
+    failed: the path to the failed file (discarded)
+    report: the path to the json report
+    mismatches: the number of mismatches allowed (0.1 - 0.9)
+    pbs1: the PBS1 sequence
+    pbs2: the PBS2 sequence
+    cores: the number of threads to use
+    verbose: run in verbose mode when true
+
+    Raises:
+    ValueError: raises an exception
+
     """
     min_overlap_pbs1 = len(pbs1) - int(mismatches * len(pbs1))
     min_overlap_pbs2 = len(pbs2) - int(mismatches * len(pbs2))

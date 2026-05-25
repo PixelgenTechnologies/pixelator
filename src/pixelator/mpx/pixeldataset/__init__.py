@@ -47,9 +47,9 @@ MIN_VERTICES_REQUIRED = 100
 def read(path: PathType) -> PixelDataset:
     """Read a PixelDataset from a provided .pxl file.
 
-    :param path: path to the file to read
-    :return: an instance of `PixelDataset`
-    :rtype: PixelDataset
+    Args:
+    path: path to the file to read
+
     """
     return PixelDataset.from_file(path)
 
@@ -84,7 +84,10 @@ class PixelDataset:
         create a new `PixelDataset` instance.
 
         This method is reserved for advanced use.
-        :param backend: an instance of `PixelDatasetBackend`
+
+        Args:
+        backend: an instance of `PixelDatasetBackend`
+
         """
         self._backend = backend
 
@@ -92,9 +95,9 @@ class PixelDataset:
     def from_file(path: PathType) -> PixelDataset:
         """Create a new instance of `PixelDataset` from the file at the provided path.
 
-        :param path: path to a .pxl file
-        :return: A new instance of `PixelDataset`
-        :rtype: PixelDataset
+        Args:
+        path: path to a .pxl file
+
         """
         # We can ignore the error here, since while MyPy thinks that the
         # @cached_property decorators that we use on FileBasedPixelDatasetBackend
@@ -115,19 +118,16 @@ class PixelDataset:
     ) -> PixelDataset:
         """Create a new instance of PixelDataset from the provided underlying objects.
 
-        :param adata: an instance of `AnnData`
-        :param edgelist: an edgelist as a `pd.DataFrame`
-        :param metadata: an instance of a dictionary with metadata, defaults to None
-        :param polarization: a `pd.DataFrame` with polarization information,
-                             defaults to None
-        :param colocalization: a `pd.DataFrame` with colocalization information,
-                               defaults to None
-        :param precomputed_layouts: a PreComputedLayouts object, defaults to None
-        :param copy: specify if the input data should be copied or not.
-                     Defaults to True.
-        :param allow_empty_edgelist: allow the edgelist to be empty. Defaults to False.
-        :return: An instance of PixelDataset
-        :rtype: PixelDataset
+        Args:
+        adata: an instance of `AnnData`
+        edgelist: an edgelist as a `pd.DataFrame`
+        metadata: an instance of a dictionary with metadata, defaults to None
+        polarization: a `pd.DataFrame` with polarization information, defaults to None
+        colocalization: a `pd.DataFrame` with colocalization information, defaults to None
+        precomputed_layouts: a PreComputedLayouts object, defaults to None
+        copy: specify if the input data should be copied or not. Defaults to True.
+        allow_empty_edgelist: allow the edgelist to be empty. Defaults to False.
+
         """
         return PixelDataset(
             backend=ObjectBasedPixelDatasetBackend(
@@ -149,7 +149,12 @@ class PixelDataset:
 
     @adata.setter
     def adata(self, value: AnnData) -> None:
-        """Set the AnnData object."""
+        """Set the AnnData object.
+
+        Args:
+            value: Value.
+
+        """
         self._backend.adata = value
 
     @property
@@ -159,7 +164,12 @@ class PixelDataset:
 
     @edgelist.setter
     def edgelist(self, value: pd.DataFrame) -> None:
-        """Set the edge list."""
+        """Set the edge list.
+
+        Args:
+            value: Value.
+
+        """
         self._backend.edgelist = _enforce_edgelist_types(value)
 
     @property
@@ -181,7 +191,12 @@ class PixelDataset:
 
     @polarization.setter
     def polarization(self, value: pd.DataFrame) -> None:
-        """Set the polarization object."""
+        """Set the polarization object.
+
+        Args:
+            value: Value.
+
+        """
         self._backend.polarization = value
 
     @property
@@ -191,7 +206,12 @@ class PixelDataset:
 
     @colocalization.setter
     def colocalization(self, value: pd.DataFrame) -> None:
-        """Set the colocalization object."""
+        """Set the colocalization object.
+
+        Args:
+            value: Value.
+
+        """
         self._backend.colocalization = value
 
     @property
@@ -204,7 +224,12 @@ class PixelDataset:
 
     @metadata.setter
     def metadata(self, value: Dict) -> None:
-        """Set the metadata object."""
+        """Set the metadata object.
+
+        Args:
+            value: Value.
+
+        """
         self._backend.metadata = value
 
     @property
@@ -216,7 +241,12 @@ class PixelDataset:
 
     @precomputed_layouts.setter
     def precomputed_layouts(self, value: PreComputedLayouts | None) -> None:
-        """Set the precomputed layouts."""
+        """Set the precomputed layouts.
+
+        Args:
+            value: Value.
+
+        """
         # Note that the type ignore here is to handle the fact that the setter
         # needs to be able to take None (in order to make it easier to the user)
         # but that will be transformed into a empty PreComputedLayouts object
@@ -232,16 +262,12 @@ class PixelDataset:
     ) -> Graph:
         """Get the graph from the underlying edgelist.
 
-        :param component_id: Optionally give the component id of the component
-                             to only return that component.
-        :param add_node_marker_counts: Add marker counts to the nodes of the graph
-        :param simplify: If True, removes self-loops and multiple edges between nodes
-                         from the graph
-        :param use_full_bipartite: If True, the full bipartite graph will be used,
-                                   otherwise it will return the A-node projection
-        :return: A Graph instance
-        :rtype: Graph
-        :raises: KeyError if the provided `component_id` is not found in the edgelist
+        Args:
+        component_id: Optionally give the component id of the component to only return that component.
+        add_node_marker_counts: Add marker counts to the nodes of the graph
+        simplify: If True, removes self-loops and multiple edges between nodes from the graph
+        use_full_bipartite: If True, the full bipartite graph will be used, otherwise it will return the A-node projection
+
         """
         if component_id:
             potential_component = self.edgelist_lazy.filter(
@@ -303,8 +329,9 @@ class PixelDataset:
     def copy(self) -> PixelDataset:
         """Create a copy of the current PixelDataset instance.
 
-        :return: A copy of the PixelDataset instance
-        :rtype: PixelDataset
+        Returns:
+        A copy of the PixelDataset instance (PixelDataset)
+
         """
         return PixelDataset.from_data(
             adata=self.adata.copy(),
@@ -332,15 +359,11 @@ class PixelDataset:
     ) -> None:
         """Save the PixelDataset to a .pxl file in the location provided in `path`.
 
-        :param path: the path where to save the dataset as a .pxl
-        :param file_format: should be 'csv' or 'parquet'. Default is 'parquet'.
-                            This indicates what file-format is used to serialize
-                            the data frames in the .pxl file.
-        :param force_overwrite: By default pixelator will not overwrite existing .pxl files, set this to true to
-                                force an overwrite of the existing file.
-        :returns: None
-        :rtype: None
-        :raises: AssertionError if invalid file format specified
+        Args:
+        path: the path where to save the dataset as a .pxl
+        file_format: should be 'csv' or 'parquet'. Default is 'parquet'. This indicates what file-format is used to serialize the data frames in the .pxl file.
+        force_overwrite: By default pixelator will not overwrite existing .pxl files, set this to true to force an overwrite of the existing file.
+
         """
         logger.debug("Saving PixelDataset to %s", path)
 
@@ -368,10 +391,10 @@ class PixelDataset:
 
         Consequently precomputed layouts will also not be filtered by marker.
 
-        :param components: The components you want to keep, defaults to None
-        :param markers: The markers you want to keep, defaults to None
-        :return: A new instance of PixelDataset with the components/markers selected
-        :rtype: PixelDataset
+        Args:
+        components: The components you want to keep, defaults to None
+        markers: The markers you want to keep, defaults to None
+
         """
         change_components = components is not None
         change_markers = markers is not None

@@ -34,7 +34,12 @@ class OrderedGroup(click.Group):
     def list_commands(  # type: ignore
         self, ctx: click.Context
     ) -> Mapping[str, click.Command]:
-        """Return a list of subcommands."""
+        """Return a list of subcommands.
+
+        Args:
+            ctx: Ctx.
+
+        """
         return self.commands
 
 
@@ -47,7 +52,13 @@ class AliasedOrderedGroup(OrderedGroup):
     """
 
     def group(self, *args, **kwargs):
-        """Attach a click group that supports aliases."""
+        """Attach a click group that supports aliases.
+
+        Args:
+            args: Args.
+            kwargs: Kwargs.
+
+        """
 
         def decorator(f):
             aliased_group = []
@@ -81,7 +92,12 @@ class AliasedOrderedGroup(OrderedGroup):
 
 
 def output_option(func):
-    """Wrap a Click entrypoint to add the --output option."""
+    """Wrap a Click entrypoint to add the --output option.
+
+    Args:
+        func: Func.
+
+    """
 
     @click.option(
         "--output",
@@ -100,7 +116,12 @@ def output_option(func):
 
 
 def design_option(func):
-    """Decorate a click command and add the --design option."""
+    """Decorate a click command and add the --design option.
+
+    Args:
+        func: Func.
+
+    """
     from pixelator.mpx.config import config
 
     assay_options = list(config.assays.keys())
