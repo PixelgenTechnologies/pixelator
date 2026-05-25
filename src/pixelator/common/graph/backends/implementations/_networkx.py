@@ -545,6 +545,7 @@ class NetworkxBasedVertex(Vertex):
         neighbor_vertices = set(self._graph.neighbors(self._index))
 
         def generate_neighbors():
+            """Yield neighbor vertices connected to the current cluster."""
             for node_idx, data in self._graph.nodes(data=True):
                 if node_idx in neighbor_vertices:
                     yield NetworkxBasedVertex(node_idx, data, self._graph)
@@ -614,6 +615,7 @@ class NetworkxBasedVertexSequence(VertexSequence):
         """Get all attributes associated with the vertices."""
 
         def all_attributes():
+            """Yield unique vertex attribute keys in the graph."""
             for node in self._vertices.values():
                 for key in node.data.keys():
                     yield key
@@ -712,6 +714,7 @@ class NetworkxBasedVertexClustering(VertexClustering):
 
     def _crossing_edges(self):
         def find_crossing_edges():
+            """Yield edges that cross between connected components."""
             graph = self._graph
             for cluster in self._clustering:
                 # Setting `nbunch2=None` means that we look for all edges

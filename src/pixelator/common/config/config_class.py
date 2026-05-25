@@ -157,6 +157,7 @@ class Config:
             return None
 
         def keyfunc(p):
+            """Return the parsed panel version used for sorting."""
             version = p.version
             if version is None:
                 v = semver.Version.parse("0.0.0")

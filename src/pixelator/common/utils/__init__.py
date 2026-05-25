@@ -182,6 +182,7 @@ def group_input_reads(
     """
 
     def group_fn(s):
+        """Return the normalized sample name used for grouping inputs."""
         sn = get_sample_name(s)
         return sn.replace(input1_pattern, "").replace(input2_pattern, "")
 
@@ -371,6 +372,7 @@ def timer(func):
 
     @wraps(func)
     def wrapper(*args, **kwds):
+        """Run the wrapped function and log its execution time."""
         start_time = time.perf_counter()
         res = func(*args, **kwds)
         run_time = time.perf_counter() - start_time

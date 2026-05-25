@@ -32,20 +32,15 @@ import numpy.typing as npt
 def _pldist(
     point: np.ndarray, start: np.ndarray, end: np.ndarray
 ) -> npt.NDArray[np.float64]:
-    """Calculate the distance of points to a line segment.
-
-        The line segment is defined by two points, start and end.
-        The distance is calculated for each point in the points array.
-
-        :type point: numpy array
-        :type start: numpy array
-        :type end: numpy array
-
+    """Calculate the perpendicular distance from a point to a line segment.
 
     Args:
-        point: a point
-        start: a point of the line
-        end: another point of the line
+        point: Point coordinates.
+        start: Start point of the segment.
+        end: End point of the segment.
+
+    Returns:
+        Distance from the point to the segment.
 
     """
     if np.all(start == end):
