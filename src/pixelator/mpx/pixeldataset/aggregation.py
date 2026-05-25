@@ -82,12 +82,12 @@ def simple_aggregate(
     available for downstream analysis.
 
     Args:
-    sample_names: an iterable of the sample names to use for each dataset
-    datasets: an iterable of the datasets you want to aggregate
-    ignore_edgelists: ignoring merging the edgelists, leaving them empty in the resulting PixelDataset. Defaults to False.
+        sample_names: an iterable of the sample names to use for each dataset
+        datasets: an iterable of the datasets you want to aggregate
+        ignore_edgelists: ignoring merging the edgelists, leaving them empty in the resulting PixelDataset. Defaults to False.
 
     Raises:
-    AssertionError: If not all pre-conditions are meet.
+        AssertionError: If not all pre-conditions are meet.
     """
     if not (len(datasets)) > 1:
         raise AssertionError(

@@ -32,15 +32,15 @@ def filter_components_sizes(
 ) -> np.ndarray:
     """Filter components by size.
 
-        Filter the component sizes provided in `component_sizes` using the size
-        cut-offs defined in `min_size` and `max_size`. The components are not
-        actually filtered, the function returns a boolean numpy array which
-        evaluates to True if the component pass the filters.
+    Filter the component sizes provided in `component_sizes` using the size
+    cut-offs defined in `min_size` and `max_size`. The components are not
+    actually filtered, the function returns a boolean numpy array which
+    evaluates to True if the component pass the filters.
 
     Args:
-    component_sizes: a numpy array with the size of each component
-    min_size: the minimum size a component must have
-    max_size: the maximum size a component must have
+        component_sizes: a numpy array with the size of each component
+        min_size: the minimum size a component must have
+        max_size: the maximum size a component must have
     """
     n_components = len(component_sizes)
     logger.debug(

@@ -26,8 +26,7 @@ class MockAnalysis(PerComponentTask):
         """Initialize the instance.
 
         Args:
-        multiplication_factor: multiplication factor.
-
+            multiplication_factor: multiplication factor.
         """
         self.multiplication_factor = multiplication_factor
         self.TASK_NAME = f"mock_analysis_{multiplication_factor}"
@@ -40,7 +39,6 @@ class MockAnalysis(PerComponentTask):
         Args:
             component: Component.
             component_id: Component id.
-
         """
         return pd.DataFrame({"component_id": [component_id], "values": [2]})
 
@@ -48,9 +46,8 @@ class MockAnalysis(PerComponentTask):
         """Run the analysis on this component.
 
         Args:
-        component: The graph of the component.
-        component_id: The id of the component.
-
+            component: The graph of the component.
+            component_id: The id of the component.
         """
         raise NotImplementedError
 
@@ -59,7 +56,6 @@ class MockAnalysis(PerComponentTask):
 
         Args:
             data: Data.
-
         """
         data["values_multiplied"] = data["values"] * self.multiplication_factor
         return data
@@ -70,7 +66,6 @@ class MockAnalysis(PerComponentTask):
         Args:
             data: Data.
             pxl_file_target: Pxl file target.
-
         """
         pxl_file_target.data_slots[self.TASK_NAME] = data  # type: ignore
 
@@ -79,7 +74,6 @@ class MockAnalysis(PerComponentTask):
 
         Args:
             data: Data.
-
         """
         scores = pd.concat(data, axis=0, ignore_index=True)
         return scores
@@ -103,9 +97,8 @@ def test_analysis_manager():
             """Initialize the instance.
 
             Args:
-            component_id: component id.
-            data: data.
-
+                component_id: component id.
+                data: data.
             """
             self.component_id = component_id
             self.frame = data
@@ -136,8 +129,7 @@ def test_analysis_manager():
             """Initialize the instance.
 
             Args:
-            mock_component_stream: mock component stream.
-
+                mock_component_stream: mock component stream.
             """
             self._mock_component_stream = mock_component_stream
             self.data = {}

@@ -13,9 +13,8 @@ def test_read(setup_basic_pixel_dataset, tmp_path):
     """Verify read.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-    tmp_path: tmp path.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+        tmp_path: tmp path.
     """
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"

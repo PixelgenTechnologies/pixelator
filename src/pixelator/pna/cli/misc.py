@@ -14,9 +14,9 @@ def list_single_cell_pna_designs(ctx: click.Context, param: Any, value: Any) -> 
     """Return a list of single cell designs supported by the config.
 
     Args:
-    ctx: The click context
-    param: The click parameter
-    value: The click value
+        ctx: The click context
+        param: The click parameter
+        value: The click value
     """
     from pixelator.pna.config import pna_config
 
@@ -37,10 +37,10 @@ def list_single_cell_pna_panels(
     """Return a list of single cell panels supported by the config.
 
     Args:
-    ctx: The click context
-    param: The click parameter
-    value: The click value
-    include_archived: Include archived.
+        ctx: The click context
+        param: The click parameter
+        value: The click value
+        include_archived: Include archived.
     """
     from pixelator.pna.config import pna_config
 
@@ -62,8 +62,8 @@ def list_single_cell_pna_panels_including_archived(
     """Return a list of single cell panels supported by the config, including archived panels.
 
     Args:
-    ctx: The click context
-    param: The click parameter
-    value: The click value
+        ctx: The click context
+        param: The click parameter
+        value: The click value
     """
     list_single_cell_pna_panels(ctx, param, value, include_archived=True)

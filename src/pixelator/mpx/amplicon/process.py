@@ -29,8 +29,8 @@ def trim_amplicon(record1: FastxReadTuple, amplicon: Region) -> FastxReadTuple:
     """Trim a single-end fastq record to match the amplicon length.
 
     Args:
-    record1: the forward fastq record
-    amplicon: the amplicon region from the assay specification
+        record1: the forward fastq record
+        amplicon: the amplicon region from the assay specification
     """
     n1, s1, q1 = record1
     s1_len = len(s1)
@@ -53,12 +53,12 @@ def generate_amplicon(
     """Generate a read from paired end fastq records.
 
     Args:
-    record1: a tuple with name, sequence and quality of the forward reads
-    record2: a tuple with name, sequence and quality of the reverse read
-    amplicon: the amplicon region from the assay specification
+        record1: a tuple with name, sequence and quality of the forward reads
+        record2: a tuple with name, sequence and quality of the reverse read
+        amplicon: the amplicon region from the assay specification
 
     Raises:
-    ValueError: if the headers of the two records are different
+        ValueError: if the headers of the two records are different
     """
     n1, s1, q1 = record1
     n2, s2, q2 = record2
@@ -104,10 +104,10 @@ def write_record(f: BinaryIO, header: str, sequence: str, quality: str) -> None:
     """Write a fastq record to a file.
 
     Args:
-    f: the file to write to
-    header: the header of the record
-    sequence: the sequence of the record
-    quality: the quality of the record
+        f: the file to write to
+        header: the header of the record
+        sequence: the sequence of the record
+        quality: the quality of the record
     """
     # Do not generate intermediate strings here to avoid unneeded copies
     f.write(b"@")
@@ -134,14 +134,14 @@ def amplicon_fastq(
     amplicon.
 
     Args:
-    inputs: a list of path to the fastq reads
-    design: the design used in the config file
-    metrics: the path to the json metrics file
-    sample_id: the sample id
-    output: the path to the output file (processed)
+        inputs: a list of path to the fastq reads
+        design: the design used in the config file
+        metrics: the path to the json metrics file
+        sample_id: the sample id
+        output: the path to the output file (processed)
 
     Raises:
-    RuntimeError: raises an exception
+        RuntimeError: raises an exception
     """
     logger.debug("Using design %s", design)
     assay = config.get_assay(design)

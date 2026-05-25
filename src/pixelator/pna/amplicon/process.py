@@ -59,19 +59,19 @@ def amplicon_fastq(
     sequences based on the assay design. The reads will be quality trimmed and filtered.
 
     Args:
-    inputs: The input files to process
-    assay: The assay design to use
-    output: The output file to write
-    mismatches: The number of mismatches to allow
-    poly_g_trimming: Whether to perform poly-G trimming
-    quality_cutoff: The quality cutoff to use for quality trimming read tails
-    low_complexity_filter: Whether to filter reads with low complexity UMIs
-    low_complexity_threshold: The percentage of the UMI that must consists of a single base to be considered of low complexity.
-    lbs_filter: Whether to filter reads with LBS detected in the UMI regions
-    lbs_filter_min_overlap: The minimum overlap to use for LBS detection in UMI regions
-    lbs_filter_error_rate: The maximum error rate to allow when determining overlap with the LBS sequence in UMI regions,
-    threads: The number of cores to use. -1 will use all available cores
-    save_failed: Whether to save reads that fail during amplicon combining to a separate file
+        inputs: The input files to process
+        assay: The assay design to use
+        output: The output file to write
+        mismatches: The number of mismatches to allow
+        poly_g_trimming: Whether to perform poly-G trimming
+        quality_cutoff: The quality cutoff to use for quality trimming read tails
+        low_complexity_filter: Whether to filter reads with low complexity UMIs
+        low_complexity_threshold: The percentage of the UMI that must consists of a single base to be considered of low complexity.
+        lbs_filter: Whether to filter reads with LBS detected in the UMI regions
+        lbs_filter_min_overlap: The minimum overlap to use for LBS detection in UMI regions
+        lbs_filter_error_rate: The maximum error rate to allow when determining overlap with the LBS sequence in UMI regions,
+        threads: The number of cores to use. -1 will use all available cores
+        save_failed: Whether to save reads that fail during amplicon combining to a separate file
     """
     threads = threads if threads > 0 else mp.cpu_count()
 

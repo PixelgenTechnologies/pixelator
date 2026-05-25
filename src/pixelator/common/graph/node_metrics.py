@@ -24,41 +24,41 @@ def local_g(
 ) -> pd.DataFrame:
     """Compute local G-scores for each node and marker.
 
-        Local G([1]_) is a spatial node metric that measures the spatial association.
-        The metric can for instance be used to detect hot spots for marker counts in a graph, where nodes
-        that are close to each other have similar values. The metric is a Z-score that
-        measures the deviation of the observed local marker expression from the expected marker
-        expression under the null hypothesis of no spatial association. The sign of the score
-        indicates whether the observed marker counts are higher or lower than expected
-        and can therefore be used to identify hot and/or cold spots.
+    Local G([1]_) is a spatial node metric that measures the spatial association.
+    The metric can for instance be used to detect hot spots for marker counts in a graph, where nodes
+    that are close to each other have similar values. The metric is a Z-score that
+    measures the deviation of the observed local marker expression from the expected marker
+    expression under the null hypothesis of no spatial association. The sign of the score
+    indicates whether the observed marker counts are higher or lower than expected
+    and can therefore be used to identify hot and/or cold spots.
 
-        The observed local marker expression for a node is computed by aggregating the weighted marker
-        expression within its local neighborhood. The local G metric is largely influenced by the choice
-        of edge weights and the size of the local neighborhood (`k`). The method implemented here uses
-        incoming transition probabilities for a k-step random walk as edge weights. By increasing `k`,
-        the local neighborhood of a node is expanded, increasing the "smoothing effect" of the metric,
-        which can be useful to increase the scale of spatial association.
+    The observed local marker expression for a node is computed by aggregating the weighted marker
+    expression within its local neighborhood. The local G metric is largely influenced by the choice
+    of edge weights and the size of the local neighborhood (`k`). The method implemented here uses
+    incoming transition probabilities for a k-step random walk as edge weights. By increasing `k`,
+    the local neighborhood of a node is expanded, increasing the "smoothing effect" of the metric,
+    which can be useful to increase the scale of spatial association.
 
-        Local G can also be useful for more interpretable visualization of polarized marker expression
-        as it enhances spatial trends across neighborhoods in the graph, even if the marker counts within
-        individual nodes are sparse.
+    Local G can also be useful for more interpretable visualization of polarized marker expression
+    as it enhances spatial trends across neighborhoods in the graph, even if the marker counts within
+    individual nodes are sparse.
 
-        Note that it is important that the node ordering in the sparse adjacency matrix, and
-        the counts matrix line up. If calling this method directly the caller is responsible for
-        ensuring that this contract is fulfilled.
+    Note that it is important that the node ordering in the sparse adjacency matrix, and
+    the counts matrix line up. If calling this method directly the caller is responsible for
+    ensuring that this contract is fulfilled.
 
-        .. [1] Bivand, R.S., Wong, D.W.S. Comparing implementations of global and
-        local indicators of spatial association. TEST 27, 716–748 (2018).
-        https://doi.org/10.1007/s11749-018-0599-x
+    .. [1] Bivand, R.S., Wong, D.W.S. Comparing implementations of global and
+    local indicators of spatial association. TEST 27, 716–748 (2018).
+    https://doi.org/10.1007/s11749-018-0599-x
 
     Args:
-    A: A sparse adjacency matrix representing the graph.
-    counts: A DataFrame of marker counts for each node.
-    k: The number of steps in the k-step random walk. Default is 1.
-    use_weights: Whether to use weights in the computation. When turned off, all edge weights will be qeual to 1. Default is True.
-    normalize_counts: Whether to normalize counts to proportions. Default is False.
-    W: A sparse matrix of custom edge weights. This will override the automated computation of edge weights. `W` must have the same dimensions as A. Note that weights can be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
-    method: The method to use for computing local G. Must be one of 'gi' or 'gstari'. 'gi' is the original local G metric, which does not consider self-loops, meaning that the local marker expression for a node is computed by aggregating the weighted expression of its neighbors. 'gstari' is a simplified version of local G that does consider self-loops. In other words, the local marker expression of a node also includes the weighted marker expression of the node itself. Default is 'gi'.
+        A: A sparse adjacency matrix representing the graph.
+        counts: A DataFrame of marker counts for each node.
+        k: The number of steps in the k-step random walk. Default is 1.
+        use_weights: Whether to use weights in the computation. When turned off, all edge weights will be qeual to 1. Default is True.
+        normalize_counts: Whether to normalize counts to proportions. Default is False.
+        W: A sparse matrix of custom edge weights. This will override the automated computation of edge weights. `W` must have the same dimensions as A. Note that weights can be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
+        method: The method to use for computing local G. Must be one of 'gi' or 'gstari'. 'gi' is the original local G metric, which does not consider self-loops, meaning that the local marker expression for a node is computed by aggregating the weighted expression of its neighbors. 'gstari' is a simplified version of local G that does consider self-loops. In other words, the local marker expression of a node also includes the weighted marker expression of the node itself. Default is 'gi'.
     """
     # Check that type is one of 'gi' or 'gstari'
     if method not in ["gi", "gstari"]:
@@ -182,22 +182,22 @@ def compute_transition_probabilities(
 ) -> sp.sparse.csr_array:
     """Compute transition probabilities of a graph.
 
-        This function computes the transition probabilities for node pairs in a graph.
-        Transition probabilities can for example be useful for weighting marker counts
-        when computing local spatial node metrics such as local G. The transition
-        probability is the probability of going from one node to another in a k-step walk,
-        where `k` is the number of steps in the walk. When `k=1`, the transition probabilities
-        are defined for the edges in the graph. With `k>1`, the transition probabilities can
-        be positive for node pairs that are not directly connected by an edge, including
-        transitions from a node to itself. In some situations, it may be desirable to ignore
-        these transitions (self-loops), which can be achieved by setting `remove_self_loops=True`.
-        In this case, the diagonal of the transition probability matrix is set to 0 and the
-        probabilities are renormalized (row-wise) to sum to 1.
+    This function computes the transition probabilities for node pairs in a graph.
+    Transition probabilities can for example be useful for weighting marker counts
+    when computing local spatial node metrics such as local G. The transition
+    probability is the probability of going from one node to another in a k-step walk,
+    where `k` is the number of steps in the walk. When `k=1`, the transition probabilities
+    are defined for the edges in the graph. With `k>1`, the transition probabilities can
+    be positive for node pairs that are not directly connected by an edge, including
+    transitions from a node to itself. In some situations, it may be desirable to ignore
+    these transitions (self-loops), which can be achieved by setting `remove_self_loops=True`.
+    In this case, the diagonal of the transition probability matrix is set to 0 and the
+    probabilities are renormalized (row-wise) to sum to 1.
 
     Args:
-    A: A sparse adjacency matrix representing the graph.
-    k: The number of steps in the random walk. Default is 1.
-    remove_self_loops: Whether to remove self-loops from the transition probability matrix. Default is False.
+        A: A sparse adjacency matrix representing the graph.
+        k: The number of steps in the random walk. Default is 1.
+        remove_self_loops: Whether to remove self-loops from the transition probability matrix. Default is False.
     """
     # Check that k is a positive integer
     if not isinstance(k, int) or k < 1:

@@ -62,13 +62,13 @@ def correct_marker_barcodes(
     marker is added to the header.
 
     Args:
-    input: The path to the input FASTQ file.
-    assay: The assay design.
-    panel: The antibody panel.
-    output: The output directory.
-    save_failed: Save failed reads to a separate file.
-    mismatches: The number of mismatches allowed when correcting towards known markers.
-    threads: The number of threads to use for processing. By default all available cores are used.
+        input: The path to the input FASTQ file.
+        assay: The assay design.
+        panel: The antibody panel.
+        output: The output directory.
+        save_failed: Save failed reads to a separate file.
+        mismatches: The number of mismatches allowed when correcting towards known markers.
+        threads: The number of threads to use for processing. By default all available cores are used.
     """
     threads = threads if threads > 0 else mp.cpu_count()
 
@@ -155,15 +155,15 @@ def demux_barcode_groups(
     Sequence records will be streamed into Arrow IPC files given a target batch size.
 
     Args:
-    corrected_reads: Corrected reads.
-    assay: Assay.
-    panel: Panel.
-    stats: Stats.
-    output_dir: Output dir.
-    reads_per_chunk: Reads per chunk.
-    max_chunks: Max chunks.
-    threads: Threads.
-    stategy: Stategy.
+        corrected_reads: Corrected reads.
+        assay: Assay.
+        panel: Panel.
+        stats: Stats.
+        output_dir: Output dir.
+        reads_per_chunk: Reads per chunk.
+        max_chunks: Max chunks.
+        threads: Threads.
+        stategy: Stategy.
     """
     # Open file handles for input files
 
@@ -254,20 +254,20 @@ def finalize_batched_groups(
     which allows for fast contiguous reads [marker_1, marker_2] groups.
 
     Params:
-        input_dir: the path to the work directory containing the demuxed data
-        output_dir: the path to the output directory
-        remove_intermediates: whether to remove the intermediate Arrow files after writing to parquet
-        strategy: the demultiplexing strategy to use. Can be "paired" or "independent"
-        memory: maximum amount of memory to use in bytes
+    input_dir: the path to the work directory containing the demuxed data
+    output_dir: the path to the output directory
+    remove_intermediates: whether to remove the intermediate Arrow files after writing to parquet
+    strategy: the demultiplexing strategy to use. Can be "paired" or "independent"
+    memory: maximum amount of memory to use in bytes
 
     Args:
-    input_dir: Input dir.
-    output_dir: Output dir.
-    remove_intermediates: Remove intermediates.
-    strategy: Strategy.
-    memory: Memory.
-    threads: Threads.
-    temp_dir: Temp dir.
+        input_dir: Input dir.
+        output_dir: Output dir.
+        remove_intermediates: Remove intermediates.
+        strategy: Strategy.
+        memory: Memory.
+        threads: Threads.
+        temp_dir: Temp dir.
     """
     if strategy == "independent":
         return _finalize_batched_groups_independent(
@@ -308,25 +308,25 @@ def _finalize_batched_groups_paired(
     which allows for fast contiguous reads of [marker_1, marker_2] groups.
 
     Params:
-        input_dir:
-            the path to the work directory containing the demuxed data
-        output_dir:
-            the path to the output directory where the final parquet files are written
-        remove_intermediates:
-            Whether to remove the intermediate parquet files after sorting and deduplication
-        memory:
-            Maximum amount of memory to use. Use None to disable memory limits.
+    input_dir:
+    the path to the work directory containing the demuxed data
+    output_dir:
+    the path to the output directory where the final parquet files are written
+    remove_intermediates:
+    Whether to remove the intermediate parquet files after sorting and deduplication
+    memory:
+    Maximum amount of memory to use. Use None to disable memory limits.
 
     Args:
-    input_dir: Input dir.
-    output_dir: Output dir.
-    remove_intermediates: Remove intermediates.
-    memory: Memory.
-    threads: Threads.
-    temp_dir: Temp dir.
+        input_dir: Input dir.
+        output_dir: Output dir.
+        remove_intermediates: Remove intermediates.
+        memory: Memory.
+        threads: Threads.
+        temp_dir: Temp dir.
 
     Raises:
-    ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
+        ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
     """
     parquet_files = []
     tmp_parquet_files = list(input_dir.glob("*.parquet"))
@@ -373,27 +373,27 @@ def _finalize_batched_groups_independent(
     which allows for fast contiguous reads [marker_1, marker_2] groups.
 
     Params:
-        work_dir:
-            the path to the work directory containing the demuxed data
-        remove_intermediates:
-             Whether to remove the intermediate parquet files after sorting and deduplication
-        memory:
-            Maximum amount of memory to use for DuckDB operations. Use None to disable memory limits.
-        threads:
-            The number of threads to use for DuckDB operations. Use None to let DuckDB decide.
-        temp_dir:
-            The temporary directory to use for DuckDB operations. If None, DuckDB will decide (defaults to /tmp).
+    work_dir:
+    the path to the work directory containing the demuxed data
+    remove_intermediates:
+    Whether to remove the intermediate parquet files after sorting and deduplication
+    memory:
+    Maximum amount of memory to use for DuckDB operations. Use None to disable memory limits.
+    threads:
+    The number of threads to use for DuckDB operations. Use None to let DuckDB decide.
+    temp_dir:
+    The temporary directory to use for DuckDB operations. If None, DuckDB will decide (defaults to /tmp).
 
     Args:
-    input_dir: Input dir.
-    output_dir: Output dir.
-    remove_intermediates: Remove intermediates.
-    memory: Memory.
-    threads: Threads.
-    temp_dir: Temp dir.
+        input_dir: Input dir.
+        output_dir: Output dir.
+        remove_intermediates: Remove intermediates.
+        memory: Memory.
+        threads: Threads.
+        temp_dir: Temp dir.
 
     Raises:
-    ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
+        ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
     """
     parquet_files = []
     tmp_files = list(input_dir.glob("*.parquet"))

@@ -35,9 +35,9 @@ class PixelFileWriter:
         """Initialize the PixelFileWriter.
 
         Args:
-        path: The path to the PXL file.
-        exists_ok: Whether to remove the file if it exists.
-        exits_ok: Exits ok.
+            path: The path to the PXL file.
+            exists_ok: Whether to remove the file if it exists.
+            exits_ok: Exits ok.
         """
         self.path = path
         self.exists_ok = exits_ok
@@ -58,8 +58,7 @@ class PixelFileWriter:
         """Get the connection to the PXL file.
 
         Returns:
-        The duckdb connection.
-
+            The duckdb connection.
         """
         if self._connection is None:
             raise ValueError("Connection is not open.")
@@ -74,9 +73,9 @@ class PixelFileWriter:
         """Close the writer context manager.
 
         Args:
-        exc_type: Exc type.
-        exc_value: Exc value.
-        traceback: Traceback.
+            exc_type: Exc type.
+            exc_value: Exc value.
+            traceback: Traceback.
         """
         self.close()
 
@@ -99,7 +98,7 @@ class PixelFileWriter:
         """Write the edgelist to the PXL file.
 
         Args:
-        edgelist: The path to the edgelist parquet file.
+            edgelist: The path to the edgelist parquet file.
         """
         if isinstance(edgelist, Path):
             self._write_parquet_file_to_table("edgelist", edgelist)
@@ -125,7 +124,7 @@ class PixelFileWriter:
         """Write the AnnData object to the PXL file.
 
         Args:
-        adata: The AnnData object to write.
+            adata: The AnnData object to write.
         """
         self._clean_existing_adata_tables()
 
@@ -158,7 +157,7 @@ class PixelFileWriter:
         """Write the metadata to the PXL file.
 
         Args:
-        metadata: The metadata dictionary to write.
+            metadata: The metadata dictionary to write.
         """
         self._connection.sql(
             """
@@ -173,7 +172,7 @@ class PixelFileWriter:
         """Write the layouts to the PXL file.
 
         Args:
-        layouts: The path to the layouts parquet file.
+            layouts: The path to the layouts parquet file.
         """
         try:
             if isinstance(layouts, list) or layouts.is_file():  # type: ignore
@@ -194,7 +193,7 @@ class PixelFileWriter:
         """Write the proximity data to the PXL file.
 
         Args:
-        proximity: The path to the proximity parquet file.
+            proximity: The path to the proximity parquet file.
         """
         try:
             if proximity.is_file():  # type: ignore

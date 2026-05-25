@@ -22,20 +22,19 @@ class BarcodeIdentifierStatistics:
     the statistics will be merged into a single instance and passed
     to the final statistics object.
 
-        A counter object capturing the distribution of distances for PID1 matches.
-        A counter object capturing the distribution of distances for PID2 matches.
+    A counter object capturing the distribution of distances for PID1 matches.
+    A counter object capturing the distribution of distances for PID2 matches.
 
 
 
     Attributes:
-    passed: the number of reads that passed the barcode identifier
-    failed: the number of reads that failed the barcode identifier
-    missing_pid1: the number of reads with a missing PID1
-    missing_pid2: the number of reads with a missing PID2
-    pid1_matches_distance_distribution:
-    pid2_matches_distance_distribution:
-    pid_pair_counter: A counter object capturing the number of reads per PID pair.
-
+        passed: the number of reads that passed the barcode identifier
+        failed: the number of reads that failed the barcode identifier
+        missing_pid1: the number of reads with a missing PID1
+        missing_pid2: the number of reads with a missing PID2
+        pid1_matches_distance_distribution:
+        pid2_matches_distance_distribution:
+        pid_pair_counter: A counter object capturing the number of reads per PID pair.
     """
 
     def __init__(self):
@@ -68,7 +67,7 @@ class BarcodeIdentifierStatistics:
         """Merge statistics from another object into this one.
 
         Args:
-        other: Other.
+            other: Other.
         """
         if isinstance(other, BarcodeIdentifierStatistics):
             self.exact += other.exact
@@ -135,10 +134,10 @@ class BarcodeIdentifier(SingleEndStep, HasFilterStatistics, HasCustomStatistics)
         """Initialize the BarcodeIdentifier object.
 
         Args:
-        assay: the assay design
-        panel: the antibody panel
-        mismatches: the maximum number of mismatches allowed when aligning the LBS sequences
-        writer: a writer to save failed reads to
+            assay: the assay design
+            panel: the antibody panel
+            mismatches: the maximum number of mismatches allowed when aligning the LBS sequences
+            writer: a writer to save failed reads to
         """
         self.assay = assay
         self.panel = panel
@@ -172,8 +171,8 @@ class BarcodeIdentifier(SingleEndStep, HasFilterStatistics, HasCustomStatistics)
         """Find the nearest antibody for a given barcode.
 
         Args:
-        read: the read to process
-        info: Info.
+            read: the read to process
+            info: Info.
         """
         # Extract the barcode sequence
         _stats = self._stats

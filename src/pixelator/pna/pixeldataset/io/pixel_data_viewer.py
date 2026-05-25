@@ -69,10 +69,10 @@ class PixelDataViewer:
         """Initialize the PixelDataViewer.
 
         Args:
-        sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
+            sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
 
         Raises:
-        ValueError: If any of the files are not valid PXL files.
+            ValueError: If any of the files are not valid PXL files.
         """
         self._db_to_file_mapping = sample_name_to_pxl_file_mapping
         self._normalized_sample_name_mapping = self._map_sample_names_to_db_names(
@@ -93,7 +93,7 @@ class PixelDataViewer:
         """Create a normalized sample name lookup table for working with the duckdb files.
 
         Args:
-        sample_name_to_pxl_file_mapping: Sample name to pxl file mapping.
+            sample_name_to_pxl_file_mapping: Sample name to pxl file mapping.
         """
 
         def _normalize_sample_name(name: str) -> str:
@@ -119,7 +119,7 @@ class PixelDataViewer:
         """Get the normalized name for a sample name.
 
         Args:
-        sample_name: Sample name.
+            sample_name: Sample name.
         """
         try:
             return self._normalized_sample_name_mapping[sample_name]
@@ -135,7 +135,7 @@ class PixelDataViewer:
         This will use the sample names from the PxlFile metadata as sample names.
 
         Args:
-        pxl_files: Pxl files.
+            pxl_files: Pxl files.
         """
         return PixelDataViewer(
             {pxl_file.sample_name: pxl_file for pxl_file in pxl_files}
@@ -148,7 +148,7 @@ class PixelDataViewer:
         """Create a PixelDataViewer from a dictionary mapping sample names to PxlFile objects.
 
         Args:
-        sample_name_to_pxl_file_mapping: Sample name to pxl file mapping.
+            sample_name_to_pxl_file_mapping: Sample name to pxl file mapping.
         """
         return PixelDataViewer(sample_name_to_pxl_file_mapping)
 
@@ -156,7 +156,7 @@ class PixelDataViewer:
         """Create a new PixelDataViewer with only a subset of the samples.
 
         Args:
-        sample_names: Sample names.
+            sample_names: Sample names.
         """
         filtered_mapping = {
             sample_name: pxl_file
@@ -189,7 +189,7 @@ class PixelDataViewer:
         """Return the attached DuckDB database name for a sample.
 
         Args:
-        sample_name: Sample name.
+            sample_name: Sample name.
         """
         return self._get_normalized_name(sample_name)
 
@@ -212,7 +212,7 @@ class PixelDataViewerSession:
         """Open a DuckDB connection and attach each PXL file in ``sources``.
 
         Args:
-        sources: Sources.
+            sources: Sources.
         """
         normalized: list[tuple[str, Path, str]] = [
             (sample_name, Path(path), db_name) for sample_name, path, db_name in sources
@@ -249,9 +249,9 @@ class PixelDataViewerSession:
         """Create a view that unions given table from all the underlying samples.
 
         Args:
-        connection: Connection.
-        table_name: Table name.
-        view_name: View name.
+            connection: Connection.
+            table_name: Table name.
+            view_name: View name.
         """
         _validate_session_sql_identifier(table_name, what="table name")
         _validate_session_sql_identifier(view_name, what="view name")
@@ -295,9 +295,9 @@ class PixelDataViewerSession:
         """Close the DuckDB connection.
 
         Args:
-        exc_type: Exc type.
-        exc_value: Exc value.
-        traceback: Traceback.
+            exc_type: Exc type.
+            exc_value: Exc value.
+            traceback: Traceback.
         """
         self.close()
 
@@ -313,7 +313,7 @@ class PixelDataViewerSession:
         """Execute a query and return a Polars LazyFrame.
 
         Args:
-        query: Query.
+            query: Query.
         """
         return (
             self.get_connection()
@@ -325,7 +325,7 @@ class PixelDataViewerSession:
         """Execute a query and return a Polars DataFrame.
 
         Args:
-        query: Query.
+            query: Query.
         """
         return self.get_connection().execute(query.sql, parameters=query.params).pl()
 
@@ -333,7 +333,7 @@ class PixelDataViewerSession:
         """Execute a scalar query and return first value.
 
         Args:
-        query: Query.
+            query: Query.
         """
         self.get_connection().execute(query.sql, parameters=query.params)
         row = self.get_connection().fetchone()
@@ -345,8 +345,8 @@ class PixelDataViewerSession:
         """Execute a query and return Arrow reader.
 
         Args:
-        query: Query.
-        batch_size: Batch size.
+            query: Query.
+            batch_size: Batch size.
         """
         result = self.get_connection().sql(query.sql, params=query.params)
         return result.fetch_arrow_reader(batch_size=batch_size)

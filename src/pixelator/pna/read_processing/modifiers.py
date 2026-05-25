@@ -26,9 +26,9 @@ class CombiningModifier(ABC):
         """Combine two reads into a single read.
 
         Args:
-        read1: Read1.
-        read2: Read2.
-        info1: Info1.
-        info2: Info2.
+            read1: Read1.
+            read2: Read2.
+            info1: Info1.
+            info2: Info2.
         """
         pass

@@ -71,8 +71,8 @@ class QueryBuilder:
         selection); consumers can filter markers in-memory after materialization.
 
         Args:
-        db_name: Db name.
-        components: Components.
+            db_name: Db name.
+            components: Components.
         """
         return Query(
             sql=f"""SELECT * FROM {db_name}.__adata__X
@@ -89,8 +89,8 @@ class QueryBuilder:
         """Build AnnData obs query for a single underlying sample DB.
 
         Args:
-        db_name: Db name.
-        components: Components.
+            db_name: Db name.
+            components: Components.
         """
         return Query(
             sql=f"""SELECT * FROM {db_name}.__adata__obs
@@ -107,8 +107,8 @@ class QueryBuilder:
         """Build AnnData var query for a single underlying sample DB.
 
         Args:
-        db_name: Db name.
-        markers: Markers.
+            db_name: Db name.
+            markers: Markers.
         """
         return Query(
             sql=f"""SELECT * FROM {db_name}.__adata__var
@@ -121,7 +121,7 @@ class QueryBuilder:
         """Build AnnData uns query for a single underlying sample DB.
 
         Args:
-        db_name: Db name.
+            db_name: Db name.
         """
         return Query(
             sql=f"SELECT * FROM {db_name}.__adata__uns",
@@ -132,7 +132,7 @@ class QueryBuilder:
         """Build query listing available obsm tables for a sample DB.
 
         Args:
-        db_name: Db name.
+            db_name: Db name.
         """
         return Query(
             sql="SHOW ALL TABLES",
@@ -148,9 +148,9 @@ class QueryBuilder:
         """Build AnnData obsm query for a given obsm table in a sample DB.
 
         Args:
-        db_name: Db name.
-        table_name: Table name.
-        components: Components.
+            db_name: Db name.
+            table_name: Table name.
+            components: Components.
         """
         qualified = table_name if "." in table_name else f"{db_name}.main.{table_name}"
         return Query(
@@ -164,7 +164,7 @@ class QueryBuilder:
         """Build an edgelist data query.
 
         Args:
-        components: Components.
+            components: Components.
         """
         return Query(
             sql=f"""SELECT * FROM edgelist
@@ -177,7 +177,7 @@ class QueryBuilder:
         """Build an edgelist count query.
 
         Args:
-        components: Components.
+            components: Components.
         """
         return Query(
             sql=f"""SELECT COUNT(*) FROM edgelist
@@ -192,8 +192,8 @@ class QueryBuilder:
         """Build a layouts query, optionally including marker-count join data.
 
         Args:
-        components: Components.
-        add_marker_counts: Add marker counts.
+            components: Components.
+            add_marker_counts: Add marker counts.
         """
         if add_marker_counts:
             return Query(
@@ -228,7 +228,7 @@ class QueryBuilder:
         """Build a layouts count query.
 
         Args:
-        components: Components.
+            components: Components.
         """
         return Query(
             sql=f"""SELECT COUNT(*)
@@ -247,9 +247,9 @@ class QueryBuilder:
         """Build a proximity data query.
 
         Args:
-        components: Components.
-        markers: Markers.
-        calculate_from_edgelist: Calculate from edgelist.
+            components: Components.
+            markers: Markers.
+            calculate_from_edgelist: Calculate from edgelist.
         """
         if calculate_from_edgelist:
             sql, params = jcs_with_analytical_stats(
@@ -275,9 +275,9 @@ class QueryBuilder:
         """Build a proximity count query.
 
         Args:
-        components: Components.
-        markers: Markers.
-        calculate_from_edgelist: Calculate from edgelist.
+            components: Components.
+            markers: Markers.
+            calculate_from_edgelist: Calculate from edgelist.
         """
         if calculate_from_edgelist:
             return self._calculate_proximity_length_from_edgelist(components, markers)

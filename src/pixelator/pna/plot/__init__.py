@@ -16,12 +16,12 @@ def molecule_rank_plot(
     """Plot the number of molecules (n_umi) per component against its n_umi rank.
 
     Args:
-    data: Data.
-    group_by: Group by.
+        data: Data.
+        group_by: Group by.
 
     Raises:
-    AssertionError: If the required column(s) are not present in the DataFrame.
-    ValueError: If the data types are invalid.
+        AssertionError: If the required column(s) are not present in the DataFrame.
+        ValueError: If the data types are invalid.
     """
     if "n_umi" not in data.columns:
         raise AssertionError("column 'n_umi' is missing from DataFrame")

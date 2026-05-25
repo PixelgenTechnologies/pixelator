@@ -46,11 +46,10 @@ def test_plot_3d_graph(
     """Verify ``plot_3d_graph`` renders a figure for parametrized components.
 
     Args:
-    snapshot: Snapshot helper used for regression comparisons.
-    component: Component id passed to the plotting function.
-    marker: Optional marker name highlighted in the plot.
-    setup_basic_pixel_dataset: Fixture providing a minimal ``PixelDataset``.
-
+        snapshot: Snapshot helper used for regression comparisons.
+        component: Component id passed to the plotting function.
+        marker: Optional marker name highlighted in the plot.
+        setup_basic_pixel_dataset: Fixture providing a minimal ``PixelDataset``.
     """
     np.random.seed(0)
     snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"
@@ -80,11 +79,10 @@ def test_plot_3d_graph_precomputed(
     """Verify ``plot_3d_graph`` uses precomputed layouts when available.
 
     Args:
-    snapshot: Snapshot helper used for regression comparisons.
-    component: Component id passed to the plotting function.
-    marker: Optional marker name highlighted in the plot.
-    setup_basic_pixel_dataset: Fixture providing a minimal ``PixelDataset``.
-
+        snapshot: Snapshot helper used for regression comparisons.
+        component: Component id passed to the plotting function.
+        marker: Optional marker name highlighted in the plot.
+        setup_basic_pixel_dataset: Fixture providing a minimal ``PixelDataset``.
     """
     np.random.seed(0)
     snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"
@@ -118,11 +116,10 @@ def test_plot_2d_graph_precomputed(
     """Verify plot 2d graph precomputed.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-    component: component.
-    marker: marker.
-    show_b_nodes: show b nodes.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+        component: component.
+        marker: marker.
+        show_b_nodes: show b nodes.
     """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
@@ -154,11 +151,10 @@ def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_node
     """Verify plot 2d graph.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-    component: component.
-    marker: marker.
-    show_b_nodes: show b nodes.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+        component: component.
+        marker: marker.
+        show_b_nodes: show b nodes.
     """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
@@ -181,8 +177,7 @@ def test_plot_colocalization_heatmap(setup_basic_pixel_dataset):
     """Verify plot colocalization heatmap.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
@@ -200,8 +195,7 @@ def test_plot_colocalization_diff_heatmap(setup_basic_pixel_dataset):
     """Verify plot colocalization diff heatmap.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
@@ -232,8 +226,7 @@ def test_plot_colocalization_diff_volcano(setup_basic_pixel_dataset):
     """Verify plot colocalization diff volcano.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
@@ -264,8 +257,7 @@ def test_plot_polarity_diff_volcano(setup_basic_pixel_dataset):
     """Verify plot polarity diff volcano.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
@@ -289,8 +281,7 @@ def test_plot_colocalization_diff_volcano_multiple(setup_basic_pixel_dataset):
     """Verify plot colocalization diff volcano multiple.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
@@ -320,8 +311,7 @@ def test_plot_polarity_diff_volcano_multiple(setup_basic_pixel_dataset):
     """Verify plot polarity diff volcano multiple.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
@@ -866,8 +856,7 @@ def test_plot_3d_heatmap(edgelist):
     """Verify plot 3d heatmap.
 
     Args:
-    edgelist: edgelist.
-
+        edgelist: edgelist.
     """
     component_1 = edgelist["component"].unique()[0]
     graph = Graph.from_edgelist(
@@ -938,11 +927,10 @@ def test_density_scatter_plot(
     """Verify density scatter plot.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-    marker1: marker1.
-    marker2: marker2.
-    extra_params: extra params.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+        marker1: marker1.
+        marker2: marker2.
+        extra_params: extra params.
     """
     facet_row = extra_params["facet_row"]
     facet_column = extra_params["facet_column"]
@@ -977,8 +965,7 @@ def test_abundance_colocalization_plot(setup_basic_pixel_dataset):
     """Verify abundance colocalization plot.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     pixel_data, *_ = setup_basic_pixel_dataset
     fig, _ = abundance_colocalization_plot(

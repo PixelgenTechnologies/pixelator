@@ -15,8 +15,7 @@ class FailingTask(PerComponentTask):
         """Initialize the instance.
 
         Args:
-        work_folder: Work folder.
-
+            work_folder: Work folder.
         """
         super().__init__()
         self._setup_was_called = False
@@ -26,8 +25,7 @@ class FailingTask(PerComponentTask):
         """Provide setup for tests.
 
         Returns:
-                Result (None).
-
+            Result (None).
         """
         self._setup_was_called = True
 
@@ -35,8 +33,7 @@ class FailingTask(PerComponentTask):
         """Provide teardown for tests.
 
         Returns:
-                Result (None).
-
+            Result (None).
         """
         self._teardown_was_called = True
 
@@ -44,8 +41,7 @@ class FailingTask(PerComponentTask):
         """Run from component id.
 
         Args:
-        component_id: Component id.
-
+            component_id: Component id.
         """
         raise RuntimeError("Simulated failure")
 
@@ -54,9 +50,8 @@ def test_tempfile_cleanup_on_failure(pna_pxl_dataset: PNAPixelDataset, tmp_path)
     """Verify tempfile cleanup on failure.
 
     Args:
-    tmp_path: tmp path.
-    pna_pxl_dataset: Pna pxl dataset.
-
+        tmp_path: tmp path.
+        pna_pxl_dataset: Pna pxl dataset.
     """
     mock_task = FailingTask()  # type: ignore
     manager = AnalysisManager([mock_task])

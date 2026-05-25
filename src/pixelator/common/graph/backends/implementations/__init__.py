@@ -23,14 +23,14 @@ def graph_backend(
 ) -> GraphBackend:
     """Get a graph backend.
 
-        Pick up a GraphBackend. Defaults to `NetworkXGraphBackend`
-        (at this time the only available backend).
+    Pick up a GraphBackend. Defaults to `NetworkXGraphBackend`
+    (at this time the only available backend).
 
     Args:
-    graph_backend_class: name of the graph backend class to try to pickup.
+        graph_backend_class: name of the graph backend class to try to pickup.
 
     Raises:
-    ValueError: when `graph_backend_class` is not recognized
+        ValueError: when `graph_backend_class` is not recognized
     """
     # TODO Later on we could use this as an entry point for loading
     # a graph backend from plugins if we would like.

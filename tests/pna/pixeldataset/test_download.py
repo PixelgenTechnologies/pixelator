@@ -22,7 +22,6 @@ class FakeResponse:
         Args:
             chunks: Chunks.
             headers: Headers.
-
         """
         self._chunks = chunks
         self.headers = headers or {}
@@ -37,8 +36,7 @@ class FakeResponse:
         """Raise for status.
 
         Returns:
-                Result (None).
-
+            Result (None).
         """
         return None
 
@@ -47,7 +45,6 @@ class FakeResponse:
 
         Args:
             chunk_size: Chunk size.
-
         """
         yield from self._chunks
 
@@ -64,9 +61,8 @@ def test_download_dataset_picks_latest_version_by_default_and_default_output_pat
     """Verify download dataset picks latest version by default and default output path.
 
     Args:
-    monkeypatch: monkeypatch.
-    run_in_tmpdir: run in tmpdir.
-
+        monkeypatch: monkeypatch.
+        run_in_tmpdir: run in tmpdir.
     """
     dataset_v1 = dl.Dataset(
         name="example",
@@ -105,8 +101,7 @@ def test_download_dataset_respects_explicit_version(monkeypatch):
     """Verify download dataset respects explicit version.
 
     Args:
-    monkeypatch: monkeypatch.
-
+        monkeypatch: monkeypatch.
     """
     dataset_v1 = dl.Dataset(
         name="example",
@@ -150,9 +145,8 @@ def test_download_dataset_skips_if_file_exists_and_overwrite_is_false(
     """Verify download dataset skips if file exists and overwrite is false.
 
     Args:
-    monkeypatch: monkeypatch.
-    tmp_path: tmp path.
-
+        monkeypatch: monkeypatch.
+        tmp_path: tmp path.
     """
     dataset_v1 = dl.Dataset(
         name="example",
@@ -184,9 +178,8 @@ def test_download_dataset_overwrites_if_overwrite_true(monkeypatch, tmp_path):
     """Verify download dataset overwrites if overwrite true.
 
     Args:
-    monkeypatch: monkeypatch.
-    tmp_path: tmp path.
-
+        monkeypatch: monkeypatch.
+        tmp_path: tmp path.
     """
     dataset_v1 = dl.Dataset(
         name="example",
@@ -225,9 +218,8 @@ def test_download_pixel_dataset_writes_file_and_calls_requests_get(
     """Verify download pixel dataset writes file and calls requests get.
 
     Args:
-    monkeypatch: monkeypatch.
-    tmp_path: tmp path.
-
+        monkeypatch: monkeypatch.
+        tmp_path: tmp path.
     """
     called: dict[str, object] = {}
 
@@ -263,9 +255,8 @@ def test_report_progress_prints_in_interactive_mode(monkeypatch, capsys):
     """Verify report progress prints in interactive mode.
 
     Args:
-    monkeypatch: monkeypatch.
-    capsys: capsys.
-
+        monkeypatch: monkeypatch.
+        capsys: capsys.
     """
     monkeypatch.setattr(dl, "_is_interactive", lambda: True)
     dl._report_progress("Hello %s", "world")
@@ -277,9 +268,8 @@ def test_report_progress_logs_in_non_interactive_mode(monkeypatch, mocker):
     """Verify report progress logs in non interactive mode.
 
     Args:
-    monkeypatch: monkeypatch.
-    mocker: mocker.
-
+        monkeypatch: monkeypatch.
+        mocker: mocker.
     """
     monkeypatch.setattr(dl, "_is_interactive", lambda: False)
     info = mocker.Mock()
@@ -293,8 +283,7 @@ def test_is_interactive_detects_ipython(monkeypatch):
     """Verify is interactive detects ipython.
 
     Args:
-    monkeypatch: monkeypatch.
-
+        monkeypatch: monkeypatch.
     """
     monkeypatch.setattr(dl.sys.stdout, "isatty", lambda: False)
     monkeypatch.setitem(

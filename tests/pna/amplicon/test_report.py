@@ -57,8 +57,7 @@ def test_amplicon_sample_report(amplicon_report):
     """Verify amplicon sample report.
 
     Args:
-    amplicon_report: amplicon report.
-
+        amplicon_report: amplicon report.
     """
     report = AmpliconSampleReport(**amplicon_report)
     assert report.sample_id == "PNA055_Sample07_300k_S7_001"

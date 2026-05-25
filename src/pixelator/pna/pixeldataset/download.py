@@ -93,13 +93,13 @@ class DownloadableDatasets:
         `pixelator-datasets` in the current working directory.
 
         Args:
-        dataset_name: The name of the dataset to download.
-        version: The version of the dataset to download. If not provided, the latest version will be downloaded.
-        output_path: The path to save the dataset to. Defaults to `./pixelator-datasets/{dataset_name}.layout.pxl`
-        overwrite: If False and a file already exists at the destination, do not download and return the path. If True, download again and overwrite the existing file.
+            dataset_name: The name of the dataset to download.
+            version: The version of the dataset to download. If not provided, the latest version will be downloaded.
+            output_path: The path to save the dataset to. Defaults to `./pixelator-datasets/{dataset_name}.layout.pxl`
+            overwrite: If False and a file already exists at the destination, do not download and return the path. If True, download again and overwrite the existing file.
 
         Raises:
-        ValueError: If the dataset is not found.
+            ValueError: If the dataset is not found.
         """
         if dataset_name not in _DATASET_MAPPINGS:
             raise ValueError(
@@ -169,8 +169,8 @@ def _report_progress(msg: str, *args: object) -> None:
     """Report progress to stdout in interactive environments, otherwise to logger.
 
     Args:
-    msg: Msg.
-    args: Args.
+        msg: Msg.
+        args: Args.
     """
     formatted = msg % args if args else msg
     if _is_interactive():
@@ -186,8 +186,8 @@ def _download_pixel_dataset(url: str, output_path: Path) -> Path:
     into memory. Progress is logged periodically.
 
     Args:
-    url: The URL of the pixel dataset to download.
-    output_path: The path to save the pixel dataset to.
+        url: The URL of the pixel dataset to download.
+        output_path: The path to save the pixel dataset to.
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)

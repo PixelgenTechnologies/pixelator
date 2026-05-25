@@ -114,9 +114,8 @@ def test_find_components_small(
     """Verify find components small.
 
     Args:
-    random_graph_path: random graph path.
-    edge_cycle_verification: edge cycle verification.
-
+        random_graph_path: random graph path.
+        edge_cycle_verification: edge cycle verification.
     """
     ground_truth_umi_map = (
         (
@@ -207,8 +206,7 @@ def test_find_no_components(random_graph_path):
     """Verify find no components.
 
     Args:
-    random_graph_path: random graph path.
-
+        random_graph_path: random graph path.
     """
     staged_refinement_options = StagedRefinementOptions(
         initial_stage_options=RefinementOptions(
@@ -240,8 +238,7 @@ def test_find_components_prunes_small_clusters_leaving_one_large(random_graph_pa
     """Verify find components prunes small clusters leaving one large.
 
     Args:
-    random_graph_path: random graph path.
-
+        random_graph_path: random graph path.
     """
     staged_refinement_options = StagedRefinementOptions(
         initial_stage_options=RefinementOptions(
@@ -321,10 +318,9 @@ def test_find_components_big(
     """Verify find components big.
 
     Args:
-    testdata_3pc_crossing_parquet: testdata 3pc crossing parquet.
-    testdata_0pc_crossing_parquet: testdata 0pc crossing parquet.
-    edge_cycle_verification: edge cycle verification.
-
+        testdata_3pc_crossing_parquet: testdata 3pc crossing parquet.
+        testdata_0pc_crossing_parquet: testdata 0pc crossing parquet.
+        edge_cycle_verification: edge cycle verification.
     """
     ground_truth_umi_map = (
         pl.read_parquet(testdata_0pc_crossing_parquet)

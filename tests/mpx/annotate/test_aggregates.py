@@ -66,10 +66,9 @@ def mixed_data_fixture(aggregates, normals, unspecifics):
     """Mixed data fixture.
 
     Args:
-    aggregates: aggregates.
-    normals: normals.
-    unspecifics: unspecifics.
-
+        aggregates: aggregates.
+        normals: normals.
+        unspecifics: unspecifics.
     """
     return np.concatenate((aggregates, normals, unspecifics), axis=0)
 
@@ -78,8 +77,7 @@ def generate_anndata(x):
     """Generate anndata.
 
     Args:
-    x: x.
-
+        x: x.
     """
     adata = AnnData(X=x)
     components = [f"CMP{idx}" for idx in range(len(x))]
@@ -93,8 +91,7 @@ def aggregate_adata_fixture(aggregates_data):
     """Aggregate adata fixture.
 
     Args:
-    aggregates_data: aggregates data.
-
+        aggregates_data: aggregates data.
     """
     return generate_anndata(aggregates_data)
 
@@ -104,8 +101,7 @@ def no_aggregates_adata_fixture(normals):
     """No aggregates adata fixture.
 
     Args:
-    normals: normals.
-
+        normals: normals.
     """
     return generate_anndata(normals)
 
@@ -114,8 +110,7 @@ def test_find_aggregates(aggregates_adata):
     """Verify find aggregates.
 
     Args:
-    aggregates_adata: aggregates adata.
-
+        aggregates_adata: aggregates adata.
     """
     results = call_aggregates(adata=aggregates_adata, inplace=False)
     assert np.sum(results.obs["tau_type"] == "high") == NBR_OF_AGGREGATE_COMPONENTS
@@ -126,8 +121,7 @@ def test_find_aggregates_writes_limits_to_uns(aggregates_adata):
     """Verify find aggregates writes limits to uns.
 
     Args:
-    aggregates_adata: aggregates adata.
-
+        aggregates_adata: aggregates adata.
     """
     results = call_aggregates(adata=aggregates_adata, inplace=False)
     assert np.sum(results.obs["tau_type"] == "high") == NBR_OF_AGGREGATE_COMPONENTS
@@ -146,8 +140,7 @@ def test_find_aggregates_inplace(aggregates_adata):
     """Verify find aggregates inplace.
 
     Args:
-    aggregates_adata: aggregates adata.
-
+        aggregates_adata: aggregates adata.
     """
     call_aggregates(adata=aggregates_adata, inplace=True)
     assert (
@@ -161,8 +154,7 @@ def test_find_in_data_with_no_aggregates(no_aggregates_adata):
     """Verify find in data with no aggregates.
 
     Args:
-    no_aggregates_adata: no aggregates adata.
-
+        no_aggregates_adata: no aggregates adata.
     """
     results = call_aggregates(adata=no_aggregates_adata, inplace=False)
     # Two false positives
@@ -173,8 +165,7 @@ def test_find_in_data_with_no_counts_in_component(aggregates_adata):
     """Verify find in data with no counts in component.
 
     Args:
-    aggregates_adata: aggregates adata.
-
+        aggregates_adata: aggregates adata.
     """
     counts = np.concatenate((aggregates_adata.X, np.zeros((1, NBR_OF_MARKERS))), axis=0)
     x = generate_anndata(counts)
@@ -187,8 +178,7 @@ def test_find_unspecific(aggregates_adata):
     """Verify find unspecific.
 
     Args:
-    aggregates_adata: aggregates adata.
-
+        aggregates_adata: aggregates adata.
     """
     results = call_aggregates(adata=aggregates_adata, inplace=False)
     assert np.sum(results.obs["tau_type"] == "low") == NBR_OF_UNSPECIFIC_COMPONENTS

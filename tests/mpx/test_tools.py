@@ -11,7 +11,6 @@ def enforce_edgelist_types_for_tests(edgelist: pd.DataFrame) -> pd.DataFrame:
 
     Args:
         edgelist: Edgelist.
-
     """
     type_dict = {
         "count": "uint16",

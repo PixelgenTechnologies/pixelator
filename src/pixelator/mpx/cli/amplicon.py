@@ -77,17 +77,16 @@ def amplicon(
     output: str,
     design: str,
 ):
-    """
-    Process diverse raw pixel data (FASTQ) formats into common amplicon
+    """Process diverse raw pixel data (FASTQ) formats into common amplicon
 
     Args:
-    ctx: Ctx.
-    fastq_1: Fastq 1.
-    fastq_2: Fastq 2.
-    sample_name: Sample name.
-    skip_input_checks: Skip input checks.
-    output: Output.
-    design: Design.
+        ctx: Ctx.
+        fastq_1: Fastq 1.
+        fastq_2: Fastq 2.
+        sample_name: Sample name.
+        skip_input_checks: Skip input checks.
+        output: Output.
+        design: Design.
     """
     # log input parameters
 

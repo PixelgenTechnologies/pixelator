@@ -34,8 +34,7 @@ def test_load_assays_dir(data_root):
     """Verify load assays dir.
 
     Args:
-    data_root: data root.
-
+        data_root: data root.
     """
     config = Config()
     config.load_assays(data_root / "assays")
@@ -51,8 +50,7 @@ def test_parsing_recursion_protection(data_root):
     """Verify parsing recursion protection.
 
     Args:
-    data_root: data root.
-
+        data_root: data root.
     """
     cfg = Config()
 
@@ -118,8 +116,7 @@ def config_with_multiple_versions(data_root):
     """Config with multiple versions.
 
     Args:
-    data_root: data root.
-
+        data_root: data root.
     """
     new_config = copy.deepcopy(config)
     new_config.load_panel_file(data_root / "UNO_D21_Beta_old.csv")
@@ -130,8 +127,7 @@ def test_loading_panel_from_config(config_with_multiple_versions):
     """Verify loading panel from config.
 
     Args:
-    config_with_multiple_versions: config with multiple versions.
-
+        config_with_multiple_versions: config with multiple versions.
     """
     panel = config_with_multiple_versions.get_panel(
         "human-sc-immunology-spatial-proteomics-1"
@@ -166,8 +162,7 @@ def test_load_antibody_panel_util(data_root):
     """Verify load antibody panel util.
 
     Args:
-    data_root: data root.
-
+        data_root: data root.
     """
     cgf_panel = load_antibody_panel(config, "human-sc-immunology-spatial-proteomics")
     assert cgf_panel.name == "human-sc-immunology-spatial-proteomics-1"
@@ -184,8 +179,7 @@ def test_list_panel_names(data_root):
     """Verify list panel names.
 
     Args:
-    data_root: data root.
-
+        data_root: data root.
     """
     assert config.list_panel_names(include_aliases=True) == [
         "human-sc-immunology-spatial-proteomics-1",
@@ -203,8 +197,7 @@ def test_loading_duplicate_aliases(data_root):
     """Verify loading duplicate aliases.
 
     Args:
-    data_root: data root.
-
+        data_root: data root.
     """
     this_config = copy.deepcopy(config)
     with pytest.raises(PanelException):

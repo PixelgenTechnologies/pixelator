@@ -16,9 +16,8 @@ def test_layout(pna_pxl_dataset: PNAPixelDataset, tmp_path):
     """Verify layout.
 
     Args:
-    tmp_path: tmp path.
-    pna_pxl_dataset: Pna pxl dataset.
-
+        tmp_path: tmp path.
+        pna_pxl_dataset: Pna pxl dataset.
     """
     manager = AnalysisManager(
         [
@@ -59,9 +58,8 @@ def test_layout_from_path(pna_pxl_dataset: PNAPixelDataset, tmp_path):
     """Verify layout from path.
 
     Args:
-    tmp_path: tmp path.
-    pna_pxl_dataset: Pna pxl dataset.
-
+        tmp_path: tmp path.
+        pna_pxl_dataset: Pna pxl dataset.
     """
     layout_task = CreateLayout(
         ["wpmds_3d"],

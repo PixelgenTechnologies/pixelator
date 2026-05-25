@@ -26,9 +26,9 @@ def estimate_observation_statistics(
     """Estimates the observation statistics for colocalization analysis.
 
     Args:
-    observations: The observed data.
-    permutation_results: The permutation results.
-    funcs: Tuple of colocalization functions.
+        observations: The observed data.
+        permutation_results: The permutation results.
+        funcs: Tuple of colocalization functions.
     """
 
     def estimates():
@@ -73,12 +73,12 @@ def permutation_analysis_results(
     """Perform permutation analysis on colocalization data.
 
     Args:
-    data: The input data for colocalization analysis.
-    funcs: A tuple of colocalization functions to apply.
-    permuter: A function that generates permuted data for analysis.
-    transformer: A function to transform the permuted data before analysis. (optional)
-    n: The number of permutations to perform. Default is 50.
-    random_seed: The random seed for reproducibility. Default is None.
+        data: The input data for colocalization analysis.
+        funcs: A tuple of colocalization functions to apply.
+        permuter: A function that generates permuted data for analysis.
+        transformer: A function to transform the permuted data before analysis. (optional)
+        n: The number of permutations to perform. Default is 50.
+        random_seed: The random seed for reproducibility. Default is None.
     """
 
     def constuct_permutation_data(data, n):

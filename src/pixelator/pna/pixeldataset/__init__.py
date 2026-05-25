@@ -72,8 +72,8 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
     """Read a PNAPixelDataset from one or more provided .pxl file(s).
 
     Args:
-    path: path to the file to read
-    paths: Paths.
+        path: path to the file to read
+        paths: Paths.
     """
     if not paths:
         raise ValueError(

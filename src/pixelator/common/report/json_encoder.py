@@ -19,11 +19,11 @@ class PixelatorJSONEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
         """Return a serializable object for ``obj``.
 
-                Dump pydantic models to json or calls the base class implementation
-                for other types.
+        Dump pydantic models to json or calls the base class implementation
+        for other types.
 
         Args:
-        obj: object to serialize
+            obj: object to serialize
         """
         if isinstance(obj, BaseModel):
             return obj.model_dump(mode="json")

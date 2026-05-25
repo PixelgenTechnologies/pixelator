@@ -193,7 +193,6 @@ def send_random_batches(queue):
 
     Args:
         queue: Queue.
-
     """
     batch = DemuxRecordBatch()
     for b in [batch1, batch2, batch3]:
@@ -212,9 +211,8 @@ def test_demux_writer_process(tmp_path, expected_df):
     """Verify demux writer process.
 
     Args:
-    tmp_path: tmp path.
-    expected_df: expected df.
-
+        tmp_path: tmp path.
+        expected_df: expected df.
     """
     output_dir = tmp_path
     policy = PartsFilenamePolicy("sample1")

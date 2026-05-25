@@ -305,8 +305,7 @@ def test_graph_can_get_marker_counts(graph):
     """Verify graph can get marker counts.
 
     Args:
-    graph: graph.
-
+        graph: graph.
     """
     result = graph.node_marker_counts
     assert set(result.columns) == {"MarkerC", "MarkerB", "MarkerA"}
@@ -317,8 +316,7 @@ def test_graph_can_get_local_g(graph):
     """Verify graph can get local g.
 
     Args:
-    graph: graph.
-
+        graph: graph.
     """
     result = graph.local_g(k=1)
     assert set(result.columns) == {"MarkerC", "MarkerB", "MarkerA"}

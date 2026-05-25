@@ -24,8 +24,7 @@ def test_embedding_decode_from_uin8_array(pna2_embedding):
     """Verify embedding decode from uin8 array.
 
     Args:
-    pna2_embedding: pna2 embedding.
-
+        pna2_embedding: pna2 embedding.
     """
     m = b"v\x87\xd6\xeb6\xccm\xeb\x1a\xb3\x0b\x00m\xe7\x01\xae\x81v\x80\xe7zp\r\x00C\xd1\x02@1\x14\x00\x00"
 
@@ -41,8 +40,7 @@ def test_embedding_decode_from_bytes(pna2_embedding):
     """Verify embedding decode from bytes.
 
     Args:
-    pna2_embedding: pna2 embedding.
-
+        pna2_embedding: pna2 embedding.
     """
     m = b"v\x87\xd6\xeb6\xccm\xeb\x1a\xb3\x0b\x00m\xe7\x01\xae\x81v\x80\xe7zp\r\x00C\xd1\x02@1\x14\x00\x00"
 
@@ -57,8 +55,7 @@ def test_embedding_encode(pna2_embedding):
     """Verify embedding encode.
 
     Args:
-    pna2_embedding: pna2 embedding.
-
+        pna2_embedding: pna2 embedding.
     """
     umi1 = b"AACTGCCATCTTTGTACCCCACAGTAAC"
     umi2 = b"CCCTATGGACAGGCCTGGATACATGACA"
@@ -74,8 +71,7 @@ def test_encode_umi(pna2_embedding):
     """Verify encode umi.
 
     Args:
-    pna2_embedding: pna2 embedding.
-
+        pna2_embedding: pna2 embedding.
     """
     umi1 = b"AACTGCCATCTTTGTACCCCACAGTAAC"
     expected = b"v\x87\xd6\xeb6\xccm\xeb\x1a\xb3\x0b\x00\x00\x00\x00\x00"
@@ -86,8 +82,7 @@ def test_decode_umi(pna2_embedding):
     """Verify decode umi.
 
     Args:
-    pna2_embedding: pna2 embedding.
-
+        pna2_embedding: pna2 embedding.
     """
     umi = b"v\x87\xd6\xeb6\xccm\xeb\x1a\xb3\x0b\x00\x00\x00\x00\x00"
     expected = b"AACTGCCATCTTTGTACCCCACAGTAAC"
@@ -98,8 +93,7 @@ def test_3bit_to_2bit_recoding(pna2_embedding):
     """Verify 3bit to 2bit recoding.
 
     Args:
-    pna2_embedding: pna2 embedding.
-
+        pna2_embedding: pna2 embedding.
     """
     umi = b"AACTGCCATCTTTGTACCCCACAGTAAC"
     umi_3bit_expected = b"v\x87\xd6\xeb6\xccm\xeb\x1a\xb3\x0b\x00\x00\x00\x00\x00"
@@ -129,9 +123,8 @@ def test_unpack_2bits(umi, packed):
     """Verify unpack 2bits.
 
     Args:
-    umi: umi.
-    packed: packed.
-
+        umi: umi.
+        packed: packed.
     """
     unpacked = unpack_2bits(packed, 28)
     assert umi == unpacked
@@ -147,9 +140,8 @@ def test_pack_2bits(umi, packed):
     """Verify pack 2bits.
 
     Args:
-    umi: umi.
-    packed: packed.
-
+        umi: umi.
+        packed: packed.
     """
     packed_umi = pack_2bits(umi)
     assert packed_umi == packed

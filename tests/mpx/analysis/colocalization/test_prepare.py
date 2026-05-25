@@ -27,9 +27,8 @@ def test_prepare_from_graph(enable_backend, edgelist):
     """Verify prepare from graph.
 
     Args:
-    enable_backend: enable backend.
-    edgelist: edgelist.
-
+        enable_backend: enable backend.
+        edgelist: edgelist.
     """
     graph = Graph.from_edgelist(
         edgelist=edgelist,

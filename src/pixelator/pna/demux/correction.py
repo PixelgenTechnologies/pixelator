@@ -39,8 +39,8 @@ def hamming_distance(x, y):
     [4, 3, 2, 2, 1, 0]
 
     Args:
-    x: X.
-    y: Y.
+        x: X.
+        y: Y.
     """
     return bin(x ^ y).count("1")
 
@@ -81,8 +81,8 @@ class BKTree:
         [0, 4, 5]
 
         Args:
-        distance_func: The distance function to use.
-        items: An optional list of items to add on initialization.
+            distance_func: The distance function to use.
+            items: An optional list of items to add on initialization.
         """
         self.distance_func = distance_func
         self.tree = None
@@ -105,7 +105,7 @@ class BKTree:
         [4, 15]
 
         Args:
-        item: Item.
+            item: Item.
         """
         node = self.tree
         if node is None:
@@ -126,7 +126,7 @@ class BKTree:
     def find(self, item, n):
         """Find items in this tree with a distance <= `n` from `item`.
 
-         Return list of (distance, item) tuples ordered by distance.
+        Return list of (distance, item) tuples ordered by distance.
 
 
         >>> tree = BKTree(hamming_distance)
@@ -147,8 +147,8 @@ class BKTree:
         True
 
         Args:
-        item: The item to find matches for.
-        n: The maximum distance to consider a match.
+            item: The item to find matches for.
+            n: The maximum distance to consider a match.
         """
         if self.tree is None:
             return []
@@ -223,8 +223,8 @@ def hamming_distance_i8(s1: BKTreeItem, s2: BKTreeItem | bytes) -> int:
     """Calculate the byte-wise Hamming distance between two sequences.
 
     Args:
-    s1: S1.
-    s2: S2.
+        s1: S1.
+        s2: S2.
     """
     b1 = np.frombuffer(s1.sequence, dtype=np.int8)
     b2 = np.frombuffer(s2.sequence if isinstance(s2, BKTreeItem) else s2, dtype=np.int8)
@@ -238,8 +238,8 @@ def build_bktree(panel: PNAAntibodyPanel, sequence_key: str) -> BKTree:
     The distance function is the edit distance
 
     Args:
-    panel: The panel to build the tree from
-    sequence_key: The key in the panel dataframe that contains the sequences
+        panel: The panel to build the tree from
+        sequence_key: The key in the panel dataframe that contains the sequences
     """
     tree = BKTree(hamming_distance_i8)
 
@@ -258,8 +258,8 @@ def build_exact_dict_lookup(
     This allows us to quickly find exact matches for a sequence in the panel.
 
     Args:
-    panel: The panel to build the lookup from
-    sequence_key: The key in the panel dataframe that contains the sequences
+        panel: The panel to build the lookup from
+        sequence_key: The key in the panel dataframe that contains the sequences
     """
     lut = dict()
 

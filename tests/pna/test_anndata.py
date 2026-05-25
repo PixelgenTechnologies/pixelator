@@ -144,8 +144,7 @@ def create_pixel_dataset_connection(edgelist):
     """Create pixel dataset connection.
 
     Args:
-    edgelist: edgelist.
-
+        edgelist: edgelist.
     """
     from pixelator import __version__
 
@@ -168,8 +167,7 @@ def test_pna_edgelist_to_anndata(pixelconnection):
     """Verify pna edgelist to anndata.
 
     Args:
-    pixelconnection: pixelconnection.
-
+        pixelconnection: pixelconnection.
     """
     adata = pna_edgelist_to_anndata(pixelconnection, mock_antibody_panel)
 
@@ -279,9 +277,8 @@ def test_pna_edgelist_to_anndata_save_adata(pixelconnection, tmp_path):
     """Verify pna edgelist to anndata save adata.
 
     Args:
-    pixelconnection: pixelconnection.
-    tmp_path: tmp path.
-
+        pixelconnection: pixelconnection.
+        tmp_path: tmp path.
     """
     from pixelator.pna.config import pna_config
 

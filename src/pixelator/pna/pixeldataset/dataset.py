@@ -55,10 +55,10 @@ class PNAPixelDataset:
         all samples, components, or markers.
 
         Args:
-        view: The PixelDataViewer instance to use for accessing the data.
-        config: The configuration for the dataset.
-        active_components: The components to include in the dataset.
-        active_markers: The markers to include in the dataset.
+            view: The PixelDataViewer instance to use for accessing the data.
+            config: The configuration for the dataset.
+            active_components: The components to include in the dataset.
+            active_markers: The markers to include in the dataset.
         """
         self._view = view
         if config is None:
@@ -86,8 +86,8 @@ class PNAPixelDataset:
         """Alias for `from_pxl_files`.
 
         Args:
-        pxl_files: Pxl files.
-        config: Config.
+            pxl_files: Pxl files.
+            config: Config.
         """
         return PNAPixelDataset.from_pxl_files(pxl_files, config)
 
@@ -108,8 +108,8 @@ class PNAPixelDataset:
         If you pass a dictionary of .pxl files the keys will be used as the sample names.
 
         Args:
-        pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a dictionary with sample names as keys and paths as values.
-        config: The configuration for the dataset.
+            pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a dictionary with sample names as keys and paths as values.
+            config: The configuration for the dataset.
         """
         if isinstance(pxl_files, Path):
             return PNAPixelDataset(
@@ -178,21 +178,20 @@ class PNAPixelDataset:
         by quite a bit.
 
         .. code-block:: python
-            from pixelator.pna.pixeldataset import PixelDataset
-            from pixelator.pna.pixeldataset.io import Query
+        from pixelator.pna.pixeldataset import PixelDataset
+        from pixelator.pna.pixeldataset.io import Query
 
-            pxl_files = ...
-            pxl_dataset = PixelDataset.from_pxl_files(pxl_files)
-            with pxl_dataset.view.open() as session:
-                df = session.execute_eager(
-                    Query("SELECT * FROM edgelist WHERE marker_1 = $m", {"m": "CD3"})
-                ).to_pandas()
+        pxl_files = ...
+        pxl_dataset = PixelDataset.from_pxl_files(pxl_files)
+        with pxl_dataset.view.open() as session:
+        df = session.execute_eager(
+        Query("SELECT * FROM edgelist WHERE marker_1 = $m", {"m": "CD3"})
+        ).to_pandas()
 
 
 
         Returns:
-        The PixelDataViewer instance used by the dataset.
-
+            The PixelDataViewer instance used by the dataset.
         """
         return self._view
 
@@ -206,8 +205,8 @@ class PNAPixelDataset:
         This will be filtered to only include the active samples, components, and markers.
 
         Args:
-        add_log1p_transform: If True, add the log1p transformation to the data.
-        add_clr_transform: If True, add the clr transformation to the data.
+            add_log1p_transform: If True, add the log1p transformation to the data.
+            add_clr_transform: If True, add the clr transformation to the data.
         """
         return self._adata_helper.read_adata(
             add_log1p_transform=add_log1p_transform,
@@ -223,8 +222,7 @@ class PNAPixelDataset:
 
 
         Returns:
-        The Edgelist instance for the dataset.
-
+            The Edgelist instance for the dataset.
         """
         return Edgelist(
             self.view,
@@ -243,9 +241,9 @@ class PNAPixelDataset:
         This will be filtered to only include the active samples, components, and markers.
 
         Args:
-        add_marker_counts: If True, add the marker counts to the proximity data.
-        add_logratio: If True, add the logratio to the proximity data.
-        calculate_from_edgelist: Calculate from edgelist.
+            add_marker_counts: If True, add the marker counts to the proximity data.
+            add_logratio: If True, add the logratio to the proximity data.
+            calculate_from_edgelist: Calculate from edgelist.
         """
         return Proximity(
             self.view,
@@ -263,8 +261,8 @@ class PNAPixelDataset:
         """Return the PreComputedLayouts instance for the dataset.
 
         Args:
-        add_marker_counts: If True, add the marker counts to the precomputed layouts.
-        add_spherical_norm: If True, add spherical coordinates to dataframe This will be filtered to only include the active samples and components.
+            add_marker_counts: If True, add the marker counts to the precomputed layouts.
+            add_spherical_norm: If True, add spherical coordinates to dataframe This will be filtered to only include the active samples and components.
         """
         return PreComputedLayouts(
             self.view,
@@ -311,12 +309,12 @@ class PNAPixelDataset:
         once the underlying data is accessed.
 
         Args:
-        samples: (The samples to include in the dataset (default): None means no filter is applied).
-        components: (The components to include in the dataset (default): None means no filter is applied).
-        markers: (The markers to include in the dataset (default): None means no filter is applied).
+            samples: (The samples to include in the dataset (default): None means no filter is applied).
+            components: (The components to include in the dataset (default): None means no filter is applied).
+            markers: (The markers to include in the dataset (default): None means no filter is applied).
 
         Raises:
-        ValueError: if all of the specified samples, components, or markers do not exist in the dataset.
+            ValueError: if all of the specified samples, components, or markers do not exist in the dataset.
         """
         samples = normalize_input_to_set(samples)
         components = normalize_input_to_set(components)

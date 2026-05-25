@@ -7,6 +7,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import ast
+import inspect
 import re
 import sys
 from pathlib import Path
@@ -21,56 +22,90 @@ SECTIONS = (
     "Examples",
     "References",
     "Note",
+    "Notes",
 )
 
 
 def normalize_docstring(doc: str) -> str:
-    """Normalize docstring."""
-    lines = [line.rstrip() for line in doc.splitlines()]
+    """Normalize Google-style section indentation in a docstring body.
+
+    Args:
+        doc: Raw docstring body from an AST node.
+
+    Returns:
+        Docstring body with section entries indented relative to section headers.
+    """
+    lines = [line.rstrip() for line in inspect.cleandoc(doc).splitlines()]
     if not lines:
         return doc
 
-    narrative: list[str] = []
-    sections: dict[str, list[str]] = {name: [] for name in SECTIONS}
+    normalized: list[str] = []
     current: str | None = None
+    previous_was_entry = False
 
     for line in lines:
-        header = line.strip()
-        if header in {f"{name}:" for name in SECTIONS}:
-            current = header[:-1]
+        stripped = line.strip()
+        if stripped in {f"{name}:" for name in SECTIONS}:
+            normalized.append(stripped)
+            current = stripped[:-1]
+            previous_was_entry = False
             continue
-        if current:
-            if not line.strip():
-                continue
-            match = re.match(r"^\s+(\*?\*?\w[\w*]*)\s*:\s*(.*)$", line)
+
+        if current is None:
+            # Previous bulk conversion preserved some code indentation inside the
+            # docstring body. Narrative text should be flush with the docstring
+            # content, not indented like source code.
+            normalized.append(stripped if stripped else "")
+            continue
+
+        if not stripped:
+            normalized.append("")
+            previous_was_entry = False
+            continue
+
+        if current in {"Args", "Attributes", "Raises"}:
+            match = re.match(
+                r"^(\*?\*?\w[\w*]*(?:\s*\([^)]*\))?):\s*(.*)$",
+                stripped,
+            )
             if match:
                 name, desc = match.groups()
-                sections[current].append(f"{name}: {desc.strip()}")
+                normalized.append(f"    {name}: {desc.strip()}")
+                previous_was_entry = True
             else:
-                if sections[current]:
-                    sections[current][-1] = f"{sections[current][-1]} {line.strip()}"
+                indent = "        " if previous_was_entry else "    "
+                normalized.append(f"{indent}{stripped}")
         else:
-            narrative.append(line)
+            normalized.append(f"    {stripped}")
+            previous_was_entry = False
 
-    while narrative and not narrative[-1].strip():
-        narrative.pop()
+    while normalized and not normalized[-1].strip():
+        normalized.pop()
 
-    out = list(narrative)
-    if narrative and any(sections.values()):
-        out.append("")
+    return "\n".join(normalized)
 
-    for name in SECTIONS:
-        entries = sections[name]
-        if not entries:
-            continue
-        out.append(f"{name}:")
-        for entry in entries:
-            out.append(f"    {entry}")
-        out.append("")
 
-    while out and not out[-1].strip():
-        out.pop()
-    return "\n".join(out)
+def render_docstring(doc: str, indent: str, quote: str = '"""') -> list[str]:
+    """Render a normalized docstring body as source lines.
+
+    Args:
+        doc: Normalized docstring body without delimiters.
+        indent: Source indentation for the docstring delimiters.
+        quote: Triple-quote delimiter to use.
+
+    Returns:
+        Source lines for the complete docstring.
+    """
+    doc_lines = doc.splitlines()
+    if len(doc_lines) == 1 and len(f"{indent}{quote}{doc_lines[0]}{quote}") <= 88:
+        return [f"{indent}{quote}{doc_lines[0]}{quote}\n"]
+
+    rendered = [f"{indent}{quote}{doc_lines[0]}\n"]
+    rendered.extend(
+        f"{indent}{line}\n" if line else f"{indent}\n" for line in doc_lines[1:]
+    )
+    rendered.append(f"{indent}{quote}\n")
+    return rendered
 
 
 def process_file(path: Path) -> bool:
@@ -96,7 +131,7 @@ def process_file(path: Path) -> bool:
 
     for node in sorted(nodes, key=lambda n: getattr(n, "lineno", 0), reverse=True):
         doc = ast.get_docstring(node, clean=False)
-        if not doc or "Args:" not in doc and ":param" not in doc:
+        if not doc or not any(f"{section}:" in doc for section in SECTIONS):
             continue
         new_doc = normalize_docstring(doc)
         if new_doc == doc:
@@ -111,9 +146,9 @@ def process_file(path: Path) -> bool:
         end_line = expr.end_lineno
         indent_width = expr.col_offset or 0
         indent = " " * indent_width
-        quote = '"""'
-        new_block = [f"{indent}{quote}{new_doc}\n{indent}{quote}\n"]
-        lines[start:end_line] = new_block
+        source = "".join(lines[start:end_line])
+        quote = "'''" if "'''" in source and '"""' not in source else '"""'
+        lines[start:end_line] = render_docstring(new_doc, indent, quote)
         changed = True
 
     if changed:
@@ -123,7 +158,6 @@ def process_file(path: Path) -> bool:
 
 def main(targets: list[str]) -> int:
     """Normalize Google docstring sections for the given paths."""
-    """Main."""
     from fill_missing_docstrings import iter_targets
 
     count = 0

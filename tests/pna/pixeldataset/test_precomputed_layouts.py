@@ -58,8 +58,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify to polars returns dataframe.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.precomputed_layouts().to_polars()
         assert isinstance(df, pl.DataFrame)
@@ -69,8 +68,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify to df returns pandas.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.precomputed_layouts().to_df()
         assert isinstance(df, pd.DataFrame)
@@ -80,8 +78,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify len returns node count.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         layouts = pxl_dataset.precomputed_layouts()
         assert len(layouts) > 0
@@ -90,8 +87,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify is empty returns false for populated.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         assert not pxl_dataset.precomputed_layouts().is_empty()
 
@@ -99,8 +95,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify components matches dataset.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         layouts = pxl_dataset.precomputed_layouts()
         assert layouts.components == pxl_dataset.components()
@@ -109,8 +104,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify spherical norm columns.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.precomputed_layouts(add_spherical_norm=True).to_polars()
         for col in ["x_norm", "y_norm", "z_norm"]:
@@ -120,8 +114,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify marker count columns present.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.precomputed_layouts(add_marker_counts=True).to_polars()
         marker_cols = {"MarkerA", "MarkerB", "MarkerC"}
@@ -131,8 +124,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify no marker count columns when disabled.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.precomputed_layouts(add_marker_counts=False).to_polars()
         marker_cols = {"MarkerA", "MarkerB", "MarkerC"}
@@ -142,8 +134,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify iterator yields component dataframes.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         layouts = pxl_dataset.precomputed_layouts()
         for comp_id, component_df in layouts.iterator():
@@ -154,8 +145,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify iterator returns polars when requested.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         layouts = pxl_dataset.precomputed_layouts()
         for comp_id, component_df in layouts.iterator(return_polars_df=True):
@@ -166,8 +156,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify str representation.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         assert "PreComputedLayouts" in str(pxl_dataset.precomputed_layouts())
 
@@ -175,8 +164,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify describe.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         layouts = pxl_dataset.precomputed_layouts()
         desc = layouts.describe()
@@ -188,8 +176,7 @@ class TestPreComputedLayoutsIntegration:
         """Verify repr.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         layouts = pxl_dataset.precomputed_layouts()
         assert repr(layouts) == str(layouts)
@@ -198,9 +185,8 @@ class TestPreComputedLayoutsIntegration:
         """Verify ipython display.
 
         Args:
-        capsys: capsys.
-        pxl_dataset: Pxl dataset.
-
+            capsys: capsys.
+            pxl_dataset: Pxl dataset.
         """
         layouts = pxl_dataset.precomputed_layouts()
         layouts._ipython_display_()

@@ -10,9 +10,8 @@ class TestPixelFileWriter:
         """Verify write edgelist.
 
         Args:
-        tmp_path: tmp path.
-        edgelist_parquet_path: edgelist parquet path.
-
+            tmp_path: tmp path.
+            edgelist_parquet_path: edgelist parquet path.
         """
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
@@ -22,9 +21,8 @@ class TestPixelFileWriter:
         """Verify write adata.
 
         Args:
-        tmp_path: tmp path.
-        adata_data: adata data.
-
+            tmp_path: tmp path.
+            adata_data: adata data.
         """
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
@@ -34,8 +32,7 @@ class TestPixelFileWriter:
         """Verify write metadata.
 
         Args:
-        tmp_path: tmp path.
-
+            tmp_path: tmp path.
         """
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
@@ -45,9 +42,8 @@ class TestPixelFileWriter:
         """Verify write proximity.
 
         Args:
-        tmp_path: tmp path.
-        proximity_parquet_path: proximity parquet path.
-
+            tmp_path: tmp path.
+            proximity_parquet_path: proximity parquet path.
         """
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
@@ -57,9 +53,8 @@ class TestPixelFileWriter:
         """Verify write layouts.
 
         Args:
-        tmp_path: tmp path.
-        layout_parquet_path: layout parquet path.
-
+            tmp_path: tmp path.
+            layout_parquet_path: layout parquet path.
         """
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:

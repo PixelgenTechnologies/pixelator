@@ -83,8 +83,7 @@ class AnnotateSampleReport(SampleReport):
         """Pixel count.
 
         Returns:
-                Result (int).
-
+            Result (int).
         """
         return self.a_pixel_count + self.b_pixel_count
 

@@ -155,16 +155,16 @@ def collapse(
     """Collapse Molecular Pixelation data (FASTQ) by umi-upi to remove duplicates and perform error correction.
 
     Args:
-    ctx: Ctx.
-    input_files: Input files.
-    markers_ignore: Markers ignore.
-    algorithm: Algorithm.
-    max_neighbours: Max neighbours.
-    mismatches: Mismatches.
-    min_count: Min count.
-    panel: Panel.
-    output: Output.
-    design: Design.
+        ctx: Ctx.
+        input_files: Input files.
+        markers_ignore: Markers ignore.
+        algorithm: Algorithm.
+        max_neighbours: Max neighbours.
+        mismatches: Mismatches.
+        min_count: Min count.
+        panel: Panel.
+        output: Output.
+        design: Design.
     """
     # log input parameters
     log_step_start(

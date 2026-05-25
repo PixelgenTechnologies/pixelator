@@ -33,9 +33,9 @@ def validate_mismatches(ctx, param, value):
     """Validate the --mismatches commandline option.
 
     Args:
-    ctx: The click context
-    param: The click parameter name
-    value: The click value
+        ctx: The click context
+        param: The click parameter name
+        value: The click value
     """
     try:
         value = int(value)
@@ -92,13 +92,13 @@ def combine_collapse(
     """Collapse Molecular Pixelation data (FASTQ) by umi-upi to remove duplicates and perform error correction.
 
     Args:
-    ctx: Ctx.
-    parquet: Parquet.
-    reports: Reports.
-    output: Output.
-    parquet_pattern: Parquet pattern.
-    report_pattern: Report pattern.
-    memory: Memory.
+        ctx: Ctx.
+        parquet: Parquet.
+        reports: Reports.
+        output: Output.
+        parquet_pattern: Parquet pattern.
+        report_pattern: Report pattern.
+        memory: Memory.
     """
     # log input parameters
     log_step_start(

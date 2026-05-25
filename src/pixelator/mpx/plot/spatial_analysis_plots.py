@@ -76,10 +76,10 @@ def plot_colocalization_heatmap(
     Example usage: plot_colocalization_heatmap(pxl.colocalization).
 
     Args:
-    colocalization_data: The colocalization data to plot. The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z", and "component".
-    markers: The markers to include in the heatmap. Defaults to None.
-    cmap: The colormap to use for the heatmap. Defaults to "vlag".
-    value_column: What colocalization metric to use. Defaults to "pearson_z".
+        colocalization_data: The colocalization data to plot. The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z", and "component".
+        markers: The markers to include in the heatmap. Defaults to None.
+        cmap: The colormap to use for the heatmap. Defaults to "vlag".
+        value_column: What colocalization metric to use. Defaults to "pearson_z".
     """
     colocalization_data = _make_colocalization_symmetric(
         colocalization_data, value_column
@@ -116,14 +116,14 @@ def plot_colocalization_diff_heatmap(
     reference:"control", contrast_column="sample").
 
     Args:
-    colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z", and the contrast_column.
-    reference: The label for reference components in the contrast_column.
-    targets: label or list of labels for target components in the contrast_column. When not specified, all labels in the contrast_column except the reference label are used as targets.
-    contrast_column: The column to use for the contrast. Defaults to "sample".
-    top_marker_log_p: When set to a value, only markers that differentially colocalize with at least one other marker with a log10 p-score higher than top_marker_log_p are inclueded in the plot.
-    min_log_p: The minimum log10 p-value. Pairs with lower log10 p-value are assigned 0.
-    cmap: The colormap to use for the heatmap. Defaults to "vlag".
-    value_column: What colocalization metric to use. Defaults to "pearson_z".
+        colocalization_data: The colocalization data frame that can be found in a pixel variable "pxl" through pxl.colocalization. The data frame should contain the columns "marker_1", "marker_2", "pearson", "pearson_z", and the contrast_column.
+        reference: The label for reference components in the contrast_column.
+        targets: label or list of labels for target components in the contrast_column. When not specified, all labels in the contrast_column except the reference label are used as targets.
+        contrast_column: The column to use for the contrast. Defaults to "sample".
+        top_marker_log_p: When set to a value, only markers that differentially colocalize with at least one other marker with a log10 p-score higher than top_marker_log_p are inclueded in the plot.
+        min_log_p: The minimum log10 p-value. Pairs with lower log10 p-value are assigned 0.
+        cmap: The colormap to use for the heatmap. Defaults to "vlag".
+        value_column: What colocalization metric to use. Defaults to "pearson_z".
     """
     if isinstance(targets, str):
         targets = [targets]
@@ -275,15 +275,15 @@ def plot_colocalization_diff_volcano(
     Example usage: `plot_colocalization_diff_volcano(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample")`.
 
     Args:
-    colocalization_data: Colocalization table (for example ``pxl.colocalization``).
-    reference: Reference label in ``contrast_column``.
-    targets: Target labels to compare against ``reference``.
-    contrast_column: Sample label column. Defaults to ``"sample"``.
-    cmap: Matplotlib colormap name.
-    value_column: Metric plotted on the x-axis. Defaults to ``"pearson_z"``.
-    n_top_pairs: Number of marker pairs to annotate on each side.
-    min_log_p: Minimum ``-log10(p)`` required to annotate a marker pair.
-    targets: Targets.
+        colocalization_data: Colocalization table (for example ``pxl.colocalization``).
+        reference: Reference label in ``contrast_column``.
+        targets: Target labels to compare against ``reference``.
+        contrast_column: Sample label column. Defaults to ``"sample"``.
+        cmap: Matplotlib colormap name.
+        value_column: Metric plotted on the x-axis. Defaults to ``"pearson_z"``.
+        n_top_pairs: Number of marker pairs to annotate on each side.
+        min_log_p: Minimum ``-log10(p)`` required to annotate a marker pair.
+        targets: Targets.
     """
     if isinstance(targets, str):
         targets = [targets]
@@ -359,20 +359,20 @@ def plot_polarity_diff_volcano(
     """Generate the volcano plot of differential polarity between reference and target(s) components.
 
     Example usage: `plot_polarity_diff_volcano(
-                                                pxl.polariazation,target:"stimulated",
-                                                reference:"control",
-                                                contrast_column="sample"
-                                                )`.
+    pxl.polariazation,target:"stimulated",
+    reference:"control",
+    contrast_column="sample"
+    )`.
 
     Args:
-    polarity_data: Polarity table (for example ``pxl.polarization``).
-    reference: Reference label in ``contrast_column``.
-    targets: Target labels to compare against ``reference``.
-    contrast_column: Sample label column. Defaults to ``"sample"``.
-    cmap: Matplotlib colormap name.
-    value_column: Metric plotted on the x-axis. Defaults to ``"morans_z"``.
-    n_top_pairs: Number of markers to annotate on each side.
-    min_log_p: Minimum ``-log10(p)`` required to annotate a marker.
+        polarity_data: Polarity table (for example ``pxl.polarization``).
+        reference: Reference label in ``contrast_column``.
+        targets: Target labels to compare against ``reference``.
+        contrast_column: Sample label column. Defaults to ``"sample"``.
+        cmap: Matplotlib colormap name.
+        value_column: Metric plotted on the x-axis. Defaults to ``"morans_z"``.
+        n_top_pairs: Number of markers to annotate on each side.
+        min_log_p: Minimum ``-log10(p)`` required to annotate a marker.
     """
     if isinstance(targets, str):
         targets = [targets]

@@ -80,12 +80,12 @@ def layout(
     """Compute graph layouts that can be used to visualize components.
 
     Args:
-    ctx: Ctx.
-    pxl_file: Pxl file.
-    layout_algorithm: Layout algorithm.
-    pmds_pivots: Pmds pivots.
-    wpmds_k: Wpmds k.
-    output: Output.
+        ctx: Ctx.
+        pxl_file: Pxl file.
+        layout_algorithm: Layout algorithm.
+        pmds_pivots: Pmds pivots.
+        wpmds_k: Wpmds k.
+        output: Output.
     """
     log_step_start(
         "layout",

@@ -51,8 +51,8 @@ def breadth_first_search(node, adj_list):
     Uses The MIT License (MIT).
 
     Args:
-    node: Node.
-    adj_list: Adj list.
+        node: Node.
+        adj_list: Adj list.
     """
     searched = set()
     queue = set()
@@ -73,8 +73,8 @@ def edit_distance(seq1: bytes, seq2: bytes) -> int:
     """Compute edit distance between two sequences.
 
     Args:
-    seq1: Seq1.
-    seq2: Seq2.
+        seq1: Seq1.
+        seq2: Seq2.
     """
     return hamming(seq1, seq2, pad=False)
 
@@ -83,20 +83,19 @@ class FileFqGzEmpty(Exception):
     """Class to manage empty fastq.gz file exceptions.
 
     Attributes:
-    ----------
+        ----------
         msg: the error message to output
         fname: the name of the file
         size: the size of the file uncompressed (should be 0)
-
     """
 
     def __init__(self, msg: str, fname: str | Path, size: int):
         """Initialize the exception.
 
         Args:
-        msg: Msg.
-        fname: Fname.
-        size: Size.
+            msg: Msg.
+            fname: Fname.
+            size: Size.
         """
         self.msg = msg
         self.fname = os.fspath(fname)
@@ -131,8 +130,8 @@ def build_annoytree(data: npt.NDArray[np.uint8], n_trees: int = 10) -> AnnoyInde
     .. [1] https://github.com/spotify/annoy
 
     Args:
-    data: the array of sequences (n_ele, n_features) in binary format
-    n_trees: (the number of Annoy trees to build. Default): 10
+        data: the array of sequences (n_ele, n_features) in binary format
+        n_trees: (the number of Annoy trees to build. Default): 10
     """
     logger.debug("Building annoy tree of shape %i,%i", data.shape[0], data.shape[1])
 
@@ -154,7 +153,7 @@ def build_binary_data(seqs: list[str]) -> npt.NDArray[np.uint8]:
     as an `np.array` (n_ele, n_features).
 
     Args:
-    seqs: a list of DNA sequences
+        seqs: a list of DNA sequences
     """
     logger.debug("Transforming %i sequences to binary form", len(seqs))
 
@@ -187,8 +186,8 @@ def get_collapsed_fragments_for_component(  # noqa: DOC402,DOC404
     :yields CollapsedFragment: a collapsed fragment
 
     Args:
-    components: a list of components as produced from `get_connected_components`
-    counts: a dictionary of the counts of each unique fragment
+        components: a list of components as produced from `get_connected_components`
+        counts: a dictionary of the counts of each unique fragment
     """
     for component in components:
         # get the most common sequence in the component and use
@@ -235,8 +234,8 @@ def get_connected_components(
     (not counting sequences twice).
 
     Args:
-    graph: a dictionary of sequence to sequences (within same distance)
-    counts: a dictionary of counts (copies) for each sequence in `graph`
+        graph: a dictionary of sequence to sequences (within same distance)
+        counts: a dictionary of counts (copies) for each sequence in `graph`
     """
     found = set()
     components = []
@@ -271,9 +270,9 @@ def identify_fragments_to_collapse(
     but at least search 10 neighbours of each sequence.
 
     Args:
-    seqs: a list of sequences to be grouped
-    min_dist: the hamming distance threshold (i.e. the mismatches between two sequences)
-    max_neighbours: the number of neighbours to use in the Annoy index
+        seqs: a list of sequences to be grouped
+        min_dist: the hamming distance threshold (i.e. the mismatches between two sequences)
+        max_neighbours: the number of neighbours to use in the Annoy index
     """
     logger.debug("Computing adjacency sequences from %i elements", len(seqs))
 
@@ -336,7 +335,7 @@ def collapse_sequences_unique(
     :yield a CollapsedFragment object
 
     Args:
-    seq_dict: the fragment to upib dict
+        seq_dict: the fragment to upib dict
     """
     logger.debug("Picking all unique sequences (i.e. no collapsing is carried out)")
 
@@ -363,9 +362,9 @@ def collapse_sequences_adjacency(
     `identify_fragments_to_collapse`.
 
     Args:
-    seq_dict: a dictionary mapping unique fragments to their corresponding upib's
-    max_neighbours: the maximum number of neighbours to search in the approximate nearest neighbour search
-    min_dist: the hamming distance threshold (i.e. the mismatches between two sequences)
+        seq_dict: a dictionary mapping unique fragments to their corresponding upib's
+        max_neighbours: the maximum number of neighbours to search in the approximate nearest neighbour search
+        min_dist: the hamming distance threshold (i.e. the mismatches between two sequences)
     """
     logger.debug("Collapsing %i sequences", len(seq_dict))
 
@@ -400,19 +399,19 @@ def create_fragment_to_upib_dict(
     UMIB will be ignored if any of its positions is None.
 
     Args:
-    input_file: path to the file to read
-    upia_start: the 0-based start position of UPIA
-    upia_end: the 1-based end position of UPIA
-    upib_start: the 0-based start position of UPIB
-    upib_end: the 1-based end position of UPIB
-    umia_start: the 0-based start position of UMIA
-    umia_end: the 1-based end position of UMIA
-    umib_start: the 0-based start position of UMIB
-    umib_end: the 1-based end position of UMIB
+        input_file: path to the file to read
+        upia_start: the 0-based start position of UPIA
+        upia_end: the 1-based end position of UPIA
+        upib_start: the 0-based start position of UPIB
+        upib_end: the 1-based end position of UPIB
+        umia_start: the 0-based start position of UMIA
+        umia_end: the 1-based end position of UMIA
+        umib_start: the 0-based start position of UMIB
+        umib_end: the 1-based end position of UMIB
 
     Raises:
-    FileFqGzEmpty: when the file is empty
-    RuntimeError: when there is a error parsing the file
+        FileFqGzEmpty: when the file is empty
+        RuntimeError: when there is a error parsing the file
     """
     logger.debug("Extracting umi-upi sequences from %s", input_file)
 
@@ -459,8 +458,8 @@ def filter_by_minimum_upib_count(
     instances of the upib's to keep it.
 
     Args:
-    unique_reads: a dictionary of fragments and their corresponding upib's
-    min_count: the minimum number of upib's per fragment required to keep it
+        unique_reads: a dictionary of fragments and their corresponding upib's
+        min_count: the minimum number of upib's per fragment required to keep it
     """
     unique_reads = {k: v for k, v in unique_reads.items() if len(v) >= min_count}
     # in case there are no reads after filtering
@@ -491,25 +490,25 @@ def create_edgelist(
 
     This will create an edgelist where each unique fragment is a row, with information
     about:
-        - `upia`, the upia of the fragment
-        - `upib`, the upib of the fragment
-        - `umi`, the umi of the fragment
-        - `count`, the number of upib's associated with the fragment
-        - `unique_molecules_count`, the number of unique molecules (based on upia+umi)
-           associated with the collapsed molecule
-        - `marker`, the marker associated with this fragment
-        - `sequence`, the antibody DNA-oligo sequence of the marker associated
-           with the fragment
+    - `upia`, the upia of the fragment
+    - `upib`, the upib of the fragment
+    - `umi`, the umi of the fragment
+    - `count`, the number of upib's associated with the fragment
+    - `unique_molecules_count`, the number of unique molecules (based on upia+umi)
+    associated with the collapsed molecule
+    - `marker`, the marker associated with this fragment
+    - `sequence`, the antibody DNA-oligo sequence of the marker associated
+    with the fragment
 
     Args:
-    clustered_reads: An iterable of tuples of unique fragments
-    unique_reads: A UniqueFragmentToUpiB dictionary
-    umia_start: the start position of upia
-    umia_end: the end position of upia
-    umib_start: the start position of upib
-    umib_end: the end position of upib
-    marker: the marker
-    sequence: (the sequence of the marker):
+        clustered_reads: An iterable of tuples of unique fragments
+        unique_reads: A UniqueFragmentToUpiB dictionary
+        umia_start: the start position of upia
+        umia_end: the end position of upia
+        umib_start: the start position of upib
+        umib_end: the end position of upib
+        marker: the marker
+        sequence: (the sequence of the marker):
     """
     # get the umi sizes to do the split
     if umia_start is not None and umia_end is not None:
@@ -559,7 +558,7 @@ def write_tmp_feather_file(df: pd.DataFrame) -> Path:
     """Write the dataframe to a feather file in the OS tmpdir.
 
     Args:
-    df: the data frame to write
+        df: the data frame to write
     """
     # create a temporary edge list and save it to a temp file
     tmp_file = tempfile.mkstemp(suffix=".feather")[1]
@@ -606,31 +605,31 @@ def collapse_fastq(
     neighbour search based on Annoy [2]_.
 
     .. [1] Smith, Tom, Andreas Heger, and Ian Sudbery. 2017. “UMI-Tools: Modeling
-           Sequencing Errors in Unique Molecular Identifiers to Improve
-           Quantification Accuracy.” Genome Research 27 (3): 491–99.
+    Sequencing Errors in Unique Molecular Identifiers to Improve
+    Quantification Accuracy.” Genome Research 27 (3): 491–99.
 
     .. [2] https://github.com/spotify/annoy
 
     Args:
-    input_file: the path to the fastq file containing MPX amplicons (must contain the UPI and UMI)
-    algorithm: the collapsing algorithm to use (unique or adjacency)
-    marker: the antibody tag to append to the output
-    sequence: the barcode sequence to append to the output
-    upia_start: the start position (0-based) of UPIA
-    upia_end: the end position (1-based) of UPIA
-    upib_start: the start position (0-based) of UPIB
-    upib_end: the end position (1-based) of UPIB
-    umia_start: the start position (0-based) of UMIA (if None UMIA will be ignored)
-    umia_end: the end position (1-based) of UMIA (if None UMIA will be ignored)
-    umib_start: the start position (0-based) of UMIB (if None UMIB will be ignored)
-    umib_end: the end position (1-based) of UMIB (if None UMIB will be ignored)
-    max_neighbours: the number of neighbours used in the approximate nearest neighbour search
-    mismatches: the number of mismatches allowed between sequences
-    min_count: discard reads with a count lower than this
+        input_file: the path to the fastq file containing MPX amplicons (must contain the UPI and UMI)
+        algorithm: the collapsing algorithm to use (unique or adjacency)
+        marker: the antibody tag to append to the output
+        sequence: the barcode sequence to append to the output
+        upia_start: the start position (0-based) of UPIA
+        upia_end: the end position (1-based) of UPIA
+        upib_start: the start position (0-based) of UPIB
+        upib_end: the end position (1-based) of UPIB
+        umia_start: the start position (0-based) of UMIA (if None UMIA will be ignored)
+        umia_end: the end position (1-based) of UMIA (if None UMIA will be ignored)
+        umib_start: the start position (0-based) of UMIB (if None UMIB will be ignored)
+        umib_end: the end position (1-based) of UMIB (if None UMIB will be ignored)
+        max_neighbours: the number of neighbours used in the approximate nearest neighbour search
+        mismatches: the number of mismatches allowed between sequences
+        min_count: discard reads with a count lower than this
 
     Raises:
-    AssertionError: invalid input
-    RuntimeError: raises an exception
+        AssertionError: invalid input
+        RuntimeError: raises an exception
     """
     if algorithm not in ["unique", "adjacency"]:
         raise AssertionError(f"Invalid value {algorithm} for algorithm")

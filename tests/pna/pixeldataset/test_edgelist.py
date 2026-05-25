@@ -50,8 +50,7 @@ class TestEdgelistIntegration:
         """Verify to polars returns dataframe.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.edgelist().to_polars()
         assert isinstance(df, pl.DataFrame)
@@ -61,8 +60,7 @@ class TestEdgelistIntegration:
         """Verify to df returns pandas.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.edgelist().to_df()
         assert isinstance(df, pd.DataFrame)
@@ -72,8 +70,7 @@ class TestEdgelistIntegration:
         """Verify len returns edge count.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         edgelist = pxl_dataset.edgelist()
         assert len(edgelist) > 0
@@ -82,8 +79,7 @@ class TestEdgelistIntegration:
         """Verify is empty returns false for populated.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         assert not pxl_dataset.edgelist().is_empty()
 
@@ -91,8 +87,7 @@ class TestEdgelistIntegration:
         """Verify components matches dataset.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         edgelist = pxl_dataset.edgelist()
         assert edgelist.components == pxl_dataset.components()
@@ -101,8 +96,7 @@ class TestEdgelistIntegration:
         """Verify to record batches yields arrow batches.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         batches = list(pxl_dataset.edgelist().to_record_batches())
         assert len(batches) > 0
@@ -112,8 +106,7 @@ class TestEdgelistIntegration:
         """Verify iterator yields components.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         edgelist = pxl_dataset.edgelist()
         items = list(edgelist.iterator())
@@ -127,8 +120,7 @@ class TestEdgelistIntegration:
         """Verify repr.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         edgelist = pxl_dataset.edgelist()
         assert repr(edgelist) == str(edgelist)
@@ -137,9 +129,8 @@ class TestEdgelistIntegration:
         """Verify ipython display.
 
         Args:
-        capsys: capsys.
-        pxl_dataset: Pxl dataset.
-
+            capsys: capsys.
+            pxl_dataset: Pxl dataset.
         """
         edgelist = pxl_dataset.edgelist()
         edgelist._ipython_display_()
@@ -150,8 +141,7 @@ class TestEdgelistIntegration:
         """Verify str representation.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         assert "EdgeList" in str(pxl_dataset.edgelist())
 
@@ -159,8 +149,7 @@ class TestEdgelistIntegration:
         """When >5 components, str should show count instead of the full set.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         edgelist = pxl_dataset.edgelist()
         n_components = len(edgelist.components)

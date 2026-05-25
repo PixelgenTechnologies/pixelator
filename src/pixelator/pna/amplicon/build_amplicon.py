@@ -34,7 +34,7 @@ def reverse_complement(seq: BytesOrString) -> BytesOrString:
     """Compute the reverse complement of a DNA seq.
 
     Args:
-    seq: the DNA sequence
+        seq: the DNA sequence
     """
     if isinstance(seq, bytes):
         return seq.translate(_TRTABLE_BYTES)[::-1]
@@ -63,7 +63,7 @@ class AmpliconBuilderStatistics:
         """Merge statistics from another object into this one.
 
         Args:
-        other: Other.
+            other: Other.
         """
         if not isinstance(other, self.__class__):
             raise ValueError("Cannot compare")
@@ -119,7 +119,7 @@ class AmpliconCombiner:
         """Initialize the AmpliconCombiner.
 
         Args:
-        assay: the assay design
+            assay: the assay design
         """
         self.assay = assay
         self._template = (
@@ -156,9 +156,9 @@ class AmpliconCombiner:
         """Build the amplicon sequence from the different regions.
 
         Args:
-        pid1_umi1_region: the PBS-1 and UMI-1 region
-        uei_region: the UEI region
-        pid2_umi2_region: the PBS-2 and UMI-2 region
+            pid1_umi1_region: the PBS-1 and UMI-1 region
+            uei_region: the UEI region
+            pid2_umi2_region: the PBS-2 and UMI-2 region
         """
         # We are using bytearray here since strings are immutable
         s = bytearray(self._template)
@@ -195,11 +195,11 @@ class AmpliconCombiner:
         All regions are assumed to have the correct length.
 
         Args:
-        pid1_umi1_region: the PBS-1 and UMI-1 region qualities
-        uei_region: the UEI region qualities
-        pid2_umi2_region: the PBS-2 and UMI-2 region qualities
-        lbs1_region: the LBS-1 region qualities
-        lbs2_region: the LBS-2 region qualities
+            pid1_umi1_region: the PBS-1 and UMI-1 region qualities
+            uei_region: the UEI region qualities
+            pid2_umi2_region: the PBS-2 and UMI-2 region qualities
+            lbs1_region: the LBS-1 region qualities
+            lbs2_region: the LBS-2 region qualities
         """
         # We are using bytearray here since strings are immutable
         s = bytearray(self._qualities_template)
@@ -251,7 +251,7 @@ class AmpliconRegionSlices:
         """Provide tuple like access to the slices.
 
         Args:
-        item: Item.
+            item: Item.
         """
         if isinstance(item, int):
             key = self.__slots__[item]
@@ -281,18 +281,18 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
     """Construct an amplicon from a pair of reads.
 
     Args:
-    assay: the assay design
-    mismatches: the maximum number of mismatches allowed when aligning the LBS sequences
-    writer: a writer to save failed reads to
+        assay: the assay design
+        mismatches: the maximum number of mismatches allowed when aligning the LBS sequences
+        writer: a writer to save failed reads to
     """
 
     def __init__(self, assay: PNAAssay, mismatches: int | float = 0.2, writer=None):
         """Initialize the AmpliconBuilder.
 
         Args:
-        assay: the assay design
-        mismatches: the maximum number of mismatches allowed when aligning the LBS sequences. If a float, it is interpreted as a fraction of the template length. Otherwise, it is the maximum number of mismatches allowed.
-        writer: a writer to save failed reads to.
+            assay: the assay design
+            mismatches: the maximum number of mismatches allowed when aligning the LBS sequences. If a float, it is interpreted as a fraction of the template length. Otherwise, it is the maximum number of mismatches allowed.
+            writer: a writer to save failed reads to.
         """
         self._assay = assay
         self._writer = writer
@@ -414,7 +414,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         """Scan the forward read for the different regions of the amplicon.
 
         Args:
-        read: the forward read
+            read: the forward read
         """
         region_slices = AmpliconRegionSlices()
 
@@ -472,7 +472,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         """Scan the reverse read for the different regions of the amplicon.
 
         Args:
-        read: the reverse read
+            read: the reverse read
         """
         region_slices = AmpliconRegionSlices()
 
@@ -519,11 +519,11 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         """Get the sequence of a region from a read.
 
         Args:
-        read: the read to extract the region from
-        region_slice: the slice for the region
-        is_reversed: whether the region is reversed (e.g. LBS-2)
-        return_ascii: whether to return the sequence as ASCII bytes
-        as_bytearray: As bytearray.
+            read: the read to extract the region from
+            region_slice: the slice for the region
+            is_reversed: whether the region is reversed (e.g. LBS-2)
+            return_ascii: whether to return the sequence as ASCII bytes
+            as_bytearray: As bytearray.
         """
         if not region_slice:
             return None, None
@@ -550,10 +550,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         If two slices are present they are combined based on the quality scores.
 
         Args:
-        read1: the forward read
-        read2: the reverse read
-        region1_slice: the slice from the forward read
-        region2_slice: the slice from the reverse read
+            read1: the forward read
+            read2: the reverse read
+            region1_slice: the slice from the forward read
+            region2_slice: the slice from the reverse read
         """
         if region1_slice is None and region2_slice is None:
             return None, None
@@ -608,10 +608,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         """Combine the quality scores of the LBS-1 region from forward and reverse reads.
 
         Args:
-        read1: the forward read
-        read2: the reverse read
-        region1_slice: the slice from the forward read
-        region2_slice: the slice from the reverse read
+            read1: the forward read
+            read2: the reverse read
+            region1_slice: the slice from the forward read
+            region2_slice: the slice from the reverse read
         """
         return self._consensus_qual_lbs(
             read1, read2, region1_slice, region2_slice, self._lbs1_qual
@@ -627,10 +627,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         """Combine the quality scores of the LBS-2 region from forward and reverse reads.
 
         Args:
-        read1: the forward read
-        read2: the reverse read
-        region1_slice: the slice from the forward read
-        region2_slice: the slice from the reverse read
+            read1: the forward read
+            read2: the reverse read
+            region1_slice: the slice from the forward read
+            region2_slice: the slice from the reverse read
         """
         return self._consensus_qual_lbs(
             read1, read2, region1_slice, region2_slice, self._lbs2_qual
@@ -647,11 +647,11 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         """Combine the quality scores of an LBS region from forward and reverse reads.
 
         Args:
-        read1: the forward read
-        read2: the reverse read
-        region1_slice: the slice from the forward read
-        region2_slice: the slice from the reverse read
-        template_qual: the quality template for the region
+            read1: the forward read
+            read2: the reverse read
+            region1_slice: the slice from the forward read
+            region2_slice: the slice from the reverse read
+            template_qual: the quality template for the region
         """
         # We cap the length of the quality string to the length of the template
         # Due to indels the quality string can be longer than the template
@@ -701,9 +701,9 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         Failure counters are incremented in the statistics object.
 
         Args:
-        pid1_umi1_region: the PID-1 and UMI-1 region
-        uei_region: the UEI region
-        pid2_umi2_region: the PID-2 and UMI-2 region
+            pid1_umi1_region: the PID-1 and UMI-1 region
+            uei_region: the UEI region
+            pid2_umi2_region: the PID-2 and UMI-2 region
         """
         if not pid1_umi1_region:
             self._custom_stats.failed_missing_upi1_umi1_reads += 1
@@ -740,10 +740,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         before building the amplicon.
 
         Args:
-        read1: Read1.
-        read2: Read2.
-        info1: Info1.
-        info2: Info2.
+            read1: Read1.
+            read2: Read2.
+            info1: Info1.
+            info2: Info2.
         """
         raise NotImplementedError("This method should be implemented in subclasses.")
 
@@ -761,10 +761,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         and should thus not be passed on to subsequent steps.
 
         Args:
-        read1: the forward read (or None)
-        read2: the reverse read (or None)
-        info1: the modification info for the forward read, (ignored)
-        info2: the modification info for the reverse read, (ignored)
+            read1: the forward read (or None)
+            read2: the reverse read (or None)
+            info1: the modification info for the forward read, (ignored)
+            info2: the modification info for the reverse read, (ignored)
         """
         if read1 is None and read2 is None:
             return None
@@ -848,10 +848,10 @@ class PairedEndAmpliconBuilder(AmpliconBuilder):
         it returns an Amplicon object with all regions set to None and an appropriate failure reason.
 
         Args:
-        read1: Read1.
-        read2: Read2.
-        info1: Info1.
-        info2: Info2.
+            read1: Read1.
+            read2: Read2.
+            info1: Info1.
+            info2: Info2.
         """
         r1_regions = self._scan_forward_read(read1)
         r2_regions = self._scan_reverse_read(read2)
@@ -930,10 +930,10 @@ class SingleEndAmpliconBuilder(AmpliconBuilder):
         """Process a single read or a pair of reads to construct an amplicon.
 
         Args:
-        read1: Read1.
-        read2: Read2.
-        info1: Info1.
-        info2: Info2.
+            read1: Read1.
+            read2: Read2.
+            info1: Info1.
+            info2: Info2.
         """
         is_read1 = read1 is not None
         read = read1 if is_read1 else read2

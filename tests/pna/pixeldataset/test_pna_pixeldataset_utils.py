@@ -28,7 +28,6 @@ def test_update_metrics_anndata_inplace(mock_adata):
 
     Args:
         mock_adata: Mock adata.
-
     """
     result = update_metrics_anndata(mock_adata, inplace=True)
     assert result is None
@@ -92,7 +91,6 @@ def test_update_metrics_anndata_not_inplace(mock_adata):
 
     Args:
         mock_adata: Mock adata.
-
     """
     result = update_metrics_anndata(mock_adata, inplace=False)
 
@@ -114,7 +112,6 @@ def test_update_metrics_anndata_empty(mock_adata):
 
     Args:
         mock_adata: Mock adata.
-
     """
     # Create empty AnnData
     empty_adata = anndata.AnnData(
@@ -132,7 +129,6 @@ def test_update_metrics_anndata_sparse(mock_adata):
 
     Args:
         mock_adata: Mock adata.
-
     """
     from scipy import sparse
 

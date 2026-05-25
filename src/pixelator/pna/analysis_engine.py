@@ -43,7 +43,7 @@ class LoggingSetup:
         """Create a LoggingSetup from a logger.
 
         Args:
-        logger: Logger.
+            logger: Logger.
         """
         return LoggingSetup(port=logger.port, log_level=logger.log_level)  # type: ignore
 
@@ -70,8 +70,8 @@ def _get_joblib_executor(nbr_cores=None, **kwargs) -> Parallel:
     """Return a joblib executor with some default settings.
 
     Args:
-    nbr_cores: Nbr cores.
-    kwargs: Kwargs.
+        nbr_cores: Nbr cores.
+        kwargs: Kwargs.
     """
     current_click_context = click.get_current_context(silent=True)
     click_nbr_cores = None
@@ -95,7 +95,7 @@ def with_logging(f):
     This decorator makes this slightly easier.
 
     Args:
-    f: F.
+        f: F.
     """
 
     @wraps(f)
@@ -131,7 +131,7 @@ class PerComponentTask(Protocol, Generic[T]):
         """Specify a dataset to enable analysis being run directly from component IDs.
 
         Args:
-        pxl_file_path: Pxl file path.
+            pxl_file_path: Pxl file path.
         """
         ...
 
@@ -143,7 +143,7 @@ class PerComponentTask(Protocol, Generic[T]):
         and the component is directly accessible from its id.
 
         Args:
-        component_id: The id of the component.
+            component_id: The id of the component.
         """
         raise NotImplementedError
 
@@ -152,8 +152,8 @@ class PerComponentTask(Protocol, Generic[T]):
         """Run the analysis on this component.
 
         Args:
-        component: The graph of the component.
-        component_id: The id of the component.
+            component: The graph of the component.
+            component_id: The id of the component.
         """
         raise NotImplementedError
 
@@ -164,8 +164,8 @@ class PerComponentTask(Protocol, Generic[T]):
         """Run the analysis on this component.
 
         Args:
-        component: The edgelist of the component.
-        component_id: The id of the component.
+            component: The edgelist of the component.
+            component_id: The id of the component.
         """
         raise NotImplementedError
 
@@ -180,11 +180,11 @@ class PerComponentTask(Protocol, Generic[T]):
         to the edgelist based analysis if the graph based analysis raises NotImplementedError.
 
         Args:
-        component: The component to run the analysis on. Either a Graph, a LazyFrame or the name of a component.
-        logging_setup: The logging setup to use.
+            component: The component to run the analysis on. Either a Graph, a LazyFrame or the name of a component.
+            logging_setup: The logging setup to use.
 
         Raises:
-        TypeError: If the component is not a Graph or a LazyFrame.
+            TypeError: If the component is not a Graph or a LazyFrame.
         """
         if isinstance(component, str):
             return self.run_from_component_id(component)
@@ -207,7 +207,7 @@ class PerComponentTask(Protocol, Generic[T]):
         """Concatenate the data. Override this if you need custom concatenation behavior.
 
         Args:
-        data: Data.
+            data: Data.
         """
         try:
             scores = pd.concat(data, axis=0)
@@ -220,7 +220,7 @@ class PerComponentTask(Protocol, Generic[T]):
         """Post process the data (e.g. adjust p-values). Override this if your data needs post processing.
 
         Args:
-        data: Data.
+            data: Data.
         """
         return data
 
@@ -228,8 +228,8 @@ class PerComponentTask(Protocol, Generic[T]):
         """Add the data in the right place in the pxl_dataset.
 
         Args:
-        data: Data.
-        pxl_file_target: Pxl file target.
+            data: Data.
+            pxl_file_target: Pxl file target.
         """
         ...
 
@@ -261,10 +261,10 @@ class AnalysisManager:
         """Initialize the analysis manager.
 
         Args:
-        analysis_to_run: The analysis to run on each component.
-        logging_setup: The logging setup to use.
-        n_cores: The number of cores to use for parallel processing (set to 1 to disable parallel processing).
-        pxl_dataset_builder: A function that can build a PixelDataset from an iterable of PxlFiles.
+            analysis_to_run: The analysis to run on each component.
+            logging_setup: The logging setup to use.
+            n_cores: The number of cores to use for parallel processing (set to 1 to disable parallel processing).
+            pxl_dataset_builder: A function that can build a PixelDataset from an iterable of PxlFiles.
         """
         self.analysis_to_run = {
             analysis.TASK_NAME: analysis for analysis in analysis_to_run
@@ -296,8 +296,8 @@ class AnalysisManager:
                 """Func.
 
                 Args:
-                component: component.
-                analysis_to_run: analysis to run.
+                    component: component.
+                    analysis_to_run: analysis to run.
                 """
                 results = []
                 for analysis_name, analysis in analysis_to_run.items():
@@ -387,8 +387,8 @@ class AnalysisManager:
         """Execute the analysis on the provided pixel dataset.
 
         Args:
-        pixel_dataset: Pixel dataset.
-        pxl_file_target: Pxl file target.
+            pixel_dataset: Pixel dataset.
+            pxl_file_target: Pxl file target.
         """
         iterator = pixel_dataset.edgelist().iterator()
         return self._execute_on_iterator(iterator, pxl_file_target)
@@ -403,8 +403,8 @@ class AnalysisManager:
         """Execute the analysis on the provided pixel file path.
 
         Args:
-        input_pxl_file_path: Input pxl file path.
-        pxl_file_target: Pxl file target.
+            input_pxl_file_path: Input pxl file path.
+            pxl_file_target: Pxl file target.
         """
         self._set_path_to_dataset(input_pxl_file_path)
         pixel_dataset = read(input_pxl_file_path)

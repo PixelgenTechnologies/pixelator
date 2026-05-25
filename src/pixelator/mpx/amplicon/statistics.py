@@ -57,7 +57,7 @@ class SequenceQualityStatsCollector:
         """Accumulate read quality statistics for a given design.
 
         Args:
-        design_name: The name of the design of the reads for which to statistics.
+            design_name: The name of the design of the reads for which to statistics.
         """
         design = config.get_assay(design_name)
 
@@ -97,7 +97,7 @@ class SequenceQualityStatsCollector:
         :raise ValueError: An unknown region id was given
 
         Args:
-        region_id: id of the region
+            region_id: id of the region
         """
         r = self._positions.get(region_id)
         if r is None:
@@ -193,7 +193,7 @@ class SequenceQualityStatsCollector:
         """Update the statistics with the given read qualities.
 
         Args:
-        qualities: Qualities.
+            qualities: Qualities.
         """
         # Use numpy for vectorized operations
         # Reinterpret cast to integers (same as ord)

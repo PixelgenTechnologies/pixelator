@@ -56,19 +56,19 @@ def build_barcodes_file(
 ) -> str:
     """Create a FASTA file of barcodes from a panel dataframe.
 
-        The FASTA file will have the marker id as
-        name and the barcode sequence as sequence. The parameter
-        rev_complement control if sequence needs to be in reverse
-        complement form or not. When anchored is true a dollar sign
-        ($) will be added at the end of the sequences to make them
-        anchored in cutadapt.
+    The FASTA file will have the marker id as
+    name and the barcode sequence as sequence. The parameter
+    rev_complement control if sequence needs to be in reverse
+    complement form or not. When anchored is true a dollar sign
+    ($) will be added at the end of the sequences to make them
+    anchored in cutadapt.
 
-        :returns str: a path to the barcodes file
+    :returns str: a path to the barcodes file
 
     Args:
-    panel: an Antibody panel object
-    anchored: make the sequences anchored if True
-    rev_complement: reverse complement the sequence column if True
+        panel: an Antibody panel object
+        anchored: make the sequences anchored if True
+        rev_complement: reverse complement the sequence column if True
     """
     logger.debug("Creating barcodes file from antibody panel")
 
@@ -92,8 +92,8 @@ def click_echo(msg: str, multiline: bool = False):
     """Print a line to the console with optional long-line wrapping.
 
     Args:
-    msg: the message to print
-    multiline: True to use text wrapping or False otherwise (default)
+        msg: the message to print
+        multiline: True to use text wrapping or False otherwise (default)
     """
     if multiline:
         click.echo(textwrap.fill(textwrap.dedent(msg), width=100))
@@ -104,11 +104,11 @@ def click_echo(msg: str, multiline: bool = False):
 def create_output_stage_dir(root: PathType, name: str) -> Path:
     """Create a new subfolder with `name` under the given `root` directory.
 
-        :returns Path: the created folder (Path)
+    :returns Path: the created folder (Path)
 
     Args:
-    root: the parent directory
-    name: the name of the directory to create
+        root: the parent directory
+        name: the name of the directory to create
     """
     output = Path(root) / name
     if not output.is_dir():
@@ -131,11 +131,11 @@ def batched(iterable, n):
 def get_extension(filename: PathType, len_ext: int = 2) -> str:
     """Extract file extensions from a filename.
 
-        :returns str: the file extension (str)
+    :returns str: the file extension (str)
 
     Args:
-    filename: the file name
-    len_ext: the number of expected extensions parts e.g.: fq.gz gives len_ext=2
+        filename: the file name
+        len_ext: the number of expected extensions parts e.g.: fq.gz gives len_ext=2
     """
     return "".join(PurePath(filename).suffixes[-len_ext:]).lstrip(".")
 
@@ -143,13 +143,13 @@ def get_extension(filename: PathType, len_ext: int = 2) -> str:
 def get_sample_name(filename: PathType) -> str:
     """Extract the sample name from a sample's filename.
 
-        The sample name is expected to be from the start of the filename until
-        the first dot.
+    The sample name is expected to be from the start of the filename until
+    the first dot.
 
-        :returns str: the sample name
+    :returns str: the sample name
 
     Args:
-    filename: path to the file
+        filename: path to the file
     """
     return Path(filename).stem.split(".")[0]
 
@@ -159,15 +159,15 @@ def group_input_reads(
 ) -> Dict[str, List[Path]]:
     """Group input files by read pairs and sample id.
 
-        :returns Dict[str, List[Path]]: a dictionary with the grouped reads
+    :returns Dict[str, List[Path]]: a dictionary with the grouped reads
 
     Args:
-    inputs: list of input files
-    input1_pattern: pattern to match read1 files
-    input2_pattern: pattern to match read2 files
+        inputs: list of input files
+        input1_pattern: pattern to match read1 files
+        input2_pattern: pattern to match read2 files
 
     Raises:
-    ValueError: if the number of reads for a sample is more than 2
+        ValueError: if the number of reads for a sample is more than 2
     """
 
     def group_fn(s):
@@ -211,10 +211,10 @@ def group_input_reads(
 def gz_size(filename: str) -> int:
     """Extract the size of a gzip compressed file.
 
-        :returns int: size of the file uncompressed (in bits)
+    :returns int: size of the file uncompressed (in bits)
 
     Args:
-    filename: file name
+        filename: file name
     """
     with gzip.open(filename, "rb") as f:
         return f.seek(0, whence=2)
@@ -229,10 +229,10 @@ def log_step_start(
     """Add information about the start of a pixelator step to the logs.
 
     Args:
-    step_name: name of the step that is starting
-    input_files: collection of input file paths
-    output: optional path to output
-    **kwargs: any additional parameters that you wish to log
+        step_name: name of the step that is starting
+        input_files: collection of input file paths
+        output: optional path to output
+        **kwargs: any additional parameters that you wish to log
     """
     from pixelator import __version__
 
@@ -271,7 +271,7 @@ def reverse_complement(seq: str) -> str:
     """Compute the reverse complement of a DNA seq.
 
     Args:
-    seq: the DNA sequence
+        seq: the DNA sequence
     """
     return seq.translate(_TRTABLE)[::-1]
 
@@ -282,14 +282,14 @@ def sanity_check_inputs(
 ) -> None:
     """Perform basic sanity checking of input files.
 
-        :returns None:
+    :returns None:
 
     Args:
-    input_files: the files to sanity check
-    allowed_extensions: the expected file extension of the files, e.g. 'fastq.gz' or a tuple of allowed types eg. ('fastq.gz', 'fq.gz')
+        input_files: the files to sanity check
+        allowed_extensions: the expected file extension of the files, e.g. 'fastq.gz' or a tuple of allowed types eg. ('fastq.gz', 'fq.gz')
 
     Raises:
-    AssertionError: when any of validation fails
+        AssertionError: when any of validation fails
     """
     input_files_: list[PathType] = (
         input_files if not isinstance(input_files, PathType) else [input_files]  # type: ignore
@@ -327,13 +327,13 @@ T = typing.TypeVar("T")
 def single_value(xs: Union[List[T], Set[T]]) -> T:
     """Extract the first value in a List or Set if the collection has a single value.
 
-        :returns T: the first value in the collection
+    :returns T: the first value in the collection
 
     Args:
-    xs: a collection of values
+        xs: a collection of values
 
     Raises:
-    AssertionError: if the collection is empty or has more than one value
+        AssertionError: if the collection is empty or has more than one value
     """
     if len(xs) == 0:
         raise AssertionError("Empty collection")
@@ -363,9 +363,9 @@ def write_parameters_file(
     """Write the parameters used in for a command to a JSON file.
 
     Args:
-    click_context: the click context object
-    output_file: the output file
-    command_path: the command to use as command name
+        click_context: the click context object
+        output_file: the output file
+        command_path: the command to use as command name
     """
     command_path_fixed = command_path or click_context.command_path
     parameters = click_context.command.params
@@ -463,16 +463,16 @@ R2_REGEX = R"(.[Rr]2$)|(_[Rr]?2$)|(_[Rr]?2)(?P<suffix>_[0-9]{3})$"
 def get_read_sample_name(read: str) -> str:
     """Extract the sample name from a read file.
 
-        Strip fq.gz or fastq.gz extension and remove R1/R2 suffixes.
-        Supported R1 R2 identifieds are:
+    Strip fq.gz or fastq.gz extension and remove R1/R2 suffixes.
+    Supported R1 R2 identifieds are:
 
-        _R1,_R2 | _r1, _r2 | _1, _2 | .R1, .R2 | .r1, .r2
+    _R1,_R2 | _r1, _r2 | _1, _2 | .R1, .R2 | .r1, .r2
 
-        :return str: sample name
-        :raise ValueError: if the read file does not have a valid extension
+    :return str: sample name
+    :raise ValueError: if the read file does not have a valid extension
 
     Args:
-    read: filename of a fastq read file
+        read: filename of a fastq read file
     """
     # group input file by sample id and order reads by R1 and R2
     if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
@@ -504,15 +504,15 @@ def get_read_sample_name(read: str) -> str:
 def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> bool:
     """Check if a read filename matches the specified read_type.
 
-        Detects the presence of a common read 1 or read 2 suffix in the filename.
+    Detects the presence of a common read 1 or read 2 suffix in the filename.
 
-        :return bool: True if the read file is a read 1 or 2 file
-        :raise ValueError: if the read file does not have a valid extension
-        :raise AssertionError: if the read_type is not 'r1' or 'r2'
+    :return bool: True if the read file is a read 1 or 2 file
+    :raise ValueError: if the read file does not have a valid extension
+    :raise AssertionError: if the read_type is not 'r1' or 'r2'
 
     Args:
-    read: filename of a fastq read file
-    read_type: the read type to check for (r1 or r2)
+        read: filename of a fastq read file
+        read_type: the read type to check for (r1 or r2)
     """
     read = Path(read).name
 
@@ -542,13 +542,13 @@ def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> 
 def flatten(iterable: Iterable[Iterable[Any] | Any]) -> Generator[Any, None, None]:
     """Flatten an Iterable containing items or collection of items.
 
-        Note: only list, set, tuple are flattened, strings and bytes are yielded as is
+    Note: only list, set, tuple are flattened, strings and bytes are yielded as is
 
-        :return Generator[Any, None, None]: A generator yielding the flattened items
-        :yield Any: the flattened items
+    :return Generator[Any, None, None]: A generator yielding the flattened items
+    :yield Any: the flattened items
 
     Args:
-    iterable: list of lists or list of sets
+        iterable: list of lists or list of sets
     """
     for item in iterable:
         if isinstance(item, (str, bytes)):

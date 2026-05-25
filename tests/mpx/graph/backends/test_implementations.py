@@ -31,8 +31,7 @@ def test_graph_backend_request_networkx_when_env_var_set(enable_backend):
     """Verify graph backend request networkx when env var set.
 
     Args:
-    enable_backend: enable backend.
-
+        enable_backend: enable backend.
     """
     result = graph_backend()
     assert isinstance(result(), NetworkXGraphBackend)
@@ -64,8 +63,7 @@ def nx_vertex(nx_graph):
     """Nx vertex.
 
     Args:
-    nx_graph: nx graph.
-
+        nx_graph: nx graph.
     """
     nx_graph.add_node(0, my_attr="a")
     yield NetworkxBasedVertex(*list(nx_graph.nodes(data=True))[0], graph=nx_graph)
@@ -79,9 +77,8 @@ class TestVertexClassesImplementVertexProtocol:
         """Verify index.
 
         Args:
-        vertex: vertex.
-        request: request.
-
+            vertex: vertex.
+            request: request.
         """
         vertex_inst = request.getfixturevalue(vertex)
         assert vertex_inst.index == 0
@@ -90,9 +87,8 @@ class TestVertexClassesImplementVertexProtocol:
         """Verify getitem.
 
         Args:
-        vertex: vertex.
-        request: request.
-
+            vertex: vertex.
+            request: request.
         """
         vertex_instance = request.getfixturevalue(vertex)
         assert vertex_instance["my_attr"] == "a"
@@ -101,9 +97,8 @@ class TestVertexClassesImplementVertexProtocol:
         """Verify setitem.
 
         Args:
-        vertex: vertex.
-        request: request.
-
+            vertex: vertex.
+            request: request.
         """
         vertex_instance = request.getfixturevalue(vertex)
         assert vertex_instance["my_attr"] == "a"
@@ -116,8 +111,7 @@ def nx_edge(nx_graph):
     """Nx edge.
 
     Args:
-    nx_graph: nx graph.
-
+        nx_graph: nx graph.
     """
     nx_graph.add_edge(0, 1, my_attr="a", index=0)
     yield NetworkxBasedEdge(list(nx_graph.edges(data=True))[0], nx_graph)
@@ -131,9 +125,8 @@ class TestEdgeClassesImplementEdgeProtocol:
         """Verify index.
 
         Args:
-        edge: edge.
-        request: request.
-
+            edge: edge.
+            request: request.
         """
         edge = request.getfixturevalue(edge)
         assert edge.index == 0
@@ -142,9 +135,8 @@ class TestEdgeClassesImplementEdgeProtocol:
         """Verify vertex tuple.
 
         Args:
-        edge: edge.
-        request: request.
-
+            edge: edge.
+            request: request.
         """
         edge = request.getfixturevalue(edge)
         assert tuple(map(lambda x: x.index, edge.vertex_tuple)) == (0, 1)
@@ -155,8 +147,7 @@ def nx_vertex_seq(nx_graph):
     """Nx vertex seq.
 
     Args:
-    nx_graph: nx graph.
-
+        nx_graph: nx graph.
     """
     nx_graph.add_node(0, my_attr="a")
     nx_graph.add_node(0, my_attr="a", other_attr=1)
@@ -179,9 +170,8 @@ class TestVertexSequenceClassesImplementVertexSequenceProtocol:
         """Verify vertices.
 
         Args:
-        vertex_seq: vertex seq.
-        request: request.
-
+            vertex_seq: vertex seq.
+            request: request.
         """
         vertex_seq = request.getfixturevalue(vertex_seq)
         assert list(map(lambda x: x.index, vertex_seq.vertices())) == [0, 1, 2]
@@ -190,9 +180,8 @@ class TestVertexSequenceClassesImplementVertexSequenceProtocol:
         """Verify len.
 
         Args:
-        vertex_seq: vertex seq.
-        request: request.
-
+            vertex_seq: vertex seq.
+            request: request.
         """
         vertex_seq = request.getfixturevalue(vertex_seq)
         assert len(vertex_seq) == 3
@@ -201,9 +190,8 @@ class TestVertexSequenceClassesImplementVertexSequenceProtocol:
         """Verify iter.
 
         Args:
-        vertex_seq: vertex seq.
-        request: request.
-
+            vertex_seq: vertex seq.
+            request: request.
         """
         vertex_seq = request.getfixturevalue(vertex_seq)
         iterator = iter(vertex_seq)
@@ -213,9 +201,8 @@ class TestVertexSequenceClassesImplementVertexSequenceProtocol:
         """Verify attributes.
 
         Args:
-        vertex_seq: vertex seq.
-        request: request.
-
+            vertex_seq: vertex seq.
+            request: request.
         """
         vertex_seq = request.getfixturevalue(vertex_seq)
         assert vertex_seq.attributes() == {"my_attr", "other_attr"}
@@ -224,9 +211,8 @@ class TestVertexSequenceClassesImplementVertexSequenceProtocol:
         """Verify get vertex.
 
         Args:
-        vertex_seq: vertex seq.
-        request: request.
-
+            vertex_seq: vertex seq.
+            request: request.
         """
         vertex_seq = request.getfixturevalue(vertex_seq)
         vertex = vertex_seq.get_vertex(0)
@@ -241,9 +227,8 @@ class TestVertexSequenceClassesImplementVertexSequenceProtocol:
         """Verify get vertex raises key error.
 
         Args:
-        vertex_seq: vertex seq.
-        request: request.
-
+            vertex_seq: vertex seq.
+            request: request.
         """
         vertex_seq = request.getfixturevalue(vertex_seq)
         with pytest.raises(KeyError):
@@ -253,9 +238,8 @@ class TestVertexSequenceClassesImplementVertexSequenceProtocol:
         """Verify get attributes.
 
         Args:
-        vertex_seq: vertex seq.
-        request: request.
-
+            vertex_seq: vertex seq.
+            request: request.
         """
         vertex_seq = request.getfixturevalue(vertex_seq)
         assert list(vertex_seq.get_attribute("my_attr")) == ["a", "b", "n"]
@@ -267,8 +251,7 @@ def nx_edge_seq(nx_graph):
     """Nx edge seq.
 
     Args:
-    nx_graph: nx graph.
-
+        nx_graph: nx graph.
     """
     nx_graph.add_edge(0, 1, my_attr="a", index=0)
     nx_graph.add_edge(1, 2, my_attr="b", index=1)
@@ -289,9 +272,8 @@ class TestEdgeSequenceClassesImplementEdgeSequenceProtocol:
         """Verify len.
 
         Args:
-        edge_seq: edge seq.
-        request: request.
-
+            edge_seq: edge seq.
+            request: request.
         """
         edge_seq = request.getfixturevalue(edge_seq)
         assert len(edge_seq) == 4
@@ -300,9 +282,8 @@ class TestEdgeSequenceClassesImplementEdgeSequenceProtocol:
         """Verify iter.
 
         Args:
-        edge_seq: edge seq.
-        request: request.
-
+            edge_seq: edge seq.
+            request: request.
         """
         edge_seq = request.getfixturevalue(edge_seq)
         iterator = iter(edge_seq)
@@ -312,9 +293,8 @@ class TestEdgeSequenceClassesImplementEdgeSequenceProtocol:
         """Verify select where.
 
         Args:
-        edge_seq: edge seq.
-        request: request.
-
+            edge_seq: edge seq.
+            request: request.
         """
         edge_seq = request.getfixturevalue(edge_seq)
         edges = edge_seq.select_where("my_attr", "a")
@@ -324,9 +304,8 @@ class TestEdgeSequenceClassesImplementEdgeSequenceProtocol:
         """Verify select within.
 
         Args:
-        edge_seq: edge seq.
-        request: request.
-
+            edge_seq: edge seq.
+            request: request.
         """
         edge_seq = request.getfixturevalue(edge_seq)
         edges = edge_seq.select_within({1, 2})
@@ -339,8 +318,7 @@ def nx_vertex_clustering(nx_graph):
     """Nx vertex clustering.
 
     Args:
-    nx_graph: nx graph.
-
+        nx_graph: nx graph.
     """
     nx_graph.add_edge(0, 1, my_attr="a", index=0)
     nx_graph.add_edge(1, 2, my_attr="b", index=1)
@@ -364,9 +342,8 @@ class TestVertexClusteringClassesImplementVertexClusteringProtocol:
         """Verify len.
 
         Args:
-        vertex_clustering: vertex clustering.
-        request: request.
-
+            vertex_clustering: vertex clustering.
+            request: request.
         """
         vertex_clustering = request.getfixturevalue(vertex_clustering)
         assert len(vertex_clustering) == 2
@@ -375,9 +352,8 @@ class TestVertexClusteringClassesImplementVertexClusteringProtocol:
         """Verify iter.
 
         Args:
-        vertex_clustering: vertex clustering.
-        request: request.
-
+            vertex_clustering: vertex clustering.
+            request: request.
         """
         vertex_clustering = request.getfixturevalue(vertex_clustering)
         iterator = iter(vertex_clustering)
@@ -387,9 +363,8 @@ class TestVertexClusteringClassesImplementVertexClusteringProtocol:
         """Verify modularity.
 
         Args:
-        vertex_clustering: vertex clustering.
-        request: request.
-
+            vertex_clustering: vertex clustering.
+            request: request.
         """
         vertex_clustering = request.getfixturevalue(vertex_clustering)
         assert pytest.approx(vertex_clustering.modularity, abs=0.01) == 0.3194
@@ -398,9 +373,8 @@ class TestVertexClusteringClassesImplementVertexClusteringProtocol:
         """Verify crossing.
 
         Args:
-        vertex_clustering: vertex clustering.
-        request: request.
-
+            vertex_clustering: vertex clustering.
+            request: request.
         """
         vertex_clustering = request.getfixturevalue(vertex_clustering)
         crossing_edges = vertex_clustering.crossing()
@@ -410,9 +384,8 @@ class TestVertexClusteringClassesImplementVertexClusteringProtocol:
         """Verify giant.
 
         Args:
-        vertex_clustering: vertex clustering.
-        request: request.
-
+            vertex_clustering: vertex clustering.
+            request: request.
         """
         vertex_clustering = request.getfixturevalue(vertex_clustering)
         assert len(vertex_clustering.giant().vs) == 3
@@ -422,9 +395,8 @@ class TestVertexClusteringClassesImplementVertexClusteringProtocol:
         """Verify subgraphs.
 
         Args:
-        vertex_clustering: vertex clustering.
-        request: request.
-
+            vertex_clustering: vertex clustering.
+            request: request.
         """
         vertex_clustering = request.getfixturevalue(vertex_clustering)
         assert len(vertex_clustering.subgraphs()) == 2

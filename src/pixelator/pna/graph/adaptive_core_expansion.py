@@ -27,7 +27,7 @@ def normalize_counts(x):
     """Normalize counts using log-mean-exp normalization.
 
     Args:
-    x: X.
+        x: X.
     """
     x_log1p = np.log1p(x)
     x_mean = np.mean(x_log1p)
@@ -41,9 +41,9 @@ def _expand_k_core_layer_until_min_seed_pct(
     """Expand the k-core layer to lower k-core layers until the minimum seed percentage is reached.
 
     Args:
-    k_cores: K cores.
-    max_k: Max k.
-    min_seed_pct: Min seed pct.
+        k_cores: K cores.
+        max_k: Max k.
+        min_seed_pct: Min seed pct.
     """
     pct_k_max = np.mean(k_cores == max_k)
     while pct_k_max < min_seed_pct and max_k > 1:
@@ -69,10 +69,10 @@ def _get_k_cores(
     """Get the k-cores of the graph.
 
     Args:
-    graph: Graph.
-    node_list: Node list.
-    max_k_core: Max k core.
-    min_seed_pct: Min seed pct.
+        graph: Graph.
+        node_list: Node list.
+        max_k_core: Max k core.
+        min_seed_pct: Min seed pct.
     """
     k_cores_dict = nx.core_number(graph)
     k_cores = np.array([k_cores_dict[n] for n in node_list])
@@ -95,9 +95,9 @@ def _build_p_step_matrix(g: Graph, node_list: list[str], k: int) -> sp.csr_matri
     """Build the k-step transition probability matrix used by ACE.
 
     Args:
-    g: G.
-    node_list: Node list.
-    k: K.
+        g: G.
+        node_list: Node list.
+        k: K.
     """
     A = g.get_adjacency_sparse(node_ordering=node_list)
     A = A + sp.diags_array([1] * A.shape[0], format="csr", dtype=None)
@@ -122,10 +122,10 @@ def _find_largets_connect_component_of_k_core(
     """Downgrade k-core seed nodes outside the largest connected component.
 
     Args:
-    raw_graph: Raw graph.
-    node_list: Node list.
-    k_cores: K cores.
-    max_k: Max k.
+        raw_graph: Raw graph.
+        node_list: Node list.
+        k_cores: K cores.
+        max_k: Max k.
     """
     seed_nodes = [node_list[i] for i, k_val in enumerate(k_cores) if k_val == max_k]
     subgraph = raw_graph.subgraph(seed_nodes)
@@ -155,13 +155,13 @@ def _find_partitions(
     """Compute candidate partitions and their Bray-Curtis scores.
 
     Args:
-    counts: Counts.
-    k_cores: K cores.
-    max_k: Max k.
-    binding_thresholds: Binding thresholds.
-    P_step: P step.
-    max_iter: Max iter.
-    nodes_to_move_threshold: Nodes to move threshold.
+        counts: Counts.
+        k_cores: K cores.
+        max_k: Max k.
+        binding_thresholds: Binding thresholds.
+        P_step: P step.
+        max_iter: Max iter.
+        nodes_to_move_threshold: Nodes to move threshold.
     """
     partitions: list[_PartitionCandidate] = []
     current_partition = (k_cores == max_k).astype(int)
@@ -217,9 +217,9 @@ def validate_best_candidate(
     """Validate selected partition against minimum high-core node percentage.
 
     Args:
-    best_candidate: Best candidate.
-    partitions: Partitions.
-    min_allowed_nodes_pct: Min allowed nodes pct.
+        best_candidate: Best candidate.
+        partitions: Partitions.
+        min_allowed_nodes_pct: Min allowed nodes pct.
     """
     if best_candidate is not None and best_candidate.nodes_pct < min_allowed_nodes_pct:
         logger.warning(
@@ -278,43 +278,43 @@ def adaptive_core_expansion(
 
     The algorithm proceeds in four main stages:
     1. Seed Identification: Computes node k-coreness and identifies the maximum
-       core layer (k_max). To ensure a robust starting point, the seed is capped
-       at max_k_core and automatically downgraded to lower core levels until it
-       meets the min_seed_pct threshold.
+    core layer (k_max). To ensure a robust starting point, the seed is capped
+    at max_k_core and automatically downgraded to lower core levels until it
+    meets the min_seed_pct threshold.
     2. k-Step Influence Modeling: Constructs a transition probability matrix P
-       derived from a k-step reachability matrix. This captures the cumulative
-       "binding strength" of a node based on its connectivity within a k-distance
-       radius, accounting for indirect paths and local density.
+    derived from a k-step reachability matrix. This captures the cumulative
+    "binding strength" of a node based on its connectivity within a k-distance
+    radius, accounting for indirect paths and local density.
     3. Iterative Expansion: For a range of binding_thresholds, nodes are moved
-       from the "low" to the "high" partition if their total transition probability
-       to the current "high" set exceeds the threshold.
+    from the "low" to the "high" partition if their total transition probability
+    to the current "high" set exceeds the threshold.
     4. Dissimilarity Optimization: Evaluates each result using the Bray-Curtis
-       dissimilarity score. The partition with the highest score that meets the
-       min_allowed_nodes_pct requirement is selected.
+    dissimilarity score. The partition with the highest score that meets the
+    min_allowed_nodes_pct requirement is selected.
 
     Args:
-    g: A `Graph` object containing the cell graph and node count data.
-    k: The neighborhood radius (number of steps) used for reachability. Larger values increase the "reach" of the core.
-    max_k_core: Cap for the maximum k-core layer used for seeding.
-    binding_thresholds: Thresholds for moving nodes to the high partition. If None, a default sequence from 0.5 to 0.3 is used.
-    max_iter: Maximum iterations per binding threshold.
-    min_seed_pct: Minimum fraction of nodes required for the initial seed.
-    nodes_to_move_threshold: Convergence limit; iteration stops if fewer nodes move.
-    min_allowed_nodes_pct: Minimum fraction of nodes required in the final "high" core partition.
-    select_lcc: If True, restricts the initial seed to the Largest Connected Component.
+        g: A `Graph` object containing the cell graph and node count data.
+        k: The neighborhood radius (number of steps) used for reachability. Larger values increase the "reach" of the core.
+        max_k_core: Cap for the maximum k-core layer used for seeding.
+        binding_thresholds: Thresholds for moving nodes to the high partition. If None, a default sequence from 0.5 to 0.3 is used.
+        max_iter: Maximum iterations per binding threshold.
+        min_seed_pct: Minimum fraction of nodes required for the initial seed.
+        nodes_to_move_threshold: Convergence limit; iteration stops if fewer nodes move.
+        min_allowed_nodes_pct: Minimum fraction of nodes required in the final "high" core partition.
+        select_lcc: If True, restricts the initial seed to the Largest Connected Component.
 
     Raises:
-    ValueError: If the graph does not contain any k-core layers above 1.
-    ValueError: If no k-core layer meets the required 'min_seed_pct' threshold.
-    ValueError: If the Graph object does not contain count data.
-    ValueError: If the 'k' parameter is not between 1 and 6 inclusive.
-    ValueError: If the 'max_k_core' parameter is not between 2 and 10 inclusive.
-    ValueError: If the 'binding_thresholds' parameter is not a sequence of floats between 0 and 1.
-    ValueError: If the 'max_iter' parameter is not between 1 and 1000 inclusive.
-    ValueError: If the 'min_seed_pct' parameter is not between 0 and 1 inclusive.
-    ValueError: If the 'nodes_to_move_threshold' parameter is not between 0 and 1000 inclusive.
-    ValueError: If the 'min_allowed_nodes_pct' parameter is not between 0 and 1 (exclusive).
-    TypeError: If the 'binding_thresholds' parameter is not a sequence of floats between 0 and 1.
+        ValueError: If the graph does not contain any k-core layers above 1.
+        ValueError: If no k-core layer meets the required 'min_seed_pct' threshold.
+        ValueError: If the Graph object does not contain count data.
+        ValueError: If the 'k' parameter is not between 1 and 6 inclusive.
+        ValueError: If the 'max_k_core' parameter is not between 2 and 10 inclusive.
+        ValueError: If the 'binding_thresholds' parameter is not a sequence of floats between 0 and 1.
+        ValueError: If the 'max_iter' parameter is not between 1 and 1000 inclusive.
+        ValueError: If the 'min_seed_pct' parameter is not between 0 and 1 inclusive.
+        ValueError: If the 'nodes_to_move_threshold' parameter is not between 0 and 1000 inclusive.
+        ValueError: If the 'min_allowed_nodes_pct' parameter is not between 0 and 1 (exclusive).
+        TypeError: If the 'binding_thresholds' parameter is not a sequence of floats between 0 and 1.
     """
     _validate_ace_parameters(
         k=k,

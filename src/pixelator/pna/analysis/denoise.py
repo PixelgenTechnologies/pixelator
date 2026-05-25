@@ -41,8 +41,8 @@ def _calculate_core_marker_counts(
     """Calculate marker counts for one-core and higher-core nodes.
 
     Args:
-    node_marker_counts: Node marker counts.
-    node_core_numbers: Node core numbers.
+        node_marker_counts: Node marker counts.
+        node_core_numbers: Node core numbers.
     """
     one_core_counts = node_marker_counts[
         (node_core_numbers[node_marker_counts.index] == 1).values
@@ -66,8 +66,8 @@ def _perform_fishers_exact_test(
     """Perform Fisher's exact test to identify over-expressed markers.
 
     Args:
-    marker_counts: Marker counts.
-    pval_significance_threshold: Pval significance threshold.
+        marker_counts: Marker counts.
+        pval_significance_threshold: Pval significance threshold.
     """
     overexpressed_markers = []
     total_one_core_markers = marker_counts["one_core"].sum()
@@ -97,9 +97,9 @@ def _calculate_excess_counts(
     """Calculate inflated excess counts for over-expressed markers.
 
     Args:
-    marker_counts: Marker counts.
-    overexpressed_markers: Overexpressed markers.
-    inflate_factor: Inflate factor.
+        marker_counts: Marker counts.
+        overexpressed_markers: Overexpressed markers.
+        inflate_factor: Inflate factor.
     """
     results = []
     total_one_core_markers = marker_counts["one_core"].sum()
@@ -136,10 +136,10 @@ def get_overexpressed_markers_in_one_core(
     marker to be removed from the one-core layer.
 
     Args:
-    node_marker_counts: Node marker counts.
-    node_core_numbers: Node core numbers.
-    pval_significance_threshold: Pval significance threshold.
-    inflate_factor: Inflate factor.
+        node_marker_counts: Node marker counts.
+        node_core_numbers: Node core numbers.
+        pval_significance_threshold: Pval significance threshold.
+        inflate_factor: Inflate factor.
     """
     marker_counts = _calculate_core_marker_counts(node_marker_counts, node_core_numbers)
 
@@ -176,11 +176,11 @@ def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list = []) -> list:
     """Identify nodes that become stranded after removing nodes_to_remove.
 
     Args:
-    component: Component.
-    nodes_to_remove: Nodes to remove.
+        component: Component.
+        nodes_to_remove: Nodes to remove.
 
     Returns:
-    list: A list of stranded nodes that are disconnected from the largest connected component after nodes_to_remove are removed.
+        list: A list of stranded nodes that are disconnected from the largest connected component after nodes_to_remove are removed.
     """
     graph = component.raw.copy()
     graph.remove_nodes_from(nodes_to_remove)
@@ -203,13 +203,13 @@ def denoise_ace(
     Nodes in the ``low`` partition are candidates for removal to retain a denser core-like graph.
 
     Args:
-    component: The graph component to process.
-    k: Neighborhood radius (steps) for the transition matrix in ACE.
-    max_k_core: Maximum k-core layer used for seeding in ACE.
-    max_iter: Maximum expansion iterations per binding threshold in ACE.
-    min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
-    nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
-    select_lcc: If True, restrict the initial ACE seed to the largest connected component.
+        component: The graph component to process.
+        k: Neighborhood radius (steps) for the transition matrix in ACE.
+        max_k_core: Maximum k-core layer used for seeding in ACE.
+        max_iter: Maximum expansion iterations per binding threshold in ACE.
+        min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
+        nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
+        select_lcc: If True, restrict the initial ACE seed to the largest connected component.
     """
     try:
         adaptive_core_expansion(
@@ -236,8 +236,8 @@ def _pixel_type_design_matrix(component: PNAGraph, node_index: pd.Index) -> np.n
     PNA graphs store bipartite side in the ``pixel_type`` node attribute (``A`` / ``B``).
 
     Args:
-    component: Component.
-    node_index: Node index.
+        component: Component.
+        node_index: Node index.
     """
     pixel_type = nx.get_node_attributes(component.raw, "pixel_type")
     n = len(node_index)
@@ -256,9 +256,9 @@ def _nodes_outside_largest_cc_after_pls_scores(
     """Return nodes to drop: fail score filter or lie outside the largest CC among passers.
 
     Args:
-    raw: Raw.
-    node_index: Node index.
-    passing_mask: Passing mask.
+        raw: Raw.
+        node_index: Node index.
+        passing_mask: Passing mask.
     """
     keep_candidates = [node_index[i] for i in range(len(node_index)) if passing_mask[i]]
     if not keep_candidates:
@@ -292,16 +292,16 @@ def denoise_pls(
     are returned for merging with other denoise methods.
 
     Args:
-    component: Component graph (mutates ``coreness`` on nodes temporarily).
-    ncomp: Requested PLS components (capped by sample size and feature count).
-    model_k: Neighborhood steps for fitting X.
-    pred_k: Neighborhood steps for prediction / scores.
-    use_weights: Use edge weights in neighborhood expansion.
-    normalization: Neighborhood matrix normalization.
-    residualize: If True, residualize X against a ``pixel_type`` design matrix.
-    pls_component_p_threshold: Per-component Pearson test vs coreness.
-    min_pls_coreness_correlation: Minimum positive correlation.
-    pls_score_threshold: All selected score columns must exceed this.
+        component: Component graph (mutates ``coreness`` on nodes temporarily).
+        ncomp: Requested PLS components (capped by sample size and feature count).
+        model_k: Neighborhood steps for fitting X.
+        pred_k: Neighborhood steps for prediction / scores.
+        use_weights: Use edge weights in neighborhood expansion.
+        normalization: Neighborhood matrix normalization.
+        residualize: If True, residualize X against a ``pixel_type`` design matrix.
+        pls_component_p_threshold: Per-component Pearson test vs coreness.
+        min_pls_coreness_correlation: Minimum positive correlation.
+        pls_score_threshold: All selected score columns must exceed this.
     """
     node_marker_counts = component.node_marker_counts
     idx = node_marker_counts.index
@@ -398,13 +398,13 @@ def denoise_one_core_layer(
     samples nodes associated with those markers for removal (bleed-over candidates).
 
     Args:
-    component: Component.
-    pval_significance_threshold: Pval significance threshold.
-    inflate_factor: Inflate factor.
-    one_core_ratio_threshold: One core ratio threshold.
+        component: Component.
+        pval_significance_threshold: Pval significance threshold.
+        inflate_factor: Inflate factor.
+        one_core_ratio_threshold: One core ratio threshold.
 
     Returns:
-    list: Node ids sampled for removal from the one-core layer (bleed-over candidates). Does not include stranded nodes; callers merge with other denoise steps and then call ``get_stranded_nodes`` once on the combined set.
+        list: Node ids sampled for removal from the one-core layer (bleed-over candidates). Does not include stranded nodes; callers merge with other denoise steps and then call ``get_stranded_nodes`` once on the combined set.
     """
     node_marker_counts = component.node_marker_counts
     node_core_numbers = pd.Series(nx.core_number(component.raw))
@@ -436,9 +436,9 @@ def write_denoised_edgelist(
     any AnnData object.
 
     Args:
-    pxl: Pxl.
-    umis_to_remove: Umis to remove.
-    output_edgelist_path: Output edgelist path.
+        pxl: Pxl.
+        umis_to_remove: Umis to remove.
+        output_edgelist_path: Output edgelist path.
     """
     with pxl.view.open() as session:
         session.get_connection().execute(
@@ -487,27 +487,27 @@ class DenoiseGraph(PerComponentTask):
         """Configure which denoise steps run and their hyperparameters.
 
         Args:
-        run_one_core: Run one core.
-        run_ace: Run ace.
-        run_pls: Run pls.
-        pval_significance_threshold: Pval significance threshold.
-        inflate_factor: Inflate factor.
-        one_core_ratio_threshold: One core ratio threshold.
-        k: K.
-        max_k_core: Max k core.
-        max_iter: Max iter.
-        min_seed_pct: Min seed pct.
-        nodes_to_move_threshold: Nodes to move threshold.
-        ace_select_lcc: Ace select lcc.
-        pls_ncomp: Pls ncomp.
-        pls_model_k: Pls model k.
-        pls_pred_k: Pls pred k.
-        pls_use_weights: Pls use weights.
-        pls_normalization: Pls normalization.
-        pls_residualize: Pls residualize.
-        pls_component_p_threshold: Pls component p threshold.
-        min_pls_coreness_correlation: Min pls coreness correlation.
-        pls_score_threshold: Pls score threshold.
+            run_one_core: Run one core.
+            run_ace: Run ace.
+            run_pls: Run pls.
+            pval_significance_threshold: Pval significance threshold.
+            inflate_factor: Inflate factor.
+            one_core_ratio_threshold: One core ratio threshold.
+            k: K.
+            max_k_core: Max k core.
+            max_iter: Max iter.
+            min_seed_pct: Min seed pct.
+            nodes_to_move_threshold: Nodes to move threshold.
+            ace_select_lcc: Ace select lcc.
+            pls_ncomp: Pls ncomp.
+            pls_model_k: Pls model k.
+            pls_pred_k: Pls pred k.
+            pls_use_weights: Pls use weights.
+            pls_normalization: Pls normalization.
+            pls_residualize: Pls residualize.
+            pls_component_p_threshold: Pls component p threshold.
+            min_pls_coreness_correlation: Min pls coreness correlation.
+            pls_score_threshold: Pls score threshold.
         """
         if not run_one_core and not run_ace and not run_pls:
             raise ValueError(
@@ -544,8 +544,8 @@ class DenoiseGraph(PerComponentTask):
         merged afterward so no step is conditioned on another's output.
 
         Args:
-        component: Component.
-        component_id: Component id.
+            component: Component.
+            component_id: Component id.
         """
         one_core_marked: list = []
         ace_marked: list = []
@@ -623,8 +623,8 @@ class DenoiseGraph(PerComponentTask):
         """Filter edgelist by removed nodes and write denoise metrics to AnnData.
 
         Args:
-        data: Data.
-        pxl_file_target: Pxl file target.
+            data: Data.
+            pxl_file_target: Pxl file target.
         """
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
@@ -672,8 +672,8 @@ def _collect_denoise_summary_info(
     """Collect summary information about the denoising process for each component.
 
     Args:
-    data: Data.
-    comp_index: Comp index.
+        data: Data.
+        comp_index: Comp index.
     """
     denoise_info = pd.DataFrame(index=comp_index)
 

@@ -71,7 +71,6 @@ class RegionModel(BaseModel):
 
         Raises:
             ValueError: if the string contains non DNA characters
-
         """
         if self.region_type is RegionType.PBS:
             is_valid = True
@@ -89,7 +88,6 @@ class AssayModel(BaseModel):
     Attributes:
         name: Name of the assay
         assay_spec: List of assay regions
-
     """
 
     # TODO: Add more metadata fields
@@ -110,7 +108,6 @@ class Region:
         max_len: maximum length of the region
         regions: list of sub-regions
         data: additional user-defined region properties
-
     """
 
     def __init__(
@@ -161,7 +158,7 @@ class Region:
         """Set the parent id of this region.
 
         Args:
-        parent_id: parent id to set
+            parent_id: parent id to set
         """
         self.parent_id = parent_id
 
@@ -298,15 +295,14 @@ class Region:
 class Assay:
     """Class representing a specific assay design.
 
-        An assay contains metadata and a list of (possible nested regions) defining
-        the structure of the assay reads.
+    An assay contains metadata and a list of (possible nested regions) defining
+    the structure of the assay reads.
 
 
 
     Attributes:
         name: Name of the assay
         assay_spec: List of regions defining the assay structure
-
     """
 
     def __init__(self, name: str, assay_spec: Optional[List[Region]] = None):
@@ -390,7 +386,7 @@ class Assay:
         """Parse an assay from a yaml file.
 
         Args:
-        filename: path to a design config file
+            filename: path to a design config file
         """
         yaml_obj = load_yaml_file(filename)
         checked_obj = AssayModel.model_validate(yaml_obj)
@@ -412,7 +408,7 @@ class Assay:
         """Retrieve a region by its id.
 
         Args:
-        region_id: id of the region to retrieve
+            region_id: id of the region to retrieve
         """
         for r in self.assay_spec:
             maybe_r = r.get_region_by_id(region_id)
@@ -426,7 +422,7 @@ class Assay:
         """Retrieve all regions of a given type.
 
         Args:
-        region_type: region type to retrieve
+            region_type: region type to retrieve
         """
         regions = []
         for r in self.assay_spec:
@@ -442,17 +438,17 @@ class Assay:
 def get_position_in_parent(assay: Assay, region_id: str) -> Tuple[int, int]:
     """Return the start and end position of a region relative to its parent region.
 
-        This assumes the amplicon consists of only fixed length regions in the path
-        from the start of the amplicon up until the region of interest.
+    This assumes the amplicon consists of only fixed length regions in the path
+    from the start of the amplicon up until the region of interest.
 
     Args:
-    assay: assay design
-    region_id: region id of the amplicon
+        assay: assay design
+        region_id: region id of the amplicon
 
     Raises:
-    ValueError: if the region_id is not found in the assay
-    ValueError: if the region has no parent
-    ValueError: if the parent_region is not found in the assay
+        ValueError: if the region_id is not found in the assay
+        ValueError: if the region has no parent
+        ValueError: if the parent_region is not found in the assay
     """
     region = assay.get_region_by_id(region_id)
     if region is None:

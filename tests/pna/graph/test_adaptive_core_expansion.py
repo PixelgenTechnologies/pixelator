@@ -44,7 +44,6 @@ def test_adaptive_core_expansion_works_as_expected(graph_from_pxl):
 
     Args:
         graph_from_pxl: Graph from pxl.
-
     """
     # Basic execution and exact count check
     res = adaptive_core_expansion(graph_from_pxl)
@@ -68,7 +67,6 @@ def test_adaptive_core_expansion_fails_with_invalid_input(graph_from_pxl):
 
     Args:
         graph_from_pxl: Graph from pxl.
-
     """
     # Invalid graph input
     with pytest.raises((AttributeError, TypeError)):
@@ -113,7 +111,6 @@ def test_adaptive_core_expansion_min_allowed_nodes_pct(graph_from_pxl, caplog):
     Args:
         graph_from_pxl: Graph from pxl.
         caplog: Caplog.
-
     """
     # Run with a high min_allowed_nodes_pct that the best BC score partition
     # might not meet, forcing a different selection or fallback.
@@ -215,7 +212,6 @@ def test_build_p_step_matrix_has_zero_diagonal_and_normalized_rows(graph_from_px
 
     Args:
         graph_from_pxl: Graph from pxl.
-
     """
     node_list = list(graph_from_pxl.raw.nodes())
     p_step = _build_p_step_matrix(g=graph_from_pxl, node_list=node_list, k=2)
@@ -303,7 +299,6 @@ def test_validate_best_candidate_returns_none_when_no_partition_is_valid(caplog)
 
     Args:
         caplog: Caplog.
-
     """
     candidate = _PartitionCandidate(
         partition=np.array([1, 0, 0]),

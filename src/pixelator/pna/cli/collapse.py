@@ -39,9 +39,9 @@ def validate_mismatches(ctx, param, value):
     """Validate the --mismatches commandline option.
 
     Args:
-    ctx: The click context
-    param: The click parameter name
-    value: The click value
+        ctx: The click context
+        param: The click parameter name
+        value: The click value
     """
     try:
         value = int(value)
@@ -110,14 +110,14 @@ def collapse(
     """Collapse Molecular Pixelation data (FASTQ) to remove duplicates and perform error correction.
 
     Args:
-    ctx: Ctx.
-    input_files: Input files.
-    design: Design.
-    panel: Panel.
-    output: Output.
-    mismatches: Mismatches.
-    algorithm: Algorithm.
-    threads: Threads.
+        ctx: Ctx.
+        input_files: Input files.
+        design: Design.
+        panel: Panel.
+        output: Output.
+        mismatches: Mismatches.
+        algorithm: Algorithm.
+        threads: Threads.
     """
     # log input parameters
     log_step_start(
@@ -169,14 +169,14 @@ def process_paired_input(
     This will run the collapse process on the files together
 
     Args:
-    ctx: The click context.
-    input_files: The UM1 and UMI2 demuxed files.
-    panel: The panel configuration.
-    mismatches: The number of mismatches allowed when error-correcting.
-    algorithm: The collapse strategy to use.
-    threads: The number of threads to use.
-    assay: The assay configuration.
-    collapse_output: The output filename for the collapsed data.
+        ctx: The click context.
+        input_files: The UM1 and UMI2 demuxed files.
+        panel: The panel configuration.
+        mismatches: The number of mismatches allowed when error-correcting.
+        algorithm: The collapse strategy to use.
+        threads: The number of threads to use.
+        assay: The assay configuration.
+        collapse_output: The output filename for the collapsed data.
     """
     if len(input_files) == 1:
         logger.info("Detected single input file.")
@@ -253,15 +253,15 @@ def process_independent_files(
     This will run the collapse process on all UMI1 files and UMI2 files successively.
 
     Args:
-    umi1_files: The UMI1 demuxed files.
-    umi2_files: The UMI2 demuxed files.
-    assay: The assay configuration.
-    panel: The panel configuration.
-    collapse_output: The output filename for the collapsed data.
-    mismatches: The number of mismatches allowed when error-correcting.
-    algorithm: The collapse strategy to use.
-    threads: The number of threads to use.
-    ctx: The click context.
+        umi1_files: The UMI1 demuxed files.
+        umi2_files: The UMI2 demuxed files.
+        assay: The assay configuration.
+        panel: The panel configuration.
+        collapse_output: The output filename for the collapsed data.
+        mismatches: The number of mismatches allowed when error-correcting.
+        algorithm: The collapse strategy to use.
+        threads: The number of threads to use.
+        ctx: The click context.
     """
     umi1_outputs = []
     umi2_outputs = []

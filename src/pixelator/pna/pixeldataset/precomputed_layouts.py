@@ -34,11 +34,11 @@ class PreComputedLayouts:
         """Create a new instance of PreComputedLayouts.
 
         Args:
-        view: View.
-        components: Components.
-        adata_helper: Adata helper.
-        add_marker_counts: Add marker counts.
-        add_spherical_norm: Add spherical norm.
+            view: View.
+            components: Components.
+            adata_helper: Adata helper.
+            add_marker_counts: Add marker counts.
+            add_spherical_norm: Add spherical norm.
         """
         self._view = view
         self._components = normalize_input_to_set(components)
@@ -68,7 +68,7 @@ class PreComputedLayouts:
         """Pivot the joined marker column into marker count columns.
 
         Args:
-        df: Df.
+            df: Df.
         """
         return (
             df.select(pl.col("*"), val=pl.lit(1))
@@ -150,7 +150,7 @@ class PreComputedLayouts:
         use more memory, but the performance should overall be better.
 
         Args:
-        return_polars_df: If True, return polars DataFrames, otherwise return pandas DataFrames
+            return_polars_df: If True, return polars DataFrames, otherwise return pandas DataFrames
         """
         with self._view.open() as session:
             for component in self.components:

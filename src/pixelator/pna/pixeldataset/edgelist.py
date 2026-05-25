@@ -39,9 +39,9 @@ class Edgelist:
         """Create a new instance of Edgelist.
 
         Args:
-        view: View.
-        components: Components.
-        adata_helper: Adata helper.
+            view: View.
+            components: Components.
+            adata_helper: Adata helper.
         """
         self._view = view
         self._components = normalize_input_to_set(components)
@@ -108,7 +108,7 @@ class Edgelist:
         """Get the edgelist as a stream of pyarrow RecordBatches.
 
         Args:
-        batch_size: Batch size.
+            batch_size: Batch size.
         """
         query = self._query_builder.edgelist_query(
             normalize_input_to_list(self.components)
@@ -129,8 +129,7 @@ class Edgelist:
         """Get a stream of components and their graphs.
 
         Returns:
-        A stream of component names and associated graphs
-
+            A stream of component names and associated graphs
         """
         for name, df in self._iterator():
             yield Component(

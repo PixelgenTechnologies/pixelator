@@ -60,21 +60,21 @@ def connect_components(
 
 
     .. [1] Traag, V.A., Waltman, L. & van Eck, N.J. From Louvain to Leiden: guaranteeing
-        well-connected communities. Sci Rep 9, 5233 (2019).
-        https://doi.org/10.1038/s4q:598-019-41695-z
+    well-connected communities. Sci Rep 9, 5233 (2019).
+    https://doi.org/10.1038/s4q:598-019-41695-z
 
     Args:
-    input: the path to the edge list dataframe (parquet)
-    output: the path to the output folder
-    sample_name: the prefix to prepend to the files (sample name)
-    metrics_file: the path to a JSON file to write metrics
-    multiplet_recovery: set to true to activate multiplet recovery
-    max_refinement_recursion_depth: The number of times a component can be broken down into smaller components during the recovery process.
-    max_edges_to_split: The maximum number of edges between the product components when splitting during multiplet recovery.
-    min_count: the minimum number of counts (molecules) an edge must have
+        input: the path to the edge list dataframe (parquet)
+        output: the path to the output folder
+        sample_name: the prefix to prepend to the files (sample name)
+        metrics_file: the path to a JSON file to write metrics
+        multiplet_recovery: set to true to activate multiplet recovery
+        max_refinement_recursion_depth: The number of times a component can be broken down into smaller components during the recovery process.
+        max_edges_to_split: The maximum number of edges between the product components when splitting during multiplet recovery.
+        min_count: the minimum number of counts (molecules) an edge must have
 
     Raises:
-    RuntimeError: if the edge list is empty after filtering
+        RuntimeError: if the edge list is empty after filtering
     """
     logger.debug("Parsing edge list %s", input)
 
@@ -219,9 +219,9 @@ def merge_strongly_connected_communities(
     None, the split communities are not considered for merging.
 
     Args:
-    edgelist: The edge list to process
-    node_community_dict: A dictionary with the community mapping for each node
-    n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
+        edgelist: The edge list to process
+        node_community_dict: A dictionary with the community mapping for each node
+        n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
     """
     community_serie = pd.Series(node_community_dict)
     edgelist["upia_community"] = community_serie[edgelist["upia"]].values
@@ -271,14 +271,14 @@ def recover_technical_multiplets(
 
 
     .. [1] Traag, V.A., Waltman, L. & van Eck, N.J. From Louvain to Leiden: guaranteeing
-        well-connected communities. Sci Rep 9, 5233 (2019).
-        https://doi.org/10.1038/s4q:598-019-41695-z
+    well-connected communities. Sci Rep 9, 5233 (2019).
+    https://doi.org/10.1038/s4q:598-019-41695-z
 
     Args:
-    edgelist: The edge list used to create the graph
-    node_component_map: A series with the component mapping for each node where the index is the upi (i.e. node name) and the value is the component id.
-    max_refinement_recursion_depth: The number of times a component can be broken down into smaller components during the recovery process.
-    max_edges_to_split: The maximum number of edges between the product components when splitting during multiplet recovery.
+        edgelist: The edge list used to create the graph
+        node_component_map: A series with the component mapping for each node where the index is the upi (i.e. node name) and the value is the component id.
+        max_refinement_recursion_depth: The number of times a component can be broken down into smaller components during the recovery process.
+        max_edges_to_split: The maximum number of edges between the product components when splitting during multiplet recovery.
     """
     logger.debug(
         "Starting multiplets recovery in edge list with %i rows",

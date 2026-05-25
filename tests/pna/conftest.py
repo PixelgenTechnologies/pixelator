@@ -59,7 +59,6 @@ def pna_pxl_file_fixture(pna_data_root):
 
     Args:
         pna_data_root: Pna data root.
-
     """
     return pna_data_root / "PNA055_Sample07_S7.layout.pxl"
 
@@ -70,7 +69,6 @@ def pna_pxl_dataset_fixture(pna_pxl_file):
 
     Args:
         pna_pxl_file: Pna pxl file.
-
     """
     pixel = read(pna_pxl_file)
     return pixel
@@ -82,7 +80,6 @@ def denoise_pxl_file_fixture(pna_data_root):
 
     Args:
         pna_data_root: Pna data root.
-
     """
     return pna_data_root / "test_denoise.pxl"
 
@@ -93,7 +90,6 @@ def denoise_pxl_dataset_fixture(denoise_pxl_file):
 
     Args:
         denoise_pxl_file: Denoise pxl file.
-
     """
     pixel = read(denoise_pxl_file)
     return pixel
@@ -104,8 +100,7 @@ def pna_pxl_panel_dataset_fixture(pna_data_root):
     """Pna pxl panel dataset fixture.
 
     Args:
-    pna_data_root: pna data root.
-
+        pna_data_root: pna data root.
     """
     return read(pna_data_root / "pxl_file_with_panel.pxl")
 
@@ -115,8 +110,7 @@ def full_run_dir() -> Path:
     """Full run dir.
 
     Returns:
-            Result (Path).
-
+        Result (Path).
     """
     return Path(PNA_DATA_ROOT) / "full_run"
 
@@ -126,8 +120,7 @@ def testdata_300k(pna_data_root) -> tuple[Path, Path]:
     """Testdata 300k.
 
     Args:
-    pna_data_root: pna data root.
-
+        pna_data_root: pna data root.
     """
     return (
         Path(pna_data_root / "PNA055_Sample07_300k_S7_R1_001.fastq.gz"),
@@ -140,8 +133,7 @@ def testdata_unbalanced_r12(pna_data_root) -> tuple[Path, Path]:
     """Testdata unbalanced r12.
 
     Args:
-    pna_data_root: pna data root.
-
+        pna_data_root: pna data root.
     """
     return (
         Path(pna_data_root / "unbalanced_R1.fastq.gz"),
@@ -154,8 +146,7 @@ def testdata_amplicon_fastq(full_run_dir) -> Path:
     """Testdata amplicon fastq.
 
     Args:
-    full_run_dir: full run dir.
-
+        full_run_dir: full run dir.
     """
     p = full_run_dir / "amplicon" / "PNA055_Sample07_filtered_S7.amplicon.fq.zst"
     return p
@@ -166,8 +157,7 @@ def testdata_paired_small_demux(pna_data_root) -> Path:
     """Testdata paired small demux.
 
     Args:
-    pna_data_root: pna data root.
-
+        pna_data_root: pna data root.
     """
     p = Path(
         pna_data_root
@@ -182,8 +172,7 @@ def testdata_demux_passed_reads(pna_data_root) -> Path:
     """Testdata demux passed reads.
 
     Args:
-    pna_data_root: pna data root.
-
+        pna_data_root: pna data root.
     """
     p = pna_data_root / "PNA055_Sample07_filtered_S7.100_reads.demux.passed.fq"
     return p
@@ -216,9 +205,8 @@ def layout_parquet_path_fixture(tmp_path_factory, layout_dataframe):
     """Layout parquet path fixture.
 
     Args:
-    tmp_path_factory: tmp path factory.
-    layout_dataframe: layout dataframe.
-
+        tmp_path_factory: tmp path factory.
+        layout_dataframe: layout dataframe.
     """
     path = tmp_path_factory.mktemp("data") / "layout.parquet"
     layout_dataframe.write_parquet(path)
@@ -230,8 +218,7 @@ def edgelist_dataframe_fixture(edgelist_data):
     """Edgelist dataframe fixture.
 
     Args:
-    edgelist_data: edgelist data.
-
+        edgelist_data: edgelist data.
     """
     edgelist = pl.read_csv(
         StringIO(edgelist_data),
@@ -253,9 +240,8 @@ def edgelist_parquet_path_fixture(tmp_path_factory, edgelist_dataframe):
     """Edgelist parquet path fixture.
 
     Args:
-    tmp_path_factory: tmp path factory.
-    edgelist_dataframe: edgelist dataframe.
-
+        tmp_path_factory: tmp path factory.
+        edgelist_dataframe: edgelist dataframe.
     """
     path = tmp_path_factory.mktemp("data") / "edgelist.parquet"
     edgelist_dataframe.write_parquet(path)
@@ -267,8 +253,7 @@ def proximity_dataframe_fixture(proximity_data):
     """Proximity dataframe fixture.
 
     Args:
-    proximity_data: proximity data.
-
+        proximity_data: proximity data.
     """
     proximity = pl.read_csv(
         StringIO(proximity_data),
@@ -281,9 +266,8 @@ def proximity_parquet_path_fixture(tmp_path_factory, proximity_dataframe):
     """Proximity parquet path fixture.
 
     Args:
-    tmp_path_factory: tmp path factory.
-    proximity_dataframe: proximity dataframe.
-
+        tmp_path_factory: tmp path factory.
+        proximity_dataframe: proximity dataframe.
     """
     path = tmp_path_factory.mktemp("data") / "proximity.parquet"
     proximity_dataframe.write_parquet(path)
@@ -323,13 +307,12 @@ def create_pxl_file(
     """Create pxl file.
 
     Args:
-    target: target.
-    sample_name: sample name.
-    edgelist_parquet_path: edgelist parquet path.
-    proximity_parquet_path: proximity parquet path.
-    layout_parquet_path: layout parquet path.
-    panel: panel.
-
+        target: target.
+        sample_name: sample name.
+        edgelist_parquet_path: edgelist parquet path.
+        proximity_parquet_path: proximity parquet path.
+        layout_parquet_path: layout parquet path.
+        panel: panel.
     """
     with PixelFileWriter(target) as writer:
         writer.write_edgelist(edgelist_parquet_path)
@@ -365,12 +348,11 @@ def pixel_file_fixture(
     """Pixel file fixture.
 
     Args:
-    tmp_path_factory: tmp path factory.
-    edgelist_parquet_path: edgelist parquet path.
-    proximity_parquet_path: proximity parquet path.
-    layout_parquet_path: layout parquet path.
-    panel: panel.
-
+        tmp_path_factory: tmp path factory.
+        edgelist_parquet_path: edgelist parquet path.
+        proximity_parquet_path: proximity parquet path.
+        layout_parquet_path: layout parquet path.
+        panel: panel.
     """
     target = tmp_path_factory.mktemp("data") / "file.pxl"
     target = create_pxl_file(
@@ -389,8 +371,7 @@ def pixel_dataset_fixture(pxl_file):
     """Pixel dataset fixture.
 
     Args:
-    pxl_file: pxl file.
-
+        pxl_file: pxl file.
     """
     return PNAPixelDataset.from_pxl_files(pxl_file)
 
@@ -412,9 +393,8 @@ def adata_data_fixture(edgelist_parquet_path, panel):
     """Adata data fixture.
 
     Args:
-    edgelist_parquet_path: edgelist parquet path.
-    panel: panel.
-
+        edgelist_parquet_path: edgelist parquet path.
+        panel: panel.
     """
     with duckdb.connect() as con:
         con.execute(f"""
@@ -432,7 +412,6 @@ def sample_hashed_pxl(pna_data_root) -> list[Path]:
 
     Args:
         pna_data_root: Pna data root.
-
     """
     return [
         pna_data_root / "sample_calling/small_hashed_sample_1.pxl",

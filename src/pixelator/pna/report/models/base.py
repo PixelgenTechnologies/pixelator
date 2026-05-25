@@ -22,10 +22,9 @@ class SampleReport(pydantic.BaseModel):
     """Base class for all pixelator reports of `single-cell` subcommands.
 
     Attributes:
-    sample_id: The sample id for which the report is generated.
-    product_id: The product id for which the report is generated.
-    command_id: The command for which the report is generated.
-
+        sample_id: The sample id for which the report is generated.
+        product_id: The product id for which the report is generated.
+        command_id: The command for which the report is generated.
     """
 
     sample_id: str
@@ -37,10 +36,10 @@ class SampleReport(pydantic.BaseModel):
         """Initialize an :class:`SampleReport` from a report file.
 
         Args:
-        p: The path to the report file.
+            p: The path to the report file.
 
         Returns:
-        A: class:`SampleReport` object.
+            A: class:`SampleReport` object.
         """
         with open(p) as fp:
             json_data = json.load(fp)
@@ -51,7 +50,7 @@ class SampleReport(pydantic.BaseModel):
         """Dump the report to a json string.
 
         Args:
-        kwargs: Additional arguments to pass to `json.dumps`.
+            kwargs: Additional arguments to pass to `json.dumps`.
         """
         return json.dumps(self.model_dump(mode="json"), **kwargs)
 
@@ -61,8 +60,8 @@ class SampleReport(pydantic.BaseModel):
         Non-existing intermediate directories in the path will be created.
 
         Args:
-        p: The path to the file to write.
-        kwargs: Additional arguments to pass to pydantics `model_dump_json`.
+            p: The path to the file to write.
+            kwargs: Additional arguments to pass to pydantics `model_dump_json`.
         """
         Path(p).resolve().parent.mkdir(parents=True, exist_ok=True)
 

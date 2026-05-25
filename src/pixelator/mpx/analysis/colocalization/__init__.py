@@ -56,15 +56,15 @@ def colocalization_from_component_edgelist(
     """Get the colocalization scores for the component in the given `edgelist`.
 
     Args:
-    edgelist: edgelist to compute colocalization scores for
-    component_id: name of the component
-    transformation: transformation method to use, defaults to "raw"
-    neighbourhood_size: size of the neighbourhood to consider, defaults to 0
-    n_permutations: number of permutations used to calculate the p-values and z-scores, defaults to 50
-    use_full_bipartite: use the full bipartiate graph, if false use A-node projection, defaults to True
-    min_region_count: minimum number of counts in region to consider, defaults to 5
-    min_marker_count: the minimum number of counts of a marker to calculate colocalization
-    random_seed: Set the random seed for the permutation tests, defaults to None
+        edgelist: edgelist to compute colocalization scores for
+        component_id: name of the component
+        transformation: transformation method to use, defaults to "raw"
+        neighbourhood_size: size of the neighbourhood to consider, defaults to 0
+        n_permutations: number of permutations used to calculate the p-values and z-scores, defaults to 50
+        use_full_bipartite: use the full bipartiate graph, if false use A-node projection, defaults to True
+        min_region_count: minimum number of counts in region to consider, defaults to 5
+        min_marker_count: the minimum number of counts of a marker to calculate colocalization
+        random_seed: Set the random seed for the permutation tests, defaults to None
     """
     graph = Graph.from_edgelist(
         edgelist=edgelist,
@@ -113,14 +113,14 @@ def colocalization_from_component_graph(
     """Compute the colocalization scores for this component graph.
 
     Args:
-    graph: graph to compute scores for
-    component_id: name of the component
-    transformation: transformation method to use, defaults to "raw"
-    neighbourhood_size: size of the neighbourhood to consider, defaults to 0
-    n_permutations: number of permutations used to calculate the p-values and z-scores, defaults to 50
-    min_region_count: minimum number of counts in region to consider, defaults to 5
-    min_marker_count: the minimum number of counts of a marker to calculate colocalization
-    random_seed: Set the random seed for the permutation tests, defaults to None
+        graph: graph to compute scores for
+        component_id: name of the component
+        transformation: transformation method to use, defaults to "raw"
+        neighbourhood_size: size of the neighbourhood to consider, defaults to 0
+        n_permutations: number of permutations used to calculate the p-values and z-scores, defaults to 50
+        min_region_count: minimum number of counts in region to consider, defaults to 5
+        min_marker_count: the minimum number of counts of a marker to calculate colocalization
+        random_seed: Set the random seed for the permutation tests, defaults to None
     """
     logger.debug("Computing colocalization for component: %s", component_id)
     logger.debug("Prepare the graph data for computing colocalization")
@@ -200,17 +200,17 @@ def colocalization_scores(
     in the `edgelist` given as input. Only the unique combination of antibodies
     are included and the component id is present in the dataframe which has the
     following columns:
-        - marker_1
-        - marker_2
-        - pearson
-        - pearson_z
-        - pearson_p_value
-        - pearson_p_value_adjusted
-        - jaccard
-        - jaccard_z
-        - jaccard_p_value
-        - jaccard_p_value_adjusted
-        - component
+    - marker_1
+    - marker_2
+    - pearson
+    - pearson_z
+    - pearson_p_value
+    - pearson_p_value_adjusted
+    - jaccard
+    - jaccard_z
+    - jaccard_p_value
+    - jaccard_p_value_adjusted
+    - component
     The function iterates all the components to compute the scores for each
     pair of antibodies. The scores are computed using the Jaccard index on the
     binarize antibody counts (colocalization) or the Pearson Correlation
@@ -219,21 +219,21 @@ def colocalization_scores(
     consideration size differences) and their expression is similar (Pearson).
     It also does permutation testing of each colocalizaiton measure to compute
     emprical p-values, corrected p-values, and z-score for each measure.
-                        computing colocalization.
+    computing colocalization.
 
     Args:
-    edgelist: an edge list dataframe with a membership column
-    use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    transformation: Select a transformation method to use for the colocalization
-    neighbourhood_size: Set the size of the neighbourhood to consider when computing the colocalization
-    n_permutations: Select number of permutations used to calculate empirical p-values of the colocalization values
-    min_region_count: The minimum size of the region (e.g. number of counts in the neighbourhood) required for it to be considered
-    min_marker_count: the minimum number of counts of a marker to calculate colocalization
-    random_seed: Set a random seed for the permutation function
+        edgelist: an edge list dataframe with a membership column
+        use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+        transformation: Select a transformation method to use for the colocalization
+        neighbourhood_size: Set the size of the neighbourhood to consider when computing the colocalization
+        n_permutations: Select number of permutations used to calculate empirical p-values of the colocalization values
+        min_region_count: The minimum size of the region (e.g. number of counts in the neighbourhood) required for it to be considered
+        min_marker_count: the minimum number of counts of a marker to calculate colocalization
+        random_seed: Set a random seed for the permutation function
 
     Raises:
-    AssertionError: when the input is not valid
-    ValueError: when no components were found to be valid for
+        AssertionError: when the input is not valid
+        ValueError: when no components were found to be valid for
     """
     if "component" not in edgelist.columns:
         raise AssertionError("edge list is missing the membership column")
@@ -311,11 +311,11 @@ def get_differential_colocalization(
     """Calculate the differential colocalization.
 
     Args:
-    colocalization_data_frame: Colocalization measurements to compare.
-    reference: Label for reference samples in ``contrast_column``.
-    targets: Target sample labels; defaults to all non-reference labels.
-    contrast_column: Column containing sample labels. Defaults to ``"sample"``.
-    value_column: Colocalization metric column. Defaults to ``"pearson_z"``.
+        colocalization_data_frame: Colocalization measurements to compare.
+        reference: Label for reference samples in ``contrast_column``.
+        targets: Target sample labels; defaults to all non-reference labels.
+        contrast_column: Column containing sample labels. Defaults to ``"sample"``.
+        value_column: Colocalization metric column. Defaults to ``"pearson_z"``.
     """
     if targets is None:
         targets = colocalization_data_frame[contrast_column].unique()
@@ -386,11 +386,11 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         """Initialize the ColocalizationAnalysis.
 
         Args:
-        transformation_type: transformation method to use
-        neighbourhood_size: size of the neighbourhood to consider
-        n_permutations: Select number of permutations used to calculate empirical z-scores and p-values of the colocalization values
-        min_region_count: The minimum size of the region (e.g. number of counts in the neighbourhood) required for it to be considered for colocalization analysis
-        min_marker_count: the minimum number of counts of a marker to calculate colocalization
+            transformation_type: transformation method to use
+            neighbourhood_size: size of the neighbourhood to consider
+            n_permutations: Select number of permutations used to calculate empirical z-scores and p-values of the colocalization values
+            min_region_count: The minimum size of the region (e.g. number of counts in the neighbourhood) required for it to be considered for colocalization analysis
+            min_marker_count: the minimum number of counts of a marker to calculate colocalization
         """
         self.transformation_type = transformation_type
         self.neighbourhood_size = neighbourhood_size
@@ -402,8 +402,8 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         """Run colocalization analysis on the component.
 
         Args:
-        component: Component.
-        component_id: Component id.
+            component: Component.
+            component_id: Component id.
         """
         logger.debug("Running colocalization analysis on component %s", component_id)
         return colocalization_from_component_graph(
@@ -422,7 +422,7 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         This will adjust the p-values using the Benjamini-Hochberg method.
 
         Args:
-        data: Data.
+            data: Data.
         """
         logger.debug("Post processing colocalization analysis data")
         if data.empty:
@@ -442,8 +442,8 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         """Add the colocalization data to the PixelDataset.
 
         Args:
-        data: Data.
-        pxl_dataset: Pxl dataset.
+            data: Data.
+            pxl_dataset: Pxl dataset.
         """
         logger.debug("Adding colocalization analysis data to PixelDataset")
         pxl_dataset.colocalization = data

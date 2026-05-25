@@ -46,7 +46,7 @@ class PixelDatasetBackend(Protocol):
         """Set the AnnData instance.
 
         Args:
-        value: Value.
+            value: Value.
         """
 
     @property
@@ -58,7 +58,7 @@ class PixelDatasetBackend(Protocol):
         """Set the edge list instance.
 
         Args:
-        value: Value.
+            value: Value.
         """
 
     @property
@@ -74,7 +74,7 @@ class PixelDatasetBackend(Protocol):
         """Set the polarization data frame.
 
         Args:
-        value: Value.
+            value: Value.
         """
 
     @property
@@ -86,7 +86,7 @@ class PixelDatasetBackend(Protocol):
         """Set the colocalization data frame.
 
         Args:
-        value: Value.
+            value: Value.
         """
 
     @property
@@ -98,7 +98,7 @@ class PixelDatasetBackend(Protocol):
         """Set the metadata object.
 
         Args:
-        value: Value.
+            value: Value.
         """
 
     @property
@@ -115,7 +115,7 @@ class PixelDatasetBackend(Protocol):
         """Set the precomputed layouts for the component graphs.
 
         Args:
-        value: Value.
+            value: Value.
         """
         ...
 
@@ -144,17 +144,17 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
         """Create a new instance of ObjectBasedPixelDatasetBackend.
 
         Args:
-        adata: AnnData object backing the dataset.
-        edgelist: Edge list dataframe for the dataset.
-        metadata: Optional metadata dictionary.
-        polarization: Optional polarization results dataframe.
-        colocalization: Optional colocalization results dataframe.
-        precomputed_layouts: Optional cached layout coordinates.
-        copy: Whether input objects are copied on construction.
-        allow_edgelist_to_be_empty: Allow constructing datasets with empty edgelists.
+            adata: AnnData object backing the dataset.
+            edgelist: Edge list dataframe for the dataset.
+            metadata: Optional metadata dictionary.
+            polarization: Optional polarization results dataframe.
+            colocalization: Optional colocalization results dataframe.
+            precomputed_layouts: Optional cached layout coordinates.
+            copy: Whether input objects are copied on construction.
+            allow_edgelist_to_be_empty: Allow constructing datasets with empty edgelists.
 
         Raises:
-        AssertionError: if `adata` or `edgelist` contains no data.
+            AssertionError: if `adata` or `edgelist` contains no data.
         """
         if adata is None or adata.n_obs == 0:
             raise AssertionError("adata cannot be empty")
@@ -190,7 +190,7 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
         """Set the AnnData object for the pixel dataset.
 
         Args:
-        value: Value.
+            value: Value.
         """
         self._adata = value
 
@@ -204,7 +204,7 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
         """Set the edge list for the pixel dataset.
 
         Args:
-        value: Value.
+            value: Value.
         """
         self._edgelist = value
 
@@ -223,7 +223,7 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
         """Set the metadata for the pixel dataset.
 
         Args:
-        value: Value.
+            value: Value.
         """
         self._metadata = value
 
@@ -237,7 +237,7 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
         """Set the polarization scores for the pixel dataset.
 
         Args:
-        value: Value.
+            value: Value.
         """
         self._polarization = value
 
@@ -251,7 +251,7 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
         """Set the co-localization scores for the pixel dataset.
 
         Args:
-        value: Value.
+            value: Value.
         """
         self._colocalization = value
 
@@ -267,7 +267,7 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
         """Set the precomputed layouts.
 
         Args:
-        value: Value.
+            value: Value.
         """
         if value is None:
             self._precomputed_layouts = PreComputedLayouts.create_empty()
@@ -291,8 +291,8 @@ class FileBasedPixelDatasetBackend(PixelDatasetBackend):
         in `path`.
 
         Args:
-        path: Path to the ``.pxl`` file.
-        datastore: Optional datastore implementation; guessed from ``path`` when omitted.
+            path: Path to the ``.pxl`` file.
+            datastore: Optional datastore implementation; guessed from ``path`` when omitted.
         """
         self._path = path
         if not datastore:
@@ -348,7 +348,7 @@ class FileBasedPixelDatasetBackend(PixelDatasetBackend):
         """Set the precomputed layouts.
 
         Args:
-        value: Value.
+            value: Value.
         """
         if value is None:
             self._precomputed_layouts = PreComputedLayouts.create_empty()

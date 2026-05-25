@@ -29,8 +29,7 @@ def fetch_config_plugins() -> Generator[EntryPoint, None, None]:
 
 
     Returns:
-    A generator of the loaded plugins
-
+        A generator of the loaded plugins
     """
     eps = importlib.metadata.entry_points()
     group = "pixelator_pna.config_plugin"
@@ -54,7 +53,7 @@ def load_config_plugins(config: PNAConfig) -> PNAConfig:
     """Load all config plugins.
 
     Args:
-    config: Config.
+        config: Config.
     """
     new_config = config
 

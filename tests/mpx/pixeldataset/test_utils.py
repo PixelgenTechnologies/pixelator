@@ -38,7 +38,6 @@ def test_antibody_metrics(full_graph_edgelist: pd.DataFrame):
 
     Args:
         full_graph_edgelist: Full graph edgelist.
-
     """
     assert_frame_equal(
         antibody_metrics(edgelist=full_graph_edgelist),
@@ -61,7 +60,6 @@ def test_antibody_counts(full_graph_edgelist: pd.DataFrame):
 
     Args:
         full_graph_edgelist: Full graph edgelist.
-
     """
     counts = component_antibody_counts(edgelist=full_graph_edgelist)
     assert_array_equal(
@@ -77,7 +75,6 @@ def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
     Args:
         edgelist: Edgelist.
         panel: Panel.
-
     """
     adata = edgelist_to_anndata(edgelist=edgelist, panel=panel)
     assert adata.n_vars == panel.size
@@ -121,7 +118,6 @@ def test_read_write_anndata(adata: AnnData):
 
     Args:
         adata: Adata.
-
     """
     with TemporaryDirectory() as tmp_dir:
         output_path = Path(tmp_dir) / "example.h5ad"
@@ -150,7 +146,6 @@ def test_edgelist_to_anndata_missing_markers(
         panel: Panel.
         edgelist: Edgelist.
         caplog: Caplog.
-
     """
     with caplog.at_level(logging.WARN):
         edgelist_to_anndata(edgelist, panel)
@@ -167,7 +162,6 @@ def test_edgelist_to_anndata(
         adata: Adata.
         panel: Panel.
         edgelist: Edgelist.
-
     """
     antibodies = panel.markers
     counts_df = component_antibody_counts(edgelist=edgelist)

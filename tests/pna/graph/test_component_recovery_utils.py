@@ -15,7 +15,6 @@ def test_get_count_statistics(tmp_path: Path) -> None:
 
     Args:
         tmp_path: Tmp path.
-
     """
     path = tmp_path / "edgelist.parquet"
     pl.DataFrame(
@@ -44,7 +43,6 @@ def test_write_hive_partitioned_edgelist_without_small_components_prunes(
 
     Args:
         tmp_path: Tmp path.
-
     """
     partitioned = tmp_path / "partitioned_edgelist.parquet"
     pl.DataFrame(
@@ -78,7 +76,6 @@ def test_write_hive_partitioned_edgelist_without_small_components_nothing_discar
 
     Args:
         tmp_path: Tmp path.
-
     """
     partitioned = tmp_path / "partitioned_edgelist.parquet"
     pl.DataFrame(

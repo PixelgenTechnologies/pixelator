@@ -106,8 +106,8 @@ class ReaderProcess(mpctx_Process):
             buffer_size: Number of reads to load per chunk.
             stdin_fd: Optional stdin file descriptor when reading from a pipe.
 
-        file_format_connection: File format connection.
-        paths: Paths.
+            file_format_connection: File format connection.
+            paths: Paths.
         """
         super().__init__()
         if len(paths) > 2:
@@ -167,9 +167,9 @@ class ReaderProcess(mpctx_Process):
         """Send a chunk of data to a worker.
 
         Args:
-        chunk_index: The index of the chunk.
-        chunk1: The first chunk of data.
-        chunk2: The second chunk of data (if paired-end data).
+            chunk_index: The index of the chunk.
+            chunk1: The first chunk of data.
+            chunk2: The second chunk of data (if paired-end data).
         """
         worker_index = self.queue.get()
         connection = self.connections[worker_index]
@@ -210,14 +210,14 @@ class WorkerProcess(mpctx_Process):
         """Initialize a WorkerProcess.
 
         Args:
-        id_: Id.
-        pipeline: Pipeline.
-        inpaths: Inpaths.
-        proxy_files: Proxy files.
-        read_pipe: Read pipe.
-        write_pipe: Write pipe.
-        need_work_queue: Need work queue.
-        statistics_class: Statistics class.
+            id_: Id.
+            pipeline: Pipeline.
+            inpaths: Inpaths.
+            proxy_files: Proxy files.
+            read_pipe: Read pipe.
+            write_pipe: Write pipe.
+            need_work_queue: Need work queue.
+            statistics_class: Statistics class.
         """
         super().__init__()
         self._id = id_
@@ -295,7 +295,7 @@ class OrderedChunkWriter:
         """Initialize an OrderedChunkWriter.
 
         Args:
-        outfile: Outfile.
+            outfile: Outfile.
         """
         self._chunks = dict()
         self._current_index = 0
@@ -305,8 +305,8 @@ class OrderedChunkWriter:
         """Write a chunk of data to the output handler.
 
         Args:
-        data: The data to write.
-        index: An integer indicating the order of the data.
+            data: The data to write.
+            index: An integer indicating the order of the data.
         """
         self._chunks[index] = data
         while self._current_index in self._chunks:
@@ -329,9 +329,9 @@ class PipelineRunner(ABC):
         """Run a pipeline on this runner.
 
         Args:
-        pipeline: The pipeline to run.
-        progress: Use an object that supports .update() and .close() such as DummyProgress, cutadapt.utils.Progress or a tqdm instance.
-        outfiles: The output files.
+            pipeline: The pipeline to run.
+            progress: Use an object that supports .update() and .close() such as DummyProgress, cutadapt.utils.Progress or a tqdm instance.
+            outfiles: The output files.
         """
 
     @abstractmethod
@@ -352,7 +352,7 @@ class PipelineRunner(ABC):
         """Close the runner.
 
         Args:
-        args: Args.
+            args: Args.
         """
         self.close()
 
@@ -367,8 +367,8 @@ class WorkerException(Exception):
         """Initialize a WorkerException.
 
         Args:
-        wrapped_exception: Wrapped exception.
-        tb_str: Tb str.
+            wrapped_exception: Wrapped exception.
+            tb_str: Tb str.
         """
         self.e = wrapped_exception
         self.tb_str = tb_str
@@ -413,10 +413,10 @@ class ParallelPipelineRunner(PipelineRunner, typing.Generic[StatisticsClass]):
         """Initialize a ParallelPipelineRunner.
 
         Args:
-        inpaths: The input files.
-        n_workers: The number of worker processes to use.
-        buffer_size: The size of the buffer used for reading the input files.
-        statistics_class: The class to use for collecting statistics.
+            inpaths: The input files.
+            n_workers: The number of worker processes to use.
+            buffer_size: The size of the buffer used for reading the input files.
+            statistics_class: The class to use for collecting statistics.
         """
         self._n_workers = n_workers
         self._need_work_queue: multiprocessing.Queue = mpctx.Queue()
@@ -473,9 +473,9 @@ class ParallelPipelineRunner(PipelineRunner, typing.Generic[StatisticsClass]):
         """Run the pipeline on the input files.
 
         Args:
-        pipeline: The pipeline to run.
-        progress: A progress object.
-        outfiles: The output files.
+            pipeline: The pipeline to run.
+            progress: A progress object.
+            outfiles: The output files.
         """
         workers, connections = self._start_workers(pipeline, outfiles.proxy_files())
         chunk_writers = []
@@ -519,7 +519,7 @@ class ParallelPipelineRunner(PipelineRunner, typing.Generic[StatisticsClass]):
         If an exception was received, raise it.
 
         Args:
-        connection: Connection.
+            connection: Connection.
         """
         result = connection.recv()
         if result == -2:
@@ -553,8 +553,8 @@ class SerialPipelineRunner(PipelineRunner):
         """Initialize a SerialPipelineRunner.
 
         Args:
-        infiles: The input files.
-        statistics_class: The class to use for collecting statistics.
+            infiles: The input files.
+            statistics_class: The class to use for collecting statistics.
         """
         self._infiles = infiles
         self._input_file_format = infiles
@@ -566,9 +566,9 @@ class SerialPipelineRunner(PipelineRunner):
         """Run the pipeline on the input files.
 
         Args:
-        pipeline: The pipeline to run.
-        progress: A progress object.
-        outfiles: The output files.
+            pipeline: The pipeline to run.
+            progress: A progress object.
+            outfiles: The output files.
         """
         (n, total1_bp, total2_bp) = pipeline.process_reads(
             self._infiles, progress=progress
@@ -602,10 +602,10 @@ def make_runner(
     This uses a SerialPipelineRunner if cores is 1 and a ParallelPipelineRunner otherwise.
 
     Args:
-    inpaths: The input files.
-    cores: The number of cores to run the pipeline on (this is actually the number of worker processes, there will be one extra process for reading the input file(s))
-    buffer_size: Forwarded to `ParallelPipelineRunner()`. Ignored if cores is 1.
-    statistics_class: Statistics class.
+        inpaths: The input files.
+        cores: The number of cores to run the pipeline on (this is actually the number of worker processes, there will be one extra process for reading the input file(s))
+        buffer_size: Forwarded to `ParallelPipelineRunner()`. Ignored if cores is 1.
+        statistics_class: Statistics class.
     """
     runner: PipelineRunner
     if cores > 1:

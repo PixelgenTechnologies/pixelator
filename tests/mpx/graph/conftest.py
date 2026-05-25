@@ -19,7 +19,6 @@ def output_dir_fixture(tmp_path):
 
     Args:
         tmp_path: Tmp path.
-
     """
     output_dir = tmp_path / "output"
     output_dir.mkdir()
@@ -32,7 +31,6 @@ def metrics_file_fixture(tmp_path):
 
     Args:
         tmp_path: Tmp path.
-
     """
     metrics_file = tmp_path / "metrics.json"
     yield metrics_file
@@ -45,7 +43,6 @@ def input_edgelist_fixture(tmp_path, edgelist_with_communities: pd.DataFrame):
     Args:
         tmp_path: Tmp path.
         edgelist_with_communities: Edgelist with communities.
-
     """
     input_edgelist = tmp_path / "tmp_edgelist.parquet"
     edgelist_with_communities.to_parquet(
@@ -60,7 +57,6 @@ def graph_with_communities_fixture(edgelist_with_communities: pd.DataFrame):
 
     Args:
         edgelist_with_communities: Edgelist with communities.
-
     """
     # build the graph from the edge list
     graph = Graph.from_edgelist(

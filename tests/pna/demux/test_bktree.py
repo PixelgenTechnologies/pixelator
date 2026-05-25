@@ -18,7 +18,6 @@ def change_nucleotide(s: bytes) -> bytes:
 
     Args:
         s: S.
-
     """
     pos = random.randint(0, len(s) - 1)
     population = list(ord(i) for i in "ACGT")
@@ -49,7 +48,6 @@ def change_2_nucleotides(s: bytes) -> bytes:
 
     Args:
         s: S.
-
     """
     positions = np.random.choice(range(0, len(s)), 2, replace=False)
     res = bytearray(s)

@@ -376,7 +376,6 @@ def test_get_overexpressed_markers_in_one_core(denoise_pxl_dataset):
 
     Args:
         denoise_pxl_dataset: Denoise pxl dataset.
-
     """
     components = denoise_pxl_dataset.adata().obs.index
 
@@ -442,7 +441,6 @@ def test_denoise_one_core_layer(denoise_pxl_dataset):
 
     Args:
         denoise_pxl_dataset: Denoise pxl dataset.
-
     """
     components = denoise_pxl_dataset.adata().obs.index
 
@@ -471,7 +469,6 @@ def test_denoise_one_core_analysis(denoise_pxl_dataset, tmp_path):
     Args:
         denoise_pxl_dataset: Denoise pxl dataset.
         tmp_path: Tmp path.
-
     """
     pxl_file_target = PixelDatasetSaver(pxl_dataset=denoise_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
@@ -524,7 +521,6 @@ def test_denoise_pls_reference_component_runs_and_cleans_coreness(denoise_pxl_da
 
     Args:
         denoise_pxl_dataset: Denoise pxl dataset.
-
     """
     comp_graph = PNAGraph.from_edgelist(
         denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
@@ -549,7 +545,6 @@ def test_denoise_pls_returns_empty_with_impossible_correlation_threshold(
 
     Args:
         denoise_pxl_dataset: Denoise pxl dataset.
-
     """
     comp_graph = PNAGraph.from_edgelist(
         denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
@@ -569,7 +564,6 @@ def test_denoise_pls_residualized_path_runs(denoise_pxl_dataset):
 
     Args:
         denoise_pxl_dataset: Denoise pxl dataset.
-
     """
     comp_graph = PNAGraph.from_edgelist(
         denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
@@ -592,7 +586,6 @@ def test_denoise_ace_reference_component(denoise_pxl_dataset):
 
     Args:
         denoise_pxl_dataset: Denoise pxl dataset.
-
     """
     comp_graph = PNAGraph.from_edgelist(
         denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
@@ -615,7 +608,6 @@ def test_denoise_ace_analysis(denoise_pxl_dataset, tmp_path):
     Args:
         denoise_pxl_dataset: Denoise pxl dataset.
         tmp_path: Tmp path.
-
     """
     pxl_file_target = PixelDatasetSaver(pxl_dataset=denoise_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
@@ -662,7 +654,6 @@ def test_denoise_ace_pls_one_core(denoise_pxl_dataset, tmp_path):
     Args:
         denoise_pxl_dataset: Denoise pxl dataset.
         tmp_path: Tmp path.
-
     """
 
     pxl_file_target = PixelDatasetSaver(pxl_dataset=denoise_pxl_dataset).save(

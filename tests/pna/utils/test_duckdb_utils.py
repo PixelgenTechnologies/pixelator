@@ -29,7 +29,6 @@ def test_parse_duckdb_memory_limit_to_bytes(setting: str, expected_bytes: int) -
     Args:
         setting: Setting.
         expected_bytes: Expected bytes.
-
     """
     assert parse_duckdb_memory_limit_to_bytes(setting) == expected_bytes
 
@@ -38,8 +37,7 @@ def test_parse_duckdb_memory_limit_to_bytes_rejects_unknown() -> None:
     """Verify parse duckdb memory limit to bytes rejects unknown.
 
     Returns:
-            Result (None).
-
+        Result (None).
     """
     with pytest.raises(ValueError, match="Unrecognized"):
         parse_duckdb_memory_limit_to_bytes("12.5 XY")
@@ -53,7 +51,6 @@ def test_get_single_thread_duckdb_config_raises_when_per_thread_below_1mib(
 
     Args:
         mock_connect: Mock connect.
-
     """
     mock_con = MagicMock()
     mock_connect.return_value.__enter__.return_value = mock_con
@@ -74,7 +71,6 @@ def test_get_single_thread_duckdb_config_allows_exactly_1_mib_per_thread(
 
     Args:
         mock_connect: Mock connect.
-
     """
     mock_con = MagicMock()
     mock_connect.return_value.__enter__.return_value = mock_con
@@ -95,7 +91,6 @@ def test_get_single_thread_duckdb_config_splits_total_bytes(
 
     Args:
         mock_connect: Mock connect.
-
     """
     mock_con = MagicMock()
     mock_connect.return_value.__enter__.return_value = mock_con
@@ -111,8 +106,7 @@ def test_get_single_thread_duckdb_config_rejects_zero_threads() -> None:
     """Verify get single thread duckdb config rejects zero threads.
 
     Returns:
-            Result (None).
-
+        Result (None).
     """
     with pytest.raises(ValueError, match="n_threads"):
         get_single_thread_duckdb_config(0)

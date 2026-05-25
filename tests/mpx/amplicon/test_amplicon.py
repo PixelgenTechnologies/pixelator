@@ -22,7 +22,6 @@ def uropod_reads(data_root):
 
     Args:
         data_root: Data root.
-
     """
     r1 = data_root / "uropod_control_300k_S1_R1_001.fastq.gz"
     r2 = data_root / "uropod_control_300k_S1_R2_001.fastq.gz"
@@ -37,7 +36,6 @@ def d21_150_150_reads(data_root):
 
     Args:
         data_root: Data root.
-
     """
     r1 = data_root / "amplicon/D21_150_150_R1.fq.gz"
     r2 = data_root / "amplicon/D21_150_150_R2.fq.gz"
@@ -60,7 +58,6 @@ def reads(data_root, request):
     Args:
         data_root: Data root.
         request: Request.
-
     """
     r1 = data_root / request.param[0]
     r2 = data_root / request.param[1]
@@ -72,7 +69,6 @@ def test_generate_amplicon(reads):
 
     Args:
         reads: Reads.
-
     """
     output_reads = []
 

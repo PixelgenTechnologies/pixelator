@@ -36,7 +36,7 @@ class QualityStatistics:
         """Initialize the QualityStatistics object.
 
         Args:
-        data: A dictionary with the quality statistics for each region.
+            data: A dictionary with the quality statistics for each region.
         """
         self._region_counters = {}
         for region_id, region_data in data.items():
@@ -46,7 +46,7 @@ class QualityStatistics:
         """Return the total number of bases for a region.
 
         Args:
-        region_id: Region id.
+            region_id: Region id.
         """
         return self._region_counters[region_id]["total_bases"]
 
@@ -54,7 +54,7 @@ class QualityStatistics:
         """Return the number of sequenced bases for a region.
 
         Args:
-        region_id: Region id.
+            region_id: Region id.
         """
         return self._region_counters[region_id]["sequenced_bases"]
 
@@ -62,7 +62,7 @@ class QualityStatistics:
         """Return the number of bases with quality above 30 for a region.
 
         Args:
-        region_id: Region id.
+            region_id: Region id.
         """
         return self._region_counters[region_id]["q30_bases"]
 
@@ -73,7 +73,7 @@ class QualityStatistics:
         30 divided by the total number bases in the region, even those that were not sequenced.
 
         Args:
-        region_id: Region id.
+            region_id: Region id.
         """
         r = self._region_counters[region_id]
         if (bases := r["total_bases"]) == 0:
@@ -88,7 +88,7 @@ class QualityStatistics:
         30 divided by the total number of sequenced bases.
 
         Args:
-        region_id: Region id.
+            region_id: Region id.
         """
         r = self._region_counters[region_id]
         if (bases := r["sequenced_bases"]) == 0:
@@ -100,7 +100,7 @@ class QualityStatistics:
         """Merge statistics from another object into this one.
 
         Args:
-        other: Other.
+            other: Other.
         """
         for region_id, region_data in other._region_counters.items():
             if region_id not in self._region_counters:
@@ -131,7 +131,7 @@ class QualityProfileStep(SingleEndStep, HasCustomStatistics):
         """Initialize the QualityProfileStep object.
 
         Args:
-        assay: The assay object
+            assay: The assay object
         """
         super().__init__()
         self.assay = assay
@@ -161,8 +161,8 @@ class QualityProfileStep(SingleEndStep, HasCustomStatistics):
         """Create a quality profile on each read position for the amplicon.
 
         Args:
-        read: Read.
-        info: Info.
+            read: Read.
+            info: Info.
         """
         # Create a view into the original quality array
         qual = np.frombuffer(read.qualities_as_bytes(), dtype=np.int8)

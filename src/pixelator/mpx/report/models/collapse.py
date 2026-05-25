@@ -43,7 +43,6 @@ class CollapseSampleReport(SampleReport):
         """Fraction duplicate reads.
 
         Returns:
-                Result (float).
-
+            Result (float).
         """
         return 1.0 - (self.molecule_count / self.output_read_count)

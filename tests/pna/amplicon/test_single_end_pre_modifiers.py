@@ -27,7 +27,6 @@ class _TrimFrontModifier(SingleEndModifier):
 
         Args:
             n: N.
-
         """
         self._n = n
 

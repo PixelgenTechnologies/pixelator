@@ -22,19 +22,19 @@ logger = logging.getLogger(__name__)
 def specificity_tau(matrix: np.ndarray) -> np.ndarray:
     """Tau specificity score computed as described in [1]_.
 
-        Essentially it gives us a score between 0 and 1, where a component that
-        expresses a single marker would have a tau score of 1, and one where all
-        markers are equally expressed would have a tau score of 0.
+    Essentially it gives us a score between 0 and 1, where a component that
+    expresses a single marker would have a tau score of 1, and one where all
+    markers are equally expressed would have a tau score of 0.
 
-        .. [1] Yanai I, Benjamin H, Shmoish M, Chalifa-Caspi V, Shklar M, Ophir R,
-            Bar-Even A, Horn-Saban S, Safran M, Domany E, Lancet D, Shmueli O.
-            Genome-wide midrange transcription profiles reveal expression level
-            relationships in human tissue specification. Bioinformatics.
-            2005 Mar 1;21(5):650-9.
-            doi: 10.1093/bioinformatics/bti042. Epub 2004 Sep 23. PMID: 15388519.
+    .. [1] Yanai I, Benjamin H, Shmoish M, Chalifa-Caspi V, Shklar M, Ophir R,
+    Bar-Even A, Horn-Saban S, Safran M, Domany E, Lancet D, Shmueli O.
+    Genome-wide midrange transcription profiles reveal expression level
+    relationships in human tissue specification. Bioinformatics.
+    2005 Mar 1;21(5):650-9.
+    doi: 10.1093/bioinformatics/bti042. Epub 2004 Sep 23. PMID: 15388519.
 
     Args:
-    matrix: a numpy matrix of marker counts
+        matrix: a numpy matrix of marker counts
     """
     max_count = np.max(matrix, axis=1)
     _, nbr_markers = matrix.shape
@@ -48,41 +48,41 @@ def specificity_tau(matrix: np.ndarray) -> np.ndarray:
 def call_aggregates(adata: AnnData, inplace: bool = True) -> Optional[AnnData]:
     """Call aggregates on the adata instance.
 
-        We defined aggregates as components where either:
-         - A single or a handful of markers account for almost all of the count data.
-           These can likely be attributed to single antibodies forming aggregates
-         - Low tau scores, meaning a an even number of counts for multiple markers.
-           These likely come from multiple antibodies forming aggregates.
+    We defined aggregates as components where either:
+    - A single or a handful of markers account for almost all of the count data.
+    These can likely be attributed to single antibodies forming aggregates
+    - Low tau scores, meaning a an even number of counts for multiple markers.
+    These likely come from multiple antibodies forming aggregates.
 
-        For downstream analysis both of these types should be removed for most types
-        of analysis.
+    For downstream analysis both of these types should be removed for most types
+    of analysis.
 
-        We find aggregates by computing a tau specificity score (see `tau_specificity`
-        for details).
+    We find aggregates by computing a tau specificity score (see `tau_specificity`
+    for details).
 
-        We mark components as "high" if they that have a tau score above
-        `annotation.constants.TAU_HARD_THRESHOLD`, or have a tau score above
-        `annotation.constants.TAU_IQR_UPPER_THRESHOLD` * inter-quartile range
-        from the median.
+    We mark components as "high" if they that have a tau score above
+    `annotation.constants.TAU_HARD_THRESHOLD`, or have a tau score above
+    `annotation.constants.TAU_IQR_UPPER_THRESHOLD` * inter-quartile range
+    from the median.
 
-        We mark components as "low" if they that have a tau score below
-        `annotation.contants.TAU_IQR_LOWER_THRESHOLD` * inter-quartile range
-        from the median.
+    We mark components as "low" if they that have a tau score below
+    `annotation.contants.TAU_IQR_LOWER_THRESHOLD` * inter-quartile range
+    from the median.
 
-        The following data is added to the AnnData:
-            - `obs["tau"]` = The tau specificity score of the component
-            - `obs["tau_type"]` = "normal"/"high"/"low" for components with
-                the respective levels of tau scores.
-            - `uns["tau_thresholds"]["tau_upper_hard_limit"]` the upper hard
-               limit used to set `tau_type` as high
-            - `uns["tau_thresholds"]["tau_upper_iqr_limit]` the upper limit
-               based on IQR used to set `tau_type` as high
-            - `uns["tau_thresholds"]["tau_lower_iqr_limit]` the lower limit
-               based on IQR used to set `tau_type` as low
+    The following data is added to the AnnData:
+    - `obs["tau"]` = The tau specificity score of the component
+    - `obs["tau_type"]` = "normal"/"high"/"low" for components with
+    the respective levels of tau scores.
+    - `uns["tau_thresholds"]["tau_upper_hard_limit"]` the upper hard
+    limit used to set `tau_type` as high
+    - `uns["tau_thresholds"]["tau_upper_iqr_limit]` the upper limit
+    based on IQR used to set `tau_type` as high
+    - `uns["tau_thresholds"]["tau_lower_iqr_limit]` the lower limit
+    based on IQR used to set `tau_type` as low
 
     Args:
-    adata: an AnnData object to call aggregates on
-    inplace: If `True` performs the operation inplace
+        adata: an AnnData object to call aggregates on
+        inplace: If `True` performs the operation inplace
     """
     logging.debug("Calling aggregates based on tau specificity scores")
 

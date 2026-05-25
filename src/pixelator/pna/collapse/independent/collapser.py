@@ -86,7 +86,6 @@ class MarkerCorrectionStats(pydantic.BaseModel):
         corrected_molecules: The total number of unique reads that were modified by the error correction process.
         corrected_unique_umis: The total number of unique UMIs of type `region_id` that were modified by the error correction process.
         output_unique_umis: The total number of unique UMIs of type `region_id` after correction.
-
     """
 
     marker: str
@@ -132,10 +131,9 @@ class CollapseInputFile:
     """Keep track of the input file to collapse.
 
     Args:
-    path: Path to the input file.
-    file_size: The total size of the input file.
-    molecule_count: The number of rows in the input dataframe. i.e. The number of molecules (unique reads).
-
+        path: Path to the input file.
+        file_size: The total size of the input file.
+        molecule_count: The number of rows in the input dataframe. i.e. The number of molecules (unique reads).
     """
 
     path: str
@@ -240,7 +238,6 @@ class IndependentCollapseStatisticsCollector:
 
         Raises:
             TypeError: If ``file_size`` is not provided when ``input_file`` is a ``PurePath``.
-
         """
         if file_size is None and isinstance(input_file, Path):
             file_size = input_file.stat(follow_symlinks=True).st_size
@@ -266,7 +263,6 @@ class IndependentCollapseStatisticsCollector:
 
         Raises:
             KeyError: If data for the marker pair already exists.
-
         """
         key = (stats.region_id, stats.marker)
 
@@ -304,7 +300,6 @@ class IndependentCollapseStatisticsCollector:
 
         Returns:
             A `SingleUMICollapseSampleReport` containing the statistics.
-
         """
         stats = self.get_combined_stats()
         return SingleUMICollapseSampleReport(
@@ -355,7 +350,6 @@ class RegionCollapser:
             This is used to link corrections of the unique umis back to all molecules that share the same UMI.
         _unique_umi_to_molecule_count: The number of molecules that map to each unique umi.
             This is used to map "unique umi" counts to the corresponding "molecule" counts.
-
     """
 
     _umi1_schema = pa.schema(
@@ -406,7 +400,6 @@ class RegionCollapser:
             logger: The logger to use for output. The default is a logger named "collapse".
             min_parallel_chunk_size: The minimum number of com to process in parallel.
             similarity_backend: The backend to use for similarity search. Currently only "faiss".
-
         """
         self.assay = assay
         self.panel = panel
@@ -513,7 +506,6 @@ class RegionCollapser:
 
         Returns:
             A numpy array containing the unique UMI sequences.
-
         """
         umi1_data = self._umi1_region_extractor(molecules)
         unique_umi1s, inverse_umi1, counts_umi1 = np.unique(
@@ -684,12 +676,11 @@ class RegionCollapser:
         """Process a group of reads from a single marker.
 
         Args:
-        idx: The index of the group in the partition
-        num_groups: The total number of groups in the partition
-        marker: The index of the marker in the panel
-        data: The data for the group. A dataframe.
-        writer: The parquet writer to stream output to.
-
+            idx: The index of the group in the partition
+            num_groups: The total number of groups in the partition
+            marker: The index of the marker in the panel
+            data: The data for the group. A dataframe.
+            writer: The parquet writer to stream output to.
         """
         starttime = time.time()
         logger = self._logger
@@ -825,7 +816,6 @@ class RegionCollapser:
 
         Returns:
             Tuple of corrected UMI array and updated marker statistics.
-
         """
         _logger = self._logger
 
@@ -917,7 +907,6 @@ class RegionCollapser:
 
         Returns:
             A numpy array with mapping input UMI indices to the corrected UMI.
-
         """
         # An array of indices mapping the original unique reads into the corrected umi space
         # Initialize with the identity mapping
@@ -954,7 +943,6 @@ class RegionCollapser:
 
         Returns:
             A pyarrow Table with the original and corrected UMI encoded sequences.
-
         """
         # broadcast the corrected umi map to the original molecule indices using the reverse indices
         corrected_umi_indices = corrected_umi_map[self._db_to_molecule_idx]
@@ -982,7 +970,6 @@ class RegionCollapser:
             memory: Read-only shared memory registry for database and read counts.
             embedding: Embedding used to encode and decode molecule vectors.
             n_molecules: Total number of molecules in the batch.
-
         """
         db = memory.get_array("db")
         read_count = memory.get_array("read_counts")

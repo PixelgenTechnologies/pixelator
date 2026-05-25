@@ -19,8 +19,7 @@ def mock_panel_fixture(request):
     """Mock panel fixture.
 
     Args:
-    request: request.
-
+        request: request.
     """
     version = getattr(request, "param", "0.0.0")
 

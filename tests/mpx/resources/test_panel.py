@@ -18,8 +18,7 @@ def test_panel(data_root):
     """Verify panel.
 
     Args:
-    data_root: data root.
-
+        data_root: data root.
     """
     panel = AntibodyPanel.from_csv(str(data_root / "test_panel.csv"))
 
@@ -43,8 +42,7 @@ def test_panel_version_metadata(data_root):
     """Verify panel version metadata.
 
     Args:
-    data_root: data root.
-
+        data_root: data root.
     """
     panel = AntibodyPanel.from_csv(str(data_root / "test_panel_v2.csv"))
 
@@ -68,7 +66,6 @@ def test_panel_with_non_unique_values(panel: pd.DataFrame):
 
     Args:
         panel: Panel.
-
     """
     panel_copy = panel.df.copy()
     duplicated_panel = pd.concat([panel_copy, panel.df])
@@ -86,7 +83,6 @@ def test_panel_raise_when_there_is_issue(panel: pd.DataFrame):
 
     Args:
         panel: Panel.
-
     """
     panel_copy = panel.df.copy()
     duplicated_panel = pd.concat([panel_copy, panel.df])
@@ -102,8 +98,7 @@ def test_panel_header_trailing_commas_warns_and_recovers(caplog):
     """Verify panel header trailing commas warns and recovers.
 
     Args:
-    caplog: caplog.
-
+        caplog: caplog.
     """
     panel_content = """# ---
 # name: test panel,

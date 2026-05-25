@@ -28,8 +28,8 @@ def _load_flags_from_environment(flag: str, default: Any | None = None) -> Any:
     """Load a feature flag from environment variables.
 
     Args:
-    flag: Feature flag name without the ``PIXELATOR_`` prefix.
-    default: Value returned when the environment variable is unset.
+        flag: Feature flag name without the ``PIXELATOR_`` prefix.
+        default: Value returned when the environment variable is unset.
     """
     return os.environ.get(f"PIXELATOR_{flag}", default)
 

@@ -15,9 +15,8 @@ def test_runs_ok(mocker, pna_data_root):
     """Verify runs ok.
 
     Args:
-    mocker: mocker.
-    pna_data_root: pna data root.
-
+        mocker: mocker.
+        pna_data_root: pna data root.
     """
     runner = CliRunner()
 

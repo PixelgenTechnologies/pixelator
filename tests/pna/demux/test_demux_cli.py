@@ -10,9 +10,8 @@ def test_demux_invalid_chunk_size(tmp_path, testdata_amplicon_fastq):
     """Verify demux invalid chunk size.
 
     Args:
-    tmp_path: tmp path.
-    testdata_amplicon_fastq: testdata amplicon fastq.
-
+        tmp_path: tmp path.
+        testdata_amplicon_fastq: testdata amplicon fastq.
     """
     runner = CliRunner()
 
@@ -41,10 +40,9 @@ def test_demux_valid(tmp_path, testdata_amplicon_fastq, panel_file):
     """Verify demux valid.
 
     Args:
-    tmp_path: tmp path.
-    testdata_amplicon_fastq: testdata amplicon fastq.
-    panel_file: panel file.
-
+        tmp_path: tmp path.
+        testdata_amplicon_fastq: testdata amplicon fastq.
+        panel_file: panel file.
     """
     runner = CliRunner()
 
@@ -69,10 +67,9 @@ def test_demux_custom_panel(tmp_path, testdata_amplicon_fastq, pna_data_root):
     """Verify demux custom panel.
 
     Args:
-    tmp_path: tmp path.
-    testdata_amplicon_fastq: testdata amplicon fastq.
-    pna_data_root: pna data root.
-
+        tmp_path: tmp path.
+        testdata_amplicon_fastq: testdata amplicon fastq.
+        pna_data_root: pna data root.
     """
     runner = CliRunner()
 

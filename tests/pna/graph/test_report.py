@@ -146,8 +146,7 @@ def test_graph_sample_report_to_json(snapshot):
     """Verify graph sample report to json.
 
     Args:
-    snapshot: snapshot.
-
+        snapshot: snapshot.
     """
     report = GraphSampleReport(
         sample_id="test_sample",

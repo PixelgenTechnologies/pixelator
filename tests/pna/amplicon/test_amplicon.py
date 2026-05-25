@@ -27,9 +27,8 @@ def test_amplicon_300k(tmp_path, testdata_300k):
     """Verify amplicon 300k.
 
     Args:
-    tmp_path: tmp path.
-    testdata_300k: testdata 300k.
-
+        tmp_path: tmp path.
+        testdata_300k: testdata 300k.
     """
     input_files = testdata_300k
     pna_assay = pna_config.get_assay("proxiome-v1")
@@ -50,9 +49,8 @@ def test_amplicon_unbalanced_single_end(tmp_path, testdata_unbalanced_r12):
     """Verify amplicon unbalanced single end.
 
     Args:
-    tmp_path: tmp path.
-    testdata_unbalanced_r12: testdata unbalanced r12.
-
+        tmp_path: tmp path.
+        testdata_unbalanced_r12: testdata unbalanced r12.
     """
     input_files = testdata_unbalanced_r12
     pna_assay = pna_config.get_assay("proxiome-v1")

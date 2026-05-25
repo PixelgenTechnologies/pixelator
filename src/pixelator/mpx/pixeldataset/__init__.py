@@ -48,7 +48,7 @@ def read(path: PathType) -> PixelDataset:
     """Read a PixelDataset from a provided .pxl file.
 
     Args:
-    path: path to the file to read
+        path: path to the file to read
     """
     return PixelDataset.from_file(path)
 
@@ -85,7 +85,7 @@ class PixelDataset:
         This method is reserved for advanced use.
 
         Args:
-        backend: an instance of `PixelDatasetBackend`
+            backend: an instance of `PixelDatasetBackend`
         """
         self._backend = backend
 
@@ -94,7 +94,7 @@ class PixelDataset:
         """Create a new instance of `PixelDataset` from the file at the provided path.
 
         Args:
-        path: path to a .pxl file
+            path: path to a .pxl file
         """
         # We can ignore the error here, since while MyPy thinks that the
         # @cached_property decorators that we use on FileBasedPixelDatasetBackend
@@ -116,14 +116,14 @@ class PixelDataset:
         """Create a new instance of PixelDataset from the provided underlying objects.
 
         Args:
-        adata: an instance of `AnnData`
-        edgelist: an edgelist as a `pd.DataFrame`
-        metadata: an instance of a dictionary with metadata, defaults to None
-        polarization: a `pd.DataFrame` with polarization information, defaults to None
-        colocalization: a `pd.DataFrame` with colocalization information, defaults to None
-        precomputed_layouts: a PreComputedLayouts object, defaults to None
-        copy: specify if the input data should be copied or not. Defaults to True.
-        allow_empty_edgelist: allow the edgelist to be empty. Defaults to False.
+            adata: an instance of `AnnData`
+            edgelist: an edgelist as a `pd.DataFrame`
+            metadata: an instance of a dictionary with metadata, defaults to None
+            polarization: a `pd.DataFrame` with polarization information, defaults to None
+            colocalization: a `pd.DataFrame` with colocalization information, defaults to None
+            precomputed_layouts: a PreComputedLayouts object, defaults to None
+            copy: specify if the input data should be copied or not. Defaults to True.
+            allow_empty_edgelist: allow the edgelist to be empty. Defaults to False.
         """
         return PixelDataset(
             backend=ObjectBasedPixelDatasetBackend(
@@ -148,7 +148,7 @@ class PixelDataset:
         """Set the AnnData object.
 
         Args:
-        value: Value.
+            value: Value.
         """
         self._backend.adata = value
 
@@ -162,7 +162,7 @@ class PixelDataset:
         """Set the edge list.
 
         Args:
-        value: Value.
+            value: Value.
         """
         self._backend.edgelist = _enforce_edgelist_types(value)
 
@@ -188,7 +188,7 @@ class PixelDataset:
         """Set the polarization object.
 
         Args:
-        value: Value.
+            value: Value.
         """
         self._backend.polarization = value
 
@@ -202,7 +202,7 @@ class PixelDataset:
         """Set the colocalization object.
 
         Args:
-        value: Value.
+            value: Value.
         """
         self._backend.colocalization = value
 
@@ -219,7 +219,7 @@ class PixelDataset:
         """Set the metadata object.
 
         Args:
-        value: Value.
+            value: Value.
         """
         self._backend.metadata = value
 
@@ -235,7 +235,7 @@ class PixelDataset:
         """Set the precomputed layouts.
 
         Args:
-        value: Value.
+            value: Value.
         """
         # Note that the type ignore here is to handle the fact that the setter
         # needs to be able to take None (in order to make it easier to the user)
@@ -253,10 +253,10 @@ class PixelDataset:
         """Get the graph from the underlying edgelist.
 
         Args:
-        component_id: Optionally give the component id of the component to only return that component.
-        add_node_marker_counts: Add marker counts to the nodes of the graph
-        simplify: If True, removes self-loops and multiple edges between nodes from the graph
-        use_full_bipartite: If True, the full bipartite graph will be used, otherwise it will return the A-node projection
+            component_id: Optionally give the component id of the component to only return that component.
+            add_node_marker_counts: Add marker counts to the nodes of the graph
+            simplify: If True, removes self-loops and multiple edges between nodes from the graph
+            use_full_bipartite: If True, the full bipartite graph will be used, otherwise it will return the A-node projection
         """
         if component_id:
             potential_component = self.edgelist_lazy.filter(
@@ -319,8 +319,7 @@ class PixelDataset:
         """Create a copy of the current PixelDataset instance.
 
         Returns:
-        A copy of the PixelDataset instance (PixelDataset)
-
+            A copy of the PixelDataset instance (PixelDataset)
         """
         return PixelDataset.from_data(
             adata=self.adata.copy(),
@@ -349,9 +348,9 @@ class PixelDataset:
         """Save the PixelDataset to a .pxl file in the location provided in `path`.
 
         Args:
-        path: the path where to save the dataset as a .pxl
-        file_format: should be 'csv' or 'parquet'. Default is 'parquet'. This indicates what file-format is used to serialize the data frames in the .pxl file.
-        force_overwrite: By default pixelator will not overwrite existing .pxl files, set this to true to force an overwrite of the existing file.
+            path: the path where to save the dataset as a .pxl
+            file_format: should be 'csv' or 'parquet'. Default is 'parquet'. This indicates what file-format is used to serialize the data frames in the .pxl file.
+            force_overwrite: By default pixelator will not overwrite existing .pxl files, set this to true to force an overwrite of the existing file.
         """
         logger.debug("Saving PixelDataset to %s", path)
 
@@ -380,8 +379,8 @@ class PixelDataset:
         Consequently precomputed layouts will also not be filtered by marker.
 
         Args:
-        components: The components you want to keep, defaults to None
-        markers: The markers you want to keep, defaults to None
+            components: The components you want to keep, defaults to None
+            markers: The markers you want to keep, defaults to None
         """
         change_components = components is not None
         change_markers = markers is not None

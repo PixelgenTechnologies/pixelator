@@ -34,7 +34,7 @@ class PNAGraph(BaseGraph):
         """Create a new graph instance.
 
         Args:
-        backend: Backend.
+            backend: Backend.
         """
         self._backend = backend
         self._connected_components_needs_recompute = False
@@ -44,8 +44,8 @@ class PNAGraph(BaseGraph):
         """Create a graph from record batches.
 
         Args:
-        edgelist: Edgelist.
-        kwargs: Kwargs.
+            edgelist: Edgelist.
+            kwargs: Kwargs.
         """
         return PNAGraph(PNAGraphBackend.from_record_batches(edgelist, **kwargs))
 
@@ -53,8 +53,8 @@ class PNAGraph(BaseGraph):
         """Create a graph from an edgelist.
 
         Args:
-        edgelist: Edgelist.
-        kwargs: Kwargs.
+            edgelist: Edgelist.
+            kwargs: Kwargs.
         """
         return PNAGraph(PNAGraphBackend.from_edgelist(edgelist, **kwargs))
 
@@ -76,23 +76,23 @@ class PNAGraph(BaseGraph):
         counts to use that can be used for plotting.
 
         The layout options are:
-          - fruchterman_reingold
-          - fruchterman_reingold_3d
-          - kamada_kawai
-          - kamada_kawai_3d
-          - pmds
-          - pmds_3d
-          - wpmds_3d
+        - fruchterman_reingold
+        - fruchterman_reingold_3d
+        - kamada_kawai
+        - kamada_kawai_3d
+        - pmds
+        - pmds_3d
+        - wpmds_3d
 
 
         The `pmds` options are much faster than the force-directed algorithms fruchterman_reingold
         and kamada_kawai. The `wpmds_3d` option is a weighted version of the `pmds_3d` algorithm.
 
         Args:
-        layout_algorithm: the layout algorithm to use to generate the coordinates
-        get_node_marker_matrix: Add a matrix of marker counts to each node if True.
-        random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
-        **kwargs: will be passed to the underlying layout implementation
+            layout_algorithm: the layout algorithm to use to generate the coordinates
+            get_node_marker_matrix: Add a matrix of marker counts to each node if True.
+            random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
+            **kwargs: will be passed to the underlying layout implementation
         """
         return self._backend.layout_coordinates(
             layout_algorithm=layout_algorithm,
@@ -151,8 +151,8 @@ class PNAGraphBackend(NetworkXGraphBackend):
         """Create a graph from an edgelist.
 
         Args:
-        edgelist: Edgelist.
-        kwargs: Kwargs.
+            edgelist: Edgelist.
+            kwargs: Kwargs.
         """
         g: nx.Graph = nx.empty_graph(0, nx.Graph)
         if isinstance(edgelist, pl.LazyFrame):
@@ -167,8 +167,8 @@ class PNAGraphBackend(NetworkXGraphBackend):
         """Create a graph from an edgelist.
 
         Args:
-        batches: Batches.
-        kwargs: Kwargs.
+            batches: Batches.
+            kwargs: Kwargs.
         """
         # TODO This is completely untested!
         g: nx.Graph = nx.empty_graph(0, nx.Graph)
@@ -204,13 +204,13 @@ class PNAGraphBackend(NetworkXGraphBackend):
         counts to use that can be used for plotting.
 
         The layout options are:
-          - pmds
-          - pmds_3d
-          - fruchterman_reingold
-          - fruchterman_reingold_3d
-          - kamada_kawai
-          - kamada_kawai_3d
-          - wpmds_3d
+        - pmds
+        - pmds_3d
+        - fruchterman_reingold
+        - fruchterman_reingold_3d
+        - kamada_kawai
+        - kamada_kawai_3d
+        - wpmds_3d
 
         For most cases the `pmds` options should be about 10-100x faster
         than the force directed layout methods, i.e. `fruchterman_reingold`
@@ -220,10 +220,10 @@ class PNAGraphBackend(NetworkXGraphBackend):
         slower than `pmds_3d`.
 
         Args:
-        layout_algorithm: the layout algorithm to use to generate the coordinates
-        get_node_marker_matrix: Add a matrix of marker counts to each node if True.
-        random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
-        **kwargs: will be passed to the underlying layout implementation
+            layout_algorithm: the layout algorithm to use to generate the coordinates
+            get_node_marker_matrix: Add a matrix of marker counts to each node if True.
+            random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
+            **kwargs: will be passed to the underlying layout implementation
         """
         start_time = timer()
         coordinates = self._layout_coordinates(

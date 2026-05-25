@@ -70,8 +70,7 @@ def test_create_node_neighborhood_abundance_matrix(mock_graph):
     """Verify create node neighborhood abundance matrix.
 
     Args:
-    mock_graph: mock graph.
-
+        mock_graph: mock graph.
     """
     X_exp = create_node_neighborhood_abundance_matrix(
         mock_graph, k=1, normalization=None, scale=False
@@ -96,8 +95,7 @@ def test_node_pls_basic(mock_graph):
     """Verify node pls basic.
 
     Args:
-    mock_graph: mock graph.
-
+        mock_graph: mock graph.
     """
     import networkx as nx
 
@@ -119,8 +117,7 @@ def test_node_pls_invalid_y(mock_graph):
     """Verify node pls invalid y.
 
     Args:
-    mock_graph: mock graph.
-
+        mock_graph: mock graph.
     """
     with pytest.raises(ValueError, match="not found in counts or graph attributes"):
         node_pls(mock_graph, y_vars="non_existent_var")

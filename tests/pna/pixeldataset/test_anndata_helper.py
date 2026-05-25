@@ -36,7 +36,6 @@ def _panel_with_version_product_and_uniprot(
         marker_a_new_name: Marker a new name.
         added_column_name: Added column name.
         added_column_value: Added column value.
-
     """
     panel_df = panel.df.copy()
     panel_df.loc["MarkerA", "uniprot_id"] = marker_a_uniprot
@@ -57,7 +56,6 @@ def _write_component_suffix_parquet(source: Path, target: Path, suffix: str) -> 
         source: Source.
         target: Target.
         suffix: Suffix.
-
     """
     (
         pl.scan_parquet(source)
@@ -80,7 +78,6 @@ def _build_two_sample_dataset_with_panels(
         edgelist_parquet_path: Edgelist parquet path.
         panel_old: Panel old.
         panel_new: Panel new.
-
     """
     sample_old = create_pxl_file(
         target=tmp_path / "sample_old.pxl",
@@ -119,9 +116,8 @@ class TestAnnDataHelper:
         """Verify anndata helper matches dataset adata no transforms.
 
         Args:
-        pxl_dataset: pxl dataset.
-        adata_data: adata data.
-
+            pxl_dataset: pxl dataset.
+            adata_data: adata data.
         """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
@@ -134,8 +130,7 @@ class TestAnnDataHelper:
         """Verify anndata helper respects component and marker filters.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         filtered = pxl_dataset.filter(
             components={"fc07dea9b679aca7"},
@@ -161,8 +156,7 @@ class TestAnnDataHelper:
         """Verify anndata helper does not mutate original.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         helper = AnnDataHelper(pxl_dataset.view)
 
@@ -190,10 +184,9 @@ def test_anndata_helper_basic_smoke(pxl_dataset, components, markers):
     """Verify anndata helper basic smoke.
 
     Args:
-    pxl_dataset: pxl dataset.
-    components: components.
-    markers: markers.
-
+        pxl_dataset: pxl dataset.
+        components: components.
+        markers: markers.
     """
     helper = AnnDataHelper(pxl_dataset.view, components=components, markers=markers)
     res = helper.read_adata(add_clr_transform=False, add_log1p_transform=False)
@@ -216,7 +209,6 @@ class TestTryBumpAdataPanelVersion:
             tmp_path: Tmp path.
             edgelist_parquet_path: Edgelist parquet path.
             panel: Panel.
-
         """
         panel_old = _panel_with_version_product_and_uniprot(
             panel,
@@ -302,7 +294,6 @@ class TestTryBumpAdataPanelVersion:
             panel: Panel.
             new_version: New version.
             new_product: New product.
-
         """
         panel_old = _panel_with_version_product_and_uniprot(
             panel,

@@ -50,7 +50,6 @@ def test_run_leiden_refinement_raises_when_not_enough_memory_for_duckdb_workers(
 
     Args:
         mock_connect: Mock connect.
-
     """
     mock_con = MagicMock()
     mock_connect.return_value.__enter__.return_value = mock_con

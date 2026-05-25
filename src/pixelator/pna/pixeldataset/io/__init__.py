@@ -141,8 +141,8 @@ def copy_databases(src_db: Path, target_db: Path) -> None:
     https://duckdb.org/docs/stable/operations_manual/footprint_of_duckdb/reclaiming_space.html
 
     Args:
-    src_db: The source PXL file.
-    target_db: The target PXL file.
+        src_db: The source PXL file.
+        target_db: The target PXL file.
     """
     query = f"""
     ATTACH '{str(src_db)}' AS src (READ_ONLY);

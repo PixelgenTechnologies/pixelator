@@ -40,8 +40,7 @@ def pytest_addoption(parser: pytest.Parser):
     tests/integration.
 
     Args:
-    parser: the pytest parser instance
-
+        parser: the pytest parser instance
     """
     parser.addoption(
         "--keep-workdirs",
@@ -58,7 +57,6 @@ def adata_fixture(edgelist: pd.DataFrame, panel: AntibodyPanel):
     Args:
         edgelist: Edgelist.
         panel: Panel.
-
     """
     adata = edgelist_to_anndata(edgelist=edgelist, panel=panel)
     return adata
@@ -76,7 +74,6 @@ def edgelist_fixture(data_root):
 
     Args:
         data_root: Data root.
-
     """
     edgelist = pl.read_csv(str(data_root / "test_edge_list.csv")).to_pandas()
     g = nx.from_pandas_edgelist(edgelist, source="upia", target="upib")
@@ -140,7 +137,6 @@ def panel_fixture(data_root):
 
     Args:
         data_root: Data root.
-
     """
     panel = AntibodyPanel.from_csv(str(data_root / "test_panel.csv"))
     return panel
@@ -153,7 +149,6 @@ def pixel_dataset_file(setup_basic_pixel_dataset, tmp_path) -> Path:
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
         tmp_path: Tmp path.
-
     """
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
@@ -192,8 +187,7 @@ def layout_df_fixture() -> pd.DataFrame:
     """Layout df fixture.
 
     Returns:
-            Result (pd.DataFrame).
-
+        Result (pd.DataFrame).
     """
     nbr_of_rows = 300
     components = [
@@ -233,8 +227,7 @@ def precomputed_layouts_fixture(layout_df) -> pd.DataFrame:
     """Precomputed layouts fixture.
 
     Args:
-    layout_df: layout df.
-
+        layout_df: layout df.
     """
     yield PreComputedLayouts(pl.DataFrame(layout_df).lazy())
 
@@ -249,7 +242,6 @@ def setup_basic_pixel_dataset(
         edgelist: Edgelist.
         adata: Adata.
         precomputed_layouts: Precomputed layouts.
-
     """
     # TODO make these dataframes more realistic
     # Right now the edgelist does line up with the polarization
@@ -311,8 +303,7 @@ def enable_backend(request):
     """Enable backend.
 
     Args:
-    request: request.
-
+        request: request.
     """
     previous_environment = os.environ
     if request.param == "networkx":

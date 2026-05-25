@@ -30,8 +30,8 @@ class PxlFile:
         """Initialize the PxlFile.
 
         Args:
-        path: Path.
-        sample_name: Sample name.
+            path: Path.
+            sample_name: Sample name.
         """
         if not path.exists():
             raise FileNotFoundError(f"File {path} does not exist.")
@@ -83,8 +83,8 @@ class PxlFile:
         """Copy a PxlFile to a new location.
 
         Args:
-        src: The source PxlFile.
-        target: The target path.
+            src: The source PxlFile.
+            target: The target path.
         """
         shutil.copy(src.path, target)
         return PxlFile(target)

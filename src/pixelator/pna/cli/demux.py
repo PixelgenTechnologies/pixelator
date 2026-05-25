@@ -112,17 +112,17 @@ def demux(
     """Demultiplex Molecular Pixelation data (FASTQ) to generate one file per antibody.
 
     Args:
-    ctx: Ctx.
-    fastq_file: Fastq file.
-    mismatches: Mismatches.
-    output_chunk_reads: Output chunk reads.
-    output_max_chunks: Output max chunks.
-    panel: Panel.
-    output: Output.
-    design: Design.
-    threads: Threads.
-    memory: Memory.
-    strategy: Strategy.
+        ctx: Ctx.
+        fastq_file: Fastq file.
+        mismatches: Mismatches.
+        output_chunk_reads: Output chunk reads.
+        output_max_chunks: Output max chunks.
+        panel: Panel.
+        output: Output.
+        design: Design.
+        threads: Threads.
+        memory: Memory.
+        strategy: Strategy.
     """
     # log input parameters
     input_files = [fastq_file]

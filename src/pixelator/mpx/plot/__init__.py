@@ -39,8 +39,8 @@ def scatter_umi_per_upia_vs_tau(
     """Create a scatter plot of pixel content vs marker specificity (Tau).
 
     Args:
-    data: a pandas DataFrame with the columns 'umi_per_upia', 'tau', and 'tau_type'.
-    group_by: a column in the DataFrame to group the plot by.
+        data: a pandas DataFrame with the columns 'umi_per_upia', 'tau', and 'tau_type'.
+        group_by: a column in the DataFrame to group the plot by.
     """
     # Validate data
     required_columns = ["umi_per_upia", "tau", "tau_type"]
@@ -98,8 +98,8 @@ def molecule_rank_plot(
     """Plot the number of molecules per component against its molecule rank.
 
     Args:
-    data: a pandas DataFrame with a column 'molecules' containing edge counts for MPX components.
-    group_by: a column in the DataFrame to group the plot by.
+        data: a pandas DataFrame with a column 'molecules' containing edge counts for MPX components.
+        group_by: a column in the DataFrame to group the plot by.
     """
     if "molecules" not in data.columns and "edges" in data.columns:
         data["molecules"] = data["edges"]
@@ -147,8 +147,8 @@ def edge_rank_plot(
     """Plot the number of edges per component against its edge rank.
 
     Args:
-    data: a pandas DataFrame with a column 'edges' containing edge counts for MPX components.
-    group_by: a column in the DataFrame to group the plot by.
+        data: a pandas DataFrame with a column 'edges' containing edge counts for MPX components.
+        group_by: a column in the DataFrame to group the plot by.
     """
     warnings.warn(
         "edge_rank_plot is deprecated and will be removed in a future version. Use molecule_rank_plot instead.",
@@ -200,10 +200,10 @@ def cell_count_plot(
     """Create a bar plot showing component counts grouped by sample metadata.
 
     Args:
-    data: DataFrame containing counts and grouping columns.
-    color_by: Column used to color bars (and group when ``group_by`` is omitted).
-    group_by: Optional column used to group bars.
-    flip_axes: Plot counts on the x-axis instead of the y-axis.
+        data: DataFrame containing counts and grouping columns.
+        color_by: Column used to color bars (and group when ``group_by`` is omitted).
+        group_by: Optional column used to group bars.
+        flip_axes: Plot counts on the x-axis instead of the y-axis.
     """
     # Validate inputs
     if group_by is not None:
@@ -362,7 +362,7 @@ def density_scatter_plot(
     It is also possible to specify one or two variables for faceting the plot by
     columns and rows:
     Example usage: `density_scatter_plot(pxl.adata, "CD3E", "CD4",
-                        facet_row = "stimulation", facet_column = "donor")`.
+    facet_row = "stimulation", facet_column = "donor")`.
     `facet_row` and `facet_column` should be names of categorical columns in `adata.obs`.
     In addition, a gate can be specified as a Series with xmin, xmax, ymin, and ymax
     to mark a range for components of interest. Alternatively, gate can be specified
@@ -370,23 +370,23 @@ def density_scatter_plot(
     When both facet_row and facet_column are specified, the condition becomes a
     tuple (facet_row, facet_column), if only one is specified, that parameter
     becomes the condition. The condition permuations are used as the index of
-     the gate.
+    the gate.
     Example usage:
-        gate = pd.DataFrame(columns = ["xmin", "ymin", "xmax", "ymax"])
-        gate.loc["Resting"] = [2, 2, 5, 4]
-        gate.loc["PHA"] = [1.5, 1.5, 5, 4]
-        fig, ax = density_scatter_plot(pixel.adata, "CD3E", "CD4", layer="dsb",
-                    facet_column="sample", gate=gate)
+    gate = pd.DataFrame(columns = ["xmin", "ymin", "xmax", "ymax"])
+    gate.loc["Resting"] = [2, 2, 5, 4]
+    gate.loc["PHA"] = [1.5, 1.5, 5, 4]
+    fig, ax = density_scatter_plot(pixel.adata, "CD3E", "CD4", layer="dsb",
+    facet_column="sample", gate=gate)
 
     Args:
-    adata: Anndata object containing the marker abundance data per component.
-    marker1: The first marker to plot (x-axis).
-    marker2: The second marker to plot (y-axis).
-    layer: The anndata layer (e.g. transformation) to use for the marker data. Defaults to None.
-    facet_row: The column to use for faceting the plot by rows. Defaults to None.
-    facet_column: The column to use for faceting the plot by columns. Defaults to None.
-    gate: The gate to use for marking a range of interest. Defaults to None.
-    show_marginal: Whether to show marginal distributions. Defaults to False.
+        adata: Anndata object containing the marker abundance data per component.
+        marker1: The first marker to plot (x-axis).
+        marker2: The second marker to plot (y-axis).
+        layer: The anndata layer (e.g. transformation) to use for the marker data. Defaults to None.
+        facet_row: The column to use for faceting the plot by rows. Defaults to None.
+        facet_column: The column to use for faceting the plot by columns. Defaults to None.
+        gate: The gate to use for marking a range of interest. Defaults to None.
+        show_marginal: Whether to show marginal distributions. Defaults to False.
     """
     layer_data = adata.to_df(layer)
     data = layer_data.loc[:, [marker1, marker2]]
@@ -442,11 +442,11 @@ def abundance_colocalization_plot(
     """Plot abundance of markers x and y with colocalization as color.
 
     Args:
-    pixel: Pixel object containing the data.
-    markers_x: List of markers for the x-axis.
-    markers_y: List of markers for the y-axis.
-    layer: The anndata layer (e.g. transformation) to use for the marker data.
-    colocalization_column: The column in the colocalization table to use for colocalization values. Defaults to "pearson_z".
+        pixel: Pixel object containing the data.
+        markers_x: List of markers for the x-axis.
+        markers_y: List of markers for the y-axis.
+        layer: The anndata layer (e.g. transformation) to use for the marker data.
+        colocalization_column: The column in the colocalization table to use for colocalization values. Defaults to "pearson_z".
     """
     data = pixel.adata.to_df(layer)
     merged_data = pd.DataFrame()

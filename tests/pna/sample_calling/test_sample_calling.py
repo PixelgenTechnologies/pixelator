@@ -254,7 +254,6 @@ def test_collect_hash_info(sample_hashed_pixel_files):
 
     Args:
         sample_hashed_pixel_files: Sample hashed pixel files.
-
     """
     pxl = read(sample_hashed_pixel_files)
     cc = collect_hash_info(
@@ -287,7 +286,6 @@ def test_collect_hash_info_should_use_all_hashing_antibodies(sample_hashed_pixel
 
     Args:
         sample_hashed_pixel_files: Sample hashed pixel files.
-
     """
     pxl = read(sample_hashed_pixel_files)
     cc = collect_hash_info(
@@ -330,7 +328,6 @@ def test_collect_hash_info_all_undetermined(sample_hashed_pixel_files):
 
     Args:
         sample_hashed_pixel_files: Sample hashed pixel files.
-
     """
     pxl = read(sample_hashed_pixel_files)
     cc = collect_hash_info(
@@ -364,7 +361,6 @@ def test_sample_calling(sample_hashed_pixel_files, tmp_path):
     Args:
         sample_hashed_pixel_files: Sample hashed pixel files.
         tmp_path: Tmp path.
-
     """
     pxl = read(sample_hashed_pixel_files)
     samplesheet, all_hashing = _samplesheet_and_hashing_for_three_samples()
@@ -427,7 +423,6 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
 
     Args:
         tmp_path: Tmp path.
-
     """
     panel_df = pd.DataFrame(
         [
@@ -534,7 +529,6 @@ def test_sample_calling_with_undetermined(sample_hashed_pixel_files, tmp_path):
     Args:
         sample_hashed_pixel_files: Sample hashed pixel files.
         tmp_path: Tmp path.
-
     """
     confidence_threshold = 0.96
     pxl = read(sample_hashed_pixel_files)
@@ -634,7 +628,6 @@ class _FakeFilteredDataset:
         Args:
             component_ids: Component ids.
             sample_confidences: Sample confidences.
-
         """
         self._component_ids = component_ids
         self._sample_confidences = sample_confidences
@@ -643,8 +636,7 @@ class _FakeFilteredDataset:
         """Components.
 
         Returns:
-                Result (set[str]).
-
+            Result (set[str]).
         """
         return self._component_ids
 
@@ -658,7 +650,6 @@ class _FakeFilteredDataset:
         Args:
             add_log1p_transform: Add log1p transform.
             add_clr_transform: Add clr transform.
-
         """
         assert self._sample_confidences is not None
         n = len(self._sample_confidences)
@@ -689,7 +680,6 @@ class _FakeMergedDataset:
             all_components: All components.
             undetermined_components: Undetermined components.
             confidences_per_sample: Confidences per sample.
-
         """
         self._all_components = all_components
         self._undetermined_components = undetermined_components
@@ -699,8 +689,7 @@ class _FakeMergedDataset:
         """Components.
 
         Returns:
-                Result (set[str]).
-
+            Result (set[str]).
         """
         return self._all_components
 
@@ -708,8 +697,7 @@ class _FakeMergedDataset:
         """Sample names.
 
         Returns:
-                Result (set[str]).
-
+            Result (set[str]).
         """
         return set(self._confidences_per_sample.keys())
 
@@ -722,10 +710,9 @@ class _FakeMergedDataset:
         """Filter.
 
         Args:
-        samples: samples.
-        components: components.
-        markers: markers.
-
+            samples: samples.
+            components: components.
+            markers: markers.
         """
         if samples == "undetermined":
             if self._undetermined_components is None:
@@ -808,7 +795,6 @@ def test_warn_if_undetermined_has_high_confidence_logs_when_fraction_above_five_
 
     Args:
         caplog: Caplog.
-
     """
     with caplog.at_level(
         logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
@@ -829,7 +815,6 @@ def test_warn_if_undetermined_has_high_confidence_no_log_when_fraction_is_exactl
 
     Args:
         caplog: Caplog.
-
     """
     with caplog.at_level(
         logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
@@ -848,7 +833,6 @@ def test_warn_if_undetermined_has_high_confidence_no_log_when_all_at_or_below_th
 
     Args:
         caplog: Caplog.
-
     """
     with caplog.at_level(
         logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
@@ -869,7 +853,6 @@ def test_warn_if_undetermined_has_high_confidence_logs_for_single_high_value(cap
 
     Args:
         caplog: Caplog.
-
     """
     with caplog.at_level(
         logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"

@@ -20,8 +20,7 @@ def test_compute_transition_probabilities(pentagram_graph):
     """Verify compute transition probabilities.
 
     Args:
-    pentagram_graph: pentagram graph.
-
+        pentagram_graph: pentagram graph.
     """
     A = pentagram_graph.get_adjacency_sparse()
 
@@ -49,8 +48,7 @@ def test_compute_transition_probabilities_remove_self_loops_true(pentagram_graph
     """Verify compute transition probabilities remove self loops true.
 
     Args:
-    pentagram_graph: pentagram graph.
-
+        pentagram_graph: pentagram graph.
     """
     A = pentagram_graph.get_adjacency_sparse()
 
@@ -78,8 +76,7 @@ def test_local_g(pentagram_graph):
     """Verify local g.
 
     Args:
-    pentagram_graph: pentagram graph.
-
+        pentagram_graph: pentagram graph.
     """
     A = pentagram_graph.get_adjacency_sparse()
     counts = pentagram_graph.node_marker_counts
@@ -115,8 +112,7 @@ def test_local_g_use_weights_false(pentagram_graph):
     """Verify local g use weights false.
 
     Args:
-    pentagram_graph: pentagram graph.
-
+        pentagram_graph: pentagram graph.
     """
     A = pentagram_graph.get_adjacency_sparse()
     # Create a 5x5 DataFrame of marker counts
@@ -194,8 +190,7 @@ def test_local_g_normalize_counts_false(pentagram_graph):
     """Verify local g normalize counts false.
 
     Args:
-    pentagram_graph: pentagram graph.
-
+        pentagram_graph: pentagram graph.
     """
     A = pentagram_graph.get_adjacency_sparse()
     # Create a 5x5 DataFrame of marker counts
@@ -273,8 +268,7 @@ def test_local_g_normalize_method_gstari(pentagram_graph):
     """Verify local g normalize method gstari.
 
     Args:
-    pentagram_graph: pentagram graph.
-
+        pentagram_graph: pentagram graph.
     """
     A = pentagram_graph.get_adjacency_sparse()
     # Create a 5x5 DataFrame of marker counts
@@ -352,8 +346,7 @@ def test_local_g_k4(pentagram_graph):
     """Verify local g k4.
 
     Args:
-    pentagram_graph: pentagram graph.
-
+        pentagram_graph: pentagram graph.
     """
     A = pentagram_graph.get_adjacency_sparse()
     # Create a 5x5 DataFrame of marker counts

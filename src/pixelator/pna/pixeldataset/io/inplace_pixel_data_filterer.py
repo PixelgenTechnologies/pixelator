@@ -25,7 +25,7 @@ class InplacePixelDataFilterer:
         """Initialize the InplacePixelDataFilterer.
 
         Args:
-        pxl_file: Pxl file.
+            pxl_file: Pxl file.
         """
         self.pxl_file = pxl_file
 
@@ -91,8 +91,8 @@ class InplacePixelDataFilterer:
         If you do not provide metadata, the existing metadata will be kept.
 
         Args:
-        components: The components to keep.
-        metadata: The metadata to write to the PXL
+            components: The components to keep.
+            metadata: The metadata to write to the PXL
         """
         # If there are not components provided, do nothing.
         if not components:

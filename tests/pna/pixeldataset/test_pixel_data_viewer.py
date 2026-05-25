@@ -22,8 +22,7 @@ def pxl_view_fixture(pxl_file):
     """Pxl view fixture.
 
     Args:
-    pxl_file: pxl file.
-
+        pxl_file: pxl file.
     """
     return PixelDataViewer.from_files([PxlFile(pxl_file)])
 
@@ -33,7 +32,6 @@ def _expected_normalized_db_name(sample_name: str) -> str:
 
     Args:
         sample_name: Sample name.
-
     """
     return f"db_{sample_name.replace('-', '_').replace(' ', '_')}"
 
@@ -47,7 +45,6 @@ def _pivot_marker_table(df: pl.DataFrame) -> pl.DataFrame:
 
     Args:
         df: Df.
-
     """
     return (
         df.select(pl.col("*"), val=pl.lit(1))
@@ -68,9 +65,8 @@ class TestPixelDataViewerQueries:
         """Verify read edgelist.
 
         Args:
-        pxl_view: pxl view.
-        edgelist_dataframe: edgelist dataframe.
-
+            pxl_view: pxl view.
+            edgelist_dataframe: edgelist dataframe.
         """
         builder = QueryBuilder()
         with pxl_view.open() as session:
@@ -83,9 +79,8 @@ class TestPixelDataViewerQueries:
         """Verify read edgelist filter.
 
         Args:
-        pxl_view: pxl view.
-        edgelist_dataframe: edgelist dataframe.
-
+            pxl_view: pxl view.
+            edgelist_dataframe: edgelist dataframe.
         """
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
@@ -104,8 +99,7 @@ class TestPixelDataViewerQueries:
         """Verify read edgelist len.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         builder = QueryBuilder()
         with pxl_view.open() as session:
@@ -116,8 +110,7 @@ class TestPixelDataViewerQueries:
         """Verify read edgelist len filter.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
@@ -129,9 +122,8 @@ class TestPixelDataViewerQueries:
         """Verify read edgelist stream.
 
         Args:
-        pxl_view: pxl view.
-        edgelist_dataframe: edgelist dataframe.
-
+            pxl_view: pxl view.
+            edgelist_dataframe: edgelist dataframe.
         """
         builder = QueryBuilder()
         with pxl_view.open() as session:
@@ -147,9 +139,8 @@ class TestPixelDataViewerQueries:
         """Verify read proximity.
 
         Args:
-        pxl_view: pxl view.
-        proximity_dataframe: proximity dataframe.
-
+            pxl_view: pxl view.
+            proximity_dataframe: proximity dataframe.
         """
         builder = QueryBuilder()
         with pxl_view.open() as session:
@@ -162,9 +153,8 @@ class TestPixelDataViewerQueries:
         """Verify read proximity filter.
 
         Args:
-        pxl_view: pxl view.
-        proximity_dataframe: proximity dataframe.
-
+            pxl_view: pxl view.
+            proximity_dataframe: proximity dataframe.
         """
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
@@ -184,8 +174,7 @@ class TestPixelDataViewerQueries:
         """Verify read proximity len.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         builder = QueryBuilder()
         with pxl_view.open() as session:
@@ -196,9 +185,8 @@ class TestPixelDataViewerQueries:
         """Verify read layouts.
 
         Args:
-        pxl_view: pxl view.
-        layout_dataframe: layout dataframe.
-
+            pxl_view: pxl view.
+            layout_dataframe: layout dataframe.
         """
         builder = QueryBuilder()
         with pxl_view.open() as session:
@@ -216,9 +204,8 @@ class TestPixelDataViewerQueries:
         """Verify read layouts add marker counts.
 
         Args:
-        snapshot: snapshot.
-        pxl_view: pxl view.
-
+            snapshot: snapshot.
+            pxl_view: pxl view.
         """
         builder = QueryBuilder()
         with pxl_view.open() as session:
@@ -236,9 +223,8 @@ class TestPixelDataViewerQueries:
         """Verify read layouts filter.
 
         Args:
-        pxl_view: pxl view.
-        layout_dataframe: layout dataframe.
-
+            pxl_view: pxl view.
+            layout_dataframe: layout dataframe.
         """
         builder = QueryBuilder()
         components = ["040b1570c7d0f28f"]
@@ -258,8 +244,7 @@ class TestPixelDataViewerQueries:
         """Verify read layouts len.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         builder = QueryBuilder()
         with pxl_view.open() as session:
@@ -270,8 +255,7 @@ class TestPixelDataViewerQueries:
         """Verify read layouts len filter.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         builder = QueryBuilder()
         components = ["fc07dea9b679aca7"]
@@ -289,9 +273,8 @@ class TestPixelDataViewerSession:
         """Verify session from source tuples matches viewer open scalar.
 
         Args:
-        pxl_file: pxl file.
-        pxl_view: pxl view.
-
+            pxl_file: pxl file.
+            pxl_view: pxl view.
         """
         sample = "test_sample"
         sources = [(sample, Path(pxl_file), _expected_normalized_db_name(sample))]
@@ -308,9 +291,8 @@ class TestPixelDataViewerSession:
         """Verify session from source tuples matches viewer open eager.
 
         Args:
-        pxl_file: pxl file.
-        pxl_view: pxl view.
-
+            pxl_file: pxl file.
+            pxl_view: pxl view.
         """
         sample = "test_sample"
         sources = [(sample, Path(pxl_file), _expected_normalized_db_name(sample))]
@@ -330,8 +312,7 @@ class TestPixelDataViewerSessionSqlInjection:
         """Verify rejects sample name with quote and comment payload.
 
         Args:
-        pxl_file: pxl file.
-
+            pxl_file: pxl file.
         """
         with pytest.raises(ValueError, match="sample name"):
             PixelDataViewerSession([("O'Brien' OR 1=1 --", Path(pxl_file), "db_safe")])
@@ -340,8 +321,7 @@ class TestPixelDataViewerSessionSqlInjection:
         """Verify rejects db alias with semicolon and quotes.
 
         Args:
-        pxl_file: pxl file.
-
+            pxl_file: pxl file.
         """
         with pytest.raises(ValueError, match="database alias"):
             PixelDataViewerSession(
@@ -352,9 +332,8 @@ class TestPixelDataViewerSessionSqlInjection:
         """Verify rejects path with apostrophe in filename.
 
         Args:
-        pxl_file: pxl file.
-        tmp_path: tmp path.
-
+            pxl_file: pxl file.
+            tmp_path: tmp path.
         """
         tricky_path = tmp_path / "evil'name.pxl"
         shutil.copy2(pxl_file, tricky_path)
@@ -365,8 +344,7 @@ class TestPixelDataViewerSessionSqlInjection:
         """Verify rejects db alias with double quote.
 
         Args:
-        pxl_file: pxl file.
-
+            pxl_file: pxl file.
         """
         with pytest.raises(ValueError, match="database alias"):
             PixelDataViewerSession([("s", Path(pxl_file), 'db_with_"quote')])
@@ -375,8 +353,7 @@ class TestPixelDataViewerSessionSqlInjection:
         """Verify accepts safe sample db and path.
 
         Args:
-        pxl_file: pxl file.
-
+            pxl_file: pxl file.
         """
         sources = [("test_sample", Path(pxl_file), "db_test_sample")]
         builder = QueryBuilder()
@@ -392,7 +369,6 @@ class TestPixelDataViewer:
 
         Args:
             pxl_view: Pxl view.
-
         """
         assert pxl_view.sample_names() == ["test_sample"]
 
@@ -400,8 +376,7 @@ class TestPixelDataViewer:
         """Verify view has all tables.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         with pxl_view.open() as session:
             result = session.execute_eager(Query("SHOW ALL TABLES", {}))
@@ -417,8 +392,7 @@ class TestPixelDataViewer:
         """Verify open returns open session.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         session = pxl_view.open()
         assert isinstance(session, PixelDataViewerSession)
@@ -432,8 +406,7 @@ class TestPixelDataViewer:
         """Verify open context manager same as manual close.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         builder = QueryBuilder()
         with pxl_view.open() as session:
@@ -445,8 +418,7 @@ class TestPixelDataViewer:
         """Verify nested open sessions are independent.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         builder = QueryBuilder()
         with pxl_view.open() as outer:
@@ -460,8 +432,7 @@ class TestPixelDataViewer:
         """Verify execute after close raises.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         session = pxl_view.open()
         session.close()
@@ -472,8 +443,7 @@ class TestPixelDataViewer:
         """Verify close idempotent.
 
         Args:
-        pxl_view: pxl view.
-
+            pxl_view: pxl view.
         """
         session = pxl_view.open()
         session.close()

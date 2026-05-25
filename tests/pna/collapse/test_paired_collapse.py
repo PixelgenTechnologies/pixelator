@@ -41,9 +41,8 @@ def test_collapse_from_paired_demux_data(tmp_path, testdata_paired_small_demux):
     """Verify collapse from paired demux data.
 
     Args:
-    tmp_path: tmp path.
-    testdata_paired_small_demux: testdata paired small demux.
-
+        tmp_path: tmp path.
+        testdata_paired_small_demux: testdata paired small demux.
     """
     assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
@@ -72,8 +71,7 @@ def test_statistics_to_json(testdata_paired_small_demux):
     """Verify statistics to json.
 
     Args:
-    testdata_paired_small_demux: testdata paired small demux.
-
+        testdata_paired_small_demux: testdata paired small demux.
     """
     stats = CollapseStatistics()
 

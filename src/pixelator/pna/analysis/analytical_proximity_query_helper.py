@@ -13,8 +13,8 @@ def jcs_with_analytical_stats(
     """Construct a SQL query for calculating proximity join counts with analytical statistics.
 
     Args:
-    components: Components.
-    markers: Markers.
+        components: Components.
+        markers: Markers.
     """
     markers = normalize_input_to_list(markers)
     components = normalize_input_to_list(components)

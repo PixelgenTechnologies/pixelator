@@ -22,7 +22,7 @@ class PixelDatasetSaver:
         """Create a new PixelDatasetSaver instance.
 
         Args:
-        pxl_dataset: Pxl dataset.
+            pxl_dataset: Pxl dataset.
         """
         self.pxl_dataset = pxl_dataset
 
@@ -40,9 +40,9 @@ class PixelDatasetSaver:
         on-disk.
 
         Args:
-        sample_name: The name of the sample to save.
-        output_path: The path to save the sample to.
-        optimize_disk_usage: If True, the saved file will be optimized for disk usage. If this is active a temporary file will be written before the final file is written to disk.
+            sample_name: The name of the sample to save.
+            output_path: The path to save the sample to.
+            optimize_disk_usage: If True, the saved file will be optimized for disk usage. If this is active a temporary file will be written before the final file is written to disk.
         """
         try:
             input_sample = self.pxl_dataset.view.sample_to_file_mappings[sample_name]

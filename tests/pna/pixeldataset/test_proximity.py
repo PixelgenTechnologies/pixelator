@@ -154,8 +154,7 @@ class TestProximityIntegration:
         """Verify to polars returns dataframe.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.proximity().to_polars()
         assert isinstance(df, pl.DataFrame)
@@ -165,8 +164,7 @@ class TestProximityIntegration:
         """Verify to df returns pandas.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.proximity().to_df()
         assert isinstance(df, pd.DataFrame)
@@ -176,8 +174,7 @@ class TestProximityIntegration:
         """Verify len returns proximity count.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         prox = pxl_dataset.proximity()
         assert len(prox) > 0
@@ -186,8 +183,7 @@ class TestProximityIntegration:
         """Verify is empty returns false for populated.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         assert not pxl_dataset.proximity().is_empty()
 
@@ -195,8 +191,7 @@ class TestProximityIntegration:
         """Verify marker counts columns present.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.proximity().to_polars()
         for col in [
@@ -212,8 +207,7 @@ class TestProximityIntegration:
         """Verify log2 ratio column present.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         df = pxl_dataset.proximity().to_polars()
         assert "log2_ratio" in df.columns
@@ -222,8 +216,7 @@ class TestProximityIntegration:
         """Verify str representation.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         assert "Proximity" in str(pxl_dataset.proximity())
 
@@ -231,8 +224,7 @@ class TestProximityIntegration:
         """Verify repr.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         prox = pxl_dataset.proximity()
         assert repr(prox) == str(prox)
@@ -241,9 +233,8 @@ class TestProximityIntegration:
         """Verify ipython display.
 
         Args:
-        capsys: capsys.
-        pxl_dataset: Pxl dataset.
-
+            capsys: capsys.
+            pxl_dataset: Pxl dataset.
         """
         prox = pxl_dataset.proximity()
         prox._ipython_display_()

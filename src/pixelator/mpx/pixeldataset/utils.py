@@ -41,8 +41,8 @@ def update_metrics_anndata(adata: AnnData, inplace: bool = True) -> Optional[Ann
     to be updated accordingly.
 
     Args:
-    adata: an AnnData object
-    inplace: If `True` performs the operation inplace
+        adata: an AnnData object
+        inplace: If `True` performs the operation inplace
     """
     logger.debug(
         "Updating metrics in AnnData object with %i components and %i markers",
@@ -77,7 +77,7 @@ def _enforce_edgelist_types(edgelist: pd.DataFrame) -> pd.DataFrame:
     """Enforce the data types of the edgelist.
 
     Args:
-    edgelist: Edgelist.
+        edgelist: Edgelist.
     """
     # Enforcing the types of the edgelist reduces the memory
     # usage by roughly 2/3s.
@@ -123,7 +123,7 @@ def antibody_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
     count and the number of components where the antibody is detected.
 
     Args:
-    edgelist: an edge list dataframe with a membership column
+        edgelist: an edge list dataframe with a membership column
     """
     if "component" not in edgelist.columns:
         raise AssertionError("Edge list is missing the component column")
@@ -165,7 +165,7 @@ def component_antibody_counts(edgelist: pd.DataFrame) -> pd.DataFrame:
     as input (component column).
 
     Args:
-    edgelist: an edge list dataframe with a membership column
+        edgelist: an edge list dataframe with a membership column
     """
     if "component" not in edgelist.columns:
         raise AssertionError("Edge list is missing the component column")
@@ -197,7 +197,7 @@ def read_anndata(filename: str) -> AnnData:
     A simple wrapper to read/parse AnnData (h5ad) files.
 
     Args:
-    filename: the path to the AnnData file (h5ad)
+        filename: the path to the AnnData file (h5ad)
     """
     if not os.path.isfile(filename):
         raise AssertionError(f"input {filename} does not exist")
@@ -212,8 +212,8 @@ def write_anndata(adata: AnnData, filename: PathType) -> None:
     A simple wrapper to write/save an AnnData object to a file.
 
     Args:
-    adata: the AnnData object to be saved
-    filename: the path to save AnnData file (h5ad)
+        adata: the AnnData object to be saved
+        filename: the path to save AnnData file (h5ad)
     """
     adata.write(filename=filename, compression="gzip")
 
@@ -257,7 +257,7 @@ def _assess_doublet(component_edgelist: pd.DataFrame) -> tuple[bool, int]:
     annotate resolution is set by RELATIVE_ANNOTATE_RESOLUTION (default is 0.5).
 
     Args:
-    component_edgelist: Component edgelist.
+        component_edgelist: Component edgelist.
     """
     component_communities = _compute_sub_communities(component_edgelist)
     component_community_sizes = component_communities.value_counts().sort_values(
@@ -285,7 +285,7 @@ def mark_potential_doublets(
     community.
 
     Args:
-    edgelist: the edge list dataframe containing component labels.
+        edgelist: the edge list dataframe containing component labels.
     """
     is_potential_doublet = pd.Series(index=edgelist["component"].unique(), dtype=bool)
     n_edges_to_split_doublet = pd.Series(
@@ -320,8 +320,8 @@ def edgelist_to_anndata(
     .obsm["log1p"] = the transformed (log1p) component to antibody counts
 
     Args:
-    edgelist: an edge list (pd.DataFrame)
-    panel: the AntibodyPanel of the panel used to generate the data
+        edgelist: an edge list (pd.DataFrame)
+        panel: the AntibodyPanel of the panel used to generate the data
     """
     logger.debug("Creating AnnData from edge list with %i edges", edgelist.shape[0])
 

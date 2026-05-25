@@ -38,10 +38,10 @@ class AnnDataHelper:
         """Create a new instance of AnnDataHelper.
 
         Args:
-        view: View.
-        components: Components.
-        markers: Markers.
-        adata_join_strategy: Adata join strategy.
+            view: View.
+            components: Components.
+            markers: Markers.
+            adata_join_strategy: Adata join strategy.
         """
         self._view = view
         self._components = normalize_input_to_set(components)
@@ -58,7 +58,6 @@ class AnnDataHelper:
         Raises:
             ValueError: If sample-level ``var`` tables cannot be aligned during
                 concatenation.
-
         """
         with self._view.open() as session:
             adatas: list[AnnData] = []
@@ -94,7 +93,7 @@ class AnnDataHelper:
         if the panels differ in patch version and have the same product.
 
         Args:
-        adatas: Adatas.
+            adatas: Adatas.
         """
         if any("panel_metadata" not in adata.uns for adata in adatas):
             logger.debug(
@@ -224,8 +223,8 @@ class AnnDataHelper:
         that must never be returned directly to callers.
 
         Args:
-        add_log1p_transform: Add log1p transform.
-        add_clr_transform: Add clr transform.
+            add_log1p_transform: Add log1p transform.
+            add_clr_transform: Add clr transform.
         """
         adata = self._read_all_samples()
 
@@ -254,8 +253,8 @@ class AnnDataHelper:
         value, so caller mutations never leak back into the cache.
 
         Args:
-        add_log1p_transform: Add log1p transform.
-        add_clr_transform: Add clr transform.
+            add_log1p_transform: Add log1p transform.
+            add_clr_transform: Add clr transform.
         """
         return self._read_adata_cached(
             add_log1p_transform=add_log1p_transform,

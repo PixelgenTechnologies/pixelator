@@ -31,8 +31,7 @@ def test_panel_validation(panel_df):
     """Verify panel validation.
 
     Args:
-    panel_df: panel df.
-
+        panel_df: panel df.
     """
     metadata = {
         "name": "test_panel",
@@ -62,8 +61,7 @@ def test_panel_properties(panel_df):
     """Verify panel properties.
 
     Args:
-    panel_df: panel df.
-
+        panel_df: panel df.
     """
     panel = PNAAntibodyPanel(df=panel_df, metadata=None)
 
@@ -72,8 +70,7 @@ def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
     """Verify panel validation fails on underscores in marker names.
 
     Args:
-    panel_df: panel df.
-
+        panel_df: panel df.
     """
     panel_df.rename(index={"marker1": "marker_1"}, inplace=True)
 
@@ -88,8 +85,7 @@ def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
     """Verify panel validation fails on white space in marker names.
 
     Args:
-    panel_df: panel df.
-
+        panel_df: panel df.
     """
     panel_df.rename(index={"marker1": "marker 1"}, inplace=True)
 
@@ -104,8 +100,7 @@ def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
     """Verify panel validation fails on invalid uniprot ids.
 
     Args:
-    panel_df: panel df.
-
+        panel_df: panel df.
     """
     panel_df.loc["marker1", "uniprot_id"] = "PAAAAA"
 
@@ -120,8 +115,7 @@ def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
     """Verify panel validation ok on concatenated uniprot ids.
 
     Args:
-    panel_df: panel df.
-
+        panel_df: panel df.
     """
     panel_df.loc["marker1", "uniprot_id"] = "P05107;P15391"
     PNAAntibodyPanel(df=panel_df, metadata=None)
@@ -131,8 +125,7 @@ def test_panel_validation_ok_uniprotid_empty(panel_df):
     """Verify panel validation ok uniprotid empty.
 
     Args:
-    panel_df: panel df.
-
+        panel_df: panel df.
     """
     panel_df.loc["marker1", "uniprot_id"] = ""
     PNAAntibodyPanel(df=panel_df, metadata=None)
@@ -142,8 +135,7 @@ def test_panel_from_pxl(pxl_file):
     """Verify panel from pxl.
 
     Args:
-    pxl_file: pxl file.
-
+        pxl_file: pxl file.
     """
     panel = PNAAntibodyPanel.from_pxl_dataset(read(pxl_file))
     assert panel.name == "test-pna-panel"
@@ -166,8 +158,7 @@ def test_panel_header_trailing_commas_warns_and_recovers(caplog):
     """Verify panel header trailing commas warns and recovers.
 
     Args:
-    caplog: caplog.
-
+        caplog: caplog.
     """
     panel_content = """# ---
 # name: test-pna-panel,

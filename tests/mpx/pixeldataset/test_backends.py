@@ -14,7 +14,6 @@ def assert_backend_can_set_values(pixel_dataset_backend):
 
     Args:
         pixel_dataset_backend: Pixel dataset backend.
-
     """
     assert pixel_dataset_backend.adata
     pixel_dataset_backend.adata = None
@@ -46,7 +45,6 @@ def test_file_based_pixel_dataset_backend_set_attrs(pixel_dataset_file):
 
     Args:
         pixel_dataset_file: Pixel dataset file.
-
     """
     pixel_dataset_backend = FileBasedPixelDatasetBackend(pixel_dataset_file)
     assert_backend_can_set_values(pixel_dataset_backend)
@@ -57,7 +55,6 @@ def test_object_based_pixel_dataset_backend_set_attrs(setup_basic_pixel_dataset)
 
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
-
     """
     (
         _,

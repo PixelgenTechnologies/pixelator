@@ -27,7 +27,6 @@ def a_config_plugin(current_config: Config) -> Config:
 
     Args:
         current_config: Current config.
-
     """
     current_config.test_attr = True  # type: ignore[attr-defined]
     return current_config

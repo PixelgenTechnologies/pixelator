@@ -21,7 +21,6 @@ def uropod_reads(data_root):
 
     Args:
         data_root: Data root.
-
     """
     r1 = data_root / "uropod_control_300k_S1_R1_001.fastq.gz"
     r2 = data_root / "uropod_control_300k_S1_R2_001.fastq.gz"
@@ -44,8 +43,7 @@ def uropod_reads_sample_mismatch(data_root):
     """Uropod reads sample mismatch.
 
     Args:
-    data_root: data root.
-
+        data_root: data root.
     """
     r1 = data_root / "uropod_control_300k_S1_R1_001.fastq.gz"
     r2 = data_root / "uropod_control_300k_S1_R2_001.fastq.gz"
@@ -66,10 +64,9 @@ def test_fastq_valid_inputs(mocker, uropod_reads, run_in_tmpdir):
     """Verify fastq valid inputs.
 
     Args:
-    mocker: mocker.
-    uropod_reads: uropod reads.
-    run_in_tmpdir: run in tmpdir.
-
+        mocker: mocker.
+        uropod_reads: uropod reads.
+        run_in_tmpdir: run in tmpdir.
     """
     runner = CliRunner()
 
@@ -97,10 +94,9 @@ def test_fastq_swapped_read_input(mocker, uropod_reads, tmp_path):
     """Verify fastq swapped read input.
 
     Args:
-    mocker: mocker.
-    uropod_reads: uropod reads.
-    tmp_path: tmp path.
-
+        mocker: mocker.
+        uropod_reads: uropod reads.
+        tmp_path: tmp path.
     """
     runner = CliRunner()
 
@@ -152,9 +148,8 @@ def test_fastq_sample_name_mismatch(mocker, uropod_reads_sample_mismatch):
     """Verify fastq sample name mismatch.
 
     Args:
-    mocker: mocker.
-    uropod_reads_sample_mismatch: uropod reads sample mismatch.
-
+        mocker: mocker.
+        uropod_reads_sample_mismatch: uropod reads sample mismatch.
     """
     runner = CliRunner()
     mocker.patch("pixelator.mpx.cli.amplicon.amplicon_fastq")

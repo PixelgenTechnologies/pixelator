@@ -16,7 +16,7 @@ def output_option(func):
     """Wrap a Click entrypoint to add the --output option.
 
     Args:
-    func: Func.
+        func: Func.
     """
 
     @click.option(
@@ -40,7 +40,7 @@ def threads_option(func):
     """Decorate a click command and add the --threads option.
 
     Args:
-    func: Func.
+        func: Func.
     """
 
     @click.option(
@@ -73,7 +73,7 @@ def memory_option(func):
     """Decorate a click command and add the --memory option.
 
     Args:
-    func: Func.
+        func: Func.
     """
 
     @click.option(
@@ -96,7 +96,7 @@ def design_option(func):
     """Decorate a click command and add the --design option.
 
     Args:
-    func: Func.
+        func: Func.
     """
     from pixelator.pna.config import pna_config
 
@@ -123,9 +123,9 @@ def validate_panel(ctx, param, value):
     """Validate the panel commandline option.
 
     Args:
-    ctx: The click context
-    param: The click parameter
-    value: The click value
+        ctx: The click context
+        param: The click parameter
+        value: The click value
     """
     try:
         if Path(value).exists():
@@ -151,7 +151,7 @@ def panel_option(func):
     """Decorate a click command and add the --panel option.
 
     Args:
-    func: Func.
+        func: Func.
     """
     from pixelator.pna.config import pna_config
 

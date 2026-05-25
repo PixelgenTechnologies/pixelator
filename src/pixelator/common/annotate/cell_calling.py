@@ -28,45 +28,45 @@ def find_component_size_limits(
 ) -> Optional[int]:
     """Find component size limits.
 
-        This function will attempt to find a cutoff for a distribution of component sizes.
-        The direction of the cut-off is determined by the `direction` parameter (lower for
-        min size and upper for max size).
+    This function will attempt to find a cutoff for a distribution of component sizes.
+    The direction of the cut-off is determined by the `direction` parameter (lower for
+    min size and upper for max size).
 
-        The underlying assumption for the lower bound is that there is one distribution
-        that consists of small components, that are mostly noise and another distribution
-        of components that are larger, and that make up the true cell components.
+    The underlying assumption for the lower bound is that there is one distribution
+    that consists of small components, that are mostly noise and another distribution
+    of components that are larger, and that make up the true cell components.
 
-        The method employed here tries to find a drop in the size of components by
-        looking at the size vs rank, on a log scale, essentially trying to find
-        the point where there is a sharp drop in the size.
+    The method employed here tries to find a drop in the size of components by
+    looking at the size vs rank, on a log scale, essentially trying to find
+    the point where there is a sharp drop in the size.
 
-        This is done by finding the minimum of the second derivative of the
-        spline-smoothed log(size_definition) ~ log(rank). This is similar to the method
-        described by Lun et al. [1]_
+    This is done by finding the minimum of the second derivative of the
+    spline-smoothed log(size_definition) ~ log(rank). This is similar to the method
+    described by Lun et al. [1]_
 
-        The underlying assumption and method for the upper bound is the same but we
-        assign each component a point in a coordinate system based on derivate2 ~ derivate1,
-        and compute the distance d from origo for each component.
+    The underlying assumption and method for the upper bound is the same but we
+    assign each component a point in a coordinate system based on derivate2 ~ derivate1,
+    and compute the distance d from origo for each component.
 
-        We select the top 50% largest components, and find the maximum rank R
-        of a component where:
+    We select the top 50% largest components, and find the maximum rank R
+    of a component where:
 
-          d > DOUBLET_DISTANCE_DEVIATION_FACTOR * stdev(d)
+    d > DOUBLET_DISTANCE_DEVIATION_FACTOR * stdev(d)
 
-        Essentially finding components that are outliers both in the first and the
-        second derivate. We then use R, to find the component with rank R, as the size
-        cutoff.
+    Essentially finding components that are outliers both in the first and the
+    second derivate. We then use R, to find the component with rank R, as the size
+    cutoff.
 
-        .. [1] Lun, A., Riesenfeld, S., Andrews, T. et al. EmptyDrops: distinguishing
-            cells from empty droplets in droplet-based single-cell RNA sequencing
+    .. [1] Lun, A., Riesenfeld, S., Andrews, T. et al. EmptyDrops: distinguishing
+    cells from empty droplets in droplet-based single-cell RNA sequencing
 
     Args:
-    component_sizes: a numpy array of component sizes
-    direction: the direction of the cutoff, either "lower" or "upper"
+        component_sizes: a numpy array of component sizes
+        direction: the direction of the cutoff, either "lower" or "upper"
 
     Raises:
-    AssertionError: if the direction is not lower or upper
-    AssertionError: if component_sizes contain NaNs or zeros
+        AssertionError: if the direction is not lower or upper
+        AssertionError: if component_sizes contain NaNs or zeros
     """
 
     def log_size_and_rank(df: pd.DataFrame) -> pd.DataFrame:

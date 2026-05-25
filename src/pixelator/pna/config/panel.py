@@ -57,15 +57,15 @@ class PNAAntibodyPanel:
     ) -> None:
         """Load a panel from a dataframe and metadata.
 
-                                invalid or with incorrect format
+        invalid or with incorrect format
 
         Args:
-        df: The dataframe containing the panel information.
-        metadata: The metadata for the panel.
-        file_name: The optional basename of the file from which the panel is loaded.
+            df: The dataframe containing the panel information.
+            metadata: The metadata for the panel.
+            file_name: The optional basename of the file from which the panel is loaded.
 
         Raises:
-        AssertionError: exception if panel file is missing,
+            AssertionError: exception if panel file is missing,
         """
         self._filename = file_name
         self.metadata = metadata
@@ -84,10 +84,10 @@ class PNAAntibodyPanel:
         """Create an AntibodyPanel from a csv panel file.
 
         Args:
-        filename: The path to the panel file.
+            filename: The path to the panel file.
 
         Raises:
-        AssertionError: exception if panel file is missing,
+            AssertionError: exception if panel file is missing,
         """
         panel_file = Path(filename)
 
@@ -112,11 +112,11 @@ class PNAAntibodyPanel:
         """Create an AntibodyPanel from a pxl dataset.
 
         Args:
-        pxl_data: A PNAPixelDataset object.
-        file_name: The optional name of the file from which the pxl dataset was loaded.
+            pxl_data: A PNAPixelDataset object.
+            file_name: The optional name of the file from which the pxl dataset was loaded.
 
         Raises:
-        KeyError: exception if panel information is missing in the pxl dataset,
+            KeyError: exception if panel information is missing in the pxl dataset,
         """
         logger.debug("Creating Antibody panel from PNAPixelDataset object")
         adata = pxl_data.adata()
@@ -129,11 +129,11 @@ class PNAAntibodyPanel:
         """Create an AntibodyPanel from an AnnData object.
 
         Args:
-        adata: An AnnData object containing panel information.
-        file_name: The optional name of the file from which the AnnData object was loaded.
+            adata: An AnnData object containing panel information.
+            file_name: The optional name of the file from which the AnnData object was loaded.
 
         Raises:
-        KeyError: exception if panel information is missing in the AnnData object.
+            KeyError: exception if panel information is missing in the AnnData object.
         """
         logger.debug("Creating Antibody panel from AnnData object")
         try:
@@ -162,7 +162,6 @@ class PNAAntibodyPanel:
 
         Returns:
             The panel name.
-
         """
         return self.metadata.name
 
@@ -172,7 +171,6 @@ class PNAAntibodyPanel:
 
         Returns:
             Product name, or None when not provided in panel metadata.
-
         """
         return self.metadata.product
 
@@ -182,7 +180,6 @@ class PNAAntibodyPanel:
 
         Returns:
             Semantic version string for this panel.
-
         """
         return self.metadata.version
 
@@ -206,10 +203,10 @@ class PNAAntibodyPanel:
         """Parse front-matter YAML metadata from a panel file.
 
         Args:
-        file: Panel CSV file whose leading comment block contains YAML metadata.
+            file: Panel CSV file whose leading comment block contains YAML metadata.
 
         Raises:
-        ValueError: If no metadata header is present in the file.
+            ValueError: If no metadata header is present in the file.
         """
         return parse_panel_header_metadata(file)
 
@@ -294,8 +291,8 @@ class PNAAntibodyPanel:
         """Validate antibody panel schema and content.
 
         Args:
-        panel_df: Dataframe containing panel markers and sequences.
-        validate_types: If True, validate dataframe column types.
+            panel_df: Dataframe containing panel markers and sequences.
+            validate_types: If True, validate dataframe column types.
         """
         errors = []
 
@@ -343,7 +340,7 @@ class PNAAntibodyPanel:
                 """Check id.
 
                 Args:
-                id_str: id str.
+                    id_str: id str.
                 """
                 return all(
                     bool(re.match(pattern, id_)) for id_ in str(id_str).split(";")
@@ -371,7 +368,7 @@ class PNAAntibodyPanel:
         """Check if two panels are equal based on their dataframes and metadata.
 
         Args:
-        other: Other.
+            other: Other.
         """
         if not isinstance(other, PNAAntibodyPanel):
             raise ValueError("Can only compare with another PNAAntibodyPanel")
@@ -382,8 +379,8 @@ def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
     """Load an antibody panel from a file or from the config file.
 
     Args:
-    config: the config object
-    panel: the path to the panel file or the name of the panel in the config file
+        config: the config object
+        panel: the path to the panel file or the name of the panel in the config file
     """
     panel_str = str(panel)
     panel_from_config = config.get_panel(panel_str)
@@ -405,8 +402,8 @@ class PNAAntibodyPanelDiff:
         """Initialize the PNAAntibodyPanelDiff object.
 
         Args:
-        panel_1: The first panel to compare.
-        panel_2: The second panel to compare.
+            panel_1: The first panel to compare.
+            panel_2: The second panel to compare.
         """
         self.panel_1 = panel_1
         self.panel_2 = panel_2
@@ -549,7 +546,7 @@ class PNAAntibodyPanelDiff:
         """Upgrade an AnnData object with the changes between the two panels.
 
         Args:
-        adata: Adata.
+            adata: Adata.
         """
         adata_panel = PNAAntibodyPanel.from_adata(adata)
         if self.panel_1 != adata_panel:

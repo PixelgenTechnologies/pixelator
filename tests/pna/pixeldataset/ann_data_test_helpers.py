@@ -18,7 +18,6 @@ class StubAnnDataHelper:
 
         Args:
             adata: Adata.
-
         """
         self._adata = adata
         self.read_adata_calls: int = 0
@@ -29,13 +28,12 @@ class StubAnnDataHelper:
         """Read adata.
 
         Returns:
-                Result (AnnData).
+            Result (AnnData).
 
 
         Args:
             add_log1p_transform: Add log1p transform.
             add_clr_transform: Add clr transform.
-
         """
         self.read_adata_calls += 1
         return self._adata
@@ -50,7 +48,6 @@ def make_test_adata(
         components: Components.
         markers: Markers.
         x: X.
-
     """
     obs = pd.DataFrame(index=pd.Index(components, name="component"))
     var = pd.DataFrame(index=pd.Index(markers, name="marker_id"))

@@ -22,7 +22,6 @@ def test_filter_components_no_filters(adata: AnnData):
 
     Args:
         adata: Adata.
-
     """
     sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
@@ -46,7 +45,6 @@ def test_filter_components_min_size(adata: AnnData):
 
     Args:
         adata: Adata.
-
     """
     sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
@@ -71,7 +69,6 @@ def test_filter_components_max_size(adata: AnnData):
 
     Args:
         adata: Adata.
-
     """
     sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
@@ -95,7 +92,6 @@ def test_filter_components_all_active(adata: AnnData):
 
     Args:
         adata: Adata.
-
     """
     sizes = adata.obs["pixels"].to_numpy()
     result = filter_components_sizes(
@@ -112,8 +108,7 @@ def test_cluster_components(data_root):
     """Verify cluster components.
 
     Args:
-    data_root: data root.
-
+        data_root: data root.
     """
     adata = read_anndata(
         str(data_root / "Sample01_human_pbmcs_unstimulated.adata.h5ad")
@@ -147,7 +142,6 @@ def test_annotate_adata(edgelist: pd.DataFrame, tmp_path: Path, panel: AntibodyP
         edgelist: Edgelist.
         tmp_path: Tmp path.
         panel: Panel.
-
     """
     output_prefix = "test_filtered"
     metrics_file = tmp_path / "metrics.json"
@@ -185,7 +179,6 @@ def test_annotate_adata_should_raise_no_cells_count_exception(
         edgelist: Edgelist.
         tmp_path: Tmp path.
         panel: Panel.
-
     """
     with pytest.raises(NoCellsFoundException) as expected_exception:
         output_prefix = "test_filtered"

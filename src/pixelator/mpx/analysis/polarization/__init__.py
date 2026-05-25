@@ -82,15 +82,15 @@ def polarization_scores_component_graph(
     null-hypothesis for the Moran's I statistic.
 
     The function returns a pd.DataFrame with the following columns:
-      morans_i, morans_p_value, morans_z, marker, component
+    morans_i, morans_p_value, morans_z, marker, component
 
     Args:
-    graph: a graph (it must be a single connected component)
-    component_id: the id of the component
-    transformation: the count transformation method to use (raw, log1p)
-    n_permutations: the number of permutations to use to estimate the null-hypothesis for the Moran's I statistic
-    min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
-    random_seed: the random seed to use to ensure that the permutations are reproducible across runs
+        graph: a graph (it must be a single connected component)
+        component_id: the id of the component
+        transformation: the count transformation method to use (raw, log1p)
+        n_permutations: the number of permutations to use to estimate the null-hypothesis for the Moran's I statistic
+        min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
+        random_seed: the random seed to use to ensure that the permutations are reproducible across runs
     """
     if graph.vcount() < MIN_VERTICES_REQUIRED:
         logger.debug(
@@ -183,13 +183,13 @@ def polarization_scores_component_df(
     See `polarization_scores_component_graph` for details.
 
     Args:
-    component_id: the id of the component
-    component_df: A data frame with an edgelist for a single connected component
-    use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    transformation: the count transformation method to use (raw, log1p)
-    n_permutations: the number of permutations to use to estimate the null-hypothesis for the Moran's I statistic
-    min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
-    random_seed: the random seed to use to ensure that the permutations are reproducible across runs
+        component_id: the id of the component
+        component_df: A data frame with an edgelist for a single connected component
+        use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+        transformation: the count transformation method to use (raw, log1p)
+        n_permutations: the number of permutations to use to estimate the null-hypothesis for the Moran's I statistic
+        min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
+        random_seed: the random seed to use to ensure that the permutations are reproducible across runs
     """
     graph = Graph.from_edgelist(
         edgelist=component_df,
@@ -226,16 +226,16 @@ def polarization_scores(
     the antibody is in the component's graph. Spatial weights (`w`) are derived
     directly from the graph. The function returns a pd.DataFrame with the following
     columns:
-      morans_i, morans_p_value, morans_z, morans_p_adjusted, marker, component
-      (morans_p_value_sim and morans_z_sim if `permutations` > 0)
+    morans_i, morans_p_value, morans_z, morans_p_adjusted, marker, component
+    (morans_p_value_sim and morans_z_sim if `permutations` > 0)
 
     Args:
-    edgelist: an edge list (pd.DataFrame) with a component column
-    use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-    transformation: the count transformation method to use (raw, log1p)
-    n_permutations: the number of permutations for simulated Z-score (z_sim) estimation (if n_permutations>0)
-    min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
-    random_seed: the random seed to use for reproducibility
+        edgelist: an edge list (pd.DataFrame) with a component column
+        use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+        transformation: the count transformation method to use (raw, log1p)
+        n_permutations: the number of permutations for simulated Z-score (z_sim) estimation (if n_permutations>0)
+        min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
+        random_seed: the random seed to use for reproducibility
     """
     if transformation not in get_args(PolarizationTransformationTypes):
         raise AssertionError(
@@ -308,10 +308,10 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """Initialize polarization analysis.
 
         Args:
-        transformation_type: Count transformation applied before Moran's I (``raw`` or ``log1p``).
-        n_permutations: Permutations used to estimate the null distribution.
-        min_marker_count: Minimum marker count required to compute statistics.
-        random_seed: Optional seed for reproducible permutation tests.
+            transformation_type: Count transformation applied before Moran's I (``raw`` or ``log1p``).
+            n_permutations: Permutations used to estimate the null distribution.
+            min_marker_count: Minimum marker count required to compute statistics.
+            random_seed: Optional seed for reproducible permutation tests.
         """
         if transformation_type not in get_args(PolarizationTransformationTypes):
             raise AssertionError(
@@ -326,8 +326,8 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """Run polarization analysis on component.
 
         Args:
-        component: Component.
-        component_id: Component id.
+            component: Component.
+            component_id: Component id.
         """
         logger.debug("Running polarization analysis on component %s", component_id)
         return polarization_scores_component_graph(
@@ -345,7 +345,7 @@ class PolarizationAnalysis(PerComponentAnalysis):
         This will adjust the calculated p-values for the calculate Moran's I statistics.
 
         Args:
-        data: Data.
+            data: Data.
         """
         logger.debug("Post processing polarization analysis data")
         if data.empty:
@@ -363,8 +363,8 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """Add data to the polarization field of the PixelDataset.
 
         Args:
-        data: Data.
-        pxl_dataset: Pxl dataset.
+            data: Data.
+            pxl_dataset: Pxl dataset.
         """
         logger.debug("Adding polarization analysis data to PixelDataset")
         pxl_dataset.polarization = data
@@ -381,11 +381,11 @@ def get_differential_polarity(
     """Calculate the differential polarity.
 
     Args:
-    polarity_data: Polarity measurements to compare.
-    reference: Label for reference samples in ``contrast_column``.
-    targets: Target sample labels; defaults to all non-reference labels.
-    contrast_column: Column containing sample labels. Defaults to ``"sample"``.
-    value_column: Polarity metric column. Defaults to ``"morans_z"``.
+        polarity_data: Polarity measurements to compare.
+        reference: Label for reference samples in ``contrast_column``.
+        targets: Target sample labels; defaults to all non-reference labels.
+        contrast_column: Column containing sample labels. Defaults to ``"sample"``.
+        value_column: Polarity metric column. Defaults to ``"morans_z"``.
     """
     if targets is None:
         targets = polarity_data[contrast_column].unique()

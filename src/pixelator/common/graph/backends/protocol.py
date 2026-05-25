@@ -51,22 +51,22 @@ class GraphBackend(Protocol):
     ) -> GraphBackend:
         """Build a graph from an edgelist.
 
-                Build a Graph from an edge list (pd.DataFrame). Multiple options are available
-                to build the graph, `add_marker_counts` will add a dictionary of marker counts
-                to each node, `simplify` will remove redundant edges and `use_full_bipartite`
-                will not project the graph (UPIA).
+        Build a Graph from an edge list (pd.DataFrame). Multiple options are available
+        to build the graph, `add_marker_counts` will add a dictionary of marker counts
+        to each node, `simplify` will remove redundant edges and `use_full_bipartite`
+        will not project the graph (UPIA).
 
-                The graph will contain the edge attributes present in the edge list when
-                `use_full_bipartite` is True and a dictionary of marker counts in each
-                vertex (node) when `add_marker_counts` is True. If `use_full_bipartite` is
-                False or `simplify` is True the edge attributes will be lost.
+        The graph will contain the edge attributes present in the edge list when
+        `use_full_bipartite` is True and a dictionary of marker counts in each
+        vertex (node) when `add_marker_counts` is True. If `use_full_bipartite` is
+        False or `simplify` is True the edge attributes will be lost.
 
         Args:
-        edgelist: the edge list (dataframe) corresponding to the graph
-        add_marker_counts: add a dictionary of marker counts to each node
-        simplify: simplifies the graph (remove redundant edges)
-        use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
-        convert_indices_to_integers: convert the indices to integers (this is the default)
+            edgelist: the edge list (dataframe) corresponding to the graph
+            add_marker_counts: add a dictionary of marker counts to each node
+            simplify: simplifies the graph (remove redundant edges)
+            use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+            convert_indices_to_integers: convert the indices to integers (this is the default)
         """
         ...
 
@@ -74,13 +74,13 @@ class GraphBackend(Protocol):
     def from_raw(graph: Any) -> GraphBackend:
         """Generate a Graph from a valid Graph object.
 
-                What the valid graph object is depends on the underlying
-                GraphBackend implementation.
+        What the valid graph object is depends on the underlying
+        GraphBackend implementation.
 
-                Typically what you want to use is `from_edgelist`.
+        Typically what you want to use is `from_edgelist`.
 
         Args:
-        graph: input graph to use
+            graph: input graph to use
         """
         ...
 
@@ -113,7 +113,7 @@ class GraphBackend(Protocol):
         """Get the sparse adjacency matrix.
 
         Args:
-        node_ordering: Control the node ordering in the adjacency matrix
+            node_ordering: Control the node ordering in the adjacency matrix
         """
         ...
 
@@ -129,7 +129,6 @@ class GraphBackend(Protocol):
 
         Raises:
             AssertionError if graph nodes don't include markers
-
         """
         ...
 
@@ -143,31 +142,31 @@ class GraphBackend(Protocol):
     ) -> pd.DataFrame:
         """Generate coordinates and (optionally) node marker counts for plotting.
 
-                Generate a dataframe with coordinates, and (optionally) node marker
-                counts to use that can be used for plotting.
+        Generate a dataframe with coordinates, and (optionally) node marker
+        counts to use that can be used for plotting.
 
-                The layout options are:
-                  - fruchterman_reingold
-                  - fruchterman_reingold_3d
-                  - kamada_kawai
-                  - kamada_kawai_3d
-                  - pmds
-                  - pmds_3d
-                  - wpmds_3d
+        The layout options are:
+        - fruchterman_reingold
+        - fruchterman_reingold_3d
+        - kamada_kawai
+        - kamada_kawai_3d
+        - pmds
+        - pmds_3d
+        - wpmds_3d
 
-                For most cases the `pmds` options should be about 10-100x faster
-                than the force directed layout methods, i.e. `fruchterman_reingold`
-                and `kamada_kawai`. Among the force directed layout methods,
-                `fruchterman_reingold` is generally faster than `kamada_kawai`. The
-                `wpmds_3d` method uses edge weights to improve the layout, but is slightly
-                slower than `pmds_3d`.
+        For most cases the `pmds` options should be about 10-100x faster
+        than the force directed layout methods, i.e. `fruchterman_reingold`
+        and `kamada_kawai`. Among the force directed layout methods,
+        `fruchterman_reingold` is generally faster than `kamada_kawai`. The
+        `wpmds_3d` method uses edge weights to improve the layout, but is slightly
+        slower than `pmds_3d`.
 
         Args:
-        layout_algorithm: the layout algorithm to use to generate the coordinates
-        only_keep_a_pixels: If true, only keep the a-pixels
-        get_node_marker_matrix: Add a matrix of marker counts to each node if True.
-        random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
-        **kwargs: will be passed to the underlying layout implementation
+            layout_algorithm: the layout algorithm to use to generate the coordinates
+            only_keep_a_pixels: If true, only keep the a-pixels
+            get_node_marker_matrix: Add a matrix of marker counts to each node if True.
+            random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
+            **kwargs: will be passed to the underlying layout implementation
         """
         ...
 
@@ -183,35 +182,35 @@ class GraphBackend(Protocol):
         """Add edges to the graph instance.
 
         Args:
-        edges: Add the following edges to the graph instance.
+            edges: Add the following edges to the graph instance.
         """
         ...
 
     def add_vertices(self, n_vertices: int, attrs: Dict[str, List]) -> None:
         """Add some number of vertices to the graph instance.
 
-                                    attributes are of different lengths
+        attributes are of different lengths
 
         Args:
-        n_vertices: the number of vertices to be added to the graph instance.
-        attrs: dict of sequences, all of length equal to the number of vertices to be added, containing the attributes of the new vertices. If `n_vertices=1` then they have to be lists of length 1.
+            n_vertices: the number of vertices to be added to the graph instance.
+            attrs: dict of sequences, all of length equal to the number of vertices to be added, containing the attributes of the new vertices. If `n_vertices=1` then they have to be lists of length 1.
 
         Raises:
-        IndexError: if the number of graph vertices to add and lists of
+            IndexError: if the number of graph vertices to add and lists of
         """
         ...
 
     def add_names_to_vertexes(self, vs_names: List[str]) -> None:
         """Rename the current vertices on the graph instance.
 
-                                    of different length
+        of different length
 
         Args:
-        vs_names: Add the following vertices to the graph instance.
+            vs_names: Add the following vertices to the graph instance.
 
         Raises:
-        ValueError: if the graph is empty
-        IndexError: if the number of graph vertices and list of names are
+            ValueError: if the graph is empty
+            IndexError: if the number of graph vertices and list of names are
         """
         ...
 

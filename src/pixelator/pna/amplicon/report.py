@@ -195,7 +195,7 @@ class AmpliconStatistics(Statistics):
         """Merge statistics from another object into this one.
 
         Args:
-        other: Other.
+            other: Other.
         """
         if other.paired is None:
             other.paired = self.paired
@@ -213,8 +213,8 @@ class AmpliconStatistics(Statistics):
         """Return a dict representation suitable for dumping in JSON format.
 
         Args:
-        gc_content: Gc content.
-        one_line: One line.
+            gc_content: Gc content.
+            one_line: One line.
         """
         return self.as_dict()
 
@@ -315,12 +315,12 @@ class AmpliconStatistics(Statistics):
         """Enable stats.paired to be set to None when unknown.
 
         Args:
-        n: N.
-        total_bp1: Total bp1.
-        total_bp2: Total bp2.
-        modifiers: Modifiers.
-        steps: Steps.
-        set_paired_to_none: Set paired to none.
+            n: N.
+            total_bp1: Total bp1.
+            total_bp2: Total bp2.
+            modifiers: Modifiers.
+            steps: Steps.
+            set_paired_to_none: Set paired to none.
         """
         stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
         if set_paired_to_none:

@@ -68,11 +68,10 @@ class RegionModel(BaseModel):
         """Validate DNA strings.
 
         Returns:
-        the validated model
+            the validated model
 
         Raises:
-        ValueError: if the string contains non DNA characters
-
+            ValueError: if the string contains non DNA characters
         """
         if self.region_type is PNARegionType.LBS:
             is_valid = True
@@ -88,9 +87,8 @@ class AssayModel(BaseModel):
     """Validation model for assay configuration.
 
     Attributes:
-    name: Name of the assay
-    assay_spec: List of assay regions
-
+        name: Name of the assay
+        assay_spec: List of assay regions
     """
 
     # TODO: Add more metadata fields
@@ -102,16 +100,15 @@ class Region:
     """Class representing a region in an assay.
 
     Attributes:
-    region_id: unique ID of the region
-    region_type: type of the region
-    name: name of the region
-    sequence_type: type of the sequence
-    sequence: string representation of the region
-    min_len: minimum length of the region
-    max_len: maximum length of the region
-    regions: list of sub-regions
-    data: additional user-defined region properties
-
+        region_id: unique ID of the region
+        region_type: type of the region
+        name: name of the region
+        sequence_type: type of the sequence
+        sequence: string representation of the region
+        min_len: minimum length of the region
+        max_len: maximum length of the region
+        regions: list of sub-regions
+        data: additional user-defined region properties
     """
 
     def __init__(
@@ -129,15 +126,15 @@ class Region:
         """Initialize a Region.
 
         Args:
-        region_id: Region id.
-        region_type: Region type.
-        name: Name.
-        sequence_type: Sequence type.
-        sequence: Sequence.
-        min_len: Min len.
-        max_len: Max len.
-        regions: Regions.
-        data: Data.
+            region_id: Region id.
+            region_type: Region type.
+            name: Name.
+            sequence_type: Sequence type.
+            sequence: Sequence.
+            min_len: Min len.
+            max_len: Max len.
+            regions: Regions.
+            data: Data.
         """
         self.parent_id: str | None = None
         self.region_id = region_id
@@ -174,7 +171,7 @@ class Region:
         """Set the parent id of this region.
 
         Args:
-        parent_id: parent id to set
+            parent_id: parent id to set
         """
         self.parent_id = parent_id
 
@@ -251,7 +248,7 @@ class Region:
         """Lookup a region by the region_id field.
 
         Args:
-        region_id: Region id.
+            region_id: Region id.
         """
         if self.region_id == region_id:
             return self
@@ -267,7 +264,7 @@ class Region:
         """Return all regions with specified region_type.
 
         Args:
-        region_type: Region type.
+            region_type: Region type.
         """
         found = []
 
@@ -284,7 +281,7 @@ class Region:
         """Return all regions with specified sequence_type.
 
         Args:
-        sequence_type: Sequence type.
+            sequence_type: Sequence type.
         """
         found = []
 
@@ -347,9 +344,8 @@ class PNAAssay:
 
 
     Attributes:
-    name: Name of the assay
-    assay_spec: List of regions defining the assay structure
-
+        name: Name of the assay
+        assay_spec: List of regions defining the assay structure
     """
 
     _REQUIRED_REGIONS = {
@@ -367,8 +363,8 @@ class PNAAssay:
         """Initialize an assay.
 
         Args:
-        name: Name.
-        assay_spec: Assay spec.
+            name: Name.
+            assay_spec: Assay spec.
         """
         self.name = name
         self.assay_spec: List[Region] = assay_spec or []
@@ -461,7 +457,7 @@ class PNAAssay:
         """Parse an assay from a yaml file.
 
         Args:
-        filename: path to a design config file
+            filename: path to a design config file
         """
         yaml_obj = load_yaml_file(filename)
         checked_obj = AssayModel.model_validate(yaml_obj)
@@ -489,7 +485,7 @@ class PNAAssay:
         """Retrieve a region by its id.
 
         Args:
-        region_id: id of the region to retrieve
+            region_id: id of the region to retrieve
         """
         for r in self.assay_spec:
             maybe_r = r.get_region_by_id(region_id)
@@ -503,7 +499,7 @@ class PNAAssay:
         """Retrieve all regions of a given type.
 
         Args:
-        region_type: region type to retrieve
+            region_type: region type to retrieve
         """
         regions = []
         for r in self.assay_spec:
@@ -516,8 +512,8 @@ class PNAAssay:
         """Retrieve all regions of a given type.
 
         Args:
-        region_type: region type to retrieve
-        sequence_type: Sequence type.
+            region_type: region type to retrieve
+            sequence_type: Sequence type.
         """
         regions = []
         for r in self.assay_spec:
@@ -539,13 +535,13 @@ def get_position_in_parent(
     from the start of the amplicon up until the region of interest.
 
     Args:
-    assay: assay design
-    region_id: region id of the amplicon
+        assay: assay design
+        region_id: region id of the amplicon
 
     Raises:
-    ValueError: if the region_id is not found in the assay
-    ValueError: if the region has no parent
-    ValueError: if the parent_region is not found in the assay
+        ValueError: if the region_id is not found in the assay
+        ValueError: if the region has no parent
+        ValueError: if the parent_region is not found in the assay
     """
     region = assay.get_region_by_id(region_id)
     if region is None:

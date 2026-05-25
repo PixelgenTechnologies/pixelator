@@ -28,8 +28,7 @@ class TestReadPixelDataset:
         """Verify read pxl file single file.
 
         Args:
-        pxl_file: Pxl file.
-
+            pxl_file: Pxl file.
         """
         dataset = read(pxl_file)
         assert isinstance(dataset, PNAPixelDataset)
@@ -38,8 +37,7 @@ class TestReadPixelDataset:
         """Verify read pxl file multiple files.
 
         Args:
-        pxl_file: Pxl file.
-
+            pxl_file: Pxl file.
         """
         dataset = read([pxl_file])
         assert isinstance(dataset, PNAPixelDataset)
@@ -48,8 +46,7 @@ class TestReadPixelDataset:
         """Verify read pixel file single file str.
 
         Args:
-        pxl_file: Pxl file.
-
+            pxl_file: Pxl file.
         """
         dataset = read(str(pxl_file))
         assert isinstance(dataset, PNAPixelDataset)
@@ -58,8 +55,7 @@ class TestReadPixelDataset:
         """Verify read pixel file multiple files str.
 
         Args:
-        pxl_file: Pxl file.
-
+            pxl_file: Pxl file.
         """
         dataset = read([str(pxl_file)])
         assert isinstance(dataset, PNAPixelDataset)
@@ -72,8 +68,7 @@ class TestPNAPixelDataset:
         """Verify from files.
 
         Args:
-        pxl_file: pxl file.
-
+            pxl_file: pxl file.
         """
         dataset = PNAPixelDataset.from_pxl_files(pxl_file)
         assert isinstance(dataset, PNAPixelDataset)
@@ -82,8 +77,7 @@ class TestPNAPixelDataset:
         """Verify from files with config.
 
         Args:
-        pxl_file: pxl file.
-
+            pxl_file: pxl file.
         """
         config = PixelDatasetConfig(adata_join_method="outer")
         dataset = PNAPixelDataset.from_pxl_files(pxl_file, config)
@@ -93,8 +87,7 @@ class TestPNAPixelDataset:
         """Verify from files with config and samples.
 
         Args:
-        pxl_file: pxl file.
-
+            pxl_file: pxl file.
         """
         dataset = PNAPixelDataset.from_pxl_files({"test_sample": pxl_file})
         assert isinstance(dataset, PNAPixelDataset)
@@ -103,8 +96,7 @@ class TestPNAPixelDataset:
         """Verify sample names.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         assert pxl_dataset.sample_names() == {"test_sample"}
 
@@ -112,8 +104,7 @@ class TestPNAPixelDataset:
         """Verify components.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         assert pxl_dataset.components() == {
             "e7d82bca9694eea7",
@@ -126,8 +117,7 @@ class TestPNAPixelDataset:
         """Verify markers.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         assert pxl_dataset.markers() == {"MarkerA", "MarkerB", "MarkerC"}
 
@@ -135,8 +125,7 @@ class TestPNAPixelDataset:
         """Verify view.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         assert isinstance(pxl_dataset.view, PixelDataViewer)
 
@@ -144,9 +133,8 @@ class TestPNAPixelDataset:
         """Verify adata.
 
         Args:
-        adata_data: adata data.
-        pxl_dataset: Pxl dataset.
-
+            adata_data: adata data.
+            pxl_dataset: Pxl dataset.
         """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
@@ -162,9 +150,8 @@ class TestPNAPixelDataset:
         """Verify adata adds transformation by default.
 
         Args:
-        adata_data: adata data.
-        pxl_dataset: Pxl dataset.
-
+            adata_data: adata data.
+            pxl_dataset: Pxl dataset.
         """
         adata = pxl_dataset.adata()
         assert "log1p" in adata.obsm
@@ -181,9 +168,8 @@ class TestPNAPixelDataset:
         """Verify adata should not mutate original.
 
         Args:
-        adata_data: adata data.
-        pxl_dataset: Pxl dataset.
-
+            adata_data: adata data.
+            pxl_dataset: Pxl dataset.
         """
         adata = pxl_dataset.adata(add_clr_transform=False, add_log1p_transform=False)
         adata.layers["new_layer"] = adata.X + 1
@@ -195,8 +181,7 @@ class TestPNAPixelDataset:
         """Verify metadata returns expected mapping.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         metadata = pxl_dataset.metadata()
         assert metadata.keys() == {"test_sample"}
@@ -215,12 +200,11 @@ class TestPNAPixelDataset:
         """Verify metadata returns empty dict when metadata table is empty.
 
         Args:
-        panel: panel.
-        tmp_path: Tmp path.
-        edgelist_parquet_path: Edgelist parquet path.
-        proximity_parquet_path: Proximity parquet path.
-        layout_parquet_path: Layout parquet path.
-
+            panel: panel.
+            tmp_path: Tmp path.
+            edgelist_parquet_path: Edgelist parquet path.
+            proximity_parquet_path: Proximity parquet path.
+            layout_parquet_path: Layout parquet path.
         """
         target = tmp_path / "empty_metadata.pxl"
         create_pxl_file(
@@ -250,8 +234,7 @@ class TestPNAPixelDatasetFilter:
         """Verify filter pixel dataset by component.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         filtered = pxl_dataset.filter(components={"fc07dea9b679aca7"})
         assert filtered.components() == {"fc07dea9b679aca7"}
@@ -293,8 +276,7 @@ class TestPNAPixelDatasetFilter:
         """Verify filter pixel dataset by component should raise for non existent.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         with pytest.raises(ValueError):
             pxl_dataset.filter(components={"nonexistentcomp"})
@@ -305,8 +287,7 @@ class TestPNAPixelDatasetFilter:
         """Verify filter pixel dataset by marker should raise for non existent.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         with pytest.raises(ValueError):
             pxl_dataset.filter(markers={"not-a-marker"})
@@ -317,8 +298,7 @@ class TestPNAPixelDatasetFilter:
         """Verify filter pixel dataset by sample should raise for non existent.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         with pytest.raises(ValueError):
             pxl_dataset.filter(samples={"not-a-sample"})
@@ -327,8 +307,7 @@ class TestPNAPixelDatasetFilter:
         """Verify filter pixel dataset by markers.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         filtered = pxl_dataset.filter(markers={"MarkerA"})
         assert filtered.markers() == {"MarkerA"}
@@ -382,8 +361,7 @@ class TestPNAPixelDatasetFilter:
         """Verify filter pixel dataset with pandas series.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         assert len(pxl_dataset.components()) == 4
         adata = pxl_dataset.adata()
@@ -399,8 +377,7 @@ class TestPNAPixelDatasetFilter:
         """Verify filter pixel dataset with polars series.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         assert len(pxl_dataset.components()) == 4
         df = pl.DataFrame(pxl_dataset.adata().obs.reset_index())
@@ -418,8 +395,7 @@ class TestPNAPixelDatasetFilter:
         """Verify filter pixel dataset with polars dataframe.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         assert len(pxl_dataset.components()) == 4
         df = pl.DataFrame(pxl_dataset.adata().obs.reset_index())
@@ -437,8 +413,7 @@ class TestPNAPixelDatasetFilter:
         """Verify filter pixel dataset with polars dataframe raises if multiple columns.
 
         Args:
-        pxl_dataset: pxl dataset.
-
+            pxl_dataset: pxl dataset.
         """
         assert len(pxl_dataset.components()) == 4
         df = pl.DataFrame(pxl_dataset.adata().obs.reset_index())
@@ -470,13 +445,12 @@ def pixel_dataset_with_different_sample_names_fixture(
     """Pixel dataset with different sample names fixture.
 
     Args:
-    request: request.
-    tmp_path_factory: tmp path factory.
-    edgelist_parquet_path: edgelist parquet path.
-    proximity_parquet_path: proximity parquet path.
-    layout_parquet_path: layout parquet path.
-    panel: panel.
-
+        request: request.
+        tmp_path_factory: tmp path factory.
+        edgelist_parquet_path: edgelist parquet path.
+        proximity_parquet_path: proximity parquet path.
+        layout_parquet_path: layout parquet path.
+        panel: panel.
     """
     sample_name = request.param
     target = tmp_path_factory.mktemp("data") / (sample_name + ".pxl")
@@ -498,8 +472,7 @@ class TestPixelDatasetNames:
         """Verify sample names.
 
         Args:
-        pxl_dataset_w_sample_names: pxl dataset w sample names.
-
+            pxl_dataset_w_sample_names: pxl dataset w sample names.
         """
         pxl_dataset, sample_name = pxl_dataset_w_sample_names
         assert len(pxl_dataset.sample_names()) == 1
@@ -509,8 +482,7 @@ class TestPixelDatasetNames:
         """Verify edgelist.
 
         Args:
-        pxl_dataset_w_sample_names: pxl dataset w sample names.
-
+            pxl_dataset_w_sample_names: pxl dataset w sample names.
         """
         pxl_dataset, sample_name = pxl_dataset_w_sample_names
         df = pxl_dataset.edgelist().to_polars()
@@ -522,8 +494,7 @@ class TestPixelDatasetNames:
         """Verify anndata.
 
         Args:
-        pxl_dataset_w_sample_names: pxl dataset w sample names.
-
+            pxl_dataset_w_sample_names: pxl dataset w sample names.
         """
         pxl_dataset, sample_name = pxl_dataset_w_sample_names
         df = pxl_dataset.adata()
@@ -543,12 +514,11 @@ def dataset_fixture(
     """Dataset fixture.
 
     Args:
-    tmp_path_factory: tmp path factory.
-    edgelist_parquet_path: edgelist parquet path.
-    proximity_parquet_path: proximity parquet path.
-    layout_parquet_path: layout parquet path.
-    panel: panel.
-
+        tmp_path_factory: tmp path factory.
+        edgelist_parquet_path: edgelist parquet path.
+        proximity_parquet_path: proximity parquet path.
+        layout_parquet_path: layout parquet path.
+        panel: panel.
     """
     tmp_path = tmp_path_factory.mktemp("multi_sample_dataset")
 
@@ -597,8 +567,7 @@ class TestPNAPixelDatasetFilterBySample:
         """Verify filter by sample.
 
         Args:
-        multi_sample_dataset: Multi sample dataset.
-
+            multi_sample_dataset: Multi sample dataset.
         """
         dataset = multi_sample_dataset
 
@@ -643,8 +612,7 @@ class TestPNAPixelDatasetFilterBySample:
         """Test filtering with combinations of sample, component, and marker.
 
         Args:
-        multi_sample_dataset: Multi sample dataset.
-
+            multi_sample_dataset: Multi sample dataset.
         """
         dataset = multi_sample_dataset
 
@@ -711,8 +679,7 @@ class TestPNAPixelDatasetFilterBySample:
         """Test filtering only by component in a multisample scenario.
 
         Args:
-        multi_sample_dataset: Multi sample dataset.
-
+            multi_sample_dataset: Multi sample dataset.
         """
 
         dataset = multi_sample_dataset
@@ -758,9 +725,8 @@ class TestPNAPixelDatasetSnapshots:
         """Verify proximity.
 
         Args:
-        snapshot: snapshot.
-        pxl_dataset: pxl dataset.
-
+            snapshot: snapshot.
+            pxl_dataset: pxl dataset.
         """
         proximity = pxl_dataset.proximity()
         assert len(proximity) == 3
@@ -777,9 +743,8 @@ class TestPNAPixelDatasetSnapshots:
         """Verify precomputed layouts.
 
         Args:
-        snapshot: snapshot.
-        pxl_dataset: pxl dataset.
-
+            snapshot: snapshot.
+            pxl_dataset: pxl dataset.
         """
         layouts = pxl_dataset.precomputed_layouts()
         assert len(layouts) == 34
@@ -801,8 +766,7 @@ class TestPrecomputedLayoutsWrapper:
         """Verify precomputed layouts with filter.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         filtered = pxl_dataset.filter(components={"fc07dea9b679aca7"})
         layouts = filtered.precomputed_layouts()
@@ -823,8 +787,7 @@ class TestPrecomputedLayoutsWrapper:
         """Verify precomputed layouts with norm.
 
         Args:
-        pxl_dataset: Pxl dataset.
-
+            pxl_dataset: Pxl dataset.
         """
         result = pxl_dataset.precomputed_layouts(add_spherical_norm=True).to_polars()
 

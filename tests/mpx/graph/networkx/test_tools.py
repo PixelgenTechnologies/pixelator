@@ -15,15 +15,13 @@ from pixelator.mpx.graph.utils import Graph
 
 
 def create_random_graph(n_nodes: int, prob: float) -> Graph:
-    """
-    create a random graph with n_nodes nodes
+    """create a random graph with n_nodes nodes
     and a probability prob of connecting two
     nodes with an edge
 
     Args:
         n_nodes: N nodes.
         prob: Prob.
-
     """
     random.seed(0)
     rng = np.random.default_rng(2)
@@ -41,13 +39,11 @@ def create_random_graph(n_nodes: int, prob: float) -> Graph:
 
 
 def create_fully_connected_bipartite_graph(n_nodes: int) -> Graph:
-    """
-    create a fully connected bipartite graph of
+    """create a fully connected bipartite graph of
     size n_nodes * 2
 
     Args:
         n_nodes: N nodes.
-
     """
     graph = Graph.from_raw(nx.complete_bipartite_graph(n1=n_nodes, n2=n_nodes))
     add_random_names_to_vertexes(graph)
@@ -64,7 +60,6 @@ def create_randomly_connected_bipartite_graph(
         n2: N2.
         p: P.
         random_seed: Random seed.
-
     """
     graph = Graph.from_raw(nx.bipartite.random_graph(n1, n2, p, seed=random_seed))
     add_random_names_to_vertexes(graph)
@@ -76,7 +71,6 @@ def full_graph(n: int) -> Graph:
 
     Args:
         n: N.
-
     """
     return Graph.from_raw(nx.complete_graph(n))
 
@@ -86,7 +80,6 @@ def add_random_names_to_vertexes(graph: Graph) -> None:
 
     Args:
         graph: Graph.
-
     """
     for vertex in graph.vs:
         vertex["name"] = random_sequence(21)
@@ -97,6 +90,5 @@ def random_sequence(size: int) -> str:
 
     Args:
         size: Size.
-
     """
     return "".join(random.choices("CGTA", k=size))

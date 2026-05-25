@@ -39,7 +39,7 @@ class ShortestPathState:
         """Initialize the frontier from the edgelist.
 
         Args:
-        edgelist: Edgelist.
+            edgelist: Edgelist.
         """
         frontier_x = []
         frontier_y = []
@@ -62,7 +62,7 @@ class ShortestPathState:
         """Initialize the shortest path state with the given edgelist.
 
         Args:
-        edgelist: Edgelist.
+            edgelist: Edgelist.
         """
         nnodes = max(edgelist["node1_id"].max(), edgelist["node2_id"].max()) + 1
         nedges = len(edgelist)
@@ -88,8 +88,8 @@ class ShortestPathFinder:
         """Initialize the shortest path finder with the given edgelist.
 
         Args:
-        edgelist: Edgelist.
-        explore_limit: Explore limit.
+            edgelist: Edgelist.
+            explore_limit: Explore limit.
         """
         self.node_map = (
             pl.concat(
@@ -193,7 +193,7 @@ class ShortestPathFinder:
         """Run the shortest path finder for a maximum number of steps.
 
         Args:
-        max_steps: Max steps.
+            max_steps: Max steps.
         """
         cycle_distribution = pd.Series(dtype=int)
         for step in range(max_steps):
@@ -230,9 +230,9 @@ def process_component(comp_name, edgelist_path, tmpdir):
     """Process a single component to remove edges not participating in cycles.
 
     Args:
-    comp_name: Comp name.
-    edgelist_path: Edgelist path.
-    tmpdir: Tmpdir.
+        comp_name: Comp name.
+        edgelist_path: Edgelist path.
+        tmpdir: Tmpdir.
     """
     with duckdb.connect() as con:
         con.execute(
@@ -316,9 +316,9 @@ def remove_no_cycle_edges(
     """Remove edges that do not participate in any cycles from the edgelist.
 
     Args:
-    input_edgelist_path: Path to the input edgelist Parquet file (hive layout supported).
-    n_threads: Number of parallel threads to use.
-    working_dir: Directory for the merged output (``working_edgelist_with_cycle_verification``); defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+        input_edgelist_path: Path to the input edgelist Parquet file (hive layout supported).
+        n_threads: Number of parallel threads to use.
+        working_dir: Directory for the merged output (``working_edgelist_with_cycle_verification``); defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
     """
     output_path = working_dir / "working_edgelist_with_cycle_verification"
     logger.info("Starting removal of no-cycle edges")

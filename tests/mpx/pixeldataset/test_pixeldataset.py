@@ -32,7 +32,6 @@ def test_pixeldataset(setup_basic_pixel_dataset):
 
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
-
     """
     (
         dataset,
@@ -80,7 +79,6 @@ def test_pixeldataset_save(setup_basic_pixel_dataset, tmp_path):
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
         tmp_path: Tmp path.
-
     """
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
@@ -95,7 +93,6 @@ def test_pixeldataset_read(setup_basic_pixel_dataset, tmp_path):
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
         tmp_path: Tmp path.
-
     """
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
@@ -109,7 +106,6 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
         tmp_path: Tmp path.
-
     """
     (
         dataset,
@@ -163,9 +159,8 @@ def test_pixeldataset_can_save_and_load_with_empty_edgelist(
     """Verify pixeldataset can save and load with empty edgelist.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-    tmp_path: tmp path.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+        tmp_path: tmp path.
     """
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
@@ -188,8 +183,7 @@ def test_pixeldataset_graph(setup_basic_pixel_dataset):
     """Verify pixeldataset graph.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     dataset, *_ = setup_basic_pixel_dataset
     full_graph = dataset.graph()
@@ -201,8 +195,7 @@ def test_pixeldataset_graph_raises_when_component_not_found(setup_basic_pixel_da
     """Verify pixeldataset graph raises when component not found.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     dataset, *_ = setup_basic_pixel_dataset
     with pytest.raises(KeyError):
@@ -213,8 +206,7 @@ def test_pixeldataset_graph_finds_component(setup_basic_pixel_dataset):
     """Verify pixeldataset graph finds component.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     dataset, *_ = setup_basic_pixel_dataset
     component_graph = dataset.graph("2ac2ca983a4b82dd")
@@ -226,8 +218,7 @@ def test_pixeldataset_precomputed_layouts(setup_basic_pixel_dataset):
     """Verify pixeldataset precomputed layouts.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     dataset, *_ = setup_basic_pixel_dataset
 
@@ -241,7 +232,6 @@ def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
         tmp_path: Tmp path.
-
     """
     (
         dataset,
@@ -285,7 +275,6 @@ def test_pixeldataset_repr(setup_basic_pixel_dataset):
 
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
-
     """
     dataset, *_ = setup_basic_pixel_dataset
 
@@ -314,8 +303,7 @@ def test_lazy_edgelist_should_warn_and_rm_on_index_column(setup_basic_pixel_data
     """Verify lazy edgelist should warn and rm on index column.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     dataset, *_ = setup_basic_pixel_dataset
     dataset.edgelist["index"] = pd.Series(range(len(dataset.edgelist)))
@@ -338,7 +326,6 @@ def test_copy(setup_basic_pixel_dataset):
 
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
-
     """
     dataset_1, *_ = setup_basic_pixel_dataset
     dataset_2_no_copy = dataset_1
@@ -360,7 +347,6 @@ def test_filter_by_component(setup_basic_pixel_dataset):
 
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
-
     """
     dataset_1, *_ = setup_basic_pixel_dataset
 
@@ -408,7 +394,6 @@ def test_filter_by_marker(setup_basic_pixel_dataset):
 
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
-
     """
     dataset_1, *_ = setup_basic_pixel_dataset
 
@@ -459,7 +444,6 @@ def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
 
     Args:
         setup_basic_pixel_dataset: Setup basic pixel dataset.
-
     """
     dataset_1, *_ = setup_basic_pixel_dataset
 

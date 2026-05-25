@@ -35,8 +35,8 @@ class SingleEndFilterWithFailureReason(SingleEndFilter):
         """Initialize a SingleEndFilterWithFailureReason pipeline step.
 
         Args:
-        predicate: Predicate.
-        writer: Writer.
+            predicate: Predicate.
+            writer: Writer.
         """
         self._filtered = 0
         self._predicate = predicate
@@ -64,8 +64,8 @@ class SingleEndFilterWithFailureReason(SingleEndFilter):
         is modified by appending the `descriptive_identifier` of the filter step.
 
         Args:
-        read: The read to filter.
-        info: The modification info.
+            read: The read to filter.
+            info: The modification info.
         """
         if self._predicate.test(read, info):
             self._filtered += 1
@@ -86,8 +86,8 @@ class TooManyN(Predicate):
         """Initialize a TooManyN pipeline predicate.
 
         Args:
-        count: the cutoff for the N count. If it is below 1.0, it will be considered a proportion, and above and equal to 1 will be considered as discarding reads with a number of N's greater than this cutoff.
-        assay: the assay configuration.
+            count: the cutoff for the N count. If it is below 1.0, it will be considered a proportion, and above and equal to 1 will be considered as discarding reads with a number of N's greater than this cutoff.
+            assay: the assay configuration.
         """
         assert count >= 0
         self.is_proportion = count < 1.0
@@ -112,8 +112,8 @@ class TooManyN(Predicate):
         """Return True if the read has too many N bases.
 
         Args:
-        read: The read to test.
-        info: The modification info.
+            read: The read to test.
+            info: The modification info.
         """
         r = read.sequence.lower()
         region1 = r[self._region1]
@@ -142,8 +142,8 @@ class LowComplexityUMI(Predicate):
         """Initialize a LowComplexityFilter pipeline predicate.
 
         Args:
-        assay: the assay configuration.
-        proportion: the proportion of a single base that defines low complexity.
+            assay: the assay configuration.
+            proportion: the proportion of a single base that defines low complexity.
         """
         if not 0.0 < proportion < 1.0:
             raise ValueError(
@@ -172,8 +172,8 @@ class LowComplexityUMI(Predicate):
         """Return True if the read has low complexity.
 
         Args:
-        read: The read to test.
-        info: The modification info.
+            read: The read to test.
+            info: The modification info.
         """
         umi1 = np.frombuffer(
             read.sequence[self._umi1_region_slice].encode("ascii"), dtype="S1"
@@ -206,18 +206,18 @@ class LBSDetectedInUMI(Predicate):
     This filtering step expects the full amplicon sequence as input.
 
     Args:
-    assay: The assay configuration.
-    min_overlap: Minimum overlap for alignment.
-    max_error_rate: Maximum error rate for alignment.
+        assay: The assay configuration.
+        min_overlap: Minimum overlap for alignment.
+        max_error_rate: Maximum error rate for alignment.
     """
 
     def __init__(self, assay, min_overlap=8, max_error_rate=0.2) -> None:
         """Initialize a LBSDetectedInUMI pipeline predicate.
 
         Args:
-        assay: Assay.
-        min_overlap: Min overlap.
-        max_error_rate: Max error rate.
+            assay: Assay.
+            min_overlap: Min overlap.
+            max_error_rate: Max error rate.
         """
         self.assay = assay
         self.min_overlap = min_overlap
@@ -264,8 +264,8 @@ class LBSDetectedInUMI(Predicate):
         """Return True if the read contains any fixed region substrings.
 
         Args:
-        read: The read to test.
-        info: The modification info.
+            read: The read to test.
+            info: The modification info.
         """
         umi1 = read.sequence[self._umi1_region_slice]
         umi2 = read.sequence[self._umi2_region_slice]

@@ -79,8 +79,8 @@ class _DataProvider(Protocol):
         """Write layouts to parquet using hive-style partitioning.
 
         Args:
-        path: Output directory or file prefix.
-        partitioning: Hive partition columns written into the path.
+            path: Output directory or file prefix.
+            partitioning: Hive partition columns written into the path.
         """
         ...
 
@@ -91,7 +91,7 @@ class _EmptyDataProvider(_DataProvider):
         """Initialize the instance.
 
         Returns:
-                Result (None).
+            Result (None).
         """
         pass
 
@@ -99,8 +99,8 @@ class _EmptyDataProvider(_DataProvider):
         """Write a parquet file to the provided path.
 
         Args:
-        path: Path.
-        partitioning: Partitioning.
+            path: Path.
+            partitioning: Partitioning.
         """
         return
 
@@ -108,7 +108,7 @@ class _EmptyDataProvider(_DataProvider):
         """Is empty.
 
         Returns:
-                Result (bool).
+            Result (bool).
         """
         return True
 
@@ -143,7 +143,7 @@ class _SingleFrameDataProvider(_DataProvider):
         """Is empty.
 
         Returns:
-                Result (bool).
+            Result (bool).
         """
         return self.lazy().select(pl.col("component")).first().collect().is_empty()
 
@@ -157,8 +157,8 @@ class _SingleFrameDataProvider(_DataProvider):
         """Write a parquet file to the provided path.
 
         Args:
-        path: Path.
-        partitioning: Partitioning.
+            path: Path.
+            partitioning: Partitioning.
         """
         _write_parquet(self.lazy(), path, partitioning)
 
@@ -215,7 +215,7 @@ class _MultiFrameDataProvider(_DataProvider):
         """Is empty.
 
         Returns:
-                Result (bool).
+            Result (bool).
         """
         return all(
             frame.select(pl.col("component")).first().collect().is_empty()
@@ -283,8 +283,8 @@ class _MultiFrameDataProvider(_DataProvider):
         """Write a parquet file to the provided path.
 
         Args:
-        path: Path.
-        partitioning: Partitioning.
+            path: Path.
+            partitioning: Partitioning.
         """
         for frame in self._lazy_frames:
             _write_parquet(frame, path, partitioning)
@@ -307,8 +307,8 @@ class PreComputedLayouts:
         """Initialize the PreComputedLayouts instance.
 
         Args:
-        layouts_lazy: Layouts lazy.
-        partitioning: Partitioning.
+            layouts_lazy: Layouts lazy.
+            partitioning: Partitioning.
         """
         if layouts_lazy is None:
             self._data_provider: _DataProvider = _EmptyDataProvider()
@@ -358,8 +358,8 @@ class PreComputedLayouts:
         """Write a parquet file to the provided path.
 
         Args:
-        path: Path.
-        partitioning: Partitioning.
+            path: Path.
+            partitioning: Partitioning.
         """
         self._data_provider.write_parquet(path, partitioning)
 
@@ -371,7 +371,7 @@ class PreComputedLayouts:
         """Return the layouts as a pandas DataFrame.
 
         Args:
-        columns: the columns to return, if `None` all columns will be returned
+            columns: the columns to return, if `None` all columns will be returned
         """
         return self._data_provider.to_df(columns)
 
@@ -389,9 +389,9 @@ class PreComputedLayouts:
         """Filter the layouts based on the provided criteria.
 
         Args:
-        component_ids: the component ids to filter on
-        graph_projection: the graph projection to filter on
-        layout_method: the layout method to filter on
+            component_ids: the component ids to filter on
+            graph_projection: the graph projection to filter on
+            layout_method: the layout method to filter on
         """
         return PreComputedLayouts(
             self._data_provider.filter(component_ids, graph_projection, layout_method),
@@ -413,13 +413,13 @@ class PreComputedLayouts:
         criteria.
 
         :yields pd.DataFrame: A generator over the components where each dataframe contains the layout(s)
-                  for that component
+        for that component
 
         Args:
-        component_ids: the component ids to filter on, if `None` all components will be returned.
-        graph_projections: the graph projections to filter on
-        layout_methods: the layout methods to filter on
-        columns: the columns to return, if `None` all columns will be returned
+            component_ids: the component ids to filter on, if `None` all components will be returned.
+            graph_projections: the graph projections to filter on
+            layout_methods: the layout methods to filter on
+            columns: the columns to return, if `None` all columns will be returned
         """
         if not component_ids:
             unique_components = self._data_provider.unique_components()
@@ -460,8 +460,8 @@ def aggregate_precomputed_layouts(
     """Aggregate precomputed layouts into a single PreComputedLayouts instance.
 
     Args:
-    pxl_datasets: Pxl datasets.
-    all_markers: All markers.
+        pxl_datasets: Pxl datasets.
+        all_markers: All markers.
     """
 
     def zero_fill_missing_markers(
@@ -559,7 +559,7 @@ def _wrap_get_layouts(d):
     This is only necessary since imap does not support multiple arguments
 
     Args:
-    d: D.
+        d: D.
     """
     (edgelist, add_node_marker_counts, layout_algorithms, all_markers) = d
     return _compute_layouts(
@@ -608,10 +608,10 @@ def generate_precomputed_layouts_for_components(
     """Generate precomputed layouts for the components in the PixelDataset.
 
     Args:
-    pixel_dataset: Dataset whose components receive layout coordinates.
-    components: Component ids to layout; defaults to all components.
-    add_node_marker_counts: Include per-node marker counts in layout output.
-    layout_algorithms: Layout algorithm name or list of algorithms to compute.
+        pixel_dataset: Dataset whose components receive layout coordinates.
+        components: Component ids to layout; defaults to all components.
+        add_node_marker_counts: Include per-node marker counts in layout output.
+        layout_algorithms: Layout algorithm name or list of algorithms to compute.
     """
     if components is None:
         components = set(pixel_dataset.adata.obs.index)

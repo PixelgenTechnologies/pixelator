@@ -65,9 +65,8 @@ def generate_cells(add_random_edges=True, add_small_pieces=False):
     """Generate cells.
 
     Args:
-    add_random_edges: add random edges.
-    add_small_pieces: add small pieces.
-
+        add_random_edges: add random edges.
+        add_small_pieces: add small pieces.
     """
     nbr_of_cells = 20
     n_random_edges = 40
@@ -124,8 +123,7 @@ def test_recover_multiplets_large_graph(large_graph):
     """Verify recover multiplets large graph.
 
     Args:
-    large_graph: large graph.
-
+        large_graph: large graph.
     """
     assert sum(1 for _ in nx.connected_components(large_graph)) == 1
 
@@ -172,8 +170,7 @@ def test_recover_multiplets_large_graph_with_small_stuff_added_on(
     """Verify recover multiplets large graph with small stuff added on.
 
     Args:
-    large_graph_with_smaller_attached: large graph with smaller attached.
-
+        large_graph_with_smaller_attached: large graph with smaller attached.
     """
     large_graph = large_graph_with_smaller_attached
     # Check what we start from
@@ -323,8 +320,7 @@ def karate_edgelist(edgelist_karate_graph):
     """Karate edgelist.
 
     Args:
-    edgelist_karate_graph: edgelist karate graph.
-
+        edgelist_karate_graph: edgelist karate graph.
     """
     edgelist = pl.DataFrame(edgelist_karate_graph).lazy()
     return edgelist
@@ -335,8 +331,7 @@ def test_find_components(lazy_edgelist_karate_graph):
     """Verify find components.
 
     Args:
-    lazy_edgelist_karate_graph: lazy edgelist karate graph.
-
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
     """
     edgelist = lazy_edgelist_karate_graph
     edgelist_with_components = find_components(
@@ -370,8 +365,7 @@ def test_find_components_no_multiple_recovery(lazy_edgelist_karate_graph):
     """Verify find components no multiple recovery.
 
     Args:
-    lazy_edgelist_karate_graph: lazy edgelist karate graph.
-
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
     """
     edgelist = lazy_edgelist_karate_graph
     edgelist_with_components = find_components(
@@ -394,8 +388,7 @@ def test_find_components_dynamic_size_filter(lazy_edgelist_karate_graph):
     """Verify find components dynamic size filter.
 
     Args:
-    lazy_edgelist_karate_graph: lazy edgelist karate graph.
-
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
     """
     edgelist = lazy_edgelist_karate_graph
     edgelist_with_components = find_components(
@@ -430,8 +423,7 @@ def test_find_components_stats(lazy_edgelist_karate_graph):
     """Verify find components stats.
 
     Args:
-    lazy_edgelist_karate_graph: lazy edgelist karate graph.
-
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
     """
     edgelist = lazy_edgelist_karate_graph
     _, stats = find_components(
@@ -483,8 +475,7 @@ def test_find_components_fixed_thresholds(lazy_edgelist_karate_graph):
     """Verify find components fixed thresholds.
 
     Args:
-    lazy_edgelist_karate_graph: lazy edgelist karate graph.
-
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
     """
     edgelist = lazy_edgelist_karate_graph
     edgelist, stats = find_components(
@@ -535,10 +526,9 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
     """Verify build pxl file with components.
 
     Args:
-    lazy_edgelist_karate_graph: lazy edgelist karate graph.
-    mock_panel: mock panel.
-    tmpdir: tmpdir.
-
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
+        mock_panel: mock panel.
+        tmpdir: tmpdir.
     """
     output = Path(tmpdir) / "output.pxl"
 
@@ -628,10 +618,9 @@ def test_build_pxl_file_with_components_for_umi_collisions(
     """Verify build pxl file with components for umi collisions.
 
     Args:
-    edgelist_karate_graph: edgelist karate graph.
-    mock_panel: mock panel.
-    tmpdir: tmpdir.
-
+        edgelist_karate_graph: edgelist karate graph.
+        mock_panel: mock panel.
+        tmpdir: tmpdir.
     """
     edgelist_df = pl.DataFrame(edgelist_karate_graph)
     ## Make the graph bipartite
@@ -710,10 +699,9 @@ def test_merge_communities_with_many_crossing_edges(
     """Verify merge communities with many crossing edges.
 
     Args:
-    comp1_size: comp1 size.
-    comp2_size: comp2 size.
-    n_crossing_edges: n crossing edges.
-
+        comp1_size: comp1 size.
+        comp2_size: comp2 size.
+        n_crossing_edges: n crossing edges.
     """
     max_edges_to_remove = 20
     max_edges_to_remove_relative = 0.001

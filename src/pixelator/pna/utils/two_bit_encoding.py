@@ -50,7 +50,7 @@ def pack_2bits(kmer: bytes) -> np.uint64:
     N bases are not supported (will raise KeyError).
 
     Args:
-    kmer: the kmer to pack
+        kmer: the kmer to pack
     """
     # pack the kmer into an int
     assert len(kmer) <= 32
@@ -70,7 +70,7 @@ def pack_4bits(kmer: bytes) -> np.uint64:
     Any nucleotides beyond the 16th are ignored.
 
     Args:
-    kmer: the kmer to pack
+        kmer: the kmer to pack
     """
     assert len(kmer) <= 16
 
@@ -85,8 +85,8 @@ def unpack_2bits(packed: int, k: int) -> bytes:
     """Unpack a kmer from an integer using two bits per nucleotides.
 
     Args:
-    packed: the packed kmer as an integer
-    k: the length of the kmer
+        packed: the packed kmer as an integer
+        k: the length of the kmer
     """
     np_packed = np.uint64(packed)
     seq = bytearray(k)
@@ -100,8 +100,8 @@ def unpack_4bits(packed: int, k: np.uint64) -> bytes:
     """Unpack a kmer from an integer using four bits per nucleotides.
 
     Args:
-    packed: the packed kmer as an integer
-    k: the length of the kmer
+        packed: the packed kmer as an integer
+        k: the length of the kmer
     """
     seq = bytearray(k)
     for i in range(k - 1, -1, -1):

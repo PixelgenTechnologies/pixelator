@@ -37,10 +37,9 @@ def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
     """Verify proximity analysis jcs.
 
     Args:
-    pna_data_root: pna data root.
-    tmp_path: tmp path.
-    pna_pxl_file: Pna pxl file.
-
+        pna_data_root: pna data root.
+        tmp_path: tmp path.
+        pna_pxl_file: Pna pxl file.
     """
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     manager = AnalysisManager(
@@ -80,10 +79,9 @@ def test_proximity_analysis_jcs_marker_count_filtering(
     """Verify proximity analysis jcs marker count filtering.
 
     Args:
-    pna_data_root: pna data root.
-    tmp_path: tmp path.
-    pna_pxl_file: Pna pxl file.
-
+        pna_data_root: pna data root.
+        tmp_path: tmp path.
+        pna_pxl_file: Pna pxl file.
     """
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     min_marker_count = 10
@@ -162,11 +160,10 @@ def test_proximity_analysis_jcs_analytic(
     """Verify proximity analysis jcs analytic.
 
     Args:
-    pna_data_root: pna data root.
-    components: components.
-    markers: markers.
-    pna_pxl_file: Pna pxl file.
-
+        pna_data_root: pna data root.
+        components: components.
+        markers: markers.
+        pna_pxl_file: Pna pxl file.
     """
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     proximity_obj = pna_pxl_dataset.filter(

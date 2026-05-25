@@ -33,10 +33,10 @@ def clr_transformation(
     around zero (which may include negative values).
 
     Raises:
-    AssertionError: If the input axis is not 0 or 1.
+        AssertionError: If the input axis is not 0 or 1.
 
     References:
-    https: //en.wikipedia.org/wiki/Compositional_data#Center_logratio_transform
+        https: //en.wikipedia.org/wiki/Compositional_data#Center_logratio_transform
     """
     if axis not in [0, 1]:
         raise AssertionError("Axis is required to be 0 or 1")
@@ -142,7 +142,7 @@ def rel_normalization(df: pd.DataFrame, axis: Literal[0, 1] = 0) -> pd.DataFrame
     row (component).
 
     Raises:
-    AssertionError: If the input axis is not 0 or 1.
+        AssertionError: If the input axis is not 0 or 1.
     """
     if axis not in [0, 1]:
         raise AssertionError("Axis is required to be 0 or 1")
@@ -227,10 +227,10 @@ def dsb_normalize(
     3. Regularize abundance per component.
 
     Raises:
-    ValueError: If no isotype controls are provided.
+        ValueError: If no isotype controls are provided.
 
     References:
-    https: //doi.org/10.1016/j.immuni.2024.04.009
+        https: //doi.org/10.1016/j.immuni.2024.04.009
     """
     log_abundance = np.log1p(raw_abundance)
     marker_background, _ = _get_background_abundance(log_abundance, axis=1)

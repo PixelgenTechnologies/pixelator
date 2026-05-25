@@ -29,8 +29,7 @@ class MockAnalysis(PerComponentAnalysis):
         """Initialize the instance.
 
         Args:
-        multiplication_factor: multiplication factor.
-
+            multiplication_factor: multiplication factor.
         """
         self.multiplication_factor = multiplication_factor
         self.ANALYSIS_NAME = f"mock_analysis_{multiplication_factor}"
@@ -41,7 +40,6 @@ class MockAnalysis(PerComponentAnalysis):
         Args:
             component: Component.
             component_id: Component id.
-
         """
         return pd.DataFrame({"component_id": [component_id], "values": [2]})
 
@@ -50,7 +48,6 @@ class MockAnalysis(PerComponentAnalysis):
 
         Args:
             data: Data.
-
         """
         data["values_multiplied"] = data["values"] * self.multiplication_factor
         return data
@@ -63,7 +60,6 @@ class MockAnalysis(PerComponentAnalysis):
         Args:
             data: Data.
             pxl_dataset: Pxl dataset.
-
         """
         pxl_dataset.data_slots[self.ANALYSIS_NAME] = data  # type: ignore
         return pxl_dataset
@@ -73,7 +69,6 @@ class MockAnalysis(PerComponentAnalysis):
 
         Args:
             data: Data.
-
         """
         scores = pd.concat(data, axis=0, ignore_index=True)
         return scores
@@ -86,8 +81,7 @@ class MockPixelDataset:
         """Initialize the instance.
 
         Returns:
-                Result (None).
-
+            Result (None).
         """
         self.data_slots = dict()  # type: ignore
 
@@ -150,8 +144,7 @@ def test_edgelist_to_component_stream(setup_basic_pixel_dataset):
     """Verify edgelist to component stream.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     (
         dataset,
@@ -168,8 +161,7 @@ def test_run_analysis(setup_basic_pixel_dataset):
     """Verify run analysis.
 
     Args:
-    setup_basic_pixel_dataset: setup basic pixel dataset.
-
+        setup_basic_pixel_dataset: setup basic pixel dataset.
     """
     (
         dataset,

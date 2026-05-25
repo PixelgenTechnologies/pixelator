@@ -17,14 +17,14 @@ class BaseWorkflowTestMixin:
     def __get_data(self, key: str) -> Any:
         """Try to retrieve a key from various data sources.
 
-                Following sources are tried in order:
+        Following sources are tried in order:
 
-                1. Stage specific data
-                2. Common data
-                3. Test config data
+        1. Stage specific data
+        2. Common data
+        3. Test config data
 
         Args:
-        key: Key.
+            key: Key.
         """
         ...
 
@@ -36,7 +36,7 @@ class BaseWorkflowTestMixin:
         """Retrieve a key from the options objects.
 
         Args:
-        key: Key.
+            key: Key.
         """
         ...
 
@@ -44,7 +44,7 @@ class BaseWorkflowTestMixin:
         """Retrieve a key from the common data.
 
         Args:
-        key: Key.
+            key: Key.
         """
         ...
 
@@ -67,7 +67,7 @@ class BaseWorkflowTestMixin:
         """Some hackery to bind data access functions.
 
         Args:
-        kwargs: Kwargs.
+            kwargs: Kwargs.
         """
         super().__init_subclass__(**kwargs)
         thisclass = BaseWorkflowTestMixin
@@ -111,8 +111,8 @@ class BaseWorkflowTestMixin:
         """Retrieve undefined attributes from the class variable dicts.
 
         Args:
-        name: Name.
-        data_key: Data key.
+            name: Name.
+            data_key: Data key.
         """
         return getattr(self, name, None)
 
@@ -120,7 +120,7 @@ class BaseWorkflowTestMixin:
         """Retrieve test config data from the class variables defined in the test class.
 
         Args:
-        key: Key.
+            key: Key.
         """
         if not hasattr(self, "options"):
             raise ValueError("No options section found in test config.")

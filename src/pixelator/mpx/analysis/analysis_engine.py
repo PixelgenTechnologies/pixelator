@@ -29,8 +29,8 @@ class PerComponentAnalysis(Protocol):
         """Run the analysis on this component.
 
         Args:
-        component: Component.
-        component_id: Component id.
+            component: Component.
+            component_id: Component id.
         """
         ...
 
@@ -38,7 +38,7 @@ class PerComponentAnalysis(Protocol):
         """Concatenate the data. Override this if you need custom concatenation behavior.
 
         Args:
-        data: Data.
+            data: Data.
         """
         try:
             scores = pd.concat(data, axis=0)
@@ -51,7 +51,7 @@ class PerComponentAnalysis(Protocol):
         """Post process the data (e.g. adjust p-values). Override this if your data needs post processing.
 
         Args:
-        data: Data.
+            data: Data.
         """
         return data
 
@@ -61,8 +61,8 @@ class PerComponentAnalysis(Protocol):
         """Add the data in the right place in the pxl_dataset.
 
         Args:
-        data: Data.
-        pxl_dataset: Pxl dataset.
+            data: Data.
+            pxl_dataset: Pxl dataset.
         """
         ...
 
@@ -148,7 +148,7 @@ class _AnalysisManager:
         """Execute the analysis on the provided pixel dataset.
 
         Args:
-        pixel_dataset: Pixel dataset.
+            pixel_dataset: Pixel dataset.
         """
         prepared_computations = self._prepare_computation()
         per_component_results = self._execute_computations_in_parallel(
@@ -167,8 +167,8 @@ def edgelist_to_component_stream(
     """Convert the edgelist in the dataset to a stream component ids and their component graphs.
 
     Args:
-    dataset: Dataset.
-    use_full_bipartite: Use full bipartite.
+        dataset: Dataset.
+        use_full_bipartite: Use full bipartite.
     """
     for component_id, component_df in (
         dataset.edgelist_lazy.collect()
@@ -194,9 +194,9 @@ def run_analysis(
     """Run the provided list of `PerComponentAnalysis` on the components in the `pxl_dataset`.
 
     Args:
-    pxl_dataset: The PixelDataset to run the analysis on.
-    analysis_to_run: A list of `PerComponentAnalysis` to run on the components in the `pxl_dataset`.
-    use_full_bipartite: Whether to use the full bipartite graph when creating the components.
+        pxl_dataset: The PixelDataset to run the analysis on.
+        analysis_to_run: A list of `PerComponentAnalysis` to run on the components in the `pxl_dataset`.
+        use_full_bipartite: Whether to use the full bipartite graph when creating the components.
     """
     if not analysis_to_run:
         logger.warning("No analysis functions were provided")

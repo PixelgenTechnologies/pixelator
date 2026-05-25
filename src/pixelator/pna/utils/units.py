@@ -12,7 +12,7 @@ def parse_size(s: str) -> int | float:
     """Parse a string as a number with optional unit suffix [K, M, G].
 
     Args:
-    s: The string to parse
+        s: The string to parse
     """
     match = re.match(r"(?P<value>\d+(?:.\d+)?)(?P<unit>[KMGkmg])?$", s)
     if not match:

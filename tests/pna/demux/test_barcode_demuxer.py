@@ -36,8 +36,7 @@ def test_create_barcode_group_to_batch_mapping(barcode_marker_group_sizes):
     """Verify create barcode group to batch mapping.
 
     Args:
-    barcode_marker_group_sizes: barcode marker group sizes.
-
+        barcode_marker_group_sizes: barcode marker group sizes.
     """
     res = create_barcode_group_to_batch_mapping(
         barcode_marker_group_sizes, reads_per_chunk=500
@@ -58,8 +57,7 @@ def test_create_markers_to_batch_mapping(barcode_marker_group_sizes):
     """Verify create markers to batch mapping.
 
     Args:
-    barcode_marker_group_sizes: barcode marker group sizes.
-
+        barcode_marker_group_sizes: barcode marker group sizes.
     """
     m1, m2 = independent_marker_groups_mapping(barcode_marker_group_sizes, 1000)
 
@@ -90,8 +88,7 @@ def test_independent_demuxing(testdata_demux_passed_reads):
     """Verify independent demuxing.
 
     Args:
-    testdata_demux_passed_reads: testdata demux passed reads.
-
+        testdata_demux_passed_reads: testdata demux passed reads.
     """
     assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel(
@@ -214,7 +211,6 @@ def is_sorted(x: npt.NDArray[np.integer]) -> bool:
 
     Args:
         x: X.
-
     """
     return bool(np.all(x[:-1] <= x[1:]))  # type: ignore
 
@@ -223,8 +219,7 @@ def test_finalize_batched_groups_independent(demux_intermediary_dir):
     """Verify finalize batched groups independent.
 
     Args:
-    demux_intermediary_dir: demux intermediary dir.
-
+        demux_intermediary_dir: demux intermediary dir.
     """
     (demux_intermediary_dir / "dedup").mkdir()
     res = finalize_batched_groups(
@@ -284,9 +279,8 @@ def test_marker_correction_pipeline(tmp_path, testdata_amplicon_fastq):
     """Verify marker correction pipeline.
 
     Args:
-    tmp_path: tmp path.
-    testdata_amplicon_fastq: testdata amplicon fastq.
-
+        tmp_path: tmp path.
+        testdata_amplicon_fastq: testdata amplicon fastq.
     """
     input_file = testdata_amplicon_fastq
     assay = pna_config.get_assay("proxiome-v1")

@@ -56,15 +56,15 @@ class AmpliconPipeline(Pipeline):
 
     - If two files (R1+R2) are provided: pre‐steps (paired), then combine, then post‐steps (single).
     - If only one file is provided (single‐end), you detect “R1” vs “R2” by looking at
-      read.name, and treat that one FASTQ as if it were already “combined.”  All
-      single‐end modifiers/steps run in that branch.
+    read.name, and treat that one FASTQ as if it were already “combined.”  All
+    single‐end modifiers/steps run in that branch.
 
     Args:
-    combiner: The step that combines the reads into a single amplicon sequence.
-    pre_modifiers: A list of modifiers that are applied to the reads before the combining step.
-    pre_steps: A list of steps that are applied to the reads before the combining step.
-    post_modifiers: A list of modifiers that are applied to the reads after the combining step.
-    post_steps: A list of steps that are applied to the reads after the combining step.
+        combiner: The step that combines the reads into a single amplicon sequence.
+        pre_modifiers: A list of modifiers that are applied to the reads before the combining step.
+        pre_steps: A list of steps that are applied to the reads before the combining step.
+        post_modifiers: A list of modifiers that are applied to the reads after the combining step.
+        post_steps: A list of steps that are applied to the reads after the combining step.
     """
 
     paired: bool | None = None
@@ -90,11 +90,11 @@ class AmpliconPipeline(Pipeline):
         """Initialize the pipeline.
 
         Args:
-        combiner: The step that combines the reads into a single amplicon sequence. In single-end mode, this step works as a modifier to enforce the expected read format.
-        pre_modifiers: A list of modifiers that are applied to the reads before the combining step.
-        pre_steps: A list of steps that are applied to the reads before the combining step.
-        post_modifiers: A list of modifiers that are applied to the reads after the combining step.
-        post_steps: A list of steps that are applied to the reads after the combining step.
+            combiner: The step that combines the reads into a single amplicon sequence. In single-end mode, this step works as a modifier to enforce the expected read format.
+            pre_modifiers: A list of modifiers that are applied to the reads before the combining step.
+            pre_steps: A list of steps that are applied to the reads before the combining step.
+            post_modifiers: A list of modifiers that are applied to the reads after the combining step.
+            post_steps: A list of steps that are applied to the reads after the combining step.
         """
         self._combiner = combiner
         self._pre_modifiers: list[
@@ -156,9 +156,9 @@ class AmpliconPipeline(Pipeline):
         is only applied to the respective other read.
 
         Args:
-        modifier1: The modifier for read 1.
-        modifier2: The modifier for read 2.
-        stage: The stage in which to apply the modifiers
+            modifier1: The modifier for read 1.
+            modifier2: The modifier for read 2.
+            stage: The stage in which to apply the modifiers
         """
         assert stage in ("pre", "post")
 
@@ -174,8 +174,8 @@ class AmpliconPipeline(Pipeline):
         """Add a Modifier (without wrapping it in a PairedEndModifierWrapper).
 
         Args:
-        modifier: Modifier.
-        stage: Stage.
+            modifier: Modifier.
+            stage: Stage.
         """
         assert stage in ("pre", "post")
 
@@ -188,7 +188,7 @@ class AmpliconPipeline(Pipeline):
         """Pre‐process paired reads.
 
         Args:
-        reads: Reads.
+            reads: Reads.
         """
         pre_modifiers_and_steps = self._pre_modifiers + self._pre_steps
         read1, read2 = reads
@@ -211,7 +211,7 @@ class AmpliconPipeline(Pipeline):
         """Pre‐process single reads.
 
         Args:
-        single_read: Single read.
+            single_read: Single read.
         """
         pre_modifiers_and_steps = self._pre_modifiers + self._pre_steps
         info = ModificationInfo(single_read)
@@ -232,8 +232,8 @@ class AmpliconPipeline(Pipeline):
         """Receive a slice of reads and process them through the pipeline.
 
         Args:
-        infiles: A list of input files to process.
-        progress: Progress.
+            infiles: A list of input files to process.
+            progress: Progress.
         """
         self._infiles = infiles
         self._reader = infiles.open()

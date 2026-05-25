@@ -97,14 +97,14 @@ def analysis(
     """Add analysis results to a PXL file.
 
     Args:
-    ctx: Ctx.
-    pxl_file: Pxl file.
-    compute_proximity: Compute proximity.
-    proximity_nbr_of_permutations: Proximity nbr of permutations.
-    compute_k_cores: Compute k cores.
-    compute_svd_var_explained: Compute svd var explained.
-    svd_nbr_of_pivots: Svd nbr of pivots.
-    output: Output.
+        ctx: Ctx.
+        pxl_file: Pxl file.
+        compute_proximity: Compute proximity.
+        proximity_nbr_of_permutations: Proximity nbr of permutations.
+        compute_k_cores: Compute k cores.
+        compute_svd_var_explained: Compute svd var explained.
+        svd_nbr_of_pivots: Svd nbr of pivots.
+        output: Output.
     """
     input_files = [pxl_file]
     log_step_start(

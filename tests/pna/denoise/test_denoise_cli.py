@@ -17,8 +17,7 @@ def test_denoise_runs_ok(denoise_pxl_file):
     """Verify denoise runs ok.
 
     Args:
-    denoise_pxl_file: denoise pxl file.
-
+        denoise_pxl_file: denoise pxl file.
     """
     runner = CliRunner()
 
@@ -48,7 +47,6 @@ def test_denoise_ace_cli_runs_ok(denoise_pxl_file):
 
     Args:
         denoise_pxl_file: Denoise pxl file.
-
     """
     runner = CliRunner()
 
@@ -102,7 +100,6 @@ def test_denoise_one_core_and_ace_cli_runs_ok(denoise_pxl_file):
 
     Args:
         denoise_pxl_file: Denoise pxl file.
-
     """
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as output_dir:
@@ -152,7 +149,6 @@ def test_denoise_ace_pls_cli_runs_ok(denoise_pxl_file):
 
     Args:
         denoise_pxl_file: Denoise pxl file.
-
     """
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as output_dir:

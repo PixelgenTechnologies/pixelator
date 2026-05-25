@@ -211,22 +211,22 @@ def graph(
     data for all of there putative cells.
 
     Args:
-    ctx: Ctx.
-    parquet_file: Parquet file.
-    multiplet_recovery: Multiplet recovery.
-    edge_cycle_verification: Edge cycle verification.
-    initial_stage_leiden_resolution: Initial stage leiden resolution.
-    refinement_stage_leiden_resolution: Refinement stage leiden resolution.
-    min_count: Min count.
-    max_refinement_recursion_depth: Max refinement recursion depth.
-    initial_stage_max_edges_to_remove: Initial stage max edges to remove.
-    refinement_stage_max_edges_to_remove: Refinement stage max edges to remove.
-    initial_stage_max_edges_to_remove_relative: Initial stage max edges to remove relative.
-    refinement_stage_max_edges_to_remove_relative: Refinement stage max edges to remove relative.
-    component_size_max_threshold: Component size max threshold.
-    component_size_min_threshold: Component size min threshold.
-    panel: Panel.
-    output: Output.
+        ctx: Ctx.
+        parquet_file: Parquet file.
+        multiplet_recovery: Multiplet recovery.
+        edge_cycle_verification: Edge cycle verification.
+        initial_stage_leiden_resolution: Initial stage leiden resolution.
+        refinement_stage_leiden_resolution: Refinement stage leiden resolution.
+        min_count: Min count.
+        max_refinement_recursion_depth: Max refinement recursion depth.
+        initial_stage_max_edges_to_remove: Initial stage max edges to remove.
+        refinement_stage_max_edges_to_remove: Refinement stage max edges to remove.
+        initial_stage_max_edges_to_remove_relative: Initial stage max edges to remove relative.
+        refinement_stage_max_edges_to_remove_relative: Refinement stage max edges to remove relative.
+        component_size_max_threshold: Component size max threshold.
+        component_size_min_threshold: Component size min threshold.
+        panel: Panel.
+        output: Output.
     """
     # log input parameters
     input_files = [parquet_file]
