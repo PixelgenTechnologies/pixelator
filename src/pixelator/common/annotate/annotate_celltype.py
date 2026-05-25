@@ -40,6 +40,7 @@ def annotate_cells(
     min_cells_per_celltype (int | None): Minimum number of cells required per cell type for annotation.
     n_cells_per_group (int | None): Number of cells to sample per group for annotation.
     skip_normalization (bool): If True, skips the library size normalization and log1p steps.
+    nmf_seed (int): Random seed for reproducibility in NMF method.
 
     Returns:
     AnnData: The query object with added annotations in `.obs`.
