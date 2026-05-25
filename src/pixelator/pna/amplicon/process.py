@@ -72,6 +72,9 @@ def amplicon_fastq(
         lbs_filter_error_rate: The maximum error rate to allow when determining overlap with the LBS sequence in UMI regions,
         threads: The number of cores to use. -1 will use all available cores
         save_failed: Whether to save reads that fail during amplicon combining to a separate file
+
+    Returns:
+        An `AmpliconStatistics` instance.
     """
     threads = threads if threads > 0 else mp.cpu_count()
 

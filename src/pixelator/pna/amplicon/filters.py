@@ -114,6 +114,9 @@ class TooManyN(Predicate):
         Args:
             read: The read to test.
             info: The modification info.
+
+        Returns:
+            True if the read has too many N bases, False otherwise.
         """
         r = read.sequence.lower()
         region1 = r[self._region1]
@@ -174,6 +177,9 @@ class LowComplexityUMI(Predicate):
         Args:
             read: The read to test.
             info: The modification info.
+
+        Returns:
+            True if the read has low complexity, False otherwise.
         """
         umi1 = np.frombuffer(
             read.sequence[self._umi1_region_slice].encode("ascii"), dtype="S1"
@@ -266,6 +272,9 @@ class LBSDetectedInUMI(Predicate):
         Args:
             read: The read to test.
             info: The modification info.
+
+        Returns:
+            True if the read contains any fixed region substrings, False otherwise.
         """
         umi1 = read.sequence[self._umi1_region_slice]
         umi2 = read.sequence[self._umi2_region_slice]

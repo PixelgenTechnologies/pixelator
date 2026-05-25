@@ -91,8 +91,8 @@ def calculate_post_recovery_component_statistics(
     """Calculate and update graph statistics after multiplet recovery.
 
     Args:
-        edgelist_with_components_path: Edgelist with components path.
-        component_stats: Component stats.
+        edgelist_with_components_path: Path to the edgelist with components in Parquet format.
+        component_stats: Graph statistics to be updated.
 
     Returns:
         GraphStatistics: Updated graph statistics.
@@ -210,7 +210,9 @@ def refine_component(
         duckdb_config: Configuration for DuckDB connection.
 
     Returns:
-        int: Number of crossing edges removed during refinement. pd.Series: Sizes of discarded components after refinement.
+        pd.Series: Sizes of new components after refinement.
+        int: Number of crossing edges removed during refinement.
+        pd.Series: Sizes of discarded components after refinement.
     """
     with duckdb.connect(config=duckdb_config) as con:
         edgelist = con.execute(f"""
@@ -323,6 +325,9 @@ def run_leiden_refinement(
         component_stats: Statistics about the components.
         component_sizes: Optional precomputed sizes of components.
         max_workers: Maximum number of worker processes to use.
+
+    Returns:
+        tuple[GraphStatistics, pl.DataFrame]: Updated component statistics and DataFrame of discarded component sizes.
 
     Raises:
         ValueError: If ``max_workers`` is invalid.
@@ -443,6 +448,9 @@ def find_components(
         refinement_options: Options for staged refinement during community detection.
         component_size_threshold: Minimum size threshold for components to be retained.
         n_threads: Number of threads to use for parallel processing.
+
+    Returns:
+        tuple[GraphStatistics, Path]: Component statistics and path to the edgelist with components.
     """
     logger.info("Starting component finding process.")
     component_stats = initialize_graph_statistics(

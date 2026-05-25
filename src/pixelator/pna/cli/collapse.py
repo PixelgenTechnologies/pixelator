@@ -262,6 +262,9 @@ def process_independent_files(
         algorithm: The collapse strategy to use.
         threads: The number of threads to use.
         ctx: The click context.
+
+    Returns:
+        A tuple with umi1 and umi2 output file paths
     """
     umi1_outputs = []
     umi2_outputs = []

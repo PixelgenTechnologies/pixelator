@@ -155,15 +155,15 @@ def demux_barcode_groups(
     Sequence records will be streamed into Arrow IPC files given a target batch size.
 
     Args:
-        corrected_reads: Corrected reads.
-        assay: Assay.
-        panel: Panel.
-        stats: Stats.
-        output_dir: Output dir.
-        reads_per_chunk: Reads per chunk.
-        max_chunks: Max chunks.
-        threads: Threads.
-        stategy: Stategy.
+        corrected_reads: The path to the corrected FASTQ file.
+        assay: The assay design.
+        panel: The antibody panel.
+        stats: The statistics from the barcode correction.
+        output_dir: The output directory.
+        reads_per_chunk: The target number of molecules in each batch.
+        max_chunks: The maximum number of batches.
+        threads: The number of threads to use for processing. The default of `-1` will use all available cores.
+        stategy: The demultiplexing strategy to use. Defaults to "paired".
     """
     # Open file handles for input files
 
@@ -325,6 +325,9 @@ def _finalize_batched_groups_paired(
         threads: Threads.
         temp_dir: Temp dir.
 
+    Returns:
+        A list of paths to the Parquet files
+
     Raises:
         ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.
     """
@@ -391,6 +394,9 @@ def _finalize_batched_groups_independent(
         memory: Memory.
         threads: Threads.
         temp_dir: Temp dir.
+
+    Returns:
+        A list of paths to the Parquet files
 
     Raises:
         ValueError: If no marker identifier (m1 or m2) is found in the Arrow IPC file name.

@@ -55,6 +55,9 @@ def _collect_label_array_indices(
     Args:
         labels: The labels for each item.
         n_components: Number of labels in the label array.
+
+    Returns:
+        An array of indices for each label.
     """
     # Single pass over the labels to collect the indices of each connected component
     groups = np.ndarray(shape=(n_components,), dtype=object)  # type: ignore
@@ -80,6 +83,9 @@ def _split_chunks(
     Args:
         n_components: The size of the input range.
         chunk_size: The size of each chunk.
+
+    Yields:
+        A tuple of (start, stop) indices for each chunk.
     """
     pos = 0
     complete_chunks = n_components // chunk_size
@@ -250,6 +256,9 @@ class MoleculeCollapser:
 
         Args:
             data: The data to initialize the binary vectors with.
+
+        Yields:
+            The binary vectors.
         """
         vector_length = 32
         shm_buffer = self._memory_manager.SharedMemory(size=(len(data) * vector_length))
@@ -274,6 +283,9 @@ class MoleculeCollapser:
 
         Args:
             data: The data to initialize the read counts with.
+
+        Yields:
+            The read counts.
         """
         n_molecules = len(data)
         shm_buffer = self._memory_manager.SharedMemory(
@@ -300,6 +312,9 @@ class MoleculeCollapser:
         Args:
             db_shm: the shared memory buffer.
             count: the number of vectors in the buffer
+
+        Returns:
+            A numpy array containing the embeddings.
         """
         vector_len = 32
 
@@ -317,6 +332,9 @@ class MoleculeCollapser:
         Args:
             counts_shm: The shared memory buffer.
             count: The number of read counts in the buffer.
+
+        Returns:
+            The numpy array.
         """
         if counts_shm.buf is None:
             raise ValueError(f"Could not read shared memory buffer")
@@ -344,6 +362,9 @@ class MoleculeCollapser:
             db_size: The size of the database.
             outputs: The outputs.
             n_components: The number of components.
+
+        Returns:
+            The number of corrected reads.
         """
         db = self._get_db_from_shared_memory(db_shm, db_size)
         read_count = self._get_counts_from_shared_memory(read_counts_shm, db_size)
@@ -391,6 +412,9 @@ class MoleculeCollapser:
             read_counts_shm: The shared memory buffer containing the read counts.
             db_size: The size of the binary vectors memory buffer in bytes.
             embedding: The PNAEmbedding instance for encoding/decoding vectors.
+
+        Returns:
+            The distributed results.
         """
         cls = MoleculeCollapser
 
@@ -450,6 +474,10 @@ class MoleculeCollapser:
         Args:
             csgraph: The sparse adjacency matrix of the connected components.
             local_stats: The statistics object for this marker pair.
+
+        Returns:
+            A tuple with a pyarrow Table with the collapsed molecules
+            and the updated statistics object.
         """
         _logger = self._logger
 

@@ -262,6 +262,9 @@ def init_duckdb_conn(
         threads: The number of threads to use. If None, duckdb will decide. Defaults to None.
         temp_dir: The directory to use for temporary files. If None, duckdb will decide (defaults to /tmp). Defaults to None.
         temp_dir_size_limit: The maximum size of the temporary directory. If None, no limit is set. Defaults to None.
+
+    Returns:
+        A duckdb connection object.
     """
     conn = dd.connect(database=str(path), read_only=read_only)
 

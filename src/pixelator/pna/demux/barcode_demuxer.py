@@ -110,6 +110,9 @@ def independent_marker_groups_mapping(
         group_sizes: Group sizes.
         reads_per_chunk: Reads per chunk.
         max_chunks: Max chunks.
+
+    Returns:
+        A tuple with a dict for marker1 and marker2. The dict map the marker to the group index.
     """
     marker1_counts: typing.Counter[str] = Counter()
     marker2_counts: typing.Counter[str] = Counter()
@@ -537,6 +540,9 @@ class PNAEmbedding:
             bitvector: A 3bit encoded byte array
             n: The length of encoded bytes without padding.
             decoded_len: The length of the uncompressed sequence
+
+        Returns:
+            the new 2-bit embedding for given input
 
         Raises:
             ValueError: if the input vector is not 128 bits long

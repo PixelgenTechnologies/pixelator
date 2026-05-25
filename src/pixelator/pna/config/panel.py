@@ -203,6 +203,9 @@ class PNAAntibodyPanel:
         Args:
             file: Panel CSV file whose leading comment block contains YAML metadata.
 
+        Returns:
+            Parsed panel metadata.
+
         Raises:
             ValueError: If no metadata header is present in the file.
         """
@@ -291,6 +294,9 @@ class PNAAntibodyPanel:
         Args:
             panel_df: Dataframe containing panel markers and sequences.
             validate_types: If True, validate dataframe column types.
+
+        Returns:
+            A list of validation error messages. Empty means valid input.
         """
         errors = []
 

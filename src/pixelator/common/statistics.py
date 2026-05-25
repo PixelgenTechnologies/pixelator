@@ -32,6 +32,11 @@ def clr_transformation(
     then subtract the geometric mean (log), centering the transformed counts
     around zero (which may include negative values).
 
+    Args:
+        df: The dataframe of antibody counts.
+        axis: The axis on which to apply the transformation. `axis=0` applies the transformation by columns (antibody), and `axis=1` applies it by rows (component). Defaults to 1.
+        non_negative: If `True`, the non-negative CLR transformation is used. If `False`, the zero-centered CLR transformation is used. Defaults to True.
+
     Returns:
         pd.DataFrame: A dataframe with the antibody counts transformed.
 
@@ -39,7 +44,7 @@ def clr_transformation(
         AssertionError: If the input axis is not 0 or 1.
 
     References:
-        https: //en.wikipedia.org/wiki/Compositional_data#Center_logratio_transform
+        https://en.wikipedia.org/wiki/Compositional_data#Center_logratio_transform
     """
     if axis not in [0, 1]:
         raise AssertionError("Axis is required to be 0 or 1")
@@ -75,6 +80,9 @@ def correct_pvalues(pvalues: np.ndarray) -> np.ndarray:
     An outline of the method can be found here:
     https://en.wikipedia.org/wiki/False_discovery_rate#Benjamini%E2%80%93Hochberg_procedure
 
+    Args:
+        pvalues: An array of p-values to adjust.
+
     Returns:
         np.ndarray: The array of adjusted p-values in the same order as the input array.
     """
@@ -106,6 +114,9 @@ def log1p_transformation(df: pd.DataFrame) -> pd.DataFrame:
     This function applies the natural logarithm of (1 + x) to the count of each
     marker or component, element-wise.
 
+    Args:
+        df: The dataframe of antibody counts (antibodies as columns).
+
     Returns:
         pd.DataFrame: A dataframe with the counts normalized.
     """
@@ -132,6 +143,9 @@ def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
     120 antibodies, the expected count is 12. If the actual count is 8, the
     transformation for HLA-ABC in this component will be -4.
 
+    Args:
+        df: The dataframe of raw antibody counts (antibodies as columns).
+
     Returns:
         pd.DataFrame: A dataframe with the counts difference from expected values.
     """
@@ -152,6 +166,10 @@ def rel_normalization(df: pd.DataFrame, axis: Literal[0, 1] = 0) -> pd.DataFrame
     count of each marker or component is divided by its total sum. Use `axis=0`
     to apply the normalization by column (antibody) and `axis=1` to apply it by
     row (component).
+
+    Args:
+        df: The dataframe of antibody counts (antibodies as columns).
+        axis: The axis on which to apply the normalization. `axis=0` applies normalization by columns, and `axis=1` applies it by rows.
 
     Returns:
         pd.DataFrame: A dataframe with the counts normalized.
@@ -182,6 +200,13 @@ def wilcoxon_test(
     value_column: str,
 ) -> pd.Series:
     """Perform a Wilcoxon rank-sum test between two groups.
+
+    Args:
+        df: The dataframe containing the data.
+        reference: Name of the reference group in the contrast column.
+        target: Name of the target group in the contrast column.
+        contrast_column: Name of the column containing the group information.
+        value_column: Name of the column containing the values to compare.
 
     Returns:
         pd.Series: A series containing the test statistic, p-value, and median difference.
@@ -245,6 +270,10 @@ def dsb_normalize(
     2. Remove background abundance per marker.
     3. Regularize abundance per component.
 
+    Args:
+        raw_abundance: The raw abundance count data.
+        isotype_controls: List of isotype controls.
+
     Returns:
         pd.DataFrame: Normalized abundance data.
 
@@ -252,7 +281,10 @@ def dsb_normalize(
         ValueError: If no isotype controls are provided.
 
     References:
-        https: //doi.org/10.1016/j.immuni.2024.04.009
+        Integrating population and single-cell variations in vaccine responses
+        identifies a naturally adjuvanted human immune setpoint,
+        Matthew P. Mulè et al., Immunity, 2024,
+        https://doi.org/10.1016/j.immuni.2024.04.009
     """
     log_abundance = np.log1p(raw_abundance)
     marker_background, _ = _get_background_abundance(log_abundance, axis=1)

@@ -107,6 +107,10 @@ def create_node_neighborhood_abundance_matrix(
         scale: Logical indicating whether to scale the predictor matrix X by centering and scaling the columns to have mean 0 and standard deviation 1. Defaults to True.
         model_mat: An optional numeric matrix of covariates to residualize out of the predictor matrix X. The number of rows in `model_mat` must match the number of nodes in the Graph. If provided, the function will residualize the predictor matrix X by regressing out the effects of the covariates in `model_mat` before returning the final matrix. Defaults to None.
 
+    Returns:
+        pd.DataFrame: A DataFrame containing expanded and normalized node
+        abundance values.
+
     Raises:
         ValueError: If the number of rows in model_mat does not match the number of nodes in the graph.
     """

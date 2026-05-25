@@ -94,6 +94,9 @@ class SharedMemoryRegistry:
         Args:
             name: The name of the buffer.
             n_bytes: The number of bytes to allocate.
+
+        Returns:
+            A SharedMemory object representing the allocated buffer.
         """
         buffer = self._manager.SharedMemory(n_bytes)
 
@@ -120,6 +123,9 @@ class SharedMemoryRegistry:
             shape: The shape of the array.
             dtype: The data type of the array.
             zero_init: Whether to initialize the array with zeros.
+
+        Returns:
+            A numpy array backed by shared memory.
         """
         assert 1 <= len(shape) <= 2
 
@@ -196,6 +202,9 @@ class ReadOnlySharedMemoryRegistry:
 
         Args:
             name: The name of the buffer
+
+        Returns:
+            The shared memory buffer or None if no buffer with the given name is found.
         """
         return self._buffer_registry.get(name)
 
@@ -206,6 +215,9 @@ class ReadOnlySharedMemoryRegistry:
 
         Args:
             name: The name of the array
+
+        Returns:
+            The numpy array backed by shared memory.
         """
         desc = self._array_registry.get(name)
         shm = self.get_buffer(name)

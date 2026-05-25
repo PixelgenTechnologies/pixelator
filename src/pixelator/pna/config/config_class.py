@@ -192,6 +192,9 @@ class PNAConfig:
             version: Optional version specifier supplied separately.
             allow_aliases: If True, also resolve through configured aliases.
 
+        Returns:
+            The resolved panel, or None if no matching panel is found.
+
         Raises:
             ValueError: If version is specified both inline and in ``version``, or if multiple ambiguous major/minor versions match.
         """
@@ -329,6 +332,10 @@ def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional
 
     Args:
         panel_name: Panel identifier, optionally suffixed with a comparator and version fragment (for example ``panel>=1.2`` or ``panel==1``).
+
+    Returns:
+        A tuple ``(name, specifier)`` where both values are None when no version
+        expression is detected.
     """
     if match := re.search(
         # Allow panel names matching [A-Za-z0-9-.]+,

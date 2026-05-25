@@ -3,7 +3,7 @@
 Includes shared connected-component helpers (hashing, UMI-based naming, size filtering)
 used by community detection and legacy graph code.
 
-Copyright (c) 2025 Pixelgen Technologies AB.
+Copyright © 2025 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
@@ -87,6 +87,9 @@ def name_components_with_umi_hashes(edgelist: pl.LazyFrame) -> pl.LazyFrame:
 
     Args:
         edgelist: Lazy edgelist with ``component``, ``umi1``, and ``umi2`` columns.
+
+    Returns:
+        The edgelist with ``component`` rewritten to UMI-derived hash strings.
     """
     comp_umis = (
         edgelist.group_by("component")
@@ -170,6 +173,9 @@ def write_hive_partitioned_edgelist_without_small_components(
         input_edgelist_path: Parquet file with component assignments (e.g. after hybrid detection).
         min_component_size_to_prune: Components with a score strictly below this are dropped.
         working_dir: Directory for a temporary DuckDB file and the hive-partition output. Defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+    Returns:
+        Path to the hive-partitioned output and a frame of discarded ``component`` / ``n_umi``.
     """
     hive_partitioned_edgelist_path = working_dir / "hive_partitioned_edgelist.parquet"
     min_sz = int(min_component_size_to_prune)
@@ -217,8 +223,12 @@ def find_clashing_umis(
     3. Are present in both `umi1` and `umi2`.
 
     Args:
-        input_file: Input file.
-        component_stats: Component stats.
+        input_file: Path to the input Parquet file containing the edgelist.
+        component_stats: Statistics object to update with clash information.
+
+    Returns:
+        (pl.Series, GraphStatistics): A tuple containing a Polars Series of clashing UMIs
+        and the updated component statistics.
     """
     with duckdb.connect() as con:
         con.execute(
@@ -267,6 +277,9 @@ def remove_umis(
         input_edgelist_path: Input Parquet edgelist.
         umis_to_remove: UMIs whose edges should be dropped.
         working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+    Returns:
+        Path to the written Parquet file (``no_clash_edgelist.parquet`` in ``working_dir``).
     """
     target_path = working_dir / "no_clash_edgelist.parquet"
     with duckdb.connect() as con:
@@ -301,6 +314,9 @@ def remove_clashing_umis(
         input_edgelist_path: Path to the input Parquet file containing the edgelist.
         component_stats: Statistics object to update with clash information.
         working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+    Returns:
+        Path to the filtered edgelist and updated component statistics.
     """
     umis_to_remove, updated_stats = find_clashing_umis(
         input_file=input_edgelist_path, component_stats=component_stats
@@ -330,6 +346,9 @@ def create_working_edgelist(
     Args:
         input_edgelist_path: Path to the input edgelist in Parquet format.
         working_dir: Directory for ``node_map.parquet`` and ``working_edgelist.parquet``; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+    Returns:
+        ``(working_edgelist_path, node_map_path)``.
     """
     node_map_path = working_dir / "node_map.parquet"
     working_edgelist_path = working_dir / "working_edgelist.parquet"
@@ -391,6 +410,9 @@ def filter_edgelist_by_read_count(
         min_read_count: Minimum read count threshold for filtering edges.
         component_stats: Statistics object to update with filtering information.
         working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+    Returns:
+        Path to the filtered edgelist and updated graph statistics.
     """
     filtered_edgelist_path = working_dir / "filtered_edgelist.parquet"
     with duckdb.connect() as con:
@@ -428,6 +450,10 @@ def save_new_working_edgelist(
         new_assignments_path: Path to the Parquet file containing new component assignments.
         component_column_name: Name of the component column in the assignments file.
         working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+    Returns:
+        Path to the updated edgelist and a dict with ``n_crossing_edges`` and
+        ``n_remaining_edges``.
     """
     output_path = working_dir / "working_edgelist_with_new_assignments.parquet"
     w = str(input_working_edgelist_path)
@@ -514,11 +540,14 @@ def filter_connected_components_by_size(
     It also updates the component statistics with information about the filtering process.
 
     Args:
-        edgelist: Edgelist.
-        component_size_threshold: Component size threshold.
-        discard_sizes: Discard sizes.
-        component_stats: Component stats.
-        dynamic_lowest_passable_bound: Dynamic lowest passable bound.
+        edgelist: The input edgelist as a Polars LazyFrame.
+        component_size_threshold: Size threshold for filtering components. If True, dynamic thresholds are used. If False, no filtering is applied. If a tuple, it specifies (min_size, max_size) for hard thresholds.
+        discard_sizes: DataFrame containing sizes of discarded components.
+        component_stats: Statistics object to update with filtering information.
+        dynamic_lowest_passable_bound: Lowest passable bound for dynamic thresholding. Defaults to None.
+
+    Returns:
+        pl.LazyFrame: The filtered edgelist as a Polars LazyFrame.
 
     Raises:
         ConnectedComponentException: If no components remain after filtering.

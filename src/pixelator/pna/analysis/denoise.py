@@ -136,10 +136,15 @@ def get_overexpressed_markers_in_one_core(
     marker to be removed from the one-core layer.
 
     Args:
-        node_marker_counts: Node marker counts.
-        node_core_numbers: Node core numbers.
-        pval_significance_threshold: Pval significance threshold.
-        inflate_factor: Inflate factor.
+        node_marker_counts: A DataFrame where rows represent nodes and columns represent markers, with values indicating the count of each marker in each node.
+        node_core_numbers: A Series where the index corresponds to the nodes and the values indicate the core number each node belongs to.
+        pval_significance_threshold: The p-value threshold for statistical significance in Fisher's exact test. Defaults to 0.05.
+        inflate_factor: A factor used to inflate the excess count of markers identified as overexpressed. Defaults to 1.5.
+
+    Returns:
+        pd.DataFrame: A DataFrame with two columns:
+        - "name": The names of the overexpressed markers.
+        - "count": The inflated excess count of each overexpressed marker.
     """
     marker_counts = _calculate_core_marker_counts(node_marker_counts, node_core_numbers)
 
@@ -176,8 +181,8 @@ def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list = []) -> list:
     """Identify nodes that become stranded after removing nodes_to_remove.
 
     Args:
-        component: Component.
-        nodes_to_remove: Nodes to remove.
+        component: The graph component from which nodes will be removed.
+        nodes_to_remove: A list of nodes to be removed from the graph.
 
     Returns:
         list: A list of stranded nodes that are disconnected from the largest connected component after nodes_to_remove are removed.
@@ -210,6 +215,9 @@ def denoise_ace(
         min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
         nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
         select_lcc: If True, restrict the initial ACE seed to the largest connected component.
+
+    Returns:
+        List of node identifiers to remove.
     """
     try:
         adaptive_core_expansion(
@@ -302,6 +310,9 @@ def denoise_pls(
         pls_component_p_threshold: Per-component Pearson test vs coreness.
         min_pls_coreness_correlation: Minimum positive correlation.
         pls_score_threshold: All selected score columns must exceed this.
+
+    Returns:
+        Nodes to remove, ``[]`` if no PLS-based removal applies.
     """
     node_marker_counts = component.node_marker_counts
     idx = node_marker_counts.index
@@ -398,10 +409,10 @@ def denoise_one_core_layer(
     samples nodes associated with those markers for removal (bleed-over candidates).
 
     Args:
-        component: Component.
-        pval_significance_threshold: Pval significance threshold.
-        inflate_factor: Inflate factor.
-        one_core_ratio_threshold: One core ratio threshold.
+        component: The graph component to process, containing node marker counts and raw graph data.
+        pval_significance_threshold: The p-value threshold for determining marker overexpression significance. Defaults to 0.05.
+        inflate_factor: A factor used for inflating certain calculations (not explicitly used in the provided code). Defaults to 1.5.
+        one_core_ratio_threshold: Components with higher nodes in their one-core layer are not denoised.
 
     Returns:
         list: Node ids sampled for removal from the one-core layer (bleed-over candidates). Does not include stranded nodes; callers merge with other denoise steps and then call ``get_stranded_nodes`` once on the combined set.
@@ -436,9 +447,9 @@ def write_denoised_edgelist(
     any AnnData object.
 
     Args:
-        pxl: Pxl.
-        umis_to_remove: Umis to remove.
-        output_edgelist_path: Output edgelist path.
+        pxl: The original pixel dataset containing the edgelist.
+        umis_to_remove: A list of UMIs (nodes) to be removed from the edgelist.
+        output_edgelist_path: The file path where the filtered edgelist Parquet file will be saved.
     """
     with pxl.view.open() as session:
         session.get_connection().execute(

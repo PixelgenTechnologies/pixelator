@@ -57,6 +57,9 @@ class FAISSBackend:
 
         Args:
             data: The data to build the index for.
+
+        Returns:
+            The built index.
         """
         return build_binary_index(data)
 
@@ -67,6 +70,10 @@ class FAISSBackend:
             index: The index to search.
             data: The data to search for.
             k: The number of nearest neighbors to find.
+
+        Returns:
+            The indices of the k nearest neighbors for each data point.
+            Indices will be -1 when less than k neighbors are found.
         """
         return index.search(data, k)
 
@@ -131,6 +138,9 @@ def _split_files_per_marker_files(inputs: Iterable[Path | str]) -> SplitFilesRes
 
     Args:
         inputs: The input files to split.
+
+    Returns:
+        A tuple of lists containing the input files for each marker.
     """
     umi1_files: list[Path] = []
     umi2_files: list[Path] = []

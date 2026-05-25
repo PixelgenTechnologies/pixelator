@@ -848,10 +848,15 @@ class PairedEndAmpliconBuilder(AmpliconBuilder):
         it returns an Amplicon object with all regions set to None and an appropriate failure reason.
 
         Args:
-            read1: Read1.
-            read2: Read2.
-            info1: Info1.
-            info2: Info2.
+            read1: The forward sequencing read.
+            read2: The reverse sequencing read.
+            info1: Additional modification information for read1. Defaults to None.
+            info2: Additional modification information for read2. Defaults to None.
+
+        Returns:
+            tuple[Amplicon, AmpliconBuilderFailureReason | None]:
+            A tuple containing the constructed Amplicon object and a failure reason if applicable.
+            If both reads are None, returns None.
         """
         r1_regions = self._scan_forward_read(read1)
         r2_regions = self._scan_reverse_read(read2)
@@ -930,10 +935,14 @@ class SingleEndAmpliconBuilder(AmpliconBuilder):
         """Process a single read or a pair of reads to construct an amplicon.
 
         Args:
-            read1: Read1.
-            read2: Read2.
-            info1: Info1.
-            info2: Info2.
+            read1: The forward read, or None if not available.
+            read2: The reverse read, or None if not available.
+            info1: Modification info for the forward read (ignored).
+            info2: Modification info for the reverse read (ignored).
+
+        Returns:
+            tuple[Amplicon, AmpliconBuilderFailureReason | None]:
+            A tuple containing the constructed Amplicon and an optional failure reason.
         """
         is_read1 = read1 is not None
         read = read1 if is_read1 else read2

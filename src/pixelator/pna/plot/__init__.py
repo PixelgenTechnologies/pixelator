@@ -16,8 +16,12 @@ def molecule_rank_plot(
     """Plot the number of molecules (n_umi) per component against its n_umi rank.
 
     Args:
-        data: Data.
-        group_by: Group by.
+        data: A pandas DataFrame with a column 'n_umi' containing antibody counts in components.
+        group_by: A column in the DataFrame to group the plot by.
+
+    Returns:
+        Tuple[plt.Figure, plt.Axes]: A plot showing the number of molecules per
+        component against its molecule rank used for quality control.
 
     Raises:
         AssertionError: If the required column(s) are not present in the DataFrame.

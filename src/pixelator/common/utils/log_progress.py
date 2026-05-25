@@ -22,7 +22,14 @@ class LogProgress:
         min_update_intervall_items: int = 1,
         item_name: str = "read",
     ):
-        """Initialize a LogProgress instance."""
+        """Initialize a LogProgress instance.
+
+        Args:
+            logger: Logger object to which progress messages will be written.
+            min_update_intervall_seconds: Minimum seconds between log updates. Defaults to 60.
+            min_update_intervall_items: Minimum number of items between log updates. Defaults to 1.
+            item_name: Name of the item being processed. Defaults to "read".
+        """
         self.logger = logger
         self.min_update_intervall_seconds = min_update_intervall_seconds
         self.min_update_intervall_items = min_update_intervall_items
@@ -33,7 +40,12 @@ class LogProgress:
         self.last_n_items = 0
 
     def update(self, increment_items: int, final_update: bool = False):
-        """Update the progress and log a message if enough time has passed or if final update."""
+        """Update the progress and log a message if enough time has passed or if final update.
+
+        Args:
+            increment_items: Number of items processed since the last update.
+            final_update: If True, forces a final log update regardless of interval. Defaults to False.
+        """
         self.n_items += increment_items
         now = time.time()
         time_delta = now - (self.start_time if final_update else self.last_time)

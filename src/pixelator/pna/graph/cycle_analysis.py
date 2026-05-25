@@ -319,6 +319,10 @@ def remove_no_cycle_edges(
         input_edgelist_path: Path to the input edgelist Parquet file (hive layout supported).
         n_threads: Number of parallel threads to use.
         working_dir: Directory for the merged output (``working_edgelist_with_cycle_verification``); defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+    Returns:
+        Total number of edges removed, the distribution of cycle lengths for remaining edges,
+        and the path to the written output (hive-style Parquet under ``working_edgelist_with_cycle_verification``).
     """
     output_path = working_dir / "working_edgelist_with_cycle_verification"
     logger.info("Starting removal of no-cycle edges")

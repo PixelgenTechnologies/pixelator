@@ -303,6 +303,9 @@ def adaptive_core_expansion(
         min_allowed_nodes_pct: Minimum fraction of nodes required in the final "high" core partition.
         select_lcc: If True, restricts the initial seed to the Largest Connected Component.
 
+    Returns:
+        The original Graph object with an additional `partition` node attribute ("high" or "low").
+
     Raises:
         ValueError: If the graph does not contain any k-core layers above 1.
         ValueError: If no k-core layer meets the required 'min_seed_pct' threshold.

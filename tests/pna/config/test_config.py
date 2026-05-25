@@ -107,6 +107,9 @@ def config_with_multiple_versions(pna_data_root):
 
     Args:
         pna_data_root: Root path to PNA test data files.
+
+    Returns:
+        A PNA config object populated with panel version variants.
     """
     new_config = copy.deepcopy(pna_config)
     new_config = load_panels_package(new_config, "tests.pna.data.panels")

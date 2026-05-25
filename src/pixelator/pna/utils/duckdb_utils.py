@@ -1,6 +1,6 @@
 """DuckDB configuration helpers for the pixelator.pna package.
 
-Copyright (c) 2025 Pixelgen Technologies AB.
+Copyright © 2025 Pixelgen Technologies AB.
 """
 
 import re
@@ -43,6 +43,9 @@ def parse_duckdb_memory_limit_to_bytes(setting: str) -> int:
 
     Args:
         setting: Raw setting string from DuckDB.
+
+    Returns:
+        Total limit in bytes (non-negative integer).
 
     Raises:
         ValueError: If the string does not match DuckDB's expected format.

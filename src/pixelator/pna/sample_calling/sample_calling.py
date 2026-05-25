@@ -47,10 +47,20 @@ def collect_hash_info(
     the component is assigned to the "undetermined" sample.
 
     Args:
-        input_pxl_file: Input pxl file.
-        hashed_antibody_mapping: Hashed antibody mapping.
+        input_pxl_file: The input pixel dataset.
+        hashed_antibody_mapping: Mapping of sample names to hashed antibody names and the full list of hashing antibodies (from panel).
         confidence_threshold: Confidence threshold.
-        undetermined_sample_name: Undetermined sample name.
+        undetermined_sample_name: Name to use for undetermined components. Defaults to "undetermined".
+
+    Returns:
+        pl.DataFrame: A Polars DataFrame containing the following columns:
+        - 'component': The component identifier.
+        - '{sample}_hash_count': The summed hash count for each sample.
+        - '{undetermined_sample_name}_hash_count': The summed hash count for antibodies not mapped to any
+        sample.
+        - 'called_sample': The sample with the highest hash count for each component
+        (may be "undetermined").
+        - 'sample_confidence': The confidence score for the sample assignment.
     """
     ab_count_data = pl.from_pandas(input_pxl_file.adata().to_df().reset_index()).lazy()
     samples = hashed_antibody_mapping.keys()
@@ -314,12 +324,12 @@ def sample_calling(
     It supports removing incompatible hashes and renaming hash markers in the output.
 
     Args:
-        input_pxl: Input pixel dataset to dehash into per-sample outputs.
-        hashing_antibody_mapping: Mapping from hash markers to sample identities.
-        output_folder: Directory where per-sample ``.pxl`` files are written.
-        confidence_threshold: Minimum confidence required to assign a sample.
-        remove_incompatible: Whether to drop incompatible hash assignments.
-        undetermined_sample_name: Sample name used for undetermined components.
+        input_pxl: The input pixel dataset to be split by sample.
+        hashing_antibody_mapping: Information about hashing antibodies, including a mapping from sample names to lists of hashed antibody names.
+        output_folder: Directory where output pxl files will be written.
+        confidence_threshold: Minimum confidence required to assign a component to a sample. Defaults to 0.8.
+        remove_incompatible: Whether to remove hashes incompatible with the current sample from the edgelist. Defaults to True.
+        undetermined_sample_name: Name to use for undetermined components. Defaults to "undetermined".
     """
     hash_info = collect_hash_info(
         input_pxl,
@@ -493,8 +503,8 @@ def create_final_report(
     """Create the final report for the sample calling.
 
     Args:
-        final_dataset: Final dataset.
-        undetermined_sample_name: Undetermined sample name.
+        final_dataset: The final dataset after sample calling.
+        undetermined_sample_name: Name to use for undetermined components. Defaults to "undetermined".
 
     Returns:
         SampleCallingTotalReport: The final report for the sample calling.

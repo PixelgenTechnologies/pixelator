@@ -24,6 +24,9 @@ def combine_parquet_files(input_files: Iterable[Path], output_file: Path) -> Pat
     Args:
         input_files: The folder containing the parquet files.
         output_file: The path to the output parquet file.
+
+    Returns:
+        The path to the combined parquet file. This is the same path as `output_file`.
     """
     files = list(input_files)
     first_file = pq.read_table(files.pop(0))

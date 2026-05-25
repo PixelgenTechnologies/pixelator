@@ -98,6 +98,9 @@ class DownloadableDatasets:
             output_path: The path to save the dataset to. Defaults to `./pixelator-datasets/{dataset_name}.layout.pxl`
             overwrite: If False and a file already exists at the destination, do not download and return the path. If True, download again and overwrite the existing file.
 
+        Returns:
+            The path to the downloaded dataset.
+
         Raises:
             ValueError: If the dataset is not found.
         """
@@ -188,6 +191,12 @@ def _download_pixel_dataset(url: str, output_path: Path) -> Path:
     Args:
         url: The URL of the pixel dataset to download.
         output_path: The path to save the pixel dataset to.
+
+    Returns:
+        The path to the downloaded file.
+
+    Raises:
+        requests.HTTPError: If the server returns an error status code. requests.RequestException: On connection or read failures.
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)

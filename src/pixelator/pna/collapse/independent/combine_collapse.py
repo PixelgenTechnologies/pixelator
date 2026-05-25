@@ -32,6 +32,9 @@ def _merge_sort_parquet(
         conn: A DuckDB connection
         parquet: An iterable of input file paths
         output_file: The path to write the combined and sorted output to
+
+    Returns:
+        The path to the combined and sorted output file.
     """
     conn.sql(
         f"""
@@ -111,6 +114,9 @@ def combine_independent_parquet_files(
         temp_directory: The directory used by DuckDB for disk spilling
         max_temp_directory_size: The maximum size in bytes that DuckDB is allowed to use for temporary files. If None, the default is used (90% of the system disk space).
         verbose: If True, enable DuckDB stdout logging.
+
+    Returns:
+        A dictionary with additional statistics calculated on the combined parquet data.
     """
     conn = init_duckdb_conn(
         memory_limit=memory_limit, threads=threads, temp_dir=temp_directory
@@ -239,6 +245,9 @@ def combine_independent_report_files(
         sample_id: The sample ID to use for the combined report.
         stats: Additional statistics calculated on the combined parquet data. These statistics cannot be derived from the individual reports.
         output_file: The output file to write the combined report to.
+
+    Returns:
+        None
     """
     regions_to_combine = frozenset(
         (
