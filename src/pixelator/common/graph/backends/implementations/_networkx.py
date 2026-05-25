@@ -468,28 +468,24 @@ class NetworkXGraphBackend(GraphBackend):
     def add_vertices(self, n_vertices: int, attrs: Dict[str, List]) -> None:
         """Add some number of vertices to the graph instance.
 
-        attributes are of different lengths
-
         Args:
             n_vertices: the number of vertices to be added to the graph instance.
             attrs: dict of sequences, all of length equal to the number of vertices to be added, containing the attributes of the new vertices. If `n_vertices=1` then they have to be lists of length 1.
 
         Raises:
-            IndexError: if the number of graph vertices to add and lists of
+            IndexError: if the number of graph vertices to add and lists of attributes are of different lengths
         """
         raise NotImplementedError()
 
     def add_names_to_vertexes(self, vs_names: List[str]) -> None:
         """Rename the current vertices on the graph instance.
 
-        of different length
-
         Args:
             vs_names: Add the following vertices to the graph instance.
 
         Raises:
             ValueError: if the graph is empty
-            IndexError: if the number of graph vertices and list of names are
+            IndexError: if the number of graph vertices and list of names are of different length
         """
         raise NotImplementedError()
 

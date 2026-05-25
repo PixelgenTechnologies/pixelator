@@ -24,11 +24,11 @@ logger = logging.getLogger(__name__)
 def fetch_cli_plugins() -> Generator[EntryPoint, None, None]:
     """Find plugins and return them as in a generator.
 
-    :yields EntryPoint: The entrypoint object
-
-
     Returns:
         A generator of the EntryPoint objects
+
+    Yields:
+        The entrypoint object (EntryPoint)
     """
     eps = importlib.metadata.entry_points()
     group = "pixelator.cli_plugin"

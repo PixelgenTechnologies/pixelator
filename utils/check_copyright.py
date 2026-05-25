@@ -23,8 +23,9 @@ class CopyrightNoticeMissing(Exception):
     This is a class extension of the :class:`Exception` class in order to
     collect missing copyright in python source files.
 
-    :param message: a message of exception
-    :param offending_file: the file with no copyright
+    Args:
+        message: a message of exception
+        offending_file: the file with no copyright
     """
 
     def __init__(self, message: str, offending_file: Path) -> None:
@@ -36,9 +37,11 @@ class CopyrightNoticeMissing(Exception):
 def check_file_for_copyright(py_file: Path) -> Optional[CopyrightNoticeMissing]:
     """Check file for presence of copyright notice.
 
-    :param py_file: a python file
-    :return: missing notice class if copyright not present in file
-    :rtype: Optional[CopyrightNoticeMissing]
+    Args:
+        py_file: a python file
+
+    Returns:
+        missing notice class if copyright not present in file (Optional[CopyrightNoticeMissing])
     """
     raw_tree = py_file.read_text()
     tree = ast.parse(raw_tree)
@@ -55,7 +58,8 @@ def check_file_for_copyright(py_file: Path) -> Optional[CopyrightNoticeMissing]:
 def check_copyright(files: Optional[Iterator[Path]]):
     """Check a list of files for copyright.
 
-    :param files: files to check
+    Args:
+        files: files to check
     """
 
     def errors():

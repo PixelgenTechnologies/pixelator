@@ -111,12 +111,13 @@ class CollapseStatistics:
     ) -> None:
         """Collect file statistics for an input file to the MoleculeCollapser.
 
-        :raise TypeError: If file_size is not provided when input_file is a PurePath.
-
         Args:
             input_file: The input file to collapse.
             molecule_count: The number of molecules in the input file
             file_size: File size.
+
+        Raises:
+            TypeError: If file_size is not provided when input_file is a PurePath.
         """
         if file_size is None and isinstance(input_file, Path):
             file_size = input_file.stat(follow_symlinks=True).st_size

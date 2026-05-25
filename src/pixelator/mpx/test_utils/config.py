@@ -37,10 +37,11 @@ class WorkflowConfig:
     def _parse(cls, config_file: Path) -> dict[str, Any]:
         """Load and resolve relative paths in the config file.
 
-        :return dict[str, Any]: the config object parsed from the `config_file`
-
         Args:
             config_file: path to the config file
+
+        Returns:
+            the config object parsed from the `config_file` (dict[str, Any])
         """
         yaml_loader = yaml.YAML(typ="safe")
         with open(str(config_file), "r") as f:

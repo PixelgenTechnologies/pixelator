@@ -134,8 +134,6 @@ class AntibodyPanel:
     ) -> None:
         """Load a panel from a dataframe and metadata.
 
-        invalid or with incorrect format
-
         Args:
             df: The dataframe containing the panel information.
             metadata: The metadata for the panel.
@@ -145,7 +143,7 @@ class AntibodyPanel:
             None
 
         Raises:
-            AssertionError: exception if panel file is missing,
+            AssertionError: exception if panel file is missing, invalid or with incorrect format
         """
         self._filename = file_name
         self._metadata = metadata
@@ -274,10 +272,11 @@ class AntibodyPanel:
     def _transform_legacy_panels(cls, df: pd.DataFrame) -> pd.DataFrame:
         """Transform legacy panels to the new format.
 
-        :returns pd.DataFrame: The in-place modified input dataframe
-
         Args:
             df: DataFrame with data of the panel to validate
+
+        Returns:
+            The in-place modified input dataframe (pd.DataFrame)
         """
         # update control and nuclear column to boolean
         TR_TABLE = {"(?i)yes": "True", "(?i)no": "False"}

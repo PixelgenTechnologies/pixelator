@@ -55,11 +55,14 @@ def get_read_sample_name(read: str | Path) -> str:
 
     _R1,_R2 | _r1, _r2 | _1, _2 | .R1, .R2 | .r1, .r2
 
-    :return str: sample name
-    :raise ValueError: if the read file does not have a valid extension
-
     Args:
         read: filename of a fastq read file
+
+    Returns:
+        sample name (str)
+
+    Raises:
+        ValueError: if the read file does not have a valid extension
     """
     # group input file by sample id and order reads by R1 and R2
     _check_extensions(read)
@@ -92,13 +95,16 @@ def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> 
 
     Detects the presence of a common read 1 or read 2 suffix in the filename.
 
-    :return bool: True if the read file is a read 1 or 2 file
-    :raise ValueError: if the read file does not have a valid extension
-    :raise AssertionError: if the read_type is not 'r1' or 'r2'
-
     Args:
         read: filename of a fastq read file
         read_type: the read type to check for (r1 or r2)
+
+    Returns:
+        True if the read file is a read 1 or 2 file (bool)
+
+    Raises:
+        ValueError: if the read file does not have a valid extension
+        AssertionError: if the read_type is not 'r1' or 'r2'
     """
     read = Path(read).name
 
@@ -145,10 +151,11 @@ def get_demux_filename_info(filename: str | Path | PurePath) -> tuple[str, int]:
     The demux output file are expeted to use following schema:
     <sample_name>.demux.part_<part_number>.parquet
 
-    :returns str: the demux part
-
     Args:
         filename: path to the file
+
+    Returns:
+        the demux part (str)
     """
     sample_name = get_sample_name(filename)
     filename_str = str(filename)

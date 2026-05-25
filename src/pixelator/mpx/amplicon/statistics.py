@@ -94,10 +94,11 @@ class SequenceQualityStatsCollector:
     def get_position(self, region_id: str) -> tuple[int, int]:
         """Return the positions for a region.
 
-        :raise ValueError: An unknown region id was given
-
         Args:
             region_id: id of the region
+
+        Raises:
+            ValueError: An unknown region id was given
         """
         r = self._positions.get(region_id)
         if r is None:

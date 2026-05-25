@@ -57,15 +57,13 @@ class PNAAntibodyPanel:
     ) -> None:
         """Load a panel from a dataframe and metadata.
 
-        invalid or with incorrect format
-
         Args:
             df: The dataframe containing the panel information.
             metadata: The metadata for the panel.
             file_name: The optional basename of the file from which the panel is loaded.
 
         Raises:
-            AssertionError: exception if panel file is missing,
+            AssertionError: exception if panel file is missing, invalid or with incorrect format
         """
         self._filename = file_name
         self.metadata = metadata

@@ -219,7 +219,6 @@ def colocalization_scores(
     consideration size differences) and their expression is similar (Pearson).
     It also does permutation testing of each colocalizaiton measure to compute
     emprical p-values, corrected p-values, and z-score for each measure.
-    computing colocalization.
 
     Args:
         edgelist: an edge list dataframe with a membership column
@@ -233,7 +232,7 @@ def colocalization_scores(
 
     Raises:
         AssertionError: when the input is not valid
-        ValueError: when no components were found to be valid for
+        ValueError: when no components were found to be valid for computing colocalization.
     """
     if "component" not in edgelist.columns:
         raise AssertionError("edge list is missing the membership column")

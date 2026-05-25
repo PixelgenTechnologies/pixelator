@@ -22,18 +22,14 @@ class BarcodeIdentifierStatistics:
     the statistics will be merged into a single instance and passed
     to the final statistics object.
 
-    A counter object capturing the distribution of distances for PID1 matches.
-    A counter object capturing the distribution of distances for PID2 matches.
-
-
 
     Attributes:
         passed: the number of reads that passed the barcode identifier
         failed: the number of reads that failed the barcode identifier
         missing_pid1: the number of reads with a missing PID1
         missing_pid2: the number of reads with a missing PID2
-        pid1_matches_distance_distribution:
-        pid2_matches_distance_distribution:
+        pid1_matches_distance_distribution: A counter object capturing the distribution of distances for PID1 matches.
+        pid2_matches_distance_distribution: A counter object capturing the distribution of distances for PID2 matches.
         pid_pair_counter: A counter object capturing the number of reads per PID pair.
     """
 

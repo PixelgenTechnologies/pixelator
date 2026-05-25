@@ -39,9 +39,6 @@ def qc_fastq(
     are trimmed. Some filters are used to discard reads (maximum and minimum
     read length and the maximum number of Ns in a read).
 
-    OSError: raises an exception
-    CalledProcessError: raises an exception
-    RuntimeError: raises an exception
 
     Args:
         input: the path to the fastq file
@@ -63,6 +60,9 @@ def qc_fastq(
 
     Raises:
         ValueError: raises an exception
+        OSError: raises an exception
+        CalledProcessError: raises an exception
+        RuntimeError: raises an exception
     """
     args = [
         "fastp",
@@ -157,9 +157,6 @@ def adapter_qc_fastq(
     will be searched in the reads and only the reads that contain both
     sequences will be kept.
 
-    OSError: raises an exception
-    CalledProcessError: raises an exception
-    RuntimeError: raises an exception
 
     Args:
         input: the path to the fastq file (must contain PBS1/2 sequences)
@@ -174,6 +171,9 @@ def adapter_qc_fastq(
 
     Raises:
         ValueError: raises an exception
+        OSError: raises an exception
+        CalledProcessError: raises an exception
+        RuntimeError: raises an exception
     """
     min_overlap_pbs1 = len(pbs1) - int(mismatches * len(pbs1))
     min_overlap_pbs2 = len(pbs2) - int(mismatches * len(pbs2))

@@ -62,10 +62,11 @@ class ColorFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         """Format a record with colored level.
 
-        :returns str: A formatted log record.
-
         Args:
             record: The record to format.
+
+        Returns:
+            A formatted log record. (str)
         """
         if not record.exc_info:
             level = record.levelname.lower()

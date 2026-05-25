@@ -426,14 +426,15 @@ def plot_3d_heatmap(
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot a 3D heatmap for the marker in the provided component.
 
-    or there are no with markers for the provided `marker`
-
     Args:
         component_graph: A component graph to plot for.
         marker: marker to plot this for.
         distance_cutoff: a distance cutoff to use for determining size of area to consider as close in the density calculation.
         layout_algorithm: (Layout algorithm to use. Options are):  "fruchterman_reingold_3d" and "kamada_kawai_3d"
         cache_layout: set this to `True` to cache the layout or faster computations on subsequent calls. This comes at the cost of additional memory usage.
+
+    Raises:
+        AssertionError if the provided `layout_algorithm` is not valid, or there are no with markers for the provided `marker`
     """
     coordinates = component_graph.layout_coordinates(
         layout_algorithm=layout_algorithm, cache=cache_layout

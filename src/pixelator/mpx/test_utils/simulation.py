@@ -66,10 +66,11 @@ class ReadSimulator:
     def build_molecule(self, nbr_of_molecules: int) -> Generator[str, None, None]:
         """Create strings representing molecules, that can then be "sequenced".
 
-        :yields str: An iterator of DNA sequences
-
         Args:
             nbr_of_molecules: number of molecules to generate
+
+        Yields:
+            An iterator of DNA sequences (str)
         """
 
         def build_fragment():
@@ -102,12 +103,13 @@ class ReadSimulator:
         each molecule is read depends on `mean_nbr_of_reads_per_molecule`
         and `std_nbr_of_reads_per_molecule`.
 
-        :yields str: an iterator of "sequenced" reads
-
         Args:
             molecules: the underlying molecules to "sequence"
             mean_nbr_of_reads_per_molecule: the mean number of reads to generate per molecule
             std_nbr_of_reads_per_molecule: the standard deviation in the number of reads generated per molecule
+
+        Yields:
+            an iterator of "sequenced" reads (str)
         """
         for molecule in molecules:
             nbr_of_times_sequences = int(
@@ -126,11 +128,12 @@ class ReadSimulator:
         Add base substitutions errors to `reads` with a probability
         given by `error_prop_per_base`.
 
-        :yields str: an iterator of DNA sequences with errors added to it
-
         Args:
             reads: reads to add errors to
             error_prob_per_base: (probability of adding an error, range): [0,1)
+
+        Yields:
+            an iterator of DNA sequences with errors added to it (str)
         """
         if error_prob_per_base < 0 or error_prob_per_base > 1:
             raise AssertionError("`error_prob_per_base` must be between 0 and 1.")

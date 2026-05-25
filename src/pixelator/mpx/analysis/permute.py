@@ -28,12 +28,13 @@ def permutations(
 ) -> Generator[RegionByCountsDataFrame, None, None]:
     """Generate `n` permutations of the data provided in `df`.
 
-    :yields RegionByCountsDataFrame: a RegionByCountsDataFrame object
-
     Args:
         df: dataframe to use as basis of permutations
         n: number of permutations to generate, defaults to 50
         random_seed: set a seed to the random number generator needed to make results deterministic, defaults to None
+
+    Yields:
+        a RegionByCountsDataFrame object (RegionByCountsDataFrame)
     """
     random_number_generator = _get_random_number_generator(random_seed)
     for _ in range(n):

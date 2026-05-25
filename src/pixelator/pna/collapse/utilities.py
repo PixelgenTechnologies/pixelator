@@ -101,11 +101,12 @@ def _split_chunks(
     This is a generator function that yields the start and stop indices of each chunk.
     The last chunk may be smaller than chunk_size.
 
-    :yield: A tuple of (start, stop) indices for each chunk
-
     Args:
         n_components: The size of the input range
         chunk_size: The size of each chunk
+
+    Yields:
+        A tuple of (start, stop) indices for each chunk
     """
     pos = 0
     complete_chunks = n_components // chunk_size

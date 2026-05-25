@@ -42,9 +42,6 @@ def demux_fastq(
     will be generated (containing the reads that matched). Another single
     file with the reads that failed to demultiplex will also be created.
 
-    OSError: raises an exception
-    CalledProcessError: raises an exception
-    RuntimeError: raises an exception
 
     Args:
         input: the path to the fastq file (must contain the barcode)
@@ -61,6 +58,9 @@ def demux_fastq(
 
     Raises:
         ValueError: raises an exception
+        OSError: raises an exception
+        CalledProcessError: raises an exception
+        RuntimeError: raises an exception
     """
     args = [
         "cutadapt",

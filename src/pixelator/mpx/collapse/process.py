@@ -183,11 +183,12 @@ def get_collapsed_fragments_for_component(  # noqa: DOC402,DOC404
     upib's, and if there is a tie the lexicographically smallest sequence is picked
     to make the results reproducible between runs.
 
-    :yields CollapsedFragment: a collapsed fragment
-
     Args:
         components: a list of components as produced from `get_connected_components`
         counts: a dictionary of the counts of each unique fragment
+
+    Yields:
+        a collapsed fragment (CollapsedFragment)
     """
     for component in components:
         # get the most common sequence in the component and use
@@ -332,10 +333,11 @@ def collapse_sequences_unique(
     Let each key in `seq_dict` represent it's own sequence. This is equivalent
     to not collapsing the sequences.
 
-    :yield a CollapsedFragment object
-
     Args:
         seq_dict: the fragment to upib dict
+
+    Yields:
+        a CollapsedFragment object
     """
     logger.debug("Picking all unique sequences (i.e. no collapsing is carried out)")
 
