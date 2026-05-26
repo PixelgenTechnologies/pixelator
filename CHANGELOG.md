@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
  - Propagate the demux --mismatches cli argument to correct_marker_barcodes (was using default i.e. 1)
+ - Follow uv.lock when building docker containers
 
 ## [0.27.0] - 2026-05-22
 
