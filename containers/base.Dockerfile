@@ -117,7 +117,6 @@ COPY . /pixelator
 COPY .git /pixelator/.git
 
 ENV UV_PROJECT_ENVIRONMENT="/usr/"
-ENV SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION_OVERRIDE
 
 RUN if [ ! -z "${VERSION_OVERRIDE}" ]; then \
     echo "Overriding version to ${VERSION_OVERRIDE}"; \
