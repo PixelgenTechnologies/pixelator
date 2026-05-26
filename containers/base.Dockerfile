@@ -118,8 +118,8 @@ COPY .git /pixelator/.git
 
 RUN if [ ! -z "${VERSION_OVERRIDE}" ]; then \
     echo "Overriding version to ${VERSION_OVERRIDE}"; \
-    SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION_OVERRIDE}" uv pip install --system . ; \
-    else uv pip install --system . ; \
+    SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION_OVERRIDE}" uv sync --system --reinstall-package pixelator ; \
+    else uv sync --system --reinstall-package pixelator ; \
     fi
 
 # ------------------------------------------
