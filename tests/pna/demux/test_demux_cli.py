@@ -67,3 +67,32 @@ def test_demux_custom_panel(tmp_path, testdata_amplicon_fastq, pna_data_root):
     cmd = runner.invoke(cli.main_cli, args)
 
     assert cmd.exit_code == 0
+
+
+@pytest.mark.slow
+def test_demux_mismatches(tmp_path, testdata_amplicon_fastq, mocker):
+    import pixelator.pna.cli.demux
+    spy = mocker.spy(pixelator.pna.cli.demux, "correct_marker_barcodes")
+
+    runner = CliRunner()
+    args = [
+        "single-cell-pna",
+        "demux",
+        str(testdata_amplicon_fastq),
+        "--output",
+        str(tmp_path),
+        "--design",
+        "proxiome-v1",
+        "--panel",
+        "proxiome-v1-immuno-155-v1.0",
+        "--mismatches",
+        "2",
+    ]
+    cmd = runner.invoke(cli.main_cli, args)
+
+    assert cmd.exit_code == 0
+    # Check that correct_marker_barcodes was called with mismatches=2
+    spy.assert_called_once()
+    kwargs = spy.call_args.kwargs
+    assert kwargs.get("mismatches") == 2
+
