@@ -116,10 +116,13 @@ WORKDIR /pixelator
 COPY . /pixelator
 COPY .git /pixelator/.git
 
+ENV UV_PROJECT_ENVIRONMENT="/usr/local/"
+ENV SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION_OVERRIDE
+
 RUN if [ ! -z "${VERSION_OVERRIDE}" ]; then \
     echo "Overriding version to ${VERSION_OVERRIDE}"; \
-    SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION_OVERRIDE}" uv sync --system --reinstall-package pixelator ; \
-    else uv sync --system --reinstall-package pixelator ; \
+    SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION_OVERRIDE}" uv sync --no-editable --no-dev --reinstall-package pixelator ; \
+    else uv sync --no-editable --no-dev --reinstall-package pixelator ; \
     fi
 
 # ------------------------------------------
