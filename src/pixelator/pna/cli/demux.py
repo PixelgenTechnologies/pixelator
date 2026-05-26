@@ -153,6 +153,7 @@ def demux(
         panel=panel,
         output=demux_output,
         save_failed=True,
+        mismatches=mismatches,
         threads=threads,
     )
 
