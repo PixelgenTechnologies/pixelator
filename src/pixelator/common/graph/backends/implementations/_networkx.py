@@ -904,6 +904,7 @@ def coarsened_pmds_layout(
         ValueError: If jitter_sd is not between 0.001 and 0.1.
         ValueError: If weight_edges_by is not "tp" or "crossing_edges".
         ValueError: If seed is not an integer or None.
+
     """
     _validate_coarsened_pmds_parameters(
         g, dim, resolution, pivots, n_iter, jitter_sd, weight_edges_by, seed
@@ -1162,19 +1163,18 @@ def _validate_coarsened_pmds_parameters(
 
 
 def normalize_layout_coordinates(points: np.ndarray) -> np.ndarray:
-    """
-    Centers 3D coordinates at 0 and scales them so that the
-    median radius (distance from the origin) is exactly 1.
+    """Centers 3D coordinates at 0 and scales them so that the median radius (distance from the origin) is exactly 1.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     points : numpy.ndarray
         An N x 3 array representing points in 3D space.
 
-    Returns:
-    --------
+    Returns
+    -------
     numpy.ndarray
         The normalized N x 3 array.
+
     """
     # Ensure input is a numpy array
     points = np.asarray(points)
