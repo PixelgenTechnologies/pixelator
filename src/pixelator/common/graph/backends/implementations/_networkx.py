@@ -896,14 +896,24 @@ def coarsened_pmds_layout(
 
     Raises:
         ValueError: If the graph is not connected.
+        ValueError: If the graph is directed.
+        ValueError: If the dim is not 2 or 3.
+        ValueError: If the resolution is not between 0.01 and 10.
+        ValueError: If pivots is not between 10 and min(#nodes, 1000).
+        ValueError: If n_iter is not between 1 and 100.
+        ValueError: If jitter_sd is not between 0.001 and 0.1.
+        ValueError: If weight_edges_by is not "tp" or "crossing_edges".
+        ValueError: If seed is not an integer or None.
     """
-    if not nx.is_connected(g):
-        raise ValueError("Only connected graphs are supported.")
+    _validate_coarsened_pmds_parameters(
+        g, dim, resolution, pivots, n_iter, jitter_sd, weight_edges_by, seed
+    )
 
     n_nodes = len(g.nodes)
     n_edges = len(g.edges)
 
     # Normalize resolution parameter to fit PNA graphs
+    # Here we use the number of edges to scale the resolution parameter
     res = resolution * n_edges / 1000
 
     # Run Leiden community detection
@@ -935,14 +945,15 @@ def coarsened_pmds_layout(
 
     A_orig = nx.to_scipy_sparse_array(g, nodelist=nodes, weight=None, format="csr")
 
+    # Create a cluster-level adjacency matrix by summing connections between clusters
     data = np.ones(n_nodes)
     row_indices = np.arange(n_nodes)
     col_indices = node_to_community_idx
     mm = sp.sparse.csr_matrix(
         (data, (row_indices, col_indices)), shape=(n_nodes, n_communities)
     )
-
     cl_counts = mm.T @ A_orig @ mm
+    # Remove internal cluster connections by setting the diagonal to zero
     cl_counts.setdiag(0)
     cl_counts.eliminate_zeros()
 
@@ -955,10 +966,9 @@ def coarsened_pmds_layout(
             g_small, dim=dim, pivots=small_pivots, weights="prob_dist", seed=seed
         )
     else:
-        for u, v, d in g_small.edges(data=True):
-            d["weight"] = 1.0 / d["weight"]
+        weights = np.array([1.0 / d["weight"] for _, _, d in g_small.edges(data=True)])
         xyz_small_dict = pmds_layout(
-            g_small, dim=dim, pivots=small_pivots, weights="weight", seed=seed
+            g_small, dim=dim, pivots=small_pivots, weights=weights, seed=seed
         )
 
     xyz_small = np.zeros((n_communities, dim))
@@ -990,16 +1000,17 @@ def coarsened_pmds_layout(
 
     def row_norm(mat):
         row_sums = np.array(mat.sum(axis=1)).flatten()
-        inv_row_sums = np.where(row_sums > 0, 1.0 / row_sums, 0.0)
+        # Use np.errstate to ignore divide by zero warnings, and set the
+        # inverse of zero sums to zero
+        with np.errstate(divide="ignore"):
+            inv_row_sums = np.where(row_sums > 0, 1.0 / row_sums, 0.0)
         return sp.sparse.diags(inv_row_sums) @ mat
 
     P_within = row_norm(A_within)
     P_between = row_norm(A_between)
 
     P = P_within + P_between
-    row_sums_P = np.array(P.sum(axis=1)).flatten()
-    inv_row_sums_P = np.where(row_sums_P > 0, 1.0 / row_sums_P, 0.0)
-    P = sp.sparse.diags(inv_row_sums_P) @ P
+    P = row_norm(P)
 
     if seed is not None:
         np.random.seed(seed)
@@ -1067,7 +1078,7 @@ def _prob_edge_weights(
     A = A + sp.sparse.diags_array([1] * A.shape[0], format="csr", dtype=A.dtype)
 
     # Divide by row sum to get the stochastic matrix
-    D = sp.sparse.diags_array(1 / A.sum(axis=1), format="csr", dtype=A.dtype)
+    D = sp.sparse.diags_array(1 / A.sum(axis=1), format="csr", dtype=None)
     P = D @ A
 
     # Compute the transition probabilities for a k-step walk
@@ -1105,7 +1116,49 @@ def _prob_edge_weights(
     return edge_probs
 
 
-import numpy as np
+def _validate_coarsened_pmds_parameters(
+    g,
+    dim,
+    resolution,
+    pivots,
+    n_iter,
+    jitter_sd,
+    weight_edges_by,
+    seed,
+):
+    import networkx as nx
+
+    if not isinstance(g, nx.Graph):
+        raise ValueError("g must be a networkx.Graph instance.")
+    if g.is_directed():
+        raise ValueError("g must be undirected.")
+    if not nx.is_connected(g):
+        raise ValueError("g must be connected.")
+
+    if dim not in (2, 3):
+        raise ValueError("dim must be 2 or 3.")
+
+    if not (isinstance(resolution, (float, int)) and 0.01 <= resolution <= 10):
+        raise ValueError("resolution must be a float between 0.01 and 10.")
+
+    n_nodes = len(g.nodes)
+    pivots_max = min(n_nodes, 1000)
+    if not (isinstance(pivots, int) and 10 <= pivots <= pivots_max):
+        raise ValueError(
+            f"pivots must be an integer between 10 and {pivots_max} (number of nodes or 1000, whichever is smaller)."
+        )
+
+    if not (isinstance(n_iter, int) and 1 <= n_iter <= 100):
+        raise ValueError("n_iter must be an integer between 1 and 100.")
+
+    if not (isinstance(jitter_sd, (float, int)) and 0.001 <= float(jitter_sd) <= 0.1):
+        raise ValueError("jitter_sd must be a float between 0.001 and 0.1.")
+
+    if weight_edges_by not in ("tp", "crossing_edges"):
+        raise ValueError('weight_edges_by must be either "tp" or "crossing_edges".')
+
+    if seed is not None and not isinstance(seed, int):
+        raise ValueError("seed must be an integer or None.")
 
 
 def normalize_layout_coordinates(points: np.ndarray) -> np.ndarray:
