@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix full name of CD45RO in the `proxiome-v1` and `proxiome-v2` panel files.
 - Fix CD298 annotation in the `proxiome-v2` panel files.
+- Propagate the demux --mismatches cli argument to correct_marker_barcodes (was using default i.e. 1)
+- Follow uv.lock when building docker containers
 
 ## [0.27.0] - 2026-05-22
 
@@ -22,9 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - When parsing panel files, trailing commas in the header will now give a warning and ignore the trailing commas,
   instead of raising an error.
+- Remove pin on polars and update to latest version
 
 ### Removed
 - Remove the `report` command for both PNA and MPX.
+
+### Fixed
+- Use dependency versions from `uv.lock` when building container.
 
 ### Parameters
 
