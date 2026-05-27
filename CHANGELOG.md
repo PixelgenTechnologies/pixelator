@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When parsing panel files, trailing commas in the header will now give a warning and ignore the trailing commas,
   instead of raising an error.
 
+### Fixed
+- Fix full name of CD45RO in the `proxiome-v1` and `proxiome-v2` panel files.
+- Fix CD298 annotation in the `proxiome-v2` panel files.
+
 ### Removed
 - Remove the `report` command for both PNA and MPX.
 

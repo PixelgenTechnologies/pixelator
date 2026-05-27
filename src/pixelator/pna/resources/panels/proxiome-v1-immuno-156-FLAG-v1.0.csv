@@ -4,7 +4,7 @@
 # description: >-
 #     Panel for the with the 155 markers + 3 control markers
 #     of the Proximome Immuno 155 panel, plus the FLAG marker
-# version: 1.0.1
+# version: 1.0.2
 # ---
 marker_id,control,full_name,alt_id,uniprot_id,sequence_1,sequence_2
 HLA-ABC,,HLA class I histocompatibility antigen,,P04439;P01889;P10321,ACTTCCTAGG,ACTTCCTAGG
