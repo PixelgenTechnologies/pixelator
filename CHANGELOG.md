@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.27.1] - 2026-05-27
+
+### Fixed
+- Fix full name of CD45RO in the `proxiome-v1` and `proxiome-v2` panel files.
+- Fix CD298 annotation in the `proxiome-v2` panel files.
+- Propagate the demux --mismatches cli argument to correct_marker_barcodes (was using default i.e. 1)
+- Follow uv.lock when building docker containers
+
+### Added
+- Add FMC63 proxiome-v2 panel
+
 ## [0.27.0] - 2026-05-22
 
 ### Added
@@ -16,9 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - When parsing panel files, trailing commas in the header will now give a warning and ignore the trailing commas,
   instead of raising an error.
+- Remove pin on polars and update to latest version
 
 ### Removed
 - Remove the `report` command for both PNA and MPX.
+
+### Fixed
+- Use dependency versions from `uv.lock` when building container.
 
 ### Parameters
 

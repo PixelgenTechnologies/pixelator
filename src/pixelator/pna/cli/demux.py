@@ -154,6 +154,7 @@ def demux(
         output=demux_output,
         save_failed=True,
         threads=threads,
+        mismatches=mismatches,
     )
 
     # Store intermediate parquet files before deduplication and sorting
