@@ -927,6 +927,10 @@ def coarsened_pmds_layout(
         resolution=res,
         seed=seed if seed is not None else 42,
         use_modularity=True,
+        iterations=1,
+        randomness=0.001,
+        trials=1,
+        starting_communities=None,
     )
 
     nodes = list(g.nodes)
