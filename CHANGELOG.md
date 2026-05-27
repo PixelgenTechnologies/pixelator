@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [x.x.x] - 2026-05-x
+
+### Fixed
+- Fix full name of CD45RO in the `proxiome-v1` and `proxiome-v2` panel files.
+- Fix CD298 annotation in the `proxiome-v2` panel files.
+
 ## [0.27.0] - 2026-05-22
 
 ### Added
@@ -16,10 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - When parsing panel files, trailing commas in the header will now give a warning and ignore the trailing commas,
   instead of raising an error.
-
-### Fixed
-- Fix full name of CD45RO in the `proxiome-v1` and `proxiome-v2` panel files.
-- Fix CD298 annotation in the `proxiome-v2` panel files.
 
 ### Removed
 - Remove the `report` command for both PNA and MPX.
