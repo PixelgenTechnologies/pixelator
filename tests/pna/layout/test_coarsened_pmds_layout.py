@@ -22,7 +22,7 @@ def graph_from_pxl():
     return g
 
 
-def test_coarsened_pmds_layout_matches_reference(graph_from_pxl):
+def test_coarsened_pmds_layout_tp_matches_reference(graph_from_pxl):
 
     layout_head_ref = pd.DataFrame(
         {
@@ -34,6 +34,23 @@ def test_coarsened_pmds_layout_matches_reference(graph_from_pxl):
 
     g = graph_from_pxl.raw
     layout = coarsened_pmds_layout(g, weight_edges_by="tp", seed=42)
+    layout_head = pd.DataFrame(dict(list(layout.items())[:3]))
+
+    assert_frame_equal(layout_head_ref, layout_head)
+
+
+def test_coarsened_pmds_layout_crossing_edges_matches_reference(graph_from_pxl):
+
+    layout_head_ref = pd.DataFrame(
+        {
+            61208583141770358: np.array([-0.17772736, 0.59633194, -0.33318281]),
+            50526950249468550: np.array([-0.20552174, 0.55308193, -0.42281924]),
+            69733109123764664: np.array([0.8492639, 0.24823581, -0.02972813]),
+        }
+    )
+
+    g = graph_from_pxl.raw
+    layout = coarsened_pmds_layout(g, weight_edges_by="crossing_edges", seed=42)
     layout_head = pd.DataFrame(dict(list(layout.items())[:3]))
 
     assert_frame_equal(layout_head_ref, layout_head)
