@@ -16,9 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - When parsing panel files, trailing commas in the header will now give a warning and ignore the trailing commas,
   instead of raising an error.
+- Remove pin on polars and update to latest version
 
 ### Removed
 - Remove the `report` command for both PNA and MPX.
+
+### Fixed
+- Use dependency versions from `uv.lock` when building container.
 
 ### Parameters
 
