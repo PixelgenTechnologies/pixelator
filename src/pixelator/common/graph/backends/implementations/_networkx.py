@@ -15,6 +15,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Optional,
     Set,
     Tuple,
@@ -27,6 +28,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import scipy as sp
+from graspologic_native import leiden
 from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
@@ -320,6 +322,8 @@ class NetworkXGraphBackend(GraphBackend):
             layout_inst = pmds_layout(
                 raw, dim=3, weights="prob_dist", seed=random_seed, **kwargs
             )
+        if layout_algorithm == "coarsened_pmds_3d":
+            layout_inst = coarsened_pmds_layout(raw, seed=random_seed, **kwargs)
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
@@ -383,6 +387,7 @@ class NetworkXGraphBackend(GraphBackend):
           - kamada_kawai
           - kamada_kawai_3d
           - wpmds_3d
+          - coarsened_pmds_3d
 
         For most cases the `pmds` options should be about 10-100x faster
         than the force directed layout methods, i.e. `fruchterman_reingold`
@@ -843,6 +848,171 @@ def pmds_layout(
     return coordinates
 
 
+def coarsened_pmds_layout(
+    g: nx.Graph,
+    dim: int = 3,
+    resolution: float = 1.0,
+    pivots: int = 200,
+    n_iter: int = 10,
+    jitter_sd: float = 1e-2,
+    weight_edges_by: Literal["tp", "crossing_edges"] = "tp",
+    seed: Optional[int] = None,
+) -> Dict[Any, np.ndarray]:
+    """Compute a coarse-to-fine PMDS layout using Leiden clustering.
+
+    This function implements an algorithm to compute a layout on a coarsened version
+    of the graph. By coarsening the graph, it is possible to process large graphs
+    faster and using less memory.
+
+    The algorithm proceeds in three main stages:
+    1. Cluster the graph using the Leiden method and create a coarsened version of
+        the graph where each community is represented as a single node. Edge weights represent
+        the number of connections between communities. The resolution parameter controls the
+        granularity of the clustering, with higher values leading to more communities. Fewer
+        communities will lead to faster computation but potentially less accurate layouts.
+    2. Compute a layout for the coarsened graph using PMDS. The `weight_edges_by` parameter
+        controls how edges are weighted in the coarsened graph. "tp" uses bidirectional transition
+        probabilities, while "crossing_edges" uses 1 divided by the number of edges crossing
+        between communities.
+    3. Each node in the original graph is assigned the coordinates of its corresponding
+        community in the coarsened graph. Then, the nodes are iteratively "wiggled" by replacing
+        their coordinates with a weighted average of their neighbors' coordinates + some random
+        jitter (`jitter_sd`).
+
+    Args:
+        g: A connected NetworkX graph.
+        dim: Number of output dimensions (default 3).
+        resolution: Leiden clustering resolution parameter. Higher values lead to more communities
+        and finer granularity but lower computational efficiency.
+        pivots: Number of pivots for PMDS at the coarse level.
+        n_iter: Number of refinement iterations.
+        jitter_sd: Standard deviation of random jitter added at each iteration.
+        weight_edges_by: How to weight edges in the coarse graph ("tp" for
+            transition probability, "crossing_edges" for inverse crossing count).
+        seed: Optional random seed for reproducibility.
+
+    Returns:
+        Dictionary mapping node IDs to coordinate arrays of shape (dim,).
+
+    Raises:
+        ValueError: If the graph is not connected.
+    """
+    if not nx.is_connected(g):
+        raise ValueError("Only connected graphs are supported.")
+
+    n_nodes = len(g.nodes)
+    n_edges = len(g.edges)
+
+    # Normalize resolution parameter to fit PNA graphs
+    res = resolution * n_edges / 1000
+
+    # Run Leiden community detection
+    edges_with_weights = [
+        (str(u), str(v), float(d.get("weight", 1.0))) for u, v, d in g.edges(data=True)
+    ]
+
+    _, community_dict = leiden(
+        edges_with_weights,
+        resolution=res,
+        seed=seed if seed is not None else 42,
+        use_modularity=True,
+    )
+
+    nodes = list(g.nodes)
+
+    # Cast node to str here so it matches the keys in community_dict
+    membership = np.array([community_dict[str(node)] for node in nodes])
+
+    unique_communities = np.unique(membership)
+    n_communities = len(unique_communities)
+
+    community_to_idx = {comm: i for i, comm in enumerate(unique_communities)}
+
+    # Cast node to str here as well
+    node_to_community_idx = np.array(
+        [community_to_idx[community_dict[str(n)]] for n in nodes]
+    )
+
+    A_orig = nx.to_scipy_sparse_array(g, nodelist=nodes, weight=None, format="csr")
+
+    data = np.ones(n_nodes)
+    row_indices = np.arange(n_nodes)
+    col_indices = node_to_community_idx
+    mm = sp.sparse.csr_matrix(
+        (data, (row_indices, col_indices)), shape=(n_nodes, n_communities)
+    )
+
+    cl_counts = mm.T @ A_orig @ mm
+    cl_counts.setdiag(0)
+    cl_counts.eliminate_zeros()
+
+    g_small = nx.from_scipy_sparse_array(cl_counts)
+
+    small_pivots = min(pivots, len(g_small.nodes))
+
+    if weight_edges_by == "tp":
+        xyz_small_dict = pmds_layout(
+            g_small, dim=dim, pivots=small_pivots, weights="prob_dist", seed=seed
+        )
+    else:
+        for u, v, d in g_small.edges(data=True):
+            d["weight"] = 1.0 / d["weight"]
+        xyz_small_dict = pmds_layout(
+            g_small, dim=dim, pivots=small_pivots, weights="weight", seed=seed
+        )
+
+    xyz_small = np.zeros((n_communities, dim))
+    small_nodes = list(g_small.nodes)
+    for i, node in enumerate(small_nodes):
+        xyz_small[node] = xyz_small_dict[node]
+
+    xyz_small = normalize_layout_coordinates(xyz_small)
+
+    # Assign the coordinates of the coarsened graph to the original nodes
+    xyz_full = xyz_small[node_to_community_idx]
+
+    A_orig_with_self = A_orig + sp.sparse.eye(n_nodes, format="csr")
+
+    rows, cols_idx = A_orig_with_self.nonzero()
+    keep_within = node_to_community_idx[rows] == node_to_community_idx[cols_idx]
+
+    A_within = sp.sparse.csr_matrix(
+        (A_orig_with_self.data * keep_within, (rows, cols_idx)),
+        shape=A_orig_with_self.shape,
+    )
+    A_within.eliminate_zeros()
+
+    A_between = sp.sparse.csr_matrix(
+        (A_orig_with_self.data * (~keep_within), (rows, cols_idx)),
+        shape=A_orig_with_self.shape,
+    )
+    A_between.eliminate_zeros()
+
+    def row_norm(mat):
+        row_sums = np.array(mat.sum(axis=1)).flatten()
+        inv_row_sums = np.where(row_sums > 0, 1.0 / row_sums, 0.0)
+        return sp.sparse.diags(inv_row_sums) @ mat
+
+    P_within = row_norm(A_within)
+    P_between = row_norm(A_between)
+
+    P = P_within + P_between
+    row_sums_P = np.array(P.sum(axis=1)).flatten()
+    inv_row_sums_P = np.where(row_sums_P > 0, 1.0 / row_sums_P, 0.0)
+    P = sp.sparse.diags(inv_row_sums_P) @ P
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    for _ in range(n_iter):
+        xyz_full += np.random.normal(scale=jitter_sd, size=xyz_full.shape)
+        xyz_full = P @ xyz_full
+
+    xyz_full = normalize_layout_coordinates(xyz_full)
+
+    return {nodes[i]: xyz_full[i] for i in range(n_nodes)}
+
+
 def _prob_edge_weights(
     g: nx.Graph,
     k: int = 5,
@@ -894,10 +1064,10 @@ def _prob_edge_weights(
     A = nx.to_scipy_sparse_array(g, weight=None, format="csr")
 
     # Add 1 to the diagonal to allow self-loops
-    A = A + sp.sparse.diags_array([1] * A.shape[0], format="csr")
+    A = A + sp.sparse.diags_array([1] * A.shape[0], format="csr", dtype=A.dtype)
 
     # Divide by row sum to get the stochastic matrix
-    D = sp.sparse.diags_array(1 / A.sum(axis=1), format="csr")
+    D = sp.sparse.diags_array(1 / A.sum(axis=1), format="csr", dtype=A.dtype)
     P = D @ A
 
     # Compute the transition probabilities for a k-step walk
@@ -933,3 +1103,46 @@ def _prob_edge_weights(
     edge_probs = np.asarray(P_step_bidirectional[row_indices, col_indices])
 
     return edge_probs
+
+
+import numpy as np
+
+
+def normalize_layout_coordinates(points: np.ndarray) -> np.ndarray:
+    """
+    Centers 3D coordinates at 0 and scales them so that the
+    median radius (distance from the origin) is exactly 1.
+
+    Parameters:
+    -----------
+    points : numpy.ndarray
+        An N x 3 array representing points in 3D space.
+
+    Returns:
+    --------
+    numpy.ndarray
+        The normalized N x 3 array.
+    """
+    # Ensure input is a numpy array
+    points = np.asarray(points)
+
+    # 1. Center the coordinates by subtracting the mean of each axis
+    # axis=0 computes the mean across the rows, giving a 1x3 vector [mean_x, mean_y, mean_z]
+    centroid = np.mean(points, axis=0)
+    centered_points = points - centroid
+
+    # 2. Calculate the Euclidean distance (radius) of each point from the new origin (0, 0, 0)
+    # axis=1 computes the norm across the columns for each individual point
+    radii = np.linalg.norm(centered_points, axis=1)
+
+    # 3. Find the median radius
+    median_radius = np.median(radii)
+
+    # Guard against division by zero if all points are exactly at the same spot
+    if median_radius == 0:
+        raise ValueError("The median radius is 0. Cannot scale the points.")
+
+    # 4. Scale the coordinates so the median radius becomes 1
+    normalized_points = centered_points / median_radius
+
+    return normalized_points
