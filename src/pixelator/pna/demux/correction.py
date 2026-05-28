@@ -94,19 +94,18 @@ class BKTree:
     def add(self, item):
         """Add given item to this tree.
 
-                >>> tree = BKTree(hamming_distance)
-                >>> list(tree)
-                []
-                >>> tree.add(4)
-                >>> sorted(tree)
-                [4]
-                >>> tree.add(15)
-                >>> sorted(tree)
-                [4, 15]
+        >>> tree = BKTree(hamming_distance)
+        >>> list(tree)
+        []
+        >>> tree.add(4)
+        >>> sorted(tree)
+        [4]
+        >>> tree.add(15)
+        >>> sorted(tree)
+        [4, 15]
 
         Args:
-                    item: The item to find matches for.
-
+            item: The item to find matches for.
         """
         node = self.tree
         if node is None:

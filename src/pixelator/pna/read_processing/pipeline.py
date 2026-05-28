@@ -174,9 +174,8 @@ class AmpliconPipeline(Pipeline):
         """Add a Modifier (without wrapping it in a PairedEndModifierWrapper).
 
         Args:
-                    modifier: Modifier.
-                    stage: The stage in which to apply the modifiers
-
+            modifier: Modifier.
+            stage: The stage in which to apply the modifiers
         """
         assert stage in ("pre", "post")
 

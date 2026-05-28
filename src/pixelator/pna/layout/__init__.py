@@ -94,15 +94,14 @@ class CreateLayout(PerComponentTask):
         """Run the layout on a component.
 
         Args:
-                    component: The component graph to run the analysis on.
-                    component_id: The id of the component.
+            component: The component graph to run the analysis on.
+            component_id: The id of the component.
 
         Returns:
-                    Name of the parquet file containing the layout data.
+            Name of the parquet file containing the layout data.
 
         Raises:
-                    TypeError: If the component is not a Graph or a LazyFrame.
-
+            TypeError: If the component is not a Graph or a LazyFrame.
         """
         results = []
         for algo in self._layout_algorithms:

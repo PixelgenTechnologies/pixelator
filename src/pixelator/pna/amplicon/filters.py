@@ -221,10 +221,9 @@ class LBSDetectedInUMI(Predicate):
         """Initialize a LBSDetectedInUMI pipeline predicate.
 
         Args:
-                    assay: the assay configuration.
-                    min_overlap: Min overlap.
-                    max_error_rate: Max error rate.
-
+            assay: the assay configuration.
+            min_overlap: Min overlap.
+            max_error_rate: Max error rate.
         """
         self.assay = assay
         self.min_overlap = min_overlap

@@ -165,24 +165,23 @@ def amplicon(
     """Process diverse raw pixel data (FASTQ) formats into common amplicon.
 
     Args:
-            ctx: Click context from the command decorator.
-            fastq_1: Fastq 1.
-            fastq_2: Fastq 2.
-            sample_name: Sample name.
-            output: Output.
-            design: Design.
-            mismatches: Mismatches.
-            remove_polyg: Remove PolyG sequences (length of 10 or more).
-            quality_cutoff: Remove bases from the tail with a Phred score lower then the cutoff value.
-            low_complexity_filter: Low complexity filter.
-            low_complexity_threshold: Low complexity threshold.
-            lbs_filter: Lbs filter.
-            lbs_filter_min_overlap: Lbs filter min overlap.
-            lbs_filter_error_rate: Lbs filter error rate.
-            skip_input_checks: Skip all check on the filename of input fastq files.
-            force_run: Force run.
-            threads: Threads.
-
+        ctx: Click context from the command decorator.
+        fastq_1: Fastq 1.
+        fastq_2: Fastq 2.
+        sample_name: Sample name.
+        output: Output.
+        design: Design.
+        mismatches: Mismatches.
+        remove_polyg: Remove PolyG sequences (length of 10 or more).
+        quality_cutoff: Remove bases from the tail with a Phred score lower then the cutoff value.
+        low_complexity_filter: Low complexity filter.
+        low_complexity_threshold: Low complexity threshold.
+        lbs_filter: Lbs filter.
+        lbs_filter_min_overlap: Lbs filter min overlap.
+        lbs_filter_error_rate: Lbs filter error rate.
+        skip_input_checks: Skip all check on the filename of input fastq files.
+        force_run: Force run.
+        threads: Threads.
     """
     # log input parameters
 

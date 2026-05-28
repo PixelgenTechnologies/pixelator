@@ -13,8 +13,7 @@ def _verify_no_antibody_in_multiple_samples(mapping: dict[str, list[str]]) -> No
     """Raise ValueError if any antibody is assigned to more than one sample.
 
     Args:
-            mapping: Sample name -> list of hashed antibody names for that sample.
-
+        mapping: Sample name -> list of hashed antibody names for that sample.
     """
     antibody_to_samples: dict[str, list[str]] = defaultdict(list)
     for sample, antibodies in mapping.items():

@@ -247,10 +247,9 @@ def _cluster_components_using_leiden(
     """Carry out a leiden clustering on the components.
 
     Args:
-            adata: AnnData object to do the clustering on
-            resolution: Resolution.
-            random_seed: If set this seed will be used to seed the random number generators used when calculating neighbors, building the umap and for the leiden clustering.
-
+        adata: AnnData object to do the clustering on
+        resolution: Resolution.
+        random_seed: If set this seed will be used to seed the random number generators used when calculating neighbors, building the umap and for the leiden clustering.
     """
     # It should be ok to run this over all vs all even on a dense matrix
     # since it shouldn't apply to more than a few thousande components.

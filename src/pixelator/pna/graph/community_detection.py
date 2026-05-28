@@ -298,8 +298,7 @@ def get_component_sizes(
     """Get sizes of components from edgelist with components.
 
     Args:
-            component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
-
+        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
     """
     with duckdb.connect() as con:
         component_sizes = con.execute(f"""

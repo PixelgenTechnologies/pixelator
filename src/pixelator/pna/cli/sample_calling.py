@@ -83,14 +83,13 @@ def sample_calling_cli(
     """Map components to samples in sample-hashed datasets.
 
     Args:
-            ctx: Click context from the command decorator.
-            input_pxl_file: Input pxl file.
-            samplesheet: Samplesheet.
-            remove_incompatible: Remove antibodies that are incompatible with their component.
-            save_undetermined: Save components that could not be confidently assigned to any sample.
-            confidence_threshold: Confidence threshold for sample calling.
-            output: Output.
-
+        ctx: Click context from the command decorator.
+        input_pxl_file: Input pxl file.
+        samplesheet: Samplesheet.
+        remove_incompatible: Remove antibodies that are incompatible with their component.
+        save_undetermined: Save components that could not be confidently assigned to any sample.
+        confidence_threshold: Confidence threshold for sample calling.
+        output: Output.
     """
     log_step_start(
         "sample-calling",

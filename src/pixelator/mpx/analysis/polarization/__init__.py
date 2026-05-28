@@ -342,9 +342,8 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """Run polarization analysis on component.
 
         Args:
-                    component: Component.
-                    component_id: the id of the component
-
+            component: Component.
+            component_id: the id of the component
         """
         logger.debug("Running polarization analysis on component %s", component_id)
         return polarization_scores_component_graph(

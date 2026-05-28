@@ -278,22 +278,21 @@ def plot_colocalization_diff_volcano(
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Generate the volcano plot of differential colocalization between reference and target(s) components.
 
-        Example usage: `plot_colocalization_diff_volcano(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample")`.
+    Example usage: `plot_colocalization_diff_volcano(pxl.colocalization, target:"stimulated", reference:"control", contrast_column="sample")`.
 
     Args:
-            colocalization_data: Colocalization table (for example ``pxl.colocalization``).
-            reference: Reference label in ``contrast_column``.
-            targets: label or list of labels for target components in the contrast_column. When not specified, all labels in the contrast_column except the reference label are used as targets.
-            contrast_column: Sample label column. Defaults to ``"sample"``.
-            cmap: Matplotlib colormap name.
-            value_column: Metric plotted on the x-axis. Defaults to ``"pearson_z"``.
-            n_top_pairs: Number of marker pairs to annotate on each side.
-            min_log_p: Minimum ``-log10(p)`` required to annotate a marker pair.
-            target: The label for target components in the contrast_column.
+        colocalization_data: Colocalization table (for example ``pxl.colocalization``).
+        reference: Reference label in ``contrast_column``.
+        targets: label or list of labels for target components in the contrast_column. When not specified, all labels in the contrast_column except the reference label are used as targets.
+        contrast_column: Sample label column. Defaults to ``"sample"``.
+        cmap: Matplotlib colormap name.
+        value_column: Metric plotted on the x-axis. Defaults to ``"pearson_z"``.
+        n_top_pairs: Number of marker pairs to annotate on each side.
+        min_log_p: Minimum ``-log10(p)`` required to annotate a marker pair.
+        target: The label for target components in the contrast_column.
 
     Returns:
-            The figure and axes objects of the plot.
-
+        The figure and axes objects of the plot.
     """
     if isinstance(targets, str):
         targets = [targets]

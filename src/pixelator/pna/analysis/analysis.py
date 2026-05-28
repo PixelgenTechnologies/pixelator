@@ -83,9 +83,8 @@ class ProximityAnalysis(PerComponentTask):
         """Run proximity analysis on a single component.
 
         Args:
-                    component: a Graph for a component to run the analysis on.
-                    component_id: the id of the component.
-
+            component: a Graph for a component to run the analysis on.
+            component_id: the id of the component.
         """
         raise NotImplementedError
 

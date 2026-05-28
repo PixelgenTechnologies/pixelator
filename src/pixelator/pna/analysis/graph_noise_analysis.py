@@ -365,14 +365,13 @@ class SvdAnalysis(PerComponentTask):
     def add_to_pixel_file(self, data: pd.DataFrame, pxl_file_target: PxlFile) -> None:
         """Add svd variance explained for the first three singular vectors.
 
-                Add svd variance explained for the first three singular vectors across
-                all components to adata.obs in pxl_dataset.
+        Add svd variance explained for the first three singular vectors across
+        all components to adata.obs in pxl_dataset.
 
         Args:
-                    data: a pandas DataFrame containing svd variance explained for the first three singular vectors across all components.
-                    pxl_dataset: the PNAPixelDataset to add the data to.
-                    pxl_file_target: the PxlFile to add the data to.
-
+            data: a pandas DataFrame containing svd variance explained for the first three singular vectors across all components.
+            pxl_dataset: the PNAPixelDataset to add the data to.
+            pxl_file_target: the PxlFile to add the data to.
         """
         logger.debug("Adding SVD analysis data to PNAPixelDataset")
         adata = PNAPixelDataset.from_files(pxl_file_target.path).adata()

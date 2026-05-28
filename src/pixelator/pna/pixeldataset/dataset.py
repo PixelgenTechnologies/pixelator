@@ -86,9 +86,8 @@ class PNAPixelDataset:
         """Alias for `from_pxl_files`.
 
         Args:
-                    pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a dictionary with sample names as keys and paths as values.
-                    config: The configuration for the dataset.
-
+            pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a dictionary with sample names as keys and paths as values.
+            config: The configuration for the dataset.
         """
         return PNAPixelDataset.from_pxl_files(pxl_files, config)
 

@@ -79,8 +79,7 @@ def _enforce_edgelist_types(edgelist: pd.DataFrame) -> pd.DataFrame:
     """Enforce the data types of the edgelist.
 
     Args:
-            edgelist: the edge list dataframe containing component labels.
-
+        edgelist: the edge list dataframe containing component labels.
     """
     # Enforcing the types of the edgelist reduces the memory
     # usage by roughly 2/3s.

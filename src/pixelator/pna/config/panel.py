@@ -563,8 +563,7 @@ class PNAAntibodyPanelDiff:
         """Upgrade an AnnData object with the changes between the two panels.
 
         Args:
-                    adata: An AnnData object containing panel information.
-
+            adata: An AnnData object containing panel information.
         """
         adata_panel = PNAAntibodyPanel.from_adata(adata)
         if self.panel_1 != adata_panel:

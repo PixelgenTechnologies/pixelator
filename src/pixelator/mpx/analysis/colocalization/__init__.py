@@ -411,9 +411,8 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         """Run colocalization analysis on the component.
 
         Args:
-                    component: Component.
-                    component_id: name of the component
-
+            component: Component.
+            component_id: name of the component
         """
         logger.debug("Running colocalization analysis on component %s", component_id)
         return colocalization_from_component_graph(

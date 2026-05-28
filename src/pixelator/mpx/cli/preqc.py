@@ -127,23 +127,21 @@ def preqc(
     output,
     design,
 ):
-    """
-    Process raw FASTQ reads with QC, trimming, and duplicate removal.
+    """Process raw FASTQ reads with QC, trimming, and duplicate removal.
 
     Args:
-            ctx: Click context from the command decorator.
-            fastq_file: Fastq file.
-            trim_front: Trim N bases from the front of the reads.
-            trim_tail: Trim N bases from the tail of the reads.
-            max_length: Max length.
-            min_length: Min length.
-            max_n_bases: Max n bases.
-            avg_qual: Minimum avg. quality a read must have (0 will disable the filter).
-            dedup: Remove duplicated reads (exact same sequence).
-            remove_polyg: Remove PolyG sequences (length of 10 or more).
-            output: Output.
-            design: Design.
-
+        ctx: Click context from the command decorator.
+        fastq_file: Fastq file.
+        trim_front: Trim N bases from the front of the reads.
+        trim_tail: Trim N bases from the tail of the reads.
+        max_length: Max length.
+        min_length: Min length.
+        max_n_bases: Max n bases.
+        avg_qual: Minimum avg. quality a read must have (0 will disable the filter).
+        dedup: Remove duplicated reads (exact same sequence).
+        remove_polyg: Remove PolyG sequences (length of 10 or more).
+        output: Output.
+        design: Design.
     """
     # log input parameters
     input_files = [fastq_file]

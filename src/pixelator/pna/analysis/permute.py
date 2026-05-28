@@ -43,16 +43,15 @@ def permute_edgelist(
 ):
     """Permute markers in an edgelist.
 
-        This function permutes the edgelist by shuffling the corresponding
-        markers to umi1 and umi2 columns.
+    This function permutes the edgelist by shuffling the corresponding
+    markers to umi1 and umi2 columns.
 
     Args:
-            edgelist: A DataFrame representing the edgelist
-            n_permutations: The number of permutations to perform
-            random_number_generator: A RandomNumberGenerator instance
-        Returns:
-            A DataFrame containing the permuted edgelist
-
+        edgelist: A DataFrame representing the edgelist
+        n_permutations: The number of permutations to perform
+        random_number_generator: A RandomNumberGenerator instance
+    Returns:
+        A DataFrame containing the permuted edgelist
     """
     if random_number_generator is None:
         random_number_generator = _get_random_number_generator()
