@@ -308,6 +308,7 @@ def test_list_panel_names(pna_data_root):
             "proxiome-v1-immuno-156-FMC63-v1.1",
             "proxiome-v2-immuno-155-v1.0",
             "proxiome-v2-immuno-156-FLAG-v1.0",
+            "proxiome-v2-immuno-156-FMC63-v1.0",
         ]
     )
 
@@ -320,6 +321,7 @@ def test_list_panel_names(pna_data_root):
         "proxiome-v1-immuno-156-FMC63-v1.1",
         "proxiome-v2-immuno-155-v1.0",
         "proxiome-v2-immuno-156-FLAG-v1.0",
+        "proxiome-v2-immuno-156-FMC63-v1.0",
     ]
 
 

@@ -180,7 +180,7 @@ class AmpliconCombiner:
             s[self._uei_region_slice] = self._uei_template
 
         # LBS-1 and LBS-2 are already included in the template
-        return s
+        return bytes(s)
 
     def build_qualities(
         self,
@@ -231,7 +231,7 @@ class AmpliconCombiner:
             )
             s[self._lbs2_region_slice] = lbs2_region
 
-        return s
+        return bytes(s)
 
 
 class AmpliconRegionSlices:
@@ -515,7 +515,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
     @staticmethod
     def _get_region_sequence(
         read, region_slice, is_reversed=False, as_bytearray=False
-    ) -> tuple[bytes | None, bytes | None]:
+    ) -> tuple[bytes | bytearray | None, bytes | bytearray | None]:
         """Get the sequence of a region from a read.
 
         Args:
@@ -688,7 +688,10 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             tq2[-len(q2) :] = q2
 
             assert len(tq1) == len(tq2)
-            tq_numpy = np.max([tq1, tq2], axis=0)
+            tq_numpy = np.maximum(
+                np.frombuffer(tq1, dtype=np.uint8),
+                np.frombuffer(tq2, dtype=np.uint8),
+            )
 
             return tq_numpy.tobytes()
 

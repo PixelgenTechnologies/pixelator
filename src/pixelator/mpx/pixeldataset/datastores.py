@@ -817,6 +817,53 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         self._set_to_read_mode()
         return self._read_dataframe_from_zip(key)
 
+    def read_precomputed_layouts(
+        self,
+    ) -> PreComputedLayouts:
+        """Read pre-computed layouts from the .pxl file.
+
+        We load each parquet leaf eagerly from the zip archive to avoid
+        intermittent parquet read failures observed when scanning zip-backed
+        partitioned datasets lazily.
+        """
+        self._set_to_read_mode()
+
+        try:
+            parquet_files = [
+                path
+                for path in self._file_system.find(self.LAYOUTS_KEY)
+                if path.endswith(".parquet")
+            ]
+        except FileNotFoundError:
+            return PreComputedLayouts.create_empty()
+
+        if not parquet_files:
+            return PreComputedLayouts.create_empty()
+
+        lazy_frames: list[pl.LazyFrame] = []
+        for parquet_file in parquet_files:
+            with self._file_system.open(parquet_file, "rb") as f:
+                frame = pl.read_parquet(f)
+
+            partition_values: dict[str, str] = {}
+            for part in Path(parquet_file).parts:
+                if "=" not in part:
+                    continue
+                key, value = part.split("=", 1)
+                partition_values[key] = value
+
+            if partition_values:
+                frame = frame.with_columns(
+                    **{
+                        column: pl.lit(value)
+                        for column, value in partition_values.items()
+                    }
+                )
+
+            lazy_frames.append(frame.lazy())
+
+        return PreComputedLayouts(layouts_lazy=lazy_frames)
+
     def read_dataframe_lazy(self, key: str) -> Optional[pl.LazyFrame]:
         """Read a dataframe lazily from a zip file.
 

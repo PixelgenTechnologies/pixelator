@@ -29,6 +29,7 @@ def build_binary_index(data) -> faiss.IndexBinary:
     db_len = data.shape[0]
     d = data.shape[1] * 8
 
+    index: faiss.IndexBinary
     if db_len < 5_000:
         index = faiss.IndexBinaryFlat(d)
     else:
@@ -63,7 +64,9 @@ class FAISSBackend:
         """
         return build_binary_index(data)
 
-    def search(self, index: faiss.IndexBinary, data: np.ndarray, k: int) -> np.ndarray:
+    def search(
+        self, index: faiss.IndexBinary, data: np.ndarray, k: int
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Search the index for the k nearest neighbors of the given data.
 
         Args:

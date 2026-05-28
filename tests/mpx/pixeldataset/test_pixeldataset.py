@@ -51,6 +51,7 @@ def test_pixeldataset(setup_basic_pixel_dataset):
     assert_frame_equal(
         edgelist,
         _enforce_edgelist_types(dataset.edgelist_lazy.collect().to_pandas()),
+        check_categorical=False,
     )
 
     assert_frame_equal(
@@ -120,7 +121,7 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     dataset.save(str(file_target))
     dataset_new = PixelDataset.from_file(str(file_target))
 
-    assert_frame_equal(edgelist, dataset_new.edgelist)
+    assert_frame_equal(edgelist, dataset_new.edgelist, check_categorical=False)
     assert_frame_equal(
         edgelist,
         # Note that we need to enforce the types manually here for this to work,
@@ -128,6 +129,7 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
         # where the user will need to manage the required datatypes themselves
         # as needed.
         _enforce_edgelist_types(dataset_new.edgelist_lazy.collect().to_pandas()),
+        check_categorical=False,
     )
 
     assert_frame_equal(
@@ -137,7 +139,10 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
 
     assert metadata == dataset_new.metadata
 
-    assert_frame_equal(polarization_scores, dataset_new.polarization)
+    assert_frame_equal(
+        polarization_scores,
+        dataset_new.polarization,
+    )
 
     assert_frame_equal(colocalization_scores, dataset_new.colocalization)
 

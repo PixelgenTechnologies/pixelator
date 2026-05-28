@@ -469,6 +469,11 @@ def aggregate_precomputed_layouts(
                     pl.col("component"), pl.lit(sample_name), separator="_"
                 ),
             ).pipe(zero_fill_missing_markers, all_markers=all_markers)
+
+            # Materialize each source independently before combining. This avoids
+            # concurrent reads on zip-backed parquet partitions, which can produce
+            # intermittent truncated parquet stream errors during collection.
+            layout_with_name = layout_with_name.collect().lazy()
             yield layout_with_name
 
     try:
