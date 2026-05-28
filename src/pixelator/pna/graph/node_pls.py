@@ -36,9 +36,15 @@ def _expand_neighborhood_matrix(
         g: A Graph object for which to create the node abundance matrix.
         node_ordering: Node ordering.
         X: Matrix to residualize (n_samples, n_features)
-        k: An integer value specifying the maximum steps from each node to expand the neighborhood for creating the predictor matrix X. If `k > 0`, the counts will be expanded to include neighborhood counts up to `k` steps away using the adjacency matrix of the Graph. Defaults to 2.
-        use_weights: Logical indicating whether to use edge weights when expanding the adjacency matrix for creating the predictor matrix X. Defaults to False.
-        min_weight: A numeric value specifying the minimum edge weight to consider when expanding the adjacency matrix for creating the predictor matrix X. Edges with weights below this threshold will be ignored. Defaults to 0.
+        k: An integer value specifying the maximum steps from each node to expand the neighborhood
+            for creating the predictor matrix X. If `k > 0`, the counts will be expanded to include
+            neighborhood counts up to `k` steps away using the adjacency matrix of the Graph.
+            Defaults to 2.
+        use_weights: Logical indicating whether to use edge weights when expanding the adjacency
+            matrix for creating the predictor matrix X. Defaults to False.
+        min_weight: A numeric value specifying the minimum edge weight to consider when expanding
+            the adjacency matrix for creating the predictor matrix X. Edges with weights below this
+            threshold will be ignored. Defaults to 0.
     """
     A = g.get_adjacency_sparse(node_ordering=node_ordering)
     # Add self-loops to represent "at most k steps"
@@ -103,19 +109,34 @@ def create_node_neighborhood_abundance_matrix(
 
     Args:
         g: A Graph object for which to create the node abundance matrix.
-        k: An integer value specifying the maximum steps from each node to expand the neighborhood for creating the predictor matrix X. If `k > 0`, the counts will be expanded to include neighborhood counts up to `k` steps away using the adjacency matrix of the Graph. Defaults to 2.
-        use_weights: Logical indicating whether to use edge weights when expanding the adjacency matrix for creating the predictor matrix X. Defaults to False.
-        min_weight: A numeric value specifying the minimum edge weight to consider when expanding the adjacency matrix for creating the predictor matrix X. Edges with weights below this threshold will be ignored. Defaults to 0.
-        normalization: A character value specifying the normalization method to apply to the predictor matrix X before fitting the PLS model. Options are "L1" for L1 normalization (scaling rows to sum to 1), "CLR" for centered log-ratio transformation, "LogNormalize" for log normalization. Use None for no normalization. Defaults to "L1".
-        scale: Logical indicating whether to scale the predictor matrix X by centering and scaling the columns to have mean 0 and standard deviation 1. Defaults to True.
-        model_mat: An optional numeric matrix of covariates to residualize out of the predictor matrix X. The number of rows in `model_mat` must match the number of nodes in the Graph. If provided, the function will residualize the predictor matrix X by regressing out the effects of the covariates in `model_mat` before returning the final matrix. Defaults to None.
+        k: An integer value specifying the maximum steps from each node to expand the neighborhood
+            for creating the predictor matrix X. If `k > 0`, the counts will be expanded to include
+            neighborhood counts up to `k` steps away using the adjacency matrix of the Graph.
+            Defaults to 2.
+        use_weights: Logical indicating whether to use edge weights when expanding the adjacency
+            matrix for creating the predictor matrix X. Defaults to False.
+        min_weight: A numeric value specifying the minimum edge weight to consider when expanding
+            the adjacency matrix for creating the predictor matrix X. Edges with weights below this
+            threshold will be ignored. Defaults to 0.
+        normalization: A character value specifying the normalization method to apply to the
+            predictor matrix X before fitting the PLS model. Options are "L1" for L1 normalization
+            (scaling rows to sum to 1), "CLR" for centered log-ratio transformation, "LogNormalize"
+            for log normalization. Use None for no normalization. Defaults to "L1".
+        scale: Logical indicating whether to scale the predictor matrix X by centering and scaling
+            the columns to have mean 0 and standard deviation 1. Defaults to True.
+        model_mat: An optional numeric matrix of covariates to residualize out of the predictor
+            matrix X. The number of rows in `model_mat` must match the number of nodes in the Graph.
+            If provided, the function will residualize the predictor matrix X by regressing out the
+            effects of the covariates in `model_mat` before returning the final matrix. Defaults to
+            None.
 
     Returns:
         pd.DataFrame: A DataFrame containing expanded and normalized node
         abundance values.
 
     Raises:
-        ValueError: If the number of rows in model_mat does not match the number of nodes in the graph.
+        ValueError: If the number of rows in model_mat does not match the number of nodes in the
+            graph.
     """
     counts = g.node_marker_counts
     X = counts.values.astype(np.float64)
@@ -184,18 +205,40 @@ def node_pls(
 
     Args:
         g: A Graph object.
-        y_vars: A string or list of variable names to use as responses (Y). These can be column names from the counts matrix or node variables from the graph data. The function will check for the presence of these variables and fetch them accordingly. If any of the specified `y_vars` are found in the counts matrix, they will be taken from the normalized counts matrix X. These variables will only be used as response variables and removed from the predictor matrix X to avoid data leakage. However, they will have been normalized and/or neighborhood-expanded as part of X before being subset out for Y.
-        x_vars: A list of variable names to use as predictors (X). These should be column names from the counts matrix of the Graph. If None, all columns from the counts matrix will be used as predictors. Defaults to None.
-        k: An integer value specifying the maximum steps from each node to expand the neighborhood for creating the predictor matrix X. If `k > 0`, the counts will be expanded to include neighborhood counts up to `k` steps away using the adjacency matrix of the Graph. Defaults to 2.
-        use_weights: Boolean indicating whether to use edge weights when expanding the adjacency matrix for creating the predictor matrix X. Defaults to False.
-        min_weight: A numeric value specifying the minimum edge weight to consider when expanding the adjacency matrix for creating the predictor matrix X. Edges with weights below this threshold will be ignored. Defaults to 0.
+        y_vars: A string or list of variable names to use as responses (Y). These can be column
+            names from the counts matrix or node variables from the graph data. The function will
+            check for the presence of these variables and fetch them accordingly. If any of the
+            specified `y_vars` are found in the counts matrix, they will be taken from the
+            normalized counts matrix X. These variables will only be used as response variables and
+            removed from the predictor matrix X to avoid data leakage. However, they will have been
+            normalized and/or neighborhood-expanded as part of X before being subset out for Y.
+        x_vars: A list of variable names to use as predictors (X). These should be column names from
+            the counts matrix of the Graph. If None, all columns from the counts matrix will be used
+            as predictors. Defaults to None.
+        k: An integer value specifying the maximum steps from each node to expand the neighborhood
+            for creating the predictor matrix X. If `k > 0`, the counts will be expanded to include
+            neighborhood counts up to `k` steps away using the adjacency matrix of the Graph.
+            Defaults to 2.
+        use_weights: Boolean indicating whether to use edge weights when expanding the adjacency
+            matrix for creating the predictor matrix X. Defaults to False.
+        min_weight: A numeric value specifying the minimum edge weight to consider when expanding
+            the adjacency matrix for creating the predictor matrix X. Edges with weights below this
+            threshold will be ignored. Defaults to 0.
         ncomp: An integer value specifying the number of PLS components to compute. Defaults to 1.
-        normalization: A character value specifying the normalization method to apply to the predictor matrix X before fitting the PLS model. Options are "L1" for L1 normalization (scaling rows to sum to 1), "CLR" for centered log-ratio transformation, "LogNormalize" for log normalization. Use None for no normalization. Defaults to "L1".
-        scale: Logical indicating whether to scale the predictor matrix X by centering and scaling the columns to have mean 0 and standard deviation 1. Defaults to True.
-        model_mat: An optional numeric matrix of covariates to residualize out of the predictor matrix X. The number of rows in `model_mat` must match the number of nodes in the Graph. If provided, the function will residualize the predictor matrix X by regressing out the effects of the covariates in `model_mat` before fitting the PLS model. Defaults to None.
+        normalization: A character value specifying the normalization method to apply to the
+            predictor matrix X before fitting the PLS model. Options are "L1" for L1 normalization
+            (scaling rows to sum to 1), "CLR" for centered log-ratio transformation, "LogNormalize"
+            for log normalization. Use None for no normalization. Defaults to "L1".
+        scale: Logical indicating whether to scale the predictor matrix X by centering and scaling
+            the columns to have mean 0 and standard deviation 1. Defaults to True.
+        model_mat: An optional numeric matrix of covariates to residualize out of the predictor
+            matrix X. The number of rows in `model_mat` must match the number of nodes in the Graph.
+            If provided, the function will residualize the predictor matrix X by regressing out the
+            effects of the covariates in `model_mat` before fitting the PLS model. Defaults to None.
 
     Returns:
-        PLSRegression: A fitted sklearn PLSRegression model, which contains the results of the PLS regression including coefficients, scores, and loadings.
+        PLSRegression: A fitted sklearn PLSRegression model, which contains the results of the PLS
+        regression including coefficients, scores, and loadings.
 
     Raises:
         ValueError: If variables are not found or if the input matrices are incompatible.

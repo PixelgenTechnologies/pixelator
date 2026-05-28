@@ -34,7 +34,8 @@ class ProximityAnalysis(PerComponentTask):
         """Initialize a ProximityAnalysis instance.
 
         Args:
-            n_permutations: the number of permutations to use for the method (only used with methods that use permutations).
+            n_permutations: the number of permutations to use for the method (only used with methods
+                that use permutations).
             min_marker_count: Min marker count.
         """
         self.method = "join_count_statistics"

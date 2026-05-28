@@ -249,7 +249,8 @@ def _cluster_components_using_leiden(
     Args:
         adata: AnnData object to do the clustering on
         resolution: Resolution.
-        random_seed: If set this seed will be used to seed the random number generators used when calculating neighbors, building the umap and for the leiden clustering.
+        random_seed: If set this seed will be used to seed the random number generators used when
+            calculating neighbors, building the umap and for the leiden clustering.
     """
     # It should be ok to run this over all vs all even on a dense matrix
     # since it shouldn't apply to more than a few thousande components.
@@ -299,7 +300,8 @@ def cluster_components(
         adata: AnnData object to do the clustering on
         obsmkey: Key to access the values `obsm` layer of `adata`
         inplace: If `True` performs the operation inplace on `adata`
-        random_seed: If set this seed will be used to seed the random number generators used when calculating neighbors, building the umap and for the leiden clustering.
+        random_seed: If set this seed will be used to seed the random number generators used when
+            calculating neighbors, building the umap and for the leiden clustering.
 
     Returns:
         a new Anndata object if `inplace` is `True` or None (Optional[AnnData])

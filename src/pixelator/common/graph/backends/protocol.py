@@ -177,7 +177,8 @@ class GraphBackend(Protocol):
             layout_algorithm: the layout algorithm to use to generate the coordinates
             only_keep_a_pixels: If true, only keep the a-pixels
             get_node_marker_matrix: Add a matrix of marker counts to each node if True.
-            random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
+            random_seed: used as the seed for graph layouts with a stochastic element. Useful to get
+                deterministic layouts across method calls.
             **kwargs: will be passed to the underlying layout implementation
 
         Returns:
@@ -210,10 +211,13 @@ class GraphBackend(Protocol):
 
         Args:
             n_vertices: the number of vertices to be added to the graph instance.
-            attrs: dict of sequences, all of length equal to the number of vertices to be added, containing the attributes of the new vertices. If `n_vertices=1` then they have to be lists of length 1.
+            attrs: dict of sequences, all of length equal to the number of vertices to be added,
+                containing the attributes of the new vertices. If `n_vertices=1` then they have to
+                be lists of length 1.
 
         Raises:
-            IndexError: if the number of graph vertices to add and lists of attributes are of different lengths
+            IndexError: if the number of graph vertices to add and lists of attributes are of
+                different lengths
         """
         ...
 

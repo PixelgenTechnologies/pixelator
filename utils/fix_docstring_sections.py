@@ -118,7 +118,8 @@ def process_file(path: Path) -> bool:
 
     lines = source.splitlines(keepends=True)
     changed = False
-    nodes: list[ast.AST] = []
+    DocNode = ast.Module | ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef
+    nodes: list[DocNode] = []
     if (
         tree.body
         and isinstance(tree.body[0], ast.Expr)

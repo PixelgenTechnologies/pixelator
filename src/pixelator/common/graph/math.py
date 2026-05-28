@@ -14,7 +14,8 @@ def mat_pow(mat, power: int, prune_threshold: float | None = None):
     Args:
         mat: Input sparse matrix.
         power: Exponent to raise the matrix to.
-        prune_threshold: Optional absolute-value threshold below which entries are set to zero before each multiplication step.
+        prune_threshold: Optional absolute-value threshold below which entries are set to zero
+            before each multiplication step.
 
     Returns:
         A sparse matrix equivalent to ``mat`` raised to ``power``.

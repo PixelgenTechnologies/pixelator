@@ -83,7 +83,8 @@ def amplicon(
         ctx: Click context from the command decorator.
         fastq_1: Path to the first FASTQ input file (read 1).
         fastq_2: Path to the second FASTQ input file (read 2), if paired-end.
-        sample_name: Override the basename of the output fastq file. Default is the basename of the first input file without extension and read 1 identifier.
+        sample_name: Override the basename of the output fastq file. Default is the basename of the
+            first input file without extension and read 1 identifier.
         skip_input_checks: Skip all check on the filename of input fastq files.
         output: The path where the results will be placed (it is created if it does not exist).
         design: The design to load from the configuration file.

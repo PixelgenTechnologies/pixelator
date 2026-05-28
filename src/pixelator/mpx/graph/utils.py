@@ -327,7 +327,8 @@ def edgelist_metrics(
 
     Args:
         edgelist: the edge list (pl.DataFrame)
-        graph: optionally add the graph instance that corresponds to the edgelist (to not have to re-compute it)
+        graph: optionally add the graph instance that corresponds to the edgelist (to not have to
+            re-compute it)
 
     Returns:
         a dataclass of metrics (EdgelistMetrics)
@@ -465,7 +466,8 @@ def update_edgelist_membership(
 
     Args:
         edgelist: the edge list
-        node_component_map: a pd.Series mapping the nodes to their components if missing, it will be constructed based on the connected components in the graph made from the edgelist.
+        node_component_map: a pd.Series mapping the nodes to their components if missing, it will be
+            constructed based on the connected components in the graph made from the edgelist.
 
     Returns:
         the remaining_edgelist and the removed_edgelist (pl.LazyFrame | pd.DataFrame)

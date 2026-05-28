@@ -296,7 +296,8 @@ def sanity_check_inputs(
 
     Args:
         input_files: the files to sanity check
-        allowed_extensions: the expected file extension of the files, e.g. 'fastq.gz' or a tuple of allowed types eg. ('fastq.gz', 'fq.gz')
+        allowed_extensions: the expected file extension of the files, e.g. 'fastq.gz' or a tuple of
+            allowed types eg. ('fastq.gz', 'fq.gz')
 
     Returns:
         None

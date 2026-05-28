@@ -269,7 +269,7 @@ def _compute_sub_communities(
 
 
 def _assess_doublet(component_edgelist: pd.DataFrame) -> tuple[bool, int]:
-    """Check whether a component is a potential doublet and how many edges should be removed to split it.
+    """Assess whether a component is a potential doublet and how many edges to remove.
 
     A component is a potential doublet if a) it has more than one community and
     b) the second largest community is at least 20% of the size of the largest

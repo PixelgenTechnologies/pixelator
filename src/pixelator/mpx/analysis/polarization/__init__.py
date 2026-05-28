@@ -88,9 +88,12 @@ def polarization_scores_component_graph(
         graph: a graph (it must be a single connected component)
         component_id: the id of the component
         transformation: the count transformation method to use (raw, log1p)
-        n_permutations: the number of permutations to use to estimate the null-hypothesis for the Moran's I statistic
-        min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
-        random_seed: the random seed to use to ensure that the permutations are reproducible across runs
+        n_permutations: the number of permutations to use to estimate the null-hypothesis for the
+            Moran's I statistic
+        min_marker_count: the minimum number of counts of a marker to calculate the Moran's I
+            statistic
+        random_seed: the random seed to use to ensure that the permutations are reproducible across
+            runs
     Returns:
         a pd.DataFrame with the polarization statistics for each antibody (pd.DataFrame)
 
@@ -192,9 +195,12 @@ def polarization_scores_component_df(
         component_df: A data frame with an edgelist for a single connected component
         use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
         transformation: the count transformation method to use (raw, log1p)
-        n_permutations: the number of permutations to use to estimate the null-hypothesis for the Moran's I statistic
-        min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
-        random_seed: the random seed to use to ensure that the permutations are reproducible across runs
+        n_permutations: the number of permutations to use to estimate the null-hypothesis for the
+            Moran's I statistic
+        min_marker_count: the minimum number of counts of a marker to calculate the Moran's I
+            statistic
+        random_seed: the random seed to use to ensure that the permutations are reproducible across
+            runs
     Returns:
         a pd.DataFrame with the polarization statistics for each antibody (pd.DataFrame)
 
@@ -243,8 +249,10 @@ def polarization_scores(
         edgelist: an edge list (pd.DataFrame) with a component column
         use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
         transformation: the count transformation method to use (raw, log1p)
-        n_permutations: the number of permutations for simulated Z-score (z_sim) estimation (if n_permutations>0)
-        min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
+        n_permutations: the number of permutations for simulated Z-score (z_sim) estimation (if
+            n_permutations>0)
+        min_marker_count: the minimum number of counts of a marker to calculate the Moran's I
+            statistic
         random_seed: the random seed to use for reproducibility
     Returns:
         a pd.DataFrames with all the polarization scores (pd.DataFrame)
@@ -323,7 +331,8 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """Initialize polarization analysis.
 
         Args:
-            transformation_type: Count transformation applied before Moran's I (``raw`` or ``log1p``).
+            transformation_type: Count transformation applied before Moran's I (``raw`` or
+                ``log1p``).
             n_permutations: Permutations used to estimate the null distribution.
             min_marker_count: Minimum marker count required to compute statistics.
             random_seed: Optional seed for reproducible permutation tests.

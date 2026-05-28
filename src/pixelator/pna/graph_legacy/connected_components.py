@@ -67,7 +67,8 @@ def _filter_edgelist(
 
     Args:
         edgelist: The edgelist to add the component column to.
-        min_read_count: minimum number of supporting reads for an edge to be considered part of the graph
+        min_read_count: minimum number of supporting reads for an edge to be considered part of the
+            graph
         component_stats: Component stats.
     """
     edgelist = edgelist.filter(pl.col("read_count") >= min_read_count)
@@ -194,7 +195,8 @@ def merge_communities_with_many_crossing_edges(
     Args:
         edgelist: The edge list to process
         node_community_dict: A dictionary mapping each node to a community
-        n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
+        n_edges: The threshold for the number of edges to be found between communities to merge or
+            None to avoid merging
         max_edges_to_remove: Max edges to remove.
         max_edges_to_remove_relative: Max edges to remove relative.
 
@@ -385,7 +387,7 @@ def recover_multiplets(
     leiden_iterations: int = 1,
     refinement_options: StagedRefinementOptions | None = None,
 ) -> tuple[nx.Graph, MultipletRecoveryStats]:
-    """Recovery multiplets by leiden community detection, removing crossing edges between communities.
+    """Recover multiplets by Leiden community detection, removing crossing edges.
 
     Args:
         edgelist: The edgelist to add the component column to.
@@ -526,7 +528,8 @@ def build_pxl_file_with_components(
         leiden_iterations: number of Leiden iterations to run
         min_count: Min count.
         refinement_options: options for component refinement
-        component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple, filter by hard thresholds as (min, max)
+        component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple,
+            filter by hard thresholds as (min, max)
     """
     with TemporaryDirectory(prefix="pixelator-") as tmp_dir:
         tmp_dir_path = Path(tmp_dir)
@@ -757,14 +760,17 @@ def find_components(
         input_edgelist: The input edgelist
         multiplet_recovery: if True run multiplet recovery, otherwise skip it
         leiden_iterations: number of Leiden iterations to run
-        min_read_count: minimum number of supporting reads for an edge to be considered part of the graph
-        component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple, filter by hard thresholds as (min, max)
+        min_read_count: minimum number of supporting reads for an edge to be considered part of the
+            graph
+        component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple,
+            filter by hard thresholds as (min, max)
         refinement_options: options for component refinement
         return_component_statistics: if True, return a component statistics object
         dynamic_lowest_passable_bound: Dynamic lowest passable bound.
 
     Returns:
-        an edgelist with components added to it, and a component statistics object if return_component_statistics is True
+        an edgelist with components added to it, and a component statistics object if
+        return_component_statistics is True
     """
     component_stats = GraphStatistics()
     no_clash_edgelist, component_stats = _remove_umi_clashes_and_get_stats(
@@ -840,7 +846,8 @@ def _filter_connected_components_by_size(
 
     Args:
         edgelist: The edgelist to add the component column to.
-        component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple, filter by hard thresholds as (min, max)
+        component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple,
+            filter by hard thresholds as (min, max)
         component_stats: Component stats.
         dynamic_lowest_passable_bound: Dynamic lowest passable bound.
     """

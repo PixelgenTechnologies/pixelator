@@ -406,13 +406,15 @@ class PreComputedLayouts:
         criteria.
 
         Args:
-            component_ids: the component ids to filter on, if `None` all components will be returned.
+            component_ids: the component ids to filter on, if `None` all components will be
+                returned.
             graph_projections: the graph projections to filter on
             layout_methods: the layout methods to filter on
             columns: the columns to return, if `None` all columns will be returned
 
         Yields:
-            A generator over the components where each dataframe contains the layout(s) (pd.DataFrame) for that component
+            A generator over the components where each dataframe contains the layout(s)
+            (pd.DataFrame) for that component
         """
         if not component_ids:
             unique_components = self._data_provider.unique_components()

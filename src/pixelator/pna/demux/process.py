@@ -68,7 +68,8 @@ def correct_marker_barcodes(
         output: The output directory.
         save_failed: Save failed reads to a separate file.
         mismatches: The number of mismatches allowed when correcting towards known markers.
-        threads: The number of threads to use for processing. By default all available cores are used.
+        threads: The number of threads to use for processing. By default all available cores are
+            used.
     """
     threads = threads if threads > 0 else mp.cpu_count()
 
@@ -162,7 +163,8 @@ def demux_barcode_groups(
         output_dir: The output directory.
         reads_per_chunk: The target number of molecules in each batch.
         max_chunks: The maximum number of batches.
-        threads: The number of threads to use for processing. The default of `-1` will use all available cores.
+        threads: The number of threads to use for processing. The default of `-1` will use all
+            available cores.
         stategy: The demultiplexing strategy to use. Defaults to "paired".
     """
     # Open file handles for input files
@@ -266,7 +268,8 @@ def finalize_batched_groups(
         remove_intermediates: Remove intermediates.
         strategy: Strategy.
         memory: Memory.
-        threads: The number of threads to use for processing. The default of `-1` will use all available cores.
+        threads: The number of threads to use for processing. The default of `-1` will use all
+            available cores.
         temp_dir: Temp dir.
     """
     if strategy == "independent":
@@ -322,7 +325,8 @@ def _finalize_batched_groups_paired(
         output_dir: The output directory.
         remove_intermediates: Remove intermediates.
         memory: Memory.
-        threads: The number of threads to use for processing. The default of `-1` will use all available cores.
+        threads: The number of threads to use for processing. The default of `-1` will use all
+            available cores.
         temp_dir: Temp dir.
 
     Returns:
@@ -385,14 +389,16 @@ def _finalize_batched_groups_independent(
     threads:
     The number of threads to use for DuckDB operations. Use None to let DuckDB decide.
     temp_dir:
-    The temporary directory to use for DuckDB operations. If None, DuckDB will decide (defaults to /tmp).
+    The temporary directory to use for DuckDB operations. If None, DuckDB will decide (defaults to
+    /tmp).
 
     Args:
         input_dir: Input dir.
         output_dir: The output directory.
         remove_intermediates: Remove intermediates.
         memory: Memory.
-        threads: The number of threads to use for processing. The default of `-1` will use all available cores.
+        threads: The number of threads to use for processing. The default of `-1` will use all
+            available cores.
         temp_dir: Temp dir.
 
     Returns:

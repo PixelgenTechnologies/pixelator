@@ -216,24 +216,41 @@ def denoise(
     Args:
         ctx: Click context from the command decorator.
         pxl_file: Path to the input PXL (PixelDataset) file.
-        run_one_core_graph_denoising: Run the denoise step to remove markers that are over-expressed in the one-core layer of a component.
-        run_ace_denoising: Remove nodes in the peripheral-like partition from adaptive core expansion (ACE). Can be combined with --run-one-core-graph-denoising: both use the full component graph; marked nodes are merged and stranded nodes are removed once at the end.
+        run_one_core_graph_denoising: Run the denoise step to remove markers that are over-expressed
+            in the one-core layer of a component.
+        run_ace_denoising: Remove nodes in the peripheral-like partition from adaptive core
+            expansion (ACE). Can be combined with --run-one-core-graph-denoising: both use the full
+            component graph; marked nodes are merged and stranded nodes are removed once at the end.
         ace_k: Neighborhood radius (steps) for ACE when --run-ace-denoising is set.
         ace_max_k_core: Maximum k-core layer used for ACE seeding when --run-ace-denoising is set.
-        ace_no_select_lcc: When --run-ace-denoising is set, do not restrict the ACE initial seed to the largest connected component (default: seed uses the LCC).
-        one_core_ratio_threshold: ratio of the number of nodes in the one-core layer to the total number of nodes in a component. If the ratio is above this threshold, one-core denoising is skipped for that component.
-        pval_threshold: pvalue threshold for an over-expression in the one-core layer to be considered significant.
+        ace_no_select_lcc: When --run-ace-denoising is set, do not restrict the ACE initial seed to
+            the largest connected component (default: seed uses the LCC).
+        one_core_ratio_threshold: ratio of the number of nodes in the one-core layer to the total
+            number of nodes in a component. If the ratio is above this threshold, one-core denoising
+            is skipped for that component.
+        pval_threshold: pvalue threshold for an over-expression in the one-core layer to be
+            considered significant.
         inflate_factor: How much to inflate number of noise markers in the one-core layer to remove.
-        run_pls_denoising: PLS-on-coreness denoise: retain the largest connected component after filtering nodes by significant PLS score components. Uses the full graph like ACE and one-core; removals are merged with other methods.
+        run_pls_denoising: PLS-on-coreness denoise: retain the largest connected component after
+            filtering nodes by significant PLS score components. Uses the full graph like ACE and
+            one-core; removals are merged with other methods.
         pls_ncomp: Requested PLS components when --run-pls-denoising is set (capped per component).
-        pls_model_k: Neighborhood steps for fitting the PLS X matrix when --run-pls-denoising is set.
-        pls_pred_k: Neighborhood steps for PLS scores (prediction X) when --run-pls-denoising is set.
-        pls_use_weights: Use edge weights in PLS neighborhood expansion when --run-pls-denoising is set.
-        pls_normalization: Normalization for the PLS neighborhood matrix when --run-pls-denoising is set.
-        pls_residualize: Residualize the PLS neighborhood matrix against pixel_type (A/B) when --run-pls-denoising is set.
-        pls_component_p_threshold: Pearson vs coreness: keep PLS components with p-value below this when --run-pls-denoising is set.
-        pls_min_coreness_correlation: Keep PLS components whose Pearson correlation with coreness exceeds this.
-        pls_score_threshold: All retained PLS score columns must exceed this value when --run-pls-denoising is set.
+        pls_model_k: Neighborhood steps for fitting the PLS X matrix when --run-pls-denoising is
+            set.
+        pls_pred_k: Neighborhood steps for PLS scores (prediction X) when --run-pls-denoising is
+            set.
+        pls_use_weights: Use edge weights in PLS neighborhood expansion when --run-pls-denoising is
+            set.
+        pls_normalization: Normalization for the PLS neighborhood matrix when --run-pls-denoising is
+            set.
+        pls_residualize: Residualize the PLS neighborhood matrix against pixel_type (A/B) when
+            --run-pls-denoising is set.
+        pls_component_p_threshold: Pearson vs coreness: keep PLS components with p-value below this
+            when --run-pls-denoising is set.
+        pls_min_coreness_correlation: Keep PLS components whose Pearson correlation with coreness
+            exceeds this.
+        pls_score_threshold: All retained PLS score columns must exceed this value when
+            --run-pls-denoising is set.
         output: The path where the results will be placed (it is created if it does not exist).
     """
     input_files = [pxl_file]

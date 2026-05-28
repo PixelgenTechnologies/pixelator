@@ -43,7 +43,8 @@ class ReadSimulator:
             nbr_of_a_pixels: The number of A pixels to sample molecules from, defaults to 1000
             nbr_of_b_pixels: The number of B pixels to sample molecules from, defaults to 1000
             random_seed: Set the random seed, defaults to 42
-            markers: A list of marker barcodes to use in generating the reads, defaults to ["AAAAAAAA"]
+            markers: A list of marker barcodes to use in generating the reads, defaults to
+                ["AAAAAAAA"]
             upia_pool_size: Upia pool size.
             upib_pool_size: Upib pool size.
         """
@@ -110,7 +111,8 @@ class ReadSimulator:
         Args:
             molecules: the underlying molecules to "sequence"
             mean_nbr_of_reads_per_molecule: the mean number of reads to generate per molecule
-            std_nbr_of_reads_per_molecule: the standard deviation in the number of reads generated per molecule
+            std_nbr_of_reads_per_molecule: the standard deviation in the number of reads generated
+                per molecule
         Returns:
             Generator[str, None, None]
 
@@ -175,7 +177,8 @@ class ReadSimulator:
             n_molecules: number of molecules to start from
             mean_reads_per_molecule: mean number of molecules to generate per molecule
             std_reads_per_molecule: the standard deviation of the number of molecules to generate
-            prob_of_seq_error: probability of base substitutions errors per base sequenced. Default: 0.
+            prob_of_seq_error: probability of base substitutions errors per base sequenced. Default:
+                0.
 
         Returns:
             An iterator of sequence reads (Iterator[str])

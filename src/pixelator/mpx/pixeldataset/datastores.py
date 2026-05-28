@@ -279,7 +279,8 @@ class PixelDataStore(Protocol):
 
         Args:
             layouts: The pre-computed layouts to write.
-            collapse_to_single_dataframe: Whether to collapse the layouts into a single dataframe before writing.
+            collapse_to_single_dataframe: Whether to collapse the layouts into a single dataframe
+                before writing.
         """
         ...
 

@@ -224,7 +224,8 @@ def plot_2d_graph(
     """Plot a (collection of) 2D graph(s) based on the given pixel data.
 
     The graph can be plotted for one or a list of components.
-    The graph nodes can be colored by a marker. The marker can be a (list of) marker(s) or "pixel_type".
+    The graph nodes can be colored by a marker. The marker can be a (list of) marker(s) or
+    "pixel_type".
     Example usage: plot_2d_graph(pxl, component=["PXLCMP0000000"], marker=["HLA-ABC", "HLA-RA"]).
 
     Args:
@@ -380,7 +381,8 @@ def plot_3d_graph(
         pxl_data: The PixelDataset containing the data.
         component: The component to plot.
         marker: The marker to use for coloring the nodes. Defaults to None.
-        layout_algorithm: The layout algorithm to use for positioning the nodes. Defaults to "fruchterman_reingold_3d".
+        layout_algorithm: The layout algorithm to use for positioning the nodes. Defaults to
+            "fruchterman_reingold_3d".
         log_scale: Whether to apply logarithmic scaling to the marker values. Defaults to True.
         normalize: Whether to normalize the coordinates. Defaults to False.
         node_size: The size of the nodes. Defaults to 3.0.
@@ -443,15 +445,20 @@ def plot_3d_heatmap(
     Args:
         component_graph: A component graph to plot for.
         marker: marker to plot this for.
-        distance_cutoff: a distance cutoff to use for determining size of area to consider as close in the density calculation.
-        layout_algorithm: (Layout algorithm to use. Options are):  "fruchterman_reingold_3d" and "kamada_kawai_3d"
-        cache_layout: set this to `True` to cache the layout or faster computations on subsequent calls. This comes at the cost of additional memory usage.
+        distance_cutoff: a distance cutoff to use for determining size of area to consider as close
+            in the density calculation.
+        layout_algorithm: (Layout algorithm to use. Options are):  "fruchterman_reingold_3d" and
+            "kamada_kawai_3d"
+        cache_layout: set this to `True` to cache the layout or faster computations on subsequent
+            calls. This comes at the cost of additional memory usage.
 
     Returns:
-        A matplotlib 3D heatmap figure, and it's associated Axes instance (Tuple[plt.Figure, plt.Axes])
+        A matplotlib 3D heatmap figure, and it's associated Axes instance (Tuple[plt.Figure,
+        plt.Axes])
 
     Raises:
-        AssertionError if the provided `layout_algorithm` is not valid, or there are no with markers for the provided `marker`
+        AssertionError if the provided `layout_algorithm` is not valid, or there are no with markers
+        for the provided `marker`
     """
     coordinates = component_graph.layout_coordinates(
         layout_algorithm=layout_algorithm, cache=cache_layout

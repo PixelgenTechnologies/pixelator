@@ -60,8 +60,10 @@ def colocalization_from_component_edgelist(
         component_id: name of the component
         transformation: transformation method to use, defaults to "raw"
         neighbourhood_size: size of the neighbourhood to consider, defaults to 0
-        n_permutations: number of permutations used to calculate the p-values and z-scores, defaults to 50
-        use_full_bipartite: use the full bipartiate graph, if false use A-node projection, defaults to True
+        n_permutations: number of permutations used to calculate the p-values and z-scores, defaults
+            to 50
+        use_full_bipartite: use the full bipartiate graph, if false use A-node projection, defaults
+            to True
         min_region_count: minimum number of counts in region to consider, defaults to 5
         min_marker_count: the minimum number of counts of a marker to calculate colocalization
         random_seed: Set the random seed for the permutation tests, defaults to None
@@ -119,7 +121,8 @@ def colocalization_from_component_graph(
         component_id: name of the component
         transformation: transformation method to use, defaults to "raw"
         neighbourhood_size: size of the neighbourhood to consider, defaults to 0
-        n_permutations: number of permutations used to calculate the p-values and z-scores, defaults to 50
+        n_permutations: number of permutations used to calculate the p-values and z-scores, defaults
+            to 50
         min_region_count: minimum number of counts in region to consider, defaults to 5
         min_marker_count: the minimum number of counts of a marker to calculate colocalization
         random_seed: Set the random seed for the permutation tests, defaults to None
@@ -228,9 +231,12 @@ def colocalization_scores(
         edgelist: an edge list dataframe with a membership column
         use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
         transformation: Select a transformation method to use for the colocalization
-        neighbourhood_size: Set the size of the neighbourhood to consider when computing the colocalization
-        n_permutations: Select number of permutations used to calculate empirical p-values of the colocalization values
-        min_region_count: The minimum size of the region (e.g. number of counts in the neighbourhood) required for it to be considered
+        neighbourhood_size: Set the size of the neighbourhood to consider when computing the
+            colocalization
+        n_permutations: Select number of permutations used to calculate empirical p-values of the
+            colocalization values
+        min_region_count: The minimum size of the region (e.g. number of counts in the
+            neighbourhood) required for it to be considered
         min_marker_count: the minimum number of counts of a marker to calculate colocalization
         random_seed: Set a random seed for the permutation function
     Returns:
@@ -397,8 +403,10 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         Args:
             transformation_type: transformation method to use
             neighbourhood_size: size of the neighbourhood to consider
-            n_permutations: Select number of permutations used to calculate empirical z-scores and p-values of the colocalization values
-            min_region_count: The minimum size of the region (e.g. number of counts in the neighbourhood) required for it to be considered for colocalization analysis
+            n_permutations: Select number of permutations used to calculate empirical z-scores and
+                p-values of the colocalization values
+            min_region_count: The minimum size of the region (e.g. number of counts in the
+                neighbourhood) required for it to be considered for colocalization analysis
             min_marker_count: the minimum number of counts of a marker to calculate colocalization
         """
         self.transformation_type = transformation_type

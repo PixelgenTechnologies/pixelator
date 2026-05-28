@@ -466,7 +466,7 @@ def pixel_dataset_with_different_sample_names_fixture(
 
 
 class TestPixelDatasetNames:
-    """Test that pixel dataset can handle sample names that contain things like dashes, that are also keywords in duckdb."""
+    """Test PixelDataset support for sample names with dashes and DuckDB keywords."""
 
     def test_sample_names(self, pxl_dataset_w_sample_names):
         """Verify sample names.

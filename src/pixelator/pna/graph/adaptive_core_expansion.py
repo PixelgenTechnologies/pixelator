@@ -93,7 +93,8 @@ def _build_p_step_matrix(g: Graph, node_list: list[str], k: int) -> sp.csr_matri
     Args:
         g: A `Graph` object containing the cell graph and node count data.
         node_list: Node list.
-        k: The neighborhood radius (number of steps) used for reachability. Larger values increase the "reach" of the core.
+        k: The neighborhood radius (number of steps) used for reachability. Larger values increase
+            the "reach" of the core.
     """
     A = g.get_adjacency_sparse(node_ordering=node_list)
     A = A + sp.diags_array([1] * A.shape[0], format="csr", dtype=None)
@@ -147,7 +148,8 @@ def _find_partitions(
         counts: Counts.
         k_cores: K cores.
         max_k: Max k.
-        binding_thresholds: Thresholds for moving nodes to the high partition. If None, a default sequence from 0.5 to 0.3 is used.
+        binding_thresholds: Thresholds for moving nodes to the high partition. If None, a default
+            sequence from 0.5 to 0.3 is used.
         P_step: P step.
         max_iter: Maximum iterations per binding threshold.
         nodes_to_move_threshold: Convergence limit; iteration stops if fewer nodes move.
@@ -208,7 +210,8 @@ def validate_best_candidate(
     Args:
         best_candidate: Best candidate.
         partitions: Partitions.
-        min_allowed_nodes_pct: Minimum fraction of nodes required in the final "high" core partition.
+        min_allowed_nodes_pct: Minimum fraction of nodes required in the final "high" core
+            partition.
     """
     if best_candidate is not None and best_candidate.nodes_pct < min_allowed_nodes_pct:
         logger.warning(
@@ -283,13 +286,16 @@ def adaptive_core_expansion(
 
     Args:
         g: A `Graph` object containing the cell graph and node count data.
-        k: The neighborhood radius (number of steps) used for reachability. Larger values increase the "reach" of the core.
+        k: The neighborhood radius (number of steps) used for reachability. Larger values increase
+            the "reach" of the core.
         max_k_core: Cap for the maximum k-core layer used for seeding.
-        binding_thresholds: Thresholds for moving nodes to the high partition. If None, a default sequence from 0.5 to 0.3 is used.
+        binding_thresholds: Thresholds for moving nodes to the high partition. If None, a default
+            sequence from 0.5 to 0.3 is used.
         max_iter: Maximum iterations per binding threshold.
         min_seed_pct: Minimum fraction of nodes required for the initial seed.
         nodes_to_move_threshold: Convergence limit; iteration stops if fewer nodes move.
-        min_allowed_nodes_pct: Minimum fraction of nodes required in the final "high" core partition.
+        min_allowed_nodes_pct: Minimum fraction of nodes required in the final "high" core
+            partition.
         select_lcc: If True, restricts the initial seed to the Largest Connected Component.
 
     Returns:
@@ -301,12 +307,14 @@ def adaptive_core_expansion(
         ValueError: If the Graph object does not contain count data.
         ValueError: If the 'k' parameter is not between 1 and 6 inclusive.
         ValueError: If the 'max_k_core' parameter is not between 2 and 10 inclusive.
-        ValueError: If the 'binding_thresholds' parameter is not a sequence of floats between 0 and 1.
+        ValueError: If the 'binding_thresholds' parameter is not a sequence of floats between 0 and
+            1.
         ValueError: If the 'max_iter' parameter is not between 1 and 1000 inclusive.
         ValueError: If the 'min_seed_pct' parameter is not between 0 and 1 inclusive.
         ValueError: If the 'nodes_to_move_threshold' parameter is not between 0 and 1000 inclusive.
         ValueError: If the 'min_allowed_nodes_pct' parameter is not between 0 and 1 (exclusive).
-        TypeError: If the 'binding_thresholds' parameter is not a sequence of floats between 0 and 1.
+        TypeError: If the 'binding_thresholds' parameter is not a sequence of floats between 0 and
+            1.
     """
     _validate_ace_parameters(
         k=k,

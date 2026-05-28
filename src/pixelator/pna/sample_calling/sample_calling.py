@@ -48,12 +48,16 @@ def collect_hash_info(
 
     Args:
         input_pxl_file: The input pixel dataset.
-        hashed_antibody_mapping: Mapping of sample names to hashed antibody names and the full list of hashing antibodies (from panel).
-        confidence_threshold: Minimum confidence required to assign a component to a sample. Defaults to 0.8.
-        undetermined_sample_name: Name to use for undetermined components. Defaults to "undetermined".
+        hashed_antibody_mapping: Mapping of sample names to hashed antibody names and the full list
+            of hashing antibodies (from panel).
+        confidence_threshold: Minimum confidence required to assign a component to a sample.
+            Defaults to 0.8.
+        undetermined_sample_name: Name to use for undetermined components. Defaults to
+            "undetermined".
 
     Returns:
-        Polars DataFrame with component id, per-sample hash counts, called sample, and confidence score.
+        Polars DataFrame with component id, per-sample hash counts, called sample, and confidence
+        score.
     """
     ab_count_data = pl.from_pandas(input_pxl_file.adata().to_df().reset_index()).lazy()
     samples = hashed_antibody_mapping.keys()
@@ -218,7 +222,8 @@ def _build_post_sample_calling_anndata(
         nodes_to_remove: Nodes to remove.
         hash_info: Hash info.
         panel: Panel.
-        hashing_antibody_mapping: Information about hashing antibodies, including a mapping from sample names to lists of hashed antibody names.
+        hashing_antibody_mapping: Information about hashing antibodies, including a mapping from
+            sample names to lists of hashed antibody names.
     """
     _add_original_hash_counts_to_obs(
         old_adata, hashing_antibody_mapping.hashing_antibodies
@@ -309,11 +314,15 @@ def sample_calling(
 
     Args:
         input_pxl: The input pixel dataset to be split by sample.
-        hashing_antibody_mapping: Information about hashing antibodies, including a mapping from sample names to lists of hashed antibody names.
+        hashing_antibody_mapping: Information about hashing antibodies, including a mapping from
+            sample names to lists of hashed antibody names.
         output_folder: Directory where output pxl files will be written.
-        confidence_threshold: Minimum confidence required to assign a component to a sample. Defaults to 0.8.
-        remove_incompatible: Whether to remove hashes incompatible with the current sample from the edgelist. Defaults to True.
-        undetermined_sample_name: Name to use for undetermined components. Defaults to "undetermined".
+        confidence_threshold: Minimum confidence required to assign a component to a sample.
+            Defaults to 0.8.
+        remove_incompatible: Whether to remove hashes incompatible with the current sample from the
+            edgelist. Defaults to True.
+        undetermined_sample_name: Name to use for undetermined components. Defaults to
+            "undetermined".
     """
     hash_info = collect_hash_info(
         input_pxl,
@@ -427,7 +436,8 @@ class FindHashedNodesToRemove(PerComponentTask):
         """Initialize the task with hashing antibody mapping and sample name.
 
         Args:
-            hashing_antibody_mapping: Information about hashing antibodies, including a mapping from sample names to lists of hashed antibody names.
+            hashing_antibody_mapping: Information about hashing antibodies, including a mapping from
+                sample names to lists of hashed antibody names.
             sample_name: Sample name.
         """
         self.hashing_antibody_mapping = hashing_antibody_mapping
@@ -475,7 +485,8 @@ def create_final_report(
 
     Args:
         final_dataset: The final dataset after sample calling.
-        undetermined_sample_name: Name to use for undetermined components. Defaults to "undetermined".
+        undetermined_sample_name: Name to use for undetermined components. Defaults to
+            "undetermined".
 
     Returns:
         SampleCallingTotalReport: The final report for the sample calling.
@@ -525,8 +536,10 @@ def warn_if_undetermined_has_high_confidence(
 
     Args:
         undetermined_sample_confidences: Undetermined sample confidences.
-        confidence_threshold: Minimum confidence required to assign a component to a sample. Defaults to 0.8.
-        undetermined_sample_name: Name to use for undetermined components. Defaults to "undetermined".
+        confidence_threshold: Minimum confidence required to assign a component to a sample.
+            Defaults to 0.8.
+        undetermined_sample_name: Name to use for undetermined components. Defaults to
+            "undetermined".
     """
     if (
         np.sum(undetermined_sample_confidences > confidence_threshold)

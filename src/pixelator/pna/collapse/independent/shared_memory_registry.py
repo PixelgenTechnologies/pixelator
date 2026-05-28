@@ -37,9 +37,11 @@ class ArrayDescriptor:
 class SharedMemoryRegistry:
     """Helper class that wraps a shared memory manager but registers all allocations by name.
 
-    The registry can be used to allocate shared memory buffers and numpy arrays backed by shared memory.
+    The registry can be used to allocate shared memory buffers and numpy arrays backed by shared
+    memory.
     The buffers and arrays can be retrieved by name from the registry.
-    Only the shared memory buffers are stored in the registry, the numpy arrays are recreated from the
+    Only the shared memory buffers are stored in the registry, the numpy arrays are recreated from
+    the
     shared memory buffers when requested.
 
     This makes recreating the numpy arrays from the SharedMemory objects across processes easier.
@@ -178,7 +180,8 @@ class SharedMemoryRegistry:
 class ReadOnlySharedMemoryRegistry:
     """Read-only view of a SharedMemoryRegistry.
 
-    This class allows to create a read-only view of a SharedMemoryRegistry that can be passed to other processes.
+    This class allows to create a read-only view of a SharedMemoryRegistry that can be passed to
+    other processes.
     The view can be used to access shared memory buffers and numpy arrays backed by shared memory.
     """
 

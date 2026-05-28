@@ -371,7 +371,8 @@ class PNAEmbedding:
         Padding bits are added to make the total length 256 bits and to separate
         the regions on byte boundaries.
 
-        256 bits is a common length for SIMD instructions (eg. 1 AVX-2 register or 2 Arm NEON registers)
+        256 bits is a common length for SIMD instructions (eg. 1 AVX-2 register or 2 Arm NEON
+        registers)
         and thus commonly used for efficient similarity search. (eg. in FAISS).
         """
         vec = np.zeros(256, dtype=np.uint8)
@@ -612,7 +613,8 @@ class BarcodeDemuxer(abc.ABC):
         Args:
             read: the input read to process
         Returns:
-            A tuple or list of tuples with a barcode_group_id and a serialized batch of records The serialized batch is encoded in the pyarrow RecordBatch ipc format.
+            A tuple or list of tuples with a barcode_group_id and a serialized batch of records The
+            serialized batch is encoded in the pyarrow RecordBatch ipc format.
         """
         raise NotImplementedError
 

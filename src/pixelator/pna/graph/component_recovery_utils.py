@@ -114,14 +114,17 @@ def get_count_statistics(edgelist_path: Path) -> dict:
     """Get count statistics from an edgelist Parquet file.
 
     This function reads an edgelist stored in a Parquet file and computes the total number of edges,
-    as well as the total number of distinct UMIs present in the edgelist. It returns these statistics
+    as well as the total number of distinct UMIs present in the edgelist. It returns these
+    statistics
     in a dictionary.
 
     Args:
         edgelist_path: Path to the input Parquet file containing the edgelist.
 
     Returns:
-        dict: A dictionary containing the following keys: - 'n_edges': Total number of edges in the edgelist. - 'n_umi': Total number of distinct UMIs in the edgelist. - 'n_reads': Total number of reads in the edgelist. - 'n_molecules': Total number of molecules in the edgelist.
+        dict: A dictionary containing the following keys: - 'n_edges': Total number of edges in the
+        edgelist. - 'n_umi': Total number of distinct UMIs in the edgelist. - 'n_reads': Total
+        number of reads in the edgelist. - 'n_molecules': Total number of molecules in the edgelist.
     """
     with duckdb.connect() as con:
         con.execute(
@@ -165,7 +168,8 @@ def write_hive_partitioned_edgelist_without_small_components(
     Args:
         input_edgelist_path: Parquet file with component assignments (e.g. after hybrid detection).
         min_component_size_to_prune: Components with a score strictly below this are dropped.
-        working_dir: Directory for a temporary DuckDB file and the hive-partition output. Defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+        working_dir: Directory for a temporary DuckDB file and the hive-partition output. Defaults
+            to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     Returns:
         Path to the hive-partitioned output and a frame of discarded ``component`` / ``n_umi``.
@@ -338,7 +342,8 @@ def create_working_edgelist(
 
     Args:
         input_edgelist_path: Path to the input edgelist in Parquet format.
-        working_dir: Directory for ``node_map.parquet`` and ``working_edgelist.parquet``; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+        working_dir: Directory for ``node_map.parquet`` and ``working_edgelist.parquet``; defaults
+            to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     Returns:
         ``(working_edgelist_path, node_map_path)``.
@@ -528,16 +533,21 @@ def filter_connected_components_by_size(
 ) -> tuple[pl.LazyFrame, GraphStatistics]:
     """Filter connected components by size and get statistics.
 
-    This function filters connected components in an edgelist based on their sizes. It computes the sizes of each component,
-    applies size thresholds (either dynamic or hard thresholds), and filters out components that do not meet the criteria.
+    This function filters connected components in an edgelist based on their sizes. It computes the
+    sizes of each component,
+    applies size thresholds (either dynamic or hard thresholds), and filters out components that do
+    not meet the criteria.
     It also updates the component statistics with information about the filtering process.
 
     Args:
         edgelist: The input edgelist as a Polars LazyFrame.
-        component_size_threshold: Size threshold for filtering components. If True, dynamic thresholds are used. If False, no filtering is applied. If a tuple, it specifies (min_size, max_size) for hard thresholds.
+        component_size_threshold: Size threshold for filtering components. If True, dynamic
+            thresholds are used. If False, no filtering is applied. If a tuple, it specifies
+            (min_size, max_size) for hard thresholds.
         discard_sizes: DataFrame containing sizes of discarded components.
         component_stats: Statistics object to update with filtering information.
-        dynamic_lowest_passable_bound: Lowest passable bound for dynamic thresholding. Defaults to None.
+        dynamic_lowest_passable_bound: Lowest passable bound for dynamic thresholding. Defaults to
+            None.
 
     Returns:
         pl.LazyFrame: The filtered edgelist as a Polars LazyFrame.

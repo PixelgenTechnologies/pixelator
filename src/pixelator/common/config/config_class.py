@@ -1,4 +1,4 @@
-"""Module contains classes and functions related to the configuration file for pixelator (assay settings).
+"""Configuration classes and helpers for Pixelator assay settings.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """

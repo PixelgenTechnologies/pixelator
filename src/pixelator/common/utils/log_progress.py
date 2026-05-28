@@ -44,7 +44,8 @@ class LogProgress:
 
         Args:
             increment_items: Number of items processed since the last update.
-            final_update: If True, forces a final log update regardless of interval. Defaults to False.
+            final_update: If True, forces a final log update regardless of interval. Defaults to
+                False.
         """
         self.n_items += increment_items
         now = time.time()

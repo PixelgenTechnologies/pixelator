@@ -86,7 +86,8 @@ class PNAPixelDataset:
         """Alias for `from_pxl_files`.
 
         Args:
-            pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a dictionary with sample names as keys and paths as values.
+            pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a
+                dictionary with sample names as keys and paths as values.
             config: The configuration for the dataset.
         """
         return PNAPixelDataset.from_pxl_files(pxl_files, config)
@@ -108,7 +109,8 @@ class PNAPixelDataset:
         If you pass a dictionary of .pxl files the keys will be used as the sample names.
 
         Args:
-            pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a dictionary with sample names as keys and paths as values.
+            pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a
+                dictionary with sample names as keys and paths as values.
             config: The configuration for the dataset.
         """
         if isinstance(pxl_files, Path):
@@ -268,7 +270,8 @@ class PNAPixelDataset:
 
         Args:
             add_marker_counts: If True, add the marker counts to the precomputed layouts.
-            add_spherical_norm: If True, add spherical coordinates to dataframe This will be filtered to only include the active samples and components.
+            add_spherical_norm: If True, add spherical coordinates to dataframe This will be
+                filtered to only include the active samples and components.
 
         Returns:
             The PreComputedLayouts instance for the dataset.
@@ -310,22 +313,29 @@ class PNAPixelDataset:
     ) -> PNAPixelDataset:
         """Filter the dataset to only include the specified samples, components, and markers.
 
-        Filtering by components will apply to all data modalities (i.e. adata, edgelist, proximity, and precomputed layouts).
-        However, filtering by markers will only apply to the adata and proximity data modalities, since filtering
+        Filtering by components will apply to all data modalities (i.e. adata, edgelist, proximity,
+        and precomputed layouts).
+        However, filtering by markers will only apply to the adata and proximity data modalities,
+        since filtering
         by markers in the edgelist and precomputed layouts will cause components to break up.
 
-        Note that filtering is done lazily, so creating new filters is cheap. The actual filtering will only be done
+        Note that filtering is done lazily, so creating new filters is cheap. The actual filtering
+        will only be done
         once the underlying data is accessed.
 
         Args:
-            samples: (The samples to include in the dataset (default): None means no filter is applied).
-            components: (The components to include in the dataset (default): None means no filter is applied).
-            markers: (The markers to include in the dataset (default): None means no filter is applied).
+            samples: (The samples to include in the dataset (default): None means no filter is
+                applied).
+            components: (The components to include in the dataset (default): None means no filter is
+                applied).
+            markers: (The markers to include in the dataset (default): None means no filter is
+                applied).
 
         Returns:
             A new PixelDataset with the specified samples, components, and markers
         Raises:
-            ValueError: if all of the specified samples, components, or markers do not exist in the dataset.
+            ValueError: if all of the specified samples, components, or markers do not exist in the
+                dataset.
         """
         samples = normalize_input_to_set(samples)
         components = normalize_input_to_set(components)

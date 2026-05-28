@@ -1,4 +1,4 @@
-"""Module contains classes and functions related to the configuration file for pixelator (assay settings).
+"""Configuration classes and helpers for Pixelator assay settings.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """
@@ -186,7 +186,8 @@ class PNAConfig:
         """Resolve a panel by name/product/alias and optional version constraint.
 
         Args:
-            panel_name: Panel name, product name, or alias. May include an inline version specifier (for example "product==1.2.0").
+            panel_name: Panel name, product name, or alias. May include an inline version specifier
+                (for example "product==1.2.0").
             version: Optional version specifier supplied separately.
             allow_aliases: If True, also resolve through configured aliases.
 
@@ -194,7 +195,8 @@ class PNAConfig:
             The resolved panel, or None if no matching panel is found.
 
         Raises:
-            ValueError: If version is specified both inline and in ``version``, or if multiple ambiguous major/minor versions match.
+            ValueError: If version is specified both inline and in ``version``, or if multiple
+                ambiguous major/minor versions match.
         """
         version_stripped_name, specified_version = parse_versioned_panel_name(
             panel_name
@@ -333,7 +335,8 @@ def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional
     """Parse a panel identifier that may include a version expression.
 
     Args:
-        panel_name: Panel identifier, optionally suffixed with a comparator and version fragment (for example ``panel>=1.2`` or ``panel==1``).
+        panel_name: Panel identifier, optionally suffixed with a comparator and version fragment
+            (for example ``panel>=1.2`` or ``panel==1``).
 
     Returns:
         A tuple ``(name, specifier)`` where both values are None when no version

@@ -323,7 +323,8 @@ class PipelineRunner(ABC):
 
         Args:
             pipeline: The pipeline to run.
-            progress: Use an object that supports .update() and .close() such as DummyProgress, cutadapt.utils.Progress or a tqdm instance.
+            progress: Use an object that supports .update() and .close() such as DummyProgress,
+                cutadapt.utils.Progress or a tqdm instance.
             outfiles: The output files.
         """
 
@@ -594,7 +595,8 @@ def make_runner(
 
     Args:
         inpaths: The input files.
-        cores: The number of cores to run the pipeline on (this is actually the number of worker processes, there will be one extra process for reading the input file(s))
+        cores: The number of cores to run the pipeline on (this is actually the number of worker
+            processes, there will be one extra process for reading the input file(s))
         buffer_size: Forwarded to `ParallelPipelineRunner()`. Ignored if cores is 1.
         statistics_class: The class to use for collecting statistics.
     """

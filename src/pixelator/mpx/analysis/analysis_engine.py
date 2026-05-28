@@ -1,4 +1,4 @@
-"""Analysis engine capable of running a list of analysis functions on each component in a pixeldataset.
+"""Analysis engine for running analysis functions on each PixelDataset component.
 
 Copyright © 2024 Pixelgen Technologies AB.
 """
@@ -39,7 +39,7 @@ class PerComponentAnalysis(Protocol):
             raise error
 
     def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing."""
+        """Post process the data (e.g. adjust p-values). Override if needed."""
         return data
 
     def add_to_pixel_dataset(
@@ -178,7 +178,8 @@ def run_analysis(
 
     Args:
         pxl_dataset: The PixelDataset to run the analysis on.
-        analysis_to_run: A list of `PerComponentAnalysis` to run on the components in the `pxl_dataset`.
+        analysis_to_run: A list of `PerComponentAnalysis` to run on the components in the
+            `pxl_dataset`.
         use_full_bipartite: Whether to use the full bipartite graph when creating the components.
 
     Returns:

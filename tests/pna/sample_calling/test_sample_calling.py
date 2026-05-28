@@ -74,7 +74,7 @@ def _samplesheet_and_hashing_for_three_samples():
 
 
 def test_hashed_antibody_mapping_requires_samplesheet_and_all_hashing_antibodies():
-    """HashedAntibodyMapping is created only via from_samplesheet with both samplesheet and all_hashing_antibodies."""
+    """Test HashedAntibodyMapping creation via from_samplesheet."""
     samplesheet, all_hashing = _samplesheet_and_hashing_for_three_samples()
     mapping = HashedAntibodyMapping.from_samplesheet(
         samplesheet,
@@ -94,7 +94,7 @@ def test_hashed_antibody_mapping_requires_samplesheet_and_all_hashing_antibodies
 
 
 def test_hashed_antibody_mapping_raises_when_antibody_in_multiple_samples():
-    """HashedAntibodyMapping raises ValueError when the same antibody is assigned to more than one sample."""
+    """Test duplicate antibody assignments raise ValueError."""
     with pytest.raises(
         ValueError, match="Antibody hash 'h1' is assigned to multiple samples"
     ):
@@ -224,7 +224,7 @@ def test_from_samplesheet_raises_when_duplicate_hash_index_maps_same_antibodies_
 
 
 def test_unmapped_hashing_antibodies_returns_antibodies_not_mapped_to_any_sample():
-    """unmapped_hashing_antibodies returns the subset of hashing antibodies not assigned to any sample."""
+    """Test unmapped_hashing_antibodies returns antibodies not assigned to samples."""
     # Panel has 6 hashing antibodies (names ending with -1..-6);
     # samplesheet only lists 2 samples (hash 1 and 2)
     samplesheet = pl.DataFrame(
@@ -282,7 +282,7 @@ def test_collect_hash_info(sample_hashed_pixel_files):
 
 
 def test_collect_hash_info_should_use_all_hashing_antibodies(sample_hashed_pixel_files):
-    """collect_hash_info uses all hashing antibodies; unmapped contribute to undetermined_hash_count.
+    """Test that unmapped hashing antibodies contribute to undetermined counts.
 
     Args:
         sample_hashed_pixel_files: Sample hashed pixel files.
@@ -615,7 +615,7 @@ def test_collect_nodes_to_remove_one_sample_in_pool():
 
 
 class _FakeFilteredDataset:
-    """Minimal stand-in for ``PNAPixelDataset`` after ``filter()`` for ``create_final_report`` tests."""
+    """Minimal filtered ``PNAPixelDataset`` stand-in for report tests."""
 
     def __init__(
         self,
@@ -665,7 +665,7 @@ class _FakeFilteredDataset:
 
 
 class _FakeMergedDataset:
-    """Mimics a merged post-sample-calling ``PNAPixelDataset`` for unit-testing ``create_final_report``."""
+    """Merged post-sample-calling ``PNAPixelDataset`` stand-in for report tests."""
 
     def __init__(
         self,

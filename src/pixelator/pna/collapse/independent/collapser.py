@@ -82,9 +82,12 @@ class MarkerCorrectionStats(pydantic.BaseModel):
         input_reads: The total number of input reads to the collapse process.
         input_molecules: The total number of unique input reads to the collapse process.
         input_unique_umis: The total number of unique UMIs of `region_id` among the input reads.
-        corrected_reads: The total number of reads that were modified by the error correction process.
-        corrected_molecules: The total number of unique reads that were modified by the error correction process.
-        corrected_unique_umis: The total number of unique UMIs of type `region_id` that were modified by the error correction process.
+        corrected_reads: The total number of reads that were modified by the error correction
+            process.
+        corrected_molecules: The total number of unique reads that were modified by the error
+            correction process.
+        corrected_unique_umis: The total number of unique UMIs of type `region_id` that were
+            modified by the error correction process.
         output_unique_umis: The total number of unique UMIs of type `region_id` after correction.
     """
 
@@ -133,7 +136,8 @@ class CollapseInputFile:
     Args:
         path: Path to the input file.
         file_size: The total size of the input file.
-        molecule_count: The number of rows in the input dataframe. i.e. The number of molecules (unique reads).
+        molecule_count: The number of rows in the input dataframe. i.e. The number of molecules
+            (unique reads).
     """
 
     path: str
@@ -341,13 +345,17 @@ class RegionCollapser:
     """Error correct UMI sequences based on similarity.
 
     Attributes:
-        _umi1_data: A numpy array containing the unique UMI-1 sequences for the current processing batch.
+        _umi1_data: A numpy array containing the unique UMI-1 sequences for the current processing
+            batch.
             These are recoded to a 2-bit encoding and cast to a 64-bit integer.
-        _umi2_data: A numpy array containing the unique UMI-2 sequences for the current processing batch.
+        _umi2_data: A numpy array containing the unique UMI-2 sequences for the current processing
+            batch.
             These are recoded to a 2-bit encoding and cast to a 64-bit integer.
 
-        _db_to_molecule_idx: A numpy array containing for each of the input moleces the index of the unique UMI.
-            This is used to link corrections of the unique umis back to all molecules that share the same UMI.
+        _db_to_molecule_idx: A numpy array containing for each of the input moleces the index of the
+            unique UMI.
+            This is used to link corrections of the unique umis back to all molecules that share the
+            same UMI.
         _unique_umi_to_molecule_count: The number of molecules that map to each unique umi.
             This is used to map "unique umi" counts to the corresponding "molecule" counts.
     """
@@ -395,7 +403,8 @@ class RegionCollapser:
             region_id: The region id of the UMI to collapse. Either "umi-1" or "umi-2".
             max_mismatches: The maximum number of mismatches allowed when collapsing molecules.
                 Either an integer >= 1 or a float in the range [0, 1).
-            algorithm: The algorithm to use for collapsing molecules. Either "cluster" or "directional".
+            algorithm: The algorithm to use for collapsing molecules. Either "cluster" or
+                "directional".
             threads: The number of threads to use for parallel processing.
             logger: The logger to use for output. The default is a logger named "collapse".
             min_parallel_chunk_size: The minimum number of com to process in parallel.

@@ -117,7 +117,8 @@ def demux(
         mismatches: The number of mismatches allowed in marker barcodes.
         output_chunk_reads: The target number of molecules in each output parquet file.
         output_max_chunks: The maximum number of marker parts to split the demuxed data into.
-        panel: A key of a panel file in the config, or a csv file with the antibody panel conjugations.
+        panel: A key of a panel file in the config, or a csv file with the antibody panel
+            conjugations.
         output: The path where the results will be placed (it is created if it does not exist).
         design: The design to load from the configuration file.
         threads: The number of total worker threads available for parallel processing.

@@ -1,4 +1,4 @@
-"""Analysis engine capable of running a list of analysis functions on each component in a pixeldataset.
+"""Analysis engine for running analysis functions on each PixelDataset component.
 
 Copyright © 2024 Pixelgen Technologies AB.
 """
@@ -170,7 +170,8 @@ class PerComponentTask(Protocol, Generic[T]):
         to the edgelist based analysis if the graph based analysis raises NotImplementedError.
 
         Args:
-            component: The component to run the analysis on. Either a Graph, a LazyFrame or the name of a component.
+            component: The component to run the analysis on. Either a Graph, a LazyFrame or the name
+                of a component.
             logging_setup: The logging setup to use.
 
         Raises:
@@ -203,7 +204,7 @@ class PerComponentTask(Protocol, Generic[T]):
             raise error
 
     def post_process_data(self, data: T) -> T:
-        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing."""
+        """Post process the data (e.g. adjust p-values). Override if needed."""
         return data
 
     def add_to_pixel_file(self, data: T, pxl_file_target: PxlFile) -> None:
@@ -240,8 +241,10 @@ class AnalysisManager:
         Args:
             analysis_to_run: The analysis to run on each component.
             logging_setup: The logging setup to use.
-            n_cores: The number of cores to use for parallel processing (set to 1 to disable parallel processing).
-            pxl_dataset_builder: A function that can build a PixelDataset from an iterable of PxlFiles.
+            n_cores: The number of cores to use for parallel processing (set to 1 to disable
+                parallel processing).
+            pxl_dataset_builder: A function that can build a PixelDataset from an iterable of
+                PxlFiles.
         """
         self.analysis_to_run = {
             analysis.TASK_NAME: analysis for analysis in analysis_to_run

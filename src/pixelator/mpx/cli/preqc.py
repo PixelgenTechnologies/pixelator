@@ -138,7 +138,8 @@ def preqc(
             If you set this argument it will overrule the value from the chosen design.
         min_length: The minimum length (bases) of a read (shorter reads will be discarded).
             If you set this argument it will overrule the value from the chosen design.
-        max_n_bases: The maximum number of Ns allowed in a read (default of 0 means any reads with N in it will be filtered out).
+        max_n_bases: The maximum number of Ns allowed in a read (default of 0 means any reads with N
+            in it will be filtered out).
         avg_qual: Minimum avg. quality a read must have (0 will disable the filter).
         dedup: Remove duplicated reads (exact same sequence).
         remove_polyg: Remove PolyG sequences (length of 10 or more).

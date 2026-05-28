@@ -56,7 +56,8 @@ def non_backtracking_transition_probabilities(
     a 3-step non-backtracking walk between two nodes i and j (connected by an edge) indicates
     that there is at least one path of length 3 connecting i and j. This can be an indication that
     i and j are located in the same neighborhood. If the probability is zero, there is no path of
-    length 3 between i and j which is an indication that i and j are located in different neighborhoods.
+    length 3 between i and j which is an indication that i and j are located in different
+    neighborhoods.
     In the latter case, the edge between i and j is potentially spurious.
 
     One limitation with this method is that edges located in sparse regions of the graph often
@@ -68,9 +69,12 @@ def non_backtracking_transition_probabilities(
     Args:
         graph: a networkx graph object.
         n_steps: the number of steps to take for the random walk.
-        cumulative: if True, calculate the cumulative transition probabilities for all steps up to n_steps.
-        deadend_action: (the action to take for deadend nodes. Options are): "remove", "ignore", "self-loop".
-        track_only_nonzero: if True, only track edges with non-zero probabilities without keeping the actual probablity.
+        cumulative: if True, calculate the cumulative transition probabilities for all steps up to
+            n_steps.
+        deadend_action: (the action to take for deadend nodes. Options are): "remove", "ignore",
+            "self-loop".
+        track_only_nonzero: if True, only track edges with non-zero probabilities without keeping
+            the actual probablity.
 
     Returns:
         a pandas series containing the transition probabilities.
@@ -257,9 +261,12 @@ class KcoreAnalysis(PerComponentTask):
     ) -> pd.DataFrame:
         """Run k-core analysis on a single component.
 
-        Calls summarize_k_cores on a component graph and returns a pandas DataFrame with k-core counts.
-        The columns in the DataFrame are names 'k_core_1', 'k_core_2', ..., 'k_core_M' where M is the
-        maximum k-core value in the component. The k-core counts are useful for quantifying graph connectivity.
+        Calls summarize_k_cores on a component graph and returns a pandas DataFrame with k-core
+        counts.
+        The columns in the DataFrame are names 'k_core_1', 'k_core_2', ..., 'k_core_M' where M is
+        the
+        maximum k-core value in the component. The k-core counts are useful for quantifying graph
+        connectivity.
 
         Args:
             component: a networkx graph for a component to run the analysis on.
@@ -317,9 +324,12 @@ class SvdAnalysis(PerComponentTask):
         """Run SVD analysis on component.
 
         Calls svd_pivot_distances on a component graph and returns a pandas DataFrame with variance
-        explained for the first three singular vectors. The columns in the DataFrame are named 'svd_var_expl_s1',
-        'svd_var_expl_s2', 'svd_var_expl_s3'. The variance explained is useful for investigating spatial coherence
-        in the graph. In the best case scenario, the first three singular vectors contribute equally to the variance
+        explained for the first three singular vectors. The columns in the DataFrame are named
+        'svd_var_expl_s1',
+        'svd_var_expl_s2', 'svd_var_expl_s3'. The variance explained is useful for investigating
+        spatial coherence
+        in the graph. In the best case scenario, the first three singular vectors contribute equally
+        to the variance
         explained, and together they should explain 100% of the total variance explained.
 
         Args:
@@ -327,7 +337,9 @@ class SvdAnalysis(PerComponentTask):
             component_id: the id of the component.
 
         Returns:
-            a pandas DataFrame containing variance explained for the first three singular vectors. If the SVD computation fails, e.g. if the number of pivot points is >= the number of nodes, the function returns a DataFrame with nan values.
+            a pandas DataFrame containing variance explained for the first three singular vectors.
+            If the SVD computation fails, e.g. if the number of pivot points is >= the number of
+            nodes, the function returns a DataFrame with nan values.
         """
         logger.debug(f"Running SVD analysis on component {component_id}")
 
@@ -369,7 +381,8 @@ class SvdAnalysis(PerComponentTask):
         all components to adata.obs in pxl_dataset.
 
         Args:
-            data: a pandas DataFrame containing svd variance explained for the first three singular vectors across all components.
+            data: a pandas DataFrame containing svd variance explained for the first three singular
+                vectors across all components.
             pxl_dataset: the PNAPixelDataset to add the data to.
             pxl_file_target: the PxlFile to add the data to.
         """

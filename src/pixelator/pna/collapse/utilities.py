@@ -172,7 +172,8 @@ def split_collapse_inputs(
         parquet_files: The parquet files to check.
 
     Returns:
-        Either a single list when the input data has been collapsed using the "paired" strategy, or a tuple of two lists when collapsed using "independent" strategy.
+        Either a single list when the input data has been collapsed using the "paired" strategy, or
+        a tuple of two lists when collapsed using "independent" strategy.
 
     Raises:
         ValueError: If the input data contains a mix of independent and paired collapsed data.
@@ -247,7 +248,8 @@ def check_collapse_strategy_inputs(
         report_files: Report files.
 
     Returns:
-        Either a single list when the input data has been collapsed using the "paired" strategy, or a tuple of two lists when collapsed using "independent" strategy.
+        Either a single list when the input data has been collapsed using the "paired" strategy, or
+        a tuple of two lists when collapsed using "independent" strategy.
 
     Raises:
         ValueError: If the input data contains a mix of independent and paired collapsed data.

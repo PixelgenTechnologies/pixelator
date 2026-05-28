@@ -90,7 +90,11 @@ def _build_docstring(node: ast.AST, kind: str) -> str:
     return f'"""{body}\n"""\n'
 
 
-def _insert_docstring(source: str, node: ast.AST, kind: str) -> str | None:
+def _insert_docstring(
+    source: str,
+    node: ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef,
+    kind: str,
+) -> str | None:
     if ast.get_docstring(node, clean=False):
         return None
     if (
@@ -139,7 +143,8 @@ def process_file(path: Path) -> bool:
         for parent in ast.walk(tree)
         for child in ast.iter_child_nodes(parent)
     }
-    nodes: list[tuple[ast.AST, str]] = []
+    DocNode = ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef
+    nodes: list[tuple[DocNode, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef):
             if node.name.startswith("_"):

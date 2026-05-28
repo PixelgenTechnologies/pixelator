@@ -64,7 +64,9 @@ class Graph:
         False or `simplify` is True the edge attributes will be lost.
 
         Args:
-            edgelist: the edge list (dataframe) corresponding to the graph either as a pandas data frame or as a polars LazyFrame. To minimize the memory usage the LazyFrame is preferred.
+            edgelist: the edge list (dataframe) corresponding to the graph either as a pandas data
+                frame or as a polars LazyFrame. To minimize the memory usage the LazyFrame is
+                preferred.
             add_marker_counts: add a dictionary of marker counts to each node
             simplify: simplifies the graph (remove redundant edges)
             use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
@@ -197,8 +199,12 @@ class Graph:
             layout_algorithm: the layout algorithm to use to generate the coordinates
             only_keep_a_pixels: If true, only keep the a-pixels
             get_node_marker_matrix: Add a matrix of marker counts to each node if True.
-            cache: set to `True` in order to cache one call of this this method. It will make subsequent calls to the layout method with the same settings much faster, at the cost of additional memory usage. This can speed things up a lot when plotting e.g. different markers across multiple markers.
-            random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
+            cache: set to `True` in order to cache one call of this this method. It will make
+                subsequent calls to the layout method with the same settings much faster, at the
+                cost of additional memory usage. This can speed things up a lot when plotting e.g.
+                different markers across multiple markers.
+            random_seed: used as the seed for graph layouts with a stochastic element. Useful to get
+                deterministic layouts across method calls.
             **kwargs: will be passed to the underlying layout implementation
 
         Returns:
@@ -251,10 +257,13 @@ class Graph:
 
         Args:
             n_vertices: the number of vertices to be added to the graph instance.
-            attrs: dict of sequences, all of length equal to the number of vertices to be added, containing the attributes of the new vertices. If `n_vertices=1` then they have to be lists of length 1.
+            attrs: dict of sequences, all of length equal to the number of vertices to be added,
+                containing the attributes of the new vertices. If `n_vertices=1` then they have to
+                be lists of length 1.
 
         Raises:
-            IndexError: if the number of graph vertices to add and lists of attributes are of different lengths
+            IndexError: if the number of graph vertices to add and lists of attributes are of
+                different lengths
         """
         self._backend.add_vertices(n_vertices=n_vertices, attrs=attrs)
         self._connected_components_needs_recompute = True
@@ -289,10 +298,19 @@ class Graph:
 
         Args:
             k: The number of steps in the k-step random walk. Default is 1.
-            use_weights: Whether to use weights in the computation. When turned off, all edge weights will be equal to 1. Default is True.
+            use_weights: Whether to use weights in the computation. When turned off, all edge
+                weights will be equal to 1. Default is True.
             normalize_counts: Whether to normalize counts to proportions. Default is True.
-            W: A sparse matrix of custom edge weights. This will override the automated computation of edge weights. `W` must have the same dimensions as A. Note that weights can be defined for any pair of nodes, not only the pairs represented by edges in `A`. Default is None.
-            method: The method to use for computing local G. Must be one of 'gi' or 'gstari'. 'gi' is the original local G metric, which does not consider self-loops, meaning that the local marker expression for a node is computed by aggregating the weighted expression of its neighbors. 'gstari' is a simplified version of local G that does consider self-loops. In other words, the local marker expression of a node also includes the weighted marker expression of the node itself. Default is 'gi'.
+            W: A sparse matrix of custom edge weights. This will override the automated computation
+                of edge weights. `W` must have the same dimensions as A. Note that weights can be
+                defined for any pair of nodes, not only the pairs represented by edges in `A`.
+                Default is None.
+            method: The method to use for computing local G. Must be one of 'gi' or 'gstari'. 'gi'
+                is the original local G metric, which does not consider self-loops, meaning that the
+                local marker expression for a node is computed by aggregating the weighted
+                expression of its neighbors. 'gstari' is a simplified version of local G that does
+                consider self-loops. In other words, the local marker expression of a node also
+                includes the weighted marker expression of the node itself. Default is 'gi'.
 
         Returns:
             A DataFrame of local G-scores for each node and marker.

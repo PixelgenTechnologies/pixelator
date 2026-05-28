@@ -61,7 +61,8 @@ def analyse_pixels(
         output_prefix: the prefix to prepend to the output file
         metrics_file: the path to a JSON file to write metrics
         use_full_bipartite: use the bipartite graph instead of the one-node-projection (UPIA)
-        analysis_to_run: a list of analysis functions (`PerComponentAnalysis` instances) to apply to each component
+        analysis_to_run: a list of analysis functions (`PerComponentAnalysis` instances) to apply to
+            each component
         verbose: run if verbose mode when true
     Returns:
         None (None)

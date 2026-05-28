@@ -236,10 +236,12 @@ class PixelDataset:
         """Get the graph from the underlying edgelist.
 
         Args:
-            component_id: Optionally give the component id of the component to only return that component.
+            component_id: Optionally give the component id of the component to only return that
+                component.
             add_node_marker_counts: Add marker counts to the nodes of the graph
             simplify: If True, removes self-loops and multiple edges between nodes from the graph
-            use_full_bipartite: If True, the full bipartite graph will be used, otherwise it will return the A-node projection
+            use_full_bipartite: If True, the full bipartite graph will be used, otherwise it will
+                return the A-node projection
         Returns:
             A Graph instance (Graph)
 
@@ -337,8 +339,10 @@ class PixelDataset:
 
         Args:
             path: the path where to save the dataset as a .pxl
-            file_format: should be 'csv' or 'parquet'. Default is 'parquet'. This indicates what file-format is used to serialize the data frames in the .pxl file.
-            force_overwrite: By default pixelator will not overwrite existing .pxl files, set this to true to force an overwrite of the existing file.
+            file_format: should be 'csv' or 'parquet'. Default is 'parquet'. This indicates what
+                file-format is used to serialize the data frames in the .pxl file.
+            force_overwrite: By default pixelator will not overwrite existing .pxl files, set this
+                to true to force an overwrite of the existing file.
 
         Returns:
             None (None)

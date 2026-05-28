@@ -88,8 +88,10 @@ def graph(
         ctx: Click context from the command decorator.
         parquet_file: Path to the input parquet edge-list file.
         multiplet_recovery: Activate the multiplet recovery using leiden community detection.
-        max_refinement_recursion_depth: The number of times a component can be broken down into smaller components during the multiplet recovery process.
-        max_edges_to_split: Maximum number of edges between the product components as a result of a component split operation during the multiplet recovery process.
+        max_refinement_recursion_depth: The number of times a component can be broken down into
+            smaller components during the multiplet recovery process.
+        max_edges_to_split: Maximum number of edges between the product components as a result of a
+            component split operation during the multiplet recovery process.
         min_count: Discard edges (pixels) with with a count (reads) below this (use 1 to disable).
         output: The path where the results will be placed (it is created if it does not exist).
     """

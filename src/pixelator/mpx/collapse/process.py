@@ -234,7 +234,8 @@ def get_connected_components(
         graph: a dictionary of sequence to sequences (within same distance)
         counts: a dictionary of counts (copies) for each sequence in `graph`
     Returns:
-        a list of sets of sequences where each set represents a connected component (list[set[UniqueFragment]])
+        a list of sets of sequences where each set represents a connected component
+        (list[set[UniqueFragment]])
     """
     found = set()
     components = []
@@ -273,7 +274,8 @@ def identify_fragments_to_collapse(
         min_dist: the hamming distance threshold (i.e. the mismatches between two sequences)
         max_neighbours: the number of neighbours to use in the Annoy index
     Returns:
-        a dictionary with fragments as keys and a list of their adjoining fragments as values (dict[UniqueFragment, list[UniqueFragment]])
+        a dictionary with fragments as keys and a list of their adjoining fragments as values
+        (dict[UniqueFragment, list[UniqueFragment]])
     """
     logger.debug("Computing adjacency sequences from %i elements", len(seqs))
 
@@ -365,11 +367,13 @@ def collapse_sequences_adjacency(
 
     Args:
         seq_dict: a dictionary mapping unique fragments to their corresponding upib's
-        max_neighbours: the maximum number of neighbours to search in the approximate nearest neighbour search
+        max_neighbours: the maximum number of neighbours to search in the approximate nearest
+            neighbour search
         min_dist: the hamming distance threshold (i.e. the mismatches between two sequences)
 
     Returns:
-        An iterator of the of collapsed molecules, and their original counts (Iterator[CollapsedFragment])
+        An iterator of the of collapsed molecules, and their original counts
+        (Iterator[CollapsedFragment])
     """
     logger.debug("Collapsing %i sequences", len(seq_dict))
 
@@ -414,7 +418,8 @@ def create_fragment_to_upib_dict(
         umib_start: the 0-based start position of UMIB
         umib_end: the 1-based end position of UMIB
     Returns:
-        a tuple with: - a dictionary with the sequence of umi+upia as keys and the list of associated upibs as values. - the number of input reads (tuple[UniqueFragmentToUpiB, int])
+        a tuple with: - a dictionary with the sequence of umi+upia as keys and the list of
+        associated upibs as values. - the number of input reads (tuple[UniqueFragmentToUpiB, int])
 
     Raises:
         FileFqGzEmpty: when the file is empty
@@ -624,7 +629,8 @@ def collapse_fastq(
     .. [2] https://github.com/spotify/annoy
 
     Args:
-        input_file: the path to the fastq file containing MPX amplicons (must contain the UPI and UMI)
+        input_file: the path to the fastq file containing MPX amplicons (must contain the UPI and
+            UMI)
         algorithm: the collapsing algorithm to use (unique or adjacency)
         marker: the antibody tag to append to the output
         sequence: the barcode sequence to append to the output

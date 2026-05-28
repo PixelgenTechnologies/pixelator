@@ -81,7 +81,9 @@ class TooManyN(Predicate):
         """Initialize a TooManyN pipeline predicate.
 
         Args:
-            count: the cutoff for the N count. If it is below 1.0, it will be considered a proportion, and above and equal to 1 will be considered as discarding reads with a number of N's greater than this cutoff.
+            count: the cutoff for the N count. If it is below 1.0, it will be considered a
+                proportion, and above and equal to 1 will be considered as discarding reads with a
+                number of N's greater than this cutoff.
             assay: the assay configuration.
         """
         assert count >= 0

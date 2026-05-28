@@ -143,7 +143,8 @@ def merge_communities_with_many_crossing_edges(
     Args:
         edgelist: The edge list to process
         node_community_dict: A dictionary mapping each node to a community
-        n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
+        n_edges: The threshold for the number of edges to be found between communities to merge or
+            None to avoid merging
         max_edges_to_remove: Max edges to remove.
         max_edges_to_remove_relative: Max edges to remove relative.
 
@@ -208,7 +209,8 @@ def refine_component(
 
     Args:
         component_id: ID of the component to refine.
-        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
+        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned)
+            format.
         refinement_options: Options for refinement during community detection.
         duckdb_config: Configuration for DuckDB connection.
 
@@ -298,7 +300,8 @@ def get_component_sizes(
     """Get sizes of components from edgelist with components.
 
     Args:
-        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
+        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned)
+            format.
     """
     with duckdb.connect() as con:
         component_sizes = con.execute(f"""
@@ -320,21 +323,24 @@ def run_leiden_refinement(
     component_sizes: pl.DataFrame | None = None,
     max_workers: int = 10,
 ) -> tuple[GraphStatistics, pl.DataFrame]:
-    """Recovery multiplets by leiden community detection, removing crossing edges between communities.
+    """Recover multiplets by Leiden community detection, removing crossing edges.
 
     Args:
-        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
+        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned)
+            format.
         refinement_options: Options for refinement during community detection.
         component_stats: Statistics about the components.
         component_sizes: Optional precomputed sizes of components.
         max_workers: Maximum number of worker processes to use.
 
     Returns:
-        tuple[GraphStatistics, pl.DataFrame]: Updated component statistics and DataFrame of discarded component sizes.
+        tuple[GraphStatistics, pl.DataFrame]: Updated component statistics and DataFrame of
+        discarded component sizes.
 
     Raises:
         ValueError: If ``max_workers`` is invalid.
-        DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than 1 MiB.
+        DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than
+            1 MiB.
     """
     if component_sizes is None:
         component_sizes = get_component_sizes(component_edgelists_path)

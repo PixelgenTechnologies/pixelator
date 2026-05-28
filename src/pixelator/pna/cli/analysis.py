@@ -100,9 +100,11 @@ def analysis(
         ctx: Click context from the command decorator.
         pxl_file: Path to the input PXL (PixelDataset) file.
         compute_proximity: Compute proximity scores matrix.
-        proximity_nbr_of_permutations: Number of permutations to use when calculating the expected proximity scores.
+        proximity_nbr_of_permutations: Number of permutations to use when calculating the expected
+            proximity scores.
         compute_k_cores: Compute k-core summary tables for each component.
-        compute_svd_var_explained: Compute variance explained for top 3 singular vectors for each component.
+        compute_svd_var_explained: Compute variance explained for top 3 singular vectors for each
+            component.
         svd_nbr_of_pivots: Number of pivots to use for SVD variance explained computation.
         output: The path where the results will be placed (it is created if it does not exist).
     """

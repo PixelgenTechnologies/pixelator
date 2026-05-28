@@ -71,7 +71,7 @@ class DemuxPipeline:
     def __init__(
         self, demuxer: BarcodeDemuxer, writer_queue: Optional[Queue] = None
     ) -> None:
-        """Initialize a pipeline that processes reads and sends them to a writer queue for further processing.
+        """Initialize a read-processing pipeline with an optional writer queue.
 
         Args:
             demuxer: The barcode demuxer to use

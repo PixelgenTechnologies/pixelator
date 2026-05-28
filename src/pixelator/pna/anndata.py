@@ -48,7 +48,8 @@ def pna_edgelist_to_anndata(
     The antibody panel object containing marker metadata.
 
     Returns:
-        Notes:  ----- Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
+        Notes:  ----- Assumes that the 'edgelist' table exists in the DuckDB connection and contains
+        the necessary columns.
     """
     logger.debug("Constructing counts matrix.")
 

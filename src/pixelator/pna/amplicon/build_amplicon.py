@@ -289,7 +289,9 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
         Args:
             assay: the assay design
-            mismatches: the maximum number of mismatches allowed when aligning the LBS sequences. If a float, it is interpreted as a fraction of the template length. Otherwise, it is the maximum number of mismatches allowed.
+            mismatches: the maximum number of mismatches allowed when aligning the LBS sequences. If
+                a float, it is interpreted as a fraction of the template length. Otherwise, it is
+                the maximum number of mismatches allowed.
             writer: a writer to save failed reads to.
         """
         self._assay = assay
@@ -764,7 +766,7 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
         info1: ModificationInfo | None,
         info2: ModificationInfo | None,
     ) -> Optional[SequenceRecord]:
-        """Build an amplicon from paired-end reads (read1, read2), or a single read if only one is present.
+        """Build an amplicon from paired-end reads, or a single read when only one is present.
 
         Return the processed read or None if the read has been
         "consumed" (filtered or written to an output file)
@@ -854,11 +856,14 @@ class PairedEndAmpliconBuilder(AmpliconBuilder):
         info1: ModificationInfo | None = None,
         info2: ModificationInfo | None = None,
     ) -> tuple[Amplicon, AmpliconBuilderFailureReason | None]:
-        """Process paired-end sequencing reads to build an Amplicon object and determine failure reasons.
+        """Process paired-end sequencing reads and determine amplicon failure reasons.
 
-        This method scans the provided forward and reverse reads for specific regions, generates consensus
-        sequences and quality scores for each region, and checks for errors. If consensus cannot be reached,
-        it returns an Amplicon object with all regions set to None and an appropriate failure reason.
+        This method scans the provided forward and reverse reads for specific regions, generates
+        consensus
+        sequences and quality scores for each region, and checks for errors. If consensus cannot be
+        reached,
+        it returns an Amplicon object with all regions set to None and an appropriate failure
+        reason.
 
         Args:
             read1: The forward sequencing read.

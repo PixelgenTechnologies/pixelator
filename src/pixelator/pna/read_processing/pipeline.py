@@ -52,7 +52,7 @@ ModifierStage = typing.Literal["pre", "post"]
 
 
 class AmpliconPipeline(Pipeline):
-    """Processing pipeline for processing single-end or paired‐end reads into a single amplicon sequence.
+    """Process single-end or paired-end reads into a single amplicon sequence.
 
     - If two files (R1+R2) are provided: pre‐steps (paired), then combine, then post‐steps (single).
     - If only one file is provided (single‐end), you detect “R1” vs “R2” by looking at
@@ -90,10 +90,13 @@ class AmpliconPipeline(Pipeline):
         """Initialize the pipeline.
 
         Args:
-            combiner: The step that combines the reads into a single amplicon sequence. In single-end mode, this step works as a modifier to enforce the expected read format.
-            pre_modifiers: A list of modifiers that are applied to the reads before the combining step.
+            combiner: The step that combines the reads into a single amplicon sequence. In
+                single-end mode, this step works as a modifier to enforce the expected read format.
+            pre_modifiers: A list of modifiers that are applied to the reads before the combining
+                step.
             pre_steps: A list of steps that are applied to the reads before the combining step.
-            post_modifiers: A list of modifiers that are applied to the reads after the combining step.
+            post_modifiers: A list of modifiers that are applied to the reads after the combining
+                step.
             post_steps: A list of steps that are applied to the reads after the combining step.
         """
         self._combiner = combiner

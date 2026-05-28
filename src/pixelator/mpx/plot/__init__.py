@@ -105,11 +105,13 @@ def molecule_rank_plot(
     """Plot the number of molecules per component against its molecule rank.
 
     Args:
-        data: a pandas DataFrame with a column 'molecules' containing edge counts for MPX components.
+        data: a pandas DataFrame with a column 'molecules' containing edge counts for MPX
+            components.
         group_by: a column in the DataFrame to group the plot by.
 
     Returns:
-        a plot showing the number of molecules per component against its edge rank used for quality control. (Tuple[plt.Figure, plt.Axes])
+        a plot showing the number of molecules per component against its edge rank used for quality
+        control. (Tuple[plt.Figure, plt.Axes])
 
     Raises:
         AssertionError if the required column(s) are not present in the DataFrame
@@ -165,7 +167,8 @@ def edge_rank_plot(
         group_by: a column in the DataFrame to group the plot by.
 
     Returns:
-        a plot showing the number of edges per component against its edge rank used for quality control. (Tuple[plt.Figure, plt.Axes])
+        a plot showing the number of edges per component against its edge rank used for quality
+        control. (Tuple[plt.Figure, plt.Axes])
 
     Raises:
         AssertionError if the required column(s) are not present in the DataFrame
@@ -474,7 +477,8 @@ def abundance_colocalization_plot(
         markers_x: List of markers for the x-axis.
         markers_y: List of markers for the y-axis.
         layer: The anndata layer (e.g. transformation) to use for the marker data.
-        colocalization_column: The column in the colocalization table to use for colocalization values. Defaults to "pearson_z".
+        colocalization_column: The column in the colocalization table to use for colocalization
+            values. Defaults to "pearson_z".
 
     Returns:
         a scatter plot of marker abundance with colocalization as color.

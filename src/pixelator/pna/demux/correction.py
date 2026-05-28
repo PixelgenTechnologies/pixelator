@@ -225,7 +225,8 @@ def hamming_distance_i8(s1: BKTreeItem, s2: BKTreeItem | bytes) -> int:
 def build_bktree(panel: PNAAntibodyPanel, sequence_key: str) -> BKTree:
     """Create a BKTree from the panel sequences.
 
-    This allows us to quickly find the closest sequence to a given query sequence with up to a given distance.
+    This allows us to quickly find the closest sequence to a given query sequence with up to a given
+    distance.
     The distance function is the edit distance
 
     Args:

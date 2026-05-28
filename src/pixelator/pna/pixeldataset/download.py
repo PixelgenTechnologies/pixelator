@@ -53,31 +53,31 @@ class DownloadableDatasets:
     ``overwrite=True``.
 
     Example:
-        List available datasets and download one::
+    List available datasets and download one::
 
-            from pathlib import Path
-            from pixelator.pna.pixeldataset.download import DownloadableDatasets
+    from pathlib import Path
+    from pixelator.pna.pixeldataset.download import DownloadableDatasets
 
-            # See what datasets exist
-            DownloadableDatasets.list_datasets()
+    # See what datasets exist
+    DownloadableDatasets.list_datasets()
 
-            # Download the latest version to the default folder (./pixelator-datasets/{dataset_name}.layout.pxl)
-            # i.e. in this case ./pixelator-datasets/pna062-pha-pbmcs.layout.pxl
-            path = DownloadableDatasets.download_dataset("pna062-pha-pbmcs")
+    # Download the latest version to the default folder
+    (./pixelator-datasets/{dataset_name}.layout.pxl)
+    # i.e. in this case ./pixelator-datasets/pna062-pha-pbmcs.layout.pxl
+    path = DownloadableDatasets.download_dataset("pna062-pha-pbmcs")
 
-            # Download to a specific path
-            path = DownloadableDatasets.download_dataset(
-                "pna062-unstim-pbmcs",
-                output_path=Path("./data/my_dataset.layout.pxl"),
-            )
+    # Download to a specific path
+    path = DownloadableDatasets.download_dataset(
+    "pna062-unstim-pbmcs",
+    output_path=Path("./data/my_dataset.layout.pxl"),
+    )
 
-            # Re-download and overwrite an existing file
-            path = DownloadableDatasets.download_dataset(
-                "pna062-pha-pbmcs",
-                output_path=Path("./data/example.layout.pxl"),
-                overwrite=True,
-            )
-
+    # Re-download and overwrite an existing file
+    path = DownloadableDatasets.download_dataset(
+    "pna062-pha-pbmcs",
+    output_path=Path("./data/example.layout.pxl"),
+    overwrite=True,
+    )
     """
 
     @staticmethod
@@ -94,9 +94,12 @@ class DownloadableDatasets:
 
         Args:
             dataset_name: The name of the dataset to download.
-            version: The version of the dataset to download. If not provided, the latest version will be downloaded.
-            output_path: The path to save the dataset to. Defaults to `./pixelator-datasets/{dataset_name}.layout.pxl`
-            overwrite: If False and a file already exists at the destination, do not download and return the path. If True, download again and overwrite the existing file.
+            version: The version of the dataset to download. If not provided, the latest version
+                will be downloaded.
+            output_path: The path to save the dataset to. Defaults to
+                `./pixelator-datasets/{dataset_name}.layout.pxl`
+            overwrite: If False and a file already exists at the destination, do not download and
+                return the path. If True, download again and overwrite the existing file.
 
         Returns:
             The path to the downloaded dataset.
@@ -196,7 +199,8 @@ def _download_pixel_dataset(url: str, output_path: Path) -> Path:
         The path to the downloaded file.
 
     Raises:
-        requests.HTTPError: If the server returns an error status code. requests.RequestException: On connection or read failures.
+        requests.HTTPError: If the server returns an error status code. requests.RequestException:
+        On connection or read failures.
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)

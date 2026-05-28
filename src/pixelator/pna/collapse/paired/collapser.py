@@ -158,11 +158,14 @@ class MoleculeCollapser:
             assay: The assay configuration.
             panel: The antibody panel configuration.
             output: The output path for the collapsed molecules.
-            max_mismatches: The maximum number of mismatches allowed when collapsing molecules. Either an integer >= 1 or a float in the range [0, 1).
-            algorithm: The algorithm to use for collapsing molecules. Either "directional" or "cluster".
+            max_mismatches: The maximum number of mismatches allowed when collapsing molecules.
+                Either an integer >= 1 or a float in the range [0, 1).
+            algorithm: The algorithm to use for collapsing molecules. Either "directional" or
+                "cluster".
             threads: The number of threads to use for parallel processing.
             logger: The logger to use for output. The default is a logger named "collapse".
-            min_parallel_chunk_size: The minimum number of connected components to process in parallel. Components below this size will be processed serially.
+            min_parallel_chunk_size: The minimum number of connected components to process in
+                parallel. Components below this size will be processed serially.
         """
         self.assay = assay
         self.panel = panel
@@ -401,8 +404,10 @@ class MoleculeCollapser:
         python multiprocessing IPC overhead.
 
         Args:
-            subrange: The range of connected components to process. A tuple with the start and stop indices.
-            component_indices: A list of lists containing the indices in the database and read counts vector for each connected component.
+            subrange: The range of connected components to process. A tuple with the start and stop
+                indices.
+            component_indices: A list of lists containing the indices in the database and read
+                counts vector for each connected component.
             db_shm: The shared memory buffer containing the binary vectors.
             read_counts_shm: The shared memory buffer containing the read counts.
             db_size: The size of the binary vectors memory buffer in bytes.

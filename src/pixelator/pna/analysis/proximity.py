@@ -97,7 +97,8 @@ def proximity_with_permute_stats(
     Args:
         edgelist: A DataFrame representing the edgelist.
         proximity_function: A function that computes proximity metrics for the given edgelist.
-        result_columns: A list of column names for which statistics (e.g., z-scores, p-values) will be computed.
+        result_columns: A list of column names for which statistics (e.g., z-scores, p-values) will
+            be computed.
         n_permutations: The number of permutations to perform. Defaults to 100.
         seed: Seed for the random number generator. Defaults to 42.
         min_std: Minimum standard deviation to use when normalizing z-scores. Defaults to 1.0.
@@ -214,14 +215,21 @@ def calculate_differential_proximity(
     """Perform differential analysis on marker-pair proximity data.
 
     Args:
-        proximity_df: Input data containing proximity metrics and grouping information. Must include columns for `contrast_column`, `marker_1`, `marker_2`, and the proximity metric (default: "join_count_z").
+        proximity_df: Input data containing proximity metrics and grouping information. Must include
+            columns for `contrast_column`, `marker_1`, `marker_2`, and the proximity metric
+            (default: "join_count_z").
         contrast_column: The column name representing the grouping variable
         reference: The reference group in the `contrast_column`.
-        targets: List of target groups to compare against the reference. If None, all groups in `contrast_column` except the reference are used. Defaults to None.
-        metric: Column name representing the proximity metric to analyze. Defaults to "join_count_z".
-        metric_type: Type of measures to analyze ("self", "co", or "all" proximities). Defaults to "all".
-        min_n_obs: Minimum number of observations required for a group to be included in the analysis. Defaults to 0.
-        p_adjust_method: Method for adjusting p-values for multiple comparisons. Defaults to "bonferroni".
+        targets: List of target groups to compare against the reference. If None, all groups in
+            `contrast_column` except the reference are used. Defaults to None.
+        metric: Column name representing the proximity metric to analyze. Defaults to
+            "join_count_z".
+        metric_type: Type of measures to analyze ("self", "co", or "all" proximities). Defaults to
+            "all".
+        min_n_obs: Minimum number of observations required for a group to be included in the
+            analysis. Defaults to 0.
+        p_adjust_method: Method for adjusting p-values for multiple comparisons. Defaults to
+            "bonferroni".
 
     Returns:
         pd.DataFrame: A DataFrame containing the results of the differential

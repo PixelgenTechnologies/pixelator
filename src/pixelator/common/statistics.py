@@ -34,8 +34,10 @@ def clr_transformation(
 
     Args:
         df: The dataframe of antibody counts.
-        axis: The axis on which to apply the transformation. `axis=0` applies the transformation by columns (antibody), and `axis=1` applies it by rows (component). Defaults to 1.
-        non_negative: If `True`, the non-negative CLR transformation is used. If `False`, the zero-centered CLR transformation is used. Defaults to True.
+        axis: The axis on which to apply the transformation. `axis=0` applies the transformation by
+            columns (antibody), and `axis=1` applies it by rows (component). Defaults to 1.
+        non_negative: If `True`, the non-negative CLR transformation is used. If `False`, the
+            zero-centered CLR transformation is used. Defaults to True.
 
     Returns:
         pd.DataFrame: A dataframe with the antibody counts transformed.
@@ -169,7 +171,8 @@ def rel_normalization(df: pd.DataFrame, axis: Literal[0, 1] = 0) -> pd.DataFrame
 
     Args:
         df: The dataframe of antibody counts (antibodies as columns).
-        axis: The axis on which to apply the normalization. `axis=0` applies normalization by columns, and `axis=1` applies it by rows.
+        axis: The axis on which to apply the normalization. `axis=0` applies normalization by
+            columns, and `axis=1` applies it by rows.
 
     Returns:
         pd.DataFrame: A dataframe with the counts normalized.

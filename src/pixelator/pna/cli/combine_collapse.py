@@ -89,7 +89,7 @@ def validate_mismatches(ctx, param, value):
 def combine_collapse(
     ctx, parquet, reports, output, parquet_pattern, report_pattern, memory
 ):
-    """Collapse Molecular Pixelation data (FASTQ) by umi-upi to remove duplicates and perform error correction.
+    """Combine parquet and JSON files from partitioned collapse results.
 
     Args:
         ctx: Click context from the command decorator.

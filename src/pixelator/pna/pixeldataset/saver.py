@@ -28,17 +28,19 @@ class PixelDatasetSaver:
         output_path: Path | str,
         optimize_disk_usage: bool = True,
     ) -> PxlFile:
-        """Save a sample from a the PixelDataset to disk as a single pxl file with any component filters applied to it.
+        """Save one PixelDataset sample to a pxl file with component filters applied.
 
         NB: for the time being, no marker filters are applied to the saved file.
 
-        This will copy the entire sample to a new file, applying any filters that have been set on the PxlFile
+        This will copy the entire sample to a new file, applying any filters that have been set on
+        the PxlFile
         on-disk.
 
         Args:
             sample_name: The name of the sample to save.
             output_path: The path to save the sample to.
-            optimize_disk_usage: If True, the saved file will be optimized for disk usage. If this is active a temporary file will be written before the final file is written to disk.
+            optimize_disk_usage: If True, the saved file will be optimized for disk usage. If this
+                is active a temporary file will be written before the final file is written to disk.
 
         Returns:
             The PxlFile pointing to the saved PixelDataset.

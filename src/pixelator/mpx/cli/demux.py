@@ -108,7 +108,8 @@ def demux(
         fastq_file: Path to the input FASTQ file.
         mismatches: The number of mismatches allowed (in percentage).
         min_length: The minimum length of the barcode that must overlap when matching.
-        panel: A key of a panel file in the config, or a csv file with the antibody panel conjugations.
+        panel: A key of a panel file in the config, or a csv file with the antibody panel
+            conjugations.
         output: The path where the results will be placed (it is created if it does not exist).
         design: The design to load from the configuration file.
         anchored: Whether barcodes must be anchored at the end of the read.

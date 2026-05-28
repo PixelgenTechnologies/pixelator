@@ -71,7 +71,8 @@ def get_single_thread_duckdb_config(n_threads: int) -> dict:
 
     Raises:
         ValueError: If ``n_threads`` is invalid.
-        DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than 1 MiB.
+        DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than
+            1 MiB.
     """
     if n_threads < 1:
         msg = f"n_threads must be >= 1, got {n_threads}"
