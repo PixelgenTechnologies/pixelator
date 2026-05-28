@@ -11,7 +11,7 @@ from pixelator.pna.graph.component_recovery_utils import (
 
 
 def test_get_count_statistics(tmp_path: Path) -> None:
-    """Test count statistics from a Parquet edgelist.
+    """Test correct edge, read, molecule, and distinct-UMI counts from a Parquet edgelist.
 
     Args:
         tmp_path: Tmp path.
@@ -39,7 +39,7 @@ def test_get_count_statistics(tmp_path: Path) -> None:
 def test_write_hive_partitioned_edgelist_without_small_components_prunes(
     tmp_path: Path,
 ) -> None:
-    """Test that small components are omitted and listed as discarded.
+    """Test components below the UMI score threshold are omitted and listed as discarded.
 
     Args:
         tmp_path: Tmp path.

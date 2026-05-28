@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify that Python modules include the Pixelgen copyright notice.
+"""General copyright checker for Python files committed to Pixelator.
 
 Copyright © 2023 Pixelgen Technologies AB.
 

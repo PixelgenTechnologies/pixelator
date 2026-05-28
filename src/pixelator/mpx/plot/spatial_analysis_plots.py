@@ -290,7 +290,9 @@ def plot_colocalization_diff_volcano(
     reference:"control", contrast_column="sample")`.
 
     Args:
-        colocalization_data: Colocalization table (for example ``pxl.colocalization``).
+        colocalization_data: Colocalization table, for example ``pxl.colocalization``. It should
+            contain ``marker_1``, ``marker_2``, ``pearson``, ``pearson_z``, and
+            ``contrast_column``.
         reference: Reference label in ``contrast_column``.
         targets: label or list of labels for target components in the contrast_column. When not
             specified, all labels in the contrast_column except the reference label are used as
@@ -300,7 +302,6 @@ def plot_colocalization_diff_volcano(
         value_column: Metric plotted on the x-axis. Defaults to ``"pearson_z"``.
         n_top_pairs: Number of marker pairs to annotate on each side.
         min_log_p: Minimum ``-log10(p)`` required to annotate a marker pair.
-        target: The label for target components in the contrast_column.
 
     Returns:
         The figure and axes objects of the plot.
@@ -385,7 +386,8 @@ def plot_polarity_diff_volcano(
     )`.
 
     Args:
-        polarity_data: Polarity table (for example ``pxl.polarization``).
+        polarity_data: Polarity table, for example ``pxl.polarization``. It should contain
+            ``marker``, ``value_column`` such as ``morans_z``, and ``contrast_column``.
         reference: Reference label in ``contrast_column``.
         targets: Target labels to compare against ``reference``.
         contrast_column: Sample label column. Defaults to ``"sample"``.
@@ -393,7 +395,6 @@ def plot_polarity_diff_volcano(
         value_column: Metric plotted on the x-axis. Defaults to ``"morans_z"``.
         n_top_pairs: Number of markers to annotate on each side.
         min_log_p: Minimum ``-log10(p)`` required to annotate a marker.
-        target: The label for target components in the contrast_column.
 
     Returns:
         The figure and axes objects of the plot.

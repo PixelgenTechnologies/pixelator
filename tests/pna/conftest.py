@@ -1,4 +1,4 @@
-"""Shared pytest fixtures and helpers for PNA tests.
+"""Configuration, shared files, and shared objects for the PNA testing framework.
 
 Copyright © 2023 Pixelgen Technologies AB.
 """

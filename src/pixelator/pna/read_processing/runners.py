@@ -95,13 +95,13 @@ class ReaderProcess(mpctx_Process):
         """Initialize a reader process that streams chunks to worker connections.
 
         Args:
-            paths: Paths.
+            paths: Input file paths to read from.
             file_format_connection: File format connection.
             connections: One connection per worker process.
             queue: Queue of worker indices ready to receive another chunk.
             buffer_size: Number of reads to load per chunk.
             stdin_fd: Optional stdin file descriptor when reading from a pipe.
-            params: path to input files
+
         Note:
             Input paths are passed as strings because they must be picklable when
             multiprocessing uses the ``spawn`` start method (default on macOS).

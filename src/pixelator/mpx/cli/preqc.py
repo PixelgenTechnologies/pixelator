@@ -127,7 +127,7 @@ def preqc(
     output,
     design,
 ):
-    """Process raw FASTQ reads with QC, trimming, and duplicate removal.
+    """Process raw Molecular Pixelation FASTQ data with QC, filtering, trimming, and deduplication.
 
     Args:
         ctx: Click context from the command decorator.

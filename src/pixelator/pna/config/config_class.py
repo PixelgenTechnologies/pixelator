@@ -1,4 +1,4 @@
-"""Configuration classes and helpers for Pixelator assay settings.
+"""Classes and functions for Pixelator configuration files and assay settings.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """

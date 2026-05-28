@@ -204,7 +204,7 @@ class PerComponentTask(Protocol, Generic[T]):
             raise error
 
     def post_process_data(self, data: T) -> T:
-        """Post process the data (e.g. adjust p-values). Override if needed."""
+        """Post process the data (e.g. adjust p-values). Override this if needed."""
         return data
 
     def add_to_pixel_file(self, data: T, pxl_file_target: PxlFile) -> None:

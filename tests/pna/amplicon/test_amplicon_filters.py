@@ -132,7 +132,7 @@ class TestLBSDetectedInUMI:
         )
 
     def test_umi2_lbs2_match_start(self):
-        """Test that partial LBS1 matches are not flagged as LBS-containing reads."""
+        """Test assembled amplicons with partial LBS1 matches are not flagged as LBS-containing."""
 
         #                     UMI1                                                                                                           UMI2
         #       ----------------------------|                                                                                    |----------------------------

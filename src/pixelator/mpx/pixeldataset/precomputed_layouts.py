@@ -604,7 +604,6 @@ def generate_precomputed_layouts_for_components(
         components: Component ids to layout; defaults to all components.
         add_node_marker_counts: Include per-node marker counts in layout output.
         layout_algorithms: Layout algorithm name or list of algorithms to compute.
-        layout_algorithm: the layout algorithm to use
     """
     if components is None:
         components = set(pixel_dataset.adata.obs.index)

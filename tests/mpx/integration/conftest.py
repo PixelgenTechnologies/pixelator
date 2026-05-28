@@ -33,6 +33,9 @@ def handle_unhandled_exception(
         exc_type: type of the exception
         exc_value: the exception exit code
         exc_traceback: traceback instance of the exception
+
+    Returns:
+        None.
     """
     if issubclass(exc_type, KeyboardInterrupt):
         # Will call default excepthook
@@ -58,6 +61,9 @@ def pytest_collect_file(
     Args:
         parent: the parent object
         file_path: path to the yaml file with test definitions
+
+    Returns:
+        A custom pytest collector that generates tests from yaml files.
     """
     file_path = Path(file_path)
 

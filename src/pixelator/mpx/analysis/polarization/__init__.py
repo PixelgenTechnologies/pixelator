@@ -336,7 +336,6 @@ class PolarizationAnalysis(PerComponentAnalysis):
             n_permutations: Permutations used to estimate the null distribution.
             min_marker_count: Minimum marker count required to compute statistics.
             random_seed: Optional seed for reproducible permutation tests.
-            transformation: the count transformation method to use (raw, log1p)
         """
         if transformation_type not in get_args(PolarizationTransformationTypes):
             raise AssertionError(

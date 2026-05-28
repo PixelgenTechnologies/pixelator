@@ -323,6 +323,9 @@ def sample_calling(
             edgelist. Defaults to True.
         undetermined_sample_name: Name to use for undetermined components. Defaults to
             "undetermined".
+
+    Returns:
+        List of all output pxl files created.
     """
     hash_info = collect_hash_info(
         input_pxl,

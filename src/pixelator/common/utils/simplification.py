@@ -32,15 +32,15 @@ import numpy.typing as npt
 def _pldist(
     point: np.ndarray, start: np.ndarray, end: np.ndarray
 ) -> npt.NDArray[np.float64]:
-    """Calculate the perpendicular distance from a point to a line segment.
+    """Calculate perpendicular distances from points to a line segment.
 
     Args:
-        point: Point coordinates.
+        point: Point coordinates; may be a single point or an array of points.
         start: Start point of the segment.
         end: End point of the segment.
 
     Returns:
-        Distance from the point to the segment.
+        Distance from each point to the segment.
     """
     if np.all(start == end):
         return np.linalg.norm(point - start)  # type: ignore
@@ -115,9 +115,7 @@ def simplify_line_rdp(
         coordinates: Array of shape ``(n, d)`` with ``n`` points in ``d`` dimensions.
         epsilon: Maximum perpendicular distance for point removal.
         return_mask: If True, return the boolean mask instead of simplified coordinates.
-        M: a series of points
-        dist: distance function
-        algo: either ``iter`` for an iterative algorithm or ``rec`` for a recursive algorithm
+
     Returns:
         Simplified coordinates, or the boolean mask when ``return_mask`` is True.
 

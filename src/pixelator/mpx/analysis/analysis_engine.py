@@ -39,7 +39,7 @@ class PerComponentAnalysis(Protocol):
             raise error
 
     def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Post process the data (e.g. adjust p-values). Override if needed."""
+        """Post process the data (e.g. adjust p-values). Override this if needed."""
         return data
 
     def add_to_pixel_dataset(
