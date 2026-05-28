@@ -113,7 +113,7 @@ def demux(
 
     Args:
         ctx: Click context from the command decorator.
-        fastq_file: Fastq file.
+        fastq_file: Path to the input FASTQ file.
         mismatches: The number of mismatches allowed in marker barcodes.
         output_chunk_reads: The target number of molecules in each output parquet file.
         output_max_chunks: The maximum number of marker parts to split the demuxed data into.

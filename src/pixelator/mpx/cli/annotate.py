@@ -94,7 +94,7 @@ def annotate(
 
     Args:
         ctx: Click context from the command decorator.
-        parquet_file: Parquet file.
+        parquet_file: Path to the input parquet edge-list file.
         panel: A key of a panel file in the config, or a csv file with the antibody panel conjugations.
         min_size: The minimum size (edges) a component must have (default is disabled). Note that this cannot be set at the same time as --dynamic-filter.
         max_size: The maximum size (edges) a component must have (default is disabled). Note that this cannot be set at the same time as --dynamic-filter.

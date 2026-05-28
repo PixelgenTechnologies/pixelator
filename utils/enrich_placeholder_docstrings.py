@@ -20,7 +20,34 @@ COMMON_PARAM_HINTS: dict[str, str] = {
     "pxl_file": "Path to the input PXL (PixelDataset) file.",
     "input_pxl_file": "Path to the input PXL (PixelDataset) file.",
     "ctx": "Click context from the command decorator.",
+    "design": "The design to load from the configuration file.",
+    "panel": (
+        "The name of a panel to load from the supported panels. "
+        "Optionally, provide a path to a custom panel file."
+    ),
+    "threads": "The number of total worker threads available for parallel processing.",
+    "memory": "The maximum amount of memory available for processing.",
+    "fastq_1": "Path to the first FASTQ input file (read 1).",
+    "fastq_2": "Path to the second FASTQ input file (read 2), if paired-end.",
+    "fastq_file": "Path to the input FASTQ file.",
+    "input_files": "One or more input FASTQ files to process.",
+    "parquet_file": "Path to the input parquet edge-list file.",
+    "parquet": "Path to a parquet file produced by collapse (may be repeated).",
+    "reports": "Path to a collapse report JSON file (may be repeated).",
+    "include_archived": "If True, include archived panels in the listing.",
+    "pls_use_weights": (
+        "Use edge weights in PLS neighborhood expansion when --run-pls-denoising is set."
+    ),
+    "low_complexity_filter": (
+        "Enable filtering of amplicons with low complexity UMI sequences."
+    ),
+    "lbs_filter": (
+        "Enable filtering of amplicons with UMI sequences that show similarity "
+        "to the LBS sequence."
+    ),
 }
+
+_WRAPPER_HINT_CACHE: dict[str, str] | None = None
 
 STRING_LITERAL_RE = re.compile(r"""(['"])(?:\\.|(?!\1).)*\1""", re.DOTALL)
 
@@ -108,6 +135,53 @@ def _join_string_literals(expr: str) -> str:
     return re.sub(r"\s+", " ", "".join(parts)).strip()
 
 
+def _wrapper_option_hints() -> dict[str, str]:
+    global _WRAPPER_HINT_CACHE
+    if _WRAPPER_HINT_CACHE is not None:
+        return _WRAPPER_HINT_CACHE
+    hints: dict[str, str] = {}
+    for rel in (
+        "src/pixelator/mpx/cli/common.py",
+        "src/pixelator/pna/cli/common.py",
+    ):
+        path = ROOT / rel
+        if path.is_file():
+            hints.update(_parse_click_decorators(path.read_text()))
+    _WRAPPER_HINT_CACHE = hints
+    return hints
+
+
+def _flag_to_param(flag: str) -> str:
+    primary = flag.split("/")[0]
+    return primary.lstrip("-").replace("-", "_")
+
+
+def _option_param_name(block: str, flag_text: str) -> str:
+    if flag_text.startswith("--"):
+        return _flag_to_param(flag_text)
+    literals = [
+        _join_string_literals(match.group(0))
+        for match in STRING_LITERAL_RE.finditer(block)
+    ]
+    if len(literals) >= 2 and not literals[1].startswith("--"):
+        return literals[1].replace("-", "_")
+    return flag_text.replace("-", "_")
+
+
+def _argument_hint(block: str, param: str) -> str | None:
+    if param in COMMON_PARAM_HINTS:
+        return COMMON_PARAM_HINTS[param]
+    metavar_match = re.search(
+        r"metavar\s*=\s*(['\"])(.+?)\1",
+        block,
+        flags=re.DOTALL,
+    )
+    if metavar_match:
+        metavar = metavar_match.group(2).strip()
+        return f"Input path ({metavar})."
+    return None
+
+
 def _extract_help_from_decorator(block: str) -> str | None:
     help_match = re.search(r"\bhelp\s*=", block)
     if not help_match:
@@ -166,15 +240,17 @@ def _parse_click_decorators(header: str) -> dict[str, str]:
         if decorator == "@click.option":
             if not name.startswith("--"):
                 continue
-            param = name.lstrip("-").replace("-", "_")
+            param = _option_param_name(block, name)
         else:
             param = name
 
         help_text = _extract_help_from_decorator(block)
         if help_text:
             mapping[param] = help_text
-        elif decorator == "@click.argument" and param in COMMON_PARAM_HINTS:
-            mapping[param] = COMMON_PARAM_HINTS[param]
+        elif decorator == "@click.argument":
+            argument_hint = _argument_hint(block, param)
+            if argument_hint:
+                mapping[param] = argument_hint
     return mapping
 
 
@@ -184,6 +260,7 @@ def _click_help_by_param(source: str, func_name: str) -> dict[str, str]:
         return {}
     header = source[: match.start()]
     mapping = dict(COMMON_PARAM_HINTS)
+    mapping.update(_wrapper_option_hints())
     mapping.update(_parse_click_decorators(header))
     return mapping
 
@@ -213,7 +290,10 @@ def _replace_docstring(
     else:
         block = [f'{indent}"""\n']
         for dl in doc_lines:
-            block.append(f"{inner}{dl}\n")
+            if dl.strip():
+                block.append(f"{inner}{dl}\n")
+            else:
+                block.append(f"{indent}\n")
         block.append(f'{indent}"""\n')
     lines[start:end] = block
     return "".join(lines)

@@ -105,7 +105,7 @@ def demux(
 
     Args:
         ctx: Click context from the command decorator.
-        fastq_file: Fastq file.
+        fastq_file: Path to the input FASTQ file.
         mismatches: The number of mismatches allowed (in percentage).
         min_length: The minimum length of the barcode that must overlap when matching.
         panel: A key of a panel file in the config, or a csv file with the antibody panel conjugations.

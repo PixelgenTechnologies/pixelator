@@ -114,7 +114,7 @@ def collapse(
     Args:
         ctx: Click context from the command decorator.
         input_files: The UM1 and UMI2 demuxed files.
-        design: Design.
+        design: The design to load from the configuration file.
         panel: The panel configuration.
         output: The path where the results will be placed (it is created if it does not exist).
         mismatches: The number of mismatches allowed when error-correcting.

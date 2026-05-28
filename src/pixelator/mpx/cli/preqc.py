@@ -131,7 +131,7 @@ def preqc(
 
     Args:
         ctx: Click context from the command decorator.
-        fastq_file: Fastq file.
+        fastq_file: Path to the input FASTQ file.
         trim_front: Trim N bases from the front of the reads.
         trim_tail: Trim N bases from the tail of the reads.
         max_length: The maximum length (bases) of a read (longer reads will be trimmed off).
@@ -143,7 +143,7 @@ def preqc(
         dedup: Remove duplicated reads (exact same sequence).
         remove_polyg: Remove PolyG sequences (length of 10 or more).
         output: The path where the results will be placed (it is created if it does not exist).
-        design: Design.
+        design: The design to load from the configuration file.
     """
     # log input parameters
     input_files = [fastq_file]

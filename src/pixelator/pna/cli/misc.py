@@ -40,7 +40,7 @@ def list_single_cell_pna_panels(
         ctx: The click context
         param: The click parameter
         value: The click value
-        include_archived: Include archived.
+        include_archived: If True, include archived panels in the listing.
     """
     from pixelator.pna.config import pna_config
 

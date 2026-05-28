@@ -156,7 +156,7 @@ def collapse(
 
     Args:
         ctx: Click context from the command decorator.
-        input_files: Input files.
+        input_files: One or more input FASTQ files to process.
         markers_ignore: A list of comma separated antibodies to ignore (discard).
         algorithm: The algorithm to use for collapsing (adjacency will perform error correction using the number of mismatches given).
         max_neighbours: The maximum number of neighbors to use when searching for similar sequences. This number depends on the sequence depth and the ratio of erronous molecules expected. A high value can make the algorithm slower. This is only used when algorithm is set to 'adjacency'.
@@ -164,7 +164,7 @@ def collapse(
         min_count: Discard molecules with with a count (reads) lower than this (set to 1 to disable).
         panel: A key of a panel file in the config, or a csv file with the antibody panel conjugations.
         output: The path where the results will be placed (it is created if it does not exist).
-        design: Design.
+        design: The design to load from the configuration file.
     """
     # log input parameters
     log_step_start(

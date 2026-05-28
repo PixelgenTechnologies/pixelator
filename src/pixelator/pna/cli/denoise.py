@@ -228,7 +228,7 @@ def denoise(
         pls_ncomp: Requested PLS components when --run-pls-denoising is set (capped per component).
         pls_model_k: Neighborhood steps for fitting the PLS X matrix when --run-pls-denoising is set.
         pls_pred_k: Neighborhood steps for PLS scores (prediction X) when --run-pls-denoising is set.
-        pls_use_weights: Pls use weights.
+        pls_use_weights: Use edge weights in PLS neighborhood expansion when --run-pls-denoising is set.
         pls_normalization: Normalization for the PLS neighborhood matrix when --run-pls-denoising is set.
         pls_residualize: Residualize the PLS neighborhood matrix against pixel_type (A/B) when --run-pls-denoising is set.
         pls_component_p_threshold: Pearson vs coreness: keep PLS components with p-value below this when --run-pls-denoising is set.

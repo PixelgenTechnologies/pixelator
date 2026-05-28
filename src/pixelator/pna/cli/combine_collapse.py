@@ -93,12 +93,12 @@ def combine_collapse(
 
     Args:
         ctx: Click context from the command decorator.
-        parquet: Parquet.
-        reports: Reports.
+        parquet: Path to a parquet file produced by collapse (may be repeated).
+        reports: Path to a collapse report JSON file (may be repeated).
         output: The path where the results will be placed (it is created if it does not exist).
         parquet_pattern: The pattern to match parquet files.
         report_pattern: The pattern to match report files.
-        memory: Memory.
+        memory: The maximum amount of memory available for processing.
     """
     # log input parameters
     log_step_start(

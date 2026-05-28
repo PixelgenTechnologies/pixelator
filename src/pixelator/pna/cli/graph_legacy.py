@@ -241,7 +241,7 @@ def graph_legacy(
 
     Args:
         ctx: Click context from the command decorator.
-        parquet_file: Parquet file.
+        parquet_file: Path to the input parquet edge-list file.
         multiplet_recovery: Activate the multiplet recovery using leiden community detection.
         leiden_iterations: Number of iterations for the leiden algorithm, high values will decrease the variance of the results but increase the runtime.
         initial_stage_leiden_resolution: The resolution parameter for the leiden algorithm at the initial stage. This should typically be set higher than the refinement stage resolution.
@@ -256,7 +256,7 @@ def graph_legacy(
         min_component_size_to_prune: The minimum number of nodes in an potential new components in order for it to be pruned.
         component_size_max_threshold: Components with more nodes than this will be filtered from the output data. This is typically not needed. Setting this will disable the automatic size filtering.
         component_size_min_threshold: Components with fewer nodes than this will be filtered from the output data. This is typically not needed. Setting this will disable the automatic size filtering.
-        panel: Panel.
+        panel: The name of a panel to load from the supported panels. Optionally, provide a path to a custom panel file.
         output: The path where the results will be placed (it is created if it does not exist).
     """
     warnings.warn(_GRAPH_LEGACY_DEPRECATION, DeprecationWarning, stacklevel=1)
