@@ -213,20 +213,20 @@ def graph(
     Args:
         ctx: Click context from the command decorator.
         parquet_file: Parquet file.
-        multiplet_recovery: Multiplet recovery.
-        edge_cycle_verification: Edge cycle verification.
-        initial_stage_leiden_resolution: Initial stage leiden resolution.
-        refinement_stage_leiden_resolution: Refinement stage leiden resolution.
-        min_count: Min count.
-        max_refinement_recursion_depth: Max refinement recursion depth.
-        initial_stage_max_edges_to_remove: Initial stage max edges to remove.
-        refinement_stage_max_edges_to_remove: Refinement stage max edges to remove.
-        initial_stage_max_edges_to_remove_relative: Initial stage max edges to remove relative.
-        refinement_stage_max_edges_to_remove_relative: Refinement stage max edges to remove relative.
-        component_size_max_threshold: Component size max threshold.
-        component_size_min_threshold: Component size min threshold.
+        multiplet_recovery: Activate the multiplet recovery using leiden community detection.
+        edge_cycle_verification: Activate edge cycle verification to remove edges from well connected regions that are not part of cycles in the graph.
+        initial_stage_leiden_resolution: The resolution parameter for the leiden algorithm at the initial stage. This should typically be set higher than the refinement stage resolution.
+        refinement_stage_leiden_resolution: The resolution parameter for the leiden algorithm at the refinement stage. This should typically be set lower than the initial stage resolution.
+        min_count: Discard edges with a read count below given value. Set to 1 to disable filtering.
+        max_refinement_recursion_depth: The maximum recursion depth for the refinement algorithm. Set to 1 to disable refinement.
+        initial_stage_max_edges_to_remove: The maximum number of edges to remove between components during the initial stage (iteration == 0) of multiplet recovery.
+        refinement_stage_max_edges_to_remove: The maximum number of edges to remove between components during the refinement stage (iteration > 0) of multiplet recovery.
+        initial_stage_max_edges_to_remove_relative: The maximum number of edges to remove between two components relative to the number of nodes in the smaller of the two when during the initial stage (iteration == 0) of multiplet recovery.
+        refinement_stage_max_edges_to_remove_relative: The maximum number of edges to remove between two components relative to the number of nodes in the smaller of the two when during the refinement stage (iteration > 0) of multiplet recovery.
+        component_size_max_threshold: Components with more nodes than this will be filtered from the output data. This is typically not needed. Setting this will disable the automatic size filtering.
+        component_size_min_threshold: Components with fewer nodes than this will be filtered from the output data. This is typically not needed. Setting this will disable the automatic size filtering.
         panel: Panel.
-        output: Output.
+        output: The path where the results will be placed (it is created if it does not exist).
     """
     # log input parameters
     input_files = [parquet_file]

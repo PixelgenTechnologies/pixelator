@@ -450,12 +450,7 @@ def aggregate_precomputed_layouts(
     pxl_datasets: Iterable[tuple[str, PixelDataset | None]],
     all_markers: set[str],
 ) -> PreComputedLayouts:
-    """Aggregate precomputed layouts into a single PreComputedLayouts instance.
-
-    Args:
-        pxl_datasets: Pxl datasets.
-        all_markers: All markers.
-    """
+    """Aggregate precomputed layouts into a single PreComputedLayouts instance."""
 
     def zero_fill_missing_markers(
         lazyframe: pl.LazyFrame, all_markers: set[str]
@@ -555,9 +550,6 @@ def _wrap_get_layouts(d):
     """Deconstruct a tuple of args to their corresponding argument.
 
     This is only necessary since imap does not support multiple arguments
-
-    Args:
-        d: D.
     """
     (edgelist, add_node_marker_counts, layout_algorithms, all_markers) = d
     return _compute_layouts(

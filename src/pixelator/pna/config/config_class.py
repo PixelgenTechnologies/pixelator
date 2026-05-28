@@ -123,7 +123,7 @@ class PNAConfig:
         """Load all assays from a directory containing yaml files.
 
         Args:
-            path: Path.
+            path: Path to an assay YAML file.
         """
         search_path = Path(path)
 
@@ -141,7 +141,7 @@ class PNAConfig:
         """Load all panel files from a directory containing csv files.
 
         Args:
-            path: Path.
+            path: Path to an assay YAML file.
         """
         search_path = Path(path)
 
@@ -151,11 +151,7 @@ class PNAConfig:
             self.load_panel_file(f)
 
     def get_assay(self, assay_name: str) -> Optional[PNAAssay]:
-        """Get an assay by name.
-
-        Args:
-            assay_name: Assay name.
-        """
+        """Get an assay by name."""
         return self.assays.get(assay_name)
 
     def list_panel_names(

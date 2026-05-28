@@ -359,9 +359,6 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """Post process polarization analysis data.
 
         This will adjust the calculated p-values for the calculate Moran's I statistics.
-
-        Args:
-            data: Data.
         """
         logger.debug("Post processing polarization analysis data")
         if data.empty:
@@ -376,12 +373,7 @@ class PolarizationAnalysis(PerComponentAnalysis):
     def add_to_pixel_dataset(
         self, data: pd.DataFrame, pxl_dataset: PixelDataset
     ) -> PixelDataset:
-        """Add data to the polarization field of the PixelDataset.
-
-        Args:
-            data: Data.
-            pxl_dataset: Pxl dataset.
-        """
+        """Add data to the polarization field of the PixelDataset."""
         logger.debug("Adding polarization analysis data to PixelDataset")
         pxl_dataset.polarization = data
         return pxl_dataset

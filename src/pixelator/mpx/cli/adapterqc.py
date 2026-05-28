@@ -56,8 +56,8 @@ def adapterqc(
     Args:
         ctx: Click context from the command decorator.
         fastq_file: Fastq file.
-        mismatches: Mismatches.
-        output: Output.
+        mismatches: The number of mismatches allowed (in percentage).
+        output: The path where the results will be placed (it is created if it does not exist).
         design: Design.
     """
     from pixelator.mpx.config.config_instance import config

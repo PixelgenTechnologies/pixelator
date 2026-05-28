@@ -40,11 +40,7 @@ class LoggingSetup:
 
     @staticmethod
     def from_logger(logger: logging.Logger):
-        """Create a LoggingSetup from a logger.
-
-        Args:
-            logger: Logger.
-        """
+        """Create a LoggingSetup from a logger."""
         return LoggingSetup(port=logger.port, log_level=logger.log_level)  # type: ignore
 
 
@@ -93,9 +89,6 @@ def with_logging(f):
     This is necessary to deal with the fact that for out of process workers
     like the ones used by joblib we need to set up logging in each worker.
     This decorator makes this slightly easier.
-
-    Args:
-        f: F.
     """
 
     @wraps(f)
@@ -129,11 +122,7 @@ class PerComponentTask(Protocol, Generic[T]):
         pass
 
     def set_dataset(self, pxl_file_path: Path):
-        """Specify a dataset to enable analysis being run directly from component IDs.
-
-        Args:
-            pxl_file_path: Pxl file path.
-        """
+        """Specify a dataset to enable analysis being run directly from component IDs."""
         ...
 
     @with_logging
@@ -205,11 +194,7 @@ class PerComponentTask(Protocol, Generic[T]):
             raise e
 
     def concatenate_data(self, data: Iterable[T]) -> T:
-        """Concatenate the data. Override this if you need custom concatenation behavior.
-
-        Args:
-            data: Data.
-        """
+        """Concatenate the data. Override this if you need custom concatenation behavior."""
         try:
             scores = pd.concat(data, axis=0)
             return scores
@@ -218,20 +203,11 @@ class PerComponentTask(Protocol, Generic[T]):
             raise error
 
     def post_process_data(self, data: T) -> T:
-        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing.
-
-        Args:
-            data: Data.
-        """
+        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing."""
         return data
 
     def add_to_pixel_file(self, data: T, pxl_file_target: PxlFile) -> None:
-        """Add the data in the right place in the pxl_dataset.
-
-        Args:
-            data: Data.
-            pxl_file_target: Pxl file target.
-        """
+        """Add the data in the right place in the pxl_dataset."""
         ...
 
     def parameters(self) -> dict[str, typing.Any]:
@@ -385,12 +361,7 @@ class AnalysisManager:
     def execute(
         self, pixel_dataset: PNAPixelDataset, pxl_file_target: PxlFile
     ) -> PNAPixelDataset:
-        """Execute the analysis on the provided pixel dataset.
-
-        Args:
-            pixel_dataset: Pixel dataset.
-            pxl_file_target: Pxl file target.
-        """
+        """Execute the analysis on the provided pixel dataset."""
         iterator = pixel_dataset.edgelist().iterator()
         return self._execute_on_iterator(iterator, pxl_file_target)
 
@@ -401,12 +372,7 @@ class AnalysisManager:
     def execute_from_path(
         self, input_pxl_file_path: Path, pxl_file_target: PxlFile
     ) -> PNAPixelDataset:
-        """Execute the analysis on the provided pixel file path.
-
-        Args:
-            input_pxl_file_path: Input pxl file path.
-            pxl_file_target: Pxl file target.
-        """
+        """Execute the analysis on the provided pixel file path."""
         self._set_path_to_dataset(input_pxl_file_path)
         pixel_dataset = read(input_pxl_file_path)
         iterator = pixel_dataset.components()

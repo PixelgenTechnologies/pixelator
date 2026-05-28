@@ -117,10 +117,6 @@ def use_workflow_context(request, tmp_path_factory):
 
     The working directory is cleaned up after the test class has run unless the
     `--keep_workdirs` is passed on the commandline, which can be useful for debugging.
-
-    Args:
-        request: Request.
-        tmp_path_factory: Tmp path factory.
     """
     keep_workdirs = request.config.getoption("--keep-workdirs", default=False)
     cls = request.cls

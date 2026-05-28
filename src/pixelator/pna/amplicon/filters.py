@@ -32,12 +32,7 @@ class SingleEndFilterWithFailureReason(SingleEndFilter):
         predicate: Predicate,
         writer=None,
     ):
-        """Initialize a SingleEndFilterWithFailureReason pipeline step.
-
-        Args:
-            predicate: Predicate.
-            writer: Writer.
-        """
+        """Initialize a SingleEndFilterWithFailureReason pipeline step."""
         self._filtered = 0
         self._predicate = predicate
         self._writer = writer

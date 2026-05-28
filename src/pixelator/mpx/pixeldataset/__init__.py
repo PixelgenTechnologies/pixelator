@@ -152,11 +152,7 @@ class PixelDataset:
 
     @adata.setter
     def adata(self, value: AnnData) -> None:
-        """Set the AnnData object.
-
-        Args:
-            value: Value.
-        """
+        """Set the AnnData object."""
         self._backend.adata = value
 
     @property
@@ -166,11 +162,7 @@ class PixelDataset:
 
     @edgelist.setter
     def edgelist(self, value: pd.DataFrame) -> None:
-        """Set the edge list.
-
-        Args:
-            value: Value.
-        """
+        """Set the edge list."""
         self._backend.edgelist = _enforce_edgelist_types(value)
 
     @property
@@ -192,11 +184,7 @@ class PixelDataset:
 
     @polarization.setter
     def polarization(self, value: pd.DataFrame) -> None:
-        """Set the polarization object.
-
-        Args:
-            value: Value.
-        """
+        """Set the polarization object."""
         self._backend.polarization = value
 
     @property
@@ -206,11 +194,7 @@ class PixelDataset:
 
     @colocalization.setter
     def colocalization(self, value: pd.DataFrame) -> None:
-        """Set the colocalization object.
-
-        Args:
-            value: Value.
-        """
+        """Set the colocalization object."""
         self._backend.colocalization = value
 
     @property
@@ -223,11 +207,7 @@ class PixelDataset:
 
     @metadata.setter
     def metadata(self, value: Dict) -> None:
-        """Set the metadata object.
-
-        Args:
-            value: Value.
-        """
+        """Set the metadata object."""
         self._backend.metadata = value
 
     @property
@@ -239,11 +219,7 @@ class PixelDataset:
 
     @precomputed_layouts.setter
     def precomputed_layouts(self, value: PreComputedLayouts | None) -> None:
-        """Set the precomputed layouts.
-
-        Args:
-            value: Value.
-        """
+        """Set the precomputed layouts."""
         # Note that the type ignore here is to handle the fact that the setter
         # needs to be able to take None (in order to make it easier to the user)
         # but that will be transformed into a empty PreComputedLayouts object

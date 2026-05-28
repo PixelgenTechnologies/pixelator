@@ -66,8 +66,8 @@ def _filter_edgelist(
     """Filter the edgelist by read count.
 
     Args:
-        edgelist: Edgelist.
-        min_read_count: Min read count.
+        edgelist: The edgelist to add the component column to.
+        min_read_count: minimum number of supporting reads for an edge to be considered part of the graph
         component_stats: Component stats.
     """
     edgelist = edgelist.filter(pl.col("read_count") >= min_read_count)
@@ -98,7 +98,7 @@ def _label_connected_components(
     """Build the graph and calculate some statistics.
 
     Args:
-        edgelist: Edgelist.
+        edgelist: The edgelist to add the component column to.
         component_stats: Component stats.
     """
     logger.debug("Finding connected components")
@@ -253,7 +253,7 @@ def _get_umi_component_map_from_edgelist(edgelist: pl.LazyFrame) -> dict:
     """Get a umi component map from an edgelist.
 
     Args:
-        edgelist: Edgelist.
+        edgelist: The edgelist to add the component column to.
     """
     umi_component_map = dict()
     if "component1" in edgelist.collect_schema().names():
@@ -279,8 +279,8 @@ def _update_components_column(
     """Update the component column in an edgelist.
 
     Args:
-        edgelist: Edgelist.
-        umi_component_map: Umi component map.
+        edgelist: The edgelist to add the component column to.
+        umi_component_map: A dictionary mapping nodes to components.
     """
     return edgelist.with_columns(
         component1=pl.col("umi1").replace_strict(umi_component_map),
@@ -388,10 +388,10 @@ def recover_multiplets(
     """Recovery multiplets by leiden community detection, removing crossing edges between communities.
 
     Args:
-        edgelist: Edgelist.
-        umi_component_map: Umi component map.
-        leiden_iterations: Leiden iterations.
-        refinement_options: Refinement options.
+        edgelist: The edgelist to add the component column to.
+        umi_component_map: A dictionary mapping nodes to components.
+        leiden_iterations: number of Leiden iterations to run
+        refinement_options: options for component refinement
     """
     if umi_component_map is None:
         umi_component_map = _get_umi_component_map_from_edgelist(edgelist)
@@ -522,11 +522,11 @@ def build_pxl_file_with_components(
         panel: Panel.
         sample_name: Sample name.
         path_output_pxl_file: Path output pxl file.
-        multiplet_recovery: Multiplet recovery.
-        leiden_iterations: Leiden iterations.
+        multiplet_recovery: if True run multiplet recovery, otherwise skip it
+        leiden_iterations: number of Leiden iterations to run
         min_count: Min count.
-        refinement_options: Refinement options.
-        component_size_threshold: Component size threshold.
+        refinement_options: options for component refinement
+        component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple, filter by hard thresholds as (min, max)
     """
     with TemporaryDirectory(prefix="pixelator-") as tmp_dir:
         tmp_dir_path = Path(tmp_dir)
@@ -617,7 +617,7 @@ def _get_working_edgelist(
     """Get a working edgelist and a map from original to working node names.
 
     Args:
-        input_edgelist: Input edgelist.
+        input_edgelist: The input edgelist
     """
     node_map = (
         pl.concat(
@@ -648,7 +648,7 @@ def _add_post_recovery_stats(edgelist: pl.LazyFrame, component_stats: GraphStati
     """Add post recovery statistics to the component statistics object.
 
     Args:
-        edgelist: Edgelist.
+        edgelist: The edgelist to add the component column to.
         component_stats: Component stats.
     """
     post_recovery_stats = edgelist.select(
@@ -839,8 +839,8 @@ def _filter_connected_components_by_size(
     """Filter connected components by size and get statistics.
 
     Args:
-        edgelist: Edgelist.
-        component_size_threshold: Component size threshold.
+        edgelist: The edgelist to add the component column to.
+        component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple, filter by hard thresholds as (min, max)
         component_stats: Component stats.
         dynamic_lowest_passable_bound: Dynamic lowest passable bound.
     """

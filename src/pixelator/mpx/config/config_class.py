@@ -41,12 +41,7 @@ class Config:
         assays: Optional[List[Assay]] = None,
         panels: Optional[List[AntibodyPanel]] = None,
     ) -> None:
-        """Initialize the config object.
-
-        Args:
-            assays: Assays.
-            panels: Panels.
-        """
+        """Initialize the config object."""
         self.assays: Dict[str, Assay] = {}
         self.panels: typing.MutableMapping[str, List[AntibodyPanel]] = defaultdict(list)
         self.panel_aliases: Dict[str, str] = {}
@@ -63,7 +58,7 @@ class Config:
         """Load an assay from a yaml file.
 
         Args:
-            path: Path.
+            path: The path to the panel file.
         """
         assay = Assay.from_yaml(path)
         self.assays[assay.name] = assay
@@ -99,7 +94,7 @@ class Config:
         """Load all assays from a directory containing yaml files.
 
         Args:
-            path: Path.
+            path: The path to the panel file.
         """
         search_path = Path(path)
 
@@ -117,7 +112,7 @@ class Config:
         """Load all panel files from a directory containing csv files.
 
         Args:
-            path: Path.
+            path: The path to the panel file.
         """
         search_path = Path(path)
 
@@ -127,11 +122,7 @@ class Config:
             self.load_panel_file(f)
 
     def get_assay(self, assay_name: str) -> Optional[Assay]:
-        """Get an assay by name.
-
-        Args:
-            assay_name: Assay name.
-        """
+        """Get an assay by name."""
         return self.assays.get(assay_name)
 
     def list_panel_names(self, include_aliases: bool = False) -> List[str]:

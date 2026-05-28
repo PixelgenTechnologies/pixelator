@@ -61,11 +61,7 @@ class CreateLayout(PerComponentTask):
         return self._work_folder
 
     def set_dataset(self, pxl_file_path: Path):
-        """Specify a dataset to enable analysis being run directly from component IDs.
-
-        Args:
-            pxl_file_path: Pxl file path.
-        """
+        """Specify a dataset to enable analysis being run directly from component IDs."""
         self.pxl_dataset = read(pxl_file_path)
 
     def run_from_component_id(self, component_id: str):
@@ -149,20 +145,11 @@ class CreateLayout(PerComponentTask):
         return result
 
     def concatenate_data(self, data: Iterable[str]) -> list[str]:
-        """Concatenate the data. Override this if you need custom concatenation behavior.
-
-        Args:
-            data: Data.
-        """
+        """Concatenate the data. Override this if you need custom concatenation behavior."""
         return list(itertools.chain.from_iterable(data))
 
     def add_to_pixel_file(self, data: list[str], pxl_file_target: PxlFile) -> None:
-        """Add the data in the right place in the pxl_dataset.
-
-        Args:
-            data: Data.
-            pxl_file_target: Pxl file target.
-        """
+        """Add the data in the right place in the pxl_dataset."""
         paths = [Path(fname) for fname in data]
         with PixelFileWriter(pxl_file_target.path) as writer:
             writer.write_layouts(paths)

@@ -60,13 +60,7 @@ class SharedMemoryRegistry:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> Self:
-        """Terminate the context.
-
-        Args:
-            exc_type: Exc type.
-            exc_val: Exc val.
-            exc_tb: Exc tb.
-        """
+        """Terminate the context."""
         # Unlinks any buffers still in the registry (e.g. left after an exception
         # in _init_shared_memory) so shared memory is released before the manager exits.
         buffers = list(self._buffer_registry.values())

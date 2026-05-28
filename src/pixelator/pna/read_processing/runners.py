@@ -208,13 +208,13 @@ class WorkerProcess(mpctx_Process):
 
         Args:
             id_: Id.
-            pipeline: Pipeline.
-            inpaths: Inpaths.
+            pipeline: The pipeline to run.
+            inpaths: The input files.
             proxy_files: Proxy files.
             read_pipe: Read pipe.
             write_pipe: Write pipe.
             need_work_queue: Need work queue.
-            statistics_class: Statistics class.
+            statistics_class: The class to use for collecting statistics.
         """
         super().__init__()
         self._id = id_
@@ -289,11 +289,7 @@ class OrderedChunkWriter:
     """
 
     def __init__(self, outfile):
-        """Initialize an OrderedChunkWriter.
-
-        Args:
-            outfile: Outfile.
-        """
+        """Initialize an OrderedChunkWriter."""
         self._chunks = dict()
         self._current_index = 0
         self._outfile = outfile
@@ -361,12 +357,7 @@ class WorkerException(Exception):
     """
 
     def __init__(self, wrapped_exception, tb_str):
-        """Initialize a WorkerException.
-
-        Args:
-            wrapped_exception: Wrapped exception.
-            tb_str: Tb str.
-        """
+        """Initialize a WorkerException."""
         self.e = wrapped_exception
         self.tb_str = tb_str
 
@@ -517,9 +508,6 @@ class ParallelPipelineRunner(PipelineRunner, typing.Generic[StatisticsClass]):
         """Try to receive data over `connection` and return it.
 
         If an exception was received, raise it.
-
-        Args:
-            connection: Connection.
         """
         result = connection.recv()
         if result == -2:
@@ -608,7 +596,7 @@ def make_runner(
         inpaths: The input files.
         cores: The number of cores to run the pipeline on (this is actually the number of worker processes, there will be one extra process for reading the input file(s))
         buffer_size: Forwarded to `ParallelPipelineRunner()`. Ignored if cores is 1.
-        statistics_class: Statistics class.
+        statistics_class: The class to use for collecting statistics.
     """
     runner: PipelineRunner
     if cores > 1:

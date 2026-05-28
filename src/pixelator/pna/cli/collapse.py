@@ -116,7 +116,7 @@ def collapse(
         input_files: The UM1 and UMI2 demuxed files.
         design: Design.
         panel: The panel configuration.
-        output: Output.
+        output: The path where the results will be placed (it is created if it does not exist).
         mismatches: The number of mismatches allowed when error-correcting.
         algorithm: The collapse strategy to use.
         threads: The number of threads to use.

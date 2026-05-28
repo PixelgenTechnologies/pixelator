@@ -41,8 +41,8 @@ def _calculate_core_marker_counts(
     """Calculate marker counts for one-core and higher-core nodes.
 
     Args:
-        node_marker_counts: Node marker counts.
-        node_core_numbers: Node core numbers.
+        node_marker_counts: A DataFrame where rows represent nodes and columns represent markers, with values indicating the count of each marker in each node.
+        node_core_numbers: A Series where the index corresponds to the nodes and the values indicate the core number each node belongs to.
     """
     one_core_counts = node_marker_counts[
         (node_core_numbers[node_marker_counts.index] == 1).values
@@ -67,7 +67,7 @@ def _perform_fishers_exact_test(
 
     Args:
         marker_counts: Marker counts.
-        pval_significance_threshold: Pval significance threshold.
+        pval_significance_threshold: The p-value threshold for statistical significance in Fisher's exact test. Defaults to 0.05.
     """
     overexpressed_markers = []
     total_one_core_markers = marker_counts["one_core"].sum()
@@ -99,7 +99,7 @@ def _calculate_excess_counts(
     Args:
         marker_counts: Marker counts.
         overexpressed_markers: Overexpressed markers.
-        inflate_factor: Inflate factor.
+        inflate_factor: A factor used for inflating certain calculations (not explicitly used in the provided code). Defaults to 1.5.
     """
     results = []
     total_one_core_markers = marker_counts["one_core"].sum()
@@ -242,7 +242,7 @@ def _pixel_type_design_matrix(component: PNAGraph, node_index: pd.Index) -> np.n
     PNA graphs store bipartite side in the ``pixel_type`` node attribute (``A`` / ``B``).
 
     Args:
-        component: Component.
+        component: The graph component to process, containing node marker counts and raw graph data.
         node_index: Node index.
     """
     pixel_type = nx.get_node_attributes(component.raw, "pixel_type")
@@ -259,13 +259,7 @@ def _nodes_outside_largest_cc_after_pls_scores(
     node_index: pd.Index,
     passing_mask: np.ndarray,
 ) -> list:
-    """Return nodes to drop: fail score filter or lie outside the largest CC among passers.
-
-    Args:
-        raw: Raw.
-        node_index: Node index.
-        passing_mask: Passing mask.
-    """
+    """Return nodes to drop: fail score filter or lie outside the largest CC among passers."""
     keep_candidates = [node_index[i] for i in range(len(node_index)) if passing_mask[i]]
     if not keep_candidates:
         return list(raw.nodes)
@@ -499,14 +493,14 @@ class DenoiseGraph(PerComponentTask):
             run_one_core: Run one core.
             run_ace: Run ace.
             run_pls: Run pls.
-            pval_significance_threshold: Pval significance threshold.
-            inflate_factor: Inflate factor.
-            one_core_ratio_threshold: One core ratio threshold.
-            k: K.
-            max_k_core: Max k core.
-            max_iter: Max iter.
-            min_seed_pct: Min seed pct.
-            nodes_to_move_threshold: Nodes to move threshold.
+            pval_significance_threshold: The p-value threshold for statistical significance in Fisher's exact test. Defaults to 0.05.
+            inflate_factor: A factor used for inflating certain calculations (not explicitly used in the provided code). Defaults to 1.5.
+            one_core_ratio_threshold: Components with higher nodes in their one-core layer are not denoised.
+            k: Neighborhood radius (steps) for the transition matrix in ACE.
+            max_k_core: Maximum k-core layer used for seeding in ACE.
+            max_iter: Maximum expansion iterations per binding threshold in ACE.
+            min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
+            nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
             ace_select_lcc: Ace select lcc.
             pls_ncomp: Pls ncomp.
             pls_model_k: Pls model k.
@@ -514,9 +508,9 @@ class DenoiseGraph(PerComponentTask):
             pls_use_weights: Pls use weights.
             pls_normalization: Pls normalization.
             pls_residualize: Pls residualize.
-            pls_component_p_threshold: Pls component p threshold.
-            min_pls_coreness_correlation: Min pls coreness correlation.
-            pls_score_threshold: Pls score threshold.
+            pls_component_p_threshold: Per-component Pearson test vs coreness.
+            min_pls_coreness_correlation: Minimum positive correlation.
+            pls_score_threshold: All selected score columns must exceed this.
         """
         if not run_one_core and not run_ace and not run_pls:
             raise ValueError(
@@ -553,7 +547,7 @@ class DenoiseGraph(PerComponentTask):
         merged afterward so no step is conditioned on another's output.
 
         Args:
-            component: Component.
+            component: The graph component to process, containing node marker counts and raw graph data.
             component_id: Component id.
         """
         one_core_marked: list = []
@@ -629,12 +623,7 @@ class DenoiseGraph(PerComponentTask):
         return nodes_to_remove
 
     def add_to_pixel_file(self, data: pd.DataFrame, pxl_file_target: PxlFile):
-        """Filter edgelist by removed nodes and write denoise metrics to AnnData.
-
-        Args:
-            data: Data.
-            pxl_file_target: Pxl file target.
-        """
+        """Filter edgelist by removed nodes and write denoise metrics to AnnData."""
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
         try:
@@ -678,12 +667,7 @@ class DenoiseGraph(PerComponentTask):
 def _collect_denoise_summary_info(
     data: pd.DataFrame, comp_index: pd.Index
 ) -> pd.DataFrame:
-    """Collect summary information about the denoising process for each component.
-
-    Args:
-        data: Data.
-        comp_index: Comp index.
-    """
+    """Collect summary information about the denoising process for each component."""
     denoise_info = pd.DataFrame(index=comp_index)
 
     n_total_removed = (

@@ -250,11 +250,7 @@ class AmpliconRegionSlices:
         self.lbs2 = None
 
     def __getitem__(self, item):
-        """Provide tuple like access to the slices.
-
-        Args:
-            item: Item.
-        """
+        """Provide tuple like access to the slices."""
         if isinstance(item, int):
             key = self.__slots__[item]
             return getattr(self, key)

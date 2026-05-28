@@ -49,7 +49,7 @@ def collect_hash_info(
     Args:
         input_pxl_file: The input pixel dataset.
         hashed_antibody_mapping: Mapping of sample names to hashed antibody names and the full list of hashing antibodies (from panel).
-        confidence_threshold: Confidence threshold.
+        confidence_threshold: Minimum confidence required to assign a component to a sample. Defaults to 0.8.
         undetermined_sample_name: Name to use for undetermined components. Defaults to "undetermined".
 
     Returns:
@@ -144,11 +144,6 @@ def _collect_nodes_to_remove(
     Incompatible hashes are defined from the panel (all hashing antibodies minus
     the current sample's), so they do not depend on other samples being present
     in the samplesheet.
-
-    Args:
-        edgelist: Edgelist.
-        all_hashing_in_panel: All hashing in panel.
-        sample_antibodies: Sample antibodies.
     """
     incompatible_hashes = all_hashing_in_panel - set(sample_antibodies)
     edgelist_df = edgelist.collect()
@@ -185,10 +180,6 @@ def _add_original_hash_counts_to_obs(
     Antibodies present in the adata matrix get their counts; those not present
     (e.g. not in samplesheet or zero counts) get 0 so all panel hashing antibodies
     are represented in obs.
-
-    Args:
-        old_adata: Old adata.
-        antibodies_for_obs: Antibodies for obs.
     """
     old_anndata_counts = old_adata.to_df()
     for ab in sorted(list(antibodies_for_obs)):
@@ -227,7 +218,7 @@ def _build_post_sample_calling_anndata(
         nodes_to_remove: Nodes to remove.
         hash_info: Hash info.
         panel: Panel.
-        hashing_antibody_mapping: Hashing antibody mapping.
+        hashing_antibody_mapping: Information about hashing antibodies, including a mapping from sample names to lists of hashed antibody names.
     """
     _add_original_hash_counts_to_obs(
         old_adata, hashing_antibody_mapping.hashing_antibodies
@@ -436,7 +427,7 @@ class FindHashedNodesToRemove(PerComponentTask):
         """Initialize the task with hashing antibody mapping and sample name.
 
         Args:
-            hashing_antibody_mapping: Hashing antibody mapping.
+            hashing_antibody_mapping: Information about hashing antibodies, including a mapping from sample names to lists of hashed antibody names.
             sample_name: Sample name.
         """
         self.hashing_antibody_mapping = hashing_antibody_mapping
@@ -445,12 +436,7 @@ class FindHashedNodesToRemove(PerComponentTask):
     def run_on_component_edgelist(
         self, component: pl.LazyFrame, component_id: str
     ) -> pl.DataFrame:
-        """Find nodes to remove for one component.
-
-        Args:
-            component: Component.
-            component_id: Component id.
-        """
+        """Find nodes to remove for one component."""
         sample_antibodies = self.hashing_antibody_mapping.get(self.sample_name, [])
         nodes_to_remove = _collect_nodes_to_remove(
             component,
@@ -460,11 +446,7 @@ class FindHashedNodesToRemove(PerComponentTask):
         return nodes_to_remove
 
     def concatenate_data(self, data: Tuple[pl.DataFrame]) -> pl.DataFrame:  # type: ignore[override]
-        """Concatenate the results from all components.
-
-        Args:
-            data: Data.
-        """
+        """Concatenate the results from all components."""
         return pl.concat(data)
 
 
@@ -472,11 +454,7 @@ class HashedSampleAnalysisManager(AnalysisManager):
     """Manager for sample calling analysis on hashed samples."""
 
     def execute(self, pixel_dataset: PNAPixelDataset) -> pl.DataFrame:  # type: ignore[override]
-        """Execute the analysis on the provided pixel dataset.
-
-        Args:
-            pixel_dataset: Pixel dataset.
-        """
+        """Execute the analysis on the provided pixel dataset."""
         if self._n_cores is None or self._n_cores > 1:
             per_component_results = self._execute_computations_in_parallel(
                 pixel_dataset.edgelist().iterator()
@@ -547,8 +525,8 @@ def warn_if_undetermined_has_high_confidence(
 
     Args:
         undetermined_sample_confidences: Undetermined sample confidences.
-        confidence_threshold: Confidence threshold.
-        undetermined_sample_name: Undetermined sample name.
+        confidence_threshold: Minimum confidence required to assign a component to a sample. Defaults to 0.8.
+        undetermined_sample_name: Name to use for undetermined components. Defaults to "undetermined".
     """
     if (
         np.sum(undetermined_sample_confidences > confidence_threshold)

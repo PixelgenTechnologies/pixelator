@@ -37,10 +37,6 @@ def hamming_distance(x, y):
 
     >>> [hamming_distance(x, 15) for x in [0, 8, 10, 12, 14, 15]]
     [4, 3, 2, 2, 1, 0]
-
-    Args:
-        x: X.
-        y: Y.
     """
     return bin(x ^ y).count("1")
 
@@ -220,12 +216,7 @@ class BKTree:
 
 
 def hamming_distance_i8(s1: BKTreeItem, s2: BKTreeItem | bytes) -> int:
-    """Calculate the byte-wise Hamming distance between two sequences.
-
-    Args:
-        s1: S1.
-        s2: S2.
-    """
+    """Calculate the byte-wise Hamming distance between two sequences."""
     b1 = np.frombuffer(s1.sequence, dtype=np.int8)
     b2 = np.frombuffer(s2.sequence if isinstance(s2, BKTreeItem) else s2, dtype=np.int8)
     return int(np.sum(b1 != b2))

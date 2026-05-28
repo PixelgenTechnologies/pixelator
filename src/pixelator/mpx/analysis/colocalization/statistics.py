@@ -50,11 +50,7 @@ def _wide_correlation_matrix_to_long_correlation_results(
 def _alphanumeric_sort_marker_columns(
     data: MarkerColocalizationResults,
 ) -> MarkerColocalizationResults:
-    """Make sure that the markers are always sorted in the same order.
-
-    Args:
-        data: Data.
-    """
+    """Make sure that the markers are always sorted in the same order."""
     data.index = pd.MultiIndex.from_tuples(
         map(sorted, data.index.values), names=data.index.names
     )
@@ -64,11 +60,7 @@ def _alphanumeric_sort_marker_columns(
 def _drop_self_correlation(
     data: MarkerColocalizationResults,
 ) -> MarkerColocalizationResults:
-    """Drop the self-correlation values from the data.
-
-    Args:
-        data: Data.
-    """
+    """Drop the self-correlation values from the data."""
     return data[data.index.get_level_values(0) != data.index.get_level_values(1)]
 
 

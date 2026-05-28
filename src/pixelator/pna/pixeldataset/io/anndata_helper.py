@@ -35,14 +35,7 @@ class AnnDataHelper:
         markers: str | list[str] | set[str] | None = None,
         adata_join_strategy: Literal["inner", "outer"] = "inner",
     ):
-        """Create a new instance of AnnDataHelper.
-
-        Args:
-            view: View.
-            components: Components.
-            markers: Markers.
-            adata_join_strategy: Adata join strategy.
-        """
+        """Create a new instance of AnnDataHelper."""
         self._view = view
         self._components = normalize_input_to_set(components)
         self._markers = normalize_input_to_set(markers)
@@ -91,9 +84,6 @@ class AnnDataHelper:
 
         Only try to upgrade to the latest version available in the view,
         if the panels differ in patch version and have the same product.
-
-        Args:
-            adatas: Adatas.
         """
         if any("panel_metadata" not in adata.uns for adata in adatas):
             logger.debug(
@@ -221,10 +211,6 @@ class AnnDataHelper:
         `AnnData` is mutable (callers can add/remove layers and other fields).
         Therefore, this *cached* method returns an internal "canonical" instance
         that must never be returned directly to callers.
-
-        Args:
-            add_log1p_transform: Add log1p transform.
-            add_clr_transform: Add clr transform.
         """
         adata = self._read_all_samples()
 
@@ -251,10 +237,6 @@ class AnnDataHelper:
 
         The returned object is always a defensive copy of the cached canonical
         value, so caller mutations never leak back into the cache.
-
-        Args:
-            add_log1p_transform: Add log1p transform.
-            add_clr_transform: Add clr transform.
         """
         return self._read_adata_cached(
             add_log1p_transform=add_log1p_transform,

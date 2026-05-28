@@ -13,11 +13,7 @@ from pixelator.common.utils.units import parse_size
 
 
 def output_option(func):
-    """Wrap a Click entrypoint to add the --output option.
-
-    Args:
-        func: Func.
-    """
+    """Wrap a Click entrypoint to add the --output option."""
 
     @click.option(
         "--output",
@@ -37,11 +33,7 @@ def output_option(func):
 
 
 def threads_option(func):
-    """Decorate a click command and add the --threads option.
-
-    Args:
-        func: Func.
-    """
+    """Decorate a click command and add the --threads option."""
 
     @click.option(
         "--threads",
@@ -70,11 +62,7 @@ def _memory_validator(ctx, param, value):
 
 
 def memory_option(func):
-    """Decorate a click command and add the --memory option.
-
-    Args:
-        func: Func.
-    """
+    """Decorate a click command and add the --memory option."""
 
     @click.option(
         "--memory",
@@ -93,11 +81,7 @@ def memory_option(func):
 
 
 def design_option(func):
-    """Decorate a click command and add the --design option.
-
-    Args:
-        func: Func.
-    """
+    """Decorate a click command and add the --design option."""
     from pixelator.pna.config import pna_config
 
     # TODO: Support assay aliases here as well
@@ -150,11 +134,7 @@ def validate_panel(ctx, param, value):
 
 
 def panel_option(func):
-    """Decorate a click command and add the --panel option.
-
-    Args:
-        func: Func.
-    """
+    """Decorate a click command and add the --panel option."""
     from pixelator.pna.config import pna_config
 
     # TODO: Support assay aliases here as well

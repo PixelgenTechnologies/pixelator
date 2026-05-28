@@ -26,20 +26,11 @@ class PerComponentAnalysis(Protocol):
     ANALYSIS_NAME: str
 
     def run_on_component(self, component: Graph, component_id: str) -> pd.DataFrame:
-        """Run the analysis on this component.
-
-        Args:
-            component: Component.
-            component_id: Component id.
-        """
+        """Run the analysis on this component."""
         ...
 
     def concatenate_data(self, data: Iterable[pd.DataFrame]) -> pd.DataFrame:
-        """Concatenate the data. Override this if you need custom concatenation behavior.
-
-        Args:
-            data: Data.
-        """
+        """Concatenate the data. Override this if you need custom concatenation behavior."""
         try:
             scores = pd.concat(data, axis=0)
             return scores
@@ -48,11 +39,7 @@ class PerComponentAnalysis(Protocol):
             raise error
 
     def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing.
-
-        Args:
-            data: Data.
-        """
+        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing."""
         return data
 
     def add_to_pixel_dataset(
@@ -62,7 +49,7 @@ class PerComponentAnalysis(Protocol):
 
         Args:
             data: Data.
-            pxl_dataset: Pxl dataset.
+            pxl_dataset: The PixelDataset to run the analysis on.
         """
         ...
 
@@ -145,11 +132,7 @@ class _AnalysisManager:
         return pxl_dataset
 
     def execute(self, pixel_dataset) -> PixelDataset:
-        """Execute the analysis on the provided pixel dataset.
-
-        Args:
-            pixel_dataset: Pixel dataset.
-        """
+        """Execute the analysis on the provided pixel dataset."""
         prepared_computations = self._prepare_computation()
         per_component_results = self._execute_computations_in_parallel(
             prepared_computations
@@ -168,7 +151,7 @@ def edgelist_to_component_stream(
 
     Args:
         dataset: Dataset.
-        use_full_bipartite: Use full bipartite.
+        use_full_bipartite: Whether to use the full bipartite graph when creating the components.
     """
     for component_id, component_df in (
         dataset.edgelist_lazy.collect()

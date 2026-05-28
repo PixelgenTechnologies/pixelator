@@ -84,7 +84,7 @@ class DemuxPipeline:
         """Set the writer queue for the pipeline.
 
         Args:
-            writer_queue: Writer queue.
+            writer_queue: The queue to send the processed reads to
         """
         self._writer_queue = writer_queue
 
@@ -175,11 +175,7 @@ class RecordBatchList:
         self._total_num_rows = 0
 
     def append(self, batch: pa.RecordBatch):
-        """Append a new RecordBatch to the list.
-
-        Args:
-            batch: Batch.
-        """
+        """Append a new RecordBatch to the list."""
         self._batches.append(batch)
         self._total_num_rows += batch.num_rows
 
@@ -232,7 +228,7 @@ class PartsFilenamePolicy(DemuxFilenamePolicy):
         """Return the filename for the given group index.
 
         Args:
-            group_index: Group index.
+            group_index: The index of the group to write the data to
         """
         return f"{self.prefix}.part_{group_index:03d}.parquet"
 
@@ -276,7 +272,7 @@ class IndependentMarkersFilenamePolicy(DemuxFilenamePolicy):
         """Return the filename for the given group index.
 
         Args:
-            group_index: Group index.
+            group_index: The index of the group to write the data to
         """
         if group_index in self._m1_groups:
             idx = self._rescaled_m1(group_index)
@@ -308,7 +304,7 @@ class DemuxWriterProcess(mpctx_Process):
             queue: The queue to receive data from the worker processes
             connection: The connection to the parent process
             schema: The schema of the arrow Tables received from the worker nodes
-            filename_policy: Filename policy.
+            filename_policy: The policy to determine the filename of the output files.
         """
         super().__init__()
 
@@ -334,7 +330,7 @@ class DemuxWriterProcess(mpctx_Process):
         """Open a new writer for the given group index.
 
         Args:
-            group_index: Group index.
+            group_index: The index of the group to write the data to
         """
         name = self.filename_policy.get_filename(group_index)
         output_file_path = str(self.output_directory / name)
@@ -648,7 +644,7 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
         """Start the worker processes and return them and the connections to them.
 
         Args:
-            pipeline: Pipeline.
+            pipeline: The pipeline to run.
         """
         workers = []
         out_connection_parent: list[Connection] = []
@@ -772,7 +768,7 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
         If an exception was received, raise it.
 
         Args:
-            connection: Connection.
+            connection: The connection to the parent process
         """
         result = connection.recv()
         if result == -2:

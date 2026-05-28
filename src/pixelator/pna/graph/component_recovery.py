@@ -24,12 +24,7 @@ from pixelator.pna.pixeldataset.io import PixelFileWriter
 
 
 def update_stats_from_adata(adata: AnnData, stats: GraphStatistics) -> GraphStatistics:
-    """Update GraphStatistics from an AnnData object.
-
-    Args:
-        adata: Adata.
-        stats: Stats.
-    """
+    """Update GraphStatistics from an AnnData object."""
     component_stats = copy(stats)
     component_stats.reads_output = int(adata.obs["reads_in_component"].sum())
 

@@ -36,11 +36,7 @@ class ShortestPathState:
     """Class to maintain the state of the shortest path search."""
 
     def initialize_frontier(self, edgelist):
-        """Initialize the frontier from the edgelist.
-
-        Args:
-            edgelist: Edgelist.
-        """
+        """Initialize the frontier from the edgelist."""
         frontier_x = []
         frontier_y = []
         frontier_index = []
@@ -59,11 +55,7 @@ class ShortestPathState:
         return frontier_x, frontier_y, frontier_index
 
     def __init__(self, edgelist):
-        """Initialize the shortest path state with the given edgelist.
-
-        Args:
-            edgelist: Edgelist.
-        """
+        """Initialize the shortest path state with the given edgelist."""
         nnodes = max(edgelist["node1_id"].max(), edgelist["node2_id"].max()) + 1
         nedges = len(edgelist)
         frontier_x, frontier_y, frontier_index = self.initialize_frontier(edgelist)
@@ -85,12 +77,7 @@ class ShortestPathFinder:
     """Class to find shortest paths in a graph using sparse matrix operations."""
 
     def __init__(self, edgelist, explore_limit=10000):
-        """Initialize the shortest path finder with the given edgelist.
-
-        Args:
-            edgelist: Edgelist.
-            explore_limit: Explore limit.
-        """
+        """Initialize the shortest path finder with the given edgelist."""
         self.node_map = (
             pl.concat(
                 (
@@ -190,11 +177,7 @@ class ShortestPathFinder:
         return n_reached
 
     def run(self, max_steps=20):
-        """Run the shortest path finder for a maximum number of steps.
-
-        Args:
-            max_steps: Max steps.
-        """
+        """Run the shortest path finder for a maximum number of steps."""
         cycle_distribution = pd.Series(dtype=int)
         for step in range(max_steps):
             if self.state.frontier.shape[0] == 0:
@@ -227,13 +210,7 @@ class ShortestPathFinder:
 
 
 def process_component(comp_name, edgelist_path, tmpdir):
-    """Process a single component to remove edges not participating in cycles.
-
-    Args:
-        comp_name: Comp name.
-        edgelist_path: Edgelist path.
-        tmpdir: Tmpdir.
-    """
+    """Process a single component to remove edges not participating in cycles."""
     with duckdb.connect() as con:
         con.execute(
             """

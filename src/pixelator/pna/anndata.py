@@ -14,11 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def calculate_antibody_metrics(counts_df):
-    """Calculate antibody metrics from a count matrix, can be used to set/update adata.vars.
-
-    Args:
-        counts_df: Counts df.
-    """
+    """Calculate antibody metrics from a count matrix, can be used to set/update adata.vars."""
     total_antibody = pd.Series(counts_df.sum(axis=0), name="antibody_count")
     relative_antibody = pd.Series(
         total_antibody / total_antibody.sum(), name="antibody_pct"
@@ -29,12 +25,7 @@ def calculate_antibody_metrics(counts_df):
 
 
 def add_panel_information(adata: AnnData, panel: PNAAntibodyPanel) -> AnnData:
-    """Add panel data to var.
-
-    Args:
-        adata: Adata.
-        panel: Panel.
-    """
+    """Add panel data to var."""
     adata.var = adata.var.join(panel.df, how="left")
 
     adata.uns["panel_metadata"] = panel.metadata.model_dump()
@@ -55,10 +46,6 @@ def pna_edgelist_to_anndata(
     with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
     panel : PNAAntibodyPanel
     The antibody panel object containing marker metadata.
-
-    Args:
-        pixel_connection: Pixel connection.
-        panel: Panel.
 
     Returns:
         Notes:  ----- Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
@@ -215,12 +202,7 @@ def pna_edgelist_to_anndata(
 
 
 def add_missing_adata_info(new_adata: AnnData, old_adata: AnnData) -> AnnData:
-    """Add missing obs and var columns from old_adata to new_adata.
-
-    Args:
-        new_adata: New adata.
-        old_adata: Old adata.
-    """
+    """Add missing obs and var columns from old_adata to new_adata."""
     missing_obs = set(old_adata.obs.columns) - set(new_adata.obs.columns)
     missing_var = set(old_adata.var.columns) - set(new_adata.var.columns)
 

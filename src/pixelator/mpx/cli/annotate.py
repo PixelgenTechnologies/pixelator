@@ -95,12 +95,12 @@ def annotate(
     Args:
         ctx: Click context from the command decorator.
         parquet_file: Parquet file.
-        panel: Panel.
+        panel: A key of a panel file in the config, or a csv file with the antibody panel conjugations.
         min_size: The minimum size (edges) a component must have (default is disabled). Note that this cannot be set at the same time as --dynamic-filter.
         max_size: The maximum size (edges) a component must have (default is disabled). Note that this cannot be set at the same time as --dynamic-filter.
-        dynamic_filter: Dynamic filter.
-        aggregate_calling: Aggregate calling.
-        output: Output.
+        dynamic_filter: Enable the dynamic component size filters. The following modes are available: both/max/min. both: estimates both minimum and maximum component size, min: estimates the minimum component size (or uses {MINIMUM_N_EDGES_CELL_SIZE} edges, whichever is smallest), max: estimates the maximum component size. Note that this cannot be set at the same time as --min-size or --max-size.
+        aggregate_calling: Enable aggregate calling, information on potential aggregates will be added to the output data.
+        output: The path where the results will be placed (it is created if it does not exist).
     """
     input_files = [parquet_file]
     # log input parameters

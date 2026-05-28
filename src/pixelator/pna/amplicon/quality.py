@@ -43,27 +43,15 @@ class QualityStatistics:
             self._region_counters[region_id] = Counter(region_data)
 
     def total_bases(self, region_id: str):
-        """Return the total number of bases for a region.
-
-        Args:
-            region_id: Region id.
-        """
+        """Return the total number of bases for a region."""
         return self._region_counters[region_id]["total_bases"]
 
     def sequences_bases(self, region_id: str):
-        """Return the number of sequenced bases for a region.
-
-        Args:
-            region_id: Region id.
-        """
+        """Return the number of sequenced bases for a region."""
         return self._region_counters[region_id]["sequenced_bases"]
 
     def q30_bases(self, region_id: str):
-        """Return the number of bases with quality above 30 for a region.
-
-        Args:
-            region_id: Region id.
-        """
+        """Return the number of bases with quality above 30 for a region."""
         return self._region_counters[region_id]["q30_bases"]
 
     def get_q30_fraction_total_bases(self, region_id: str):
@@ -71,9 +59,6 @@ class QualityStatistics:
 
         The fraction is calculated as the number of bases with quality above
         30 divided by the total number bases in the region, even those that were not sequenced.
-
-        Args:
-            region_id: Region id.
         """
         r = self._region_counters[region_id]
         if (bases := r["total_bases"]) == 0:
@@ -86,9 +71,6 @@ class QualityStatistics:
 
         The fraction is calculated as the number of bases with quality above
         30 divided by the total number of sequenced bases.
-
-        Args:
-            region_id: Region id.
         """
         r = self._region_counters[region_id]
         if (bases := r["sequenced_bases"]) == 0:

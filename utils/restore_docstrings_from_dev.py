@@ -86,6 +86,16 @@ def _format_sections(sections: dict[str, list[str]]) -> list[str]:
     return out
 
 
+def _sphinx_param_map(doc: str) -> dict[str, str]:
+    params: dict[str, str] = {}
+    for line in inspect.cleandoc(doc).splitlines():
+        match = re.match(r":param\s+(\S+)(?:\s+\(([^)]+)\))?:\s*(.*)", line.strip())
+        if match:
+            name, _, desc = match.groups()
+            params[name.lstrip("*")] = desc.strip()
+    return params
+
+
 def _arg_map(section_lines: list[str]) -> dict[str, str]:
     args: dict[str, str] = {}
     for line in section_lines:
@@ -105,6 +115,32 @@ def _is_placeholder(name: str, desc: str) -> bool:
         name.capitalize() + ".",
         name + ".",
     }
+
+
+def _prune_synthetic_args(head_doc: str, dev_doc: str) -> tuple[str, bool]:
+    """Drop Args sections that were auto-filled when dev had no parameter docs."""
+    _, dev_sections = _parse_sections(convert_docstring_body(inspect.cleandoc(dev_doc)))
+    if dev_sections.get("Args") or _sphinx_param_map(dev_doc):
+        return head_doc, False
+
+    head_narrative, head_sections = _parse_sections(head_doc)
+    arg_lines = head_sections.get("Args", [])
+    if not arg_lines:
+        return head_doc, False
+
+    head_args = _arg_map(arg_lines)
+    if not head_args or not all(
+        _is_placeholder(name, desc) for name, desc in head_args.items()
+    ):
+        return head_doc, False
+
+    del head_sections["Args"]
+    out_lines = list(head_narrative)
+    formatted = _format_sections(head_sections)
+    if out_lines and formatted:
+        out_lines.append("")
+    out_lines.extend(formatted)
+    return "\n".join(out_lines), True
 
 
 def _merge_docs(head_doc: str, dev_doc: str) -> tuple[str, bool]:
@@ -132,6 +168,13 @@ def _merge_docs(head_doc: str, dev_doc: str) -> tuple[str, bool]:
 
     head_args = _arg_map(head_sections.get("Args", []))
     dev_args = _arg_map(dev_sections.get("Args", []))
+    dev_args.update(
+        {
+            name: desc
+            for name, desc in _sphinx_param_map(dev_doc).items()
+            if name not in dev_args or _is_placeholder(name, dev_args[name])
+        }
+    )
     new_arg_lines: list[str] = []
     for name, desc in head_args.items():
         if (
@@ -270,6 +313,9 @@ def process_file(path: Path) -> bool:
             if not head_doc or not dev_doc or head_doc == dev_doc:
                 continue
             merged, changed = _merge_docs(head_doc, dev_doc)
+            pruned, pruned_changed = _prune_synthetic_args(merged, dev_doc)
+            if pruned_changed:
+                merged, changed = pruned, True
             if changed:
                 pending.append((node, merged))
         if not pending:

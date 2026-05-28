@@ -165,19 +165,19 @@ def analysis(
 
     Args:
         ctx: Click context from the command decorator.
-        pxl_file: Pxl file.
+        pxl_file: Path to the input PXL (PixelDataset) file.
         compute_polarization: Compute polarization scores matrix (components by markers).
         compute_colocalization: Compute colocalization scores (marker by marker) for each component.
-        use_full_bipartite: Use full bipartite.
-        polarization_transformation: Polarization transformation.
-        polarization_n_permutations: Polarization n permutations.
-        polarization_min_marker_count: Polarization min marker count.
-        colocalization_transformation: Colocalization transformation.
-        colocalization_neighbourhood_size: Colocalization neighbourhood size.
-        colocalization_n_permutations: Colocalization n permutations.
-        colocalization_min_region_count: Colocalization min region count.
-        colocalization_min_marker_count: Colocalization min marker count.
-        output: Output.
+        use_full_bipartite: Use the bipartite graph instead of the one-node projection (UPIA) when computing polarization, coabundance and colocalization scores.
+        polarization_transformation: Which approach to use to normalize the antibody counts; raw uses raw counts and log1p uses log(x+1) transformed counts.
+        polarization_n_permutations: Set the number of permutations use to compute the empirical z-score and p-value for the polarization score.
+        polarization_min_marker_count: Set the minimum number of counts of a marker to calculate the polarization score in a component.
+        colocalization_transformation: Select the type of transformation to use on the node by antibody counts matrix when computing colocalization.
+        colocalization_neighbourhood_size: Select the size of the neighborhood to use when computing colocalization metrics on each component.
+        colocalization_n_permutations: Set the number of permutations use to compute the empirical p-value for the colocalization score.
+        colocalization_min_region_count: The minimum number of counts in a region for it to be considered valid for computing colocalization.
+        colocalization_min_marker_count: The minimum number of marker counts in component for colocalization.
+        output: The path where the results will be placed (it is created if it does not exist).
     """
     # log input parameters
     input_files = [pxl_file]

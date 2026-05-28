@@ -107,9 +107,9 @@ def independent_marker_groups_mapping(
     target_chunk_count: the number of chunks to partition the markers into
 
     Args:
-        group_sizes: Group sizes.
-        reads_per_chunk: Reads per chunk.
-        max_chunks: Max chunks.
+        group_sizes: the mapping of (PID1, PID2) pairs to the number of reads
+        reads_per_chunk: the target number of reads per chunk
+        max_chunks: the maximum number of groups
 
     Returns:
         A tuple with a dict for marker1 and marker2. The dict map the marker to the group index.
@@ -218,20 +218,12 @@ class DemuxRecordBatch:
         self._size = 0
 
     def _verify_m1_markers(self, allowed_ids: Sequence[int]) -> bool:
-        """Check if all markers are in the allowed set.
-
-        Args:
-            allowed_ids: Allowed ids.
-        """
+        """Check if all markers are in the allowed set."""
         mask = np.isin(self.marker1[: self._size], allowed_ids)
         return bool(np.all(mask))
 
     def _verify_m2_markers(self, allowed_ids: Sequence[int]) -> bool:
-        """Check if all markers are in the allowed set.
-
-        Args:
-            allowed_ids: Allowed ids.
-        """
+        """Check if all markers are in the allowed set."""
         mask = np.isin(self.marker2[: self._size], allowed_ids)
         return bool(np.all(mask))
 
@@ -332,27 +324,15 @@ class PNAEmbedding:
         self._uei_slice = slice(192, 192 + self._uei_len * 3)
 
     def get_umi1_bytes(self, embedded: bytes):
-        """Return the bytes of the UMI1 from the molecule embedding.
-
-        Args:
-            embedded: Embedded.
-        """
+        """Return the bytes of the UMI1 from the molecule embedding."""
         return embedded[0:12]
 
     def get_umi2_bytes(self, embedded: bytes):
-        """Return the bytes of the UMI2 from the molecule embedding.
-
-        Args:
-            embedded: Embedded.
-        """
+        """Return the bytes of the UMI2 from the molecule embedding."""
         return embedded[12:24]
 
     def get_uei_bytes(self, embedded: bytes):
-        """Return the bytes of the UEI from the molecule embedding.
-
-        Args:
-            embedded: Embedded.
-        """
+        """Return the bytes of the UEI from the molecule embedding."""
         return embedded[24:32]
 
     def _encode_umi1(self, umi1: bytes, output):
@@ -393,11 +373,6 @@ class PNAEmbedding:
 
         256 bits is a common length for SIMD instructions (eg. 1 AVX-2 register or 2 Arm NEON registers)
         and thus commonly used for efficient similarity search. (eg. in FAISS).
-
-        Args:
-            umi1: Umi1.
-            umi2: Umi2.
-            uei: Uei.
         """
         vec = np.zeros(256, dtype=np.uint8)
 
@@ -463,9 +438,6 @@ class PNAEmbedding:
         The output is padded to 128 bits since that is a common SIMD vector length
         and thus commonly used for efficient similarity search. (eg. in FAISS).
 
-        Args:
-            umi: Umi.
-
         Returns:
             a 16-byte/128-bits array of packed nucleotides
         Raises:
@@ -527,7 +499,7 @@ class PNAEmbedding:
         """Compress the 3-bit per nucleotide embedded UEI into a 2-bit embedding.
 
         Args:
-            bitvector: Bitvector.
+            bitvector: the 256-bit vector to unpack
         """
         return self._compress_3bit_embedding(bitvector, 8, 15)
 
@@ -614,12 +586,7 @@ class BarcodeDemuxer(abc.ABC):
     def _serialize_group(
         self, group_id: int, group: DemuxRecordBatch
     ) -> tuple[int, bytes]:
-        """Serialize and send a group to the writer process.
-
-        Args:
-            group_id: Group id.
-            group: Group.
-        """
+        """Serialize and send a group to the writer process."""
         serialized_batch = group.serialize()
         self._records_written += len(group)
         group.clear()

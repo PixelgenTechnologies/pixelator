@@ -19,11 +19,7 @@ class PixelDatasetSaver:
     """A class to save a PixelDataset to disk."""
 
     def __init__(self, pxl_dataset):
-        """Create a new PixelDatasetSaver instance.
-
-        Args:
-            pxl_dataset: Pxl dataset.
-        """
+        """Create a new PixelDatasetSaver instance."""
         self.pxl_dataset = pxl_dataset
 
     def save(

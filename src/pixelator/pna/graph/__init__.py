@@ -31,11 +31,7 @@ class PNAGraph(BaseGraph):
     """Graph class for PNA data."""
 
     def __init__(self, backend: NetworkXGraphBackend):
-        """Create a new graph instance.
-
-        Args:
-            backend: Backend.
-        """
+        """Create a new graph instance."""
         self._backend = backend
         self._connected_components_needs_recompute = False
         self._connected_components: VertexClustering | None = None

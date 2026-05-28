@@ -25,7 +25,7 @@ class InplacePixelDataFilterer:
         """Initialize the InplacePixelDataFilterer.
 
         Args:
-            pxl_file: Pxl file.
+            pxl_file: Path to the input PXL (PixelDataset) file.
         """
         self.pxl_file = pxl_file
 

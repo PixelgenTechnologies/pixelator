@@ -210,12 +210,7 @@ class AmpliconStatistics(Statistics):
         return self
 
     def as_json(self, gc_content: float = 0.5, one_line: bool = False) -> Dict:
-        """Return a dict representation suitable for dumping in JSON format.
-
-        Args:
-            gc_content: Gc content.
-            one_line: One line.
-        """
+        """Return a dict representation suitable for dumping in JSON format."""
         return self.as_dict()
 
     def as_dict(self) -> Dict:
@@ -312,16 +307,7 @@ class AmpliconStatistics(Statistics):
         steps,
         set_paired_to_none: bool = False,
     ):
-        """Enable stats.paired to be set to None when unknown.
-
-        Args:
-            n: N.
-            total_bp1: Total bp1.
-            total_bp2: Total bp2.
-            modifiers: Modifiers.
-            steps: Steps.
-            set_paired_to_none: Set paired to none.
-        """
+        """Enable stats.paired to be set to None when unknown."""
         stats = super().collect(n, total_bp1, total_bp2, modifiers, steps)
         if set_paired_to_none:
             stats.paired = None

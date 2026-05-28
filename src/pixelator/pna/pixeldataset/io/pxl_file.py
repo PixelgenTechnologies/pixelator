@@ -27,12 +27,7 @@ class PxlFile:
     """PxlFile represents a a pxl file on disk and provides basic utility methods."""
 
     def __init__(self, path: Path, sample_name: str | None = None):
-        """Initialize the PxlFile.
-
-        Args:
-            path: Path.
-            sample_name: Sample name.
-        """
+        """Initialize the PxlFile."""
         if not path.exists():
             raise FileNotFoundError(f"File {path} does not exist.")
 

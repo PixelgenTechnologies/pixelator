@@ -276,9 +276,6 @@ def _assess_doublet(component_edgelist: pd.DataFrame) -> tuple[bool, int]:
     community. A lower resolution is to be used for annotation of potential doublets
     compared to the component recovery in the graph phase. The reduction factor in
     annotate resolution is set by RELATIVE_ANNOTATE_RESOLUTION (default is 0.5).
-
-    Args:
-        component_edgelist: Component edgelist.
     """
     component_communities = _compute_sub_communities(component_edgelist)
     component_community_sizes = component_communities.value_counts().sort_values(

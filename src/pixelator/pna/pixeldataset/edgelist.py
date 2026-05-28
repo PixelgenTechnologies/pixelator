@@ -36,13 +36,7 @@ class Edgelist:
         components: str | Iterable[str] | None = None,
         adata_helper: AnnDataHelper | None = None,
     ):
-        """Create a new instance of Edgelist.
-
-        Args:
-            view: View.
-            components: Components.
-            adata_helper: Adata helper.
-        """
+        """Create a new instance of Edgelist."""
         self._view = view
         self._components = normalize_input_to_set(components)
         self._adata_helper = (
@@ -105,11 +99,7 @@ class Edgelist:
     def to_record_batches(
         self, batch_size: int = 1_000_000
     ) -> Iterable[pa.RecordBatch]:
-        """Get the edgelist as a stream of pyarrow RecordBatches.
-
-        Args:
-            batch_size: Batch size.
-        """
+        """Get the edgelist as a stream of pyarrow RecordBatches."""
         query = self._query_builder.edgelist_query(
             normalize_input_to_list(self.components)
         )

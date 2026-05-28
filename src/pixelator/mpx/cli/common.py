@@ -91,11 +91,7 @@ class AliasedOrderedGroup(OrderedGroup):
 
 
 def output_option(func):
-    """Wrap a Click entrypoint to add the --output option.
-
-    Args:
-        func: Func.
-    """
+    """Wrap a Click entrypoint to add the --output option."""
 
     @click.option(
         "--output",
@@ -114,11 +110,7 @@ def output_option(func):
 
 
 def design_option(func):
-    """Decorate a click command and add the --design option.
-
-    Args:
-        func: Func.
-    """
+    """Decorate a click command and add the --design option."""
     from pixelator.mpx.config import config
 
     assay_options = list(config.assays.keys())

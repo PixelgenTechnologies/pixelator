@@ -262,11 +262,11 @@ def finalize_batched_groups(
 
     Args:
         input_dir: Input dir.
-        output_dir: Output dir.
+        output_dir: The output directory.
         remove_intermediates: Remove intermediates.
         strategy: Strategy.
         memory: Memory.
-        threads: Threads.
+        threads: The number of threads to use for processing. The default of `-1` will use all available cores.
         temp_dir: Temp dir.
     """
     if strategy == "independent":
@@ -319,10 +319,10 @@ def _finalize_batched_groups_paired(
 
     Args:
         input_dir: Input dir.
-        output_dir: Output dir.
+        output_dir: The output directory.
         remove_intermediates: Remove intermediates.
         memory: Memory.
-        threads: Threads.
+        threads: The number of threads to use for processing. The default of `-1` will use all available cores.
         temp_dir: Temp dir.
 
     Returns:
@@ -389,10 +389,10 @@ def _finalize_batched_groups_independent(
 
     Args:
         input_dir: Input dir.
-        output_dir: Output dir.
+        output_dir: The output directory.
         remove_intermediates: Remove intermediates.
         memory: Memory.
-        threads: Threads.
+        threads: The number of threads to use for processing. The default of `-1` will use all available cores.
         temp_dir: Temp dir.
 
     Returns:

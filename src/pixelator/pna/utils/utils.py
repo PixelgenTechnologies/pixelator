@@ -174,11 +174,7 @@ def get_demux_filename_info(filename: str | Path | PurePath) -> tuple[str, int]:
 
 
 def timer(command_name: str | None = None):
-    """Time the different steps of a function.
-
-    Args:
-        command_name: Command name.
-    """
+    """Time the different steps of a function."""
 
     def wrapper(func):
         @wraps(func)
@@ -198,11 +194,7 @@ def timer(command_name: str | None = None):
 def normalize_input_to_set(
     one_or_more_values: Iterable[str] | str | None,
 ) -> set[str] | None:
-    """Normalize input to a set of strings.
-
-    Args:
-        one_or_more_values: One or more values.
-    """
+    """Normalize input to a set of strings."""
     if one_or_more_values is None:
         return None
     if isinstance(one_or_more_values, str):
@@ -224,11 +216,7 @@ def normalize_input_to_set(
 def normalize_input_to_list(
     one_or_more_values: Iterable[str] | str | None,
 ) -> list[str] | None:
-    """Normalize input to a list of strings.
-
-    Args:
-        one_or_more_values: One or more values.
-    """
+    """Normalize input to a list of strings."""
     if one_or_more_values is None:
         return None
     if isinstance(one_or_more_values, str):

@@ -70,13 +70,7 @@ class PixelFileWriter:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        """Close the writer context manager.
-
-        Args:
-            exc_type: Exc type.
-            exc_value: Exc value.
-            traceback: Traceback.
-        """
+        """Close the writer context manager."""
         self.close()
 
     def _write_parquet_file_to_table(

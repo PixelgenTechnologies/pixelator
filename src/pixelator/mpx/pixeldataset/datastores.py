@@ -383,13 +383,7 @@ class ZipBasedPixelFile(PixelDataStore):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        """Exit the context manager.
-
-        Args:
-            exc_type: Exc type.
-            exc_value: Exc value.
-            traceback: Traceback.
-        """
+        """Exit the context manager."""
         self.close()
 
     def __del__(self) -> None:

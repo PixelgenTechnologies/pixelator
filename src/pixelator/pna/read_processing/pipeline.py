@@ -185,11 +185,7 @@ class AmpliconPipeline(Pipeline):
             self._post_modifiers.append(modifier)
 
     def _pre_process_paired(self, reads):
-        """Pre‐process paired reads.
-
-        Args:
-            reads: Reads.
-        """
+        """Pre‐process paired reads."""
         pre_modifiers_and_steps = self._pre_modifiers + self._pre_steps
         read1, read2 = reads
         n_bp1 = len(read1)
@@ -208,11 +204,7 @@ class AmpliconPipeline(Pipeline):
         return read1, read2, info1, info2, n_bp1, n_bp2
 
     def _pre_process_single(self, single_read):
-        """Pre‐process single reads.
-
-        Args:
-            single_read: Single read.
-        """
+        """Pre‐process single reads."""
         pre_modifiers_and_steps = self._pre_modifiers + self._pre_steps
         info = ModificationInfo(single_read)
         n_bp = len(single_read)

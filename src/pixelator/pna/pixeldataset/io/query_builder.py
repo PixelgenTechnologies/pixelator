@@ -69,10 +69,6 @@ class QueryBuilder:
 
         Note: marker filtering is intentionally not pushed down into SQL (column
         selection); consumers can filter markers in-memory after materialization.
-
-        Args:
-            db_name: Db name.
-            components: Components.
         """
         return Query(
             sql=f"""SELECT * FROM {db_name}.__adata__X
@@ -86,12 +82,7 @@ class QueryBuilder:
         db_name: str,
         components: list[str] | None = None,
     ) -> Query:
-        """Build AnnData obs query for a single underlying sample DB.
-
-        Args:
-            db_name: Db name.
-            components: Components.
-        """
+        """Build AnnData obs query for a single underlying sample DB."""
         return Query(
             sql=f"""SELECT * FROM {db_name}.__adata__obs
                     WHERE {self._optimized_where_condition("index", "components", components)}
@@ -104,12 +95,7 @@ class QueryBuilder:
         db_name: str,
         markers: list[str] | None = None,
     ) -> Query:
-        """Build AnnData var query for a single underlying sample DB.
-
-        Args:
-            db_name: Db name.
-            markers: Markers.
-        """
+        """Build AnnData var query for a single underlying sample DB."""
         return Query(
             sql=f"""SELECT * FROM {db_name}.__adata__var
                     WHERE {self._optimized_where_condition("index", "markers", markers)}
@@ -118,22 +104,14 @@ class QueryBuilder:
         )
 
     def adata_uns_query(self, db_name: str) -> Query:
-        """Build AnnData uns query for a single underlying sample DB.
-
-        Args:
-            db_name: Db name.
-        """
+        """Build AnnData uns query for a single underlying sample DB."""
         return Query(
             sql=f"SELECT * FROM {db_name}.__adata__uns",
             params={},
         )
 
     def adata_obsm_table_names_query(self, db_name: str) -> Query:
-        """Build query listing available obsm tables for a sample DB.
-
-        Args:
-            db_name: Db name.
-        """
+        """Build query listing available obsm tables for a sample DB."""
         return Query(
             sql="SHOW ALL TABLES",
             params={},
@@ -145,13 +123,7 @@ class QueryBuilder:
         table_name: str,
         components: list[str] | None = None,
     ) -> Query:
-        """Build AnnData obsm query for a given obsm table in a sample DB.
-
-        Args:
-            db_name: Db name.
-            table_name: Table name.
-            components: Components.
-        """
+        """Build AnnData obsm query for a given obsm table in a sample DB."""
         qualified = table_name if "." in table_name else f"{db_name}.main.{table_name}"
         return Query(
             sql=f"""SELECT * FROM {qualified}
@@ -161,11 +133,7 @@ class QueryBuilder:
         )
 
     def edgelist_query(self, components: list[str] | None) -> Query:
-        """Build an edgelist data query.
-
-        Args:
-            components: Components.
-        """
+        """Build an edgelist data query."""
         return Query(
             sql=f"""SELECT * FROM edgelist
                     WHERE {self._optimized_component_where_condition(components)}
@@ -174,11 +142,7 @@ class QueryBuilder:
         )
 
     def edgelist_len_query(self, components: list[str] | None) -> Query:
-        """Build an edgelist count query.
-
-        Args:
-            components: Components.
-        """
+        """Build an edgelist count query."""
         return Query(
             sql=f"""SELECT COUNT(*) FROM edgelist
                     WHERE {self._optimized_component_where_condition(components)}
@@ -189,12 +153,7 @@ class QueryBuilder:
     def layouts_query(
         self, components: list[str] | None, add_marker_counts: bool
     ) -> Query:
-        """Build a layouts query, optionally including marker-count join data.
-
-        Args:
-            components: Components.
-            add_marker_counts: Add marker counts.
-        """
+        """Build a layouts query, optionally including marker-count join data."""
         if add_marker_counts:
             return Query(
                 sql=f"""
@@ -225,11 +184,7 @@ class QueryBuilder:
         )
 
     def layouts_len_query(self, components: list[str] | None) -> Query:
-        """Build a layouts count query.
-
-        Args:
-            components: Components.
-        """
+        """Build a layouts count query."""
         return Query(
             sql=f"""SELECT COUNT(*)
                     FROM layouts
@@ -244,13 +199,7 @@ class QueryBuilder:
         markers: list[str] | None,
         calculate_from_edgelist: bool = False,
     ) -> Query:
-        """Build a proximity data query.
-
-        Args:
-            components: Components.
-            markers: Markers.
-            calculate_from_edgelist: Calculate from edgelist.
-        """
+        """Build a proximity data query."""
         if calculate_from_edgelist:
             sql, params = jcs_with_analytical_stats(
                 components=components,
@@ -272,13 +221,7 @@ class QueryBuilder:
         markers: list[str] | None,
         calculate_from_edgelist: bool = False,
     ) -> Query:
-        """Build a proximity count query.
-
-        Args:
-            components: Components.
-            markers: Markers.
-            calculate_from_edgelist: Calculate from edgelist.
-        """
+        """Build a proximity count query."""
         if calculate_from_edgelist:
             return self._calculate_proximity_length_from_edgelist(components, markers)
 

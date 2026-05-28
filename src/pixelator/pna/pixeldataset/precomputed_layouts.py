@@ -31,15 +31,7 @@ class PreComputedLayouts:
         add_marker_counts: bool = True,
         add_spherical_norm: bool = False,
     ):
-        """Create a new instance of PreComputedLayouts.
-
-        Args:
-            view: View.
-            components: Components.
-            adata_helper: Adata helper.
-            add_marker_counts: Add marker counts.
-            add_spherical_norm: Add spherical norm.
-        """
+        """Create a new instance of PreComputedLayouts."""
         self._view = view
         self._components = normalize_input_to_set(components)
         self._adata_helper = (
@@ -65,11 +57,7 @@ class PreComputedLayouts:
         )
 
     def _pivot_marker_table(self, df: pl.DataFrame) -> pl.DataFrame:
-        """Pivot the joined marker column into marker count columns.
-
-        Args:
-            df: Df.
-        """
+        """Pivot the joined marker column into marker count columns."""
         return (
             df.select(pl.col("*"), val=pl.lit(1))
             .pivot(

@@ -33,17 +33,7 @@ class Proximity:
         add_log2_ratio: bool = True,
         calculate_from_edgelist: bool = False,
     ):
-        """Create a new instance of Proximity.
-
-        Args:
-            view: View.
-            components: Components.
-            markers: Markers.
-            adata_helper: Adata helper.
-            add_marker_counts: Add marker counts.
-            add_log2_ratio: Add log2 ratio.
-            calculate_from_edgelist: Calculate from edgelist.
-        """
+        """Create a new instance of Proximity."""
         self._view = view
         self._components = normalize_input_to_set(components)
         self._markers = normalize_input_to_set(markers)

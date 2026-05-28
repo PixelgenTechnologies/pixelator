@@ -50,11 +50,7 @@ def fetch_config_plugins() -> Generator[EntryPoint, None, None]:
 
 
 def load_config_plugins(config: Config) -> Config:
-    """Load all config plugins.
-
-    Args:
-        config: Config.
-    """
+    """Load all config plugins."""
     new_config = config
 
     for entry_point in fetch_config_plugins():

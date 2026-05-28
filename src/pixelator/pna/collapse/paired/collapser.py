@@ -217,11 +217,6 @@ class MoleculeCollapser:
 
         This wraps the context managers for the shared memory manager, parallel worker pool,
         and the parquet writer.
-
-        Args:
-            exc_type: Exc type.
-            exc_val: Exc val.
-            exc_tb: Exc tb.
         """
         self._memory_manager.__exit__(exc_type, exc_val, exc_tb)
         self._parallel_worker.__exit__(exc_type, exc_val, exc_tb)

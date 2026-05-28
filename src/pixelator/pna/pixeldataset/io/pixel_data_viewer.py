@@ -93,7 +93,7 @@ class PixelDataViewer:
         """Create a normalized sample name lookup table for working with the duckdb files.
 
         Args:
-            sample_name_to_pxl_file_mapping: Sample name to pxl file mapping.
+            sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
         """
 
         def _normalize_sample_name(name: str) -> str:
@@ -116,11 +116,7 @@ class PixelDataViewer:
         return normalized_names
 
     def _get_normalized_name(self, sample_name: str) -> str:
-        """Get the normalized name for a sample name.
-
-        Args:
-            sample_name: Sample name.
-        """
+        """Get the normalized name for a sample name."""
         try:
             return self._normalized_sample_name_mapping[sample_name]
         except KeyError:
@@ -133,9 +129,6 @@ class PixelDataViewer:
         """Create a PixelDataViewer from a list of PxlFile objects.
 
         This will use the sample names from the PxlFile metadata as sample names.
-
-        Args:
-            pxl_files: Pxl files.
         """
         return PixelDataViewer(
             {pxl_file.sample_name: pxl_file for pxl_file in pxl_files}
@@ -148,16 +141,12 @@ class PixelDataViewer:
         """Create a PixelDataViewer from a dictionary mapping sample names to PxlFile objects.
 
         Args:
-            sample_name_to_pxl_file_mapping: Sample name to pxl file mapping.
+            sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
         """
         return PixelDataViewer(sample_name_to_pxl_file_mapping)
 
     def filter_samples(self, sample_names: set[str]) -> "PixelDataViewer":
-        """Create a new PixelDataViewer with only a subset of the samples.
-
-        Args:
-            sample_names: Sample names.
-        """
+        """Create a new PixelDataViewer with only a subset of the samples."""
         filtered_mapping = {
             sample_name: pxl_file
             for sample_name, pxl_file in self._db_to_file_mapping.items()
@@ -186,11 +175,7 @@ class PixelDataViewer:
         return list(self._db_to_file_mapping.keys())
 
     def normalized_sample_db_name(self, sample_name: str) -> str:
-        """Return the attached DuckDB database name for a sample.
-
-        Args:
-            sample_name: Sample name.
-        """
+        """Return the attached DuckDB database name for a sample."""
         return self._get_normalized_name(sample_name)
 
 
@@ -209,11 +194,7 @@ class PixelDataViewerSession:
     """
 
     def __init__(self, sources: list[tuple[str, Path | str, str]]) -> None:
-        """Open a DuckDB connection and attach each PXL file in ``sources``.
-
-        Args:
-            sources: Sources.
-        """
+        """Open a DuckDB connection and attach each PXL file in ``sources``."""
         normalized: list[tuple[str, Path, str]] = [
             (sample_name, Path(path), db_name) for sample_name, path, db_name in sources
         ]
@@ -246,13 +227,7 @@ class PixelDataViewerSession:
         table_name: str,
         view_name: str,
     ) -> None:
-        """Create a view that unions given table from all the underlying samples.
-
-        Args:
-            connection: Connection.
-            table_name: Table name.
-            view_name: View name.
-        """
+        """Create a view that unions given table from all the underlying samples."""
         _validate_session_sql_identifier(table_name, what="table name")
         _validate_session_sql_identifier(view_name, what="view name")
         try:
@@ -292,13 +267,7 @@ class PixelDataViewerSession:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
-        """Close the DuckDB connection.
-
-        Args:
-            exc_type: Exc type.
-            exc_value: Exc value.
-            traceback: Traceback.
-        """
+        """Close the DuckDB connection."""
         self.close()
 
     def get_connection(self) -> duckdb.DuckDBPyConnection:
@@ -310,11 +279,7 @@ class PixelDataViewerSession:
         return self._connection
 
     def execute_lazy(self, query: Query) -> pl.LazyFrame:
-        """Execute a query and return a Polars LazyFrame.
-
-        Args:
-            query: Query.
-        """
+        """Execute a query and return a Polars LazyFrame."""
         return (
             self.get_connection()
             .execute(query.sql, parameters=query.params)
@@ -322,19 +287,11 @@ class PixelDataViewerSession:
         )
 
     def execute_eager(self, query: Query) -> pl.DataFrame:
-        """Execute a query and return a Polars DataFrame.
-
-        Args:
-            query: Query.
-        """
+        """Execute a query and return a Polars DataFrame."""
         return self.get_connection().execute(query.sql, parameters=query.params).pl()
 
     def execute_scalar(self, query: Query) -> int:
-        """Execute a scalar query and return first value.
-
-        Args:
-            query: Query.
-        """
+        """Execute a scalar query and return first value."""
         self.get_connection().execute(query.sql, parameters=query.params)
         row = self.get_connection().fetchone()
         if row is None:
@@ -342,12 +299,7 @@ class PixelDataViewerSession:
         return row[0]  # type: ignore[return-value]
 
     def execute_arrow_reader(self, query: Query, batch_size: int):
-        """Execute a query and return Arrow reader.
-
-        Args:
-            query: Query.
-            batch_size: Batch size.
-        """
+        """Execute a query and return Arrow reader."""
         result = self.get_connection().sql(query.sql, params=query.params)
         return result.fetch_arrow_reader(batch_size=batch_size)
 

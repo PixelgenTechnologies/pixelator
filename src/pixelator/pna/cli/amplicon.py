@@ -168,19 +168,19 @@ def amplicon(
         ctx: Click context from the command decorator.
         fastq_1: Fastq 1.
         fastq_2: Fastq 2.
-        sample_name: Sample name.
-        output: Output.
+        sample_name: Override the basename of the output fastq file. Default is the basename of the first input file without extension and read 1 identifier.
+        output: The path where the results will be placed (it is created if it does not exist).
         design: Design.
-        mismatches: Mismatches.
+        mismatches: The number of mismatches allowed (given as fraction).
         remove_polyg: Remove PolyG sequences (length of 10 or more).
         quality_cutoff: Remove bases from the tail with a Phred score lower then the cutoff value.
         low_complexity_filter: Low complexity filter.
-        low_complexity_threshold: Low complexity threshold.
+        low_complexity_threshold: The threshold for determining if a UMI sequence is of low complexity and will be removed.
         lbs_filter: Lbs filter.
-        lbs_filter_min_overlap: Lbs filter min overlap.
-        lbs_filter_error_rate: Lbs filter error rate.
+        lbs_filter_min_overlap: The minimum overlap required in a semi-global alignment of a UMI sequence with the LBS regions. Reads with less overlap will not be removed by the LBS filter.
+        lbs_filter_error_rate: The allowed error-rate in a semi-global alignment of a UMI sequence with the LBS regions.The error rate is defined as a percentage of UMI length.
         skip_input_checks: Skip all check on the filename of input fastq files.
-        force_run: Force run.
+        force_run: If more than 50% of reads are filtered, this indicates some serious problem with the input data and the amplicon commandwill fail with an exit status of 1. Setting this flag will force an exit status of 0.
         threads: Threads.
     """
     # log input parameters

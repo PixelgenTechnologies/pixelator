@@ -192,11 +192,7 @@ class SequenceQualityStatsCollector:
         )
 
     def update(self, qualities: Union[str, np.ndarray]) -> None:
-        """Update the statistics with the given read qualities.
-
-        Args:
-            qualities: Qualities.
-        """
+        """Update the statistics with the given read qualities."""
         # Use numpy for vectorized operations
         # Reinterpret cast to integers (same as ord)
         if isinstance(qualities, str):

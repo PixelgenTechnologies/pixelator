@@ -39,7 +39,7 @@ def populate_component_stats_from_hybrid_detection(
     """Fill graph statistics from hybrid (FLP + Leiden) community-detection outputs.
 
     Args:
-        component_stats: Component stats.
+        component_stats: Statistics object to update with filtering information.
         pre_recovery_stats: Pre recovery stats.
         post_flp_stats: Post flp stats.
         post_recovery_stats: Post recovery stats.
@@ -68,9 +68,6 @@ def hash_component(component: set[int]) -> str:
     """Hash a component deterministically based on its nodes.
 
     Note: this preserves the historical hashing behavior used by the legacy pipeline.
-
-    Args:
-        component: Component.
     """
     hasher = xxhash.xxh3_64()
     for node in sorted(component):
@@ -104,11 +101,7 @@ def name_components_with_umi_hashes(edgelist: pl.LazyFrame) -> pl.LazyFrame:
 
 
 def initialize_graph_statistics(collapsed_edgelist_path: Path) -> GraphStatistics:
-    """Initialize and return a GraphStatistics object with all fields set to zero.
-
-    Args:
-        collapsed_edgelist_path: Collapsed edgelist path.
-    """
+    """Initialize and return a GraphStatistics object with all fields set to zero."""
     component_stats = GraphStatistics()
     raw_stats = get_count_statistics(collapsed_edgelist_path)
     component_stats.molecules_input = raw_stats["n_molecules"]
@@ -506,8 +499,8 @@ def combine_component_sizes(
     """Add pre-filtering connected component size statistics to the component stats.
 
     Args:
-        edgelist: Edgelist.
-        discard_sizes: Discard sizes.
+        edgelist: Lazy edgelist with ``component``, ``umi1``, and ``umi2`` columns.
+        discard_sizes: DataFrame containing sizes of discarded components.
     """
     component_sizes = (
         edgelist.group_by("component")

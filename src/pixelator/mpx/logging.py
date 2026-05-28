@@ -89,7 +89,7 @@ class DefaultCliFormatter(logging.Formatter):
         """Format a record for CLI output.
 
         Args:
-            record: Record.
+            record: The record to format.
         """
         if not record.exc_info:
             level = record.levelname.lower()
@@ -214,11 +214,6 @@ class LoggingSetup:
         """Exit the context manager.
 
         This will shut down the logging process if needed.
-
-        Args:
-            exc_type: Exc type.
-            exc_value: Exc value.
-            traceback_obj: Traceback obj.
         """
 
         def log_exception(exc_type, exc_value, traceback_obj):
@@ -291,7 +286,7 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
         """Handle a log record.
 
         Args:
-            record: Record.
+            record: The record to format.
         """
         logger = logging.getLogger(LogRecordSocketReceiver.LISTENER_LOGGER)
         logger.handle(record)
@@ -331,7 +326,7 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
             host: Host.
             port: Port.
             handler: Handler.
-            log_file: Log file.
+            log_file: the filename of the log output
             console_log_formatter: Console log formatter.
         """
         self.timeout = 0.1

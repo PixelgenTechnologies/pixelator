@@ -24,11 +24,7 @@ class _PartitionCandidate:
 
 
 def normalize_counts(x):
-    """Normalize counts using log-mean-exp normalization.
-
-    Args:
-        x: X.
-    """
+    """Normalize counts using log-mean-exp normalization."""
     x_log1p = np.log1p(x)
     x_mean = np.mean(x_log1p)
     norm = np.exp(x_mean)
@@ -43,7 +39,7 @@ def _expand_k_core_layer_until_min_seed_pct(
     Args:
         k_cores: K cores.
         max_k: Max k.
-        min_seed_pct: Min seed pct.
+        min_seed_pct: Minimum fraction of nodes required for the initial seed.
     """
     pct_k_max = np.mean(k_cores == max_k)
     while pct_k_max < min_seed_pct and max_k > 1:
@@ -71,8 +67,8 @@ def _get_k_cores(
     Args:
         graph: Graph.
         node_list: Node list.
-        max_k_core: Max k core.
-        min_seed_pct: Min seed pct.
+        max_k_core: Cap for the maximum k-core layer used for seeding.
+        min_seed_pct: Minimum fraction of nodes required for the initial seed.
     """
     k_cores_dict = nx.core_number(graph)
     k_cores = np.array([k_cores_dict[n] for n in node_list])
@@ -95,9 +91,9 @@ def _build_p_step_matrix(g: Graph, node_list: list[str], k: int) -> sp.csr_matri
     """Build the k-step transition probability matrix used by ACE.
 
     Args:
-        g: G.
+        g: A `Graph` object containing the cell graph and node count data.
         node_list: Node list.
-        k: K.
+        k: The neighborhood radius (number of steps) used for reachability. Larger values increase the "reach" of the core.
     """
     A = g.get_adjacency_sparse(node_ordering=node_list)
     A = A + sp.diags_array([1] * A.shape[0], format="csr", dtype=None)
@@ -119,14 +115,7 @@ def _build_p_step_matrix(g: Graph, node_list: list[str], k: int) -> sp.csr_matri
 def _find_largets_connect_component_of_k_core(
     raw_graph: nx.Graph, node_list: list[str], k_cores: np.ndarray, max_k: int
 ) -> np.ndarray:
-    """Downgrade k-core seed nodes outside the largest connected component.
-
-    Args:
-        raw_graph: Raw graph.
-        node_list: Node list.
-        k_cores: K cores.
-        max_k: Max k.
-    """
+    """Downgrade k-core seed nodes outside the largest connected component."""
     seed_nodes = [node_list[i] for i, k_val in enumerate(k_cores) if k_val == max_k]
     subgraph = raw_graph.subgraph(seed_nodes)
     components = list(nx.connected_components(subgraph))
@@ -158,10 +147,10 @@ def _find_partitions(
         counts: Counts.
         k_cores: K cores.
         max_k: Max k.
-        binding_thresholds: Binding thresholds.
+        binding_thresholds: Thresholds for moving nodes to the high partition. If None, a default sequence from 0.5 to 0.3 is used.
         P_step: P step.
-        max_iter: Max iter.
-        nodes_to_move_threshold: Nodes to move threshold.
+        max_iter: Maximum iterations per binding threshold.
+        nodes_to_move_threshold: Convergence limit; iteration stops if fewer nodes move.
     """
     partitions: list[_PartitionCandidate] = []
     current_partition = (k_cores == max_k).astype(int)
@@ -219,7 +208,7 @@ def validate_best_candidate(
     Args:
         best_candidate: Best candidate.
         partitions: Partitions.
-        min_allowed_nodes_pct: Min allowed nodes pct.
+        min_allowed_nodes_pct: Minimum fraction of nodes required in the final "high" core partition.
     """
     if best_candidate is not None and best_candidate.nodes_pct < min_allowed_nodes_pct:
         logger.warning(

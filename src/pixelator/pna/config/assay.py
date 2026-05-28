@@ -126,8 +126,8 @@ class Region:
         """Initialize a Region.
 
         Args:
-            region_id: Region id.
-            region_type: Region type.
+            region_id: id of the region to retrieve
+            region_type: region type to retrieve
             name: Name.
             sequence_type: Sequence type.
             sequence: Sequence.
@@ -248,7 +248,7 @@ class Region:
         """Lookup a region by the region_id field.
 
         Args:
-            region_id: Region id.
+            region_id: id of the region to retrieve
         """
         if self.region_id == region_id:
             return self
@@ -264,7 +264,7 @@ class Region:
         """Return all regions with specified region_type.
 
         Args:
-            region_type: Region type.
+            region_type: region type to retrieve
         """
         found = []
 
@@ -278,11 +278,7 @@ class Region:
         return found
 
     def get_regions_by_sequence_type(self, sequence_type: SequenceType | str):
-        """Return all regions with specified sequence_type.
-
-        Args:
-            sequence_type: Sequence type.
-        """
+        """Return all regions with specified sequence_type."""
         found = []
 
         if self.sequence_type == sequence_type:
@@ -360,12 +356,7 @@ class PNAAssay:
     }
 
     def __init__(self, name: str, assay_spec: Optional[List[Region]] = None):
-        """Initialize an assay.
-
-        Args:
-            name: Name.
-            assay_spec: Assay spec.
-        """
+        """Initialize an assay."""
         self.name = name
         self.assay_spec: List[Region] = assay_spec or []
 

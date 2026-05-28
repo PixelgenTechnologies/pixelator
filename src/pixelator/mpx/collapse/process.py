@@ -49,10 +49,6 @@ def breadth_first_search(node, adj_list):
 
     Copyright (c) 2015 CGAT
     Uses The MIT License (MIT).
-
-    Args:
-        node: Node.
-        adj_list: Adj list.
     """
     searched = set()
     queue = set()
@@ -70,12 +66,7 @@ def breadth_first_search(node, adj_list):
 
 
 def edit_distance(seq1: bytes, seq2: bytes) -> int:
-    """Compute edit distance between two sequences.
-
-    Args:
-        seq1: Seq1.
-        seq2: Seq2.
-    """
+    """Compute edit distance between two sequences."""
     return hamming(seq1, seq2, pad=False)
 
 

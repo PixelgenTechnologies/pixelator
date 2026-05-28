@@ -429,9 +429,6 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         """Post process the colocalization data.
 
         This will adjust the p-values using the Benjamini-Hochberg method.
-
-        Args:
-            data: Data.
         """
         logger.debug("Post processing colocalization analysis data")
         if data.empty:
@@ -448,12 +445,7 @@ class ColocalizationAnalysis(PerComponentAnalysis):
     def add_to_pixel_dataset(
         self, data: pd.DataFrame, pxl_dataset: PixelDataset
     ) -> PixelDataset:
-        """Add the colocalization data to the PixelDataset.
-
-        Args:
-            data: Data.
-            pxl_dataset: Pxl dataset.
-        """
+        """Add the colocalization data to the PixelDataset."""
         logger.debug("Adding colocalization analysis data to PixelDataset")
         pxl_dataset.colocalization = data
         return pxl_dataset

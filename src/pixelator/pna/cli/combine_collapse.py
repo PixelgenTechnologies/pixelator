@@ -95,7 +95,7 @@ def combine_collapse(
         ctx: Click context from the command decorator.
         parquet: Parquet.
         reports: Reports.
-        output: Output.
+        output: The path where the results will be placed (it is created if it does not exist).
         parquet_pattern: The pattern to match parquet files.
         report_pattern: The pattern to match report files.
         memory: Memory.
