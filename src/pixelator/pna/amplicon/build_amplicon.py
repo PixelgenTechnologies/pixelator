@@ -35,6 +35,8 @@ def reverse_complement(seq: BytesOrString) -> BytesOrString:
 
     Args:
         seq: the DNA sequence
+    Returns:
+        the reverse complement of the input sequence (Bytes or Str depending on the input)
     """
     if isinstance(seq, bytes):
         return seq.translate(_TRTABLE_BYTES)[::-1]
@@ -415,6 +417,8 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
         Args:
             read: the forward read
+        Returns:
+            the slices for the different regions of the amplicon in the read
         """
         region_slices = AmpliconRegionSlices()
 
@@ -473,6 +477,8 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
 
         Args:
             read: the reverse read
+        Returns:
+            the slices for the different regions of the amplicon in the read
         """
         region_slices = AmpliconRegionSlices()
 
@@ -524,6 +530,9 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             is_reversed: whether the region is reversed (e.g. LBS-2)
             return_ascii: whether to return the sequence as ASCII bytes
             as_bytearray: As bytearray.
+
+        Returns:
+            the sequence  and quality of the region as a tuple, or None if the slice is empty
         """
         if not region_slice:
             return None, None
@@ -707,6 +716,8 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             pid1_umi1_region: the PID-1 and UMI-1 region
             uei_region: the UEI region
             pid2_umi2_region: the PID-2 and UMI-2 region
+        Returns:
+            None if all regions are valid, a failure reason otherwise
         """
         if not pid1_umi1_region:
             self._custom_stats.failed_missing_upi1_umi1_reads += 1
@@ -768,6 +779,9 @@ class AmpliconBuilder(CombiningModifier, HasFilterStatistics, HasCustomStatistic
             read2: the reverse read (or None)
             info1: the modification info for the forward read, (ignored)
             info2: the modification info for the reverse read, (ignored)
+
+        Returns:
+            the created amplicon as a new SequenceRecord or None if filtered out
         """
         if read1 is None and read2 is None:
             return None

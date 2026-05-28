@@ -72,6 +72,8 @@ def connect_components(
         max_refinement_recursion_depth: The number of times a component can be broken down into smaller components during the recovery process.
         max_edges_to_split: The maximum number of edges between the product components when splitting during multiplet recovery.
         min_count: the minimum number of counts (molecules) an edge must have
+    Returns:
+        None (None)
 
     Raises:
         RuntimeError: if the edge list is empty after filtering
@@ -222,6 +224,8 @@ def merge_strongly_connected_communities(
         edgelist: The edge list to process
         node_community_dict: A dictionary with the community mapping for each node
         n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
+    Returns:
+        A tuple with the modified edge list and the updated community mapping
     """
     community_serie = pd.Series(node_community_dict)
     edgelist["upia_community"] = community_serie[edgelist["upia"]].values
@@ -279,6 +283,9 @@ def recover_technical_multiplets(
         node_component_map: A series with the component mapping for each node where the index is the upi (i.e. node name) and the value is the component id.
         max_refinement_recursion_depth: The number of times a component can be broken down into smaller components during the recovery process.
         max_edges_to_split: The maximum number of edges between the product components when splitting during multiplet recovery.
+
+    Returns:
+        A tuple with the updated node component map and the iteration depth at which each node is re-assigned to a component. (Tuple[pd.Series, pd.Series])
     """
     logger.debug(
         "Starting multiplets recovery in edge list with %i rows",

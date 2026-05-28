@@ -62,6 +62,8 @@ class PNAAntibodyPanel:
             metadata: The metadata for the panel.
             file_name: The optional basename of the file from which the panel is loaded.
 
+        Returns:
+            None
         Raises:
             AssertionError: exception if panel file is missing, invalid or with incorrect format
         """
@@ -83,6 +85,9 @@ class PNAAntibodyPanel:
 
         Args:
             filename: The path to the panel file.
+
+        Returns:
+            The AntibodyPanel object. (AntibodyPanel)
 
         Raises:
             AssertionError: exception if panel file is missing,
@@ -113,6 +118,9 @@ class PNAAntibodyPanel:
             pxl_data: A PNAPixelDataset object.
             file_name: The optional name of the file from which the pxl dataset was loaded.
 
+        Returns:
+            The AntibodyPanel object. (AntibodyPanel)
+
         Raises:
             KeyError: exception if panel information is missing in the pxl dataset,
         """
@@ -129,6 +137,9 @@ class PNAAntibodyPanel:
         Args:
             adata: An AnnData object containing panel information.
             file_name: The optional name of the file from which the AnnData object was loaded.
+
+        Returns:
+            The AntibodyPanel object. (AntibodyPanel)
 
         Raises:
             KeyError: exception if panel information is missing in the AnnData object.
@@ -385,6 +396,8 @@ def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
     Args:
         config: the config object
         panel: the path to the panel file or the name of the panel in the config file
+    Returns:
+        the antibody panel (PNAAntibodyPanel)
     """
     panel_str = str(panel)
     panel_from_config = config.get_panel(panel_str)
@@ -550,7 +563,8 @@ class PNAAntibodyPanelDiff:
         """Upgrade an AnnData object with the changes between the two panels.
 
         Args:
-            adata: Adata.
+                    adata: An AnnData object containing panel information.
+
         """
         adata_panel = PNAAntibodyPanel.from_adata(adata)
         if self.panel_1 != adata_panel:

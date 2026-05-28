@@ -174,8 +174,9 @@ class AmpliconPipeline(Pipeline):
         """Add a Modifier (without wrapping it in a PairedEndModifierWrapper).
 
         Args:
-            modifier: Modifier.
-            stage: Stage.
+                    modifier: Modifier.
+                    stage: The stage in which to apply the modifiers
+
         """
         assert stage in ("pre", "post")
 
@@ -234,6 +235,9 @@ class AmpliconPipeline(Pipeline):
         Args:
             infiles: A list of input files to process.
             progress: Progress.
+
+        Returns:
+            (n_reads, total1_bp, total2_bp or None).
         """
         self._infiles = infiles
         self._reader = infiles.open()

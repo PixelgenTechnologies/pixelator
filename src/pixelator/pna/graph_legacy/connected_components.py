@@ -197,6 +197,9 @@ def merge_communities_with_many_crossing_edges(
         n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
         max_edges_to_remove: Max edges to remove.
         max_edges_to_remove_relative: Max edges to remove relative.
+
+    Returns:
+        The updated community mapping
     """
     community_serie = pd.Series(node_community_dict)
     if max_edges_to_remove is None and max_edges_to_remove_relative is None:
@@ -293,6 +296,9 @@ def make_edgelist_with_component_column(
     Args:
         edgelist: The edgelist to add the component column to.
         umi_component_map: A dictionary mapping nodes to components.
+
+    Returns:
+        The edgelist with crossing edges removed and the component column added.
     """
     return (
         _update_components_column(edgelist, umi_component_map)
@@ -756,6 +762,9 @@ def find_components(
         refinement_options: options for component refinement
         return_component_statistics: if True, return a component statistics object
         dynamic_lowest_passable_bound: Dynamic lowest passable bound.
+
+    Returns:
+        an edgelist with components added to it, and a component statistics object if return_component_statistics is True
     """
     component_stats = GraphStatistics()
     no_clash_edgelist, component_stats = _remove_umi_clashes_and_get_stats(

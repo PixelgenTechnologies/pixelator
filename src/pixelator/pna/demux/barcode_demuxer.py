@@ -466,6 +466,8 @@ class PNAEmbedding:
         Args:
             umi: Umi.
 
+        Returns:
+            a 16-byte/128-bits array of packed nucleotides
         Raises:
             ValueError: if the UMI is longer than 32 nucleotides
         """
@@ -485,7 +487,8 @@ class PNAEmbedding:
 
         Args:
             umi_bytes: the 128-bit umi vector
-
+        Returns:
+            the decoded nucleotide sequence
         Raises:
             ValueError: if the input vector is not 128 bits long
         """
@@ -511,7 +514,8 @@ class PNAEmbedding:
 
         Args:
             bitvector: the 128-bit umi vector
-
+        Returns:
+            the new 2-bit embedding for given input
         Raises:
             ValueError: if the input vector is not 128 bits long
         """
@@ -640,6 +644,8 @@ class BarcodeDemuxer(abc.ABC):
 
         Args:
             read: the input read to process
+        Returns:
+            A tuple or list of tuples with a barcode_group_id and a serialized batch of records The serialized batch is encoded in the pyarrow RecordBatch ipc format.
         """
         raise NotImplementedError
 
@@ -675,6 +681,8 @@ class IndependentBarcodeDemuxer(BarcodeDemuxer):
 
         Args:
             read: the read to process
+        Returns:
+            the read with the antibody information added
         """
         if read.comment is None:
             raise BarcodeDemuxingError("No comment found in read")
@@ -752,6 +760,8 @@ class PairedBarcodeDemuxer(BarcodeDemuxer):
 
         Args:
             read: the read to process
+        Returns:
+            the read with the antibody information added
         """
         if read.comment is None:
             raise BarcodeDemuxingError("No comment found in read")

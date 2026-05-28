@@ -91,6 +91,11 @@ def polarization_scores_component_graph(
         n_permutations: the number of permutations to use to estimate the null-hypothesis for the Moran's I statistic
         min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
         random_seed: the random seed to use to ensure that the permutations are reproducible across runs
+    Returns:
+        a pd.DataFrame with the polarization statistics for each antibody (pd.DataFrame)
+
+    Raises:
+        AssertionError when the input is not valid
     """
     if graph.vcount() < MIN_VERTICES_REQUIRED:
         logger.debug(
@@ -190,6 +195,11 @@ def polarization_scores_component_df(
         n_permutations: the number of permutations to use to estimate the null-hypothesis for the Moran's I statistic
         min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
         random_seed: the random seed to use to ensure that the permutations are reproducible across runs
+    Returns:
+        a pd.DataFrame with the polarization statistics for each antibody (pd.DataFrame)
+
+    Raises:
+        AssertionError when the input is not valid
     """
     graph = Graph.from_edgelist(
         edgelist=component_df,
@@ -236,6 +246,11 @@ def polarization_scores(
         n_permutations: the number of permutations for simulated Z-score (z_sim) estimation (if n_permutations>0)
         min_marker_count: the minimum number of counts of a marker to calculate the Moran's I statistic
         random_seed: the random seed to use for reproducibility
+    Returns:
+        a pd.DataFrames with all the polarization scores (pd.DataFrame)
+
+    Raises:
+        AssertionError when the input is not valid
     """
     if transformation not in get_args(PolarizationTransformationTypes):
         raise AssertionError(
@@ -312,6 +327,7 @@ class PolarizationAnalysis(PerComponentAnalysis):
             n_permutations: Permutations used to estimate the null distribution.
             min_marker_count: Minimum marker count required to compute statistics.
             random_seed: Optional seed for reproducible permutation tests.
+            transformation: the count transformation method to use (raw, log1p)
         """
         if transformation_type not in get_args(PolarizationTransformationTypes):
             raise AssertionError(
@@ -326,8 +342,9 @@ class PolarizationAnalysis(PerComponentAnalysis):
         """Run polarization analysis on component.
 
         Args:
-            component: Component.
-            component_id: Component id.
+                    component: Component.
+                    component_id: the id of the component
+
         """
         logger.debug("Running polarization analysis on component %s", component_id)
         return polarization_scores_component_graph(
@@ -386,6 +403,10 @@ def get_differential_polarity(
         targets: Target sample labels; defaults to all non-reference labels.
         contrast_column: Column containing sample labels. Defaults to ``"sample"``.
         value_column: Polarity metric column. Defaults to ``"morans_z"``.
+        target: The label for target components in the contrast_column.
+
+    Returns:
+        The differential polarity. (pd.DataFrame)
     """
     if targets is None:
         targets = polarity_data[contrast_column].unique()

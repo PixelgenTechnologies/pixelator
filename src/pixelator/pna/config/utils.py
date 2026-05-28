@@ -13,6 +13,8 @@ def load_yaml_file(path: PathType) -> Any:
 
     Args:
         path: path to the yaml file
+    Returns:
+        a yaml object
 
     Raises:
         FileExistsError: If the path does not exist

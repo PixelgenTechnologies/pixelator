@@ -39,7 +39,6 @@ def qc_fastq(
     are trimmed. Some filters are used to discard reads (maximum and minimum
     read length and the maximum number of Ns in a read).
 
-
     Args:
         input: the path to the fastq file
         output: the path to the output file (processed)
@@ -57,7 +56,8 @@ def qc_fastq(
         dedup: remove duplicated reads when true
         remove_polyg: remove PolyG sequences (length 10 or more)
         verbose: run in verbose mode when true
-
+    Returns:
+        None
     Raises:
         ValueError: raises an exception
         OSError: raises an exception
@@ -157,7 +157,6 @@ def adapter_qc_fastq(
     will be searched in the reads and only the reads that contain both
     sequences will be kept.
 
-
     Args:
         input: the path to the fastq file (must contain PBS1/2 sequences)
         output: the path to the output file (processed)
@@ -168,7 +167,8 @@ def adapter_qc_fastq(
         pbs2: the PBS2 sequence
         cores: the number of threads to use
         verbose: run in verbose mode when true
-
+    Returns:
+        None
     Raises:
         ValueError: raises an exception
         OSError: raises an exception

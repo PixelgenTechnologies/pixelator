@@ -43,6 +43,9 @@ class PixelDatasetSaver:
             sample_name: The name of the sample to save.
             output_path: The path to save the sample to.
             optimize_disk_usage: If True, the saved file will be optimized for disk usage. If this is active a temporary file will be written before the final file is written to disk.
+
+        Returns:
+            The PxlFile pointing to the saved PixelDataset.
         """
         try:
             input_sample = self.pxl_dataset.view.sample_to_file_mappings[sample_name]

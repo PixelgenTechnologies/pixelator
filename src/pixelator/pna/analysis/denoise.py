@@ -140,7 +140,7 @@ def get_overexpressed_markers_in_one_core(
         node_core_numbers: A Series where the index corresponds to the nodes and the values indicate the core number each node belongs to.
         pval_significance_threshold: The p-value threshold for statistical significance in Fisher's exact test. Defaults to 0.05.
         inflate_factor: A factor used to inflate the excess count of markers identified as overexpressed. Defaults to 1.5.
-
+        one_core_ratio_threshold: Components with higher nodes in
     Returns:
         DataFrame with columns ``name`` (overexpressed marker) and ``count`` (inflated excess count).
     """

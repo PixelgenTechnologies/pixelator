@@ -241,6 +241,14 @@ def plot_2d_graph(
         alpha: The alpha value for the nodes. Defaults to 0.7.
         cache_layout: Whether to cache the layout coordinates. Defaults to False.
         random_seed: The random seed to use for the layout algorithm. Defaults to None.
+
+    Returns:
+        The figure and axes objects of the plot. (Tuple[plt.Figure, plt.Axes])
+
+    Raises:
+        AssertionError if the marker is not found in the component graph.
+        AssertionError if no nodes are found with the specified marker.
+        AssertionError if "pixel_type" is in the markers together with other markers.
     """
     if isinstance(component, str):
         component = [component]
@@ -325,6 +333,9 @@ def plot_3d_from_coordinates(
         opacity: The opacity of the nodes. Defaults to 0.4.
         cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
         suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
+
+    Returns:
+        The plotted 3D graph. (go.Figure)
     """
     fig = go.Figure(
         data=[
@@ -378,6 +389,9 @@ def plot_3d_graph(
         cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
         cache_layout: Whether to cache the layout coordinates. Defaults to False.
         suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
+
+    Returns:
+        The plotted 3D graph. (go.Figure)
     """
     coordinates, _, _ = _get_coordinates(
         pxl_data=pxl_data,
@@ -432,6 +446,9 @@ def plot_3d_heatmap(
         distance_cutoff: a distance cutoff to use for determining size of area to consider as close in the density calculation.
         layout_algorithm: (Layout algorithm to use. Options are):  "fruchterman_reingold_3d" and "kamada_kawai_3d"
         cache_layout: set this to `True` to cache the layout or faster computations on subsequent calls. This comes at the cost of additional memory usage.
+
+    Returns:
+        A matplotlib 3D heatmap figure, and it's associated Axes instance (Tuple[plt.Figure, plt.Axes])
 
     Raises:
         AssertionError if the provided `layout_algorithm` is not valid, or there are no with markers for the provided `marker`

@@ -25,6 +25,9 @@ def build_network_directional(
         indices: The indices of the k-nearest neighbors. A 2D array with shape (n_queries, k).
         read_counts: The read support for each molecule. A 1D array with shape (n_queries,).
         cutoff: The distance cutoff to consider an edge between two nodes.
+
+    Returns:
+        A sparse directed adjacency matrix in CSR format. (scipy.sparse.csr_matrix)
     """
     if distances.shape != indices.shape:
         raise ValueError(

@@ -65,6 +65,8 @@ def colocalization_from_component_edgelist(
         min_region_count: minimum number of counts in region to consider, defaults to 5
         min_marker_count: the minimum number of counts of a marker to calculate colocalization
         random_seed: Set the random seed for the permutation tests, defaults to None
+    Returns:
+        a dataframe with computed colocalization scores (pd.DataFrame)
     """
     graph = Graph.from_edgelist(
         edgelist=edgelist,
@@ -121,6 +123,8 @@ def colocalization_from_component_graph(
         min_region_count: minimum number of counts in region to consider, defaults to 5
         min_marker_count: the minimum number of counts of a marker to calculate colocalization
         random_seed: Set the random seed for the permutation tests, defaults to None
+    Returns:
+        a dataframe containing colocalization scores for this component (pd.DataFrame)
     """
     logger.debug("Computing colocalization for component: %s", component_id)
     logger.debug("Prepare the graph data for computing colocalization")
@@ -229,6 +233,8 @@ def colocalization_scores(
         min_region_count: The minimum size of the region (e.g. number of counts in the neighbourhood) required for it to be considered
         min_marker_count: the minimum number of counts of a marker to calculate colocalization
         random_seed: Set a random seed for the permutation function
+    Returns:
+        a pd.DataFrame of scores (pd.DataFrame)
 
     Raises:
         AssertionError: when the input is not valid
@@ -315,6 +321,10 @@ def get_differential_colocalization(
         targets: Target sample labels; defaults to all non-reference labels.
         contrast_column: Column containing sample labels. Defaults to ``"sample"``.
         value_column: Colocalization metric column. Defaults to ``"pearson_z"``.
+        target: The label for target components in the contrast_column.
+
+    Returns:
+        The differential colocalization. (pd.DataFrame)
     """
     if targets is None:
         targets = colocalization_data_frame[contrast_column].unique()
@@ -401,8 +411,9 @@ class ColocalizationAnalysis(PerComponentAnalysis):
         """Run colocalization analysis on the component.
 
         Args:
-            component: Component.
-            component_id: Component id.
+                    component: Component.
+                    component_id: name of the component
+
         """
         logger.debug("Running colocalization analysis on component %s", component_id)
         return colocalization_from_component_graph(

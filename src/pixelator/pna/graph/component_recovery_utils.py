@@ -125,7 +125,7 @@ def get_count_statistics(edgelist_path: Path) -> dict:
     in a dictionary.
 
     Args:
-        edgelist_path: Edgelist path.
+        edgelist_path: Path to the input Parquet file containing the edgelist.
 
     Returns:
         dict: A dictionary containing the following keys: - 'n_edges': Total number of edges in the edgelist. - 'n_umi': Total number of distinct UMIs in the edgelist. - 'n_reads': Total number of reads in the edgelist. - 'n_molecules': Total number of molecules in the edgelist.
@@ -623,6 +623,9 @@ def filter_components_by_size_dynamic(
     Args:
         component_sizes: DataFrame with columns `component` and `n_umi`.
         lowest_passable_bound: Lowest passable bound.
+
+    Returns:
+        Components that pass the filter, and the computed lower bound.
     """
     if lowest_passable_bound is None:
         lowest_passable_bound = MIN_PNA_COMPONENT_SIZE
@@ -653,6 +656,9 @@ def filter_components_by_size_hard_thresholds(
         component_sizes: DataFrame with columns `component` and `n_umi`.
         lower_bound: The lower bound for the component size.
         higher_bound: The higher bound for the component size.
+
+    Returns:
+        The `component` column for components that pass the filter.
     """
     if lower_bound is None:
         lower_bound = 0

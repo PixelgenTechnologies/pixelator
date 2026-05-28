@@ -51,6 +51,9 @@ class SampleReport(pydantic.BaseModel):
 
         Args:
             kwargs: Additional arguments to pass to `json.dumps`.
+
+        Returns:
+            The report serialized to JSON as a string.
         """
         return json.dumps(self.model_dump(mode="json"), **kwargs)
 

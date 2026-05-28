@@ -41,6 +41,13 @@ def scatter_umi_per_upia_vs_tau(
     Args:
         data: a pandas DataFrame with the columns 'umi_per_upia', 'tau', and 'tau_type'.
         group_by: a column in the DataFrame to group the plot by.
+
+    Returns:
+        a scatter plot of pixel content vs marker specificity (Tau). (Tuple[plt.Figure, plt.Axes])
+
+    Raises:
+        ValueError if the required columns are not present in the DataFrame
+        AssertionError if the data types are invalid
     """
     # Validate data
     required_columns = ["umi_per_upia", "tau", "tau_type"]
@@ -100,6 +107,13 @@ def molecule_rank_plot(
     Args:
         data: a pandas DataFrame with a column 'molecules' containing edge counts for MPX components.
         group_by: a column in the DataFrame to group the plot by.
+
+    Returns:
+        a plot showing the number of molecules per component against its edge rank used for quality control. (Tuple[plt.Figure, plt.Axes])
+
+    Raises:
+        AssertionError if the required column(s) are not present in the DataFrame
+        ValueError if the data types are invalid
     """
     if "molecules" not in data.columns and "edges" in data.columns:
         data["molecules"] = data["edges"]
@@ -149,6 +163,13 @@ def edge_rank_plot(
     Args:
         data: a pandas DataFrame with a column 'edges' containing edge counts for MPX components.
         group_by: a column in the DataFrame to group the plot by.
+
+    Returns:
+        a plot showing the number of edges per component against its edge rank used for quality control. (Tuple[plt.Figure, plt.Axes])
+
+    Raises:
+        AssertionError if the required column(s) are not present in the DataFrame
+        ValueError if the data types are invalid
     """
     warnings.warn(
         "edge_rank_plot is deprecated and will be removed in a future version. Use molecule_rank_plot instead.",
@@ -204,6 +225,13 @@ def cell_count_plot(
         color_by: Column used to color bars (and group when ``group_by`` is omitted).
         group_by: Optional column used to group bars.
         flip_axes: Plot counts on the x-axis instead of the y-axis.
+
+    Returns:
+        a bar plot with component counts by group(s). (Tuple[plt.Figure, plt.Axes])
+
+    Raises:
+        ValueError if the required grouping variables are missing in the DataFrame
+        AssertionError if the data types are invalid
     """
     # Validate inputs
     if group_by is not None:
@@ -447,6 +475,9 @@ def abundance_colocalization_plot(
         markers_y: List of markers for the y-axis.
         layer: The anndata layer (e.g. transformation) to use for the marker data.
         colocalization_column: The column in the colocalization table to use for colocalization values. Defaults to "pearson_z".
+
+    Returns:
+        a scatter plot of marker abundance with colocalization as color.
     """
     data = pixel.adata.to_df(layer)
     merged_data = pd.DataFrame()

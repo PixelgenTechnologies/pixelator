@@ -197,6 +197,9 @@ def run_analysis(
         pxl_dataset: The PixelDataset to run the analysis on.
         analysis_to_run: A list of `PerComponentAnalysis` to run on the components in the `pxl_dataset`.
         use_full_bipartite: Whether to use the full bipartite graph when creating the components.
+
+    Returns:
+        A `PixelDataset` instance with the provided analysis added to it.
     """
     if not analysis_to_run:
         logger.warning("No analysis functions were provided")

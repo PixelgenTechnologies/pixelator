@@ -106,13 +106,13 @@ def demux(
     Args:
         ctx: Click context from the command decorator.
         fastq_file: Fastq file.
-        mismatches: Mismatches.
-        min_length: Min length.
-        panel: Panel.
-        output: Output.
-        design: Design.
-        anchored: Anchored.
-        rev_complement: Rev complement.
+        mismatches: The number of mismatches allowed (in percentage).
+        min_length: The minimum length of the barcode that must overlap when matching.
+        panel: A key of a panel file in the config, or a csv file with the antibody panel conjugations.
+        output: The path where the results will be placed (it is created if it does not exist).
+        design: The design to load from the configuration file.
+        anchored: Whether barcodes must be anchored at the end of the read.
+        rev_complement: Whether to use the reverse complement of the barcode sequences.
     """
     # log input parameters
     input_files = [fastq_file]

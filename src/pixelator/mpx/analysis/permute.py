@@ -32,6 +32,8 @@ def permutations(
         df: dataframe to use as basis of permutations
         n: number of permutations to generate, defaults to 50
         random_seed: set a seed to the random number generator needed to make results deterministic, defaults to None
+    Returns:
+        a generator that yields `n` permutations of the input dataframe (Generator[RegionByCountsDataFrame, None, None])
 
     Yields:
         a RegionByCountsDataFrame object (RegionByCountsDataFrame)
@@ -57,6 +59,8 @@ def permute(
     Args:
         df: input dataframe to permute
         random_number_generator: Set a random number generator to make results reproducible, defaults to None
+    Returns:
+        a permuted dataframe
     """
     if not random_number_generator:
         random_number_generator = _get_random_number_generator()

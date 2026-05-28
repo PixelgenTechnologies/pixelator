@@ -92,7 +92,13 @@ class PNAGraph(BaseGraph):
             layout_algorithm: the layout algorithm to use to generate the coordinates
             get_node_marker_matrix: Add a matrix of marker counts to each node if True.
             random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
-            **kwargs: will be passed to the underlying layout implementation
+            kwargs: will be passed to the underlying layout implementation
+        Returns:
+            the coordinates and markers (if activated) as a dataframe (pd.DataFrame)
+
+        Raises:
+            AssertionError if the provided `layout_algorithm` is not valid
+            ValueError if the provided current graph instance is empty
         """
         return self._backend.layout_coordinates(
             layout_algorithm=layout_algorithm,
@@ -223,7 +229,13 @@ class PNAGraphBackend(NetworkXGraphBackend):
             layout_algorithm: the layout algorithm to use to generate the coordinates
             get_node_marker_matrix: Add a matrix of marker counts to each node if True.
             random_seed: used as the seed for graph layouts with a stochastic element. Useful to get deterministic layouts across method calls.
-            **kwargs: will be passed to the underlying layout implementation
+            kwargs: will be passed to the underlying layout implementation
+        Returns:
+            the coordinates and markers (if activated) as a dataframe (pd.DataFrame)
+
+        Raises:
+            AssertionError if the provided `layout_algorithm` is not valid
+            ValueError if the provided current graph instance is empty
         """
         start_time = timer()
         coordinates = self._layout_coordinates(

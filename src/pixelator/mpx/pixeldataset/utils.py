@@ -43,6 +43,8 @@ def update_metrics_anndata(adata: AnnData, inplace: bool = True) -> Optional[Ann
     Args:
         adata: an AnnData object
         inplace: If `True` performs the operation inplace
+    Returns:
+        the updated AnnData object or None if inplace is True (Optional[AnnData])
     """
     logger.debug(
         "Updating metrics in AnnData object with %i components and %i markers",
@@ -77,7 +79,8 @@ def _enforce_edgelist_types(edgelist: pd.DataFrame) -> pd.DataFrame:
     """Enforce the data types of the edgelist.
 
     Args:
-        edgelist: Edgelist.
+            edgelist: the edge list dataframe containing component labels.
+
     """
     # Enforcing the types of the edgelist reduces the memory
     # usage by roughly 2/3s.
@@ -124,6 +127,11 @@ def antibody_metrics(edgelist: pd.DataFrame) -> pd.DataFrame:
 
     Args:
         edgelist: an edge list dataframe with a membership column
+    Returns:
+        a pd.DataFrame with the antibody metrics per antibody (pd.DataFrame)
+
+    Raises:
+        AssertionError when the input edge list is not valid
     """
     if "component" not in edgelist.columns:
         raise AssertionError("Edge list is missing the component column")
@@ -166,6 +174,11 @@ def component_antibody_counts(edgelist: pd.DataFrame) -> pd.DataFrame:
 
     Args:
         edgelist: an edge list dataframe with a membership column
+    Returns:
+        a pd.DataFrame with the antibody counts per component (pd.DataFrame)
+
+    Raises:
+        AssertionError when the input edge list is not valid
     """
     if "component" not in edgelist.columns:
         raise AssertionError("Edge list is missing the component column")
@@ -198,6 +211,12 @@ def read_anndata(filename: str) -> AnnData:
 
     Args:
         filename: the path to the AnnData file (h5ad)
+
+    Returns:
+        an AnnData object (AnnData)
+
+    Raises:
+        AssertionError when the input is not valid
     """
     if not os.path.isfile(filename):
         raise AssertionError(f"input {filename} does not exist")
@@ -214,6 +233,9 @@ def write_anndata(adata: AnnData, filename: PathType) -> None:
     Args:
         adata: the AnnData object to be saved
         filename: the path to save AnnData file (h5ad)
+
+    Returns:
+        None (None)
     """
     adata.write(filename=filename, compression="gzip")
 
@@ -286,6 +308,9 @@ def mark_potential_doublets(
 
     Args:
         edgelist: the edge list dataframe containing component labels.
+
+    Returns:
+        a boolean series indicating whether a component is a potential doublet. (pd.Series)
     """
     is_potential_doublet = pd.Series(index=edgelist["component"].unique(), dtype=bool)
     n_edges_to_split_doublet = pd.Series(
@@ -322,6 +347,8 @@ def edgelist_to_anndata(
     Args:
         edgelist: an edge list (pd.DataFrame)
         panel: the AntibodyPanel of the panel used to generate the data
+    Returns:
+        an AnnData object (AnnData)
     """
     logger.debug("Creating AnnData from edge list with %i edges", edgelist.shape[0])
 

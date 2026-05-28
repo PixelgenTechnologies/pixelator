@@ -126,6 +126,8 @@ def validate_panel(ctx, param, value):
         ctx: The click context
         param: The click parameter
         value: The click value
+    Returns:
+        The validated value
     """
     try:
         if Path(value).exists():

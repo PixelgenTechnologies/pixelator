@@ -76,6 +76,9 @@ class CreateLayout(PerComponentTask):
 
         Args:
             component_id: The id of the component.
+
+        Returns:
+            a LazyFrame containing the layout data.
         """
         edgelist = (
             self.pxl_dataset.filter(components=[component_id])  # type: ignore
@@ -91,11 +94,15 @@ class CreateLayout(PerComponentTask):
         """Run the layout on a component.
 
         Args:
-            component: The component graph to run the analysis on.
-            component_id: Component id.
+                    component: The component graph to run the analysis on.
+                    component_id: The id of the component.
+
+        Returns:
+                    Name of the parquet file containing the layout data.
 
         Raises:
-            TypeError: If the component is not a Graph or a LazyFrame.
+                    TypeError: If the component is not a Graph or a LazyFrame.
+
         """
         results = []
         for algo in self._layout_algorithms:
@@ -130,6 +137,9 @@ class CreateLayout(PerComponentTask):
         Args:
             component: The component to run the analysis on. Either a Graph or a LazyFrame.
             component_id: The id of the component.
+
+        Returns:
+            Name of the parquet file containing the layout data.
         """
         if isinstance(component, pl.LazyFrame):
             graph = PNAGraph.from_edgelist(component)

@@ -679,6 +679,9 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
         Args:
             pipeline: The pipeline to run.
             progress: A progress object to update with the number of processed reads.
+
+        Returns:
+            A statistics object.
         """
         workers, connections = self._start_workers(pipeline)
 

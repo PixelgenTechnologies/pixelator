@@ -89,6 +89,9 @@ class PixelDataStore(Protocol):
         Args:
             path: The path to the pixel data store.
 
+        Returns:
+            A pixel data store. (PixelDataStore)
+
         Raises:
             CannotGuessPixelDatastoreError: If the datastore format cannot be guessed from the path.
         """
@@ -100,6 +103,9 @@ class PixelDataStore(Protocol):
 
         Args:
             path: The path to the pixel data store.
+
+        Returns:
+            The guessed pixel data store format. (PixelDataStore)
 
         Raises:
             CannotGuessPixelDatastoreError: If the datastore format cannot be guessed from the path.
@@ -151,6 +157,9 @@ class PixelDataStore(Protocol):
 
         Args:
             key: The key of the dataframe to read.
+
+        Returns:
+            The dataframe. (pd.DataFrame)
         """
         ...
 
@@ -159,6 +168,9 @@ class PixelDataStore(Protocol):
 
         Args:
             key: The key of the dataframe to read.
+
+        Returns:
+            The lazy dataframe. (Optional[pl.LazyFrame])
         """
         ...
 
@@ -360,7 +372,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Create a zip-based pixel data store.
 
         Args:
-            path: Path.
+            path: Path prefix to search within the archive.
         """
         self.path = path
         self._file_system_handle = None
@@ -440,7 +452,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Guess the file format of the given path and returns the a PixelDataStore.
 
         Args:
-            path: Path.
+            path: Path prefix to search within the archive.
         """
         return ZipBasedPixelFile.guess_file_format(path)
 
@@ -449,7 +461,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Guess the file format of the given path and returns the a PixelDataStore.
 
         Args:
-            path: Path.
+            path: Path prefix to search within the archive.
         """
         file_system = ZipFileSystem(fo=path, mode="r")
         members = [file_["name"] for file_ in file_system.ls("/")]
@@ -481,7 +493,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write the given AnnData object to the .pxl file.
 
         Args:
-            anndata: Anndata.
+            anndata: The AnnData object to write.
         """
         self._set_to_write_mode()
         self._check_if_writeable(self.ANNDATA_KEY)
@@ -535,7 +547,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write the given metadata to the .pxl file.
 
         Args:
-            metadata: Metadata.
+            metadata: The metadata to write.
         """
         self._set_to_write_mode()
         self._check_if_writeable(self.METADATA_KEY)
@@ -548,8 +560,8 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write the given edgelist to the .pxl file.
 
         Args:
-            edgelist: Edgelist.
-            partitioning: Partitioning.
+            edgelist: The edgelist to write.
+            partitioning: The (optional) partitioning to use when writing the dataframe.
         """
         self.write_dataframe(edgelist, self.EDGELIST_KEY, partitioning)
 
@@ -557,7 +569,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write the given polarization data to the .pxl file.
 
         Args:
-            polarization: Polarization.
+            polarization: The polarization data to write.
         """
         self.write_dataframe(polarization, self.POLARIZATION_KEY)
 
@@ -565,7 +577,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write the given colocalization data to the .pxl file.
 
         Args:
-            colocalization: Colocalization.
+            colocalization: The colocalization data to write.
         """
         self.write_dataframe(colocalization, self.COLOCALIZATION_KEY)
 
@@ -576,7 +588,7 @@ class ZipBasedPixelFile(PixelDataStore):
         """Write pre-computed layouts to the data store.
 
         Args:
-            layouts: Layouts.
+            layouts: The pre-computed layouts to write.
         """
         if layouts is None:
             logger.debug("No layouts to write, will skip.")
@@ -610,8 +622,8 @@ class ZipBasedPixelFile(PixelDataStore):
         """Save the given PixelDataset to the .pxl file.
 
         Args:
-            dataset: Dataset.
-            force_overwrite: Force overwrite.
+            dataset: The PixelDataset to save.
+            force_overwrite: Whether to force overwrite an existing file.
         """
         path = Path(self.path)
         if path.exists():
@@ -668,7 +680,7 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         """Create a zip-based pixel file using csv files to store dataframes.
 
         Args:
-            path: Path.
+            path: Path prefix to search within the archive.
         """
         super().__init__(path)
 
@@ -681,9 +693,9 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         """Write the given dataframe to the .pxl file.
 
         Args:
-            dataframe: Dataframe.
-            key: Key.
-            partitioning: Partitioning.
+            dataframe: The dataframe to write.
+            key: The key to write the dataframe to.
+            partitioning: The (optional) partitioning to use when writing the dataframe.
         """
         # Note that partitioning will be ignored here
         self._set_to_write_mode()
@@ -697,7 +709,7 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         """Read a dataframe from the .pxl file.
 
         Args:
-            key: Key.
+            key: The key to write the dataframe to.
         """
         self._set_to_read_mode()
         return self._read_dataframe_from_zip(key)
@@ -706,7 +718,7 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         """Read a dataframe lazily from a zip file (NB: Not implemented!).
 
         Args:
-            key: Key.
+            key: The key to write the dataframe to.
         """
         raise NotImplementedError(
             "You are trying to read data lazily from a csv-based pxl file. "
@@ -722,7 +734,7 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         """Write pre-computed layouts to the data store (NB: Not implemented!).
 
         Args:
-            layouts: Layouts.
+            layouts: The pre-computed layouts to write.
         """
         raise NotImplementedError(
             "You are trying to write precomputed layouts to a csv-based pxl file. "
@@ -752,7 +764,7 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         """Create a zip-based pixel file using parquet files to store dataframes.
 
         Args:
-            path: Path.
+            path: Path prefix to search within the archive.
         """
         super().__init__(path)
 
@@ -812,7 +824,7 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         """Read a dataframe from the .pxl file.
 
         Args:
-            key: Key.
+            key: The key to write the dataframe to.
         """
         self._set_to_read_mode()
         return self._read_dataframe_from_zip(key)
@@ -868,7 +880,7 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         """Read a dataframe lazily from a zip file.
 
         Args:
-            key: Key.
+            key: The key to write the dataframe to.
         """
         self._set_to_read_mode()
         return self._read_dataframe_from_zip_lazy(key)

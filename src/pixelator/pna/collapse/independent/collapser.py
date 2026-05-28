@@ -962,14 +962,15 @@ class RegionCollapser:
         The database and read counts are loaded from shared memory to reduce
         python multiprocessing IPC overhead.
 
-
-
         Args:
             subrange: Start and stop indices of connected components to process.
             component_indices: Per-component indices into the database and read-count arrays.
             memory: Read-only shared memory registry for database and read counts.
             embedding: Embedding used to encode and decode molecule vectors.
             n_molecules: Total number of molecules in the batch.
+            db_shm: The shared memory buffer containing the binary vectors.
+            read_counts_shm: The shared memory buffer containing the read counts.
+            db_size: The size of the binary vectors memory buffer in bytes.
         """
         db = memory.get_array("db")
         read_count = memory.get_array("read_counts")

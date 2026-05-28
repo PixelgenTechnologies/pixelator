@@ -64,7 +64,7 @@ def get_single_thread_duckdb_config(n_threads: int) -> dict:
     """Get a DuckDB configuration that limits memory usage for multi-threaded processing.
 
     Args:
-        n_threads: N threads.
+        n_threads: Number of threads to be used in the multi-threaded processing.
 
     Returns:
         dict: DuckDB configuration dictionary with memory limit and single thread setting.

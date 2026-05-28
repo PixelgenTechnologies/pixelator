@@ -214,27 +214,28 @@ def denoise(
     """Denoise components of a PXL file.
 
     Args:
-        ctx: Click context from the command decorator.
-        pxl_file: Pxl file.
-        run_one_core_graph_denoising: Run one core graph denoising.
-        run_ace_denoising: Run ace denoising.
-        ace_k: Ace k.
-        ace_max_k_core: Ace max k core.
-        ace_no_select_lcc: Ace no select lcc.
-        one_core_ratio_threshold: One core ratio threshold.
-        pval_threshold: Pval threshold.
-        inflate_factor: Inflate factor.
-        run_pls_denoising: Run pls denoising.
-        pls_ncomp: Pls ncomp.
-        pls_model_k: Pls model k.
-        pls_pred_k: Pls pred k.
-        pls_use_weights: Pls use weights.
-        pls_normalization: Pls normalization.
-        pls_residualize: Pls residualize.
-        pls_component_p_threshold: Pls component p threshold.
-        pls_min_coreness_correlation: Pls min coreness correlation.
-        pls_score_threshold: Pls score threshold.
-        output: Output.
+            ctx: Click context from the command decorator.
+            pxl_file: Pxl file.
+            run_one_core_graph_denoising: Run the denoise step to remove markers that are over-expressed in the one-core layer of a component.
+            run_ace_denoising: Run ace denoising.
+            ace_k: Ace k.
+            ace_max_k_core: Ace max k core.
+            ace_no_select_lcc: Ace no select lcc.
+            one_core_ratio_threshold: One core ratio threshold.
+            pval_threshold: Pval threshold.
+            inflate_factor: Inflate factor.
+            run_pls_denoising: Run pls denoising.
+            pls_ncomp: Pls ncomp.
+            pls_model_k: Pls model k.
+            pls_pred_k: Pls pred k.
+            pls_use_weights: Pls use weights.
+            pls_normalization: Pls normalization.
+            pls_residualize: Pls residualize.
+            pls_component_p_threshold: Pls component p threshold.
+            pls_min_coreness_correlation: Pls min coreness correlation.
+            pls_score_threshold: All retained PLS score columns must exceed this value when --run-pls-denoising is set.
+            output: Output.
+
     """
     input_files = [pxl_file]
     log_step_start(

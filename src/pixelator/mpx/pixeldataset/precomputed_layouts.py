@@ -57,15 +57,19 @@ class _DataProvider(Protocol):
 
     def is_empty(self) -> bool:
         """Return whether the provider contains any layout rows."""
+        ...
 
     def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
         """Materialize layouts as a pandas DataFrame."""
+        ...
 
     def lazy(self):
         """Return a Polars lazy frame view of the layouts."""
+        ...
 
     def unique_components(self):
         """Return the set of component identifiers present in the data."""
+        ...
 
     def filter(
         self,
@@ -74,6 +78,7 @@ class _DataProvider(Protocol):
         layout_methods: str | set[str] | None = None,
     ) -> pl.LazyFrame | list[pl.LazyFrame]:
         """Filter layouts by component, projection, and layout method."""
+        ...
 
     def write_parquet(self, path: Path, partitioning: list[str]) -> None:
         """Write layouts to parquet using hive-style partitioning.
@@ -356,6 +361,8 @@ class PreComputedLayouts:
 
         Args:
             columns: the columns to return, if `None` all columns will be returned
+        Returns:
+            A pandas DataFrame with the layout(s)
         """
         return self._data_provider.to_df(columns)
 
@@ -376,6 +383,8 @@ class PreComputedLayouts:
             component_ids: the component ids to filter on
             graph_projection: the graph projection to filter on
             layout_method: the layout method to filter on
+        Returns:
+            A new PreComputedLayouts instance with the filtered layouts (PreComputedLayouts)
         """
         return PreComputedLayouts(
             self._data_provider.filter(component_ids, graph_projection, layout_method),
@@ -601,6 +610,7 @@ def generate_precomputed_layouts_for_components(
         components: Component ids to layout; defaults to all components.
         add_node_marker_counts: Include per-node marker counts in layout output.
         layout_algorithms: Layout algorithm name or list of algorithms to compute.
+        layout_algorithm: the layout algorithm to use
     """
     if components is None:
         components = set(pixel_dataset.adata.obs.index)

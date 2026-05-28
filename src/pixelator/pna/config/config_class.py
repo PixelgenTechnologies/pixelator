@@ -166,6 +166,8 @@ class PNAConfig:
         Args:
             include_aliases: Include panel aliases in the list
             include_archived: Include archived panels in the list
+        Returns:
+            A list of panel names
         """
         out = []
         for panel in itertools.chain.from_iterable(self.panels.values()):
@@ -303,6 +305,8 @@ def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
     Args:
         config: The config object to load assays into
         package_name: The name of the package to load assays from
+    Returns:
+        The updated config object
     """
     for resource in importlib.resources.files(package_name).iterdir():
         if resource.is_file():
@@ -318,6 +322,8 @@ def load_panels_package(config: ConfigType, package_name: str) -> ConfigType:
     Args:
         config: The config object to load panel files into
         package_name: The name of the package to load panels from
+    Returns:
+        The updated config object
     """
     for resource in importlib.resources.files(package_name).iterdir():
         if resource.is_file():

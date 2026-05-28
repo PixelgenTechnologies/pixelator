@@ -60,6 +60,8 @@ class ReadSimulator:
 
         Args:
             length: length of the sequence to generate
+        Returns:
+            A random DNA sequence (str)
         """
         return "".join([self.rng.choice(["A", "T", "C", "G"]) for _ in range(length)])
 
@@ -68,6 +70,8 @@ class ReadSimulator:
 
         Args:
             nbr_of_molecules: number of molecules to generate
+        Returns:
+            Generator[str, None, None]
 
         Yields:
             An iterator of DNA sequences (str)
@@ -107,6 +111,8 @@ class ReadSimulator:
             molecules: the underlying molecules to "sequence"
             mean_nbr_of_reads_per_molecule: the mean number of reads to generate per molecule
             std_nbr_of_reads_per_molecule: the standard deviation in the number of reads generated per molecule
+        Returns:
+            Generator[str, None, None]
 
         Yields:
             an iterator of "sequenced" reads (str)
@@ -132,6 +138,11 @@ class ReadSimulator:
             reads: reads to add errors to
             error_prob_per_base: (probability of adding an error, range): [0,1)
 
+        Returns:
+            Generator[str, None, None]
+
+        Raises:
+            Assertion error if `error_prob_per_base` is invalid
         Yields:
             an iterator of DNA sequences with errors added to it (str)
         """
@@ -165,6 +176,9 @@ class ReadSimulator:
             mean_reads_per_molecule: mean number of molecules to generate per molecule
             std_reads_per_molecule: the standard deviation of the number of molecules to generate
             prob_of_seq_error: probability of base substitutions errors per base sequenced. Default: 0.
+
+        Returns:
+            An iterator of sequence reads (Iterator[str])
         """
         fragments = self.build_molecule(n_molecules)
         reads = self.sequence_molecule(

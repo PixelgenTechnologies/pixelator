@@ -42,7 +42,6 @@ def demux_fastq(
     will be generated (containing the reads that matched). Another single
     file with the reads that failed to demultiplex will also be created.
 
-
     Args:
         input: the path to the fastq file (must contain the barcode)
         output: the path to the output file (processed)
@@ -55,6 +54,8 @@ def demux_fastq(
         cores: the number of cores to use
         verbose: run in verbose mode when true
         sample_id: the sample id
+    Returns:
+        true if demux results were ok
 
     Raises:
         ValueError: raises an exception
@@ -136,8 +137,9 @@ def check_demux_results_are_ok(report_data: dict, sample_id: str) -> bool:
     """Check if the demultiplexing results are ok.
 
     Args:
-        report_data: Report data.
-        sample_id: Sample id.
+            report_data: Report data.
+            sample_id: the sample id
+
     """
     read_counts = report_data["read_counts"]
     input_reads = read_counts["input"]

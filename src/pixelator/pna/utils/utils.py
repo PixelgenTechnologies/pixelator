@@ -135,6 +135,8 @@ def clean_suffixes(path: PurePath) -> PurePath:
 
     Args:
         path: The path to clean
+    Returns:
+        The path without fasta/fastq suffixes or compression extensions
     """
     while path.suffix in _KNOWN_COMPRESSION:
         path = path.with_suffix("")

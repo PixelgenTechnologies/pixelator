@@ -94,18 +94,19 @@ class BKTree:
     def add(self, item):
         """Add given item to this tree.
 
-        >>> tree = BKTree(hamming_distance)
-        >>> list(tree)
-        []
-        >>> tree.add(4)
-        >>> sorted(tree)
-        [4]
-        >>> tree.add(15)
-        >>> sorted(tree)
-        [4, 15]
+                >>> tree = BKTree(hamming_distance)
+                >>> list(tree)
+                []
+                >>> tree.add(4)
+                >>> sorted(tree)
+                [4]
+                >>> tree.add(15)
+                >>> sorted(tree)
+                [4, 15]
 
         Args:
-            item: Item.
+                    item: The item to find matches for.
+
         """
         node = self.tree
         if node is None:
@@ -240,6 +241,8 @@ def build_bktree(panel: PNAAntibodyPanel, sequence_key: str) -> BKTree:
     Args:
         panel: The panel to build the tree from
         sequence_key: The key in the panel dataframe that contains the sequences
+    Returns:
+        The BKTree
     """
     tree = BKTree(hamming_distance_i8)
 
@@ -260,6 +263,8 @@ def build_exact_dict_lookup(
     Args:
         panel: The panel to build the lookup from
         sequence_key: The key in the panel dataframe that contains the sequences
+    Returns:
+        The lookup table
     """
     lut = dict()
 

@@ -53,6 +53,8 @@ def add_cli_plugins(group: Group) -> None:
 
     Args:
         group: An instance of `click.Group` to add sub commands to
+    Returns:
+        None
     """
     for entrypoint in fetch_cli_plugins():
         logger.debug("Loading cli plugin %s", entrypoint.name)

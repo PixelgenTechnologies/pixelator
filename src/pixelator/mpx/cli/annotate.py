@@ -90,17 +90,19 @@ def annotate(
     aggregate_calling,
     output,
 ):
-    """Filter, annotate and call cells from an edge list
+    """
+    Filter, annotate and call cells from an edge list
 
     Args:
-        ctx: Click context from the command decorator.
-        parquet_file: Parquet file.
-        panel: Panel.
-        min_size: Min size.
-        max_size: Max size.
-        dynamic_filter: Dynamic filter.
-        aggregate_calling: Aggregate calling.
-        output: Output.
+            ctx: Click context from the command decorator.
+            parquet_file: Parquet file.
+            panel: Panel.
+            min_size: The minimum size (edges) a component must have (default is disabled). Note that this cannot be set at the same time as --dynamic-filter.
+            max_size: The maximum size (edges) a component must have (default is disabled). Note that this cannot be set at the same time as --dynamic-filter.
+            dynamic_filter: Dynamic filter.
+            aggregate_calling: Aggregate calling.
+            output: Output.
+
     """
     input_files = [parquet_file]
     # log input parameters

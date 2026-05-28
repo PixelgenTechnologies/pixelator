@@ -94,20 +94,17 @@ class ReaderProcess(mpctx_Process):
     ):
         """Initialize a reader process that streams chunks to worker connections.
 
-        Note:
-            Input paths are passed as strings because they must be picklable when
-            multiprocessing uses the ``spawn`` start method (default on macOS).
-
         Args:
-            paths: One or more input FASTA/FASTQ paths.
-            file_format_connection: Connection used to communicate detected file format.
+            paths: Paths.
+            file_format_connection: File format connection.
             connections: One connection per worker process.
             queue: Queue of worker indices ready to receive another chunk.
             buffer_size: Number of reads to load per chunk.
             stdin_fd: Optional stdin file descriptor when reading from a pipe.
-
-            file_format_connection: File format connection.
-            paths: Paths.
+            params: path to input files
+        Note:
+            Input paths are passed as strings because they must be picklable when
+            multiprocessing uses the ``spawn`` start method (default on macOS).
         """
         super().__init__()
         if len(paths) > 2:
@@ -476,6 +473,9 @@ class ParallelPipelineRunner(PipelineRunner, typing.Generic[StatisticsClass]):
             pipeline: The pipeline to run.
             progress: A progress object.
             outfiles: The output files.
+
+        Returns:
+            The statistics object.
         """
         workers, connections = self._start_workers(pipeline, outfiles.proxy_files())
         chunk_writers = []
@@ -569,6 +569,9 @@ class SerialPipelineRunner(PipelineRunner):
             pipeline: The pipeline to run.
             progress: A progress object.
             outfiles: The output files.
+
+        Returns:
+            The statistics object.
         """
         (n, total1_bp, total2_bp) = pipeline.process_reads(
             self._infiles, progress=progress

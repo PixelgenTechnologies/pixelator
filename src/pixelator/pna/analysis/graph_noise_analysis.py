@@ -72,6 +72,9 @@ def non_backtracking_transition_probabilities(
         deadend_action: (the action to take for deadend nodes. Options are): "remove", "ignore", "self-loop".
         track_only_nonzero: if True, only track edges with non-zero probabilities without keeping the actual probablity.
 
+    Returns:
+        a pandas series containing the transition probabilities.
+
     Raises:
         ValueError: if the deadend_action is not one of the valid options.
         ValueError: if the number of steps is less than 3.
@@ -160,7 +163,8 @@ def svd_pivot_distances(
         g: a networkx graph object
         pivots: the number of pivot nodes to use
         seed: the random seed to use
-
+    Returns:
+        a tuple containing the results of the SVD
     Raises:
         ValueError: the number of pivots must be less than the number of nodes in the graph
     """
@@ -212,6 +216,8 @@ def summarize_k_cores(g: nx.Graph) -> pd.DataFrame:
 
     Args:
         g: a networkx Graph object
+    Returns:
+        a dataframe with the summarized node k-cores (pd.DataFrame)
 
     Raises:
         AssertionError: the input arguments are incorrect
@@ -258,6 +264,9 @@ class KcoreAnalysis(PerComponentTask):
         Args:
             component: a networkx graph for a component to run the analysis on.
             component_id: the id of the component.
+
+        Returns:
+            a pandas DataFrame containing k-core counts.
         """
         logger.debug(f"Running k-core analysis on component {component_id}")
         k_core_summary = summarize_k_cores(
@@ -316,6 +325,9 @@ class SvdAnalysis(PerComponentTask):
         Args:
             component: a networkx graph for a component to run the analysis on.
             component_id: the id of the component.
+
+        Returns:
+            a pandas DataFrame containing variance explained for the first three singular vectors. If the SVD computation fails, e.g. if the number of pivot points is >= the number of nodes, the function returns a DataFrame with nan values.
         """
         logger.debug(f"Running SVD analysis on component {component_id}")
 
@@ -353,13 +365,14 @@ class SvdAnalysis(PerComponentTask):
     def add_to_pixel_file(self, data: pd.DataFrame, pxl_file_target: PxlFile) -> None:
         """Add svd variance explained for the first three singular vectors.
 
-        Add svd variance explained for the first three singular vectors across
-        all components to adata.obs in pxl_dataset.
+                Add svd variance explained for the first three singular vectors across
+                all components to adata.obs in pxl_dataset.
 
         Args:
-            data: a pandas DataFrame containing svd variance explained for the first three singular vectors across all components.
-            pxl_dataset: the PNAPixelDataset to add the data to.
-            pxl_file_target: Pxl file target.
+                    data: a pandas DataFrame containing svd variance explained for the first three singular vectors across all components.
+                    pxl_dataset: the PNAPixelDataset to add the data to.
+                    pxl_file_target: the PxlFile to add the data to.
+
         """
         logger.debug("Adding SVD analysis data to PNAPixelDataset")
         adata = PNAPixelDataset.from_files(pxl_file_target.path).adata()

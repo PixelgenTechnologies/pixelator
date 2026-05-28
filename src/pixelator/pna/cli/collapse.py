@@ -42,6 +42,8 @@ def validate_mismatches(ctx, param, value):
         ctx: The click context
         param: The click parameter name
         value: The click value
+    Returns:
+        The validated value
     """
     try:
         value = int(value)
@@ -110,14 +112,15 @@ def collapse(
     """Collapse Molecular Pixelation data (FASTQ) to remove duplicates and perform error correction.
 
     Args:
-        ctx: Click context from the command decorator.
-        input_files: Input files.
-        design: Design.
-        panel: Panel.
-        output: Output.
-        mismatches: Mismatches.
-        algorithm: Algorithm.
-        threads: Threads.
+            ctx: Click context from the command decorator.
+            input_files: The UM1 and UMI2 demuxed files.
+            design: Design.
+            panel: The panel configuration.
+            output: Output.
+            mismatches: The number of mismatches allowed when error-correcting.
+            algorithm: The collapse strategy to use.
+            threads: The number of threads to use.
+
     """
     # log input parameters
     log_step_start(

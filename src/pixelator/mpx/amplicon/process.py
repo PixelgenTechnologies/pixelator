@@ -31,6 +31,8 @@ def trim_amplicon(record1: FastxReadTuple, amplicon: Region) -> FastxReadTuple:
     Args:
         record1: the forward fastq record
         amplicon: the amplicon region from the assay specification
+    Returns:
+        a tuple with the sequence id, sequence and quality (FastxReadTuple)
     """
     n1, s1, q1 = record1
     s1_len = len(s1)
@@ -56,6 +58,8 @@ def generate_amplicon(
         record1: a tuple with name, sequence and quality of the forward reads
         record2: a tuple with name, sequence and quality of the reverse read
         amplicon: the amplicon region from the assay specification
+    Returns:
+        a tuple with the name, sequence and quality (FastxReadTuple)
 
     Raises:
         ValueError: if the headers of the two records are different
@@ -108,6 +112,8 @@ def write_record(f: BinaryIO, header: str, sequence: str, quality: str) -> None:
         header: the header of the record
         sequence: the sequence of the record
         quality: the quality of the record
+    Returns:
+        None
     """
     # Do not generate intermediate strings here to avoid unneeded copies
     f.write(b"@")
@@ -139,6 +145,9 @@ def amplicon_fastq(
         metrics: the path to the json metrics file
         sample_id: the sample id
         output: the path to the output file (processed)
+
+    Returns:
+        None (None)
 
     Raises:
         RuntimeError: raises an exception

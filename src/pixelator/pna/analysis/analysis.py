@@ -53,6 +53,9 @@ class ProximityAnalysis(PerComponentTask):
             component: a Graph for a component to run the analysis on.
             component_id: the id of the component.
             component_df: Component df.
+
+        Returns:
+            a pandas DataFrame containing average_node degrees per type counts.
         """
         result = self._proxmimity_function(component_df.collect())
         result["component"] = component_id
@@ -80,8 +83,9 @@ class ProximityAnalysis(PerComponentTask):
         """Run proximity analysis on a single component.
 
         Args:
-            component: Component.
-            component_id: Component id.
+                    component: a Graph for a component to run the analysis on.
+                    component_id: the id of the component.
+
         """
         raise NotImplementedError
 

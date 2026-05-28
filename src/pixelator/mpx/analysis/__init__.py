@@ -63,6 +63,8 @@ def analyse_pixels(
         use_full_bipartite: use the bipartite graph instead of the one-node-projection (UPIA)
         analysis_to_run: a list of analysis functions (`PerComponentAnalysis` instances) to apply to each component
         verbose: run if verbose mode when true
+    Returns:
+        None (None)
 
     Raises:
         AssertionError: the input arguments are not valid

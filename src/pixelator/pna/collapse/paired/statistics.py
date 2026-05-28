@@ -72,7 +72,8 @@ class CollapseSummaryStatistics(pydantic.BaseModel):
         """Create a CollapseSummaryStatistics from a collapsed LazyFrame.
 
         Args:
-            collapsed_lz_df: Collapsed lz df.
+                    collapsed_lz_df: The collapsed dataframe.
+
         """
         df = collapsed_lz_df.select("uei_count", "read_count").collect()
         uei_stats = SummaryStatistics.from_series(df.get_column("uei_count"))

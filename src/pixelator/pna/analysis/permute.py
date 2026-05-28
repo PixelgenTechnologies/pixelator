@@ -29,6 +29,8 @@ def edgelist_permutations(
         edgelist_df: dataframe to use as basis of permutations
         n: number of permutations to generate, defaults to 50
         random_seed: set a seed to the random number generator needed to make results deterministic, defaults to None
+    Returns:
+        a generator that yields `n` permutations of the input dataframe (Generator[pl.DataFrame, None, None])
     """
     random_number_generator = _get_random_number_generator(random_seed)
     for _ in range(n):
@@ -41,13 +43,16 @@ def permute_edgelist(
 ):
     """Permute markers in an edgelist.
 
-    This function permutes the edgelist by shuffling the corresponding
-    markers to umi1 and umi2 columns.
+        This function permutes the edgelist by shuffling the corresponding
+        markers to umi1 and umi2 columns.
 
     Args:
-        edgelist: A DataFrame representing the edgelist
-        n_permutations: The number of permutations to perform
-        random_number_generator: Random number generator.
+            edgelist: A DataFrame representing the edgelist
+            n_permutations: The number of permutations to perform
+            random_number_generator: A RandomNumberGenerator instance
+        Returns:
+            A DataFrame containing the permuted edgelist
+
     """
     if random_number_generator is None:
         random_number_generator = _get_random_number_generator()
@@ -99,6 +104,8 @@ def permute_node_markers(
         node_markers: A DataFrame representing the node_markers (nodes as rows and markers as columns)
         random_number_generator: A RandomNumberGenerator instance
         node_a_rows: A boolean Series indicating which rows are COa nodes
+    Returns:
+        A DataFrame containing the permuted node_markers
     """
     if random_number_generator is None:
         random_number_generator = _get_random_number_generator()

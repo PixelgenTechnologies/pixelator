@@ -51,6 +51,8 @@ def pack_2bits(kmer: bytes) -> np.uint64:
 
     Args:
         kmer: the kmer to pack
+    Returns:
+        the packed kmer as an integer
     """
     # pack the kmer into an int
     assert len(kmer) <= 32
@@ -71,6 +73,8 @@ def pack_4bits(kmer: bytes) -> np.uint64:
 
     Args:
         kmer: the kmer to pack
+    Returns:
+        the packed kmer as an integer
     """
     assert len(kmer) <= 16
 

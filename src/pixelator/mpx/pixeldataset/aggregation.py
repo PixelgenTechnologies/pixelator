@@ -86,6 +86,9 @@ def simple_aggregate(
         datasets: an iterable of the datasets you want to aggregate
         ignore_edgelists: ignoring merging the edgelists, leaving them empty in the resulting PixelDataset. Defaults to False.
 
+    Returns:
+        a PixelDataset instance with all the merged samples (PixelDataset)
+
     Raises:
         AssertionError: If not all pre-conditions are meet.
     """

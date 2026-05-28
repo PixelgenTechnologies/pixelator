@@ -26,6 +26,9 @@ class WorkflowConfig:
 
         Args:
             test_name: name of the test case as given in the config.
+
+        Returns:
+            the config object for the test case
         """
         return self._config[test_name]
 
@@ -60,6 +63,8 @@ class WorkflowConfig:
         Args:
             config_file: path to the config file
             config: the config object parsed from the `config_file`
+        Returns:
+            the config object with relative paths resolved
         """
         for test_id, test_config in config.items():
             panel_file = test_config.get("panel_file")

@@ -169,6 +169,9 @@ class BarcodeIdentifier(SingleEndStep, HasFilterStatistics, HasCustomStatistics)
         Args:
             read: the read to process
             info: Modification info from earlier pipeline steps (unused).
+
+        Returns:
+            the read with the antibody information added
         """
         # Extract the barcode sequence
         _stats = self._stats

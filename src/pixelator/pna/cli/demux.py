@@ -114,15 +114,15 @@ def demux(
     Args:
         ctx: Click context from the command decorator.
         fastq_file: Fastq file.
-        mismatches: Mismatches.
-        output_chunk_reads: Output chunk reads.
-        output_max_chunks: Output max chunks.
-        panel: Panel.
-        output: Output.
-        design: Design.
-        threads: Threads.
-        memory: Memory.
-        strategy: Strategy.
+        mismatches: The number of mismatches allowed in marker barcodes.
+        output_chunk_reads: The target number of molecules in each output parquet file.
+        output_max_chunks: The maximum number of marker parts to split the demuxed data into.
+        panel: A key of a panel file in the config, or a csv file with the antibody panel conjugations.
+        output: The path where the results will be placed (it is created if it does not exist).
+        design: The design to load from the configuration file.
+        threads: The number of total worker threads available for parallel processing.
+        memory: The maximum amount of memory available for processing.
+        strategy: The strategy for splitting demuxed files (paired or independent).
     """
     # log input parameters
     input_files = [fastq_file]

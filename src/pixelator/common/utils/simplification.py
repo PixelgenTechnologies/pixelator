@@ -115,7 +115,9 @@ def simplify_line_rdp(
         coordinates: Array of shape ``(n, d)`` with ``n`` points in ``d`` dimensions.
         epsilon: Maximum perpendicular distance for point removal.
         return_mask: If True, return the boolean mask instead of simplified coordinates.
-
+        M: a series of points
+        dist: distance function
+        algo: either ``iter`` for an iterative algorithm or ``rec`` for a recursive algorithm
     Returns:
         Simplified coordinates, or the boolean mask when ``return_mask`` is True.
 

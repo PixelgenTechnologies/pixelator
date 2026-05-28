@@ -96,7 +96,8 @@ class SequenceQualityStatsCollector:
 
         Args:
             region_id: id of the region
-
+        Returns:
+            a tuple with start and end positions
         Raises:
             ValueError: An unknown region id was given
         """

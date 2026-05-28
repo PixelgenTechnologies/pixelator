@@ -85,6 +85,9 @@ class PxlFile:
         Args:
             src: The source PxlFile.
             target: The target path.
+
+        Returns:
+            The new PxlFile.
         """
         shutil.copy(src.path, target)
         return PxlFile(target)

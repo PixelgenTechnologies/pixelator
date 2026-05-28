@@ -131,6 +131,8 @@ def build_annoytree(data: npt.NDArray[np.uint8], n_trees: int = 10) -> AnnoyInde
     Args:
         data: the array of sequences (n_ele, n_features) in binary format
         n_trees: (the number of Annoy trees to build. Default): 10
+    Returns:
+        an AnnoyIndex object (AnnoyIndex)
     """
     logger.debug("Building annoy tree of shape %i,%i", data.shape[0], data.shape[1])
 
@@ -153,6 +155,8 @@ def build_binary_data(seqs: list[str]) -> npt.NDArray[np.uint8]:
 
     Args:
         seqs: a list of DNA sequences
+    Returns:
+        a numpy array of binary sequences (npt.NDArray[np.uint8])
     """
     logger.debug("Transforming %i sequences to binary form", len(seqs))
 
@@ -185,6 +189,8 @@ def get_collapsed_fragments_for_component(  # noqa: DOC402,DOC404
     Args:
         components: a list of components as produced from `get_connected_components`
         counts: a dictionary of the counts of each unique fragment
+    Returns:
+        Generator[CollapsedFragment, None, None]
 
     Yields:
         a collapsed fragment (CollapsedFragment)
@@ -236,6 +242,8 @@ def get_connected_components(
     Args:
         graph: a dictionary of sequence to sequences (within same distance)
         counts: a dictionary of counts (copies) for each sequence in `graph`
+    Returns:
+        a list of sets of sequences where each set represents a connected component (list[set[UniqueFragment]])
     """
     found = set()
     components = []
@@ -273,6 +281,8 @@ def identify_fragments_to_collapse(
         seqs: a list of sequences to be grouped
         min_dist: the hamming distance threshold (i.e. the mismatches between two sequences)
         max_neighbours: the number of neighbours to use in the Annoy index
+    Returns:
+        a dictionary with fragments as keys and a list of their adjoining fragments as values (dict[UniqueFragment, list[UniqueFragment]])
     """
     logger.debug("Computing adjacency sequences from %i elements", len(seqs))
 
@@ -366,6 +376,9 @@ def collapse_sequences_adjacency(
         seq_dict: a dictionary mapping unique fragments to their corresponding upib's
         max_neighbours: the maximum number of neighbours to search in the approximate nearest neighbour search
         min_dist: the hamming distance threshold (i.e. the mismatches between two sequences)
+
+    Returns:
+        An iterator of the of collapsed molecules, and their original counts (Iterator[CollapsedFragment])
     """
     logger.debug("Collapsing %i sequences", len(seq_dict))
 
@@ -409,6 +422,8 @@ def create_fragment_to_upib_dict(
         umia_end: the 1-based end position of UMIA
         umib_start: the 0-based start position of UMIB
         umib_end: the 1-based end position of UMIB
+    Returns:
+        a tuple with: - a dictionary with the sequence of umi+upia as keys and the list of associated upibs as values. - the number of input reads (tuple[UniqueFragmentToUpiB, int])
 
     Raises:
         FileFqGzEmpty: when the file is empty
@@ -461,6 +476,8 @@ def filter_by_minimum_upib_count(
     Args:
         unique_reads: a dictionary of fragments and their corresponding upib's
         min_count: the minimum number of upib's per fragment required to keep it
+    Returns:
+        A filtered instance of the input dictionary (UniqueFragmentToUpiB)
     """
     unique_reads = {k: v for k, v in unique_reads.items() if len(v) >= min_count}
     # in case there are no reads after filtering
@@ -510,6 +527,8 @@ def create_edgelist(
         umib_end: the end position of upib
         marker: the marker
         sequence: (the sequence of the marker):
+    Returns:
+        a dataframe representing the edgelist of the mpx graph (pd.DataFrame)
     """
     # get the umi sizes to do the split
     if umia_start is not None and umia_end is not None:
@@ -560,6 +579,8 @@ def write_tmp_feather_file(df: pd.DataFrame) -> Path:
 
     Args:
         df: the data frame to write
+    Returns:
+        path of the file written (PathType)
     """
     # create a temporary edge list and save it to a temp file
     tmp_file = tempfile.mkstemp(suffix=".feather")[1]
@@ -627,6 +648,8 @@ def collapse_fastq(
         max_neighbours: the number of neighbours used in the approximate nearest neighbour search
         mismatches: the number of mismatches allowed between sequences
         min_count: discard reads with a count lower than this
+    Returns:
+        a str containing the path to the edge list file (tuple[Path | None, int])
 
     Raises:
         AssertionError: invalid input

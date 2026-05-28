@@ -146,6 +146,9 @@ def merge_communities_with_many_crossing_edges(
         n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
         max_edges_to_remove: Max edges to remove.
         max_edges_to_remove_relative: Max edges to remove relative.
+
+    Returns:
+        The updated community mapping
     """
     community_serie = pd.Series(node_community_dict)
     if max_edges_to_remove is None and max_edges_to_remove_relative is None:
@@ -295,7 +298,8 @@ def get_component_sizes(
     """Get sizes of components from edgelist with components.
 
     Args:
-        component_edgelists_path: Component edgelists path.
+            component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
+
     """
     with duckdb.connect() as con:
         component_sizes = con.execute(f"""

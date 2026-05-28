@@ -81,6 +81,8 @@ def pearson(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
 
     Args:
         df: the RegionByCountsDataFrame to compute Pearson correlation on
+    Returns:
+        MarkerColocalizationResults with Pearson correlations (MarkerColocalizationResults)
     """
     pearson_matrix = df.corr(method="pearson")
     pearson_values = _alphanumeric_sort_marker_columns(
@@ -105,6 +107,8 @@ def jaccard(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
 
     Args:
         df: the RegionByCountsDataFrame to compute Jaccard indexes on
+    Returns:
+        MarkerColocalizationResults with Jaccard indexes (MarkerColocalizationResults)
     """
     jaccard_matrix = pd.DataFrame(
         1 - pairwise_distances((df.T > 0).to_numpy(dtype=bool), metric="jaccard"),
@@ -132,5 +136,7 @@ def apply_multiple_stats(
     Args:
         df: data to compute statistics on
         funcs: a list of functions to use to compute the statistics
+    Returns:
+        a dataframe with all the statistics computed for the dataframe (pd.DataFrame)
     """
     return pd.concat([func.func(df) for func in funcs], axis=1)
