@@ -164,6 +164,12 @@ def test_loading_multiple_major_version(config_with_multiple_versions):
     "panel_alias,panel_name,panel_version",
     [
         ("test-pna==1.1.0", "test-pna-panel", "1.1.0"),
+        (
+            # this test input ascertains alias lookup can resolve this specific version bump made to align product and panel versions
+            "proxiome-v2-immuno-155-v1.0",
+            "proxiome-v2-immuno-155-v2.0",
+            "2.0.1",  # bump this version string when doing patch updates to proxiome-v2-immuno-155-v2.0
+        ),
     ],
 )
 def test_loading_panel_from_config_alias(
@@ -293,8 +299,11 @@ def test_list_panel_names(pna_data_root):
             "proxiome-v1-immuno-156-FMC63-v1.0",
             "proxiome-v1-immuno-156-FMC63-v1.1",
             "proxiome-v2-immuno-155-v1.0",
+            "proxiome-v2-immuno-155-v2.0",
             "proxiome-v2-immuno-156-FLAG-v1.0",
+            "proxiome-v2-immuno-156-FLAG-v2.0",
             "proxiome-v2-immuno-156-FMC63-v1.0",
+            "proxiome-v2-immuno-156-FMC63-v2.0",
         ]
     )
 
@@ -305,9 +314,9 @@ def test_list_panel_names(pna_data_root):
         "proxiome-v1-immuno-156-FLAG-v1.1",
         "proxiome-v1-immuno-156-FMC63-v1.0",
         "proxiome-v1-immuno-156-FMC63-v1.1",
-        "proxiome-v2-immuno-155-v1.0",
-        "proxiome-v2-immuno-156-FLAG-v1.0",
-        "proxiome-v2-immuno-156-FMC63-v1.0",
+        "proxiome-v2-immuno-155-v2.0",
+        "proxiome-v2-immuno-156-FLAG-v2.0",
+        "proxiome-v2-immuno-156-FMC63-v2.0",
     ]
 
 

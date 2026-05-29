@@ -1,10 +1,12 @@
 # ---
-# name: proxiome-v2-immuno-156-FMC63-v1.0
+# name: proxiome-v2-immuno-156-FMC63-v2.0
 # product: proxiome-v2-immuno-156-FMC63
+# aliases:
+#   - proxiome-v2-immuno-156-FMC63-v1.0
 # description: >-
 #     Panel for the Proxiome Immuno Kit with 155 markers + 3 control markers
 #     + 3*8 hashing antibodies + the FMC63 marker
-# version: 1.0.0
+# version: 2.0.0
 # ---
 marker_id,control,full_name,alt_id,uniprot_id,sequence_1,sequence_2,sample_hashing
 HLA-ABC,,HLA class I histocompatibility antigen,,P04439;P01889;P10321,ACTTCCTAGG,ACTTCCTAGG
