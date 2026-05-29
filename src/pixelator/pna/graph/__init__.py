@@ -51,7 +51,7 @@ class PNAGraph(BaseGraph):
 
     def layout_coordinates(  # type: ignore
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "wpmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
         **kwargs,
@@ -69,7 +69,7 @@ class PNAGraph(BaseGraph):
           - pmds
           - pmds_3d
           - wpmds_3d
-
+          - coarsened_pmds_3d
 
         The `pmds` options are much faster than the force-directed algorithms fruchterman_reingold
         and kamada_kawai. The `wpmds_3d` option is a weighted version of the `pmds_3d` algorithm.
@@ -174,7 +174,7 @@ class PNAGraphBackend(NetworkXGraphBackend):
 
     def layout_coordinates(  # type: ignore
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "wpmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
         **kwargs,
@@ -185,20 +185,17 @@ class PNAGraphBackend(NetworkXGraphBackend):
         counts to use that can be used for plotting.
 
         The layout options are:
+          - coarsened_pmds_3d
+          - wpmds_3d
           - pmds
           - pmds_3d
           - fruchterman_reingold
           - fruchterman_reingold_3d
           - kamada_kawai
           - kamada_kawai_3d
-          - wpmds_3d
 
-        For most cases the `pmds` options should be about 10-100x faster
-        than the force directed layout methods, i.e. `fruchterman_reingold`
-        and `kamada_kawai`. Among the force directed layout methods,
-        `fruchterman_reingold` is generally faster than `kamada_kawai`. The
-        `wpmds_3d` method uses edge weights to improve the layout, but is slightly
-        slower than `pmds_3d`.
+        For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be prefered.
+        On PNA data they are faster and produce better results.
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
         :param get_node_marker_matrix: Add a matrix of marker counts to each

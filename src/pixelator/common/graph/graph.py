@@ -159,7 +159,7 @@ class Graph:
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "wpmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         cache: bool = False,
@@ -172,17 +172,17 @@ class Graph:
         counts to use that can be used for plotting.
 
         The layout options are:
+          - coarsened_pmds_3d
+          - wpmds_3d
+          - pmds
+          - pmds_3d
           - fruchterman_reingold
           - fruchterman_reingold_3d
           - kamada_kawai
           - kamada_kawai_3d
-          - pmds
-          - pmds_3d
-          - wpmds_3d
 
-
-        The `pmds` options are much faster than the force-directed algorithms fruchterman_reingold
-        and kamada_kawai. The `wpmds_3d` option is a weighted version of the `pmds_3d` algorithm.
+        For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be prefered.
+        On PNA data they are faster and produce better results.
 
         :param layout_algorithm: the layout algorithm to use to generate the coordinates
         :param only_keep_a_pixels: If true, only keep the a-pixels
