@@ -389,21 +389,24 @@ class NetworkXGraphBackend(GraphBackend):
           - kamada_kawai
           - kamada_kawai_3d
 
-        For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be prefered.
-        On PNA data they are faster and produce better results.
+        For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
+        preferred. On PNA data they are faster and produce better results.
 
-        :param layout_algorithm: the layout algorithm to use to generate the coordinates
-        :param only_keep_a_pixels: If true, only keep the a-pixels
-        :param get_node_marker_matrix: Add a matrix of marker counts to each
-                                       node if True.
-        :param random_seed: used as the seed for graph layouts with a stochastic
-                            element. Useful to get deterministic layouts across
-                            method calls.
-        :param **kwargs: will be passed to the underlying layout implementation
-        :return: the coordinates and markers (if activated) as a dataframe
-        :rtype: pd.DataFrame
-        :raises: AssertionError if the provided `layout_algorithm` is not valid
-        :raises: ValueError if the provided current graph instance is empty
+        Args:
+            layout_algorithm: Layout algorithm to use for coordinate generation.
+            only_keep_a_pixels: If True, only keep the a-pixels.
+            get_node_marker_matrix: If True, add a matrix of marker counts to each node.
+            random_seed: Seed for graph layouts with a stochastic element. Useful for
+                deterministic layouts across method calls.
+            **kwargs: Passed to the underlying layout implementation.
+
+        Returns:
+            DataFrame with coordinates and marker counts (if enabled).
+
+        Raises:
+            AssertionError: If the provided layout_algorithm is not valid.
+            ValueError: If the current graph instance is empty.
+
         """
         start_time = timer()
         coordinates = self._layout_coordinates(
@@ -1163,17 +1166,16 @@ def _validate_coarsened_pmds_parameters(
 
 
 def normalize_layout_coordinates(points: np.ndarray) -> np.ndarray:
-    """Centers 3D coordinates at 0 and scales them so that the median radius (distance from the origin) is exactly 1.
+    """Center layout coordinates at the origin and scale by median radius.
 
-    Parameters
-    ----------
-    points : numpy.ndarray
-        An N x 3 array representing points in 3D space.
+    Centers coordinates at 0 and scales them so that the median radius (distance
+    from the origin) is exactly 1.
 
-    Returns
-    -------
-    numpy.ndarray
-        The normalized N x 3 array.
+    Args:
+        points: An N x D array of layout coordinates.
+
+    Returns:
+        Normalized coordinate array with the same shape as ``points``.
 
     """
     # Ensure input is a numpy array
