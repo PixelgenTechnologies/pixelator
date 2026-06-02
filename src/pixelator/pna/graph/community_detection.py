@@ -91,13 +91,17 @@ def map_working_to_original_umi_names(
     """Replace working UMI names in an edgelist with original names and write parquet."""
     output_path = working_dir / "edgelist_with_original_umis.parquet"
     with duckdb.connect() as con:
-        missing_count = con.execute(f"""
+        missing_count_row = con.execute(f"""
             SELECT COUNT(*) AS n_missing
             FROM parquet_scan('{str(input_edgelist_path)}') e
             LEFT JOIN read_parquet('{str(node_map_path)}') m1 ON e.umi1 = m1.working_name
             LEFT JOIN read_parquet('{str(node_map_path)}') m2 ON e.umi2 = m2.working_name
             WHERE m1.original_name IS NULL OR m2.original_name IS NULL
-        """).fetchone()[0]
+        """).fetchone()
+        if missing_count_row is None:
+            msg = "Failed to compute missing UMI mapping count"
+            raise RuntimeError(msg)
+        missing_count = int(missing_count_row[0])
         if missing_count > 0:
             raise ValueError("Missing UMI mapping for one or more edges")
 
