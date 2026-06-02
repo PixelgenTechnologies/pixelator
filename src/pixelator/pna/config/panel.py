@@ -631,3 +631,19 @@ class PNAAddonPanel(PartialPNAAntibodyPanel):
 
 class PNASampleHashingPanel(PartialPNAAntibodyPanel):
     """Class representing a sample hashing panel for PNA."""
+
+    _REQUIRED_COLUMNS = {
+        **PartialPNAAntibodyPanel._REQUIRED_COLUMNS,
+        "sample_hashing": bool,
+    }
+
+    @classmethod
+    def validate_antibody_panel(cls, panel_df, validate_types=True):
+        """Validate that the panel dataframe is a valid sample hashing panel."""
+        return super().validate_antibody_panel(panel_df, validate_types) + (
+            []
+            if (panel_df["sample_hashing"]).all()
+            else [
+                "All entries in `sample_hashing` column must be 'yes' (True) for a sample hashing panel"
+            ]
+        )
