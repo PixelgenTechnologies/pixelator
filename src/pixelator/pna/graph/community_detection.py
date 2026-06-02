@@ -84,6 +84,36 @@ class MultipletRecoveryStats:
     max_recursion_depth: int = 0
 
 
+def map_working_to_original_umi_names(
+    input_edgelist_path: Path, node_map_path: Path, working_dir: Path
+) -> Path:
+    """Replace working UMI names in an edgelist with original names and write parquet."""
+    output_path = working_dir / "edgelist_with_original_umis.parquet"
+    with duckdb.connect() as con:
+        missing_count = con.execute(f"""
+            SELECT COUNT(*) AS n_missing
+            FROM parquet_scan('{str(input_edgelist_path)}') e
+            LEFT JOIN read_parquet('{str(node_map_path)}') m1 ON e.umi1 = m1.working_name
+            LEFT JOIN read_parquet('{str(node_map_path)}') m2 ON e.umi2 = m2.working_name
+            WHERE m1.original_name IS NULL OR m2.original_name IS NULL
+        """).fetchone()[0]
+        if missing_count > 0:
+            raise ValueError("Missing UMI mapping for one or more edges")
+
+        con.execute(f"""
+            COPY (
+                SELECT
+                    e.* EXCLUDE (umi1, umi2),
+                    m1.original_name AS umi1,
+                    m2.original_name AS umi2
+                FROM parquet_scan('{str(input_edgelist_path)}') e
+                JOIN read_parquet('{str(node_map_path)}') m1 ON e.umi1 = m1.working_name
+                JOIN read_parquet('{str(node_map_path)}') m2 ON e.umi2 = m2.working_name
+            ) TO '{str(output_path)}' (FORMAT PARQUET)
+        """)
+    return output_path
+
+
 def calculate_post_recovery_component_statistics(
     edgelist_with_components_path: Path,
     component_stats: GraphStatistics,
@@ -585,20 +615,16 @@ def find_components(
     )
 
     logger.info("Mapping UMIs to original names.")
-    umi_map = pl.read_parquet(node_map_path)
-    final_edgelist_with_components = pl.scan_parquet(
-        latest_working_edgelist_path, hive_schema={"component": pl.String}
-    ).with_columns(
-        umi1=pl.col("umi1").replace_strict(
-            umi_map["working_name"], umi_map["original_name"]
-        ),
-        umi2=pl.col("umi2").replace_strict(
-            umi_map["working_name"], umi_map["original_name"]
-        ),
+    latest_working_edgelist_path = map_working_to_original_umi_names(
+        input_edgelist_path=latest_working_edgelist_path,
+        node_map_path=node_map_path,
+        working_dir=working_dir,
     )
     logger.info("Creating component names from UMIs.")
     final_edgelist_with_components = name_components_with_umi_hashes(
-        final_edgelist_with_components
+        pl.scan_parquet(
+            latest_working_edgelist_path, hive_schema={"component": pl.String}
+        )
     )
 
     logger.info("Writing resolved edgelist.")
