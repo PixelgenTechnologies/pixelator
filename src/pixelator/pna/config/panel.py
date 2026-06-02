@@ -21,6 +21,7 @@ import re
 
 import pandas as pd
 import polars as pl
+import numpy as np
 import ruamel.yaml as yaml
 from io import StringIO
 
@@ -622,53 +623,92 @@ class PNAAntibodyPanelDiff:
 
     def upgrade_adata(self, adata: AnnData) -> AnnData:
         """Upgrade an AnnData object with the changes between the two panels."""
-        adata_panel = PNAAntibodyPanel.from_adata(adata)
+
+        if len(self.added_clones) > 0:
+            raise ValueError(
+                "Cannot automatically upgrade panel if there are added clones. "
+                + "Please check the differences between the panels and upgrade manually."
+            )
+        if len(self.removed_clones) > 0:
+            raise ValueError(
+                "Cannot automatically upgrade panel if there are removed clones. "
+                + "Please check the differences between the panels and upgrade manually."
+            )
+
+        adata_panel = (
+            [
+                pp
+                for pp in PNAAntibodyPanelCombination.from_adata(adata).partial_panels()
+                if pp.metadata.name == self.panel_1.name
+                and pp.metadata.version == self.panel_1.version
+            ]
+            or [None]
+        ).pop()
+        if adata_panel is None:
+            raise ValueError(
+                "The provided AnnData object does not contain the panel. Cannot upgrade."
+            )
         if self.panel_1 != adata_panel:
             raise ValueError(
                 "The provided AnnData object does not match the panel. Cannot upgrade."
-                f"Expected panel {self.panel_2.name} v{self.panel_2.version}, but got panel {adata_panel.name} v{adata_panel.version}."
+                + f" Expected panel {self.panel_2.name} v{self.panel_2.version}, "
+                + f"but got panel {adata_panel.name} v{adata_panel.version}."
             )
 
-        non_panel_columns = adata.var.copy()[
-            [
-                col
-                for col in adata.var.columns
-                if col not in adata.uns["panel_metadata"]["panel_columns"]
-            ]
-            + self.join_on_columns
-        ]
-        adata.var = (
-            self.joined.select(
-                list(
-                    set(
-                        self.join_on_columns
-                        + self.identical_columns
-                        + [f"{col}_panel_2" for col in self.changed_columns]
-                        + self.added_columns
-                    )
-                )
-            )
-            .rename({f"{col}_panel_2": col for col in self.changed_columns})
-            # keep order and append new to the end
-            .select(
-                ["marker_id"]  # index not in panel_metadata panel_columns below
-                + adata.uns["panel_metadata"]["panel_columns"]
-                + self.added_columns
-            )
-            .to_pandas()
-            .set_index("marker_id")
+        # first update the uns variables
+        for idx in range(adata.uns.get("num_partial_panels", 0)):
+            metadata_key = f"panel_metadata__{idx}"
+            metadata = AntibodyPanelMetadata.model_validate(adata.uns[metadata_key])
+            if (
+                metadata.name == self.panel_1.name
+                and metadata.version == self.panel_1.version
+            ):
+                adata.uns[metadata_key] = self.panel_2.metadata.model_dump()
+                adata.uns[f"panel_df__{idx}"] = self.panel_2.df.to_csv()
+                break
+
+        # update the andata var table
+        org_var_shape = adata.var.shape
+        org_index = adata.var.index.name
+        adata.var.reset_index(inplace=True)
+        panel1_row_identifiers = list(
+            self.panel_1.to_polars().select(self.join_on_columns).iter_rows()
         )
-        if adata.var.shape[0] != non_panel_columns.shape[0]:
+        var_identifiers = list(
+            adata.var[self.join_on_columns].itertuples(index=False, name=None)
+        )
+        is_panel_row = np.array(
+            [row in panel1_row_identifiers for row in var_identifiers]
+        )
+        row_indexes_in_var = np.array(
+            [var_identifiers.index(row) for row in panel1_row_identifiers]
+        )
+        for col in self.removed_columns:
+            if (adata.var.loc[~is_panel_row, col].fillna("") == "").all():
+                adata.var.drop(col, inplace=True, errors="ignore", axis=1)
+            else:
+                adata.var.loc[is_panel_row, col] = pd.NA
+        for col in self.added_columns:
+            if col not in adata.var.columns:
+                adata.var[col] = pd.NA
+            else:
+                assert (adata.var.loc[is_panel_row, col].fillna("") == "").all(), (
+                    "added column already exists in adata.var with non-empty values for some of the panel rows. Cannot automatically upgrade."
+                )
+            adata.var.iloc[row_indexes_in_var, adata.var.columns.get_loc(col)] = (
+                self.joined[col]
+            )
+        for col in self.changed_columns:
+            adata.var.iloc[row_indexes_in_var, adata.var.columns.get_loc(col)] = (
+                self.joined[col + "_panel_2"]
+            )
+        adata.var.set_index(org_index, inplace=True)
+
+        # shape check
+        if adata.var.shape[0] != org_var_shape[0]:
             raise ValueError(
                 "Row count mismatch in automatic patch panel patch version bump."
             )
-        adata.var = adata.var.join(
-            non_panel_columns.set_index(self.join_on_columns),
-            how="outer",
-            on=self.join_on_columns,
-        )
-        adata.uns["panel_metadata"] = self.panel_2.metadata.model_dump()
-        adata.uns["panel_metadata"]["panel_columns"] = self.panel_2.df.columns.tolist()
         return adata
 
 

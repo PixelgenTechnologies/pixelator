@@ -53,7 +53,7 @@ def create_qc_report(
 def create_per_sample_qc_reports(
     input_path: Path,
     output_path: Path,
-    panel: Optional[str],
+    panels: Optional[list[str]],
     metadata: Optional[str],
     verbose: Optional[bool],
 ) -> None:
@@ -82,8 +82,8 @@ def create_per_sample_qc_reports(
     logger.info("Generating PNA QC reports from %s", input_path)
 
     # collect and save metrics
-    if panel is not None:
-        panel_obj = load_antibody_panel(pna_config, panel)
+    if panels is not None:
+        panel_obj = load_antibody_panel(pna_config, panels)
     else:
         panel_obj = None
 
