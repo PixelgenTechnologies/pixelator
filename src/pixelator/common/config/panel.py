@@ -52,6 +52,34 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
         Version(v)  # will raise if not a valid version string
         return v
 
+    @classmethod
+    def from_panel_csv(cls, panel_file: PathType) -> AntibodyPanelMetadata:
+        """Create an AntibodyPanelMetadata object from a panel csv file."""
+        yaml_loader = yaml.YAML(typ="safe")
+
+        metadata_lines = []
+        with open(str(panel_file), "r") as f:
+            for line in f:
+                if line.startswith("# "):
+                    metadata_lines.append(line[2:])
+                else:
+                    # first line after header must be csv column names
+                    # metadata_lines.append(f"panel_columns: [{line.strip()}]\n")
+                    break
+
+        metadata = "".join(
+            metadata_lines
+            # reorder to place csv columns before last "---" to generate a valid yaml
+            # metadata_lines[:-2] + [metadata_lines[-1]] + [metadata_lines[-2]]
+        )
+        raw_config = list(yaml_loader.load_all(metadata))
+
+        if len(raw_config) == 0:
+            raise ValueError(f"No header / metadata found in panel file {panel_file}")
+
+        frontmatter = raw_config[0]
+        print(frontmatter)
+        return cls.model_validate(frontmatter)
 
 class AntibodyPanel:
     """Class representing a Molecular Pixelation antibody panel."""
