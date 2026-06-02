@@ -102,7 +102,7 @@ def demux(
     mismatches,
     output_chunk_reads,
     output_max_chunks,
-    panel,
+    panel: list[str],
     output,
     design,
     threads,

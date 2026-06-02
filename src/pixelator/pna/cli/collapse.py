@@ -101,7 +101,7 @@ def collapse(
     ctx,
     input_files,
     design,
-    panel,
+    panels: list[str],
     output,
     mismatches,
     algorithm,
@@ -111,7 +111,7 @@ def collapse(
     # log input parameters
     log_step_start(
         "collapse",
-        panel=panel,
+        panel=panels,
         design=design,
         output=output,
         mismatches=mismatches,
@@ -122,7 +122,7 @@ def collapse(
     sanity_check_inputs(input_files=input_files, allowed_extensions=("parquet",))
 
     assay = pna_config.get_assay(design)
-    panel = load_antibody_panel(pna_config, panel)
+    panel = load_antibody_panel(pna_config, panels)
 
     # create the output directory
     collapse_output = create_output_stage_dir(output, "collapse")

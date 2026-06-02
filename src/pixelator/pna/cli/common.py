@@ -127,6 +127,11 @@ def validate_panel(ctx, param, value):
     return value
 
 
+def validate_all_panels(ctx, param, value):
+    """Validate all provided panels."""
+    return [validate_panel(ctx, param, v) for v in value]
+
+
 def panel_option(func):
     """Decorate a click command and add the --panel option."""
     from pixelator.pna.config import pna_config
@@ -140,8 +145,9 @@ def panel_option(func):
         required=True,
         default=None,
         type=click.UNPROCESSED,
-        callback=validate_panel,
+        callback=validate_all_panels,
         help="The name of a panel to load from the supported panels. Optionally, provide a path to a custom panel file.",
+        multiple=True,
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
