@@ -21,7 +21,7 @@ from pixelator.common.config.config_class import Config, PanelException
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 from pixelator.pna.config.assay import PNAAssay
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import PartialPNAAntibodyPanel, panel_from_csv
 
 DNA_CHARS = {"A", "C", "G", "T"}
 
@@ -36,7 +36,7 @@ class PNAConfig:
     def __init__(
         self,
         assays: Optional[List[PNAAssay]] = None,
-        panels: Optional[List[PNAAntibodyPanel]] = None,
+        panels: Optional[List[PartialPNAAntibodyPanel]] = None,
     ) -> None:
         """Initialize a PNA configuration object.
 
@@ -46,12 +46,12 @@ class PNAConfig:
 
         """
         self.assays: Dict[str, PNAAssay] = {}
-        self.panels: typing.MutableMapping[str, List[PNAAntibodyPanel]] = defaultdict(
-            list
+        self.panels: typing.MutableMapping[str, List[PartialPNAAntibodyPanel]] = (
+            defaultdict(list)
         )
         self.panel_aliases: Dict[str, str] = {}
-        self.products: typing.MutableMapping[str, List[PNAAntibodyPanel]] = defaultdict(
-            list
+        self.products: typing.MutableMapping[str, List[PartialPNAAntibodyPanel]] = (
+            defaultdict(list)
         )
 
         if assays is not None:
@@ -88,10 +88,10 @@ class PNAConfig:
             PanelException: If loading introduces a conflicting alias mapping.
 
         """
-        panel = PNAAntibodyPanel.from_csv(path)
+        panel = panel_from_csv(path)
         self.add_panel(panel)
 
-    def add_panel(self, panel: PNAAntibodyPanel) -> None:
+    def add_panel(self, panel: PartialPNAAntibodyPanel) -> None:
         """Register a panel and its lookup keys in the config.
 
         The panel is indexed by panel name (or filename fallback), optional product,
@@ -176,7 +176,7 @@ class PNAConfig:
         panel_name: str,
         version: Optional[str] = None,
         allow_aliases: bool = True,
-    ) -> Optional[PNAAntibodyPanel]:
+    ) -> Optional[PartialPNAAntibodyPanel]:
         """Resolve a panel by name/product/alias and optional version constraint.
 
         Args:

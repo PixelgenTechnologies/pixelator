@@ -22,7 +22,7 @@ from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import PerComponentTask
 from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
 from pixelator.pna.config import pna_config
-from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
+from pixelator.pna.config.panel import PNAAntibodyPanelCombination, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
@@ -337,14 +337,18 @@ class DenoiseOneCore(PerComponentTask):
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
         try:
-            panel = PNAAntibodyPanel.from_pxl_dataset(read(pxl_file_target.path))
+            panel = PNAAntibodyPanelCombination.from_pxl_dataset(
+                read(pxl_file_target.path)
+            )
         except KeyError:
             # If pxl file does not contain panel data, try to load it from
             # the panel name.
             # This will happen when old pxl files generated before v0.22.0
             # are used.
-            panel_name = pxl.metadata().popitem()[1]["panel_name"]
-            panel = load_antibody_panel(pna_config, panel_name)
+            panel_names = (
+                pxl.metadata().popitem()[1]["panel_name"].split("+")
+            )  # Could be a "+" separated list of panel names
+            panel = load_antibody_panel(pna_config, panel_names)
         nodes_to_remove = (
             data.loc[~data["umi"].isna(), "umi"].astype(np.uint64).tolist()
         )
