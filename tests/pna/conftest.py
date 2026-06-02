@@ -21,6 +21,7 @@ from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import (
     PNAAntibodyPanelCombination,
+    PNASampleHashingPanel,
 )
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter
@@ -200,6 +201,32 @@ def panel_fixture():
             version="0.1.0",
             aliases=["test-pna"],
             description="Test R&D panel for RNA",
+        ),
+    )
+
+
+@pytest.fixture(name="hashing_panel", scope="module")
+def hashing_panel_fixture():
+    return PNASampleHashingPanel(
+        df=pd.DataFrame(
+            [
+                ["HM-1", False, "ACTTCCTACC", "ACTTCCTACC", True],
+                ["HM-2", False, "GGGCTATGGT", "GGGCTATGGT", True],
+            ],
+            columns=[
+                "marker_id",
+                "control",
+                "sequence_1",
+                "sequence_2",
+                "sample_hashing",
+            ],
+        ).set_index("marker_id"),
+        metadata=AntibodyPanelMetadata(
+            version="0.1.0",
+            name="hash-set-1",
+            product="hash-set-1",
+            aliases=[],
+            panel_type=PNASampleHashingPanel.__name__,
         ),
     )
 

@@ -7,17 +7,24 @@ from pathlib import Path
 
 import numpy as np
 import polars as pl
+from pydantic import version
 import pytest
+import pandas as pd
 
+from pixelator.common.config.panel import AntibodyPanelMetadata
 from pixelator.common.utils.testing import adata_assert_equal
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import (
+    PartialPNAAntibodyPanel,
+    PNAAntibodyPanelCombination,
+    PNASampleHashingPanel,
+)
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from tests.pna.conftest import create_pxl_file
 
 
 def _panel_with_version_product_and_uniprot(
-    panel: PNAAntibodyPanel,
+    panel: PartialPNAAntibodyPanel,
     *,
     version: str,
     product: str | None,
@@ -25,7 +32,7 @@ def _panel_with_version_product_and_uniprot(
     marker_a_new_name: str | None = None,
     added_column_name: str | None = None,
     added_column_value: str | None = None,
-) -> PNAAntibodyPanel:
+) -> PartialPNAAntibodyPanel:
     """Clone a panel while tweaking version/product and marker metadata for tests."""
     panel_df = panel.df.copy()
     panel_df.loc["MarkerA", "uniprot_id"] = marker_a_uniprot
@@ -36,7 +43,7 @@ def _panel_with_version_product_and_uniprot(
     metadata = panel.metadata.model_copy(
         update={"version": version, "product": product}
     )
-    return PNAAntibodyPanel(df=panel_df, metadata=metadata)
+    return PartialPNAAntibodyPanel(df=panel_df, metadata=metadata)
 
 
 def _write_component_suffix_parquet(source: Path, target: Path, suffix: str) -> None:
@@ -52,8 +59,8 @@ def _build_two_sample_dataset_with_panels(
     *,
     tmp_path: Path,
     edgelist_parquet_path: Path,
-    panel_old: PNAAntibodyPanel,
-    panel_new: PNAAntibodyPanel,
+    panel_old: PNAAntibodyPanelCombination,
+    panel_new: PNAAntibodyPanelCombination,
 ) -> PNAPixelDataset:
     """Create two on-disk PXL samples with distinct panels for bumping patch version tests."""
     sample_old = create_pxl_file(
@@ -153,17 +160,19 @@ class TestTryBumpAdataPanelVersion:
         self,
         tmp_path: Path,
         edgelist_parquet_path: Path,
-        panel: PNAAntibodyPanel,
+        panel: PNAAntibodyPanelCombination,
+        hashing_panel: PNASampleHashingPanel,
     ):
         """Bump to latest patch when major/minor/product prerequisites are satisfied."""
+        print(panel.base_panels, panel.hashing_panels, panel.addon_panels)
         panel_old = _panel_with_version_product_and_uniprot(
-            panel,
+            panel.base_panels[0],
             version="0.1.0",
             product="test-product",
             marker_a_uniprot="P12345",
         )
         panel_new = _panel_with_version_product_and_uniprot(
-            panel,
+            panel.base_panels[0],
             version="0.1.1",
             product="test-product",
             marker_a_uniprot="Q9UPN0",
@@ -174,8 +183,12 @@ class TestTryBumpAdataPanelVersion:
         dataset = _build_two_sample_dataset_with_panels(
             tmp_path=tmp_path,
             edgelist_parquet_path=edgelist_parquet_path,
-            panel_old=panel_old,
-            panel_new=panel_new,
+            panel_old=PNAAntibodyPanelCombination.from_list_of_subpanels(
+                [panel_old, hashing_panel]
+            ),
+            panel_new=PNAAntibodyPanelCombination.from_list_of_subpanels(
+                [panel_new, hashing_panel]
+            ),
         )
         helper = AnnDataHelper(dataset.view)
 
@@ -216,6 +229,18 @@ class TestTryBumpAdataPanelVersion:
         assert (adata_old[:, "MarkerC"].X == bumped[0][:, "MarkerC"].X).all()
         assert (adata_new[:, "MarkerC"].X == bumped[1][:, "MarkerC"].X).all()
 
+        # make sure hashing panel didnt change and is still correctly reconstructed from the bumped adata
+        assert adata_old[:, adata_old.var["sample_hashing"].index].var.equals(
+            bumped[0][:, bumped[0].var["sample_hashing"].index].var
+        )
+        assert adata_new[:, adata_new.var["sample_hashing"].index].var.equals(
+            bumped[1][:, bumped[1].var["sample_hashing"].index].var
+        )
+        reconstructed_hp = PNAAntibodyPanelCombination.from_adata(
+            bumped[0]
+        ).hashing_panels[0]
+        assert reconstructed_hp == hashing_panel
+
     @pytest.mark.parametrize(
         "new_version,new_product",
         [
@@ -228,30 +253,36 @@ class TestTryBumpAdataPanelVersion:
         self,
         tmp_path: Path,
         edgelist_parquet_path: Path,
-        panel: PNAAntibodyPanel,
+        panel: PNAAntibodyPanelCombination,
         new_version: str,
         new_product: str | None,
+        hashing_panel: PNASampleHashingPanel,
     ):
         """Skip bump when version compatibility or product prerequisites are not met."""
         panel_old = _panel_with_version_product_and_uniprot(
-            panel,
+            panel.base_panels[0],
             version="0.1.0",
             product="test-product",
             marker_a_uniprot="P12345",
         )
         panel_new = _panel_with_version_product_and_uniprot(
-            panel,
+            panel.base_panels[0],
             version=new_version,
             product=new_product,
             marker_a_uniprot="Q9UPN0",
             added_column_name="target_class",
             added_column_value="new-version",
         )
+
         dataset = _build_two_sample_dataset_with_panels(
             tmp_path=tmp_path,
             edgelist_parquet_path=edgelist_parquet_path,
-            panel_old=panel_old,
-            panel_new=panel_new,
+            panel_old=PNAAntibodyPanelCombination.from_list_of_subpanels(
+                [panel_old, hashing_panel]
+            ),
+            panel_new=PNAAntibodyPanelCombination.from_list_of_subpanels(
+                [panel_new, hashing_panel]
+            ),
         )
         helper = AnnDataHelper(dataset.view)
 

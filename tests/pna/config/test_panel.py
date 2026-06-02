@@ -5,7 +5,10 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import (
+    PNAAntibodyPanelCombination,
+    PartialPNAAntibodyPanel,
+)
 from pixelator.pna.pixeldataset import read
 
 
@@ -30,7 +33,7 @@ def test_panel_validation(panel_df):
         "description": "panel description",
         "aliases": ["test_alias"],
     }
-    panel = PNAAntibodyPanel(
+    panel = PNAAntibodyPanelCombination(
         df=panel_df,
         metadata=AntibodyPanelMetadata(**metadata),
         file_name="test.csv",
@@ -43,13 +46,21 @@ def test_panel_validation(panel_df):
 
     assert panel.markers_control == ["marker2"]
     assert panel.markers == ["marker1", "marker2", "marker3"]
-    assert_frame_equal(panel.df, panel_df)
+    assert_frame_equal(
+        panel.df.drop(columns=["partial_panel_name", "partial_panel_type"]), panel_df
+    )
     assert panel.filename == "test.csv"
     assert panel.size == 3
 
 
 def test_panel_properties(panel_df):
-    panel = PNAAntibodyPanel(df=panel_df, metadata=None)
+    panel = PNAAntibodyPanelCombination(
+        df=panel_df,
+        metadata=AntibodyPanelMetadata(
+            name="mock-name",
+            version="0.0.0",
+        ),
+    )
 
 
 def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
@@ -59,7 +70,13 @@ def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
         AssertionError,
         match=r".*The marker_id column should not contain underscores.*Offending values:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanelCombination(
+            df=panel_df,
+            metadata=AntibodyPanelMetadata(
+                name="mock-name",
+                version="0.0.0",
+            ),
+        )
 
 
 def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
@@ -69,7 +86,13 @@ def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
         AssertionError,
         match=r".*The marker_id column should not contain white-spaces.*Offending values:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanelCombination(
+            df=panel_df,
+            metadata=AntibodyPanelMetadata(
+                name="mock-name",
+                version="0.0.0",
+            ),
+        )
 
 
 def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
@@ -79,21 +102,39 @@ def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
         AssertionError,
         match=r".*Invalid UniProt IDs found.*Please conform to the naming convention or remove the following IDs:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanelCombination(
+            df=panel_df,
+            metadata=AntibodyPanelMetadata(
+                name="mock-name",
+                version="0.0.0",
+            ),
+        )
 
 
 def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
     panel_df.loc["marker1", "uniprot_id"] = "P05107;P15391"
-    PNAAntibodyPanel(df=panel_df, metadata=None)
+    PNAAntibodyPanelCombination(
+        df=panel_df,
+        metadata=AntibodyPanelMetadata(
+            name="mock-name",
+            version="0.0.0",
+        ),
+    )
 
 
 def test_panel_validation_ok_uniprotid_empty(panel_df):
     panel_df.loc["marker1", "uniprot_id"] = ""
-    PNAAntibodyPanel(df=panel_df, metadata=None)
+    PNAAntibodyPanelCombination(
+        df=panel_df,
+        metadata=AntibodyPanelMetadata(
+            name="mock-name",
+            version="0.0.0",
+        ),
+    )
 
 
 def test_panel_from_pxl(pxl_file):
-    panel = PNAAntibodyPanel.from_pxl_dataset(read(pxl_file))
+    panel = PNAAntibodyPanelCombination.from_pxl_dataset(read(pxl_file))
     assert panel.name == "test-pna-panel"
     assert panel.version == "0.1.0"
     assert panel.description == "Test R&D panel for RNA"
@@ -107,4 +148,7 @@ def test_panel_from_pxl(pxl_file):
         "sequence_2": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
     }
     expected_df = pd.DataFrame(expected_data).set_index("marker_id")
-    assert_frame_equal(panel.df, expected_df)
+    assert_frame_equal(
+        panel.df.drop(columns=["partial_panel_name", "partial_panel_type"]),
+        expected_df,
+    )
