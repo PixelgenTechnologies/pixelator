@@ -20,7 +20,7 @@ from cutadapt.utils import DummyProgress, Progress
 from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.common.utils import get_sample_name
 from pixelator.common.utils.log_progress import LogProgress
-from pixelator.pna.config import PNAAntibodyPanel, PNAAssay
+from pixelator.pna.config import PNAAntibodyPanelCombination, PNAAssay
 from pixelator.pna.demux.barcode_demuxer import (
     BarcodeDemuxer,
     IndependentBarcodeDemuxer,
@@ -48,7 +48,7 @@ import multiprocessing as mp
 def correct_marker_barcodes(
     input: Path,
     assay: PNAAssay,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     output: Path,
     save_failed: bool = True,
     mismatches: int = 1,
@@ -139,7 +139,7 @@ def correct_marker_barcodes(
 def demux_barcode_groups(
     corrected_reads: Path,
     assay: PNAAssay,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     stats: BarcodeCorrectionStatistics,
     output_dir: Path,
     reads_per_chunk: int = 50_000_000,

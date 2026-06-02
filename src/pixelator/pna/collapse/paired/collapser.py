@@ -39,7 +39,7 @@ from pixelator.pna.collapse.utilities import (
     _find_connected_components_directional,
     build_binary_index,
 )
-from pixelator.pna.config import PNAAntibodyPanel, PNAAssay
+from pixelator.pna.config import PNAAntibodyPanelCombination, PNAAssay
 from pixelator.pna.demux.barcode_demuxer import PNAEmbedding
 from pixelator.pna.utils import pack_2bits
 from pixelator.pna.utils.two_bit_encoding import pack_4bits
@@ -146,7 +146,7 @@ class MoleculeCollapser:
     def __init__(
         self,
         assay: PNAAssay,
-        panel: PNAAntibodyPanel,
+        panel: PNAAntibodyPanelCombination,
         output: Path,
         max_mismatches: int | float = 0.1,
         algorithm: MoleculeCollapserAlgorithm = "directional",

@@ -14,7 +14,7 @@ from pixelator.pna.config.assay import (
 from pixelator.pna.config.config_class import Config, load_assays_package
 from pixelator.pna.config.config_instance import pna_config
 from pixelator.pna.config.panel import (
-    PNAAntibodyPanel,
+    PNAAntibodyPanelCombination,
     load_antibody_panel,
 )
 
@@ -30,7 +30,7 @@ __all__ = [
     "pna_config",
     "load_assays_package",
     "load_yaml_file",
-    "PNAAntibodyPanel",
+    "PNAAntibodyPanelCombination",
     "AntibodyPanelMetadata",
     "load_antibody_panel",
 ]

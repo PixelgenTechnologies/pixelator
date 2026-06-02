@@ -20,7 +20,7 @@ from graspologic_native import leiden
 
 from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config import PNAAntibodyPanel
+from pixelator.pna.config import PNAAntibodyPanelCombination
 from pixelator.pna.graph.component_recovery_utils import (
     ConnectedComponentException,
     filter_components_by_size_dynamic,
@@ -473,7 +473,7 @@ def _find_clashing_umis(
 
 def build_pxl_file_with_components(
     molecules_lazy_frame: pl.LazyFrame,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     sample_name: str,
     path_output_pxl_file: Path,
     multiplet_recovery: bool,

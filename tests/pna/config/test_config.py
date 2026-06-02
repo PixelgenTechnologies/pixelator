@@ -19,7 +19,7 @@ from pixelator.pna.config.config_class import (
     load_panels_package,
 )
 from pixelator.pna.config.config_instance import pna_config
-from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
+from pixelator.pna.config.panel import PartialPNAAntibodyPanel, load_antibody_panel
 
 
 def test_config_creation():
@@ -274,7 +274,7 @@ def test_panel_with_non_dna_sequences(pna_data_root):
     ).fillna("")
     panel_df["control"] = panel_df["control"].map(lambda s: s.lower() == "yes")
     panel_df.loc["CD45", "sequence_1"] = "PPPPPP"
-    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df)
+    errors = PartialPNAAntibodyPanel.validate_antibody_panel(panel_df)
     assert len(errors) == 2
     assert errors[0] == "All sequence_1 values must have the same length."
     assert (

@@ -16,7 +16,11 @@ import pyarrow as pa
 from dnaio import SequenceRecord
 
 from pixelator.common.exceptions import PixelatorBaseException
-from pixelator.pna.config import PNAAntibodyPanel, PNAAssay, get_position_in_parent
+from pixelator.pna.config import (
+    PNAAntibodyPanelCombination,
+    PNAAssay,
+    get_position_in_parent,
+)
 
 
 def create_barcode_group_to_batch_mapping(
@@ -531,7 +535,7 @@ class PNAEmbedding:
 class BarcodeDemuxer(abc.ABC):
     """An abstract base class for BarcodeDemuxer steps."""
 
-    def __init__(self, assay: PNAAssay, panel: PNAAntibodyPanel):
+    def __init__(self, assay: PNAAssay, panel: PNAAntibodyPanelCombination):
         """Initialize a BarcodeDemuxer object.
 
         :param assay: the assay design
@@ -605,7 +609,7 @@ class IndependentBarcodeDemuxer(BarcodeDemuxer):
     def __init__(
         self,
         assay: PNAAssay,
-        panel: PNAAntibodyPanel,
+        panel: PNAAntibodyPanelCombination,
         marker1_groups: dict[str, int],
         marker2_groups: dict[str, int],
     ):
@@ -683,7 +687,7 @@ class PairedBarcodeDemuxer(BarcodeDemuxer):
     def __init__(
         self,
         assay: PNAAssay,
-        panel: PNAAntibodyPanel,
+        panel: PNAAntibodyPanelCombination,
         supergroups: dict[tuple[str, str], int],
     ):
         """Initialize the PairedBarcodeDemuxer object.

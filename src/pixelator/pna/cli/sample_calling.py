@@ -18,7 +18,7 @@ from pixelator.common.utils import (
 )
 from pixelator.pna import read
 from pixelator.pna.cli.common import output_option
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 from pixelator.pna.sample_calling import (
     create_final_report,
     sample_calling,
@@ -98,7 +98,7 @@ def sample_calling_cli(
     pool_name = Path(input_pxl_file).name.split(".")[0]
     undetermined_sample_name = f"{pool_name}_undetermined"
 
-    panel_info = PNAAntibodyPanel.from_pxl_dataset(read(input_pxl_file))
+    panel_info = PNAAntibodyPanelCombination.from_pxl_dataset(read(input_pxl_file))
     hashing_antibodies_in_panel = set(
         panel_info.df[panel_info.df["sample_hashing"] == "yes"].index.to_list()
     )

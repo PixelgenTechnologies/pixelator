@@ -19,7 +19,9 @@ import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import (
+    PNAAntibodyPanelCombination,
+)
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from tests.pna.data.pxl_data import (
@@ -191,7 +193,7 @@ def panel_fixture():
         panel_df["control"].astype(str).map(lambda s: s.lower() == "yes")
     )
 
-    return PNAAntibodyPanel(
+    return PNAAntibodyPanelCombination(
         df=panel_df,
         metadata=AntibodyPanelMetadata(
             name="test-pna-panel",

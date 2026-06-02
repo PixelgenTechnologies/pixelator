@@ -21,7 +21,7 @@ from pixelator import __version__
 from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
@@ -213,7 +213,7 @@ def _build_post_sample_calling_anndata(
     old_adata: anndata.AnnData,
     nodes_to_remove: pl.DataFrame,
     hash_info: pl.DataFrame,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     hashing_antibody_mapping: HashedAntibodyMapping,
 ):
     """Build AnnData object after sample calling.
@@ -333,7 +333,7 @@ def sample_calling(
         confidence_threshold,
         undetermined_sample_name,
     )
-    panel = PNAAntibodyPanel.from_pxl_dataset(input_pxl)
+    panel = PNAAntibodyPanelCombination.from_pxl_dataset(input_pxl)
 
     dehashed = hash_info.group_by("called_sample")
     output_files: list[Path] = []
