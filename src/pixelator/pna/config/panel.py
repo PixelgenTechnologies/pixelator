@@ -620,6 +620,139 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
     hashing_panels: Optional[list[PNASampleHashingPanel]]
     addon_panels: Optional[list[PNAAddonPanel]]
 
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        metadata: AntibodyPanelMetadata | list[AntibodyPanelMetadata],
+        file_name: Optional[str] = None,
+    ):
+
+        if metadata is None:
+            raise ValueError("Panel metadata cannot be None")
+
+        self.base_panels = []
+        self.hashing_panels = None
+        self.addon_panels = None
+
+        # a combination never has a filename itself but the partial panel member might have
+        self._filename = None
+
+        if (
+            "partial_panel_name" not in df.columns
+            and "partial_panel_type" not in df.columns
+            and isinstance(metadata, AntibodyPanelMetadata)
+        ):
+            panel_type = get_panel_type_from_metadata(metadata)
+            panel = panel_type(df, metadata, file_name=file_name)
+            match panel_type.__name__:
+                case PartialPNAAntibodyPanel.__name__ | PNABasePanel.__name__:
+                    self.add_base_panel(panel)
+                case PNASampleHashingPanel.__name__:
+                    self.add_hashing_panel(panel)
+                case PNAAddonPanel.__name__:
+                    self.add_addon_panel(panel)
+                case _:
+                    raise ValueError(
+                        f"Unknown panel type {panel_type} in panel metadata. "
+                        + "Cannot initialize panel combination."
+                    )
+            self._df = self.df  # add in the extra columns
+        elif (
+            "partial_panel_name" in df.columns
+            and "partial_panel_type" in df.columns
+            and isinstance(metadata, list)
+            and all(isinstance(m, AntibodyPanelMetadata) for m in metadata)
+        ):
+            raise NotImplementedError(
+                "Please initialise using from_list_of_subpanels instead"
+            )
+        else:
+            raise ValueError(
+                "Cannot initialise PNAAntibodyPanelCombination with the provided dataframe and "
+                "metadata."
+            )
+        self._df = self.df
+
+    @classmethod
+    def from_panel(
+        cls, panel: PartialPNAAntibodyPanel
+    ) -> "PNAAntibodyPanelCombination":
+        """Initialize a panel combination from a single panel."""
+        return cls(
+            df=panel.df,
+            metadata=panel.metadata,
+            file_name=panel.filename,
+        )
+    def add_base_panel(self, base_panel: PNABasePanel | PartialPNAAntibodyPanel):
+        """Add a base panel."""
+        if isinstance(base_panel, PartialPNAAntibodyPanel):
+            base_panel = PNABasePanel(
+                base_panel.df, base_panel.metadata, base_panel.filename
+            )
+        self.base_panels.append(base_panel)
+        self._df = self.df
+
+    def add_addon_panel(self, addon_panel: PNAAddonPanel):
+        """Add an addon panel."""
+        if self.addon_panels is None:
+            self.addon_panels = []
+        self.addon_panels.append(addon_panel)
+        self._df = self.df
+
+    def add_hashing_panel(self, hashing_panel: PNASampleHashingPanel):
+        """Add a sample hashing panel."""
+        if self.hashing_panels is None:
+            self.hashing_panels = []
+        self.hashing_panels.append(hashing_panel)
+        self._df = self.df
+
+    def add_panel(
+        self,
+        panel: PartialPNAAntibodyPanel
+        | PNABasePanel
+        | PNASampleHashingPanel
+        | PNAAddonPanel,
+    ):
+        """Add another panel to the combination."""
+        match panel:
+            case PartialPNAAntibodyPanel():
+                self.add_base_panel(panel)
+            case PNABasePanel():
+                self.add_base_panel(panel)
+            case PNASampleHashingPanel():
+                self.add_hashing_panel(panel)
+            case PNAAddonPanel():
+                self.add_addon_panel(panel)
+            case _:
+                raise ValueError(f"Unknown panel type: {panel.__class__.__name__}")
+        self._df = self.df
+
+    @classmethod
+    def from_list_of_subpanels(
+        cls,
+        panels: list[
+            PartialPNAAntibodyPanel
+            | PNABasePanel
+            | PNASampleHashingPanel
+            | PNAAddonPanel
+        ],
+    ) -> "PNAAntibodyPanelCombination":
+        """Create a panel combination from a list of subpanels."""
+        first_panel = panels.pop()
+        combination = cls.from_panel(first_panel)
+        for panel in panels:
+            combination.add_panel(panel)
+        return combination
+
+    @property
+    def name(self) -> str:
+        """Panel name from metadata.
+
+        Returns:
+            The panel name.
+
+        """
+        return " + ".join(p.metadata.name for p in self.partial_panels())
 
 class PNABasePanel(PartialPNAAntibodyPanel):
     """Class representing a base panel for PNA."""
