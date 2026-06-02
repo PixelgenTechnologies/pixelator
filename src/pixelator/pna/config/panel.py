@@ -707,6 +707,54 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
             metadata=panel.metadata,
             file_name=panel.filename,
         )
+
+    @property
+    def metadata(self) -> list[AntibodyPanelMetadata]:
+        """Return the metadata for all the panels that are part of the combination."""
+        return [p.metadata for p in self.partial_panels()]
+
+    @metadata.setter
+    def metadata(self, _value: list[AntibodyPanelMetadata]):
+        """Set the metadata for all the panels that are part of the combination."""
+        raise AttributeError("Metadata for combination panels is read-only.")
+
+    def partial_panels(self):
+        """Return a list of all the partial panels that are part of the combination."""
+        return (
+            self.base_panels + (self.hashing_panels or []) + (self.addon_panels or [])
+        )
+
+    @property
+    def num_partial_panels(self):
+        """Return the number of all the partial panels that are part of the combination."""
+        return sum(1 for _ in self.partial_panels())
+
+    @property
+    def df(self):
+        """Return the panel dataframe for the combination of panels."""
+        df_list = [
+            panel.to_polars()
+            .with_columns(
+                pl.lit(panel.name).alias("partial_panel_name"),
+                pl.lit(panel.__class__.__name__).alias("partial_panel_type"),
+            )
+            .to_pandas()
+            .set_index(self._INDEX_COLUMN)
+            for panel in self.partial_panels()
+        ]
+        df = (
+            pd.concat(
+                df_list,
+                axis=0,
+            )
+            if len(df_list) > 1
+            else df_list[0]
+        )
+        # make sure clone sequences are unique! Otherwise raise an error
+        if df.duplicated(subset=["sequence_1", "sequence_2"]).any():
+            raise ValueError("Duplicate sequences found in the panel combination.")
+        return df
+
     def add_base_panel(self, base_panel: PNABasePanel | PartialPNAAntibodyPanel):
         """Add a base panel."""
         if isinstance(base_panel, PartialPNAAntibodyPanel):
@@ -777,6 +825,58 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
 
         """
         return " + ".join(p.metadata.name for p in self.partial_panels())
+
+    @property
+    def product(self) -> Optional[str]:
+        """Product identifier from metadata, if present.
+
+        Returns:
+            Product name, or None when not provided in panel metadata.
+
+        """
+        return " + ".join(p.metadata.product for p in self.partial_panels())
+
+    @property
+    def version(self) -> str:
+        """Panel version from metadata.
+
+        Returns:
+            Semantic version string for this panel.
+
+        """
+        return " + ".join(p.metadata.version for p in self.partial_panels())
+
+    @property
+    def description(self) -> Optional[str]:
+        """Return the panel file description."""
+        return " + ".join(str(p.metadata.description) for p in self.partial_panels())
+
+    @property
+    def aliases(self) -> list[str]:
+        """Return the (optional) list of panel file aliases."""
+        if self.num_partial_panels == 1:
+            return self.partial_panels()[0].aliases
+        else:
+            raise AttributeError(
+                "Cannot get aliases for a combination of panels. "
+                + "Aliases are only defined for individual panels."
+            )
+
+    @property
+    def archived(self) -> Optional[bool]:
+        """Return whether the panel is marked as archived."""
+        return any(p.metadata.archived for p in self.partial_panels())
+
+    @property
+    def filename(self) -> Optional[str]:
+        """Return the filename of the panel, if available."""
+        if self.num_partial_panels == 1:
+            return self.partial_panels()[0].filename
+        else:
+            raise AttributeError(
+                "Cannot get filename for a combination of panels. "
+                + "Filename is only defined for individual panels."
+            )
 
 class PNABasePanel(PartialPNAAntibodyPanel):
     """Class representing a base panel for PNA."""
