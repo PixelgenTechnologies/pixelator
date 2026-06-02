@@ -5,9 +5,12 @@ from pathlib import Path
 import polars as pl
 
 from pixelator.pna.graph.component_recovery_utils import (
+    create_component_size_data_frame,
+    filter_connected_components_by_size,
     get_count_statistics,
     write_hive_partitioned_edgelist_without_small_components,
 )
+from pixelator.pna.graph.report import GraphStatistics
 
 
 def test_get_count_statistics(tmp_path: Path) -> None:
@@ -86,3 +89,77 @@ def test_write_hive_partitioned_edgelist_without_small_components_nothing_discar
         hive_schema={"component": pl.String},
     ).collect()
     assert kept.height == 3
+
+
+def test_filter_connected_components_by_size_hard_thresholds(tmp_path: Path) -> None:
+    """Hard thresholds keep only components within the configured UMI-size bounds."""
+    input_path = tmp_path / "component_filter_input.parquet"
+    input_frame = pl.DataFrame(
+        {
+            "component": ["a", "a", "b", "c", "c"],
+            "umi1": ["u1", "u3", "v1", "w1", "w1"],
+            "umi2": ["u2", "u4", "v2", "w2", "w3"],
+        }
+    )
+    input_frame.write_parquet(input_path)
+    discard_sizes = pl.DataFrame(
+        schema={"component": pl.String, "n_umi": pl.UInt32},
+    )
+    component_stats = GraphStatistics()
+
+    filtered_edgelist_path, stats = filter_connected_components_by_size(
+        input_edgelist_path=input_path,
+        component_size_threshold=(3, 4),
+        discard_sizes=discard_sizes,
+        component_stats=component_stats,
+        working_dir=tmp_path,
+    )
+
+    filtered = pl.scan_parquet(
+        filtered_edgelist_path, hive_schema={"component": pl.String}
+    ).collect()
+
+    assert set(filtered["component"].unique().to_list()) == {"a", "c"}
+    assert filtered.height == 4
+    assert stats.component_count_pre_component_size_filtering == 3
+    assert stats.component_count_post_component_size_filtering == 2
+    assert stats.component_size_min_filtering_threshold == 3
+    assert stats.component_size_max_filtering_threshold == 4
+    assert stats.pre_filtering_component_sizes == {2: 1, 3: 1, 4: 1}
+
+
+def test_create_component_size_data_frame_computes_sizes_per_component(
+    tmp_path: Path,
+) -> None:
+    """Component sizes are computed from distinct umi1 + umi2 counts per component."""
+    input_path = tmp_path / "component_sizes_input.parquet"
+    pl.DataFrame(
+        {
+            "component": ["a", "a", "a", "b"],
+            "umi1": ["u1", "u1", "u2", "v1"],
+            "umi2": ["x1", "x2", "x2", "y1"],
+        }
+    ).write_parquet(input_path)
+
+    combined = create_component_size_data_frame(input_path)
+    combined_sorted = combined.sort("component")
+
+    assert combined_sorted["component"].to_list() == ["a", "b"]
+    assert combined_sorted["n_umi"].to_list() == [4, 2]
+
+
+def test_create_component_size_data_frame_handles_empty_input(tmp_path: Path) -> None:
+    """An empty edgelist produces an empty component-size dataframe."""
+    input_path = tmp_path / "component_sizes_empty.parquet"
+    pl.DataFrame(
+        {
+            "component": pl.Series([], dtype=pl.String),
+            "umi1": pl.Series([], dtype=pl.String),
+            "umi2": pl.Series([], dtype=pl.String),
+        }
+    ).write_parquet(input_path)
+
+    combined = create_component_size_data_frame(input_path)
+
+    assert combined.is_empty()
+    assert combined.columns == ["component", "n_umi"]

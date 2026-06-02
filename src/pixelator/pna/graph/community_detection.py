@@ -576,17 +576,19 @@ def find_components(
         )
 
     logger.info("Filtering connected components by size.")
-    latest_edgelist = pl.scan_parquet(
-        latest_working_edgelist_path, hive_schema={"component": pl.String}
-    )
-    latest_edgelist_filtered, component_stats = filter_connected_components_by_size(
-        edgelist=latest_edgelist,
+    latest_working_edgelist_path, component_stats = filter_connected_components_by_size(
+        input_edgelist_path=latest_working_edgelist_path,
         discard_sizes=discard_sizes,
         component_size_threshold=component_size_threshold,
         component_stats=component_stats,
+        working_dir=working_dir,
     )
+
+    logger.info("Mapping UMIs to original names.")
     umi_map = pl.read_parquet(node_map_path)
-    final_edgelist_with_components = latest_edgelist_filtered.with_columns(
+    final_edgelist_with_components = pl.scan_parquet(
+        latest_working_edgelist_path, hive_schema={"component": pl.String}
+    ).with_columns(
         umi1=pl.col("umi1").replace_strict(
             umi_map["working_name"], umi_map["original_name"]
         ),
@@ -594,6 +596,7 @@ def find_components(
             umi_map["working_name"], umi_map["original_name"]
         ),
     )
+    logger.info("Creating component names from UMIs.")
     final_edgelist_with_components = name_components_with_umi_hashes(
         final_edgelist_with_components
     )
