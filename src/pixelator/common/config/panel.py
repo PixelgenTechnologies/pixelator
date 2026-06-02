@@ -33,6 +33,7 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
     description: Optional[str] = None
     aliases: List[str] = []
     archived: Optional[bool] = False
+    panel_type: Optional[str] = None
 
     @pydantic.field_validator("version")
     @classmethod

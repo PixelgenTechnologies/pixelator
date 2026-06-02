@@ -379,6 +379,28 @@ class PartialPNAAntibodyPanel:
         return self.df.equals(other.df) and self.metadata == other.metadata
 
 
+def get_panel_type_from_metadata(
+    metadata: AntibodyPanelMetadata,
+) -> type[PartialPNAAntibodyPanel]:
+    """Get the panel class type from the panel metadata."""
+    match metadata.panel_type:
+        case PartialPNAAntibodyPanel.__name__:
+            return PartialPNAAntibodyPanel
+        case PNABasePanel.__name__:
+            return PNABasePanel
+        case PNAAddonPanel.__name__:
+            return PNAAddonPanel
+        case PNASampleHashingPanel.__name__:
+            return PNASampleHashingPanel
+        case _:
+            # fall back to PartialPNAAntibodyPanel
+            warnings.warn(
+                f"Unknown panel type {metadata.panel_type} in panel metadata. "
+                + "Falling back to generic PartialPNAAntibodyPanel.",
+                UserWarning,
+            )
+            return PartialPNAAntibodyPanel
+
 def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
     """Load an antibody panel from a file or from the config file.
 
@@ -405,7 +427,9 @@ class PNAAntibodyPanelDiff:
 
     join_on_columns: list[str] = ["sequence_1", "sequence_2"]
 
-    def __init__(self, panel_1: PNAAntibodyPanel, panel_2: PNAAntibodyPanel) -> None:
+    def __init__(
+        self, panel_1: PartialPNAAntibodyPanel, panel_2: PartialPNAAntibodyPanel
+    ) -> None:
         """Initialize the PNAAntibodyPanelDiff object.
 
         :param panel_1: The first panel to compare.
