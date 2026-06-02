@@ -188,7 +188,6 @@ def proximity_parquet_path_fixture(tmp_path_factory, proximity_dataframe):
 def panel_fixture():
     panel_df = pd.read_csv(StringIO(TEST_PANEL)).set_index("marker_id")
 
-    panel_df = panel_df
     panel_df["uniprot_id"] = panel_df["uniprot_id"].fillna("")
     panel_df["control"] = (
         panel_df["control"].astype(str).map(lambda s: s.lower() == "yes")

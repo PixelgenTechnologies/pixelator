@@ -18,12 +18,11 @@ except ImportError:
     from typing_extensions import Self
 
 import re
+from io import StringIO
 
+import numpy as np
 import pandas as pd
 import polars as pl
-import numpy as np
-import ruamel.yaml as yaml
-from io import StringIO
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.common.types import PathType
@@ -125,7 +124,7 @@ class PartialPNAAntibodyPanel:
         return panel
 
     @classmethod
-    def from_adata(cls, adata: AnnData, file_name: Optional[str] = None) -> Self:
+    def from_adata(cls, adata: AnnData, file_name: Optional[str] = None):
         """Create an AntibodyPanel from an AnnData object.
 
         :param adata: An AnnData object containing panel information.
@@ -147,8 +146,9 @@ class PartialPNAAntibodyPanel:
         panel_columns = panel_metadata.get("panel_columns")
         if not panel_columns:
             raise KeyError(
-                "The provided AnnData object does not contain panel columns information in the metadata. "
-                + "Please, regenerate your data with the most recent version of pixelator."
+                "The provided AnnData object does not contain panel columns information in the "
+                + "metadata. Please, regenerate your data with the most recent version of "
+                + "pixelator."
             )
         df = adata.var[panel_columns]
         metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
@@ -325,7 +325,8 @@ class PartialPNAAntibodyPanel:
                 found_type = panel_pl_df[col].dtype.to_python()
                 if not found_type == expected_type:
                     errors.append(
-                        f"Column {col} has incorrect type. Expected {expected_type}, got {found_type}"
+                        f"Column {col} has incorrect type. "
+                        + f"Expected {expected_type}, got {found_type}"
                     )
 
         if panel_df.shape[0] == 0:
@@ -346,7 +347,8 @@ class PartialPNAAntibodyPanel:
         if panel_df["control"].dtype != bool:
             errors.append("`control` column is not boolean")
 
-        # Check UniProt IDs format conforming to the UniProt naming convention. Empty IDs are allowed.
+        # Check UniProt IDs format conforming to the UniProt naming convention.
+        # Empty IDs are allowed.
         if "uniprot_id" in panel_df.columns:
             # Pattern for valid UniProt IDs
             pattern = r"^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}|$"
@@ -623,7 +625,6 @@ class PNAAntibodyPanelDiff:
 
     def upgrade_adata(self, adata: AnnData) -> AnnData:
         """Upgrade an AnnData object with the changes between the two panels."""
-
         if len(self.added_clones) > 0:
             raise ValueError(
                 "Cannot automatically upgrade panel if there are added clones. "
@@ -693,7 +694,8 @@ class PNAAntibodyPanelDiff:
                 adata.var[col] = pd.NA
             else:
                 assert (adata.var.loc[is_panel_row, col].fillna("") == "").all(), (
-                    "added column already exists in adata.var with non-empty values for some of the panel rows. Cannot automatically upgrade."
+                    "added column already exists in adata.var with non-empty values for some of the"
+                    + " panel rows. Cannot automatically upgrade."
                 )
             adata.var.iloc[row_indexes_in_var, adata.var.columns.get_loc(col)] = (
                 self.joined[col]
@@ -738,7 +740,7 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
         metadata: AntibodyPanelMetadata | list[AntibodyPanelMetadata],
         file_name: Optional[str] = None,
     ):
-
+        """Initialize the PNAAntibodyPanelCombination object."""
         if metadata is None:
             raise ValueError("Panel metadata cannot be None")
 
@@ -760,9 +762,9 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
                 case PartialPNAAntibodyPanel.__name__ | PNABasePanel.__name__:
                     self.add_base_panel(panel)
                 case PNASampleHashingPanel.__name__:
-                    self.add_hashing_panel(panel)
+                    self.add_hashing_panel(panel)  # type: ignore
                 case PNAAddonPanel.__name__:
-                    self.add_addon_panel(panel)
+                    self.add_addon_panel(panel)  # type: ignore
                 case _:
                     raise ValueError(
                         f"Unknown panel type {panel_type} in panel metadata. "
@@ -796,13 +798,13 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
             file_name=panel.filename,
         )
 
-    @property
-    def metadata(self) -> list[AntibodyPanelMetadata]:
+    @property  # type: ignore[override]
+    def metadata(self) -> list[AntibodyPanelMetadata]:  # type: ignore[override]
         """Return the metadata for all the panels that are part of the combination."""
         return [p.metadata for p in self.partial_panels()]
 
-    @metadata.setter
-    def metadata(self, _value: list[AntibodyPanelMetadata]):
+    @metadata.setter  # type: ignore[override]
+    def metadata(self, _value: list[AntibodyPanelMetadata]):  # type: ignore[override]
         """Set the metadata for all the panels that are part of the combination."""
         raise AttributeError("Metadata for combination panels is read-only.")
 

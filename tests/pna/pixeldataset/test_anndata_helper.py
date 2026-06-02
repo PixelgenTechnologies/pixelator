@@ -7,11 +7,8 @@ from pathlib import Path
 
 import numpy as np
 import polars as pl
-from pydantic import version
 import pytest
-import pandas as pd
 
-from pixelator.common.config.panel import AntibodyPanelMetadata
 from pixelator.common.utils.testing import adata_assert_equal
 from pixelator.pna.config.panel import (
     PartialPNAAntibodyPanel,
@@ -229,7 +226,8 @@ class TestTryBumpAdataPanelVersion:
         assert (adata_old[:, "MarkerC"].X == bumped[0][:, "MarkerC"].X).all()
         assert (adata_new[:, "MarkerC"].X == bumped[1][:, "MarkerC"].X).all()
 
-        # make sure hashing panel didnt change and is still correctly reconstructed from the bumped adata
+        # make sure hashing panel didnt change and is still correctly reconstructed from the
+        # bumped adata
         assert adata_old[:, adata_old.var["sample_hashing"].index].var.equals(
             bumped[0][:, bumped[0].var["sample_hashing"].index].var
         )

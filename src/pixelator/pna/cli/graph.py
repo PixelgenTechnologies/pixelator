@@ -271,7 +271,7 @@ def graph(
 
     component_size_threshold = True
     if any([component_size_min_threshold, component_size_max_threshold]):
-        component_size_threshold = (
+        component_size_threshold = (  # type: ignore[assignment]
             component_size_min_threshold,
             component_size_max_threshold,
         )

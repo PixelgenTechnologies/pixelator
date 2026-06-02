@@ -9,10 +9,11 @@ import warnings
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Self
-from anndata import AnnData
+
 import pandas as pd
 import pydantic
 import ruamel.yaml as yaml
+from anndata import AnnData
 from packaging.version import Version
 
 from pixelator.common.types import PathType

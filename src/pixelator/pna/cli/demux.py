@@ -142,15 +142,18 @@ def demux(
 
     # load assay design
     assay = pna_config.get_assay(design)
+    if assay is None:
+        raise ValueError(f"Assay design '{design}' not found in configuration")
+
     # load marker panel
-    panel = load_antibody_panel(pna_config, panel)
+    panel_obj = load_antibody_panel(pna_config, panel)
 
     logger.info(f"Correcting marker barcodes for input: {fastq_file}")
 
     stats, corrected, failed = correct_marker_barcodes(
         input=input_files[0],
         assay=assay,
-        panel=panel,
+        panel=panel_obj,
         output=demux_output,
         save_failed=True,
         threads=threads,
@@ -163,7 +166,7 @@ def demux(
     demux_barcode_groups(
         corrected_reads=corrected,
         assay=assay,
-        panel=panel,
+        panel=panel_obj,
         stats=stats,
         output_dir=tmp_output_dir,
         threads=threads,

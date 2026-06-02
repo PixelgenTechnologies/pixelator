@@ -6,8 +6,8 @@ from pandas.testing import assert_frame_equal
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import (
-    PNAAntibodyPanelCombination,
     PartialPNAAntibodyPanel,
+    PNAAntibodyPanelCombination,
 )
 from pixelator.pna.pixeldataset import read
 
