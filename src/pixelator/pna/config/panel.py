@@ -220,6 +220,10 @@ class PNAAntibodyPanel:
         )
 
         panel["control"] = panel["control"].map(lambda s: s.lower() == "yes")
+        if "sample_hashing" in panel.columns:
+            panel["sample_hashing"] = panel["sample_hashing"].map(
+                lambda s: s.lower() == "yes"
+            )
 
         return panel.copy()
 
