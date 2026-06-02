@@ -65,6 +65,8 @@ class PartialPNAAntibodyPanel:
                                 invalid or with incorrect format
         """
         self._filename = file_name
+        if metadata is None:
+            raise ValueError("Panel metadata cannot be None")
         self.metadata = metadata
         self._df = df
 
