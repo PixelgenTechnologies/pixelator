@@ -322,24 +322,7 @@ class AntibodyPanel:
             ValueError: If no metadata header is present in the file.
 
         """
-        yaml_loader = yaml.YAML(typ="safe")
-
-        metadata_lines = []
-        with open(str(file), "r") as f:
-            for line in f:
-                if line.startswith("# "):
-                    metadata_lines.append(line[2:])
-                else:
-                    break
-
-        metadata = "".join(metadata_lines)
-        raw_config = list(yaml_loader.load_all(metadata))
-
-        if len(raw_config) == 0:
-            raise ValueError(f"No header / metadata found in panel file {file}")
-
-        frontmatter = raw_config[0]
-        return AntibodyPanelMetadata.model_validate(frontmatter)
+        return AntibodyPanelMetadata.from_panel_csv(file)
 
     @cached_property
     def markers_control(self) -> List[str]:
