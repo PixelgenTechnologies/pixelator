@@ -27,6 +27,7 @@ from pixelator.pna.graph.component_recovery_utils import (
     filter_edgelist_by_read_count,
     initialize_graph_statistics,
     name_components_with_umi_hashes,
+    name_components_with_umi_hashes_from_parquet,
     populate_component_stats_from_hybrid_detection,
     remove_clashing_umis,
     write_hive_partitioned_edgelist_without_small_components,
@@ -621,14 +622,9 @@ def find_components(
         working_dir=working_dir,
     )
     logger.info("Creating component names from UMIs.")
-    final_edgelist_with_components = name_components_with_umi_hashes(
-        pl.scan_parquet(
-            latest_working_edgelist_path, hive_schema={"component": pl.String}
-        )
+    final_edgelist_with_components = name_components_with_umi_hashes_from_parquet(
+        input_edgelist_path=latest_working_edgelist_path,
+        working_dir=working_dir,
     )
 
-    logger.info("Writing resolved edgelist.")
-    resolved_edgelist_path = working_dir / "edgelist_with_resolved_components.parquet"
-    final_edgelist_with_components.sink_parquet(resolved_edgelist_path)
-
-    return component_stats, resolved_edgelist_path
+    return component_stats, final_edgelist_with_components

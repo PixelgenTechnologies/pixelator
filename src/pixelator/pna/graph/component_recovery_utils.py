@@ -94,6 +94,46 @@ def name_components_with_umi_hashes(edgelist: pl.LazyFrame) -> pl.LazyFrame:
     return edgelist.with_columns(pl.col("component").replace_strict(comp_hashes))
 
 
+def name_components_with_umi_hashes_from_parquet(
+    input_edgelist_path: Path,
+    working_dir: Path = DEFAULT_WORKING_DIR,
+) -> Path:
+    """Rewrite component ids to deterministic UMI-based hashes and write parquet."""
+    output_path = working_dir / "edgelist_with_hashed_components.parquet"
+    with duckdb.connect() as con:
+        component_rows = con.execute(f"""
+            SELECT
+                component,
+                LIST(DISTINCT umi1) AS umi1_values,
+                LIST(DISTINCT umi2) AS umi2_values
+            FROM parquet_scan('{str(input_edgelist_path)}')
+            GROUP BY component
+        """).fetchall()
+
+        component_hashes = [
+            (component, hash_component(set(umi1_values + umi2_values)))
+            for component, umi1_values, umi2_values in component_rows
+        ]
+        con.register(
+            "component_hashes",
+            pl.DataFrame(
+                component_hashes,
+                schema=["component", "component_hash"],
+                orient="row",
+            ).to_arrow(),
+        )
+        con.execute(f"""
+            COPY (
+                SELECT
+                    e.* EXCLUDE (component),
+                    c.component_hash AS component
+                FROM parquet_scan('{str(input_edgelist_path)}') e
+                JOIN component_hashes c ON e.component = c.component
+            ) TO '{str(output_path)}' (FORMAT PARQUET)
+        """)
+    return output_path
+
+
 def initialize_graph_statistics(collapsed_edgelist_path: Path) -> GraphStatistics:
     """Initialize and return a GraphStatistics object with all fields set to zero."""
     component_stats = GraphStatistics()
