@@ -8,8 +8,8 @@ from __future__ import annotations
 import warnings
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional
-
+from typing import TYPE_CHECKING, List, Optional, Self
+from anndata import AnnData
 import pandas as pd
 import pydantic
 import ruamel.yaml as yaml
@@ -81,6 +81,50 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
         frontmatter = raw_config[0]
         print(frontmatter)
         return cls.model_validate(frontmatter)
+
+    @classmethod
+    def from_adata(cls, adata: AnnData) -> list[Self]:
+        """Create a list of AntibodyPanelMetadata objects from an AnnData object."""
+        if "panel_metadata" in adata.uns:
+            logger.debug(
+                'Found "panel_metadata" in adata.uns, loading panel metadata from there.'
+            )
+            return [cls.model_validate(adata.uns["panel_metadata"])]
+        elif "num_partial_panels" in adata.uns:
+            logger.debug(
+                "Found metadata for %s partial panels in adata.uns",
+                adata.uns["num_partial_panels"],
+            )
+            panel_metadatas = []
+            for idx in range(adata.uns["num_partial_panels"]):
+                if f"panel_metadata__{idx}" not in adata.uns:
+                    raise KeyError(
+                        "The provided AnnData object contains partial panel information but is "
+                        + f"missing the metadata for panel at index {idx}. "
+                    )
+                panel_metadatas.append(
+                    cls.model_validate(adata.uns[f"panel_metadata__{idx}"])
+                )
+            if len(panel_metadatas) != adata.uns["num_partial_panels"]:
+                raise ValueError(
+                    "The provided AnnData object contains partial panel information but the number "
+                    + f"of panel metadata entries ({len(panel_metadatas)}) does not match the "
+                    + f"expected number of partial panels ({adata.uns['num_partial_panels']}). "
+                )
+            return panel_metadatas
+        else:
+            logger.warning(
+                "The provided AnnData object does not contains panel metadata information."
+                + "panel name and version will be set to 'unknown' and '0.0.0' respectively."
+            )
+            return [
+                cls(
+                    name="unknown",
+                    version="0.0.0",
+                    description="No panel metadata found in adata.uns",
+                )
+            ]
+
 
 class AntibodyPanel:
     """Class representing a Molecular Pixelation antibody panel."""

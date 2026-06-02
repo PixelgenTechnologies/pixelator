@@ -22,6 +22,7 @@ import re
 import pandas as pd
 import polars as pl
 import ruamel.yaml as yaml
+from io import StringIO
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.common.types import PathType
@@ -232,12 +233,12 @@ class PartialPNAAntibodyPanel:
     @cached_property
     def markers_control(self) -> List[str]:
         """Return a list of marker control (names)."""
-        return list(self._df[self._df["control"]].index)
+        return list(self.df[self.df["control"]].index)
 
     @cached_property
     def markers(self) -> List[str]:
         """Return the list of unique markers in the panel."""
-        return list(self._df.index.unique())
+        return list(self.df.index.unique())
 
     @property
     def df(self) -> pd.DataFrame:
@@ -252,7 +253,7 @@ class PartialPNAAntibodyPanel:
     @cached_property
     def size(self) -> int:
         """Return the size of the marker panel."""
-        return self._df.shape[0]
+        return self.df.shape[0]
 
     @staticmethod
     def _validate_sequences(panel_df, sequence_col):
@@ -374,8 +375,8 @@ class PartialPNAAntibodyPanel:
 
     def __eq__(self, other: object) -> bool:
         """Check if two panels are equal based on their dataframes and metadata."""
-        if not isinstance(other, PNAAntibodyPanel):
-            raise ValueError("Can only compare with another PNAAntibodyPanel")
+        if not isinstance(other, PartialPNAAntibodyPanel):
+            raise ValueError("Can only compare with another PartialPNAAntibodyPanel")
         return self.df.equals(other.df) and self.metadata == other.metadata
 
 
@@ -401,25 +402,72 @@ def get_panel_type_from_metadata(
             )
             return PartialPNAAntibodyPanel
 
-def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
+
+def panel_from_adata(adata: AnnData) -> PartialPNAAntibodyPanel:
+    """Create a PartialPNAAntibodyPanel from an AnnData object."""
+    if "num_partial_panels" in adata.uns:
+        return PNAAntibodyPanelCombination.from_adata(adata)
+    else:
+        [metadata] = AntibodyPanelMetadata.from_adata(adata)
+        panel_type = get_panel_type_from_metadata(metadata)
+        return panel_type.from_adata(adata)
+
+
+def panel_from_pxl_dataset(
+    pxl_data: PNAPixelDataset,
+) -> PartialPNAAntibodyPanel | PNAAntibodyPanelCombination:
+    """Create a PartialPNAAntibodyPanel or PNAAntibodyPanelCombination from a PNAPixelDataset object."""
+    return panel_from_adata(pxl_data.adata())
+
+
+def panel_from_csv(panel_file: PathType) -> PartialPNAAntibodyPanel:
+    """Create a PartialPNAAntibodyPanel from a csv panel file."""
+    panel_file = Path(panel_file)
+    if not panel_file.is_file() or panel_file.suffix != ".csv":
+        raise AssertionError(
+            f"Panel file {panel_file} not found or has an incorrect format"
+        )
+
+    metadata = AntibodyPanelMetadata.from_panel_csv(panel_file)
+    panel_type = get_panel_type_from_metadata(metadata)
+    return panel_type.from_csv(panel_file)
+
+
+def load_antibody_panel(
+    config: PNAConfig, requested_panels: PathType | list[PathType] | list[str]
+) -> PNAAntibodyPanelCombination:
     """Load an antibody panel from a file or from the config file.
 
     :param config: the config object
-    :param panel: the path to the panel file or the name of the
-        panel in the config file
+    :param requested_panels: the path to the panel file(s) or the name(s) of the
+        panel(s) in the config file
 
+        ,
     :returns: the antibody panel
-    :rtype: PNAAntibodyPanel
+    :rtype: PNAAntibodyPanelCombination
     """
-    panel_str = str(panel)
-    panel_from_config = config.get_panel(panel_str)
+    return_panels = []
+    for panel in (
+        requested_panels if isinstance(requested_panels, list) else [requested_panels]
+    ):
+        panel_str = str(panel)
+        logger.debug("Loading panel %s", panel_str)
+        panel_from_config = config.get_panel(panel_str)
 
-    if panel_from_config is not None:
-        logger.info("Found panel in config file: %s", panel_from_config.name)
-        return panel_from_config
+        if panel_from_config is not None:
+            logger.info("Found panel in config file: %s", panel_from_config.name)
+            return_panels.append(panel_from_config)
+            continue
 
-    panel_obj = PNAAntibodyPanel.from_csv(panel)
-    return panel_obj
+        panel_obj = panel_from_csv(panel)
+        logger.info(
+            "Loaded %s %s from CSV file: %s",
+            panel_obj.__class__.__name__,
+            panel_obj.name,
+            panel_obj.filename,
+        )
+        return_panels.append(panel_obj)
+    return PNAAntibodyPanelCombination.from_list_of_subpanels(return_panels)
 
 
 class PNAAntibodyPanelDiff:
@@ -877,6 +925,31 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
                 "Cannot get filename for a combination of panels. "
                 + "Filename is only defined for individual panels."
             )
+
+    @classmethod
+    def from_adata(cls, adata, file_name=None):
+        """Create a panel combination from an AnnData object."""
+        list_of_metadatas = AntibodyPanelMetadata.from_adata(adata)
+        logger.debug(
+            "Found %d panel metadata entries in the AnnData object.",
+            len(list_of_metadatas),
+        )
+        if len(list_of_metadatas) == 1 and "num_partial_panels" not in adata.uns:
+            # Backwards compatability with old pixelfiles
+            subpanels = [PartialPNAAntibodyPanel.from_adata(adata, file_name)]
+        elif "num_partial_panels" in adata.uns:
+            subpanels = []
+            for idx, metadata in enumerate(list_of_metadatas):
+                df = (
+                    pd.read_csv(StringIO(adata.uns[f"panel_df__{idx}"]))
+                    .set_index(cls._INDEX_COLUMN)
+                    .fillna("")
+                )
+                panel_type = get_panel_type_from_metadata(metadata)
+                subpanels.append(panel_type(df, metadata))
+
+        return PNAAntibodyPanelCombination.from_list_of_subpanels(subpanels)
+
 
 class PNABasePanel(PartialPNAAntibodyPanel):
     """Class representing a base panel for PNA."""
