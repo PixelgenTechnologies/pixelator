@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
 
 
-class PNAAntibodyPanel:
+class PartialPNAAntibodyPanel:
     """Class representing a PNA antibody panel."""
 
     # required columns
@@ -596,3 +596,36 @@ class PNAAntibodyPanelDiff:
         adata.uns["panel_metadata"] = self.panel_2.metadata.model_dump()
         adata.uns["panel_metadata"]["panel_columns"] = self.panel_2.df.columns.tolist()
         return adata
+
+
+class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
+    """Class representing a combination of PNA antibody panels used in a sample.
+
+    This can be a combination of base panels, sample hashing panels and addon panels.
+    This represent the concat of the panels i.e. all the antibodies added to the same tube.
+
+    Should raise loud errors if the panels are not compatible (e.g. different sequences for the same
+      marker or same sequences is present in multiple panels).
+    """
+
+    _REQUIRED_COLUMNS = {
+        **PartialPNAAntibodyPanel._REQUIRED_COLUMNS,
+        "partial_panel_name": str,
+        "partial_panel_type": str,
+    }
+
+    base_panels: list[PNABasePanel]
+    hashing_panels: Optional[list[PNASampleHashingPanel]]
+    addon_panels: Optional[list[PNAAddonPanel]]
+
+
+class PNABasePanel(PartialPNAAntibodyPanel):
+    """Class representing a base panel for PNA."""
+
+
+class PNAAddonPanel(PartialPNAAntibodyPanel):
+    """Class representing an addon panel for PNA."""
+
+
+class PNASampleHashingPanel(PartialPNAAntibodyPanel):
+    """Class representing a sample hashing panel for PNA."""
