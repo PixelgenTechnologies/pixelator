@@ -3,7 +3,7 @@
 Includes shared connected-component helpers (hashing, UMI-based naming, size filtering)
 used by community detection and legacy graph code.
 
-Copyright (c) 2025 Pixelgen Technologies AB.
+Copyright © 2025 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
@@ -92,6 +92,46 @@ def name_components_with_umi_hashes(edgelist: pl.LazyFrame) -> pl.LazyFrame:
         comp_hashes[comp] = hash_component(set(umi1 + umi2))
 
     return edgelist.with_columns(pl.col("component").replace_strict(comp_hashes))
+
+
+def name_components_with_umi_hashes_from_parquet(
+    input_edgelist_path: Path,
+    working_dir: Path = DEFAULT_WORKING_DIR,
+) -> Path:
+    """Rewrite component ids to deterministic UMI-based hashes and write parquet."""
+    output_path = working_dir / "edgelist_with_hashed_components.parquet"
+    with duckdb.connect() as con:
+        component_rows = con.execute(f"""
+            SELECT
+                component,
+                LIST(DISTINCT umi1) AS umi1_values,
+                LIST(DISTINCT umi2) AS umi2_values
+            FROM parquet_scan('{str(input_edgelist_path)}')
+            GROUP BY component
+        """).fetchall()
+
+        component_hashes = [
+            (component, hash_component(set(umi1_values + umi2_values)))
+            for component, umi1_values, umi2_values in component_rows
+        ]
+        con.register(
+            "component_hashes",
+            pl.DataFrame(
+                component_hashes,
+                schema=["component", "component_hash"],
+                orient="row",
+            ).to_arrow(),
+        )
+        con.execute(f"""
+            COPY (
+                SELECT
+                    e.* EXCLUDE (component),
+                    c.component_hash AS component
+                FROM parquet_scan('{str(input_edgelist_path)}') e
+                JOIN component_hashes c ON e.component = c.component
+            ) TO '{str(output_path)}' (FORMAT PARQUET)
+        """)
+    return output_path
 
 
 def initialize_graph_statistics(collapsed_edgelist_path: Path) -> GraphStatistics:
@@ -500,35 +540,32 @@ def save_new_working_edgelist(
     }
 
 
-def combine_component_sizes(
-    edgelist: pl.LazyFrame,
-    discard_sizes: pl.DataFrame,
+def create_component_size_data_frame(
+    input_edgelist_path: Path,
 ) -> pl.DataFrame:
-    """Add pre-filtering connected component size statistics to the component stats."""
-    component_sizes = (
-        edgelist.group_by("component")
-        .agg(
-            pl.col("umi1").n_unique().alias("n_umi1"),
-            pl.col("umi2").n_unique().alias("n_umi2"),
-        )
-        .select(
-            pl.col("component"),
-            n_umi=(pl.col("n_umi1") + pl.col("n_umi2")).cast(pl.UInt32),
-        )
-        .collect()
-    )
-    component_sizes = pl.concat([component_sizes, discard_sizes], how="vertical")
-
+    """Find component sizes from a parquet edgelist."""
+    with duckdb.connect() as con:
+        component_sizes = con.execute(f"""
+            SELECT
+                component,
+                CAST(
+                    COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)
+                    AS UINT32
+                ) AS n_umi
+            FROM parquet_scan('{str(input_edgelist_path)}')
+            GROUP BY component
+        """).pl()
     return component_sizes
 
 
 def filter_connected_components_by_size(
-    edgelist: pl.LazyFrame,
+    input_edgelist_path: Path,
     component_size_threshold: bool | tuple[int, int],
     discard_sizes: pl.DataFrame,
     component_stats: GraphStatistics,
     dynamic_lowest_passable_bound=None,
-) -> tuple[pl.LazyFrame, GraphStatistics]:
+    working_dir: Path = DEFAULT_WORKING_DIR,
+) -> tuple[Path, GraphStatistics]:
     """Filter connected components by size and get statistics.
 
     This function filters connected components in an edgelist based on their sizes. It computes the sizes of each component,
@@ -536,22 +573,25 @@ def filter_connected_components_by_size(
     It also updates the component statistics with information about the filtering process.
 
     Args:
-        edgelist (pl.LazyFrame): The input edgelist as a Polars LazyFrame.
+        input_edgelist_path (Path): Path to the input parquet edgelist.
         component_size_threshold (bool | tuple[int, int]): Size threshold for filtering components.
             If True, dynamic thresholds are used. If False, no filtering is applied.
             If a tuple, it specifies (min_size, max_size) for hard thresholds.
         discard_sizes (pl.DataFrame): DataFrame containing sizes of discarded components.
         component_stats (GraphStatistics): Statistics object to update with filtering information.
         dynamic_lowest_passable_bound (int, optional): Lowest passable bound for dynamic thresholding. Defaults to None.
+        working_dir (Path): Directory for temporary parquet output.
 
     Returns:
-        pl.LazyFrame: The filtered edgelist as a Polars LazyFrame.
+        tuple[Path, GraphStatistics]: Path to the filtered parquet edgelist and updated component statistics.
 
     Raises:
         ConnectedComponentException: If no components remain after filtering.
 
     """
-    component_sizes = combine_component_sizes(edgelist, discard_sizes)
+    component_sizes = create_component_size_data_frame(input_edgelist_path)
+    component_sizes = pl.concat([component_sizes, discard_sizes], how="vertical")
+
     unique, counts = np.unique(
         component_sizes["n_umi"].cast(pl.Int32), return_counts=True
     )
@@ -608,9 +648,22 @@ def filter_connected_components_by_size(
         passing_components
     )
 
-    edgelist = edgelist.filter(pl.col("component").is_in(passing_components))
+    filtered_edgelist_path = working_dir / "component_size_filtered_edgelist.parquet"
+    with duckdb.connect() as con:
+        con.register(
+            "passing_components",
+            passing_components.to_frame().to_arrow(),
+        )
+        con.execute(f"""
+            COPY (
+                SELECT e.*
+                FROM parquet_scan('{str(input_edgelist_path)}') e
+                JOIN passing_components p
+                ON e.component = p.component
+            ) TO '{str(filtered_edgelist_path)}' (FORMAT PARQUET)
+        """)
 
-    return edgelist, component_stats
+    return filtered_edgelist_path, component_stats
 
 
 def filter_components_by_size_dynamic(

@@ -159,7 +159,7 @@ class Graph:
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "wpmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         cache: bool = False,
@@ -172,35 +172,35 @@ class Graph:
         counts to use that can be used for plotting.
 
         The layout options are:
+          - coarsened_pmds_3d
+          - wpmds_3d
+          - pmds
+          - pmds_3d
           - fruchterman_reingold
           - fruchterman_reingold_3d
           - kamada_kawai
           - kamada_kawai_3d
-          - pmds
-          - pmds_3d
-          - wpmds_3d
 
+        For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
+        preferred. On PNA data they are faster and produce better results.
 
-        The `pmds` options are much faster than the force-directed algorithms fruchterman_reingold
-        and kamada_kawai. The `wpmds_3d` option is a weighted version of the `pmds_3d` algorithm.
+        Args:
+            layout_algorithm: Layout algorithm to use for coordinate generation.
+            only_keep_a_pixels: If True, only keep the a-pixels.
+            get_node_marker_matrix: If True, add a matrix of marker counts to each node.
+            cache: If True, cache one call of this method. Subsequent calls with the same
+                settings are faster at the cost of additional memory usage.
+            random_seed: Seed for graph layouts with a stochastic element. Useful for
+                deterministic layouts across method calls.
+            **kwargs: Passed to the underlying layout implementation.
 
-        :param layout_algorithm: the layout algorithm to use to generate the coordinates
-        :param only_keep_a_pixels: If true, only keep the a-pixels
-        :param get_node_marker_matrix: Add a matrix of marker counts to each
-                                       node if True.
-        :param cache: set to `True` in order to cache one call of this this method.
-                      It will make subsequent calls to the layout method
-                      with the same settings much faster, at the cost of additional
-                      memory usage. This can speed things up a lot when plotting
-                      e.g. different markers across multiple markers.
-        :param random_seed: used as the seed for graph layouts with a stochastic
-                            element. Useful to get deterministic layouts across
-                            method calls.
-        :param **kwargs: will be passed to the underlying layout implementation
-        :return: the coordinates and markers (if activated) as a dataframe
-        :rtype: pd.DataFrame
-        :raises: AssertionError if the provided `layout_algorithm` is not valid
-        :raises: ValueError if the provided current graph instance is empty
+        Returns:
+            DataFrame with coordinates and marker counts (if enabled).
+
+        Raises:
+            AssertionError: If the provided layout_algorithm is not valid.
+            ValueError: If the current graph instance is empty.
+
         """
         if cache:
             return self._cached_layout_coordinates(
