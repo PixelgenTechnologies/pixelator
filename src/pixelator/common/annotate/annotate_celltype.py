@@ -4,16 +4,38 @@ Copyright © 2026 Pixelgen Technologies AB.
 """
 
 import logging
+from importlib import resources
 from typing import List
 
 import numpy as np
 import pandas as pd
 import scanpy as sc
+import scipy
 from anndata import AnnData
 from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import KNeighborsClassifier
 
 from pixelator.common.utils import logger
+
+_DEFAULT_REFERENCE_PACKAGE = "pixelator.common"
+_DEFAULT_REFERENCE_RESOURCE = "resources/pbmc_reference_celltype_annotations.h5ad"
+
+
+def _load_default_reference() -> AnnData:
+    """Load the bundled default PBMC reference AnnData from package resources."""
+    resource = resources.files(_DEFAULT_REFERENCE_PACKAGE).joinpath(
+        _DEFAULT_REFERENCE_RESOURCE
+    )
+    if not resource.is_file():
+        raise FileNotFoundError(
+            "Default cell type reference resource "
+            f"'{_DEFAULT_REFERENCE_RESOURCE}' was not found in package "
+            f"'{_DEFAULT_REFERENCE_PACKAGE}'. Ensure package data files are bundled "
+            "correctly."
+        )
+
+    with resources.as_file(resource) as resource_path:
+        return sc.read_h5ad(resource_path)
 
 
 def annotate_cells(
@@ -22,7 +44,7 @@ def annotate_cells(
     summarize_by_column: str | None = None,
     reference_groups: List[str] = ["celltype_l1", "celltype_l2"],
     method: str = "nmf",
-    min_prediction_score: float = 0.2,
+    min_prediction_score: float = 0.0,
     min_cells_per_celltype: int | None = None,
     n_cells_per_group: int | None = None,
     skip_normalization: bool = False,
@@ -37,7 +59,7 @@ def annotate_cells(
     reference_groups (List[str]): The columns in `reference.obs` containing the ground truth labels.
     method (str): Either 'scanpy' (PCA + KNN, mimics Seurat) or 'nmf' (Seeded Non-Negative Matrix Factorization).
     min_prediction_score (float): Cells with prediction probabilities below this are labeled "Unknown".
-    min_cells_per_celltype (int | None): Minimum number of cells required per cell type for annotation.
+    min_cells_per_celltype (int | None): Minimum number of cells required in the reference data per cell type for annotation.
     n_cells_per_group (int | None): Number of cells to sample per group for annotation.
     skip_normalization (bool): If True, skips the library size normalization and log1p steps.
     nmf_seed (int): Random seed for reproducibility in NMF method.
@@ -47,9 +69,7 @@ def annotate_cells(
 
     """
     if reference is None:
-        reference = sc.read_h5ad(
-            "src/pixelator/common/resources/pbmc_reference_celltype_annotations.h5ad"
-        )
+        reference = _load_default_reference()
 
     if not isinstance(reference, AnnData):
         raise TypeError("reference must be an AnnData object.")
@@ -71,7 +91,10 @@ def annotate_cells(
         if ref_group not in reference.obs.columns:
             raise KeyError(f"Column '{ref_group}' not found in reference.obs")
 
-    shared_features = list(set(query.var_names).intersection(reference.var_names))
+    reference_var_names = set(reference.var_names)
+    shared_features = [
+        feature for feature in query.var_names if feature in reference_var_names
+    ]
 
     logger.debug(f"Found {len(shared_features)} overlapping features.")
 
@@ -103,14 +126,13 @@ def annotate_cells(
             )
         case "nmf":
             if n_cells_per_group is None:
-                n_cells_per_group = 50
+                n_cells_per_group = 100
             if min_cells_per_celltype is None:
                 min_cells_per_celltype = 10
             query = _seeded_nmf_annotation(
                 query=query_tmp,
                 reference=ref_tmp,
                 groups=reference_groups,
-                skip_normalization=skip_normalization,
                 min_prediction_score=min_prediction_score,
                 n_cells_per_group=n_cells_per_group,
                 min_cells_per_celltype=min_cells_per_celltype,
@@ -177,7 +199,6 @@ def _seeded_nmf_annotation(
     query,
     reference,
     groups,
-    skip_normalization,
     min_prediction_score,
     n_cells_per_group=100,
     min_cells_per_celltype=10,
@@ -185,9 +206,9 @@ def _seeded_nmf_annotation(
 ):
     """Seeded NMF using enrichment matrices and Non-Negative Least Squares."""
     ref_data = (
-        reference.X.toarray() if pd.api.types.is_sparse(reference.X) else reference.X
+        reference.X.toarray() if scipy.sparse.issparse(reference.X) else reference.X
     )
-    target_data = query.X.toarray() if pd.api.types.is_sparse(query.X) else query.X
+    target_data = query.X.toarray() if scipy.sparse.issparse(query.X) else query.X
 
     for group in groups:
         logger.debug(f"Running Seeded NMF for '{group}'.")
@@ -243,11 +264,17 @@ def _get_w_matrix(
     np.ndarray: Array of unique group labels.
 
     """
-    np.random.seed(seed)
+    rng = np.random.default_rng(seed)
     df_groups = pd.DataFrame({"group": groups})
 
     counts = df_groups["group"].value_counts()
     valid_groups = counts[counts >= min_cells_per_celltype].index
+
+    if len(valid_groups) == 0:
+        raise ValueError(
+            f"No groups have at least {min_cells_per_celltype} cells. Cannot perform annotation."
+        )
+
     for excluded_group in set(counts.index) - set(valid_groups):
         logger.debug(
             f"Excluding group '{excluded_group}' with only {counts[excluded_group]} cells. Minimum required number of cells is {min_cells_per_celltype}."
@@ -256,7 +283,7 @@ def _get_w_matrix(
     sampled_indices = []
     for g in valid_groups:
         idx = df_groups[df_groups["group"] == g].index
-        sampled = np.random.choice(idx, min(len(idx), n_cells_per_group), replace=False)
+        sampled = rng.choice(idx, min(len(idx), n_cells_per_group), replace=False)
         sampled_indices.extend(sampled)
 
     sampled_data = ref_data[:, sampled_indices]
