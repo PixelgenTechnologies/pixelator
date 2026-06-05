@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from pixelator.common.config import AntibodyPanelMetadata
+from pixelator.common.config import AntibodyPanelMetadata, PanelType
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 
@@ -35,6 +35,8 @@ if TYPE_CHECKING:
 
 class PartialPNAAntibodyPanel:
     """Class representing a PNA antibody panel."""
+
+    _panel_type: PanelType = PanelType.PARTIAL
 
     # required columns
     _INDEX_COLUMN = "marker_id"
@@ -66,9 +68,22 @@ class PartialPNAAntibodyPanel:
                                 invalid or with incorrect format
         """
         self._filename = file_name
+
         if metadata is None:
             raise ValueError("Panel metadata cannot be None")
+        if (
+            self.__class__._panel_type is PanelType.PARTIAL
+            and metadata.panel_type is None
+        ):
+            # if panel type is missing from metadata use partial as default legacy behavior
+            metadata.panel_type = PanelType.PARTIAL
+        elif metadata.panel_type != self.__class__._panel_type:
+            raise ValueError(
+                f"Panel metadata panel_type {metadata.panel_type!r} does not match "
+                + f"{self.__class__.__name__} (expected {self.__class__._panel_type.value})."
+            )
         self.metadata = metadata
+
         self._df = df
 
         # validate the panel
@@ -388,16 +403,22 @@ def get_panel_type_from_metadata(
 ) -> type[PartialPNAAntibodyPanel]:
     """Get the panel class type from the panel metadata."""
     match metadata.panel_type:
-        case PartialPNAAntibodyPanel.__name__:
+        case PanelType.PARTIAL:
             return PartialPNAAntibodyPanel
-        case PNABasePanel.__name__:
+        case PanelType.BASE:
             return PNABasePanel
-        case PNAAddonPanel.__name__:
+        case PanelType.ADDON:
             return PNAAddonPanel
-        case PNASampleHashingPanel.__name__:
+        case PanelType.SAMPLE_HASHING:
             return PNASampleHashingPanel
+        case None:
+            warnings.warn(
+                "Panel metadata has no panel_type. "
+                + "Falling back to generic PartialPNAAntibodyPanel.",
+                UserWarning,
+            )
+            return PartialPNAAntibodyPanel
         case _:
-            # fall back to PartialPNAAntibodyPanel
             warnings.warn(
                 f"Unknown panel type {metadata.panel_type} in panel metadata. "
                 + "Falling back to generic PartialPNAAntibodyPanel.",
@@ -410,10 +431,10 @@ def panel_from_adata(adata: AnnData) -> PartialPNAAntibodyPanel:
     """Create a PartialPNAAntibodyPanel from an AnnData object."""
     if "num_partial_panels" in adata.uns:
         return PNAAntibodyPanelCombination.from_adata(adata)
-    else:
-        [metadata] = AntibodyPanelMetadata.from_adata(adata)
-        panel_type = get_panel_type_from_metadata(metadata)
-        return panel_type.from_adata(adata)
+    panel_type = get_panel_type_from_metadata(
+        AntibodyPanelMetadata.from_adata(adata)[0]
+    )
+    return panel_type.from_adata(adata)
 
 
 def panel_from_pxl_dataset(
@@ -444,8 +465,6 @@ def load_antibody_panel(
     :param config: the config object
     :param requested_panels: the path to the panel file(s) or the name(s) of the
         panel(s) in the config file
-
-        ,
     :returns: the antibody panel
     :rtype: PNAAntibodyPanelCombination
     """
@@ -664,7 +683,7 @@ class PNAAntibodyPanelDiff:
                 metadata.name == self.panel_1.name
                 and metadata.version == self.panel_1.version
             ):
-                adata.uns[metadata_key] = self.panel_2.metadata.model_dump()
+                adata.uns[metadata_key] = self.panel_2.metadata.to_dict()
                 adata.uns[f"panel_df__{idx}"] = self.panel_2.df.to_csv()
                 break
 
@@ -730,7 +749,7 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
         "partial_panel_type": str,
     }
 
-    base_panels: list[PNABasePanel]
+    base_panels: list[PNABasePanel | PartialPNAAntibodyPanel]
     hashing_panels: Optional[list[PNASampleHashingPanel]]
     addon_panels: Optional[list[PNAAddonPanel]]
 
@@ -756,20 +775,9 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
             and "partial_panel_type" not in df.columns
             and isinstance(metadata, AntibodyPanelMetadata)
         ):
-            panel_type = get_panel_type_from_metadata(metadata)
-            panel = panel_type(df, metadata, file_name=file_name)
-            match panel_type.__name__:
-                case PartialPNAAntibodyPanel.__name__ | PNABasePanel.__name__:
-                    self.add_base_panel(panel)
-                case PNASampleHashingPanel.__name__:
-                    self.add_hashing_panel(panel)  # type: ignore
-                case PNAAddonPanel.__name__:
-                    self.add_addon_panel(panel)  # type: ignore
-                case _:
-                    raise ValueError(
-                        f"Unknown panel type {panel_type} in panel metadata. "
-                        + "Cannot initialize panel combination."
-                    )
+            panel_type_class = get_panel_type_from_metadata(metadata)
+            panel = panel_type_class(df, metadata, file_name=file_name)
+            self.add_panel(panel)
             self._df = self.df  # add in the extra columns
         elif (
             "partial_panel_name" in df.columns
@@ -819,14 +827,35 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
         """Return the number of all the partial panels that are part of the combination."""
         return sum(1 for _ in self.partial_panels())
 
+    @staticmethod
+    def _validate_no_conflicting_duplicate_markers(df_list: list[pd.DataFrame]) -> None:
+        """Reject the same marker_id with incompatible rows across partial panels."""
+        seen_markers: dict[str, pd.Series] = {}
+        for partial_df in df_list:
+            for marker_id, row in partial_df.iterrows():
+                if marker_id in seen_markers:
+                    if not seen_markers[marker_id].equals(row):
+                        raise ValueError(
+                            "Conflicting duplicate marker_id "
+                            + f"'{marker_id}' across panels in combination."
+                        )
+                else:
+                    seen_markers[marker_id] = row
+
     @property
     def df(self):
         """Return the panel dataframe for the combination of panels."""
+        partial_dfs = [panel.df for panel in self.partial_panels()]
+        if len(partial_dfs) > 1:
+            self._validate_no_conflicting_duplicate_markers(partial_dfs)
+
         df_list = [
             panel.to_polars()
             .with_columns(
                 pl.lit(panel.name).alias("partial_panel_name"),
-                pl.lit(panel.__class__.__name__).alias("partial_panel_type"),
+                pl.lit(panel.metadata.panel_type or PanelType.PARTIAL).alias(
+                    "partial_panel_type"
+                ),
             )
             .to_pandas()
             .set_index(self._INDEX_COLUMN)
@@ -848,8 +877,10 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
     def add_base_panel(self, base_panel: PNABasePanel | PartialPNAAntibodyPanel):
         """Add a base panel."""
         if isinstance(base_panel, PartialPNAAntibodyPanel):
-            base_panel = PNABasePanel(
-                base_panel.df, base_panel.metadata, base_panel.filename
+            logger.warning(
+                "Adding a PartialPNAAntibodyPanel as a base panel. "
+                + "this is expected legacy behavior for panels without a defined type."
+                + " Consider updating the panel metadata to set the panel type."
             )
         self.base_panels.append(base_panel)
         self._df = self.df
@@ -876,15 +907,17 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
         | PNAAddonPanel,
     ):
         """Add another panel to the combination."""
+        # Match subclasses before PartialPNAAntibodyPanel; class patterns also
+        # match instances of subclasses.
         match panel:
-            case PartialPNAAntibodyPanel():
-                self.add_base_panel(panel)
-            case PNABasePanel():
-                self.add_base_panel(panel)
             case PNASampleHashingPanel():
                 self.add_hashing_panel(panel)
             case PNAAddonPanel():
                 self.add_addon_panel(panel)
+            case PNABasePanel():
+                self.add_base_panel(panel)
+            case PartialPNAAntibodyPanel():
+                self.add_base_panel(panel)
             case _:
                 raise ValueError(f"Unknown panel type: {panel.__class__.__name__}")
         self._df = self.df
@@ -900,9 +933,10 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
         ],
     ) -> "PNAAntibodyPanelCombination":
         """Create a panel combination from a list of subpanels."""
-        first_panel = panels.pop()
-        combination = cls.from_panel(first_panel)
-        for panel in panels:
+        if not panels:
+            raise ValueError("At least one panel is required to build a combination.")
+        combination = cls.from_panel(panels[0])
+        for panel in panels[1:]:
             combination.add_panel(panel)
         return combination
 
@@ -924,7 +958,16 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
             Product name, or None when not provided in panel metadata.
 
         """
-        return " + ".join(p.metadata.product for p in self.partial_panels())
+        # ok to drop None values here since we anyway use the partial panels when checking this
+        # property for e.g. bumping panel versions, i.e. this string is only for display
+        products = [
+            p.metadata.product
+            for p in self.partial_panels()
+            if p.metadata.product is not None
+        ]
+        if not products:
+            return None
+        return " + ".join(products)
 
     @property
     def version(self) -> str:
@@ -971,24 +1014,29 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
     @classmethod
     def from_adata(cls, adata, file_name=None):
         """Create a panel combination from an AnnData object."""
-        list_of_metadatas = AntibodyPanelMetadata.from_adata(adata)
-        logger.debug(
-            "Found %d panel metadata entries in the AnnData object.",
-            len(list_of_metadatas),
-        )
-        if len(list_of_metadatas) == 1 and "num_partial_panels" not in adata.uns:
-            # Backwards compatability with old pixelfiles
+        if "num_partial_panels" not in adata.uns:
             subpanels = [PartialPNAAntibodyPanel.from_adata(adata, file_name)]
-        elif "num_partial_panels" in adata.uns:
+        else:
+            list_of_metadatas = AntibodyPanelMetadata.from_adata(adata)
+            logger.debug(
+                "Found %d panel metadata entries in the AnnData object.",
+                len(list_of_metadatas),
+            )
             subpanels = []
             for idx, metadata in enumerate(list_of_metadatas):
+                panel_df_key = f"panel_df__{idx}"
+                if panel_df_key not in adata.uns:
+                    raise KeyError(
+                        "The provided AnnData object contains partial panel information but is "
+                        + f"missing the panel dataframe for panel at index {idx}."
+                    )
                 df = (
-                    pd.read_csv(StringIO(adata.uns[f"panel_df__{idx}"]))
+                    pd.read_csv(StringIO(adata.uns[panel_df_key]))
                     .set_index(cls._INDEX_COLUMN)
                     .fillna("")
                 )
-                panel_type = get_panel_type_from_metadata(metadata)
-                subpanels.append(panel_type(df, metadata))
+                panel_type_class = get_panel_type_from_metadata(metadata)
+                subpanels.append(panel_type_class(df, metadata))
 
         return PNAAntibodyPanelCombination.from_list_of_subpanels(subpanels)
 
@@ -996,13 +1044,19 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
 class PNABasePanel(PartialPNAAntibodyPanel):
     """Class representing a base panel for PNA."""
 
+    _panel_type = PanelType.BASE
+
 
 class PNAAddonPanel(PartialPNAAntibodyPanel):
     """Class representing an addon panel for PNA."""
 
+    _panel_type = PanelType.ADDON
+
 
 class PNASampleHashingPanel(PartialPNAAntibodyPanel):
     """Class representing a sample hashing panel for PNA."""
+
+    _panel_type = PanelType.SAMPLE_HASHING
 
     _REQUIRED_COLUMNS = {
         **PartialPNAAntibodyPanel._REQUIRED_COLUMNS,

@@ -7,10 +7,11 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
+from anndata import AnnData
 from pandas.testing import assert_frame_equal
 
-from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.pna.anndata import pna_edgelist_to_anndata
+from pixelator.common.config import AntibodyPanelMetadata, PanelType
+from pixelator.pna.anndata import add_panel_information, pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanelCombination, load_antibody_panel
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 
@@ -269,3 +270,28 @@ def test_pna_edgelist_to_anndata_save_adata(pixelconnection, tmp_path):
     adata = pna_edgelist_to_anndata(pixelconnection, panel)
 
     adata.write_h5ad(tmp_path / "test.h5ad")
+
+
+def test_add_panel_information_multi_panel(panel, hashing_panel):
+    """Verify multi-panel combinations are serialized and round-tripped from AnnData."""
+    combo = PNAAntibodyPanelCombination.from_list_of_subpanels(
+        [panel.partial_panels()[0], hashing_panel]
+    )
+    adata = AnnData(
+        obs=pd.DataFrame(index=["component-1"]),
+        var=pd.DataFrame(index=["MarkerA"]),
+    )
+    adata = add_panel_information(adata, combo)
+
+    assert adata.uns["num_partial_panels"] == 2
+    assert "panel_metadata__0" in adata.uns
+    assert "panel_metadata__1" in adata.uns
+    assert "panel_df__0" in adata.uns
+    assert "panel_df__1" in adata.uns
+    assert adata.uns["panel_metadata__1"]["panel_type"] == PanelType.SAMPLE_HASHING
+    assert "panel_metadata" not in adata.uns
+
+    roundtrip = PNAAntibodyPanelCombination.from_adata(adata)
+    assert roundtrip.num_partial_panels == 2
+    assert len(roundtrip.base_panels) == 1
+    assert len(roundtrip.hashing_panels) == 1

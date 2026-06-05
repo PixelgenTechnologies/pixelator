@@ -40,7 +40,7 @@ def _panel_with_version_product_and_uniprot(
     metadata = panel.metadata.model_copy(
         update={"version": version, "product": product}
     )
-    return PartialPNAAntibodyPanel(df=panel_df, metadata=metadata)
+    return type(panel)(df=panel_df, metadata=metadata)
 
 
 def _write_component_suffix_parquet(source: Path, target: Path, suffix: str) -> None:
@@ -161,7 +161,6 @@ class TestTryBumpAdataPanelVersion:
         hashing_panel: PNASampleHashingPanel,
     ):
         """Bump to latest patch when major/minor/product prerequisites are satisfied."""
-        print(panel.base_panels, panel.hashing_panels, panel.addon_panels)
         panel_old = _panel_with_version_product_and_uniprot(
             panel.base_panels[0],
             version="0.1.0",
@@ -228,11 +227,14 @@ class TestTryBumpAdataPanelVersion:
 
         # make sure hashing panel didnt change and is still correctly reconstructed from the
         # bumped adata
-        assert adata_old[:, adata_old.var["sample_hashing"].index].var.equals(
-            bumped[0][:, bumped[0].var["sample_hashing"].index].var
+        hashing_marker_ids = adata_old.var.index[
+            adata_old.var["sample_hashing"].fillna(False).astype(bool)
+        ]
+        assert adata_old[:, hashing_marker_ids].var.equals(
+            bumped[0][:, hashing_marker_ids].var
         )
-        assert adata_new[:, adata_new.var["sample_hashing"].index].var.equals(
-            bumped[1][:, bumped[1].var["sample_hashing"].index].var
+        assert adata_new[:, hashing_marker_ids].var.equals(
+            bumped[1][:, hashing_marker_ids].var
         )
         reconstructed_hp = PNAAntibodyPanelCombination.from_adata(
             bumped[0]

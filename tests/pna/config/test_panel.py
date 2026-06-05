@@ -2,12 +2,15 @@
 
 import pandas as pd
 import pytest
+from anndata import AnnData
 from pandas.testing import assert_frame_equal
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import (
+    PanelType,
     PartialPNAAntibodyPanel,
     PNAAntibodyPanelCombination,
+    PNABasePanel,
 )
 from pixelator.pna.pixeldataset import read
 
@@ -53,14 +56,76 @@ def test_panel_validation(panel_df):
     assert panel.size == 3
 
 
-def test_panel_properties(panel_df):
-    panel = PNAAntibodyPanelCombination(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(
-            name="mock-name",
+def test_panel_combination_classifies_hashing_panel_regardless_of_order(
+    panel_df, hashing_panel
+):
+    base = PNABasePanel(
+        panel_df,
+        AntibodyPanelMetadata(
+            name="base-panel",
             version="0.0.0",
+            panel_type=PanelType.BASE,
         ),
     )
+    combo_hashing_first = PNAAntibodyPanelCombination.from_list_of_subpanels(
+        [hashing_panel, base]
+    )
+    combo_base_first = PNAAntibodyPanelCombination.from_list_of_subpanels(
+        [base, hashing_panel]
+    )
+
+    for combo in (combo_hashing_first, combo_base_first):
+        assert len(combo.base_panels) == 1
+        assert len(combo.hashing_panels) == 1
+        assert combo.num_partial_panels == 2
+
+
+def test_combination_rejects_duplicate_sequences(panel_df):
+    meta1 = AntibodyPanelMetadata(
+        name="panel-a", version="0.0.0", panel_type=PanelType.BASE
+    )
+    meta2 = AntibodyPanelMetadata(
+        name="panel-b", version="0.0.0", panel_type=PanelType.BASE
+    )
+    with pytest.raises(ValueError, match="Duplicate sequences found"):
+        PNAAntibodyPanelCombination.from_list_of_subpanels(
+            [
+                PNABasePanel(panel_df, meta1),
+                PNABasePanel(panel_df.copy(), meta2),
+            ]
+        )
+
+
+def test_combination_rejects_conflicting_duplicate_marker_id(panel_df):
+    meta1 = AntibodyPanelMetadata(
+        name="panel-a", version="0.0.0", panel_type=PanelType.BASE
+    )
+    meta2 = AntibodyPanelMetadata(
+        name="panel-b", version="0.0.0", panel_type=PanelType.BASE
+    )
+    conflicting_df = panel_df.copy()
+    conflicting_df.loc["marker1", "sequence_1"] = "TTTT"
+
+    with pytest.raises(ValueError, match="Conflicting duplicate marker_id"):
+        PNAAntibodyPanelCombination.from_list_of_subpanels(
+            [
+                PNABasePanel(panel_df, meta1),
+                PNABasePanel(conflicting_df, meta2),
+            ]
+        )
+
+
+def test_combination_aliases_raises_for_multi_panel(panel_df, hashing_panel):
+    base = PNABasePanel(
+        panel_df,
+        AntibodyPanelMetadata(
+            name="base-panel", version="0.0.0", panel_type=PanelType.BASE
+        ),
+    )
+    combo = PNAAntibodyPanelCombination.from_list_of_subpanels([base, hashing_panel])
+
+    with pytest.raises(AttributeError, match="Cannot get aliases"):
+        _ = combo.aliases
 
 
 def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
@@ -131,6 +196,84 @@ def test_panel_validation_ok_uniprotid_empty(panel_df):
             version="0.0.0",
         ),
     )
+
+
+def test_panel_metadata_panel_type_must_match_class(panel_df):
+    with pytest.raises(ValueError, match="does not match"):
+        PNABasePanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="wrong-type",
+                version="0.0.0",
+                panel_type=PanelType.SAMPLE_HASHING,
+            ),
+        )
+
+
+def test_base_panel_sets_panel_type_when_missing(panel_df):
+    panel = PartialPNAAntibodyPanel(
+        panel_df,
+        AntibodyPanelMetadata(name="base-panel", version="0.0.0"),
+    )
+    assert panel.metadata.panel_type == PanelType.PARTIAL
+
+
+def test_antibody_panel_metadata_from_adata_rejects_incomplete_schema():
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=["m1"]),
+    )
+    adata.uns["num_partial_panels"] = 2
+    adata.uns["panel_metadata__0"] = {"name": "a", "version": "0.0.0"}
+
+    with pytest.raises(KeyError, match="missing the metadata for panel at index 1"):
+        AntibodyPanelMetadata.from_adata(adata)
+
+
+def test_combination_from_adata_rejects_missing_panel_df(panel, hashing_panel):
+    from pixelator.pna.anndata import add_panel_information
+
+    combo = PNAAntibodyPanelCombination.from_list_of_subpanels(
+        [panel.partial_panels()[0], hashing_panel]
+    )
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=["MarkerA"]),
+    )
+    adata = add_panel_information(adata, combo)
+    del adata.uns["panel_df__1"]
+
+    with pytest.raises(KeyError, match="missing the panel dataframe"):
+        PNAAntibodyPanelCombination.from_adata(adata)
+
+
+def test_antibody_panel_metadata_from_adata_reads_partial_panels():
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=["m1"]),
+    )
+    adata.uns["num_partial_panels"] = 1
+    adata.uns["panel_metadata__0"] = {"name": "a", "version": "0.0.0"}
+
+    metadatas = AntibodyPanelMetadata.from_adata(adata)
+    assert len(metadatas) == 1
+    assert metadatas[0].name == "a"
+
+
+def test_legacy_panel_metadata_roundtrip(panel_df):
+    metadata = AntibodyPanelMetadata(name="legacy-panel", version="1.0.0")
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=panel_df.copy(),
+    )
+    adata.uns["panel_metadata"] = {
+        **metadata.model_dump(),
+        "panel_columns": list(panel_df.columns),
+    }
+
+    combo = PNAAntibodyPanelCombination.from_adata(adata)
+    assert combo.num_partial_panels == 1
+    assert combo.name == "legacy-panel"
 
 
 def test_panel_from_pxl(pxl_file):

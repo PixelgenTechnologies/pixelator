@@ -520,7 +520,7 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
     assert adata.uns["num_partial_panels"] == mock_panel.num_partial_panels
     adata_panels = PNAAntibodyPanelCombination.from_adata(adata)
     for idx, mock_pp in enumerate(mock_panel.partial_panels()):
-        assert adata.uns[f"panel_metadata__{idx}"] == mock_pp.metadata.model_dump()
+        assert adata.uns[f"panel_metadata__{idx}"] == mock_pp.metadata.to_dict()
 
         reconstructed_panel = adata_panels.partial_panels()[idx]
         assert (

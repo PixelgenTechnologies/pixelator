@@ -17,7 +17,7 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from pixelator.common.config import AntibodyPanelMetadata
+from pixelator.common.config import AntibodyPanelMetadata, PanelType
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import (
     PNAAntibodyPanelCombination,
@@ -225,7 +225,7 @@ def hashing_panel_fixture():
             name="hash-set-1",
             product="hash-set-1",
             aliases=[],
-            panel_type=PNASampleHashingPanel.__name__,
+            panel_type=PanelType.SAMPLE_HASHING,
         ),
     )
 

@@ -36,9 +36,7 @@ def add_panel_information(
 
     adata.uns["num_partial_panels"] = panel.num_partial_panels
     for i, pp in enumerate(panel.partial_panels()):
-        metadata_dict = pp.metadata.model_dump()
-
-        adata.uns[f"panel_metadata__{i}"] = metadata_dict
+        adata.uns[f"panel_metadata__{i}"] = pp.metadata.to_dict()
         adata.uns[f"panel_df__{i}"] = pp.df.to_csv()
 
     return adata
@@ -55,7 +53,7 @@ def pna_edgelist_to_anndata(
     pixel_connection : duckdb.DuckDBPyConnection
         A DuckDB connection to a pixel file. The connection must contain an 'edgelist' table
         with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
-    panel : PNAAntibodyPanel
+    panel : PNAAntibodyPanelCombination
         The antibody panel object containing marker metadata.
 
     Returns

@@ -19,7 +19,11 @@ from pixelator.pna.config.config_class import (
     load_panels_package,
 )
 from pixelator.pna.config.config_instance import pna_config
-from pixelator.pna.config.panel import PartialPNAAntibodyPanel, load_antibody_panel
+from pixelator.pna.config.panel import (
+    PartialPNAAntibodyPanel,
+    PNAAntibodyPanelCombination,
+    load_antibody_panel,
+)
 
 
 def test_config_creation():
@@ -250,6 +254,8 @@ def test_load_antibody_panel_util(pna_data_root):
 
     """
     cgf_panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")
+    assert isinstance(cgf_panel, PNAAntibodyPanelCombination)
+    assert cgf_panel.num_partial_panels == 1
     assert cgf_panel.name == "proxiome-v1-immuno-155-v1.0"
 
     path_panel = load_antibody_panel(
@@ -260,6 +266,34 @@ def test_load_antibody_panel_util(pna_data_root):
 
     with pytest.raises(AssertionError):
         load_antibody_panel(pna_config, "human-qwdqwdqwdqdw-proteomics")
+
+
+def test_load_antibody_panel_multiple_panels(pna_data_root, tmp_path):
+    """Verify loading multiple panel files returns a combination with both partial panels."""
+    hashing_csv = tmp_path / "hash-panel.csv"
+    hashing_csv.write_text(
+        """# ---
+# name: hash-set-1
+# product: hash-set-1
+# version: 0.1.0
+# panel_type: sample_hashing
+# ---
+marker_id,control,sequence_1,sequence_2,sample_hashing
+HM-1,no,ACTTCCTACC,ACTTCCTACC,yes
+HM-2,no,GGGCTATGGT,GGGCTATGGT,yes
+"""
+    )
+    combo = load_antibody_panel(
+        pna_config,
+        [
+            pna_data_root / "test-pna-panel-v1.1.0.csv",
+            hashing_csv,
+        ],
+    )
+    assert isinstance(combo, PNAAntibodyPanelCombination)
+    assert combo.num_partial_panels == 2
+    assert len(combo.base_panels) == 1
+    assert len(combo.hashing_panels) == 1
 
 
 def test_panel_with_non_dna_sequences(pna_data_root):
