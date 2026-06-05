@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Added
 - `coarsened_pmds_layout` method for more performant cell layout computation.
+- `annotate_cells` method to determine cell-types using another given set of pre-annotated cells.
 
 ### Fixed
  - Performance regression (introduced in 0.27.1) in the graph command, where memory usage became
