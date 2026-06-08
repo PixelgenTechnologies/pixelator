@@ -1,0 +1,11 @@
+2026-06-08 14:11:43,662 INFO Found panel in config file: proxiome-v1-immuno-155-v1.0
+2026-06-08 14:11:43,662 INFO Reusing existing pxl at /tmp/pna_bench/bench.pxl (size on disk: 472.51 MiB) (skipping synthetic edgelist generation)
+2026-06-08 14:11:43,663 INFO Found panel in config file: proxiome-v1-immuno-155-v1.0
+
+================================================================================
+Benchmark for pna_edgelist_to_anndata (n_components=10000, avg_edges_per_component=1000, markers=158)
+================================================================================
+pna_edgelist_to_anndata (current impl)                  time=  15.20s  tracemalloc_peak= 34.90 MiB  rss_delta=810.38 MiB  rss_peak=  1.07 GiB
+  -> adata shape=(30000, 158) X dtype=uint32 n_obs_cols=8
+
+Done.

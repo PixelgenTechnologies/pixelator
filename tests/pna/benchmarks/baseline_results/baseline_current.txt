@@ -1,0 +1,269 @@
+2026-06-08 13:52:01,876 INFO Found panel in config file: proxiome-v1-immuno-155-v1.0
+2026-06-08 13:52:01,877 INFO Reusing existing pxl at /tmp/pna_bench/bench.pxl (size on disk: 472.51 MiB) (skipping synthetic edgelist generation)
+2026-06-08 13:52:01,877 INFO Found panel in config file: proxiome-v1-immuno-155-v1.0
+
+================================================================================
+Benchmark for pna_edgelist_to_anndata (n_components=10000, avg_edges_per_component=1000, markers=158)
+================================================================================
+pna_edgelist_to_anndata (current impl)                  time=   1.30s  tracemalloc_peak= 92.28 MiB  rss_delta=  2.77 GiB  rss_peak=  3.05 GiB
+  -> adata shape=(30000, 158) X dtype=uint32 n_obs_cols=8
+
+EXPLAIN ANALYZE :: wide PIVOT (default COUNT DISTINCT) :: threads=default time=   0.60s  tracemalloc_peak= 51.38 KiB  rss_delta=153.97 MiB  rss_peak=  3.20 GiB
+---- query plan (truncated to first 60 lines) ----
+analyzed_plan
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││    Query Profiling Information    ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+EXPLAIN ANALYZE          SELECT *         FROM (             WITH counts_df_long AS (                 WITH                     marker_1_counts AS (                         SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS marker_1_count                         FROM edgelist                         GROUP BY component, marker_1),                     marker_2_counts AS (                         SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS marker_2_count                         FROM edgelist                         GROUP BY component, marker_2                     )                 SELECT                     COALESCE(a.component, b.component) AS component,                     COALESCE(a.marker, b.marker) AS marker,                     COALESCE(a.marker_1_count, 0) AS marker_1_count,                     COALESCE(b.marker_2_count, 0) AS marker_2_count,                     COALESCE(a.marker_1_count, 0) + COALESCE(b.marker_2_count, 0) AS count                 FROM marker_1_counts a                 FULL OUTER JOIN marker_2_counts b                     ON a.component = b.component AND a.marker = b.marker             )             PIVOT counts_df_long             ON marker IN ('HLA-ABC', 'B2M', 'CD11b', 'CD11c', 'CD18', 'CD82', 'CD8', 'TCRab', 'HLA-DR', 'CD45', 'CD14', 'CD16', 'CD19', 'mIgG1', 'CD45RB', 'CD44', 'CD52', 'CD59', 'CD45RA', 'CD36', 'CD2', 'CD29', 'CD5', 'CD162', 'CD27', 'CR1', 'CD26', 'CD49d', 'CD37', 'CD41', 'CD20', 'CD64', 'CD22', 'PD-L1', 'Siglec-7', 'CD25', 'PD-1', 'NKp46', 'mIgG2a', 'mIgG2b', 'CTLA-4', 'CD86', 'CD13', 'ADAM10', 'KIR2DL1', 'KIR2DL2/DL3', 'NKG2A', 'NKG2C', 'CD163', 'CD169', 'CD1a', 'CD1c', 'CD206', 'DNAM-1', 'PD-L2', 'CD28', 'SLAMF6', 'CD45RO', 'CD49e', 'CD56', 'CD79a', 'CD80', 'CD81', 'LILRB1', 'CD93', 'IgD', 'IgE', 'IgM', 'KLRG1', 'NKp80', 'TCRgd', 'CD10', 'CD103', 'CCR9', 'CD1b', 'CD21', 'TALLA', 'CD277', 'LAIR1', 'CD371', 'CD89', 'CD90', 'CD70', 'GPR56', 'HLA-DQ', 'TCRVd2', 'HLA-DR-DP-DQ', 'Siglec-9', 'TCRVa7.2', 'Fas', 'TCRVg9', 'CD127', 'CD141', 'CD31', 'CD6', 'CD57', 'CD73', 'TIM-3', 'GITR', 'CCR3', 'SLAMF7', 'TIGIT', 'OX40', 'ICAM-2', 'CD123', 'CD150', 'CD40L', 'KIR', 'CD161', 'CD180', 'CCR1', 'CCR2', 'CD1d', 'CD200', 'Ly9', 'CD24', '2B4', 'BAFF-R', 'ICOS', 'CD32', 'CD33', 'NKp30', 'CD38', 'CD39', 'CD40', 'CD48', 'ICAM-3', 'CD55', 'CD58', 'CD62P', 'CD69', 'CD72', 'CD84', 'CD9', 'CD94', 'TCRVb5', 'CD3e', 'CD4', 'CD11a', 'CD43', 'CD7', 'CD53', 'CD302', 'VISTA', 'BCMA', 'CD138', '4-1BB', 'CD66b', 'CX3CR1', 'EpCAM', 'DC-SIGN', 'CD34', 'Dectin-1', 'ICAM-1', 'CD71', 'CD47', 'c-Kit', 'NKG2D')             USING SUM(count)             GROUP BY component         )     
+┌────────────────────────────────────────────────┐
+│┌──────────────────────────────────────────────┐│
+││              Total Time: 0.592s              ││
+│└──────────────────────────────────────────────┘│
+└────────────────────────────────────────────────┘
+┌───────────────────────────┐
+│           QUERY           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│      EXPLAIN_ANALYZE      │
+│    ────────────────────   │
+│                           │
+│           0 rows          │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│           PIVOT           │
+│    ────────────────────   │
+│                           │
+│        30,000 rows        │
+│           0.11s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│__internal_decompress_strin│
+│           g(#0)           │
+│             #1            │
+│             #2            │
+│                           │
+│                           │
+│                           │
+│        30,000 rows        │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│       HASH_GROUP_BY       │
+│    ────────────────────   │
+│         Groups: #0        │
+│                           │
+│        Aggregates:        │
+│          list(#1)         │
+│          list(#2)         │
+│                           │
+│                           │
+│                           │
+│        30,000 rows        │
+│           1.50s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│  __internal_pivot_group1  │
+---- end of plan ----
+
+EXPLAIN ANALYZE :: component metrics (default COUNT DISTINCT) :: threads=default time=   0.52s  tracemalloc_peak= 66.35 KiB  rss_delta=       0 B  rss_peak=  3.20 GiB
+---- query plan (truncated to first 60 lines) ----
+analyzed_plan
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││    Query Profiling Information    ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+EXPLAIN ANALYZE          WITH             marker_1_counts AS (                 SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS marker_1_count                 FROM edgelist                 GROUP BY component, marker_1),             marker_2_counts AS (                 SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS marker_2_count                 FROM edgelist                 GROUP BY component, marker_2             ),             component_marker_counts AS (                 SELECT                     COALESCE(a.component, b.component) AS component,                     COALESCE(a.marker_1_count, 0) AS marker_1_count,                     COALESCE(b.marker_2_count, 0) AS marker_2_count                 FROM marker_1_counts a                 FULL OUTER JOIN marker_2_counts b                     ON a.component = b.component AND a.marker = b.marker             ),             component_umi AS (                 SELECT                     component,                     SUM(marker_1_count) AS n_umi1,                     SUM(marker_2_count) AS n_umi2                 FROM component_marker_counts                 GROUP BY component             ),             edge_counts AS (                 SELECT component, COUNT(*) AS n_edges, SUM(read_count) AS reads_in_component                 FROM edgelist                 GROUP BY component             )         SELECT             u.component,             n_umi1,             n_umi2,             e.n_edges,             e.reads_in_component,             (n_umi1 + n_umi2) AS n_umi         FROM component_umi u         LEFT JOIN edge_counts e ON u.component = e.component         ORDER BY u.component     
+┌────────────────────────────────────────────────┐
+│┌──────────────────────────────────────────────┐│
+││              Total Time: 0.517s              ││
+│└──────────────────────────────────────────────┘│
+└────────────────────────────────────────────────┘
+┌───────────────────────────┐
+│           QUERY           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│      EXPLAIN_ANALYZE      │
+│    ────────────────────   │
+│                           │
+│           0 rows          │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│__internal_decompress_strin│
+│           g(#0)           │
+│             #1            │
+│             #2            │
+│             #3            │
+│             #4            │
+│             #5            │
+│                           │
+│                           │
+│                           │
+│        30,000 rows        │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│          ORDER_BY         │
+│    ────────────────────   │
+│      u.component ASC      │
+│                           │
+│                           │
+│                           │
+│        30,000 rows        │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│__internal_compress_string_│
+│        ubigint(#0)        │
+│             #1            │
+│             #2            │
+│             #3            │
+│             #4            │
+│             #5            │
+│                           │
+│                           │
+---- end of plan ----
+
+EXPLAIN ANALYZE :: wide PIVOT (default COUNT DISTINCT) :: threads=1 time=   5.38s  tracemalloc_peak= 51.38 KiB  rss_delta=728.62 MiB  rss_peak=  3.91 GiB
+---- query plan (truncated to first 60 lines) ----
+analyzed_plan
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││    Query Profiling Information    ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+EXPLAIN ANALYZE          SELECT *         FROM (             WITH counts_df_long AS (                 WITH                     marker_1_counts AS (                         SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS marker_1_count                         FROM edgelist                         GROUP BY component, marker_1),                     marker_2_counts AS (                         SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS marker_2_count                         FROM edgelist                         GROUP BY component, marker_2                     )                 SELECT                     COALESCE(a.component, b.component) AS component,                     COALESCE(a.marker, b.marker) AS marker,                     COALESCE(a.marker_1_count, 0) AS marker_1_count,                     COALESCE(b.marker_2_count, 0) AS marker_2_count,                     COALESCE(a.marker_1_count, 0) + COALESCE(b.marker_2_count, 0) AS count                 FROM marker_1_counts a                 FULL OUTER JOIN marker_2_counts b                     ON a.component = b.component AND a.marker = b.marker             )             PIVOT counts_df_long             ON marker IN ('HLA-ABC', 'B2M', 'CD11b', 'CD11c', 'CD18', 'CD82', 'CD8', 'TCRab', 'HLA-DR', 'CD45', 'CD14', 'CD16', 'CD19', 'mIgG1', 'CD45RB', 'CD44', 'CD52', 'CD59', 'CD45RA', 'CD36', 'CD2', 'CD29', 'CD5', 'CD162', 'CD27', 'CR1', 'CD26', 'CD49d', 'CD37', 'CD41', 'CD20', 'CD64', 'CD22', 'PD-L1', 'Siglec-7', 'CD25', 'PD-1', 'NKp46', 'mIgG2a', 'mIgG2b', 'CTLA-4', 'CD86', 'CD13', 'ADAM10', 'KIR2DL1', 'KIR2DL2/DL3', 'NKG2A', 'NKG2C', 'CD163', 'CD169', 'CD1a', 'CD1c', 'CD206', 'DNAM-1', 'PD-L2', 'CD28', 'SLAMF6', 'CD45RO', 'CD49e', 'CD56', 'CD79a', 'CD80', 'CD81', 'LILRB1', 'CD93', 'IgD', 'IgE', 'IgM', 'KLRG1', 'NKp80', 'TCRgd', 'CD10', 'CD103', 'CCR9', 'CD1b', 'CD21', 'TALLA', 'CD277', 'LAIR1', 'CD371', 'CD89', 'CD90', 'CD70', 'GPR56', 'HLA-DQ', 'TCRVd2', 'HLA-DR-DP-DQ', 'Siglec-9', 'TCRVa7.2', 'Fas', 'TCRVg9', 'CD127', 'CD141', 'CD31', 'CD6', 'CD57', 'CD73', 'TIM-3', 'GITR', 'CCR3', 'SLAMF7', 'TIGIT', 'OX40', 'ICAM-2', 'CD123', 'CD150', 'CD40L', 'KIR', 'CD161', 'CD180', 'CCR1', 'CCR2', 'CD1d', 'CD200', 'Ly9', 'CD24', '2B4', 'BAFF-R', 'ICOS', 'CD32', 'CD33', 'NKp30', 'CD38', 'CD39', 'CD40', 'CD48', 'ICAM-3', 'CD55', 'CD58', 'CD62P', 'CD69', 'CD72', 'CD84', 'CD9', 'CD94', 'TCRVb5', 'CD3e', 'CD4', 'CD11a', 'CD43', 'CD7', 'CD53', 'CD302', 'VISTA', 'BCMA', 'CD138', '4-1BB', 'CD66b', 'CX3CR1', 'EpCAM', 'DC-SIGN', 'CD34', 'Dectin-1', 'ICAM-1', 'CD71', 'CD47', 'c-Kit', 'NKG2D')             USING SUM(count)             GROUP BY component         )     
+┌────────────────────────────────────────────────┐
+│┌──────────────────────────────────────────────┐│
+││               Total Time: 5.38s              ││
+│└──────────────────────────────────────────────┘│
+└────────────────────────────────────────────────┘
+┌───────────────────────────┐
+│           QUERY           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│      EXPLAIN_ANALYZE      │
+│    ────────────────────   │
+│                           │
+│           0 rows          │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│           PIVOT           │
+│    ────────────────────   │
+│                           │
+│        30,000 rows        │
+│           0.09s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│__internal_decompress_strin│
+│           g(#0)           │
+│             #1            │
+│             #2            │
+│                           │
+│                           │
+│                           │
+│        30,000 rows        │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│       HASH_GROUP_BY       │
+│    ────────────────────   │
+│         Groups: #0        │
+│                           │
+│        Aggregates:        │
+│          list(#1)         │
+│          list(#2)         │
+│                           │
+│                           │
+│                           │
+│        30,000 rows        │
+│           0.18s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│  __internal_pivot_group1  │
+---- end of plan ----
+
+EXPLAIN ANALYZE :: component metrics (default COUNT DISTINCT) :: threads=1 time=   4.92s  tracemalloc_peak= 66.35 KiB  rss_delta=  1.69 MiB  rss_peak=  3.91 GiB
+---- query plan (truncated to first 60 lines) ----
+analyzed_plan
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││    Query Profiling Information    ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+EXPLAIN ANALYZE          WITH             marker_1_counts AS (                 SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS marker_1_count                 FROM edgelist                 GROUP BY component, marker_1),             marker_2_counts AS (                 SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS marker_2_count                 FROM edgelist                 GROUP BY component, marker_2             ),             component_marker_counts AS (                 SELECT                     COALESCE(a.component, b.component) AS component,                     COALESCE(a.marker_1_count, 0) AS marker_1_count,                     COALESCE(b.marker_2_count, 0) AS marker_2_count                 FROM marker_1_counts a                 FULL OUTER JOIN marker_2_counts b                     ON a.component = b.component AND a.marker = b.marker             ),             component_umi AS (                 SELECT                     component,                     SUM(marker_1_count) AS n_umi1,                     SUM(marker_2_count) AS n_umi2                 FROM component_marker_counts                 GROUP BY component             ),             edge_counts AS (                 SELECT component, COUNT(*) AS n_edges, SUM(read_count) AS reads_in_component                 FROM edgelist                 GROUP BY component             )         SELECT             u.component,             n_umi1,             n_umi2,             e.n_edges,             e.reads_in_component,             (n_umi1 + n_umi2) AS n_umi         FROM component_umi u         LEFT JOIN edge_counts e ON u.component = e.component         ORDER BY u.component     
+┌────────────────────────────────────────────────┐
+│┌──────────────────────────────────────────────┐│
+││               Total Time: 4.92s              ││
+│└──────────────────────────────────────────────┘│
+└────────────────────────────────────────────────┘
+┌───────────────────────────┐
+│           QUERY           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│      EXPLAIN_ANALYZE      │
+│    ────────────────────   │
+│                           │
+│           0 rows          │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│__internal_decompress_strin│
+│           g(#0)           │
+│             #1            │
+│             #2            │
+│             #3            │
+│             #4            │
+│             #5            │
+│                           │
+│                           │
+│                           │
+│        30,000 rows        │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│          ORDER_BY         │
+│    ────────────────────   │
+│      u.component ASC      │
+│                           │
+│                           │
+│                           │
+│        30,000 rows        │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│__internal_compress_string_│
+│        ubigint(#0)        │
+│             #1            │
+│             #2            │
+│             #3            │
+│             #4            │
+│             #5            │
+│                           │
+│                           │
+---- end of plan ----
+
+PROBE :: wide PIVOT (COUNT() - no distinct, WRONG semantics) time=   1.79s  tracemalloc_peak= 39.08 MiB  rss_delta=288.47 MiB  rss_peak=  4.19 GiB
+PROBE :: component metrics (COUNT() - no distinct, WRONG semantics) time=   0.26s  tracemalloc_peak=  8.06 MiB  rss_delta=       0 B  rss_peak=  4.19 GiB
+Done.
