@@ -27,6 +27,7 @@ from pixelator.pna.graph.component_recovery_utils import (
     filter_edgelist_by_read_count,
     initialize_graph_statistics,
     name_components_with_umi_hashes,
+    name_components_with_umi_hashes_from_parquet,
     populate_component_stats_from_hybrid_detection,
     remove_clashing_umis,
     write_hive_partitioned_edgelist_without_small_components,
@@ -82,6 +83,40 @@ class MultipletRecoveryStats:
     crossing_edges_removed: int = 0
     crossing_edges_removed_in_initial_stage: int = 0
     max_recursion_depth: int = 0
+
+
+def map_working_to_original_umi_names(
+    input_edgelist_path: Path, node_map_path: Path, working_dir: Path
+) -> Path:
+    """Replace working UMI names in an edgelist with original names and write parquet."""
+    output_path = working_dir / "edgelist_with_original_umis.parquet"
+    with duckdb.connect() as con:
+        missing_count_row = con.execute(f"""
+            SELECT COUNT(*) AS n_missing
+            FROM parquet_scan('{str(input_edgelist_path)}') e
+            LEFT JOIN read_parquet('{str(node_map_path)}') m1 ON e.umi1 = m1.working_name
+            LEFT JOIN read_parquet('{str(node_map_path)}') m2 ON e.umi2 = m2.working_name
+            WHERE m1.original_name IS NULL OR m2.original_name IS NULL
+        """).fetchone()
+        if missing_count_row is None:
+            msg = "Failed to compute missing UMI mapping count"
+            raise RuntimeError(msg)
+        missing_count = int(missing_count_row[0])
+        if missing_count > 0:
+            raise ValueError("Missing UMI mapping for one or more edges")
+
+        con.execute(f"""
+            COPY (
+                SELECT
+                    e.* EXCLUDE (umi1, umi2),
+                    m1.original_name AS umi1,
+                    m2.original_name AS umi2
+                FROM parquet_scan('{str(input_edgelist_path)}') e
+                JOIN read_parquet('{str(node_map_path)}') m1 ON e.umi1 = m1.working_name
+                JOIN read_parquet('{str(node_map_path)}') m2 ON e.umi2 = m2.working_name
+            ) TO '{str(output_path)}' (FORMAT PARQUET)
+        """)
+    return output_path
 
 
 def calculate_post_recovery_component_statistics(
@@ -585,30 +620,24 @@ def find_components(
         )
 
     logger.info("Filtering connected components by size.")
-    latest_edgelist = pl.scan_parquet(
-        latest_working_edgelist_path, hive_schema={"component": pl.String}
-    )
-    latest_edgelist_filtered, component_stats = filter_connected_components_by_size(
-        edgelist=latest_edgelist,
+    latest_working_edgelist_path, component_stats = filter_connected_components_by_size(
+        input_edgelist_path=latest_working_edgelist_path,
         discard_sizes=discard_sizes,
         component_size_threshold=component_size_threshold,
         component_stats=component_stats,
-    )
-    umi_map = pl.read_parquet(node_map_path)
-    final_edgelist_with_components = latest_edgelist_filtered.with_columns(
-        umi1=pl.col("umi1").replace_strict(
-            umi_map["working_name"], umi_map["original_name"]
-        ),
-        umi2=pl.col("umi2").replace_strict(
-            umi_map["working_name"], umi_map["original_name"]
-        ),
-    )
-    final_edgelist_with_components = name_components_with_umi_hashes(
-        final_edgelist_with_components
+        working_dir=working_dir,
     )
 
-    logger.info("Writing resolved edgelist.")
-    resolved_edgelist_path = working_dir / "edgelist_with_resolved_components.parquet"
-    final_edgelist_with_components.sink_parquet(resolved_edgelist_path)
+    logger.info("Mapping UMIs to original names.")
+    latest_working_edgelist_path = map_working_to_original_umi_names(
+        input_edgelist_path=latest_working_edgelist_path,
+        node_map_path=node_map_path,
+        working_dir=working_dir,
+    )
+    logger.info("Creating component names from UMIs.")
+    final_edgelist_with_components = name_components_with_umi_hashes_from_parquet(
+        input_edgelist_path=latest_working_edgelist_path,
+        working_dir=working_dir,
+    )
 
-    return component_stats, resolved_edgelist_path
+    return component_stats, final_edgelist_with_components

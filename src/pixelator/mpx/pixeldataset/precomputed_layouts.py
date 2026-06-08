@@ -595,7 +595,7 @@ def generate_precomputed_layouts_for_components(
     components: set[str] | None = None,
     add_node_marker_counts: bool = True,
     layout_algorithms: SupportedLayoutAlgorithm
-    | list[SupportedLayoutAlgorithm] = "wpmds_3d",
+    | list[SupportedLayoutAlgorithm] = "coarsened_pmds_3d",
 ) -> PreComputedLayouts:
     """Generate precomputed layouts for the components in the PixelDataset.
 

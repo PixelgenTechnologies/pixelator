@@ -88,6 +88,8 @@ dev = [
     "pytest-watcher",
     "ipython",
     "types-requests>=2.32.4.20260107",
+    "line-profiler>=5.0.2",
+    "ipykernel>=7.2.0",
 ]
 
 

@@ -100,6 +100,7 @@ def build_pxl_file_with_components(
             n_threads=n_cores,
         )
 
+        logger.info("Writing pxl file to %s", path_output_pxl_file)
         with PixelFileWriter(path_output_pxl_file) as pxl_file_writer:
             pxl_connection = pxl_file_writer.get_connection()
             pxl_connection.execute(
