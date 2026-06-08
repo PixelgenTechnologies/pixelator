@@ -1,12 +1,12 @@
 """Community detection and refinement functions for graph analysis.
 
-Copyright (c) 2025 Pixelgen Technologies AB.
+Copyright © 2025 Pixelgen Technologies AB.
 """
 
 import multiprocessing
 import shutil
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import as_completed
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
@@ -27,6 +27,7 @@ from pixelator.pna.graph.component_recovery_utils import (
     filter_edgelist_by_read_count,
     initialize_graph_statistics,
     name_components_with_umi_hashes,
+    name_components_with_umi_hashes_from_parquet,
     populate_component_stats_from_hybrid_detection,
     remove_clashing_umis,
     write_hive_partitioned_edgelist_without_small_components,
@@ -84,6 +85,40 @@ class MultipletRecoveryStats:
     max_recursion_depth: int = 0
 
 
+def map_working_to_original_umi_names(
+    input_edgelist_path: Path, node_map_path: Path, working_dir: Path
+) -> Path:
+    """Replace working UMI names in an edgelist with original names and write parquet."""
+    output_path = working_dir / "edgelist_with_original_umis.parquet"
+    with duckdb.connect() as con:
+        missing_count_row = con.execute(f"""
+            SELECT COUNT(*) AS n_missing
+            FROM parquet_scan('{str(input_edgelist_path)}') e
+            LEFT JOIN read_parquet('{str(node_map_path)}') m1 ON e.umi1 = m1.working_name
+            LEFT JOIN read_parquet('{str(node_map_path)}') m2 ON e.umi2 = m2.working_name
+            WHERE m1.original_name IS NULL OR m2.original_name IS NULL
+        """).fetchone()
+        if missing_count_row is None:
+            msg = "Failed to compute missing UMI mapping count"
+            raise RuntimeError(msg)
+        missing_count = int(missing_count_row[0])
+        if missing_count > 0:
+            raise ValueError("Missing UMI mapping for one or more edges")
+
+        con.execute(f"""
+            COPY (
+                SELECT
+                    e.* EXCLUDE (umi1, umi2),
+                    m1.original_name AS umi1,
+                    m2.original_name AS umi2
+                FROM parquet_scan('{str(input_edgelist_path)}') e
+                JOIN read_parquet('{str(node_map_path)}') m1 ON e.umi1 = m1.working_name
+                JOIN read_parquet('{str(node_map_path)}') m2 ON e.umi2 = m2.working_name
+            ) TO '{str(output_path)}' (FORMAT PARQUET)
+        """)
+    return output_path
+
+
 def calculate_post_recovery_component_statistics(
     edgelist_with_components_path: Path,
     component_stats: GraphStatistics,
@@ -91,12 +126,11 @@ def calculate_post_recovery_component_statistics(
     """Calculate and update graph statistics after multiplet recovery.
 
     Args:
-        edgelist_with_components_path (Path): Path to the edgelist with components in Parquet format.
-        component_stats (GraphStatistics): Graph statistics to be updated.
+        edgelist_with_components_path: Path to the edgelist with components in Parquet format.
+        component_stats: Graph statistics to be updated.
 
     Returns:
         GraphStatistics: Updated graph statistics.
-
     """
     edgelist = pl.scan_parquet(
         edgelist_with_components_path,
@@ -141,11 +175,16 @@ def merge_communities_with_many_crossing_edges(
     If one of them is None, only the other one is considered and if they are
     both None, the split communities are not considered for merging.
 
-    :param edgelist: The edge list to process
-    :param node_community_dict: A dictionary mapping each node to a community
-    :param n_edges: The threshold for the number of edges to be found between
-    communities to merge or None to avoid merging
-    :returns: The updated community mapping
+    Args:
+        edgelist: The edge list to process
+        node_community_dict: A dictionary mapping each node to a community
+        n_edges: The threshold for the number of edges to be found between communities to merge or
+            None to avoid merging
+        max_edges_to_remove: Max edges to remove.
+        max_edges_to_remove_relative: Max edges to remove relative.
+
+    Returns:
+        The updated community mapping
     """
     community_serie = pd.Series(node_community_dict)
     if max_edges_to_remove is None and max_edges_to_remove_relative is None:
@@ -205,7 +244,8 @@ def refine_component(
 
     Args:
         component_id: ID of the component to refine.
-        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
+        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned)
+            format.
         refinement_options: Options for refinement during community detection.
         duckdb_config: Configuration for DuckDB connection.
 
@@ -213,7 +253,6 @@ def refine_component(
         pd.Series: Sizes of new components after refinement.
         int: Number of crossing edges removed during refinement.
         pd.Series: Sizes of discarded components after refinement.
-
     """
     with duckdb.connect(config=duckdb_config) as con:
         edgelist = con.execute(f"""
@@ -293,7 +332,12 @@ def refine_component(
 def get_component_sizes(
     component_edgelists_path: Path,
 ) -> pd.Series:
-    """Get sizes of components from edgelist with components."""
+    """Get sizes of components from edgelist with components.
+
+    Args:
+        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned)
+            format.
+    """
     with duckdb.connect() as con:
         component_sizes = con.execute(f"""
             SELECT component, COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2) AS n_umi
@@ -314,23 +358,24 @@ def run_leiden_refinement(
     component_sizes: pl.DataFrame | None = None,
     max_workers: int = 10,
 ) -> tuple[GraphStatistics, pl.DataFrame]:
-    """Recovery multiplets by leiden community detection, removing crossing edges between communities.
+    """Recover multiplets by Leiden community detection, removing crossing edges.
 
     Args:
-        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned) format.
+        component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned)
+            format.
         refinement_options: Options for refinement during community detection.
         component_stats: Statistics about the components.
         component_sizes: Optional precomputed sizes of components.
         max_workers: Maximum number of worker processes to use.
 
     Returns:
-        tuple[GraphStatistics, pl.DataFrame]: Updated component statistics and DataFrame of discarded component sizes.
+        tuple[GraphStatistics, pl.DataFrame]: Updated component statistics and DataFrame of
+        discarded component sizes.
 
     Raises:
         ValueError: If ``max_workers`` is invalid.
-        DuckdbPerThreadMemoryError: If the configured memory split would give each thread
-            less than 1 MiB.
-
+        DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than
+            1 MiB.
     """
     if component_sizes is None:
         component_sizes = get_component_sizes(component_edgelists_path)
@@ -450,19 +495,20 @@ def find_components(
 
     Returns:
         tuple[GraphStatistics, Path]: Component statistics and path to the edgelist with components.
-
     """
     logger.info("Starting component finding process.")
     component_stats = initialize_graph_statistics(
         collapsed_edgelist_path=input_edgelist_path
     )
 
+    logger.info("Removing clashing UMIs.")
     no_clash_edgelist_path, component_stats = remove_clashing_umis(
         input_edgelist_path=input_edgelist_path,
         component_stats=component_stats,
         working_dir=working_dir,
     )
 
+    logger.info("Filtering edgelist by read count.")
     filtered_edgelist_path, component_stats = filter_edgelist_by_read_count(
         input_edgelist_path=no_clash_edgelist_path,
         min_read_count=min_read_count,
@@ -470,6 +516,7 @@ def find_components(
         working_dir=working_dir,
     )
 
+    logger.info("Starting component finding process.")
     working_edgelist_path, node_map_path = create_working_edgelist(
         input_edgelist_path=filtered_edgelist_path,
         working_dir=working_dir,
@@ -506,6 +553,7 @@ def find_components(
         )
         raise ConnectedComponentException(msg)
 
+    logger.debug("Populating component statistics from hybrid detection.")
     populate_component_stats_from_hybrid_detection(
         component_stats=component_stats,
         pre_recovery_stats=pre_recovery_stats,
@@ -513,6 +561,7 @@ def find_components(
         post_recovery_stats=post_recovery_stats,
     )
 
+    logger.info("Writing hive partitioned edgelist without small components.")
     hive_partitioned_edgelist_path, discard_sizes = (
         write_hive_partitioned_edgelist_without_small_components(
             input_edgelist_path=partitioned_edgelist_path,
@@ -545,6 +594,7 @@ def find_components(
             component_stats=component_stats,
         )
 
+    logger.debug("Writing unified edgelist.")
     new_edgelist_path = working_dir / "unified_edge_list.parquet"
     pl.scan_parquet(
         latest_working_edgelist_path, hive_schema={"component": pl.String}
@@ -569,29 +619,25 @@ def find_components(
             f"Edge cycle verification completed in {time.time() - time_start:.2f} seconds."
         )
 
-    latest_edgelist = pl.scan_parquet(
-        latest_working_edgelist_path, hive_schema={"component": pl.String}
-    )
-    latest_edgelist_filtered, component_stats = filter_connected_components_by_size(
-        edgelist=latest_edgelist,
+    logger.info("Filtering connected components by size.")
+    latest_working_edgelist_path, component_stats = filter_connected_components_by_size(
+        input_edgelist_path=latest_working_edgelist_path,
         discard_sizes=discard_sizes,
         component_size_threshold=component_size_threshold,
         component_stats=component_stats,
-    )
-    umi_map = pl.read_parquet(node_map_path)
-    final_edgelist_with_components = latest_edgelist_filtered.with_columns(
-        umi1=pl.col("umi1").replace_strict(
-            umi_map["working_name"], umi_map["original_name"]
-        ),
-        umi2=pl.col("umi2").replace_strict(
-            umi_map["working_name"], umi_map["original_name"]
-        ),
-    )
-    final_edgelist_with_components = name_components_with_umi_hashes(
-        final_edgelist_with_components
+        working_dir=working_dir,
     )
 
-    resolved_edgelist_path = working_dir / "edgelist_with_resolved_components.parquet"
-    final_edgelist_with_components.sink_parquet(resolved_edgelist_path)
+    logger.info("Mapping UMIs to original names.")
+    latest_working_edgelist_path = map_working_to_original_umi_names(
+        input_edgelist_path=latest_working_edgelist_path,
+        node_map_path=node_map_path,
+        working_dir=working_dir,
+    )
+    logger.info("Creating component names from UMIs.")
+    final_edgelist_with_components = name_components_with_umi_hashes_from_parquet(
+        input_edgelist_path=latest_working_edgelist_path,
+        working_dir=working_dir,
+    )
 
-    return component_stats, resolved_edgelist_path
+    return component_stats, final_edgelist_with_components

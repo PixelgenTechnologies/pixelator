@@ -53,45 +53,72 @@ class PreComputedLayoutsEmpty(PixelatorBaseException):
 
 
 class _DataProvider(Protocol):
-    def is_empty(self) -> bool: ...
+    """Protocol for reading and writing precomputed layout tables."""
 
-    def to_df(self, columns: list[str] | None = None) -> pd.DataFrame: ...
+    def is_empty(self) -> bool:
+        """Return whether the provider contains any layout rows."""
+        ...
 
-    def lazy(self): ...
+    def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
+        """Materialize layouts as a pandas DataFrame."""
+        ...
 
-    def unique_components(self): ...
+    def lazy(self):
+        """Return a Polars lazy frame view of the layouts."""
+        ...
+
+    def unique_components(self):
+        """Return the set of component identifiers present in the data."""
+        ...
 
     def filter(
         self,
         component_ids: str | set[str] | None = None,
         graph_projections: str | set[str] | None = None,
         layout_methods: str | set[str] | None = None,
-    ) -> pl.LazyFrame | list[pl.LazyFrame]: ...
+    ) -> pl.LazyFrame | list[pl.LazyFrame]:
+        """Filter layouts by component, projection, and layout method."""
+        ...
 
     def write_parquet(self, path: Path, partitioning: list[str]) -> None:
-        """Write a parquet file to the provided path."""
+        """Write layouts to parquet using hive-style partitioning.
+
+        Args:
+            path: Output directory or file prefix.
+            partitioning: Hive partition columns written into the path.
+        """
         ...
 
 
 class _EmptyDataProvider(_DataProvider):
     def __init__(self) -> None:
         # This class needs no parameters
+        """Create an empty layout data provider."""
         pass
 
     def write_parquet(self, path: Path, partitioning: list[str]) -> None:
-        """Write a parquet file to the provided path."""
+        """Write a parquet file to the provided path.
+
+        Args:
+            path: Output directory for parquet files.
+            partitioning: Hive partition columns written with the parquet dataset.
+        """
         return
 
     def is_empty(self) -> bool:
+        """Return whether this provider contains no layout rows."""
         return True
 
     def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
+        """Return layout coordinates as a pandas DataFrame."""
         raise PreComputedLayoutsEmpty("No layouts available")
 
     def lazy(self):
+        """Return layout data as a Polars lazy frame."""
         raise PreComputedLayoutsEmpty("No layouts available")
 
     def unique_components(self):
+        """Return the set of component ids present in the layouts."""
         return {}
 
     def filter(
@@ -100,29 +127,40 @@ class _EmptyDataProvider(_DataProvider):
         graph_projections: str | set[str] | None = None,
         layout_methods: str | set[str] | None = None,
     ) -> list[pl.LazyFrame]:
+        """Return layout lazy frame(s) filtered by component, projection, and method."""
         raise PreComputedLayoutsEmpty("No layouts available")
 
 
 class _SingleFrameDataProvider(_DataProvider):
     def __init__(self, lazy_frame: pl.LazyFrame) -> None:
+        """Initialize the object."""
         self._lazy_frame = lazy_frame
 
     def is_empty(self) -> bool:
+        """Return whether this provider contains no layout rows."""
         return self.lazy().select(pl.col("component")).first().collect().is_empty()
 
     def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
+        """Return layout coordinates as a pandas DataFrame."""
         if columns:
             return self._lazy_frame.select(columns).collect().to_pandas()
         return self.lazy().collect().to_pandas()
 
     def write_parquet(self, path: Path, partitioning: list[str]) -> None:
-        """Write a parquet file to the provided path."""
+        """Write a parquet file to the provided path.
+
+        Args:
+            path: Output directory for parquet files.
+            partitioning: Hive partition columns written with the parquet dataset.
+        """
         _write_parquet(self.lazy(), path, partitioning)
 
     def lazy(self):
+        """Return layout data as a Polars lazy frame."""
         return self._lazy_frame
 
     def unique_components(self):
+        """Return the set of component ids present in the layouts."""
         return set(
             self.lazy()
             .select(pl.col("component").unique())
@@ -136,6 +174,7 @@ class _SingleFrameDataProvider(_DataProvider):
         graph_projections: str | set[str] | None = None,
         layout_methods: str | set[str] | None = None,
     ) -> pl.LazyFrame:
+        """Return layout lazy frame(s) filtered by component, projection, and method."""
         component_ids = PreComputedLayouts._convert_to_set(component_ids)
         graph_projections = PreComputedLayouts._convert_to_set(graph_projections)
         layout_methods = PreComputedLayouts._convert_to_set(layout_methods)
@@ -162,9 +201,11 @@ class _SingleFrameDataProvider(_DataProvider):
 
 class _MultiFrameDataProvider(_DataProvider):
     def __init__(self, lazy_frames: Iterable[pl.LazyFrame]) -> None:
+        """Initialize the object."""
         self._lazy_frames = list(lazy_frames)
 
     def is_empty(self) -> bool:
+        """Return whether this provider contains no layout rows."""
         return all(
             frame.select(pl.col("component")).first().collect().is_empty()
             # We don't want to use `lazy()` here to skip
@@ -174,17 +215,20 @@ class _MultiFrameDataProvider(_DataProvider):
         )
 
     def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
+        """Return layout coordinates as a pandas DataFrame."""
         if columns:
             return self.lazy().select(columns).collect().to_pandas()
         return self.lazy().collect().to_pandas()
 
     def lazy(self):
+        """Return layout data as a Polars lazy frame."""
         try:
             return pl.concat(self._lazy_frames, how="diagonal")
         except ValueError:
             raise PreComputedLayoutsEmpty(f"No layouts available: {self._lazy_frames}")
 
     def unique_components(self):
+        """Return the set of component ids present in the layouts."""
         return set(
             flatten(
                 frame.select(pl.col("component").unique())
@@ -201,6 +245,7 @@ class _MultiFrameDataProvider(_DataProvider):
         graph_projections: str | set[str] | None = None,
         layout_methods: str | set[str] | None = None,
     ) -> list[pl.LazyFrame]:
+        """Return layout lazy frame(s) filtered by component, projection, and method."""
         component_ids = PreComputedLayouts._convert_to_set(component_ids)
         graph_projections = PreComputedLayouts._convert_to_set(graph_projections)
         layout_methods = PreComputedLayouts._convert_to_set(layout_methods)
@@ -224,7 +269,12 @@ class _MultiFrameDataProvider(_DataProvider):
         return list(data())
 
     def write_parquet(self, path: Path, partitioning: list[str]) -> None:
-        """Write a parquet file to the provided path."""
+        """Write a parquet file to the provided path.
+
+        Args:
+            path: Output directory for parquet files.
+            partitioning: Hive partition columns written with the parquet dataset.
+        """
         for frame in self._lazy_frames:
             _write_parquet(frame, path, partitioning)
 
@@ -243,7 +293,12 @@ class PreComputedLayouts:
         layouts_lazy: pl.LazyFrame | Iterable[pl.LazyFrame] | None,
         partitioning: Optional[list[str]] = None,
     ) -> None:
-        """Initialize the PreComputedLayouts instance."""
+        """Initialize the PreComputedLayouts instance.
+
+        Args:
+            layouts_lazy: Layouts lazy.
+            partitioning: Hive partition columns written with the parquet dataset.
+        """
         if layouts_lazy is None:
             self._data_provider: _DataProvider = _EmptyDataProvider()
         elif isinstance(layouts_lazy, pl.LazyFrame):
@@ -289,7 +344,12 @@ class PreComputedLayouts:
         return self._partitioning
 
     def write_parquet(self, path: Path, partitioning: list[str]) -> None:
-        """Write a parquet file to the provided path."""
+        """Write a parquet file to the provided path.
+
+        Args:
+            path: Output directory for parquet files.
+            partitioning: Hive partition columns written with the parquet dataset.
+        """
         self._data_provider.write_parquet(path, partitioning)
 
     def unique_components(self) -> set[str]:
@@ -299,8 +359,10 @@ class PreComputedLayouts:
     def to_df(self, columns: list[str] | None = None) -> pd.DataFrame:
         """Return the layouts as a pandas DataFrame.
 
-        :param columns: the columns to return, if `None` all columns will be returned
-        :return: A pandas DataFrame with the layout(s)
+        Args:
+            columns: the columns to return, if `None` all columns will be returned
+        Returns:
+            A pandas DataFrame with the layout(s)
         """
         return self._data_provider.to_df(columns)
 
@@ -317,11 +379,12 @@ class PreComputedLayouts:
     ) -> PreComputedLayouts:
         """Filter the layouts based on the provided criteria.
 
-        :param component_ids: the component ids to filter on
-        :param graph_projection: the graph projection to filter on
-        :param layout_method: the layout method to filter on
-        :return: A new PreComputedLayouts instance with the filtered layouts
-        :rtype: PreComputedLayouts
+        Args:
+            component_ids: the component ids to filter on
+            graph_projection: the graph projection to filter on
+            layout_method: the layout method to filter on
+        Returns:
+            A new PreComputedLayouts instance with the filtered layouts (PreComputedLayouts)
         """
         return PreComputedLayouts(
             self._data_provider.filter(component_ids, graph_projection, layout_method),
@@ -342,13 +405,16 @@ class PreComputedLayouts:
         Providing additional parameters will filter the layouts based on these
         criteria.
 
-        :param component_ids: the component ids to filter on, if `None` all components
-                              will be returned.
-        :param graph_projections: the graph projections to filter on
-        :param layout_methods: the layout methods to filter on
-        :param columns: the columns to return, if `None` all columns will be returned
-        :yields pd.DataFrame: A generator over the components where each dataframe contains the layout(s)
-                  for that component
+        Args:
+            component_ids: the component ids to filter on, if `None` all components will be
+                returned.
+            graph_projections: the graph projections to filter on
+            layout_methods: the layout methods to filter on
+            columns: the columns to return, if `None` all columns will be returned
+
+        Yields:
+            A generator over the components where each dataframe contains the layout(s)
+            (pd.DataFrame) for that component
         """
         if not component_ids:
             unique_components = self._data_provider.unique_components()
@@ -409,6 +475,11 @@ def aggregate_precomputed_layouts(
                     pl.col("component"), pl.lit(sample_name), separator="_"
                 ),
             ).pipe(zero_fill_missing_markers, all_markers=all_markers)
+
+            # Materialize each source independently before combining. This avoids
+            # concurrent reads on zip-backed parquet partitions, which can produce
+            # intermittent truncated parquet stream errors during collection.
+            layout_with_name = layout_with_name.collect().lazy()
             yield layout_with_name
 
     try:
@@ -524,15 +595,15 @@ def generate_precomputed_layouts_for_components(
     components: set[str] | None = None,
     add_node_marker_counts: bool = True,
     layout_algorithms: SupportedLayoutAlgorithm
-    | list[SupportedLayoutAlgorithm] = "wpmds_3d",
+    | list[SupportedLayoutAlgorithm] = "coarsened_pmds_3d",
 ) -> PreComputedLayouts:
     """Generate precomputed layouts for the components in the PixelDataset.
 
-    :param pixel_dataset: the PixelDataset to generate the layouts for
-    :param components: the components to generate the layouts for, if `None` all components will be used
-    :param add_node_marker_counts: whether to add the marker counts to the layout. If you don't need them
-                                   you can set this to false and speed up the computations.
-    :param layout_algorithm: the layout algorithm to use
+    Args:
+        pixel_dataset: Dataset whose components receive layout coordinates.
+        components: Component ids to layout; defaults to all components.
+        add_node_marker_counts: Include per-node marker counts in layout output.
+        layout_algorithms: Layout algorithm name or list of algorithms to compute.
     """
     if components is None:
         components = set(pixel_dataset.adata.obs.index)

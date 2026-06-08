@@ -20,6 +20,7 @@ from pixelator.mpx.config import config
 
 
 def test_config_creation():
+    """Verify config creation."""
     config = Config()
     load_assays_package(config, "pixelator.mpx.resources.assays")
 
@@ -30,6 +31,11 @@ def test_config_creation():
 
 
 def test_load_assays_dir(data_root):
+    """Verify load assays dir.
+
+    Args:
+        data_root: data root.
+    """
     config = Config()
     config.load_assays(data_root / "assays")
 
@@ -41,6 +47,11 @@ def test_load_assays_dir(data_root):
 
 
 def test_parsing_recursion_protection(data_root):
+    """Verify parsing recursion protection.
+
+    Args:
+        data_root: data root.
+    """
     cfg = Config()
 
     with pytest.raises(RecursionError):
@@ -48,6 +59,7 @@ def test_parsing_recursion_protection(data_root):
 
 
 def test_assay_region_ids():
+    """Verify assay region ids."""
     all_region_ids = config.get_assay("D21").region_ids
 
     expected_region_ids = {
@@ -64,6 +76,7 @@ def test_assay_region_ids():
 
 
 def test_assay_get_region_by_id():
+    """Verify assay get region by id."""
     assay = config.get_assay("D21")
 
     region = assay.get_region_by_id("pbs-2")
@@ -71,6 +84,7 @@ def test_assay_get_region_by_id():
 
 
 def test_assay_get_regions_by_type():
+    """Verify assay get regions by type."""
     assay = config.get_assay("D21")
 
     regions = assay.get_regions_by_type("pbs")
@@ -79,6 +93,7 @@ def test_assay_get_regions_by_type():
 
 
 def test_get_position_in_amplicon_D21():
+    """Verify get position in amplicon d21."""
     design = config.get_assay("D21")
 
     pbs1_pos = get_position_in_parent(design, "pbs-1")
@@ -98,12 +113,22 @@ def test_get_position_in_amplicon_D21():
 
 @pytest.fixture()
 def config_with_multiple_versions(data_root):
+    """Config with multiple versions.
+
+    Args:
+        data_root: data root.
+    """
     new_config = copy.deepcopy(config)
     new_config.load_panel_file(data_root / "UNO_D21_Beta_old.csv")
     return new_config
 
 
 def test_loading_panel_from_config(config_with_multiple_versions):
+    """Verify loading panel from config.
+
+    Args:
+        config_with_multiple_versions: config with multiple versions.
+    """
     panel = config_with_multiple_versions.get_panel(
         "human-sc-immunology-spatial-proteomics-1"
     )
@@ -112,12 +137,14 @@ def test_loading_panel_from_config(config_with_multiple_versions):
 
 
 def test_loading_panel_from_config_alias():
+    """Verify loading panel from config alias."""
     panel = config.get_panel("human-sc-immunology-spatial-proteomics")
     assert panel.name == "human-sc-immunology-spatial-proteomics-1"
     assert panel.version == "0.6.0"
 
 
 def test_loading_panel_from_config_specific_version():
+    """Verify loading panel from config specific version."""
     panel = config.get_panel(
         "human-sc-immunology-spatial-proteomics-1", version="0.3.0"
     )
@@ -132,6 +159,11 @@ def test_loading_panel_from_config_specific_version():
 
 
 def test_load_antibody_panel_util(data_root):
+    """Verify load antibody panel util.
+
+    Args:
+        data_root: data root.
+    """
     cgf_panel = load_antibody_panel(config, "human-sc-immunology-spatial-proteomics")
     assert cgf_panel.name == "human-sc-immunology-spatial-proteomics-1"
 
@@ -144,6 +176,11 @@ def test_load_antibody_panel_util(data_root):
 
 
 def test_list_panel_names(data_root):
+    """Verify list panel names.
+
+    Args:
+        data_root: data root.
+    """
     assert config.list_panel_names(include_aliases=True) == [
         "human-sc-immunology-spatial-proteomics-1",
         "human-sc-immunology-spatial-proteomics-2",
@@ -157,6 +194,11 @@ def test_list_panel_names(data_root):
 
 
 def test_loading_duplicate_aliases(data_root):
+    """Verify loading duplicate aliases.
+
+    Args:
+        data_root: data root.
+    """
     this_config = copy.deepcopy(config)
     with pytest.raises(PanelException):
         this_config.load_panel_file(

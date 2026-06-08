@@ -13,6 +13,11 @@ from pixelator.pna.config import PNAAntibodyPanelCombination
 
 @pytest.fixture(name="mock_panel")
 def mock_panel_fixture(request):
+    """Mock panel fixture.
+
+    Args:
+        request: request.
+    """
     version = getattr(request, "param", "0.0.0")
 
     # Each marker is duplicated in the panel,
@@ -53,6 +58,7 @@ def mock_panel_fixture(request):
 
 @pytest.fixture(name="edgelist_karate_graph")
 def edgelist_karate_graph_fixture():
+    """Edgelist karate graph fixture."""
     rng = np.random.default_rng(0)
 
     markers = ["MarkerA", "MarkerB", "MarkerC"]

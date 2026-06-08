@@ -86,10 +86,14 @@ class PixelDataStore(Protocol):
     def from_path(path: PathType) -> PixelDataStore:
         """Get a PixelDataStore from the provided path.
 
-        :param path: The path to the pixel data store.
-        :return: A pixel data store.
-        :rtype: PixelDataStore
-        :raises CannotGuessPixelDatastoreError: If the datastore format cannot be guessed from the path.
+        Args:
+            path: The path to the pixel data store.
+
+        Returns:
+            A pixel data store. (PixelDataStore)
+
+        Raises:
+            CannotGuessPixelDatastoreError: If the datastore format cannot be guessed from the path.
         """
         return PixelDataStore.guess_datastore_from_path(path)
 
@@ -97,10 +101,14 @@ class PixelDataStore(Protocol):
     def guess_datastore_from_path(path: PathType) -> PixelDataStore:
         """Guess the pixel data store format based on the given path.
 
-        :param path: The path to the pixel data store.
-        :return: The guessed pixel data store format.
-        :rtype: PixelDataStore
-        :raises CannotGuessPixelDatastoreError: If the datastore format cannot be guessed from the path.
+        Args:
+            path: The path to the pixel data store.
+
+        Returns:
+            The guessed pixel data store format. (PixelDataStore)
+
+        Raises:
+            CannotGuessPixelDatastoreError: If the datastore format cannot be guessed from the path.
         """
         if str(path).endswith(".pxl"):
             return ZipBasedPixelFile.guess_file_format(path)
@@ -115,48 +123,54 @@ class PixelDataStore(Protocol):
     def read_anndata(self) -> AnnData:
         """Read the pixel data as an AnnData object.
 
-        :return: The pixel data as an AnnData object.
-        :rtype: AnnData
+        Returns:
+            The pixel data as an AnnData object. (AnnData)
         """
         ...
 
     def write_anndata(self, anndata: AnnData) -> None:
         """Write the given AnnData object to the pixel data store.
 
-        :param anndata: The AnnData object to write.
+        Args:
+            anndata: The AnnData object to write.
         """
         ...
 
     def read_metadata(self) -> Dict[str, Any]:
         """Read the metadata associated with the pixel data store.
 
-        :return: The metadata as a dictionary.
-        :rtype: Dict[str, Any]
+        Returns:
+            The metadata as a dictionary. (Dict[str, Any])
         """
         ...
 
     def write_metadata(self, metadata: Dict[str, Any]) -> None:
         """Write the given metadata to the pixel data store.
 
-        :param metadata: The metadata to write.
+        Args:
+            metadata: The metadata to write.
         """
         ...
 
     def read_dataframe(self, key: str) -> pd.DataFrame:
         """Read a dataframe from the pixel data store.
 
-        :param key: The key of the dataframe to read.
-        :return: The dataframe.
-        :rtype: pd.DataFrame
+        Args:
+            key: The key of the dataframe to read.
+
+        Returns:
+            The dataframe. (pd.DataFrame)
         """
         ...
 
     def read_dataframe_lazy(self, key: str) -> Optional[pl.LazyFrame]:
         """Read a lazy dataframe from the pixel data store.
 
-        :param key: The key of the dataframe to read.
-        :return: The lazy dataframe.
-        :rtype: Optional[pl.LazyFrame]
+        Args:
+            key: The key of the dataframe to read.
+
+        Returns:
+            The lazy dataframe. (Optional[pl.LazyFrame])
         """
         ...
 
@@ -172,42 +186,42 @@ class PixelDataStore(Protocol):
         This may not be supported by all data stores. If not supported, this
         option will be ignored.
 
-        :param dataframe: The dataframe to write.
-        :param key: The key to write the dataframe to.
-        :param partitioning: The (optional) partitioning to use when
-                             writing the dataframe.
+        Args:
+            dataframe: The dataframe to write.
+            key: The key to write the dataframe to.
+            partitioning: The (optional) partitioning to use when writing the dataframe.
         """
         ...
 
     def read_edgelist(self) -> pd.DataFrame:
         """Read an edgelist from the pixel data store.
 
-        :return: The edgelist.
-        :rtype: pd.DataFrame
+        Returns:
+            The edgelist. (pd.DataFrame)
         """
         ...
 
     def read_edgelist_lazy(self) -> pl.LazyFrame:
         """Read a lazy edgelist from the pixel data store.
 
-        :return: The lazy edgelist.
-        :rtype: pl.LazyFrame
+        Returns:
+            The lazy edgelist. (pl.LazyFrame)
         """
         ...
 
     def read_polarization(self) -> Optional[pd.DataFrame]:
         """Read the polarization data from the pixel data store.
 
-        :return: The polarization data, or None if it doesn't exist.
-        :rtype: Optional[pd.DataFrame]
+        Returns:
+            The polarization data, or None if it doesn't exist. (Optional[pd.DataFrame])
         """
         ...
 
     def read_colocalization(self) -> Optional[pd.DataFrame]:
         """Read the colocalization data from the pixel data store.
 
-        :return: The colocalization data, or None if it doesn't exist.
-        :rtype: Optional[pd.DataFrame]
+        Returns:
+            The colocalization data, or None if it doesn't exist. (Optional[pd.DataFrame])
         """
         ...
 
@@ -220,31 +234,34 @@ class PixelDataStore(Protocol):
         This may not be supported by all data stores. If not supported, this
         option will be ignored.
 
-        :param edgelist: The edgelist to write.
-        :param partitioning: The (optional) partitioning to use when
-                             writing the dataframe.
+        Args:
+            edgelist: The edgelist to write.
+            partitioning: The (optional) partitioning to use when writing the dataframe.
         """
         ...
 
     def write_polarization(self, polarization: pd.DataFrame) -> None:
         """Write the given polarization data to the pixel data store.
 
-        :param polarization: The polarization data to write.
+        Args:
+            polarization: The polarization data to write.
         """
         ...
 
     def write_colocalization(self, colocalization: pd.DataFrame) -> None:
         """Write the given colocalization data to the pixel data store.
 
-        :param colocalization: The colocalization data to write.
+        Args:
+            colocalization: The colocalization data to write.
         """
         ...
 
     def save(self, dataset: PixelDataset, force_overwrite: bool = False) -> None:
         """Save the given PixelDataset to the pixel data store.
 
-        :param dataset: The PixelDataset to save.
-        :param force_overwrite: Whether to force overwrite an existing file.
+        Args:
+            dataset: The PixelDataset to save.
+            force_overwrite: Whether to force overwrite an existing file.
         """
         ...
 
@@ -260,18 +277,29 @@ class PixelDataStore(Protocol):
     ) -> None:
         """Write pre-computed layouts to the data store.
 
-        :param layouts: The pre-computed layouts to write.
-        :param collapse_to_single_dataframe: Whether to collapse the layouts into
-                                             a single dataframe before writing.
+        Args:
+            layouts: The pre-computed layouts to write.
+            collapse_to_single_dataframe: Whether to collapse the layouts into a single dataframe
+                before writing.
         """
         ...
 
 
 class _CustomZipFileSystem(ZipFileSystem):
     def __init__(self, *args, **kwargs):
+        """Initialize the zip filesystem wrapper."""
         super().__init__(*args, **kwargs)
 
     def find(self, path, maxdepth=None, withdirs=False, detail=False, **kwargs):
+        """List files in the zip archive using fsspec discovery semantics.
+
+        Args:
+            path: Path prefix to search within the archive.
+            maxdepth: Maximum directory depth to traverse.
+            withdirs: Include directories in the result mapping.
+            detail: Return detailed file metadata instead of paths only.
+            **kwargs: Additional arguments forwarded to the base implementation.
+        """
         if maxdepth is not None and maxdepth < 1:
             raise ValueError("maxdepth must be at least 1")
 
@@ -342,7 +370,11 @@ class ZipBasedPixelFile(PixelDataStore):
     POLARIZATION_KEY: str
 
     def __init__(self, path: PathType) -> None:
-        """Create a zip-based pixel data store."""
+        """Create a zip-based pixel data store.
+
+        Args:
+            path: Path prefix to search within the archive.
+        """
         self.path = path
         self._file_system_handle = None
         self._current_mode: Literal["r", "w", "a"] | None = None
@@ -412,12 +444,20 @@ class ZipBasedPixelFile(PixelDataStore):
 
     @staticmethod
     def from_file(path) -> PixelDataStore:
-        """Guess the file format of the given path and returns the a PixelDataStore."""
+        """Guess the file format of the given path and returns the a PixelDataStore.
+
+        Args:
+            path: Path prefix to search within the archive.
+        """
         return ZipBasedPixelFile.guess_file_format(path)
 
     @staticmethod
     def guess_file_format(path: PathType) -> PixelDataStore:
-        """Guess the file format of the given path and returns the a PixelDataStore."""
+        """Guess the file format of the given path and returns the a PixelDataStore.
+
+        Args:
+            path: Path prefix to search within the archive.
+        """
         file_system = ZipFileSystem(fo=path, mode="r")
         members = [file_["name"] for file_ in file_system.ls("/")]
         file_format: Optional[Type[ZipBasedPixelFile]] = None
@@ -445,7 +485,11 @@ class ZipBasedPixelFile(PixelDataStore):
         return data
 
     def write_anndata(self, anndata: AnnData) -> None:
-        """Write the given AnnData object to the .pxl file."""
+        """Write the given AnnData object to the .pxl file.
+
+        Args:
+            anndata: The AnnData object to write.
+        """
         self._set_to_write_mode()
         self._check_if_writeable(self.ANNDATA_KEY)
         with self._file_system.open(self.ANNDATA_KEY, "wb", compression=None) as af:
@@ -495,7 +539,11 @@ class ZipBasedPixelFile(PixelDataStore):
         return PreComputedLayouts(layouts_lazy=layouts_lazy)
 
     def write_metadata(self, metadata: Dict[str, Any]) -> None:
-        """Write the given metadata to the .pxl file."""
+        """Write the given metadata to the .pxl file.
+
+        Args:
+            metadata: The metadata to write.
+        """
         self._set_to_write_mode()
         self._check_if_writeable(self.METADATA_KEY)
         with self._file_system.open(self.METADATA_KEY, "w") as f:
@@ -504,22 +552,39 @@ class ZipBasedPixelFile(PixelDataStore):
     def write_edgelist(
         self, edgelist: pd.DataFrame, partitioning: Optional[list[str]] = None
     ) -> None:
-        """Write the given edgelist to the .pxl file."""
+        """Write the given edgelist to the .pxl file.
+
+        Args:
+            edgelist: The edgelist to write.
+            partitioning: The (optional) partitioning to use when writing the dataframe.
+        """
         self.write_dataframe(edgelist, self.EDGELIST_KEY, partitioning)
 
     def write_polarization(self, polarization: pd.DataFrame) -> None:
-        """Write the given polarization data to the .pxl file."""
+        """Write the given polarization data to the .pxl file.
+
+        Args:
+            polarization: The polarization data to write.
+        """
         self.write_dataframe(polarization, self.POLARIZATION_KEY)
 
     def write_colocalization(self, colocalization: pd.DataFrame) -> None:
-        """Write the given colocalization data to the .pxl file."""
+        """Write the given colocalization data to the .pxl file.
+
+        Args:
+            colocalization: The colocalization data to write.
+        """
         self.write_dataframe(colocalization, self.COLOCALIZATION_KEY)
 
     def write_precomputed_layouts(
         self,
         layouts: Optional[PreComputedLayouts],
     ) -> None:
-        """Write pre-computed layouts to the data store."""
+        """Write pre-computed layouts to the data store.
+
+        Args:
+            layouts: The pre-computed layouts to write.
+        """
         if layouts is None:
             logger.debug("No layouts to write, will skip.")
             return
@@ -549,7 +614,12 @@ class ZipBasedPixelFile(PixelDataStore):
         logger.debug("Completed writing layouts...")
 
     def save(self, dataset: PixelDataset, force_overwrite: bool = False) -> None:
-        """Save the given PixelDataset to the .pxl file."""
+        """Save the given PixelDataset to the .pxl file.
+
+        Args:
+            dataset: The PixelDataset to save.
+            force_overwrite: Whether to force overwrite an existing file.
+        """
         path = Path(self.path)
         if path.exists():
             if force_overwrite:
@@ -602,7 +672,11 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
     COLOCALIZATION_KEY: str = "colocalization.csv.gz"
 
     def __init__(self, path: PathType) -> None:
-        """Create a zip-based pixel file using csv files to store dataframes."""
+        """Create a zip-based pixel file using csv files to store dataframes.
+
+        Args:
+            path: Path prefix to search within the archive.
+        """
         super().__init__(path)
 
     def write_dataframe(
@@ -611,7 +685,13 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         key: str,
         partitioning: Optional[list[str]] = None,
     ) -> None:
-        """Write the given dataframe to the .pxl file."""
+        """Write the given dataframe to the .pxl file.
+
+        Args:
+            dataframe: The dataframe to write.
+            key: The key to write the dataframe to.
+            partitioning: The (optional) partitioning to use when writing the dataframe.
+        """
         # Note that partitioning will be ignored here
         self._set_to_write_mode()
 
@@ -621,12 +701,20 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
             dataframe.to_csv(f, compression="gzip", index=False)
 
     def read_dataframe(self, key: str) -> Optional[pd.DataFrame]:
-        """Read a dataframe from the .pxl file."""
+        """Read a dataframe from the .pxl file.
+
+        Args:
+            key: The key to write the dataframe to.
+        """
         self._set_to_read_mode()
         return self._read_dataframe_from_zip(key)
 
     def read_dataframe_lazy(self, key: str) -> Optional[pl.LazyFrame]:
-        """Read a dataframe lazily from a zip file (NB: Not implemented!)."""
+        """Read a dataframe lazily from a zip file (NB: Not implemented!).
+
+        Args:
+            key: The key to write the dataframe to.
+        """
         raise NotImplementedError(
             "You are trying to read data lazily from a csv-based pxl file. "
             "This is currently not supported. "
@@ -638,7 +726,11 @@ class ZipBasedPixelFileWithCSV(ZipBasedPixelFile):
         self,
         layouts: Optional[PreComputedLayouts],
     ) -> None:
-        """Write pre-computed layouts to the data store (NB: Not implemented!)."""
+        """Write pre-computed layouts to the data store (NB: Not implemented!).
+
+        Args:
+            layouts: The pre-computed layouts to write.
+        """
         raise NotImplementedError(
             "You are trying to write precomputed layouts to a csv-based pxl file. "
             "This is not supported. Please save your pxl file as a parquet based pxl file "
@@ -664,7 +756,11 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
     COLOCALIZATION_KEY: str = "colocalization.parquet"
 
     def __init__(self, path) -> None:
-        """Create a zip-based pixel file using parquet files to store dataframes."""
+        """Create a zip-based pixel file using parquet files to store dataframes.
+
+        Args:
+            path: Path prefix to search within the archive.
+        """
         super().__init__(path)
 
     def write_dataframe(
@@ -679,9 +775,10 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         i.e. a directory structure with one level per partitioning provided, and parquet
         files as leaves.
 
-        :param dataframe: The dataframe to write.
-        :param key: The key of the dataframe to write.
-        :param partitioning: The partitioning to use when writing the dataframe.
+        Args:
+            dataframe: The dataframe to write.
+            key: The key of the dataframe to write.
+            partitioning: The partitioning to use when writing the dataframe.
         """
         DEFAULT_COMPRESSION = "zstd"
 
@@ -719,12 +816,67 @@ class ZipBasedPixelFileWithParquet(ZipBasedPixelFile):
         )
 
     def read_dataframe(self, key: str) -> Optional[pd.DataFrame]:
-        """Read a dataframe from the .pxl file."""
+        """Read a dataframe from the .pxl file.
+
+        Args:
+            key: The key to write the dataframe to.
+        """
         self._set_to_read_mode()
         return self._read_dataframe_from_zip(key)
 
+    def read_precomputed_layouts(
+        self,
+    ) -> PreComputedLayouts:
+        """Read pre-computed layouts from the .pxl file.
+
+        We load each parquet leaf eagerly from the zip archive to avoid
+        intermittent parquet read failures observed when scanning zip-backed
+        partitioned datasets lazily.
+        """
+        self._set_to_read_mode()
+
+        try:
+            parquet_files = [
+                path
+                for path in self._file_system.find(self.LAYOUTS_KEY)
+                if path.endswith(".parquet")
+            ]
+        except FileNotFoundError:
+            return PreComputedLayouts.create_empty()
+
+        if not parquet_files:
+            return PreComputedLayouts.create_empty()
+
+        lazy_frames: list[pl.LazyFrame] = []
+        for parquet_file in parquet_files:
+            with self._file_system.open(parquet_file, "rb") as f:
+                frame = pl.read_parquet(f)
+
+            partition_values: dict[str, str] = {}
+            for part in Path(parquet_file).parts:
+                if "=" not in part:
+                    continue
+                key, value = part.split("=", 1)
+                partition_values[key] = value
+
+            if partition_values:
+                frame = frame.with_columns(
+                    **{
+                        column: pl.lit(value)
+                        for column, value in partition_values.items()
+                    }
+                )
+
+            lazy_frames.append(frame.lazy())
+
+        return PreComputedLayouts(layouts_lazy=lazy_frames)
+
     def read_dataframe_lazy(self, key: str) -> Optional[pl.LazyFrame]:
-        """Read a dataframe lazily from a zip file."""
+        """Read a dataframe lazily from a zip file.
+
+        Args:
+            key: The key to write the dataframe to.
+        """
         self._set_to_read_mode()
         return self._read_dataframe_from_zip_lazy(key)
 

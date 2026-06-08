@@ -1,5 +1,4 @@
-"""
-Configuration and shared files/objects for the testing framework
+"""Configuration, shared files, and shared objects for the PNA testing framework.
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
@@ -42,6 +41,7 @@ logging.getLogger("pixelator").setLevel(logging.DEBUG)
 
 @pytest.fixture(name="pna_data_root", scope="module")
 def pna_data_root_fixture():
+    """Pna data root fixture."""
     return PNA_DATA_ROOT
 
 
@@ -58,29 +58,73 @@ def run_in_tmpdir():
 
 @pytest.fixture(name="pna_pxl_file", scope="module")
 def pna_pxl_file_fixture(pna_data_root):
-    """Load an example pna pixel from disk."""
+    """Load an example pna pixel from disk.
+
+    Args:
+        pna_data_root: Pna data root.
+    """
     return pna_data_root / "PNA055_Sample07_S7.layout.pxl"
 
 
 @pytest.fixture(name="pna_pxl_dataset", scope="module")
 def pna_pxl_dataset_fixture(pna_pxl_file):
-    """Load an example pna pixel from disk."""
+    """Load an example pna pixel from disk.
+
+    Args:
+        pna_pxl_file: Pna pxl file.
+    """
     pixel = read(pna_pxl_file)
+    return pixel
+
+
+@pytest.fixture(name="denoise_pxl_file", scope="module")
+def denoise_pxl_file_fixture(pna_data_root):
+    """Load an example pna pixel from disk.
+
+    Args:
+        pna_data_root: Pna data root.
+    """
+    return pna_data_root / "test_denoise.pxl"
+
+
+@pytest.fixture(name="denoise_pxl_dataset", scope="module")
+def denoise_pxl_dataset_fixture(denoise_pxl_file):
+    """Load an example pna pixel from disk.
+
+    Args:
+        denoise_pxl_file: Denoise pxl file.
+    """
+    pixel = read(denoise_pxl_file)
     return pixel
 
 
 @pytest.fixture(name="pna_pxl_panel_dataset", scope="module")
 def pna_pxl_panel_dataset_fixture(pna_data_root):
+    """Pna pxl panel dataset fixture.
+
+    Args:
+        pna_data_root: pna data root.
+    """
     return read(pna_data_root / "pxl_file_with_panel.pxl")
 
 
 @pytest.fixture(scope="session")
 def full_run_dir() -> Path:
+    """Full run dir.
+
+    Returns:
+        Result (Path).
+    """
     return Path(PNA_DATA_ROOT) / "full_run"
 
 
 @pytest.fixture(scope="module")
 def testdata_300k(pna_data_root) -> tuple[Path, Path]:
+    """Testdata 300k.
+
+    Args:
+        pna_data_root: pna data root.
+    """
     return (
         Path(pna_data_root / "PNA055_Sample07_300k_S7_R1_001.fastq.gz"),
         Path(pna_data_root / "PNA055_Sample07_300k_S7_R2_001.fastq.gz"),
@@ -89,6 +133,11 @@ def testdata_300k(pna_data_root) -> tuple[Path, Path]:
 
 @pytest.fixture(scope="module")
 def testdata_unbalanced_r12(pna_data_root) -> tuple[Path, Path]:
+    """Testdata unbalanced r12.
+
+    Args:
+        pna_data_root: pna data root.
+    """
     return (
         Path(pna_data_root / "unbalanced_R1.fastq.gz"),
         Path(pna_data_root / "unbalanced_R2.fastq.gz"),
@@ -97,12 +146,22 @@ def testdata_unbalanced_r12(pna_data_root) -> tuple[Path, Path]:
 
 @pytest.fixture(scope="module")
 def testdata_amplicon_fastq(full_run_dir) -> Path:
+    """Testdata amplicon fastq.
+
+    Args:
+        full_run_dir: full run dir.
+    """
     p = full_run_dir / "amplicon" / "PNA055_Sample07_filtered_S7.amplicon.fq.zst"
     return p
 
 
 @pytest.fixture(scope="module")
 def testdata_paired_small_demux(pna_data_root) -> Path:
+    """Testdata paired small demux.
+
+    Args:
+        pna_data_root: pna data root.
+    """
     p = Path(
         pna_data_root
         / "paired-demux-results"
@@ -113,12 +172,18 @@ def testdata_paired_small_demux(pna_data_root) -> Path:
 
 @pytest.fixture(scope="module")
 def testdata_demux_passed_reads(pna_data_root) -> Path:
+    """Testdata demux passed reads.
+
+    Args:
+        pna_data_root: pna data root.
+    """
     p = pna_data_root / "PNA055_Sample07_filtered_S7.100_reads.demux.passed.fq"
     return p
 
 
 @pytest.fixture(name="layout_dataframe", scope="module")
 def layout_dataframe_fixture():
+    """Layout dataframe fixture."""
     layout = pl.read_csv(
         StringIO(LAYOUT_DATA),
         schema={
@@ -140,6 +205,12 @@ def layout_dataframe_fixture():
 
 @pytest.fixture(name="layout_parquet_path", scope="module")
 def layout_parquet_path_fixture(tmp_path_factory, layout_dataframe):
+    """Layout parquet path fixture.
+
+    Args:
+        tmp_path_factory: tmp path factory.
+        layout_dataframe: layout dataframe.
+    """
     path = tmp_path_factory.mktemp("data") / "layout.parquet"
     layout_dataframe.write_parquet(path)
     return path
@@ -147,6 +218,11 @@ def layout_parquet_path_fixture(tmp_path_factory, layout_dataframe):
 
 @pytest.fixture(name="edgelist_dataframe", scope="module")
 def edgelist_dataframe_fixture(edgelist_data):
+    """Edgelist dataframe fixture.
+
+    Args:
+        edgelist_data: edgelist data.
+    """
     edgelist = pl.read_csv(
         StringIO(edgelist_data),
         schema={
@@ -164,6 +240,12 @@ def edgelist_dataframe_fixture(edgelist_data):
 
 @pytest.fixture(name="edgelist_parquet_path", scope="module")
 def edgelist_parquet_path_fixture(tmp_path_factory, edgelist_dataframe):
+    """Edgelist parquet path fixture.
+
+    Args:
+        tmp_path_factory: tmp path factory.
+        edgelist_dataframe: edgelist dataframe.
+    """
     path = tmp_path_factory.mktemp("data") / "edgelist.parquet"
     edgelist_dataframe.write_parquet(path)
     return path
@@ -171,6 +253,11 @@ def edgelist_parquet_path_fixture(tmp_path_factory, edgelist_dataframe):
 
 @pytest.fixture(name="proximity_dataframe", scope="module")
 def proximity_dataframe_fixture(proximity_data):
+    """Proximity dataframe fixture.
+
+    Args:
+        proximity_data: proximity data.
+    """
     proximity = pl.read_csv(
         StringIO(proximity_data),
     )
@@ -179,6 +266,12 @@ def proximity_dataframe_fixture(proximity_data):
 
 @pytest.fixture(name="proximity_parquet_path", scope="module")
 def proximity_parquet_path_fixture(tmp_path_factory, proximity_dataframe):
+    """Proximity parquet path fixture.
+
+    Args:
+        tmp_path_factory: tmp path factory.
+        proximity_dataframe: proximity dataframe.
+    """
     path = tmp_path_factory.mktemp("data") / "proximity.parquet"
     proximity_dataframe.write_parquet(path)
     return path
@@ -186,6 +279,7 @@ def proximity_parquet_path_fixture(tmp_path_factory, proximity_dataframe):
 
 @pytest.fixture(name="panel", scope="module")
 def panel_fixture():
+    """Panel fixture."""
     panel_df = pd.read_csv(StringIO(TEST_PANEL)).set_index("marker_id")
 
     panel_df["uniprot_id"] = panel_df["uniprot_id"].fillna("")
@@ -238,6 +332,16 @@ def create_pxl_file(
     layout_parquet_path,
     panel,
 ):
+    """Create pxl file.
+
+    Args:
+        target: target.
+        sample_name: sample name.
+        edgelist_parquet_path: edgelist parquet path.
+        proximity_parquet_path: proximity parquet path.
+        layout_parquet_path: layout parquet path.
+        panel: panel.
+    """
     with PixelFileWriter(target) as writer:
         writer.write_edgelist(edgelist_parquet_path)
         con = writer.get_connection()
@@ -269,6 +373,15 @@ def pixel_file_fixture(
     layout_parquet_path,
     panel,
 ):
+    """Pixel file fixture.
+
+    Args:
+        tmp_path_factory: tmp path factory.
+        edgelist_parquet_path: edgelist parquet path.
+        proximity_parquet_path: proximity parquet path.
+        layout_parquet_path: layout parquet path.
+        panel: panel.
+    """
     target = tmp_path_factory.mktemp("data") / "file.pxl"
     target = create_pxl_file(
         target=target,
@@ -283,21 +396,34 @@ def pixel_file_fixture(
 
 @pytest.fixture(name="pxl_dataset", scope="function")
 def pixel_dataset_fixture(pxl_file):
+    """Pixel dataset fixture.
+
+    Args:
+        pxl_file: pxl file.
+    """
     return PNAPixelDataset.from_pxl_files(pxl_file)
 
 
 @pytest.fixture(name="edgelist_data", scope="module")
 def edgelist_data_fixture():
+    """Edgelist data fixture."""
     return EDGELIST_DATA
 
 
 @pytest.fixture(name="proximity_data", scope="module")
 def proximity_data_fixture():
+    """Proximity data fixture."""
     return PROXIMITY_DATA
 
 
 @pytest.fixture(name="adata_data", scope="function")
 def adata_data_fixture(edgelist_parquet_path, panel):
+    """Adata data fixture.
+
+    Args:
+        edgelist_parquet_path: edgelist parquet path.
+        panel: panel.
+    """
     with duckdb.connect() as con:
         con.execute(f"""
                     CREATE TABLE edgelist AS SELECT *
@@ -310,7 +436,11 @@ def adata_data_fixture(edgelist_parquet_path, panel):
 
 @pytest.fixture(name="sample_hashed_pixel_files", scope="module")
 def sample_hashed_pxl(pna_data_root) -> list[Path]:
-    """Fixture for a sample pixel file with hashed antibodies."""
+    """Fixture for a sample pixel file with hashed antibodies.
+
+    Args:
+        pna_data_root: Pna data root.
+    """
     return [
         pna_data_root / "sample_calling/small_hashed_sample_1.pxl",
         pna_data_root / "sample_calling/small_hashed_sample_2.pxl",

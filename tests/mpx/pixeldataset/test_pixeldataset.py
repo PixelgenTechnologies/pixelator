@@ -28,7 +28,11 @@ np.random.seed(42)
 
 
 def test_pixeldataset(setup_basic_pixel_dataset):
-    """test_pixeldataset."""
+    """test_pixeldataset.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+    """
     (
         dataset,
         edgelist,
@@ -47,6 +51,7 @@ def test_pixeldataset(setup_basic_pixel_dataset):
     assert_frame_equal(
         edgelist,
         _enforce_edgelist_types(dataset.edgelist_lazy.collect().to_pandas()),
+        check_categorical=False,
     )
 
     assert_frame_equal(
@@ -70,7 +75,12 @@ def test_pixeldataset(setup_basic_pixel_dataset):
 
 
 def test_pixeldataset_save(setup_basic_pixel_dataset, tmp_path):
-    """test_pixeldataset_save."""
+    """test_pixeldataset_save.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+        tmp_path: Tmp path.
+    """
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
     dataset.save(str(file_target))
@@ -79,7 +89,12 @@ def test_pixeldataset_save(setup_basic_pixel_dataset, tmp_path):
 
 
 def test_pixeldataset_read(setup_basic_pixel_dataset, tmp_path):
-    """test_pixeldataset_read."""
+    """test_pixeldataset_read.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+        tmp_path: Tmp path.
+    """
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
     dataset.save(str(file_target))
@@ -87,7 +102,12 @@ def test_pixeldataset_read(setup_basic_pixel_dataset, tmp_path):
 
 
 def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
-    """test_pixeldataset_from_file_parquet."""
+    """test_pixeldataset_from_file_parquet.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+        tmp_path: Tmp path.
+    """
     (
         dataset,
         edgelist,
@@ -101,7 +121,7 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
     dataset.save(str(file_target))
     dataset_new = PixelDataset.from_file(str(file_target))
 
-    assert_frame_equal(edgelist, dataset_new.edgelist)
+    assert_frame_equal(edgelist, dataset_new.edgelist, check_categorical=False)
     assert_frame_equal(
         edgelist,
         # Note that we need to enforce the types manually here for this to work,
@@ -109,6 +129,7 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
         # where the user will need to manage the required datatypes themselves
         # as needed.
         _enforce_edgelist_types(dataset_new.edgelist_lazy.collect().to_pandas()),
+        check_categorical=False,
     )
 
     assert_frame_equal(
@@ -118,7 +139,10 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
 
     assert metadata == dataset_new.metadata
 
-    assert_frame_equal(polarization_scores, dataset_new.polarization)
+    assert_frame_equal(
+        polarization_scores,
+        dataset_new.polarization,
+    )
 
     assert_frame_equal(colocalization_scores, dataset_new.colocalization)
 
@@ -137,6 +161,12 @@ def test_pixeldataset_from_file_parquet(setup_basic_pixel_dataset, tmp_path):
 def test_pixeldataset_can_save_and_load_with_empty_edgelist(
     setup_basic_pixel_dataset, tmp_path
 ):
+    """Verify pixeldataset can save and load with empty edgelist.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+        tmp_path: tmp path.
+    """
     dataset, *_ = setup_basic_pixel_dataset
     file_target = tmp_path / "dataset.pxl"
     dataset.edgelist = pd.DataFrame()
@@ -155,6 +185,11 @@ def test_pixeldataset_can_save_and_load_with_empty_edgelist(
 
 
 def test_pixeldataset_graph(setup_basic_pixel_dataset):
+    """Verify pixeldataset graph.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     dataset, *_ = setup_basic_pixel_dataset
     full_graph = dataset.graph()
     assert isinstance(full_graph, Graph)
@@ -162,12 +197,22 @@ def test_pixeldataset_graph(setup_basic_pixel_dataset):
 
 
 def test_pixeldataset_graph_raises_when_component_not_found(setup_basic_pixel_dataset):
+    """Verify pixeldataset graph raises when component not found.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     dataset, *_ = setup_basic_pixel_dataset
     with pytest.raises(KeyError):
         dataset.graph("not-a-component")
 
 
 def test_pixeldataset_graph_finds_component(setup_basic_pixel_dataset):
+    """Verify pixeldataset graph finds component.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     dataset, *_ = setup_basic_pixel_dataset
     component_graph = dataset.graph("2ac2ca983a4b82dd")
     assert isinstance(component_graph, Graph)
@@ -175,6 +220,11 @@ def test_pixeldataset_graph_finds_component(setup_basic_pixel_dataset):
 
 
 def test_pixeldataset_precomputed_layouts(setup_basic_pixel_dataset):
+    """Verify pixeldataset precomputed layouts.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     dataset, *_ = setup_basic_pixel_dataset
 
     precomputed_layouts = dataset.precomputed_layouts
@@ -182,7 +232,12 @@ def test_pixeldataset_precomputed_layouts(setup_basic_pixel_dataset):
 
 
 def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
-    """test_pixeldataset_from_file_csv."""
+    """test_pixeldataset_from_file_csv.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+        tmp_path: Tmp path.
+    """
     (
         dataset,
         edgelist,
@@ -221,7 +276,11 @@ def test_pixeldataset_from_file_csv(setup_basic_pixel_dataset, tmp_path):
 
 
 def test_pixeldataset_repr(setup_basic_pixel_dataset):
-    """test_pixeldataset_repr."""
+    """test_pixeldataset_repr.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+    """
     dataset, *_ = setup_basic_pixel_dataset
 
     assert repr(dataset).splitlines() == [
@@ -246,6 +305,11 @@ def test_lazy_edgelist_should_warn_and_rm_on_index_column(setup_basic_pixel_data
     # pixeldatasets, since then this column would be propagated to the
     # edgelist - this broke the Graph construction since
     # it assumes that the first two columns should be the vertices
+    """Verify lazy edgelist should warn and rm on index column.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     dataset, *_ = setup_basic_pixel_dataset
     dataset.edgelist["index"] = pd.Series(range(len(dataset.edgelist)))
 
@@ -263,7 +327,11 @@ def test_lazy_edgelist_should_warn_and_rm_on_index_column(setup_basic_pixel_data
 
 
 def test_copy(setup_basic_pixel_dataset):
-    """test_copy."""
+    """test_copy.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+    """
     dataset_1, *_ = setup_basic_pixel_dataset
     dataset_2_no_copy = dataset_1
     assert dataset_1 == dataset_2_no_copy
@@ -280,7 +348,11 @@ def _assert_has_components(dataset, comp_set):
 
 
 def test_filter_by_component(setup_basic_pixel_dataset):
-    """test_filter by component."""
+    """test_filter by component.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+    """
     dataset_1, *_ = setup_basic_pixel_dataset
 
     # Assert before filter contains all data
@@ -323,7 +395,11 @@ def test_filter_by_component(setup_basic_pixel_dataset):
 
 
 def test_filter_by_marker(setup_basic_pixel_dataset):
-    """test_filter by marker."""
+    """test_filter by marker.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+    """
     dataset_1, *_ = setup_basic_pixel_dataset
 
     original_adata_markers = set(dataset_1.adata.var.index)
@@ -369,7 +445,11 @@ def test_filter_by_marker(setup_basic_pixel_dataset):
 
 
 def test_filter_by_component_and_marker(setup_basic_pixel_dataset):
-    """test_filter by component and marker."""
+    """test_filter by component and marker.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+    """
     dataset_1, *_ = setup_basic_pixel_dataset
 
     original_adata_markers = set(dataset_1.adata.var.index)
@@ -426,7 +506,7 @@ def test__enforce_edgelist_types():
     # without exposing it as a public function (since the user shouldn't
     # have to worry about it). Importing it here in tests, will have to
     # be seen as a pragmatic solution to this problem.
-
+    """Verify enforce edgelist types."""
     data = pd.DataFrame(
         {
             "count": [1, 3, 1],

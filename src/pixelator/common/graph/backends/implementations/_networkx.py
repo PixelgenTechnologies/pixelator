@@ -15,6 +15,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Optional,
     Set,
     Tuple,
@@ -27,6 +28,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import scipy as sp
+from graspologic_native import leiden
 from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
@@ -39,6 +41,7 @@ from pixelator.common.graph.backends.protocol import (
     VertexClustering,
     VertexSequence,
 )
+from pixelator.common.graph.math import mat_pow
 
 if TYPE_CHECKING:
     from pixelator.mpx.graph import Graph
@@ -58,7 +61,8 @@ class NetworkXGraphBackend(GraphBackend):
         Create a Graph instance (as an end-user this is probably not the interface
         you are looking for). Try `Graph.from_edgelist`.
 
-        :param raw: The underlying raw representation of the graph, defaults to None
+        Args:
+            raw: The underlying raw representation of the graph, defaults to None
         """
         self._raw = raw
 
@@ -197,15 +201,18 @@ class NetworkXGraphBackend(GraphBackend):
         vertex (node) when `add_marker_counts` is True. If `use_full_bipartite` is
         False or `simplify` is True the edge attributes will be lost.
 
-        :param edgelist: the edge list (dataframe) corresponding to the graph
-        :param add_marker_counts: add a dictionary of marker counts to each node
-        :param simplify: simplifies the graph (remove redundant edges)
-        :param use_full_bipartite: use the bipartite graph instead of the projection
-                                  (UPIA)
-        :param convert_indices_to_integers: convert the indices to integers (this is the default)
-        :returns: a GraphBackend instance
-        :rtype: NetworkXGraphBackend
-        :raises: AssertionError when the input edge list is not valid
+        Args:
+            edgelist: the edge list (dataframe) corresponding to the graph
+            add_marker_counts: add a dictionary of marker counts to each node
+            simplify: simplifies the graph (remove redundant edges)
+            use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+            convert_indices_to_integers: convert the indices to integers (this is the default)
+
+        Returns:
+            a GraphBackend instance (NetworkXGraphBackend)
+
+        Raises:
+            AssertionError when the input edge list is not valid
         """
         if isinstance(edgelist, pd.DataFrame):
             edgelist: pl.LazyFrame = pl.LazyFrame(edgelist)  # type: ignore
@@ -231,9 +238,11 @@ class NetworkXGraphBackend(GraphBackend):
     def from_raw(graph: Union[nx.Graph, nx.MultiGraph]) -> NetworkXGraphBackend:
         """Generate a Graph from an networkx.Graph object.
 
-        :param graph: input networkx graph to use
-        :return: A pixelator Graph object
-        :rtype: NetworkXGraphBackend
+        Args:
+            graph: input networkx graph to use
+
+        Returns:
+            A pixelator Graph object (NetworkXGraphBackend)
         """
         return NetworkXGraphBackend(graph)
 
@@ -270,8 +279,11 @@ class NetworkXGraphBackend(GraphBackend):
     ) -> csr_matrix:
         """Get the sparse adjacency matrix.
 
-        :param node_ordering: Control the node ordering in the adjacency matrix
-        :return: a sparse adjacency matrix
+        Args:
+            node_ordering: Control the node ordering in the adjacency matrix
+
+        Returns:
+            a sparse adjacency matrix
         """
         return nx.to_scipy_sparse_array(self._raw, nodelist=node_ordering)
 
@@ -283,7 +295,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def _layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "wpmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
         random_seed: Optional[int] = None,
         **kwargs,
     ) -> pd.DataFrame:
@@ -319,6 +331,8 @@ class NetworkXGraphBackend(GraphBackend):
             layout_inst = pmds_layout(
                 raw, dim=3, weights="prob_dist", seed=random_seed, **kwargs
             )
+        if layout_algorithm == "coarsened_pmds_3d":
+            layout_inst = coarsened_pmds_layout(raw, seed=random_seed, **kwargs)
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
@@ -339,9 +353,11 @@ class NetworkXGraphBackend(GraphBackend):
     def node_marker_counts(self) -> pd.DataFrame:
         """Get the marker counts of each node as a dataframe.
 
-        :return: node markers as a dataframe
-        :rtype: pd.DataFrame
-        :raises: AssertionError if graph nodes don't include markers
+        Returns:
+            node markers as a dataframe (pd.DataFrame)
+
+        Raises:
+            AssertionError if graph nodes don't include markers
         """
         if "markers" not in self.vs.attributes():
             raise AssertionError("Could not find 'markers' in vertex attributes")
@@ -363,7 +379,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "wpmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
@@ -375,33 +391,32 @@ class NetworkXGraphBackend(GraphBackend):
         counts to use that can be used for plotting.
 
         The layout options are:
-          - pmds
-          - pmds_3d
-          - fruchterman_reingold
-          - fruchterman_reingold_3d
-          - kamada_kawai
-          - kamada_kawai_3d
-          - wpmds_3d
+        - coarsened_pmds_3d
+        - fruchterman_reingold
+        - fruchterman_reingold_3d
+        - kamada_kawai
+        - kamada_kawai_3d
+        - pmds
+        - pmds_3d
+        - wpmds_3d
 
-        For most cases the `pmds` options should be about 10-100x faster
-        than the force directed layout methods, i.e. `fruchterman_reingold`
-        and `kamada_kawai`. Among the force directed layout methods,
-        `fruchterman_reingold` is generally faster than `kamada_kawai`. The
-        `wpmds_3d` method uses edge weights to improve the layout, but is slightly
-        slower than `pmds_3d`.
+        For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
+        preferred. On PNA data they are faster and produce better results.
 
-        :param layout_algorithm: the layout algorithm to use to generate the coordinates
-        :param only_keep_a_pixels: If true, only keep the a-pixels
-        :param get_node_marker_matrix: Add a matrix of marker counts to each
-                                       node if True.
-        :param random_seed: used as the seed for graph layouts with a stochastic
-                            element. Useful to get deterministic layouts across
-                            method calls.
-        :param **kwargs: will be passed to the underlying layout implementation
-        :return: the coordinates and markers (if activated) as a dataframe
-        :rtype: pd.DataFrame
-        :raises: AssertionError if the provided `layout_algorithm` is not valid
-        :raises: ValueError if the provided current graph instance is empty
+        Args:
+            layout_algorithm: Layout algorithm to use for coordinate generation.
+            only_keep_a_pixels: If True, only keep the a-pixels.
+            get_node_marker_matrix: Add a matrix of marker counts to each node if True.
+            random_seed: Seed for graph layouts with a stochastic element. Useful for
+                deterministic layouts across method calls.
+            **kwargs: Passed to the underlying layout implementation.
+
+        Returns:
+            DataFrame with coordinates and marker counts (if enabled).
+
+        Raises:
+            AssertionError: If the provided layout_algorithm is not valid.
+            ValueError: If the current graph instance is empty.
         """
         start_time = timer()
         coordinates = self._layout_coordinates(
@@ -447,29 +462,35 @@ class NetworkXGraphBackend(GraphBackend):
     def add_edges(self, edges: Iterable[Tuple[int]]) -> None:  # noqa: DOC501
         """Add edges to the graph instance.
 
-        :param edges: Add the following edges to the graph instance.
+        Args:
+            edges: Add the following edges to the graph instance.
         """
         self.raw.add_edges_from(edges)
 
     def add_vertices(self, n_vertices: int, attrs: Dict[str, List]) -> None:
         """Add some number of vertices to the graph instance.
 
-        :param n_vertices: the number of vertices to be added to the graph instance.
-        :param attrs: dict of sequences, all of length equal to the number of vertices
-                      to be added, containing the attributes of the new vertices. If
-                      `n_vertices=1` then they have to be lists of length 1.
-        :raises IndexError: if the number of graph vertices to add and lists of
-                            attributes are of different lengths
+        Args:
+            n_vertices: the number of vertices to be added to the graph instance.
+            attrs: dict of sequences, all of length equal to the number of vertices to be added,
+                containing the attributes of the new vertices. If `n_vertices=1` then they have to
+                be lists of length 1.
+
+        Raises:
+            IndexError: if the number of graph vertices to add and lists of attributes are of
+                different lengths
         """
         raise NotImplementedError()
 
     def add_names_to_vertexes(self, vs_names: List[str]) -> None:
         """Rename the current vertices on the graph instance.
 
-        :param vs_names: Add the following vertices to the graph instance.
-        :raises ValueError: if the graph is empty
-        :raises IndexError: if the number of graph vertices and list of names are
-                            of different length
+        Args:
+            vs_names: Add the following vertices to the graph instance.
+
+        Raises:
+            ValueError: if the graph is empty
+            IndexError: if the number of graph vertices and list of names are of different length
         """
         raise NotImplementedError()
 
@@ -508,6 +529,7 @@ class NetworkxBasedVertex(Vertex):
         neighbor_vertices = set(self._graph.neighbors(self._index))
 
         def generate_neighbors():
+            """Yield neighbor vertices connected to the current cluster."""
             for node_idx, data in self._graph.nodes(data=True):
                 if node_idx in neighbor_vertices:
                     yield NetworkxBasedVertex(node_idx, data, self._graph)
@@ -577,6 +599,7 @@ class NetworkxBasedVertexSequence(VertexSequence):
         """Get all attributes associated with the vertices."""
 
         def all_attributes():
+            """Yield unique vertex attribute keys in the graph."""
             for node in self._vertices.values():
                 for key in node.data.keys():
                     yield key
@@ -675,6 +698,7 @@ class NetworkxBasedVertexClustering(VertexClustering):
 
     def _crossing_edges(self):
         def find_crossing_edges():
+            """Yield edges that cross between connected components."""
             graph = self._graph
             for cluster in self._clustering:
                 # Setting `nbunch2=None` means that we look for all edges
@@ -727,26 +751,30 @@ def pmds_layout(
     floating-point precision.
 
     .. [1] Brandes U, Pich C. Eigensolver Methods for Progressive
-        Multidimensional Scaling of Large Data. International Symposium
-        on Graph Drawing, 2007. Lecture Notes in Computer Science, vol
-        4372. doi: 10.1007/978-3-540-70904-6_6.
+    Multidimensional Scaling of Large Data. International Symposium
+    on Graph Drawing, 2007. Lecture Notes in Computer Science, vol
+    4372. doi: 10.1007/978-3-540-70904-6_6.
 
-    :param g: A networkx graph object
-    :param pivots: The number of pivot nodes to use
-    :param dim: The dimension of the layout
-    :param weights: Edge weights to use for the layout computation.
-    Options are:
 
     * an np.array with non-negative values (same number of elements as edges in g)
     * "prob_dist" to weight each edge (i, j) by -log(P)^3, where P is the probability
-        of a random walker to go from i to j in 5 steps and then back again (j->i)
-        in 5 steps. For this computation, self-loops are added to the graph to ensure
-        that all transitions are possible.
+    of a random walker to go from i to j in 5 steps and then back again (j->i)
+    in 5 steps. For this computation, self-loops are added to the graph to ensure
+    that all transitions are possible.
     * None to use unweighted shortest path lengths
-    :param seed: Set seed for reproducibility
-    :return: A dataframe with layout coordinates
-    :rtype: pd.DataFrame
-    :raises ValueError: if conditions are not met
+
+    Args:
+        g: A networkx graph object
+        pivots: The number of pivot nodes to use
+        dim: The dimension of the layout
+        weights: Edge weights to use for the layout computation. Options are:
+        seed: Set seed for reproducibility
+
+    Returns:
+        A dataframe with layout coordinates (pd.DataFrame)
+
+    Raises:
+        ValueError: if conditions are not met
     """
     if not nx.is_connected(g):
         raise ValueError("Only connected graphs are supported.")
@@ -842,6 +870,187 @@ def pmds_layout(
     return coordinates
 
 
+def coarsened_pmds_layout(
+    g: nx.Graph,
+    dim: int = 3,
+    resolution: float = 1.0,
+    pivots: int = 200,
+    n_iter: int = 10,
+    jitter_sd: float = 1e-2,
+    weight_edges_by: Literal["tp", "crossing_edges"] = "tp",
+    seed: Optional[int] = None,
+) -> Dict[Any, np.ndarray]:
+    """Compute a coarse-to-fine PMDS layout using Leiden clustering.
+
+    This function implements an algorithm to compute a layout on a coarsened version
+    of the graph. By coarsening the graph, it is possible to process large graphs
+    faster and using less memory.
+
+    The algorithm proceeds in three main stages:
+    1. Cluster the graph using the Leiden method and create a coarsened version of
+        the graph where each community is represented as a single node. Edge weights represent
+        the number of connections between communities. The resolution parameter controls the
+        granularity of the clustering, with higher values leading to more communities. Fewer
+        communities will lead to faster computation but potentially less accurate layouts.
+    2. Compute a layout for the coarsened graph using PMDS. The `weight_edges_by` parameter
+        controls how edges are weighted in the coarsened graph. "tp" uses bidirectional transition
+        probabilities, while "crossing_edges" uses 1 divided by the number of edges crossing
+        between communities.
+    3. Each node in the original graph is assigned the coordinates of its corresponding
+        community in the coarsened graph. Then, the nodes are iteratively "wiggled" by replacing
+        their coordinates with a weighted average of their neighbors' coordinates + some random
+        jitter (`jitter_sd`).
+
+    Args:
+        g: A connected NetworkX graph.
+        dim: Number of output dimensions (default 3).
+        resolution: Leiden clustering resolution parameter. Higher values lead to more communities
+        and finer granularity but lower computational efficiency.
+        pivots: Number of pivots for PMDS at the coarse level.
+        n_iter: Number of refinement iterations.
+        jitter_sd: Standard deviation of random jitter added at each iteration.
+        weight_edges_by: How to weight edges in the coarse graph ("tp" for
+            transition probability, "crossing_edges" for inverse crossing count).
+        seed: Optional random seed for reproducibility.
+
+    Returns:
+        Dictionary mapping node IDs to coordinate arrays of shape (dim,).
+
+    Raises:
+        ValueError: If the graph is not connected.
+        ValueError: If the graph is directed.
+        ValueError: If the dim is not 2 or 3.
+        ValueError: If the resolution is not between 0.01 and 10.
+        ValueError: If pivots is not between 10 and min(#nodes, 1000).
+        ValueError: If n_iter is not between 1 and 100.
+        ValueError: If jitter_sd is not between 0.001 and 0.1.
+        ValueError: If weight_edges_by is not "tp" or "crossing_edges".
+        ValueError: If seed is not an integer or None.
+
+    """
+    _validate_coarsened_pmds_parameters(
+        g, dim, resolution, pivots, n_iter, jitter_sd, weight_edges_by, seed
+    )
+
+    n_nodes = len(g.nodes)
+    n_edges = len(g.edges)
+
+    # Normalize resolution parameter to fit PNA graphs
+    # Here we use the number of edges to scale the resolution parameter
+    res = resolution * n_edges / 1000
+
+    # Run Leiden community detection
+    edges_with_weights = [
+        (str(u), str(v), float(d.get("weight", 1.0))) for u, v, d in g.edges(data=True)
+    ]
+
+    _, community_dict = leiden(
+        edges_with_weights,
+        resolution=res,
+        seed=seed if seed is not None else 42,
+        use_modularity=True,
+        iterations=1,
+        randomness=0.001,
+        trials=1,
+        starting_communities=None,
+    )
+
+    nodes = list(g.nodes)
+
+    # Cast node to str here so it matches the keys in community_dict
+    membership = np.array([community_dict[str(node)] for node in nodes])
+
+    unique_communities = np.unique(membership)
+    n_communities = len(unique_communities)
+
+    community_to_idx = {comm: i for i, comm in enumerate(unique_communities)}
+
+    # Cast node to str here as well
+    node_to_community_idx = np.array(
+        [community_to_idx[community_dict[str(n)]] for n in nodes]
+    )
+
+    A_orig = nx.to_scipy_sparse_array(g, nodelist=nodes, weight=None, format="csr")
+
+    # Create a cluster-level adjacency matrix by summing connections between clusters
+    data = np.ones(n_nodes)
+    row_indices = np.arange(n_nodes)
+    col_indices = node_to_community_idx
+    mm = sp.sparse.csr_matrix(
+        (data, (row_indices, col_indices)), shape=(n_nodes, n_communities)
+    )
+    cl_counts = mm.T @ A_orig @ mm
+    # Remove internal cluster connections by setting the diagonal to zero
+    cl_counts.setdiag(0)
+    cl_counts.eliminate_zeros()
+
+    g_small = nx.from_scipy_sparse_array(cl_counts)
+
+    small_pivots = min(pivots, len(g_small.nodes))
+
+    if weight_edges_by == "tp":
+        xyz_small_dict = pmds_layout(
+            g_small, dim=dim, pivots=small_pivots, weights="prob_dist", seed=seed
+        )
+    else:
+        weights = np.array([1.0 / d["weight"] for _, _, d in g_small.edges(data=True)])
+        xyz_small_dict = pmds_layout(
+            g_small, dim=dim, pivots=small_pivots, weights=weights, seed=seed
+        )
+
+    xyz_small = np.zeros((n_communities, dim))
+    small_nodes = list(g_small.nodes)
+    for i, node in enumerate(small_nodes):
+        xyz_small[node] = xyz_small_dict[node]
+
+    xyz_small = normalize_layout_coordinates(xyz_small)
+
+    # Assign the coordinates of the coarsened graph to the original nodes
+    xyz_full = xyz_small[node_to_community_idx]
+
+    A_orig_with_self = A_orig + sp.sparse.eye(n_nodes, format="csr")
+
+    rows, cols_idx = A_orig_with_self.nonzero()
+    keep_within = node_to_community_idx[rows] == node_to_community_idx[cols_idx]
+
+    A_within = sp.sparse.csr_matrix(
+        (A_orig_with_self.data * keep_within, (rows, cols_idx)),
+        shape=A_orig_with_self.shape,
+    )
+    A_within.eliminate_zeros()
+
+    A_between = sp.sparse.csr_matrix(
+        (A_orig_with_self.data * (~keep_within), (rows, cols_idx)),
+        shape=A_orig_with_self.shape,
+    )
+    A_between.eliminate_zeros()
+
+    def row_norm(mat):
+        row_sums = np.array(mat.sum(axis=1)).flatten()
+        # Use np.errstate to ignore divide by zero warnings, and set the
+        # inverse of zero sums to zero
+        with np.errstate(divide="ignore"):
+            inv_row_sums = np.where(row_sums > 0, 1.0 / row_sums, 0.0)
+        return sp.sparse.diags(inv_row_sums) @ mat
+
+    P_within = row_norm(A_within)
+    P_between = row_norm(A_between)
+
+    P = P_within + P_between
+    P = row_norm(P)
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    for _ in range(n_iter):
+        xyz_full += np.random.normal(scale=jitter_sd, size=xyz_full.shape)
+        xyz_full = P @ xyz_full
+
+    xyz_full = normalize_layout_coordinates(xyz_full)
+
+    return {nodes[i]: xyz_full[i] for i in range(n_nodes)}
+
+
 def _prob_edge_weights(
     g: nx.Graph,
     k: int = 5,
@@ -879,11 +1088,15 @@ def _prob_edge_weights(
     connected (if there are many possible k-step paths between them), this
     probability should be high.
 
-    :param g: A networkx graph object
-    :param k: The number of steps in the random walk
-    :return: An array of edge weights
-    :rtype: np.array
-    :raises ValueError: if conditions are not met
+    Args:
+        g: A networkx graph object
+        k: The number of steps in the random walk
+
+    Returns:
+        An array of edge weights (np.array)
+
+    Raises:
+        ValueError: if conditions are not met
     """
     # Check that k is an integer between 1 and 10
     if not isinstance(k, int) and k < 1 or k > 10:
@@ -893,15 +1106,15 @@ def _prob_edge_weights(
     A = nx.to_scipy_sparse_array(g, weight=None, format="csr")
 
     # Add 1 to the diagonal to allow self-loops
-    A = A + sp.sparse.diags_array([1] * A.shape[0], format="csr")
+    A = A + sp.sparse.diags_array([1] * A.shape[0], format="csr", dtype=A.dtype)
 
     # Divide by row sum to get the stochastic matrix
-    D = sp.sparse.diags_array(1 / A.sum(axis=1), format="csr")
+    D = sp.sparse.diags_array(1 / A.sum(axis=1), format="csr", dtype=None)
     P = D @ A
 
     # Compute the transition probabilities for a k-step walk
     min_weight = 0.001  # To avoid having the sparse matrix grow too dense
-    P_step = _mat_pow(P, k, prune_threshold=min_weight)
+    P_step = mat_pow(P, k, prune_threshold=min_weight)
     P_step = (P_step + min_weight * P) / (
         1 + min_weight
     )  # Ensure that the original values are not pruned
@@ -934,11 +1147,84 @@ def _prob_edge_weights(
     return edge_probs
 
 
-def _mat_pow(mat, power, prune_threshold: float | None = None):
-    mat_power = mat.copy()
-    for _ in range(power - 1):
-        if prune_threshold:
-            mat_power.data[np.abs(mat_power.data) < prune_threshold] = 0
-            mat_power.eliminate_zeros()
-        mat_power = mat @ mat_power
-    return mat_power
+def _validate_coarsened_pmds_parameters(
+    g,
+    dim,
+    resolution,
+    pivots,
+    n_iter,
+    jitter_sd,
+    weight_edges_by,
+    seed,
+):
+    import networkx as nx
+
+    if not isinstance(g, nx.Graph):
+        raise ValueError("g must be a networkx.Graph instance.")
+    if g.is_directed():
+        raise ValueError("g must be undirected.")
+    if not nx.is_connected(g):
+        raise ValueError("g must be connected.")
+
+    if dim not in (2, 3):
+        raise ValueError("dim must be 2 or 3.")
+
+    if not (isinstance(resolution, (float, int)) and 0.01 <= resolution <= 10):
+        raise ValueError("resolution must be a float between 0.01 and 10.")
+
+    n_nodes = len(g.nodes)
+    pivots_max = min(n_nodes, 1000)
+    if not (isinstance(pivots, int) and 10 <= pivots <= pivots_max):
+        raise ValueError(
+            f"pivots must be an integer between 10 and {pivots_max} (number of nodes or 1000, whichever is smaller)."
+        )
+
+    if not (isinstance(n_iter, int) and 1 <= n_iter <= 100):
+        raise ValueError("n_iter must be an integer between 1 and 100.")
+
+    if not (isinstance(jitter_sd, (float, int)) and 0.001 <= float(jitter_sd) <= 0.1):
+        raise ValueError("jitter_sd must be a float between 0.001 and 0.1.")
+
+    if weight_edges_by not in ("tp", "crossing_edges"):
+        raise ValueError('weight_edges_by must be either "tp" or "crossing_edges".')
+
+    if seed is not None and not isinstance(seed, int):
+        raise ValueError("seed must be an integer or None.")
+
+
+def normalize_layout_coordinates(points: np.ndarray) -> np.ndarray:
+    """Center layout coordinates at the origin and scale by median radius.
+
+    Centers coordinates at 0 and scales them so that the median radius (distance
+    from the origin) is exactly 1.
+
+    Args:
+        points: An N x D array of layout coordinates.
+
+    Returns:
+        Normalized coordinate array with the same shape as ``points``.
+
+    """
+    # Ensure input is a numpy array
+    points = np.asarray(points)
+
+    # 1. Center the coordinates by subtracting the mean of each axis
+    # axis=0 computes the mean across the rows, giving a 1x3 vector [mean_x, mean_y, mean_z]
+    centroid = np.mean(points, axis=0)
+    centered_points = points - centroid
+
+    # 2. Calculate the Euclidean distance (radius) of each point from the new origin (0, 0, 0)
+    # axis=1 computes the norm across the columns for each individual point
+    radii = np.linalg.norm(centered_points, axis=1)
+
+    # 3. Find the median radius
+    median_radius = np.median(radii)
+
+    # Guard against division by zero if all points are exactly at the same spot
+    if median_radius == 0:
+        raise ValueError("The median radius is 0. Cannot scale the points.")
+
+    # 4. Scale the coordinates so the median radius becomes 1
+    normalized_points = centered_points / median_radius
+
+    return normalized_points

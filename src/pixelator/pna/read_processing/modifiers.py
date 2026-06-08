@@ -23,5 +23,12 @@ class CombiningModifier(ABC):
         info1: ModificationInfo,
         info2: ModificationInfo,
     ) -> SequenceRecord | None:
-        """Combine two reads into a single read."""
+        """Combine two reads into a single read.
+
+        Args:
+            read1: Forward read (or None).
+            read2: Reverse read (or None).
+            info1: Modification info for the forward read (unused).
+            info2: Modification info for the reverse read (unused).
+        """
         pass

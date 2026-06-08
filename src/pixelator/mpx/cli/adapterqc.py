@@ -51,7 +51,15 @@ def adapterqc(
     output,
     design,
 ):
-    """Check for the presence of PBS1/2 sequences in FASTQ input files."""
+    """Check for the presence of PBS1/2 sequences in FASTQ input files.
+
+    Args:
+        ctx: Click context from the command decorator.
+        fastq_file: Path to the input FASTQ file.
+        mismatches: The number of mismatches allowed (in percentage).
+        output: The path where the results will be placed (it is created if it does not exist).
+        design: The design to load from the configuration file.
+    """
     from pixelator.mpx.config.config_instance import config
 
     input_files = [fastq_file]

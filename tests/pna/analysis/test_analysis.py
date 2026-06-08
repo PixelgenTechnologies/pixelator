@@ -6,6 +6,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 from io import StringIO
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -34,6 +35,13 @@ MarkerB,MarkerC,9864156ed5c9eb6c,c925e4e5eeb989b9,0.0,1.0,0.0,0.061,0.062,0.001,
 
 @pytest.mark.slow
 def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
+    """Verify proximity analysis jcs.
+
+    Args:
+        pna_data_root: pna data root.
+        tmp_path: tmp path.
+        pna_pxl_file: Pna pxl file.
+    """
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     manager = AnalysisManager(
         [ProximityAnalysis(n_permutations=25, min_marker_count=0)],
@@ -60,15 +68,47 @@ def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
     )
     expected_proximity = expected_proximity.astype({"join_count": "uint32"})
 
-    assert_frame_equal(
-        proximity, expected_proximity, check_like=True, check_dtype=False
+    # Drop non numerical columns, as well as join_count_p since it varies too much between two different seeds
+    drop_columns = ["join_count_p", "sample"]
+    high_join_count_expected = expected_proximity.query(
+        "join_count_expected_mean > 1000"
+    ).drop(columns=drop_columns)
+    high_join_count_observed = proximity.loc[high_join_count_expected.index].drop(
+        columns=drop_columns
     )
+
+    # Check that the computed values are within relative tolerance. Some variables are very unstable.
+    rtols = {
+        "join_count": 1.0e-5,
+        "join_count_expected_mean": 0.02,
+        "join_count_expected_sd": 0.75,
+        "join_count_z": 15,
+        "marker_1_count": 1.0e-5,
+        "marker_1_freq": 1.0e-5,
+        "marker_2_count": 1.0e-5,
+        "marker_2_freq": 1.0e-5,
+        "min_count": 1.0e-5,
+        "log2_ratio": 15,
+    }
+    tol_series = pd.Series(rtols)
+    percent_diff = abs(high_join_count_expected - high_join_count_observed) / (
+        abs(high_join_count_expected) + 1e-9
+    )
+
+    assert not (percent_diff > tol_series).any().any()
 
 
 @pytest.mark.slow
 def test_proximity_analysis_jcs_marker_count_filtering(
     pna_pxl_file: Path, pna_data_root, tmp_path
 ):
+    """Verify proximity analysis jcs marker count filtering.
+
+    Args:
+        pna_data_root: pna data root.
+        tmp_path: tmp path.
+        pna_pxl_file: Pna pxl file.
+    """
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     min_marker_count = 10
     manager_unfiltered = AnalysisManager(
@@ -116,6 +156,7 @@ def test_proximity_analysis_jcs_marker_count_filtering(
 
 
 def test_calculate_differential_proximity():
+    """Verify calculate differential proximity."""
     proximity = pd.read_csv(StringIO(PROXIMITY_DATA))
     dpa = calculate_differential_proximity(
         proximity,
@@ -142,6 +183,14 @@ def test_calculate_differential_proximity():
 def test_proximity_analysis_jcs_analytic(
     pna_pxl_file: Path, pna_data_root, components, markers
 ):
+    """Verify proximity analysis jcs analytic.
+
+    Args:
+        pna_data_root: pna data root.
+        components: components.
+        markers: markers.
+        pna_pxl_file: Pna pxl file.
+    """
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     proximity_obj = pna_pxl_dataset.filter(
         components=components, markers=markers

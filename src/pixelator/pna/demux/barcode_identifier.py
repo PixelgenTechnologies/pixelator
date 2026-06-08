@@ -26,16 +26,17 @@ class BarcodeIdentifierStatistics:
     the statistics will be merged into a single instance and passed
     to the final statistics object.
 
-    :ivar passed: the number of reads that passed the barcode identifier
-    :ivar failed: the number of reads that failed the barcode identifier
-    :ivar missing_pid1: the number of reads with a missing PID1
-    :ivar missing_pid2: the number of reads with a missing PID2
-    :ivar pid1_matches_distance_distribution:
-        A counter object capturing the distribution of distances for PID1 matches.
-    :ivar pid2_matches_distance_distribution:
-        A counter object capturing the distribution of distances for PID2 matches.
 
-    :ivar pid_pair_counter: A counter object capturing the number of reads per PID pair.
+    Attributes:
+        passed: the number of reads that passed the barcode identifier
+        failed: the number of reads that failed the barcode identifier
+        missing_pid1: the number of reads with a missing PID1
+        missing_pid2: the number of reads with a missing PID2
+        pid1_matches_distance_distribution: A counter object capturing the distribution of distances
+            for PID1 matches.
+        pid2_matches_distance_distribution: A counter object capturing the distribution of distances
+            for PID2 matches.
+        pid_pair_counter: A counter object capturing the number of reads per PID pair.
     """
 
     def __init__(self):
@@ -65,7 +66,11 @@ class BarcodeIdentifierStatistics:
         return self.missing_pid1_pid2 + self.missing_pid1 + self.missing_pid2
 
     def __iadd__(self, other):
-        """Merge statistics from another object into this one."""
+        """Merge statistics from another object into this one.
+
+        Args:
+            other: Statistics instance to merge into this one.
+        """
         if isinstance(other, BarcodeIdentifierStatistics):
             self.exact += other.exact
             self.corrected += other.corrected
@@ -134,10 +139,11 @@ class BarcodeIdentifier(SingleEndStep, HasFilterStatistics, HasCustomStatistics)
     ):
         """Initialize the BarcodeIdentifier object.
 
-        :param assay: the assay design
-        :param panel: the antibody panel
-        :param mismatches: the maximum number of mismatches allowed when aligning the LBS sequences
-        :param writer: a writer to save failed reads to
+        Args:
+            assay: the assay design
+            panel: the antibody panel
+            mismatches: the maximum number of mismatches allowed when aligning the LBS sequences
+            writer: a writer to save failed reads to
         """
         self.assay = assay
         self.panel = panel
@@ -170,8 +176,12 @@ class BarcodeIdentifier(SingleEndStep, HasFilterStatistics, HasCustomStatistics)
     def __call__(self, read: SequenceRecord, info=None) -> SequenceRecord | None:
         """Find the nearest antibody for a given barcode.
 
-        :param read: the read to process
-        :return: the read with the antibody information added
+        Args:
+            read: the read to process
+            info: Modification info from earlier pipeline steps (unused).
+
+        Returns:
+            the read with the antibody information added
         """
         # Extract the barcode sequence
         _stats = self._stats

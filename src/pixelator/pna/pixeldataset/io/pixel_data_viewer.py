@@ -68,8 +68,11 @@ class PixelDataViewer:
     ):
         """Initialize the PixelDataViewer.
 
-        :param sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
-        :raises ValueError: If any of the files are not valid PXL files.
+        Args:
+            sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
+
+        Raises:
+            ValueError: If any of the files are not valid PXL files.
         """
         self._db_to_file_mapping = sample_name_to_pxl_file_mapping
         self._normalized_sample_name_mapping = self._map_sample_names_to_db_names(
@@ -87,7 +90,11 @@ class PixelDataViewer:
     def _map_sample_names_to_db_names(
         self, sample_name_to_pxl_file_mapping: dict[str, PxlFile]
     ) -> dict[str, str]:
-        """Create a normalized sample name lookup table for working with the duckdb files."""
+        """Create a normalized sample name lookup table for working with the duckdb files.
+
+        Args:
+            sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
+        """
 
         def _normalize_sample_name(name: str) -> str:
             # Remove whitespaces and dashes from the sample name
@@ -131,7 +138,11 @@ class PixelDataViewer:
     def from_sample_to_file_mappings(
         sample_name_to_pxl_file_mapping: dict[str, PxlFile],
     ) -> "PixelDataViewer":
-        """Create a PixelDataViewer from a dictionary mapping sample names to PxlFile objects."""
+        """Create a PixelDataViewer from a dictionary mapping sample names to PxlFile objects.
+
+        Args:
+            sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
+        """
         return PixelDataViewer(sample_name_to_pxl_file_mapping)
 
     def filter_samples(self, sample_names: set[str]) -> "PixelDataViewer":

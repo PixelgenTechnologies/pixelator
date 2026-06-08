@@ -5,6 +5,85 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [] - Unreleased
+
+## Added
+- `annotate_cells` method to determine cell-types using another given set of pre-annotated cells.
+
+## [0.28.0] - 2026-06-03
+
+## Added
+- `coarsened_pmds_layout` method for more performant cell layout computation.
+
+### Fixed
+ - Performance regression (introduced in 0.27.1) in the graph command, where memory usage became
+   extremely high towards the final stages of the process
+ - Fix rename panel files to reflect current version.
+
+## [0.27.2] - 2026-05-29
+
+### Fixed
+ - Fix proxiome-v2 panel major version, from 1 to 2.
+
+## [0.27.1] - 2026-05-27
+
+### Fixed
+- Fix full name of CD45RO in the `proxiome-v1` and `proxiome-v2` panel files.
+- Fix CD298 annotation in the `proxiome-v2` panel files.
+- Propagate the demux --mismatches cli argument to correct_marker_barcodes (was using default i.e. 1)
+- Follow uv.lock when building docker containers
+
+### Added
+- Add FMC63 proxiome-v2 panel
+
+## [0.27.0] - 2026-05-22
+
+### Added
+- Two new denoising methods to `pixelator single-cell-pna denoise`:
+  - Adaptive Core Denoising (ACE) denoising: removes peripheral-like nodes around the graph core.
+  - Partial Least Squares (PLS) denoising: filters nodes using PLS components associated with coreness.
+- Automatically bump panel patch version when possible, when creating an reading Anndata object.
+
+### Changed
+- When parsing panel files, trailing commas in the header will now give a warning and ignore the trailing commas,
+  instead of raising an error.
+- Remove pin on polars and update to latest version
+
+### Removed
+- Remove the `report` command for both PNA and MPX.
+
+### Fixed
+- Use dependency versions from `uv.lock` when building container.
+
+### Parameters
+
+- `pixelator single-cell-pna denoise`
+
+| Old parameter                        | New parameter               |
+| ------------------------------------ | --------------------------- |
+|                                      | `--run-ace-denoising`       |
+|                                      | `--ace-k`                   |
+|                                      | `--ace-max-k-core`          |
+|                                      | `--ace-no-select-lcc`       |
+|                                      | `--one-core-ratio-threshold`|
+|                                      | `--pval-threshold`          |
+|                                      | `--inflate-factor`          |
+|                                      | `--run-pls-denoising`       |
+|                                      | `--pls-ncomp`               |
+|                                      | `--pls-model-k`             |
+|                                      | `--pls-pred-k`              |
+|                                      | `--pls-use-weights / --pls-no-weights` |
+|                                      | `--pls-normalization`       |
+|                                      | `--pls-residualize`         |
+|                                      | `--pls-component-p-threshold` |
+|                                      | `--pls-min-coreness-correlation` |
+|                                      | `--pls-score-threshold`     |
+
+> [!NOTE]
+> Parameter has been **updated** if both old and new parameter information is present.
+> Parameter has been **added** if just the new parameter information is present.
+> Parameter has been **removed** if new parameter information isn't present.
+
 ## [0.26.0] - 2026-05-04
 
 ### Important changes
@@ -24,6 +103,8 @@ See the updated table below for which panel version to use:
 The old panel names no longer work; please specify the new panel name instead.
 
 ### Added
+- Add adaptive core expansion (ACE) and partial least squares (PLS) as graph denoise method options.
+
 - Add the option to calculate proximity scores from edgelist using analytical expected join counts.
   `PNAPixelDataset.proximity(calculate_from_edgelist=True)` is used to compute these scores.
 
@@ -49,6 +130,7 @@ The old panel names no longer work; please specify the new panel name instead.
 - Add support for inline panel version specifiers in panel identifiers (for example `panel==1.1.0`).
 
 ### Changed
+- Collect metrics for each denoise method in adata.obs and remove disqualified_for_denoise from the corresponding json report.
 - The previous implementation has been renamed and is available with `pixelator single-cell-pna graph_legacy`.
 - Rename bundled PNA v1 resources to `proxiome-v1-*` naming for assays and panels. IMPORTANT: the old panel names no longer work. To rerun old data, update relevant scripts to the new panel name(s).
 - Remove all panel aliases. Use the correct panel name, or alternatively use a product name with a version specifier to select the panel.

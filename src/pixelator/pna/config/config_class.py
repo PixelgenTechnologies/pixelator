@@ -1,4 +1,4 @@
-"""Module contains classes and functions related to the configuration file for pixelator (assay settings).
+"""Classes and functions for Pixelator configuration files and assay settings.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """
@@ -43,7 +43,6 @@ class PNAConfig:
         Args:
             assays: Optional assays to pre-populate the config with.
             panels: Optional panels to pre-populate the config with.
-
         """
         self.assays: Dict[str, PNAAssay] = {}
         self.panels: typing.MutableMapping[str, List[PartialPNAAntibodyPanel]] = (
@@ -69,7 +68,6 @@ class PNAConfig:
 
         Raises:
             ValueError: If an assay with the same name already exists in the config.
-
         """
         assay = PNAAssay.from_yaml(path)
         if assay.name in self.assays:
@@ -86,7 +84,6 @@ class PNAConfig:
 
         Raises:
             PanelException: If loading introduces a conflicting alias mapping.
-
         """
         panel = panel_from_csv(path)
         self.add_panel(panel)
@@ -102,7 +99,6 @@ class PNAConfig:
 
         Raises:
             PanelException: If an alias already maps to a different panel key.
-
         """
         key = panel.name if panel.name is not None else str(panel.filename)
         self.panels[key].append(panel)
@@ -124,7 +120,11 @@ class PNAConfig:
             self.panel_aliases[alias] = key
 
     def load_assays(self, path: PathType):
-        """Load all assays from a directory containing yaml files."""
+        """Load all assays from a directory containing yaml files.
+
+        Args:
+            path: Path to an assay YAML file.
+        """
         search_path = Path(path)
 
         yaml_files = list(
@@ -138,7 +138,11 @@ class PNAConfig:
             self.load_assay(f)
 
     def load_panels(self, path: PathType):
-        """Load all panel files from a directory containing csv files."""
+        """Load all panel files from a directory containing csv files.
+
+        Args:
+            path: Path to an assay YAML file.
+        """
         search_path = Path(path)
 
         csv_files = list(search_path.glob("*.csv"))
@@ -155,9 +159,11 @@ class PNAConfig:
     ) -> List[str]:
         """Return a list of all panel names.
 
-        :param include_aliases: Include panel aliases in the list
-        :param include_archived: Include archived panels in the list
-        :returns: A list of panel names
+        Args:
+            include_aliases: Include panel aliases in the list
+            include_archived: Include archived panels in the list
+        Returns:
+            A list of panel names
         """
         out = []
         for panel in itertools.chain.from_iterable(self.panels.values()):
@@ -180,8 +186,8 @@ class PNAConfig:
         """Resolve a panel by name/product/alias and optional version constraint.
 
         Args:
-            panel_name: Panel name, product name, or alias. May include an inline
-                version specifier (for example "product==1.2.0").
+            panel_name: Panel name, product name, or alias. May include an inline version specifier
+                (for example "product==1.2.0").
             version: Optional version specifier supplied separately.
             allow_aliases: If True, also resolve through configured aliases.
 
@@ -189,9 +195,8 @@ class PNAConfig:
             The resolved panel, or None if no matching panel is found.
 
         Raises:
-            ValueError: If version is specified both inline and in ``version``, or if
-                multiple ambiguous major/minor versions match.
-
+            ValueError: If version is specified both inline and in ``version``, or if multiple
+                ambiguous major/minor versions match.
         """
         version_stripped_name, specified_version = parse_versioned_panel_name(
             panel_name
@@ -273,6 +278,11 @@ class PNAConfig:
             )
 
         def keyfunc(p):
+            """Keyfunc.
+
+            Args:
+                p: p.
+            """
             version = p.version
             if version is None:
                 v = semver.Version.parse("0.0.0")
@@ -290,9 +300,11 @@ ConfigType = typing.TypeVar("ConfigType", Config, PNAConfig)
 def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
     """Load default assays from a resources package.
 
-    :param config: The config object to load assays into
-    :param package_name: The name of the package to load assays from
-    :return: The updated config object
+    Args:
+        config: The config object to load assays into
+        package_name: The name of the package to load assays from
+    Returns:
+        The updated config object
     """
     for resource in importlib.resources.files(package_name).iterdir():
         if resource.is_file():
@@ -305,9 +317,11 @@ def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
 def load_panels_package(config: ConfigType, package_name: str) -> ConfigType:
     """Load default panels from a resources package.
 
-    :param config: The config object to load panel files into
-    :param package_name: The name of the package to load panels from
-    :return: The updated config object
+    Args:
+        config: The config object to load panel files into
+        package_name: The name of the package to load panels from
+    Returns:
+        The updated config object
     """
     for resource in importlib.resources.files(package_name).iterdir():
         if resource.is_file():
@@ -321,13 +335,12 @@ def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional
     """Parse a panel identifier that may include a version expression.
 
     Args:
-        panel_name: Panel identifier, optionally suffixed with a comparator and
-            version fragment (for example ``panel>=1.2`` or ``panel==1``).
+        panel_name: Panel identifier, optionally suffixed with a comparator and version fragment
+            (for example ``panel>=1.2`` or ``panel==1``).
 
     Returns:
         A tuple ``(name, specifier)`` where both values are None when no version
         expression is detected.
-
     """
     if match := re.search(
         # Allow panel names matching [A-Za-z0-9-.]+,

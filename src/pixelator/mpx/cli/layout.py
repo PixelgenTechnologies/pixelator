@@ -10,6 +10,7 @@ import click
 
 from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.common.utils import (
+    create_output_stage_dir,
     get_sample_name,
     log_step_start,
     sanity_check_inputs,
@@ -21,7 +22,6 @@ from pixelator.mpx.cli.common import logger, output_option
 from pixelator.mpx.pixeldataset.precomputed_layouts import (
     generate_precomputed_layouts_for_components,
 )
-from pixelator.mpx.report.common import PixelatorWorkdir
 from pixelator.mpx.report.models.layout import LayoutSampleReport
 
 
@@ -48,7 +48,7 @@ from pixelator.mpx.report.models.layout import LayoutSampleReport
     "--layout-algorithm",
     required=False,
     multiple=True,
-    default=["wpmds_3d"],
+    default=["coarsened_pmds_3d"],
     help="Select a layout algorithm to use. This can be specified multiple times to compute multiple layouts. Default: pmds_3d",
     type=click.Choice(get_args(SupportedLayoutAlgorithm)),
 )
@@ -62,8 +62,15 @@ def layout(
     layout_algorithm,
     output,
 ):
-    """
-    Compute graph layouts that can be used to visualize components
+    """Compute graph layouts that can be used to visualize components
+
+    Args:
+        ctx: Click context from the command decorator.
+        pxl_file: Path to the input PXL (PixelDataset) file.
+        no_node_marker_counts: Skip adding marker counts to the layout. Default: False.
+        layout_algorithm: Select a layout algorithm to use. This can be specified multiple times to
+            compute multiple layouts. Default: pmds_3d.
+        output: The path where the results will be placed (it is created if it does not exist).
     """
     log_step_start(
         "layout",
@@ -77,8 +84,7 @@ def layout(
     sanity_check_inputs(pxl_file, allowed_extensions="pxl")
 
     # create output folder if it does not exist
-    workdir = PixelatorWorkdir(output)
-    layout_output_dir = workdir.stage_dir("layout")
+    layout_output_dir = create_output_stage_dir(output, "layout")
 
     logger.info(f"Computing layout(s) for file {pxl_file}")
 

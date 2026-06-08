@@ -137,9 +137,10 @@ class PreComputedLayouts:
         the `batch_size` parameter. If you set it to a large number, you will
         use more memory, but the performance should overall be better.
 
-        :param return_polars_df: If True, return polars DataFrames, otherwise return pandas DataFrames
-
-        :return: A stream of layouts names and associated layout dataframes
+        Args:
+            return_polars_df: If True, return polars DataFrames, otherwise return pandas DataFrames
+        Returns:
+            A stream of layouts names and associated layout dataframes
         """
         with self._view.open() as session:
             for component in self.components:

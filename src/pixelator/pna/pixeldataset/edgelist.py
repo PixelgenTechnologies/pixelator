@@ -118,7 +118,8 @@ class Edgelist:
     def iterator(self) -> Iterable[Component]:
         """Get a stream of components and their graphs.
 
-        :return: A stream of component names and associated graphs
+        Returns:
+            A stream of component names and associated graphs
         """
         for name, df in self._iterator():
             yield Component(

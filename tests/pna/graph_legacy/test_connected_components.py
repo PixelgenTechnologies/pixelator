@@ -27,6 +27,7 @@ from pixelator.pna.pixeldataset import PNAPixelDataset
 
 @pytest.mark.slow
 def test_recover_multiplets():
+    """Verify recover multiplets."""
     multiple_graph = nx.karate_club_graph()
     assert sum(1 for _ in nx.connected_components(multiple_graph)) == 1
 
@@ -62,6 +63,12 @@ def test_recover_multiplets():
 
 
 def generate_cells(add_random_edges=True, add_small_pieces=False):
+    """Generate cells.
+
+    Args:
+        add_random_edges: add random edges.
+        add_small_pieces: add small pieces.
+    """
     nbr_of_cells = 20
     n_random_edges = 40
     rng = np.random.default_rng(0)
@@ -106,6 +113,7 @@ def generate_cells(add_random_edges=True, add_small_pieces=False):
 
 @pytest.fixture(name="large_graph")
 def large_graph_fixture():
+    """Large graph fixture."""
     return generate_cells(add_random_edges=True, add_small_pieces=False)
 
 
@@ -113,6 +121,11 @@ def large_graph_fixture():
 def test_recover_multiplets_large_graph(large_graph):
     # Check that we have a single "mega cluster" component before
     # starting
+    """Verify recover multiplets large graph.
+
+    Args:
+        large_graph: large graph.
+    """
     assert sum(1 for _ in nx.connected_components(large_graph)) == 1
 
     options = StagedRefinementOptions(
@@ -147,6 +160,7 @@ def test_recover_multiplets_large_graph(large_graph):
 
 @pytest.fixture(name="large_graph_with_smaller_attached")
 def large_graph_with_smaller_things_added_on_fixture():
+    """Large graph with smaller things added on fixture."""
     return generate_cells(add_random_edges=True, add_small_pieces=True)
 
 
@@ -154,6 +168,11 @@ def large_graph_with_smaller_things_added_on_fixture():
 def test_recover_multiplets_large_graph_with_small_stuff_added_on(
     large_graph_with_smaller_attached,
 ):
+    """Verify recover multiplets large graph with small stuff added on.
+
+    Args:
+        large_graph_with_smaller_attached: large graph with smaller attached.
+    """
     large_graph = large_graph_with_smaller_attached
     # Check what we start from
     assert sum(1 for _ in nx.connected_components(large_graph)) == 2
@@ -195,6 +214,7 @@ def test_recover_multiplets_large_graph_with_small_stuff_added_on(
 
 @pytest.mark.slow
 def test_recover_multiplets_with_refinement_enabled():
+    """Verify recover multiplets with refinement enabled."""
     multiple_graph = nx.karate_club_graph()
     assert sum(1 for _ in nx.connected_components(multiple_graph)) == 1
 
@@ -237,6 +257,7 @@ def test_recover_multiplets_with_refinement_enabled():
 
 @pytest.mark.slow
 def test_filter_components_by_size_dynamic_if_no_limit_found_return_all():
+    """Verify filter components by size dynamic if no limit found return all."""
     component_sizes = pl.DataFrame({"component": [0, 1, 2, 3], "n_umi": [3, 2, 4, 1]})
     filtered, threshold = filter_components_by_size_dynamic(
         component_sizes, lowest_passable_bound=-1
@@ -246,6 +267,7 @@ def test_filter_components_by_size_dynamic_if_no_limit_found_return_all():
 
 
 def test_filter_components_by_size_dynamic():
+    """Verify filter components by size dynamic."""
     rng = np.random.default_rng(seed=0)
     cells_dist = rng.normal(10_000, 1000, 1000).astype(int)
     debris_dist = rng.normal(1000, 200, 1000).astype(int)
@@ -266,6 +288,7 @@ def test_filter_components_by_size_dynamic():
 
 
 def test_filter_components_by_size_hard_thresholds():
+    """Verify filter components by size hard thresholds."""
     components = [
         {1, 2, 3},
         {4, 5},
@@ -283,6 +306,7 @@ def test_filter_components_by_size_hard_thresholds():
 
 
 def test_hash_component():
+    """Verify hash component."""
     component = {1, 2, 3}
     result = hash_component(component)
     assert result == "7c68b4906e7ea780"
@@ -294,12 +318,22 @@ def test_hash_component():
 
 @pytest.fixture(name="lazy_edgelist_karate_graph")
 def karate_edgelist(edgelist_karate_graph):
+    """Karate edgelist.
+
+    Args:
+        edgelist_karate_graph: edgelist karate graph.
+    """
     edgelist = pl.DataFrame(edgelist_karate_graph).lazy()
     return edgelist
 
 
 @pytest.mark.slow
 def test_find_components(lazy_edgelist_karate_graph):
+    """Verify find components.
+
+    Args:
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
+    """
     edgelist = lazy_edgelist_karate_graph
     edgelist_with_components = find_components(
         edgelist,
@@ -329,6 +363,11 @@ def test_find_components(lazy_edgelist_karate_graph):
 
 
 def test_find_components_no_multiple_recovery(lazy_edgelist_karate_graph):
+    """Verify find components no multiple recovery.
+
+    Args:
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
+    """
     edgelist = lazy_edgelist_karate_graph
     edgelist_with_components = find_components(
         edgelist,
@@ -347,6 +386,11 @@ def test_find_components_no_multiple_recovery(lazy_edgelist_karate_graph):
 
 @pytest.mark.slow
 def test_find_components_dynamic_size_filter(lazy_edgelist_karate_graph):
+    """Verify find components dynamic size filter.
+
+    Args:
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
+    """
     edgelist = lazy_edgelist_karate_graph
     edgelist_with_components = find_components(
         edgelist,
@@ -377,6 +421,11 @@ def test_find_components_dynamic_size_filter(lazy_edgelist_karate_graph):
 
 @pytest.mark.slow
 def test_find_components_stats(lazy_edgelist_karate_graph):
+    """Verify find components stats.
+
+    Args:
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
+    """
     edgelist = lazy_edgelist_karate_graph
     _, stats = find_components(
         edgelist,
@@ -424,6 +473,11 @@ def test_find_components_stats(lazy_edgelist_karate_graph):
 
 @pytest.mark.slow
 def test_find_components_fixed_thresholds(lazy_edgelist_karate_graph):
+    """Verify find components fixed thresholds.
+
+    Args:
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
+    """
     edgelist = lazy_edgelist_karate_graph
     edgelist, stats = find_components(
         edgelist,
@@ -470,6 +524,13 @@ def test_find_components_fixed_thresholds(lazy_edgelist_karate_graph):
 @pytest.mark.slow
 @pytest.mark.parametrize("mock_panel", ["1.0.0", "2.0.0"], indirect=True)
 def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, tmpdir):
+    """Verify build pxl file with components.
+
+    Args:
+        lazy_edgelist_karate_graph: lazy edgelist karate graph.
+        mock_panel: mock panel.
+        tmpdir: tmpdir.
+    """
     output = Path(tmpdir) / "output.pxl"
 
     _, stats = build_pxl_file_with_components(
@@ -559,6 +620,13 @@ def test_build_pxl_file_with_components(lazy_edgelist_karate_graph, mock_panel, 
 def test_build_pxl_file_with_components_for_umi_collisions(
     edgelist_karate_graph, mock_panel, tmpdir
 ):
+    """Verify build pxl file with components for umi collisions.
+
+    Args:
+        edgelist_karate_graph: edgelist karate graph.
+        mock_panel: mock panel.
+        tmpdir: tmpdir.
+    """
     edgelist_df = pl.DataFrame(edgelist_karate_graph)
     ## Make the graph bipartite
     edgelist_df = edgelist_df.with_columns(umi2=pl.col("umi2") + pl.col("umi1").max())
@@ -633,6 +701,13 @@ def test_build_pxl_file_with_components_for_umi_collisions(
 def test_merge_communities_with_many_crossing_edges(
     comp1_size, comp2_size, n_crossing_edges
 ):
+    """Verify merge communities with many crossing edges.
+
+    Args:
+        comp1_size: comp1 size.
+        comp2_size: comp2 size.
+        n_crossing_edges: n crossing edges.
+    """
     max_edges_to_remove = 20
     max_edges_to_remove_relative = 0.001
     comp1_edges = pl.DataFrame(

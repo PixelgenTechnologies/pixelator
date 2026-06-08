@@ -26,6 +26,7 @@ def output_option(func):
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Invoke the wrapped Click callback."""
         return func(*args, **kwargs)
 
     return wrapper
@@ -43,6 +44,7 @@ def threads_option(func):
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Invoke the wrapped Click callback."""
         return func(*args, **kwargs)
 
     return wrapper
@@ -72,6 +74,7 @@ def memory_option(func):
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Invoke the wrapped Click callback."""
         return func(*args, **kwargs)
 
     return wrapper
@@ -94,6 +97,7 @@ def design_option(func):
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Invoke the wrapped Click callback."""
         return func(*args, **kwargs)
 
     return wrapper
@@ -102,10 +106,12 @@ def design_option(func):
 def validate_panel(ctx, param, value):
     """Validate the panel commandline option.
 
-    :param ctx: The click context
-    :param param: The click parameter
-    :param value: The click value
-    :returns: The validated value
+    Args:
+        ctx: The click context
+        param: The click parameter
+        value: The click value
+    Returns:
+        The validated value
     """
     try:
         if Path(value).exists():
@@ -151,6 +157,7 @@ def panel_option(func):
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        """Invoke the wrapped Click callback."""
         return func(*args, **kwargs)
 
     return wrapper

@@ -7,7 +7,11 @@ import pandas as pd
 
 
 def enforce_edgelist_types_for_tests(edgelist: pd.DataFrame) -> pd.DataFrame:
-    """Enforce the types of a edgelist dataframe, in testing."""
+    """Enforce the types of a edgelist dataframe, in testing.
+
+    Args:
+        edgelist: Edgelist.
+    """
     type_dict = {
         "count": "uint16",
         "upia": "category",

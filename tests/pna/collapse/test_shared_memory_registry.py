@@ -10,6 +10,7 @@ from pixelator.pna.collapse.independent.shared_memory_registry import (
 
 
 def test_get_array():
+    """Verify get array."""
     registry = SharedMemoryRegistry()
     with registry as r:
         arr = r.allocate_array("db", (1024,), dtype=np.uint8)
@@ -22,6 +23,7 @@ def test_get_array():
 
 
 def test_get_array_zero_init():
+    """Verify get array zero init."""
     registry = SharedMemoryRegistry()
     with registry as r:
         arr = r.allocate_array("db", (1024,), dtype=np.uint8, zero_init=True)
@@ -30,6 +32,7 @@ def test_get_array_zero_init():
 
 
 def test_shared_memory_pickler():
+    """Verify shared memory pickler."""
     registry = SharedMemoryRegistry()
 
     with registry as r:

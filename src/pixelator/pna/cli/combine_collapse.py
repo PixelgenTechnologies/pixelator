@@ -32,9 +32,10 @@ from pixelator.pna.utils import timer
 def validate_mismatches(ctx, param, value):
     """Validate the --mismatches commandline option.
 
-    :param ctx: The click context
-    :param param: The click parameter name
-    :param value: The click value
+    Args:
+        ctx: The click context
+        param: The click parameter name
+        value: The click value
     """
     try:
         value = int(value)
@@ -88,7 +89,17 @@ def validate_mismatches(ctx, param, value):
 def combine_collapse(
     ctx, parquet, reports, output, parquet_pattern, report_pattern, memory
 ):
-    """Collapse Molecular Pixelation data (FASTQ) by umi-upi to remove duplicates and perform error correction."""  # noqa
+    """Combine parquet and JSON files from partitioned collapse results.
+
+    Args:
+        ctx: Click context from the command decorator.
+        parquet: Path to a parquet file produced by collapse (may be repeated).
+        reports: Path to a collapse report JSON file (may be repeated).
+        output: The path where the results will be placed (it is created if it does not exist).
+        parquet_pattern: The pattern to match parquet files.
+        report_pattern: The pattern to match report files.
+        memory: The maximum amount of memory available for processing.
+    """
     # log input parameters
     log_step_start(
         "combine-collapse",

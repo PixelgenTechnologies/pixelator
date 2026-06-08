@@ -4,6 +4,7 @@ from pixelator.pna.graph.report import GraphSampleReport, GraphStatistics
 
 
 def test_can_convert_component_statistics_to_graph_sample_report():
+    """Verify can convert component statistics to graph sample report."""
     component_stats = GraphStatistics(
         component_count_pre_recovery=10,
         component_count_post_recovery=8,
@@ -60,6 +61,7 @@ def test_can_convert_component_statistics_to_graph_sample_report():
 
 
 def test_graph_sample_report():
+    """Verify graph sample report."""
     report = GraphSampleReport(
         sample_id="test_sample",
         product_id="single-cell-pna",
@@ -141,6 +143,11 @@ def test_graph_sample_report():
 
 
 def test_graph_sample_report_to_json(snapshot):
+    """Verify graph sample report to json.
+
+    Args:
+        snapshot: snapshot.
+    """
     report = GraphSampleReport(
         sample_id="test_sample",
         product_id="single-cell-pna",

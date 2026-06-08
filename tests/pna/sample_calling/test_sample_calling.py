@@ -74,7 +74,7 @@ def _samplesheet_and_hashing_for_three_samples():
 
 
 def test_hashed_antibody_mapping_requires_samplesheet_and_all_hashing_antibodies():
-    """HashedAntibodyMapping is created only via from_samplesheet with both samplesheet and all_hashing_antibodies."""
+    """Test from_samplesheet requires samplesheet and all hashing antibodies."""
     samplesheet, all_hashing = _samplesheet_and_hashing_for_three_samples()
     mapping = HashedAntibodyMapping.from_samplesheet(
         samplesheet,
@@ -94,7 +94,7 @@ def test_hashed_antibody_mapping_requires_samplesheet_and_all_hashing_antibodies
 
 
 def test_hashed_antibody_mapping_raises_when_antibody_in_multiple_samples():
-    """HashedAntibodyMapping raises ValueError when the same antibody is assigned to more than one sample."""
+    """Test ValueError when the same antibody is assigned to multiple samples."""
     with pytest.raises(
         ValueError, match="Antibody hash 'h1' is assigned to multiple samples"
     ):
@@ -224,7 +224,7 @@ def test_from_samplesheet_raises_when_duplicate_hash_index_maps_same_antibodies_
 
 
 def test_unmapped_hashing_antibodies_returns_antibodies_not_mapped_to_any_sample():
-    """unmapped_hashing_antibodies returns the subset of hashing antibodies not assigned to any sample."""
+    """Test unmapped_hashing_antibodies returns hashing antibodies not assigned to samples."""
     # Panel has 6 hashing antibodies (names ending with -1..-6);
     # samplesheet only lists 2 samples (hash 1 and 2)
     samplesheet = pl.DataFrame(
@@ -250,7 +250,11 @@ def test_unmapped_hashing_antibodies_returns_antibodies_not_mapped_to_any_sample
 
 
 def test_collect_hash_info(sample_hashed_pixel_files):
-    """Test the sample calling functionality."""
+    """Test the sample calling functionality.
+
+    Args:
+        sample_hashed_pixel_files: Sample hashed pixel files.
+    """
     pxl = read(sample_hashed_pixel_files)
     cc = collect_hash_info(
         pxl,
@@ -278,7 +282,11 @@ def test_collect_hash_info(sample_hashed_pixel_files):
 
 
 def test_collect_hash_info_should_use_all_hashing_antibodies(sample_hashed_pixel_files):
-    """collect_hash_info uses all hashing antibodies; unmapped contribute to undetermined_hash_count."""
+    """Test all hashing antibodies; unmapped ones contribute to undetermined hash counts.
+
+    Args:
+        sample_hashed_pixel_files: Sample hashed pixel files.
+    """
     pxl = read(sample_hashed_pixel_files)
     cc = collect_hash_info(
         pxl,
@@ -316,7 +324,11 @@ def test_collect_hash_info_should_use_all_hashing_antibodies(sample_hashed_pixel
 
 
 def test_collect_hash_info_all_undetermined(sample_hashed_pixel_files):
-    """Test is undetermined when confidence is below threshold"""
+    """Test is undetermined when confidence is below threshold
+
+    Args:
+        sample_hashed_pixel_files: Sample hashed pixel files.
+    """
     pxl = read(sample_hashed_pixel_files)
     cc = collect_hash_info(
         pxl,
@@ -344,7 +356,12 @@ def test_collect_hash_info_all_undetermined(sample_hashed_pixel_files):
 
 @pytest.mark.slow
 def test_sample_calling(sample_hashed_pixel_files, tmp_path):
-    """Test the sample calling functionality."""
+    """Test the sample calling functionality.
+
+    Args:
+        sample_hashed_pixel_files: Sample hashed pixel files.
+        tmp_path: Tmp path.
+    """
     pxl = read(sample_hashed_pixel_files)
     samplesheet, all_hashing = _samplesheet_and_hashing_for_three_samples()
     hashed_antibodies = HashedAntibodyMapping.from_samplesheet(
@@ -403,6 +420,9 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
     The dehashing step should only strip `-<hash_index>` for *known hashing*
     antibodies, not for arbitrary biological marker IDs that happen to end
     with `-<digits>`.
+
+    Args:
+        tmp_path: Tmp path.
     """
     panel_df = pd.DataFrame(
         [
@@ -504,7 +524,12 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
 
 @pytest.mark.slow
 def test_sample_calling_with_undetermined(sample_hashed_pixel_files, tmp_path):
-    """Test the sample calling functionality."""
+    """Test the sample calling functionality.
+
+    Args:
+        sample_hashed_pixel_files: Sample hashed pixel files.
+        tmp_path: Tmp path.
+    """
     confidence_threshold = 0.96
     pxl = read(sample_hashed_pixel_files)
     samplesheet, all_hashing = _samplesheet_and_hashing_for_three_samples()
@@ -590,7 +615,7 @@ def test_collect_nodes_to_remove_one_sample_in_pool():
 
 
 class _FakeFilteredDataset:
-    """Minimal stand-in for ``PNAPixelDataset`` after ``filter()`` for ``create_final_report`` tests."""
+    """Minimal stand-in for ``PNAPixelDataset`` after ``filter()`` for report tests."""
 
     def __init__(
         self,
@@ -598,10 +623,21 @@ class _FakeFilteredDataset:
         component_ids: set[str],
         sample_confidences: list[float] | None = None,
     ):
+        """Initialize the instance.
+
+        Args:
+            component_ids: Component ids.
+            sample_confidences: Sample confidences.
+        """
         self._component_ids = component_ids
         self._sample_confidences = sample_confidences
 
     def components(self) -> set[str]:
+        """Components.
+
+        Returns:
+            Result (set[str]).
+        """
         return self._component_ids
 
     def adata(
@@ -609,6 +645,12 @@ class _FakeFilteredDataset:
         add_log1p_transform: bool = True,
         add_clr_transform: bool = True,
     ) -> anndata.AnnData:
+        """Adata.
+
+        Args:
+            add_log1p_transform: Add log1p transform.
+            add_clr_transform: Add clr transform.
+        """
         assert self._sample_confidences is not None
         n = len(self._sample_confidences)
         # Explicit string obs index avoids AnnData ImplicitModificationWarning on index coercion.
@@ -623,7 +665,7 @@ class _FakeFilteredDataset:
 
 
 class _FakeMergedDataset:
-    """Mimics a merged post-sample-calling ``PNAPixelDataset`` for unit-testing ``create_final_report``."""
+    """Merged post-sample-calling ``PNAPixelDataset`` stand-in for report tests."""
 
     def __init__(
         self,
@@ -632,14 +674,31 @@ class _FakeMergedDataset:
         undetermined_components: set[str] | None,
         confidences_per_sample: dict[str, list[float]],
     ):
+        """Initialize the instance.
+
+        Args:
+            all_components: All components.
+            undetermined_components: Undetermined components.
+            confidences_per_sample: Confidences per sample.
+        """
         self._all_components = all_components
         self._undetermined_components = undetermined_components
         self._confidences_per_sample = confidences_per_sample
 
     def components(self) -> set[str]:
+        """Components.
+
+        Returns:
+            Result (set[str]).
+        """
         return self._all_components
 
     def sample_names(self) -> set[str]:
+        """Sample names.
+
+        Returns:
+            Result (set[str]).
+        """
         return set(self._confidences_per_sample.keys())
 
     def filter(
@@ -648,6 +707,13 @@ class _FakeMergedDataset:
         components=None,
         markers=None,
     ) -> _FakeFilteredDataset:
+        """Filter.
+
+        Args:
+            samples: samples.
+            components: components.
+            markers: markers.
+        """
         if samples == "undetermined":
             if self._undetermined_components is None:
                 raise ValueError(
@@ -725,7 +791,11 @@ def test_create_final_report_zero_success_when_all_components_undetermined():
 def test_warn_if_undetermined_has_high_confidence_logs_when_fraction_above_five_percent(
     caplog,
 ):
-    """More than 5% strictly above the threshold should emit one WARNING."""
+    """More than 5% strictly above the threshold should emit one WARNING.
+
+    Args:
+        caplog: Caplog.
+    """
     with caplog.at_level(
         logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
     ):
@@ -741,7 +811,11 @@ def test_warn_if_undetermined_has_high_confidence_logs_when_fraction_above_five_
 def test_warn_if_undetermined_has_high_confidence_no_log_when_fraction_is_exactly_five_percent(
     caplog,
 ):
-    """The check uses ``> 0.05``, so exactly 5% above threshold must not warn."""
+    """The check uses ``> 0.05``, so exactly 5% above threshold must not warn.
+
+    Args:
+        caplog: Caplog.
+    """
     with caplog.at_level(
         logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
     ):
@@ -755,7 +829,11 @@ def test_warn_if_undetermined_has_high_confidence_no_log_when_fraction_is_exactl
 def test_warn_if_undetermined_has_high_confidence_no_log_when_all_at_or_below_threshold(
     caplog,
 ):
-    """Values equal to the threshold are not counted as high confidence (strict ``>``)."""
+    """Values equal to the threshold are not counted as high confidence (strict ``>``).
+
+    Args:
+        caplog: Caplog.
+    """
     with caplog.at_level(
         logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
     ):
@@ -771,7 +849,11 @@ def test_warn_if_undetermined_has_high_confidence_no_log_when_all_at_or_below_th
 
 
 def test_warn_if_undetermined_has_high_confidence_logs_for_single_high_value(caplog):
-    """One component above threshold is 100% of the undetermined set, which is > 5%."""
+    """One component above threshold is 100% of the undetermined set, which is > 5%.
+
+    Args:
+        caplog: Caplog.
+    """
     with caplog.at_level(
         logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
     ):

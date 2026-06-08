@@ -24,7 +24,11 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from pixelator.common.config import AntibodyPanelMetadata, PanelType
+from pixelator.common.config.panel import (
+    AntibodyPanelMetadata,
+    PanelType,
+    parse_panel_header_metadata,
+)
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 
@@ -58,14 +62,15 @@ class PartialPNAAntibodyPanel:
     ) -> None:
         """Load a panel from a dataframe and metadata.
 
-        :param df: The dataframe containing the panel information.
-        :param metadata: The metadata for the panel.
-        :param file_name: The optional basename of the file from which
-            the panel is loaded.
+        Args:
+            df: The dataframe containing the panel information.
+            metadata: The metadata for the panel.
+            file_name: The optional basename of the file from which the panel is loaded.
 
-        :returns: None
-        :raises AssertionError: exception if panel file is missing,
-                                invalid or with incorrect format
+        Returns:
+            None
+        Raises:
+            AssertionError: exception if panel file is missing, invalid or with incorrect format
         """
         self._filename = file_name
 
@@ -98,10 +103,14 @@ class PartialPNAAntibodyPanel:
     def from_csv(cls, filename: PathType) -> Self:
         """Create an AntibodyPanel from a csv panel file.
 
-        :param filename: The path to the panel file.
-        :returns: The AntibodyPanel object.
-        :raises AssertionError: exception if panel file is missing,
-        :rtype: AntibodyPanel
+        Args:
+            filename: The path to the panel file.
+
+        Returns:
+            The AntibodyPanel object. (AntibodyPanel)
+
+        Raises:
+            AssertionError: exception if panel file is missing,
         """
         panel_file = Path(filename)
 
@@ -125,12 +134,15 @@ class PartialPNAAntibodyPanel:
     ) -> Self:
         """Create an AntibodyPanel from a pxl dataset.
 
-        :param pxl_data: A PNAPixelDataset object.
-        :param file_name: The optional name of the file from which
-            the pxl dataset was loaded.
-        :returns: The AntibodyPanel object.
-        :raises KeyError: exception if panel information is missing in the pxl dataset,
-        :rtype: AntibodyPanel
+        Args:
+            pxl_data: A PNAPixelDataset object.
+            file_name: The optional name of the file from which the pxl dataset was loaded.
+
+        Returns:
+            The AntibodyPanel object. (AntibodyPanel)
+
+        Raises:
+            KeyError: exception if panel information is missing in the pxl dataset,
         """
         logger.debug("Creating Antibody panel from PNAPixelDataset object")
         adata = pxl_data.adata()
@@ -142,12 +154,15 @@ class PartialPNAAntibodyPanel:
     def from_adata(cls, adata: AnnData, file_name: Optional[str] = None):
         """Create an AntibodyPanel from an AnnData object.
 
-        :param adata: An AnnData object containing panel information.
-        :param file_name: The optional name of the file from which
-            the AnnData object was loaded.
-        :returns: The AntibodyPanel object.
-        :raises KeyError: exception if panel information is missing in the AnnData object.
-        :rtype: AntibodyPanel
+        Args:
+            adata: An AnnData object containing panel information.
+            file_name: The optional name of the file from which the AnnData object was loaded.
+
+        Returns:
+            The AntibodyPanel object. (AntibodyPanel)
+
+        Raises:
+            KeyError: exception if panel information is missing in the AnnData object.
         """
         logger.debug("Creating Antibody panel from AnnData object")
         try:
@@ -177,7 +192,6 @@ class PartialPNAAntibodyPanel:
 
         Returns:
             The panel name.
-
         """
         return self.metadata.name
 
@@ -187,7 +201,6 @@ class PartialPNAAntibodyPanel:
 
         Returns:
             Product name, or None when not provided in panel metadata.
-
         """
         return self.metadata.product
 
@@ -197,7 +210,6 @@ class PartialPNAAntibodyPanel:
 
         Returns:
             Semantic version string for this panel.
-
         """
         return self.metadata.version
 
@@ -228,7 +240,6 @@ class PartialPNAAntibodyPanel:
 
         Raises:
             ValueError: If no metadata header is present in the file.
-
         """
         return AntibodyPanelMetadata.from_panel_csv(file)
 
@@ -322,7 +333,6 @@ class PartialPNAAntibodyPanel:
 
         Returns:
             A list of validation error messages. Empty means valid input.
-
         """
         errors = []
 
@@ -369,6 +379,11 @@ class PartialPNAAntibodyPanel:
             pattern = r"^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}|$"
 
             def check_id(id_str):
+                """Check id.
+
+                Args:
+                    id_str: id str.
+                """
                 return all(
                     bool(re.match(pattern, id_)) for id_ in str(id_str).split(";")
                 )
@@ -392,7 +407,11 @@ class PartialPNAAntibodyPanel:
         return pl.from_pandas(self.df, include_index=True)
 
     def __eq__(self, other: object) -> bool:
-        """Check if two panels are equal based on their dataframes and metadata."""
+        """Check if two panels are equal based on their dataframes and metadata.
+
+        Args:
+            other: Panel to compare for equality.
+        """
         if not isinstance(other, PartialPNAAntibodyPanel):
             raise ValueError("Can only compare with another PartialPNAAntibodyPanel")
         return self.df.equals(other.df) and self.metadata == other.metadata
@@ -462,11 +481,13 @@ def load_antibody_panel(
 ) -> PNAAntibodyPanelCombination:
     """Load an antibody panel from a file or from the config file.
 
-    :param config: the config object
-    :param requested_panels: the path to the panel file(s) or the name(s) of the
-        panel(s) in the config file
-    :returns: the antibody panel
-    :rtype: PNAAntibodyPanelCombination
+    Args:
+        config: the config object.
+        requested_panels: the path to the panel file(s) or the name(s) of the
+            panel(s) in the config file.
+
+    Returns:
+        The loaded antibody panel as a PNAAntibodyPanelCombination.
     """
     return_panels = []
     for panel in (
@@ -502,8 +523,9 @@ class PNAAntibodyPanelDiff:
     ) -> None:
         """Initialize the PNAAntibodyPanelDiff object.
 
-        :param panel_1: The first panel to compare.
-        :param panel_2: The second panel to compare.
+        Args:
+            panel_1: The first panel to compare.
+            panel_2: The second panel to compare.
         """
         self.panel_1 = panel_1
         self.panel_2 = panel_2
@@ -643,7 +665,11 @@ class PNAAntibodyPanelDiff:
         )
 
     def upgrade_adata(self, adata: AnnData) -> AnnData:
-        """Upgrade an AnnData object with the changes between the two panels."""
+        """Upgrade an AnnData object with the changes between the two panels.
+
+        Args:
+            adata: An AnnData object containing panel information.
+        """
         if len(self.added_clones) > 0:
             raise ValueError(
                 "Cannot automatically upgrade panel if there are added clones. "

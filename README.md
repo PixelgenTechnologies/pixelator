@@ -60,14 +60,12 @@ pip install .
 ### Using docker
 
 The `pixelator` command-line tool can be run with docker images available on
-the [GitHub container registry](https://github.com/PixelgenTechnologies/pixelator/pkgs/container/pixelator).
+the [Quay container registry](https://quay.io/repository/pixelgen-technologies/pixelator).
 
 ```shell
-docker pull ghcr.io/pixelgentechnologies/pixelator:latest
-docker run ghcr.io/pixelgentechnologies/pixelator:latest pixelator --help
+docker pull quay.io/pixelgen-technologies/pixelator:latest
+docker run quay.io/pixelgen-technologies/pixelator:latest pixelator --help
 ```
-
-You can also use the containers provided by the biocontainers project on [quay.io](https://quay.io/repository/biocontainers/pixelator).
 
 ## Usage
 

@@ -5,6 +5,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import re
 import warnings
 from enum import StrEnum
 from functools import cached_property
@@ -59,7 +60,6 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
 
         Raises:
             packaging.version.InvalidVersion: If the value is not a valid version.
-
         """
         Version(v)  # will raise if not a valid version string
         return v
@@ -161,6 +161,61 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
             ]
 
 
+def _strip_trailing_commas(metadata: str) -> tuple[str, bool]:
+    """Remove line-end commas from header YAML.
+
+    This keeps recovery narrow to the malformed pattern we want to tolerate.
+    """
+    normalized = re.sub(r",(\s*(?:\n|$))", r"\1", metadata)
+    return normalized, normalized != metadata
+
+
+def _load_header_frontmatter(metadata: str) -> AntibodyPanelMetadata:
+    """Load and validate first YAML document from panel metadata text."""
+    yaml_loader = yaml.YAML(typ="safe")
+    raw_config = list(yaml_loader.load_all(metadata))
+
+    if len(raw_config) == 0:
+        raise ValueError("No header / metadata found in panel file")
+
+    frontmatter = raw_config[0]
+    return AntibodyPanelMetadata.model_validate(frontmatter)
+
+
+def parse_panel_header_metadata(file: Path) -> AntibodyPanelMetadata:
+    """Parse panel front-matter metadata and recover from trailing commas."""
+    metadata_lines = []
+    with open(str(file), "r") as handle:
+        for line in handle:
+            if line.startswith("# "):
+                metadata_lines.append(line[2:])
+            else:
+                break
+
+    metadata = "".join(metadata_lines)
+    try:
+        return _load_header_frontmatter(metadata)
+    except (yaml.YAMLError, pydantic.ValidationError, ValueError):
+        normalized_metadata, changed = _strip_trailing_commas(metadata)
+        if not changed:
+            if metadata.strip() == "":
+                raise ValueError(f"No header / metadata found in panel file {file}")
+            raise
+
+        try:
+            parsed = _load_header_frontmatter(normalized_metadata)
+        except (yaml.YAMLError, pydantic.ValidationError, ValueError):
+            if metadata.strip() == "":
+                raise ValueError(f"No header / metadata found in panel file {file}")
+            raise
+
+        logger.warning(
+            "Panel header in %s contains trailing comma(s); parsing with commas ignored.",
+            file,
+        )
+        return parsed
+
+
 class AntibodyPanel:
     """Class representing a Molecular Pixelation antibody panel."""
 
@@ -187,14 +242,16 @@ class AntibodyPanel:
     ) -> None:
         """Load a panel from a dataframe and metadata.
 
-        :param df: The dataframe containing the panel information.
-        :param metadata: The metadata for the panel.
-        :param file_name: The optional basename of the file from which
-            the panel is loaded.
+        Args:
+            df: The dataframe containing the panel information.
+            metadata: The metadata for the panel.
+            file_name: The optional basename of the file from which the panel is loaded.
 
-        :returns: None
-        :raises AssertionError: exception if panel file is missing,
-                                invalid or with incorrect format
+        Returns:
+            None
+
+        Raises:
+            AssertionError: exception if panel file is missing, invalid or with incorrect format
         """
         self._filename = file_name
         self._metadata = metadata
@@ -212,10 +269,14 @@ class AntibodyPanel:
     def from_csv(cls, filename: PathType) -> "AntibodyPanel":
         """Create an AntibodyPanel from a csv panel file.
 
-        :param filename: The path to the panel file.
-        :returns: The AntibodyPanel object.
-        :raises AssertionError: exception if panel file is missing,
-        :rtype: AntibodyPanel
+        Args:
+            filename: The path to the panel file.
+
+        Returns:
+            The AntibodyPanel object. (AntibodyPanel)
+
+        Raises:
+            AssertionError: exception if panel file is missing,
         """
         panel_file = Path(filename)
 
@@ -275,7 +336,6 @@ class AntibodyPanel:
 
         Returns:
             A list of validation error messages. An empty list means valid input.
-
         """
         errors = []
 
@@ -320,8 +380,11 @@ class AntibodyPanel:
     def _transform_legacy_panels(cls, df: pd.DataFrame) -> pd.DataFrame:
         """Transform legacy panels to the new format.
 
-        :param df: DataFrame with data of the panel to validate
-        :returns pd.DataFrame: The in-place modified input dataframe
+        Args:
+            df: DataFrame with data of the panel to validate
+
+        Returns:
+            The in-place modified input dataframe (pd.DataFrame)
         """
         # update control and nuclear column to boolean
         TR_TABLE = {"(?i)yes": "True", "(?i)no": "False"}
@@ -355,7 +418,6 @@ class AntibodyPanel:
 
         Raises:
             ValueError: If no metadata header is present in the file.
-
         """
         return AntibodyPanelMetadata.from_panel_csv(file)
 
@@ -392,12 +454,12 @@ class AntibodyPanel:
 def load_antibody_panel(config: Config, panel: PathType) -> AntibodyPanel:
     """Load an antibody panel from a file or from the config file.
 
-    :param config: the config object
-    :param panel: the path to the panel file or the name of the
-        panel in the config file
+    Args:
+        config: the config object
+        panel: the path to the panel file or the name of the panel in the config file
 
-    :returns: the antibody panel
-    :rtype: AntibodyPanel
+    Returns:
+        the antibody panel (AntibodyPanel)
     """
     panel_str = str(panel)
     panel_from_config = config.get_panel(panel_str)

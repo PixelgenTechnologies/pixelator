@@ -23,6 +23,11 @@ class _TrimFrontModifier(SingleEndModifier):
     """A modifier that trims a fixed number of bases from the front of a read."""
 
     def __init__(self, n: int):
+        """Initialize the instance.
+
+        Args:
+            n: N.
+        """
         self._n = n
 
     def __call__(self, read, info):
@@ -84,6 +89,7 @@ class TestPreProcessSingle:
         assert n_bp == 8
 
     def test_n_bp_reflects_original_length_not_trimmed(self):
+        """Verify n bp reflects original length not trimmed."""
         pipeline = self._make_pipeline(_TrimFrontModifier(5))
         read = _make_read("ACGTACGT")  # 8 bases
 
@@ -92,6 +98,7 @@ class TestPreProcessSingle:
         assert n_bp == 8
 
     def test_modifier_returning_none_stops_chain_and_returns_original_n_bp(self):
+        """Verify modifier returning none stops chain and returns original n bp."""
         pipeline = self._make_pipeline(
             _TrimFrontModifier(1),
             _ReturnNoneModifier(),

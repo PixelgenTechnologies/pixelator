@@ -55,18 +55,20 @@ def analyse_pixels(
     co-localization) which are then added to the `PixelDataset` (depending
     on which scores are enabled).
 
-    :param input: the path to the PixelDataset (zip)
-    :param output: the path to the output file
-    :param output_prefix: the prefix to prepend to the output file
-    :param metrics_file: the path to a JSON file to write metrics
-    :param use_full_bipartite: use the bipartite graph instead of the
-                               one-node-projection (UPIA)
-    :param analysis_to_run: a list of analysis functions (`PerComponentAnalysis` instances) to apply
-                            to each component
-    :param verbose: run if verbose mode when true
-    :returns: None
-    :rtype: None
-    :raises AssertionError: the input arguments are not valid
+    Args:
+        input: the path to the PixelDataset (zip)
+        output: the path to the output file
+        output_prefix: the prefix to prepend to the output file
+        metrics_file: the path to a JSON file to write metrics
+        use_full_bipartite: use the bipartite graph instead of the one-node-projection (UPIA)
+        analysis_to_run: a list of analysis functions (`PerComponentAnalysis` instances) to apply to
+            each component
+        verbose: run if verbose mode when true
+    Returns:
+        None (None)
+
+    Raises:
+        AssertionError: the input arguments are not valid
     """
     logger.debug("Parsing PixelDataset from %s", input)
 

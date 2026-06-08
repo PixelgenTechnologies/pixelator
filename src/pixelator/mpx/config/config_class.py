@@ -1,4 +1,4 @@
-"""Module contains classes and functions related to the configuration file for pixelator (assay settings).
+"""Classes and functions for Pixelator configuration files and assay settings.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """
@@ -55,15 +55,22 @@ class Config:
                 self.panels[key].append(p)
 
     def load_assay(self, path: PathType) -> None:
-        """Load an assay from a yaml file."""
+        """Load an assay from a yaml file.
+
+        Args:
+            path: The path to the panel file.
+        """
         assay = Assay.from_yaml(path)
         self.assays[assay.name] = assay
 
     def load_panel_file(self, path: PathType) -> None:
         """Load the panel file.
 
-        :param path: The path to the panel file.
-        :raises PanelException: If the panel alias already exists in the config.
+        Args:
+            path: The path to the panel file.
+
+        Raises:
+            PanelException: If the panel alias already exists in the config.
         """
         panel = AntibodyPanel.from_csv(path)
         key = panel.name if panel.name is not None else str(panel.filename)
@@ -84,7 +91,11 @@ class Config:
             self.panel_aliases[alias] = key
 
     def load_assays(self, path: PathType):
-        """Load all assays from a directory containing yaml files."""
+        """Load all assays from a directory containing yaml files.
+
+        Args:
+            path: The path to the panel file.
+        """
         search_path = Path(path)
 
         yaml_files = list(
@@ -98,7 +109,11 @@ class Config:
             self.load_assay(f)
 
     def load_panels(self, path: PathType):
-        """Load all panel files from a directory containing csv files."""
+        """Load all panel files from a directory containing csv files.
+
+        Args:
+            path: The path to the panel file.
+        """
         search_path = Path(path)
 
         csv_files = list(search_path.glob("*.csv"))
@@ -113,8 +128,10 @@ class Config:
     def list_panel_names(self, include_aliases: bool = False) -> List[str]:
         """Return a list of all panel names.
 
-        :param include_aliases: Include panel aliases in the list
-        :returns: A list of panel names
+        Args:
+            include_aliases: Include panel aliases in the list
+        Returns:
+            A list of panel names
         """
         out = sorted(list(self.panels.keys()))
 
@@ -132,9 +149,10 @@ class Config:
     ) -> Optional[AntibodyPanel]:
         """Get a panel by name.
 
-        :param panel_name: The name of the panel
-        :param version: The optional version of a panel to return
-        :param allow_aliases: Allow panel aliases to be used
+        Args:
+            panel_name: The name of the panel
+            version: The optional version of a panel to return
+            allow_aliases: Allow panel aliases to be used
         """
         panels_with_key = self.panels.get(panel_name)
 
@@ -168,9 +186,11 @@ class Config:
 def load_assays_package(config: Config, package_name: str) -> Config:
     """Load default assays from a resources package.
 
-    :param config: The config object to load assays into
-    :param package_name: The name of the package to load assays from
-    :return: The updated config object
+    Args:
+        config: The config object to load assays into
+        package_name: The name of the package to load assays from
+    Returns:
+        The updated config object
     """
     # TODO: Consider switching to base importlib.resources after
     #       dropping python3.8 support.
@@ -185,9 +205,11 @@ def load_assays_package(config: Config, package_name: str) -> Config:
 def load_panels_package(config: Config, package_name: str) -> Config:
     """Load default panels from a resources package.
 
-    :param config: The config object to load panel files into
-    :param package_name: The name of the package to load panels from
-    :return: The updated config object
+    Args:
+        config: The config object to load panel files into
+        package_name: The name of the package to load panels from
+    Returns:
+        The updated config object
     """
     # TODO: Consider switching to base importlib.resources after
     #       dropping python3.8 support.
