@@ -23,30 +23,66 @@ from pixelator.mpx.pixeldataset import PixelDataset
 
 
 class MockAnalysis(PerComponentAnalysis):
+    """Represent mock analysis."""
+
     def __init__(self, multiplication_factor):
+        """Initialize the instance.
+
+        Args:
+            multiplication_factor: multiplication factor.
+        """
         self.multiplication_factor = multiplication_factor
         self.ANALYSIS_NAME = f"mock_analysis_{multiplication_factor}"
 
     def run_on_component(self, component: Graph, component_id: str) -> pd.DataFrame:
+        """Run on component.
+
+        Args:
+            component: Component.
+            component_id: Component id.
+        """
         return pd.DataFrame({"component_id": [component_id], "values": [2]})
 
     def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Post process data.
+
+        Args:
+            data: Data.
+        """
         data["values_multiplied"] = data["values"] * self.multiplication_factor
         return data
 
     def add_to_pixel_dataset(
         self, data: pd.DataFrame, pxl_dataset: PixelDataset
     ) -> PixelDataset:
+        """Add to pixel dataset.
+
+        Args:
+            data: Data.
+            pxl_dataset: Pxl dataset.
+        """
         pxl_dataset.data_slots[self.ANALYSIS_NAME] = data  # type: ignore
         return pxl_dataset
 
     def concatenate_data(self, data: Iterable[pd.DataFrame]) -> pd.DataFrame:
+        """Concatenate data.
+
+        Args:
+            data: Data.
+        """
         scores = pd.concat(data, axis=0, ignore_index=True)
         return scores
 
 
 class MockPixelDataset:
+    """Represent mock pixel dataset."""
+
     def __init__(self) -> None:
+        """Initialize the instance.
+
+        Returns:
+            Result (None).
+        """
         self.data_slots = dict()  # type: ignore
 
 
@@ -58,6 +94,7 @@ class MockGraph(MagicMock):
 
 
 def test_analysis_manager():
+    """Verify analysis manager."""
     component_stream = [
         ("component1", MockGraph()),
         ("component2", MockGraph()),
@@ -104,6 +141,11 @@ def test_analysis_manager():
 
 
 def test_edgelist_to_component_stream(setup_basic_pixel_dataset):
+    """Verify edgelist to component stream.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     (
         dataset,
         *_,
@@ -116,6 +158,11 @@ def test_edgelist_to_component_stream(setup_basic_pixel_dataset):
 
 
 def test_run_analysis(setup_basic_pixel_dataset):
+    """Verify run analysis.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     (
         dataset,
         *_,

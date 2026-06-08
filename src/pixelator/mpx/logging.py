@@ -62,8 +62,11 @@ class ColorFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         """Format a record with colored level.
 
-        :param record: The record to format.
-        :returns str: A formatted log record.
+        Args:
+            record: The record to format.
+
+        Returns:
+            A formatted log record. (str)
         """
         if not record.exc_info:
             level = record.levelname.lower()
@@ -83,7 +86,11 @@ class DefaultCliFormatter(logging.Formatter):
     """Click formatter with colored levels."""
 
     def format(self, record: logging.LogRecord) -> str:
-        """Format a record for CLI output."""
+        """Format a record for CLI output.
+
+        Args:
+            record: The record to format.
+        """
         if not record.exc_info:
             level = record.levelname.lower()
             msg = record.getMessage()
@@ -104,8 +111,9 @@ class ClickHandler(logging.Handler):
     def __init__(self, level: int = 0, use_stderr: bool = True):
         """Initialize the click handler.
 
-        :param level: The logging level.
-        :param use_stderr: Log to sys.stderr instead of sys.stdout.
+        Args:
+            level: The logging level.
+            use_stderr: Log to sys.stderr instead of sys.stdout.
         """
         super().__init__(level=level)
         self._use_stderr = use_stderr
@@ -113,7 +121,8 @@ class ClickHandler(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         """Do whatever it takes to actually log the specified logging record.
 
-        :param record: The record to log.
+        Args:
+            record: The record to log.
         """
         try:
             msg = self.format(record)
@@ -139,9 +148,10 @@ class LoggingSetup:
     ):
         """Initialize the logging setup.
 
-        :param log_file: the filename of the log output
-        :param verbose: enable verbose logging and console output
-        :param logger: the logger to configure, default is the root logger
+        Args:
+            log_file: the filename of the log output
+            verbose: enable verbose logging and console output
+            logger: the logger to configure, default is the root logger
         """
         self.log_file = Path(log_file) if log_file is not None else None
         self.verbose = verbose
@@ -273,7 +283,11 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
                     break
 
     def handle_log_record(self, record):
-        """Handle a log record."""
+        """Handle a log record.
+
+        Args:
+            record: The record to format.
+        """
         logger = logging.getLogger(LogRecordSocketReceiver.LISTENER_LOGGER)
         logger.handle(record)
 
@@ -306,7 +320,15 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
         log_file=None,
         console_log_formatter=DefaultCliFormatter(),
     ):
-        """Initialize the log record socket receiver."""
+        """Initialize the log record socket receiver.
+
+        Args:
+            host: Host.
+            port: Port.
+            handler: Handler.
+            log_file: the filename of the log output
+            console_log_formatter: Console log formatter.
+        """
         self.timeout = 0.1
         self.log_file = log_file
         self._console_log_formatter = console_log_formatter

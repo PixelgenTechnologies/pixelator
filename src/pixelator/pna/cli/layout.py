@@ -77,7 +77,19 @@ def layout(
     wpmds_k,
     output,
 ):
-    """Compute graph layouts that can be used to visualize components."""
+    """Compute graph layouts that can be used to visualize components.
+
+    Args:
+        ctx: Click context from the command decorator.
+        pxl_file: Path to the input PXL (PixelDataset) file.
+        layout_algorithm: Select a layout algorithm to use. This can be specified multiple times to
+            compute multiple layouts. Default: pmds_3d.
+        pmds_pivots: Number of pivots to use for the PMDS layout algorithm. Default: 50. More give
+            better results, but increase computation times.
+        wpmds_k: The window size used when computing probability weights to the wpmds layout method.
+            Only used when the wpmds layout method is selected. Default: 3.
+        output: The path where the results will be placed (it is created if it does not exist).
+    """
     log_step_start(
         "layout",
         input_files=pxl_file,

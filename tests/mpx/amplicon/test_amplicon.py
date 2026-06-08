@@ -18,7 +18,11 @@ from pixelator.mpx.config import config, get_position_in_parent
 
 @pytest.fixture()
 def uropod_reads(data_root):
-    """Paired end reads from Uropod control sample."""
+    """Paired end reads from Uropod control sample.
+
+    Args:
+        data_root: Data root.
+    """
     r1 = data_root / "uropod_control_300k_S1_R1_001.fastq.gz"
     r2 = data_root / "uropod_control_300k_S1_R2_001.fastq.gz"
     return r1, r2
@@ -29,6 +33,9 @@ def d21_150_150_reads(data_root):
     """Paired end reads from D21 amplicon.
 
     Each read is longer then the amplicon length.
+
+    Args:
+        data_root: Data root.
     """
     r1 = data_root / "amplicon/D21_150_150_R1.fq.gz"
     r2 = data_root / "amplicon/D21_150_150_R2.fq.gz"
@@ -46,14 +53,23 @@ def d21_150_150_reads(data_root):
     ids=["uropod", "d21_150_150"],
 )
 def reads(data_root, request):
-    """Parameterized fixture with paired end reads."""
+    """Parameterized fixture with paired end reads.
+
+    Args:
+        data_root: Data root.
+        request: Request.
+    """
     r1 = data_root / request.param[0]
     r2 = data_root / request.param[1]
     return r1, r2
 
 
 def test_generate_amplicon(reads):
-    """Test generating amplicons from paired end reads."""
+    """Test generating amplicons from paired end reads.
+
+    Args:
+        reads: Reads.
+    """
     output_reads = []
 
     records_iterator = zip(

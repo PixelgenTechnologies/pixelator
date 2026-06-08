@@ -38,6 +38,7 @@ mock_antibody_panel.df = pd.DataFrame(
 def create_edgelist():
     # Please note that the graph has a bipartite structure
     # i.e. a node cannot be both a umi1 and a umi2
+    """Create edgelist."""
     node_to_maker_marker_map = {
         # component 1
         1: "A",  # 1
@@ -140,6 +141,11 @@ def create_edgelist():
 
 @pytest.fixture(name="pixelconnection")
 def create_pixel_dataset_connection(edgelist):
+    """Create pixel dataset connection.
+
+    Args:
+        edgelist: edgelist.
+    """
     from pixelator import __version__
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -158,6 +164,11 @@ def create_pixel_dataset_connection(edgelist):
 
 
 def test_pna_edgelist_to_anndata(pixelconnection):
+    """Verify pna edgelist to anndata.
+
+    Args:
+        pixelconnection: pixelconnection.
+    """
     adata = pna_edgelist_to_anndata(pixelconnection, mock_antibody_panel)
 
     assert adata.shape == (3, 3)
@@ -263,6 +274,12 @@ def test_pna_edgelist_to_anndata(pixelconnection):
 
 
 def test_pna_edgelist_to_anndata_save_adata(pixelconnection, tmp_path):
+    """Verify pna edgelist to anndata save adata.
+
+    Args:
+        pixelconnection: pixelconnection.
+        tmp_path: tmp path.
+    """
     from pixelator.pna.config import pna_config
 
     panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")

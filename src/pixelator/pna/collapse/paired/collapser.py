@@ -58,7 +58,6 @@ def _collect_label_array_indices(
 
     Returns:
         An array of indices for each label.
-
     """
     # Single pass over the labels to collect the indices of each connected component
     groups = np.ndarray(shape=(n_components,), dtype=object)  # type: ignore
@@ -87,7 +86,6 @@ def _split_chunks(
 
     Yields:
         A tuple of (start, stop) indices for each chunk.
-
     """
     pos = 0
     complete_chunks = n_components // chunk_size
@@ -162,12 +160,12 @@ class MoleculeCollapser:
             output: The output path for the collapsed molecules.
             max_mismatches: The maximum number of mismatches allowed when collapsing molecules.
                 Either an integer >= 1 or a float in the range [0, 1).
-            algorithm: The algorithm to use for collapsing molecules. Either "directional" or "cluster".
+            algorithm: The algorithm to use for collapsing molecules. Either "directional" or
+                "cluster".
             threads: The number of threads to use for parallel processing.
             logger: The logger to use for output. The default is a logger named "collapse".
-            min_parallel_chunk_size: The minimum number of connected components to process in parallel.
-                Components below this size will be processed serially.
-
+            min_parallel_chunk_size: The minimum number of connected components to process in
+                parallel. Components below this size will be processed serially.
         """
         self.assay = assay
         self.panel = panel
@@ -259,7 +257,6 @@ class MoleculeCollapser:
 
         Yields:
             The binary vectors.
-
         """
         vector_length = 32
         shm_buffer = self._memory_manager.SharedMemory(size=(len(data) * vector_length))
@@ -287,7 +284,6 @@ class MoleculeCollapser:
 
         Yields:
             The read counts.
-
         """
         n_molecules = len(data)
         shm_buffer = self._memory_manager.SharedMemory(
@@ -317,7 +313,6 @@ class MoleculeCollapser:
 
         Returns:
             A numpy array containing the embeddings.
-
         """
         vector_len = 32
 
@@ -338,7 +333,6 @@ class MoleculeCollapser:
 
         Returns:
             The numpy array.
-
         """
         if counts_shm.buf is None:
             raise ValueError(f"Could not read shared memory buffer")
@@ -369,7 +363,6 @@ class MoleculeCollapser:
 
         Returns:
             The number of corrected reads.
-
         """
         db = self._get_db_from_shared_memory(db_shm, db_size)
         read_count = self._get_counts_from_shared_memory(read_counts_shm, db_size)
@@ -411,10 +404,10 @@ class MoleculeCollapser:
         python multiprocessing IPC overhead.
 
         Args:
-            subrange: The range of connected components to process.
-                A tuple with the start and stop indices.
-            component_indices: A list of lists containing the indices
-                in the database and read counts vector for each connected component.
+            subrange: The range of connected components to process. A tuple with the start and stop
+                indices.
+            component_indices: A list of lists containing the indices in the database and read
+                counts vector for each connected component.
             db_shm: The shared memory buffer containing the binary vectors.
             read_counts_shm: The shared memory buffer containing the read counts.
             db_size: The size of the binary vectors memory buffer in bytes.
@@ -422,7 +415,6 @@ class MoleculeCollapser:
 
         Returns:
             The distributed results.
-
         """
         cls = MoleculeCollapser
 
@@ -486,7 +478,6 @@ class MoleculeCollapser:
         Returns:
             A tuple with a pyarrow Table with the collapsed molecules
             and the updated statistics object.
-
         """
         _logger = self._logger
 
@@ -513,6 +504,11 @@ class MoleculeCollapser:
         bitvector = self._bitvector
 
         def work_fn_parallel(subrange):
+            """Work fn parallel.
+
+            Args:
+                subrange: subrange.
+            """
             start, stop = subrange
             res = MoleculeCollapser._record_group_worker_fn(
                 subrange, groups[start:stop], db_mem, rc_mem, n_molecules, bitvector
@@ -598,7 +594,6 @@ class MoleculeCollapser:
             num_groups: The total number of groups.
             markers: The markers in the group.
             data: The data for the group.
-
         """
         starttime = time.time()
         _logger = self._logger
@@ -725,7 +720,6 @@ class MoleculeCollapser:
 
         Args:
             path: The path to the parquet file.
-
         """
         _logger = self._logger
 
@@ -755,6 +749,5 @@ class MoleculeCollapser:
 
         Returns:
             The collapse statistics.
-
         """
         return self._stats

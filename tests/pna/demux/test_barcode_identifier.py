@@ -18,6 +18,7 @@ from pixelator.pna.demux.barcode_identifier import BarcodeIdentifier
 
 
 def test_barcode_identifier_exact_match():
+    """Verify barcode identifier exact match."""
     assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
 
@@ -50,6 +51,7 @@ def test_barcode_identifier_exact_match():
 
 
 def test_barcode_identifier_one_mismatch():
+    """Verify barcode identifier one mismatch."""
     assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
 
@@ -82,6 +84,7 @@ def test_barcode_identifier_one_mismatch():
 
 
 def test_barcode_identifier_failed():
+    """Verify barcode identifier failed."""
     assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
 

@@ -35,7 +35,8 @@ class QualityStatistics:
     def __init__(self, data):
         """Initialize the QualityStatistics object.
 
-        :param data: A dictionary with the quality statistics for each region.
+        Args:
+            data: A dictionary with the quality statistics for each region.
         """
         self._region_counters = {}
         for region_id, region_data in data.items():
@@ -78,7 +79,11 @@ class QualityStatistics:
         return r["q30_bases"] / bases
 
     def __iadd__(self, other):
-        """Merge statistics from another object into this one."""
+        """Merge statistics from another object into this one.
+
+        Args:
+            other: Statistics instance to merge into this one.
+        """
         for region_id, region_data in other._region_counters.items():
             if region_id not in self._region_counters:
                 self._region_counters[region_id] = other._region_counters[region_id]
@@ -107,7 +112,8 @@ class QualityProfileStep(SingleEndStep, HasCustomStatistics):
     def __init__(self, assay: PNAAssay):
         """Initialize the QualityProfileStep object.
 
-        :param assay: The assay object
+        Args:
+            assay: The assay object
         """
         super().__init__()
         self.assay = assay
@@ -134,7 +140,12 @@ class QualityProfileStep(SingleEndStep, HasCustomStatistics):
         return region_slices
 
     def __call__(self, read: SequenceRecord, info: ModificationInfo) -> SequenceRecord:
-        """Create a quality profile on each read position for the amplicon."""
+        """Create a quality profile on each read position for the amplicon.
+
+        Args:
+            read: Amplicon read to annotate with per-position quality.
+            info: Modification info from earlier pipeline steps (unused).
+        """
         # Create a view into the original quality array
         qual = np.frombuffer(read.qualities_as_bytes(), dtype=np.int8)
         # Convert the vector to integers

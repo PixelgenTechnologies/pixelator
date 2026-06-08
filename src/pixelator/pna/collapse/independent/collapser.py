@@ -82,11 +82,13 @@ class MarkerCorrectionStats(pydantic.BaseModel):
         input_reads: The total number of input reads to the collapse process.
         input_molecules: The total number of unique input reads to the collapse process.
         input_unique_umis: The total number of unique UMIs of `region_id` among the input reads.
-        corrected_reads: The total number of reads that were modified by the error correction process.
-        corrected_molecules: The total number of unique reads that were modified by the error correction process.
-        corrected_unique_umis: The total number of unique UMIs of type `region_id` that were modified by the error correction process.
+        corrected_reads: The total number of reads that were modified by the error correction
+            process.
+        corrected_molecules: The total number of unique reads that were modified by the error
+            correction process.
+        corrected_unique_umis: The total number of unique UMIs of type `region_id` that were
+            modified by the error correction process.
         output_unique_umis: The total number of unique UMIs of type `region_id` after correction.
-
     """
 
     marker: str
@@ -131,10 +133,11 @@ class MarkerCorrectionStats(pydantic.BaseModel):
 class CollapseInputFile:
     """Keep track of the input file to collapse.
 
-    :param path: Path to the input file.
-    :param file_size: The total size of the input file.
-    :param molecule_count: The number of rows in the input dataframe.
-        i.e. The number of molecules (unique reads).
+    Args:
+        path: Path to the input file.
+        file_size: The total size of the input file.
+        molecule_count: The number of rows in the input dataframe. i.e. The number of molecules
+            (unique reads).
     """
 
     path: str
@@ -232,9 +235,13 @@ class IndependentCollapseStatisticsCollector:
     ) -> None:
         """Collect file statistics for an input file to the MoleculeCollapser.
 
-        :param input_file: The input file to collapse.
-        :param molecule_count: The number of molecules in the input file
-        :raise TypeError: If file_size is not provided when input_file is a PurePath.
+        Args:
+            input_file: Input file to collapse.
+            molecule_count: Number of molecules in the input file.
+            file_size: File size in bytes; required when ``input_file`` is a ``PurePath``.
+
+        Raises:
+            TypeError: If ``file_size`` is not provided when ``input_file`` is a ``PurePath``.
         """
         if file_size is None and isinstance(input_file, Path):
             file_size = input_file.stat(follow_symlinks=True).st_size
@@ -260,7 +267,6 @@ class IndependentCollapseStatisticsCollector:
 
         Raises:
             KeyError: If data for the marker pair already exists.
-
         """
         key = (stats.region_id, stats.marker)
 
@@ -298,7 +304,6 @@ class IndependentCollapseStatisticsCollector:
 
         Returns:
             A `SingleUMICollapseSampleReport` containing the statistics.
-
         """
         stats = self.get_combined_stats()
         return SingleUMICollapseSampleReport(
@@ -340,16 +345,19 @@ class RegionCollapser:
     """Error correct UMI sequences based on similarity.
 
     Attributes:
-        _umi1_data: A numpy array containing the unique UMI-1 sequences for the current processing batch.
+        _umi1_data: A numpy array containing the unique UMI-1 sequences for the current processing
+            batch.
             These are recoded to a 2-bit encoding and cast to a 64-bit integer.
-        _umi2_data: A numpy array containing the unique UMI-2 sequences for the current processing batch.
+        _umi2_data: A numpy array containing the unique UMI-2 sequences for the current processing
+            batch.
             These are recoded to a 2-bit encoding and cast to a 64-bit integer.
 
-        _db_to_molecule_idx: A numpy array containing for each of the input moleces the index of the unique UMI.
-            This is used to link corrections of the unique umis back to all molecules that share the same UMI.
+        _db_to_molecule_idx: A numpy array containing for each of the input moleces the index of the
+            unique UMI.
+            This is used to link corrections of the unique umis back to all molecules that share the
+            same UMI.
         _unique_umi_to_molecule_count: The number of molecules that map to each unique umi.
             This is used to map "unique umi" counts to the corresponding "molecule" counts.
-
     """
 
     _umi1_schema = pa.schema(
@@ -395,12 +403,12 @@ class RegionCollapser:
             region_id: The region id of the UMI to collapse. Either "umi-1" or "umi-2".
             max_mismatches: The maximum number of mismatches allowed when collapsing molecules.
                 Either an integer >= 1 or a float in the range [0, 1).
-            algorithm: The algorithm to use for collapsing molecules. Either "cluster" or "directional".
+            algorithm: The algorithm to use for collapsing molecules. Either "cluster" or
+                "directional".
             threads: The number of threads to use for parallel processing.
             logger: The logger to use for output. The default is a logger named "collapse".
             min_parallel_chunk_size: The minimum number of com to process in parallel.
             similarity_backend: The backend to use for similarity search. Currently only "faiss".
-
         """
         self.assay = assay
         self.panel = panel
@@ -507,7 +515,6 @@ class RegionCollapser:
 
         Returns:
             A numpy array containing the unique UMI sequences.
-
         """
         umi1_data = self._umi1_region_extractor(molecules)
         unique_umi1s, inverse_umi1, counts_umi1 = np.unique(
@@ -677,11 +684,12 @@ class RegionCollapser:
     ) -> MarkerCorrectionStats:
         """Process a group of reads from a single marker.
 
-        :param idx: The index of the group in the partition
-        :param num_groups: The total number of groups in the partition
-        :param marker: The index of the marker in the panel
-        :param data: The data for the group. A dataframe.
-        :param writer: The parquet writer to stream output to.
+        Args:
+            idx: The index of the group in the partition
+            num_groups: The total number of groups in the partition
+            marker: The index of the marker in the panel
+            data: The data for the group. A dataframe.
+            writer: The parquet writer to stream output to.
         """
         starttime = time.time()
         logger = self._logger
@@ -810,9 +818,13 @@ class RegionCollapser:
     ) -> tuple[pa.Array, MarkerCorrectionStats]:
         """Determine connected components and collapse the UMIs for each component.
 
-        :param csgraph: The sparse adjacency matrix of the connected components
-        :param local_stats: The statistics object for this marker pair
-        :return: A tuple with a pyarrow Table with for each read the corrected UMI
+        Args:
+            csgraph: Sparse adjacency matrix of the molecule graph.
+            marker_name: Marker name for the molecule group being processed.
+            local_stats: Mutable statistics object for this marker pair.
+
+        Returns:
+            Tuple of corrected UMI array and updated marker statistics.
         """
         _logger = self._logger
 
@@ -904,7 +916,6 @@ class RegionCollapser:
 
         Returns:
             A numpy array with mapping input UMI indices to the corrected UMI.
-
         """
         # An array of indices mapping the original unique reads into the corrected umi space
         # Initialize with the identity mapping
@@ -941,7 +952,6 @@ class RegionCollapser:
 
         Returns:
             A pyarrow Table with the original and corrected UMI encoded sequences.
-
         """
         # broadcast the corrected umi map to the original molecule indices using the reverse indices
         corrected_umi_indices = corrected_umi_map[self._db_to_molecule_idx]
@@ -961,14 +971,15 @@ class RegionCollapser:
         The database and read counts are loaded from shared memory to reduce
         python multiprocessing IPC overhead.
 
-        :param subrange: The range of connected components to process.
-            A tuple with the start and stop indices.
-        :param component_indices: A list of lists containing the indices
-            in the database and read counts vector for each connected component.
-        :param db_shm: The shared memory buffer containing the binary vectors.
-        :param read_counts_shm: The shared memory buffer containing the read counts.
-        :param db_size: The size of the binary vectors memory buffer in bytes.
-        :param embedding: The PNAEmbedding instance for encoding/decoding vectors.
+        Args:
+            subrange: Start and stop indices of connected components to process.
+            component_indices: Per-component indices into the database and read-count arrays.
+            memory: Read-only shared memory registry for database and read counts.
+            embedding: Embedding used to encode and decode molecule vectors.
+            n_molecules: Total number of molecules in the batch.
+            db_shm: The shared memory buffer containing the binary vectors.
+            read_counts_shm: The shared memory buffer containing the read counts.
+            db_size: The size of the binary vectors memory buffer in bytes.
         """
         db = memory.get_array("db")
         read_count = memory.get_array("read_counts")

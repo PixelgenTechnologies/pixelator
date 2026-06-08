@@ -15,7 +15,11 @@ from tests.mpx.graph.networkx.test_tools import add_random_names_to_vertexes
 
 @pytest.fixture(name="output_dir")
 def output_dir_fixture(tmp_path):
-    """Fix an output directory."""
+    """Fix an output directory.
+
+    Args:
+        tmp_path: Tmp path.
+    """
     output_dir = tmp_path / "output"
     output_dir.mkdir()
     yield output_dir
@@ -23,14 +27,23 @@ def output_dir_fixture(tmp_path):
 
 @pytest.fixture(name="metrics_file")
 def metrics_file_fixture(tmp_path):
-    """Fix a metrics file."""
+    """Fix a metrics file.
+
+    Args:
+        tmp_path: Tmp path.
+    """
     metrics_file = tmp_path / "metrics.json"
     yield metrics_file
 
 
 @pytest.fixture(name="input_edgelist")
 def input_edgelist_fixture(tmp_path, edgelist_with_communities: pd.DataFrame):
-    """Fix an input edgelist."""
+    """Fix an input edgelist.
+
+    Args:
+        tmp_path: Tmp path.
+        edgelist_with_communities: Edgelist with communities.
+    """
     input_edgelist = tmp_path / "tmp_edgelist.parquet"
     edgelist_with_communities.to_parquet(
         input_edgelist, compression="zstd", index=False
@@ -40,7 +53,11 @@ def input_edgelist_fixture(tmp_path, edgelist_with_communities: pd.DataFrame):
 
 @pytest.fixture(name="graph_with_communities")
 def graph_with_communities_fixture(edgelist_with_communities: pd.DataFrame):
-    """Fix a bipartite multi-graph with communities and no marker counts."""
+    """Fix a bipartite multi-graph with communities and no marker counts.
+
+    Args:
+        edgelist_with_communities: Edgelist with communities.
+    """
     # build the graph from the edge list
     graph = Graph.from_edgelist(
         edgelist=edgelist_with_communities,

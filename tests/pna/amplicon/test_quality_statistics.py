@@ -4,6 +4,7 @@ from pixelator.pna.amplicon.quality import QualityStatistics
 
 
 def test_construction():
+    """Verify construction."""
     stats = QualityStatistics(
         {
             "r1": {"total_bases": 100, "q30_bases": 30, "sequenced_bases": 100},
@@ -16,6 +17,7 @@ def test_construction():
 
 
 def test_merging():
+    """Verify merging."""
     stats = QualityStatistics(
         {
             "r1": {"total_bases": 100, "q30_bases": 30, "sequenced_bases": 100},
@@ -37,6 +39,7 @@ def test_merging():
 
 
 def test_collect():
+    """Verify collect."""
     stats = QualityStatistics(
         {
             "umi-1": {"total_bases": 100, "q30_bases": 30, "sequenced_bases": 10},

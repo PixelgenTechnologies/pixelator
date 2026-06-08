@@ -14,6 +14,11 @@ from pixelator.pna.demux.correction import BKTreeItem, build_bktree
 
 
 def change_nucleotide(s: bytes) -> bytes:
+    """Change nucleotide.
+
+    Args:
+        s: S.
+    """
     pos = random.randint(0, len(s) - 1)
     population = list(ord(i) for i in "ACGT")
     population.remove(s[pos])
@@ -24,6 +29,7 @@ def change_nucleotide(s: bytes) -> bytes:
 
 
 def helper_populations():
+    """Helper populations."""
     res = dict()
 
     for i in list(b"ACGT"):
@@ -38,6 +44,11 @@ _NUCLEOTIDES_POPULATION = helper_populations()
 
 
 def change_2_nucleotides(s: bytes) -> bytes:
+    """Change 2 nucleotides.
+
+    Args:
+        s: S.
+    """
     positions = np.random.choice(range(0, len(s)), 2, replace=False)
     res = bytearray(s)
 
@@ -50,6 +61,7 @@ def change_2_nucleotides(s: bytes) -> bytes:
 
 @pytest.mark.slow
 def test_bktree_building():
+    """Verify bktree building."""
     panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
     tree = build_bktree(panel, sequence_key="sequence_1")
 

@@ -26,7 +26,17 @@ def _panel_with_version_product_and_uniprot(
     added_column_name: str | None = None,
     added_column_value: str | None = None,
 ) -> PNAAntibodyPanel:
-    """Clone a panel while tweaking version/product and marker metadata for tests."""
+    """Clone a panel while tweaking version/product and marker metadata for tests.
+
+    Args:
+        panel: Panel.
+        version: Version.
+        product: Product.
+        marker_a_uniprot: Marker a uniprot.
+        marker_a_new_name: Marker a new name.
+        added_column_name: Added column name.
+        added_column_value: Added column value.
+    """
     panel_df = panel.df.copy()
     panel_df.loc["MarkerA", "uniprot_id"] = marker_a_uniprot
     if marker_a_new_name is not None:
@@ -40,7 +50,13 @@ def _panel_with_version_product_and_uniprot(
 
 
 def _write_component_suffix_parquet(source: Path, target: Path, suffix: str) -> None:
-    """Write a parquet copy where `component` values are suffixed to avoid overlap."""
+    """Write a parquet copy where `component` values are suffixed to avoid overlap.
+
+    Args:
+        source: Source.
+        target: Target.
+        suffix: Suffix.
+    """
     (
         pl.scan_parquet(source)
         .with_columns((pl.col("component") + suffix).alias("component"))
@@ -55,7 +71,14 @@ def _build_two_sample_dataset_with_panels(
     panel_old: PNAAntibodyPanel,
     panel_new: PNAAntibodyPanel,
 ) -> PNAPixelDataset:
-    """Create two on-disk PXL samples with distinct panels for bumping patch version tests."""
+    """Create two on-disk PXL samples with distinct panels for bumping patch version tests.
+
+    Args:
+        tmp_path: Tmp path.
+        edgelist_parquet_path: Edgelist parquet path.
+        panel_old: Panel old.
+        panel_new: Panel new.
+    """
     sample_old = create_pxl_file(
         target=tmp_path / "sample_old.pxl",
         sample_name="sample_old",
@@ -85,9 +108,17 @@ def _build_two_sample_dataset_with_panels(
 
 
 class TestAnnDataHelper:
+    """Represent test ann data helper."""
+
     def test_anndata_helper_matches_dataset_adata_no_transforms(
         self, pxl_dataset, adata_data
     ):
+        """Verify anndata helper matches dataset adata no transforms.
+
+        Args:
+            pxl_dataset: pxl dataset.
+            adata_data: adata data.
+        """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
 
@@ -96,6 +127,11 @@ class TestAnnDataHelper:
         adata_assert_equal(res, adata_data)
 
     def test_anndata_helper_respects_component_and_marker_filters(self, pxl_dataset):
+        """Verify anndata helper respects component and marker filters.
+
+        Args:
+            pxl_dataset: pxl dataset.
+        """
         filtered = pxl_dataset.filter(
             components={"fc07dea9b679aca7"},
             markers={"MarkerA"},
@@ -117,6 +153,11 @@ class TestAnnDataHelper:
         )
 
     def test_anndata_helper_does_not_mutate_original(self, pxl_dataset):
+        """Verify anndata helper does not mutate original.
+
+        Args:
+            pxl_dataset: pxl dataset.
+        """
         helper = AnnDataHelper(pxl_dataset.view)
 
         adata = helper.read_adata(add_clr_transform=False, add_log1p_transform=False)
@@ -140,6 +181,13 @@ class TestAnnDataHelper:
     ],
 )
 def test_anndata_helper_basic_smoke(pxl_dataset, components, markers):
+    """Verify anndata helper basic smoke.
+
+    Args:
+        pxl_dataset: pxl dataset.
+        components: components.
+        markers: markers.
+    """
     helper = AnnDataHelper(pxl_dataset.view, components=components, markers=markers)
     res = helper.read_adata(add_clr_transform=False, add_log1p_transform=False)
     assert res.n_obs >= 0
@@ -155,7 +203,13 @@ class TestTryBumpAdataPanelVersion:
         edgelist_parquet_path: Path,
         panel: PNAAntibodyPanel,
     ):
-        """Bump to latest patch when major/minor/product prerequisites are satisfied."""
+        """Bump to latest patch when major/minor/product prerequisites are satisfied.
+
+        Args:
+            tmp_path: Tmp path.
+            edgelist_parquet_path: Edgelist parquet path.
+            panel: Panel.
+        """
         panel_old = _panel_with_version_product_and_uniprot(
             panel,
             version="0.1.0",
@@ -232,7 +286,15 @@ class TestTryBumpAdataPanelVersion:
         new_version: str,
         new_product: str | None,
     ):
-        """Skip bump when version compatibility or product prerequisites are not met."""
+        """Skip bump when version compatibility or product prerequisites are not met.
+
+        Args:
+            tmp_path: Tmp path.
+            edgelist_parquet_path: Edgelist parquet path.
+            panel: Panel.
+            new_version: New version.
+            new_product: New product.
+        """
         panel_old = _panel_with_version_product_and_uniprot(
             panel,
             version="0.1.0",

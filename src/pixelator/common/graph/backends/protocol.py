@@ -62,15 +62,18 @@ class GraphBackend(Protocol):
         vertex (node) when `add_marker_counts` is True. If `use_full_bipartite` is
         False or `simplify` is True the edge attributes will be lost.
 
-        :param edgelist: the edge list (dataframe) corresponding to the graph
-        :param add_marker_counts: add a dictionary of marker counts to each node
-        :param simplify: simplifies the graph (remove redundant edges)
-        :param use_full_bipartite: use the bipartite graph instead of the projection
-                                  (UPIA)
-        :param convert_indices_to_integers: convert the indices to integers (this is the default)
-        :returns: a Graph instance
-        :rtype: GraphBackend
-        :raises: AssertionError when the input edge list is not valid
+        Args:
+            edgelist: the edge list (dataframe) corresponding to the graph
+            add_marker_counts: add a dictionary of marker counts to each node
+            simplify: simplifies the graph (remove redundant edges)
+            use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+            convert_indices_to_integers: convert the indices to integers (this is the default)
+
+        Returns:
+            a Graph instance (GraphBackend)
+
+        Raises:
+            AssertionError when the input edge list is not valid
         """
         ...
 
@@ -83,9 +86,11 @@ class GraphBackend(Protocol):
 
         Typically what you want to use is `from_edgelist`.
 
-        :param graph: input graph to use
-        :return: A pixelator GraphBackend object
-        :rtype: GraphBackend
+        Args:
+            graph: input graph to use
+
+        Returns:
+            A pixelator GraphBackend object (GraphBackend)
         """
         ...
 
@@ -117,8 +122,11 @@ class GraphBackend(Protocol):
     ) -> csr_matrix:
         """Get the sparse adjacency matrix.
 
-        :param node_ordering: Control the node ordering in the adjacency matrix
-        :return: a sparse adjacency matrix
+        Args:
+            node_ordering: Control the node ordering in the adjacency matrix
+
+        Returns:
+            a sparse adjacency matrix
         """
         ...
 
@@ -129,9 +137,11 @@ class GraphBackend(Protocol):
     def node_marker_counts(self) -> pd.DataFrame:
         """Get the marker counts of each node as a dataframe.
 
-        :return: node markers as a dataframe
-        :rtype: pd.DataFrame
-        :raises: AssertionError if graph nodes don't include markers
+        Returns:
+            node markers as a dataframe (pd.DataFrame)
+
+        Raises:
+            AssertionError if graph nodes don't include markers
         """
         ...
 
@@ -149,14 +159,14 @@ class GraphBackend(Protocol):
         counts to use that can be used for plotting.
 
         The layout options are:
-          - coarsened_pmds_3d
-          - wpmds_3d
-          - pmds
-          - pmds_3d
-          - fruchterman_reingold
-          - fruchterman_reingold_3d
-          - kamada_kawai
-          - kamada_kawai_3d
+        - coarsened_pmds_3d
+        - fruchterman_reingold
+        - fruchterman_reingold_3d
+        - kamada_kawai
+        - kamada_kawai_3d
+        - pmds
+        - pmds_3d
+        - wpmds_3d
 
         For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
         preferred. On PNA data they are faster and produce better results.
@@ -164,7 +174,7 @@ class GraphBackend(Protocol):
         Args:
             layout_algorithm: Layout algorithm to use for coordinate generation.
             only_keep_a_pixels: If True, only keep the a-pixels.
-            get_node_marker_matrix: If True, add a matrix of marker counts to each node.
+            get_node_marker_matrix: Add a matrix of marker counts to each node if True.
             random_seed: Seed for graph layouts with a stochastic element. Useful for
                 deterministic layouts across method calls.
             **kwargs: Passed to the underlying layout implementation.
@@ -175,7 +185,6 @@ class GraphBackend(Protocol):
         Raises:
             AssertionError: If the provided layout_algorithm is not valid.
             ValueError: If the current graph instance is empty.
-
         """
         ...
 
@@ -190,29 +199,35 @@ class GraphBackend(Protocol):
     def add_edges(self, edges: Iterable[Tuple[int]]) -> None:
         """Add edges to the graph instance.
 
-        :param edges: Add the following edges to the graph instance.
+        Args:
+            edges: Add the following edges to the graph instance.
         """
         ...
 
     def add_vertices(self, n_vertices: int, attrs: Dict[str, List]) -> None:
         """Add some number of vertices to the graph instance.
 
-        :param n_vertices: the number of vertices to be added to the graph instance.
-        :param attrs: dict of sequences, all of length equal to the number of vertices
-                      to be added, containing the attributes of the new vertices. If
-                      `n_vertices=1` then they have to be lists of length 1.
-        :raises IndexError: if the number of graph vertices to add and lists of
-                            attributes are of different lengths
+        Args:
+            n_vertices: the number of vertices to be added to the graph instance.
+            attrs: dict of sequences, all of length equal to the number of vertices to be added,
+                containing the attributes of the new vertices. If `n_vertices=1` then they have to
+                be lists of length 1.
+
+        Raises:
+            IndexError: if the number of graph vertices to add and lists of attributes are of
+                different lengths
         """
         ...
 
     def add_names_to_vertexes(self, vs_names: List[str]) -> None:
         """Rename the current vertices on the graph instance.
 
-        :param vs_names: Add the following vertices to the graph instance.
-        :raises ValueError: if the graph is empty
-        :raises IndexError: if the number of graph vertices and list of names are
-                            of different length
+        Args:
+            vs_names: Add the following vertices to the graph instance.
+
+        Raises:
+            ValueError: if the graph is empty
+            IndexError: if the number of graph vertices and list of names are of different length
         """
         ...
 

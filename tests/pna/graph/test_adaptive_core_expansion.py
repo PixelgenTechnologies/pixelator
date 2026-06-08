@@ -40,7 +40,11 @@ def graph_from_pxl():
 
 @pytest.mark.slow
 def test_adaptive_core_expansion_works_as_expected(graph_from_pxl):
-    """Test that adaptive_core_expansion works for various valid inputs."""
+    """Test that adaptive_core_expansion works for various valid inputs.
+
+    Args:
+        graph_from_pxl: Graph from pxl.
+    """
     # Basic execution and exact count check
     res = adaptive_core_expansion(graph_from_pxl)
     partitions = list(nx.get_node_attributes(res.raw, "partition").values())
@@ -59,7 +63,11 @@ def test_adaptive_core_expansion_works_as_expected(graph_from_pxl):
 
 
 def test_adaptive_core_expansion_fails_with_invalid_input(graph_from_pxl):
-    """Test that adaptive_core_expansion raises errors for invalid inputs."""
+    """Test that adaptive_core_expansion raises errors for invalid inputs.
+
+    Args:
+        graph_from_pxl: Graph from pxl.
+    """
     # Invalid graph input
     with pytest.raises((AttributeError, TypeError)):
         adaptive_core_expansion("Invalid")
@@ -98,7 +106,12 @@ def test_adaptive_core_expansion_fails_with_invalid_input(graph_from_pxl):
 
 
 def test_adaptive_core_expansion_min_allowed_nodes_pct(graph_from_pxl, caplog):
-    """Test that min_allowed_nodes_pct correctly influences partition selection."""
+    """Test that min_allowed_nodes_pct correctly influences partition selection.
+
+    Args:
+        graph_from_pxl: Graph from pxl.
+        caplog: Caplog.
+    """
     # Run with a high min_allowed_nodes_pct that the best BC score partition
     # might not meet, forcing a different selection or fallback.
     # From previous tests, the default high count is ~43k out of ~43.5k (~99%).
@@ -195,7 +208,11 @@ def test_get_k_cores_raises_when_max_k_is_one():
 
 
 def test_build_p_step_matrix_has_zero_diagonal_and_normalized_rows(graph_from_pxl):
-    """P-step matrix should have zero diagonal and row-normalized probabilities."""
+    """P-step matrix should have zero diagonal and row-normalized probabilities.
+
+    Args:
+        graph_from_pxl: Graph from pxl.
+    """
     node_list = list(graph_from_pxl.raw.nodes())
     p_step = _build_p_step_matrix(g=graph_from_pxl, node_list=node_list, k=2)
     assert p_step.shape == (len(node_list), len(node_list))
@@ -278,7 +295,11 @@ def test_validate_best_candidate_prefers_valid_partition_with_highest_bc():
 
 
 def test_validate_best_candidate_returns_none_when_no_partition_is_valid(caplog):
-    """Return None and log warning when no candidate meets node-percentage floor."""
+    """Return None and log warning when no candidate meets node-percentage floor.
+
+    Args:
+        caplog: Caplog.
+    """
     candidate = _PartitionCandidate(
         partition=np.array([1, 0, 0]),
         bc_score=0.9,

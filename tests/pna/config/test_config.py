@@ -23,6 +23,7 @@ from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 
 
 def test_config_creation():
+    """Verify config creation."""
     config = PNAConfig()
     load_assays_package(config, "pixelator.pna.resources.assays")
 
@@ -33,6 +34,11 @@ def test_config_creation():
 
 
 def test_load_assays_dir(pna_data_root):
+    """Verify load assays dir.
+
+    Args:
+        pna_data_root: pna data root.
+    """
     config = PNAConfig()
     config.load_assays(pna_data_root / "assays")
 
@@ -41,6 +47,7 @@ def test_load_assays_dir(pna_data_root):
 
 
 def test_assay_region_ids():
+    """Verify assay region ids."""
     all_region_ids = pna_config.get_assay("proxiome-v1").region_ids
 
     expected_region_ids = {
@@ -57,6 +64,7 @@ def test_assay_region_ids():
 
 
 def test_assay_get_region_by_id():
+    """Verify assay get region by id."""
     assay = pna_config.get_assay("proxiome-v1")
 
     region = assay.get_region_by_id("pid-2")
@@ -64,6 +72,7 @@ def test_assay_get_region_by_id():
 
 
 def test_assay_get_regions_by_type():
+    """Verify assay get regions by type."""
     assay = pna_config.get_assay("proxiome-v1")
 
     regions = assay.get_regions_by_type("lbs-1")
@@ -72,6 +81,7 @@ def test_assay_get_regions_by_type():
 
 
 def test_get_position_in_amplicon_pna_1():
+    """Verify get position in amplicon pna 1."""
     design = pna_config.get_assay("proxiome-v1")
 
     umi1_pos = get_position_in_parent(design, "umi-1")
@@ -100,7 +110,6 @@ def config_with_multiple_versions(pna_data_root):
 
     Returns:
         A PNA config object populated with panel version variants.
-
     """
     new_config = copy.deepcopy(pna_config)
     new_config = load_panels_package(new_config, "tests.pna.data.panels")
@@ -114,7 +123,6 @@ def test_loading_panel_from_config(config_with_multiple_versions):
 
     Args:
         config_with_multiple_versions: Config fixture with multiple panel versions.
-
     """
     panel_name = "test-pna-panel==1.1.0"
     panel = config_with_multiple_versions.get_panel(panel_name)
@@ -127,7 +135,6 @@ def test_loading_multiple_minor_version(config_with_multiple_versions):
 
     Args:
         config_with_multiple_versions: Config fixture with multiple panel versions.
-
     """
     panel_name = "test-pna-panel==1"
     with pytest.raises(
@@ -147,7 +154,6 @@ def test_loading_multiple_major_version(config_with_multiple_versions):
 
     Args:
         config_with_multiple_versions: Config fixture with multiple panel versions.
-
     """
     panel_name = "test-pna-panel>=0.0.1"
     with pytest.raises(
@@ -175,6 +181,14 @@ def test_loading_multiple_major_version(config_with_multiple_versions):
 def test_loading_panel_from_config_alias(
     config_with_multiple_versions, panel_alias, panel_name, panel_version
 ):
+    """Verify loading panel from config alias.
+
+    Args:
+        config_with_multiple_versions: config with multiple versions.
+        panel_alias: panel alias.
+        panel_name: panel name.
+        panel_version: panel version.
+    """
     panel = config_with_multiple_versions.get_panel(panel_alias)
     assert panel.name == panel_name
     assert panel.version == panel_version
@@ -185,7 +199,6 @@ def test_loading_panel_from_config_specific_version(config_with_multiple_version
 
     Args:
         config_with_multiple_versions: Config fixture with multiple panel versions.
-
     """
     panel = config_with_multiple_versions.get_panel("test-pna-panel", version="1.1.0")
     assert panel.name == "test-pna-panel"
@@ -211,7 +224,6 @@ def test_loading_panel_from_config_product_and_specific_version(
 
     Args:
         config_with_multiple_versions: Config fixture with multiple panel versions.
-
     """
     panel = config_with_multiple_versions.get_panel("test-product", version="1.1.0")
     assert panel.name == "test-pna-panel"
@@ -225,7 +237,6 @@ def test_loading_panel_from_config_alias_and_specific_version(
 
     Args:
         config_with_multiple_versions: Config fixture with multiple panel versions.
-
     """
     # NOTE: Panel aliases are deprecated and should not be used for new panels.
     #
@@ -253,7 +264,6 @@ def test_load_antibody_panel_util(pna_data_root):
 
     Args:
         pna_data_root: Root path to PNA test data files.
-
     """
     cgf_panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")
     assert cgf_panel.name == "proxiome-v1-immuno-155-v1.0"
@@ -273,7 +283,6 @@ def test_panel_with_non_dna_sequences(pna_data_root):
 
     Args:
         pna_data_root: Root path to PNA test data files.
-
     """
     panel_df = pd.read_csv(
         pna_data_root / "test-pna-panel-v1.1.0.csv", index_col="marker_id", comment="#"
@@ -290,6 +299,11 @@ def test_panel_with_non_dna_sequences(pna_data_root):
 
 
 def test_list_panel_names(pna_data_root):
+    """Verify list panel names.
+
+    Args:
+        pna_data_root: pna data root.
+    """
     assert sorted(pna_config.list_panel_names(include_aliases=True)) == sorted(
         [
             "proxiome-v1-immuno-155-v1.0",
@@ -321,6 +335,12 @@ def test_list_panel_names(pna_data_root):
 
 
 def test_loading_duplicate_aliases(config_with_multiple_versions, pna_data_root):
+    """Verify loading duplicate aliases.
+
+    Args:
+        config_with_multiple_versions: config with multiple versions.
+        pna_data_root: pna data root.
+    """
     this_config = copy.deepcopy(config_with_multiple_versions)
     from pixelator.common.config.config_class import PanelException
 

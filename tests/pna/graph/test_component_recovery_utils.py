@@ -16,7 +16,11 @@ from pixelator.pna.graph.report import GraphStatistics
 
 
 def test_get_count_statistics(tmp_path: Path) -> None:
-    """get_count_statistics yields correct edge, read, molecule, and distinct-UMI counts from a Parquet edgelist."""
+    """Test correct edge, read, molecule, and distinct-UMI counts from a Parquet edgelist.
+
+    Args:
+        tmp_path: Tmp path.
+    """
     path = tmp_path / "edgelist.parquet"
     pl.DataFrame(
         {
@@ -40,7 +44,11 @@ def test_get_count_statistics(tmp_path: Path) -> None:
 def test_write_hive_partitioned_edgelist_without_small_components_prunes(
     tmp_path: Path,
 ) -> None:
-    """Components below the UMI score threshold are omitted from the hive output and listed as discarded."""
+    """Test components below the UMI score threshold are omitted and listed as discarded.
+
+    Args:
+        tmp_path: Tmp path.
+    """
     partitioned = tmp_path / "partitioned_edgelist.parquet"
     pl.DataFrame(
         {
@@ -69,7 +77,11 @@ def test_write_hive_partitioned_edgelist_without_small_components_prunes(
 def test_write_hive_partitioned_edgelist_without_small_components_nothing_discarded(
     tmp_path: Path,
 ) -> None:
-    """When every component meets the threshold, discarded frame is empty and all rows are kept."""
+    """When every component meets the threshold, discarded frame is empty and all rows are kept.
+
+    Args:
+        tmp_path: Tmp path.
+    """
     partitioned = tmp_path / "partitioned_edgelist.parquet"
     pl.DataFrame(
         {
