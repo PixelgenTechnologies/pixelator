@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Added
 - `annotate_cells` method to determine cell-types using another given set of pre-annotated cells.
+- `proxiome-v2-immuno-155-v2.1` panel
 
 ## [0.28.0] - 2026-06-03
 
