@@ -20,4 +20,4 @@ class SampleCallingTotalReport(SampleReport):
     report_type: str = "sample_calling_total"
     number_of_components: int
     percentage_of_components_successfully_called: float
-    sample_confidences_per_sample: dict[str, list[float]]
+    hash_enrichment_factors_per_sample: dict[str, list[float]]

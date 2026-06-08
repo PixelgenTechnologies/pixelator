@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 def collect_hash_info(
     input_pxl_file: PNAPixelDataset,
     hashed_antibody_mapping: HashedAntibodyMapping,
-    confidence_threshold: float,
+    enrichment_threshold: float,
     undetermined_sample_name: str = "undetermined",
 ) -> pl.DataFrame:
     """Map components to samples in an sample-hashed dataset.
@@ -41,7 +41,11 @@ def collect_hash_info(
     This function processes a pixel dataset and a mapping of components to
     samples based on hashed antibodies. It computes the hashed antibody count
     for each component, determines the most likely sample assignment for each
-    component, and calculates a confidence score for the assignment.
+    component, and calculates a hash enrichment factor for the assignment.
+
+    The hash enrichment factor is the ratio of the highest hash count to the
+    second highest hash count across all hash buckets. A higher value means
+    the component is more clearly dominated by one sample.
 
     If the most likely assignment is to antibodies not belonging to any sample,
     the component is assigned to the "undetermined" sample.
@@ -50,14 +54,15 @@ def collect_hash_info(
         input_pxl_file: The input pixel dataset.
         hashed_antibody_mapping: Mapping of sample names to hashed antibody names and the full list
             of hashing antibodies (from panel).
-        confidence_threshold: Minimum confidence required to assign a component to a sample.
-            Defaults to 0.8.
+        enrichment_threshold: Minimum hash enrichment factor required to assign a component to a
+            sample. The enrichment factor is the highest hash count divided by the second highest
+            hash count. Defaults to 2.0.
         undetermined_sample_name: Name to use for undetermined components. Defaults to
             "undetermined".
 
     Returns:
-        Polars DataFrame with component id, per-sample hash counts, called sample, and confidence
-        score.
+        Polars DataFrame with component id, per-sample hash counts, called sample, and hash
+        enrichment factor.
     """
     ab_count_data = pl.from_pandas(input_pxl_file.adata().to_df().reset_index()).lazy()
     samples = hashed_antibody_mapping.keys()
@@ -95,16 +100,26 @@ def collect_hash_info(
             .str.strip_suffix("_hash_count")
             .alias("called_sample"),
             pl.col("value").max().alias("max_value"),
-            pl.col("value").sum().alias("total_value"),
+            pl.col("value")
+            .sort(descending=True)
+            .slice(1, 1)
+            .first()
+            .fill_null(0)
+            .alias("second_max_value"),
         )
         .with_columns(
-            pl.when(pl.col("total_value") == 0)
+            pl.when(pl.col("max_value") == 0)
             .then(pl.lit(0.0))
-            .otherwise(pl.col("max_value") / pl.col("total_value"))
-            .alias("sample_confidence")
+            .when(pl.col("second_max_value") == 0)
+            .then(pl.lit(float("inf")))
+            .otherwise(
+                pl.col("max_value").cast(pl.Float64)
+                / pl.col("second_max_value").cast(pl.Float64)
+            )
+            .alias("hash_enrichment_factor")
         )
         .with_columns(
-            pl.when(pl.col("sample_confidence") < confidence_threshold)
+            pl.when(pl.col("hash_enrichment_factor") < enrichment_threshold)
             .then(pl.lit(undetermined_sample_name))
             .otherwise(pl.col("called_sample"))
             .alias("called_sample")
@@ -119,7 +134,7 @@ def collect_hash_info(
         + [
             f"{undetermined_sample_name}_hash_count",
             "called_sample",
-            "sample_confidence",
+            "hash_enrichment_factor",
         ]
     )
 
@@ -241,7 +256,7 @@ def _build_post_sample_calling_anndata(
     call_aggregates(new_adata)
     new_adata = _add_missing_adata_info(new_adata, old_adata)
     new_adata.obs = new_adata.obs.join(
-        hash_info.select(["component", "sample_confidence"])
+        hash_info.select(["component", "hash_enrichment_factor"])
         .to_pandas()
         .set_index("component", drop=True),
         how="left",
@@ -298,7 +313,7 @@ def sample_calling(
     input_pxl: PNAPixelDataset,
     hashing_antibody_mapping: HashedAntibodyMapping,
     output_folder: Path,
-    confidence_threshold: float = 0.8,
+    enrichment_threshold: float = 2.0,
     remove_incompatible: bool = True,
     undetermined_sample_name: str = "undetermined",
 ) -> list[Path]:
@@ -306,10 +321,10 @@ def sample_calling(
 
     Splits components of a pixel dataset by their sample and writes out
     separate pxl files for each sample. This function processes a
-    PNAPixelDataset, assigns components to samples based on hash information
-    and confidence thresholds, and writes out pxl files for each determined
-    sample. It will also write a file for undetermined components (under the name
-    "{undetermined_sample_name}.dehashed.pxl").
+    PNAPixelDataset, assigns components to samples based on hash enrichment
+    factors and an enrichment threshold, and writes out pxl files for each
+    determined sample. It will also write a file for undetermined components
+    (under the name "{undetermined_sample_name}.dehashed.pxl").
     It supports removing incompatible hashes and renaming hash markers in the output.
 
     Args:
@@ -317,8 +332,9 @@ def sample_calling(
         hashing_antibody_mapping: Information about hashing antibodies, including a mapping from
             sample names to lists of hashed antibody names.
         output_folder: Directory where output pxl files will be written.
-        confidence_threshold: Minimum confidence required to assign a component to a sample.
-            Defaults to 0.8.
+        enrichment_threshold: Minimum hash enrichment factor required to assign a component to a
+            sample. The enrichment factor is the highest hash count divided by the second highest
+            hash count. Defaults to 2.0.
         remove_incompatible: Whether to remove hashes incompatible with the current sample from the
             edgelist. Defaults to True.
         undetermined_sample_name: Name to use for undetermined components. Defaults to
@@ -330,7 +346,7 @@ def sample_calling(
     hash_info = collect_hash_info(
         input_pxl,
         hashing_antibody_mapping,
-        confidence_threshold,
+        enrichment_threshold,
         undetermined_sample_name,
     )
     panel = PNAAntibodyPanel.from_pxl_dataset(input_pxl)
@@ -510,10 +526,10 @@ def create_final_report(
             n_undetermined_components / n_components
         )
 
-    sample_confidences_per_sample = {
+    hash_enrichment_factors_per_sample = {
         sample_name: final_dataset.filter(samples=sample_name)
         .adata()
-        .obs["sample_confidence"]
+        .obs["hash_enrichment_factor"]
         for sample_name in final_dataset.sample_names()
     }
 
@@ -522,34 +538,37 @@ def create_final_report(
         product_id="single-cell-pna",
         number_of_components=n_components,
         percentage_of_components_successfully_called=percentage_of_components_successfully_called,
-        sample_confidences_per_sample={
-            sample: confidences.to_list()
-            for sample, confidences in sample_confidences_per_sample.items()
+        hash_enrichment_factors_per_sample={
+            sample: enrichment_factors.to_list()
+            for sample, enrichment_factors in hash_enrichment_factors_per_sample.items()
         },
     )
     return total_report
 
 
-def warn_if_undetermined_has_high_confidence(
-    undetermined_sample_confidences: pd.Series | np.ndarray,
-    confidence_threshold: float,
+def warn_if_undetermined_has_high_enrichment(
+    undetermined_enrichment_factors: pd.Series | np.ndarray,
+    enrichment_threshold: float,
     undetermined_sample_name: str = "undetermined",
 ) -> None:
-    """Warn if the undetermined sample has a high confidence score.
+    """Warn if the undetermined sample has a high hash enrichment factor.
+
+    A high enrichment factor in undetermined components means they are clearly
+    dominated by one hash, suggesting the samplesheet may have wrong sample indices.
 
     Args:
-        undetermined_sample_confidences: Undetermined sample confidences.
-        confidence_threshold: Minimum confidence required to assign a component to a sample.
-            Defaults to 0.8.
+        undetermined_enrichment_factors: Hash enrichment factors for undetermined components.
+        enrichment_threshold: Minimum hash enrichment factor required to assign a component to a
+            sample.
         undetermined_sample_name: Name to use for undetermined components. Defaults to
             "undetermined".
     """
     if (
-        np.sum(undetermined_sample_confidences > confidence_threshold)
-        / len(undetermined_sample_confidences)
+        np.sum(undetermined_enrichment_factors > enrichment_threshold)
+        / len(undetermined_enrichment_factors)
         > 0.05
     ):
         logger.warning(
-            f"There are more than 5% of components in {undetermined_sample_name} that have a high confidence score. "
+            f"There are more than 5% of components in {undetermined_sample_name} that have a high hash enrichment factor. "
             "This may indicate that the samplesheet has the wrong sample indices."
         )
