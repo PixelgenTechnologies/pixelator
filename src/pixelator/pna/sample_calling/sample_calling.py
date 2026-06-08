@@ -56,7 +56,7 @@ def collect_hash_info(
             of hashing antibodies (from panel).
         enrichment_threshold: Minimum hash enrichment factor required to assign a component to a
             sample. The enrichment factor is the highest hash count divided by the second highest
-            hash count. Defaults to 2.0.
+            hash count.
         undetermined_sample_name: Name to use for undetermined components. Defaults to
             "undetermined".
 
@@ -111,7 +111,9 @@ def collect_hash_info(
             pl.when(pl.col("max_value") == 0)
             .then(pl.lit(0.0))
             .when(pl.col("second_max_value") == 0)
-            .then(pl.lit(float("inf")))
+            .then(
+                pl.col("max_value").cast(pl.Float64)
+            )  # If second max is 0 but max is not, set enrichment to max_value (as if second max was 1).
             .otherwise(
                 pl.col("max_value").cast(pl.Float64)
                 / pl.col("second_max_value").cast(pl.Float64)
@@ -313,7 +315,7 @@ def sample_calling(
     input_pxl: PNAPixelDataset,
     hashing_antibody_mapping: HashedAntibodyMapping,
     output_folder: Path,
-    enrichment_threshold: float = 2.0,
+    enrichment_threshold: float = 10.0,
     remove_incompatible: bool = True,
     undetermined_sample_name: str = "undetermined",
 ) -> list[Path]:
@@ -334,7 +336,7 @@ def sample_calling(
         output_folder: Directory where output pxl files will be written.
         enrichment_threshold: Minimum hash enrichment factor required to assign a component to a
             sample. The enrichment factor is the highest hash count divided by the second highest
-            hash count. Defaults to 2.0.
+            hash count. Defaults to 10.0.
         remove_incompatible: Whether to remove hashes incompatible with the current sample from the
             edgelist. Defaults to True.
         undetermined_sample_name: Name to use for undetermined components. Defaults to
