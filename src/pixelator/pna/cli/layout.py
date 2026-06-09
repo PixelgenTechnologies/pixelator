@@ -6,9 +6,11 @@ Copyright © 2024 Pixelgen Technologies AB.
 import logging
 import sys
 from pathlib import Path
+from typing import get_args
 
 import click
 
+from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.common.utils import (
     create_output_stage_dir,
     get_sample_name,
@@ -46,9 +48,9 @@ logger = logging.getLogger(__name__)
     "--layout-algorithm",
     required=False,
     multiple=True,
-    default=["wpmds_3d"],
-    help="Select a layout algorithm to use. This can be specified multiple times to compute multiple layouts. Default: pmds_3d",
-    type=click.Choice(["pmds_3d", "wpmds_3d"]),
+    default=["coarsened_pmds_3d"],
+    help="Select a layout algorithm to use. This can be specified multiple times to compute multiple layouts. Default: coarsened_pmds_3d",
+    type=click.Choice(get_args(SupportedLayoutAlgorithm)),
 )
 @click.option(
     "--pmds-pivots",
@@ -83,7 +85,7 @@ def layout(
         ctx: Click context from the command decorator.
         pxl_file: Path to the input PXL (PixelDataset) file.
         layout_algorithm: Select a layout algorithm to use. This can be specified multiple times to
-            compute multiple layouts. Default: pmds_3d.
+            compute multiple layouts. Default: coarsened_pmds_3d.
         pmds_pivots: Number of pivots to use for the PMDS layout algorithm. Default: 50. More give
             better results, but increase computation times.
         wpmds_k: The window size used when computing probability weights to the wpmds layout method.
