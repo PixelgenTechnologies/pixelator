@@ -65,8 +65,8 @@ from pixelator.pna.sample_calling.report import (
     type=float,
     default=10.0,
     help="Hash enrichment threshold for sample calling. "
-    "Components with a hash enrichment factor (highest hash count divided by second highest) "
-    "below this threshold will be considered undetermined. "
+    "Components with a hash enrichment factor below this threshold will be considered undetermined. "
+    "Hash enrichment is calculated as the ration between highest hash count and the second highest hash count."
     "Default is 10.0.",
 )
 @output_option
