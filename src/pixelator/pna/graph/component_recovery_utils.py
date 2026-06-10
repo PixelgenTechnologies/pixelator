@@ -601,7 +601,8 @@ def filter_connected_components_by_size(
         ConnectedComponentException: If no components remain after filtering.
     """
     component_sizes = create_component_size_data_frame(input_edgelist_path)
-    component_sizes = pl.concat([component_sizes, discard_sizes], how="vertical")
+    if discard_sizes.height > 0:
+        component_sizes = pl.concat([component_sizes, discard_sizes], how="vertical")
 
     unique, counts = np.unique(
         component_sizes["n_umi"].cast(pl.Int32), return_counts=True
