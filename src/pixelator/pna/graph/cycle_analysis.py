@@ -387,7 +387,7 @@ def remove_no_cycle_edges(
                 [out_paths],
             )
             con.execute(
-                "COPY merged_edgelist TO ? (FORMAT PARQUET, PARTITION_BY (component))",
+                "COPY merged_edgelist TO ? (FORMAT PARQUET)",
                 [str(output_path)],
             )
             return total_removed_edges, edge_cycle_length_dist, output_path

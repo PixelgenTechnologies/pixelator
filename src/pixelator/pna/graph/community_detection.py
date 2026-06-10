@@ -618,22 +618,6 @@ def find_components(
         logger.info(
             f"Edge cycle verification completed in {time.time() - time_start:.2f} seconds."
         )
-        ## One more component refinement iteration after cycle verification
-        if refinement_options.max_component_refinement_depth > 1:
-            logger.info(
-                "Starting refinement stages on edgelist after cycle verification."
-            )
-            time_start = time.time()
-            component_stats, new_discarded_sizes = run_leiden_refinement(
-                component_edgelists_path=latest_working_edgelist_path,
-                refinement_options=refinement_options,
-                component_stats=component_stats,
-                max_workers=n_threads,
-            )
-            discard_sizes = pl.concat((discard_sizes, new_discarded_sizes))
-            logger.info(
-                f"Refinement stages after cycle verification completed in {time.time() - time_start:.2f} seconds."
-            )
 
     logger.info("Filtering connected components by size.")
     latest_working_edgelist_path, component_stats = filter_connected_components_by_size(
