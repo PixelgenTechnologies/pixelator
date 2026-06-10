@@ -8,6 +8,7 @@ from pixelator.pna.config import pna_config
 
 
 def test_amplicon_builder_no_mismatches():
+    """Verify amplicon builder no mismatches."""
     assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
@@ -52,6 +53,7 @@ def test_amplicon_builder_no_mismatches():
 
 
 def test_amplicon_builder_shift():
+    """Verify amplicon builder shift."""
     assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.2)
 
@@ -89,6 +91,7 @@ def test_amplicon_builder_shift():
 
 
 def test_amplicon_builder_large_shift():
+    """Verify amplicon builder large shift."""
     assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
@@ -112,6 +115,7 @@ def test_amplicon_builder_large_shift():
 
 
 def test_uei_deletion():
+    """Verify uei deletion."""
     assay = pna_config.get_assay("proxiome-v1")
 
     r1 = SequenceRecord(
@@ -146,6 +150,7 @@ def test_uei_deletion():
 
 
 def test_bad_lbs2():
+    """Verify bad lbs2."""
     assay = pna_config.get_assay("proxiome-v1")
 
     r1 = SequenceRecord(
@@ -170,6 +175,7 @@ def test_bad_lbs2():
 
 
 def test_lbs2_insertion():
+    """Verify lbs2 insertion."""
     assay = pna_config.get_assay("proxiome-v1")
 
     r1 = SequenceRecord(
@@ -204,6 +210,7 @@ def test_lbs2_insertion():
 
 
 def test_amplicon_crappy_lbs1():
+    """Verify amplicon crappy lbs1."""
     assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 
@@ -261,6 +268,7 @@ def test_amplicon_uei_length_mismatch():
 
 
 def test_amplicon_intersecting_reads():
+    """Verify amplicon intersecting reads."""
     assay = pna_config.get_assay("proxiome-v1")
     step = PairedEndAmpliconBuilder(assay, mismatches=0.1)
 

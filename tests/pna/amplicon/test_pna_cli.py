@@ -15,6 +15,11 @@ from pixelator import cli
 
 @pytest.fixture()
 def testdata_300k_sample_mismatch(testdata_300k):
+    """Testdata 300k sample mismatch.
+
+    Args:
+        testdata_300k: testdata 300k.
+    """
     [r1, r2] = testdata_300k
 
     pwd = Path.cwd()
@@ -31,6 +36,11 @@ def testdata_300k_sample_mismatch(testdata_300k):
 
 @pytest.mark.slow
 def test_fastq_valid_inputs(testdata_300k):
+    """Verify fastq valid inputs.
+
+    Args:
+        testdata_300k: testdata 300k.
+    """
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as d:
@@ -49,6 +59,11 @@ def test_fastq_valid_inputs(testdata_300k):
 
 
 def test_fastq_swapped_read_input(testdata_300k):
+    """Verify fastq swapped read input.
+
+    Args:
+        testdata_300k: testdata 300k.
+    """
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as d:
@@ -72,6 +87,11 @@ def test_fastq_swapped_read_input(testdata_300k):
 
 
 def test_fastq_sample_name_mismatch(testdata_300k_sample_mismatch):
+    """Verify fastq sample name mismatch.
+
+    Args:
+        testdata_300k_sample_mismatch: testdata 300k sample mismatch.
+    """
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as d:
@@ -92,6 +112,12 @@ def test_fastq_sample_name_mismatch(testdata_300k_sample_mismatch):
 
 
 def test_can_skip_input_checks(mocker, testdata_300k_sample_mismatch):
+    """Verify can skip input checks.
+
+    Args:
+        mocker: mocker.
+        testdata_300k_sample_mismatch: testdata 300k sample mismatch.
+    """
     runner = CliRunner()
 
     def mock_amplicon_sample_report():
@@ -127,6 +153,11 @@ def test_can_skip_input_checks(mocker, testdata_300k_sample_mismatch):
 
 @pytest.mark.slow
 def test_fastq_single_end(testdata_unbalanced_r12):
+    """Verify fastq single end.
+
+    Args:
+        testdata_unbalanced_r12: testdata unbalanced r12.
+    """
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as d:

@@ -28,13 +28,18 @@ class OrderedGroup(click.Group):
         commands: Optional[Dict[str, click.Command]] = None,
         **kwargs,
     ):
+        """Initialize the ordered Click command group."""
         super(OrderedGroup, self).__init__(name, commands, **kwargs)
         self.commands = commands or collections.OrderedDict()
 
     def list_commands(  # type: ignore
         self, ctx: click.Context
     ) -> Mapping[str, click.Command]:
-        """Return a list of subcommands."""
+        """Return a list of subcommands.
+
+        Args:
+            ctx: Click context from the command decorator.
+        """
         return self.commands
 
 
@@ -47,7 +52,12 @@ class AliasedOrderedGroup(OrderedGroup):
     """
 
     def group(self, *args, **kwargs):
-        """Attach a click group that supports aliases."""
+        """Attach a click group that supports aliases.
+
+        Args:
+            args: Positional arguments passed to ``click.group``.
+            kwargs: Keyword arguments passed to ``click.group``.
+        """
 
         def decorator(f):
             aliased_group = []

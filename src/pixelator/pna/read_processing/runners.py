@@ -92,20 +92,19 @@ class ReaderProcess(mpctx_Process):
         buffer_size: int,
         stdin_fd,
     ):
-        """Initialize a ReaderProcess.
+        """Initialize a reader process that streams chunks to worker connections.
 
-        :param params paths: path to input files
-        :param connections: a list of Connection objects, one for each worker.
-        :param queue: a Queue of worker indices. A worker writes its own index into this
-        :param queue to notify the reader that it is ready to receive more data.
-        :param buffer_size:
-        :param stdin_fd:
+        Args:
+            paths: Input file paths to read from.
+            file_format_connection: File format connection.
+            connections: One connection per worker process.
+            queue: Queue of worker indices ready to receive another chunk.
+            buffer_size: Number of reads to load per chunk.
+            stdin_fd: Optional stdin file descriptor when reading from a pipe.
 
-        .. note::
-            This expects the paths to the input files as strings because these can be pickled
-            while file-like objects such as BufferedReader cannot. When using multiprocessing with
-            the "spawn" method, which is the default method on macOS, function arguments must be
-            picklable.
+        Note:
+            Input paths are passed as strings because they must be picklable when
+            multiprocessing uses the ``spawn`` start method (default on macOS).
         """
         super().__init__()
         if len(paths) > 2:
@@ -164,9 +163,10 @@ class ReaderProcess(mpctx_Process):
     def send_to_worker(self, chunk_index, chunk1, chunk2=None):
         """Send a chunk of data to a worker.
 
-        :param chunk_index: The index of the chunk.
-        :param chunk1: The first chunk of data.
-        :param chunk2: The second chunk of data (if paired-end data).
+        Args:
+            chunk_index: The index of the chunk.
+            chunk1: The first chunk of data.
+            chunk2: The second chunk of data (if paired-end data).
         """
         worker_index = self.queue.get()
         connection = self.connections[worker_index]
@@ -204,7 +204,18 @@ class WorkerProcess(mpctx_Process):
         need_work_queue: multiprocessing.Queue,
         statistics_class: Type[Statistics] = Statistics,
     ):
-        """Initialize a WorkerProcess."""
+        """Initialize a WorkerProcess.
+
+        Args:
+            id_: Id.
+            pipeline: The pipeline to run.
+            inpaths: The input files.
+            proxy_files: Proxy files.
+            read_pipe: Read pipe.
+            write_pipe: Write pipe.
+            need_work_queue: Need work queue.
+            statistics_class: The class to use for collecting statistics.
+        """
         super().__init__()
         self._id = id_
         self._pipeline = pipeline
@@ -286,8 +297,9 @@ class OrderedChunkWriter:
     def write(self, data: bytes, index: int):
         """Write a chunk of data to the output handler.
 
-        :param data: The data to write.
-        :param index: An integer indicating the order of the data.
+        Args:
+            data: The data to write.
+            index: An integer indicating the order of the data.
         """
         self._chunks[index] = data
         while self._current_index in self._chunks:
@@ -309,10 +321,11 @@ class PipelineRunner(ABC):
     ) -> Statistics:
         """Run a pipeline on this runner.
 
-        :param pipeline: The pipeline to run.
-        :param progress: Use an object that supports .update() and .close() such
-            as DummyProgress, cutadapt.utils.Progress or a tqdm instance.
-        :param outfiles: The output files.
+        Args:
+            pipeline: The pipeline to run.
+            progress: Use an object that supports .update() and .close() such as DummyProgress,
+                cutadapt.utils.Progress or a tqdm instance.
+            outfiles: The output files.
         """
 
     @abstractmethod
@@ -330,7 +343,11 @@ class PipelineRunner(ABC):
         return self
 
     def __exit__(self, *args):
-        """Close the runner."""
+        """Close the runner.
+
+        Args:
+            args: Exception info from the context manager protocol (unused).
+        """
         self.close()
 
 
@@ -384,10 +401,11 @@ class ParallelPipelineRunner(PipelineRunner, typing.Generic[StatisticsClass]):
     ):
         """Initialize a ParallelPipelineRunner.
 
-        :param inpaths: The input files.
-        :param n_workers: The number of worker processes to use.
-        :param buffer_size: The size of the buffer used for reading the input files.
-        :param statistics_class: The class to use for collecting statistics.
+        Args:
+            inpaths: The input files.
+            n_workers: The number of worker processes to use.
+            buffer_size: The size of the buffer used for reading the input files.
+            statistics_class: The class to use for collecting statistics.
         """
         self._n_workers = n_workers
         self._need_work_queue: multiprocessing.Queue = mpctx.Queue()
@@ -443,10 +461,13 @@ class ParallelPipelineRunner(PipelineRunner, typing.Generic[StatisticsClass]):
     def run(self, pipeline, progress, outfiles: OutputFiles) -> StatisticsClass:
         """Run the pipeline on the input files.
 
-        :param pipeline: The pipeline to run.
-        :param progress: A progress object.
-        :param outfiles: The output files.
-        :return: The statistics object.
+        Args:
+            pipeline: The pipeline to run.
+            progress: A progress object.
+            outfiles: The output files.
+
+        Returns:
+            The statistics object.
         """
         workers, connections = self._start_workers(pipeline, outfiles.proxy_files())
         chunk_writers = []
@@ -520,8 +541,9 @@ class SerialPipelineRunner(PipelineRunner):
     ):
         """Initialize a SerialPipelineRunner.
 
-        :param infiles: The input files.
-        :param statistics_class: The class to use for collecting statistics.
+        Args:
+            infiles: The input files.
+            statistics_class: The class to use for collecting statistics.
         """
         self._infiles = infiles
         self._input_file_format = infiles
@@ -532,10 +554,13 @@ class SerialPipelineRunner(PipelineRunner):
     ) -> Statistics:
         """Run the pipeline on the input files.
 
-        :param pipeline: The pipeline to run.
-        :param progress: A progress object.
-        :param outfiles: The output files.
-        :return: The statistics object.
+        Args:
+            pipeline: The pipeline to run.
+            progress: A progress object.
+            outfiles: The output files.
+
+        Returns:
+            The statistics object.
         """
         (n, total1_bp, total2_bp) = pipeline.process_reads(
             self._infiles, progress=progress
@@ -568,10 +593,12 @@ def make_runner(
 
     This uses a SerialPipelineRunner if cores is 1 and a ParallelPipelineRunner otherwise.
 
-    :param inpaths: The input files.
-    :param cores: The number of cores to run the pipeline on (this is actually the number of worker
-                  processes, there will be one extra process for reading the input file(s))
-    :param buffer_size: Forwarded to `ParallelPipelineRunner()`. Ignored if cores is 1.
+    Args:
+        inpaths: The input files.
+        cores: The number of cores to run the pipeline on (this is actually the number of worker
+            processes, there will be one extra process for reading the input file(s))
+        buffer_size: Forwarded to `ParallelPipelineRunner()`. Ignored if cores is 1.
+        statistics_class: The class to use for collecting statistics.
     """
     runner: PipelineRunner
     if cores > 1:

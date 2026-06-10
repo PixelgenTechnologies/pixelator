@@ -51,7 +51,6 @@ class AnnDataHelper:
         Raises:
             ValueError: If sample-level ``var`` tables cannot be aligned during
                 concatenation.
-
         """
         with self._view.open() as session:
             adatas: list[AnnData] = []

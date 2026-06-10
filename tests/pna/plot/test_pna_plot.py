@@ -15,6 +15,7 @@ from pixelator.pna.plot import molecule_rank_plot
     baseline_dir="./snapshots/test_molecule_rank_plot",
 )
 def test_molecule_rank_plot():
+    """Verify molecule rank plot."""
     np.random.seed(0)
     data = pd.DataFrame(
         {

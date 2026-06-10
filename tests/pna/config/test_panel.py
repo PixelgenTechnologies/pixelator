@@ -14,6 +14,7 @@ from pixelator.pna.pixeldataset import read
 
 @pytest.fixture
 def panel_df():
+    """Panel df."""
     data = {
         "marker_id": ["marker1", "marker2", "marker3"],
         "uniprot_id": ["P61769", "P05107", "P15391"],
@@ -27,6 +28,11 @@ def panel_df():
 
 def test_panel_validation(panel_df):
     # all is ok
+    """Verify panel validation.
+
+    Args:
+        panel_df: panel df.
+    """
     metadata = {
         "name": "test_panel",
         "version": "0.0.0",
@@ -52,10 +58,20 @@ def test_panel_validation(panel_df):
 
 
 def test_panel_properties(panel_df):
+    """Verify panel properties.
+
+    Args:
+        panel_df: panel df.
+    """
     panel = PNAAntibodyPanel(df=panel_df, metadata=None)
 
 
 def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
+    """Verify panel validation fails on underscores in marker names.
+
+    Args:
+        panel_df: panel df.
+    """
     panel_df.rename(index={"marker1": "marker_1"}, inplace=True)
 
     with pytest.raises(
@@ -66,6 +82,11 @@ def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
 
 
 def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
+    """Verify panel validation fails on white space in marker names.
+
+    Args:
+        panel_df: panel df.
+    """
     panel_df.rename(index={"marker1": "marker 1"}, inplace=True)
 
     with pytest.raises(
@@ -76,6 +97,11 @@ def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
 
 
 def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
+    """Verify panel validation fails on invalid uniprot ids.
+
+    Args:
+        panel_df: panel df.
+    """
     panel_df.loc["marker1", "uniprot_id"] = "PAAAAA"
 
     with pytest.raises(
@@ -86,16 +112,31 @@ def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
 
 
 def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
+    """Verify panel validation ok on concatenated uniprot ids.
+
+    Args:
+        panel_df: panel df.
+    """
     panel_df.loc["marker1", "uniprot_id"] = "P05107;P15391"
     PNAAntibodyPanel(df=panel_df, metadata=None)
 
 
 def test_panel_validation_ok_uniprotid_empty(panel_df):
+    """Verify panel validation ok uniprotid empty.
+
+    Args:
+        panel_df: panel df.
+    """
     panel_df.loc["marker1", "uniprot_id"] = ""
     PNAAntibodyPanel(df=panel_df, metadata=None)
 
 
 def test_panel_from_pxl(pxl_file):
+    """Verify panel from pxl.
+
+    Args:
+        pxl_file: pxl file.
+    """
     panel = PNAAntibodyPanel.from_pxl_dataset(read(pxl_file))
     assert panel.name == "test-pna-panel"
     assert panel.version == "0.1.0"
@@ -114,6 +155,11 @@ def test_panel_from_pxl(pxl_file):
 
 
 def test_panel_header_trailing_commas_warns_and_recovers(caplog):
+    """Verify panel header trailing commas warns and recovers.
+
+    Args:
+        caplog: caplog.
+    """
     panel_content = """# ---
 # name: test-pna-panel,
 # product: test-product,
@@ -138,6 +184,7 @@ MarkerA,no,ACTTCCTAGG,ACTTCCTAGG
 
 
 def test_panel_header_non_recoverable_yaml_still_fails():
+    """Verify panel header non recoverable yaml still fails."""
     panel_content = """# ---
 # name: test panel
 # aliases: [test-alias

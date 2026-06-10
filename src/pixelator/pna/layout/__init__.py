@@ -35,8 +35,9 @@ class CreateLayout(PerComponentTask):
     ) -> None:
         """Create a new CreateLayout instance.
 
-        :param layout_algorithms: The layout algorithms to run.
-        :param algorithm_kwargs: Additional keyword arguments to pass to the layout algorithms.
+        Args:
+            layout_algorithms: The layout algorithms to run.
+            algorithm_kwargs: Additional keyword arguments to pass to the layout algorithms.
         """
         super().__init__()
         self._layout_algorithms = layout_algorithms
@@ -69,8 +70,11 @@ class CreateLayout(PerComponentTask):
         This only works when the pxl_dataset is set so that components
         are directly accessible through their IDs.
 
-        :param component_id: The id of the component.
-        :return: a LazyFrame containing the layout data.
+        Args:
+            component_id: The id of the component.
+
+        Returns:
+            a LazyFrame containing the layout data.
         """
         edgelist = (
             self.pxl_dataset.filter(components=[component_id])  # type: ignore
@@ -85,9 +89,15 @@ class CreateLayout(PerComponentTask):
     ) -> list[str]:
         """Run the layout on a component.
 
-        :param component: The component graph to run the analysis on.
-        :return: Name of the parquet file containing the layout data.
-        :raises TypeError: If the component is not a Graph or a LazyFrame.
+        Args:
+            component: The component graph to run the analysis on.
+            component_id: The id of the component.
+
+        Returns:
+            Name of the parquet file containing the layout data.
+
+        Raises:
+            TypeError: If the component is not a Graph or a LazyFrame.
         """
         results = []
         for algo in self._layout_algorithms:
@@ -119,9 +129,12 @@ class CreateLayout(PerComponentTask):
     ) -> list[str]:
         """Run the layout on a component.
 
-        :param component: The component to run the analysis on. Either a Graph or a LazyFrame.
-        :param component_id: The id of the component.
-        :return: Name of the parquet file containing the layout data.
+        Args:
+            component: The component to run the analysis on. Either a Graph or a LazyFrame.
+            component_id: The id of the component.
+
+        Returns:
+            Name of the parquet file containing the layout data.
         """
         if isinstance(component, pl.LazyFrame):
             graph = PNAGraph.from_edgelist(component)

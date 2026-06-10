@@ -10,6 +10,7 @@ class WorkflowConfig:
     """Class used to load and query the workflow tests configuration file."""
 
     def __init__(self, config_file: Path):
+        """Initialize the test configuration helper."""
         self.config_file = config_file
         self._config = self._parse(self.config_file)
 
@@ -23,20 +24,27 @@ class WorkflowConfig:
         :class:`PixelatorWorkfklowTest` subclass to the test name in the config file
         by defining the class variable :attr:`test_id` on the subclass.
 
-        :param test_name: name of the test case as given in the config.
-        :returns: the config object for the test case
+        Args:
+            test_name: name of the test case as given in the config.
+
+        Returns:
+            the config object for the test case
         """
         return self._config[test_name]
 
     def keys(self):
+        """Keys."""
         return self._config.keys()
 
     @classmethod
     def _parse(cls, config_file: Path) -> dict[str, Any]:
         """Load and resolve relative paths in the config file.
 
-        :param config_file: path to the config file
-        :return dict[str, Any]: the config object parsed from the `config_file`
+        Args:
+            config_file: path to the config file
+
+        Returns:
+            the config object parsed from the `config_file` (dict[str, Any])
         """
         yaml_loader = yaml.YAML(typ="safe")
         with open(str(config_file), "r") as f:
@@ -52,9 +60,11 @@ class WorkflowConfig:
         All relative paths in the config file are resolved relative to the parent
         directory of the config file.
 
-        :param config_file: path to the config file
-        :param config: the config object parsed from the `config_file`
-        :returns: the config object with relative paths resolved
+        Args:
+            config_file: path to the config file
+            config: the config object parsed from the `config_file`
+        Returns:
+            the config object with relative paths resolved
         """
         for test_id, test_config in config.items():
             panel_file = test_config.get("panel_file")

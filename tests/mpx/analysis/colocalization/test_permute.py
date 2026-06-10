@@ -17,6 +17,7 @@ random_number_generator = default_rng(seed=747)
 
 
 def test_permute():
+    """Verify permute."""
     df = pd.DataFrame(
         random_number_generator.integers(0, 100, size=(200, 4)),
         columns=["marker1", "marker2", "marker3", "marker4"],
@@ -35,6 +36,7 @@ def test_permute():
 
 
 def test_permutations():
+    """Verify permutations."""
     df = pd.DataFrame(
         random_number_generator.integers(0, 100, size=(200, 4)),
         columns=["marker1", "marker2", "marker3", "marker4"],

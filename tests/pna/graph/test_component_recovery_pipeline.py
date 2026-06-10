@@ -1,3 +1,8 @@
+"""Integration tests for the PNA component recovery pipeline.
+
+Copyright © 2025 Pixelgen Technologies AB.
+"""
+
 import random
 import tempfile
 from pathlib import Path
@@ -15,6 +20,7 @@ from pixelator.pna.graph.component_recovery_utils import ConnectedComponentExcep
 
 @pytest.fixture
 def random_graph_path():
+    """Random graph path."""
     random.seed(0)
 
     n_clusters = 10
@@ -105,6 +111,12 @@ def test_find_components_small(
     random_graph_path,
     edge_cycle_verification,
 ):
+    """Verify find components small.
+
+    Args:
+        random_graph_path: random graph path.
+        edge_cycle_verification: edge cycle verification.
+    """
     ground_truth_umi_map = (
         (
             pl.read_parquet(random_graph_path)
@@ -191,6 +203,11 @@ def test_find_components_small(
 
 
 def test_find_no_components(random_graph_path):
+    """Verify find no components.
+
+    Args:
+        random_graph_path: random graph path.
+    """
     staged_refinement_options = StagedRefinementOptions(
         initial_stage_options=RefinementOptions(
             leiden_resolution=1.0,
@@ -218,6 +235,11 @@ def test_find_no_components(random_graph_path):
 
 
 def test_find_components_prunes_small_clusters_leaving_one_large(random_graph_path):
+    """Verify find components prunes small clusters leaving one large.
+
+    Args:
+        random_graph_path: random graph path.
+    """
     staged_refinement_options = StagedRefinementOptions(
         initial_stage_options=RefinementOptions(
             leiden_resolution=1.0,
@@ -248,6 +270,7 @@ def test_find_components_prunes_small_clusters_leaving_one_large(random_graph_pa
 
 
 def test_find_components_empty_parquet_file():
+    """Verify find components empty parquet file."""
     staged_refinement_options = StagedRefinementOptions(
         initial_stage_options=RefinementOptions(
             leiden_resolution=1.0,
@@ -292,6 +315,13 @@ def test_find_components_big(
     testdata_0pc_crossing_parquet,
     edge_cycle_verification,
 ):
+    """Verify find components big.
+
+    Args:
+        testdata_3pc_crossing_parquet: testdata 3pc crossing parquet.
+        testdata_0pc_crossing_parquet: testdata 0pc crossing parquet.
+        edge_cycle_verification: edge cycle verification.
+    """
     ground_truth_umi_map = (
         pl.read_parquet(testdata_0pc_crossing_parquet)
         .group_by("component")

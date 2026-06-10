@@ -1,10 +1,13 @@
 """Cycle analysis and edge filtering based on cycle participation.
 
-In a graph, edges that do not participate in any cycles can be indicative of noise or erroneous connections.
+In a graph, edges that do not participate in any cycles can be indicative of noise or erroneous
+connections.
 Given that an edge indicates spatial proximity between two markers, we expect that true connections
 should often be part of cycles formed by other nearby markers. Edges that are not part of any cycles
-are more likely to be spurious and can be removed to improve the quality of the graph. To prevent removing
-edges in sparse regions, we only evaluate edges that connect nodes in core-2 or higher layers of the graph.
+are more likely to be spurious and can be removed to improve the quality of the graph. To prevent
+removing
+edges in sparse regions, we only evaluate edges that connect nodes in core-2 or higher layers of the
+graph.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
@@ -300,8 +303,8 @@ def remove_no_cycle_edges(
 
     Returns:
         Total number of edges removed, the distribution of cycle lengths for remaining edges,
-        and the path to the written output (hive-style Parquet under ``working_edgelist_with_cycle_verification``).
-
+        and the path to the written output (hive-style Parquet under
+        ``working_edgelist_with_cycle_verification``).
     """
     output_path = working_dir / "working_edgelist_with_cycle_verification"
     logger.info("Starting removal of no-cycle edges")

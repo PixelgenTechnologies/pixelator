@@ -48,10 +48,10 @@ def pna_edgelist_to_anndata(
     Parameters
     ----------
     pixel_connection : duckdb.DuckDBPyConnection
-        A DuckDB connection to a pixel file. The connection must contain an 'edgelist' table
-        with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
+    A DuckDB connection to a pixel file. The connection must contain an 'edgelist' table
+    with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
     panel : PNAAntibodyPanel
-        The antibody panel object containing marker metadata.
+    The antibody panel object containing marker metadata.
 
     Returns
     -------
@@ -140,9 +140,13 @@ def pna_edgelist_to_anndata(
             WHERE component IN ({placeholders})
             GROUP BY component
         """
-        for comp, n_umi1_val, n_umi2_val, n_edges_val, reads_val in (
-            pixel_connection.execute(per_component_metrics_sql, batch).fetchall()
-        ):
+        for (
+            comp,
+            n_umi1_val,
+            n_umi2_val,
+            n_edges_val,
+            reads_val,
+        ) in pixel_connection.execute(per_component_metrics_sql, batch).fetchall():
             i = component_to_idx[comp]
             n_umi1_arr[i] = n_umi1_val
             n_umi2_arr[i] = n_umi2_val

@@ -48,7 +48,6 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
 
         Raises:
             packaging.version.InvalidVersion: If the value is not a valid version.
-
         """
         Version(v)  # will raise if not a valid version string
         return v
@@ -135,14 +134,16 @@ class AntibodyPanel:
     ) -> None:
         """Load a panel from a dataframe and metadata.
 
-        :param df: The dataframe containing the panel information.
-        :param metadata: The metadata for the panel.
-        :param file_name: The optional basename of the file from which
-            the panel is loaded.
+        Args:
+            df: The dataframe containing the panel information.
+            metadata: The metadata for the panel.
+            file_name: The optional basename of the file from which the panel is loaded.
 
-        :returns: None
-        :raises AssertionError: exception if panel file is missing,
-                                invalid or with incorrect format
+        Returns:
+            None
+
+        Raises:
+            AssertionError: exception if panel file is missing, invalid or with incorrect format
         """
         self._filename = file_name
         self._metadata = metadata
@@ -160,10 +161,14 @@ class AntibodyPanel:
     def from_csv(cls, filename: PathType) -> "AntibodyPanel":
         """Create an AntibodyPanel from a csv panel file.
 
-        :param filename: The path to the panel file.
-        :returns: The AntibodyPanel object.
-        :raises AssertionError: exception if panel file is missing,
-        :rtype: AntibodyPanel
+        Args:
+            filename: The path to the panel file.
+
+        Returns:
+            The AntibodyPanel object. (AntibodyPanel)
+
+        Raises:
+            AssertionError: exception if panel file is missing,
         """
         panel_file = Path(filename)
 
@@ -223,7 +228,6 @@ class AntibodyPanel:
 
         Returns:
             A list of validation error messages. An empty list means valid input.
-
         """
         errors = []
 
@@ -268,8 +272,11 @@ class AntibodyPanel:
     def _transform_legacy_panels(cls, df: pd.DataFrame) -> pd.DataFrame:
         """Transform legacy panels to the new format.
 
-        :param df: DataFrame with data of the panel to validate
-        :returns pd.DataFrame: The in-place modified input dataframe
+        Args:
+            df: DataFrame with data of the panel to validate
+
+        Returns:
+            The in-place modified input dataframe (pd.DataFrame)
         """
         # update control and nuclear column to boolean
         TR_TABLE = {"(?i)yes": "True", "(?i)no": "False"}
@@ -303,7 +310,6 @@ class AntibodyPanel:
 
         Raises:
             ValueError: If no metadata header is present in the file.
-
         """
         return parse_panel_header_metadata(file)
 
@@ -340,12 +346,12 @@ class AntibodyPanel:
 def load_antibody_panel(config: Config, panel: PathType) -> AntibodyPanel:
     """Load an antibody panel from a file or from the config file.
 
-    :param config: the config object
-    :param panel: the path to the panel file or the name of the
-        panel in the config file
+    Args:
+        config: the config object
+        panel: the path to the panel file or the name of the panel in the config file
 
-    :returns: the antibody panel
-    :rtype: AntibodyPanel
+    Returns:
+        the antibody panel (AntibodyPanel)
     """
     panel_str = str(panel)
     panel_from_config = config.get_panel(panel_str)

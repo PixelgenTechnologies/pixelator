@@ -36,7 +36,14 @@ def populate_component_stats_from_hybrid_detection(
     post_flp_stats: PyGraphProperties,
     post_recovery_stats: PyGraphProperties,
 ) -> None:
-    """Fill graph statistics from hybrid (FLP + Leiden) community-detection outputs."""
+    """Fill graph statistics from hybrid (FLP + Leiden) community-detection outputs.
+
+    Args:
+        component_stats: Statistics object to update with filtering information.
+        pre_recovery_stats: Pre recovery stats.
+        post_flp_stats: Post flp stats.
+        post_recovery_stats: Post recovery stats.
+    """
     component_stats.component_count_pre_recovery = (
         pre_recovery_stats.n_connected_components
     )
@@ -80,7 +87,6 @@ def name_components_with_umi_hashes(edgelist: pl.LazyFrame) -> pl.LazyFrame:
 
     Returns:
         The edgelist with ``component`` rewritten to UMI-derived hash strings.
-
     """
     comp_umis = (
         edgelist.group_by("component")
@@ -148,19 +154,17 @@ def get_count_statistics(edgelist_path: Path) -> dict:
     """Get count statistics from an edgelist Parquet file.
 
     This function reads an edgelist stored in a Parquet file and computes the total number of edges,
-    as well as the total number of distinct UMIs present in the edgelist. It returns these statistics
+    as well as the total number of distinct UMIs present in the edgelist. It returns these
+    statistics
     in a dictionary.
 
     Args:
-        edgelist_path (str): Path to the input Parquet file containing the edgelist.
+        edgelist_path: Path to the input Parquet file containing the edgelist.
 
     Returns:
-        dict: A dictionary containing the following keys:
-            - 'n_edges': Total number of edges in the edgelist.
-            - 'n_umi': Total number of distinct UMIs in the edgelist.
-            - 'n_reads': Total number of reads in the edgelist.
-            - 'n_molecules': Total number of molecules in the edgelist.
-
+        dict: A dictionary containing the following keys: - 'n_edges': Total number of edges in the
+        edgelist. - 'n_umi': Total number of distinct UMIs in the edgelist. - 'n_reads': Total
+        number of reads in the edgelist. - 'n_molecules': Total number of molecules in the edgelist.
     """
     with duckdb.connect() as con:
         con.execute(
@@ -204,12 +208,11 @@ def write_hive_partitioned_edgelist_without_small_components(
     Args:
         input_edgelist_path: Parquet file with component assignments (e.g. after hybrid detection).
         min_component_size_to_prune: Components with a score strictly below this are dropped.
-        working_dir: Directory for a temporary DuckDB file and the hive-partition output.
-            Defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+        working_dir: Directory for a temporary DuckDB file and the hive-partition output. Defaults
+            to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     Returns:
         Path to the hive-partitioned output and a frame of discarded ``component`` / ``n_umi``.
-
     """
     hive_partitioned_edgelist_path = working_dir / "hive_partitioned_edgelist.parquet"
     min_sz = int(min_component_size_to_prune)
@@ -257,13 +260,12 @@ def find_clashing_umis(
     3. Are present in both `umi1` and `umi2`.
 
     Args:
-        input_file (Path): Path to the input Parquet file containing the edgelist.
-        component_stats (GraphStatistics): Statistics object to update with clash information.
+        input_file: Path to the input Parquet file containing the edgelist.
+        component_stats: Statistics object to update with clash information.
 
     Returns:
         (pl.Series, GraphStatistics): A tuple containing a Polars Series of clashing UMIs
         and the updated component statistics.
-
     """
     with duckdb.connect() as con:
         con.execute(
@@ -315,7 +317,6 @@ def remove_umis(
 
     Returns:
         Path to the written Parquet file (``no_clash_edgelist.parquet`` in ``working_dir``).
-
     """
     target_path = working_dir / "no_clash_edgelist.parquet"
     with duckdb.connect() as con:
@@ -353,7 +354,6 @@ def remove_clashing_umis(
 
     Returns:
         Path to the filtered edgelist and updated component statistics.
-
     """
     umis_to_remove, updated_stats = find_clashing_umis(
         input_file=input_edgelist_path, component_stats=component_stats
@@ -382,12 +382,11 @@ def create_working_edgelist(
 
     Args:
         input_edgelist_path: Path to the input edgelist in Parquet format.
-        working_dir: Directory for ``node_map.parquet`` and ``working_edgelist.parquet``;
-            defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+        working_dir: Directory for ``node_map.parquet`` and ``working_edgelist.parquet``; defaults
+            to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     Returns:
         ``(working_edgelist_path, node_map_path)``.
-
     """
     node_map_path = working_dir / "node_map.parquet"
     working_edgelist_path = working_dir / "working_edgelist.parquet"
@@ -452,7 +451,6 @@ def filter_edgelist_by_read_count(
 
     Returns:
         Path to the filtered edgelist and updated graph statistics.
-
     """
     filtered_edgelist_path = working_dir / "filtered_edgelist.parquet"
     with duckdb.connect() as con:
@@ -494,7 +492,6 @@ def save_new_working_edgelist(
     Returns:
         Path to the updated edgelist and a dict with ``n_crossing_edges`` and
         ``n_remaining_edges``.
-
     """
     output_path = working_dir / "working_edgelist_with_new_assignments.parquet"
     w = str(input_working_edgelist_path)
@@ -543,7 +540,18 @@ def save_new_working_edgelist(
 def create_component_size_data_frame(
     input_edgelist_path: Path,
 ) -> pl.DataFrame:
-    """Find component sizes from a parquet edgelist."""
+    """Find component sizes from a parquet edgelist.
+
+    Add pre-filtering connected component size statistics to the component stats.
+
+    Args:
+        input_edgelist_path: Path to the input parquet edgelist with ``component``, ``umi1``, and
+        ``umi2`` columns.
+
+    Returns:
+        A Polars DataFrame with columns ``component`` and ``n_umi``, where ``n_umi`` is the count
+        of distinct UMIs in that component (counting both ``umi1`` and ``umi2``).
+    """
     with duckdb.connect() as con:
         component_sizes = con.execute(f"""
             SELECT
@@ -568,26 +576,29 @@ def filter_connected_components_by_size(
 ) -> tuple[Path, GraphStatistics]:
     """Filter connected components by size and get statistics.
 
-    This function filters connected components in an edgelist based on their sizes. It computes the sizes of each component,
-    applies size thresholds (either dynamic or hard thresholds), and filters out components that do not meet the criteria.
+    This function filters connected components in an edgelist based on their sizes. It computes the
+    sizes of each component,
+    applies size thresholds (either dynamic or hard thresholds), and filters out components that do
+    not meet the criteria.
     It also updates the component statistics with information about the filtering process.
 
     Args:
-        input_edgelist_path (Path): Path to the input parquet edgelist.
-        component_size_threshold (bool | tuple[int, int]): Size threshold for filtering components.
-            If True, dynamic thresholds are used. If False, no filtering is applied.
-            If a tuple, it specifies (min_size, max_size) for hard thresholds.
-        discard_sizes (pl.DataFrame): DataFrame containing sizes of discarded components.
-        component_stats (GraphStatistics): Statistics object to update with filtering information.
-        dynamic_lowest_passable_bound (int, optional): Lowest passable bound for dynamic thresholding. Defaults to None.
-        working_dir (Path): Directory for temporary parquet output.
+        input_edgelist_path: Path to the input parquet edgelist.
+        component_size_threshold: Size threshold for filtering components. If True, dynamic
+            thresholds are used. If False, no filtering is applied. If a tuple, it specifies
+            (min_size, max_size) for hard thresholds.
+        discard_sizes: DataFrame containing sizes of discarded components.
+        component_stats: Statistics object to update with filtering information.
+        dynamic_lowest_passable_bound: Lowest passable bound for dynamic thresholding. Defaults to
+            None.
+        working_dir: Directory for temporary parquet output.
 
     Returns:
-        tuple[Path, GraphStatistics]: Path to the filtered parquet edgelist and updated component statistics.
+        tuple[Path, GraphStatistics]: Path to the filtered parquet edgelist and updated component
+        statistics.
 
     Raises:
         ConnectedComponentException: If no components remain after filtering.
-
     """
     component_sizes = create_component_size_data_frame(input_edgelist_path)
     component_sizes = pl.concat([component_sizes, discard_sizes], how="vertical")
@@ -672,8 +683,12 @@ def filter_components_by_size_dynamic(
 ) -> tuple[pl.Series, int | None]:
     """Filter components by size using dynamic thresholds.
 
-    :param component_sizes: DataFrame with columns `component` and `n_umi`.
-    :returns: Components that pass the filter, and the computed lower bound.
+    Args:
+        component_sizes: DataFrame with columns `component` and `n_umi`.
+        lowest_passable_bound: Lowest passable bound.
+
+    Returns:
+        Components that pass the filter, and the computed lower bound.
     """
     if lowest_passable_bound is None:
         lowest_passable_bound = MIN_PNA_COMPONENT_SIZE
@@ -700,10 +715,13 @@ def filter_components_by_size_hard_thresholds(
 ) -> pl.Series:
     """Filter components by size using hard thresholds.
 
-    :param component_sizes: DataFrame with columns `component` and `n_umi`.
-    :param lower_bound: The lower bound for the component size.
-    :param higher_bound: The higher bound for the component size.
-    :returns: The `component` column for components that pass the filter.
+    Args:
+        component_sizes: DataFrame with columns `component` and `n_umi`.
+        lower_bound: The lower bound for the component size.
+        higher_bound: The higher bound for the component size.
+
+    Returns:
+        The `component` column for components that pass the filter.
     """
     if lower_bound is None:
         lower_bound = 0

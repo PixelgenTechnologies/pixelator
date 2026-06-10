@@ -23,11 +23,17 @@ def a_plugin():
 
 
 def a_config_plugin(current_config: Config) -> Config:
+    """A config plugin.
+
+    Args:
+        current_config: Current config.
+    """
     current_config.test_attr = True  # type: ignore[attr-defined]
     return current_config
 
 
 def test_that_cli_plugins_are_loaded_in_main():
+    """Verify that cli plugins are loaded in main."""
     with mock.patch(
         "pixelator.mpx.cli.plugin.fetch_cli_plugins",
         return_value=[
@@ -43,6 +49,7 @@ def test_that_cli_plugins_are_loaded_in_main():
 
 
 def test_that_config_plugins_are_loaded_in_main():
+    """Verify that config plugins are loaded in main."""
     with mock.patch(
         "pixelator.mpx.config.plugin.fetch_config_plugins",
         return_value=[
@@ -58,10 +65,13 @@ def test_that_config_plugins_are_loaded_in_main():
 
 
 class MockEntryPoints:
+    """Represent mock entry points."""
+
     pass
 
 
 def test_fetch_cli_plugins():
+    """Verify fetch cli plugins."""
     mock_entrypoints = MockEntryPoints()
     mock_entrypoints.select = mock.MagicMock(
         return_value=[
@@ -80,6 +90,7 @@ def test_fetch_cli_plugins():
 
 
 def test_fetch_config_plugins():
+    """Verify fetch config plugins."""
     mock_entrypoints = MockEntryPoints()
     mock_entrypoints.select = mock.MagicMock(
         return_value=[

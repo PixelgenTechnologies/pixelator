@@ -34,7 +34,11 @@ np.random.seed(42)
 
 
 def test_antibody_metrics(full_graph_edgelist: pd.DataFrame):
-    """test_antibody_metrics."""
+    """test_antibody_metrics.
+
+    Args:
+        full_graph_edgelist: Full graph edgelist.
+    """
     assert_frame_equal(
         antibody_metrics(edgelist=full_graph_edgelist),
         pd.DataFrame(
@@ -52,7 +56,11 @@ def test_antibody_metrics(full_graph_edgelist: pd.DataFrame):
 
 
 def test_antibody_counts(full_graph_edgelist: pd.DataFrame):
-    """test_antibody_counts."""
+    """test_antibody_counts.
+
+    Args:
+        full_graph_edgelist: Full graph edgelist.
+    """
     counts = component_antibody_counts(edgelist=full_graph_edgelist)
     assert_array_equal(
         counts.to_numpy(),
@@ -62,7 +70,12 @@ def test_antibody_counts(full_graph_edgelist: pd.DataFrame):
 
 
 def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
-    """test_adata_creation."""
+    """test_adata_creation.
+
+    Args:
+        edgelist: Edgelist.
+        panel: Panel.
+    """
     adata = edgelist_to_anndata(edgelist=edgelist, panel=panel)
     assert adata.n_vars == panel.size
     assert adata.n_obs == edgelist["component"].nunique()
@@ -101,7 +114,11 @@ def test_adata_creation(edgelist: pd.DataFrame, panel: AntibodyPanel):
 
 
 def test_read_write_anndata(adata: AnnData):
-    """test_read_write_anndata."""
+    """test_read_write_anndata.
+
+    Args:
+        adata: Adata.
+    """
     with TemporaryDirectory() as tmp_dir:
         output_path = Path(tmp_dir) / "example.h5ad"
         write_anndata(adata, output_path)
@@ -123,7 +140,13 @@ def test_read_write_anndata(adata: AnnData):
 def test_edgelist_to_anndata_missing_markers(
     panel: AntibodyPanel, edgelist: pd.DataFrame, caplog
 ):
-    """test_edgelist_to_anndata_missing_markers."""
+    """test_edgelist_to_anndata_missing_markers.
+
+    Args:
+        panel: Panel.
+        edgelist: Edgelist.
+        caplog: Caplog.
+    """
     with caplog.at_level(logging.WARN):
         edgelist_to_anndata(edgelist, panel)
 
@@ -133,7 +156,13 @@ def test_edgelist_to_anndata_missing_markers(
 def test_edgelist_to_anndata(
     adata: AnnData, panel: AntibodyPanel, edgelist: pd.DataFrame
 ):
-    """test_edgelist_to_anndata."""
+    """test_edgelist_to_anndata.
+
+    Args:
+        adata: Adata.
+        panel: Panel.
+        edgelist: Edgelist.
+    """
     antibodies = panel.markers
     counts_df = component_antibody_counts(edgelist=edgelist)
     counts_df = counts_df.reindex(columns=antibodies, fill_value=0)

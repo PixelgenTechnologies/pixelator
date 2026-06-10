@@ -28,7 +28,6 @@ class ArrayDescriptor:
     Attributes:
         shape: The shape of the array.
         dtype: The data type of the array.
-
     """
 
     shape: tuple[int] | tuple[int, int]
@@ -38,9 +37,11 @@ class ArrayDescriptor:
 class SharedMemoryRegistry:
     """Helper class that wraps a shared memory manager but registers all allocations by name.
 
-    The registry can be used to allocate shared memory buffers and numpy arrays backed by shared memory.
+    The registry can be used to allocate shared memory buffers and numpy arrays backed by shared
+    memory.
     The buffers and arrays can be retrieved by name from the registry.
-    Only the shared memory buffers are stored in the registry, the numpy arrays are recreated from the
+    Only the shared memory buffers are stored in the registry, the numpy arrays are recreated from
+    the
     shared memory buffers when requested.
 
     This makes recreating the numpy arrays from the SharedMemory objects across processes easier.
@@ -92,7 +93,6 @@ class SharedMemoryRegistry:
 
         Returns:
             A SharedMemory object representing the allocated buffer.
-
         """
         buffer = self._manager.SharedMemory(n_bytes)
 
@@ -122,7 +122,6 @@ class SharedMemoryRegistry:
 
         Returns:
             A numpy array backed by shared memory.
-
         """
         assert 1 <= len(shape) <= 2
 
@@ -144,7 +143,6 @@ class SharedMemoryRegistry:
 
         Args:
             name: The name of the buffer
-
         """
         return self._buffer_registry.get(name)
 
@@ -155,7 +153,6 @@ class SharedMemoryRegistry:
 
         Args:
             name: The name of the array
-
         """
         desc = self._array_registry.get(name)
         shm = self.get_buffer(name)
@@ -173,7 +170,6 @@ class SharedMemoryRegistry:
 
         Args:
             name: The name of the buffer
-
         """
         buffer = self._buffer_registry.pop(name, None)
         self._array_registry.pop(name, None)
@@ -184,7 +180,8 @@ class SharedMemoryRegistry:
 class ReadOnlySharedMemoryRegistry:
     """Read-only view of a SharedMemoryRegistry.
 
-    This class allows to create a read-only view of a SharedMemoryRegistry that can be passed to other processes.
+    This class allows to create a read-only view of a SharedMemoryRegistry that can be passed to
+    other processes.
     The view can be used to access shared memory buffers and numpy arrays backed by shared memory.
     """
 
@@ -193,7 +190,6 @@ class ReadOnlySharedMemoryRegistry:
 
         Args:
             registry: The SharedMemoryRegistry to create a read-only view of.
-
         """
         self._buffer_registry = registry._buffer_registry.copy()
         self._array_registry = registry._array_registry.copy()
@@ -206,7 +202,6 @@ class ReadOnlySharedMemoryRegistry:
 
         Returns:
             The shared memory buffer or None if no buffer with the given name is found.
-
         """
         return self._buffer_registry.get(name)
 
@@ -220,7 +215,6 @@ class ReadOnlySharedMemoryRegistry:
 
         Returns:
             The numpy array backed by shared memory.
-
         """
         desc = self._array_registry.get(name)
         shm = self.get_buffer(name)

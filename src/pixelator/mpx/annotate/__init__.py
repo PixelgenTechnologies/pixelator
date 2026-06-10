@@ -90,19 +90,22 @@ def annotate_components(
     - a dataframe with the components metrics before filtering (csv)
     - a PixelDataset with the filtered AnnData and edge list (zip)
 
-    :param input: the path to the edge list dataframe (parquet)
-    :param panel: the AntibodyPanel of the panel used to generate the data
-    :param output: the path to the output folder
-    :param output_prefix: the prefix to prepend to the files (sample name)
-    :param metrics_file: the path to a JSON file to write metrics
-    :param min_size: the minimum size a component must have
-    :param max_size: the maximum size a component must have
-    :param dynamic_filter: use a rank based approach to define the min and or max size
-    :param aggregate_calling: activate aggregate calling
-    :param verbose: run if verbose mode when true
-    :returns: None
-    :rtype: None
-    :raises: RuntimeError if max_size is smaller than min_size
+    Args:
+        input: the path to the edge list dataframe (parquet)
+        panel: the AntibodyPanel of the panel used to generate the data
+        output: the path to the output folder
+        output_prefix: the prefix to prepend to the files (sample name)
+        metrics_file: the path to a JSON file to write metrics
+        min_size: the minimum size a component must have
+        max_size: the maximum size a component must have
+        dynamic_filter: use a rank based approach to define the min and or max size
+        aggregate_calling: activate aggregate calling
+        verbose: run if verbose mode when true
+    Returns:
+        None (None)
+
+    Raises:
+        RuntimeError if max_size is smaller than min_size
     """
     logger.debug("Parsing edge list %s", input)
 
@@ -241,7 +244,14 @@ def annotate_components(
 def _cluster_components_using_leiden(
     adata: AnnData, resolution: float = 1.0, random_seed: Optional[int] = None
 ) -> None:
-    """Carry out a leiden clustering on the components."""
+    """Carry out a leiden clustering on the components.
+
+    Args:
+        adata: AnnData object to do the clustering on
+        resolution: Resolution.
+        random_seed: If set this seed will be used to seed the random number generators used when
+            calculating neighbors, building the umap and for the leiden clustering.
+    """
     # It should be ok to run this over all vs all even on a dense matrix
     # since it shouldn't apply to more than a few thousande components.
     connections = adata.obsp["connectivities"]
@@ -286,15 +296,18 @@ def cluster_components(
     A new column called `X_umap` will be added to `obsm` containing the
     coordinates of the UMAP manifold.
 
-    :param adata: AnnData object to do the clustering on
-    :param obsmkey: Key to access the values `obsm` layer of `adata`
-    :param inplace: If `True` performs the operation inplace on `adata`
-    :param random_seed: If set this seed will be used to seed the random number
-                        generators used when calculating neighbors, building the umap
-                        and for the leiden clustering.
-    :returns: a new Anndata object if `inplace` is `True` or None
-    :rtype: Optional[AnnData]
-    :raises: AssertionError if `obsmkey` is missing
+    Args:
+        adata: AnnData object to do the clustering on
+        obsmkey: Key to access the values `obsm` layer of `adata`
+        inplace: If `True` performs the operation inplace on `adata`
+        random_seed: If set this seed will be used to seed the random number generators used when
+            calculating neighbors, building the umap and for the leiden clustering.
+
+    Returns:
+        a new Anndata object if `inplace` is `True` or None (Optional[AnnData])
+
+    Raises:
+        AssertionError if `obsmkey` is missing
     """
     # Import here as it is a slow import
     import scanpy as sc
@@ -355,8 +368,10 @@ class AnnotateAnndataStatistics(typing.TypedDict):
 def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
     """Collect metrics from an AnnData object.
 
-    :param adata: the AnnData object
-    :returns: a dictionary of different metrics
+    Args:
+        adata: the AnnData object
+    Returns:
+        a dictionary of different metrics
     """
     molecule_count = adata.obs["molecules"].sum()
     read_count = adata.obs["reads"].sum()

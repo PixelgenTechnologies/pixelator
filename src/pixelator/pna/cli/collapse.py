@@ -38,10 +38,12 @@ logger = logging.getLogger("collapse")
 def validate_mismatches(ctx, param, value):
     """Validate the --mismatches commandline option.
 
-    :param ctx: The click context
-    :param param: The click parameter name
-    :param value: The click value
-    :returns: The validated value
+    Args:
+        ctx: The click context
+        param: The click parameter name
+        value: The click value
+    Returns:
+        The validated value
     """
     try:
         value = int(value)
@@ -107,7 +109,18 @@ def collapse(
     algorithm,
     threads,
 ):
-    """Collapse Molecular Pixelation data (FASTQ) to remove duplicates and perform error correction."""  # noqa
+    """Collapse Molecular Pixelation data (FASTQ) to remove duplicates and perform error correction.
+
+    Args:
+        ctx: Click context from the command decorator.
+        input_files: The UM1 and UMI2 demuxed files.
+        design: The design to load from the configuration file.
+        panel: The panel configuration.
+        output: The path where the results will be placed (it is created if it does not exist).
+        mismatches: The number of mismatches allowed when error-correcting.
+        algorithm: The collapse strategy to use.
+        threads: The number of threads to use.
+    """
     # log input parameters
     log_step_start(
         "collapse",
@@ -166,7 +179,6 @@ def process_paired_input(
         threads: The number of threads to use.
         assay: The assay configuration.
         collapse_output: The output filename for the collapsed data.
-
     """
     if len(input_files) == 1:
         logger.info("Detected single input file.")
@@ -255,7 +267,6 @@ def process_independent_files(
 
     Returns:
         A tuple with umi1 and umi2 output file paths
-
     """
     umi1_outputs = []
     umi2_outputs = []
