@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Switch sample calling evaluation metric to hash enrichment factor instead of hash purity.
 
+### Fixed
+- Always route DuckDB spill files to a local temp directory (`PIXELATOR_DUCKDB_TEMP_DIR` or `/tmp`)
+  instead of next to the `.pxl` database file. This prevents `denoise`, component filtering and other
+  commands from spilling onto networked filesystems (e.g. to S3 when running the pipeline in the cloud)
+  where the `.pxl` may live.
+
 ## [0.28.0] - 2026-06-03
 
 ### Added

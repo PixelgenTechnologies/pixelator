@@ -108,7 +108,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-import duckdb
+from pixelator.common.duckdb_utils import connect_duckdb
 
 from .inplace_pixel_data_filterer import InplacePixelDataFilterer
 from .pixel_data_viewer import PixelDataViewer, PixelDataViewerSession
@@ -150,5 +150,5 @@ def copy_databases(src_db: Path, target_db: Path) -> None:
     COPY FROM DATABASE src TO target;
     """
 
-    with duckdb.connect() as connection:
+    with connect_duckdb() as connection:
         connection.execute(query)

@@ -5,14 +5,16 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 import atexit
 import multiprocessing
-import os
 import sys
-from pathlib import Path
 
 import click
 import yappi
 
 from pixelator import __version__
+from pixelator.common.duckdb_utils import (
+    get_duckdb_max_temp_dir_size_from_env,
+    get_duckdb_temp_dir_from_env,
+)
 from pixelator.common.utils import click_echo
 from pixelator.mpx.cli.adapterqc import adapterqc
 from pixelator.mpx.cli.amplicon import amplicon
@@ -96,13 +98,13 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     ctx.obj["CORES"] = max(1, cores)
 
     # Read in environment variables
-    duckdb_temp_dir = os.environ.get("PIXELATOR_DUCKDB_TEMP_DIR")
+    duckdb_temp_dir = get_duckdb_temp_dir_from_env()
     if duckdb_temp_dir:
-        ctx.obj["DUCKDB_TEMP_DIR"] = Path(duckdb_temp_dir)
+        ctx.obj["DUCKDB_TEMP_DIR"] = duckdb_temp_dir
 
-    duckdb_tmp_dir_size = os.environ.get("PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE")
+    duckdb_tmp_dir_size = get_duckdb_max_temp_dir_size_from_env()
     if duckdb_tmp_dir_size:
-        ctx.obj["DUCKDB_MAX_TEMP_DIR_SIZE"] = duckdb_tmp_dir_size.strip()
+        ctx.obj["DUCKDB_MAX_TEMP_DIR_SIZE"] = duckdb_tmp_dir_size
 
     return 0
 

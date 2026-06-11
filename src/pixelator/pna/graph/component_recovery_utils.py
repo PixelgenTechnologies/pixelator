@@ -12,13 +12,13 @@ import logging
 import typing
 from pathlib import Path
 
-import duckdb
 import numpy as np
 import polars as pl
 import xxhash
 from pixelator_core import PyGraphProperties
 
 from pixelator.common.annotate.cell_calling import find_component_size_limits
+from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.pna.graph.constants import DEFAULT_WORKING_DIR, MIN_PNA_COMPONENT_SIZE
 from pixelator.pna.graph.report import GraphStatistics
@@ -106,7 +106,7 @@ def name_components_with_umi_hashes_from_parquet(
 ) -> Path:
     """Rewrite component ids to deterministic UMI-based hashes and write parquet."""
     output_path = working_dir / "edgelist_with_hashed_components.parquet"
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         component_rows = con.execute(f"""
             SELECT
                 component,
@@ -166,7 +166,7 @@ def get_count_statistics(edgelist_path: Path) -> dict:
         edgelist. - 'n_umi': Total number of distinct UMIs in the edgelist. - 'n_reads': Total
         number of reads in the edgelist. - 'n_molecules': Total number of molecules in the edgelist.
     """
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         con.execute(
             f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(edgelist_path)}')"
         )
@@ -217,7 +217,7 @@ def write_hive_partitioned_edgelist_without_small_components(
     hive_partitioned_edgelist_path = working_dir / "hive_partitioned_edgelist.parquet"
     min_sz = int(min_component_size_to_prune)
     logger.debug("Filtering out small components from edge list")
-    with duckdb.connect(working_dir / "temp_hivepartition.duckdb") as conn:
+    with connect_duckdb(working_dir / "temp_hivepartition.duckdb") as conn:
         conn.execute(f"""
             CREATE TEMP TABLE component_counts AS
                 SELECT
@@ -267,7 +267,7 @@ def find_clashing_umis(
         (pl.Series, GraphStatistics): A tuple containing a Polars Series of clashing UMIs
         and the updated component statistics.
     """
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         con.execute(
             f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(input_file)}')"
         )
@@ -319,7 +319,7 @@ def remove_umis(
         Path to the written Parquet file (``no_clash_edgelist.parquet`` in ``working_dir``).
     """
     target_path = working_dir / "no_clash_edgelist.parquet"
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         con.execute(
             f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
         )
@@ -390,7 +390,7 @@ def create_working_edgelist(
     """
     node_map_path = working_dir / "node_map.parquet"
     working_edgelist_path = working_dir / "working_edgelist.parquet"
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         con.execute(
             f"CREATE VIEW input_edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
         )
@@ -453,7 +453,7 @@ def filter_edgelist_by_read_count(
         Path to the filtered edgelist and updated graph statistics.
     """
     filtered_edgelist_path = working_dir / "filtered_edgelist.parquet"
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         con.execute(
             f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
         )
@@ -496,7 +496,7 @@ def save_new_working_edgelist(
     output_path = working_dir / "working_edgelist_with_new_assignments.parquet"
     w = str(input_working_edgelist_path)
     a = str(new_assignments_path)
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         c1 = component_column_name + "_1"
         c2 = component_column_name + "_2"
         con.execute(f"""
@@ -552,7 +552,7 @@ def create_component_size_data_frame(
         A Polars DataFrame with columns ``component`` and ``n_umi``, where ``n_umi`` is the count
         of distinct UMIs in that component (counting both ``umi1`` and ``umi2``).
     """
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         component_sizes = con.execute(f"""
             SELECT
                 component,
@@ -660,7 +660,7 @@ def filter_connected_components_by_size(
     )
 
     filtered_edgelist_path = working_dir / "component_size_filtered_edgelist.parquet"
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         con.register(
             "passing_components",
             passing_components.to_frame().to_arrow(),

@@ -11,13 +11,13 @@ from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 
-import duckdb
 import networkx as nx
 import pandas as pd
 import polars as pl
 from graspologic_native import leiden
 from pixelator_core import run_hybrid_community_detection
 
+from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.common.utils import get_process_pool_executor
 from pixelator.pna.cli.common import logger
 from pixelator.pna.graph.component_recovery_utils import (
@@ -90,7 +90,7 @@ def map_working_to_original_umi_names(
 ) -> Path:
     """Replace working UMI names in an edgelist with original names and write parquet."""
     output_path = working_dir / "edgelist_with_original_umis.parquet"
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         missing_count_row = con.execute(f"""
             SELECT COUNT(*) AS n_missing
             FROM parquet_scan('{str(input_edgelist_path)}') e
@@ -254,7 +254,7 @@ def refine_component(
         int: Number of crossing edges removed during refinement.
         pd.Series: Sizes of discarded components after refinement.
     """
-    with duckdb.connect(config=duckdb_config) as con:
+    with connect_duckdb(config=duckdb_config) as con:
         edgelist = con.execute(f"""
             SELECT *
             FROM read_parquet('{str(component_edgelists_path)}/component={component_id}', hive_partitioning = true)
@@ -338,7 +338,7 @@ def get_component_sizes(
         component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned)
             format.
     """
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         component_sizes = con.execute(f"""
             SELECT component, COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2) AS n_umi
             FROM read_parquet(
