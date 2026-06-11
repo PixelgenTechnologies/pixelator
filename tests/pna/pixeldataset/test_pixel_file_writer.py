@@ -20,9 +20,11 @@ class TestPixelFileWriter:
         monkeypatch.setenv("PIXELATOR_DUCKDB_TEMP_DIR", str(duckdb_tmp))
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
-            setting = writer.get_connection().execute(
-                "SELECT current_setting('temp_directory')"
-            ).fetchone()[0]
+            setting = (
+                writer.get_connection()
+                .execute("SELECT current_setting('temp_directory')")
+                .fetchone()[0]
+            )
         assert setting == str(duckdb_tmp.absolute())
 
     def test_open_defaults_temp_directory_to_tmp(self, tmp_path, monkeypatch):
@@ -35,9 +37,11 @@ class TestPixelFileWriter:
         monkeypatch.delenv("PIXELATOR_DUCKDB_TEMP_DIR", raising=False)
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
-            setting = writer.get_connection().execute(
-                "SELECT current_setting('temp_directory')"
-            ).fetchone()[0]
+            setting = (
+                writer.get_connection()
+                .execute("SELECT current_setting('temp_directory')")
+                .fetchone()[0]
+            )
         assert setting == str(Path("/tmp").absolute())
 
     def test_write_edgelist(self, tmp_path, edgelist_parquet_path):
