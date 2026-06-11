@@ -252,9 +252,9 @@ def init_duckdb_conn(
         memory_limit: The memory limit in bytes. If None, no limit is set. Defaults to None.
         threads: The number of threads to use. If None, duckdb will decide. Defaults to None.
         temp_dir: The directory to use for temporary files. If None, defaults to
-            PIXELATOR_DUCKDB_TEMP_DIR or /tmp (never next to the database file).
+            ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp`` (never next to the database file).
         temp_dir_size_limit: The maximum size of the temporary directory. If None, defaults to
-            PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE when set, otherwise no limit.
+            ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when set, otherwise no limit.
 
     Returns:
         A duckdb connection object.

@@ -45,9 +45,9 @@ class PixelFileWriter:
         Args:
             path: The path to the PXL file.
             exits_ok: Whether to remove the file if it exists.
-            temp_dir: DuckDB spill directory. Defaults to PIXELATOR_DUCKDB_TEMP_DIR or /tmp.
+            temp_dir: DuckDB spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
             temp_dir_size_limit: DuckDB spill size limit. Defaults to
-                PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE when set.
+                ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when set.
         """
         self.path = path
         self.exists_ok = exits_ok
