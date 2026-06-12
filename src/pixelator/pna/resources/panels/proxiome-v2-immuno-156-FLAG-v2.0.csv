@@ -1,9 +1,10 @@
 # ---
-# name: proxiome-v2-immuno-155-v2.1
-# product: proxiome-v2-immuno-155
+# name: proxiome-v2-immuno-156-FLAG-v2.0
+# product: proxiome-v2-immuno-156-FLAG
 # description: >-
-#     Panel for the Proxiome Immuno Kit with 155 markers + 3 control markers + 3*8 hashing antibodies
-# version: 2.1.0
+#     Panel for the Proxiome Immuno Kit with 155 markers + 3 control markers
+#     + 3*8 hashing antibodies + the FLAG marker
+# version: 2.0.0
 # ---
 marker_id,control,full_name,alt_id,uniprot_id,sequence_1,sequence_2,sample_hashing
 HLA-ABC,,HLA class I histocompatibility antigen,,P04439;P01889;P10321,ACTTCCTAGG,ACTTCCTAGG
@@ -188,3 +189,4 @@ CD98-5,,,,,TTCGTAACTA,TTCGTAACTA,yes
 CD98-6,,,,,CTGACCGCTA,CTGACCGCTA,yes
 CD98-7,,,,,CCCTCGGTCT,CCCTCGGTCT,yes
 CD98-8,,,,,ATCGCACGTA,ATCGCACGTA,yes
+FLAG,,,,,CTTAACATCT,CTTAACATCT
