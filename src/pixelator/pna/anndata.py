@@ -53,12 +53,12 @@ def pna_edgelist_to_anndata(
     panel : PNAAntibodyPanel
     The antibody panel object containing marker metadata.
 
-    Returns
+    Returns:
     -------
     AnnData
         An AnnData object with counts and panel information.
 
-    Notes
+    Notes:
     -----
     Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
 

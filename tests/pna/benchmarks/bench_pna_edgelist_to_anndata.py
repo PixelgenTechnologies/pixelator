@@ -84,7 +84,7 @@ def _fmt_bytes(n: int) -> str:
         return "0 B"
     units = ["B", "KiB", "MiB", "GiB", "TiB"]
     i = min(int(math.log(n, 1024)), len(units) - 1)
-    return f"{n / 1024 ** i:.2f} {units[i]}"
+    return f"{n / 1024**i:.2f} {units[i]}"
 
 
 @dataclass
@@ -355,7 +355,9 @@ def _bench_explain(pxl_path: Path, markers: list[str], threads: int | None) -> N
             ),
         ]:
             label = f"EXPLAIN ANALYZE :: {query_label} :: threads={thread_label}"
-            measurement, rows = _measure(label, lambda s=sql: con.execute("EXPLAIN ANALYZE " + s).fetchall())
+            measurement, rows = _measure(
+                label, lambda s=sql: con.execute("EXPLAIN ANALYZE " + s).fetchall()
+            )
             print(measurement)
             print("---- query plan (truncated to first 60 lines) ----")
             joined = "\n".join(line for row in rows for line in row)
@@ -366,9 +368,7 @@ def _bench_explain(pxl_path: Path, markers: list[str], threads: int | None) -> N
         con.close()
 
 
-def _bench_explain_probe_non_distinct(
-    pxl_path: Path, markers: list[str]
-) -> None:
+def _bench_explain_probe_non_distinct(pxl_path: Path, markers: list[str]) -> None:
     """Optional sanity probe: replace COUNT(DISTINCT ...) with COUNT(...).
 
     Semantics are wrong, but if peak RSS / time drops sharply this confirms the
@@ -449,7 +449,9 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
+    )
 
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -495,9 +497,7 @@ def main() -> int:
             _write_pxl(edgelist, pxl_path)
             del edgelist
             gc.collect()
-            logger.info(
-                "pxl size on disk: %s", _fmt_bytes(os.path.getsize(pxl_path))
-            )
+            logger.info("pxl size on disk: %s", _fmt_bytes(os.path.getsize(pxl_path)))
 
         print()
         print("=" * 80)
