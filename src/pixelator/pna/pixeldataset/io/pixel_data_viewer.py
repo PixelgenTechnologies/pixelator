@@ -12,6 +12,8 @@ from typing import Iterable
 import duckdb
 import polars as pl
 
+from pixelator.common.duckdb_utils import connect_duckdb
+
 from .pxl_file import PXL_FILE_MANDATOR_TABLES, PXL_FILE_OTHER_TABLES, PxlFile
 from .query_builder import Query
 
@@ -209,7 +211,7 @@ class PixelDataViewerSession:
 
     def _create_open_connection(self) -> duckdb.DuckDBPyConnection:
         """Create an in-memory DuckDB connection with PXL files attached."""
-        connection = duckdb.connect(":memory:")
+        connection = connect_duckdb(":memory:")
         self._attach_to_files(connection)
         for table in PXL_FILE_OTHER_TABLES:
             self._simple_union_table_view(connection, table, table)

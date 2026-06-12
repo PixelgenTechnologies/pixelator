@@ -17,7 +17,6 @@ import os
 import tempfile
 from pathlib import Path
 
-import duckdb
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -25,6 +24,7 @@ import polars as pl
 from joblib import Parallel, delayed
 from scipy.sparse import csc_matrix
 
+from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.pna.graph.constants import (
     DEFAULT_WORKING_DIR,
     MAX_CYCLE_SEARCH_STEPS,
@@ -214,7 +214,7 @@ class ShortestPathFinder:
 
 def process_component(comp_name, edgelist_path, tmpdir):
     """Process a single component to remove edges not participating in cycles."""
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         con.execute(
             """
             CREATE TEMP TABLE comp_edgelist AS
@@ -309,7 +309,7 @@ def remove_no_cycle_edges(
     output_path = working_dir / "working_edgelist_with_cycle_verification"
     logger.info("Starting removal of no-cycle edges")
     with tempfile.TemporaryDirectory() as tmpdir:
-        with duckdb.connect(tmpdir + "/temp_duckdb.db") as con:
+        with connect_duckdb(tmpdir + "/temp_duckdb.db") as con:
             con.execute(
                 """
                 CREATE TEMP TABLE graph_edgelist AS
