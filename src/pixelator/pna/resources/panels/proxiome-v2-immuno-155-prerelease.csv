@@ -1,9 +1,11 @@
 # ---
-# name: proxiome-v2-immuno-155-v2.1
+# name: proxiome-v2-immuno-155-v2.0
 # product: proxiome-v2-immuno-155
+# aliases:
+#   - proxiome-v2-immuno-155-v1.0
 # description: >-
 #     Panel for the Proxiome Immuno Kit with 155 markers + 3 control markers + 3*8 hashing antibodies
-# version: 2.1.0
+# version: 2.0.1
 # ---
 marker_id,control,full_name,alt_id,uniprot_id,sequence_1,sequence_2,sample_hashing
 HLA-ABC,,HLA class I histocompatibility antigen,,P04439;P01889;P10321,ACTTCCTAGG,ACTTCCTAGG
@@ -164,7 +166,7 @@ c-Kit,,Mast/Stem cell growth factor receptor Kit,CD117,P10721,GCTATAATTG,GCTATAA
 NKG2D,,NKG2-D type II integral membrane protein,CD314;KG2DN,P26718,TGGCGCACAC,TGGCGCACAC
 CD98,,4F2 cell-surface antigen heavy chain,SLC3A2,P08195,CCAGAGCGGA,CCAGAGCGGA
 CD298,,Na+/K+-ATPase β3,ATP1B3,P54709,AAGCCTGCCT,AAGCCTGCCT
-B2M-1,,,,,GAGGGACGGT,GAGGGACGGT,yes
+B2M-1,,,,,TGAGTGGTGA,TGAGTGGTGA,yes
 B2M-2,,,,,TAGAGGAGGC,TAGAGGAGGC,yes
 B2M-3,,,,,CCCACTAAGC,CCCACTAAGC,yes
 B2M-4,,,,,TGGTTTACAA,TGGTTTACAA,yes
@@ -172,7 +174,7 @@ B2M-5,,,,,CTAACTACGG,CTAACTACGG,yes
 B2M-6,,,,,TATTGAACCT,TATTGAACCT,yes
 B2M-7,,,,,ATCAACCCTA,ATCAACCCTA,yes
 B2M-8,,,,,GTATCCCTAC,GTATCCCTAC,yes
-CD298-1,,,,,AAAGTCTCTG,AAAGTCTCTG,yes
+CD298-1,,,,,GCTAGCAACG,GCTAGCAACG,yes
 CD298-2,,,,,AAATAGTACG,AAATAGTACG,yes
 CD298-3,,,,,GACGGCTTAG,GACGGCTTAG,yes
 CD298-4,,,,,GTCAAGGTAA,GTCAAGGTAA,yes
@@ -180,7 +182,7 @@ CD298-5,,,,,GGTAAGCCCT,GGTAAGCCCT,yes
 CD298-6,,,,,GCCGCCTATG,GCCGCCTATG,yes
 CD298-7,,,,,GCTCCGCAAC,GCTCCGCAAC,yes
 CD298-8,,,,,AGCCTCAGCA,AGCCTCAGCA,yes
-CD98-1,,,,,TGGCTTAGCC,TGGCTTAGCC,yes
+CD98-1,,,,,CACTTGGCCA,CACTTGGCCA,yes
 CD98-2,,,,,ATTGTGTGGG,ATTGTGTGGG,yes
 CD98-3,,,,,CATAGACCAT,CATAGACCAT,yes
 CD98-4,,,,,ATGTTCCTCT,ATGTTCCTCT,yes
