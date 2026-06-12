@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Switch sample calling evaluation metric to hash enrichment factor instead of hash purity.
+- Reduce memory usage in `pna_edgelist_to_anndata` by restricting duckdb queries to 512 components at a time.
 
 ### Fixed
 - Always route DuckDB spill files to a local temp directory (`PIXELATOR_DUCKDB_TEMP_DIR` or `/tmp`)

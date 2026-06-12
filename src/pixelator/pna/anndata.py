@@ -5,12 +5,18 @@ import logging
 import duckdb
 import numpy as np
 import pandas as pd
-import polars as pl
 from anndata import AnnData
 
 from pixelator.pna.config import PNAAntibodyPanel
 
 logger = logging.getLogger(__name__)
+
+
+# Number of components aggregated in a single DuckDB query inside
+# :func:`pna_edgelist_to_anndata`. Larger values amortise per-query overhead;
+# smaller values bound the peak ``COUNT(DISTINCT umi*)`` hash table size. The
+# default keeps peak memory roughly linear in this constant.
+_COMPONENT_BATCH_SIZE = 512
 
 
 def calculate_antibody_metrics(counts_df):
@@ -48,109 +54,128 @@ def pna_edgelist_to_anndata(
     The antibody panel object containing marker metadata.
 
     Returns:
-        Notes:  ----- Assumes that the 'edgelist' table exists in the DuckDB connection and contains
-        the necessary columns.
+    -------
+    AnnData
+        An AnnData object with counts and panel information.
+
+    Notes:
+    -----
+    Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
+
+    The aggregations are computed in fixed-size batches of components. Each
+    ``COUNT(DISTINCT umi*)`` operator therefore only ever builds a hash set
+    over one batch's worth of rows instead of a single global distinct hash
+    table per worker thread. The batch size (:data:`_COMPONENT_BATCH_SIZE`) is
+    tuned to amortise DuckDB's per-query overhead while keeping peak hash
+    table memory bounded. ``WHERE component IN (...)`` benefits from DuckDB's
+    row-group zone maps when the edgelist is clustered by component (the
+    typical case for PNA pipelines that emit edges component-by-component).
+
     """
-    logger.debug("Constructing counts matrix.")
-
-    marker_names = [f"'{m}'" for m in panel.markers]
-    marker_names_sql = ", ".join(marker_names)
-    node_counts_df = (
-        pixel_connection.execute(f"""
-        SELECT *
-        FROM (
-            WITH counts_df_long AS (
-                WITH
-                    marker_1_counts AS (
-                        SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS marker_1_count
-                        FROM edgelist
-                        GROUP BY component, marker_1),
-                    marker_2_counts AS (
-                        SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS marker_2_count
-                        FROM edgelist
-                        GROUP BY component, marker_2
-                    )
-                SELECT
-                    COALESCE(a.component, b.component) AS component,
-                    COALESCE(a.marker, b.marker) AS marker,
-                    COALESCE(a.marker_1_count, 0) AS marker_1_count,
-                    COALESCE(b.marker_2_count, 0) AS marker_2_count,
-                    COALESCE(a.marker_1_count, 0) + COALESCE(b.marker_2_count, 0) AS count
-                FROM marker_1_counts a
-                FULL OUTER JOIN marker_2_counts b
-                    ON a.component = b.component AND a.marker = b.marker
-            )
-            PIVOT counts_df_long
-            ON marker IN ({marker_names_sql})
-            USING SUM(count)
-            GROUP BY component
+    components = (
+        pixel_connection.execute(
+            "SELECT DISTINCT component FROM edgelist ORDER BY component"
         )
-    """)
-        .df()
-        .fillna(0)
+        .df()["component"]
+        .tolist()
     )
 
-    node_counts_df.set_index("component", inplace=True)
-    node_counts_df = node_counts_df.reindex(columns=panel.markers, fill_value=0)
-    node_counts_df = node_counts_df.astype("uint32")
+    n_components = len(components)
+    n_markers = len(panel.markers)
+    component_to_idx = {c: i for i, c in enumerate(components)}
+    marker_to_idx = {m: i for i, m in enumerate(panel.markers)}
 
-    # compute components metrics (obs) and re-index
-    logger.debug("Computing component metrics.")
+    X = np.zeros((n_components, n_markers), dtype=np.uint32)
+    n_umi1_arr = np.zeros(n_components, dtype=np.uint64)
+    n_umi2_arr = np.zeros(n_components, dtype=np.uint64)
+    n_edges_arr = np.zeros(n_components, dtype=np.uint64)
+    reads_arr = np.zeros(n_components, dtype=np.uint64)
 
-    components_metrics_df = pixel_connection.execute(f"""
+    logger.debug(
+        "Aggregating per-component metrics over %d components in batches of %d.",
+        n_components,
+        _COMPONENT_BATCH_SIZE,
+    )
+    for batch_start in range(0, n_components, _COMPONENT_BATCH_SIZE):
+        batch = components[batch_start : batch_start + _COMPONENT_BATCH_SIZE]
+        placeholders = ", ".join(["?"] * len(batch))
+
+        # Per-marker counts: combine A-side and B-side distinct UMI counts
+        # for each (component, marker). The CTE shape plus outer ``SUM``
+        # produces a single hash aggregation in DuckDB's plan that scales
+        # better than a flat ``UNION ALL`` of two ``COUNT(DISTINCT)`` queries.
+        per_marker_sql = f"""
             WITH
-                marker_1_counts AS (
-                    SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS marker_1_count
+                a AS (
+                    SELECT component, marker_1 AS marker, COUNT(DISTINCT umi1) AS c
                     FROM edgelist
-                    GROUP BY component, marker_1),
-                marker_2_counts AS (
-                    SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS marker_2_count
+                    WHERE component IN ({placeholders})
+                    GROUP BY component, marker_1
+                ),
+                b AS (
+                    SELECT component, marker_2 AS marker, COUNT(DISTINCT umi2) AS c
                     FROM edgelist
+                    WHERE component IN ({placeholders})
                     GROUP BY component, marker_2
-                ),
-                component_marker_counts AS (
-                    SELECT
-                        COALESCE(a.component, b.component) AS component,
-                        COALESCE(a.marker_1_count, 0) AS marker_1_count,
-                        COALESCE(b.marker_2_count, 0) AS marker_2_count
-                    FROM marker_1_counts a
-                    FULL OUTER JOIN marker_2_counts b
-                        ON a.component = b.component AND a.marker = b.marker
-                    ),
-                component_umi AS (
-                    SELECT
-                        component,
-                        SUM(marker_1_count) AS n_umi1,
-                        SUM(marker_2_count) AS n_umi2
-                    FROM component_marker_counts
-                    GROUP BY component
-                ),
-                edge_counts AS (
-                    SELECT component, COUNT(*) AS n_edges, SUM(read_count) AS reads_in_component
-                    FROM edgelist
-                    GROUP BY component
                 )
+            SELECT component, marker, SUM(c) AS total
+            FROM (SELECT * FROM a UNION ALL SELECT * FROM b)
+            GROUP BY component, marker
+        """
+        for comp, marker, total in pixel_connection.execute(
+            per_marker_sql, batch + batch
+        ).fetchall():
+            j = marker_to_idx.get(marker)
+            if j is not None:
+                X[component_to_idx[comp], j] = total
+
+        per_component_metrics_sql = f"""
             SELECT
-                u.component,
-                n_umi1,
-                n_umi2,
-                e.n_edges,
-                e.reads_in_component,
-                (n_umi1 + n_umi2) AS n_umi
-            FROM component_umi u
-            LEFT JOIN edge_counts e ON u.component = e.component
-            ORDER BY u.component
-    """).df()
+                component,
+                COUNT(DISTINCT umi1) AS n_umi1,
+                COUNT(DISTINCT umi2) AS n_umi2,
+                COUNT(*) AS n_edges,
+                SUM(read_count) AS reads_in_component
+            FROM edgelist
+            WHERE component IN ({placeholders})
+            GROUP BY component
+        """
+        for (
+            comp,
+            n_umi1_val,
+            n_umi2_val,
+            n_edges_val,
+            reads_val,
+        ) in pixel_connection.execute(per_component_metrics_sql, batch).fetchall():
+            i = component_to_idx[comp]
+            n_umi1_arr[i] = n_umi1_val
+            n_umi2_arr[i] = n_umi2_val
+            n_edges_arr[i] = n_edges_val
+            reads_arr[i] = reads_val
 
-    n_antibodies = pd.Series(
-        (node_counts_df != 0).sum(axis=1),
-        index=node_counts_df.index,
-        name="n_antibodies",
-        dtype=np.uint32,
+    components_str = [str(c) for c in components]
+    component_index = pd.Index(components_str, name="component")
+
+    node_counts_df = pd.DataFrame(
+        X,
+        index=component_index,
+        columns=pd.Index(panel.markers, name="marker_id"),
     )
-    components_metrics_df.set_index("component", inplace=True)
-    components_metrics_df = components_metrics_df.join(n_antibodies)
 
+    logger.debug("Computing component metrics.")
+    n_antibodies = (X > 0).sum(axis=1)
+
+    components_metrics_df = pd.DataFrame(
+        {
+            "n_umi1": n_umi1_arr,
+            "n_umi2": n_umi2_arr,
+            "n_edges": n_edges_arr,
+            "reads_in_component": reads_arr,
+            "n_umi": n_umi1_arr + n_umi2_arr,
+            "n_antibodies": n_antibodies,
+        },
+        index=component_index,
+    )
     components_metrics_df = components_metrics_df.astype(
         {
             "n_umi": np.uint64,
@@ -161,10 +186,7 @@ def pna_edgelist_to_anndata(
             "reads_in_component": np.uint64,
         }
     )
-    components_metrics_df = components_metrics_df.reindex(index=node_counts_df.index)
-    components_metrics_df.index = components_metrics_df.index.astype(str)
 
-    # compute antibody metrics (var) and re-index
     logger.debug("Computing antibody metrics.")
     antibody_metrics_df = calculate_antibody_metrics(counts_df=node_counts_df)
     antibody_metrics_df = antibody_metrics_df.reindex(index=panel.markers, fill_value=0)
@@ -176,10 +198,6 @@ def pna_edgelist_to_anndata(
     )
     antibody_metrics_df.index = antibody_metrics_df.index.astype(str)
 
-    # create AnnData object
-    node_counts_df.index = node_counts_df.index.astype(
-        str
-    )  # anndata requires indexes to be strings
     logger.debug("Building AnnData instance.")
     adata = AnnData(
         X=node_counts_df,
@@ -189,7 +207,6 @@ def pna_edgelist_to_anndata(
 
     adata = add_panel_information(adata, panel)
 
-    # find fraction of isotype markers in cell
     total_marker_counts = node_counts_df.sum(axis=1)
     isotype_markers = adata.var[adata.var["control"]].index
     isotype_counts = node_counts_df[isotype_markers].sum(axis=1)
