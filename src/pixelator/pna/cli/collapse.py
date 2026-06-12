@@ -103,7 +103,7 @@ def collapse(
     ctx,
     input_files,
     design,
-    panel,
+    panels: list[str],
     output,
     mismatches,
     algorithm,
@@ -115,7 +115,7 @@ def collapse(
         ctx: Click context from the command decorator.
         input_files: The UM1 and UMI2 demuxed files.
         design: The design to load from the configuration file.
-        panel: The panel configuration.
+        panels: The panels configuration.
         output: The path where the results will be placed (it is created if it does not exist).
         mismatches: The number of mismatches allowed when error-correcting.
         algorithm: The collapse strategy to use.
@@ -124,7 +124,7 @@ def collapse(
     # log input parameters
     log_step_start(
         "collapse",
-        panel=panel,
+        panel=panels,
         design=design,
         output=output,
         mismatches=mismatches,
@@ -135,7 +135,7 @@ def collapse(
     sanity_check_inputs(input_files=input_files, allowed_extensions=("parquet",))
 
     assay = pna_config.get_assay(design)
-    panel = load_antibody_panel(pna_config, panel)
+    panel = load_antibody_panel(pna_config, panels)
 
     # create the output directory
     collapse_output = create_output_stage_dir(output, "collapse")

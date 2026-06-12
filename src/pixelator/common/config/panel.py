@@ -7,13 +7,15 @@ from __future__ import annotations
 
 import re
 import warnings
+from enum import StrEnum
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Self
 
 import pandas as pd
 import pydantic
 import ruamel.yaml as yaml
+from anndata import AnnData
 from packaging.version import Version
 
 from pixelator.common.types import PathType
@@ -21,6 +23,15 @@ from pixelator.common.utils import logger
 
 if TYPE_CHECKING:
     from pixelator.common.config import Config
+
+
+class PanelType(StrEnum):
+    """Panel type values used in metadata."""
+
+    PARTIAL = "partial"
+    BASE = "base"
+    ADDON = "addon"
+    SAMPLE_HASHING = "sample_hashing"
 
 
 class AntibodyPanelMetadata(pydantic.BaseModel):
@@ -34,6 +45,7 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
     description: Optional[str] = None
     aliases: List[str] = []
     archived: Optional[bool] = False
+    panel_type: Optional[PanelType] = None
 
     @pydantic.field_validator("version")
     @classmethod
@@ -51,6 +63,102 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
         """
         Version(v)  # will raise if not a valid version string
         return v
+
+    def to_dict(self) -> dict:
+        """Serialize panel metadata for storage in andata or hdf5."""
+        serialized = self.model_dump()
+        # panel type needs to be explicitly serialized as its value for hdf5 storage of anndata
+        serialized["panel_type"] = (
+            self.panel_type.value if self.panel_type is not None else None
+        )
+        return serialized
+
+    @classmethod
+    def _deserialize_from_adata_key(cls, adata: AnnData, key: str) -> Self:
+        """Deserialize panel metadata from a specified key in adata.uns."""
+        if key not in adata.uns:
+            raise KeyError(
+                f"Key {key!r} not found in adata.uns for panel metadata deserialization."
+            )
+        deserialized_metadata = adata.uns[key]
+        deserialized_metadata["panel_type"] = (
+            PanelType(deserialized_metadata["panel_type"])
+            if deserialized_metadata.get("panel_type") is not None
+            else None
+        )
+        return cls.model_validate(deserialized_metadata)
+
+    @classmethod
+    def from_panel_csv(cls, panel_file: PathType) -> AntibodyPanelMetadata:
+        """Create an AntibodyPanelMetadata object from a panel csv file."""
+        yaml_loader = yaml.YAML(typ="safe")
+
+        metadata_lines = []
+        with open(str(panel_file), "r") as f:
+            for line in f:
+                if line.startswith("# "):
+                    metadata_lines.append(line[2:])
+                else:
+                    # first line after header must be csv column names
+                    # metadata_lines.append(f"panel_columns: [{line.strip()}]\n")
+                    break
+
+        metadata = "".join(
+            metadata_lines
+            # reorder to place csv columns before last "---" to generate a valid yaml
+            # metadata_lines[:-2] + [metadata_lines[-1]] + [metadata_lines[-2]]
+        )
+        raw_config = list(yaml_loader.load_all(metadata))
+
+        if len(raw_config) == 0:
+            raise ValueError(f"No header / metadata found in panel file {panel_file}")
+
+        frontmatter = raw_config[0]
+        return cls.model_validate(frontmatter)
+
+    @classmethod
+    def from_adata(cls, adata: AnnData) -> list[Self]:
+        """Create a list of AntibodyPanelMetadata objects from an AnnData object."""
+        if "num_partial_panels" in adata.uns:
+            logger.debug(
+                "Found metadata for %s partial panels in adata.uns",
+                adata.uns["num_partial_panels"],
+            )
+            panel_metadatas = []
+            for idx in range(adata.uns["num_partial_panels"]):
+                if f"panel_metadata__{idx}" not in adata.uns:
+                    raise KeyError(
+                        "The provided AnnData object contains partial panel information but is "
+                        + f"missing the metadata for panel at index {idx}."
+                    )
+
+                panel_metadatas.append(
+                    cls._deserialize_from_adata_key(adata, f"panel_metadata__{idx}")
+                )
+            if len(panel_metadatas) != adata.uns["num_partial_panels"]:
+                raise ValueError(
+                    "The provided AnnData object contains partial panel information but the number "
+                    + f"of panel metadata entries ({len(panel_metadatas)}) does not match the "
+                    + f"expected number of partial panels ({adata.uns['num_partial_panels']})."
+                )
+            return panel_metadatas
+        elif "panel_metadata" in adata.uns:
+            logger.debug(
+                'Found "panel_metadata" in adata.uns, loading panel metadata from there.'
+            )
+            return [cls._deserialize_from_adata_key(adata, "panel_metadata")]
+        else:
+            logger.warning(
+                "The provided AnnData object does not contains panel metadata information."
+                + "panel name and version will be set to 'unknown' and '0.0.0' respectively."
+            )
+            return [
+                cls(
+                    name="unknown",
+                    version="0.0.0",
+                    description="No panel metadata found in adata.uns",
+                )
+            ]
 
 
 def _strip_trailing_commas(metadata: str) -> tuple[str, bool]:
@@ -311,7 +419,7 @@ class AntibodyPanel:
         Raises:
             ValueError: If no metadata header is present in the file.
         """
-        return parse_panel_header_metadata(file)
+        return AntibodyPanelMetadata.from_panel_csv(file)
 
     @cached_property
     def markers_control(self) -> List[str]:

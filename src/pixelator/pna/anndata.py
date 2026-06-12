@@ -8,7 +8,7 @@ import pandas as pd
 import polars as pl
 from anndata import AnnData
 
-from pixelator.pna.config import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 
 logger = logging.getLogger(__name__)
 
@@ -24,32 +24,42 @@ def calculate_antibody_metrics(counts_df):
     return pd.concat([total_antibody, relative_antibody, components_detected], axis=1)
 
 
-def add_panel_information(adata: AnnData, panel: PNAAntibodyPanel) -> AnnData:
+def add_panel_information(
+    adata: AnnData, panel: PNAAntibodyPanelCombination
+) -> AnnData:
     """Add panel data to var."""
+    assert isinstance(panel, PNAAntibodyPanelCombination), (
+        "Only PNAAntibodyPanelCombination is supported for adata conversion."
+    )
+
     adata.var = adata.var.join(panel.df, how="left")
 
-    adata.uns["panel_metadata"] = panel.metadata.model_dump()
-    adata.uns["panel_metadata"]["panel_columns"] = list(panel.df.columns)
+    adata.uns["num_partial_panels"] = panel.num_partial_panels
+    for i, pp in enumerate(panel.partial_panels()):
+        adata.uns[f"panel_metadata__{i}"] = pp.metadata.to_dict()
+        adata.uns[f"panel_df__{i}"] = pp.df.to_csv()
 
     return adata
 
 
 def pna_edgelist_to_anndata(
-    pixel_connection: duckdb.DuckDBPyConnection, panel: PNAAntibodyPanel
+    pixel_connection: duckdb.DuckDBPyConnection,
+    panel: PNAAntibodyPanelCombination,
 ) -> AnnData:
     """Build an AnnData object from a DuckDB connection to a pixel file and a panel object.
 
-    Parameters
-    ----------
-    pixel_connection : duckdb.DuckDBPyConnection
-    A DuckDB connection to a pixel file. The connection must contain an 'edgelist' table
-    with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
-    panel : PNAAntibodyPanel
-    The antibody panel object containing marker metadata.
+    Args:
+        pixel_connection: A DuckDB connection to a pixel file. The connection must
+            contain an 'edgelist' table with the required columns
+            (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
+        panel: The antibody panel object containing marker metadata.
 
     Returns:
-        Notes:  ----- Assumes that the 'edgelist' table exists in the DuckDB connection and contains
-        the necessary columns.
+        An AnnData object with counts and panel information.
+
+    Notes:
+        Assumes that the 'edgelist' table exists in the DuckDB connection
+        and contains the necessary columns.
     """
     logger.debug("Constructing counts matrix.")
 

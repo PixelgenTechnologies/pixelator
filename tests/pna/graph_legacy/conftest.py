@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 
 from pixelator.common.config.panel import AntibodyPanelMetadata
-from pixelator.pna.config import PNAAntibodyPanel
+from pixelator.pna.config import PNAAntibodyPanelCombination
 
 
 @pytest.fixture(name="mock_panel")
@@ -20,11 +20,9 @@ def mock_panel_fixture(request):
     """
     version = getattr(request, "param", "0.0.0")
 
-    mock_antibody_panel = create_autospec(PNAAntibodyPanel)
-    mock_antibody_panel.markers = ["MarkerA", "MarkerB", "MarkerC"]
     # Each marker is duplicated in the panel,
     # on these parameters so this accounts for that.
-    mock_antibody_panel.df = pd.DataFrame(
+    df = pd.DataFrame(
         {
             "marker_id": [
                 "MarkerA",
@@ -38,12 +36,11 @@ def mock_panel_fixture(request):
             "sequence_2": ["TTTT", "AAAA", "CCCC"],
         }
     )
-    mock_antibody_panel.df.index = mock_antibody_panel.df.marker_id
 
     if version.startswith("2"):
-        mock_antibody_panel.df.drop(columns=["nuclear"], inplace=True)
+        df.drop(columns=["nuclear"], inplace=True)
 
-    mock_antibody_panel.metadata = AntibodyPanelMetadata.model_validate(
+    metadata = AntibodyPanelMetadata.model_validate(
         {
             "name": "mock-panel",
             "version": version,
@@ -51,10 +48,11 @@ def mock_panel_fixture(request):
             "aliases": ["mock_alias"],
         }
     )
-    mock_antibody_panel.name = mock_antibody_panel.metadata.name
-    mock_antibody_panel.version = mock_antibody_panel.metadata.version
-    mock_antibody_panel.aliases = mock_antibody_panel.metadata.aliases
-    mock_antibody_panel.description = mock_antibody_panel.metadata.description
+
+    mock_antibody_panel = PNAAntibodyPanelCombination(
+        df=df.set_index("marker_id"),
+        metadata=metadata,
+    )
     return mock_antibody_panel
 
 

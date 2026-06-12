@@ -15,7 +15,7 @@ import pytest
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna import read
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling import (
     collect_hash_info,
@@ -457,7 +457,7 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
         ]
     ).set_index("marker_id")
 
-    panel = PNAAntibodyPanel(
+    panel = PNAAntibodyPanelCombination(
         df=panel_df,
         metadata=AntibodyPanelMetadata(
             name="test-panel",

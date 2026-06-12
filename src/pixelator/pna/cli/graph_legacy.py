@@ -216,7 +216,7 @@ def graph_legacy(
     min_component_size_to_prune,
     component_size_max_threshold,
     component_size_min_threshold,
-    panel,
+    panels,
     output,
 ):
     """Find connected components from the input molecules.
@@ -271,8 +271,8 @@ def graph_legacy(
         component_size_min_threshold: Components with fewer nodes than this will be filtered from
             the output data. This is typically not needed. Setting this will disable the automatic
             size filtering.
-        panel: The name of a panel to load from the supported panels. Optionally, provide a path to
-            a custom panel file.
+        panels: The name of a panels to load from the supported panels. Optionally, provide a path
+            to a custom panel file.
         output: The path where the results will be placed (it is created if it does not exist).
     """
     warnings.warn(_GRAPH_LEGACY_DEPRECATION, DeprecationWarning, stacklevel=1)
@@ -298,7 +298,7 @@ def graph_legacy(
         min_component_size_to_prune=min_component_size_to_prune,
         component_size_max_threshold=component_size_max_threshold,
         component_size_min_threshold=component_size_min_threshold,
-        panel=panel,
+        panels=panels,
     )
 
     # some basic sanity check on the input files
@@ -318,7 +318,7 @@ def graph_legacy(
     )
     output_path = graph_output / f"{sample_name}.graph.pxl"
 
-    panel = load_antibody_panel(pna_config, panel)
+    panel = load_antibody_panel(pna_config, panels)
     initial_stage_refinement_options = RefinementOptions(
         min_component_size=min_component_size_in_refinement,
         leiden_resolution=initial_stage_leiden_resolution,

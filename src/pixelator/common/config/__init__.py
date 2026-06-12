@@ -13,6 +13,7 @@ from pixelator.common.config.config_class import Config, load_assays_package
 from pixelator.common.config.panel import (
     AntibodyPanel,
     AntibodyPanelMetadata,
+    PanelType,
     load_antibody_panel,
 )
 from pixelator.common.config.utils import load_yaml_file
@@ -30,5 +31,6 @@ __all__ = [
     "load_yaml_file",
     "AntibodyPanel",
     "AntibodyPanelMetadata",
+    "PanelType",
     "load_antibody_panel",
 ]

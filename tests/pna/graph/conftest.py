@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from pixelator.pna.config import PNAAntibodyPanel
+from pixelator.pna.config import PNAAntibodyPanelCombination
 
 
 @pytest.fixture(name="mock_panel")
@@ -23,7 +23,7 @@ def mock_panel_fixture(request):
     """
     version = getattr(request, "param", "0.0.0")
 
-    mock_antibody_panel = create_autospec(PNAAntibodyPanel)
+    mock_antibody_panel = create_autospec(PNAAntibodyPanelCombination)
     mock_antibody_panel.markers = ["MarkerA", "MarkerB", "MarkerC"]
     # Each marker is duplicated in the panel,
     # on these parameters so this accounts for that.

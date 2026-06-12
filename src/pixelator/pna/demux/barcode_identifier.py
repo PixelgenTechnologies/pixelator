@@ -9,7 +9,11 @@ from typing import Any, cast
 from cutadapt.steps import HasFilterStatistics, SingleEndStep
 from dnaio import SequenceRecord
 
-from pixelator.pna.config import PNAAntibodyPanel, PNAAssay, get_position_in_parent
+from pixelator.pna.config import (
+    PNAAntibodyPanelCombination,
+    PNAAssay,
+    get_position_in_parent,
+)
 from pixelator.pna.demux.correction import BKTree, build_bktree, build_exact_dict_lookup
 from pixelator.pna.read_processing.statistics import HasCustomStatistics
 
@@ -127,7 +131,11 @@ class BarcodeIdentifier(SingleEndStep, HasFilterStatistics, HasCustomStatistics)
     """A pipeline filter that finds the nearest antibody for a given barcode."""
 
     def __init__(
-        self, assay: PNAAssay, panel: PNAAntibodyPanel, mismatches: int = 1, writer=None
+        self,
+        assay: PNAAssay,
+        panel: PNAAntibodyPanelCombination,
+        mismatches: int = 1,
+        writer=None,
     ):
         """Initialize the BarcodeIdentifier object.
 
