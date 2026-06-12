@@ -28,7 +28,7 @@ jobs:
           path-to-signatures: 'signatures/pixelator/version1/cla.json'
           path-to-document: 'https://software.pixelgen.com/assets/files/Pixelgen_Individual_Contributor_License_Agreement_(CLA)-671dac61b4e5458371c420b857122e5a.pdf' # e.g. a CLA or a DCO document
           branch: 'main'
-          allowlist: johandahlberg,fbdtemme,ptajvar,maxkarlsson,ludvigla,vincent-van-hoef,elhb,dependabot[bot]
+          allowlist: johandahlberg,fbdtemme,ptajvar,maxkarlsson,ludvigla,vincent-van-hoef,elhb,dependabot[bot],cursoragent
           remote-organization-name: PixelgenTechnologies
           remote-repository-name: cla-signatures
           lock-pullrequest-aftermerge: false
