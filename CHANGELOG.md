@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Switch sample calling evaluation metric to hash enrichment factor instead of hash purity.
-- Reduce memory usage in `pna_edgelist_to_anndata` by restricting duckdb queries to 512 components at a time
+- Reduce memory usage in `pna_edgelist_to_anndata` by restricting duckdb queries to 512 components at a time.
 
 ## [0.28.0] - 2026-06-03
 
