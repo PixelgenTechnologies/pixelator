@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `annotate_cells` method to determine cell-types using another given set of pre-annotated cells.
-- `proxiome-v2-immuno-155-v2.1` panel
+- `proxiome-v2-immuno-155-v2.0` panel
 - Expose `coarsened_pmds_3d` (and other supported layout algorithms) on the `single-cell-pna layout` CLI, and make `coarsened_pmds_3d` the default.
 
 
@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of next to the `.pxl` database file. This prevents `denoise`, component filtering and other
   commands from spilling onto networked filesystems (e.g. to S3 when running the pipeline in the cloud)
   where the `.pxl` may live.
+- Fix the prerelease panel naming, rename `proxiome-v2-immuno-155-v2.0` to `proxiome-v2-immuno-155-prerelease`.
 
 ## [0.28.0] - 2026-06-03
 
