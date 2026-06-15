@@ -56,7 +56,8 @@ class SequenceQualityStatsCollector:
     def __init__(self, design_name: str):
         """Accumulate read quality statistics for a given design.
 
-        :param design_name: The name of the design of the reads for which to statistics.
+        Args:
+            design_name: The name of the design of the reads for which to statistics.
         """
         design = config.get_assay(design_name)
 
@@ -93,9 +94,12 @@ class SequenceQualityStatsCollector:
     def get_position(self, region_id: str) -> tuple[int, int]:
         """Return the positions for a region.
 
-        :param region_id: id of the region
-        :returns: a tuple with start and end positions
-        :raise ValueError: An unknown region id was given
+        Args:
+            region_id: id of the region
+        Returns:
+            a tuple with start and end positions
+        Raises:
+            ValueError: An unknown region id was given
         """
         r = self._positions.get(region_id)
         if r is None:

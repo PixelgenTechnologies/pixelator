@@ -119,15 +119,18 @@ class ObjectBasedPixelDatasetBackend(PixelDatasetBackend):
     ) -> None:
         """Create a new instance of ObjectBasedPixelDatasetBackend.
 
-        :param adata: an AnnData instance
-        :param edgelist: an edgelist dataframe
-        :param metadata: a dict with metadata, defaults to None
-        :param polarization: a polarization dataframe, defaults to None
-        :param colocalization: a colocalization dataframe, defaults to None
-        :param copy: decide if the input data should be copied or not. Defaults to True.
-        :param allow_edgelist_to_be_empty: allow the edgelist to be empty.
-                                           Defaults to False.
-        :raises AssertionError: if `adata` or `edgelist` contains no data.
+        Args:
+            adata: AnnData object backing the dataset.
+            edgelist: Edge list dataframe for the dataset.
+            metadata: Optional metadata dictionary.
+            polarization: Optional polarization results dataframe.
+            colocalization: Optional colocalization results dataframe.
+            precomputed_layouts: Optional cached layout coordinates.
+            copy: Whether input objects are copied on construction.
+            allow_edgelist_to_be_empty: Allow constructing datasets with empty edgelists.
+
+        Raises:
+            AssertionError: if `adata` or `edgelist` contains no data.
         """
         if adata is None or adata.n_obs == 0:
             raise AssertionError("adata cannot be empty")
@@ -239,7 +242,9 @@ class FileBasedPixelDatasetBackend(PixelDatasetBackend):
         Create a backend, fetching information from the .pxl file
         in `path`.
 
-        :param path: Path to the .pxl file
+        Args:
+            path: Path to the ``.pxl`` file.
+            datastore: Optional datastore implementation; guessed from ``path`` when omitted.
         """
         self._path = path
         if not datastore:

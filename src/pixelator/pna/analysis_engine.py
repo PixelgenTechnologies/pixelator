@@ -1,4 +1,4 @@
-"""Analysis engine capable of running a list of analysis functions on each component in a pixeldataset.
+"""Analysis engine for running analysis functions on each PixelDataset component.
 
 Copyright © 2024 Pixelgen Technologies AB.
 """
@@ -55,6 +55,7 @@ def _add_handlers_to_root_logger(logging_setup):
 
 class _ParallelWithLogging(Parallel):
     def __init__(self, **kwargs):
+        """Initialize a joblib ``Parallel`` executor that logs via the root logger."""
         super().__init__(**kwargs)
 
     def _print(self, mgs):
@@ -62,7 +63,12 @@ class _ParallelWithLogging(Parallel):
 
 
 def _get_joblib_executor(nbr_cores=None, **kwargs) -> Parallel:
-    """Return a joblib executor with some default settings."""
+    """Return a joblib executor with some default settings.
+
+    Args:
+        nbr_cores: Number of worker processes to use.
+        kwargs: Keyword arguments forwarded to ``joblib.Parallel``.
+    """
     current_click_context = click.get_current_context(silent=True)
     click_nbr_cores = None
     if current_click_context:
@@ -88,6 +94,7 @@ def with_logging(f):
     @wraps(f)
     def wrapper(*args, **kwds):
         # Turn this into a dectorator
+        """Execute the wrapped function with optional logging setup."""
         logging_setup = kwds.pop("logging_setup", None)
         if logging_setup:
             _add_handlers_to_root_logger(logging_setup)
@@ -100,7 +107,8 @@ def with_logging(f):
 class PerComponentTask(Protocol, Generic[T]):
     """Protocol for tasks that are run on each component in a PixelDataset.
 
-    :var TASK_NAME: The name of the analysis.
+    Attributes:
+        TASK_NAME: The name of the analysis task.
     """
 
     TASK_NAME: typing.ClassVar[str]
@@ -124,7 +132,8 @@ class PerComponentTask(Protocol, Generic[T]):
         This method assumes that the dataset is stored internally
         and the component is directly accessible from its id.
 
-        :param component_id: The id of the component.
+        Args:
+            component_id: The id of the component.
         """
         raise NotImplementedError
 
@@ -132,8 +141,9 @@ class PerComponentTask(Protocol, Generic[T]):
     def run_on_component_graph(self, component: PNAGraph, component_id: str) -> T:
         """Run the analysis on this component.
 
-        :param component: The graph of the component.
-        :param component_id: The id of the component.
+        Args:
+            component: The graph of the component.
+            component_id: The id of the component.
         """
         raise NotImplementedError
 
@@ -143,8 +153,9 @@ class PerComponentTask(Protocol, Generic[T]):
     ) -> T:
         """Run the analysis on this component.
 
-        :param component: The edgelist of the component.
-        :param component_id: The id of the component.
+        Args:
+            component: The edgelist of the component.
+            component_id: The id of the component.
         """
         raise NotImplementedError
 
@@ -158,9 +169,13 @@ class PerComponentTask(Protocol, Generic[T]):
         The default implementation will first try the graph based analysis and then fall back
         to the edgelist based analysis if the graph based analysis raises NotImplementedError.
 
-        :param component: The component to run the analysis on. Either a Graph, a LazyFrame or the name of a component.
-        :param logging_setup: The logging setup to use.
-        :raises TypeError: If the component is not a Graph or a LazyFrame.
+        Args:
+            component: The component to run the analysis on. Either a Graph, a LazyFrame or the name
+                of a component.
+            logging_setup: The logging setup to use.
+
+        Raises:
+            TypeError: If the component is not a Graph or a LazyFrame.
         """
         if isinstance(component, str):
             return self.run_from_component_id(component)
@@ -189,7 +204,7 @@ class PerComponentTask(Protocol, Generic[T]):
             raise error
 
     def post_process_data(self, data: T) -> T:
-        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing."""
+        """Post process the data (e.g. adjust p-values). Override this if needed."""
         return data
 
     def add_to_pixel_file(self, data: T, pxl_file_target: PxlFile) -> None:
@@ -223,10 +238,13 @@ class AnalysisManager:
     ):
         """Initialize the analysis manager.
 
-        :param analysis_to_run: The analysis to run on each component.
-        :param logging_setup: The logging setup to use.
-        :param n_cores: The number of cores to use for parallel processing (set to 1 to disable parallel processing).
-        :param pxl_dataset_builder: A function that can build a PixelDataset from an iterable of PxlFiles.
+        Args:
+            analysis_to_run: The analysis to run on each component.
+            logging_setup: The logging setup to use.
+            n_cores: The number of cores to use for parallel processing (set to 1 to disable
+                parallel processing).
+            pxl_dataset_builder: A function that can build a PixelDataset from an iterable of
+                PxlFiles.
         """
         self.analysis_to_run = {
             analysis.TASK_NAME: analysis for analysis in analysis_to_run
@@ -255,6 +273,12 @@ class AnalysisManager:
         ) as parallel:
 
             def func(component, analysis_to_run):
+                """Func.
+
+                Args:
+                    component: component.
+                    analysis_to_run: analysis to run.
+                """
                 results = []
                 for analysis_name, analysis in analysis_to_run.items():
                     logger.debug(

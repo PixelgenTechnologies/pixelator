@@ -7,6 +7,7 @@ from pixelator.mpx.feature_flags import _load_flags_from_environment
 
 def test_load_flags_from_environment():
     # Test when the environment variable is set
+    """Verify load flags from environment."""
     os.environ["PIXELATOR_FLAG"] = "True"
     result = bool(_load_flags_from_environment("FLAG", default=False))
     assert result is True

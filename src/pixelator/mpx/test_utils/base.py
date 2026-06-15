@@ -53,7 +53,11 @@ class BaseWorkflowTestMixin:
         ...
 
     def __init_subclass__(cls, **kwargs):
-        """Some hackery to bind data access functions."""
+        """Some hackery to bind data access functions.
+
+        Args:
+            kwargs: Additional keyword arguments.
+        """
         super().__init_subclass__(**kwargs)
         thisclass = BaseWorkflowTestMixin
         clsname = cls.__name__

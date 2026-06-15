@@ -11,10 +11,15 @@ from pixelator.common.types import PathType
 def load_yaml_file(path: PathType) -> Any:
     """Load an arbitrary yaml file.
 
-    :param path: path to the yaml file
-    :raises FileExistsError: If the path does not exist
-    :raises TypeError: If the path is not a yaml file
-    :returns: a yaml object
+    Args:
+        path: path to the yaml file
+
+    Returns:
+        a yaml object
+
+    Raises:
+        FileExistsError: If the path does not exist
+        TypeError: If the path is not a yaml file
     """
     path = Path(path)
     if not path.is_file():

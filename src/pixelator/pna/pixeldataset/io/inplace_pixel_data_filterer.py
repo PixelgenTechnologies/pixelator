@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import duckdb
 
+from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.pixeldataset.io.pixel_data_viewer import PixelDataViewer
 from pixelator.pna.pixeldataset.io.pixel_file_writer import PixelFileWriter
@@ -22,7 +23,11 @@ class InplacePixelDataFilterer:
     """
 
     def __init__(self, pxl_file: PxlFile):
-        """Initialize the InplacePixelDataFilterer."""
+        """Initialize the InplacePixelDataFilterer.
+
+        Args:
+            pxl_file: Path to the input PXL (PixelDataset) file.
+        """
         self.pxl_file = pxl_file
 
     def _update_metadata(
@@ -86,8 +91,9 @@ class InplacePixelDataFilterer:
         Note that if you provide metadata it will overwrite the existing metadata.
         If you do not provide metadata, the existing metadata will be kept.
 
-        :param components: The components to keep.
-        :param metadata: The metadata to write to the PXL
+        Args:
+            components: The components to keep.
+            metadata: The metadata to write to the PXL
         """
         # If there are not components provided, do nothing.
         if not components:
@@ -95,7 +101,7 @@ class InplacePixelDataFilterer:
 
         components_as_list: list[str] = normalize_input_to_list(components)  # type: ignore
 
-        with duckdb.connect(self.pxl_file.path) as connection:
+        with connect_duckdb(self.pxl_file.path) as connection:
             self._filter_edgelist(connection, components_as_list)
             self._filter_proximity(connection, components_as_list)
             self._filter_layouts(connection, components_as_list)

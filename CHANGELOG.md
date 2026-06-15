@@ -5,9 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.29.0] - 2026-06-15
+
+### Added
+- `annotate_cells` method to determine cell-types using another given set of pre-annotated cells.
+- `proxiome-v2-immuno-155-v2.0` panels (including panels for FLAG, FMC63 and G4S add ons to the immuno-155 base panel)
+- Expose `coarsened_pmds_3d` (and other supported layout algorithms) on the `single-cell-pna layout` CLI, and make `coarsened_pmds_3d` the default.
+
+
+### Changed
+- Switch sample calling evaluation metric to hash enrichment factor instead of hash purity.
+- Reduce memory usage in `pna_edgelist_to_anndata` by restricting duckdb queries to 512 components at a time.
+
+### Fixed
+- Always route DuckDB spill files to a local temp directory (`PIXELATOR_DUCKDB_TEMP_DIR` or `/tmp`)
+  instead of next to the `.pxl` database file. This prevents `denoise`, component filtering and other
+  commands from spilling onto networked filesystems (e.g. to S3 when running the pipeline in the cloud)
+  where the `.pxl` may live.
+- Fix the prerelease panel naming, rename `proxiome-v2-immuno-155-v2.0` to `proxiome-v2-immuno-155-prerelease`.
+
 ## [0.28.0] - 2026-06-03
 
-## Added
+### Added
 - `coarsened_pmds_layout` method for more performant cell layout computation.
 
 ### Fixed

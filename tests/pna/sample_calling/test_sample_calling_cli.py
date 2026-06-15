@@ -18,6 +18,11 @@ from pixelator.pna import read
 
 @pytest.mark.slow
 def test_runs_ok(pna_data_root):
+    """Verify runs ok.
+
+    Args:
+        pna_data_root: pna data root.
+    """
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as d:
@@ -29,8 +34,8 @@ def test_runs_ok(pna_data_root):
             "--samplesheet",
             str(pna_data_root) + "/sample_calling/samplesheet.csv",
             "--remove-incompatible",
-            "--confidence-threshold",
-            "0.96",
+            "--enrichment-threshold",
+            "40.0",
             "--save-undetermined",
             "--output",
             d,
@@ -69,10 +74,10 @@ def test_runs_ok(pna_data_root):
         total_data = json.loads(total_report.read_text())
         assert total_data["report_type"] == "sample_calling_total"
         assert total_data["sample_id"] == "all"
-        assert "sample_confidences_per_sample" in total_data
+        assert "hash_enrichment_factors_per_sample" in total_data
         assert "percentage_of_components_successfully_called" in total_data
         assert (
-            np.abs(total_data["percentage_of_components_successfully_called"] - 14 / 15)
+            np.abs(total_data["percentage_of_components_successfully_called"] - 12 / 15)
             < 1e-6
         )
         total_components = 0

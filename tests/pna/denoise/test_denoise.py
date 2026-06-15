@@ -372,7 +372,11 @@ TCRab,17,fe6336721ae34f6c
 
 @pytest.mark.slow
 def test_get_overexpressed_markers_in_one_core(denoise_pxl_dataset):
-    """Test the get_overexpressed_markers_in_one_core function."""
+    """Test the get_overexpressed_markers_in_one_core function.
+
+    Args:
+        denoise_pxl_dataset: Denoise pxl dataset.
+    """
     components = denoise_pxl_dataset.adata().obs.index
 
     def over_expressed_markers_per_component():
@@ -433,7 +437,11 @@ def test_get_stranded_nodes():
 
 @pytest.mark.slow
 def test_denoise_one_core_layer(denoise_pxl_dataset):
-    """Test the denoise_one_core_layer function."""
+    """Test the denoise_one_core_layer function.
+
+    Args:
+        denoise_pxl_dataset: Denoise pxl dataset.
+    """
     components = denoise_pxl_dataset.adata().obs.index
 
     for comp in components:
@@ -456,7 +464,12 @@ def test_denoise_one_core_layer(denoise_pxl_dataset):
 
 @pytest.mark.slow
 def test_denoise_one_core_analysis(denoise_pxl_dataset, tmp_path):
-    """Test graph denoising with one-core only."""
+    """Test graph denoising with one-core only.
+
+    Args:
+        denoise_pxl_dataset: Denoise pxl dataset.
+        tmp_path: Tmp path.
+    """
     pxl_file_target = PixelDatasetSaver(pxl_dataset=denoise_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
@@ -504,7 +517,11 @@ REFERENCE_ACE_LOW_NODE_COUNT = 5436
 
 
 def test_denoise_pls_reference_component_runs_and_cleans_coreness(denoise_pxl_dataset):
-    """denoise_pls should return removable nodes and clean temporary coreness attrs."""
+    """denoise_pls should return removable nodes and clean temporary coreness attrs.
+
+    Args:
+        denoise_pxl_dataset: Denoise pxl dataset.
+    """
     comp_graph = PNAGraph.from_edgelist(
         denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
         .edgelist()
@@ -524,7 +541,11 @@ def test_denoise_pls_reference_component_runs_and_cleans_coreness(denoise_pxl_da
 def test_denoise_pls_returns_empty_with_impossible_correlation_threshold(
     denoise_pxl_dataset,
 ):
-    """No components can pass when min correlation is set above 1.0."""
+    """No components can pass when min correlation is set above 1.0.
+
+    Args:
+        denoise_pxl_dataset: Denoise pxl dataset.
+    """
     comp_graph = PNAGraph.from_edgelist(
         denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
         .edgelist()
@@ -539,7 +560,11 @@ def test_denoise_pls_returns_empty_with_impossible_correlation_threshold(
 
 
 def test_denoise_pls_residualized_path_runs(denoise_pxl_dataset):
-    """Residualized PLS denoising path should execute and return node ids."""
+    """Residualized PLS denoising path should execute and return node ids.
+
+    Args:
+        denoise_pxl_dataset: Denoise pxl dataset.
+    """
     comp_graph = PNAGraph.from_edgelist(
         denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
         .edgelist()
@@ -557,7 +582,11 @@ def test_denoise_pls_residualized_path_runs(denoise_pxl_dataset):
 
 @pytest.mark.slow
 def test_denoise_ace_reference_component(denoise_pxl_dataset):
-    """ACE layer removal list matches peripheral partition on reference component."""
+    """ACE layer removal list matches peripheral partition on reference component.
+
+    Args:
+        denoise_pxl_dataset: Denoise pxl dataset.
+    """
     comp_graph = PNAGraph.from_edgelist(
         denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
         .edgelist()
@@ -574,7 +603,12 @@ def test_denoise_ace_reference_component(denoise_pxl_dataset):
 
 @pytest.mark.slow
 def test_denoise_ace_analysis(denoise_pxl_dataset, tmp_path):
-    """ACE-only graph denoising records ACE removal counts."""
+    """ACE-only graph denoising records ACE removal counts.
+
+    Args:
+        denoise_pxl_dataset: Denoise pxl dataset.
+        tmp_path: Tmp path.
+    """
     pxl_file_target = PixelDatasetSaver(pxl_dataset=denoise_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
@@ -615,7 +649,12 @@ def test_denoise_ace_analysis(denoise_pxl_dataset, tmp_path):
 
 @pytest.mark.slow
 def test_denoise_ace_pls_one_core(denoise_pxl_dataset, tmp_path):
-    """ACE, PLS, and One Core graph denoising records removal counts."""
+    """ACE, PLS, and One Core graph denoising records removal counts.
+
+    Args:
+        denoise_pxl_dataset: Denoise pxl dataset.
+        tmp_path: Tmp path.
+    """
 
     pxl_file_target = PixelDatasetSaver(pxl_dataset=denoise_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"

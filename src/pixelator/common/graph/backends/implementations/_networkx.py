@@ -61,7 +61,8 @@ class NetworkXGraphBackend(GraphBackend):
         Create a Graph instance (as an end-user this is probably not the interface
         you are looking for). Try `Graph.from_edgelist`.
 
-        :param raw: The underlying raw representation of the graph, defaults to None
+        Args:
+            raw: The underlying raw representation of the graph, defaults to None
         """
         self._raw = raw
 
@@ -200,15 +201,18 @@ class NetworkXGraphBackend(GraphBackend):
         vertex (node) when `add_marker_counts` is True. If `use_full_bipartite` is
         False or `simplify` is True the edge attributes will be lost.
 
-        :param edgelist: the edge list (dataframe) corresponding to the graph
-        :param add_marker_counts: add a dictionary of marker counts to each node
-        :param simplify: simplifies the graph (remove redundant edges)
-        :param use_full_bipartite: use the bipartite graph instead of the projection
-                                  (UPIA)
-        :param convert_indices_to_integers: convert the indices to integers (this is the default)
-        :returns: a GraphBackend instance
-        :rtype: NetworkXGraphBackend
-        :raises: AssertionError when the input edge list is not valid
+        Args:
+            edgelist: the edge list (dataframe) corresponding to the graph
+            add_marker_counts: add a dictionary of marker counts to each node
+            simplify: simplifies the graph (remove redundant edges)
+            use_full_bipartite: use the bipartite graph instead of the projection (UPIA)
+            convert_indices_to_integers: convert the indices to integers (this is the default)
+
+        Returns:
+            a GraphBackend instance (NetworkXGraphBackend)
+
+        Raises:
+            AssertionError when the input edge list is not valid
         """
         if isinstance(edgelist, pd.DataFrame):
             edgelist: pl.LazyFrame = pl.LazyFrame(edgelist)  # type: ignore
@@ -234,9 +238,11 @@ class NetworkXGraphBackend(GraphBackend):
     def from_raw(graph: Union[nx.Graph, nx.MultiGraph]) -> NetworkXGraphBackend:
         """Generate a Graph from an networkx.Graph object.
 
-        :param graph: input networkx graph to use
-        :return: A pixelator Graph object
-        :rtype: NetworkXGraphBackend
+        Args:
+            graph: input networkx graph to use
+
+        Returns:
+            A pixelator Graph object (NetworkXGraphBackend)
         """
         return NetworkXGraphBackend(graph)
 
@@ -273,8 +279,11 @@ class NetworkXGraphBackend(GraphBackend):
     ) -> csr_matrix:
         """Get the sparse adjacency matrix.
 
-        :param node_ordering: Control the node ordering in the adjacency matrix
-        :return: a sparse adjacency matrix
+        Args:
+            node_ordering: Control the node ordering in the adjacency matrix
+
+        Returns:
+            a sparse adjacency matrix
         """
         return nx.to_scipy_sparse_array(self._raw, nodelist=node_ordering)
 
@@ -344,9 +353,11 @@ class NetworkXGraphBackend(GraphBackend):
     def node_marker_counts(self) -> pd.DataFrame:
         """Get the marker counts of each node as a dataframe.
 
-        :return: node markers as a dataframe
-        :rtype: pd.DataFrame
-        :raises: AssertionError if graph nodes don't include markers
+        Returns:
+            node markers as a dataframe (pd.DataFrame)
+
+        Raises:
+            AssertionError if graph nodes don't include markers
         """
         if "markers" not in self.vs.attributes():
             raise AssertionError("Could not find 'markers' in vertex attributes")
@@ -380,14 +391,14 @@ class NetworkXGraphBackend(GraphBackend):
         counts to use that can be used for plotting.
 
         The layout options are:
-          - coarsened_pmds_3d
-          - wpmds_3d
-          - pmds
-          - pmds_3d
-          - fruchterman_reingold
-          - fruchterman_reingold_3d
-          - kamada_kawai
-          - kamada_kawai_3d
+        - coarsened_pmds_3d
+        - fruchterman_reingold
+        - fruchterman_reingold_3d
+        - kamada_kawai
+        - kamada_kawai_3d
+        - pmds
+        - pmds_3d
+        - wpmds_3d
 
         For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
         preferred. On PNA data they are faster and produce better results.
@@ -395,7 +406,7 @@ class NetworkXGraphBackend(GraphBackend):
         Args:
             layout_algorithm: Layout algorithm to use for coordinate generation.
             only_keep_a_pixels: If True, only keep the a-pixels.
-            get_node_marker_matrix: If True, add a matrix of marker counts to each node.
+            get_node_marker_matrix: Add a matrix of marker counts to each node if True.
             random_seed: Seed for graph layouts with a stochastic element. Useful for
                 deterministic layouts across method calls.
             **kwargs: Passed to the underlying layout implementation.
@@ -406,7 +417,6 @@ class NetworkXGraphBackend(GraphBackend):
         Raises:
             AssertionError: If the provided layout_algorithm is not valid.
             ValueError: If the current graph instance is empty.
-
         """
         start_time = timer()
         coordinates = self._layout_coordinates(
@@ -452,29 +462,35 @@ class NetworkXGraphBackend(GraphBackend):
     def add_edges(self, edges: Iterable[Tuple[int]]) -> None:  # noqa: DOC501
         """Add edges to the graph instance.
 
-        :param edges: Add the following edges to the graph instance.
+        Args:
+            edges: Add the following edges to the graph instance.
         """
         self.raw.add_edges_from(edges)
 
     def add_vertices(self, n_vertices: int, attrs: Dict[str, List]) -> None:
         """Add some number of vertices to the graph instance.
 
-        :param n_vertices: the number of vertices to be added to the graph instance.
-        :param attrs: dict of sequences, all of length equal to the number of vertices
-                      to be added, containing the attributes of the new vertices. If
-                      `n_vertices=1` then they have to be lists of length 1.
-        :raises IndexError: if the number of graph vertices to add and lists of
-                            attributes are of different lengths
+        Args:
+            n_vertices: the number of vertices to be added to the graph instance.
+            attrs: dict of sequences, all of length equal to the number of vertices to be added,
+                containing the attributes of the new vertices. If `n_vertices=1` then they have to
+                be lists of length 1.
+
+        Raises:
+            IndexError: if the number of graph vertices to add and lists of attributes are of
+                different lengths
         """
         raise NotImplementedError()
 
     def add_names_to_vertexes(self, vs_names: List[str]) -> None:
         """Rename the current vertices on the graph instance.
 
-        :param vs_names: Add the following vertices to the graph instance.
-        :raises ValueError: if the graph is empty
-        :raises IndexError: if the number of graph vertices and list of names are
-                            of different length
+        Args:
+            vs_names: Add the following vertices to the graph instance.
+
+        Raises:
+            ValueError: if the graph is empty
+            IndexError: if the number of graph vertices and list of names are of different length
         """
         raise NotImplementedError()
 
@@ -513,6 +529,7 @@ class NetworkxBasedVertex(Vertex):
         neighbor_vertices = set(self._graph.neighbors(self._index))
 
         def generate_neighbors():
+            """Yield neighbor vertices connected to the current cluster."""
             for node_idx, data in self._graph.nodes(data=True):
                 if node_idx in neighbor_vertices:
                     yield NetworkxBasedVertex(node_idx, data, self._graph)
@@ -582,6 +599,7 @@ class NetworkxBasedVertexSequence(VertexSequence):
         """Get all attributes associated with the vertices."""
 
         def all_attributes():
+            """Yield unique vertex attribute keys in the graph."""
             for node in self._vertices.values():
                 for key in node.data.keys():
                     yield key
@@ -680,6 +698,7 @@ class NetworkxBasedVertexClustering(VertexClustering):
 
     def _crossing_edges(self):
         def find_crossing_edges():
+            """Yield edges that cross between connected components."""
             graph = self._graph
             for cluster in self._clustering:
                 # Setting `nbunch2=None` means that we look for all edges
@@ -732,26 +751,30 @@ def pmds_layout(
     floating-point precision.
 
     .. [1] Brandes U, Pich C. Eigensolver Methods for Progressive
-        Multidimensional Scaling of Large Data. International Symposium
-        on Graph Drawing, 2007. Lecture Notes in Computer Science, vol
-        4372. doi: 10.1007/978-3-540-70904-6_6.
+    Multidimensional Scaling of Large Data. International Symposium
+    on Graph Drawing, 2007. Lecture Notes in Computer Science, vol
+    4372. doi: 10.1007/978-3-540-70904-6_6.
 
-    :param g: A networkx graph object
-    :param pivots: The number of pivot nodes to use
-    :param dim: The dimension of the layout
-    :param weights: Edge weights to use for the layout computation.
-    Options are:
 
     * an np.array with non-negative values (same number of elements as edges in g)
     * "prob_dist" to weight each edge (i, j) by -log(P)^3, where P is the probability
-        of a random walker to go from i to j in 5 steps and then back again (j->i)
-        in 5 steps. For this computation, self-loops are added to the graph to ensure
-        that all transitions are possible.
+    of a random walker to go from i to j in 5 steps and then back again (j->i)
+    in 5 steps. For this computation, self-loops are added to the graph to ensure
+    that all transitions are possible.
     * None to use unweighted shortest path lengths
-    :param seed: Set seed for reproducibility
-    :return: A dataframe with layout coordinates
-    :rtype: pd.DataFrame
-    :raises ValueError: if conditions are not met
+
+    Args:
+        g: A networkx graph object
+        pivots: The number of pivot nodes to use
+        dim: The dimension of the layout
+        weights: Edge weights to use for the layout computation. Options are:
+        seed: Set seed for reproducibility
+
+    Returns:
+        A dataframe with layout coordinates (pd.DataFrame)
+
+    Raises:
+        ValueError: if conditions are not met
     """
     if not nx.is_connected(g):
         raise ValueError("Only connected graphs are supported.")
@@ -1065,11 +1088,15 @@ def _prob_edge_weights(
     connected (if there are many possible k-step paths between them), this
     probability should be high.
 
-    :param g: A networkx graph object
-    :param k: The number of steps in the random walk
-    :return: An array of edge weights
-    :rtype: np.array
-    :raises ValueError: if conditions are not met
+    Args:
+        g: A networkx graph object
+        k: The number of steps in the random walk
+
+    Returns:
+        An array of edge weights (np.array)
+
+    Raises:
+        ValueError: if conditions are not met
     """
     # Check that k is an integer between 1 and 10
     if not isinstance(k, int) and k < 1 or k > 10:

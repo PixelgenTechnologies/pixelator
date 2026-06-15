@@ -15,6 +15,7 @@ from pixelator.common.annotate.constants import MINIMUM_N_EDGES_CELL_SIZE
 def test_find_component_min_size_limits_signal_and_noise():
     # Generate two distributions, one that's noise (poisson distribution),
     #  one that is signal (normal distribution)
+    """Verify find component min size limits signal and noise."""
     random_state = np.random.default_rng(seed=1)
     signal = random_state.normal(1500, 500, 1000)
     noise = random_state.poisson(100, 500)
@@ -27,6 +28,7 @@ def test_find_component_min_size_limits_signal_and_noise():
 
 def test_find_component_min_size_limits_only_signal():
     # Generate only a single distributions, that resembles signal (normal distribution)
+    """Verify find component min size limits only signal."""
     random_state = np.random.default_rng(seed=1)
     test_data = random_state.normal(1500, 500, 500)
 
@@ -37,6 +39,7 @@ def test_find_component_min_size_limits_only_signal():
 
 def test_find_component_min_size_limits_only_noise():
     # Generate only a single distributions, that resembles noise (poisson distribution)
+    """Verify find component min size limits only noise."""
     random_state = np.random.default_rng(seed=1)
     test_data = random_state.poisson(100, 500)
 
@@ -45,6 +48,7 @@ def test_find_component_min_size_limits_only_noise():
 
 
 def test_find_component_min_size_limits_signal_and_many_doublets():
+    """Verify find component min size limits signal and many doublets."""
     random_state = np.random.default_rng(seed=1)
     signal = random_state.normal(1500, 500, 500)
     noise = random_state.poisson(100, 500)
@@ -57,6 +61,7 @@ def test_find_component_min_size_limits_signal_and_many_doublets():
 
 
 def test_find_component_max_size():
+    """Verify find component max size."""
     random_state = np.random.default_rng(seed=1)
     signal = random_state.normal(1500, 100, 500)
     noise = random_state.normal(3000, 200, 50)

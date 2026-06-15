@@ -224,30 +224,32 @@ def plot_2d_graph(
     """Plot a (collection of) 2D graph(s) based on the given pixel data.
 
     The graph can be plotted for one or a list of components.
-    The graph nodes can be colored by a marker. The marker can be a (list of) marker(s) or "pixel_type".
+    The graph nodes can be colored by a marker. The marker can be a (list of) marker(s) or
+    "pixel_type".
     Example usage: plot_2d_graph(pxl, component=["PXLCMP0000000"], marker=["HLA-ABC", "HLA-RA"]).
 
-    :param pxl_data: The pixel dataset to plot.
-    :param component: The component(s) to plot. Defaults to None.
-    :param marker: The marker attribute to use for coloring the nodes. Defaults to "pixel_type".
-    :param layout_algorithm: The layout algorithm to use. Defaults to None (checking for pre-computed).
-    :param show_edges: Whether to show the edges in the graph. Defaults to False.
-    :param log_scale: Whether to use a logarithmic scale for the marker attribute. Defaults to True.
-    :param node_size: The size of the nodes. Defaults to 10.0.
-    :param edge_width: The width of the edges. Defaults to 1.0.
-    :param show_b_nodes: Whether to show the B-nodes. Defaults to False.
-    :param cmap: The colormap to use for coloring the nodes. Defaults to "cool".
-    :param alpha: The alpha value for the nodes. Defaults to 0.7.
-    :param cache_layout: Whether to cache the layout coordinates. Defaults to False.
-    :param random_seed: The random seed to use for the layout algorithm. Defaults to None.
+    Args:
+        pxl_data: The pixel dataset to plot.
+        component: The component(s) to plot. Defaults to None.
+        marker: The marker attribute to use for coloring the nodes. Defaults to "pixel_type".
+        layout_algorithm: The layout algorithm to use. Defaults to None (checking for pre-computed).
+        show_edges: Whether to show the edges in the graph. Defaults to False.
+        log_scale: Whether to use a logarithmic scale for the marker attribute. Defaults to True.
+        node_size: The size of the nodes. Defaults to 10.0.
+        edge_width: The width of the edges. Defaults to 1.0.
+        show_b_nodes: Whether to show the B-nodes. Defaults to False.
+        cmap: The colormap to use for coloring the nodes. Defaults to "cool".
+        alpha: The alpha value for the nodes. Defaults to 0.7.
+        cache_layout: Whether to cache the layout coordinates. Defaults to False.
+        random_seed: The random seed to use for the layout algorithm. Defaults to None.
 
-    :return: The figure and axes objects of the plot.
-    :rtype: Tuple[plt.Figure, plt.Axes]
+    Returns:
+        The figure and axes objects of the plot. (Tuple[plt.Figure, plt.Axes])
 
-    :raises: AssertionError if the marker is not found in the component graph.
-    :raises: AssertionError if no nodes are found with the specified marker.
-    :raises: AssertionError if "pixel_type" is in the markers together with other markers.
-
+    Raises:
+        AssertionError if the marker is not found in the component graph.
+        AssertionError if no nodes are found with the specified marker.
+        AssertionError if "pixel_type" is in the markers together with other markers.
     """
     if isinstance(component, str):
         component = [component]
@@ -326,14 +328,15 @@ def plot_3d_from_coordinates(
 ) -> go.Figure:
     """Plot a 3D graph from the given coordinates.
 
-    :param coordinates: The coordinates to plot.
-    :param node_size: The size of the nodes. Defaults to 3.0.
-    :param opacity: The opacity of the nodes. Defaults to 0.4.
-    :param cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
-    :param suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
-    :return: The plotted 3D graph.
-    :rtype: go.Figure
+    Args:
+        coordinates: The coordinates to plot.
+        node_size: The size of the nodes. Defaults to 3.0.
+        opacity: The opacity of the nodes. Defaults to 0.4.
+        cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
+        suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
 
+    Returns:
+        The plotted 3D graph. (go.Figure)
     """
     fig = go.Figure(
         data=[
@@ -374,21 +377,23 @@ def plot_3d_graph(
 ) -> go.Figure:
     """Plot a 3D graph of the specified component in the given PixelDataset.
 
-    :param pxl_data: The PixelDataset containing the data.
-    :param component: The component to plot.
-    :param marker: The marker to use for coloring the nodes. Defaults to None.
-    :param layout_algorithm: The layout algorithm to use for positioning the nodes. Defaults to "fruchterman_reingold_3d".
-    :param log_scale: Whether to apply logarithmic scaling to the marker values. Defaults to True.
-    :param normalize: Whether to normalize the coordinates. Defaults to False.
-    :param node_size: The size of the nodes. Defaults to 3.0.
-    :param opacity: The opacity of the nodes. Defaults to 0.4.
-    :param show_b_nodes: Whether to show nodes of type B. Defaults to False.
-    :param cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
-    :param cache_layout: Whether to cache the layout coordinates. Defaults to False.
-    :param suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
-    :return: The plotted 3D graph.
-    :rtype: go.Figure
+    Args:
+        pxl_data: The PixelDataset containing the data.
+        component: The component to plot.
+        marker: The marker to use for coloring the nodes. Defaults to None.
+        layout_algorithm: The layout algorithm to use for positioning the nodes. Defaults to
+            "fruchterman_reingold_3d".
+        log_scale: Whether to apply logarithmic scaling to the marker values. Defaults to True.
+        normalize: Whether to normalize the coordinates. Defaults to False.
+        node_size: The size of the nodes. Defaults to 3.0.
+        opacity: The opacity of the nodes. Defaults to 0.4.
+        show_b_nodes: Whether to show nodes of type B. Defaults to False.
+        cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
+        cache_layout: Whether to cache the layout coordinates. Defaults to False.
+        suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
 
+    Returns:
+        The plotted 3D graph. (go.Figure)
     """
     coordinates, _, _ = _get_coordinates(
         pxl_data=pxl_data,
@@ -437,19 +442,23 @@ def plot_3d_heatmap(
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot a 3D heatmap for the marker in the provided component.
 
-    :param component_graph: A component graph to plot for.
-    :param marker: marker to plot this for.
-    :param distance_cutoff: a distance cutoff to use for determining size of
-                            area to consider as close in the density calculation.
-    :param layout_algorithm: Layout algorithm to use. Options are:
-                            "fruchterman_reingold_3d" and "kamada_kawai_3d"
-    :param cache_layout: set this to `True` to cache the layout
-                         or faster computations on subsequent calls. This comes at the
-                         cost of additional memory usage.
-    :return: A matplotlib 3D heatmap figure, and it's associated Axes instance
-    :rtype: Tuple[plt.Figure, plt.Axes]
-    :raises: AssertionError if the provided `layout_algorithm` is not valid,
-             or there are no with markers for the provided `marker`
+    Args:
+        component_graph: A component graph to plot for.
+        marker: marker to plot this for.
+        distance_cutoff: a distance cutoff to use for determining size of area to consider as close
+            in the density calculation.
+        layout_algorithm: (Layout algorithm to use. Options are):  "fruchterman_reingold_3d" and
+            "kamada_kawai_3d"
+        cache_layout: set this to `True` to cache the layout or faster computations on subsequent
+            calls. This comes at the cost of additional memory usage.
+
+    Returns:
+        A matplotlib 3D heatmap figure, and it's associated Axes instance (Tuple[plt.Figure,
+        plt.Axes])
+
+    Raises:
+        AssertionError if the provided `layout_algorithm` is not valid, or there are no with markers
+        for the provided `marker`
     """
     coordinates = component_graph.layout_coordinates(
         layout_algorithm=layout_algorithm, cache=cache_layout

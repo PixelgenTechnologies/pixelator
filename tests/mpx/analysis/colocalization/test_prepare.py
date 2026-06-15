@@ -24,6 +24,12 @@ random_number_generator = default_rng(seed=433)
 
 @pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
 def test_prepare_from_graph(enable_backend, edgelist):
+    """Verify prepare from graph.
+
+    Args:
+        enable_backend: enable backend.
+        edgelist: edgelist.
+    """
     graph = Graph.from_edgelist(
         edgelist=edgelist,
         add_marker_counts=True,
@@ -44,6 +50,7 @@ def test_prepare_from_graph(enable_backend, edgelist):
 
 
 def test_filter_by_region_counts():
+    """Verify filter by region counts."""
     df = pd.DataFrame(
         [[1, 2, 3, 4], [2, 3, 5, 6], [10, 5, 3, 8]],
         columns=["marker1", "marker2", "marker3", "marker4"],
@@ -53,6 +60,7 @@ def test_filter_by_region_counts():
 
 
 def test_filter_by_marker_counts():
+    """Verify filter by marker counts."""
     df = pd.DataFrame(
         [[1, 2, 3, 4], [2, 3, 5, 6], [10, 5, 3, 8]],
         columns=["marker1", "marker2", "marker3", "marker4"],
@@ -62,6 +70,7 @@ def test_filter_by_marker_counts():
 
 
 def test_filter_by_unique_values():
+    """Verify filter by unique values."""
     df = pd.DataFrame([[1, 2], [2, 2], [3, 2]], columns=["marker1", "marker2"])
     result = filter_by_unique_values(df=df, at_least_n_unique=2)
     assert result.shape == (3, 1)

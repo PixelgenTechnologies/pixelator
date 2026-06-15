@@ -8,6 +8,7 @@ from pixelator.pna.demux.barcode_demuxer import PNAEmbedding
 
 
 def test_bitvector_roundtrip():
+    """Verify bitvector roundtrip."""
     umi1 = b"AAATAGTCTCCTCGGCAACAGGCCCCTT"
     umi2 = b"TACGGCCTACACCCCTCATTGACACTTT"
     uei = b"GATAAGATAGTGTGA"

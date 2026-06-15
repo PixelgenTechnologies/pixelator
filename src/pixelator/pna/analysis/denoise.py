@@ -38,7 +38,14 @@ logger = logging.getLogger(__name__)
 def _calculate_core_marker_counts(
     node_marker_counts: pd.DataFrame, node_core_numbers: pd.Series
 ) -> pd.DataFrame:
-    """Calculate marker counts for one-core and higher-core nodes."""
+    """Calculate marker counts for one-core and higher-core nodes.
+
+    Args:
+        node_marker_counts: A DataFrame where rows represent nodes and columns represent markers,
+            with values indicating the count of each marker in each node.
+        node_core_numbers: A Series where the index corresponds to the nodes and the values indicate
+            the core number each node belongs to.
+    """
     one_core_counts = node_marker_counts[
         (node_core_numbers[node_marker_counts.index] == 1).values
     ].sum()
@@ -58,7 +65,13 @@ def _perform_fishers_exact_test(
     marker_counts: pd.DataFrame,
     pval_significance_threshold: float,
 ) -> list:
-    """Perform Fisher's exact test to identify over-expressed markers."""
+    """Perform Fisher's exact test to identify over-expressed markers.
+
+    Args:
+        marker_counts: Marker counts.
+        pval_significance_threshold: The p-value threshold for statistical significance in Fisher's
+            exact test. Defaults to 0.05.
+    """
     overexpressed_markers = []
     total_one_core_markers = marker_counts["one_core"].sum()
     total_higher_core_markers = marker_counts["higher_core"].sum()
@@ -84,7 +97,14 @@ def _calculate_excess_counts(
     overexpressed_markers: list,
     inflate_factor: float,
 ) -> list:
-    """Calculate inflated excess counts for over-expressed markers."""
+    """Calculate inflated excess counts for over-expressed markers.
+
+    Args:
+        marker_counts: Marker counts.
+        overexpressed_markers: Overexpressed markers.
+        inflate_factor: A factor used for inflating certain calculations (not explicitly used in the
+            provided code). Defaults to 1.5.
+    """
     results = []
     total_one_core_markers = marker_counts["one_core"].sum()
     total_higher_core_markers = marker_counts["higher_core"].sum()
@@ -120,23 +140,18 @@ def get_overexpressed_markers_in_one_core(
     marker to be removed from the one-core layer.
 
     Args:
-        node_marker_counts (pd.DataFrame): A DataFrame where rows represent
-            nodes and columns represent markers, with values indicating the
-            count of each marker in each node.
-        node_core_numbers (pd.Series): A Series where the index corresponds to
-            the nodes and the values indicate the core number each node belongs to.
-        pval_significance_threshold (float, optional): The p-value threshold
-            for statistical significance in Fisher's exact test. Defaults to 0.05.
-        inflate_factor (float, optional): A factor used to inflate the excess
-            count of markers identified as overexpressed. Defaults to 1.5.
-        one_core_ratio_threshold(float, optional): Components with higher nodes in
-                                                   their one-core layer are not denoised.
-
+        node_marker_counts: A DataFrame where rows represent nodes and columns represent markers,
+            with values indicating the count of each marker in each node.
+        node_core_numbers: A Series where the index corresponds to the nodes and the values indicate
+            the core number each node belongs to.
+        pval_significance_threshold: The p-value threshold for statistical significance in Fisher's
+            exact test. Defaults to 0.05.
+        inflate_factor: A factor used to inflate the excess count of markers identified as
+            overexpressed. Defaults to 1.5.
+        one_core_ratio_threshold: Components with higher nodes in
     Returns:
-        pd.DataFrame: A DataFrame with two columns:
-            - "name": The names of the overexpressed markers.
-            - "count": The inflated excess count of each overexpressed marker.
-
+        DataFrame with columns ``name`` (overexpressed marker) and ``count`` (inflated excess
+        count).
     """
     marker_counts = _calculate_core_marker_counts(node_marker_counts, node_core_numbers)
 
@@ -173,13 +188,12 @@ def get_stranded_nodes(component: PNAGraph, nodes_to_remove: list = []) -> list:
     """Identify nodes that become stranded after removing nodes_to_remove.
 
     Args:
-        component (PNAGraph): The graph component from which nodes will be removed.
-        nodes_to_remove (list): A list of nodes to be removed from the graph.
+        component: The graph component from which nodes will be removed.
+        nodes_to_remove: A list of nodes to be removed from the graph.
 
     Returns:
-        list: A list of stranded nodes that are disconnected from the largest
-        connected component after nodes_to_remove are removed.
-
+        list: A list of stranded nodes that are disconnected from the largest connected component
+        after nodes_to_remove are removed.
     """
     graph = component.raw.copy()
     graph.remove_nodes_from(nodes_to_remove)
@@ -212,7 +226,6 @@ def denoise_ace(
 
     Returns:
         List of node identifiers to remove.
-
     """
     try:
         adaptive_core_expansion(
@@ -237,6 +250,10 @@ def _pixel_type_design_matrix(component: PNAGraph, node_index: pd.Index) -> np.n
     """Build a 2-column design matrix [intercept, B-side dummy] matching R treatment coding.
 
     PNA graphs store bipartite side in the ``pixel_type`` node attribute (``A`` / ``B``).
+
+    Args:
+        component: The graph component to process, containing node marker counts and raw graph data.
+        node_index: Node index.
     """
     pixel_type = nx.get_node_attributes(component.raw, "pixel_type")
     n = len(node_index)
@@ -298,7 +315,6 @@ def denoise_pls(
 
     Returns:
         Nodes to remove, ``[]`` if no PLS-based removal applies.
-
     """
     node_marker_counts = component.node_marker_counts
     idx = node_marker_counts.index
@@ -395,20 +411,18 @@ def denoise_one_core_layer(
     samples nodes associated with those markers for removal (bleed-over candidates).
 
     Args:
-        component (PNAGraph): The graph component to process, containing
-            node marker counts and raw graph data.
-        pval_significance_threshold (float, optional): The p-value threshold
-            for determining marker overexpression significance. Defaults to 0.05.
-        inflate_factor (float, optional): A factor used for inflating certain
-            calculations (not explicitly used in the provided code). Defaults to 1.5.
-        one_core_ratio_threshold(float, optional): Components with higher nodes in
-                                                   their one-core layer are not denoised.
+        component: The graph component to process, containing node marker counts and raw graph data.
+        pval_significance_threshold: The p-value threshold for determining marker overexpression
+            significance. Defaults to 0.05.
+        inflate_factor: A factor used for inflating certain calculations (not explicitly used in the
+            provided code). Defaults to 1.5.
+        one_core_ratio_threshold: Components with higher nodes in their one-core layer are not
+            denoised.
 
     Returns:
-        list: Node ids sampled for removal from the one-core layer (bleed-over
-        candidates). Does not include stranded nodes; callers merge with other
-        denoise steps and then call ``get_stranded_nodes`` once on the combined set.
-
+        list: Node ids sampled for removal from the one-core layer (bleed-over candidates). Does not
+        include stranded nodes; callers merge with other denoise steps and then call
+        ``get_stranded_nodes`` once on the combined set.
     """
     node_marker_counts = component.node_marker_counts
     node_core_numbers = pd.Series(nx.core_number(component.raw))
@@ -440,10 +454,9 @@ def write_denoised_edgelist(
     any AnnData object.
 
     Args:
-        pxl (PNAPixelDataset): The original pixel dataset containing the edgelist.
-        umis_to_remove (list): A list of UMIs (nodes) to be removed from the edgelist.
-        output_edgelist_path (str): The file path where the filtered edgelist Parquet file will be saved.
-
+        pxl: The original pixel dataset containing the edgelist.
+        umis_to_remove: A list of UMIs (nodes) to be removed from the edgelist.
+        output_edgelist_path: The file path where the filtered edgelist Parquet file will be saved.
     """
     with pxl.view.open() as session:
         session.get_connection().execute(
@@ -460,7 +473,7 @@ def write_denoised_edgelist(
 
 
 class DenoiseGraph(PerComponentTask):
-    """Graph denoising: one-core, ACE, and/or PLS on the full graph, merged removal plus stranding."""
+    """Run graph denoising with one-core, ACE, PLS, merged removal, and stranding."""
 
     TASK_NAME = "denoise-graph"
 
@@ -489,7 +502,34 @@ class DenoiseGraph(PerComponentTask):
         min_pls_coreness_correlation: float = 0.0,
         pls_score_threshold: float = -3.0,
     ):
-        """Configure which denoise steps run and their hyperparameters."""
+        """Configure which denoise steps run and their hyperparameters.
+
+        Args:
+            run_one_core: Run one core.
+            run_ace: Run ace.
+            run_pls: Run pls.
+            pval_significance_threshold: The p-value threshold for statistical significance in
+                Fisher's exact test. Defaults to 0.05.
+            inflate_factor: A factor used for inflating certain calculations (not explicitly used in
+                the provided code). Defaults to 1.5.
+            one_core_ratio_threshold: Components with higher nodes in their one-core layer are not
+                denoised.
+            k: Neighborhood radius (steps) for the transition matrix in ACE.
+            max_k_core: Maximum k-core layer used for seeding in ACE.
+            max_iter: Maximum expansion iterations per binding threshold in ACE.
+            min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
+            nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
+            ace_select_lcc: Ace select lcc.
+            pls_ncomp: Pls ncomp.
+            pls_model_k: Pls model k.
+            pls_pred_k: Pls pred k.
+            pls_use_weights: Pls use weights.
+            pls_normalization: Pls normalization.
+            pls_residualize: Pls residualize.
+            pls_component_p_threshold: Per-component Pearson test vs coreness.
+            min_pls_coreness_correlation: Minimum positive correlation.
+            pls_score_threshold: All selected score columns must exceed this.
+        """
         if not run_one_core and not run_ace and not run_pls:
             raise ValueError(
                 "At least one of run_one_core, run_ace, or run_pls must be True."
@@ -523,6 +563,11 @@ class DenoiseGraph(PerComponentTask):
 
         One-core, ACE, and PLS each see the same full ``component`` graph; removals are
         merged afterward so no step is conditioned on another's output.
+
+        Args:
+            component: The graph component to process, containing node marker counts and raw graph
+                data.
+            component_id: Component id.
         """
         one_core_marked: list = []
         ace_marked: list = []

@@ -35,15 +35,18 @@ def filter_components_sizes(
     Filter the component sizes provided in `component_sizes` using the size
     cut-offs defined in `min_size` and `max_size`. The components are not
     actually filtered, the function returns a boolean numpy array which
-    evaluates to True if the component pass the filters.
+    evaluates to True if the component passes the filters.
 
-    :param component_sizes: a numpy array with the size of each component
-    :param min_size: the minimum size a component must have
-    :param max_size: the maximum size a component must have
-    :returns: a boolean np.array with the filtered status (True if the component
-              pass the filters)
-    :rtype: np.ndarray
-    :raises: RuntimeError if all the components are filtered
+    Args:
+        component_sizes: a numpy array with the size of each component
+        min_size: the minimum size a component must have
+        max_size: the maximum size a component must have
+
+    Returns:
+        Boolean array where True indicates that the component passed the filters.
+
+    Raises:
+        NoCellsFoundException: If all components are filtered out.
     """
     n_components = len(component_sizes)
     logger.debug(

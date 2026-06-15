@@ -8,6 +8,7 @@ from pixelator.pna.config import pna_config
 
 
 def test_quality_counting_per_region():
+    """Verify quality counting per region."""
     assay = pna_config.get_assay("proxiome-v1")
     step = QualityProfileStep(assay)
 

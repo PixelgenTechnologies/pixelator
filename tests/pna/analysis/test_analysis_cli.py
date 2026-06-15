@@ -12,6 +12,12 @@ from pixelator.pna.pixeldataset import read
 
 @pytest.mark.slow
 def test_runs_ok(mocker, pna_data_root):
+    """Verify runs ok.
+
+    Args:
+        mocker: mocker.
+        pna_data_root: pna data root.
+    """
     runner = CliRunner()
 
     # Picking a two components here to run to speed up the computations...

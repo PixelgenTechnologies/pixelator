@@ -25,10 +25,11 @@ from typing import Any
 
 
 def _load_flags_from_environment(flag: str, default: Any | None = None) -> Any:
-    """Load feature flag from environment variables.
+    """Load a feature flag from environment variables.
 
-    :param flag: The name of the feature flag.
-    :default: The default value of the feature flag.
+    Args:
+        flag: Feature flag name without the ``PIXELATOR_`` prefix.
+        default: Value returned when the environment variable is unset.
     """
     return os.environ.get(f"PIXELATOR_{flag}", default)
 

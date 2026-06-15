@@ -71,9 +71,10 @@ def pearson(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
     in the RegionByCountsDataFrame. Since these values are symmetrical only
     one of the combination of each marker pair is returned
 
-    :param df: the RegionByCountsDataFrame to compute Pearson correlation on
-    :rtype: MarkerColocalizationResults
-    :return: MarkerColocalizationResults with Pearson correlations
+    Args:
+        df: the RegionByCountsDataFrame to compute Pearson correlation on
+    Returns:
+        MarkerColocalizationResults with Pearson correlations (MarkerColocalizationResults)
     """
     pearson_matrix = df.corr(method="pearson")
     pearson_values = _alphanumeric_sort_marker_columns(
@@ -96,9 +97,10 @@ def jaccard(df: RegionByCountsDataFrame) -> MarkerColocalizationResults:
     in the RegionByCountsDataFrame. Since these values are symmetrical only
     one of the combination of each marker pair is returned
 
-    :param df: the RegionByCountsDataFrame to compute Jaccard indexes on
-    :rtype: MarkerColocalizationResults
-    :return: MarkerColocalizationResults with Jaccard indexes
+    Args:
+        df: the RegionByCountsDataFrame to compute Jaccard indexes on
+    Returns:
+        MarkerColocalizationResults with Jaccard indexes (MarkerColocalizationResults)
     """
     jaccard_matrix = pd.DataFrame(
         1 - pairwise_distances((df.T > 0).to_numpy(dtype=bool), metric="jaccard"),
@@ -123,10 +125,10 @@ def apply_multiple_stats(
 ) -> pd.DataFrame:
     """Compute multiple statistics on the same dataframe.
 
-    :param df: data to compute statistics on
-    :param funcs: a list of functions to use to compute the
-                  statistics
-    :return: a dataframe with all the statistics computed for the dataframe
-    :rtype: pd.DataFrame
+    Args:
+        df: data to compute statistics on
+        funcs: a list of functions to use to compute the statistics
+    Returns:
+        a dataframe with all the statistics computed for the dataframe (pd.DataFrame)
     """
     return pd.concat([func.func(df) for func in funcs], axis=1)

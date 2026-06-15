@@ -48,8 +48,11 @@ class SummaryStatistics(pydantic.BaseModel):
     def from_series(cls, distribution: pd.Series | pl.Series) -> Self:
         """Create a SummaryStatistics from a pandas or polars Series.
 
-        :param distribution: The series to summarize.
-        :return: A SummaryStatistics object from given series.
+        Args:
+            distribution: The series to summarize.
+
+        Returns:
+            A SummaryStatistics object from given series.
         """
         distribution = distribution.to_numpy()
 

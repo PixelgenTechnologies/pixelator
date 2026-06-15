@@ -51,20 +51,25 @@ def find_component_size_limits(
     We select the top 50% largest components, and find the maximum rank R
     of a component where:
 
-      d > DOUBLET_DISTANCE_DEVIATION_FACTOR * stdev(d)
+    d > DOUBLET_DISTANCE_DEVIATION_FACTOR * stdev(d)
 
     Essentially finding components that are outliers both in the first and the
     second derivate. We then use R, to find the component with rank R, as the size
     cutoff.
 
     .. [1] Lun, A., Riesenfeld, S., Andrews, T. et al. EmptyDrops: distinguishing
-        cells from empty droplets in droplet-based single-cell RNA sequencing
+    cells from empty droplets in droplet-based single-cell RNA sequencing
 
-    :param component_sizes: a numpy array of component sizes
-    :param direction: the direction of the cutoff, either "lower" or "upper"
-    :return: the lower or upper bound cutoff
-    :raises AssertionError: if the direction is not lower or upper
-    :raises AssertionError: if component_sizes contain NaNs or zeros
+    Args:
+        component_sizes: a numpy array of component sizes
+        direction: the direction of the cutoff, either "lower" or "upper"
+
+    Returns:
+        the lower or upper bound cutoff
+
+    Raises:
+        AssertionError: if the direction is not lower or upper
+        AssertionError: if component_sizes contain NaNs or zeros
     """
 
     def log_size_and_rank(df: pd.DataFrame) -> pd.DataFrame:

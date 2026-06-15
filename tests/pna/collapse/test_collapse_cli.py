@@ -10,6 +10,12 @@ from pixelator import cli
 
 @pytest.mark.skip(reason="For debugging only")
 def test_collapse_run(mocker, testdata_paired_small_demux):
+    """Verify collapse run.
+
+    Args:
+        mocker: mocker.
+        testdata_paired_small_demux: testdata paired small demux.
+    """
     runner = CliRunner()
     mocker.patch("pixelator.cli.amplicon.amplicon_fastq")
 
@@ -32,6 +38,13 @@ def test_collapse_run(mocker, testdata_paired_small_demux):
 
 @pytest.mark.parametrize("panel_file", ["proxiome-v1-immuno-155-v1.0"])
 def test_invalid_mismatch_param(mocker, testdata_paired_small_demux, panel_file):
+    """Verify invalid mismatch param.
+
+    Args:
+        mocker: mocker.
+        testdata_paired_small_demux: testdata paired small demux.
+        panel_file: panel file.
+    """
     runner = CliRunner()
     mocker.patch("pixelator.pna.cli.amplicon.amplicon_fastq")
 

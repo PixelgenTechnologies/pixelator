@@ -90,6 +90,7 @@ class GraphSampleReport(SampleReport):
         description="The ratio of the total number of A-pixels and the total number of B-pixels in the graph.",
     )
     def a_pixel_b_pixel_ratio(self):  # noqa: D102
+        """Return the ratio of A-pixel to B-pixel counts."""
         return self.a_pixel_count / self.b_pixel_count
 
     @pydantic.computed_field(  # type: ignore
@@ -98,4 +99,9 @@ class GraphSampleReport(SampleReport):
     )
     @property
     def pixel_count(self) -> int:  # noqa: D102
+        """Pixel count.
+
+        Returns:
+            Number of graph components in the report.
+        """
         return self.a_pixel_count + self.b_pixel_count

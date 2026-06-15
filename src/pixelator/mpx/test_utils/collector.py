@@ -16,9 +16,11 @@ class NoModuleClass(pytest.Class):  # noqa
         """Fake module with a None obj."""
 
         def __init__(self):  # noqa
+            """Create a placeholder module object for pytest collection."""
             self.obj = None
 
     def getparent(self, cls):  # noqa
+        """Return a mock module parent when pytest expects a module node."""
         parent = super().getparent(cls)
         if parent is None:
             return self.MockModule()

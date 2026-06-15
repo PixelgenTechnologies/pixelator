@@ -28,13 +28,17 @@ def permutations(
 ) -> Generator[RegionByCountsDataFrame, None, None]:
     """Generate `n` permutations of the data provided in `df`.
 
-    :param df: dataframe to use as basis of permutations
-    :param n: number of permutations to generate, defaults to 50
-    :param random_seed: set a seed to the random number generator
-                        needed to make results deterministic, defaults to None
-    :yields RegionByCountsDataFrame: a RegionByCountsDataFrame object
-    :return: a generator that yields `n` permutations of the input dataframe
-    :rtype: Generator[RegionByCountsDataFrame, None, None]
+    Args:
+        df: dataframe to use as basis of permutations
+        n: number of permutations to generate, defaults to 50
+        random_seed: set a seed to the random number generator needed to make results deterministic,
+            defaults to None
+    Returns:
+        a generator that yields `n` permutations of the input dataframe
+        (Generator[RegionByCountsDataFrame, None, None])
+
+    Yields:
+        a RegionByCountsDataFrame object (RegionByCountsDataFrame)
     """
     random_number_generator = _get_random_number_generator(random_seed)
     for _ in range(n):
@@ -54,10 +58,12 @@ def permute(
     might mean that some markers that have counts in the original
     dataframe might not have it counts in the permuted dataframe.
 
-    :param df: input dataframe to permute
-    :param random_number_generator: Set a random number generator
-                                    to make results reproducible, defaults to None
-    :return: a permuted dataframe
+    Args:
+        df: input dataframe to permute
+        random_number_generator: Set a random number generator to make results reproducible,
+            defaults to None
+    Returns:
+        a permuted dataframe
     """
     if not random_number_generator:
         random_number_generator = _get_random_number_generator()

@@ -15,6 +15,7 @@ random_number_generator = default_rng(seed=747)
 
 
 def test_permute_edgelist():
+    """Verify permute edgelist."""
     n_markers = 4
     n_nodes = 50
     n_edges = 500
@@ -73,6 +74,7 @@ def test_permute_edgelist():
 
 @pytest.mark.slow
 def test_permutations():
+    """Verify permutations."""
     df = pl.DataFrame(
         random_number_generator.integers(0, 100, size=(200, 4)),
         schema=["umi1", "umi2", "marker_1", "marker_2"],

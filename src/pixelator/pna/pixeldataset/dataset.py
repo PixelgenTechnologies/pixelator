@@ -54,10 +54,11 @@ class PNAPixelDataset:
         Note that setting any of the `active_*` parameters to None will include
         all samples, components, or markers.
 
-        :param view: The PixelDataViewer instance to use for accessing the data.
-        :param config: The configuration for the dataset.
-        :param active_components: The components to include in the dataset.
-        :param active_markers: The markers to include in the dataset.
+        Args:
+            view: The PixelDataViewer instance to use for accessing the data.
+            config: The configuration for the dataset.
+            active_components: The components to include in the dataset.
+            active_markers: The markers to include in the dataset.
         """
         self._view = view
         if config is None:
@@ -82,7 +83,13 @@ class PNAPixelDataset:
         | dict[str, Path],
         config: PixelDatasetConfig | None = None,
     ) -> PNAPixelDataset:
-        """Alias for `from_pxl_files`."""
+        """Alias for `from_pxl_files`.
+
+        Args:
+            pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a
+                dictionary with sample names as keys and paths as values.
+            config: The configuration for the dataset.
+        """
         return PNAPixelDataset.from_pxl_files(pxl_files, config)
 
     @staticmethod
@@ -101,10 +108,10 @@ class PNAPixelDataset:
 
         If you pass a dictionary of .pxl files the keys will be used as the sample names.
 
-        :param pxl_files: The .pxl files to include in the dataset.
-                          Can be a list of paths or a dictionary with sample names
-                          as keys and paths as values.
-        :param config: The configuration for the dataset.
+        Args:
+            pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a
+                dictionary with sample names as keys and paths as values.
+            config: The configuration for the dataset.
         """
         if isinstance(pxl_files, Path):
             return PNAPixelDataset(
@@ -173,17 +180,20 @@ class PNAPixelDataset:
         by quite a bit.
 
         .. code-block:: python
-            from pixelator.pna.pixeldataset import PixelDataset
-            from pixelator.pna.pixeldataset.io import Query
+        from pixelator.pna.pixeldataset import PixelDataset
+        from pixelator.pna.pixeldataset.io import Query
 
-            pxl_files = ...
-            pxl_dataset = PixelDataset.from_pxl_files(pxl_files)
-            with pxl_dataset.view.open() as session:
-                df = session.execute_eager(
-                    Query("SELECT * FROM edgelist WHERE marker_1 = $m", {"m": "CD3"})
-                ).to_pandas()
+        pxl_files = ...
+        pxl_dataset = PixelDataset.from_pxl_files(pxl_files)
+        with pxl_dataset.view.open() as session:
+        df = session.execute_eager(
+        Query("SELECT * FROM edgelist WHERE marker_1 = $m", {"m": "CD3"})
+        ).to_pandas()
 
-        :return: The PixelDataViewer instance used by the dataset.
+
+
+        Returns:
+            The PixelDataViewer instance used by the dataset.
         """
         return self._view
 
@@ -195,9 +205,13 @@ class PNAPixelDataset:
         """Return the AnnData instance for the dataset.
 
         This will be filtered to only include the active samples, components, and markers.
-        :param add_log1p_transform: If True, add the log1p transformation to the data.
-        :param add_clr_transform: If True, add the clr transformation to the data.
-        :return: The AnnData instance for the dataset.
+
+        Args:
+            add_log1p_transform: If True, add the log1p transformation to the data.
+            add_clr_transform: If True, add the clr transformation to the data.
+
+        Returns:
+            The AnnData instance for the dataset.
         """
         return self._adata_helper.read_adata(
             add_log1p_transform=add_log1p_transform,
@@ -210,7 +224,10 @@ class PNAPixelDataset:
         """Return the Edgelist instance for the dataset.
 
         This will be filtered to only include the active samples and components.
-        :return: The Edgelist instance for the dataset.
+
+
+        Returns:
+            The Edgelist instance for the dataset.
         """
         return Edgelist(
             self.view,
@@ -228,9 +245,13 @@ class PNAPixelDataset:
 
         This will be filtered to only include the active samples, components, and markers.
 
-        :param add_marker_counts: If True, add the marker counts to the proximity data.
-        :param add_logratio: If True, add the logratio to the proximity data.
-        :return: The Proximity instance for the dataset.
+        Args:
+            add_marker_counts: If True, add the marker counts to the proximity data.
+            add_logratio: If True, add the logratio to the proximity data.
+            calculate_from_edgelist: Calculate from edgelist.
+
+        Returns:
+            The Proximity instance for the dataset.
         """
         return Proximity(
             self.view,
@@ -247,10 +268,13 @@ class PNAPixelDataset:
     ) -> PreComputedLayouts:
         """Return the PreComputedLayouts instance for the dataset.
 
-        :param add_marker_counts: If True, add the marker counts to the precomputed layouts.
-        :param add_spherical_norm: If True, add spherical coordinates to dataframe
-        This will be filtered to only include the active samples and components.
-        :return: The PreComputedLayouts instance for the dataset.
+        Args:
+            add_marker_counts: If True, add the marker counts to the precomputed layouts.
+            add_spherical_norm: If True, add spherical coordinates to dataframe This will be
+                filtered to only include the active samples and components.
+
+        Returns:
+            The PreComputedLayouts instance for the dataset.
         """
         return PreComputedLayouts(
             self.view,
@@ -289,18 +313,29 @@ class PNAPixelDataset:
     ) -> PNAPixelDataset:
         """Filter the dataset to only include the specified samples, components, and markers.
 
-        Filtering by components will apply to all data modalities (i.e. adata, edgelist, proximity, and precomputed layouts).
-        However, filtering by markers will only apply to the adata and proximity data modalities, since filtering
+        Filtering by components will apply to all data modalities (i.e. adata, edgelist, proximity,
+        and precomputed layouts).
+        However, filtering by markers will only apply to the adata and proximity data modalities,
+        since filtering
         by markers in the edgelist and precomputed layouts will cause components to break up.
 
-        Note that filtering is done lazily, so creating new filters is cheap. The actual filtering will only be done
+        Note that filtering is done lazily, so creating new filters is cheap. The actual filtering
+        will only be done
         once the underlying data is accessed.
 
-        :param samples: The samples to include in the dataset (default: None means no filter is applied).
-        :param components: The components to include in the dataset (default: None means no filter is applied).
-        :param markers: The markers to include in the dataset (default: None means no filter is applied).
-        :raises ValueError: if all of the specified samples, components, or markers do not exist in the dataset.
-        :return: A new PixelDataset with the specified samples, components, and markers
+        Args:
+            samples: (The samples to include in the dataset (default): None means no filter is
+                applied).
+            components: (The components to include in the dataset (default): None means no filter is
+                applied).
+            markers: (The markers to include in the dataset (default): None means no filter is
+                applied).
+
+        Returns:
+            A new PixelDataset with the specified samples, components, and markers
+        Raises:
+            ValueError: if all of the specified samples, components, or markers do not exist in the
+                dataset.
         """
         samples = normalize_input_to_set(samples)
         components = normalize_input_to_set(components)

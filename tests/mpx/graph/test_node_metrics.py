@@ -17,6 +17,11 @@ from pixelator.common.graph.node_metrics import (
 
 def test_compute_transition_probabilities(pentagram_graph):
     # Create a sparse adjacency matrix
+    """Verify compute transition probabilities.
+
+    Args:
+        pentagram_graph: pentagram graph.
+    """
     A = pentagram_graph.get_adjacency_sparse()
 
     # Compute transition probabilities
@@ -40,6 +45,11 @@ def test_compute_transition_probabilities(pentagram_graph):
 
 def test_compute_transition_probabilities_remove_self_loops_true(pentagram_graph):
     # Create a sparse adjacency matrix
+    """Verify compute transition probabilities remove self loops true.
+
+    Args:
+        pentagram_graph: pentagram graph.
+    """
     A = pentagram_graph.get_adjacency_sparse()
 
     # Compute transition probabilities
@@ -63,6 +73,11 @@ def test_compute_transition_probabilities_remove_self_loops_true(pentagram_graph
 
 def test_local_g(pentagram_graph):
     # Create a sparse adjacency matrix
+    """Verify local g.
+
+    Args:
+        pentagram_graph: pentagram graph.
+    """
     A = pentagram_graph.get_adjacency_sparse()
     counts = pentagram_graph.node_marker_counts
 
@@ -94,6 +109,11 @@ def test_local_g(pentagram_graph):
 
 def test_local_g_use_weights_false(pentagram_graph):
     # Create a sparse adjacency matrix
+    """Verify local g use weights false.
+
+    Args:
+        pentagram_graph: pentagram graph.
+    """
     A = pentagram_graph.get_adjacency_sparse()
     # Create a 5x5 DataFrame of marker counts
     counts = pd.DataFrame(
@@ -167,6 +187,11 @@ def test_local_g_use_weights_false(pentagram_graph):
 
 def test_local_g_normalize_counts_false(pentagram_graph):
     # Create a sparse adjacency matrix
+    """Verify local g normalize counts false.
+
+    Args:
+        pentagram_graph: pentagram graph.
+    """
     A = pentagram_graph.get_adjacency_sparse()
     # Create a 5x5 DataFrame of marker counts
     counts = pd.DataFrame(
@@ -240,6 +265,11 @@ def test_local_g_normalize_counts_false(pentagram_graph):
 
 def test_local_g_normalize_method_gstari(pentagram_graph):
     # Create a sparse adjacency matrix
+    """Verify local g normalize method gstari.
+
+    Args:
+        pentagram_graph: pentagram graph.
+    """
     A = pentagram_graph.get_adjacency_sparse()
     # Create a 5x5 DataFrame of marker counts
     counts = pd.DataFrame(
@@ -313,6 +343,11 @@ def test_local_g_normalize_method_gstari(pentagram_graph):
 
 def test_local_g_k4(pentagram_graph):
     # Create a sparse adjacency matrix
+    """Verify local g k4.
+
+    Args:
+        pentagram_graph: pentagram graph.
+    """
     A = pentagram_graph.get_adjacency_sparse()
     # Create a 5x5 DataFrame of marker counts
     counts = pd.DataFrame(

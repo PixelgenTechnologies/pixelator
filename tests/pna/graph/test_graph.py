@@ -57,6 +57,7 @@ EDGELIST_DATA = """umi1,umi2,count,uei,marker_1,marker_2,component
 
 
 def test_graph_from_edgelist():
+    """Verify graph from edgelist."""
     input_data = pl.read_csv(
         StringIO(EDGELIST_DATA),
         has_header=True,
@@ -283,6 +284,7 @@ def test_graph_from_edgelist():
 
 @pytest.fixture
 def graph():
+    """Graph."""
     input_data = pl.read_csv(
         StringIO(EDGELIST_DATA),
         has_header=True,
@@ -300,12 +302,22 @@ def graph():
 
 
 def test_graph_can_get_marker_counts(graph):
+    """Verify graph can get marker counts.
+
+    Args:
+        graph: graph.
+    """
     result = graph.node_marker_counts
     assert set(result.columns) == {"MarkerC", "MarkerB", "MarkerA"}
     assert result.shape == (34, 3)
 
 
 def test_graph_can_get_local_g(graph):
+    """Verify graph can get local g.
+
+    Args:
+        graph: graph.
+    """
     result = graph.local_g(k=1)
     assert set(result.columns) == {"MarkerC", "MarkerB", "MarkerA"}
     assert result.shape == (34, 3)

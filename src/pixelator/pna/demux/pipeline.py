@@ -71,16 +71,21 @@ class DemuxPipeline:
     def __init__(
         self, demuxer: BarcodeDemuxer, writer_queue: Optional[Queue] = None
     ) -> None:
-        """Initialize a pipeline that processes reads and sends them to a writer queue for further processing.
+        """Initialize a read-processing pipeline with an optional writer queue.
 
-        :param demuxer: The barcode demuxer to use
-        :param writer_queue: The queue to send the processed reads to
+        Args:
+            demuxer: The barcode demuxer to use
+            writer_queue: The queue to send the processed reads to
         """
         self._demuxer = demuxer
         self._writer_queue = writer_queue
 
     def set_writer_queue(self, writer_queue: Queue) -> None:
-        """Set the writer queue for the pipeline."""
+        """Set the writer queue for the pipeline.
+
+        Args:
+            writer_queue: The queue to send the processed reads to
+        """
         self._writer_queue = writer_queue
 
     def process_reads(
@@ -90,8 +95,9 @@ class DemuxPipeline:
     ) -> Tuple[int, int, Optional[int]]:
         """Run the pipeline. Return statistics.
 
-        :param infiles: Input chunks of data as a file-like object
-        :param progress: A progress object to update
+        Args:
+            infiles: Input chunks of data as a file-like object
+            progress: A progress object to update
         """
         assert self._writer_queue is not None
 
@@ -196,7 +202,8 @@ class DemuxFilenamePolicy(Protocol):
     def get_filename(self, group_index: int) -> str:
         """Return the filename for the given group index.
 
-        :param group_index: The index of the group to write the data to
+        Args:
+            group_index: The index of the group to write the data to
         """
         ...
 
@@ -211,13 +218,18 @@ class PartsFilenamePolicy(DemuxFilenamePolicy):
     def __init__(self, prefix: str):
         """Initialize the filename policy.
 
-        :param prefix: The prefix to use for the output files.
+        Args:
+            prefix: The prefix to use for the output files.
         """
         super().__init__()
         self.prefix = prefix
 
     def get_filename(self, group_index: int) -> str:
-        """Return the filename for the given group index."""
+        """Return the filename for the given group index.
+
+        Args:
+            group_index: The index of the group to write the data to
+        """
         return f"{self.prefix}.part_{group_index:03d}.parquet"
 
 
@@ -235,7 +247,10 @@ class IndependentMarkersFilenamePolicy(DemuxFilenamePolicy):
     def __init__(self, prefix: str, m1_map: dict[str, int], m2_map: dict[str, int]):
         """Initialize the filename policy.
 
-        :param prefix: The prefix to use for the output files.
+        Args:
+            prefix: The prefix to use for the output files.
+            m1_map: M1 map.
+            m2_map: M2 map.
         """
         super().__init__()
         self.prefix = prefix
@@ -254,7 +269,11 @@ class IndependentMarkersFilenamePolicy(DemuxFilenamePolicy):
         return idx - self._m2_min
 
     def get_filename(self, group_index: int) -> str:
-        """Return the filename for the given group index."""
+        """Return the filename for the given group index.
+
+        Args:
+            group_index: The index of the group to write the data to
+        """
         if group_index in self._m1_groups:
             idx = self._rescaled_m1(group_index)
             return f"{self.prefix}.m1.part_{idx:03d}.parquet"
@@ -279,11 +298,13 @@ class DemuxWriterProcess(mpctx_Process):
     ):
         """Initialize a DemuxWriterProcess instance.
 
-        :param output_directory: The directory to write the output arrow files to
-        :param filename_prefix: The prefix to use for the output files
-        :param queue: The queue to receive data from the worker processes
-        :param connection: The connection to the parent process
-        :param schema: The schema of the arrow Tables received from the worker nodes
+        Args:
+            output_directory: The directory to write the output arrow files to
+            filename_prefix: The prefix to use for the output files
+            queue: The queue to receive data from the worker processes
+            connection: The connection to the parent process
+            schema: The schema of the arrow Tables received from the worker nodes
+            filename_policy: The policy to determine the filename of the output files.
         """
         super().__init__()
 
@@ -306,7 +327,11 @@ class DemuxWriterProcess(mpctx_Process):
         self._write_options = {"use_threads": True}
 
     def open_writer(self, group_index: int):
-        """Open a new writer for the given group index."""
+        """Open a new writer for the given group index.
+
+        Args:
+            group_index: The index of the group to write the data to
+        """
         name = self.filename_policy.get_filename(group_index)
         output_file_path = str(self.output_directory / name)
         batch_writer = pq.ParquetWriter(
@@ -358,8 +383,9 @@ class DemuxWriterProcess(mpctx_Process):
 
         If the buffer is large enough, write it to disk.
 
-        :param group_index: The index of the group to write the data to
-        :param buf: The serialized bytes of a RecordBatch received from a worker process
+        Args:
+            group_index: The index of the group to write the data to
+            buf: The serialized bytes of a RecordBatch received from a worker process
         """
         # Convert the raw buffer back into a RecordBatch
         group_batch = pa.ipc.read_record_batch(buf, self._schema)
@@ -373,8 +399,9 @@ class DemuxWriterProcess(mpctx_Process):
     def write_batches(self, group_index: int, group_data: RecordBatchList) -> None:
         """Write batches of records to the output file for given `group_index`.
 
-        :param group_index: The index of the group to write the data to
-        :param group_data: The RecordBatchList containing the data to write
+        Args:
+            group_index: The index of the group to write the data to
+            group_data: The RecordBatchList containing the data to write
         """
         table = pa.Table.from_batches(group_data.batches())
         writer = self._batch_writers.get(group_index)
@@ -421,13 +448,15 @@ class DemuxWorkerProcess(mpctx_Process):
     ) -> None:
         """Initialize the worker process.
 
-        :param id_: The index of the worker
-        :param pipeline: The pipeline to run
-        :param inpaths: The input paths to read data from
-        :param read_pipe: The connection to the reader process
-        :param parent_pipe: The connection to the parent process
-        :param writer_queue: The queue to send the processed reads to
-        :param need_work_queue: The queue to notify the reader process that work is needed
+        Args:
+            id_: The index of the worker
+            pipeline: The pipeline to run
+            inpaths: The input paths to read data from
+            read_pipe: The connection to the reader process
+            parent_pipe: The connection to the parent process
+            writer_queue: The queue to send the processed reads to
+            need_work_queue: The queue to notify the reader process that work is needed
+            statistics_class: Statistics class.
         """
         super().__init__()
         self._id = id_
@@ -495,15 +524,19 @@ class WorkerException(Exception):
     To communicate the traceback in a multiprocessing setting, we need to
     capture the traceback as a string.
 
-    :ivar e: The original exception
-    :ivar tb_str: The traceback string
+
+
+    Attributes:
+        e: The original exception
+        tb_str: The traceback string
     """
 
     def __init__(self, wrapped_exception, tb_str):
         """Initialize the WorkerException object.
 
-        :param wrapped_exception: The original exception
-        :param tb_str: The traceback string
+        Args:
+            wrapped_exception: The original exception
+            tb_str: The traceback string
         """
         self.e = wrapped_exception
         self.tb_str = tb_str
@@ -552,7 +585,6 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
             output_directory: The directory to write the output files to.
             filename_policy: The policy to determine the filename of the output files.
             buffer_size: The size of the buffer to use for reading data.
-
         """
         self._n_workers = n_workers
         self._need_work_queue: multiprocessing.Queue = mpctx.Queue()
@@ -609,7 +641,11 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
     def _start_workers(
         self, pipeline
     ) -> tuple[list[DemuxWorkerProcess], list[Connection]]:
-        """Start the worker processes and return them and the connections to them."""
+        """Start the worker processes and return them and the connections to them.
+
+        Args:
+            pipeline: The pipeline to run.
+        """
         workers = []
         out_connection_parent: list[Connection] = []
 
@@ -636,9 +672,12 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
     def run(self, pipeline, progress) -> Statistics:
         """Run a pipeline on the pipeline runner.
 
-        :param pipeline: The pipeline to run.
-        :param progress: A progress object to update with the number of processed reads.
-        :return: A statistics object.
+        Args:
+            pipeline: The pipeline to run.
+            progress: A progress object to update with the number of processed reads.
+
+        Returns:
+            A statistics object.
         """
         workers, connections = self._start_workers(pipeline)
 
@@ -727,6 +766,9 @@ class ParallelDemuxPipelineRunner(PipelineRunner):
         """Try to receive data over `connection` and return it.
 
         If an exception was received, raise it.
+
+        Args:
+            connection: The connection to the parent process
         """
         result = connection.recv()
         if result == -2:

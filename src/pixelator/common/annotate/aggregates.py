@@ -27,14 +27,17 @@ def specificity_tau(matrix: np.ndarray) -> np.ndarray:
     markers are equally expressed would have a tau score of 0.
 
     .. [1] Yanai I, Benjamin H, Shmoish M, Chalifa-Caspi V, Shklar M, Ophir R,
-        Bar-Even A, Horn-Saban S, Safran M, Domany E, Lancet D, Shmueli O.
-        Genome-wide midrange transcription profiles reveal expression level
-        relationships in human tissue specification. Bioinformatics.
-        2005 Mar 1;21(5):650-9.
-        doi: 10.1093/bioinformatics/bti042. Epub 2004 Sep 23. PMID: 15388519.
+    Bar-Even A, Horn-Saban S, Safran M, Domany E, Lancet D, Shmueli O.
+    Genome-wide midrange transcription profiles reveal expression level
+    relationships in human tissue specification. Bioinformatics.
+    2005 Mar 1;21(5):650-9.
+    doi: 10.1093/bioinformatics/bti042. Epub 2004 Sep 23. PMID: 15388519.
 
-    :param matrix: a numpy matrix of marker counts
-    :return: a vector of the computed tau values
+    Args:
+        matrix: a numpy matrix of marker counts
+
+    Returns:
+        a vector of the computed tau values
     """
     max_count = np.max(matrix, axis=1)
     _, nbr_markers = matrix.shape
@@ -49,10 +52,10 @@ def call_aggregates(adata: AnnData, inplace: bool = True) -> Optional[AnnData]:
     """Call aggregates on the adata instance.
 
     We defined aggregates as components where either:
-     - A single or a handful of markers account for almost all of the count data.
-       These can likely be attributed to single antibodies forming aggregates
-     - Low tau scores, meaning a an even number of counts for multiple markers.
-       These likely come from multiple antibodies forming aggregates.
+    - A single or a handful of markers account for almost all of the count data.
+    These can likely be attributed to single antibodies forming aggregates
+    - Low tau scores, meaning a an even number of counts for multiple markers.
+    These likely come from multiple antibodies forming aggregates.
 
     For downstream analysis both of these types should be removed for most types
     of analysis.
@@ -70,19 +73,22 @@ def call_aggregates(adata: AnnData, inplace: bool = True) -> Optional[AnnData]:
     from the median.
 
     The following data is added to the AnnData:
-        - `obs["tau"]` = The tau specificity score of the component
-        - `obs["tau_type"]` = "normal"/"high"/"low" for components with
-            the respective levels of tau scores.
-        - `uns["tau_thresholds"]["tau_upper_hard_limit"]` the upper hard
-           limit used to set `tau_type` as high
-        - `uns["tau_thresholds"]["tau_upper_iqr_limit]` the upper limit
-           based on IQR used to set `tau_type` as high
-        - `uns["tau_thresholds"]["tau_lower_iqr_limit]` the lower limit
-           based on IQR used to set `tau_type` as low
+    - `obs["tau"]` = The tau specificity score of the component
+    - `obs["tau_type"]` = "normal"/"high"/"low" for components with
+    the respective levels of tau scores.
+    - `uns["tau_thresholds"]["tau_upper_hard_limit"]` the upper hard
+    limit used to set `tau_type` as high
+    - `uns["tau_thresholds"]["tau_upper_iqr_limit]` the upper limit
+    based on IQR used to set `tau_type` as high
+    - `uns["tau_thresholds"]["tau_lower_iqr_limit]` the lower limit
+    based on IQR used to set `tau_type` as low
 
-    :param adata: an AnnData object to call aggregates on
-    :param inplace: If `True` performs the operation inplace
-    :return: the updated AnnData object or None if inplace is True.
+    Args:
+        adata: an AnnData object to call aggregates on
+        inplace: If `True` performs the operation inplace
+
+    Returns:
+        the updated AnnData object or None if inplace is True.
     """
     logging.debug("Calling aggregates based on tau specificity scores")
 

@@ -43,9 +43,13 @@ from pixelator.mpx.plot.layout_plots import (
 def test_plot_3d_graph(
     snapshot: Snapshot, component, marker, setup_basic_pixel_dataset
 ):
-    """Test `plot_3d_graph` function.
+    """Verify ``plot_3d_graph`` renders a figure for parametrized components.
 
-    :param snapshot: testing snapshot directory
+    Args:
+        snapshot: Snapshot helper used for regression comparisons.
+        component: Component id passed to the plotting function.
+        marker: Optional marker name highlighted in the plot.
+        setup_basic_pixel_dataset: Fixture providing a minimal ``PixelDataset``.
     """
     np.random.seed(0)
     snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"
@@ -72,9 +76,13 @@ def test_plot_3d_graph(
 def test_plot_3d_graph_precomputed(
     snapshot: Snapshot, component, marker, setup_basic_pixel_dataset
 ):
-    """Test `plot_3d_graph` function.
+    """Verify ``plot_3d_graph`` uses precomputed layouts when available.
 
-    :param snapshot: testing snapshot directory
+    Args:
+        snapshot: Snapshot helper used for regression comparisons.
+        component: Component id passed to the plotting function.
+        marker: Optional marker name highlighted in the plot.
+        setup_basic_pixel_dataset: Fixture providing a minimal ``PixelDataset``.
     """
     np.random.seed(0)
     snapshot.snapshot_dir = "tests/snapshots/test_plot/test_plot_3d_graph"
@@ -105,6 +113,14 @@ def test_plot_3d_graph_precomputed(
 def test_plot_2d_graph_precomputed(
     setup_basic_pixel_dataset, component, marker, show_b_nodes
 ):
+    """Verify plot 2d graph precomputed.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+        component: component.
+        marker: marker.
+        show_b_nodes: show b nodes.
+    """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
     assert pxl_data.precomputed_layouts is not None
@@ -132,6 +148,14 @@ def test_plot_2d_graph_precomputed(
     ],
 )
 def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_nodes):
+    """Verify plot 2d graph.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+        component: component.
+        marker: marker.
+        show_b_nodes: show b nodes.
+    """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
     fig, _ = plot_2d_graph(
@@ -150,6 +174,11 @@ def test_plot_2d_graph(setup_basic_pixel_dataset, component, marker, show_b_node
     baseline_dir="../snapshots/test_plot/test_plot_colocalization_heatmap",
 )
 def test_plot_colocalization_heatmap(setup_basic_pixel_dataset):
+    """Verify plot colocalization heatmap.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
     fig, _ = plot_colocalization_heatmap(
@@ -163,6 +192,11 @@ def test_plot_colocalization_heatmap(setup_basic_pixel_dataset):
     baseline_dir="../snapshots/test_plot/test_plot_colocalization_diff_heatmap",
 )
 def test_plot_colocalization_diff_heatmap(setup_basic_pixel_dataset):
+    """Verify plot colocalization diff heatmap.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
     colocalization_data = pxl_data.colocalization
@@ -189,6 +223,11 @@ def test_plot_colocalization_diff_heatmap(setup_basic_pixel_dataset):
     baseline_dir="../snapshots/test_plot/test_plot_colocalization_diff_volcano",
 )
 def test_plot_colocalization_diff_volcano(setup_basic_pixel_dataset):
+    """Verify plot colocalization diff volcano.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
     colocalization_data = pxl_data.colocalization
@@ -215,6 +254,11 @@ def test_plot_colocalization_diff_volcano(setup_basic_pixel_dataset):
     baseline_dir="../snapshots/test_plot/test_plot_polarity_diff_volcano",
 )
 def test_plot_polarity_diff_volcano(setup_basic_pixel_dataset):
+    """Verify plot polarity diff volcano.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
     polarity_data = pxl_data.polarization
@@ -234,6 +278,11 @@ def test_plot_polarity_diff_volcano(setup_basic_pixel_dataset):
     baseline_dir="../snapshots/test_plot/test_plot_colocalization_diff_volcano_multiple",
 )
 def test_plot_colocalization_diff_volcano_multiple(setup_basic_pixel_dataset):
+    """Verify plot colocalization diff volcano multiple.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
     colocalization_data = pxl_data.colocalization
@@ -259,6 +308,11 @@ def test_plot_colocalization_diff_volcano_multiple(setup_basic_pixel_dataset):
     baseline_dir="../snapshots/test_plot/test_plot_polarity_diff_volcano_multiple",
 )
 def test_plot_polarity_diff_volcano_multiple(setup_basic_pixel_dataset):
+    """Verify plot polarity diff volcano multiple.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     np.random.seed(0)
     pxl_data, *_ = setup_basic_pixel_dataset
     polarity_data = pxl_data.polarization
@@ -277,6 +331,7 @@ def test_plot_polarity_diff_volcano_multiple(setup_basic_pixel_dataset):
     baseline_dir="../snapshots/test_plot/test_scatter_umi_per_upia_vs_tau",
 )
 def test_scatter_umi_per_upia_vs_tau():
+    """Verify scatter umi per upia vs tau."""
     np.random.seed(0)
     data = pd.DataFrame(
         {
@@ -295,6 +350,7 @@ def test_scatter_umi_per_upia_vs_tau():
     baseline_dir="../snapshots/test_plot/test_cell_count_plot",
 )
 def test_cell_count_plot():
+    """Verify cell count plot."""
     np.random.seed(0)
     data = pd.DataFrame(
         {
@@ -311,6 +367,7 @@ def test_cell_count_plot():
     baseline_dir="../snapshots/test_plot/test_molecule_rank_plot",
 )
 def test_molecule_rank_plot():
+    """Verify molecule rank plot."""
     np.random.seed(0)
     data = pd.DataFrame(
         {
@@ -327,6 +384,7 @@ def test_molecule_rank_plot():
     baseline_dir="../snapshots/test_plot/test_molecule_rank_plot",
 )
 def test_molecule_rank_plot_back_compatibility():
+    """Verify molecule rank plot back compatibility."""
     np.random.seed(0)
     data = pd.DataFrame(
         {
@@ -343,6 +401,7 @@ def test_molecule_rank_plot_back_compatibility():
     baseline_dir="../snapshots/test_plot/test_edge_rank_plot",
 )
 def test_edge_rank_plot():
+    """Verify edge rank plot."""
     np.random.seed(0)
     data = pd.DataFrame(
         {
@@ -355,6 +414,7 @@ def test_edge_rank_plot():
 
 
 def test__calculate_distance_to_unit_sphere_zones():
+    """Verify calculate distance to unit sphere zones."""
     rng = np.random.default_rng(seed=10)
     sphere_points = rng.standard_normal((10, 3))
     sphere_points = sphere_points / np.linalg.norm(sphere_points, axis=1)[:, None]
@@ -673,6 +733,7 @@ def test__calculate_distance_to_unit_sphere_zones():
 
 
 def test__calculate_densities():
+    """Verify calculate densities."""
     rng = np.random.default_rng(seed=10)
     sphere_points = rng.standard_normal((100, 3))
     sphere_points = sphere_points / np.linalg.norm(sphere_points, axis=1)[:, None]
@@ -792,6 +853,11 @@ def test__calculate_densities():
 
 
 def test_plot_3d_heatmap(edgelist):
+    """Verify plot 3d heatmap.
+
+    Args:
+        edgelist: edgelist.
+    """
     component_1 = edgelist["component"].unique()[0]
     graph = Graph.from_edgelist(
         edgelist[edgelist["component"] == component_1],
@@ -858,6 +924,14 @@ def test_plot_3d_heatmap(edgelist):
 def test_density_scatter_plot(
     setup_basic_pixel_dataset, marker1, marker2, extra_params
 ):
+    """Verify density scatter plot.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+        marker1: marker1.
+        marker2: marker2.
+        extra_params: extra params.
+    """
     facet_row = extra_params["facet_row"]
     facet_column = extra_params["facet_column"]
     gate = extra_params["gate"]
@@ -888,6 +962,11 @@ def test_density_scatter_plot(
     baseline_dir="../snapshots/test_plot/test_abundance_colocalization_plot/",
 )
 def test_abundance_colocalization_plot(setup_basic_pixel_dataset):
+    """Verify abundance colocalization plot.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     pixel_data, *_ = setup_basic_pixel_dataset
     fig, _ = abundance_colocalization_plot(
         pixel_data,

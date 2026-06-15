@@ -12,10 +12,12 @@ from pixelator.mpx.amplicon.statistics import (
 
 
 def test_sequence_quality_stats_collector():
+    """Verify sequence quality stats collector."""
     _ = SequenceQualityStatsCollector(design_name="D21")
 
 
 def test_sequence_quality_stats_collector_update():
+    """Verify sequence quality stats collector update."""
     rng = np.random.default_rng(seed=1)
 
     collector = SequenceQualityStatsCollector(design_name="D21")

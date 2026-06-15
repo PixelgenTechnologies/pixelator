@@ -199,7 +199,8 @@ def graph(
     Main stages:
     1) Fast label propagation: Used as a graph coarsening step to reduce the size of the graph.
     2) Leiden community detection
-    2.1) Initial stage: Attempt to break up the mega cluster that is formed due to random edges between cells.
+    2.1) Initial stage: Attempt to break up the mega cluster that is formed due to random edges
+    between cells.
     2.2) Refinement stage: Refine the connected components found in the initial stage.
 
     Optional stage:
@@ -209,6 +210,39 @@ def graph(
 
     After the connected components have been identified we will create a pxl file that contains
     data for all of there putative cells.
+
+    Args:
+        ctx: Click context from the command decorator.
+        parquet_file: Path to the input parquet edge-list file.
+        multiplet_recovery: Activate the multiplet recovery using leiden community detection.
+        edge_cycle_verification: Activate edge cycle verification to remove edges from well
+            connected regions that are not part of cycles in the graph.
+        initial_stage_leiden_resolution: The resolution parameter for the leiden algorithm at the
+            initial stage. This should typically be set higher than the refinement stage resolution.
+        refinement_stage_leiden_resolution: The resolution parameter for the leiden algorithm at the
+            refinement stage. This should typically be set lower than the initial stage resolution.
+        min_count: Discard edges with a read count below given value. Set to 1 to disable filtering.
+        max_refinement_recursion_depth: The maximum recursion depth for the refinement algorithm.
+            Set to 1 to disable refinement.
+        initial_stage_max_edges_to_remove: The maximum number of edges to remove between components
+            during the initial stage (iteration == 0) of multiplet recovery.
+        refinement_stage_max_edges_to_remove: The maximum number of edges to remove between
+            components during the refinement stage (iteration > 0) of multiplet recovery.
+        initial_stage_max_edges_to_remove_relative: The maximum number of edges to remove between
+            two components relative to the number of nodes in the smaller of the two when during the
+            initial stage (iteration == 0) of multiplet recovery.
+        refinement_stage_max_edges_to_remove_relative: The maximum number of edges to remove between
+            two components relative to the number of nodes in the smaller of the two when during the
+            refinement stage (iteration > 0) of multiplet recovery.
+        component_size_max_threshold: Components with more nodes than this will be filtered from the
+            output data. This is typically not needed. Setting this will disable the automatic size
+            filtering.
+        component_size_min_threshold: Components with fewer nodes than this will be filtered from
+            the output data. This is typically not needed. Setting this will disable the automatic
+            size filtering.
+        panel: The name of a panel to load from the supported panels. Optionally, provide a path to
+            a custom panel file.
+        output: The path where the results will be placed (it is created if it does not exist).
     """
     # log input parameters
     input_files = [parquet_file]

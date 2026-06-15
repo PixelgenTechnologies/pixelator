@@ -14,6 +14,7 @@ class BKTreeItem:
     __slots__ = ["id", "sequence"]
 
     def __init__(self, id: int, sequence: bytes):
+        """Store a panel marker id and its sequence bytes."""
         self.id = id
         self.sequence = sequence
 
@@ -62,8 +63,6 @@ class BKTree:
         The distance function should be a callable that takes two items
         and returns a non-negative distance integer,
 
-        :param distance_func: The distance function to use.
-        :param items: An optional list of items to add on initialization.
 
         >>> tree = BKTree(hamming_distance)
         >>> list(tree)
@@ -76,6 +75,10 @@ class BKTree:
         >>> tree = BKTree(hamming_distance, [0, 4, 5])
         >>> sorted(tree)
         [0, 4, 5]
+
+        Args:
+            distance_func: The distance function to use.
+            items: An optional list of items to add on initialization.
         """
         self.distance_func = distance_func
         self.tree = None
@@ -96,6 +99,9 @@ class BKTree:
         >>> tree.add(15)
         >>> sorted(tree)
         [4, 15]
+
+        Args:
+            item: The item to find matches for.
         """
         node = self.tree
         if node is None:
@@ -116,10 +122,8 @@ class BKTree:
     def find(self, item, n):
         """Find items in this tree with a distance <= `n` from `item`.
 
-         Return list of (distance, item) tuples ordered by distance.
+        Return list of (distance, item) tuples ordered by distance.
 
-        :param item: The item to find matches for.
-        :param n: The maximum distance to consider a match.
 
         >>> tree = BKTree(hamming_distance)
         >>> tree.find(13, 1)
@@ -137,6 +141,10 @@ class BKTree:
         [(1, 5), (1, 15), (2, 4), (2, 14)]
         >>> sorted(tree.find(0, 1000)) == [(hamming_distance(x, 0), x) for x in tree]
         True
+
+        Args:
+            item: The item to find matches for.
+            n: The maximum distance to consider a match.
         """
         if self.tree is None:
             return []
@@ -217,12 +225,15 @@ def hamming_distance_i8(s1: BKTreeItem, s2: BKTreeItem | bytes) -> int:
 def build_bktree(panel: PNAAntibodyPanel, sequence_key: str) -> BKTree:
     """Create a BKTree from the panel sequences.
 
-    This allows us to quickly find the closest sequence to a given query sequence with up to a given distance.
+    This allows us to quickly find the closest sequence to a given query sequence with up to a given
+    distance.
     The distance function is the edit distance
 
-    :param panel: The panel to build the tree from
-    :param sequence_key: The key in the panel dataframe that contains the sequences
-    :return: The BKTree
+    Args:
+        panel: The panel to build the tree from
+        sequence_key: The key in the panel dataframe that contains the sequences
+    Returns:
+        The BKTree
     """
     tree = BKTree(hamming_distance_i8)
 
@@ -240,9 +251,11 @@ def build_exact_dict_lookup(
 
     This allows us to quickly find exact matches for a sequence in the panel.
 
-    :param panel: The panel to build the lookup from
-    :param sequence_key: The key in the panel dataframe that contains the sequences
-    :return: The lookup table
+    Args:
+        panel: The panel to build the lookup from
+        sequence_key: The key in the panel dataframe that contains the sequences
+    Returns:
+        The lookup table
     """
     lut = dict()
 

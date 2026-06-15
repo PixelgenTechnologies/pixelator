@@ -58,18 +58,21 @@ def umitools_example_matrix():
 def test_build_network_directional(umitools_example_matrix):
     """Test the build_adjacency_matrix_directional function.
 
-      TCGT                  CCGT
-       2                      2
-       |                      |
-       +----<----+------>-----+
-                 |
-               456 (ACGT)
-                 |
-     +           +------>----+
-     |                       |
+    TCGT                  CCGT
+    2                      2
+    |                      |
+    +----<----+------>-----+
+    |
+    456 (ACGT)
+    |
+    +           +------>----+
+    |                       |
     90 (AAAT)                72 (ACAT)
-                              ↓
-                            1 (ACAG)
+    ↓
+    1 (ACAG)
+
+    Args:
+        umitools_example_matrix: Umitools example matrix.
     """
     distances, indices, counts = umitools_example_matrix
 
@@ -93,21 +96,24 @@ def test_build_network_directional(umitools_example_matrix):
 def test_build_network_cluster(umitools_example_matrix):
     """Test the build_adjacency_matrix_directional function.
 
-      (TCGT)                  (CCGT)
-       2  ------------------- 2
-       |                      |
-       +------+     +- -------+
-              |     |
-          456 (ACGT)
-                 |
-                 |
-            72 (ACAT)
-     +-----------+-----------+
-     |                       |
+    (TCGT)                  (CCGT)
+    2  ------------------- 2
+    |                      |
+    +------+     +- -------+
+    |     |
+    456 (ACGT)
+    |
+    |
+    72 (ACAT)
+    +-----------+-----------+
+    |                       |
     90 (AAAT)             1 (ACAG)
 
 
 
+
+    Args:
+        umitools_example_matrix: Umitools example matrix.
     """
     distances, indices, counts = umitools_example_matrix
 

@@ -60,22 +60,25 @@ def connect_components(
 
 
     .. [1] Traag, V.A., Waltman, L. & van Eck, N.J. From Louvain to Leiden: guaranteeing
-        well-connected communities. Sci Rep 9, 5233 (2019).
-        https://doi.org/10.1038/s4q:598-019-41695-z
+    well-connected communities. Sci Rep 9, 5233 (2019).
+    https://doi.org/10.1038/s4q:598-019-41695-z
 
-    :param input: the path to the edge list dataframe (parquet)
-    :param output: the path to the output folder
-    :param sample_name: the prefix to prepend to the files (sample name)
-    :param metrics_file: the path to a JSON file to write metrics
-    :param multiplet_recovery: set to true to activate multiplet recovery
-    :param max_refinement_recursion_depth: The number of times a component can be broken down into
-                             smaller components during the recovery process.
-    :param max_edges_to_split: The maximum number of edges between the product components
-                                when splitting during multiplet recovery.
-    :param min_count: the minimum number of counts (molecules) an edge must have
-    :returns: None
-    :rtype: None
-    :raises RuntimeError: if the edge list is empty after filtering
+    Args:
+        input: the path to the edge list dataframe (parquet)
+        output: the path to the output folder
+        sample_name: the prefix to prepend to the files (sample name)
+        metrics_file: the path to a JSON file to write metrics
+        multiplet_recovery: set to true to activate multiplet recovery
+        max_refinement_recursion_depth: The number of times a component can be broken down into
+            smaller components during the recovery process.
+        max_edges_to_split: The maximum number of edges between the product components when
+            splitting during multiplet recovery.
+        min_count: the minimum number of counts (molecules) an edge must have
+    Returns:
+        None (None)
+
+    Raises:
+        RuntimeError: if the edge list is empty after filtering
     """
     logger.debug("Parsing edge list %s", input)
 
@@ -219,10 +222,13 @@ def merge_strongly_connected_communities(
     to the nodes in the connected strongly connected communities. If `n_edges` is
     None, the split communities are not considered for merging.
 
-    :param edgelist: The edge list to process
-    :param node_community_dict: A dictionary with the community mapping for each node
-    :param n_edges: The threshold for the number of edges to be found between communities to merge or None to avoid merging
-    :returns: A tuple with the modified edge list and the updated community mapping
+    Args:
+        edgelist: The edge list to process
+        node_community_dict: A dictionary with the community mapping for each node
+        n_edges: The threshold for the number of edges to be found between communities to merge or
+            None to avoid merging
+    Returns:
+        A tuple with the modified edge list and the updated community mapping
     """
     community_serie = pd.Series(node_community_dict)
     edgelist["upia_community"] = community_serie[edgelist["upia"]].values
@@ -272,20 +278,21 @@ def recover_technical_multiplets(
 
 
     .. [1] Traag, V.A., Waltman, L. & van Eck, N.J. From Louvain to Leiden: guaranteeing
-        well-connected communities. Sci Rep 9, 5233 (2019).
-        https://doi.org/10.1038/s4q:598-019-41695-z
+    well-connected communities. Sci Rep 9, 5233 (2019).
+    https://doi.org/10.1038/s4q:598-019-41695-z
 
-    :param edgelist: The edge list used to create the graph
-    :param node_component_map: A series with the component mapping for each
-                            node where the index is the upi (i.e. node name)
-                            and the value is the component id.
-    :param max_refinement_recursion_depth: The number of times a component can be broken down
-                            into smaller components during the recovery process.
-    :param max_edges_to_split: The maximum number of edges between the product components
-                            when splitting during multiplet recovery.
-    :return: A tuple with the updated node component map and the iteration depth at which each
-             node is re-assigned to a component.
-    :rtype: Tuple[pd.Series, pd.Series]
+    Args:
+        edgelist: The edge list used to create the graph
+        node_component_map: A series with the component mapping for each node where the index is the
+            upi (i.e. node name) and the value is the component id.
+        max_refinement_recursion_depth: The number of times a component can be broken down into
+            smaller components during the recovery process.
+        max_edges_to_split: The maximum number of edges between the product components when
+            splitting during multiplet recovery.
+
+    Returns:
+        A tuple with the updated node component map and the iteration depth at which each node is
+        re-assigned to a component. (Tuple[pd.Series, pd.Series])
     """
     logger.debug(
         "Starting multiplets recovery in edge list with %i rows",

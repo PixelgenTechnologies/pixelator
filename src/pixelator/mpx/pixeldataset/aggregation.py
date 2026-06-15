@@ -81,14 +81,17 @@ def simple_aggregate(
     ignore them when aggregating the data. This will mean that they are not directly
     available for downstream analysis.
 
-    :param sample_names: an iterable of the sample names to use for each dataset
-    :param datasets: an iterable of the datasets you want to aggregate
-    :param ignore_edgelists: ignoring merging the edgelists, leaving them empty in the
-                             resulting PixelDataset. Defaults to False.
+    Args:
+        sample_names: an iterable of the sample names to use for each dataset
+        datasets: an iterable of the datasets you want to aggregate
+        ignore_edgelists: ignoring merging the edgelists, leaving them empty in the resulting
+            PixelDataset. Defaults to False.
 
-    :raises AssertionError: If not all pre-conditions are meet.
-    :return: a PixelDataset instance with all the merged samples
-    :rtype: PixelDataset
+    Returns:
+        a PixelDataset instance with all the merged samples (PixelDataset)
+
+    Raises:
+        AssertionError: If not all pre-conditions are meet.
     """
     if not (len(datasets)) > 1:
         raise AssertionError(

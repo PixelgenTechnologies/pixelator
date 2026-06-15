@@ -1,6 +1,6 @@
 """DuckDB configuration helpers for the pixelator.pna package.
 
-Copyright (c) 2025 Pixelgen Technologies AB.
+Copyright © 2025 Pixelgen Technologies AB.
 """
 
 import re
@@ -49,7 +49,6 @@ def parse_duckdb_memory_limit_to_bytes(setting: str) -> int:
 
     Raises:
         ValueError: If the string does not match DuckDB's expected format.
-
     """
     m = _DUCKDB_MEMORY_LIMIT_RE.match(setting.strip())
     if not m:
@@ -65,16 +64,15 @@ def get_single_thread_duckdb_config(n_threads: int) -> dict:
     """Get a DuckDB configuration that limits memory usage for multi-threaded processing.
 
     Args:
-        n_threads (int): Number of threads to be used in the multi-threaded processing.
+        n_threads: Number of threads to be used in the multi-threaded processing.
 
     Returns:
         dict: DuckDB configuration dictionary with memory limit and single thread setting.
 
     Raises:
         ValueError: If ``n_threads`` is invalid.
-        DuckdbPerThreadMemoryError: If the configured memory split would give each thread
-            less than 1 MiB.
-
+        DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than
+            1 MiB.
     """
     if n_threads < 1:
         msg = f"n_threads must be >= 1, got {n_threads}"

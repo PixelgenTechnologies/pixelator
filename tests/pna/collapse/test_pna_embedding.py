@@ -12,6 +12,7 @@ from pixelator.pna.utils.two_bit_encoding import pack_4bits, unpack_4bits
 
 @pytest.fixture(scope="module")
 def pna2_embedding():
+    """Pna2 embedding."""
     from pixelator.pna.config import pna_config
 
     assay = pna_config.get_assay("proxiome-v1")
@@ -20,6 +21,11 @@ def pna2_embedding():
 
 
 def test_embedding_decode_from_uin8_array(pna2_embedding):
+    """Verify embedding decode from uin8 array.
+
+    Args:
+        pna2_embedding: pna2 embedding.
+    """
     m = b"v\x87\xd6\xeb6\xccm\xeb\x1a\xb3\x0b\x00m\xe7\x01\xae\x81v\x80\xe7zp\r\x00C\xd1\x02@1\x14\x00\x00"
 
     b = np.frombuffer(m, dtype=np.uint8, count=len(m))
@@ -31,6 +37,11 @@ def test_embedding_decode_from_uin8_array(pna2_embedding):
 
 
 def test_embedding_decode_from_bytes(pna2_embedding):
+    """Verify embedding decode from bytes.
+
+    Args:
+        pna2_embedding: pna2 embedding.
+    """
     m = b"v\x87\xd6\xeb6\xccm\xeb\x1a\xb3\x0b\x00m\xe7\x01\xae\x81v\x80\xe7zp\r\x00C\xd1\x02@1\x14\x00\x00"
 
     umi1, umi2, uei = pna2_embedding.decode(m)
@@ -41,6 +52,11 @@ def test_embedding_decode_from_bytes(pna2_embedding):
 
 
 def test_embedding_encode(pna2_embedding):
+    """Verify embedding encode.
+
+    Args:
+        pna2_embedding: pna2 embedding.
+    """
     umi1 = b"AACTGCCATCTTTGTACCCCACAGTAAC"
     umi2 = b"CCCTATGGACAGGCCTGGATACATGACA"
     uei = b"TGCGCCGGGGCGTGC"
@@ -52,18 +68,33 @@ def test_embedding_encode(pna2_embedding):
 
 
 def test_encode_umi(pna2_embedding):
+    """Verify encode umi.
+
+    Args:
+        pna2_embedding: pna2 embedding.
+    """
     umi1 = b"AACTGCCATCTTTGTACCCCACAGTAAC"
     expected = b"v\x87\xd6\xeb6\xccm\xeb\x1a\xb3\x0b\x00\x00\x00\x00\x00"
     assert pna2_embedding.encode_umi(umi1) == expected
 
 
 def test_decode_umi(pna2_embedding):
+    """Verify decode umi.
+
+    Args:
+        pna2_embedding: pna2 embedding.
+    """
     umi = b"v\x87\xd6\xeb6\xccm\xeb\x1a\xb3\x0b\x00\x00\x00\x00\x00"
     expected = b"AACTGCCATCTTTGTACCCCACAGTAAC"
     assert pna2_embedding.decode_umi(umi) == expected
 
 
 def test_3bit_to_2bit_recoding(pna2_embedding):
+    """Verify 3bit to 2bit recoding.
+
+    Args:
+        pna2_embedding: pna2 embedding.
+    """
     umi = b"AACTGCCATCTTTGTACCCCACAGTAAC"
     umi_3bit_expected = b"v\x87\xd6\xeb6\xccm\xeb\x1a\xb3\x0b\x00\x00\x00\x00\x00"
 
@@ -89,6 +120,12 @@ def test_3bit_to_2bit_recoding(pna2_embedding):
     ],
 )
 def test_unpack_2bits(umi, packed):
+    """Verify unpack 2bits.
+
+    Args:
+        umi: umi.
+        packed: packed.
+    """
     unpacked = unpack_2bits(packed, 28)
     assert umi == unpacked
 
@@ -100,6 +137,12 @@ def test_unpack_2bits(umi, packed):
     ],
 )
 def test_pack_2bits(umi, packed):
+    """Verify pack 2bits.
+
+    Args:
+        umi: umi.
+        packed: packed.
+    """
     packed_umi = pack_2bits(umi)
     assert packed_umi == packed
 
@@ -108,7 +151,8 @@ def test_pack_unpack_2_and_4bits():
     """Test that packing and unpacking with 2 and 4 bits per nucleotide is consistent.
     itertools.combinations_with_replacement is used to generate all possible combinations of
     15 nucleotides (G, T, C, A, N) and test that packing and unpacking returns the original
-    sequence. (Note that "all possible combinations" is NOT all possible orders of these combinations
+    sequence. (Note that "all possible combinations" is NOT all possible orders of these
+    combinations
     i.e. we reduce the full 15 mer space to only 3876 sequences, so this test is not too slow.)
     """
     for dna in itertools.combinations_with_replacement(b"GTCAN", 15):

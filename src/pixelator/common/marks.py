@@ -12,6 +12,7 @@ def experimental(f):
 
     @wraps(f)
     def wrapper(*args, **kwds):
+        """Call the wrapped function after emitting an experimental API warning."""
         warnings.warn(
             f"The function `{f.__name__}` is experimental, it might be removed or "
             "the API might change without notice.",

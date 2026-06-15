@@ -27,7 +27,6 @@ def combine_parquet_files(input_files: Iterable[Path], output_file: Path) -> Pat
 
     Returns:
         The path to the combined parquet file. This is the same path as `output_file`.
-
     """
     files = list(input_files)
     first_file = pq.read_table(files.pop(0))
@@ -45,8 +44,11 @@ def combine_parquet_files(input_files: Iterable[Path], output_file: Path) -> Pat
 def combine_report_files(input_files: Iterable[Path]) -> CollapseStatistics:
     """Combine a list of JSON collapse report files into a single report.
 
-    :param input_files: The folder containing the parquet files.
-    :returns: A new CollapseStatistics instance containing the combined report data.
+    Args:
+        input_files: The folder containing the parquet files.
+
+    Returns:
+        A new CollapseStatistics instance containing the combined report data.
     """
     files = list(input_files)
     combined_stats = CollapseStatistics()

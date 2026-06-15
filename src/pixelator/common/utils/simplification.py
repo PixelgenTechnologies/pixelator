@@ -32,17 +32,15 @@ import numpy.typing as npt
 def _pldist(
     point: np.ndarray, start: np.ndarray, end: np.ndarray
 ) -> npt.NDArray[np.float64]:
-    """Calculate the distance of points to a line segment.
+    """Calculate perpendicular distances from points to a line segment.
 
-    The line segment is defined by two points, start and end.
-    The distance is calculated for each point in the points array.
+    Args:
+        point: Point coordinates; may be a single point or an array of points.
+        start: Start point of the segment.
+        end: End point of the segment.
 
-    :param point: a point
-    :type point: numpy array
-    :param start: a point of the line
-    :type start: numpy array
-    :param end: another point of the line
-    :type end: numpy array
+    Returns:
+        Distance from each point to the segment.
     """
     if np.all(start == end):
         return np.linalg.norm(point - start)  # type: ignore
@@ -111,23 +109,19 @@ def _ramer_douglas_peucker_iterative(
 def simplify_line_rdp(
     coordinates: np.ndarray, epsilon: float = 1e-2, return_mask=False
 ):
-    """Simplifies a given array of points using the Ramer-Douglas-Peucker algorithm.
+    """Simplify a line using the Ramer-Douglas-Peucker algorithm.
 
-    .. example:
+    Args:
+        coordinates: Array of shape ``(n, d)`` with ``n`` points in ``d`` dimensions.
+        epsilon: Maximum perpendicular distance for point removal.
+        return_mask: If True, return the boolean mask instead of simplified coordinates.
 
-    >>> simplify_line_rdp(np.array([[1, 1], [2, 2], [3, 3], [4, 4]]))
-    [[1, 1], [4, 4]]
+    Returns:
+        Simplified coordinates, or the boolean mask when ``return_mask`` is True.
 
-    :param M: a series of points
-    :type M: numpy array with shape ``(n,d)`` where ``n`` is the number of points and ``d`` their dimension
-    :param epsilon: epsilon in the rdp algorithm
-    :type epsilon: float
-    :param dist: distance function
-    :type dist: function with signature ``f(point, start, end)`` -- see :func:`rdp.pldist`
-    :param algo: either ``iter`` for an iterative algorithm or ``rec`` for a recursive algorithm
-    :type algo: string
-    :param return_mask: return mask instead of simplified array
-    :type return_mask: bool
+    Examples:
+        >>> simplify_line_rdp(np.array([[1, 1], [2, 2], [3, 3], [4, 4]]))
+        array([[1, 1], [4, 4]])
     """
     mask = _ramer_douglas_peucker_iterative(
         coordinates, 0, len(coordinates) - 1, epsilon

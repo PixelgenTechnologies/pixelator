@@ -62,8 +62,15 @@ def layout(
     layout_algorithm,
     output,
 ):
-    """
-    Compute graph layouts that can be used to visualize components
+    """Compute graph layouts that can be used to visualize components
+
+    Args:
+        ctx: Click context from the command decorator.
+        pxl_file: Path to the input PXL (PixelDataset) file.
+        no_node_marker_counts: Skip adding marker counts to the layout. Default: False.
+        layout_algorithm: Select a layout algorithm to use. This can be specified multiple times to
+            compute multiple layouts. Default: pmds_3d.
+        output: The path where the results will be placed (it is created if it does not exist).
     """
     log_step_start(
         "layout",

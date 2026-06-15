@@ -23,6 +23,11 @@ np.random.seed(42)
 
 
 def test_simple_aggregate(setup_basic_pixel_dataset):
+    """Verify simple aggregate.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     dataset_1, *_ = setup_basic_pixel_dataset
     dataset_2 = dataset_1.copy()
 
@@ -195,6 +200,12 @@ def test_simple_aggregate(setup_basic_pixel_dataset):
 def test_simple_aggregate_do_not_have_problems_with_layouts_when_working_with_files(
     setup_basic_pixel_dataset, tmp_path
 ):
+    """Verify simple aggregate do not have problems with layouts when working with files.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+        tmp_path: tmp path.
+    """
     dataset_1, *_ = setup_basic_pixel_dataset
     tmp_data_set_path_1 = tmp_path / "dataset_1.pxl"
     tmp_data_set_path_2 = tmp_path / "dataset_2.pxl"
@@ -213,7 +224,11 @@ def test_simple_aggregate_do_not_have_problems_with_layouts_when_working_with_fi
 
 
 def test_simple_aggregate_ignore_edgelist(setup_basic_pixel_dataset):
-    """test_simple_aggregate."""
+    """test_simple_aggregate.
+
+    Args:
+        setup_basic_pixel_dataset: Setup basic pixel dataset.
+    """
     dataset_1, *_ = setup_basic_pixel_dataset
     dataset_2 = dataset_1.copy()
 
@@ -231,6 +246,11 @@ def test_filter_should_return_proper_typed_edgelist_data(setup_basic_pixel_datas
     # Test to check for bug EXE-1177
     # This bug was caused by filtering returning an incorrectly typed
     # edgelist, which in turn caused getting the graph to fail
+    """Verify filter should return proper typed edgelist data.
+
+    Args:
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     dataset_1, *_ = setup_basic_pixel_dataset
     dataset_2 = dataset_1.copy()
 
@@ -248,6 +268,12 @@ def test_on_aggregation_not_passing_unique_sample_names_should_raise(
     tmp_path,
     setup_basic_pixel_dataset,
 ):
+    """Verify on aggregation not passing unique sample names should raise.
+
+    Args:
+        tmp_path: tmp path.
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     dataset_1, *_ = setup_basic_pixel_dataset
     dataset_2 = dataset_1.copy()
 
@@ -273,7 +299,12 @@ def test_aggregation_all_samples_show_up(
     # There used to be a bug (EXE-1186) where only the first two samples
     # were actually aggregated. This test is here to catch that potential
     # problem in the future.
+    """Verify aggregation all samples show up.
 
+    Args:
+        tmp_path: tmp path.
+        setup_basic_pixel_dataset: setup basic pixel dataset.
+    """
     dataset_1, *_ = setup_basic_pixel_dataset
     dataset_2 = dataset_1.copy()
     dataset_3 = dataset_1.copy()

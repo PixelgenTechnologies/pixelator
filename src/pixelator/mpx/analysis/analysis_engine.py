@@ -1,4 +1,4 @@
-"""Analysis engine capable of running a list of analysis functions on each component in a pixeldataset.
+"""Analysis engine for running analysis functions on each PixelDataset component.
 
 Copyright © 2024 Pixelgen Technologies AB.
 """
@@ -39,13 +39,18 @@ class PerComponentAnalysis(Protocol):
             raise error
 
     def post_process_data(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Post process the data (e.g. adjust p-values). Override this if your data needs post processing."""
+        """Post process the data (e.g. adjust p-values). Override this if needed."""
         return data
 
     def add_to_pixel_dataset(
         self, data: pd.DataFrame, pxl_dataset: PixelDataset
     ) -> PixelDataset:
-        """Add the data in the right place in the pxl_dataset."""
+        """Add the data in the right place in the pxl_dataset.
+
+        Args:
+            data: Data.
+            pxl_dataset: The PixelDataset to run the analysis on.
+        """
         ...
 
     def parameters(self) -> dict:
@@ -70,6 +75,7 @@ class _AnalysisManager:
         analysis_to_run: Iterable[PerComponentAnalysis],
         component_stream: Iterable[tuple[str, Graph]],
     ):
+        """Initialize the analysis engine with the analyses to execute."""
         self.analysis_to_run = {
             analysis.ANALYSIS_NAME: analysis for analysis in analysis_to_run
         }
@@ -141,7 +147,12 @@ class _AnalysisManager:
 def edgelist_to_component_stream(
     dataset: PixelDataset, use_full_bipartite: bool
 ) -> Iterable[tuple[str, Graph]]:
-    """Convert the edgelist in the dataset to a stream component ids and their component graphs."""
+    """Convert the edgelist in the dataset to a stream component ids and their component graphs.
+
+    Args:
+        dataset: Dataset.
+        use_full_bipartite: Whether to use the full bipartite graph when creating the components.
+    """
     for component_id, component_df in (
         dataset.edgelist_lazy.collect()
         .partition_by(by="component", as_dict=True)
@@ -165,10 +176,14 @@ def run_analysis(
 ) -> PixelDataset:
     """Run the provided list of `PerComponentAnalysis` on the components in the `pxl_dataset`.
 
-    :param pxl_dataset: The PixelDataset to run the analysis on.
-    :param analysis_to_run: A list of `PerComponentAnalysis` to run on the components in the `pxl_dataset`.
-    :param use_full_bipartite: Whether to use the full bipartite graph when creating the components.
-    :returns: A `PixelDataset` instance with the provided analysis added to it.
+    Args:
+        pxl_dataset: The PixelDataset to run the analysis on.
+        analysis_to_run: A list of `PerComponentAnalysis` to run on the components in the
+            `pxl_dataset`.
+        use_full_bipartite: Whether to use the full bipartite graph when creating the components.
+
+    Returns:
+        A `PixelDataset` instance with the provided analysis added to it.
     """
     if not analysis_to_run:
         logger.warning("No analysis functions were provided")

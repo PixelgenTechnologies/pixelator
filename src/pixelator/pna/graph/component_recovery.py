@@ -67,7 +67,8 @@ def build_pxl_file_with_components(
 
     Starting from an edgelist parquet file, (collapse step output) this function recovers components
     using community detection with staged refinement, and writes a new PXL file containing the
-    edgelist with resolved components. Components are resolved based on the provided community detection options.
+    edgelist with resolved components. Components are resolved based on the provided community
+    detection options.
     It also computes and returns statistics about the graph.
 
     Args:
@@ -79,14 +80,12 @@ def build_pxl_file_with_components(
         edge_cycle_verification: Whether to perform edge cycle verification.
         min_read_count: Minimum read count threshold for an edge to be retained.
         refinement_options: Options for staged refinement during community detection.
-        component_size_threshold: Min/Max size threshold for components to be retained.
-            Can be a boolean for dynamic sizing or a tuple of two integers (Min, Max).
+        component_size_threshold: Min/Max size threshold for components to be retained. Can be a
+            boolean for dynamic sizing or a tuple of two integers (Min, Max).
         n_cores: Number of CPU cores to use for parallel processing.
 
     Returns:
         Tuple of PNAPixelDataset and GraphStatistics
-
-
     """
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_dir_path = Path(tmp_dir)

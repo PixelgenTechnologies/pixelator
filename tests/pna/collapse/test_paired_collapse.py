@@ -31,12 +31,19 @@ def test_label_array_to_indices_uniform_shape():
 
 
 def test_split_chunks():
+    """Verify split chunks."""
     r = list(_split_chunks(10, 3))
     assert r == [(0, 3), (3, 6), (6, 9), (9, 10)]
 
 
 @pytest.mark.slow
 def test_collapse_from_paired_demux_data(tmp_path, testdata_paired_small_demux):
+    """Verify collapse from paired demux data.
+
+    Args:
+        tmp_path: tmp path.
+        testdata_paired_small_demux: testdata paired small demux.
+    """
     assay = pna_config.get_assay("proxiome-v1")
     panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
     output = tmp_path / "test.parquet"
@@ -61,6 +68,11 @@ def test_collapse_from_paired_demux_data(tmp_path, testdata_paired_small_demux):
 
 
 def test_statistics_to_json(testdata_paired_small_demux):
+    """Verify statistics to json.
+
+    Args:
+        testdata_paired_small_demux: testdata paired small demux.
+    """
     stats = CollapseStatistics()
 
     stats.add_input_file(testdata_paired_small_demux, molecule_count=972152)

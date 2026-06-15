@@ -61,7 +61,6 @@ class SingleEndFilterWithFailureReason(SingleEndFilter):
         Args:
             read: The read to filter.
             info: The modification info.
-
         """
         if self._predicate.test(read, info):
             self._filtered += 1
@@ -81,10 +80,11 @@ class TooManyN(Predicate):
     def __init__(self, count: float, assay: PNAAssay):
         """Initialize a TooManyN pipeline predicate.
 
-        :param count: the cutoff for the N count.
-            If it is below 1.0, it will be considered a proportion, and above and equal to
-            1 will be considered as discarding reads with a number of N's greater than this cutoff.
-        :param assay: the assay configuration.
+        Args:
+            count: the cutoff for the N count. If it is below 1.0, it will be considered a
+                proportion, and above and equal to 1 will be considered as discarding reads with a
+                number of N's greater than this cutoff.
+            assay: the assay configuration.
         """
         assert count >= 0
         self.is_proportion = count < 1.0
@@ -114,7 +114,6 @@ class TooManyN(Predicate):
 
         Returns:
             True if the read has too many N bases, False otherwise.
-
         """
         r = read.sequence.lower()
         region1 = r[self._region1]
@@ -145,7 +144,6 @@ class LowComplexityUMI(Predicate):
         Args:
             assay: the assay configuration.
             proportion: the proportion of a single base that defines low complexity.
-
         """
         if not 0.0 < proportion < 1.0:
             raise ValueError(
@@ -179,7 +177,6 @@ class LowComplexityUMI(Predicate):
 
         Returns:
             True if the read has low complexity, False otherwise.
-
         """
         umi1 = np.frombuffer(
             read.sequence[self._umi1_region_slice].encode("ascii"), dtype="S1"
@@ -215,11 +212,16 @@ class LBSDetectedInUMI(Predicate):
         assay: The assay configuration.
         min_overlap: Minimum overlap for alignment.
         max_error_rate: Maximum error rate for alignment.
-
     """
 
     def __init__(self, assay, min_overlap=8, max_error_rate=0.2) -> None:
-        """Initialize a LBSDetectedInUMI pipeline predicate."""
+        """Initialize a LBSDetectedInUMI pipeline predicate.
+
+        Args:
+            assay: the assay configuration.
+            min_overlap: Min overlap.
+            max_error_rate: Max error rate.
+        """
         self.assay = assay
         self.min_overlap = min_overlap
         self.max_error_rate = max_error_rate
@@ -270,7 +272,6 @@ class LBSDetectedInUMI(Predicate):
 
         Returns:
             True if the read contains any fixed region substrings, False otherwise.
-
         """
         umi1 = read.sequence[self._umi1_region_slice]
         umi2 = read.sequence[self._umi2_region_slice]

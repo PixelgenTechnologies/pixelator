@@ -24,6 +24,7 @@ class PixelatorWorkflowContext:
     """
 
     def __init__(self, test_id: str, workdir: Path):
+        """Initialize workflow test context paths and configuration."""
         self.test_id = test_id
         self.workdir: Path = workdir
         self.results: Dict[str, Any] = {}
@@ -32,14 +33,17 @@ class PixelatorWorkflowContext:
         self.logs: Dict[str, str] = {}
 
     def set_logs(self, key: str, logs: str):
+        """Set logs."""
         self.logs[key] = logs
 
     def get_logs(self, key: str) -> str:
+        """Get logs."""
         return self.logs[key]
 
     def run_command(
         self, key: str, command: List[str], link_files: Optional[List[str]] = None
     ) -> CliRunnerResult:
+        """Run command."""
         runner = CliRunner()
 
         command = [str(s) for s in command]
@@ -80,10 +84,12 @@ class PixelatorWorkflowContext:
 
         If no suffix is given files will be linked directly into the working directory.
 
-        :param files: list of files to link
-        :param suffix: path relative to the workflow working directory to link
-            the files in.
-        :raises ValueError: if a file is not absolute
+        Args:
+            files: list of files to link
+            suffix: path relative to the workflow working directory to link the files in.
+
+        Raises:
+            ValueError: if a file is not absolute
         """
         for f in files:
             f_path = Path(f)

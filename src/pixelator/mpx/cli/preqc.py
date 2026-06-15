@@ -127,9 +127,25 @@ def preqc(
     output,
     design,
 ):
-    """Process raw Molecular Pixelation data (FASTQ) to perform QC, filtering,
-    trimming and removal of duplicates.
-    """  # noqa: D205,D400,D415
+    """Process raw Molecular Pixelation FASTQ data with QC, filtering, trimming, and deduplication.
+
+    Args:
+        ctx: Click context from the command decorator.
+        fastq_file: Path to the input FASTQ file.
+        trim_front: Trim N bases from the front of the reads.
+        trim_tail: Trim N bases from the tail of the reads.
+        max_length: The maximum length (bases) of a read (longer reads will be trimmed off).
+            If you set this argument it will overrule the value from the chosen design.
+        min_length: The minimum length (bases) of a read (shorter reads will be discarded).
+            If you set this argument it will overrule the value from the chosen design.
+        max_n_bases: The maximum number of Ns allowed in a read (default of 0 means any reads with N
+            in it will be filtered out).
+        avg_qual: Minimum avg. quality a read must have (0 will disable the filter).
+        dedup: Remove duplicated reads (exact same sequence).
+        remove_polyg: Remove PolyG sequences (length of 10 or more).
+        output: The path where the results will be placed (it is created if it does not exist).
+        design: The design to load from the configuration file.
+    """
     # log input parameters
     input_files = [fastq_file]
 

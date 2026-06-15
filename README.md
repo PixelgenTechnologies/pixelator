@@ -44,7 +44,7 @@ pip install pixelgen-pixelator
 
 ### Additional installation instructions
 
-For runnning some of the MPX related pixelator commands you will need to have `fastp` installed on
+For running some of the MPX related pixelator commands you will need to have `fastp` installed on
 you system. For installation instructions, please visit the [fastp GitHub repository](https://github.com/OpenGene/fastp).
 
 ### Installation from source

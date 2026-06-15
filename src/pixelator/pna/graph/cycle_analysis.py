@@ -1,10 +1,13 @@
 """Cycle analysis and edge filtering based on cycle participation.
 
-In a graph, edges that do not participate in any cycles can be indicative of noise or erroneous connections.
+In a graph, edges that do not participate in any cycles can be indicative of noise or erroneous
+connections.
 Given that an edge indicates spatial proximity between two markers, we expect that true connections
 should often be part of cycles formed by other nearby markers. Edges that are not part of any cycles
-are more likely to be spurious and can be removed to improve the quality of the graph. To prevent removing
-edges in sparse regions, we only evaluate edges that connect nodes in core-2 or higher layers of the graph.
+are more likely to be spurious and can be removed to improve the quality of the graph. To prevent
+removing
+edges in sparse regions, we only evaluate edges that connect nodes in core-2 or higher layers of the
+graph.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
@@ -14,7 +17,6 @@ import os
 import tempfile
 from pathlib import Path
 
-import duckdb
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -22,6 +24,7 @@ import polars as pl
 from joblib import Parallel, delayed
 from scipy.sparse import csc_matrix
 
+from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.pna.graph.constants import (
     DEFAULT_WORKING_DIR,
     MAX_CYCLE_SEARCH_STEPS,
@@ -211,7 +214,7 @@ class ShortestPathFinder:
 
 def process_component(comp_name, edgelist_path, tmpdir):
     """Process a single component to remove edges not participating in cycles."""
-    with duckdb.connect() as con:
+    with connect_duckdb() as con:
         con.execute(
             """
             CREATE TEMP TABLE comp_edgelist AS
@@ -300,13 +303,13 @@ def remove_no_cycle_edges(
 
     Returns:
         Total number of edges removed, the distribution of cycle lengths for remaining edges,
-        and the path to the written output (hive-style Parquet under ``working_edgelist_with_cycle_verification``).
-
+        and the path to the written output (hive-style Parquet under
+        ``working_edgelist_with_cycle_verification``).
     """
     output_path = working_dir / "working_edgelist_with_cycle_verification"
     logger.info("Starting removal of no-cycle edges")
     with tempfile.TemporaryDirectory() as tmpdir:
-        with duckdb.connect(tmpdir + "/temp_duckdb.db") as con:
+        with connect_duckdb(tmpdir + "/temp_duckdb.db") as con:
             con.execute(
                 """
                 CREATE TEMP TABLE graph_edgelist AS

@@ -23,10 +23,11 @@ def update_metrics_anndata(adata: AnnData, inplace: bool = True) -> Optional[Ann
     when the AnnData object has been filtered and one wants the QC metrics
     to be updated accordingly.
 
-    :param adata: an AnnData object
-    :param inplace: If `True` performs the operation inplace
-    :returns: the updated AnnData object or None if inplace is True
-    :rtype: Optional[AnnData]
+    Args:
+        adata: an AnnData object
+        inplace: If `True` performs the operation inplace
+    Returns:
+        the updated AnnData object or None if inplace is True (Optional[AnnData])
     """
     logger.debug(
         "Updating metrics in AnnData object with %i components and %i markers",

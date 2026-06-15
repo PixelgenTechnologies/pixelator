@@ -35,6 +35,13 @@ MarkerB,MarkerC,9864156ed5c9eb6c,c925e4e5eeb989b9,0.0,1.0,0.0,0.061,0.062,0.001,
 
 @pytest.mark.slow
 def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
+    """Verify proximity analysis jcs.
+
+    Args:
+        pna_data_root: pna data root.
+        tmp_path: tmp path.
+        pna_pxl_file: Pna pxl file.
+    """
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     manager = AnalysisManager(
         [ProximityAnalysis(n_permutations=25, min_marker_count=0)],
@@ -95,6 +102,13 @@ def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
 def test_proximity_analysis_jcs_marker_count_filtering(
     pna_pxl_file: Path, pna_data_root, tmp_path
 ):
+    """Verify proximity analysis jcs marker count filtering.
+
+    Args:
+        pna_data_root: pna data root.
+        tmp_path: tmp path.
+        pna_pxl_file: Pna pxl file.
+    """
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     min_marker_count = 10
     manager_unfiltered = AnalysisManager(
@@ -142,6 +156,7 @@ def test_proximity_analysis_jcs_marker_count_filtering(
 
 
 def test_calculate_differential_proximity():
+    """Verify calculate differential proximity."""
     proximity = pd.read_csv(StringIO(PROXIMITY_DATA))
     dpa = calculate_differential_proximity(
         proximity,
@@ -168,6 +183,14 @@ def test_calculate_differential_proximity():
 def test_proximity_analysis_jcs_analytic(
     pna_pxl_file: Path, pna_data_root, components, markers
 ):
+    """Verify proximity analysis jcs analytic.
+
+    Args:
+        pna_data_root: pna data root.
+        components: components.
+        markers: markers.
+        pna_pxl_file: Pna pxl file.
+    """
     pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
     proximity_obj = pna_pxl_dataset.filter(
         components=components, markers=markers

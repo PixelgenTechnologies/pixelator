@@ -12,6 +12,8 @@ import duckdb
 import polars as pl
 from anndata import AnnData
 
+from pixelator.pna.utils import init_duckdb_conn
+
 
 class PixelFileWriter:
     """Writer class for PXL files.
@@ -31,21 +33,38 @@ class PixelFileWriter:
             writer.write_edgelist(Path("edgelist.parquet"))
     """
 
-    def __init__(self, path: Path, exits_ok: bool = False):
+    def __init__(
+        self,
+        path: Path,
+        exits_ok: bool = False,
+        temp_dir: Path | str | None = None,
+        temp_dir_size_limit: str | None = None,
+    ):
         """Initialize the PixelFileWriter.
 
-        :param path: The path to the PXL file.
-        :param exists_ok: Whether to remove the file if it exists.
+        Args:
+            path: The path to the PXL file.
+            exits_ok: Whether to remove the file if it exists.
+            temp_dir: DuckDB spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
+            temp_dir_size_limit: DuckDB spill size limit. Defaults to
+                ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when set.
         """
         self.path = path
         self.exists_ok = exits_ok
+        self._temp_dir = temp_dir
+        self._temp_dir_size_limit = temp_dir_size_limit
         if self.exists_ok and self.path.exists():
             self.path.unlink()
         self._connection: duckdb.DuckDBPyConnection = None  # type: ignore
 
     def open(self):
         """Open a connection to the PXL file."""
-        self._connection = duckdb.connect(self.path)
+        self._connection = init_duckdb_conn(
+            path=self.path,
+            read_only=False,
+            temp_dir=self._temp_dir,
+            temp_dir_size_limit=self._temp_dir_size_limit,
+        )
 
     def close(self):
         """Close the connection to the PXL file."""
@@ -55,7 +74,8 @@ class PixelFileWriter:
     def get_connection(self) -> duckdb.DuckDBPyConnection:
         """Get the connection to the PXL file.
 
-        :return: The duckdb connection.
+        Returns:
+            The duckdb connection.
         """
         if self._connection is None:
             raise ValueError("Connection is not open.")
@@ -88,7 +108,8 @@ class PixelFileWriter:
     def write_edgelist(self, edgelist: Path | pl.DataFrame) -> None:
         """Write the edgelist to the PXL file.
 
-        :param edgelist: The path to the edgelist parquet file.
+        Args:
+            edgelist: The path to the edgelist parquet file.
         """
         if isinstance(edgelist, Path):
             self._write_parquet_file_to_table("edgelist", edgelist)
@@ -113,7 +134,8 @@ class PixelFileWriter:
     def write_adata(self, adata: AnnData) -> None:
         """Write the AnnData object to the PXL file.
 
-        :param adata: The AnnData object to write.
+        Args:
+            adata: The AnnData object to write.
         """
         self._clean_existing_adata_tables()
 
@@ -145,7 +167,8 @@ class PixelFileWriter:
     def write_metadata(self, metadata: dict) -> None:
         """Write the metadata to the PXL file.
 
-        :param metadata: The metadata dictionary to write.
+        Args:
+            metadata: The metadata dictionary to write.
         """
         self._connection.sql(
             """
@@ -159,7 +182,8 @@ class PixelFileWriter:
     def write_layouts(self, layouts: Path | pl.DataFrame | list[Path]) -> None:
         """Write the layouts to the PXL file.
 
-        :param layouts: The path to the layouts parquet file.
+        Args:
+            layouts: The path to the layouts parquet file.
         """
         try:
             if isinstance(layouts, list) or layouts.is_file():  # type: ignore
@@ -179,7 +203,8 @@ class PixelFileWriter:
     def write_proximity(self, proximity: Path | pl.DataFrame) -> None:
         """Write the proximity data to the PXL file.
 
-        :param proximity: The path to the proximity parquet file.
+        Args:
+            proximity: The path to the proximity parquet file.
         """
         try:
             if proximity.is_file():  # type: ignore

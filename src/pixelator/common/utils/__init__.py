@@ -63,11 +63,13 @@ def build_barcodes_file(
     ($) will be added at the end of the sequences to make them
     anchored in cutadapt.
 
-    :param panel: an Antibody panel object
-    :param anchored: make the sequences anchored if True
-    :param rev_complement: reverse complement the sequence column
-                           if True
-    :returns str: a path to the barcodes file
+    Args:
+        panel: an Antibody panel object
+        anchored: make the sequences anchored if True
+        rev_complement: reverse complement the sequence column if True
+
+    Returns:
+        a path to the barcodes file (str)
     """
     logger.debug("Creating barcodes file from antibody panel")
 
@@ -90,8 +92,9 @@ def build_barcodes_file(
 def click_echo(msg: str, multiline: bool = False):
     """Print a line to the console with optional long-line wrapping.
 
-    :param msg: the message to print
-    :param multiline: True to use text wrapping or False otherwise (default)
+    Args:
+        msg: the message to print
+        multiline: True to use text wrapping or False otherwise (default)
     """
     if multiline:
         click.echo(textwrap.fill(textwrap.dedent(msg), width=100))
@@ -102,9 +105,12 @@ def click_echo(msg: str, multiline: bool = False):
 def create_output_stage_dir(root: PathType, name: str) -> Path:
     """Create a new subfolder with `name` under the given `root` directory.
 
-    :param root: the parent directory
-    :param name: the name of the directory to create
-    :returns Path: the created folder (Path)
+    Args:
+        root: the parent directory
+        name: the name of the directory to create
+
+    Returns:
+        the created folder (Path) (Path)
     """
     output = Path(root) / name
     if not output.is_dir():
@@ -127,10 +133,12 @@ def batched(iterable, n):
 def get_extension(filename: PathType, len_ext: int = 2) -> str:
     """Extract file extensions from a filename.
 
-    :param filename: the file name
-    :param len_ext: the number of expected extensions parts
-        e.g.: fq.gz gives len_ext=2
-    :returns str: the file extension (str)
+    Args:
+        filename: the file name
+        len_ext: the number of expected extensions parts e.g.: fq.gz gives len_ext=2
+
+    Returns:
+        the file extension (str) (str)
     """
     return "".join(PurePath(filename).suffixes[-len_ext:]).lstrip(".")
 
@@ -141,8 +149,11 @@ def get_sample_name(filename: PathType) -> str:
     The sample name is expected to be from the start of the filename until
     the first dot.
 
-    :param filename: path to the file
-    :returns str: the sample name
+    Args:
+        filename: path to the file
+
+    Returns:
+        the sample name (str)
     """
     return Path(filename).stem.split(".")[0]
 
@@ -152,14 +163,20 @@ def group_input_reads(
 ) -> Dict[str, List[Path]]:
     """Group input files by read pairs and sample id.
 
-    :param inputs: list of input files
-    :param input1_pattern: pattern to match read1 files
-    :param input2_pattern: pattern to match read2 files
-    :raises ValueError: if the number of reads for a sample is more than 2
-    :returns Dict[str, List[Path]]: a dictionary with the grouped reads
+    Args:
+        inputs: list of input files
+        input1_pattern: pattern to match read1 files
+        input2_pattern: pattern to match read2 files
+
+    Returns:
+        a dictionary with the grouped reads (Dict[str, List[Path]])
+
+    Raises:
+        ValueError: if the number of reads for a sample is more than 2
     """
 
     def group_fn(s):
+        """Return the normalized sample name used for grouping inputs."""
         sn = get_sample_name(s)
         return sn.replace(input1_pattern, "").replace(input2_pattern, "")
 
@@ -199,8 +216,11 @@ def group_input_reads(
 def gz_size(filename: str) -> int:
     """Extract the size of a gzip compressed file.
 
-    :param filename: file name
-    :returns int: size of the file uncompressed (in bits)
+    Args:
+        filename: file name
+
+    Returns:
+        size of the file uncompressed (in bits) (int)
     """
     with gzip.open(filename, "rb") as f:
         return f.seek(0, whence=2)
@@ -214,11 +234,14 @@ def log_step_start(
 ) -> None:
     """Add information about the start of a pixelator step to the logs.
 
-    :param step_name: name of the step that is starting
-    :param input_files: collection of input file paths
-    :param output: optional path to output
-    :param **kwargs: any additional parameters that you wish to log
-    :rtype: None
+    Args:
+        step_name: name of the step that is starting
+        input_files: collection of input file paths
+        output: optional path to output
+        **kwargs: any additional parameters that you wish to log
+
+    Returns:
+        None
     """
     from pixelator import __version__
 
@@ -256,9 +279,11 @@ def remove_csv_whitespaces(df: pd.DataFrame) -> None:
 def reverse_complement(seq: str) -> str:
     """Compute the reverse complement of a DNA seq.
 
-    :param seq: the DNA sequence
-    :return: the reverse complement of the input sequence
-    :rtype: str
+    Args:
+        seq: the DNA sequence
+
+    Returns:
+        the reverse complement of the input sequence (str)
     """
     return seq.translate(_TRTABLE)[::-1]
 
@@ -269,11 +294,16 @@ def sanity_check_inputs(
 ) -> None:
     """Perform basic sanity checking of input files.
 
-    :param input_files: the files to sanity check
-    :param allowed_extensions: the expected file extension of the files, e.g. 'fastq.gz'
-                               or a tuple of allowed types eg. ('fastq.gz', 'fq.gz')
-    :raises AssertionError: when any of validation fails
-    :returns None:
+    Args:
+        input_files: the files to sanity check
+        allowed_extensions: the expected file extension of the files, e.g. 'fastq.gz' or a tuple of
+            allowed types eg. ('fastq.gz', 'fq.gz')
+
+    Returns:
+        None
+
+    Raises:
+        AssertionError: when any of validation fails
     """
     input_files_: list[PathType] = (
         input_files if not isinstance(input_files, PathType) else [input_files]  # type: ignore
@@ -311,9 +341,14 @@ T = typing.TypeVar("T")
 def single_value(xs: Union[List[T], Set[T]]) -> T:
     """Extract the first value in a List or Set if the collection has a single value.
 
-    :param xs: a collection of values
-    :returns T: the first value in the collection
-    :raises AssertionError: if the collection is empty or has more than one value
+    Args:
+        xs: a collection of values
+
+    Returns:
+        the first value in the collection (T)
+
+    Raises:
+        AssertionError: if the collection is empty or has more than one value
     """
     if len(xs) == 0:
         raise AssertionError("Empty collection")
@@ -327,6 +362,7 @@ def timer(func):
 
     @wraps(func)
     def wrapper(*args, **kwds):
+        """Run the wrapped function and log its execution time."""
         start_time = time.perf_counter()
         res = func(*args, **kwds)
         run_time = time.perf_counter() - start_time
@@ -341,9 +377,10 @@ def write_parameters_file(
 ) -> None:
     """Write the parameters used in for a command to a JSON file.
 
-    :param click_context: the click context object
-    :param output_file: the output file
-    :param command_path: the command to use as command name
+    Args:
+        click_context: the click context object
+        output_file: the output file
+        command_path: the command to use as command name
     """
     command_path_fixed = command_path or click_context.command_path
     parameters = click_context.command.params
@@ -446,9 +483,14 @@ def get_read_sample_name(read: str) -> str:
 
     _R1,_R2 | _r1, _r2 | _1, _2 | .R1, .R2 | .r1, .r2
 
-    :param read: filename of a fastq read file
-    :return str: sample name
-    :raise ValueError: if the read file does not have a valid extension
+    Args:
+        read: filename of a fastq read file
+
+    Returns:
+        sample name (str)
+
+    Raises:
+        ValueError: if the read file does not have a valid extension
     """
     # group input file by sample id and order reads by R1 and R2
     if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
@@ -482,11 +524,16 @@ def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> 
 
     Detects the presence of a common read 1 or read 2 suffix in the filename.
 
-    :param read: filename of a fastq read file
-    :param read_type: the read type to check for (r1 or r2)
-    :return bool: True if the read file is a read 1 or 2 file
-    :raise ValueError: if the read file does not have a valid extension
-    :raise AssertionError: if the read_type is not 'r1' or 'r2'
+    Args:
+        read: filename of a fastq read file
+        read_type: the read type to check for (r1 or r2)
+
+    Returns:
+        True if the read file is a read 1 or 2 file (bool)
+
+    Raises:
+        ValueError: if the read file does not have a valid extension
+        AssertionError: if the read_type is not 'r1' or 'r2'
     """
     read = Path(read).name
 
@@ -518,9 +565,14 @@ def flatten(iterable: Iterable[Iterable[Any] | Any]) -> Generator[Any, None, Non
 
     Note: only list, set, tuple are flattened, strings and bytes are yielded as is
 
-    :param iterable: list of lists or list of sets
-    :return Generator[Any, None, None]: A generator yielding the flattened items
-    :yield Any: the flattened items
+    Args:
+        iterable: list of lists or list of sets
+
+    Returns:
+        A generator yielding the flattened items (Generator[Any, None, None])
+
+    Yields:
+        the flattened items (Any)
     """
     for item in iterable:
         if isinstance(item, (str, bytes)):

@@ -35,7 +35,6 @@ def _merge_sort_parquet(
 
     Returns:
         The path to the combined and sorted output file.
-
     """
     conn.sql(
         f"""
@@ -63,7 +62,6 @@ class CombineCollapseIndependentStats:
         corrected_reads: Total number of corrected reads
         umi1_degree_distribution: The node degree distribution for umi1, degree->count
         umi2_degree_distribution: The node degree distribution for umi2, degree->count
-
     """
 
     output_molecules: int
@@ -84,8 +82,10 @@ def combine_independent_parquet_files(
 
     Use DuckDB for their support of larger than memory joins.
 
-    The independently corrected partitioned umi1 and umi2 output files are first combined and sorted.
-    This result in two sorted parquet files, one for with UMI1 correction info and one with the UMI2 correction.
+    The independently corrected partitioned umi1 and umi2 output files are first combined and
+    sorted.
+    This result in two sorted parquet files, one for with UMI1 correction info and one with the UMI2
+    correction.
     The sorting is done on the original_umi1,original_umi2 and uei columns.
     The umi regions before correction are common in the m1 and m2 parquet files,
     so we guaranteed that the row id of each molecule in the merged m1 file will match that
@@ -111,20 +111,17 @@ def combine_independent_parquet_files(
         umi1_files: The list of UMI1 parquet files.
         umi2_files: The list of UMI2 parquet files.
         output_file: The path to the output parquet file.
-        threads: The number of threads to use for DuckDB. If None, the default is used (all available cores).
-        memory_limit: The memory limit to use for DuckDB in MB eg: '1024MiB' for 1GiB.
-            If None, the default is used (80% of the system memory).
+        threads: The number of threads to use for DuckDB. If None, the default is used (all
+            available cores).
+        memory_limit: The memory limit to use for DuckDB in MB eg: '1024MiB' for 1GiB. If None, the
+            default is used (80% of the system memory).
         temp_directory: The directory used by DuckDB for disk spilling
-        max_temp_directory_size:
-            The maximum size in bytes that DuckDB is allowed to use for temporary files.
-            If None, the default is used (90% of the system disk space).
-
+        max_temp_directory_size: The maximum size in bytes that DuckDB is allowed to use for
+            temporary files. If None, the default is used (90% of the system disk space).
         verbose: If True, enable DuckDB stdout logging.
-
 
     Returns:
         A dictionary with additional statistics calculated on the combined parquet data.
-
     """
     conn = init_duckdb_conn(
         memory_limit=memory_limit, threads=threads, temp_dir=temp_directory
@@ -251,13 +248,12 @@ def combine_independent_report_files(
         marker1_reports: The list of marker1 reports.
         marker2_reports: The list of marker2 reports.
         sample_id: The sample ID to use for the combined report.
-        stats: Additional statistics calculated on the combined parquet data.
-            These statistics cannot be derived from the individual reports.
+        stats: Additional statistics calculated on the combined parquet data. These statistics
+            cannot be derived from the individual reports.
         output_file: The output file to write the combined report to.
 
     Returns:
         None
-
     """
     regions_to_combine = frozenset(
         (

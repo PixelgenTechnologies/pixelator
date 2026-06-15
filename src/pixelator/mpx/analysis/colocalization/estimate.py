@@ -25,11 +25,13 @@ def estimate_observation_statistics(
 ):
     """Estimates the observation statistics for colocalization analysis.
 
-    :param observations: The observed data.
-    :param permutation_results: The permutation results.
-    :param funcs: Tuple of colocalization functions.
-    :return: The estimated observation statistics.
-    :rtype: pd.DataFrame
+    Args:
+        observations: The observed data.
+        permutation_results: The permutation results.
+        funcs: Tuple of colocalization functions.
+
+    Returns:
+        The estimated observation statistics. (pd.DataFrame)
     """
 
     def estimates():
@@ -73,14 +75,16 @@ def permutation_analysis_results(
 ) -> pd.DataFrame:
     """Perform permutation analysis on colocalization data.
 
-    :param data: The input data for colocalization analysis.
-    :param funcs: A tuple of colocalization functions to apply.
-    :param permuter: A function that generates permuted data for analysis.
-    :param transformer: A function to transform the permuted data before analysis. (optional)
-    :param n: The number of permutations to perform. Default is 50.
-    :param random_seed: The random seed for reproducibility. Default is None.
-    :return: The results of the permutation analysis.
-    :rtype: pd.DataFrame
+    Args:
+        data: The input data for colocalization analysis.
+        funcs: A tuple of colocalization functions to apply.
+        permuter: A function that generates permuted data for analysis.
+        transformer: A function to transform the permuted data before analysis. (optional)
+        n: The number of permutations to perform. Default is 50.
+        random_seed: The random seed for reproducibility. Default is None.
+
+    Returns:
+        The results of the permutation analysis. (pd.DataFrame)
     """
 
     def constuct_permutation_data(data, n):

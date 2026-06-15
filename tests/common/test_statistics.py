@@ -23,18 +23,21 @@ DATA_ROOT = Path(__file__).parent / "data"
 
 
 def test_correct_p_values_basic():
+    """Verify correct p values basic."""
     x = np.array([0.001, 0.001, 0.02, 0.01])
     result = correct_pvalues(x)
     assert_array_almost_equal(result, np.array([0.002, 0.002, 0.02, 0.013333]))
 
 
 def test_correct_p_values_only_ties():
+    """Verify correct p values only ties."""
     x = np.array([0.001, 0.001])
     result = correct_pvalues(x)
     assert_array_almost_equal(result, np.array([0.001, 0.001]))
 
 
 def test_correct_p_values_with_nan_values():
+    """Verify correct p values with nan values."""
     x = np.array([0.001, 0.001, np.nan, 0.02, 0.01])
     result = correct_pvalues(x)
     assert_array_almost_equal(
@@ -43,6 +46,7 @@ def test_correct_p_values_with_nan_values():
 
 
 def test_log1p_transformation():
+    """Verify log1p transformation."""
     antibody_counts = pd.DataFrame(
         [[7.0, 3.0, 10.0], [10.0, 2.0, 5.0]],
         columns=["A", "B", "C"],
@@ -59,6 +63,7 @@ def test_log1p_transformation():
 
 
 def test_clr_transformation():
+    """Verify clr transformation."""
     antibody_counts = pd.DataFrame(
         [[7.0, 3.0, 10.0], [10.0, 2.0, 5.0]],
         columns=["A", "B", "C"],
@@ -129,6 +134,7 @@ def test_clr_standard_transformation_axis_1():
 
 
 def test_rate_diff_transformation():
+    """Verify rate diff transformation."""
     antibody_counts = pd.DataFrame(
         [[7.0, 3.0, 10.0], [10.0, 2.0, 5.0]],
         columns=["A", "B", "C"],
@@ -145,6 +151,7 @@ def test_rate_diff_transformation():
 
 
 def test_rel_normalization():
+    """Verify rel normalization."""
     antibody_counts = pd.DataFrame(
         [[7.0, 3.0, 10.0], [10.0, 2.0, 5.0]],
         columns=["A", "B", "C"],
@@ -173,6 +180,7 @@ def test_rel_normalization():
 
 
 def test_wilcoxon_test():
+    """Verify wilcoxon test."""
     same_dist_df = pd.DataFrame(
         {
             "group": ["A"] * 50 + ["B"] * 50,
@@ -195,6 +203,7 @@ def test_wilcoxon_test():
 
 
 def test_dsb_normalize():
+    """Verify dsb normalize."""
     input_data = pd.read_csv(
         str(DATA_ROOT / "dsb_normalization_test_input.csv")
     ).astype(float)
