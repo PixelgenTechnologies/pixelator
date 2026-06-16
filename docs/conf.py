@@ -40,10 +40,16 @@ autoapi_ignore = [
     "*/__pycache__/**/*",
 ]
 
+# Options for AutoAPI
 autoapi_options = [
-    "members",
-    "show-inheritance",
-    "show-module-summary",
+    "members",  # Display children of an object
+    "show-inheritance",  # Display a list of base classes below the class signature
+    "show-module-summary",  # Whether to include autosummary directives in generated module documentation.
+    # "undoc-members",  # Display objects that have no docstring
+    # "special-members",  # Display special objects (eg. __foo__ in Python)
+    # "imported-members",  # For objects imported into a package, display objects imported from the same top level package or module.
+    # "inherited-members",  # Display children of an object that have been inherited from a base class.
+    # Note the absence of the option private-members
 ]
 
 autoapi_member_order = "alphabetical"

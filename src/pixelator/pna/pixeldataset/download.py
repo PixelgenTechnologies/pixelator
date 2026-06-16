@@ -1,4 +1,4 @@
-"""Module for downloading pixel datasets that can be used with e.g. tutorials.
+"""Module for downloading Pixelgen Technologies datasets that can be used with e.g. tutorials.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
