@@ -20,7 +20,36 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosummary",
     "sphinx_design",
+    "autoapi.extension",
+    "sphinx_click",
 ]
+
+autoapi_type = "python"
+autoapi_dirs = ["../src/pixelator"]
+autoapi_root = "api/generated"
+autoapi_add_toctree_entry = False
+
+autoapi_ignore = [
+    "*/pixelator/mpx/*",
+    "*/pixelator/mpx/**/*",
+    "*/pixelator/cli/*",
+    "*/pixelator/cli/**/*",
+    "*/pixelator/pna/cli/*",
+    "*/pixelator/pna/cli/**/*",
+    "*/__pycache__/*",
+    "*/__pycache__/**/*",
+]
+
+autoapi_options = [
+    "members",
+    "show-inheritance",
+    "show-module-summary",
+]
+
+autoapi_member_order = "alphabetical"
+autoapi_python_class_content = "both"
+autoapi_python_use_implicit_namespaces = True
+
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
