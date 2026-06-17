@@ -30,20 +30,20 @@ our data analysis sections for MPX and PNA (section for PNA is linked below as "
 
       Browse Pixelator command-line interface commands, options, and arguments.
 
-   .. .. grid-item-card:: Tutorials
-   ..    :link: https://software.pixelgen.com/pna-analysis/introduction/
-   ..    :link-type: url
+   .. grid-item-card:: Pixelgen software site
+      :link: https://software.pixelgen.com/
+      :link-type: url
 
-   ..    See tutorials and code examples for getting started
-   ..    with Proximity Network Assay (PNA) data analysis
-   ..    using Pixelator as a Python library.
+      See the Pixelgen software site for information about
+      software, analysis, and datasets.
 
-   .. .. grid-item-card:: Pixelgen software
-   ..    :link: https://software.pixelgen.com/
-   ..    :link-type: url
+      .. .. grid-item-card:: Tutorials
+      .. :link: https://software.pixelgen.com/pna-analysis/introduction/
+      .. :link-type: url
 
-   ..    See the Pixelgen software site for information about
-   ..    software, analysis, and datasets.
+      .. See tutorials and code examples for getting started
+      .. with Proximity Network Assay (PNA) data analysis
+      .. using Pixelator as a Python library.
 
 .. toctree::
    :maxdepth: 2

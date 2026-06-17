@@ -1,5 +1,5 @@
 Python API reference
-=============
+====================
 
 This section documents the public Python API for Pixelator.
 

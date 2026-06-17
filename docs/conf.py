@@ -8,11 +8,21 @@
 
 
 project = "Pixelator"
-copyright = "2026, Pixelgen Technologies"
+copyright = "2026 Pixelgen Technologies"
 author = "Pixelgen Technologies"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+
+nitpicky = True
+nitpick_ignore = [
+    # --- MPX excluded from AutoAPI ---
+    ("py:class", "pixelator.mpx.graph.Graph"),
+    # --- No public intersphinx inventory ---
+    # (see if these can be resolved without ignoring)
+    ("py:class", "duckdb.DuckDBPyConnection"),
+    ("py:class", "faiss.IndexBinary"),
+]
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -45,7 +55,7 @@ autoapi_options = [
     "members",  # Display children of an object
     "show-inheritance",  # Display a list of base classes below the class signature
     "show-module-summary",  # Whether to include autosummary directives in generated module documentation.
-    # "undoc-members",  # Display objects that have no docstring
+    "undoc-members",  # Display objects that have no docstring
     # "special-members",  # Display special objects (eg. __foo__ in Python)
     # "imported-members",  # For objects imported into a package, display objects imported from the same top level package or module.
     # "inherited-members",  # Display children of an object that have been inherited from a base class.
@@ -88,8 +98,20 @@ napoleon_attr_annotations = True
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "numpy": ("https://numpy.org/doc/stable", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy", None),
     "seaborn": ("https://seaborn.pydata.org/", None),
+    "polars": ("https://docs.pola.rs/api/python/stable/", None),
+    "pydantic": ("https://docs.pydantic.dev/latest/", None),
+    "scanpy": ("https://scanpy.readthedocs.io/en/stable/", None),
+    "anndata": ("https://anndata.readthedocs.io/en/stable/", None),
+    "cutadapt": ("https://cutadapt.readthedocs.io/en/stable/", None),
+    "dnaio": ("https://dnaio.readthedocs.io/en/stable/", None),
+    "pyarrow": ("https://arrow.apache.org/docs/", None),
+    "networkx": ("https://networkx.org/documentation/stable/", None),
+    "click": ("https://click.palletsprojects.com/en/stable/", None),
+    "packaging": ("https://packaging.pypa.io/en/stable/", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
 }
