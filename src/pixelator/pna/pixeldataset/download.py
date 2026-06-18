@@ -1,4 +1,4 @@
-"""Module for downloading Pixelgen Technologies datasets that can be used with e.g. tutorials.
+"""Module for downloading datasets that can be used with e.g. tutorials.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
@@ -44,40 +44,38 @@ _DATASET_MAPPINGS = {dataset.name: {dataset.version: dataset} for dataset in _DA
 
 
 class DownloadableDatasets:
-    """Download example pixel datasets for tutorials and testing.
+    """Download example datasets for tutorials and testing.
 
-    Use this class to fetch small example datasets (e.g. PNA PBMCs) to your
-    machine. Call ``list_datasets()`` to see what is available, then
-    ``download_dataset()`` with the dataset name to download it. If the file
-    already exists at the destination, the download is skipped unless you pass
-    ``overwrite=True``.
+    Fetch small example datasets (e.g. PNA PBMCs) with ``download_dataset()``.
+    Call ``list_datasets()`` to see available names and descriptions.
 
-    Example:
-    List available datasets and download one::
+    .. dropdown:: Example
 
-    from pathlib import Path
-    from pixelator.pna.pixeldataset.download import DownloadableDatasets
+        .. code-block:: python
 
-    # See what datasets exist
-    DownloadableDatasets.list_datasets()
+            # Example: list available datasets and download datasets
 
-    # Download the latest version to the default folder
-    (./pixelator-datasets/{dataset_name}.layout.pxl)
-    # i.e. in this case ./pixelator-datasets/pna062-pha-pbmcs.layout.pxl
-    path = DownloadableDatasets.download_dataset("pna062-pha-pbmcs")
+            from pathlib import Path
+            from pixelator.pna.pixeldataset.download import DownloadableDatasets
 
-    # Download to a specific path
-    path = DownloadableDatasets.download_dataset(
-    "pna062-unstim-pbmcs",
-    output_path=Path("./data/my_dataset.layout.pxl"),
-    )
+            # List available datasets
+            DownloadableDatasets.list_datasets()
 
-    # Re-download and overwrite an existing file
-    path = DownloadableDatasets.download_dataset(
-    "pna062-pha-pbmcs",
-    output_path=Path("./data/example.layout.pxl"),
-    overwrite=True,
-    )
+            # Download the latest version of a dataset to the default folder
+            path = DownloadableDatasets.download_dataset("pna062-pha-pbmcs")
+
+            # Download to a specific path
+            path = DownloadableDatasets.download_dataset(
+                "pna062-unstim-pbmcs",
+                output_path=Path("./data/my_dataset.layout.pxl"),
+            )
+
+            # Download and overwrite an existing file
+            path = DownloadableDatasets.download_dataset(
+                "pna062-pha-pbmcs",
+                output_path=Path("./data/my_dataset.layout.pxl"),
+                overwrite=True,
+            )
     """
 
     @staticmethod
@@ -87,25 +85,27 @@ class DownloadableDatasets:
         output_path: Path | None = None,
         overwrite: bool = False,
     ) -> Path:
-        """Download a dataset from the URL to a local path.
-
-        If `output_path` is not provided, the dataset will be downloaded into a subdirectory called
-        `pixelator-datasets` in the current working directory.
+        """Download a dataset to a local path.
 
         Args:
-            dataset_name: The name of the dataset to download.
-            version: The version of the dataset to download. If not provided, the latest version
-                will be downloaded.
-            output_path: The path to save the dataset to. Defaults to
-                `./pixelator-datasets/{dataset_name}.layout.pxl`
-            overwrite: If False and a file already exists at the destination, do not download and
-                return the path. If True, download again and overwrite the existing file.
+            dataset_name: Name of the dataset to download.
+            version: Dataset version to download. Defaults to the latest
+                version for ``dataset_name``.
+            output_path: Destination file path. Defaults to
+                ``./pixelator-datasets/{dataset_name}.layout.pxl``
+                (relative to the current working directory).
+            overwrite: Controls behavior when the destination file already exists.
+                If True, the file is overwritten. If False, the download is skipped
+                and the existing path is returned.
 
         Returns:
             The path to the downloaded dataset.
 
         Raises:
-            ValueError: If the dataset is not found.
+            ValueError: If ``dataset_name`` is not found.
+            KeyError: If ``version`` does not match a known version.
+            requests.HTTPError: If the server returns an error status code.
+            requests.RequestException: On connection or read failures.
         """
         if dataset_name not in _DATASET_MAPPINGS:
             raise ValueError(
@@ -130,21 +130,21 @@ class DownloadableDatasets:
 
     @staticmethod
     def list_datasets():
-        """List all available datasets."""
+        """Print a list of all available datasets."""
         print("Available datasets:")
         for dataset in _DATASETS:
             print(f"- {dataset}")
 
     def __str__(self) -> str:
-        """Return the string representation of the class."""
+        """Return a string listing available dataset names."""
         return f"DownloadableDatasets(datasets={list(_DATASET_MAPPINGS.keys())})"
 
     def __repr__(self) -> str:
-        """Return the string representation of the class."""
+        """Return the same string as ``str``."""
         return str(self)
 
     def _ipython_display_(self):
-        """Display the DownloadableDatasets in Jupyter notebooks."""
+        """Print available datasets when displayed in IPython or Jupyter."""
         print(self.list_datasets())
 
 

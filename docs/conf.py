@@ -56,8 +56,8 @@ autoapi_options = [
     "show-inheritance",  # Display a list of base classes below the class signature
     "show-module-summary",  # Whether to include autosummary directives in generated module documentation.
     "undoc-members",  # Display objects that have no docstring
+    "imported-members",  # For objects imported into a package, display objects imported from the same top level package or module.
     # "special-members",  # Display special objects (eg. __foo__ in Python)
-    # "imported-members",  # For objects imported into a package, display objects imported from the same top level package or module.
     # "inherited-members",  # Display children of an object that have been inherited from a base class.
     # Note the absence of the option private-members
 ]
@@ -65,6 +65,8 @@ autoapi_options = [
 autoapi_member_order = "alphabetical"
 autoapi_python_class_content = "both"
 autoapi_python_use_implicit_namespaces = True
+autoapi_own_page_level = "class"
+autoapi_own_page_level = "function"
 
 
 templates_path = ["_templates"]
@@ -76,9 +78,10 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 
 autodoc_member_order = "alphabetical"
-autodoc_typehints = "description"
+autodoc_typehints = "signature"
 autodoc_typehints_format = "short"
 autodoc_typehints_description_target = "documented_params"
 

@@ -4,7 +4,9 @@ API overview
 Primary entry points for PNA analysis.
 
 **Reader**
-* :func:`pixelator.pna.read_pna`
+
+* :func:`pixelator.read_pna`
+
 
 **Datasets**
 
