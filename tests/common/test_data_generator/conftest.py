@@ -4,9 +4,11 @@ Copyright © 2026 Pixelgen Technologies AB.
 """
 
 import pandas as pd
+import polars as pl
 import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
+from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel
 
 # Six regular markers and two hashing ones. A hashing marker is placed first so
@@ -42,4 +44,27 @@ def marker_panel_fixture():
     return PNAAntibodyPanel(
         df=panel_df,
         metadata=AntibodyPanelMetadata(name="test-marker-panel", version="0.1.0"),
+    )
+
+
+@pytest.fixture(name="assay")
+def assay_fixture():
+    """The proxiome-v2 assay describing the read structure."""
+    return pna_config.get_assay("proxiome-v2")
+
+
+@pytest.fixture(name="populated_edgelist")
+def populated_edgelist_fixture():
+    """A small populated edge list with umi/marker columns for both endpoints.
+
+    Markers are taken from the ``marker_panel`` fixture so the panel joins in
+    the read generation code resolve to sequences.
+    """
+    return pl.DataFrame(
+        {
+            "umi1": [0b00000000, 0b11100100, 1234567890],
+            "marker1": ["MarkerA", "MarkerB", "MarkerC"],
+            "umi2": [0b11111111, 42, 987654321],
+            "marker2": ["MarkerD", "MarkerE", "MarkerF"],
+        }
     )
