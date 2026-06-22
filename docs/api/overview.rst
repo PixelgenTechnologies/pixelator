@@ -17,6 +17,11 @@ Primary entry points for PNA analysis.
 
 * :func:`pixelator.pna.plot.molecule_rank_plot`
 
+**Abundance normalization**
+
+* :func:`pixelator.common.statistics.clr_transformation`
+* :func:`pixelator.common.statistics.dsb_normalize`
+
 .. **Configuration**
 
 .. * :class:`pixelator.pna.config.config_instance.pna_config`
