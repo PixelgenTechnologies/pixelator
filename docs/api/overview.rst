@@ -13,6 +13,10 @@ Primary entry points for PNA analysis.
 .. * :class:`pixelator.pna.pixeldataset.dataset.PixelDataset`
 * :class:`pixelator.pna.pixeldataset.download.DownloadableDatasets`
 
+**Plotting**
+
+* :func:`pixelator.pna.plot.molecule_rank_plot`
+
 .. **Configuration**
 
 .. * :class:`pixelator.pna.config.config_instance.pna_config`
