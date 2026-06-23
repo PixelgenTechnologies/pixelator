@@ -18,6 +18,12 @@ our data analysis sections for MPX and PNA (section for PNA is linked below as "
 .. grid:: 1 1 2 2
    :gutter: 2
 
+   .. grid-item-card:: Python API overview
+      :link: api/overview
+      :link-type: doc
+
+      Main functions and classes for PNA analysis with the Pixelator Python API.
+
    .. grid-item-card:: Python API reference
       :link: api/index
       :link-type: doc

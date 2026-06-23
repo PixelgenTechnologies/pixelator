@@ -77,6 +77,17 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "pydata_sphinx_theme"
+html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/PixelgenTechnologies/pixelator",
+            "icon": "fab fa-github",
+            "type": "fontawesome",
+        },
+    ]
+}
+
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 
