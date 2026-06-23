@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- The default `min_allowed_nodes_pct` in `adaptive_core_expansion` has been changed from 0.8 to 0.9, meaning that a valid "high" core partition must include at least 90% of all nodes. Components that don't meet this criteria will not be denoised by ACE. 
+
 ## [0.29.0] - 2026-06-15
 
 ### Added
