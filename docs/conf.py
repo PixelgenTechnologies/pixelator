@@ -91,6 +91,8 @@ html_theme_options = {
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 
+python_maximum_signature_line_length = 40
+
 autodoc_member_order = "alphabetical"
 autodoc_typehints = "signature"
 autodoc_typehints_format = "short"

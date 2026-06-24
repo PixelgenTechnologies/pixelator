@@ -15,6 +15,10 @@ for usage examples.
 .. * :class:`pixelator.pna.pixeldataset.dataset.PixelDataset`
 * :class:`pixelator.pna.pixeldataset.download.DownloadableDatasets`
 
+**PNAPixelDataset**
+
+* :class:`pixelator.pna.pixeldataset.PNAPixelDataset`
+
 **Plotting**
 
 * :func:`pixelator.pna.plot.molecule_rank_plot`
@@ -23,6 +27,10 @@ for usage examples.
 
 * :func:`pixelator.common.statistics.clr_transformation`
 * :func:`pixelator.common.statistics.dsb_normalize`
+
+**Analysis**
+
+* :func:`pixelator.pna.analysis.calculate_differential_proximity`
 
 .. **Configuration**
 
