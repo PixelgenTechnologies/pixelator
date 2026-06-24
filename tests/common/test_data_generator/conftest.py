@@ -11,32 +11,32 @@ from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel
 
-# Six regular markers and two hashing ones. A hashing marker is placed first so
-# that tests can verify hashing markers are excluded from the abundance tiers by
-# mask rather than merely by trailing position.
-_MARKERS = [
-    ("Hash0", "yes"),
-    ("MarkerA", "no"),
-    ("MarkerB", "no"),
-    ("MarkerC", "no"),
-    ("MarkerD", "no"),
-    ("MarkerE", "no"),
-    ("MarkerF", "no"),
-    ("Hash1", "yes"),
-]
+# Six regular markers and two groups of hashing markers, indexed 1-8 via the
+# `-X` suffix (mirroring the real panel naming). A hashing marker is placed
+# first so that tests can verify hashing markers are excluded from the abundance
+# tiers by mask rather than merely by trailing position.
+_REGULAR = ["MarkerA", "MarkerB", "MarkerC", "MarkerD", "MarkerE", "MarkerF"]
+_HASHING = [f"{base}-{i}" for base in ("HashA", "HashB") for i in range(1, 9)]
+_MARKERS = [(_HASHING[0], "yes")]
+_MARKERS += [(marker, "no") for marker in _REGULAR]
+_MARKERS += [(marker, "yes") for marker in _HASHING[1:]]
 
-_BASES = ["AA", "AC", "AG", "AT", "CA", "CC", "CG", "CT"]
+
+def _dna(i: int, prefix: str) -> str:
+    """Build a unique length-10 dna sequence from an integer (3-base-4 suffix)."""
+    suffix = "".join("ACGT"[(i >> (2 * k)) & 3] for k in range(3))
+    return f"{prefix}{suffix}"
 
 
 @pytest.fixture(name="marker_panel")
 def marker_panel_fixture():
-    """A small PNA panel with six regular markers and two hashing markers."""
+    """A small PNA panel with six regular markers and indexed hashing markers."""
     panel_df = pd.DataFrame(
         {
             "marker_id": [marker for marker, _ in _MARKERS],
             "control": [False] * len(_MARKERS),
-            "sequence_1": [f"ACGTACGT{suffix}" for suffix in _BASES],
-            "sequence_2": [f"TGCATGCA{suffix}" for suffix in _BASES],
+            "sequence_1": [_dna(i, "ACGTACG") for i in range(len(_MARKERS))],
+            "sequence_2": [_dna(i, "TGCATGC") for i in range(len(_MARKERS))],
             "sample_hashing": [hashing for _, hashing in _MARKERS],
         }
     ).set_index("marker_id")

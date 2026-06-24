@@ -23,6 +23,7 @@ def generate_edgelist(
     min_neighbors: int,
     panel: PNAAntibodyPanel,
     n_crossing_edges: int = 1,
+    hashing_fraction: float = 0.2,
     rng=None,
 ) -> pl.DataFrame:
     """Generate a populated edge list for ``n_cells`` cells with crossing edges.
@@ -40,6 +41,7 @@ def generate_edgelist(
         min_neighbors: minimum number of neighbors per node.
         panel: antibody panel providing the available markers.
         n_crossing_edges: number of chimeric edges to add across cells.
+        hashing_fraction: fraction of each cell's umis assigned to hashing markers.
         rng: a seed or numpy Generator for the random number generator.
 
     Returns:
@@ -47,15 +49,21 @@ def generate_edgelist(
     """
     rng = np.random.default_rng(rng)
 
+    # Assign one hashing index per cell so that every index in the panel is used
+    # at least once (when there are enough cells).
+    cell_hashing_indices = _hashing_indices_per_cell(n_cells, panel, rng)
+
     # Generate and populate one edge list per cell, sharing the generator so no
     # two cells draw the same random sequence, then stack them.
     edgelist = pl.concat(
         populate_cell(
             generate_cell_graph(n_nodes, n_edges, min_neighbors, rng=rng),
             panel,
+            int(hashing_index),
+            hashing_fraction,
             rng=rng,
         )
-        for _ in range(n_cells)
+        for hashing_index in cell_hashing_indices
     )
 
     # Add crossing edges: join the umi1/marker1 of one random edge with the
@@ -74,13 +82,21 @@ def generate_edgelist(
 
 
 def populate_cell(
-    edgelist: pl.DataFrame, panel: PNAAntibodyPanel, rng=None
+    edgelist: pl.DataFrame,
+    panel: PNAAntibodyPanel,
+    hashing_index: int,
+    hashing_fraction: float = 0.2,
+    rng=None,
 ) -> pl.DataFrame:
     """Populate a cell edge list with umis and markers.
 
     Args:
         edgelist: edge list with ``node1`` and ``node2`` node-index columns.
         panel: antibody panel providing the available markers.
+        hashing_index: hashing index (the ``-X`` suffix) whose markers receive
+            the hashing overwrite for this cell.
+        hashing_fraction: fraction of the cell's umis assigned to the hashing
+            markers of ``hashing_index``.
         rng: a seed or numpy Generator for the random number generator.
 
     Returns:
@@ -88,7 +104,9 @@ def populate_cell(
     """
     rng = np.random.default_rng(rng)
     node_umi_map = _assign_umis(edgelist, rng)
-    node_umi_map = _assign_markers(node_umi_map, panel, rng)
+    node_umi_map = _assign_markers(
+        node_umi_map, panel, hashing_index, hashing_fraction, rng
+    )
     node_umi_map = _correlate_neighbors(node_umi_map, edgelist, rng)
     return (
         edgelist.join(
@@ -99,6 +117,23 @@ def populate_cell(
         )
         .select("umi1", "marker1", "umi2", "marker2")
     )
+
+
+def _hashing_indices_per_cell(
+    n_cells: int, panel: PNAAntibodyPanel, rng: np.random.Generator
+) -> np.ndarray:
+    """Assign a hashing index to each cell, covering every panel index.
+
+    The unique hashing indices (the ``-X`` suffix of the hashing markers) are
+    tiled to ``n_cells`` so each is used at least once when ``n_cells`` is at
+    least the number of indices, then shuffled across cells.
+    """
+    df = panel.to_polars()
+    hashing = df.filter(pl.col("sample_hashing") == "yes")["marker_id"]
+    indices = np.unique([int(m.rsplit("-", 1)[-1]) for m in hashing])
+    cell_indices = np.resize(indices, n_cells)
+    rng.shuffle(cell_indices)
+    return cell_indices
 
 
 def _assign_umis(edgelist: pl.DataFrame, rng: np.random.Generator) -> pl.DataFrame:
@@ -138,16 +173,28 @@ def _marker_probabilities(
 
 
 def _assign_markers(
-    node_umi_map: pl.DataFrame, panel: PNAAntibodyPanel, rng: np.random.Generator
+    node_umi_map: pl.DataFrame,
+    panel: PNAAntibodyPanel,
+    hashing_index: int,
+    hashing_fraction: float,
+    rng: np.random.Generator,
 ) -> pl.DataFrame:
-    """Sample a marker per umi, then overwrite 5% with one random hashing marker."""
+    """Sample a marker per umi, then overwrite a fraction with hashing markers.
+
+    A ``hashing_fraction`` of the umis is selected for hashing and assigned
+    uniformly among all hashing markers sharing ``hashing_index`` (the ``-X``
+    suffix in the name).
+    """
     markers, probs, is_hashing = _marker_probabilities(panel)
-    hashing_marker = rng.choice(markers[is_hashing])
+    hashing_markers = markers[is_hashing]
+    index = np.array([int(m.rsplit("-", 1)[-1]) for m in hashing_markers])
+    chosen = hashing_markers[index == hashing_index]
+    n = node_umi_map.height
     return node_umi_map.with_columns(
-        marker=rng.choice(markers, size=node_umi_map.height, p=probs)
+        marker=rng.choice(markers, size=n, p=probs)
     ).with_columns(
-        marker=pl.when(pl.Series(rng.random(node_umi_map.height) < 0.05))
-        .then(pl.lit(hashing_marker))
+        marker=pl.when(pl.Series(rng.random(n) < hashing_fraction))
+        .then(pl.Series(rng.choice(chosen, size=n)))
         .otherwise(pl.col("marker"))
     )
 
