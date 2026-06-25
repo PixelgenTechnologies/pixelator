@@ -69,6 +69,9 @@ def test_write_pna_pxl_edgelist_schema(written_pxl):
 
     expected = {"umi1", "umi2", "marker_1", "marker_2", "component", "read_count"}
     assert expected <= set(edgelist.columns)
+    # the random read counts from generate_edgelist are preserved
+    assert edgelist["read_count"].min() >= 1
+    assert edgelist["read_count"].n_unique() > 1
 
 
 def test_write_pna_pxl_markers_from_panel(written_pxl, real_panel):

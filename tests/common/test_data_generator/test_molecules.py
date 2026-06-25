@@ -190,11 +190,15 @@ def test_generate_edgelist_uses_all_hashing_indices(marker_panel):
         "umi2",
         "marker_2",
         "component",
+        "read_count",
     ]
     assert edgelist.height == 8 * 80
     # one unique component id per cell, no nulls without crossing edges
     assert edgelist["component"].null_count() == 0
     assert edgelist["component"].n_unique() == 8
+    # every edge has a random positive read count
+    assert edgelist["read_count"].min() >= 1
+    assert edgelist["read_count"].n_unique() > 1
 
 
 def test_generate_edgelist_component_column(marker_panel):

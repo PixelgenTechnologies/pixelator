@@ -84,7 +84,14 @@ def generate_edgelist(
             "component": pl.Series([None] * n_crossing_edges, dtype=pl.Utf8),
         }
     )
-    return pl.concat([edgelist, crossing])
+
+    # Assign a random positive read count to every edge.
+    populated = pl.concat([edgelist, crossing])
+    return populated.with_columns(
+        read_count=pl.Series(
+            rng.integers(1, 101, size=populated.height), dtype=pl.UInt32
+        )
+    )
 
 
 def populate_cell(
