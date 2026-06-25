@@ -12,6 +12,10 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
+from pixelator.common.utils.test_data_generator import (
+    generate_edgelist,
+    write_pna_pxl,
+)
 from pixelator.pna.analysis.denoise import (
     DenoiseGraph,
     denoise_ace,
@@ -24,7 +28,7 @@ from pixelator.pna.analysis_engine import AnalysisManager
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import load_antibody_panel
 from pixelator.pna.graph import PNAGraph
-from pixelator.pna.pixeldataset import PixelDatasetSaver
+from pixelator.pna.pixeldataset import PixelDatasetSaver, read
 
 OVER_EXPRESSED_MARKERS = """name,count,component
 CD156c,17,1a3afa30f0a90a83
@@ -462,17 +466,43 @@ def test_denoise_one_core_layer(denoise_pxl_dataset):
         assert nx.is_connected(denoised_graph)
 
 
-@pytest.mark.slow
-def test_denoise_one_core_analysis(denoise_pxl_dataset, tmp_path):
+@pytest.fixture(name="synthetic_denoise_pxl_dataset", scope="module")
+def synthetic_denoise_pxl_dataset_fixture(tmp_path_factory):
+    """A small synthetic denoise dataset generated on the fly.
+
+    Four independent cell graphs are generated and populated with markers from
+    the proxiome-v1 panel (no hashing markers), then written to a pxl file. The
+    edge count is tuned so each component stays connected while keeping a sizable
+    peripheral one-core layer (~7% of nodes) on top of a denser core, so one-core
+    denoising actually removes nodes. Connectivity matters: a disconnected piece
+    would be stranded and removed, which could drop core>1 nodes the test expects
+    to be preserved. The fixed seed makes these properties deterministic.
+    """
+    panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")
+    edgelist = generate_edgelist(
+        n_cells=4,
+        n_nodes=2000,
+        n_edges=3900,
+        min_neighbors=20,
+        panel=panel,
+        n_crossing_edges=0,
+        rng=0,
+    )
+    path = tmp_path_factory.mktemp("denoise") / "synthetic.pxl"
+    write_pna_pxl(edgelist, panel, path, sample_name="PNA055_Sample07_S7")
+    return read(path)
+
+
+def test_denoise_one_core_analysis(synthetic_denoise_pxl_dataset, tmp_path):
     """Test graph denoising with one-core only.
 
     Args:
-        denoise_pxl_dataset: Denoise pxl dataset.
+        synthetic_denoise_pxl_dataset: Small synthetic denoise pxl dataset.
         tmp_path: Tmp path.
     """
-    pxl_file_target = PixelDatasetSaver(pxl_dataset=denoise_pxl_dataset).save(
-        "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
-    )
+    pxl_file_target = PixelDatasetSaver(
+        pxl_dataset=synthetic_denoise_pxl_dataset
+    ).save("PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl")
     with mock.patch(
         "pixelator.pna.analysis.denoise.load_antibody_panel"
     ) as mock_load_panel:
@@ -484,13 +514,18 @@ def test_denoise_one_core_analysis(denoise_pxl_dataset, tmp_path):
         mock_load_panel.side_effect = f
 
         manager = AnalysisManager([DenoiseGraph(run_one_core=True, run_ace=False)])
-        denoised_dataset = manager.execute(denoise_pxl_dataset, pxl_file_target)
+        denoised_dataset = manager.execute(
+            synthetic_denoise_pxl_dataset, pxl_file_target
+        )
 
     assert "tau_type" in denoised_dataset.adata().obs.columns
-    components = denoise_pxl_dataset.adata().obs.index
+    components = synthetic_denoise_pxl_dataset.adata().obs.index
     for comp in components:
         graph = PNAGraph.from_edgelist(
-            denoise_pxl_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
+            synthetic_denoise_pxl_dataset.filter(components=[comp])
+            .edgelist()
+            .to_polars()
+            .lazy()
         )
         denoised_graph = PNAGraph.from_edgelist(
             denoised_dataset.filter(components=[comp]).edgelist().to_polars().lazy()
