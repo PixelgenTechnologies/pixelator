@@ -69,14 +69,19 @@ from pixelator.pna.pixeldataset.types import Component
 
 
 def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
-    """Read a PNAPixelDataset from one or more provided .pxl file(s).
+    """Read data from one or more ``.pxl`` files.
 
     Args:
-        path: path to the file to read
-        paths: Paths.
+        paths: One or more paths to ``.pxl`` files. A single path or a list of
+            paths may be passed. Each path may be a ``pathlib.Path`` or ``str``.
 
     Returns:
-        an instance of `PNAPixelDataset`
+        The data from the ``.pxl`` file(s).
+
+    Raises:
+        IOException: If a file is not a DuckDB database file.
+        ValueError: If a file is not a valid ``.pxl`` file, if a sample name cannot be determined from file metadata.
+        FileNotFoundError: If any path does not exist on disk.
     """
     if not paths:
         raise ValueError(
