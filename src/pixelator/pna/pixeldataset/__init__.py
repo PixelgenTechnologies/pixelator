@@ -12,7 +12,7 @@ Low-level access to those files (``PxlFile``, ``Query``, ``PixelDataViewer``, wr
 ``pixelator.pna.pixeldataset.io``; see that package’s module documentation for the IO-layer
 diagrams.
 
-## Architecture (dataset layer)
+..rubric:: Architecture (dataset layer)
 
 :class:`~pixelator.pna.pixeldataset.dataset.PNAPixelDataset` is the façade: it holds a
 :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer` that maps sample
@@ -31,7 +31,7 @@ names to on-disk ``PxlFile`` instances, and it constructs an
   filtering samples) and updated active components/markers, rebuilding ``AnnDataHelper``
   accordingly.
 
-### Dependency overview (ASCII)
+..rubric:: Dependency overview (ASCII)
 
 .. code-block:: none
 

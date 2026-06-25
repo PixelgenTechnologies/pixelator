@@ -12,7 +12,7 @@ Pixelator can be used in two ways: as a data processing pipeline
 The pipeline nf-core/pixelator consists of several steps and will produce
 ready-to-analyze outputs from your initial FASTQ sequencing libraries.
 Usage of Pixelator as a programming library is covered in the API reference and in
-our data analysis sections for MPX and PNA (section for PNA is linked below as "Tutorials").
+our data analysis sections for MPX and PNA (see "Pixelgen software site" below).
 
 
 .. grid:: 1 1 2 2
