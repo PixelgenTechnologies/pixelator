@@ -514,7 +514,9 @@ def test_denoise_one_core_analysis(synthetic_denoise_pxl_dataset, tmp_path):
 
         mock_load_panel.side_effect = f
 
-        manager = AnalysisManager([DenoiseGraph(run_one_core=True, run_ace=False)])
+        manager = AnalysisManager(
+            [DenoiseGraph(run_one_core=True, run_ace=False)], n_cores=1
+        )
         denoised_dataset = manager.execute(
             synthetic_denoise_pxl_dataset, pxl_file_target
         )
@@ -605,7 +607,9 @@ def _run_one_core_denoise(dataset, target_path):
         mock_load_panel.side_effect = lambda *args, **kwargs: load_antibody_panel(
             pna_config, "proxiome-v1-immuno-155-v1.0"
         )
-        manager = AnalysisManager([DenoiseGraph(run_one_core=True, run_ace=False)])
+        manager = AnalysisManager(
+            [DenoiseGraph(run_one_core=True, run_ace=False)], n_cores=1
+        )
         return manager.execute(dataset, target)
 
 
