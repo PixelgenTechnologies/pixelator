@@ -81,8 +81,8 @@ def populated_edgelist_fixture():
     return pl.DataFrame(
         {
             "umi1": [0b00000000, 0b11100100, 1234567890],
-            "marker1": ["MarkerA", "MarkerB", "MarkerC"],
+            "marker_1": ["MarkerA", "MarkerB", "MarkerC"],
             "umi2": [0b11111111, 42, 987654321],
-            "marker2": ["MarkerD", "MarkerE", "MarkerF"],
+            "marker_2": ["MarkerD", "MarkerE", "MarkerF"],
         }
     )

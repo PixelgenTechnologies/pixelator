@@ -111,8 +111,8 @@ def _assemble_amplicons(
     """Sample n_reads edges and build {umi1}{pid1}{lbs1}{uei}{lbs2}{pid2}{umi2}.
 
     umi1/umi2/uei are 2-bit-encoded integers decoded back to dna; pid1/pid2 are
-    the marker pid sequences from the panel (sequence_1 for marker1, sequence_2
-    for marker2). uei is a random number with twice as many bits as the uei
+    the marker pid sequences from the panel (sequence_1 for marker_1, sequence_2
+    for marker_2). uei is a random number with twice as many bits as the uei
     region is long (each base encodes 2 bits).
     """
     uei_len = assay.get_region_by_id("uei").max_len
@@ -134,9 +134,9 @@ def _assemble_amplicons(
     panel_df = panel.to_polars()
     return (
         reads.join(
-            panel_df.select(marker1="marker_id", pid1="sequence_1"), on="marker1"
+            panel_df.select(marker_1="marker_id", pid1="sequence_1"), on="marker_1"
         )
-        .join(panel_df.select(marker2="marker_id", pid2="sequence_2"), on="marker2")
+        .join(panel_df.select(marker_2="marker_id", pid2="sequence_2"), on="marker_2")
         .select(
             pl.concat_str(
                 "umi1_seq",

@@ -157,8 +157,8 @@ def test_assemble_amplicons_segments(populated_edgelist, marker_panel, assay):
     panel_df = marker_panel.to_polars()
     seq1 = dict(zip(panel_df["marker_id"], panel_df["sequence_1"]))
     seq2 = dict(zip(panel_df["marker_id"], panel_df["sequence_2"]))
-    pid1 = seq1[edge["marker1"][0]]
-    pid2 = seq2[edge["marker2"][0]]
+    pid1 = seq1[edge["marker_1"][0]]
+    pid2 = seq2[edge["marker_2"][0]]
 
     expected_len = (
         umi1_len + len(pid1) + len(lbs1) + uei_len + len(lbs2) + len(pid2) + umi2_len

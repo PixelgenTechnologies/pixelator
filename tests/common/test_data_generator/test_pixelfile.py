@@ -69,9 +69,6 @@ def test_write_pna_pxl_edgelist_schema(written_pxl):
 
     expected = {"umi1", "umi2", "marker_1", "marker_2", "component", "read_count"}
     assert expected <= set(edgelist.columns)
-    # the generator's marker1/marker2 columns are renamed away
-    assert "marker1" not in edgelist.columns
-    assert "marker2" not in edgelist.columns
 
 
 def test_write_pna_pxl_markers_from_panel(written_pxl, real_panel):

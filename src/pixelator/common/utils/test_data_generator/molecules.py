@@ -32,8 +32,8 @@ def generate_edgelist(
     with umis and markers (see :func:`populate_cell`). The per-cell edge lists are
     concatenated and tagged with a unique ``component`` id, and
     ``n_crossing_edges`` chimeric edges are added: for each, two random edges are
-    sampled and a new edge joins the umi1/marker1 of the first with the
-    umi2/marker2 of the second. Crossing edges have a null ``component``.
+    sampled and a new edge joins the umi1/marker_1 of the first with the
+    umi2/marker_2 of the second. Crossing edges have a null ``component``.
 
     Args:
         n_cells: number of cell graphs to generate.
@@ -46,8 +46,9 @@ def generate_edgelist(
         rng: a seed or numpy Generator for the random number generator.
 
     Returns:
-        A polars DataFrame with columns ``umi1``, ``marker1``, ``umi2``,
-        ``marker2`` and ``component`` (null for crossing edges).
+        A polars DataFrame with columns ``umi1``, ``marker_1``, ``umi2``,
+        ``marker_2``, ``component`` (null for crossing edges) and a random
+        positive ``read_count`` per edge.
     """
     rng = np.random.default_rng(rng)
 
@@ -69,17 +70,17 @@ def generate_edgelist(
         for cell, hashing_index in enumerate(cell_hashing_indices)
     )
 
-    # Add crossing edges: join the umi1/marker1 of one random edge with the
-    # umi2/marker2 of another random edge. These belong to no single cell, so
+    # Add crossing edges: join the umi1/marker_1 of one random edge with the
+    # umi2/marker_2 of another random edge. These belong to no single cell, so
     # their component is null.
     first = edgelist[rng.integers(0, edgelist.height, size=n_crossing_edges)]
     second = edgelist[rng.integers(0, edgelist.height, size=n_crossing_edges)]
     crossing = pl.DataFrame(
         {
             "umi1": first["umi1"],
-            "marker1": first["marker1"],
+            "marker_1": first["marker_1"],
             "umi2": second["umi2"],
-            "marker2": second["marker2"],
+            "marker_2": second["marker_2"],
             "component": pl.Series([None] * n_crossing_edges, dtype=pl.Utf8),
         }
     )
@@ -106,7 +107,7 @@ def populate_cell(
         rng: a seed or numpy Generator for the random number generator.
 
     Returns:
-        A polars DataFrame with columns ``umi1``, ``marker1``, ``umi2``, ``marker2``.
+        A polars DataFrame with columns ``umi1``, ``marker_1``, ``umi2``, ``marker_2``.
     """
     rng = np.random.default_rng(rng)
     node_umi_map = _assign_umis(edgelist, rng)
@@ -116,12 +117,12 @@ def populate_cell(
     node_umi_map = _correlate_neighbors(node_umi_map, edgelist, rng)
     return (
         edgelist.join(
-            node_umi_map.select(node1="node", umi1="umi", marker1="marker"), on="node1"
+            node_umi_map.select(node1="node", umi1="umi", marker_1="marker"), on="node1"
         )
         .join(
-            node_umi_map.select(node2="node", umi2="umi", marker2="marker"), on="node2"
+            node_umi_map.select(node2="node", umi2="umi", marker_2="marker"), on="node2"
         )
-        .select("umi1", "marker1", "umi2", "marker2")
+        .select("umi1", "marker_1", "umi2", "marker_2")
     )
 
 

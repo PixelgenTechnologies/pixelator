@@ -184,7 +184,13 @@ def test_generate_edgelist_uses_all_hashing_indices(marker_panel):
         n_crossing_edges=0,
         rng=0,
     )
-    assert edgelist.columns == ["umi1", "marker1", "umi2", "marker2", "component"]
+    assert edgelist.columns == [
+        "umi1",
+        "marker_1",
+        "umi2",
+        "marker_2",
+        "component",
+    ]
     assert edgelist.height == 8 * 80
     # one unique component id per cell, no nulls without crossing edges
     assert edgelist["component"].null_count() == 0
@@ -226,13 +232,20 @@ def test_generate_edgelist_without_hashing_markers(no_hashing_panel):
         rng=0,
     )
 
-    assert edgelist.columns == ["umi1", "marker1", "umi2", "marker2", "component"]
+    assert edgelist.columns == [
+        "umi1",
+        "marker_1",
+        "umi2",
+        "marker_2",
+        "component",
+        "read_count",
+    ]
     assert edgelist.height == n_cells * n_edges
     assert edgelist["component"].n_unique() == n_cells
     # every marker is drawn from the panel
     panel_markers = set(no_hashing_panel.to_polars()["marker_id"])
-    assert set(edgelist["marker1"]) <= panel_markers
-    assert set(edgelist["marker2"]) <= panel_markers
+    assert set(edgelist["marker_1"]) <= panel_markers
+    assert set(edgelist["marker_2"]) <= panel_markers
 
 
 def test_correlate_neighbors_membership():
@@ -304,18 +317,18 @@ def test_populate_cell(marker_panel):
     result = populate_cell(edgelist, marker_panel, hashing_index=1, rng=0)
 
     # schema and one row per input edge
-    assert result.columns == ["umi1", "marker1", "umi2", "marker2"]
+    assert result.columns == ["umi1", "marker_1", "umi2", "marker_2"]
     assert result.height == edgelist.height
 
     # markers come from the panel
     panel_markers = set(marker_panel.to_polars()["marker_id"])
-    assert set(result["marker1"]) <= panel_markers
-    assert set(result["marker2"]) <= panel_markers
+    assert set(result["marker_1"]) <= panel_markers
+    assert set(result["marker_2"]) <= panel_markers
 
     # each node resolves to a single (umi, marker): every umi maps to exactly one
     # marker, and the number of distinct umis equals the number of distinct nodes
-    pairs = list(zip(result["umi1"], result["marker1"]))
-    pairs += list(zip(result["umi2"], result["marker2"]))
+    pairs = list(zip(result["umi1"], result["marker_1"]))
+    pairs += list(zip(result["umi2"], result["marker_2"]))
     umi_to_marker = dict(pairs)
     for umi, marker in pairs:
         assert umi_to_marker[umi] == marker
