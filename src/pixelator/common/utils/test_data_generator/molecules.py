@@ -59,7 +59,7 @@ def generate_edgelist(
         populate_cell(
             generate_cell_graph(n_nodes, n_edges, min_neighbors, rng=rng),
             panel,
-            int(hashing_index),
+            None if hashing_index is None else int(hashing_index),
             hashing_fraction,
             rng=rng,
         )
@@ -84,7 +84,7 @@ def generate_edgelist(
 def populate_cell(
     edgelist: pl.DataFrame,
     panel: PNAAntibodyPanel,
-    hashing_index: int,
+    hashing_index: int | None = None,
     hashing_fraction: float = 0.2,
     rng=None,
 ) -> pl.DataFrame:
@@ -94,7 +94,8 @@ def populate_cell(
         edgelist: edge list with ``node1`` and ``node2`` node-index columns.
         panel: antibody panel providing the available markers.
         hashing_index: hashing index (the ``-X`` suffix) whose markers receive
-            the hashing overwrite for this cell.
+            the hashing overwrite for this cell. ``None`` (or a panel without
+            hashing markers) skips the hashing overwrite.
         hashing_fraction: fraction of the cell's umis assigned to the hashing
             markers of ``hashing_index``.
         rng: a seed or numpy Generator for the random number generator.
@@ -121,15 +122,19 @@ def populate_cell(
 
 def _hashing_indices_per_cell(
     n_cells: int, panel: PNAAntibodyPanel, rng: np.random.Generator
-) -> np.ndarray:
+) -> np.ndarray | list[None]:
     """Assign a hashing index to each cell, covering every panel index.
 
     The unique hashing indices (the ``-X`` suffix of the hashing markers) are
     tiled to ``n_cells`` so each is used at least once when ``n_cells`` is at
-    least the number of indices, then shuffled across cells.
+    least the number of indices, then shuffled across cells. When the panel has
+    no hashing markers, ``[None] * n_cells`` is returned so each cell skips the
+    hashing overwrite.
     """
     df = panel.to_polars()
-    hashing = df.filter(pl.col("sample_hashing") == "yes")["marker_id"]
+    hashing = df["marker_id"].to_numpy()[_hashing_mask(df)]
+    if hashing.size == 0:
+        return [None] * n_cells
     indices = np.unique([int(m.rsplit("-", 1)[-1]) for m in hashing])
     cell_indices = np.resize(indices, n_cells)
     rng.shuffle(cell_indices)
@@ -147,6 +152,17 @@ def _assign_umis(edgelist: pl.DataFrame, rng: np.random.Generator) -> pl.DataFra
     )
 
 
+def _hashing_mask(df: pl.DataFrame) -> np.ndarray:
+    """Boolean mask of hashing markers; all ``False`` when the panel has none.
+
+    Panels without a ``sample_hashing`` column (or with no ``"yes"`` entries) are
+    treated as having no hashing markers, so hashing degrades gracefully.
+    """
+    if "sample_hashing" in df.columns:
+        return (df["sample_hashing"] == "yes").to_numpy()
+    return np.zeros(df.height, dtype=bool)
+
+
 def _marker_probabilities(
     panel: PNAAntibodyPanel,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -159,7 +175,7 @@ def _marker_probabilities(
     """
     df = panel.to_polars()
     markers = df["marker_id"].to_numpy()
-    is_hashing = (df["sample_hashing"] == "yes").to_numpy()
+    is_hashing = _hashing_mask(df)
     idx = np.flatnonzero(~is_hashing)
 
     n = idx.shape[0]
@@ -175,7 +191,7 @@ def _marker_probabilities(
 def _assign_markers(
     node_umi_map: pl.DataFrame,
     panel: PNAAntibodyPanel,
-    hashing_index: int,
+    hashing_index: int | None,
     hashing_fraction: float,
     rng: np.random.Generator,
 ) -> pl.DataFrame:
@@ -183,16 +199,23 @@ def _assign_markers(
 
     A ``hashing_fraction`` of the umis is selected for hashing and assigned
     uniformly among all hashing markers sharing ``hashing_index`` (the ``-X``
-    suffix in the name).
+    suffix in the name). When ``hashing_index`` is ``None`` or the panel has no
+    matching hashing markers, the overwrite is skipped entirely.
     """
     markers, probs, is_hashing = _marker_probabilities(panel)
+    n = node_umi_map.height
+    node_umi_map = node_umi_map.with_columns(marker=rng.choice(markers, size=n, p=probs))
+
+    if hashing_index is None:
+        return node_umi_map
+
     hashing_markers = markers[is_hashing]
     index = np.array([int(m.rsplit("-", 1)[-1]) for m in hashing_markers])
     chosen = hashing_markers[index == hashing_index]
-    n = node_umi_map.height
+    if chosen.size == 0:
+        return node_umi_map
+
     return node_umi_map.with_columns(
-        marker=rng.choice(markers, size=n, p=probs)
-    ).with_columns(
         marker=pl.when(pl.Series(rng.random(n) < hashing_fraction))
         .then(pl.Series(rng.choice(chosen, size=n)))
         .otherwise(pl.col("marker"))
