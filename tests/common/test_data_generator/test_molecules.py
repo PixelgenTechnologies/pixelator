@@ -184,8 +184,55 @@ def test_generate_edgelist_uses_all_hashing_indices(marker_panel):
         n_crossing_edges=0,
         rng=0,
     )
-    assert edgelist.columns == ["umi1", "marker1", "umi2", "marker2"]
+    assert edgelist.columns == ["umi1", "marker1", "umi2", "marker2", "component"]
     assert edgelist.height == 8 * 80
+    # one unique component id per cell, no nulls without crossing edges
+    assert edgelist["component"].null_count() == 0
+    assert edgelist["component"].n_unique() == 8
+
+
+def test_generate_edgelist_component_column(marker_panel):
+    """Each cell gets a unique component id; crossing edges have a null component."""
+    n_cells, n_edges, n_crossing = 3, 80, 5
+    edgelist = generate_edgelist(
+        n_cells=n_cells,
+        n_nodes=40,
+        n_edges=n_edges,
+        min_neighbors=10,
+        panel=marker_panel,
+        n_crossing_edges=n_crossing,
+        rng=0,
+    )
+
+    assert edgelist.height == n_cells * n_edges + n_crossing
+    # crossing edges are exactly the rows with a null component
+    assert edgelist["component"].null_count() == n_crossing
+    # the per-cell rows carry one unique id per cell
+    cell_rows = edgelist.filter(pl.col("component").is_not_null())
+    assert cell_rows.height == n_cells * n_edges
+    assert cell_rows["component"].n_unique() == n_cells
+
+
+def test_generate_edgelist_without_hashing_markers(no_hashing_panel):
+    """generate_edgelist works on a panel that has no hashing markers."""
+    n_cells, n_edges = 4, 80
+    edgelist = generate_edgelist(
+        n_cells=n_cells,
+        n_nodes=40,
+        n_edges=n_edges,
+        min_neighbors=10,
+        panel=no_hashing_panel,
+        n_crossing_edges=0,
+        rng=0,
+    )
+
+    assert edgelist.columns == ["umi1", "marker1", "umi2", "marker2", "component"]
+    assert edgelist.height == n_cells * n_edges
+    assert edgelist["component"].n_unique() == n_cells
+    # every marker is drawn from the panel
+    panel_markers = set(no_hashing_panel.to_polars()["marker_id"])
+    assert set(edgelist["marker1"]) <= panel_markers
+    assert set(edgelist["marker2"]) <= panel_markers
 
 
 def test_correlate_neighbors_membership():

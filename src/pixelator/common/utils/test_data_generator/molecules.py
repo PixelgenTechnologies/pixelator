@@ -30,9 +30,10 @@ def generate_edgelist(
 
     Each cell is an independent graph (see :func:`generate_cell_graph`) populated
     with umis and markers (see :func:`populate_cell`). The per-cell edge lists are
-    concatenated, and ``n_crossing_edges`` chimeric edges are added: for each, two
-    random edges are sampled and a new edge joins the umi1/marker1 of the first
-    with the umi2/marker2 of the second.
+    concatenated and tagged with a unique ``component`` id, and
+    ``n_crossing_edges`` chimeric edges are added: for each, two random edges are
+    sampled and a new edge joins the umi1/marker1 of the first with the
+    umi2/marker2 of the second. Crossing edges have a null ``component``.
 
     Args:
         n_cells: number of cell graphs to generate.
@@ -45,7 +46,8 @@ def generate_edgelist(
         rng: a seed or numpy Generator for the random number generator.
 
     Returns:
-        A polars DataFrame with columns ``umi1``, ``marker1``, ``umi2``, ``marker2``.
+        A polars DataFrame with columns ``umi1``, ``marker1``, ``umi2``,
+        ``marker2`` and ``component`` (null for crossing edges).
     """
     rng = np.random.default_rng(rng)
 
@@ -54,7 +56,8 @@ def generate_edgelist(
     cell_hashing_indices = _hashing_indices_per_cell(n_cells, panel, rng)
 
     # Generate and populate one edge list per cell, sharing the generator so no
-    # two cells draw the same random sequence, then stack them.
+    # two cells draw the same random sequence, then stack them. Each cell is
+    # tagged with a unique component id.
     edgelist = pl.concat(
         populate_cell(
             generate_cell_graph(n_nodes, n_edges, min_neighbors, rng=rng),
@@ -62,12 +65,13 @@ def generate_edgelist(
             None if hashing_index is None else int(hashing_index),
             hashing_fraction,
             rng=rng,
-        )
-        for hashing_index in cell_hashing_indices
+        ).with_columns(component=pl.lit(f"{cell:016x}"))
+        for cell, hashing_index in enumerate(cell_hashing_indices)
     )
 
     # Add crossing edges: join the umi1/marker1 of one random edge with the
-    # umi2/marker2 of another random edge.
+    # umi2/marker2 of another random edge. These belong to no single cell, so
+    # their component is null.
     first = edgelist[rng.integers(0, edgelist.height, size=n_crossing_edges)]
     second = edgelist[rng.integers(0, edgelist.height, size=n_crossing_edges)]
     crossing = pl.DataFrame(
@@ -76,6 +80,7 @@ def generate_edgelist(
             "marker1": first["marker1"],
             "umi2": second["umi2"],
             "marker2": second["marker2"],
+            "component": pl.Series([None] * n_crossing_edges, dtype=pl.Utf8),
         }
     )
     return pl.concat([edgelist, crossing])

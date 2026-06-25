@@ -47,6 +47,24 @@ def marker_panel_fixture():
     )
 
 
+@pytest.fixture(name="no_hashing_panel")
+def no_hashing_panel_fixture():
+    """A small PNA panel with only regular markers and no ``sample_hashing`` column."""
+    panel_df = pd.DataFrame(
+        {
+            "marker_id": _REGULAR,
+            "control": [False] * len(_REGULAR),
+            "sequence_1": [_dna(i, "ACGTACG") for i in range(len(_REGULAR))],
+            "sequence_2": [_dna(i, "TGCATGC") for i in range(len(_REGULAR))],
+        }
+    ).set_index("marker_id")
+
+    return PNAAntibodyPanel(
+        df=panel_df,
+        metadata=AntibodyPanelMetadata(name="test-no-hashing-panel", version="0.1.0"),
+    )
+
+
 @pytest.fixture(name="assay")
 def assay_fixture():
     """The proxiome-v2 assay describing the read structure."""
