@@ -13,10 +13,7 @@ import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-from pixelator.common.utils.test_data_generator import (
-    generate_edgelist,
-    write_pna_pxl,
-)
+from pixelator.common.utils.test_data_generator import write_pna_pxl
 from pixelator.pna.analysis.denoise import (
     DenoiseGraph,
     denoise_ace,
@@ -183,30 +180,13 @@ def test_denoise_one_core_layer(synthetic_denoise_pxl_dataset):
 
 
 @pytest.fixture(name="synthetic_denoise_pxl_dataset", scope="module")
-def synthetic_denoise_pxl_dataset_fixture(tmp_path_factory):
-    """A small synthetic denoise dataset generated on the fly.
+def synthetic_denoise_pxl_dataset_fixture(synthetic_denoise_pxl_file):
+    """The synthetic denoise pxl file (see conftest) loaded as a dataset.
 
-    Four independent cell graphs are generated and populated with markers from
-    the proxiome-v1 panel (no hashing markers), then written to a pxl file. The
-    edge count is tuned so each component stays connected while keeping a sizable
-    peripheral one-core layer (~7% of nodes) on top of a denser core, so one-core
-    denoising actually removes nodes. Connectivity matters: a disconnected piece
-    would be stranded and removed, which could drop core>1 nodes the test expects
-    to be preserved. The fixed seed makes these properties deterministic.
+    Args:
+        synthetic_denoise_pxl_file: Path to the synthetic denoise pxl file.
     """
-    panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")
-    edgelist = generate_edgelist(
-        n_cells=4,
-        n_nodes=2000,
-        n_edges=3900,
-        min_neighbors=20,
-        panel=panel,
-        n_crossing_edges=0,
-        rng=0,
-    )
-    path = tmp_path_factory.mktemp("denoise") / "synthetic.pxl"
-    write_pna_pxl(edgelist, panel, path, sample_name="PNA055_Sample07_S7")
-    return read(path)
+    return read(synthetic_denoise_pxl_file)
 
 
 @pytest.fixture(name="synthetic_component_graph", scope="module")
@@ -608,6 +588,10 @@ def test_denoise_ace_pls_one_core(synthetic_denoise_pxl_dataset, tmp_path):
     ]
 
     assert all(col in obs.columns for col in summary_cols)
+
+    # The pre-denoise isotype fraction is recorded for every component.
+    assert "pre_denoise_isotype_fraction" in obs.columns
+    assert obs["pre_denoise_isotype_fraction"].notna().all()
 
     # The per-method marking columns reconcile with the total removed.
     pd.testing.assert_frame_equal(
