@@ -212,7 +212,7 @@ class NetworkXGraphBackend(GraphBackend):
             a GraphBackend instance (NetworkXGraphBackend)
 
         Raises:
-            AssertionError when the input edge list is not valid
+            AssertionError: when the input edge list is not valid
         """
         if isinstance(edgelist, pd.DataFrame):
             edgelist: pl.LazyFrame = pl.LazyFrame(edgelist)  # type: ignore
@@ -751,9 +751,9 @@ def pmds_layout(
     floating-point precision.
 
     .. [1] Brandes U, Pich C. Eigensolver Methods for Progressive
-    Multidimensional Scaling of Large Data. International Symposium
-    on Graph Drawing, 2007. Lecture Notes in Computer Science, vol
-    4372. doi: 10.1007/978-3-540-70904-6_6.
+        Multidimensional Scaling of Large Data. International Symposium
+        on Graph Drawing, 2007. Lecture Notes in Computer Science, vol
+        4372. doi: 10.1007/978-3-540-70904-6_6.
 
 
     * an np.array with non-negative values (same number of elements as edges in g)
