@@ -63,9 +63,8 @@ autoapi_options = [
 ]
 
 autoapi_member_order = "alphabetical"
-autoapi_python_class_content = "both"
+autoapi_python_class_content = "class"
 autoapi_python_use_implicit_namespaces = True
-autoapi_own_page_level = "class"
 autoapi_own_page_level = "function"
 
 

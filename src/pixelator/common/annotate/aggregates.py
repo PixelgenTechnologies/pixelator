@@ -27,11 +27,11 @@ def specificity_tau(matrix: np.ndarray) -> np.ndarray:
     markers are equally expressed would have a tau score of 0.
 
     .. [1] Yanai I, Benjamin H, Shmoish M, Chalifa-Caspi V, Shklar M, Ophir R,
-    Bar-Even A, Horn-Saban S, Safran M, Domany E, Lancet D, Shmueli O.
-    Genome-wide midrange transcription profiles reveal expression level
-    relationships in human tissue specification. Bioinformatics.
-    2005 Mar 1;21(5):650-9.
-    doi: 10.1093/bioinformatics/bti042. Epub 2004 Sep 23. PMID: 15388519.
+        Bar-Even A, Horn-Saban S, Safran M, Domany E, Lancet D, Shmueli O.
+        Genome-wide midrange transcription profiles reveal expression level
+        relationships in human tissue specification. Bioinformatics.
+        2005 Mar 1;21(5):650-9.
+        doi: 10.1093/bioinformatics/bti042. Epub 2004 Sep 23. PMID: 15388519.
 
     Args:
         matrix: a numpy matrix of marker counts

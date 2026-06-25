@@ -50,8 +50,8 @@ def local_g(
     ensuring that this contract is fulfilled.
 
     .. [1] Bivand, R.S., Wong, D.W.S. Comparing implementations of global and
-    local indicators of spatial association. TEST 27, 716–748 (2018).
-    https://doi.org/10.1007/s11749-018-0599-x
+        local indicators of spatial association. TEST 27, 716–748 (2018).
+        https://doi.org/10.1007/s11749-018-0599-x
 
     Args:
         A: A sparse adjacency matrix representing the graph.
