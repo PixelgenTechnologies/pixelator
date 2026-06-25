@@ -9,6 +9,7 @@ from unittest import mock
 
 import networkx as nx
 import pandas as pd
+import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
@@ -518,8 +519,36 @@ def test_denoise_one_core_analysis(synthetic_denoise_pxl_dataset, tmp_path):
             synthetic_denoise_pxl_dataset, pxl_file_target
         )
 
-    assert "tau_type" in denoised_dataset.adata().obs.columns
+    obs = denoised_dataset.adata().obs
+    assert "tau_type" in obs.columns
     components = synthetic_denoise_pxl_dataset.adata().obs.index
+
+    # denoising actually removed nodes, otherwise the per-component checks
+    # below would pass for a no-op denoiser
+    assert obs["number_of_nodes_removed_in_denoise"].sum() > 0
+
+    # (4) only one-core ran: ACE/PLS marked nothing and the per-method counts
+    # reconcile with the total removed per component
+    assert (obs["denoised_nodes_marked_only_by_ace"] == 0).all()
+    assert (obs["denoised_nodes_marked_only_by_pls"] == 0).all()
+    assert (
+        obs["denoised_nodes_marked_only_by_one_core"]
+        + obs["denoised_nodes_marked_stranded"]
+        == obs["number_of_nodes_removed_in_denoise"]
+    ).all()
+
+    # denoising does not drop or add whole components
+    assert set(obs.index) == set(components)
+
+    # the denoised edge list is a pure subset of the original (denoising only
+    # removes edges, it never introduces new umis/edges)
+    original_edges = synthetic_denoise_pxl_dataset.edgelist().to_polars()
+    denoised_edges = denoised_dataset.edgelist().to_polars()
+    new_edges = denoised_edges.join(
+        original_edges, on=["umi1", "umi2"], how="anti"
+    )
+    assert new_edges.height == 0
+
     for comp in components:
         graph = PNAGraph.from_edgelist(
             synthetic_denoise_pxl_dataset.filter(components=[comp])
@@ -545,6 +574,122 @@ def test_denoise_one_core_analysis(synthetic_denoise_pxl_dataset, tmp_path):
             denoised_node_core_numbers[denoised_node_core_numbers > 1],
             check_like=True,
         )
+
+        removed_nodes = set(graph.raw.nodes()) - set(denoised_graph.raw.nodes())
+        n_removed = int(obs.loc[comp, "number_of_nodes_removed_in_denoise"])
+        n_stranded = int(obs.loc[comp, "denoised_nodes_marked_stranded"])
+
+        # the reported removal count matches the actual node-count drop
+        assert denoised_graph.vcount() == graph.vcount() - n_removed
+        assert len(removed_nodes) == n_removed
+
+        # one-core only removes core-1 nodes; any higher-core removal can only
+        # come from the stranding cleanup that follows
+        removed_higher_core = {
+            node for node in removed_nodes if node_core_numbers[node] > 1
+        }
+        assert len(removed_higher_core) <= n_stranded
+
+        # the stranding cleanup leaves every denoised component connected
+        assert nx.is_connected(denoised_graph.raw)
+
+
+def _run_one_core_denoise(dataset, target_path):
+    """Run one-core-only graph denoising on ``dataset`` writing to ``target_path``."""
+    target = PixelDatasetSaver(pxl_dataset=dataset).save(
+        "PNA055_Sample07_S7", target_path
+    )
+    with mock.patch(
+        "pixelator.pna.analysis.denoise.load_antibody_panel"
+    ) as mock_load_panel:
+        mock_load_panel.side_effect = lambda *args, **kwargs: load_antibody_panel(
+            pna_config, "proxiome-v1-immuno-155-v1.0"
+        )
+        manager = AnalysisManager([DenoiseGraph(run_one_core=True, run_ace=False)])
+        return manager.execute(dataset, target)
+
+
+def test_denoise_one_core_analysis_deterministic(
+    synthetic_denoise_pxl_dataset, tmp_path
+):
+    """One-core denoising is reproducible: two runs remove the identical nodes.
+
+    Args:
+        synthetic_denoise_pxl_dataset: Small synthetic denoise pxl dataset.
+        tmp_path: Tmp path.
+    """
+    first = _run_one_core_denoise(
+        synthetic_denoise_pxl_dataset, Path(tmp_path) / "first.pxl"
+    )
+    second = _run_one_core_denoise(
+        synthetic_denoise_pxl_dataset, Path(tmp_path) / "second.pxl"
+    )
+
+    # identical per-component removal counts
+    assert_series_equal(
+        first.adata().obs["number_of_nodes_removed_in_denoise"],
+        second.adata().obs["number_of_nodes_removed_in_denoise"],
+    )
+
+    # identical surviving nodes
+    def surviving_umis(dataset):
+        edgelist = dataset.edgelist().to_polars()
+        return set(edgelist["umi1"]) | set(edgelist["umi2"])
+
+    assert surviving_umis(first) == surviving_umis(second)
+
+
+def test_denoise_one_core_skips_disqualified_component(tmp_path):
+    """A component that is almost entirely one-core is left untouched.
+
+    Components whose one-core layer exceeds ``one_core_ratio_threshold`` (90%) are
+    disqualified from one-core denoising, so no nodes should be removed.
+
+    Args:
+        tmp_path: Tmp path.
+    """
+    panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")
+    markers = panel.markers
+
+    # A star graph: one centre (umi1) joined to many leaves (umi2). Every node
+    # has core number 1, so the component is disqualified from one-core denoising.
+    n_leaves = 40
+    leaves = list(range(2, 2 * n_leaves + 1, 2))
+    edgelist = pl.DataFrame(
+        {
+            "umi1": [1] * n_leaves,
+            "umi2": leaves,
+            "marker_1": [markers[0]] * n_leaves,
+            "marker_2": [markers[i % len(markers)] for i in range(n_leaves)],
+            "component": ["star"] * n_leaves,
+            "read_count": [1] * n_leaves,
+        }
+    )
+    path = write_pna_pxl(
+        edgelist,
+        panel,
+        Path(tmp_path) / "disqualified.pxl",
+        sample_name="PNA055_Sample07_S7",
+    )
+    dataset = read(path)
+
+    # sanity check: the component really is almost entirely one-core
+    graph = PNAGraph.from_edgelist(dataset.edgelist().to_polars().lazy())
+    core_numbers = pd.Series(nx.core_number(graph.raw))
+    assert (core_numbers <= 1).mean() >= 0.9
+
+    denoised_dataset = _run_one_core_denoise(dataset, Path(tmp_path) / "out.pxl")
+
+    obs = denoised_dataset.adata().obs
+    assert int(obs.loc["star", "number_of_nodes_removed_in_denoise"]) == 0
+
+    # the component is unchanged: same nodes and same number of edges
+    denoised_edges = denoised_dataset.edgelist().to_polars()
+    original_edges = dataset.edgelist().to_polars()
+    assert denoised_edges.height == original_edges.height
+    assert (set(denoised_edges["umi1"]) | set(denoised_edges["umi2"])) == (
+        set(original_edges["umi1"]) | set(original_edges["umi2"])
+    )
 
 
 REFERENCE_ACE_COMPONENT = "57129a8b0fff38c6"
