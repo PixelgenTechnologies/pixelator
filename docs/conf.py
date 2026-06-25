@@ -84,7 +84,8 @@ html_theme_options = {
             "icon": "fab fa-github",
             "type": "fontawesome",
         },
-    ]
+    ],
+    "navbar_end": ["version-switcher"],
 }
 
 html_static_path = ["_static"]
