@@ -9,7 +9,7 @@ import numpy as np
 import polars as pl
 from polars.testing import assert_frame_equal
 
-from pixelator.common.utils.test_data_generator.molecules import (
+from tests.common.test_data_generator.molecules import (
     _assign_markers,
     _assign_umis,
     _correlate_neighbors,
