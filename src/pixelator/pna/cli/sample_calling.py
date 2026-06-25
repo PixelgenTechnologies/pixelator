@@ -81,17 +81,7 @@ def sample_calling_cli(
     enrichment_threshold: float,
     output,
 ):
-    """Map components to samples in sample-hashed datasets.
-
-    Args:
-        ctx: Click context from the command decorator.
-        input_pxl_file: Path to the input PXL (PixelDataset) file.
-        samplesheet: Path to a samplesheet file with a hash_index column.
-        remove_incompatible: Remove antibodies that are incompatible with their component.
-        save_undetermined: Save components that could not be confidently assigned to any sample.
-        enrichment_threshold: Hash enrichment threshold for sample calling.
-        output: The path where the results will be placed (it is created if it does not exist).
-    """
+    """Map components to samples in sample-hashed datasets."""
     log_step_start(
         "sample-calling",
         input_files=input_pxl_file,

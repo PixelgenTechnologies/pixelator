@@ -27,7 +27,7 @@ class PNAPixelDataset:
 
     This class provides a high-level interface to the data stored in one or more .pxl files.
     You can build a PixelDataset from one or more .pxl files, and then use the various methods
-    to filer and access the underlying data in different ways.
+    to filter and access the underlying data in different ways.
 
     .. code-block:: python
 

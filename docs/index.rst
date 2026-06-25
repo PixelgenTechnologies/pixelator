@@ -7,8 +7,9 @@ software solutions that empower users working with
 and `Proximity Network (PNA) <https://software.pixelgen.com/common/glossary/#pna>`_
 assays in data processing and analysis.
 
-Pixelator can be used in two ways: as a data processing pipeline
-(nf-core/pixelator) and as a programming library (pixelator).
+Pixelator can be used in two ways: as a `data processing pipeline
+(nf-core/pixelator) <https://software.pixelgen.com/nf-core-pixelator/introduction/>`_
+and as a programming library (pixelator).
 The pipeline nf-core/pixelator consists of several steps and will produce
 ready-to-analyze outputs from your initial FASTQ sequencing libraries.
 Usage of Pixelator as a programming library is covered in the API reference and in
