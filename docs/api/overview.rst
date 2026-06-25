@@ -12,7 +12,6 @@ for usage examples.
 
 **Datasets**
 
-.. * :class:`pixelator.pna.pixeldataset.dataset.PixelDataset`
 * :class:`pixelator.pna.pixeldataset.download.DownloadableDatasets`
 
 **PNAPixelDataset**
@@ -31,7 +30,3 @@ for usage examples.
 **Analysis**
 
 * :func:`pixelator.pna.analysis.calculate_differential_proximity`
-
-.. **Configuration**
-
-.. * :class:`pixelator.pna.config.config_instance.pna_config`

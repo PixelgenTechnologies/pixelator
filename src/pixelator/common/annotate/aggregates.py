@@ -78,9 +78,9 @@ def call_aggregates(adata: AnnData, inplace: bool = True) -> Optional[AnnData]:
     the respective levels of tau scores.
     - `uns["tau_thresholds"]["tau_upper_hard_limit"]` the upper hard
     limit used to set `tau_type` as high
-    - `uns["tau_thresholds"]["tau_upper_iqr_limit]` the upper limit
+    - `uns["tau_thresholds"]["tau_upper_iqr_limit"]` the upper limit
     based on IQR used to set `tau_type` as high
-    - `uns["tau_thresholds"]["tau_lower_iqr_limit]` the lower limit
+    - `uns["tau_thresholds"]["tau_lower_iqr_limit"]` the lower limit
     based on IQR used to set `tau_type` as low
 
     Args:
