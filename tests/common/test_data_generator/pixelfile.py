@@ -22,12 +22,12 @@ def write_pna_pxl(
 ) -> Path:
     """Write a populated edge list to a single-cell-pna pxl file.
 
-    The edge list is expected in the :func:`generate_edgelist` schema (``umi1``,
-    ``marker_1``, ``umi2``, ``marker_2``, ``component``, ``read_count``). Crossing
-    edges (rows with a null ``component``) are dropped before the AnnData is
-    built, so only genuine per-cell components are aggregated. The edge list is
-    selected down to the pxl schema, written to the file, and an AnnData with
-    aggregate metrics is built and stored alongside it.
+    The edge list must have the columns produced by :func:`generate_edgelist`:
+    ``umi1``, ``marker_1``, ``umi2``, ``marker_2``, ``component`` and
+    ``read_count``. Crossing edges (rows with a null ``component``) are dropped
+    before the AnnData is built, so only genuine per-cell components are
+    aggregated. The edge list is selected down to the pxl schema, written to the
+    file, and an AnnData with aggregate metrics is built and stored alongside it.
 
     Args:
         edgelist: populated edge list from :func:`generate_edgelist`.
