@@ -67,9 +67,7 @@ def test_get_overexpressed_markers_in_one_core_detects_enriched_marker():
     expected_count = np.round(
         total_one_core * higher_core["enriched"] / total_higher_core
     )
-    expected_excess = int(
-        np.ceil(1.5 * (one_core["enriched"] - expected_count))
-    )
+    expected_excess = int(np.ceil(1.5 * (one_core["enriched"] - expected_count)))
     assert int(result.loc[result["name"] == "enriched", "count"].iloc[0]) == (
         expected_excess
     )
@@ -212,9 +210,9 @@ def test_denoise_one_core_analysis(synthetic_denoise_pxl_dataset, tmp_path):
         synthetic_denoise_pxl_dataset: Small synthetic denoise pxl dataset.
         tmp_path: Tmp path.
     """
-    pxl_file_target = PixelDatasetSaver(
-        pxl_dataset=synthetic_denoise_pxl_dataset
-    ).save("PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl")
+    pxl_file_target = PixelDatasetSaver(pxl_dataset=synthetic_denoise_pxl_dataset).save(
+        "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
+    )
     with mock.patch(
         "pixelator.pna.analysis.denoise.load_antibody_panel"
     ) as mock_load_panel:
@@ -257,9 +255,7 @@ def test_denoise_one_core_analysis(synthetic_denoise_pxl_dataset, tmp_path):
     # removes edges, it never introduces new umis/edges)
     original_edges = synthetic_denoise_pxl_dataset.edgelist().to_polars()
     denoised_edges = denoised_dataset.edgelist().to_polars()
-    new_edges = denoised_edges.join(
-        original_edges, on=["umi1", "umi2"], how="anti"
-    )
+    new_edges = denoised_edges.join(original_edges, on=["umi1", "umi2"], how="anti")
     assert new_edges.height == 0
 
     for comp in components:
@@ -503,9 +499,9 @@ def test_denoise_ace_analysis(synthetic_denoise_pxl_dataset, tmp_path):
     """
     components = synthetic_denoise_pxl_dataset.adata().obs.index
 
-    pxl_file_target = PixelDatasetSaver(
-        pxl_dataset=synthetic_denoise_pxl_dataset
-    ).save("PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl")
+    pxl_file_target = PixelDatasetSaver(pxl_dataset=synthetic_denoise_pxl_dataset).save(
+        "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
+    )
 
     with mock.patch(
         "pixelator.pna.analysis.denoise.load_antibody_panel"
@@ -557,9 +553,9 @@ def test_denoise_ace_pls_one_core(synthetic_denoise_pxl_dataset, tmp_path):
     """
     components = synthetic_denoise_pxl_dataset.adata().obs.index
 
-    pxl_file_target = PixelDatasetSaver(
-        pxl_dataset=synthetic_denoise_pxl_dataset
-    ).save("PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl")
+    pxl_file_target = PixelDatasetSaver(pxl_dataset=synthetic_denoise_pxl_dataset).save(
+        "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
+    )
 
     with mock.patch(
         "pixelator.pna.analysis.denoise.load_antibody_panel"

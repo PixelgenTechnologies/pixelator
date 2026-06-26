@@ -44,9 +44,7 @@ def generated_edgelist_fixture(real_panel):
 def written_pxl_fixture(generated_edgelist, real_panel, tmp_path_factory):
     """Write the generated edge list to a pxl file once for the module."""
     path = tmp_path_factory.mktemp("pxl") / "synthetic.pxl"
-    return write_pna_pxl(
-        generated_edgelist, real_panel, path, sample_name=SAMPLE_NAME
-    )
+    return write_pna_pxl(generated_edgelist, real_panel, path, sample_name=SAMPLE_NAME)
 
 
 def test_write_pna_pxl_returns_existing_path(written_pxl):

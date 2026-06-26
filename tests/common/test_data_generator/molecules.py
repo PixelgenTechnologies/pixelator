@@ -217,7 +217,9 @@ def _assign_markers(
     """
     markers, probs, is_hashing = _marker_probabilities(panel)
     n = node_umi_map.height
-    node_umi_map = node_umi_map.with_columns(marker=rng.choice(markers, size=n, p=probs))
+    node_umi_map = node_umi_map.with_columns(
+        marker=rng.choice(markers, size=n, p=probs)
+    )
 
     if hashing_index is None:
         return node_umi_map

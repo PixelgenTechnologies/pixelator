@@ -45,7 +45,9 @@ def test_generate_cell_graph_reproducible():
     assert_frame_equal(first, generate_cell_graph(**params, rng=0))
 
     # a Generator seeded identically yields the same edge list as the int seed
-    assert_frame_equal(first, generate_cell_graph(**params, rng=np.random.default_rng(0)))
+    assert_frame_equal(
+        first, generate_cell_graph(**params, rng=np.random.default_rng(0))
+    )
 
     # a different seed yields a different edge list
     assert not first.equals(generate_cell_graph(**params, rng=1))

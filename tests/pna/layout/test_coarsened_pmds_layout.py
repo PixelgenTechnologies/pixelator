@@ -23,7 +23,6 @@ def graph_from_pxl():
 
 
 def test_coarsened_pmds_layout_tp_matches_reference(graph_from_pxl):
-
     layout_head_ref = pd.DataFrame(
         {
             61208583141770358: np.array([0.1764863, -0.23645603, -0.49442918]),
@@ -40,7 +39,6 @@ def test_coarsened_pmds_layout_tp_matches_reference(graph_from_pxl):
 
 
 def test_coarsened_pmds_layout_crossing_edges_matches_reference(graph_from_pxl):
-
     layout_head_ref = pd.DataFrame(
         {
             61208583141770358: np.array([-0.17772736, 0.59633194, -0.33318281]),

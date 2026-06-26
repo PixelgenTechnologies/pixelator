@@ -180,7 +180,10 @@ def test_assemble_amplicons_segments(populated_edgelist, marker_panel, assay):
     end6 = end5 + len(pid2)
     assert amplicon[end5:end6] == pid2
     end7 = end6 + umi2_len
-    assert amplicon[end6:end7] == _decode_2bit_dna(np.array([edge["umi2"][0]]), umi2_len)[0]
+    assert (
+        amplicon[end6:end7]
+        == _decode_2bit_dna(np.array([edge["umi2"][0]]), umi2_len)[0]
+    )
     assert end7 == len(amplicon)
 
 
