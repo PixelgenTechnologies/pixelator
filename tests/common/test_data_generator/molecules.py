@@ -39,7 +39,7 @@ def generate_edgelist(
         n_cells: number of cell graphs to generate.
         n_nodes: number of nodes per cell graph.
         n_edges: target number of edges per cell graph.
-        min_neighbors: minimum number of neighbors per node.
+        min_neighbors: minimum number of candidate neighbors per node, before filtering.
         panel: antibody panel providing the available markers.
         n_crossing_edges: number of chimeric edges to add across cells.
         hashing_fraction: fraction of each cell's umis assigned to hashing markers.
