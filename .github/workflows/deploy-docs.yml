@@ -1,0 +1,42 @@
+name: "Deploy docs"
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build (e.g. v0.29.0)"
+        required: true
+
+permissions:
+  contents: write
+concurrency:
+  group: deploy-docs
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - id: ver
+        run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+        env:
+          TAG: ${{ inputs.tag }}
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --group docs
+      - name: Build docs
+        env:
+          DOCS_VERSION: ${{ steps.ver.outputs.version }}
+        run: uv run sphinx-build -b html docs docs/_build/html --keep-going -n
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./docs/_build/html
+          destination_dir: docs/${{ steps.ver.outputs.version }}
+          keep_files: true
