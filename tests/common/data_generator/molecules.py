@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import polars as pl
 
-from tests.common.test_data_generator.topology import generate_cell_graph
+from tests.common.data_generator.topology import generate_cell_graph
 
 if TYPE_CHECKING:
     from pixelator.pna.config.panel import PNAAntibodyPanel

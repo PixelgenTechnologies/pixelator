@@ -8,7 +8,7 @@ import gzip
 import numpy as np
 import pytest
 
-from tests.common.test_data_generator.reads import (
+from tests.common.data_generator.reads import (
     _add_substitutions,
     _assemble_amplicons,
     _decode_2bit_dna,

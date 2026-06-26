@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from polars.testing import assert_frame_equal
 
-from tests.common.test_data_generator.topology import generate_cell_graph
+from tests.common.data_generator.topology import generate_cell_graph
 
 
 @pytest.mark.parametrize("rng", [0, 1, 42])
