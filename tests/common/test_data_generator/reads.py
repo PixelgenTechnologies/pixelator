@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from pixelator.pna.config.panel import PNAAntibodyPanel
 
 
-def to_fastq(
+def write_pna_fastq(
     sample_name: str,
     n_reads: int,
     edgelist: pl.DataFrame,

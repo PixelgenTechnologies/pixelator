@@ -16,7 +16,7 @@ from tests.common.test_data_generator.reads import (
     _reverse_complement,
     _write_fastq,
     _write_paired_reads,
-    to_fastq,
+    write_pna_fastq,
 )
 
 # Amplicon length for proxiome-v2 with the length-10 marker_panel sequences:
@@ -228,10 +228,10 @@ def test_write_paired_reads(tmp_path):
     assert all(len(rec[2]) == 90 for rec in r2)
 
 
-def test_to_fastq_end_to_end(tmp_path, populated_edgelist, marker_panel, assay):
-    """to_fastq writes valid paired fastq files with the requested read count."""
+def test_write_pna_fastq_end_to_end(tmp_path, populated_edgelist, marker_panel, assay):
+    """write_pna_fastq writes valid paired fastq files with the requested read count."""
     n_reads = 50
-    r1_path, r2_path = to_fastq(
+    r1_path, r2_path = write_pna_fastq(
         "sample",
         n_reads,
         populated_edgelist,
@@ -256,19 +256,21 @@ def test_to_fastq_end_to_end(tmp_path, populated_edgelist, marker_panel, assay):
     assert set("".join(rec[1] for rec in r2)) <= set("ACGT")
 
 
-def test_to_fastq_reproducible(tmp_path, populated_edgelist, marker_panel, assay):
+def test_write_pna_fastq_reproducible(
+    tmp_path, populated_edgelist, marker_panel, assay
+):
     """The same seed yields identical reads; a different seed differs."""
     dirs = [tmp_path / name for name in ("a", "b", "c")]
     for directory in dirs:
         directory.mkdir()
 
-    paths_a = to_fastq(
+    paths_a = write_pna_fastq(
         "s", 30, populated_edgelist, marker_panel, assay, output_dir=dirs[0], rng=0
     )
-    paths_b = to_fastq(
+    paths_b = write_pna_fastq(
         "s", 30, populated_edgelist, marker_panel, assay, output_dir=dirs[1], rng=0
     )
-    paths_c = to_fastq(
+    paths_c = write_pna_fastq(
         "s", 30, populated_edgelist, marker_panel, assay, output_dir=dirs[2], rng=1
     )
 

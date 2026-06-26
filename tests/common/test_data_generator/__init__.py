@@ -10,13 +10,13 @@ from tests.common.test_data_generator.molecules import (
     populate_cell,
 )
 from tests.common.test_data_generator.pixelfile import write_pna_pxl
-from tests.common.test_data_generator.reads import to_fastq
+from tests.common.test_data_generator.reads import write_pna_fastq
 from tests.common.test_data_generator.topology import generate_cell_graph
 
 __all__ = [
     "generate_cell_graph",
     "generate_edgelist",
     "populate_cell",
-    "to_fastq",
+    "write_pna_fastq",
     "write_pna_pxl",
 ]
