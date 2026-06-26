@@ -181,10 +181,18 @@ def _marker_probabilities(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Per-marker sampling probabilities and the hashing-marker mask.
 
-    Abundance tiers apply only to non-hashing markers: the first sixth of markers
-    make 50% of all umis (high abundance), the next third make 40% (medium) and
-    the last 50% make 10% (low). Hashing markers (``sample_hashing == "yes"``)
-    are excluded from the tiers and sampled at the low-abundance per-marker rate.
+    Abundance tiers apply only to non-hashing markers: the first sixth make 50%
+    of all umis (high abundance) and the next third make 40% (medium). The
+    low-abundance tier (the remaining non-hashing markers) and the hashing
+    markers (``sample_hashing == "yes"``) together share the final 10%, every one
+    of them sampled at the same per-marker rate ``0.1 / (n_low + n_hashing)``.
+    Folding the hashing markers into the low tier's budget keeps the high and
+    medium tiers at 50% and 40% regardless of how many hashing markers the panel
+    has. The result is normalized to sum to one (it already does up to
+    floating-point error).
+
+    NB: for the hashing markers, these probabilities correspond to the noise
+    background. True hashing markers are applied separately.
     """
     df = panel.to_polars()
     markers = df["marker_id"].to_numpy()
@@ -195,7 +203,7 @@ def _marker_probabilities(
     n_high, n_medium = round(1.0 / 6.0 * n), round(2.0 / 6.0 * n)
     n_low = n - n_high - n_medium
 
-    probs = np.full(markers.shape[0], 0.1 / n_low)
+    probs = np.full(markers.shape[0], 0.1 / (n_low + is_hashing.sum()))
     probs[idx[:n_high]] = 0.5 / n_high
     probs[idx[n_high : n_high + n_medium]] = 0.4 / n_medium
     return markers, probs / probs.sum(), is_hashing

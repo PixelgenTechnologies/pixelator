@@ -74,10 +74,12 @@ def test_marker_probabilities(marker_panel):
     assert markers[0] == "HashA-1"
     assert is_hashing[0]
 
-    # rebuild the expected per-tier weights: 1 high / 2 medium / 3 low over the
-    # non-hashing markers, everything else at the low per-marker rate
-    n_high, n_medium, n_low = 1, 2, 3
-    raw = np.full(len(markers), 0.1 / n_low)
+    # rebuild the expected per-tier weights: 1 high / 2 medium over the
+    # non-hashing markers; the 3 low non-hashing markers and the 16 hashing
+    # markers all share the low tier's 10% at a common per-marker rate
+    n_high, n_medium, n_low, n_hashing = 1, 2, 3, 16
+    low_rate = 0.1 / (n_low + n_hashing)
+    raw = np.full(len(markers), low_rate)
     regular = np.flatnonzero(~is_hashing)
     raw[regular[0]] = 0.5 / n_high
     raw[regular[1:3]] = 0.4 / n_medium
@@ -90,8 +92,8 @@ def test_marker_probabilities(marker_panel):
     assert np.isclose(probs.sum(), 1.0)
     assert (probs >= 0).all()
 
-    # hashing markers are all sampled at the low non-hashing per-marker rate
-    assert np.allclose(probs[is_hashing], (0.1 / n_low) / raw.sum())
+    # hashing markers share the low tier's budget at the common low per-marker rate
+    assert np.allclose(probs[is_hashing], low_rate / raw.sum())
 
 
 def test_assign_markers_proportions(marker_panel):
