@@ -110,10 +110,10 @@ def _random_qualities(
     return [row.tobytes().decode("ascii") for row in q]
 
 
-def _write_fastq(
+def _write_fastq_records(
     path: Path, headers: list[str], sequences: list[str], qualities: list[str]
 ) -> None:
-    """Write reads to a gzip-compressed fastq file."""
+    """Serialize header/sequence/quality records to a gzip-compressed fastq file."""
     with gzip.open(path, "wt") as fh:
         for header, sequence, quality in zip(headers, sequences, qualities):
             fh.write(f"@{header}\n{sequence}\n+\n{quality}\n")
@@ -193,6 +193,10 @@ def _write_paired_reads(
     output_dir = Path(output_dir)
     r1_path = output_dir / f"{sample_name}_R1.fastq.gz"
     r2_path = output_dir / f"{sample_name}_R2.fastq.gz"
-    _write_fastq(r1_path, headers, r1_seqs, _random_qualities(n, read1_length, rng))
-    _write_fastq(r2_path, headers, r2_seqs, _random_qualities(n, read2_length, rng))
+    _write_fastq_records(
+        r1_path, headers, r1_seqs, _random_qualities(n, read1_length, rng)
+    )
+    _write_fastq_records(
+        r2_path, headers, r2_seqs, _random_qualities(n, read2_length, rng)
+    )
     return r1_path, r2_path

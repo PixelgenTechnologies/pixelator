@@ -14,7 +14,7 @@ from tests.common.data_generator.reads import (
     _decode_2bit_dna,
     _random_qualities,
     _reverse_complement,
-    _write_fastq,
+    _write_fastq_records,
     _write_paired_reads,
     write_pna_fastq,
 )
@@ -115,13 +115,13 @@ def test_random_qualities_reproducible():
     assert first == _random_qualities(10, 20, np.random.default_rng(0))
 
 
-def test_write_fastq_roundtrip(tmp_path):
+def test_write_fastq_records_roundtrip(tmp_path):
     """Records are written in the four-line fastq format and read back intact."""
     path = tmp_path / "out.fastq.gz"
     headers = ["s:0", "s:1"]
     sequences = ["ACGT", "TTTT"]
     qualities = ["IIII", "####"]
-    _write_fastq(path, headers, sequences, qualities)
+    _write_fastq_records(path, headers, sequences, qualities)
     assert _read_fastq(path) == [
         ("s:0", "ACGT", "IIII"),
         ("s:1", "TTTT", "####"),
