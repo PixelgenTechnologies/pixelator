@@ -6,6 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import os
 
 project = "Pixelator"
 copyright = "2026 Pixelgen Technologies"
@@ -75,6 +76,9 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
+_docs_version = os.environ.get("DOCS_VERSION", "latest")
+
+html_baseurl = "https://karlmoresco.github.io/pixelator/"
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "icon_links": [
@@ -86,10 +90,15 @@ html_theme_options = {
         },
     ],
     "navbar_end": ["version-switcher"],
+    "switcher": {
+        "json_url": "https://karlmoresco.github.io/pixelator/switcher.json",
+        "version_match": _docs_version,
+    },
 }
 
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+html_extra_path = ["switcher.json"]
 
 python_maximum_signature_line_length = 40
 
