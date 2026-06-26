@@ -31,6 +31,24 @@ def write_pna_fastq(
 ) -> tuple[Path, Path]:
     """Convert a populated edge list into reads and write paired-end fastq files.
 
+    Reads are sampled from ``edgelist`` one edge at a time: ``n_reads`` row
+    indices are drawn uniformly at random *with replacement*, so the number of
+    reads is independent of the number of edges. An edge may be picked many
+    times or not at all, and its read depth is random rather than tied to its
+    ``read_count`` (that column is not used as a sampling weight). Every edge is
+    eligible, including the crossing/chimeric edges produced by
+    :func:`generate_edgelist`, so background chimeras appear in the reads.
+
+    Each sampled edge becomes one amplicon, assembled by concatenating, in
+    order: the first umi, the first marker's pid sequence (``sequence_1``), the
+    ``lbs-1`` linker, a unique event identifier (uei), the ``lbs-2`` linker, the
+    second marker's pid sequence (``sequence_2``) and the second umi. The two
+    umis and the uei are 2-bit-encoded integers decoded back to dna; the uei is
+    drawn once per edge, so reads coming from the same edge share it. Per-base
+    sequencing errors are then applied at ``substitution_error_rate``, and the
+    amplicon is split into a mate pair (R1 from the start, R2 the reverse
+    complement of the end).
+
     Args:
         sample_name: base name for the output ``<sample_name>_R1/2.fastq.gz`` files.
         n_reads: number of reads to sample.
