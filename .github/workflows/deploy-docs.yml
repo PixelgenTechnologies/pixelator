@@ -5,6 +5,8 @@ on:
       tag:
         description: "Tag to build (e.g. v0.29.0)"
         required: true
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -14,15 +16,19 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ github.event_name != 'release' || github.event.release.prerelease == false }}
     runs-on: ubuntu-latest
     steps:
       - id: ver
-        run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
         env:
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+        
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ steps.ver.outputs.tag }}
           fetch-depth: 0
           fetch-tags: true
       - uses: astral-sh/setup-uv@v6
@@ -40,3 +46,71 @@ jobs:
           publish_dir: ./docs/_build/html
           destination_dir: docs/${{ steps.ver.outputs.version }}
           keep_files: true
+          
+      - name: Checkout gh-pages (for existing switcher.json)
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+          fetch-depth: 1
+
+      - name: Update switcher.json (append if missing)
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          version = os.environ["VERSION"]
+          base = os.environ["DOCS_BASE_URL"].rstrip("/")
+          entry = {
+              "version": version,
+              "url": f"{base}/{version}/",
+          }
+          src = Path("gh-pages/docs/switcher.json")
+          if src.exists():
+              try:
+                  data = json.loads(src.read_text(encoding="utf-8"))
+                  if not isinstance(data, list):
+                      data = []
+              except Exception:
+                  data = []
+          else:
+              data = []
+          exists = any(
+              isinstance(item, dict)
+              and str(item.get("version", "")) == version
+              for item in data
+          )
+          if not exists:
+              data.append(entry)
+          out_dir = Path("switcher-out")
+          out_dir.mkdir(parents=True, exist_ok=True)
+          (out_dir / "switcher.json").write_text(
+              json.dumps(data, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+      
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./switcher-out
+          destination_dir: docs
+          keep_files: true
+    
+      - name: Print docs URL
+        env:
+          DOCS_VERSION: ${{ steps.ver.outputs.version }}
+          DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
+        run: |
+          DOCS_URL="${DOCS_BASE_URL}/${DOCS_VERSION}/"
+          echo "Docs URL: $DOCS_URL"
+          echo "DOCS_URL=$DOCS_URL" >> "$GITHUB_ENV"
+          echo "### Docs published" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: $DOCS_URL" >> "$GITHUB_STEP_SUMMARY"
+      
