@@ -5,6 +5,8 @@ on:
       tag:
         description: "Tag to build (e.g. v0.29.0)"
         required: true
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -19,7 +21,7 @@ jobs:
       - id: ver
         run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
         env:
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag }}
