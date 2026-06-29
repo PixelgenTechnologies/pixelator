@@ -98,6 +98,7 @@ html_theme_options = {
 
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+html_extra_path = ["switcher.json"]
 
 python_maximum_signature_line_length = 40
 
