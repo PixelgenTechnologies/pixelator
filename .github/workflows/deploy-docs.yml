@@ -102,3 +102,15 @@ jobs:
           publish_dir: ./switcher-out
           destination_dir: docs
           keep_files: true
+    
+      - name: Print docs URL
+        env:
+          DOCS_VERSION: ${{ steps.ver.outputs.version }}
+          DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
+        run: |
+          DOCS_URL="${DOCS_BASE_URL}/${DOCS_VERSION}/"
+          echo "Docs URL: $DOCS_URL"
+          echo "DOCS_URL=$DOCS_URL" >> "$GITHUB_ENV"
+          echo "### Docs published" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: $DOCS_URL" >> "$GITHUB_STEP_SUMMARY"
+      
