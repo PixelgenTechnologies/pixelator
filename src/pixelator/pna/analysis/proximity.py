@@ -246,7 +246,7 @@ def calculate_differential_proximity(
 
     Raises:
         ValueError: If ``contrast_column`` is not in ``proximity_df``.
-        ValueError: If data remains after applying ``metric_type`` filtering.
+        ValueError: If no data remains after applying ``metric_type`` filtering.
 
     References:
         * `Bonferroni correction <https://en.wikipedia.org/wiki/Bonferroni_correction>`_
