@@ -19,12 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: ver
-        run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
         env:
           TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+        
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ steps.ver.outputs.tag }}
           fetch-depth: 0
           fetch-tags: true
       - uses: astral-sh/setup-uv@v6
