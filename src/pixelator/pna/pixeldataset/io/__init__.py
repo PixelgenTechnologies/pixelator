@@ -38,7 +38,7 @@ A full pxl file has (at least) the following tables:
     │ (proximity)         │
     └─────────────────────┘
 
-## Architecture (IO types)
+.. rubric:: Architecture (IO types)
 
 - `QueryBuilder` builds immutable `Query` values (SQL text + bound parameters).
 - `PixelDataViewer` maps sample names to `PxlFile` instances; and gives a unified
@@ -53,7 +53,7 @@ A full pxl file has (at least) the following tables:
   using `AnnDataHelper`, `PixelDataViewer`, and `PixelFileWriter` when
   rewriting AnnData.
 
-### Class diagram (ASCII)
+.. rubric:: Class diagram (ASCII)
 
 .. code-block:: none
 

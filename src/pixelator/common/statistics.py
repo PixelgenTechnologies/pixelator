@@ -1,6 +1,6 @@
 """Functions for statistics/math.
 
-This module contains functions related to various useful statistics/math
+This module contains functions related to various useful statistics/maths-concepts.
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
@@ -23,30 +23,48 @@ def clr_transformation(
     axis: Literal[0, 1] = 1,
     non_negative: bool = True,
 ) -> pd.DataFrame:
-    """Transform antibody counts data with CLR (centered log ratio).
+    """Transform antibody counts using the centered log-ratio (CLR) algorithm.
 
-    This function performs a CLR (centered log ratio) transformation on the
+    This function performs a CLR transformation on the
     provided dataframe containing antibody counts. The CLR transformation
     divides the counts by the geometric mean and then applies a log
-    transformation. Alternatively, it can log-transform the counts first and
-    then subtract the geometric mean (log), centering the transformed counts
-    around zero (which may include negative values).
+    transformation to the ratio. Alternatively, it can log-transform the
+    counts first and then subtract the log-transformed geometric mean,
+    centering the transformed counts around zero (which may include negative values).
+
+    .. dropdown:: Detailed explanation
+
+        .. rubric:: Center value
+        In the implementation, a "center" value is calculated and used in the
+        computations. The center value is the arithmetic mean of the ``log1p``-transformed
+        abundances of all the proteins along the specified ``axis``.
+
+        .. rubric:: Ratio form
+        The function divides each protein abundance by the ``np.exp`` of the
+        center value and then applies a ``np.log1p`` transformation on the ratio.
+
+        .. rubric:: Difference form
+        The function calculates the natural logarithm with a
+        pseudocount of 1 (``np.log1p``) of each protein's abundance and
+        subtracts the center value from them.
 
     Args:
-        df: The dataframe of antibody counts.
-        axis: The axis on which to apply the transformation. `axis=0` applies the transformation by
-            columns (antibody), and `axis=1` applies it by rows (component). Defaults to 1.
-        non_negative: If `True`, the non-negative CLR transformation is used. If `False`, the
-            zero-centered CLR transformation is used. Defaults to True.
+        df: Dataframe containing antibody counts (antibodies as columns).
+        axis: The axis along which to compute the center. ``axis=0`` centers per
+            antibody (column), and ``axis=1`` centers per component (row).
+            Defaults to ``1``.
+        non_negative: If ``True``, use the ratio form. If
+            ``False``, use the difference form. Defaults to ``True``.
 
     Returns:
-        pd.DataFrame: A dataframe with the antibody counts transformed.
+        A dataframe with the same shape and index/columns as ``df`` containing
+        the CLR-transformed values.
 
     Raises:
         AssertionError: If the input axis is not 0 or 1.
 
     References:
-        https://en.wikipedia.org/wiki/Compositional_data#Center_logratio_transform
+        https://en.wikipedia.org/wiki/Compositional_data#Center_log_ratio_transform
     """
     if axis not in [0, 1]:
         raise AssertionError("Axis is required to be 0 or 1")
@@ -265,29 +283,39 @@ def _get_background_abundance(dataframe: pd.DataFrame, axis=0):
 def dsb_normalize(
     raw_abundance: pd.DataFrame, isotype_controls: Union[List, None] = None
 ):
-    """Normalize abundance data using the empty-droplet-free method.
+    """Normalize abundance data using DSB - denoised and scaled by background.
 
     This method is implemented as described in Mulè et al.'s dsb package.
     The normalization steps are:
+
     1. Log1p transformation.
     2. Remove background abundance per marker.
     3. Regularize abundance per component.
 
     Args:
-        raw_abundance: The raw abundance count data.
-        isotype_controls: List of isotype controls.
+        raw_abundance: The raw abundance count data with components as rows
+            and markers as columns.
+        isotype_controls: Column names of isotype control markers in ``raw_abundance``.
+            At least one is required.
 
     Returns:
-        pd.DataFrame: Normalized abundance data.
+        A dataframe with the same shape and index/columns as ``raw_abundance``
+        containing the normalized abundance values.
 
     Raises:
-        ValueError: If no isotype controls are provided.
+        ValueError: If ``isotype_controls`` is ``None``.
 
     References:
         Integrating population and single-cell variations in vaccine responses
         identifies a naturally adjuvanted human immune setpoint,
         Matthew P. Mulè et al., Immunity, 2024,
         https://doi.org/10.1016/j.immuni.2024.04.009
+
+        Normalizing and denoising protein expression data
+        from droplet-based single cell profiling
+        Matthew P. Mulè, Andrew J. Martins, & John S. Tsang,
+        Nature Communications, 2022
+        https://www.nature.com/articles/s41467-022-29356-8
     """
     log_abundance = np.log1p(raw_abundance)
     marker_background, _ = _get_background_abundance(log_abundance, axis=1)

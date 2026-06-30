@@ -63,9 +63,8 @@ autoapi_options = [
 ]
 
 autoapi_member_order = "alphabetical"
-autoapi_python_class_content = "both"
+autoapi_python_class_content = "class"
 autoapi_python_use_implicit_namespaces = True
-autoapi_own_page_level = "class"
 autoapi_own_page_level = "function"
 
 
@@ -77,8 +76,22 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "pydata_sphinx_theme"
+html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/PixelgenTechnologies/pixelator",
+            "icon": "fab fa-github",
+            "type": "fontawesome",
+        },
+    ],
+    "navbar_end": ["version-switcher"],
+}
+
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+
+python_maximum_signature_line_length = 40
 
 autodoc_member_order = "alphabetical"
 autodoc_typehints = "signature"
