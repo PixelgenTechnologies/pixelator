@@ -67,7 +67,6 @@ jobs:
           version = os.environ["VERSION"]
           base = os.environ["DOCS_BASE_URL"].rstrip("/")
           entry = {
-              "name": version,
               "version": version,
               "url": f"{base}/docs/{version}/",
           }
@@ -83,10 +82,7 @@ jobs:
               data = []
           exists = any(
               isinstance(item, dict)
-              and (
-                  str(item.get("version", "")) == version
-                  or str(item.get("name", "")) == version
-              )
+              and str(item.get("version", "")) == version
               for item in data
           )
           if not exists:

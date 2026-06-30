@@ -91,7 +91,7 @@ html_theme_options = {
     ],
     "navbar_end": ["version-switcher"],
     "switcher": {
-        "json_url": "https://karlmoresco.github.io/pixelator/docs/switcher.json",
+        "json_url": "https://karlmoresco.github.io/pixelator/switcher.json",
         "version_match": _docs_version,
     },
 }
