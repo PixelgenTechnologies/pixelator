@@ -1,7 +1,7 @@
 Pixelator documentation
 =======================
 
-Pixelgen Technologies provides Pixelator, a suite of open source
+`Pixelgen Technologies <https://www.pixelgen.com/>`_ provides Pixelator, a suite of open source
 software solutions that empower users working with
 `Molecular Pixelation (MPX) <https://software.pixelgen.com/common/glossary/#mpx>`_
 and `Proximity Network (PNA) <https://software.pixelgen.com/common/glossary/#pna>`_

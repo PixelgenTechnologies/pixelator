@@ -77,8 +77,12 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 _docs_version = os.environ.get("DOCS_VERSION", "latest")
+_docs_base_url = os.environ.get(
+    "DOCS_BASE_URL",
+    "https://karlmoresco.github.io/pixelator",
+).rstrip("/")
 
-html_baseurl = "https://karlmoresco.github.io/pixelator/"
+html_baseurl = f"{_docs_base_url}/"
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "icon_links": [
@@ -91,8 +95,11 @@ html_theme_options = {
     ],
     "navbar_end": ["version-switcher"],
     "switcher": {
-        "json_url": "https://karlmoresco.github.io/pixelator/switcher.json",
+        "json_url": f"{_docs_base_url}/switcher.json",
         "version_match": _docs_version,
+    },
+    "logo": {
+        "image_light": "_static/pixelator.svg",
     },
 }
 

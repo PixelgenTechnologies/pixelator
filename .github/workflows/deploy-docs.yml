@@ -18,6 +18,8 @@ jobs:
   deploy:
     if: ${{ github.event_name != 'release' || github.event.release.prerelease == false }}
     runs-on: ubuntu-latest
+    env:
+      DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
     steps:
       - id: ver
         env:
@@ -58,7 +60,6 @@ jobs:
       - name: Update switcher.json (append if missing)
         env:
           VERSION: ${{ steps.ver.outputs.version }}
-          DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
         run: |
           python - <<'PY'
           import json
@@ -106,7 +107,6 @@ jobs:
       - name: Print docs URL
         env:
           DOCS_VERSION: ${{ steps.ver.outputs.version }}
-          DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
         run: |
           DOCS_URL="${DOCS_BASE_URL}/${DOCS_VERSION}/"
           echo "Docs URL: $DOCS_URL"
