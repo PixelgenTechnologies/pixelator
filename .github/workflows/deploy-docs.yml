@@ -45,3 +45,63 @@ jobs:
           publish_dir: ./docs/_build/html
           destination_dir: docs/${{ steps.ver.outputs.version }}
           keep_files: true
+          
+      - name: Checkout gh-pages (for existing switcher.json)
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+          fetch-depth: 1
+
+      - name: Update switcher.json (append if missing)
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+          DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          version = os.environ["VERSION"]
+          base = os.environ["DOCS_BASE_URL"].rstrip("/")
+          entry = {
+              "name": version,
+              "version": version,
+              "url": f"{base}/docs/{version}/",
+          }
+          src = Path("gh-pages/docs/switcher.json")
+          if src.exists():
+              try:
+                  data = json.loads(src.read_text(encoding="utf-8"))
+                  if not isinstance(data, list):
+                      data = []
+              except Exception:
+                  data = []
+          else:
+              data = []
+          exists = any(
+              isinstance(item, dict)
+              and (
+                  str(item.get("version", "")) == version
+                  or str(item.get("name", "")) == version
+              )
+              for item in data
+          )
+          if not exists:
+              data.append(entry)
+          out_dir = Path("switcher-out")
+          out_dir.mkdir(parents=True, exist_ok=True)
+          (out_dir / "switcher.json").write_text(
+              json.dumps(data, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+      
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./switcher-out
+          destination_dir: docs
+          keep_files: true
