@@ -68,7 +68,7 @@ jobs:
           base = os.environ["DOCS_BASE_URL"].rstrip("/")
           entry = {
               "version": version,
-              "url": f"{base}/docs/{version}/",
+              "url": f"{base}/{version}/",
           }
           src = Path("gh-pages/docs/switcher.json")
           if src.exists():
