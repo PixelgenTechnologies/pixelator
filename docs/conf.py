@@ -95,7 +95,7 @@ html_theme_options = {
         "version_match": _docs_version,
     },
     "logo": {
-        image_light: "_static/pixelator.svg",
+        "image_light": "_static/pixelator.svg",
     }
 }
 
