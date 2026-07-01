@@ -58,7 +58,7 @@ jobs:
       - name: Update switcher.json (append if missing)
         env:
           VERSION: ${{ steps.ver.outputs.version }}
-          DOCS_BASE_URL: https://PixelgenTechnologies.github.io/pixelator
+          DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
         run: |
           python - <<'PY'
           import json
@@ -106,7 +106,7 @@ jobs:
       - name: Print docs URL
         env:
           DOCS_VERSION: ${{ steps.ver.outputs.version }}
-          DOCS_BASE_URL: https://PixelgenTechnologies.github.io/pixelator
+          DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
         run: |
           DOCS_URL="${DOCS_BASE_URL}/${DOCS_VERSION}/"
           echo "Docs URL: $DOCS_URL"
