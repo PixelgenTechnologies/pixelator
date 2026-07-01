@@ -72,8 +72,7 @@ def test_denoise_ace_cli_runs_ok(denoise_pxl_file):
         result = read(out_pxl)
         obs = result.adata().obs
         assert (
-            int(obs.loc["57129a8b0fff38c6", "denoised_nodes_marked_only_by_ace"])
-            == 5436
+            int(obs.loc["c4c3ef9497b3746d", "denoised_nodes_marked_only_by_ace"]) == 32
         )
         summary_cols = [
             "denoised_nodes_marked_only_by_ace",

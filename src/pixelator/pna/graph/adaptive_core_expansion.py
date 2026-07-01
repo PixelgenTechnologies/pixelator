@@ -257,7 +257,7 @@ def adaptive_core_expansion(
     max_iter: int = 200,
     min_seed_pct: float = 0.1,
     nodes_to_move_threshold: int = 10,
-    min_allowed_nodes_pct: float = 0.8,
+    min_allowed_nodes_pct: float = 0.9,
     select_lcc: bool = True,
 ) -> Graph:
     """Perform Adaptive Core Expansion (ACE) graph partitioning.

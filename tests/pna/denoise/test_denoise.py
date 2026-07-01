@@ -513,7 +513,8 @@ def test_denoise_one_core_analysis(denoise_pxl_dataset, tmp_path):
 
 
 REFERENCE_ACE_COMPONENT = "57129a8b0fff38c6"
-REFERENCE_ACE_LOW_NODE_COUNT = 5436
+REFERENCE_ACE_COMPONENT_HIGH_QUALITY = "c4c3ef9497b3746d"
+REFERENCE_ACE_LOW_NODE_COUNT = 32
 
 
 def test_denoise_pls_reference_component_runs_and_cleans_coreness(denoise_pxl_dataset):
@@ -588,13 +589,14 @@ def test_denoise_ace_reference_component(denoise_pxl_dataset):
         denoise_pxl_dataset: Denoise pxl dataset.
     """
     comp_graph = PNAGraph.from_edgelist(
-        denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT_HIGH_QUALITY])
         .edgelist()
         .to_polars()
         .lazy()
     )
     removed = denoise_ace(comp_graph)
     assert removed != [None]
+    a = len(removed)
     assert len(removed) == REFERENCE_ACE_LOW_NODE_COUNT
     partitions = nx.get_node_attributes(comp_graph.raw, "partition")
     low_ids = {n for n, p in partitions.items() if p == "low"}
@@ -625,7 +627,9 @@ def test_denoise_ace_analysis(denoise_pxl_dataset, tmp_path):
         == obs["number_of_nodes_removed_in_denoise"]
     ).all()
     assert int(
-        obs.loc[REFERENCE_ACE_COMPONENT, "denoised_nodes_marked_only_by_ace"]
+        obs.loc[
+            REFERENCE_ACE_COMPONENT_HIGH_QUALITY, "denoised_nodes_marked_only_by_ace"
+        ]
     ) == (REFERENCE_ACE_LOW_NODE_COUNT)
 
     assert (
@@ -633,13 +637,13 @@ def test_denoise_ace_analysis(denoise_pxl_dataset, tmp_path):
     )  # ACE-only denoising with LCC seed should not produce stranded nodes
 
     orig_graph = PNAGraph.from_edgelist(
-        denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        denoise_pxl_dataset.filter(components=[REFERENCE_ACE_COMPONENT_HIGH_QUALITY])
         .edgelist()
         .to_polars()
         .lazy()
     )
     denoised_graph = PNAGraph.from_edgelist(
-        denoised_dataset.filter(components=[REFERENCE_ACE_COMPONENT])
+        denoised_dataset.filter(components=[REFERENCE_ACE_COMPONENT_HIGH_QUALITY])
         .edgelist()
         .to_polars()
         .lazy()
