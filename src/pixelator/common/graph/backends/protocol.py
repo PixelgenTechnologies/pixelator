@@ -73,7 +73,7 @@ class GraphBackend(Protocol):
             a Graph instance (GraphBackend)
 
         Raises:
-            AssertionError when the input edge list is not valid
+            AssertionError: when the input edge list is not valid
         """
         ...
 
