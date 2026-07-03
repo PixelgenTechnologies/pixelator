@@ -49,17 +49,14 @@ jobs:
           destination_dir: docs/${{ steps.ver.outputs.version }}
           keep_files: true
           
-      - name: Checkout gh-pages (for existing switcher.json)
+      - name: Checkout gh-pages (for regenerating switcher.json)
         uses: actions/checkout@v4
-        continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
           fetch-depth: 1
 
-      - name: Update switcher.json (append if missing)
-        env:
-          VERSION: ${{ steps.ver.outputs.version }}
+      - name: Regenerate switcher.json
         run: uv run python docs/_scripts/update_switcher.py
       
       - uses: peaceiris/actions-gh-pages@v4

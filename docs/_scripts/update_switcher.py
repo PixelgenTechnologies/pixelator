@@ -1,35 +1,32 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 from pathlib import Path
+
+VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
 
 def main() -> None:
-    version = os.environ["VERSION"]
     base = os.environ["DOCS_BASE_URL"].rstrip("/")
+    docs_dir = Path("gh-pages/docs")
 
-    entry = {
-        "version": version,
-        "url": f"{base}/{version}/",
-    }
+    versions = []
+    if docs_dir.is_dir():
+        for child in docs_dir.iterdir():
+            match = VERSION_RE.match(child.name)
+            if child.is_dir() and match:
+                versions.append((tuple(int(g) for g in match.groups()), child.name))
 
-    src = Path("gh-pages/docs/switcher.json")
-    if src.exists():
-        try:
-            data = json.loads(src.read_text(encoding="utf-8"))
-            if not isinstance(data, list):
-                data = []
-        except Exception:
-            data = []
-    else:
-        data = []
+    # Newest first, sorted numerically (so 0.30.0 > 0.9.0, unlike string sort)
+    versions.sort(reverse=True)
 
-    exists = any(
-        isinstance(item, dict) and str(item.get("version", "")) == version
-        for item in data
-    )
-    if not exists:
-        data.append(entry)
+    data = [
+        {"version": name, "url": f"{base}/{name}/"}
+        for _, name in versions
+    ]
+    if data:
+        data[0]["preferred"] = True
 
     out_dir = Path("switcher-out")
     out_dir.mkdir(parents=True, exist_ok=True)
