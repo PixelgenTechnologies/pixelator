@@ -80,13 +80,13 @@ def _summarize_proximity(
     marker pairs supported by at least ``min_n_cells`` components.
     """
     filtered = proximity_df[
-        proximity_df["join_count_expected_mean"] > min_expected_join_count
+        proximity_df["join_count_expected_mean"] >= min_expected_join_count
     ]
 
     summary = filtered.groupby(["marker_1", "marker_2"]).agg(
         mean_log2_ratio=("log2_ratio", "mean"), n_cells=("log2_ratio", "size")
     )
-    summary = summary[summary["n_cells"] > min_n_cells].reset_index()
+    summary = summary[summary["n_cells"] >= min_n_cells].reset_index()
     return summary
 
 
@@ -159,6 +159,7 @@ def compare_sample_pair(
     candidate_markers = (
         markers if markers is not None else set(clr1.columns) & set(clr2.columns)
     )
+
     expressed_markers = _expressed_markers(clr1, clr2, candidate_markers, min_mean_clr)
 
     if not expressed_markers:
@@ -167,16 +168,16 @@ def compare_sample_pair(
             "Try lowering min_mean_clr."
         )
 
-    abundance_1 = _summarize_abundance(clr1, expressed_markers)
-    abundance_2 = _summarize_abundance(clr2, expressed_markers)
+    abundance_1 = _summarize_abundance(clr1, candidate_markers)
+    abundance_2 = _summarize_abundance(clr2, candidate_markers)
     abundance = pd.DataFrame(
         {
-            "marker": sorted(expressed_markers),
+            "marker": sorted(candidate_markers),
             f"mean_clr_{sample1_name}": abundance_1.loc[
-                sorted(expressed_markers)
+                sorted(candidate_markers)
             ].values,
             f"mean_clr_{sample2_name}": abundance_2.loc[
-                sorted(expressed_markers)
+                sorted(candidate_markers)
             ].values,
         }
     )
@@ -185,6 +186,11 @@ def compare_sample_pair(
             abundance[f"mean_clr_{sample2_name}"]
         )
     )
+    if pd.isna(abundance_correlation):
+        raise ValueError(
+            "Abundance correlation is undefined. "
+            "(need >=2 expressed markers with non-constant values)."
+        )
 
     proximity_1 = dataset1.filter(markers=expressed_markers).proximity().to_df()
     proximity_2 = dataset2.filter(markers=expressed_markers).proximity().to_df()
@@ -219,6 +225,12 @@ def compare_sample_pair(
             proximity[f"log2_ratio_{sample2_name}"]
         )
     )
+    if pd.isna(proximity_correlation):
+        raise ValueError(
+            "Proximity correlation is undefined. "
+            "(need >=2 marker pairs with non-constant values). "
+            "Try lowering min_expected_join_count or min_n_cells."
+        )
 
     return SamplePairComparisonResult(
         sample1_name=sample1_name,
