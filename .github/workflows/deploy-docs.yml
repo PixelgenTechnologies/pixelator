@@ -60,41 +60,7 @@ jobs:
       - name: Update switcher.json (append if missing)
         env:
           VERSION: ${{ steps.ver.outputs.version }}
-        run: |
-          python - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-          version = os.environ["VERSION"]
-          base = os.environ["DOCS_BASE_URL"].rstrip("/")
-          entry = {
-              "version": version,
-              "url": f"{base}/{version}/",
-          }
-          src = Path("gh-pages/docs/switcher.json")
-          if src.exists():
-              try:
-                  data = json.loads(src.read_text(encoding="utf-8"))
-                  if not isinstance(data, list):
-                      data = []
-              except Exception:
-                  data = []
-          else:
-              data = []
-          exists = any(
-              isinstance(item, dict)
-              and str(item.get("version", "")) == version
-              for item in data
-          )
-          if not exists:
-              data.append(entry)
-          out_dir = Path("switcher-out")
-          out_dir.mkdir(parents=True, exist_ok=True)
-          (out_dir / "switcher.json").write_text(
-              json.dumps(data, indent=2) + "\n",
-              encoding="utf-8",
-          )
-          PY
+        run: uv run python docs/_scripts/update_switcher.py
       
       - uses: peaceiris/actions-gh-pages@v4
         with:
