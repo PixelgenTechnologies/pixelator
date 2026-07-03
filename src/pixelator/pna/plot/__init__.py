@@ -9,6 +9,17 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
+from pixelator.pna.plot.comparison import (
+    plot_sample_pair_comparison,
+    write_sample_pair_comparison_report,
+)
+
+__all__ = [
+    "molecule_rank_plot",
+    "plot_sample_pair_comparison",
+    "write_sample_pair_comparison_report",
+]
+
 
 def molecule_rank_plot(
     data: pd.DataFrame, group_by: Optional[str] = None
