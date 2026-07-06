@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `pixelator.pna.analysis.comparison.compare_sample_pairs` to check that pairs of PNA samples are similar in terms of abundance (mean marker CLR) and proximity (mean marker-pair proximity score) patterns, reporting the correlation between each pair.
-- `compare_sample_pairs_by_gate` to run the same comparison restricted to components matching a cell-type gate (e.g. `["+CD3e", "+CD4", "-CD19"]`), with positive/negative thresholds determined automatically from each marker's CLR distribution.
+- `pixelator.pna.analysis.compare_sample_pairs_by_gate` to run the same comparison restricted to components matching a cell-type gate (e.g. `["+CD3e", "+CD4", "-CD19"]`), with positive/negative thresholds determined automatically from each marker's CLR distribution.
 - `pixelator.pna.analysis.gating.determine_marker_threshold` to determine a positive/negative CLR threshold for a marker, warning and skipping markers whose distribution appears unimodal.
 - `pixelator.pna.plot.plot_sample_pair_comparison` and `write_sample_pair_comparison_report` to plot and collect sample pair abundance/proximity comparisons into an HTML report.
 

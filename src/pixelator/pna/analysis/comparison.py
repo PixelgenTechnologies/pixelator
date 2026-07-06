@@ -189,7 +189,7 @@ def compare_sample_pair(
     if pd.isna(abundance_correlation):
         raise ValueError(
             "Abundance correlation is undefined. "
-            "(need >=2 expressed markers with non-constant values)."
+            "(need >=2 markers with non-constant values)."
         )
 
     proximity_1 = dataset1.filter(markers=expressed_markers).proximity().to_df()
