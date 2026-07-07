@@ -16,13 +16,15 @@ author = "Pixelgen Technologies"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 nitpicky = True
-nitpick_ignore = [
-    # --- MPX excluded from AutoAPI ---
-    ("py:class", "pixelator.mpx.graph.Graph"),
-    # --- No public intersphinx inventory ---
-    # (see if these can be resolved without ignoring)
-    ("py:class", "duckdb.DuckDBPyConnection"),
-    ("py:class", "faiss.IndexBinary"),
+nitpick_ignore_regex = [
+    # --- MPX excluded ---
+    (r"py:.*", r"pixelator\.mpx\..*"),
+    # --- Unable to resolve intersphinx inventory ---
+    (r"py:.*", r"polars\..*"),
+    (r"py:.*", r"cutadapt\..*"),
+    (r"py:.*", r"numpy\..*"),
+    (r"py:.*", r"duckdb\..*"),
+    (r"py:.*", r"faiss\..*"),
 ]
 
 extensions = [
@@ -145,4 +147,5 @@ intersphinx_mapping = {
     "packaging": ("https://packaging.pypa.io/en/stable/", None),
     "sklearn": ("https://scikit-learn.org/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
+    "requests": ("https://requests.readthedocs.io/en/stable/", None),
 }

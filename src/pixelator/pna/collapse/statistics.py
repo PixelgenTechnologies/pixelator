@@ -33,14 +33,12 @@ class MarkerLinkGroupStats(pydantic.BaseModel):
     """Collect statistics of groups of molecules that will be collapsed.
 
     Attributes:
-        ----------
-        corrected_reads_count : int
-        The total number of reads in unique molecules that were error corrected to another "close"
-        molecule.
-        cluster_size_distribution: 1D array of ints
-            The result of binning the size of each group of close molecules.
-        collapsed_molecules_count: int
-            The total number of unique molecules (UMI1+UMI2+UEI) after error correction.
+        corrected_reads_count: The total number of reads in unique molecules that
+            were error corrected to another "close" molecule.
+        cluster_size_distribution: The result of binning the size of each group of
+            close molecules.
+        collapsed_molecules_count: The total number of unique molecules
+            (UMI1+UMI2+UEI) after error correction.
     """
 
     marker_1: str

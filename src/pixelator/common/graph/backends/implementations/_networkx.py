@@ -357,7 +357,7 @@ class NetworkXGraphBackend(GraphBackend):
             node markers as a dataframe (pd.DataFrame)
 
         Raises:
-            AssertionError if graph nodes don't include markers
+            AssertionError: If graph nodes don't include markers
         """
         if "markers" not in self.vs.attributes():
             raise AssertionError("Could not find 'markers' in vertex attributes")

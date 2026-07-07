@@ -35,15 +35,18 @@ def clr_transformation(
     .. dropdown:: Detailed explanation
 
         .. rubric:: Center value
+
         In the implementation, a "center" value is calculated and used in the
         computations. The center value is the arithmetic mean of the ``log1p``-transformed
         abundances of all the proteins along the specified ``axis``.
 
         .. rubric:: Ratio form
+
         The function divides each protein abundance by the ``np.exp`` of the
         center value and then applies a ``np.log1p`` transformation on the ratio.
 
         .. rubric:: Difference form
+
         The function calculates the natural logarithm with a
         pseudocount of 1 (``np.log1p``) of each protein's abundance and
         subtracts the center value from them.
