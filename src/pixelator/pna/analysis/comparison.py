@@ -113,10 +113,10 @@ def compare_sample_pair(
 ) -> SamplePairComparisonResult:
     """Compare abundance and proximity similarity between a single pair of samples.
 
-    Markers are first restricted to those expressed (mean CLR above
-    ``min_mean_clr``) in both samples. Mean marker CLR values (abundance) and
-    mean marker-pair proximity log2 ratios are then compared between the two
-    samples, and the Pearson correlation is computed for each.
+    Mean marker CLR values (abundance) and mean marker-pair proximity log2 ratios
+    are compared between the two samples, and the Pearson correlation is computed
+    for each. For proximity scores, markers are first restricted to those expressed
+    (mean CLR above ``min_mean_clr``) in both samples.
 
     Args:
         pxl1: The first sample, given as a `PNAPixelDataset`, a path to a
