@@ -82,7 +82,7 @@ def determine_marker_threshold(
     (rather than 0), since the two components end up splitting the single
     mode. The default cutoff of 3.0 was chosen empirically to reliably
     separate unimodal distributions from clearly bimodal ones (separated by
-    several standard deviations); consider tuning it for your own data.
+    several standard deviations).
 
     Args:
         values: The CLR values (across components) for a single marker.
