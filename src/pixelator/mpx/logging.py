@@ -158,6 +158,7 @@ class LoggingSetup:
         self._root_logger = logger or logging.getLogger()
         self._server = None
         self._server_thread = None
+        self._socket_handler = None
 
     def _shutdown_listener(self) -> None:
         """Send the stop token to the logging process and wait for it to finish."""
@@ -166,6 +167,13 @@ class LoggingSetup:
             self._server.server_close()
         if self._server_thread:
             self._server_thread.join(timeout=1)
+        # Detach the handler we added to the (root) logger, otherwise it lingers
+        # after shutdown and keeps sending records to the now-closed listener,
+        # polluting the logger for any subsequent use (e.g. across tests).
+        if self._socket_handler is not None:
+            self._root_logger.removeHandler(self._socket_handler)
+            self._socket_handler.close()
+            self._socket_handler = None
 
     def initialize(self):
         """Configure logging and start the listener process."""
@@ -189,8 +197,8 @@ class LoggingSetup:
         self._server_thread.daemon = True
         self._server_thread.start()
 
-        socker_handler = SocketHandler(LOCALHOST, port)
-        self._root_logger.addHandler(socker_handler)
+        self._socket_handler = SocketHandler(LOCALHOST, port)
+        self._root_logger.addHandler(self._socket_handler)
         self._root_logger.setLevel(logging.DEBUG if self.verbose else logging.INFO)
 
     @property
