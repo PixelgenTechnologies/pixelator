@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Generate the version switcher JSON for the docs site."""
+
 import json
 import os
 import re
@@ -8,6 +10,7 @@ VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
 
 def main() -> None:
+    """Build switcher JSON from versioned docs directories."""
     base = os.environ["DOCS_BASE_URL"].rstrip("/")
     docs_dir = Path("gh-pages/docs")
 
@@ -21,10 +24,7 @@ def main() -> None:
     # Newest first, sorted numerically (so 0.30.0 > 0.9.0, unlike string sort)
     versions.sort(reverse=True)
 
-    data = [
-        {"version": name, "url": f"{base}/{name}/"}
-        for _, name in versions
-    ]
+    data = [{"version": name, "url": f"{base}/{name}/"} for _, name in versions]
     if data:
         data[0]["preferred"] = True
 
