@@ -33,7 +33,7 @@ PNA_DATA_ROOT = Path(__file__).parent / "data"
 # We need to add basic logging config here to make sure
 # integration tests output logs to stdout
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("pixelator").setLevel(logging.DEBUG)
+logging.getLogger("pixelator").setLevel(logging.INFO)
 
 
 @pytest.fixture(name="pna_data_root", scope="module")
