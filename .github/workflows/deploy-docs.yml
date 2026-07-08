@@ -1,4 +1,4 @@
-name: "Deploy docs"
+name: "Docs"
 on:
   workflow_dispatch:
     inputs:
@@ -13,13 +13,14 @@ concurrency:
   group: deploy-docs-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+env:
+  DOCS_BASE_URL: https://PixelgenTechnologies.github.io/pixelator
+
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
     outputs:
       version: ${{ steps.ver.outputs.version }}
     steps:
@@ -30,7 +31,7 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           version="${TAG#v}"
           echo "version=${version:-latest}" >> "$GITHUB_OUTPUT"
-        
+
       # On pull_request events the tag output is empty, so checkout falls
       # back to the default ref (the PR merge commit).
       - uses: actions/checkout@v4
@@ -61,7 +62,6 @@ jobs:
     permissions:
       contents: write
     env:
-      DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
       DOCS_VERSION: ${{ needs.build.outputs.version }}
     steps:
       # Needed for docs/_scripts/update_switcher.py
@@ -79,7 +79,7 @@ jobs:
           publish_dir: ./docs/_build/html
           destination_dir: docs/${{ env.DOCS_VERSION }}
           keep_files: true
-          
+
       - name: Checkout gh-pages (for regenerating switcher.json)
         uses: actions/checkout@v4
         with:
@@ -105,4 +105,3 @@ jobs:
           echo "DOCS_URL=$DOCS_URL" >> "$GITHUB_ENV"
           echo "### Docs published" >> "$GITHUB_STEP_SUMMARY"
           echo "- URL: $DOCS_URL" >> "$GITHUB_STEP_SUMMARY"
-      
