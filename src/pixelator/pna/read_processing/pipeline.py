@@ -55,9 +55,9 @@ class AmpliconPipeline(Pipeline):
     """Process single-end or paired-end reads into a single amplicon sequence.
 
     - If two files (R1+R2) are provided: pre‐steps (paired), then combine, then post‐steps (single).
-    - If only one file is provided (single‐end), you detect “R1” vs “R2” by looking at
-    read.name, and treat that one FASTQ as if it were already “combined.”  All
-    single‐end modifiers/steps run in that branch.
+    - If only one file is provided (single‐end), you detect "R1" vs "R2" by looking at
+      read.name, and treat that one FASTQ as if it were already "combined.”  All
+      single‐end modifiers/steps run in that branch.
 
     Args:
         combiner: The step that combines the reads into a single amplicon sequence.

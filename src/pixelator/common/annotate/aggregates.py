@@ -20,13 +20,13 @@ logger = logging.getLogger(__name__)
 
 
 def specificity_tau(matrix: np.ndarray) -> np.ndarray:
-    """Tau specificity score computed as described in [1]_.
+    """Tau specificity score computed as described in [Yanai2005]_.
 
     Essentially it gives us a score between 0 and 1, where a component that
     expresses a single marker would have a tau score of 1, and one where all
     markers are equally expressed would have a tau score of 0.
 
-    .. [1] Yanai I, Benjamin H, Shmoish M, Chalifa-Caspi V, Shklar M, Ophir R,
+    .. [Yanai2005] Yanai I, Benjamin H, Shmoish M, Chalifa-Caspi V, Shklar M, Ophir R,
         Bar-Even A, Horn-Saban S, Safran M, Domany E, Lancet D, Shmueli O.
         Genome-wide midrange transcription profiles reveal expression level
         relationships in human tissue specification. Bioinformatics.

@@ -141,7 +141,7 @@ class GraphBackend(Protocol):
             node markers as a dataframe (pd.DataFrame)
 
         Raises:
-            AssertionError if graph nodes don't include markers
+            AssertionError: If graph nodes don't include markers
         """
         ...
 
