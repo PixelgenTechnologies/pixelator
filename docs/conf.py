@@ -28,6 +28,23 @@ nitpick_ignore_regex = [
     # --- Unresolvable source annotations ---
     (r"py:.*", r"matplotlib\.pyplot\..*"),
     (r"py:.*", r"pyarrow\.schema"),
+    # --- Private, internal, TypeVar, protocol-base, and native targets ---
+    # These come from annotations, base-class lists, or TypeVars in the source code.
+    (
+        r"py:.*",
+        r"(Edge|Vertex|VertexSequence|AmpliconBuilder|BarcodeDemuxer"
+        r"|DemuxFilenamePolicy|PipelineRunner|StatisticsClass"
+        r"|NetworkxBasedVertexClustering|T|mpctx_Process)",
+    ),
+    (r"py:.*", r"(_SummaryStatsDict|_PartitionCandidate|_COMPONENT_BATCH_SIZE)"),
+    (r"py:.*", r"pixelator_core\.PyGraphProperties"),
+    (r"py:.*", r"pixelator\.pna\.pixeldataset\.legacy\.PNALegacyPixelDataset"),
+    (r"py:.*", r"pixelator\.types\.PathType"),
+    (
+        r"py:.*",
+        r"pixelator\.common\.graph\.backends\.implementations\._networkx"
+        r"\.NetworkXGraphBackend",
+    ),
 ]
 
 suppress_warnings = ["ref.python", "autoapi.python_import_resolution"]
