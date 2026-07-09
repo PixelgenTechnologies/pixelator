@@ -6,6 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import logging
 import os
 
 project = "Pixelator"
@@ -47,7 +48,31 @@ nitpick_ignore_regex = [
     ),
 ]
 
-suppress_warnings = ["ref.python", "autoapi.python_import_resolution"]
+suppress_warnings = [
+    "ref.python",
+    "autoapi.python_import_resolution",
+    "toc.not_included",
+    "toc.not_readable",
+]
+
+# Warnings emitted without a Sphinx type/subtype, so suppress_warnings
+# cannot match them; they are suppressed via a logging filter instead.
+_suppressed_warning_fragments = (
+    # Import placeholders AutoAPI could not resolve.
+    "Unknown type: placeholder",
+    # pna_config is assigned 4 times in config_instance.py; AutoAPI
+    # documents each assignment.
+    "duplicate object description of pixelator.pna.config.config_instance.pna_config",
+)
+
+
+def _keep_warning(record):
+    message = record.getMessage()
+    return not any(fragment in message for fragment in _suppressed_warning_fragments)
+
+
+for _logger_name in ("sphinx.autoapi._mapper", "sphinx.sphinx.domains.python"):
+    logging.getLogger(_logger_name).addFilter(_keep_warning)
 
 extensions = [
     "sphinx.ext.autodoc",
