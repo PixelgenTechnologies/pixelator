@@ -146,10 +146,10 @@ def gate_mask(
             marker's distribution to be considered bimodal. Defaults to 3.0.
 
     Returns:
-        A tuple of:
-            - A boolean `pd.Series` (indexed like ``clr``) that is ``True`` for
-              components passing all (non-ignored) gating criteria.
-            - A list of `MarkerThreshold` instances, one per marker in ``gate``.
+        A tuple whose first element is a boolean ``pd.Series`` (indexed like
+        ``clr``) that is ``True`` for components passing all (non-ignored)
+        gating criteria, and whose second element is a list of
+        ``MarkerThreshold`` instances, one per marker in ``gate``.
 
     Raises:
         KeyError: If a marker in ``gate`` is not a column of ``clr``.

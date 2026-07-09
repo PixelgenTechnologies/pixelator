@@ -107,7 +107,7 @@ def correct_pvalues(pvalues: np.ndarray) -> np.ndarray:
         pvalues: An array of p-values to adjust.
 
     Returns:
-        np.ndarray: The array of adjusted p-values in the same order as the input array.
+        The array of adjusted p-values in the same order as the input array.
     """
     # Most descriptions of the BH method states that p-values should
     # first be ordered in ascending order an ranked, however doing so
@@ -141,7 +141,7 @@ def log1p_transformation(df: pd.DataFrame) -> pd.DataFrame:
         df: The dataframe of antibody counts (antibodies as columns).
 
     Returns:
-        pd.DataFrame: A dataframe with the counts normalized.
+        A dataframe with the counts normalized.
     """
     logger.debug(
         (
@@ -170,7 +170,7 @@ def rate_diff_transformation(df: pd.DataFrame) -> pd.DataFrame:
         df: The dataframe of raw antibody counts (antibodies as columns).
 
     Returns:
-        pd.DataFrame: A dataframe with the counts difference from expected values.
+        A dataframe with the counts difference from expected values.
     """
     antibody_counts_per_component = df.sum(axis=1)
     antibody_rates = df.sum(axis=0)
@@ -196,7 +196,7 @@ def rel_normalization(df: pd.DataFrame, axis: Literal[0, 1] = 0) -> pd.DataFrame
             columns, and `axis=1` applies it by rows.
 
     Returns:
-        pd.DataFrame: A dataframe with the counts normalized.
+        A dataframe with the counts normalized.
 
     Raises:
         AssertionError: If the input axis is not 0 or 1.
@@ -233,7 +233,7 @@ def wilcoxon_test(
         value_column: Name of the column containing the values to compare.
 
     Returns:
-        pd.Series: A series containing the test statistic, p-value, and median difference.
+        A series containing the test statistic, p-value, and median difference.
     """
     reference_df = df.loc[df[contrast_column] == reference, :]
     target_df = df.loc[df[contrast_column] == target, :]

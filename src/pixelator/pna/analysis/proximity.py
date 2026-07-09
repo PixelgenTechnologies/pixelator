@@ -106,7 +106,7 @@ def proximity_with_permute_stats(
         min_marker_count: Minimum marker count threshold for filtering the edgelist. Defaults to 0.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the proximity results augmented with
+        A DataFrame containing the proximity results augmented with
         statistical measures, including expected means, standard deviations,
         z-scores, and p-values for the specified result columns.
     """
@@ -159,7 +159,7 @@ def jcs_with_permute_stats(
         min_marker_count: Minimum marker count to consider. Defaults to 0.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the proximity statistics.
+        A DataFrame containing the proximity statistics.
     """
     return proximity_with_permute_stats(
         edgelist,

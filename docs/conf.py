@@ -25,7 +25,12 @@ nitpick_ignore_regex = [
     (r"py:.*", r"numpy\..*"),
     (r"py:.*", r"duckdb\..*"),
     (r"py:.*", r"faiss\..*"),
+    # --- Unresolvable source annotations ---
+    (r"py:.*", r"matplotlib\.pyplot\..*"),
+    (r"py:.*", r"pyarrow\.schema"),
 ]
+
+suppress_warnings = ["ref.python", "autoapi.python_import_resolution"]
 
 extensions = [
     "sphinx.ext.autodoc",
