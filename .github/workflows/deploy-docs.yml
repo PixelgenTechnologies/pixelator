@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  DOCS_BASE_URL: https://PixelgenTechnologies.github.io/pixelator
+  DOCS_BASE_URL: https://karlmoresco.github.io/pixelator
 
 jobs:
   build:
