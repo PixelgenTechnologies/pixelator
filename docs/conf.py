@@ -6,6 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import logging
 import os
 
 project = "Pixelator"
@@ -25,7 +26,53 @@ nitpick_ignore_regex = [
     (r"py:.*", r"numpy\..*"),
     (r"py:.*", r"duckdb\..*"),
     (r"py:.*", r"faiss\..*"),
+    # --- Unresolvable source annotations ---
+    (r"py:.*", r"matplotlib\.pyplot\..*"),
+    (r"py:.*", r"pyarrow\.schema"),
+    # --- Private, internal, TypeVar, protocol-base, and native targets ---
+    # These come from annotations, base-class lists, or TypeVars in the source code.
+    (
+        r"py:.*",
+        r"(Edge|Vertex|VertexSequence|AmpliconBuilder|BarcodeDemuxer"
+        r"|DemuxFilenamePolicy|PipelineRunner|StatisticsClass"
+        r"|NetworkxBasedVertexClustering|T|mpctx_Process)",
+    ),
+    (r"py:.*", r"(_SummaryStatsDict|_PartitionCandidate|_COMPONENT_BATCH_SIZE)"),
+    (r"py:.*", r"pixelator_core\.PyGraphProperties"),
+    (r"py:.*", r"pixelator\.pna\.pixeldataset\.legacy\.PNALegacyPixelDataset"),
+    (r"py:.*", r"pixelator\.types\.PathType"),
+    (
+        r"py:.*",
+        r"pixelator\.common\.graph\.backends\.implementations\._networkx"
+        r"\.NetworkXGraphBackend",
+    ),
 ]
+
+suppress_warnings = [
+    "ref.python",
+    "autoapi.python_import_resolution",
+    "toc.not_included",
+    "toc.not_readable",
+]
+
+# Warnings emitted without a Sphinx type/subtype, so suppress_warnings
+# cannot match them; they are suppressed via a logging filter instead.
+_suppressed_warning_fragments = (
+    # Import placeholders AutoAPI could not resolve.
+    "Unknown type: placeholder",
+    # pna_config is assigned 4 times in config_instance.py; AutoAPI
+    # documents each assignment.
+    "duplicate object description of pixelator.pna.config.config_instance.pna_config",
+)
+
+
+def _keep_warning(record):
+    message = record.getMessage()
+    return not any(fragment in message for fragment in _suppressed_warning_fragments)
+
+
+for _logger_name in ("sphinx.autoapi._mapper", "sphinx.sphinx.domains.python"):
+    logging.getLogger(_logger_name).addFilter(_keep_warning)
 
 extensions = [
     "sphinx.ext.autodoc",

@@ -131,8 +131,7 @@ def create_node_neighborhood_abundance_matrix(
             None.
 
     Returns:
-        pd.DataFrame: A DataFrame containing expanded and normalized node
-        abundance values.
+        A DataFrame containing expanded and normalized node abundance values.
 
     Raises:
         ValueError: If the number of rows in model_mat does not match the number of nodes in the
@@ -237,8 +236,8 @@ def node_pls(
             effects of the covariates in `model_mat` before fitting the PLS model. Defaults to None.
 
     Returns:
-        PLSRegression: A fitted sklearn PLSRegression model, which contains the results of the PLS
-        regression including coefficients, scores, and loadings.
+        A fitted sklearn PLSRegression model, which contains the results of the
+        PLS regression including coefficients, scores, and loadings.
 
     Raises:
         ValueError: If variables are not found or if the input matrices are incompatible.

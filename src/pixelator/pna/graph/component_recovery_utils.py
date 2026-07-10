@@ -264,8 +264,8 @@ def find_clashing_umis(
         component_stats: Statistics object to update with clash information.
 
     Returns:
-        (pl.Series, GraphStatistics): A tuple containing a Polars Series of clashing UMIs
-        and the updated component statistics.
+        A tuple containing a Polars Series of clashing UMIs and the updated
+        component statistics.
     """
     with connect_duckdb() as con:
         con.execute(
@@ -594,8 +594,8 @@ def filter_connected_components_by_size(
         working_dir: Directory for temporary parquet output.
 
     Returns:
-        tuple[Path, GraphStatistics]: Path to the filtered parquet edgelist and updated component
-        statistics.
+        A tuple of the path to the filtered parquet edgelist and the updated
+        component statistics.
 
     Raises:
         ConnectedComponentException: If no components remain after filtering.

@@ -79,7 +79,7 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
         The data from the ``.pxl`` file(s).
 
     Raises:
-        IOException: If a file is not a DuckDB database file.
+        duckdb.IOException: If a file is not a DuckDB database file.
         ValueError: If a file is not a valid ``.pxl`` file, if a sample name cannot be determined from file metadata.
         FileNotFoundError: If any path does not exist on disk.
     """

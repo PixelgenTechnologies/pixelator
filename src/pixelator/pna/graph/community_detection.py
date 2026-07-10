@@ -250,9 +250,9 @@ def refine_component(
         duckdb_config: Configuration for DuckDB connection.
 
     Returns:
-        pd.Series: Sizes of new components after refinement.
-        int: Number of crossing edges removed during refinement.
-        pd.Series: Sizes of discarded components after refinement.
+        A tuple of the sizes of the new components after refinement, the
+        number of crossing edges removed during refinement, and the sizes of
+        the discarded components after refinement.
     """
     with connect_duckdb(config=duckdb_config) as con:
         edgelist = con.execute(f"""
@@ -369,7 +369,7 @@ def run_leiden_refinement(
         max_workers: Maximum number of worker processes to use.
 
     Returns:
-        tuple[GraphStatistics, pl.DataFrame]: Updated component statistics and DataFrame of
+        A tuple of the updated component statistics and a DataFrame of
         discarded component sizes.
 
     Raises:
@@ -494,7 +494,8 @@ def find_components(
         n_threads: Number of threads to use for parallel processing.
 
     Returns:
-        tuple[GraphStatistics, Path]: Component statistics and path to the edgelist with components.
+        A tuple of the component statistics and the path to the edgelist with
+        components.
     """
     logger.info("Starting component finding process.")
     component_stats = initialize_graph_statistics(
