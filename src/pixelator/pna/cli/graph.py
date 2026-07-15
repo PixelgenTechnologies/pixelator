@@ -159,7 +159,7 @@ from pixelator.pna.graph.report import GraphSampleReport
 )
 @click.option(
     "--component-size-min-threshold",
-    default=None,
+    default=MIN_PNA_COMPONENT_SIZE,
     required=False,
     type=click.IntRange(min=1, max=None),
     show_default=True,
