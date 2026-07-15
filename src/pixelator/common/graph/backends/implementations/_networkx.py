@@ -333,6 +333,8 @@ class NetworkXGraphBackend(GraphBackend):
             )
         if layout_algorithm == "coarsened_pmds_3d":
             layout_inst = coarsened_pmds_layout(raw, seed=random_seed, **kwargs)
+        if layout_algorithm == "spectral_3d":
+            layout_inst = spectral_layout(raw)
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
@@ -1049,6 +1051,43 @@ def coarsened_pmds_layout(
     xyz_full = normalize_layout_coordinates(xyz_full)
 
     return {nodes[i]: xyz_full[i] for i in range(n_nodes)}
+
+
+def spectral_layout(
+    g: nx.Graph,
+    dim: Literal[2, 3] = 3,
+    normalize: bool = False,
+    tolerance: float=0,
+):
+    """Use a spectral layout algorithm to compute coordinates from a graph."""
+
+    # validate input
+    if g.is_directed():
+        raise ValueError("g must be an undirected graph.")
+    if not nx.is_connected(g):
+        raise ValueError("g must be connected.")
+
+    if dim not in (2, 3):
+        raise ValueError("dim must be an integer that's either 2 or 3.")
+
+    # get node-list and define the (sparse) adjacency matrix A
+    nodes = list(g.nodes)
+    A = nx.to_scipy_sparse_array(g, nodelist=nodes, weight=None, format="csr")
+
+    # build the Laplacian
+    L = sp.sparse.csgraph.laplacian(A)
+
+    # compute eigenpairs (k=dim + 1 to account for trivial 0-eigenvalue)
+    vals, vecs = sp.sparse.linalg.eigsh(L, k=dim + 1, which="SM", tol=tolerance)
+
+    # get coordinates
+    order = np.argsort(vals)
+    raw_coordinates = vecs[:, order[1 : dim + 1]]
+
+    # normalize
+    coordinates = normalize_layout_coordinates(raw_coordinates)
+
+    return {nodes[i]: coordinates[i,  :] for i in range(len(nodes))}
 
 
 def _prob_edge_weights(

@@ -36,6 +36,7 @@ SupportedLayoutAlgorithm = Literal[
     "pmds_3d",
     "wpmds_3d",
     "coarsened_pmds_3d",
+    "spectral_3d",
 ]
 
 
