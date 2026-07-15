@@ -148,7 +148,7 @@ from pixelator.pna.graph.report import GraphSampleReport
 )
 @click.option(
     "--component-size-max-threshold",
-    default=None,
+    default=500_000,
     required=False,
     type=click.IntRange(min=1, max=None),
     show_default=True,
