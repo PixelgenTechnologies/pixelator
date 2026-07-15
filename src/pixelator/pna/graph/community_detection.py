@@ -490,7 +490,7 @@ def find_components(
         edge_cycle_verification: Whether to perform edge cycle verification.
         min_read_count: Minimum read count threshold for an edge to be retained.
         refinement_options: Options for staged refinement during community detection.
-        component_size_threshold: Minimum size threshold for components to be retained.
+        component_size_threshold: Minimum and maximum size threshold for components to be retained.
         n_threads: Number of threads to use for parallel processing.
 
     Returns:
