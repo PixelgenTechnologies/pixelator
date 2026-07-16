@@ -12,6 +12,7 @@ from functools import partial
 from pathlib import Path
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 import polars as pl
 from graspologic_native import leiden
@@ -477,7 +478,7 @@ def find_components(
     refinement_options: StagedRefinementOptions = StagedRefinementOptions(),
     component_size_threshold: bool | tuple[int, int] = (
         MIN_PNA_COMPONENT_SIZE,
-        2**32 - 1,
+        np.iinfo(np.uint64).max,
     ),
     n_threads: int = 1,
 ) -> tuple[GraphStatistics, Path]:
