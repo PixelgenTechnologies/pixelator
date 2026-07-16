@@ -48,7 +48,6 @@ suppress_warnings = [
     "ref.python",
     "autoapi.python_import_resolution",
     "toc.not_included",
-    "toc.not_readable",
 ]
 
 # Warnings emitted without a Sphinx type/subtype, so suppress_warnings
