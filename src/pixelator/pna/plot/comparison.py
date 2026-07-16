@@ -13,6 +13,7 @@ from typing import Sequence
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from pixelator.pna.analysis.comparison import SamplePairComparisonResult
@@ -41,7 +42,7 @@ def _plot_similarity_scatter(ax, data, x, y, correlation, xlabel, ylabel, title)
 
 def plot_sample_pair_comparison(
     result: SamplePairComparisonResult,
-) -> tuple[Figure, tuple[plt.Axes, plt.Axes]]:
+) -> tuple[Figure, tuple[Axes, Axes]]:
     """Plot the abundance and proximity comparison for a sample pair.
 
     Produces a figure with two scatter plots, both expected to be concentrated
@@ -57,8 +58,8 @@ def plot_sample_pair_comparison(
             `pixelator.pna.analysis.comparison.compare_sample_pair`.
 
     Returns:
-        A tuple of the created `matplotlib.figure.Figure` and its two `Axes`
-        (abundance, proximity).
+        A tuple of the created figure and its two
+        axes (abundance, proximity).
 
     """
     sample1_name = result.sample1_name

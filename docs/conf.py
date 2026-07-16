@@ -26,9 +26,6 @@ nitpick_ignore_regex = [
     (r"py:.*", r"numpy\..*"),
     (r"py:.*", r"duckdb\..*"),
     (r"py:.*", r"faiss\..*"),
-    # --- Unresolvable source annotations ---
-    (r"py:.*", r"matplotlib\.pyplot\..*"),
-    (r"py:.*", r"pyarrow\.schema"),
     # --- Private, internal, TypeVar, protocol-base, and native targets ---
     # These come from annotations, base-class lists, or TypeVars in the source code.
     (
