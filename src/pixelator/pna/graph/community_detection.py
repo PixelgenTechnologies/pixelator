@@ -565,16 +565,21 @@ def find_components(
     logger.info(
         "Writing hive partitioned edgelist without out-of-size-bound components."
     )
+    upper_component_size_bound = (
+        component_size_threshold[1]
+        if isinstance(component_size_threshold, tuple)
+        else np.iinfo(np.uint64).max
+    )
     logger.info(
         "Filtering connected components by size: min=%d, max=%d",
         refinement_options.initial_stage_options.min_component_size_to_prune,
-        component_size_threshold[1],
+        upper_component_size_bound,
     )
     hive_partitioned_edgelist_path, discard_sizes = (
         write_hive_partitioned_edgelist_without_out_of_size_bound_components(
             input_edgelist_path=partitioned_edgelist_path,
             min_component_size_to_prune=refinement_options.initial_stage_options.min_component_size_to_prune,
-            max_component_size_to_prune=component_size_threshold[1],
+            max_component_size_to_prune=upper_component_size_bound,
             working_dir=working_dir,
         )
     )
