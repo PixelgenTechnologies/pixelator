@@ -30,7 +30,7 @@ from pixelator.pna.graph.component_recovery_utils import (
     name_components_with_umi_hashes_from_parquet,
     populate_component_stats_from_hybrid_detection,
     remove_clashing_umis,
-    write_hive_partitioned_edgelist_without_small_components,
+    write_hive_partitioned_edgelist_without_out_of_size_bound_components,
 )
 from pixelator.pna.graph.constants import (
     LEIDEN_RANDOM_SEED,
@@ -562,11 +562,19 @@ def find_components(
         post_recovery_stats=post_recovery_stats,
     )
 
-    logger.info("Writing hive partitioned edgelist without small components.")
+    logger.info(
+        "Writing hive partitioned edgelist without out-of-size-bound components."
+    )
+    logger.info(
+        "Filtering connected components by size: min=%d, max=%d",
+        refinement_options.initial_stage_options.min_component_size_to_prune,
+        component_size_threshold[1],
+    )
     hive_partitioned_edgelist_path, discard_sizes = (
-        write_hive_partitioned_edgelist_without_small_components(
+        write_hive_partitioned_edgelist_without_out_of_size_bound_components(
             input_edgelist_path=partitioned_edgelist_path,
             min_component_size_to_prune=refinement_options.initial_stage_options.min_component_size_to_prune,
+            max_component_size_to_prune=component_size_threshold[1],
             working_dir=working_dir,
         )
     )

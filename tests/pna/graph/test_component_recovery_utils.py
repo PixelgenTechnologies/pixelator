@@ -10,7 +10,7 @@ from pixelator.pna.graph.component_recovery_utils import (
     get_count_statistics,
     name_components_with_umi_hashes,
     name_components_with_umi_hashes_from_parquet,
-    write_hive_partitioned_edgelist_without_small_components,
+    write_hive_partitioned_edgelist_without_out_of_size_bound_components,
 )
 from pixelator.pna.graph.report import GraphStatistics
 
@@ -41,7 +41,7 @@ def test_get_count_statistics(tmp_path: Path) -> None:
     }
 
 
-def test_write_hive_partitioned_edgelist_without_small_components_prunes(
+def test_write_hive_partitioned_edgelist_without_out_of_size_bound_components(
     tmp_path: Path,
 ) -> None:
     """Test components below the UMI score threshold are omitted and listed as discarded.
@@ -58,10 +58,12 @@ def test_write_hive_partitioned_edgelist_without_small_components_prunes(
         }
     ).write_parquet(partitioned)
 
-    out_path, discarded = write_hive_partitioned_edgelist_without_small_components(
-        input_edgelist_path=partitioned,
-        min_component_size_to_prune=3,
-        working_dir=tmp_path,
+    out_path, discarded = (
+        write_hive_partitioned_edgelist_without_out_of_size_bound_components(
+            input_edgelist_path=partitioned,
+            min_component_size_to_prune=3,
+            working_dir=tmp_path,
+        )
     )
 
     assert out_path == tmp_path / "hive_partitioned_edgelist.parquet"
@@ -74,7 +76,7 @@ def test_write_hive_partitioned_edgelist_without_small_components_prunes(
     assert discarded_sorted["n_umi"].to_list() == [2]
 
 
-def test_write_hive_partitioned_edgelist_without_small_components_nothing_discarded(
+def test_write_hive_partitioned_edgelist_without_out_of_size_bound_components_nothing_discarded(
     tmp_path: Path,
 ) -> None:
     """When every component meets the threshold, discarded frame is empty and all rows are kept.
@@ -91,7 +93,7 @@ def test_write_hive_partitioned_edgelist_without_small_components_nothing_discar
         }
     ).write_parquet(partitioned)
 
-    _, discarded = write_hive_partitioned_edgelist_without_small_components(
+    _, discarded = write_hive_partitioned_edgelist_without_out_of_size_bound_components(
         input_edgelist_path=partitioned,
         min_component_size_to_prune=2,
         working_dir=tmp_path,
