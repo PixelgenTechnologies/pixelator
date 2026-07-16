@@ -5,10 +5,8 @@ from typing import Any
 
 from ruamel import yaml
 
-from pixelator.types import PathType
 
-
-def load_yaml_file(path: PathType) -> Any:
+def load_yaml_file(path: Path) -> Any:
     """Load an arbitrary yaml file.
 
     Args:
@@ -20,7 +18,6 @@ def load_yaml_file(path: PathType) -> Any:
         FileExistsError: If the path does not exist
         TypeError: If the path is not a yaml file
     """
-    path = Path(path)
     if not path.is_file():
         raise FileExistsError(f"{path} is not a file")
 

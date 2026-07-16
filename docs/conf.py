@@ -39,7 +39,6 @@ nitpick_ignore_regex = [
     ),
     (r"py:.*", r"(_SummaryStatsDict|_PartitionCandidate|_COMPONENT_BATCH_SIZE)"),
     (r"py:.*", r"pixelator_core\.PyGraphProperties"),
-    (r"py:.*", r"pixelator\.pna\.pixeldataset\.legacy\.PNALegacyPixelDataset"),
     (r"py:.*", r"pixelator\.types\.PathType"),
     (
         r"py:.*",
