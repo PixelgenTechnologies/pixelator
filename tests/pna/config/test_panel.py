@@ -1,5 +1,6 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import pandas as pd
@@ -54,6 +55,7 @@ def test_panel_validation(panel_df):
     assert panel.markers == ["marker1", "marker2", "marker3"]
     assert_frame_equal(panel.df, panel_df)
     assert panel.filename == "test.csv"
+    assert panel.filepath is None
     assert panel.size == 3
 
 
@@ -180,6 +182,7 @@ MarkerA,no,ACTTCCTAGG,ACTTCCTAGG
 
     assert panel.name == "test-pna-panel"
     assert panel.version == "1.0.0"
+    assert panel.filepath == Path(tmp_file.name).resolve()
     assert "trailing comma" in caplog.text.lower()
 
 

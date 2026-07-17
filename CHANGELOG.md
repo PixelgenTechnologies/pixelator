@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.gating.determine_marker_threshold` to determine a positive/negative CLR threshold for a marker, warning and skipping markers whose distribution appears unimodal.
 - `pixelator.pna.plot.plot_sample_pair_comparison` and `write_sample_pair_comparison_report` to plot and collect sample pair abundance/proximity comparisons into an HTML report.
 - Setup for generating API documentation pages from source files, and a workflow for building and deploying the docs automatically.
+- `PNAAssay` and `PNAAntibodyPanel` now hold an optional path to the path they were parsed from.
 
 ### Changed
 - The default `min_allowed_nodes_pct` in `adaptive_core_expansion` has been changed from 0.8 to 0.9, meaning that a valid "high" core partition must include at least 90% of all nodes. Components that don't meet this criteria will not be denoised by ACE.

@@ -7,6 +7,7 @@ import enum
 import json
 import typing
 from functools import cache
+from pathlib import Path
 from typing import Any, List, Mapping, Optional, Set, Tuple
 
 try:
@@ -342,6 +343,7 @@ class PNAAssay:
     Attributes:
         name: Name of the assay
         assay_spec: List of regions defining the assay structure
+        filepath: Path to the file the assay was loaded from, if any
     """
 
     _REQUIRED_REGIONS = {
@@ -355,10 +357,16 @@ class PNAAssay:
         "uei",
     }
 
-    def __init__(self, name: str, assay_spec: Optional[List[Region]] = None):
+    def __init__(
+        self,
+        name: str,
+        assay_spec: Optional[List[Region]] = None,
+        filepath: Optional[PathType] = None,
+    ):
         """Initialize an assay."""
         self.name = name
         self.assay_spec: List[Region] = assay_spec or []
+        self.filepath: Optional[Path] = Path(filepath).resolve() if filepath else None
 
         self._update_parent_ids()
 
@@ -454,7 +462,9 @@ class PNAAssay:
         """
         yaml_obj = load_yaml_file(filename)
         checked_obj = AssayModel.model_validate(yaml_obj)
-        return cls._load_assay_model(checked_obj)
+        assay = cls._load_assay_model(checked_obj)
+        assay.filepath = Path(filename).resolve()
+        return assay
 
     def to_json(self):
         """Return a json representation of the assay."""
