@@ -12,6 +12,7 @@ from functools import partial
 from pathlib import Path
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 import polars as pl
 from graspologic_native import leiden
@@ -30,7 +31,7 @@ from pixelator.pna.graph.component_recovery_utils import (
     name_components_with_umi_hashes_from_parquet,
     populate_component_stats_from_hybrid_detection,
     remove_clashing_umis,
-    write_hive_partitioned_edgelist_without_small_components,
+    write_hive_partitioned_edgelist_without_out_of_size_bound_components,
 )
 from pixelator.pna.graph.constants import (
     LEIDEN_RANDOM_SEED,
@@ -477,7 +478,7 @@ def find_components(
     refinement_options: StagedRefinementOptions = StagedRefinementOptions(),
     component_size_threshold: bool | tuple[int, int] = (
         MIN_PNA_COMPONENT_SIZE,
-        2**32 - 1,
+        np.iinfo(np.uint64).max,
     ),
     n_threads: int = 1,
 ) -> tuple[GraphStatistics, Path]:
@@ -490,7 +491,7 @@ def find_components(
         edge_cycle_verification: Whether to perform edge cycle verification.
         min_read_count: Minimum read count threshold for an edge to be retained.
         refinement_options: Options for staged refinement during community detection.
-        component_size_threshold: Minimum size threshold for components to be retained.
+        component_size_threshold: Minimum and maximum size threshold for components to be retained.
         n_threads: Number of threads to use for parallel processing.
 
     Returns:
@@ -562,9 +563,21 @@ def find_components(
         post_recovery_stats=post_recovery_stats,
     )
 
-    logger.info("Writing hive partitioned edgelist without small components.")
+    logger.info(
+        "Writing hive partitioned edgelist without out-of-size-bound components."
+    )
+    upper_component_size_bound = (
+        component_size_threshold[1]
+        if isinstance(component_size_threshold, tuple)
+        else np.iinfo(np.uint64).max
+    )
+    logger.info(
+        "Filtering connected components by size: min=%d, max=%d",
+        refinement_options.initial_stage_options.min_component_size_to_prune,
+        upper_component_size_bound,
+    )
     hive_partitioned_edgelist_path, discard_sizes = (
-        write_hive_partitioned_edgelist_without_small_components(
+        write_hive_partitioned_edgelist_without_out_of_size_bound_components(
             input_edgelist_path=partitioned_edgelist_path,
             min_component_size_to_prune=refinement_options.initial_stage_options.min_component_size_to_prune,
             working_dir=working_dir,
