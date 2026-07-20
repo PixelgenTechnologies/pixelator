@@ -8,6 +8,22 @@ from pathlib import Path
 
 VERSION_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
+REDIRECT_HTML = """\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting...</title>
+  <meta http-equiv="refresh" content="0; url={version}/">
+  <link rel="canonical" href="{version}/">
+  <script>location.replace("{version}/");</script>
+</head>
+<body>
+  <p>Redirecting to <a href="{version}/">{version}</a>…</p>
+</body>
+</html>
+"""
+
 
 def main() -> None:
     """Build switcher JSON from versioned docs directories."""
@@ -34,6 +50,13 @@ def main() -> None:
         json.dumps(data, indent=2) + "\n",
         encoding="utf-8",
     )
+
+    if versions:
+        latest = versions[0][1]
+        (out_dir / "index.html").write_text(
+            REDIRECT_HTML.format(version=latest),
+            encoding="utf-8",
+        )
 
 
 if __name__ == "__main__":

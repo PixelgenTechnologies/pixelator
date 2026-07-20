@@ -128,7 +128,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 _docs_version = os.environ.get("DOCS_VERSION", "latest")
 _docs_base_url = os.environ.get(
     "DOCS_BASE_URL",
-    "https://PixelgenTechnologies.github.io/pixelator",
+    "https://karlmoresco.github.io/pixelator",
 ).rstrip("/")
 
 html_baseurl = f"{_docs_base_url}/"
