@@ -190,3 +190,12 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "requests": ("https://requests.readthedocs.io/en/stable/", None),
 }
+
+def skip_typevars(app, what, name, obj, skip, options):
+    if what == "data" and obj.name == "T":
+        return True
+    return None
+
+
+def setup(app):
+    app.connect("autoapi-skip-member", skip_typevars)
