@@ -5,9 +5,10 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 from typing import Optional, Tuple
 
-import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from pixelator.pna.plot.comparison import (
     plot_sample_pair_comparison,
@@ -23,7 +24,7 @@ __all__ = [
 
 def molecule_rank_plot(
     data: pd.DataFrame, group_by: Optional[str] = None
-) -> Tuple[plt.Figure, plt.Axes]:
+) -> Tuple[Figure, Axes]:
     """Plot molecule count (``n_umi``) per component against component rank (based on ``n_umi``).
 
     Each row of data represents one component. Components are ranked by

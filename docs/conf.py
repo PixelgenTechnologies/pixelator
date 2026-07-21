@@ -26,9 +26,6 @@ nitpick_ignore_regex = [
     (r"py:.*", r"numpy\..*"),
     (r"py:.*", r"duckdb\..*"),
     (r"py:.*", r"faiss\..*"),
-    # --- Unresolvable source annotations ---
-    (r"py:.*", r"matplotlib\.pyplot\..*"),
-    (r"py:.*", r"pyarrow\.schema"),
     # --- Private, internal, TypeVar, protocol-base, and native targets ---
     # These come from annotations, base-class lists, or TypeVars in the source code.
     (
@@ -39,7 +36,6 @@ nitpick_ignore_regex = [
     ),
     (r"py:.*", r"(_SummaryStatsDict|_PartitionCandidate|_COMPONENT_BATCH_SIZE)"),
     (r"py:.*", r"pixelator_core\.PyGraphProperties"),
-    (r"py:.*", r"pixelator\.pna\.pixeldataset\.legacy\.PNALegacyPixelDataset"),
     (r"py:.*", r"pixelator\.types\.PathType"),
     (
         r"py:.*",
@@ -51,8 +47,6 @@ nitpick_ignore_regex = [
 suppress_warnings = [
     "ref.python",
     "autoapi.python_import_resolution",
-    "toc.not_included",
-    "toc.not_readable",
 ]
 
 # Warnings emitted without a Sphinx type/subtype, so suppress_warnings
@@ -196,3 +190,13 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "requests": ("https://requests.readthedocs.io/en/stable/", None),
 }
+
+
+def skip_typevars(app, what, name, obj, skip, options):
+    if what == "data" and obj.name == "T":
+        return True
+    return None
+
+
+def setup(app):
+    app.connect("autoapi-skip-member", skip_typevars)

@@ -294,7 +294,7 @@ class DemuxWriterProcess(mpctx_Process):
         filename_policy: DemuxFilenamePolicy,
         queue: multiprocessing.Queue,
         connection: Connection,
-        schema: pa.schema,
+        schema: pa.Schema,
     ):
         """Initialize a DemuxWriterProcess instance.
 

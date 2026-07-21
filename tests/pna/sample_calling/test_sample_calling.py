@@ -18,16 +18,14 @@ from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling import (
+    _add_original_hash_counts_to_obs,
+    _collect_nodes_to_remove,
     collect_hash_info,
     create_final_report,
     sample_calling,
     warn_if_undetermined_has_high_enrichment,
 )
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
-from pixelator.pna.sample_calling.sample_calling import (
-    _add_original_hash_counts_to_obs,
-    _collect_nodes_to_remove,
-)
 
 
 def test_add_original_hash_counts_includes_all_panel_antibodies():
@@ -799,9 +797,7 @@ def test_warn_if_undetermined_has_high_enrichment_logs_when_fraction_above_five_
     Args:
         caplog: Caplog.
     """
-    with caplog.at_level(
-        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
-    ):
+    with caplog.at_level(logging.WARNING, logger="pixelator.pna.sample_calling"):
         warn_if_undetermined_has_high_enrichment(
             undetermined_enrichment_factors=np.array([10.5] * 6 + [1.5] * 94),
             enrichment_threshold=10.0,
@@ -819,9 +815,7 @@ def test_warn_if_undetermined_has_high_enrichment_no_log_when_fraction_is_exactl
     Args:
         caplog: Caplog.
     """
-    with caplog.at_level(
-        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
-    ):
+    with caplog.at_level(logging.WARNING, logger="pixelator.pna.sample_calling"):
         warn_if_undetermined_has_high_enrichment(
             undetermined_enrichment_factors=np.array([10.5] * 5 + [1.5] * 95),
             enrichment_threshold=10.0,
@@ -837,9 +831,7 @@ def test_warn_if_undetermined_has_high_enrichment_no_log_when_all_at_or_below_th
     Args:
         caplog: Caplog.
     """
-    with caplog.at_level(
-        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
-    ):
+    with caplog.at_level(logging.WARNING, logger="pixelator.pna.sample_calling"):
         warn_if_undetermined_has_high_enrichment(
             undetermined_enrichment_factors=np.full(50, 10.0),
             enrichment_threshold=10.0,
@@ -857,9 +849,7 @@ def test_warn_if_undetermined_has_high_enrichment_logs_for_single_high_value(cap
     Args:
         caplog: Caplog.
     """
-    with caplog.at_level(
-        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
-    ):
+    with caplog.at_level(logging.WARNING, logger="pixelator.pna.sample_calling"):
         warn_if_undetermined_has_high_enrichment(
             undetermined_enrichment_factors=np.array([10.5]),
             enrichment_threshold=10.0,
