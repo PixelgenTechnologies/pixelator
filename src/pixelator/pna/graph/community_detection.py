@@ -123,12 +123,15 @@ def map_working_to_original_umi_names(
 def calculate_post_recovery_component_statistics(
     edgelist_with_components_path: Path,
     component_stats: GraphStatistics,
+    discarded_large_components: pl.DataFrame | None = None,
 ) -> GraphStatistics:
     """Calculate and update graph statistics after multiplet recovery.
 
     Args:
         edgelist_with_components_path: Path to the edgelist with components in Parquet format.
         component_stats: Graph statistics to be updated.
+        discarded_large_components: Components already discarded for being above the upper size
+            bound before this point.
 
     Returns:
         GraphStatistics: Updated graph statistics.
@@ -144,17 +147,28 @@ def calculate_post_recovery_component_statistics(
         )
     ).collect()
 
+    all_component_sizes = node_comp_stats.select("n_umi")
+    n_discarded_large_components = 0
+    if discarded_large_components is not None and discarded_large_components.height > 0:
+        n_discarded_large_components = discarded_large_components.height
+        all_component_sizes = pl.concat(
+            [all_component_sizes, discarded_large_components.select("n_umi")],
+            how="vertical",
+        )
+
     component_stats.fraction_nodes_in_largest_component_post_recovery = (
-        node_comp_stats.select(pl.col("n_umi")).max()[0]
-        / node_comp_stats.select(pl.col("n_umi")).sum()[0]
+        all_component_sizes.select(pl.col("n_umi")).max()[0]
+        / all_component_sizes.select(pl.col("n_umi")).sum()[0]
     )[0, 0]
-    component_stats.component_count_post_recovery = node_comp_stats.height
+    component_stats.component_count_post_recovery = (
+        node_comp_stats.height + n_discarded_large_components
+    )
     component_stats.edge_count_post_recovery = node_comp_stats.select(
         pl.sum("n_edges")
     )[0, 0]
-    component_stats.node_count_post_recovery = node_comp_stats.select(pl.sum("n_umi"))[
-        0, 0
-    ]
+    component_stats.node_count_post_recovery = all_component_sizes.select(
+        pl.sum("n_umi")
+    )[0, 0]
 
     return component_stats
 
@@ -580,9 +594,22 @@ def find_components(
         write_hive_partitioned_edgelist_without_out_of_size_bound_components(
             input_edgelist_path=partitioned_edgelist_path,
             min_component_size_to_prune=refinement_options.initial_stage_options.min_component_size_to_prune,
+            max_component_size_to_prune=upper_component_size_bound,
             working_dir=working_dir,
         )
     )
+    discarded_large_components = discard_sizes.filter(
+        pl.col("n_umi") > upper_component_size_bound
+    )
+
+    if not any(hive_partitioned_edgelist_path.iterdir()):
+        msg = (
+            "No connected components found in the graph after filtering by component size. "
+            "Likely all components were filtered away for being too small or too large. "
+            "This indicates some serious issue with the data, or that the configured size "
+            "thresholds are too strict. Will not continue with the rest of the computations."
+        )
+        raise ConnectedComponentException(msg)
 
     latest_working_edgelist_path = hive_partitioned_edgelist_path
 
@@ -606,6 +633,7 @@ def find_components(
         component_stats = calculate_post_recovery_component_statistics(
             edgelist_with_components_path=latest_working_edgelist_path,
             component_stats=component_stats,
+            discarded_large_components=discarded_large_components,
         )
 
     logger.debug("Writing unified edgelist.")
