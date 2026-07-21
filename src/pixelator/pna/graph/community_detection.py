@@ -582,7 +582,10 @@ def find_components(
     )
     upper_component_size_bound = (
         component_size_threshold[1]
-        if isinstance(component_size_threshold, tuple)
+        if (
+            isinstance(component_size_threshold, tuple)
+            and component_size_threshold[1] is not None
+        )
         else np.iinfo(np.uint64).max
     )
     logger.info(
