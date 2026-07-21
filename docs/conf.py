@@ -191,6 +191,7 @@ intersphinx_mapping = {
     "requests": ("https://requests.readthedocs.io/en/stable/", None),
 }
 
+
 def skip_typevars(app, what, name, obj, skip, options):
     if what == "data" and obj.name == "T":
         return True
