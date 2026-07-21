@@ -57,6 +57,12 @@ def main() -> None:
             REDIRECT_HTML.format(version=latest),
             encoding="utf-8",
         )
+    else:
+        # Fallback if no versions exist
+        (out_dir / "index.html").write_text(
+            "<!DOCTYPE html><html><body><p>No documentation available.</p></body></html>",
+            encoding="utf-8",
+        )
 
 
 if __name__ == "__main__":
