@@ -147,12 +147,15 @@ def calculate_post_recovery_component_statistics(
         )
     ).collect()
 
-    all_component_sizes = node_comp_stats.select("n_umi")
+    all_component_sizes = node_comp_stats.select(["n_umi", "n_edges"])
     n_discarded_large_components = 0
     if discarded_large_components is not None and discarded_large_components.height > 0:
         n_discarded_large_components = discarded_large_components.height
         all_component_sizes = pl.concat(
-            [all_component_sizes, discarded_large_components.select("n_umi")],
+            [
+                all_component_sizes,
+                discarded_large_components.select(["n_umi", "n_edges"]),
+            ],
             how="vertical",
         )
 
@@ -163,7 +166,7 @@ def calculate_post_recovery_component_statistics(
     component_stats.component_count_post_recovery = (
         node_comp_stats.height + n_discarded_large_components
     )
-    component_stats.edge_count_post_recovery = node_comp_stats.select(
+    component_stats.edge_count_post_recovery = all_component_sizes.select(
         pl.sum("n_edges")
     )[0, 0]
     component_stats.node_count_post_recovery = all_component_sizes.select(
@@ -628,7 +631,9 @@ def find_components(
                 component_stats=component_stats,
                 max_workers=n_threads,
             )
-            discard_sizes = pl.concat((discard_sizes, new_discarded_sizes))
+            discard_sizes = pl.concat(
+                (discard_sizes.select(["component", "n_umi"]), new_discarded_sizes)
+            )
             logger.info(
                 f"Refinement stages completed in {time.time() - time_start:.2f} seconds."
             )

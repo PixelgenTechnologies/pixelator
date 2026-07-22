@@ -228,12 +228,13 @@ def write_hive_partitioned_edgelist_without_out_of_size_bound_components(
                     CAST(
                         COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)
                         AS UINT32
-                    ) AS n_umi
+                    ) AS n_umi,
+                    COUNT(*) AS n_edges
                 FROM parquet_scan('{str(input_edgelist_path)}')
                 GROUP BY component;
 
             CREATE TABLE discarded_components AS
-                SELECT component, n_umi
+                SELECT component, n_umi, n_edges
                 FROM component_counts
                 WHERE n_umi < {min_sz} OR n_umi > {max_sz};
 

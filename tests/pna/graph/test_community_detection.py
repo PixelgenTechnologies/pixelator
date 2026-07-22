@@ -57,6 +57,7 @@ def test_calculate_post_recovery_component_statistics_includes_discarded_large_c
         {
             "component": ["huge"],
             "n_umi": pl.Series([1000], dtype=pl.UInt32),
+            "n_edges": pl.Series([5000], dtype=pl.UInt32),
         }
     )
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as f:
