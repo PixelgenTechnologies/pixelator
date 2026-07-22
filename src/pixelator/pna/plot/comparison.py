@@ -16,15 +16,22 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
+from pixelator.common.plot import PIXELGEN_ACCENT_COLORS
 from pixelator.pna.analysis.comparison import SamplePairComparisonResult
+
+_REFERENCE_LINE_COLOR = PIXELGEN_ACCENT_COLORS["reds"][6]
 
 
 def _plot_similarity_scatter(ax, data, x, y, correlation, xlabel, ylabel, title):
-    sns.scatterplot(data=data, x=x, y=y, alpha=0.7, ax=ax)
+    sns.scatterplot(
+        data=data, x=x, y=y, alpha=0.7, ax=ax, color=PIXELGEN_ACCENT_COLORS["blues"][6]
+    )
 
     lo = min(data[x].min(), data[y].min())
     hi = max(data[x].max(), data[y].max())
-    ax.plot([lo, hi], [lo, hi], color="red", linestyle="--", label="y = x")
+    ax.plot(
+        [lo, hi], [lo, hi], color=_REFERENCE_LINE_COLOR, linestyle="--", label="y = x"
+    )
 
     ax.text(
         0.05,
