@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import click
+import numpy as np
 
 from pixelator.common.utils import (
     create_output_stage_dir,
@@ -154,7 +155,8 @@ from pixelator.pna.graph.report import GraphSampleReport
     show_default=True,
     help=(
         "Components with more nodes than this will be filtered from the output data. "
-        "This is typically not needed. Setting this will disable the automatic size filtering."
+        "Setting this (or --component-size-min-threshold) switches from automatic "
+        "(dynamic) component size filtering to a fixed threshold."
     ),
 )
 @click.option(
@@ -165,7 +167,8 @@ from pixelator.pna.graph.report import GraphSampleReport
     show_default=True,
     help=(
         "Components with fewer nodes than this will be filtered from the output data. "
-        "This is typically not needed. Setting this will disable the automatic size filtering."
+        "Setting this (or --component-size-max-threshold) switches from automatic "
+        "(dynamic) component size filtering to a fixed threshold."
     ),
 )
 @panel_option
@@ -273,8 +276,12 @@ def graph(
     component_size_threshold = True
     if any([component_size_min_threshold, component_size_max_threshold]):
         component_size_threshold = (
-            component_size_min_threshold,
-            component_size_max_threshold,
+            component_size_min_threshold
+            if component_size_min_threshold is not None
+            else MIN_PNA_COMPONENT_SIZE,
+            component_size_max_threshold
+            if component_size_max_threshold is not None
+            else int(np.iinfo(np.uint32).max),
         )
 
     n_cores = ctx.obj.get("CORES")

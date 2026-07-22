@@ -12,6 +12,7 @@ from functools import partial
 from pathlib import Path
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 import polars as pl
 from graspologic_native import leiden
@@ -30,7 +31,7 @@ from pixelator.pna.graph.component_recovery_utils import (
     name_components_with_umi_hashes_from_parquet,
     populate_component_stats_from_hybrid_detection,
     remove_clashing_umis,
-    write_hive_partitioned_edgelist_without_small_components,
+    write_hive_partitioned_edgelist_without_out_of_size_bound_components,
 )
 from pixelator.pna.graph.constants import (
     LEIDEN_RANDOM_SEED,
@@ -122,12 +123,15 @@ def map_working_to_original_umi_names(
 def calculate_post_recovery_component_statistics(
     edgelist_with_components_path: Path,
     component_stats: GraphStatistics,
+    discarded_large_components: pl.DataFrame | None = None,
 ) -> GraphStatistics:
     """Calculate and update graph statistics after multiplet recovery.
 
     Args:
         edgelist_with_components_path: Path to the edgelist with components in Parquet format.
         component_stats: Graph statistics to be updated.
+        discarded_large_components: Components already discarded for being above the upper size
+            bound before this point.
 
     Returns:
         GraphStatistics: Updated graph statistics.
@@ -143,17 +147,31 @@ def calculate_post_recovery_component_statistics(
         )
     ).collect()
 
+    all_component_sizes = node_comp_stats.select(["n_umi", "n_edges"])
+    n_discarded_large_components = 0
+    if discarded_large_components is not None and discarded_large_components.height > 0:
+        n_discarded_large_components = discarded_large_components.height
+        all_component_sizes = pl.concat(
+            [
+                all_component_sizes,
+                discarded_large_components.select(["n_umi", "n_edges"]),
+            ],
+            how="vertical",
+        )
+
     component_stats.fraction_nodes_in_largest_component_post_recovery = (
-        node_comp_stats.select(pl.col("n_umi")).max()[0]
-        / node_comp_stats.select(pl.col("n_umi")).sum()[0]
+        all_component_sizes.select(pl.col("n_umi")).max()[0]
+        / all_component_sizes.select(pl.col("n_umi")).sum()[0]
     )[0, 0]
-    component_stats.component_count_post_recovery = node_comp_stats.height
-    component_stats.edge_count_post_recovery = node_comp_stats.select(
+    component_stats.component_count_post_recovery = (
+        node_comp_stats.height + n_discarded_large_components
+    )
+    component_stats.edge_count_post_recovery = all_component_sizes.select(
         pl.sum("n_edges")
     )[0, 0]
-    component_stats.node_count_post_recovery = node_comp_stats.select(pl.sum("n_umi"))[
-        0, 0
-    ]
+    component_stats.node_count_post_recovery = all_component_sizes.select(
+        pl.sum("n_umi")
+    )[0, 0]
 
     return component_stats
 
@@ -477,7 +495,7 @@ def find_components(
     refinement_options: StagedRefinementOptions = StagedRefinementOptions(),
     component_size_threshold: bool | tuple[int, int] = (
         MIN_PNA_COMPONENT_SIZE,
-        2**32 - 1,
+        np.iinfo(np.uint64).max,
     ),
     n_threads: int = 1,
 ) -> tuple[GraphStatistics, Path]:
@@ -490,7 +508,7 @@ def find_components(
         edge_cycle_verification: Whether to perform edge cycle verification.
         min_read_count: Minimum read count threshold for an edge to be retained.
         refinement_options: Options for staged refinement during community detection.
-        component_size_threshold: Minimum size threshold for components to be retained.
+        component_size_threshold: Minimum and maximum size threshold for components to be retained.
         n_threads: Number of threads to use for parallel processing.
 
     Returns:
@@ -562,14 +580,42 @@ def find_components(
         post_recovery_stats=post_recovery_stats,
     )
 
-    logger.info("Writing hive partitioned edgelist without small components.")
+    logger.info(
+        "Writing hive partitioned edgelist without out-of-size-bound components."
+    )
+    upper_component_size_bound = (
+        component_size_threshold[1]
+        if (
+            isinstance(component_size_threshold, tuple)
+            and component_size_threshold[1] is not None
+        )
+        else np.iinfo(np.uint64).max
+    )
+    logger.info(
+        "Filtering connected components by size: min=%d, max=%d",
+        refinement_options.initial_stage_options.min_component_size_to_prune,
+        upper_component_size_bound,
+    )
     hive_partitioned_edgelist_path, discard_sizes = (
-        write_hive_partitioned_edgelist_without_small_components(
+        write_hive_partitioned_edgelist_without_out_of_size_bound_components(
             input_edgelist_path=partitioned_edgelist_path,
             min_component_size_to_prune=refinement_options.initial_stage_options.min_component_size_to_prune,
+            max_component_size_to_prune=upper_component_size_bound,
             working_dir=working_dir,
         )
     )
+    discarded_large_components = discard_sizes.filter(
+        pl.col("n_umi") > upper_component_size_bound
+    )
+
+    if not any(hive_partitioned_edgelist_path.iterdir()):
+        msg = (
+            "No connected components found in the graph after filtering by component size. "
+            "Likely all components were filtered away for being too small or too large. "
+            "This indicates some serious issue with the data, or that the configured size "
+            "thresholds are too strict. Will not continue with the rest of the computations."
+        )
+        raise ConnectedComponentException(msg)
 
     latest_working_edgelist_path = hive_partitioned_edgelist_path
 
@@ -585,7 +631,9 @@ def find_components(
                 component_stats=component_stats,
                 max_workers=n_threads,
             )
-            discard_sizes = pl.concat((discard_sizes, new_discarded_sizes))
+            discard_sizes = pl.concat(
+                (discard_sizes.select(["component", "n_umi"]), new_discarded_sizes)
+            )
             logger.info(
                 f"Refinement stages completed in {time.time() - time_start:.2f} seconds."
             )
@@ -593,6 +641,7 @@ def find_components(
         component_stats = calculate_post_recovery_component_statistics(
             edgelist_with_components_path=latest_working_edgelist_path,
             component_stats=component_stats,
+            discarded_large_components=discarded_large_components,
         )
 
     logger.debug("Writing unified edgelist.")

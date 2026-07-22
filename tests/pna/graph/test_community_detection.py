@@ -43,6 +43,40 @@ def test_calculate_post_recovery_component_statistics():
     assert out.fraction_nodes_in_largest_component_post_recovery == pytest.approx(3 / 5)
 
 
+def test_calculate_post_recovery_component_statistics_includes_discarded_large_components():
+    """Components discarded early for being too large still count toward "largest component"."""
+    edgelist = pl.DataFrame(
+        {
+            "umi1": [1, 1, 100],
+            "umi2": [10, 11, 200],
+            "component": ["A", "A", "B"],
+        }
+    )
+    # Discarded upstream for being too large; its edges are gone, only its size is known.
+    discarded_large_components = pl.DataFrame(
+        {
+            "component": ["huge"],
+            "n_umi": pl.Series([1000], dtype=pl.UInt32),
+            "n_edges": pl.Series([5000], dtype=pl.UInt32),
+        }
+    )
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as f:
+        path = Path(f.name)
+    try:
+        edgelist.write_parquet(path)
+        stats = GraphStatistics()
+        out = calculate_post_recovery_component_statistics(
+            path, stats, discarded_large_components=discarded_large_components
+        )
+    finally:
+        path.unlink(missing_ok=True)
+
+    assert out.component_count_post_recovery == 3
+    assert out.fraction_nodes_in_largest_component_post_recovery == pytest.approx(
+        1000 / 1005
+    )
+
+
 def test_map_working_to_original_umi_names(tmp_path: Path) -> None:
     """Working UMI names in umi1 and umi2 are replaced with original names."""
     node_map_path = tmp_path / "node_map.parquet"
