@@ -243,8 +243,8 @@ def plot_2d_graph(
         node_size: The size of the nodes. Defaults to 10.0.
         edge_width: The width of the edges. Defaults to 1.0.
         show_b_nodes: Whether to show the B-nodes. Defaults to False.
-        cmap: The colormap to use for coloring the nodes. Defaults to a Pixelgen
-            branded sequential blues colormap.
+        cmap: The colormap to use for coloring the nodes. Defaults to a branded
+            sequential blues colormap.
         alpha: The alpha value for the nodes. Defaults to 0.7.
         cache_layout: Whether to cache the layout coordinates. Defaults to False.
         random_seed: The random seed to use for the layout algorithm. Defaults to None.

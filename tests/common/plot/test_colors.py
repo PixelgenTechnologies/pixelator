@@ -5,6 +5,7 @@ Copyright © 2026 Pixelgen Technologies AB.
 
 import re
 
+import matplotlib.colors
 import pytest
 from matplotlib.colors import Colormap
 
@@ -292,11 +293,38 @@ class TestColorscaleAndColormaps:
         r, g, b, _ = cmap(0.0)
         assert min(r, g, b) < 0.95
 
-    def test_divergent_colormap_midpoint_is_near_white(self):
-        """The divergent colormap should pass through white at its midpoint."""
+    def test_divergent_colormap_midpoint_is_light_gray_not_white(self):
+        """The divergent colormap's center should be a visible light gray, not white.
+
+        A pure-white center fades into a white plot background, making
+        near-zero points/cells hard to see (this is what min_level and
+        center_color are meant to prevent).
+        """
         cmap = pixelgen_divergent_colormap("blues", "reds")
         r, g, b, _ = cmap(0.5)
-        assert r > 0.9 and g > 0.9 and b > 0.9
+        assert abs(r - g) < 0.02 and abs(g - b) < 0.02, (
+            "the default center color should be a neutral gray"
+        )
+        assert 0.5 < r < 0.95, "the center should be visibly non-white but still light"
+
+    def test_divergent_colormap_avoids_near_white_around_center(self):
+        """Colors near (but not exactly at) the center should also stay clear of white."""
+        cmap = pixelgen_divergent_colormap("blues", "reds")
+        for position in (0.3, 0.7):
+            r, g, b, _ = cmap(position)
+            assert min(r, g, b) < 0.95
+
+    def test_divergent_colormap_center_color_is_configurable(self):
+        """A custom center_color should be used (approximately) at the midpoint."""
+        cmap = pixelgen_divergent_colormap("blues", "reds", center_color="#123456")
+        expected = matplotlib.colors.to_rgba("#123456")
+        actual = cmap(0.5)
+        assert all(abs(a - e) < 0.05 for a, e in zip(actual, expected))
+
+    def test_divergent_colormap_min_level_invalid_raises(self):
+        """min_level is forwarded to pixelgen_colorscale and validated the same way."""
+        with pytest.raises(ValueError):
+            pixelgen_divergent_colormap("blues", "reds", min_level=0)
 
     def test_named_colormap_matches_gradient_endpoints(self):
         """`pixelgen_colormap` should reproduce the same gradient as `pixelgen_gradient`."""

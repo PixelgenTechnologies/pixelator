@@ -19,9 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - The default `min_allowed_nodes_pct` in `adaptive_core_expansion` has been changed from 0.8 to 0.9, meaning that a valid "high" core partition must include at least 90% of all nodes. Components that don't meet this criteria will not be denoised by ACE.
 - `pixelator.mpx.plot` and `pixelator.pna.plot` functions now use the Pixelgen brand theme and color palettes from `pixelator.common.plot` by default, for a consistent, on-brand look across every plot.
+- `pixelgen_divergent_colormap` and the `plot_colocalization_heatmap`/`plot_colocalization_diff_volcano`/`plot_polarity_diff_volcano` plots that use it now center on a light Pixelgen grey rather than white, and use a `min_level` floor on both hues, so values near zero stay visible against a white background instead of fading out.
+- Color scales for signed metrics (`abundance_colocalization_plot`'s hue mapping, `plot_colocalization_heatmap`'s `center=0`, and the `CenteredNorm` used by the volcano plots) are now correctly centered on zero, instead of on the (potentially skewed) 10th-90th percentile midpoint or raw data min/max.
 
 ### Fixed
-- `abundance_colocalization_plot` no longer leaves `NaN` colocalization values in facets where a marker pair has no recorded colocalization data.
+- `abundance_colocalization_plot` no longer fabricates zero-valued colocalization scores for marker pairs or components with no recorded colocalization data (previously an incorrect `fillna(0)` call skewed the quantile-based color/size scaling); points with no data are now correctly omitted instead.
 
 ## [0.29.0] - 2026-06-15
 

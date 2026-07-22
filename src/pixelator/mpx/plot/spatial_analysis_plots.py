@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.colors import Colormap
+from matplotlib.colors import CenteredNorm, Colormap
 
 from pixelator.common.plot import pixelgen_divergent_colormap
 from pixelator.mpx.analysis.colocalization import get_differential_colocalization
@@ -105,6 +105,7 @@ def plot_colocalization_heatmap(
         linewidths=0.1,
         method="complete",
         cmap=cmap,
+        center=0,
     )
 
     return plt.gcf(), plt.gca()
@@ -354,6 +355,7 @@ def plot_colocalization_diff_volcano(
             s=20,
             marker="o",
             cmap=cmap,
+            norm=CenteredNorm(vcenter=0),
         )
 
         ax.set(
@@ -447,6 +449,7 @@ def plot_polarity_diff_volcano(
             s=20,
             marker="o",
             cmap=cmap,
+            norm=CenteredNorm(vcenter=0),
         )
 
         ax.set(

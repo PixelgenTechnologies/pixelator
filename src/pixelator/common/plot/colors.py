@@ -743,20 +743,40 @@ def pixelgen_sequential_colormap(
     return LinearSegmentedColormap.from_list(f"pixelgen_sequential_{hue}", colors, N=n)
 
 
+#: Default color for the center (typically zero) of a divergent colormap: a
+#: light Pixelgen grey rather than pure white, so that values near the center
+#: don't fade into a white plot background.
+_DIVERGENT_CENTER_COLOR = PIXELGEN_ACCENT_COLORS["greys"][4]
+
+
 def pixelgen_divergent_colormap(
-    hue_low: str = "blues", hue_high: str = "reds", n: int = 256
+    hue_low: str = "blues",
+    hue_high: str = "reds",
+    min_level: int = 4,
+    center_color: str = _DIVERGENT_CENTER_COLOR,
+    n: int = 256,
 ) -> LinearSegmentedColormap:
     """Get a Pixelgen branded divergent matplotlib colormap between two hues.
 
-    The colormap goes from the dark end of ``hue_low``, through white, to the
-    dark end of ``hue_high``. This is useful for signed values such as
+    The colormap goes from the dark end of ``hue_low``, through ``center_color``,
+    to the dark end of ``hue_high``. This is useful for signed values such as
     correlations or differential scores.
+
+    Both the center and the shades immediately next to it are chosen to stay
+    clear of white by default (a light grey center, and a ``min_level`` floor
+    on both hues), so that values near the center of the scale -- which are
+    often the most common values, e.g. for a differential score centered on
+    zero -- remain visible rather than fading into a white plot background.
 
     Args:
         hue_low: The accent color hue for low (negative) values. See
             `pixelgen_accent_colors`.
         hue_high: The accent color hue for high (positive) values. See
             `pixelgen_accent_colors`.
+        min_level: The lightest accent color level (1-12) to use on either
+            side of the center. See `pixelgen_colorscale`.
+        center_color: The color to use for the exact center of the scale.
+            Defaults to a light Pixelgen grey.
         n: The number of discrete color levels to sample the colormap at.
 
     Returns:
@@ -764,12 +784,13 @@ def pixelgen_divergent_colormap(
         argument.
 
     Raises:
-        ValueError: If ``hue_low`` or ``hue_high`` is unknown.
+        ValueError: If ``hue_low`` or ``hue_high`` is unknown, or ``min_level``
+            is out of range.
     """
-    low = pixelgen_colorscale(hue=hue_low, direction=-1)
-    high = pixelgen_colorscale(hue=hue_high, direction=1)
+    low = pixelgen_colorscale(hue=hue_low, direction=-1, min_level=min_level)
+    high = pixelgen_colorscale(hue=hue_high, direction=1, min_level=min_level)
     return LinearSegmentedColormap.from_list(
-        f"pixelgen_divergent_{hue_low}_{hue_high}", [*low, "#FFFFFF", *high], N=n
+        f"pixelgen_divergent_{hue_low}_{hue_high}", [*low, center_color, *high], N=n
     )
 
 

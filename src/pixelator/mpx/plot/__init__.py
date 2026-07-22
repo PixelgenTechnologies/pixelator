@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.colors import Normalize
+from matplotlib.colors import CenteredNorm, Normalize
 from matplotlib.patches import Rectangle
 from scipy.stats import gaussian_kde
 
@@ -576,9 +576,9 @@ def abundance_colocalization_plot(
         hue="colocalization",
         palette=pixelgen_divergent_colormap("blues", "reds"),
         size="colocalization_abs",
-        hue_norm=Normalize(
-            vmin=merged_data["colocalization"].quantile(0.1),
-            vmax=merged_data["colocalization"].quantile(0.9),
+        hue_norm=CenteredNorm(
+            vcenter=0,
+            halfrange=merged_data["colocalization"].abs().quantile(0.9),
             clip=True,
         ),
         size_norm=Normalize(
