@@ -10,11 +10,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import Colormap
 
+from pixelator.common.plot import pixelgen_divergent_colormap
 from pixelator.mpx.analysis.colocalization import get_differential_colocalization
 from pixelator.mpx.analysis.polarization import get_differential_polarity
 
 logger = logging.getLogger(__name__)
+
+_DEFAULT_DIVERGENT_CMAP = pixelgen_divergent_colormap("blues", "reds")
 
 
 def _pivot_colocalization_data(
@@ -66,7 +70,7 @@ def _make_colocalization_symmetric(
 def plot_colocalization_heatmap(
     colocalization_data: pd.DataFrame,
     markers: Union[list, None] = None,
-    cmap: str = "vlag",
+    cmap: str | Colormap = _DEFAULT_DIVERGENT_CMAP,
     value_column: str = "pearson_z",
 ) -> Tuple[plt.Figure, plt.Axes]:
     """Plot a colocalization heatmap based on the provided colocalization data.
@@ -80,7 +84,8 @@ def plot_colocalization_heatmap(
             be found in a pixel variable "pxl" through pxl.colocalization. The data frame should
             contain the columns "marker_1", "marker_2", "pearson", "pearson_z", and "component".
         markers: The markers to include in the heatmap. Defaults to None.
-        cmap: The colormap to use for the heatmap. Defaults to "vlag".
+        cmap: The colormap to use for the heatmap. Defaults to a Pixelgen
+            branded divergent blues-to-reds colormap.
         value_column: What colocalization metric to use. Defaults to "pearson_z".
 
     Returns:
@@ -112,7 +117,7 @@ def plot_colocalization_diff_heatmap(
     contrast_column: str = "sample",
     top_marker_log_p: float | None = None,
     min_log_p: float = 3.0,
-    cmap: str = "vlag",
+    cmap: str | Colormap = _DEFAULT_DIVERGENT_CMAP,
     value_column: str = "pearson_z",
 ) -> Tuple[dict, dict]:
     """Plot the differential colocalization between reference and target components.
@@ -133,7 +138,8 @@ def plot_colocalization_diff_heatmap(
             least one other marker with a log10 p-score higher than top_marker_log_p are inclueded
             in the plot.
         min_log_p: The minimum log10 p-value. Pairs with lower log10 p-value are assigned 0.
-        cmap: The colormap to use for the heatmap. Defaults to "vlag".
+        cmap: The colormap to use for the heatmap. Defaults to a Pixelgen
+            branded divergent blues-to-reds colormap.
         value_column: What colocalization metric to use. Defaults to "pearson_z".
 
     Returns:
@@ -279,7 +285,7 @@ def plot_colocalization_diff_volcano(
     reference: str,
     targets: str | list[str] | None = None,
     contrast_column: str = "sample",
-    cmap: str = "vlag",
+    cmap: str | Colormap = _DEFAULT_DIVERGENT_CMAP,
     value_column="pearson_z",
     n_top_pairs: int = 5,
     min_log_p: float = 5.0,
@@ -298,7 +304,8 @@ def plot_colocalization_diff_volcano(
             specified, all labels in the contrast_column except the reference label are used as
             targets.
         contrast_column: Sample label column. Defaults to ``"sample"``.
-        cmap: Matplotlib colormap name.
+        cmap: The colormap to use. Defaults to a Pixelgen branded divergent
+            blues-to-reds colormap.
         value_column: Metric plotted on the x-axis. Defaults to ``"pearson_z"``.
         n_top_pairs: Number of marker pairs to annotate on each side.
         min_log_p: Minimum ``-log10(p)`` required to annotate a marker pair.
@@ -372,7 +379,7 @@ def plot_polarity_diff_volcano(
     reference: str,
     targets: str | list[str] | None = None,
     contrast_column: str = "sample",
-    cmap: str = "vlag",
+    cmap: str | Colormap = _DEFAULT_DIVERGENT_CMAP,
     value_column="morans_z",
     n_top_pairs: int = 5,
     min_log_p: float = 5.0,
@@ -391,7 +398,8 @@ def plot_polarity_diff_volcano(
         reference: Reference label in ``contrast_column``.
         targets: Target labels to compare against ``reference``.
         contrast_column: Sample label column. Defaults to ``"sample"``.
-        cmap: Matplotlib colormap name.
+        cmap: The colormap to use. Defaults to a Pixelgen branded divergent
+            blues-to-reds colormap.
         value_column: Metric plotted on the x-axis. Defaults to ``"morans_z"``.
         n_top_pairs: Number of markers to annotate on each side.
         min_log_p: Minimum ``-log10(p)`` required to annotate a marker.

@@ -10,6 +10,7 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
+from pixelator.common.plot import pixelgen_discrete_colors, set_pixelgen_theme
 from pixelator.pna.plot.comparison import (
     plot_sample_pair_comparison,
     write_sample_pair_comparison_report,
@@ -20,6 +21,8 @@ __all__ = [
     "plot_sample_pair_comparison",
     "write_sample_pair_comparison_report",
 ]
+
+set_pixelgen_theme()
 
 
 def molecule_rank_plot(
@@ -73,6 +76,11 @@ def molecule_rank_plot(
             x="rank",
             y="n_umi",
             hue=group_by,
+            palette=(
+                pixelgen_discrete_colors(n=data[group_by].nunique())
+                if group_by is not None
+                else None
+            ),
             aspect=1.6,
         )
         .set(xscale="log", yscale="log")

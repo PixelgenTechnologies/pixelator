@@ -3,22 +3,13 @@
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
+from pixelator.common.plot.colors import PIXELGEN_ACCENT_COLORS
+
 
 class Color:
-    """Class for color constants."""
+    """Class for color constants, sourced from the Pixelgen brand accent colors."""
 
-    LIGHTGREY = "#bebebe"
-    ORANGERED2 = "#ee4000"
-    SKYBLUE3 = "#6ca6cd"
-    NETWORKX_NODE_COLOR = "#1f78b4"
-    JETSET = [
-        "#00007F",  # dark blue
-        "#0000FF",  # blue
-        "#007FFF",  # azure
-        "#00FFFF",  # cyan
-        "#7FFF7F",  # light green
-        "#FFFF00",  # yellow
-        "#FF7F00",  # orange
-        "#FF0000",  # red
-        "#7F0000",  # dark red
-    ]
+    LIGHTGREY = PIXELGEN_ACCENT_COLORS["greys"][2]
+    ORANGERED2 = PIXELGEN_ACCENT_COLORS["reds"][6]
+    SKYBLUE3 = PIXELGEN_ACCENT_COLORS["blues"][5]
+    NETWORKX_NODE_COLOR = PIXELGEN_ACCENT_COLORS["blues"][6]
