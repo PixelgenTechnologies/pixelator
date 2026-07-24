@@ -229,7 +229,7 @@ def write_hive_partitioned_edgelist_without_out_of_size_bound_components(
                         COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)
                         AS UINT32
                     ) AS n_umi,
-                    COUNT(*) AS n_edges
+                    CAST(COUNT(*) AS UINT32) AS n_edges
                 FROM parquet_scan('{str(input_edgelist_path)}')
                 GROUP BY component;
 
