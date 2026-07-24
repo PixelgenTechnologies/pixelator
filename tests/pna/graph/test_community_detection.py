@@ -13,6 +13,9 @@ from pixelator.pna.graph.community_detection import (
     map_working_to_original_umi_names,
     run_leiden_refinement,
 )
+from pixelator.pna.graph.component_recovery_utils import (
+    write_hive_partitioned_edgelist_without_out_of_size_bound_components,
+)
 from pixelator.pna.graph.report import GraphStatistics
 from pixelator.pna.utils.duckdb_utils import DuckdbPerThreadMemoryError
 
@@ -75,6 +78,52 @@ def test_calculate_post_recovery_component_statistics_includes_discarded_large_c
     assert out.fraction_nodes_in_largest_component_post_recovery == pytest.approx(
         1000 / 1005
     )
+
+
+def test_calculate_post_recovery_component_statistics_with_real_discarded_frame(
+    tmp_path: Path,
+):
+    """The discarded-components frame produced upstream must concat with n_edges from pl.len().
+
+    Regression test for a schema mismatch (Int64 vs UInt32) between the two `n_edges`
+    columns being concatenated.
+    """
+    edgelist = pl.DataFrame(
+        {
+            "umi1": [1, 1, 100],
+            "umi2": [10, 11, 200],
+            "component": ["A", "A", "B"],
+        }
+    )
+    kept_path = tmp_path / "edgelist.parquet"
+    edgelist.write_parquet(kept_path)
+
+    # A component large enough to be pruned upstream, producing the real
+    # discarded-components frame (as returned by community detection).
+    partitioned = tmp_path / "partitioned_edgelist.parquet"
+    pl.DataFrame(
+        {
+            "component": ["huge", "huge"],
+            "umi1": ["a", "c"],
+            "umi2": ["b", "d"],
+        }
+    ).write_parquet(partitioned)
+    _, discarded_large_components = (
+        write_hive_partitioned_edgelist_without_out_of_size_bound_components(
+            input_edgelist_path=partitioned,
+            min_component_size_to_prune=0,
+            max_component_size_to_prune=3,
+            working_dir=tmp_path,
+        )
+    )
+
+    stats = GraphStatistics()
+    out = calculate_post_recovery_component_statistics(
+        kept_path, stats, discarded_large_components=discarded_large_components
+    )
+
+    assert out.component_count_post_recovery == 3
+    assert out.edge_count_post_recovery == 5
 
 
 def test_map_working_to_original_umi_names(tmp_path: Path) -> None:

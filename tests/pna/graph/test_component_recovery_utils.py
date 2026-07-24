@@ -75,6 +75,8 @@ def test_write_hive_partitioned_edgelist_without_out_of_size_bound_components_pr
     discarded_sorted = discarded.sort("component")
     assert discarded_sorted["component"].to_list() == ["drop"]
     assert discarded_sorted["n_umi"].to_list() == [2]
+    assert discarded_sorted.schema["n_umi"] == pl.UInt32
+    assert discarded_sorted.schema["n_edges"] == pl.UInt32
 
 
 def test_write_hive_partitioned_edgelist_without_out_of_size_bound_components_prunes_large(
