@@ -401,6 +401,7 @@ class NetworkXGraphBackend(GraphBackend):
         - pmds
         - pmds_3d
         - wpmds_3d
+        - spectral_3d
 
         For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
         preferred. On PNA data they are faster and produce better results.
@@ -1054,9 +1055,9 @@ def coarsened_pmds_layout(
 
 
 def _spectral_layout_eigen(g, nodes, dim, normalize, seed):
-    """Compute the spectral layout coordinates by eigendecomposition of the 
-    (optionally) symmetrically normalized graph Laplacian"""
-
+    """Compute the spectral layout coordinates by eigendecomposition of the
+    (optionally) symmetrically normalized graph Laplacian
+    """
     # Get the (sparse) adjacency matrix A
     A = nx.to_scipy_sparse_array(g, nodelist=nodes, weight=None, format="csr")
 
@@ -1092,9 +1093,9 @@ def _spectral_layout_eigen(g, nodes, dim, normalize, seed):
 
 
 def _spectral_layout_psvd(g, nodes, dim, normalize, seed):
-    """Compute the spectral layout coordinates by partial singular value decomposition 
-    of the degree-normalized biadjacency matrix."""
-
+    """Compute the spectral layout coordinates by partial singular value decomposition
+    of the degree-normalized biadjacency matrix.
+    """
     # Identify and order node sets, check partitioning
     pixel_type = nx.get_node_attributes(g, "pixel_type")
     nodes_u = [node for node in nodes if pixel_type.get(node) == "A"]
@@ -1164,7 +1165,6 @@ def spectral_layout(
     method: Literal["eigen", "psvd"] = "psvd",
 ):
     """Use a spectral layout algorithm to compute coordinates from a graph."""
-
     # Validate inputs
     if g.is_directed():
         raise ValueError("g must be an undirected graph.")
