@@ -1055,27 +1055,41 @@ def coarsened_pmds_layout(
 
 def _spectral_layout_eigen(g, nodes, dim, normalize, seed):
     """Compute the spectral layout coordinates by eigendecomposition of the 
-    (optionally degree-normalized) graph Laplacian"""
+    (optionally) symmetrically normalized graph Laplacian"""
 
     # Get the (sparse) adjacency matrix A
     A = nx.to_scipy_sparse_array(g, nodelist=nodes, weight=None, format="csr")
 
     # Build the Laplacian
-    L = sp.sparse.csgraph.laplacian(A)
+    if normalize:
+        # Symmetrically normalized Laplacian: L_sym = D^(-1/2) L D^(-1/2)
+        L = sp.sparse.csgraph.laplacian(A, normed=True)
 
+        # Diagonal inverse square root degree matrix
+        degrees = np.asarray(A.sum(axis=1)).ravel()
+        diag_inv_sqrt = sp.sparse.diags(1.0 / np.sqrt(degrees))
+    else:
+        # Non-normalized Laplacian
+        L = sp.sparse.csgraph.laplacian(A, normed=False)
+    
     # Compute eigenpairs (k=dim + 1 to account for trivial 0-eigenvalue)
     vals, vecs = sp.sparse.linalg.eigsh(L, k=dim + 1, which="SM")
 
-    # Return coordinates
+    # Exclude trivial eigenvector
     order = np.argsort(vals)
-    raw_coordinates = vecs[:, order[1 : dim + 1]]
+    selection = order[1 : dim + 1]
+    raw_coordinates = vecs[:, selection]
+
+    if normalize:
+        # De-normalize
+        raw_coordinates = diag_inv_sqrt @ raw_coordinates
 
     return raw_coordinates
 
 
 def _spectral_layout_psvd(g, nodes, dim, normalize, seed):
     """Compute the spectral layout coordinates by partial singular value decomposition 
-    of the (optionally degree-normalized) biadjacency matrix."""
+    of the degree-normalized biadjacency matrix."""
 
     # Identify and order node sets, check partitioning
     pixel_type = nx.get_node_attributes(g, "pixel_type")
@@ -1137,7 +1151,7 @@ def _spectral_layout_psvd(g, nodes, dim, normalize, seed):
 def spectral_layout(
     g: nx.Graph,
     dim: Literal[2, 3] = 3,
-    normalize: bool = False,
+    normalize: bool = True,
     seed: Optional[int] = None,
     method: Literal["eigen", "psvd"] = "psvd",
 ):
@@ -1153,16 +1167,16 @@ def spectral_layout(
     nodes = list(g.nodes)
 
     # Determine method and compute raw coordinates
-    if method == "eigen":
-        raw_coordinates = _spectral_layout_eigen(
+    if method == "psvd":
+        raw_coordinates = _spectral_layout_psvd(
             g,
             nodes=nodes,
             dim=dim,
             normalize=normalize,
             seed=seed,
         )
-    elif method == "psvd":
-        raw_coordinates = _spectral_layout_psvd(
+    elif method == "eigen":
+        raw_coordinates = _spectral_layout_eigen(
             g,
             nodes=nodes,
             dim=dim,
@@ -1171,7 +1185,6 @@ def spectral_layout(
         )
 
     # Return normalized coordinates
-    # (Note that this step is unrelated to the parameter "normalize")
     coordinates = normalize_layout_coordinates(raw_coordinates)
 
     return {nodes[i]: coordinates[i,  :] for i in range(len(nodes))}
