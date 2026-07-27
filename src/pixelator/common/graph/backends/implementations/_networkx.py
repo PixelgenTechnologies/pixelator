@@ -1072,8 +1072,12 @@ def _spectral_layout_eigen(g, nodes, dim, normalize, seed):
         # Non-normalized Laplacian
         L = sp.sparse.csgraph.laplacian(A, normed=False)
     
+    # Build starting vector from seed
+    rng = np.random.default_rng(seed)
+    v0 = rng.standard_normal(L.shape[0])
+    
     # Compute eigenpairs (k=dim + 1 to account for trivial 0-eigenvalue)
-    vals, vecs = sp.sparse.linalg.eigsh(L, k=dim + 1, which="SM")
+    vals, vecs = sp.sparse.linalg.eigsh(L, k=dim + 1, which="SM", v0=v0, tol=0)
 
     # Exclude trivial eigenvector
     order = np.argsort(vals)
@@ -1122,10 +1126,14 @@ def _spectral_layout_psvd(g, nodes, dim, normalize, seed):
         @ B
         @ diag_inv_sqrt_v
     )
+    
+    # Get starting vector from seed
+    rng = np.random.default_rng(seed)
+    v0 = rng.standard_normal(min(B_norm.shape))
 
     # Do partial singular value decomposition
     # (k=dim + 1 to account for trivial 0-eigenvalue)
-    vecs_u, s, vecs_v_t = sp.sparse.linalg.svds(B_norm, k=dim + 1, random_state=seed)
+    vecs_u, s, vecs_v_t = sp.sparse.linalg.svds(B_norm, k=dim + 1, v0=v0, tol=0)
 
     # Sort by descending and exclude trivial value, transpose
     selection = np.argsort(s)[::-1][1 : dim + 1]
@@ -1162,6 +1170,12 @@ def spectral_layout(
         raise ValueError("g must be an undirected graph.")
     if not nx.is_connected(g):
         raise ValueError("g must be connected.")
+    if method == "psvd" and not normalize:
+        raise ValueError(
+            "normalize=False is not supported for method='psvd'. "
+            "Use normalize=True or switch to method='eigen' "
+            "and keep normalize=False for non-normalized."
+        )
 
     # Get nodes
     nodes = list(g.nodes)
