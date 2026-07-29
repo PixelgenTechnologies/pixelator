@@ -333,6 +333,8 @@ class NetworkXGraphBackend(GraphBackend):
             )
         if layout_algorithm == "coarsened_pmds_3d":
             layout_inst = coarsened_pmds_layout(raw, seed=random_seed, **kwargs)
+        if layout_algorithm == "spectral_3d":
+            layout_inst = spectral_layout(raw, dim=3, seed=random_seed, **kwargs)
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
@@ -399,6 +401,7 @@ class NetworkXGraphBackend(GraphBackend):
         - pmds
         - pmds_3d
         - wpmds_3d
+        - spectral_3d
 
         For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
         preferred. On PNA data they are faster and produce better results.
@@ -1049,6 +1052,187 @@ def coarsened_pmds_layout(
     xyz_full = normalize_layout_coordinates(xyz_full)
 
     return {nodes[i]: xyz_full[i] for i in range(n_nodes)}
+
+
+def _spectral_layout_eigen(g, nodes, dim, normalize, seed):
+    """Compute spectral layout coordinates via eigendecomposition of the graph Laplacian.
+
+    Compute the spectral layout coordinates by eigendecomposition of the
+    (optionally) symmetrically normalized graph Laplacian.
+    """
+    # Get the (sparse) adjacency matrix A
+    A = nx.to_scipy_sparse_array(g, nodelist=nodes, weight=None, format="csr")
+
+    # Build the Laplacian
+    if normalize:
+        # Symmetrically normalized Laplacian: L_sym = D^(-1/2) L D^(-1/2)
+        L = sp.sparse.csgraph.laplacian(A, normed=True)
+
+        # Diagonal inverse square root degree matrix
+        degrees = np.asarray(A.sum(axis=1)).ravel()
+        diag_inv_sqrt = sp.sparse.diags(1.0 / np.sqrt(degrees))
+    else:
+        # Non-normalized Laplacian
+        L = sp.sparse.csgraph.laplacian(A, normed=False)
+
+    # Get matrix dimension
+    N = L.shape[0]
+
+    # Build starting vector from seed
+    rng = np.random.default_rng(seed)
+    v0 = rng.standard_normal(N)
+
+    # Check condition for k vs N
+    k = dim + 1
+    if not k < N:
+        raise ValueError(
+            f"method='eigen' with dim={dim} requires a component "
+            f"with more than {k} nodes, but got {N}"
+        )
+
+    # Compute eigenpairs (k=dim + 1 to account for trivial 0-eigenvalue)
+    vals, vecs = sp.sparse.linalg.eigsh(L, k=k, which="SM", v0=v0, tol=0)
+
+    # Exclude trivial eigenvector
+    order = np.argsort(vals)
+    raw_coordinates = vecs[:, order[1:k]]
+
+    if normalize:
+        # De-normalize
+        raw_coordinates = diag_inv_sqrt @ raw_coordinates
+
+    return raw_coordinates
+
+
+def _spectral_layout_psvd(g, nodes, dim, seed):
+    """Compute spectral layout coordinates via partial SVD of the biadjacency matrix.
+
+    Compute the spectral layout coordinates by partial singular value decomposition
+    of the degree-normalized biadjacency matrix.
+    """
+    # Identify and order node sets, check partitioning
+    pixel_type = nx.get_node_attributes(g, "pixel_type")
+    nodes_u = [node for node in nodes if pixel_type.get(node) == "A"]
+    nodes_v = [node for node in nodes if pixel_type.get(node) == "B"]
+
+    if any({pixel_type.get(u), pixel_type.get(v)} != {"A", "B"} for u, v in g.edges()):
+        raise ValueError(
+            "The 'psvd' spectral method requires a bipartite graph whose "
+            "nodes are partitioned exactly into 'A' and 'B' via the "
+            "'pixel_type' attribute. Try method='eigen'."
+        )
+
+    # Compute the biadjacency matrix
+    B = nx_bipartite.biadjacency_matrix(
+        g, row_order=nodes_u, column_order=nodes_v, weight=None, format="csr"
+    )
+
+    # Get node degrees by summing in the biadjacency matrix
+    degrees_u = np.asarray(B.sum(axis=1)).ravel()
+    degrees_v = np.asarray(B.sum(axis=0)).ravel()
+
+    # Define the inverse square root diagonal matrices
+    diag_inv_sqrt_u = sp.sparse.diags(1.0 / np.sqrt(degrees_u))
+    diag_inv_sqrt_v = sp.sparse.diags(1.0 / np.sqrt(degrees_v))
+
+    # Compute the normalized biadjacency matrix
+    B_norm = diag_inv_sqrt_u @ B @ diag_inv_sqrt_v
+
+    # Get matrix order
+    M, N = B_norm.shape
+
+    # Get starting vector from seed
+    rng = np.random.default_rng(seed)
+    v0 = rng.standard_normal(min(M, N))
+
+    # Check condition for k vs matrix size
+    # (Note: k is guaranteed greater or equal to 1 because of input validation of "dim")
+    # (Note: using kmax=min(M, N)-1 covers all cases for the condition [SciPy 1.18.0])
+    k = dim + 1
+    kmax = min(M, N) - 1
+    if not k <= kmax:
+        raise ValueError(
+            f"method='psvd' with dim={dim} requires a bipartite graph "
+            f"whose partition sizes M, N satisfy {k} <= min(M, N) - 1, "
+            f"but got M = {M}, N = {N} (gives min(M, N) - 1 = {kmax}). "
+            f"Try method='eigen'."
+        )
+
+    # Do partial singular value decomposition
+    # (k=dim + 1 to account for trivial 0-eigenvalue)
+    vecs_u, s, vecs_v_t = sp.sparse.linalg.svds(B_norm, k=k, v0=v0, tol=0)
+
+    # Sort by descending and exclude trivial value, transpose
+    selection = np.argsort(s)[::-1][1:k]
+
+    vecs_v = vecs_v_t.T
+
+    # De-normalize (random-walk rescale)
+    raw_coords_u = diag_inv_sqrt_u @ vecs_u[:, selection]
+    raw_coords_v = diag_inv_sqrt_v @ vecs_v[:, selection]
+
+    # Return coordinates by initial node order
+    raw_coords_unord = np.concatenate([raw_coords_u, raw_coords_v], axis=0)
+
+    nodes_uv = nodes_u + nodes_v
+    position = {node: i for i, node in enumerate(nodes_uv)}
+    order = [position[node] for node in nodes]
+
+    raw_coordinates = raw_coords_unord[order]
+
+    return raw_coordinates
+
+
+def spectral_layout(
+    g: nx.Graph,
+    dim: int = 3,
+    normalize: bool = True,
+    seed: Optional[int] = None,
+    method: Literal["eigen", "psvd"] = "psvd",
+):
+    """Use a spectral layout algorithm to compute coordinates from a graph."""
+    # Validate inputs
+    if g.number_of_nodes() in (0, 1):
+        raise ValueError("g must have more than 1 node.")
+    if g.is_directed():
+        raise ValueError("g must be an undirected graph.")
+    if not nx.is_connected(g):
+        raise ValueError("g must be connected.")
+    if dim not in (2, 3):
+        raise ValueError("dim must be 2 or 3.")
+    if method not in ("eigen", "psvd"):
+        raise ValueError("method must be 'eigen' or 'psvd'.")
+    if method == "psvd" and not normalize:
+        raise ValueError(
+            "normalize=False is not supported for method='psvd'. "
+            "Use normalize=True or switch to method='eigen' "
+            "and keep normalize=False for non-normalized."
+        )
+
+    # Get nodes
+    nodes = list(g.nodes)
+
+    # Determine method and compute raw coordinates
+    if method == "psvd":
+        raw_coordinates = _spectral_layout_psvd(
+            g,
+            nodes=nodes,
+            dim=dim,
+            seed=seed,
+        )
+    elif method == "eigen":
+        raw_coordinates = _spectral_layout_eigen(
+            g,
+            nodes=nodes,
+            dim=dim,
+            normalize=normalize,
+            seed=seed,
+        )
+
+    # Return normalized coordinates
+    coordinates = normalize_layout_coordinates(raw_coordinates)
+
+    return {nodes[i]: coordinates[i, :] for i in range(len(nodes))}
 
 
 def _prob_edge_weights(

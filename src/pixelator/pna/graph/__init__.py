@@ -80,6 +80,7 @@ class PNAGraph(BaseGraph):
         - pmds
         - pmds_3d
         - wpmds_3d
+        - spectral_3d
 
         For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
         preferred. On PNA data they are faster and produce better results.
@@ -216,6 +217,7 @@ class PNAGraphBackend(NetworkXGraphBackend):
         - pmds
         - pmds_3d
         - wpmds_3d
+        - spectral_3d
 
 
         For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
