@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - The graph stage now raises an error instead of an internal DuckDB crash when a component-size threshold discards every component in the input.
 - `single-cell-pna graph` no longer crashes with a `polars.exceptions.SchemaError` on `n_edges` (`Int64` vs `UInt32`) when calculating post-recovery component statistics with `--multiplet-recovery` and a `--component-size-max-threshold` that discards large components.
+- `write_parameters_file` now includes Click positional arguments (e.g. multi-file inputs) under `cli.arguments` in `*.meta.json`, not only options.
 
 ## [0.29.0] - 2026-06-15
 
