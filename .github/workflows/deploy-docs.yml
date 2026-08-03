@@ -90,6 +90,9 @@ jobs:
       - name: Regenerate switcher.json
         run: python3 docs/_scripts/update_switcher.py
 
+      - name: Ensure .nojekyll exists
+        run: touch ./switcher-out/.nojekyll
+
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
