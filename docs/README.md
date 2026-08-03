@@ -63,7 +63,7 @@ Key files:
 - Building and deploying the docs is handled by the "Docs" workflow (`.github/workflows/deploy-docs.yml`).
 - The workflow runs on three triggers: published releases, manual dispatch (`workflow_dispatch`, which requires a `tag` input), and pull requests.
 - The build job runs for all three triggers and builds with `sphinx-build ... --fail-on-warning -n`, so warnings fail the build (see "Warnings and strict builds").
-- The deploy job only runs for manual dispatch and non-prerelease releases. It does not run on pull requests, and prereleases are built but not deployed.
+- The deploy job only runs for manual dispatch and stable releases. It does not run on pull requests nor prereleases.
 - Deployment publishes the built HTML to the `gh-pages` branch under `docs/<version>/` via [GitHub Pages](https://docs.github.com/en/pages) (using `peaceiris/actions-gh-pages`). The version is the release tag without the leading `v` (or the dispatch `tag`), defaulting to `latest` when unset.
 - After publishing, `docs/_scripts/update_switcher.py` regenerates `switcher.json` (the version list used by the theme's version switcher) and a redirect at `docs/index.html` that points to the newest version.
 - GitHub Pages must be configured to serve from the `gh-pages` branch with the `/docs` folder as the source (repo Settings → Pages).
