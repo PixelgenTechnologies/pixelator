@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--multiplet-recovery` and a `--component-size-max-threshold` that discards large components.
 - `write_parameters_file` now includes Click positional arguments (e.g. multi-file inputs) under
   `cli.arguments` in `*.meta.json`, not only options.
+- `filter_connected_components_by_size` now ensures matching size schemas between discarded and remaining components.
 
 ## [0.29.0] - 2026-06-15
 
