@@ -26,6 +26,18 @@ from pixelator.pna.graph.report import GraphStatistics
 logger = logging.getLogger(__name__)
 
 
+def has_uei_count(con, relation: str) -> bool:
+    """Return True if ``relation`` has a ``uei_count`` column."""
+    return "uei_count" in {
+        row[0] for row in con.execute(f"DESCRIBE {relation}").fetchall()
+    }
+
+
+def n_molecules_sql(has_uei_count: bool) -> str:
+    """SQL expression for molecule count; defaults to edge count when absent."""
+    return "SUM(uei_count)" if has_uei_count else "COUNT(*)"
+
+
 class ConnectedComponentException(PixelatorBaseException):
     """Raised when connected-component computation or filtering fails."""
 
@@ -170,11 +182,12 @@ def get_count_statistics(edgelist_path: Path) -> dict:
         con.execute(
             f"CREATE VIEW edgelist AS SELECT * FROM parquet_scan('{str(edgelist_path)}')"
         )
-        n_edges, n_reads, n_molecules, n_umi = con.execute("""
+        n_molecules_expr = n_molecules_sql(has_uei_count(con, "edgelist"))
+        n_edges, n_reads, n_molecules, n_umi = con.execute(f"""
             SELECT
                 COUNT(*) AS n_edges,
                 SUM(read_count) AS n_reads,
-                SUM(uei_count) AS n_molecules,
+                {n_molecules_expr} AS n_molecules,
                 (
                     SELECT COUNT(DISTINCT umi)
                     FROM (
@@ -412,14 +425,14 @@ def create_working_edgelist(
             FROM all_umis
         """)
 
-        con.execute("""
+        uei_count_sql = "ie.uei_count, " if has_uei_count(con, "input_edgelist") else ""
+        con.execute(f"""
             CREATE VIEW working_edgelist AS
             SELECT
                 nm1.working_name AS umi1,
                 nm2.working_name AS umi2,
                 ie.read_count,
-                ie.uei_count,
-                ie.marker_1,
+                {uei_count_sql}ie.marker_1,
                 ie.marker_2
             FROM input_edgelist ie
             JOIN node_map nm1 ON ie.umi1 = nm1.original_name

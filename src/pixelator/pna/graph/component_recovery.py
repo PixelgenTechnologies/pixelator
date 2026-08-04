@@ -18,6 +18,10 @@ from pixelator.pna.graph.community_detection import (
     StagedRefinementOptions,
     find_components,
 )
+from pixelator.pna.graph.component_recovery_utils import (
+    has_uei_count,
+    n_molecules_sql,
+)
 from pixelator.pna.graph.report import GraphStatistics
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
@@ -113,8 +117,9 @@ def build_pxl_file_with_components(
             )
             logger.debug("Counting molecules")
 
+            molecules_sql = n_molecules_sql(has_uei_count(pxl_connection, "edgelist"))
             sums = pxl_connection.execute(
-                "SELECT SUM(uei_count) as uei_count FROM edgelist"
+                f"SELECT {molecules_sql} as uei_count FROM edgelist"
             ).pl()
 
             component_stats.molecules_output = int(sums["uei_count"][0])
