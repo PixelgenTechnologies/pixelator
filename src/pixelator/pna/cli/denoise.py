@@ -306,9 +306,7 @@ def denoise(
         number_of_umis_removed
         / (pxl_dataset.adata().obs["n_umi"].sum() + number_of_umis_removed)
     )
-    output_reads = int(
-        pxl_dataset_denoised.adata().obs["reads_in_component"].sum()
-    )
+    output_reads = int(pxl_dataset_denoised.adata().obs["reads_in_component"].sum())
     report = DenoiseSampleReport(
         sample_id=sample_name,
         product_id="single-cell-pna",
