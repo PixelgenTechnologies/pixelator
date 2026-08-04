@@ -521,6 +521,109 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
 
 
 @pytest.mark.slow
+def test_sample_calling_without_uei_count(tmp_path: Path):
+    """sample_calling succeeds when the input edgelist has no uei_count column."""
+    panel_df = pd.DataFrame(
+        [
+            {
+                "marker_id": "PD-1",
+                "control": False,
+                "uniprot_id": "P00001",
+                "sequence_1": "ATCGATCGAA",
+                "sequence_2": "ATCGATCGAC",
+            },
+            {
+                "marker_id": "HashA",
+                "control": False,
+                "uniprot_id": "P00002",
+                "sequence_1": "ATCGATCGAT",
+                "sequence_2": "ATCGATCGAG",
+            },
+            {
+                "marker_id": "HashA-1",
+                "control": False,
+                "uniprot_id": "P00003",
+                "sequence_1": "ATCGATCGTT",
+                "sequence_2": "ATCGATCGTG",
+            },
+            {
+                "marker_id": "HashB-2",
+                "control": False,
+                "uniprot_id": "P00004",
+                "sequence_1": "ATCGATCGTA",
+                "sequence_2": "ATCGATCGTC",
+            },
+        ]
+    ).set_index("marker_id")
+
+    panel = PNAAntibodyPanel(
+        df=panel_df,
+        metadata=AntibodyPanelMetadata(
+            name="test-panel",
+            version="0.1.0",
+            aliases=["test-panel"],
+            description="Synthetic panel for sample-calling without uei_count.",
+        ),
+    )
+
+    edgelist = pl.DataFrame(
+        {
+            "umi1": pl.Series([1, 2, 3], dtype=pl.UInt64),
+            "umi2": pl.Series([2, 3, 4], dtype=pl.UInt64),
+            "read_count": pl.Series([10, 10, 10], dtype=pl.UInt32),
+            "marker_1": ["PD-1", "PD-1", "HashA-1"],
+            "marker_2": ["PD-1", "HashA-1", "HashA-1"],
+            "component": ["c1", "c1", "c1"],
+        }
+    )
+    assert "uei_count" not in edgelist.columns
+
+    target = tmp_path / "input.pxl"
+    with PixelFileWriter(target) as writer:
+        writer.write_edgelist(edgelist)
+        con = writer.get_connection()
+        adata = pna_edgelist_to_anndata(con, panel=panel)
+        writer.write_adata(adata)
+        writer.write_metadata(
+            {
+                "sample_name": "input",
+                "version": "0.1.0",
+                "panel_name": "custom_panel",
+            }
+        )
+
+    input_pxl = read(target)
+    hashing_antibodies = HashedAntibodyMapping(
+        mapping={"S1": ["HashA-1"]},
+        all_hashing_antibodies=["HashA-1", "HashB-2"],
+    )
+
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    sample_calling(
+        input_pxl=input_pxl,
+        hashing_antibody_mapping=hashing_antibodies,
+        output_folder=out_dir,
+        remove_incompatible=True,
+        enrichment_threshold=1.5,
+    )
+
+    output_files = list(out_dir.glob("*.dehashed.pxl"))
+    assert len(output_files) == 1
+
+    dehashed_edgelist = read(output_files[0]).edgelist().to_polars()
+    assert "uei_count" not in dehashed_edgelist.columns
+    assert set(dehashed_edgelist.columns) >= {
+        "umi1",
+        "umi2",
+        "read_count",
+        "marker_1",
+        "marker_2",
+        "component",
+    }
+
+
+@pytest.mark.slow
 def test_sample_calling_with_undetermined(sample_hashed_pixel_files, tmp_path):
     """Test the sample calling functionality.
 
