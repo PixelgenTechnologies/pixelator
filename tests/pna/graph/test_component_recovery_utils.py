@@ -252,6 +252,44 @@ def test_filter_connected_components_by_size_includes_early_discards_in_pre_filt
     assert fraction_of_discarded_components == pytest.approx(1 - 2 / 4)
 
 
+def test_filter_connected_components_by_size_accepts_discard_sizes_with_n_edges(
+    tmp_path: Path,
+) -> None:
+    """discard_sizes as returned by write_hive_partitioned_edgelist_without_out_of_size_bound_components carries an n_edges column; it must not break the concat with the (component, n_umi) sizes frame."""
+    input_path = tmp_path / "component_filter_input.parquet"
+    pl.DataFrame(
+        {
+            "component": ["a", "a", "b", "c", "c"],
+            "umi1": ["u1", "u3", "v1", "w1", "w1"],
+            "umi2": ["u2", "u4", "v2", "w2", "w3"],
+        }
+    ).write_parquet(input_path)
+    discard_sizes = pl.DataFrame(
+        {
+            "component": ["huge"],
+            "n_umi": pl.Series([10], dtype=pl.UInt32),
+            "n_edges": pl.Series([20], dtype=pl.UInt32),
+        }
+    )
+    component_stats = GraphStatistics()
+
+    filtered_edgelist_path, stats = filter_connected_components_by_size(
+        input_edgelist_path=input_path,
+        component_size_threshold=(3, 4),
+        discard_sizes=discard_sizes,
+        component_stats=component_stats,
+        working_dir=tmp_path,
+    )
+
+    filtered = pl.scan_parquet(
+        filtered_edgelist_path, hive_schema={"component": pl.String}
+    ).collect()
+
+    assert set(filtered["component"].unique().to_list()) == {"a", "c"}
+    assert stats.component_count_pre_component_size_filtering == 4
+    assert stats.pre_filtering_component_sizes == {2: 1, 3: 1, 4: 1, 10: 1}
+
+
 def test_create_component_size_data_frame_computes_sizes_per_component(
     tmp_path: Path,
 ) -> None:
