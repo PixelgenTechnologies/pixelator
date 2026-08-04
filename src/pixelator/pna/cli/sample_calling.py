@@ -123,9 +123,9 @@ def sample_calling_cli(
         pool_name=pool_name,
     )
 
-    pxl = read(Path(input_pxl_file))
+    input_pxl_dataset = read(Path(input_pxl_file))
     output_files = sample_calling(
-        input_pxl=pxl,
+        input_pxl=input_pxl_dataset,
         hashing_antibody_mapping=hashed_antibodies,
         output_folder=sample_calling_output,
         remove_incompatible=remove_incompatible,
@@ -135,20 +135,29 @@ def sample_calling_cli(
 
     for pxl_file in output_files:
         sample_name = get_sample_name(pxl_file)
-        pxl = read(pxl_file)
+        sample_pxl = read(pxl_file)
         write_parameters_file(
             ctx,
             sample_calling_output / f"{sample_name}.meta.json",
             command_path="pixelator single-cell-pna sample-calling",
         )
         metrics = sample_calling_output / f"{sample_name}.report.json"
+        output_reads = int(sample_pxl.adata().obs["reads_in_component"].sum())
+        input_reads = int(
+            input_pxl_dataset.filter(components=sample_pxl.adata().obs.index.tolist())
+            .adata()
+            .obs["reads_in_component"]
+            .sum()
+        )
         report = SampleCallingSampleReport(
             sample_id=sample_name,
             product_id="single-cell-pna",
-            number_of_components=len(pxl.components()),
+            number_of_components=len(sample_pxl.components()),
             number_of_incompatible_hashes_removed=(
-                pxl.adata().obs["removed_incompatible_hashes"].sum()
+                sample_pxl.adata().obs["removed_incompatible_hashes"].sum()
             ),
+            input_reads=input_reads,
+            output_reads=output_reads,
         )
         report.write_json_file(metrics, indent=4)
 
@@ -156,6 +165,7 @@ def sample_calling_cli(
     final_dataset = read(output_files)
     total_report = create_final_report(
         final_dataset=final_dataset,
+        input_reads=int(input_pxl_dataset.adata().obs["reads_in_component"].sum()),
         undetermined_sample_name=undetermined_sample_name,
     )
     total_report.write_json_file(

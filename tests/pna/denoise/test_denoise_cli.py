@@ -69,6 +69,13 @@ def test_denoise_cli_writes_outputs_and_report(synthetic_denoise_pxl_file):
         assert report["number_of_umis_removed"] > 0
         assert 0.0 <= report["ratio_of_umis_removed"] <= 1.0
 
+        input_obs = read(synthetic_denoise_pxl_file).adata().obs
+        expected_input_reads = int(input_obs["reads_in_component"].sum())
+        expected_output_reads = int(obs["reads_in_component"].sum())
+        assert report["input_reads"] == expected_input_reads
+        assert report["output_reads"] == expected_output_reads
+        assert report["output_reads"] <= report["input_reads"]
+
         # The parameters file records the command and the flags we passed, which
         # confirms the CLI options are threaded into the DenoiseGraph task.
         meta_path = Path(output_dir) / "denoise" / f"{stem}.meta.json"
@@ -112,6 +119,13 @@ def test_denoise_cli_no_denoising_method(synthetic_denoise_pxl_file):
         assert report["report_type"] == "denoise"
         assert report["number_of_umis_removed"] is None
         assert report["ratio_of_umis_removed"] is None
+
+        # No denoising happened, so input and output read counts are identical.
+        expected_reads = int(
+            read(synthetic_denoise_pxl_file).adata().obs["reads_in_component"].sum()
+        )
+        assert report["input_reads"] == expected_reads
+        assert report["output_reads"] == expected_reads
 
         # The output pxl is a verbatim copy of the input: denoising was skipped.
         out_pxl = _denoised_output(output_dir, synthetic_denoise_pxl_file)

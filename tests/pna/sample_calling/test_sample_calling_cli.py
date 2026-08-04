@@ -61,6 +61,9 @@ def test_runs_ok(pna_data_root):
             assert report_data["report_type"] == "sample_calling"
             assert report_data["sample_id"] == sample_name
             assert "number_of_components" in report_data
+            assert report_data["input_reads"] > 0
+            assert report_data["output_reads"] > 0
+            assert report_data["output_reads"] <= report_data["input_reads"]
 
             meta_data = json.loads(meta_json.read_text())
             assert (
@@ -76,6 +79,19 @@ def test_runs_ok(pna_data_root):
         assert total_data["sample_id"] == "all"
         assert "hash_enrichment_factors_per_sample" in total_data
         assert "percentage_of_components_successfully_called" in total_data
+        input_pxl = read(str(pna_data_root / f"sample_calling/{pool_name}.pxl"))
+        expected_input_reads = int(input_pxl.adata().obs["reads_in_component"].sum())
+        assert total_data["input_reads"] == expected_input_reads
+
+        expected_output_reads = 0
+        for output in outputs:
+            if get_sample_name(output) == f"{pool_name}_undetermined":
+                continue
+            expected_output_reads += int(
+                read(output).adata().obs["reads_in_component"].sum()
+            )
+        assert total_data["output_reads"] == expected_output_reads
+        assert total_data["output_reads"] < total_data["input_reads"]
         assert (
             np.abs(total_data["percentage_of_components_successfully_called"] - 12 / 15)
             < 1e-6
