@@ -621,15 +621,18 @@ class _FakeFilteredDataset:
         *,
         component_ids: set[str],
         hash_enrichment_factors: list[float] | None = None,
+        reads_in_component: list[int] | None = None,
     ):
         """Initialize the instance.
 
         Args:
             component_ids: Component ids.
             hash_enrichment_factors: Hash enrichment factors.
+            reads_in_component: Reads in component.
         """
         self._component_ids = component_ids
         self._hash_enrichment_factors = hash_enrichment_factors
+        self._reads_in_component = reads_in_component
 
     def components(self) -> set[str]:
         """Components.
@@ -654,12 +657,13 @@ class _FakeFilteredDataset:
         n = len(self._hash_enrichment_factors)
         # Explicit string obs index avoids AnnData ImplicitModificationWarning on index coercion.
         obs_index = [f"comp_{i}" for i in range(n)]
+        obs = {"hash_enrichment_factor": self._hash_enrichment_factors}
+        if self._reads_in_component is not None:
+            assert len(self._reads_in_component) == n
+            obs["reads_in_component"] = self._reads_in_component
         return anndata.AnnData(
             X=np.zeros((n, 1)),
-            obs=pd.DataFrame(
-                {"hash_enrichment_factor": self._hash_enrichment_factors},
-                index=obs_index,
-            ),
+            obs=pd.DataFrame(obs, index=obs_index),
         )
 
 
@@ -672,6 +676,7 @@ class _FakeMergedDataset:
         all_components: set[str],
         undetermined_components: set[str] | None,
         enrichment_factors_per_sample: dict[str, list[float]],
+        reads_in_component_per_sample: dict[str, list[int]] | None = None,
     ):
         """Initialize the instance.
 
@@ -679,10 +684,12 @@ class _FakeMergedDataset:
             all_components: All components.
             undetermined_components: Undetermined components.
             enrichment_factors_per_sample: Hash enrichment factors per sample.
+            reads_in_component_per_sample: Reads in component, per sample.
         """
         self._all_components = all_components
         self._undetermined_components = undetermined_components
         self._enrichment_factors_per_sample = enrichment_factors_per_sample
+        self._reads_in_component_per_sample = reads_in_component_per_sample or {}
 
     def components(self) -> set[str]:
         """Components.
@@ -723,6 +730,9 @@ class _FakeMergedDataset:
                 hash_enrichment_factors=self._enrichment_factors_per_sample.get(
                     "undetermined"
                 ),
+                reads_in_component=self._reads_in_component_per_sample.get(
+                    "undetermined"
+                ),
             )
         if samples not in self._enrichment_factors_per_sample:
             raise ValueError(
@@ -731,11 +741,12 @@ class _FakeMergedDataset:
         return _FakeFilteredDataset(
             component_ids=set(),
             hash_enrichment_factors=self._enrichment_factors_per_sample[samples],
+            reads_in_component=self._reads_in_component_per_sample.get(samples),
         )
 
 
 def test_create_final_report_works_when_no_undetermined_sample():
-    """When ``undetermined`` is not a sample, the success rate is 100%."""
+    """When ``undetermined`` is not a sample, the success rate is 100% and all reads count as output."""
     ds = _FakeMergedDataset(
         all_components={"c1", "c2", "c3"},
         undetermined_components=None,
@@ -743,8 +754,12 @@ def test_create_final_report_works_when_no_undetermined_sample():
             "PBMC": [10.0, 9.5],
             "Raji": [8.0],
         },
+        reads_in_component_per_sample={
+            "PBMC": [30, 20],
+            "Raji": [15],
+        },
     )
-    report = create_final_report(ds)  # type: ignore[arg-type]
+    report = create_final_report(ds, input_reads=30 + 20 + 15)  # type: ignore[arg-type]
 
     assert report.sample_id == "all"
     assert report.product_id == "single-cell-pna"
@@ -755,10 +770,15 @@ def test_create_final_report_works_when_no_undetermined_sample():
         "PBMC": [10.0, 9.5],
         "Raji": [8.0],
     }
+    assert report.input_reads == 30 + 20 + 15
+    assert report.output_reads == 30 + 20 + 15
 
 
 def test_create_final_report_percentage_excludes_undetermined_components():
-    """Success rate is 1 minus the fraction of components in the undetermined sample."""
+    """Success rate is 1 minus the fraction of components in the undetermined sample.
+
+    Reads in the undetermined sample must not count toward output_reads.
+    """
     ds = _FakeMergedDataset(
         all_components={"a", "b", "c", "d"},
         undetermined_components={"d"},
@@ -766,27 +786,37 @@ def test_create_final_report_percentage_excludes_undetermined_components():
             "PBMC": [10.0, 10.0, 10.0],
             "undetermined": [1.2],
         },
+        reads_in_component_per_sample={
+            "PBMC": [10, 20, 30],
+            "undetermined": [100],
+        },
     )
-    report = create_final_report(ds)  # type: ignore[arg-type]
+    report = create_final_report(ds, input_reads=10 + 20 + 30 + 100)  # type: ignore[arg-type]
 
     assert report.number_of_components == 4
     assert report.percentage_of_components_successfully_called == pytest.approx(0.75)
     assert report.hash_enrichment_factors_per_sample["PBMC"] == [10.0, 10.0, 10.0]
     assert report.hash_enrichment_factors_per_sample["undetermined"] == [1.2]
+    assert report.input_reads == 10 + 20 + 30 + 100
+    assert report.output_reads == 10 + 20 + 30
 
 
 def test_create_final_report_zero_success_when_all_components_undetermined():
-    """When every component belongs to ``undetermined``, the success rate is 0."""
+    """When every component belongs to ``undetermined``, the success rate and output reads are 0."""
     ds = _FakeMergedDataset(
         all_components={"x", "y"},
         undetermined_components={"x", "y"},
         enrichment_factors_per_sample={"undetermined": [1.1, 1.2]},
+        reads_in_component_per_sample={"undetermined": [500, 700]},
     )
-    report = create_final_report(ds)  # type: ignore[arg-type]
+    report = create_final_report(ds, input_reads=1200)  # type: ignore[arg-type]
 
     assert report.number_of_components == 2
     assert report.percentage_of_components_successfully_called == 0.0
     assert report.hash_enrichment_factors_per_sample["undetermined"] == [1.1, 1.2]
+    assert report.input_reads == 1200
+    # Every read ended up in undetermined, so none count as output.
+    assert report.output_reads == 0
 
 
 def test_warn_if_undetermined_has_high_enrichment_logs_when_fraction_above_five_percent(

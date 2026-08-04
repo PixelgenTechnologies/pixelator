@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PNAAssay` and `PNAAntibodyPanel` now hold an optional path to the path they were parsed from.
 - `pixelator.common.plot` with Pixelgen's brand colors, gradients, palettes, and theme (`PIXELGEN_ACCENT_COLORS`, `PIXELGEN_CELL_PALETTE`, `pixelgen_gradient`, `pixelgen_palette`, `pixelgen_accent_colors`, `pixelgen_discrete_colors`, `create_discrete_palette`, `pixelgen_colorscale`/`pixelgen_sequential_colormap`/`pixelgen_divergent_colormap`/`pixelgen_colormap`, `set_pixelgen_theme`/`pixelgen_theme`, `style_facet_strips`), ported from the internal `themes_and_palettes.R` ggplot2 helpers.
 - Spectral layout algorithm
+- `single-cell-pna denoise` and `single-cell-pna sample-calling` now report `input_reads` and `output_reads` in `report.json`.
 
 ### Changed
 - The default `min_allowed_nodes_pct` in `adaptive_core_expansion` has been changed from 0.8 to 0.9, meaning that a valid "high" core partition must include at least 90% of all nodes. Components that don't meet this criteria will not be denoised by ACE.

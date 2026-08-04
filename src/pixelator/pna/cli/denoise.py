@@ -253,6 +253,9 @@ def denoise(
     )
     metrics = denoise_output / f"{sample_name}.report.json"
 
+    pxl_dataset = read(pxl_file.path)
+    input_reads = int(pxl_dataset.adata().obs["reads_in_component"].sum())
+
     if (
         not run_one_core_graph_denoising
         and not run_ace_denoising
@@ -263,6 +266,8 @@ def denoise(
             product_id="single-cell-pna",
             number_of_umis_removed=None,
             ratio_of_umis_removed=None,
+            input_reads=input_reads,
+            output_reads=input_reads,
         )
         report.write_json_file(metrics, indent=4)
         return
@@ -291,7 +296,6 @@ def denoise(
     ]
     logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
     manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
-    pxl_dataset = read(pxl_file.path)
 
     pxl_dataset_denoised = manager.execute(pxl_dataset, output_pxl_file_target)
 
@@ -302,11 +306,16 @@ def denoise(
         number_of_umis_removed
         / (pxl_dataset.adata().obs["n_umi"].sum() + number_of_umis_removed)
     )
+    output_reads = int(
+        pxl_dataset_denoised.adata().obs["reads_in_component"].sum()
+    )
     report = DenoiseSampleReport(
         sample_id=sample_name,
         product_id="single-cell-pna",
         number_of_umis_removed=number_of_umis_removed,
         ratio_of_umis_removed=ratio_of_umis_removed,
+        input_reads=input_reads,
+        output_reads=output_reads,
     )
 
     report.write_json_file(metrics, indent=4)

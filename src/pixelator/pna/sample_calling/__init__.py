@@ -500,12 +500,15 @@ class HashedSampleAnalysisManager(AnalysisManager):
 
 
 def create_final_report(
-    final_dataset: PNAPixelDataset, undetermined_sample_name: str = "undetermined"
+    final_dataset: PNAPixelDataset,
+    input_reads: int,
+    undetermined_sample_name: str = "undetermined",
 ) -> SampleCallingTotalReport:
     """Create the final report for the sample calling.
 
     Args:
         final_dataset: The final dataset after sample calling.
+        input_reads: Total number of reads across all samples before sample calling.
         undetermined_sample_name: Name to use for undetermined components. Defaults to
             "undetermined".
 
@@ -535,6 +538,17 @@ def create_final_report(
         for sample_name in final_dataset.sample_names()
     }
 
+    output_reads = sum(
+        int(
+            final_dataset.filter(samples=sample_name)
+            .adata()
+            .obs["reads_in_component"]
+            .sum()
+        )
+        for sample_name in final_dataset.sample_names()
+        if sample_name != undetermined_sample_name
+    )
+
     total_report = SampleCallingTotalReport(
         sample_id="all",
         product_id="single-cell-pna",
@@ -544,6 +558,8 @@ def create_final_report(
             sample: enrichment_factors.to_list()
             for sample, enrichment_factors in hash_enrichment_factors_per_sample.items()
         },
+        input_reads=input_reads,
+        output_reads=output_reads,
     )
     return total_report
 
