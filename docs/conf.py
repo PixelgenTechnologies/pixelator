@@ -125,7 +125,7 @@ _docs_base_url = os.environ.get(
     "https://PixelgenTechnologies.github.io/pixelator",
 ).rstrip("/")
 
-html_baseurl = f"{_docs_base_url}/"
+html_baseurl = f"{_docs_base_url}/{_docs_version}/"
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "icon_links": [
