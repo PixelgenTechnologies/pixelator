@@ -266,6 +266,7 @@ def denoise(
             product_id="single-cell-pna",
             number_of_umis_removed=None,
             ratio_of_umis_removed=None,
+            # When denoising is turned off input_reads=output_reads
             input_reads=input_reads,
             output_reads=input_reads,
         )
