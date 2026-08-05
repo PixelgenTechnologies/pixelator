@@ -7,6 +7,7 @@ import pytest
 
 from pixelator.pna.graph.component_recovery_utils import (
     create_component_size_data_frame,
+    create_working_edgelist,
     filter_connected_components_by_size,
     get_count_statistics,
     name_components_with_umi_hashes,
@@ -39,6 +40,57 @@ def test_get_count_statistics(tmp_path: Path) -> None:
         "n_reads": 60,
         "n_molecules": 6,
         "n_umi": 4,
+    }
+
+
+def test_get_count_statistics_without_uei_count(tmp_path: Path) -> None:
+    """When uei_count is absent, molecule count defaults to edge count."""
+    path = tmp_path / "edgelist.parquet"
+    pl.DataFrame(
+        {
+            "umi1": ["a", "b", "a"],
+            "umi2": ["d", "c", "d"],
+            "read_count": [10, 20, 30],
+        }
+    ).write_parquet(path)
+
+    stats = get_count_statistics(path)
+
+    assert stats == {
+        "n_edges": 3,
+        "n_reads": 60,
+        "n_molecules": 3,
+        "n_umi": 4,
+    }
+
+
+def test_create_working_edgelist_without_uei_count(tmp_path: Path) -> None:
+    """Working edgelist omits uei_count when the input column is missing."""
+    path = tmp_path / "edgelist.parquet"
+    pl.DataFrame(
+        {
+            "umi1": [1, 2],
+            "umi2": [3, 4],
+            "read_count": [10, 20],
+            "marker_1": ["A", "B"],
+            "marker_2": ["C", "D"],
+        }
+    ).cast(
+        {"umi1": pl.UInt64, "umi2": pl.UInt64, "read_count": pl.UInt32}
+    ).write_parquet(path)
+
+    working_edgelist_path, _ = create_working_edgelist(
+        input_edgelist_path=path, working_dir=tmp_path
+    )
+    working = pl.read_parquet(working_edgelist_path)
+
+    assert "uei_count" not in working.columns
+    assert set(working.columns) >= {
+        "umi1",
+        "umi2",
+        "read_count",
+        "marker_1",
+        "marker_2",
     }
 
 

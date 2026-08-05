@@ -404,8 +404,12 @@ def sample_calling(
 
             marker_1_sql = "COALESCE(hm1.base_marker, e.marker_1) AS marker_1"
             marker_2_sql = "COALESCE(hm2.base_marker, e.marker_2) AS marker_2"
+            edgelist_columns = {
+                row[0] for row in con.execute("DESCRIBE edgelist").fetchall()
+            }
+            uei_count_sql = "e.uei_count, " if "uei_count" in edgelist_columns else ""
             select_cols = (
-                "e.umi1, e.umi2, e.read_count, e.uei_count, "
+                f"e.umi1, e.umi2, e.read_count, {uei_count_sql}"
                 f"{marker_1_sql}, {marker_2_sql}, e.component"
             )
 
