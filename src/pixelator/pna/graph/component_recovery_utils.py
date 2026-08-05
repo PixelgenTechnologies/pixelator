@@ -425,14 +425,15 @@ def create_working_edgelist(
             FROM all_umis
         """)
 
-        uei_count_sql = "ie.uei_count, " if has_uei_count(con, "input_edgelist") else ""
+        uei_count_sql = "ie.uei_count," if has_uei_count(con, "input_edgelist") else ""
         con.execute(f"""
             CREATE VIEW working_edgelist AS
             SELECT
                 nm1.working_name AS umi1,
                 nm2.working_name AS umi2,
                 ie.read_count,
-                {uei_count_sql}ie.marker_1,
+                {uei_count_sql}
+                ie.marker_1,
                 ie.marker_2
             FROM input_edgelist ie
             JOIN node_map nm1 ON ie.umi1 = nm1.original_name
