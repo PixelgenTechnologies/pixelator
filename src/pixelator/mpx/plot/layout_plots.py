@@ -12,14 +12,19 @@ import pandas as pd
 import plotly.graph_objects as go
 import polars as pl
 import scipy
-from matplotlib import cm
-from matplotlib.colors import Normalize
+from matplotlib.colors import Colormap, Normalize
 
 from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.common.marks import experimental
+from pixelator.common.plot import pixelgen_colorscale, pixelgen_sequential_colormap
 from pixelator.mpx.graph import Graph
 from pixelator.mpx.pixeldataset import PixelDataset
 from pixelator.mpx.plot.constants import Color
+
+# min_level=5 keeps the lightest end of the scale well clear of white, so that
+# low-intensity nodes/points remain clearly visible against the plot's white background.
+_DEFAULT_SEQUENTIAL_CMAP = pixelgen_sequential_colormap("blues", min_level=5)
+_DEFAULT_SEQUENTIAL_COLORSCALE = pixelgen_colorscale("blues", min_level=5)
 
 
 def _unit_sphere_surface(horizontal_resolution, vertical_resolution):
@@ -138,7 +143,7 @@ def _decorate_plot(
     im=None,
     include_colorbar: bool = False,
     vmax: float = 0,
-    cmap: str = "cool",
+    cmap: str | Colormap = _DEFAULT_SEQUENTIAL_CMAP,
     ax=None,
     fig=None,
     legend_ax=None,
@@ -216,7 +221,7 @@ def plot_2d_graph(
     node_size: float = 10.0,
     edge_width: float = 1.0,
     show_b_nodes: bool = False,
-    cmap: str = "cool",
+    cmap: str | Colormap = _DEFAULT_SEQUENTIAL_CMAP,
     alpha: float = 0.5,
     cache_layout: bool = False,
     random_seed: int | None = None,
@@ -238,7 +243,8 @@ def plot_2d_graph(
         node_size: The size of the nodes. Defaults to 10.0.
         edge_width: The width of the edges. Defaults to 1.0.
         show_b_nodes: Whether to show the B-nodes. Defaults to False.
-        cmap: The colormap to use for coloring the nodes. Defaults to "cool".
+        cmap: The colormap to use for coloring the nodes. Defaults to a branded
+            sequential blues colormap.
         alpha: The alpha value for the nodes. Defaults to 0.7.
         cache_layout: Whether to cache the layout coordinates. Defaults to False.
         random_seed: The random seed to use for the layout algorithm. Defaults to None.
@@ -323,7 +329,7 @@ def plot_3d_from_coordinates(
     coordinates: pd.DataFrame,
     node_size: float = 3.0,
     opacity: float = 0.4,
-    cmap: str = "Inferno",
+    cmap: str | list[str] = _DEFAULT_SEQUENTIAL_COLORSCALE,
     suppress_fig: bool = False,
 ) -> go.Figure:
     """Plot a 3D graph from the given coordinates.
@@ -332,7 +338,9 @@ def plot_3d_from_coordinates(
         coordinates: The coordinates to plot.
         node_size: The size of the nodes. Defaults to 3.0.
         opacity: The opacity of the nodes. Defaults to 0.4.
-        cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
+        cmap: The plotly colorscale (a named colorscale or a list of colors) to
+            use for coloring the nodes. Defaults to a Pixelgen branded
+            sequential blues colorscale.
         suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
 
     Returns:
@@ -371,7 +379,7 @@ def plot_3d_graph(
     node_size: float = 3.0,
     opacity: float = 0.4,
     show_b_nodes: bool = False,
-    cmap: str = "Inferno",
+    cmap: str | list[str] = _DEFAULT_SEQUENTIAL_COLORSCALE,
     cache_layout: bool = False,
     suppress_fig: bool = False,
 ) -> go.Figure:
@@ -388,7 +396,9 @@ def plot_3d_graph(
         node_size: The size of the nodes. Defaults to 3.0.
         opacity: The opacity of the nodes. Defaults to 0.4.
         show_b_nodes: Whether to show nodes of type B. Defaults to False.
-        cmap: The colormap to use for coloring the nodes. Defaults to "Inferno".
+        cmap: The plotly colorscale (a named colorscale or a list of colors) to
+            use for coloring the nodes. Defaults to a Pixelgen branded
+            sequential blues colorscale.
         cache_layout: Whether to cache the layout coordinates. Defaults to False.
         suppress_fig: Whether to suppress (i.e. not plot) the figure. Defaults to False.
 
@@ -483,9 +493,7 @@ def plot_3d_heatmap(
 
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(1, 1, 1, projection="3d")
-    color_scale = cm.inferno(  # type: ignore
-        densities.reshape(horizontal_resolution, -1)
-    )
+    color_scale = _DEFAULT_SEQUENTIAL_CMAP(densities.reshape(horizontal_resolution, -1))
     ax.plot_surface(  # type: ignore
         X,
         Y,

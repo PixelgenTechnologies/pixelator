@@ -5,27 +5,47 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 from typing import Optional, Tuple
 
-import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+
+from pixelator.common.plot import pixelgen_discrete_colors, set_pixelgen_theme
+from pixelator.pna.plot.comparison import (
+    plot_sample_pair_comparison,
+    write_sample_pair_comparison_report,
+)
+
+__all__ = [
+    "molecule_rank_plot",
+    "plot_sample_pair_comparison",
+    "write_sample_pair_comparison_report",
+]
+
+set_pixelgen_theme()
 
 
 def molecule_rank_plot(
     data: pd.DataFrame, group_by: Optional[str] = None
-) -> Tuple[plt.Figure, plt.Axes]:
-    """Plot the number of molecules (n_umi) per component against its n_umi rank.
+) -> Tuple[Figure, Axes]:
+    """Plot molecule count (``n_umi``) per component against component rank (based on ``n_umi``).
+
+    Each row of data represents one component. Components are ranked by
+    descending ``n_umi`` (rank 1 corresponds to the highest count). When ``group_by`` is set,
+    ranks are computed within each group and series are drawn in separate colors.
 
     Args:
-        data: A pandas DataFrame with a column 'n_umi' containing antibody counts in components.
-        group_by: A column in the DataFrame to group the plot by.
+        data: DataFrame with an ``n_umi`` column giving the molecule count per
+            component.
+        group_by: Optional column name used to rank within groups and color
+            the plot.
 
     Returns:
-        Tuple[plt.Figure, plt.Axes]: A plot showing the number of molecules per
-        component against its molecule rank used for quality control.
+        A representation of the log-log plot for number of molecules vs component rank, which can be used for quality control.
 
     Raises:
-        AssertionError: If the required column(s) are not present in the DataFrame.
-        ValueError: If the data types are invalid.
+        AssertionError: If ``n_umi`` or ``group_by`` is missing from the columns in ``data``.
+        ValueError: If the type of ``data[group_by]`` is invalid.
     """
     if "n_umi" not in data.columns:
         raise AssertionError("column 'n_umi' is missing from DataFrame")
@@ -56,6 +76,11 @@ def molecule_rank_plot(
             x="rank",
             y="n_umi",
             hue=group_by,
+            palette=(
+                pixelgen_discrete_colors(n=data[group_by].nunique())
+                if group_by is not None
+                else None
+            ),
             aspect=1.6,
         )
         .set(xscale="log", yscale="log")

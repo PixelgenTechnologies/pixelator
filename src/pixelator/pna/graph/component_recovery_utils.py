@@ -194,12 +194,13 @@ def get_count_statistics(edgelist_path: Path) -> dict:
     }
 
 
-def write_hive_partitioned_edgelist_without_small_components(
+def write_hive_partitioned_edgelist_without_out_of_size_bound_components(
     input_edgelist_path: Path,
     min_component_size_to_prune: int,
+    max_component_size_to_prune: int = np.iinfo(np.uint64).max,
     working_dir: Path = DEFAULT_WORKING_DIR,
 ) -> tuple[Path, pl.DataFrame]:
-    """Remove components below a UMI score threshold and write a hive-partitioned edgelist.
+    """Remove components outside the specified size bounds and write a hive-partitioned edgelist..
 
     The per-component score matches hybrid community detection:
     ``COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)``. Rows from components that pass the
@@ -207,7 +208,8 @@ def write_hive_partitioned_edgelist_without_small_components(
 
     Args:
         input_edgelist_path: Parquet file with component assignments (e.g. after hybrid detection).
-        min_component_size_to_prune: Components with a score strictly below this are dropped.
+        min_component_size_to_prune: Components with number of UMIs strictly below this are dropped.
+        max_component_size_to_prune: Components with number of UMIs strictly above this are dropped.
         working_dir: Directory for a temporary DuckDB file and the hive-partition output. Defaults
             to ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
@@ -216,7 +218,8 @@ def write_hive_partitioned_edgelist_without_small_components(
     """
     hive_partitioned_edgelist_path = working_dir / "hive_partitioned_edgelist.parquet"
     min_sz = int(min_component_size_to_prune)
-    logger.debug("Filtering out small components from edge list")
+    max_sz = int(max_component_size_to_prune)
+    logger.debug("Filtering out components outside size bounds from edge list")
     with connect_duckdb(working_dir / "temp_hivepartition.duckdb") as conn:
         conn.execute(f"""
             CREATE TEMP TABLE component_counts AS
@@ -225,20 +228,21 @@ def write_hive_partitioned_edgelist_without_small_components(
                     CAST(
                         COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)
                         AS UINT32
-                    ) AS n_umi
+                    ) AS n_umi,
+                    CAST(COUNT(*) AS UINT32) AS n_edges
                 FROM parquet_scan('{str(input_edgelist_path)}')
                 GROUP BY component;
 
             CREATE TABLE discarded_components AS
-                SELECT component, n_umi
+                SELECT component, n_umi, n_edges
                 FROM component_counts
-                WHERE n_umi < {min_sz};
+                WHERE n_umi < {min_sz} OR n_umi > {max_sz};
 
             CREATE TABLE edgelist AS
                 SELECT e.*
                 FROM parquet_scan('{str(input_edgelist_path)}') e
                 JOIN component_counts c ON e.component = c.component
-                WHERE c.n_umi >= {min_sz}
+                WHERE c.n_umi >= {min_sz} AND c.n_umi <= {max_sz}
                 ORDER BY e.component;
 
             COPY edgelist TO '{str(hive_partitioned_edgelist_path)}'
@@ -264,8 +268,8 @@ def find_clashing_umis(
         component_stats: Statistics object to update with clash information.
 
     Returns:
-        (pl.Series, GraphStatistics): A tuple containing a Polars Series of clashing UMIs
-        and the updated component statistics.
+        A tuple containing a Polars Series of clashing UMIs and the updated
+        component statistics.
     """
     with connect_duckdb() as con:
         con.execute(
@@ -594,14 +598,17 @@ def filter_connected_components_by_size(
         working_dir: Directory for temporary parquet output.
 
     Returns:
-        tuple[Path, GraphStatistics]: Path to the filtered parquet edgelist and updated component
-        statistics.
+        A tuple of the path to the filtered parquet edgelist and the updated
+        component statistics.
 
     Raises:
         ConnectedComponentException: If no components remain after filtering.
     """
     component_sizes = create_component_size_data_frame(input_edgelist_path)
-    component_sizes = pl.concat([component_sizes, discard_sizes], how="vertical")
+    component_sizes = pl.concat(
+        [component_sizes, discard_sizes.select(["component", "n_umi"])],
+        how="vertical",
+    )
 
     unique, counts = np.unique(
         component_sizes["n_umi"].cast(pl.Int32), return_counts=True

@@ -214,7 +214,7 @@ class ShortestPathFinder:
 
 def process_component(comp_name, edgelist_path, tmpdir):
     """Process a single component to remove edges not participating in cycles."""
-    with connect_duckdb() as con:
+    with connect_duckdb(config={"threads": "1"}) as con:
         con.execute(
             """
             CREATE TEMP TABLE comp_edgelist AS
@@ -352,7 +352,13 @@ def remove_no_cycle_edges(
             logger.info(
                 f"Processing {len(components)} components in parallel using {n_threads} threads."
             )
-            n_removed_edges_list = Parallel(n_jobs=n_threads)(
+            # Keep workers alive longer to avoid worker-restart warnings
+            # during long component processing batches.
+            n_removed_edges_list = Parallel(
+                n_jobs=n_threads,
+                backend="loky",
+                backend_kwargs={"timeout": 1800},
+            )(
                 delayed(process_component)(comp_name, input_edgelist_path, tmpdir)
                 for comp_name in components
             )

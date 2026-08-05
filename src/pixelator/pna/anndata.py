@@ -45,32 +45,25 @@ def pna_edgelist_to_anndata(
 ) -> AnnData:
     """Build an AnnData object from a DuckDB connection to a pixel file and a panel object.
 
-    Parameters
-    ----------
-    pixel_connection : duckdb.DuckDBPyConnection
-    A DuckDB connection to a pixel file. The connection must contain an 'edgelist' table
-    with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
-    panel : PNAAntibodyPanel
-    The antibody panel object containing marker metadata.
+    Args:
+        pixel_connection: A DuckDB connection to a pixel file. The connection must contain an 'edgelist' table
+            with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
+        panel: The antibody panel object containing marker metadata.
 
     Returns:
-    -------
-    AnnData
         An AnnData object with counts and panel information.
 
     Notes:
-    -----
-    Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
+        Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
 
-    The aggregations are computed in fixed-size batches of components. Each
-    ``COUNT(DISTINCT umi*)`` operator therefore only ever builds a hash set
-    over one batch's worth of rows instead of a single global distinct hash
-    table per worker thread. The batch size (:data:`_COMPONENT_BATCH_SIZE`) is
-    tuned to amortise DuckDB's per-query overhead while keeping peak hash
-    table memory bounded. ``WHERE component IN (...)`` benefits from DuckDB's
-    row-group zone maps when the edgelist is clustered by component (the
-    typical case for PNA pipelines that emit edges component-by-component).
-
+        The aggregations are computed in fixed-size batches of components. Each
+        ``COUNT(DISTINCT umi*)`` operator therefore only ever builds a hash set
+        over one batch's worth of rows instead of a single global distinct hash
+        table per worker thread. The batch size (:data:`_COMPONENT_BATCH_SIZE`) is
+        tuned to amortise DuckDB's per-query overhead while keeping peak hash
+        table memory bounded. ``WHERE component IN (...)`` benefits from DuckDB's
+        row-group zone maps when the edgelist is clustered by component (the
+        typical case for PNA pipelines that emit edges component-by-component).
     """
     components = (
         pixel_connection.execute(

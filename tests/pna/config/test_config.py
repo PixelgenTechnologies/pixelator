@@ -44,6 +44,7 @@ def test_load_assays_dir(pna_data_root):
 
     a1 = config.get_assay("test-pna-assay")
     assert a1.name == "test-pna-assay"
+    assert a1.filepath == (pna_data_root / "assays" / "test-pna-assay.yaml").resolve()
 
 
 def test_assay_region_ids():
@@ -273,6 +274,9 @@ def test_load_antibody_panel_util(pna_data_root):
     )
     assert path_panel.name == "test-pna-panel"
     assert path_panel.filename == "test-pna-panel-v1.1.0.csv"
+    assert (
+        path_panel.filepath == (pna_data_root / "test-pna-panel-v1.1.0.csv").resolve()
+    )
 
     with pytest.raises(AssertionError):
         load_antibody_panel(pna_config, "human-qwdqwdqwdqdw-proteomics")

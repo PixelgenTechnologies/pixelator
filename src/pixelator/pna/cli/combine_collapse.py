@@ -89,17 +89,7 @@ def validate_mismatches(ctx, param, value):
 def combine_collapse(
     ctx, parquet, reports, output, parquet_pattern, report_pattern, memory
 ):
-    """Combine parquet and JSON files from partitioned collapse results.
-
-    Args:
-        ctx: Click context from the command decorator.
-        parquet: Path to a parquet file produced by collapse (may be repeated).
-        reports: Path to a collapse report JSON file (may be repeated).
-        output: The path where the results will be placed (it is created if it does not exist).
-        parquet_pattern: The pattern to match parquet files.
-        report_pattern: The pattern to match report files.
-        memory: The maximum amount of memory available for processing.
-    """
+    """Combine parquet and JSON files from partitioned collapse results."""
     # log input parameters
     log_step_start(
         "combine-collapse",

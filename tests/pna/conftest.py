@@ -33,7 +33,7 @@ PNA_DATA_ROOT = Path(__file__).parent / "data"
 # We need to add basic logging config here to make sure
 # integration tests output logs to stdout
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("pixelator").setLevel(logging.DEBUG)
+logging.getLogger("pixelator").setLevel(logging.INFO)
 
 
 @pytest.fixture(name="pna_data_root", scope="module")
@@ -71,27 +71,6 @@ def pna_pxl_dataset_fixture(pna_pxl_file):
         pna_pxl_file: Pna pxl file.
     """
     pixel = read(pna_pxl_file)
-    return pixel
-
-
-@pytest.fixture(name="denoise_pxl_file", scope="module")
-def denoise_pxl_file_fixture(pna_data_root):
-    """Load an example pna pixel from disk.
-
-    Args:
-        pna_data_root: Pna data root.
-    """
-    return pna_data_root / "test_denoise.pxl"
-
-
-@pytest.fixture(name="denoise_pxl_dataset", scope="module")
-def denoise_pxl_dataset_fixture(denoise_pxl_file):
-    """Load an example pna pixel from disk.
-
-    Args:
-        denoise_pxl_file: Denoise pxl file.
-    """
-    pixel = read(denoise_pxl_file)
     return pixel
 
 

@@ -52,9 +52,9 @@ def _validate_session_file_path(path: Path) -> None:
 
 
 class PixelDataViewer:
-    """Maps sample names to PXL files and can open a :class:`PixelDataViewerSession`.
+    """Maps sample names to PXL files and can open a :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewerSession`.
 
-    Query execution uses a :class:`PixelDataViewerSession` from ``viewer.open()``
+    Query execution uses a :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewerSession` from ``viewer.open()``
 
     .. code-block:: python
 
@@ -185,7 +185,7 @@ class PixelDataViewerSession:
     """DuckDB session over one or more attached PXL files.
 
     Pass a list of ``(sample_name, pxl_path, db_name)`` tuples, where
-    ``db_name`` is the DuckDB attach alias (see :meth:`PixelDataViewer.normalized_sample_db_name`).
+    ``db_name`` is the DuckDB attach alias (see :meth:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer.normalized_sample_db_name`).
 
     At construction time, ``sample_name``, ``db_name``, and the path string are
     validated to only use valid DuckDB identifiers.

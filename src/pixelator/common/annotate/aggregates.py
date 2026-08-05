@@ -20,18 +20,18 @@ logger = logging.getLogger(__name__)
 
 
 def specificity_tau(matrix: np.ndarray) -> np.ndarray:
-    """Tau specificity score computed as described in [1]_.
+    """Tau specificity score computed as described in [Yanai2005]_.
 
     Essentially it gives us a score between 0 and 1, where a component that
     expresses a single marker would have a tau score of 1, and one where all
     markers are equally expressed would have a tau score of 0.
 
-    .. [1] Yanai I, Benjamin H, Shmoish M, Chalifa-Caspi V, Shklar M, Ophir R,
-    Bar-Even A, Horn-Saban S, Safran M, Domany E, Lancet D, Shmueli O.
-    Genome-wide midrange transcription profiles reveal expression level
-    relationships in human tissue specification. Bioinformatics.
-    2005 Mar 1;21(5):650-9.
-    doi: 10.1093/bioinformatics/bti042. Epub 2004 Sep 23. PMID: 15388519.
+    .. [Yanai2005] Yanai I, Benjamin H, Shmoish M, Chalifa-Caspi V, Shklar M, Ophir R,
+        Bar-Even A, Horn-Saban S, Safran M, Domany E, Lancet D, Shmueli O.
+        Genome-wide midrange transcription profiles reveal expression level
+        relationships in human tissue specification. Bioinformatics.
+        2005 Mar 1;21(5):650-9.
+        doi: 10.1093/bioinformatics/bti042. Epub 2004 Sep 23. PMID: 15388519.
 
     Args:
         matrix: a numpy matrix of marker counts
@@ -78,9 +78,9 @@ def call_aggregates(adata: AnnData, inplace: bool = True) -> Optional[AnnData]:
     the respective levels of tau scores.
     - `uns["tau_thresholds"]["tau_upper_hard_limit"]` the upper hard
     limit used to set `tau_type` as high
-    - `uns["tau_thresholds"]["tau_upper_iqr_limit]` the upper limit
+    - `uns["tau_thresholds"]["tau_upper_iqr_limit"]` the upper limit
     based on IQR used to set `tau_type` as high
-    - `uns["tau_thresholds"]["tau_lower_iqr_limit]` the lower limit
+    - `uns["tau_thresholds"]["tau_lower_iqr_limit"]` the lower limit
     based on IQR used to set `tau_type` as low
 
     Args:
