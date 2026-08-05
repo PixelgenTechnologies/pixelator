@@ -1,0 +1,26 @@
+pixelator.pna.analysis.denoise.denoise_pls
+==========================================
+
+.. py:function:: pixelator.pna.analysis.denoise.denoise_pls(component: pixelator.pna.graph.PNAGraph, *, ncomp: int = 5, model_k: int = 2, pred_k: int = 1, use_weights: bool = True, normalization: pixelator.pna.graph.node_pls.GraphNormalizationOptions = 'L1', residualize: bool = False, pls_component_p_threshold: float = 0.01, min_pls_coreness_correlation: float = 0.0, pls_score_threshold: float = -3.0) -> list
+
+   PLS-on-coreness denoise: significant components, score gate, then largest connected set.
+
+   Fits PLS with neighborhood radius ``model_k`` and scores nodes
+   using radius ``pred_k``.
+
+   Filtering uses **all** nodes (not only ACE ``high``); removals
+   are returned for merging with other denoise methods.
+
+   :param component: Component graph (mutates ``coreness`` on nodes temporarily).
+   :param ncomp: Requested PLS components (capped by sample size and feature count).
+   :param model_k: Neighborhood steps for fitting X.
+   :param pred_k: Neighborhood steps for prediction / scores.
+   :param use_weights: Use edge weights in neighborhood expansion.
+   :param normalization: Neighborhood matrix normalization.
+   :param residualize: If True, residualize X against a ``pixel_type`` design matrix.
+   :param pls_component_p_threshold: Per-component Pearson test vs coreness.
+   :param min_pls_coreness_correlation: Minimum positive correlation.
+   :param pls_score_threshold: All selected score columns must exceed this.
+
+   :returns: Nodes to remove, ``[]`` if no PLS-based removal applies.
+

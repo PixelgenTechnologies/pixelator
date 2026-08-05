@@ -1,0 +1,19 @@
+pixelator.common.duckdb_utils.connect_duckdb
+============================================
+
+.. py:function:: pixelator.common.duckdb_utils.connect_duckdb(database: str | pathlib.Path = ':memory:', *, read_only: bool = False, config: dict | None = None, temp_dir: str | pathlib.Path | None = None, temp_dir_size_limit: str | None = None) -> duckdb.DuckDBPyConnection
+
+   Open a DuckDB connection with the spill (temp) directory always set.
+
+   This prevents DuckDB from spilling next to the database file, which may be on a
+   networked filesystem.
+
+   :param database: The database to connect to. Defaults to an in-memory database.
+   :param read_only: Whether to open the database in read-only mode.
+   :param config: A DuckDB configuration dict passed through to ``duckdb.connect``.
+   :param temp_dir: The spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
+   :param temp_dir_size_limit: The spill directory size limit. Defaults to
+                               ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when unset.
+
+   :returns: A DuckDB connection with ``temp_directory`` configured.
+

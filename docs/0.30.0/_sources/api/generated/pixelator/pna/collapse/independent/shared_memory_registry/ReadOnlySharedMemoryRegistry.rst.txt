@@ -1,0 +1,33 @@
+pixelator.pna.collapse.independent.shared_memory_registry.ReadOnlySharedMemoryRegistry
+======================================================================================
+
+.. py:class:: pixelator.pna.collapse.independent.shared_memory_registry.ReadOnlySharedMemoryRegistry(registry: SharedMemoryRegistry)
+
+   Read-only view of a SharedMemoryRegistry.
+
+   This class allows to create a read-only view of a SharedMemoryRegistry that can be passed to
+   other processes.
+   The view can be used to access shared memory buffers and numpy arrays backed by shared memory.
+
+
+   .. py:method:: get_array(name: str) -> numpy.ndarray
+
+      Query the registry for a shared memory array by name.
+
+      The array will be recreated from the registered shared memory buffer.
+
+      :param name: The name of the array
+
+      :returns: The numpy array backed by shared memory.
+
+
+
+   .. py:method:: get_buffer(name: str) -> multiprocessing.shared_memory.SharedMemory | None
+
+      Query the registry for a shared memory buffer by name.
+
+      :param name: The name of the buffer
+
+      :returns: The shared memory buffer or None if no buffer with the given name is found.
+
+

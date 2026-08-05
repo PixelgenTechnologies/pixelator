@@ -1,0 +1,61 @@
+pixelator.pna.collapse.paired.report.CollapseSampleReport
+=========================================================
+
+.. py:class:: pixelator.pna.collapse.paired.report.CollapseSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.base.SampleReport`
+
+
+   Model for report data returned by the collapse stage.
+
+
+   .. py:attribute:: input_molecules
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: markers
+      :type:  list[pixelator.pna.collapse.paired.statistics.MarkerLinkGroupStats]
+      :value: None
+
+
+
+   .. py:attribute:: output_molecules
+      :type:  int
+      :value: None
+
+
+
+   .. py:property:: output_reads
+      :type: int
+
+
+      The total number of error-corrected output reads.
+
+      This is an alias for the input reads as no reads are removed during the collapse step.
+
+
+   .. py:attribute:: processed_files
+      :type:  list[pixelator.pna.collapse.paired.statistics.CollapseInputFile]
+      :value: None
+
+
+
+   .. py:attribute:: report_type
+      :type:  str
+      :value: 'collapse'
+
+
+
+   .. py:attribute:: unique_marker_links
+      :type:  int
+      :value: None
+
+

@@ -1,0 +1,7 @@
+pixelator.pna.graph.community_detection.map_working_to_original_umi_names
+=========================================================================
+
+.. py:function:: pixelator.pna.graph.community_detection.map_working_to_original_umi_names(input_edgelist_path: pathlib.Path, node_map_path: pathlib.Path, working_dir: pathlib.Path) -> pathlib.Path
+
+   Replace working UMI names in an edgelist with original names and write parquet.
+

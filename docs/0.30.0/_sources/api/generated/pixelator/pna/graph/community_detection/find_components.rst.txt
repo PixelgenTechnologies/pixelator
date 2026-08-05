@@ -1,0 +1,19 @@
+pixelator.pna.graph.community_detection.find_components
+=======================================================
+
+.. py:function:: pixelator.pna.graph.community_detection.find_components(input_edgelist_path: pathlib.Path, working_dir: pathlib.Path, multiplet_recovery: bool = True, edge_cycle_verification: bool = False, min_read_count: int = 1, refinement_options: StagedRefinementOptions = StagedRefinementOptions(), component_size_threshold: bool | tuple[int, int] = (MIN_PNA_COMPONENT_SIZE, np.iinfo(np.uint64).max), n_threads: int = 1) -> tuple[pixelator.pna.graph.report.GraphStatistics, pathlib.Path]
+
+   Find components in the given edgelist.
+
+   :param input_edgelist_path: Path to the input edgelist in Parquet format.
+   :param working_dir: Directory to use for temporary files and output.
+   :param multiplet_recovery: Whether to perform multiplet recovery.
+   :param edge_cycle_verification: Whether to perform edge cycle verification.
+   :param min_read_count: Minimum read count threshold for an edge to be retained.
+   :param refinement_options: Options for staged refinement during community detection.
+   :param component_size_threshold: Minimum and maximum size threshold for components to be retained.
+   :param n_threads: Number of threads to use for parallel processing.
+
+   :returns: A tuple of the component statistics and the path to the edgelist with
+             components.
+

@@ -1,0 +1,15 @@
+pixelator.common.utils.sanity_check_inputs
+==========================================
+
+.. py:function:: pixelator.common.utils.sanity_check_inputs(input_files: Sequence[pixelator.common.types.PathType] | pixelator.common.types.PathType, allowed_extensions: Union[Sequence[str], Optional[str]] = None) -> None
+
+   Perform basic sanity checking of input files.
+
+   :param input_files: the files to sanity check
+   :param allowed_extensions: the expected file extension of the files, e.g. 'fastq.gz' or a tuple of
+                              allowed types eg. ('fastq.gz', 'fq.gz')
+
+   :returns: None
+
+   :raises AssertionError: when any of validation fails
+

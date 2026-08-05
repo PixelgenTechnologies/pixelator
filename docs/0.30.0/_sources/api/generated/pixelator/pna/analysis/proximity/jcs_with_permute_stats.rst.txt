@@ -1,0 +1,13 @@
+pixelator.pna.analysis.proximity.jcs_with_permute_stats
+=======================================================
+
+.. py:function:: pixelator.pna.analysis.proximity.jcs_with_permute_stats(edgelist: polars.DataFrame, n_permutations: int = 100, min_marker_count: int = 0) -> pandas.DataFrame
+
+   Compute proximity results augmented with statistics based on permutation tests.
+
+   :param edgelist: A DataFrame representing the edgelist.
+   :param n_permutations: Number of permutations to perform. Defaults to 100.
+   :param min_marker_count: Minimum marker count to consider. Defaults to 0.
+
+   :returns: A DataFrame containing the proximity statistics.
+

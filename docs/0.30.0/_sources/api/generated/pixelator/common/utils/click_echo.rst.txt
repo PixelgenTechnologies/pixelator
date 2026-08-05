@@ -1,0 +1,10 @@
+pixelator.common.utils.click_echo
+=================================
+
+.. py:function:: pixelator.common.utils.click_echo(msg: str, multiline: bool = False)
+
+   Print a line to the console with optional long-line wrapping.
+
+   :param msg: the message to print
+   :param multiline: True to use text wrapping or False otherwise (default)
+

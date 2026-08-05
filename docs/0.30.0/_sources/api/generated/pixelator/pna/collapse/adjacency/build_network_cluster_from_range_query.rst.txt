@@ -1,0 +1,19 @@
+pixelator.pna.collapse.adjacency.build_network_cluster_from_range_query
+=======================================================================
+
+.. py:function:: pixelator.pna.collapse.adjacency.build_network_cluster_from_range_query(lims, distances, indices, index_map=None)
+
+   Create a sparse adjacency matrix from a FAISS range query result.
+
+   FAISS range queries already returns a CSR matrix
+
+   So for query i:
+   - lims[i], lims[i+1] is the range in I and D that lists the neighbors of i
+   - I[lims[i]:lims[i+1]] are the indices from the database vectors
+   - D[lims[i]:lims[i+1]] are the corresponding distances
+
+   :param lims: The range limits for the neighbors of each query.
+   :param distances: The distances of the neighbors.
+   :param indices: The indices of the neighbors.
+   :param index_map: A transformation of the indices
+

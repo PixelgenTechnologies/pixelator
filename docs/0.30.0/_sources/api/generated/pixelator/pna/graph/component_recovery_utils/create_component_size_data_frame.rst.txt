@@ -1,0 +1,15 @@
+pixelator.pna.graph.component_recovery_utils.create_component_size_data_frame
+=============================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.create_component_size_data_frame(input_edgelist_path: pathlib.Path) -> polars.DataFrame
+
+   Find component sizes from a parquet edgelist.
+
+   Add pre-filtering connected component size statistics to the component stats.
+
+   :param input_edgelist_path: Path to the input parquet edgelist with ``component``, ``umi1``, and
+   :param ``umi2`` columns.:
+
+   :returns: A Polars DataFrame with columns ``component`` and ``n_umi``, where ``n_umi`` is the count
+             of distinct UMIs in that component (counting both ``umi1`` and ``umi2``).
+

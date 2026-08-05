@@ -1,0 +1,41 @@
+pixelator.pna.config.plugin
+===========================
+
+.. py:module:: pixelator.pna.config.plugin
+
+.. autoapi-nested-parse::
+
+   Helpers for configuration plugin entrypoints.
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.config.plugin.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/plugin/fetch_config_plugins
+   /api/generated/pixelator/pna/config/plugin/load_config_plugins
+
+.. autoapisummary::
+
+   pixelator.pna.config.plugin.fetch_config_plugins
+   pixelator.pna.config.plugin.load_config_plugins
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

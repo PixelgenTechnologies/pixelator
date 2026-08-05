@@ -1,0 +1,18 @@
+pixelator.pna.utils.init_duckdb_conn
+====================================
+
+.. py:function:: pixelator.pna.utils.init_duckdb_conn(path: pathlib.Path | str = ':memory:', read_only: bool = False, memory_limit: int | None = None, threads: int | None = None, temp_dir: str | pathlib.Path | None = None, temp_dir_size_limit: str | None = None) -> duckdb.DuckDBPyConnection
+
+   Initialize a duckdb connection with resource limits.
+
+   :param path: The path to the duckdb database file. Defaults to ":memory:" for in-memory database.
+   :param read_only: Whether to open the database in read-only mode. Defaults to False.
+   :param memory_limit: The memory limit in bytes. If None, no limit is set. Defaults to None.
+   :param threads: The number of threads to use. If None, duckdb will decide. Defaults to None.
+   :param temp_dir: The directory to use for temporary files. If None, defaults to
+                    ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp`` (never next to the database file).
+   :param temp_dir_size_limit: The maximum size of the temporary directory. If None, defaults to
+                               ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when set, otherwise no limit.
+
+   :returns: A duckdb connection object.
+

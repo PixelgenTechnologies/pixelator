@@ -1,0 +1,14 @@
+pixelator.pna.analysis.report.SvdReport
+=======================================
+
+.. py:class:: pixelator.pna.analysis.report.SvdReport(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Model for report data returned by the k-core analysis.
+
+
+   .. py:attribute:: median_variance_explained_3d
+      :type:  float
+

@@ -1,0 +1,32 @@
+pixelator.pna.collapse.paired.statistics
+========================================
+
+.. py:module:: pixelator.pna.collapse.paired.statistics
+
+.. autoapi-nested-parse::
+
+   Collect statistics about the collapse process.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/paired/statistics/CollapseInputFile
+   /api/generated/pixelator/pna/collapse/paired/statistics/CollapseStatistics
+   /api/generated/pixelator/pna/collapse/paired/statistics/CollapseSummaryStatistics
+   /api/generated/pixelator/pna/collapse/paired/statistics/MarkerLinkGroupStats
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.paired.statistics.CollapseInputFile
+   pixelator.pna.collapse.paired.statistics.CollapseStatistics
+   pixelator.pna.collapse.paired.statistics.CollapseSummaryStatistics
+   pixelator.pna.collapse.paired.statistics.MarkerLinkGroupStats
+
+

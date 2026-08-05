@@ -1,0 +1,73 @@
+pixelator.pna.graph.PNAGraphBackend
+===================================
+
+.. py:class:: pixelator.pna.graph.PNAGraphBackend(raw: Optional[networkx.Graph] = None)
+
+   Bases: :py:obj:`pixelator.common.graph.backends.implementations._networkx.NetworkXGraphBackend`
+
+
+   Graph backend for PNA data that reuses most of the NetworkXGraphBackend.
+
+
+   .. py:method:: from_edgelist(edgelist: polars.LazyFrame | pandas.DataFrame, **kwargs)
+      :staticmethod:
+
+
+      Create a graph from an edgelist.
+
+      :param edgelist: Edge list used to build the graph.
+      :param kwargs: Additional keyword arguments passed to the graph backend.
+
+
+
+   .. py:method:: from_record_batches(batches: Iterable[pyarrow.RecordBatch], **kwargs)
+      :staticmethod:
+
+
+      Create a graph from an edgelist.
+
+      :param batches: PyArrow record batches containing edge rows.
+      :param kwargs: Additional keyword arguments passed to the graph backend.
+
+
+
+   .. py:method:: layout_coordinates(layout_algorithm: pixelator.common.graph.backends.protocol.SupportedLayoutAlgorithm = 'coarsened_pmds_3d', get_node_marker_matrix: bool = True, random_seed: Optional[int] = None, **kwargs) -> pandas.DataFrame
+
+      Generate coordinates and (optionally) node marker counts for plotting.
+
+      Generate a dataframe with coordinates, and (optionally) node marker
+      counts to use that can be used for plotting.
+
+      The layout options are:
+      - coarsened_pmds_3d
+      - fruchterman_reingold
+      - fruchterman_reingold_3d
+      - kamada_kawai
+      - kamada_kawai_3d
+      - pmds
+      - pmds_3d
+      - wpmds_3d
+      - spectral_3d
+
+
+      For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
+      preferred. On PNA data they are faster and produce better results.
+
+      :param layout_algorithm: Layout algorithm to use for coordinate generation.
+      :param get_node_marker_matrix: Add a matrix of marker counts to each node if True.
+      :param random_seed: Seed for graph layouts with a stochastic element. Useful for
+                          deterministic layouts across method calls.
+      :param \*\*kwargs: Passed to the underlying layout implementation.
+
+      :returns: DataFrame with coordinates and marker counts (if enabled).
+
+      :raises AssertionError: If the provided layout_algorithm is not valid.
+      :raises ValueError: If the current graph instance is empty.
+
+
+
+   .. py:method:: node_marker_counts() -> pandas.DataFrame
+
+      Return the marker counts for each node.
+
+

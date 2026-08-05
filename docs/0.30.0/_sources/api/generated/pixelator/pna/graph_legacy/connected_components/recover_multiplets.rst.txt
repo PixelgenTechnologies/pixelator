@@ -1,0 +1,12 @@
+pixelator.pna.graph_legacy.connected_components.recover_multiplets
+==================================================================
+
+.. py:function:: pixelator.pna.graph_legacy.connected_components.recover_multiplets(edgelist: polars.LazyFrame, umi_component_map: dict | None = None, leiden_iterations: int = 1, refinement_options: StagedRefinementOptions | None = None) -> tuple[networkx.Graph, MultipletRecoveryStats]
+
+   Recover multiplets by Leiden community detection, removing crossing edges.
+
+   :param edgelist: The edgelist to add the component column to.
+   :param umi_component_map: A dictionary mapping nodes to components.
+   :param leiden_iterations: number of Leiden iterations to run
+   :param refinement_options: options for component refinement
+

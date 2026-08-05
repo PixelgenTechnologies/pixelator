@@ -1,0 +1,237 @@
+pixelator.pna.graph.report.GraphStatistics
+==========================================
+
+.. py:class:: pixelator.pna.graph.report.GraphStatistics
+
+   Graph statistics for a sample.
+
+
+   .. py:attribute:: aggregate_count
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: component_count_post_component_size_filtering
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: component_count_post_recovery
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: component_count_pre_component_size_filtering
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: component_count_pre_recovery
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: component_size_max_filtering_threshold
+      :type:  int | None
+      :value: None
+
+
+
+   .. py:attribute:: component_size_min_filtering_threshold
+      :type:  int | None
+      :value: 0
+
+
+
+   .. py:attribute:: crossing_edges_removed
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: crossing_edges_removed_initial_stage
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: edge_count_in_aggregates
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: edge_count_post_recovery
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: edge_count_pre_recovery
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: edge_cycle_length_distribution
+      :type:  dict[int, int]
+
+
+   .. py:attribute:: edges_removed_in_cycle_verification
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: fraction_nodes_in_largest_component_post_recovery
+      :type:  float
+      :value: 0.0
+
+
+
+   .. py:attribute:: fraction_nodes_in_largest_component_pre_recovery
+      :type:  float
+      :value: 0.0
+
+
+
+   .. py:attribute:: max_recursion_depth
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: median_markers_per_component
+      :type:  float
+      :value: 0
+
+
+
+   .. py:attribute:: median_reads_per_component
+      :type:  float
+      :value: 0
+
+
+
+   .. py:attribute:: molecules_input
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: molecules_output
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: molecules_post_read_count_filtering
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: molecules_post_umi_collision_removal
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: node_count_in_aggregates
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: node_count_post_recovery
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: node_count_pre_recovery
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: post_flp_community_sizes
+      :type:  dict[int, int]
+
+
+   .. py:attribute:: pre_filtering_component_sizes
+      :type:  dict[int, int] | None
+      :value: None
+
+
+
+   .. py:attribute:: read_count_in_aggregates
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: reads_input
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: reads_output
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: reads_post_read_count_filtering
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: reads_post_umi_collision_removal
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: stranded_nodes_pre_recovery
+      :type:  int
+      :value: 0
+
+
+
+   .. py:method:: to_dict()
+
+      Convert the object to a dictionary.
+
+
+
+   .. py:attribute:: umi1_clashes
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: umi1_umi2_clashes
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: umi2_clashes
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: umis_input
+      :type:  int
+      :value: 0
+
+

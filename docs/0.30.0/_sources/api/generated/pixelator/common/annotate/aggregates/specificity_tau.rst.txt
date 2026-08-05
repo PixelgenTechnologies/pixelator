@@ -1,0 +1,22 @@
+pixelator.common.annotate.aggregates.specificity_tau
+====================================================
+
+.. py:function:: pixelator.common.annotate.aggregates.specificity_tau(matrix: numpy.ndarray) -> numpy.ndarray
+
+   Tau specificity score computed as described in [Yanai2005]_.
+
+   Essentially it gives us a score between 0 and 1, where a component that
+   expresses a single marker would have a tau score of 1, and one where all
+   markers are equally expressed would have a tau score of 0.
+
+   .. [Yanai2005] Yanai I, Benjamin H, Shmoish M, Chalifa-Caspi V, Shklar M, Ophir R,
+       Bar-Even A, Horn-Saban S, Safran M, Domany E, Lancet D, Shmueli O.
+       Genome-wide midrange transcription profiles reveal expression level
+       relationships in human tissue specification. Bioinformatics.
+       2005 Mar 1;21(5):650-9.
+       doi: 10.1093/bioinformatics/bti042. Epub 2004 Sep 23. PMID: 15388519.
+
+   :param matrix: a numpy matrix of marker counts
+
+   :returns: a vector of the computed tau values
+

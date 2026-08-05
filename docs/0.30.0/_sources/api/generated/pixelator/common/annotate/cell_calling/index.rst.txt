@@ -1,0 +1,39 @@
+pixelator.common.annotate.cell_calling
+======================================
+
+.. py:module:: pixelator.common.annotate.cell_calling
+
+.. autoapi-nested-parse::
+
+   Functions for doing size-based cell calling.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.annotate.cell_calling.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/annotate/cell_calling/find_component_size_limits
+
+.. autoapisummary::
+
+   pixelator.common.annotate.cell_calling.find_component_size_limits
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

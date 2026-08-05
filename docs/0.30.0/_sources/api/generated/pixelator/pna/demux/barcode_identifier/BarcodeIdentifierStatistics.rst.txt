@@ -1,0 +1,91 @@
+pixelator.pna.demux.barcode_identifier.BarcodeIdentifierStatistics
+==================================================================
+
+.. py:class:: pixelator.pna.demux.barcode_identifier.BarcodeIdentifierStatistics
+
+   Helper class to collect statistics for the barcode identifier step.
+
+   Each individual worker in a PipelineExecutor will have its own
+   independent instance of this class. At the end of the execution,
+   the statistics will be merged into a single instance and passed
+   to the final statistics object.
+
+
+   :ivar passed: the number of reads that passed the barcode identifier
+   :ivar failed: the number of reads that failed the barcode identifier
+   :ivar missing_pid1: the number of reads with a missing PID1
+   :ivar missing_pid2: the number of reads with a missing PID2
+   :ivar pid1_matches_distance_distribution: A counter object capturing the distribution of distances
+                                             for PID1 matches.
+   :ivar pid2_matches_distance_distribution: A counter object capturing the distribution of distances
+                                             for PID2 matches.
+   :ivar pid_pair_counter: A counter object capturing the number of reads per PID pair.
+
+
+
+   .. py:method:: collect() -> dict[str, Any]
+
+      Return a dictionary with statistics.
+
+
+
+   .. py:attribute:: corrected
+      :value: 0
+
+
+
+   .. py:attribute:: exact
+      :value: 0
+
+
+
+   .. py:property:: failed
+      :type: int
+
+
+      Return the total number of reads that failed the barcode identification step.
+
+
+   .. py:method:: get_pid_group_counter() -> dict[tuple[str, str], int]
+
+      Return the number of reads per PID pair.
+
+
+
+   .. py:property:: input
+      :type: int
+
+
+      Return the total number of reads processed.
+
+
+   .. py:attribute:: missing_pid1
+      :value: 0
+
+
+
+   .. py:attribute:: missing_pid1_pid2
+      :value: 0
+
+
+
+   .. py:attribute:: missing_pid2
+      :value: 0
+
+
+
+   .. py:property:: passed
+      :type: int
+
+
+      Return the number of reads that passed the barcode identification.
+
+
+   .. py:attribute:: pid1_matches_distance_distribution
+
+
+   .. py:attribute:: pid2_matches_distance_distribution
+
+
+   .. py:attribute:: pid_pair_counter
+

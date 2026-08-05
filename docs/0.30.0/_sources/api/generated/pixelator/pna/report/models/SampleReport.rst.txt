@@ -1,0 +1,60 @@
+pixelator.pna.report.models.SampleReport
+========================================
+
+.. py:class:: pixelator.pna.report.models.SampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Base class for all pixelator reports of `single-cell` subcommands.
+
+   :ivar sample_id: The sample id for which the report is generated.
+   :ivar product_id: The product id for which the report is generated.
+   :ivar command_id: The command for which the report is generated.
+
+
+
+   .. py:method:: from_json(p: pathlib.Path) -> Self
+      :classmethod:
+
+
+      Initialize a SampleReport from a report file.
+
+      :param p: The path to the report file.
+
+      :returns: A :class:`~pixelator.pna.report.models.base.SampleReport` object.
+
+
+
+   .. py:attribute:: product_id
+      :type:  Literal['single-cell-pna', 'single-cell-mpx']
+
+
+   .. py:attribute:: report_type
+      :type:  str
+
+
+   .. py:attribute:: sample_id
+      :type:  str
+
+
+   .. py:method:: to_json(**kwargs: Any) -> str
+
+      Dump the report to a json string.
+
+      :param kwargs: Additional arguments to pass to `json.dumps`.
+
+      :returns: The report serialized to JSON as a string.
+
+
+
+   .. py:method:: write_json_file(p: str | os.PathLike, **kwargs: Any) -> None
+
+      Write a JSON serialized SampleReport to a file.
+
+      Non-existing intermediate directories in the path will be created.
+
+      :param p: The path to the file to write.
+      :param kwargs: Additional arguments to pass to pydantics `model_dump_json`.
+
+

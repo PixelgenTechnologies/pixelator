@@ -1,0 +1,22 @@
+pixelator.pna.graph_legacy
+==========================
+
+.. py:module:: pixelator.pna.graph_legacy
+
+.. autoapi-nested-parse::
+
+   Legacy PNA graph-step implementation (component recovery pipeline).
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/graph_legacy/connected_components/index
+
+

@@ -1,0 +1,7 @@
+pixelator.common.duckdb_utils.get_duckdb_temp_dir_from_env
+==========================================================
+
+.. py:function:: pixelator.common.duckdb_utils.get_duckdb_temp_dir_from_env() -> pathlib.Path | None
+
+   Return ``PIXELATOR_DUCKDB_TEMP_DIR`` as a ``Path``, or ``None`` if unset.
+

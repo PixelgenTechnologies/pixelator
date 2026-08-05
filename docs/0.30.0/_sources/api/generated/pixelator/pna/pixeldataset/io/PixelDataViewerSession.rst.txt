@@ -1,0 +1,59 @@
+pixelator.pna.pixeldataset.io.PixelDataViewerSession
+====================================================
+
+.. py:class:: pixelator.pna.pixeldataset.io.PixelDataViewerSession(sources: list[tuple[str, pathlib.Path | str, str]])
+
+   DuckDB session over one or more attached PXL files.
+
+   Pass a list of ``(sample_name, pxl_path, db_name)`` tuples, where
+   ``db_name`` is the DuckDB attach alias (see :meth:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer.normalized_sample_db_name`).
+
+   At construction time, ``sample_name``, ``db_name``, and the path string are
+   validated to only use valid DuckDB identifiers.
+
+   The connection is opened when the session is constructed. Close it with
+   ``session.close()`` or by using ``with viewer.open() as session:`` (exit
+   calls ``close()``). Each session uses its own connection.
+
+
+   .. py:method:: close() -> None
+
+      Close the DuckDB connection. Safe to call more than once.
+
+
+
+   .. py:method:: execute_arrow_reader(query: pixelator.pna.pixeldataset.io.query_builder.Query, batch_size: int)
+
+      Execute a query and return Arrow reader.
+
+
+
+   .. py:method:: execute_eager(query: pixelator.pna.pixeldataset.io.query_builder.Query) -> polars.DataFrame
+
+      Execute a query and return a Polars DataFrame.
+
+
+
+   .. py:method:: execute_lazy(query: pixelator.pna.pixeldataset.io.query_builder.Query) -> polars.LazyFrame
+
+      Execute a query and return a Polars LazyFrame.
+
+
+
+   .. py:method:: execute_scalar(query: pixelator.pna.pixeldataset.io.query_builder.Query) -> int
+
+      Execute a scalar query and return first value.
+
+
+
+   .. py:method:: get_connection() -> duckdb.DuckDBPyConnection
+
+      Return the DuckDB connection for this session.
+
+
+
+   .. py:method:: load_stochastic_extension() -> None
+
+      Load the DuckDB stochastic extension, installing it only if needed.
+
+

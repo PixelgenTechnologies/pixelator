@@ -1,0 +1,55 @@
+pixelator.pna.pixeldataset.edgelist.Edgelist
+============================================
+
+.. py:class:: pixelator.pna.pixeldataset.edgelist.Edgelist(view: pixelator.pna.pixeldataset.io.PixelDataViewer, components: str | Iterable[str] | None = None, adata_helper: pixelator.pna.pixeldataset.io.anndata_helper.AnnDataHelper | None = None)
+
+   Representation of an edgelist.
+
+   To get the edgelist as a pandas DataFrame, use the `to_df()` method.
+   To get the edgelist as a polars DataFrame, use the `to_polars()` method.
+   To access the components one at a time use the `iterator()` method.
+
+   For memory efficient access to the edgelist, use the `to_record_batches()` method.
+   This allows you to iterate over the edgelist using py.ArrowRecordBatch's.
+   This is useful when you have a large edgelist that does not fit into memory,
+   and your algorithm can be implemented in a streaming fashion.
+
+
+   .. py:property:: components
+      :type: set[str]
+
+
+      Get the component names.
+
+
+   .. py:method:: is_empty() -> bool
+
+      Check if the edgelist is empty.
+
+
+
+   .. py:method:: iterator() -> Iterable[pixelator.pna.pixeldataset.types.Component]
+
+      Get a stream of components and their graphs.
+
+      :returns: A stream of component names and associated graphs
+
+
+
+   .. py:method:: to_df() -> pandas.DataFrame
+
+      Get the edgelist as a pandas DataFrame.
+
+
+
+   .. py:method:: to_polars() -> polars.DataFrame
+
+      Get the edgelist as a polars DataFrame.
+
+
+
+   .. py:method:: to_record_batches(batch_size: int = 1000000) -> Iterable[pyarrow.RecordBatch]
+
+      Get the edgelist as a stream of pyarrow RecordBatches.
+
+

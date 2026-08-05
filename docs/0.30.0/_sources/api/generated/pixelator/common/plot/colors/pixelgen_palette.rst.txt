@@ -1,0 +1,18 @@
+pixelator.common.plot.colors.pixelgen_palette
+=============================================
+
+.. py:function:: pixelator.common.plot.colors.pixelgen_palette(n: int, name: str) -> list[str]
+
+   Get the first ``n`` colors of a Pixelgen branded discrete palette.
+
+   :param n: The number of colors to return.
+   :param name: The name of the palette. One of the keys of `PIXELGEN_PALETTES`
+                (``"Tint"``, ``"Pastel"``, ``"Semi-saturated"``, ``"Saturated"``,
+                ``"Cells1"``, ``"Cells2"``, or ``"Cells3"``).
+
+   :returns: A list of ``n`` hex color strings.
+
+   :raises ValueError: If ``name`` is not a known palette, if ``n`` exceeds the
+       number of colors available in the palette, or if ``n`` < 1.
+   :raises TypeError: If ``n`` is not an integer.
+

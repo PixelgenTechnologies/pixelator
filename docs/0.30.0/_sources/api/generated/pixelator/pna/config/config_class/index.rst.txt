@@ -1,0 +1,62 @@
+pixelator.pna.config.config_class
+=================================
+
+.. py:module:: pixelator.pna.config.config_class
+
+.. autoapi-nested-parse::
+
+   Classes and functions for Pixelator configuration files and assay settings.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.config.config_class.ConfigType
+   pixelator.pna.config.config_class.DNA_CHARS
+   pixelator.pna.config.config_class.RangeType
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/config_class/PNAConfig
+
+.. autoapisummary::
+
+   pixelator.pna.config.config_class.PNAConfig
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/config_class/load_assays_package
+   /api/generated/pixelator/pna/config/config_class/load_panels_package
+   /api/generated/pixelator/pna/config/config_class/parse_versioned_panel_name
+
+.. autoapisummary::
+
+   pixelator.pna.config.config_class.load_assays_package
+   pixelator.pna.config.config_class.load_panels_package
+   pixelator.pna.config.config_class.parse_versioned_panel_name
+
+
+Module Contents
+---------------
+
+.. py:data:: ConfigType
+
+.. py:data:: DNA_CHARS
+
+.. py:data:: RangeType
+

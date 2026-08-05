@@ -1,0 +1,113 @@
+pixelator.pna.layout.PerComponentTask
+=====================================
+
+.. py:class:: pixelator.pna.layout.PerComponentTask
+
+   Bases: :py:obj:`Protocol`, :py:obj:`Generic`\ [\ :py:obj:`T`\ ]
+
+
+   Protocol for tasks that are run on each component in a PixelDataset.
+
+   :ivar TASK_NAME: The name of the analysis task.
+
+
+
+   .. py:attribute:: TASK_NAME
+      :type:  ClassVar[str]
+
+
+   .. py:method:: add_to_pixel_file(data: T, pxl_file_target: pixelator.pna.pixeldataset.io.PxlFile) -> None
+
+      Add the data in the right place in the pxl_dataset.
+
+
+
+   .. py:method:: concatenate_data(data: Iterable[T]) -> T
+
+      Concatenate the data. Override this if you need custom concatenation behavior.
+
+
+
+   .. py:method:: parameters() -> dict[str, Any]
+
+      Return the parameters of the `PerComponentAnalysis`.
+
+      This is used e.g. to store the metadata the parameters of the analysis
+      in the run metadata.
+
+
+
+   .. py:method:: post_process_data(data: T) -> T
+
+      Post process the data (e.g. adjust p-values). Override this if needed.
+
+
+
+   .. py:method:: run_from_component_id(component_id: str) -> T
+      :abstractmethod:
+
+
+      Run the analysis on this component.
+
+      This method assumes that the dataset is stored internally
+      and the component is directly accessible from its id.
+
+      :param component_id: The id of the component.
+
+
+
+   .. py:method:: run_on_component(component: pixelator.pna.pixeldataset.Component | str, logging_setup: LoggingSetup | None = None) -> T
+
+      Run the analysis on a component.
+
+      This method will let the Analysis decide whether to run on a Graph or a LazyFrame.
+      The default implementation will first try the graph based analysis and then fall back
+      to the edgelist based analysis if the graph based analysis raises NotImplementedError.
+
+      :param component: The component to run the analysis on. Either a Graph, a LazyFrame or the name
+                        of a component.
+      :param logging_setup: The logging setup to use.
+
+      :raises TypeError: If the component is not a Graph or a LazyFrame.
+
+
+
+   .. py:method:: run_on_component_edgelist(component: polars.LazyFrame, component_id: str) -> T
+      :abstractmethod:
+
+
+      Run the analysis on this component.
+
+      :param component: The edgelist of the component.
+      :param component_id: The id of the component.
+
+
+
+   .. py:method:: run_on_component_graph(component: pixelator.pna.graph.PNAGraph, component_id: str) -> T
+      :abstractmethod:
+
+
+      Run the analysis on this component.
+
+      :param component: The graph of the component.
+      :param component_id: The id of the component.
+
+
+
+   .. py:method:: set_dataset(pxl_file_path: pathlib.Path)
+
+      Specify a dataset to enable analysis being run directly from component IDs.
+
+
+
+   .. py:method:: setup() -> None
+
+      Setup the analysis before running on any components.
+
+
+
+   .. py:method:: teardown() -> None
+
+      Teardown the analysis after running on all components.
+
+

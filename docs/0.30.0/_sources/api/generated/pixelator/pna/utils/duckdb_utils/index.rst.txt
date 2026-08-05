@@ -1,0 +1,41 @@
+pixelator.pna.utils.duckdb_utils
+================================
+
+.. py:module:: pixelator.pna.utils.duckdb_utils
+
+.. autoapi-nested-parse::
+
+   DuckDB configuration helpers for the pixelator.pna package.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Exceptions
+----------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/utils/duckdb_utils/DuckdbPerThreadMemoryError
+
+.. autoapisummary::
+
+   pixelator.pna.utils.duckdb_utils.DuckdbPerThreadMemoryError
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/utils/duckdb_utils/get_single_thread_duckdb_config
+   /api/generated/pixelator/pna/utils/duckdb_utils/parse_duckdb_memory_limit_to_bytes
+
+.. autoapisummary::
+
+   pixelator.pna.utils.duckdb_utils.get_single_thread_duckdb_config
+   pixelator.pna.utils.duckdb_utils.parse_duckdb_memory_limit_to_bytes
+
+

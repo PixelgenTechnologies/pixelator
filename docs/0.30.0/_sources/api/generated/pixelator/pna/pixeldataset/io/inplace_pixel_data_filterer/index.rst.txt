@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.io.inplace_pixel_data_filterer
+=========================================================
+
+.. py:module:: pixelator.pna.pixeldataset.io.inplace_pixel_data_filterer
+
+.. autoapi-nested-parse::
+
+   In-place component filtering for PXL files.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/io/inplace_pixel_data_filterer/InplacePixelDataFilterer
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.io.inplace_pixel_data_filterer.InplacePixelDataFilterer
+
+

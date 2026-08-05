@@ -1,0 +1,21 @@
+pixelator.pna.graph_legacy.connected_components.StagedRefinementOptions
+=======================================================================
+
+.. py:class:: pixelator.pna.graph_legacy.connected_components.StagedRefinementOptions
+
+   Options for refining components at each stage.
+
+
+   .. py:attribute:: inital_stage_options
+      :type:  RefinementOptions
+
+
+   .. py:attribute:: max_component_refinement_depth
+      :type:  int
+      :value: 1
+
+
+
+   .. py:attribute:: refinement_stage_options
+      :type:  RefinementOptions
+

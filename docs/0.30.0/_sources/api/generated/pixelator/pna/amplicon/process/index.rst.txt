@@ -1,0 +1,37 @@
+pixelator.pna.amplicon.process
+==============================
+
+.. py:module:: pixelator.pna.amplicon.process
+
+.. autoapi-nested-parse::
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.amplicon.process.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/amplicon/process/amplicon_fastq
+
+.. autoapisummary::
+
+   pixelator.pna.amplicon.process.amplicon_fastq
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

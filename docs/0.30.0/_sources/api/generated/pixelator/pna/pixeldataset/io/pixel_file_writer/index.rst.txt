@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.io.pixel_file_writer
+===============================================
+
+.. py:module:: pixelator.pna.pixeldataset.io.pixel_file_writer
+
+.. autoapi-nested-parse::
+
+   Writer utilities for writing PXL-backed pixeldatasets.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/io/pixel_file_writer/PixelFileWriter
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.io.pixel_file_writer.PixelFileWriter
+
+

@@ -1,0 +1,39 @@
+pixelator.pna.plot
+==================
+
+.. py:module:: pixelator.pna.plot
+
+.. autoapi-nested-parse::
+
+   Functions for creating plots that are useful with PNA data.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/plot/comparison/index
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/plot/molecule_rank_plot
+   /api/generated/pixelator/pna/plot/plot_sample_pair_comparison
+   /api/generated/pixelator/pna/plot/write_sample_pair_comparison_report
+
+.. autoapisummary::
+
+   pixelator.pna.plot.molecule_rank_plot
+   pixelator.pna.plot.plot_sample_pair_comparison
+   pixelator.pna.plot.write_sample_pair_comparison_report
+
+

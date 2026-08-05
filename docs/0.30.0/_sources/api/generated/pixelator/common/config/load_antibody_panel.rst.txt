@@ -1,0 +1,12 @@
+pixelator.common.config.load_antibody_panel
+===========================================
+
+.. py:function:: pixelator.common.config.load_antibody_panel(config: pixelator.common.config.Config, panel: pixelator.common.types.PathType) -> AntibodyPanel
+
+   Load an antibody panel from a file or from the config file.
+
+   :param config: the config object
+   :param panel: the path to the panel file or the name of the panel in the config file
+
+   :returns: the antibody panel (AntibodyPanel)
+

@@ -1,0 +1,62 @@
+pixelator.common.config.assay
+=============================
+
+.. py:module:: pixelator.common.config.assay
+
+.. autoapi-nested-parse::
+
+   Module containing classes and functions related to the different assay/designs used by pixelator.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.config.assay.DNA_CHARS
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/config/assay/Assay
+   /api/generated/pixelator/common/config/assay/AssayModel
+   /api/generated/pixelator/common/config/assay/Region
+   /api/generated/pixelator/common/config/assay/RegionModel
+   /api/generated/pixelator/common/config/assay/RegionType
+   /api/generated/pixelator/common/config/assay/SequenceType
+
+.. autoapisummary::
+
+   pixelator.common.config.assay.Assay
+   pixelator.common.config.assay.AssayModel
+   pixelator.common.config.assay.Region
+   pixelator.common.config.assay.RegionModel
+   pixelator.common.config.assay.RegionType
+   pixelator.common.config.assay.SequenceType
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/config/assay/get_position_in_parent
+
+.. autoapisummary::
+
+   pixelator.common.config.assay.get_position_in_parent
+
+
+Module Contents
+---------------
+
+.. py:data:: DNA_CHARS
+

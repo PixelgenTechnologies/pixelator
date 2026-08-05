@@ -1,0 +1,26 @@
+pixelator.pna.collapse.independent.report
+=========================================
+
+.. py:module:: pixelator.pna.collapse.independent.report
+
+.. autoapi-nested-parse::
+
+   Functions and classes related to reporting for the collapse stage.
+
+   Copyright © 2024 Pixelgen Technologies AB
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/independent/report/IndependentCollapseSampleReport
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.independent.report.IndependentCollapseSampleReport
+
+

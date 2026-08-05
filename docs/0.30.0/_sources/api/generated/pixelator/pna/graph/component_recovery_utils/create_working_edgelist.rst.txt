@@ -1,0 +1,13 @@
+pixelator.pna.graph.component_recovery_utils.create_working_edgelist
+====================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.create_working_edgelist(input_edgelist_path: pathlib.Path, working_dir: pathlib.Path = DEFAULT_WORKING_DIR) -> tuple[pathlib.Path, pathlib.Path]
+
+   Build a dense node-id edgelist and a map from original to working node names.
+
+   :param input_edgelist_path: Path to the input edgelist in Parquet format.
+   :param working_dir: Directory for ``node_map.parquet`` and ``working_edgelist.parquet``; defaults
+                       to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+   :returns: ``(working_edgelist_path, node_map_path)``.
+

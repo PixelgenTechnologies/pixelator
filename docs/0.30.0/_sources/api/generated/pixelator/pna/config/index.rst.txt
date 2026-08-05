@@ -1,0 +1,88 @@
+pixelator.pna.config
+====================
+
+.. py:module:: pixelator.pna.config
+
+.. autoapi-nested-parse::
+
+   Configuration models and loaders for PNA assays and panels.
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/config/assay/index
+   /api/generated/pixelator/pna/config/config_class/index
+   /api/generated/pixelator/pna/config/config_instance/index
+   /api/generated/pixelator/pna/config/panel/index
+   /api/generated/pixelator/pna/config/plugin/index
+   /api/generated/pixelator/pna/config/utils/index
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.config.pna_config
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/AntibodyPanelMetadata
+   /api/generated/pixelator/pna/config/AssayModel
+   /api/generated/pixelator/pna/config/Config
+   /api/generated/pixelator/pna/config/PNAAntibodyPanel
+   /api/generated/pixelator/pna/config/PNAAssay
+   /api/generated/pixelator/pna/config/PNARegionType
+   /api/generated/pixelator/pna/config/Region
+   /api/generated/pixelator/pna/config/RegionModel
+   /api/generated/pixelator/pna/config/SequenceType
+
+.. autoapisummary::
+
+   pixelator.pna.config.AntibodyPanelMetadata
+   pixelator.pna.config.AssayModel
+   pixelator.pna.config.Config
+   pixelator.pna.config.PNAAntibodyPanel
+   pixelator.pna.config.PNAAssay
+   pixelator.pna.config.PNARegionType
+   pixelator.pna.config.Region
+   pixelator.pna.config.RegionModel
+   pixelator.pna.config.SequenceType
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/get_position_in_parent
+   /api/generated/pixelator/pna/config/load_antibody_panel
+   /api/generated/pixelator/pna/config/load_assays_package
+   /api/generated/pixelator/pna/config/load_yaml_file
+
+.. autoapisummary::
+
+   pixelator.pna.config.get_position_in_parent
+   pixelator.pna.config.load_antibody_panel
+   pixelator.pna.config.load_assays_package
+   pixelator.pna.config.load_yaml_file
+
+
+Package Contents
+----------------
+
+.. py:data:: pna_config
+

@@ -1,0 +1,64 @@
+pixelator.common.config.assay.RegionModel
+=========================================
+
+.. py:class:: pixelator.common.config.assay.RegionModel(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Validation model for region configuration.
+
+
+   .. py:method:: check_valid_dna_string() -> Self
+
+      Validate DNA strings.
+
+      :returns: the validated model
+
+      :raises ValueError: if the string contains non DNA characters
+
+
+
+   .. py:attribute:: data
+      :type:  Optional[Mapping[str, Any]]
+
+
+   .. py:attribute:: max_len
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: min_len
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: name
+      :type:  str
+
+
+   .. py:attribute:: region_id
+      :type:  str
+
+
+   .. py:attribute:: region_type
+      :type:  RegionType
+
+
+   .. py:attribute:: regions
+      :type:  Optional[List[RegionModel]]
+      :value: []
+
+
+
+   .. py:attribute:: sequence
+      :type:  Optional[str]
+      :value: None
+
+
+
+   .. py:attribute:: sequence_type
+      :type:  SequenceType
+

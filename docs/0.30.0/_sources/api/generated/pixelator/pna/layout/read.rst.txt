@@ -1,0 +1,16 @@
+pixelator.pna.layout.read
+=========================
+
+.. py:function:: pixelator.pna.layout.read(paths: pathlib.Path | list[pathlib.Path] | str | list[str]) -> dataset.PNAPixelDataset
+
+   Read data from one or more ``.pxl`` files.
+
+   :param paths: One or more paths to ``.pxl`` files. A single path or a list of
+                 paths may be passed. Each path may be a ``pathlib.Path`` or ``str``.
+
+   :returns: The data from the ``.pxl`` file(s).
+
+   :raises duckdb.IOException: If a file is not a DuckDB database file.
+   :raises ValueError: If a file is not a valid ``.pxl`` file, if a sample name cannot be determined from file metadata.
+   :raises FileNotFoundError: If any path does not exist on disk.
+

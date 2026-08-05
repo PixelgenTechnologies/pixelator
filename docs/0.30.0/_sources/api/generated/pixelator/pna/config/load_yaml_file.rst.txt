@@ -1,0 +1,14 @@
+pixelator.pna.config.load_yaml_file
+===================================
+
+.. py:function:: pixelator.pna.config.load_yaml_file(path: pixelator.common.types.PathType) -> Any
+
+   Load an arbitrary yaml file.
+
+   :param path: path to the yaml file
+
+   :returns: a yaml object
+
+   :raises FileExistsError: If the path does not exist
+   :raises TypeError: If the path is not a yaml file
+

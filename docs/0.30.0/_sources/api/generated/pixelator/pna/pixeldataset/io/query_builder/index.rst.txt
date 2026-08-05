@@ -1,0 +1,28 @@
+pixelator.pna.pixeldataset.io.query_builder
+===========================================
+
+.. py:module:: pixelator.pna.pixeldataset.io.query_builder
+
+.. autoapi-nested-parse::
+
+   Query building utilities for PXL-backed pixeldatasets.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/io/query_builder/Query
+   /api/generated/pixelator/pna/pixeldataset/io/query_builder/QueryBuilder
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.io.query_builder.Query
+   pixelator.pna.pixeldataset.io.query_builder.QueryBuilder
+
+

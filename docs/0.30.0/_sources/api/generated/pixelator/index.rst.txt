@@ -1,0 +1,49 @@
+pixelator
+=========
+
+.. py:module:: pixelator
+
+.. autoapi-nested-parse::
+
+   Top-level package for Pixelator.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/common/index
+   /api/generated/pixelator/pna/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/DownloadableDatasets
+
+.. autoapisummary::
+
+   pixelator.DownloadableDatasets
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/read_pna
+
+.. autoapisummary::
+
+   pixelator.read_pna
+
+

@@ -1,0 +1,55 @@
+pixelator.pna.graph.community_detection
+=======================================
+
+.. py:module:: pixelator.pna.graph.community_detection
+
+.. autoapi-nested-parse::
+
+   Community detection and refinement functions for graph analysis.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/community_detection/MultipletRecoveryStats
+   /api/generated/pixelator/pna/graph/community_detection/RefinementOptions
+   /api/generated/pixelator/pna/graph/community_detection/StagedRefinementOptions
+
+.. autoapisummary::
+
+   pixelator.pna.graph.community_detection.MultipletRecoveryStats
+   pixelator.pna.graph.community_detection.RefinementOptions
+   pixelator.pna.graph.community_detection.StagedRefinementOptions
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/community_detection/calculate_post_recovery_component_statistics
+   /api/generated/pixelator/pna/graph/community_detection/find_components
+   /api/generated/pixelator/pna/graph/community_detection/get_component_sizes
+   /api/generated/pixelator/pna/graph/community_detection/map_working_to_original_umi_names
+   /api/generated/pixelator/pna/graph/community_detection/merge_communities_with_many_crossing_edges
+   /api/generated/pixelator/pna/graph/community_detection/refine_component
+   /api/generated/pixelator/pna/graph/community_detection/run_leiden_refinement
+
+.. autoapisummary::
+
+   pixelator.pna.graph.community_detection.calculate_post_recovery_component_statistics
+   pixelator.pna.graph.community_detection.find_components
+   pixelator.pna.graph.community_detection.get_component_sizes
+   pixelator.pna.graph.community_detection.map_working_to_original_umi_names
+   pixelator.pna.graph.community_detection.merge_communities_with_many_crossing_edges
+   pixelator.pna.graph.community_detection.refine_component
+   pixelator.pna.graph.community_detection.run_leiden_refinement
+
+

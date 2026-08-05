@@ -1,0 +1,32 @@
+pixelator.common
+================
+
+.. py:module:: pixelator.common
+
+.. autoapi-nested-parse::
+
+   Shared utilities used by MPX and PNA pipelines.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/common/annotate/index
+   /api/generated/pixelator/common/config/index
+   /api/generated/pixelator/common/duckdb_utils/index
+   /api/generated/pixelator/common/exceptions/index
+   /api/generated/pixelator/common/graph/index
+   /api/generated/pixelator/common/marks/index
+   /api/generated/pixelator/common/plot/index
+   /api/generated/pixelator/common/report/index
+   /api/generated/pixelator/common/statistics/index
+   /api/generated/pixelator/common/types/index
+   /api/generated/pixelator/common/utils/index
+
+

@@ -1,0 +1,12 @@
+pixelator.common.utils.get_extension
+====================================
+
+.. py:function:: pixelator.common.utils.get_extension(filename: pixelator.common.types.PathType, len_ext: int = 2) -> str
+
+   Extract file extensions from a filename.
+
+   :param filename: the file name
+   :param len_ext: the number of expected extensions parts e.g.: fq.gz gives len_ext=2
+
+   :returns: the file extension (str) (str)
+

@@ -1,0 +1,41 @@
+pixelator.common.annotate.aggregates
+====================================
+
+.. py:module:: pixelator.common.annotate.aggregates
+
+.. autoapi-nested-parse::
+
+   Functions for finding aggregates.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.annotate.aggregates.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/annotate/aggregates/call_aggregates
+   /api/generated/pixelator/common/annotate/aggregates/specificity_tau
+
+.. autoapisummary::
+
+   pixelator.common.annotate.aggregates.call_aggregates
+   pixelator.common.annotate.aggregates.specificity_tau
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

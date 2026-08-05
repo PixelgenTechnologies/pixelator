@@ -1,0 +1,12 @@
+pixelator.common.config.load_assays_package
+===========================================
+
+.. py:function:: pixelator.common.config.load_assays_package(config: Config, package_name: str) -> Config
+
+   Load default assays from a resources package.
+
+   :param config: The config object to load assays into
+   :param package_name: The name of the package to load assays from
+
+   :returns: The updated config object
+

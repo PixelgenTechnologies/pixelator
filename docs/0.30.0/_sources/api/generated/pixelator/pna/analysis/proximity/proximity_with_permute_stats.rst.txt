@@ -1,0 +1,24 @@
+pixelator.pna.analysis.proximity.proximity_with_permute_stats
+=============================================================
+
+.. py:function:: pixelator.pna.analysis.proximity.proximity_with_permute_stats(edgelist: polars.DataFrame, proximity_function: Callable[[polars.DataFrame], pandas.DataFrame], result_columns: list[str], n_permutations: int = 100, seed: int | None = 42, min_std: float = 1.0, min_marker_count: int = 0) -> pandas.DataFrame
+
+   Compute proximity results augmented with statistics based on permutation tests.
+
+   This function calculates proximity metrics for a given edgelist and augments
+   the results with statistical measures derived from permutation tests. It
+   supports computing z-scores and p-values for specified result columns.
+
+   :param edgelist: A DataFrame representing the edgelist.
+   :param proximity_function: A function that computes proximity metrics for the given edgelist.
+   :param result_columns: A list of column names for which statistics (e.g., z-scores, p-values) will
+                          be computed.
+   :param n_permutations: The number of permutations to perform. Defaults to 100.
+   :param seed: Seed for the random number generator. Defaults to 42.
+   :param min_std: Minimum standard deviation to use when normalizing z-scores. Defaults to 1.0.
+   :param min_marker_count: Minimum marker count threshold for filtering the edgelist. Defaults to 0.
+
+   :returns: A DataFrame containing the proximity results augmented with
+             statistical measures, including expected means, standard deviations,
+             z-scores, and p-values for the specified result columns.
+

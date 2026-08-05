@@ -1,0 +1,24 @@
+pixelator.pna.demux.barcode_demuxer.independent_marker_groups_mapping
+=====================================================================
+
+.. py:function:: pixelator.pna.demux.barcode_demuxer.independent_marker_groups_mapping(group_sizes: dict[tuple[str, str], int], reads_per_chunk: int = 50000000, max_chunks: int = 8) -> tuple[dict[str, int], dict[str, int]]
+
+   Combine grouped reads by markers into approximately equal sized chunks.
+
+   This is the classical partitioning problem.
+   We use the simple greedy number partitioning algorithm here.
+
+   The number of groups is determined by the `target_chunk_reads`.
+   The number of groups will be capped by `max_chunk_count` should the calculated number of groups
+   exceed this value.
+
+   Params:
+   group_sizes: the mapping of (marker1, marker2) pairs to the number of reads
+   target_chunk_count: the number of chunks to partition the markers into
+
+   :param group_sizes: the mapping of (PID1, PID2) pairs to the number of reads
+   :param reads_per_chunk: the target number of reads per chunk
+   :param max_chunks: the maximum number of groups
+
+   :returns: A tuple with a dict for marker1 and marker2. The dict map the marker to the group index.
+

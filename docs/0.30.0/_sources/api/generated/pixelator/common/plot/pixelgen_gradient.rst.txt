@@ -1,0 +1,18 @@
+pixelator.common.plot.pixelgen_gradient
+=======================================
+
+.. py:function:: pixelator.common.plot.pixelgen_gradient(n: int, name: str) -> list[str]
+
+   Get ``n`` colors interpolated along a Pixelgen branded gradient.
+
+   :param n: The number of colors to return.
+   :param name: The name of the gradient. One of the keys of `PIXELGEN_GRADIENTS`
+                (``"BluesCherry"``, ``"BluesGrayCherry"``, ``"GrayblueRose"``,
+                ``"Cherry"``, ``"Blues"``, ``"Magenta"``, ``"Cyan"``, or
+                ``"NaturalBlue"``).
+
+   :returns: A list of ``n`` hex color strings interpolated along the gradient.
+
+   :raises ValueError: If ``name`` is not a known gradient, or ``n`` < 1.
+   :raises TypeError: If ``n`` is not an integer.
+

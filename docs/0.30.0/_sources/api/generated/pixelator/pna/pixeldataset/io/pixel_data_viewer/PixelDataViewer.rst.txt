@@ -1,0 +1,67 @@
+pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer
+===============================================================
+
+.. py:class:: pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer(sample_name_to_pxl_file_mapping: dict[str, pixelator.pna.pixeldataset.io.pxl_file.PxlFile])
+
+   Maps sample names to PXL files and can open a :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewerSession`.
+
+   Query execution uses a :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewerSession` from ``viewer.open()``
+
+   .. code-block:: python
+
+       with viewer.open() as session:
+           df = session.execute_eager(Query("SELECT * FROM edgelist", {}))
+
+       # or: session = viewer.open(); ...; session.close()
+
+
+   .. py:method:: filter_samples(sample_names: set[str]) -> PixelDataViewer
+
+      Create a new PixelDataViewer with only a subset of the samples.
+
+
+
+   .. py:method:: from_files(pxl_files: Iterable[pixelator.pna.pixeldataset.io.pxl_file.PxlFile]) -> PixelDataViewer
+      :staticmethod:
+
+
+      Create a PixelDataViewer from a list of PxlFile objects.
+
+      This will use the sample names from the PxlFile metadata as sample names.
+
+
+
+   .. py:method:: from_sample_to_file_mappings(sample_name_to_pxl_file_mapping: dict[str, pixelator.pna.pixeldataset.io.pxl_file.PxlFile]) -> PixelDataViewer
+      :staticmethod:
+
+
+      Create a PixelDataViewer from a dictionary mapping sample names to PxlFile objects.
+
+      :param sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
+
+
+
+   .. py:method:: normalized_sample_db_name(sample_name: str) -> str
+
+      Return the attached DuckDB database name for a sample.
+
+
+
+   .. py:method:: open() -> PixelDataViewerSession
+
+      Return a new session with an open DuckDB connection (context manager or ``close()``).
+
+
+
+   .. py:method:: sample_names() -> list[str]
+
+      Return the list of sample names known to the view.
+
+
+
+   .. py:property:: sample_to_file_mappings
+      :type: dict[str, pathlib.Path]
+
+
+      Return a dictionary mapping sample names to PxlFile objects.
+

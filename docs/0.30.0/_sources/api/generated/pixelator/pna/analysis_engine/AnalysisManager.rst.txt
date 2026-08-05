@@ -1,0 +1,26 @@
+pixelator.pna.analysis_engine.AnalysisManager
+=============================================
+
+.. py:class:: pixelator.pna.analysis_engine.AnalysisManager(analysis_to_run: Iterable[PerComponentTask], logging_setup: LoggingSetup | None = None, n_cores: int | None = None, pxl_dataset_builder: Callable[[Iterable[pixelator.pna.pixeldataset.io.PxlFile]], pixelator.pna.pixeldataset.PNAPixelDataset] | None = None)
+
+   Analysis manager that can run a number of analysis across a stream of components.
+
+   The analysis manager is responsible for hooking up the analysis functions and making
+   them run on each component in the stream. The main workflow it uses is outlined in the
+   `execute` method.
+
+
+   .. py:attribute:: analysis_to_run
+
+
+   .. py:method:: execute(pixel_dataset: pixelator.pna.pixeldataset.PNAPixelDataset, pxl_file_target: pixelator.pna.pixeldataset.io.PxlFile) -> pixelator.pna.pixeldataset.PNAPixelDataset
+
+      Execute the analysis on the provided pixel dataset.
+
+
+
+   .. py:method:: execute_from_path(input_pxl_file_path: pathlib.Path, pxl_file_target: pixelator.pna.pixeldataset.io.PxlFile) -> pixelator.pna.pixeldataset.PNAPixelDataset
+
+      Execute the analysis on the provided pixel file path.
+
+

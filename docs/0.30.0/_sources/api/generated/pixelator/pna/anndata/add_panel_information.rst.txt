@@ -1,0 +1,7 @@
+pixelator.pna.anndata.add_panel_information
+===========================================
+
+.. py:function:: pixelator.pna.anndata.add_panel_information(adata: anndata.AnnData, panel: pixelator.pna.config.PNAAntibodyPanel) -> anndata.AnnData
+
+   Add panel data to var.
+

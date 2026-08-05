@@ -1,0 +1,16 @@
+pixelator.pna.demux.barcode_demuxer.create_barcode_group_to_batch_mapping
+=========================================================================
+
+.. py:function:: pixelator.pna.demux.barcode_demuxer.create_barcode_group_to_batch_mapping(group_sizes: dict[tuple[str, str], int], reads_per_chunk: int = 50000000, max_chunks: int = 8) -> dict[tuple[str, str], int]
+
+   Create groups of (PID1, PID2) pairs.
+
+   The input mapping is a dictionary of (PID1, PID2) pairs to the number of
+   reads that have been found to contain that pair of PID barcodes.
+
+   The total number of reads in a supergroup can be less or more than the target_chunk_size.
+
+   :param group_sizes: the mapping of (PID1, PID2) pairs to the number of reads
+   :param reads_per_chunk: the target number of reads per chunk
+   :param max_chunks: the maximum number of groups
+

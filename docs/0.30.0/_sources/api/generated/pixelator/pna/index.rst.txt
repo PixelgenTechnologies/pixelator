@@ -1,0 +1,64 @@
+pixelator.pna
+=============
+
+.. py:module:: pixelator.pna
+
+.. autoapi-nested-parse::
+
+   Top-level package for pixelator.pna.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/amplicon/index
+   /api/generated/pixelator/pna/analysis/index
+   /api/generated/pixelator/pna/analysis_engine/index
+   /api/generated/pixelator/pna/anndata/index
+   /api/generated/pixelator/pna/collapse/index
+   /api/generated/pixelator/pna/config/index
+   /api/generated/pixelator/pna/demux/index
+   /api/generated/pixelator/pna/graph/index
+   /api/generated/pixelator/pna/graph_legacy/index
+   /api/generated/pixelator/pna/layout/index
+   /api/generated/pixelator/pna/pixeldataset/index
+   /api/generated/pixelator/pna/plot/index
+   /api/generated/pixelator/pna/read_processing/index
+   /api/generated/pixelator/pna/report/index
+   /api/generated/pixelator/pna/resources/index
+   /api/generated/pixelator/pna/sample_calling/index
+   /api/generated/pixelator/pna/utils/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/DownloadableDatasets
+
+.. autoapisummary::
+
+   pixelator.pna.DownloadableDatasets
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/read
+
+.. autoapisummary::
+
+   pixelator.pna.read
+
+

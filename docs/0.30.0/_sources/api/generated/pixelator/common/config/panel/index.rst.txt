@@ -1,0 +1,43 @@
+pixelator.common.config.panel
+=============================
+
+.. py:module:: pixelator.common.config.panel
+
+.. autoapi-nested-parse::
+
+   Marker panel management for different Molecular Pixelation assays.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/config/panel/AntibodyPanel
+   /api/generated/pixelator/common/config/panel/AntibodyPanelMetadata
+
+.. autoapisummary::
+
+   pixelator.common.config.panel.AntibodyPanel
+   pixelator.common.config.panel.AntibodyPanelMetadata
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/config/panel/load_antibody_panel
+   /api/generated/pixelator/common/config/panel/parse_panel_header_metadata
+
+.. autoapisummary::
+
+   pixelator.common.config.panel.load_antibody_panel
+   pixelator.common.config.panel.parse_panel_header_metadata
+
+

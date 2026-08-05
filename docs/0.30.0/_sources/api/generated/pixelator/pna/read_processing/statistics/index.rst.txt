@@ -1,0 +1,26 @@
+pixelator.pna.read_processing.statistics
+========================================
+
+.. py:module:: pixelator.pna.read_processing.statistics
+
+.. autoapi-nested-parse::
+
+   Module for defining the HasCustomStatistics interface.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/read_processing/statistics/HasCustomStatistics
+
+.. autoapisummary::
+
+   pixelator.pna.read_processing.statistics.HasCustomStatistics
+
+

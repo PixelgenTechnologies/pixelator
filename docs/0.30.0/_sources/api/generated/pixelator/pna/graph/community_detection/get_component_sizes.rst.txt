@@ -1,0 +1,10 @@
+pixelator.pna.graph.community_detection.get_component_sizes
+===========================================================
+
+.. py:function:: pixelator.pna.graph.community_detection.get_component_sizes(component_edgelists_path: pathlib.Path) -> pandas.Series
+
+   Get sizes of components from edgelist with components.
+
+   :param component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned)
+                                    format.
+

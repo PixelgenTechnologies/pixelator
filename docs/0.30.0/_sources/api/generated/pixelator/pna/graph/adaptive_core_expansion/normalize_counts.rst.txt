@@ -1,0 +1,7 @@
+pixelator.pna.graph.adaptive_core_expansion.normalize_counts
+============================================================
+
+.. py:function:: pixelator.pna.graph.adaptive_core_expansion.normalize_counts(x)
+
+   Normalize counts using log-mean-exp normalization.
+

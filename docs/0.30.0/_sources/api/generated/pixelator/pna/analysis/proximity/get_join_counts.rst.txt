@@ -1,0 +1,12 @@
+pixelator.pna.analysis.proximity.get_join_counts
+================================================
+
+.. py:function:: pixelator.pna.analysis.proximity.get_join_counts(edgelist: polars.DataFrame) -> pandas.DataFrame
+
+   Compute the number of edges for each marker pair in the given edgelist.
+
+   :param edgelist: A DataFrame representing the edgelist with columns "marker_1" and "marker_2".
+
+   :returns: DataFrame containing the number of edges for each marker pair. The resulting DataFrame
+             includes columns ``marker_1``, ``marker_2``, and ``join_count``.
+

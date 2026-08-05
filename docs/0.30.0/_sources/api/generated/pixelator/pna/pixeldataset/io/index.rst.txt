@@ -1,0 +1,152 @@
+pixelator.pna.pixeldataset.io
+=============================
+
+.. py:module:: pixelator.pna.pixeldataset.io
+
+.. autoapi-nested-parse::
+
+   PNA Pixel File io.
+
+   This module handles writing and reading duckdb based pxl files.
+
+   Duckdb is an embedded database that supports storing multiple
+   tables in one portable file.
+
+   Pxl files should contain an edgelist table that contains
+   the edgelist. Futhermore it should contain a number of tables
+   that encode the adata object. All these table should be prefixed
+   with `__adata__`, e.g. the adata.obs table should be named
+   `__adata__obs`.
+
+   In addition to the adata tables, and the edgelist, the database
+   can contain a metadata table, a layouts table, and a proximity
+   data table.
+
+   A full pxl file has (at least) the following tables:
+
+   .. code-block:: none
+
+       ┌─────────────────────┐
+       │ name                │
+       │ ---                 │
+       │ str                 │
+       ╞═════════════════════╡
+       │ Mandatory           │
+       │ ---------           │
+       │ __adata__X          │
+       │ __adata__obs        │
+       │ __adata__var        │
+       │ edgelist            │
+       ├─────────────────────┤
+       │ Optional            │
+       │ --------            │
+       │ (layouts)           │
+       │ (metadata)          │
+       │ (proximity)         │
+       └─────────────────────┘
+
+   .. rubric:: Architecture (IO types)
+
+   - `QueryBuilder` builds immutable `Query` values (SQL text + bound parameters).
+   - `PixelDataViewer` maps sample names to `PxlFile` instances; and gives a unified
+     view to run SQL queries over the edgelist, layouts and proximity tables. Use
+     ``with viewer.open() as session:`` and run `Query` instances via
+     `PixelDataViewerSession` (lazy or eager Polars).
+   - `AnnDataHelper` holds a `PixelDataViewer` and uses `QueryBuilder` to join the
+     annotated data from all samples into a single object.
+   - `PixelFileWriter` writes edgelist, AnnData-backed tables, and related data
+     to a `.pxl` path.
+   - `InplacePixelDataFilterer` owns a `PxlFile` and trims components in place,
+     using `AnnDataHelper`, `PixelDataViewer`, and `PixelFileWriter` when
+     rewriting AnnData.
+
+   .. rubric:: Class diagram (ASCII)
+
+   .. code-block:: none
+
+       ┌──────────────────────────────────────────────────────────────────────────┐
+       │ pixeldataset.io — types and responsibilities                             │
+       └──────────────────────────────────────────────────────────────────────────┘
+
+       Query  (dataclass: sql: str, params: dict)
+            ▲
+            │ builds
+       ┌────┴────────────────────────────────────────────────────────────────────┐
+       │ QueryBuilder                                                            │
+       │   adata_X / obs / var / uns / obsm_* queries, edgelist_query → Query    │
+       └─────────────────────────────────────────────────────────────────────────┘
+
+       ┌─────────────────────┐   maps sample → file   ┌──────────────────────────────┐
+       │ PixelDataViewer     │ ──────────────────────▶│ PxlFile                      │
+       │ open() → session    │                        │ path, sample_name, metadata… │
+       │ sample_names, …     │                        └──────────────────────────────┘
+       └──────────┬──────────┘
+                  │
+                  │ PixelDataViewerSession.execute_* (uses Query)
+                  ▼
+               [ Query ]
+
+       ┌─────────────────────┐
+       │ AnnDataHelper       │──uses──▶ PixelDataViewer
+       │ read_adata(...)     │
+       └──────────┬──────────┘
+                  │ builds queries via
+                  ▼
+            QueryBuilder
+
+       ┌──────────────────────────────┐  owns   ┌────────────────────────────┐
+       │ InplacePixelDataFilterer     │────────▶│ PxlFile                    │
+       │ pxl_file, filter_components  │         └────────────────────────────┘
+       └──────────────┬───────────────┘
+                      │ uses when rewriting
+                      ├──▶ AnnDataHelper
+                      ├──▶ PixelDataViewer
+                      └──▶ PixelFileWriter
+                                 │
+                                 │ path; write_edgelist, write_adata
+                                 ▼
+                            (.pxl file)
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/pixeldataset/io/anndata_helper/index
+   /api/generated/pixelator/pna/pixeldataset/io/inplace_pixel_data_filterer/index
+   /api/generated/pixelator/pna/pixeldataset/io/pixel_data_viewer/index
+   /api/generated/pixelator/pna/pixeldataset/io/pixel_file_writer/index
+   /api/generated/pixelator/pna/pixeldataset/io/pxl_file/index
+   /api/generated/pixelator/pna/pixeldataset/io/query_builder/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/io/InplacePixelDataFilterer
+   /api/generated/pixelator/pna/pixeldataset/io/PixelDataViewer
+   /api/generated/pixelator/pna/pixeldataset/io/PixelDataViewerSession
+   /api/generated/pixelator/pna/pixeldataset/io/PixelFileWriter
+   /api/generated/pixelator/pna/pixeldataset/io/PxlFile
+   /api/generated/pixelator/pna/pixeldataset/io/Query
+   /api/generated/pixelator/pna/pixeldataset/io/QueryBuilder
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.io.InplacePixelDataFilterer
+   pixelator.pna.pixeldataset.io.PixelDataViewer
+   pixelator.pna.pixeldataset.io.PixelDataViewerSession
+   pixelator.pna.pixeldataset.io.PixelFileWriter
+   pixelator.pna.pixeldataset.io.PxlFile
+   pixelator.pna.pixeldataset.io.Query
+   pixelator.pna.pixeldataset.io.QueryBuilder
+
+

@@ -1,0 +1,17 @@
+pixelator.pna.utils.utils.is_read_file
+======================================
+
+.. py:function:: pixelator.pna.utils.utils.is_read_file(read: pathlib.Path | str, read_type: Literal['r1'] | Literal['r2']) -> bool
+
+   Check if a read filename matches the specified read_type.
+
+   Detects the presence of a common read 1 or read 2 suffix in the filename.
+
+   :param read: filename of a fastq read file
+   :param read_type: the read type to check for (r1 or r2)
+
+   :returns: True if the read file is a read 1 or 2 file (bool)
+
+   :raises ValueError: if the read file does not have a valid extension
+   :raises AssertionError: if the read_type is not 'r1' or 'r2'
+

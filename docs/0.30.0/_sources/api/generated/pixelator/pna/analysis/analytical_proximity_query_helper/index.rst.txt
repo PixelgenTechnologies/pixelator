@@ -1,0 +1,26 @@
+pixelator.pna.analysis.analytical_proximity_query_helper
+========================================================
+
+.. py:module:: pixelator.pna.analysis.analytical_proximity_query_helper
+
+.. autoapi-nested-parse::
+
+   Module for constructing analytical proximity sql queries.
+
+   Copyright © 2026 Pixelgen Technologies AB
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/analytical_proximity_query_helper/jcs_with_analytical_stats
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.analytical_proximity_query_helper.jcs_with_analytical_stats
+
+

@@ -1,0 +1,28 @@
+pixelator.pna.graph.report
+==========================
+
+.. py:module:: pixelator.pna.graph.report
+
+.. autoapi-nested-parse::
+
+   Model for report data returned by the single-cell-pna graph stage.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/report/GraphSampleReport
+   /api/generated/pixelator/pna/graph/report/GraphStatistics
+
+.. autoapisummary::
+
+   pixelator.pna.graph.report.GraphSampleReport
+   pixelator.pna.graph.report.GraphStatistics
+
+

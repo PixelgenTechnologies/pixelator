@@ -1,0 +1,71 @@
+pixelator.common.config
+=======================
+
+.. py:module:: pixelator.common.config
+
+.. autoapi-nested-parse::
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/common/config/assay/index
+   /api/generated/pixelator/common/config/config_class/index
+   /api/generated/pixelator/common/config/panel/index
+   /api/generated/pixelator/common/config/utils/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/config/AntibodyPanel
+   /api/generated/pixelator/common/config/AntibodyPanelMetadata
+   /api/generated/pixelator/common/config/Assay
+   /api/generated/pixelator/common/config/AssayModel
+   /api/generated/pixelator/common/config/Config
+   /api/generated/pixelator/common/config/Region
+   /api/generated/pixelator/common/config/RegionModel
+   /api/generated/pixelator/common/config/RegionType
+   /api/generated/pixelator/common/config/SequenceType
+
+.. autoapisummary::
+
+   pixelator.common.config.AntibodyPanel
+   pixelator.common.config.AntibodyPanelMetadata
+   pixelator.common.config.Assay
+   pixelator.common.config.AssayModel
+   pixelator.common.config.Config
+   pixelator.common.config.Region
+   pixelator.common.config.RegionModel
+   pixelator.common.config.RegionType
+   pixelator.common.config.SequenceType
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/config/get_position_in_parent
+   /api/generated/pixelator/common/config/load_antibody_panel
+   /api/generated/pixelator/common/config/load_assays_package
+   /api/generated/pixelator/common/config/load_yaml_file
+
+.. autoapisummary::
+
+   pixelator.common.config.get_position_in_parent
+   pixelator.common.config.load_antibody_panel
+   pixelator.common.config.load_assays_package
+   pixelator.common.config.load_yaml_file
+
+

@@ -1,0 +1,89 @@
+pixelator.pna.pixeldataset.io.PixelFileWriter
+=============================================
+
+.. py:class:: pixelator.pna.pixeldataset.io.PixelFileWriter(path: pathlib.Path, exits_ok: bool = False, temp_dir: pathlib.Path | str | None = None, temp_dir_size_limit: str | None = None)
+
+   Writer class for PXL files.
+
+   This class takes care of writing data to duckdb based pxl files.
+   In addition to writing data tables it will should take care of
+   creating any indexes that can be used to speed up queries downstream.
+
+   When writing using this it is recommended to use the writer as a
+   context manager.
+
+   .. code-block:: python
+
+       from pixelator.pna.pixeldataset.io import PixelFileWriter
+
+       with PixelFileWriter("my_file.pxl") as writer:
+           writer.write_edgelist(Path("edgelist.parquet"))
+
+
+   .. py:method:: close()
+
+      Close the connection to the PXL file.
+
+
+
+   .. py:attribute:: exists_ok
+      :value: False
+
+
+
+   .. py:method:: get_connection() -> duckdb.DuckDBPyConnection
+
+      Get the connection to the PXL file.
+
+      :returns: The duckdb connection.
+
+
+
+   .. py:method:: open()
+
+      Open a connection to the PXL file.
+
+
+
+   .. py:attribute:: path
+
+
+   .. py:method:: write_adata(adata: anndata.AnnData) -> None
+
+      Write the AnnData object to the PXL file.
+
+      :param adata: The AnnData object to write.
+
+
+
+   .. py:method:: write_edgelist(edgelist: pathlib.Path | polars.DataFrame) -> None
+
+      Write the edgelist to the PXL file.
+
+      :param edgelist: The path to the edgelist parquet file.
+
+
+
+   .. py:method:: write_layouts(layouts: pathlib.Path | polars.DataFrame | list[pathlib.Path]) -> None
+
+      Write the layouts to the PXL file.
+
+      :param layouts: The path to the layouts parquet file.
+
+
+
+   .. py:method:: write_metadata(metadata: dict) -> None
+
+      Write the metadata to the PXL file.
+
+      :param metadata: The metadata dictionary to write.
+
+
+
+   .. py:method:: write_proximity(proximity: pathlib.Path | polars.DataFrame) -> None
+
+      Write the proximity data to the PXL file.
+
+      :param proximity: The path to the proximity parquet file.
+
+

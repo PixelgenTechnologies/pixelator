@@ -1,0 +1,11 @@
+pixelator.common.utils.gz_size
+==============================
+
+.. py:function:: pixelator.common.utils.gz_size(filename: str) -> int
+
+   Extract the size of a gzip compressed file.
+
+   :param filename: file name
+
+   :returns: size of the file uncompressed (in bits) (int)
+

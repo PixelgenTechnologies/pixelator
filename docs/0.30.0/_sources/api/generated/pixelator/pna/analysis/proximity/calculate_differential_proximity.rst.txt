@@ -1,0 +1,46 @@
+pixelator.pna.analysis.proximity.calculate_differential_proximity
+=================================================================
+
+.. py:function:: pixelator.pna.analysis.proximity.calculate_differential_proximity(proximity_df: pandas.DataFrame, contrast_column: str, reference: str, targets: List[str] | None = None, metric: str = 'join_count_z', metric_type: Literal['all', 'self', 'co'] = 'all', min_n_obs: int = 0, p_adjust_method: Literal['bonferroni', 'holm', 'hochberg', 'hommel', 'fdr_bh', 'fdr_by', 'sidak'] = 'bonferroni') -> pandas.DataFrame
+
+   Perform differential proximity analysis between groups of marker-pair data.
+
+   Compare a proximity metric between a reference group and one or more target
+   groups for marker pairs using the two-sided `Mann-Whitney U test <https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test>`_.
+   P-values are adjusted to counteract the `multiple comparisons problem <https://en.wikipedia.org/wiki/Multiple_comparisons_problem>`_.
+   See references below for resources on p-value adjustment methods.
+
+   :param proximity_df: Input data containing proximity metrics and grouping information.
+                        Must include ``contrast_column``, ``marker_1``, ``marker_2``,
+                        and the column determined by ``metric``.
+   :param contrast_column: Column name of the grouping variable.
+   :param reference: Reference group label in ``contrast_column``.
+   :param targets: Target group labels to compare against ``reference``. If ``None``,
+                   all other groups in ``contrast_column`` except ``reference`` are used. Defaults to ``None``.
+   :param metric: Column name of the proximity metric to analyze. Defaults to
+                  ``join_count_z``.
+   :param metric_type: Marker pairs to include: ``"self"`` (includes pairs for which ``marker_1`` and
+                       ``marker_2`` are the same), ``"co"``
+                       (includes pairs for which ``marker_1`` and ``marker_2`` are different), or
+                       ``"all"``. This parameter defaults to ``"all"``.
+   :param min_n_obs: When greater than zero, marker pairs must have more than this
+                     many observations in both ``reference`` and each target group. Defaults to 0.
+   :param p_adjust_method: Method for adjusting p-values for multiple comparisons.
+                           ``p_adjust_method`` is passed to ``statsmodels.stats.multitest.multipletests``.
+                           Defaults to ``"bonferroni"``.
+
+   :returns: DataFrame containing the results of the differential
+             proximity analysis, including statistical metrics and adjusted p-values.
+
+   :raises ValueError: If ``contrast_column`` is not in ``proximity_df``.
+   :raises ValueError: If no data remains after applying ``metric_type`` filtering.
+
+   .. rubric:: References
+
+   * `Bonferroni correction <https://en.wikipedia.org/wiki/Bonferroni_correction>`_
+   * `Holm–Bonferroni method <https://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method>`_
+   * `Hochberg method <https://www.sciencedirect.com/topics/mathematics/hochberg-method#:~:text=Hochberg's%20method%20is%20defined%20as,applicable%20when%20testing%20multiple%20hypotheses.>`_
+   * `Hommel <https://academic.oup.com/biomet/article-abstract/75/2/383/292949?redirectedFrom=fulltext&login=false>`_
+   * `False discovery rate <https://en.wikipedia.org/wiki/False_discovery_rate>`_
+   * `Sidak correction <https://en.wikipedia.org/wiki/%C5%A0id%C3%A1k_correction>`_
+

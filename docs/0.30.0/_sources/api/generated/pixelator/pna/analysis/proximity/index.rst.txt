@@ -1,0 +1,32 @@
+pixelator.pna.analysis.proximity
+================================
+
+.. py:module:: pixelator.pna.analysis.proximity
+
+.. autoapi-nested-parse::
+
+   Module for computing localization proximity statistics.
+
+   Copyright © 2024 Pixelgen Technologies AB
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/proximity/calculate_differential_proximity
+   /api/generated/pixelator/pna/analysis/proximity/get_join_counts
+   /api/generated/pixelator/pna/analysis/proximity/jcs_with_permute_stats
+   /api/generated/pixelator/pna/analysis/proximity/proximity_with_permute_stats
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.proximity.calculate_differential_proximity
+   pixelator.pna.analysis.proximity.get_join_counts
+   pixelator.pna.analysis.proximity.jcs_with_permute_stats
+   pixelator.pna.analysis.proximity.proximity_with_permute_stats
+
+

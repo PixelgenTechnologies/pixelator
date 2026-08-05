@@ -1,0 +1,199 @@
+pixelator.pna.pixeldataset.dataset.PNAPixelDataset
+==================================================
+
+.. py:class:: pixelator.pna.pixeldataset.dataset.PNAPixelDataset(view: pixelator.pna.pixeldataset.io.PixelDataViewer, config: pixelator.pna.pixeldataset.config.PixelDatasetConfig | None = None, active_components: Iterable[str] | str | None = None, active_markers: Iterable[str] | str | None = None)
+
+   A PixelDataset is a collection of samples, components, and markers.
+
+   This class provides a high-level interface to the data stored in one or more .pxl files.
+   You can build a PixelDataset from one or more .pxl files, and then use the various methods
+   to filter and access the underlying data in different ways.
+
+   .. code-block:: python
+
+       from pathlib import Path
+       from pixelator.pna.pixeldataset import PixelDataset
+
+       pxl_files = Path("<dir with pxl files>").glob("*.pxl")
+       pxl_dataset = PixelDataset.from_pxl_files(pxl_files)
+
+   To filter data you can do:
+
+   .. code-block:: python
+
+       ten_components = pxl_dataset.adata.obs.index[:10]
+       pxl_dataset.filter(components=ten_components)
+
+
+   .. py:method:: adata(add_log1p_transform: bool = True, add_clr_transform: bool = True) -> anndata.AnnData
+
+      Return the AnnData instance for the dataset.
+
+      This will be filtered to only include the active samples, components, and markers.
+
+      :param add_log1p_transform: If True, add the log1p transformation to the data.
+      :param add_clr_transform: If True, add the clr transformation to the data.
+
+      :returns: The AnnData instance for the dataset.
+
+
+
+   .. py:method:: components() -> set[str]
+
+      Return the set of component names in the project.
+
+
+
+   .. py:method:: describe() -> str
+
+      Return a description of the PixelDataset.
+
+
+
+   .. py:method:: edgelist() -> pixelator.pna.pixeldataset.edgelist.Edgelist
+
+      Return the Edgelist instance for the dataset.
+
+      This will be filtered to only include the active samples and components.
+
+
+      :returns: The Edgelist instance for the dataset.
+
+
+
+   .. py:method:: filter(samples: Iterable[str] | str | None = None, components: Iterable[str] | str | None = None, markers: Iterable[str] | str | None = None) -> PNAPixelDataset
+
+      Filter the dataset to only include the specified samples, components, and markers.
+
+      Filtering by components will apply to all data modalities (i.e. adata, edgelist, proximity,
+      and precomputed layouts).
+      However, filtering by markers will only apply to the adata and proximity data modalities,
+      since filtering
+      by markers in the edgelist and precomputed layouts will cause components to break up.
+
+      Note that filtering is done lazily, so creating new filters is cheap. The actual filtering
+      will only be done
+      once the underlying data is accessed.
+
+      :param samples: (The samples to include in the dataset (default): None means no filter is
+                      applied).
+      :param components: (The components to include in the dataset (default): None means no filter is
+                         applied).
+      :param markers: (The markers to include in the dataset (default): None means no filter is
+                      applied).
+
+      :returns: A new PixelDataset with the specified samples, components, and markers
+
+      :raises ValueError: if all of the specified samples, components, or markers do not exist in the
+          dataset.
+
+
+
+   .. py:method:: from_files(pxl_files: pathlib.Path | Iterable[pathlib.Path] | Iterable[pixelator.pna.pixeldataset.io.PxlFile] | pixelator.pna.pixeldataset.io.PxlFile | dict[str, pathlib.Path], config: pixelator.pna.pixeldataset.config.PixelDatasetConfig | None = None) -> PNAPixelDataset
+      :staticmethod:
+
+
+      Alias for `from_pxl_files`.
+
+      :param pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a
+                        dictionary with sample names as keys and paths as values.
+      :param config: The configuration for the dataset.
+
+
+
+   .. py:method:: from_pxl_files(pxl_files: pathlib.Path | Iterable[pathlib.Path] | Iterable[pixelator.pna.pixeldataset.io.PxlFile] | pixelator.pna.pixeldataset.io.PxlFile | dict[str, pathlib.Path], config: pixelator.pna.pixeldataset.config.PixelDatasetConfig | None = None) -> PNAPixelDataset
+      :staticmethod:
+
+
+      Create a new PixelDataset from one or more .pxl files.
+
+      If you pass a list of .pxl files the name of the samples
+      will be inferred from the sample name in the file.
+
+      If you pass a dictionary of .pxl files the keys will be used as the sample names.
+
+      :param pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a
+                        dictionary with sample names as keys and paths as values.
+      :param config: The configuration for the dataset.
+
+
+
+   .. py:method:: markers() -> set[str]
+
+      Return the set of marker names in the project.
+
+
+
+   .. py:method:: metadata() -> dict
+
+      Return the metadata for the dataset.
+
+
+
+   .. py:method:: precomputed_layouts(add_marker_counts: bool = True, add_spherical_norm: bool = False) -> pixelator.pna.pixeldataset.precomputed_layouts.PreComputedLayouts
+
+      Return the PreComputedLayouts instance for the dataset.
+
+      :param add_marker_counts: If True, add the marker counts to the precomputed layouts.
+      :param add_spherical_norm: If True, add spherical coordinates to dataframe This will be
+                                 filtered to only include the active samples and components.
+
+      :returns: The PreComputedLayouts instance for the dataset.
+
+
+
+   .. py:method:: proximity(add_marker_counts: bool = True, add_logratio: bool = True, calculate_from_edgelist: bool = False) -> pixelator.pna.pixeldataset.proximity.Proximity
+
+      Return the Proximity instance for the dataset.
+
+      This will be filtered to only include the active samples, components, and markers.
+
+      :param add_marker_counts: If True, add the marker counts to the proximity data.
+      :param add_logratio: If True, add the logratio to the proximity data.
+      :param calculate_from_edgelist: Calculate from edgelist.
+
+      :returns: The Proximity instance for the dataset.
+
+
+
+   .. py:method:: sample_names() -> set[str]
+
+      Return the set of sample names in the project.
+
+
+
+   .. py:property:: view
+      :type: pixelator.pna.pixeldataset.io.PixelDataViewer
+
+
+      Return the PixelDataViewer instance used by the dataset.
+
+      This can be used to write custom queries to the underlying data via
+      :class:`~pixelator.pna.pixeldataset.io.query_builder.Query` and
+      :meth:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer.open`.
+
+      Alternatively, inside the same ``with`` block you can call
+      ``session.get_connection()`` and use the DuckDB Python API directly.
+
+      You can find more information about the duckdb API here:
+      https://duckdb.org/docs/api/python/overview
+
+      Typically you do not need to bother with using the connection
+      directly, but for certain advanced use cases it can boost performance
+      by quite a bit.
+
+      .. code-block:: python
+
+          from pixelator.pna.pixeldataset import PixelDataset
+          from pixelator.pna.pixeldataset.io import Query
+
+          pxl_files = ...
+          pxl_dataset = PixelDataset.from_pxl_files(pxl_files)
+          with pxl_dataset.view.open() as session:
+              df = session.execute_eager(
+                  Query("SELECT * FROM edgelist WHERE marker_1 = $m", {"m": "CD3"})
+              ).to_pandas()
+
+
+      :returns: The PixelDataViewer instance used by the dataset.
+

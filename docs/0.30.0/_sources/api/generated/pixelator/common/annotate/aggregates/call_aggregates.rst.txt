@@ -1,0 +1,44 @@
+pixelator.common.annotate.aggregates.call_aggregates
+====================================================
+
+.. py:function:: pixelator.common.annotate.aggregates.call_aggregates(adata: anndata.AnnData, inplace: bool = True) -> Optional[anndata.AnnData]
+
+   Call aggregates on the adata instance.
+
+   We defined aggregates as components where either:
+   - A single or a handful of markers account for almost all of the count data.
+   These can likely be attributed to single antibodies forming aggregates
+   - Low tau scores, meaning a an even number of counts for multiple markers.
+   These likely come from multiple antibodies forming aggregates.
+
+   For downstream analysis both of these types should be removed for most types
+   of analysis.
+
+   We find aggregates by computing a tau specificity score (see `tau_specificity`
+   for details).
+
+   We mark components as "high" if they that have a tau score above
+   `annotation.constants.TAU_HARD_THRESHOLD`, or have a tau score above
+   `annotation.constants.TAU_IQR_UPPER_THRESHOLD` * inter-quartile range
+   from the median.
+
+   We mark components as "low" if they that have a tau score below
+   `annotation.contants.TAU_IQR_LOWER_THRESHOLD` * inter-quartile range
+   from the median.
+
+   The following data is added to the AnnData:
+   - `obs["tau"]` = The tau specificity score of the component
+   - `obs["tau_type"]` = "normal"/"high"/"low" for components with
+   the respective levels of tau scores.
+   - `uns["tau_thresholds"]["tau_upper_hard_limit"]` the upper hard
+   limit used to set `tau_type` as high
+   - `uns["tau_thresholds"]["tau_upper_iqr_limit"]` the upper limit
+   based on IQR used to set `tau_type` as high
+   - `uns["tau_thresholds"]["tau_lower_iqr_limit"]` the lower limit
+   based on IQR used to set `tau_type` as low
+
+   :param adata: an AnnData object to call aggregates on
+   :param inplace: If `True` performs the operation inplace
+
+   :returns: the updated AnnData object or None if inplace is True.
+

@@ -1,0 +1,39 @@
+pixelator.pna.analysis.analysis
+===============================
+
+.. py:module:: pixelator.pna.analysis.analysis
+
+.. autoapi-nested-parse::
+
+   Analysis classes for the PNA data.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.analysis.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/analysis/ProximityAnalysis
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.analysis.ProximityAnalysis
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

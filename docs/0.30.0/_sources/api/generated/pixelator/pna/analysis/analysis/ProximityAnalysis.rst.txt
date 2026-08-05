@@ -1,0 +1,62 @@
+pixelator.pna.analysis.analysis.ProximityAnalysis
+=================================================
+
+.. py:class:: pixelator.pna.analysis.analysis.ProximityAnalysis(n_permutations: int = 100, min_marker_count: int = 10)
+
+   Bases: :py:obj:`pixelator.pna.analysis_engine.PerComponentTask`
+
+
+   Run proximity analysis on each component.
+
+
+   .. py:attribute:: TASK_NAME
+      :value: 'proximity'
+
+
+
+   .. py:method:: add_to_pixel_file(data: pandas.DataFrame, pxl_file_target: pixelator.pna.pixeldataset.io.PxlFile) -> None
+
+      Add proximity data for all components to the pixeldataset.
+
+      :param data: a pandas DataFrame containing proximity data for all components.
+      :param pxl_dataset: the PixelDataset to add the data to.
+      :param pxl_file_target: Pxl file target.
+
+
+
+   .. py:attribute:: method
+      :value: 'join_count_statistics'
+
+
+
+   .. py:method:: parameters() -> dict
+
+      Return the parameters of the `PerComponentAnalysis`.
+
+      This is used e.g. to store the metadata the parameters of the analysis
+      in the run metadata.
+
+
+
+   .. py:method:: run_on_component_edgelist(component_df: polars.LazyFrame, component_id: str) -> pandas.DataFrame
+
+      Run proximity analysis on a single component.
+
+      :param component: a Graph for a component to run the analysis on.
+      :param component_id: the id of the component.
+      :param component_df: Component df.
+
+      :returns: a pandas DataFrame containing average_node degrees per type counts.
+
+
+
+   .. py:method:: run_on_component_graph(component: pixelator.pna.graph.PNAGraph, component_id: str) -> pandas.DataFrame
+      :abstractmethod:
+
+
+      Run proximity analysis on a single component.
+
+      :param component: a Graph for a component to run the analysis on.
+      :param component_id: the id of the component.
+
+

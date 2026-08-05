@@ -1,0 +1,27 @@
+pixelator.common.plot.colors.pixelgen_discrete_colors
+=====================================================
+
+.. py:function:: pixelator.common.plot.colors.pixelgen_discrete_colors(hue: str | collections.abc.Sequence[str] | None = None, level: int | collections.abc.Sequence[int] | None = None, n: int | None = None, shuffle: bool = False, indices: collections.abc.Sequence[int] | None = None) -> list[str]
+
+   Get a list of Pixelgen accent colors suitable for coloring discrete categories.
+
+   When neither ``hue`` nor ``level`` is given, this returns colors picked
+   from across the full accent color grid in an order chosen to maximize
+   perceptual distinction between adjacent categories -- this is the
+   recommended default discrete color cycle.
+
+   :param hue: Optional hue name or list of hue names to restrict the colors to.
+               See `pixelgen_accent_colors`.
+   :param level: Optional level or list of levels to restrict the colors to. See
+                 `pixelgen_accent_colors`.
+   :param n: If given, only the first ``n`` colors are returned.
+   :param shuffle: Whether to shuffle the resulting colors. Ignored if
+                   ``indices`` is given. Defaults to False.
+   :param indices: Optional 0-based indices used to select and/or reorder the
+                   colors.
+
+   :returns: A list of hex color strings.
+
+   :raises ValueError: If ``hue`` or ``level`` are invalid (see
+       `pixelgen_accent_colors`), or if ``n`` < 1.
+

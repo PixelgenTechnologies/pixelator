@@ -1,0 +1,87 @@
+pixelator.pna.graph.component_recovery_utils
+============================================
+
+.. py:module:: pixelator.pna.graph.component_recovery_utils
+
+.. autoapi-nested-parse::
+
+   Utility functions for the graph stage.
+
+   Includes shared connected-component helpers (hashing, UMI-based naming, size filtering)
+   used by community detection and legacy graph code.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.graph.component_recovery_utils.logger
+
+
+Exceptions
+----------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/component_recovery_utils/ConnectedComponentException
+
+.. autoapisummary::
+
+   pixelator.pna.graph.component_recovery_utils.ConnectedComponentException
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/component_recovery_utils/create_component_size_data_frame
+   /api/generated/pixelator/pna/graph/component_recovery_utils/create_working_edgelist
+   /api/generated/pixelator/pna/graph/component_recovery_utils/filter_components_by_size_dynamic
+   /api/generated/pixelator/pna/graph/component_recovery_utils/filter_components_by_size_hard_thresholds
+   /api/generated/pixelator/pna/graph/component_recovery_utils/filter_connected_components_by_size
+   /api/generated/pixelator/pna/graph/component_recovery_utils/filter_edgelist_by_read_count
+   /api/generated/pixelator/pna/graph/component_recovery_utils/find_clashing_umis
+   /api/generated/pixelator/pna/graph/component_recovery_utils/get_count_statistics
+   /api/generated/pixelator/pna/graph/component_recovery_utils/hash_component
+   /api/generated/pixelator/pna/graph/component_recovery_utils/initialize_graph_statistics
+   /api/generated/pixelator/pna/graph/component_recovery_utils/name_components_with_umi_hashes
+   /api/generated/pixelator/pna/graph/component_recovery_utils/name_components_with_umi_hashes_from_parquet
+   /api/generated/pixelator/pna/graph/component_recovery_utils/populate_component_stats_from_hybrid_detection
+   /api/generated/pixelator/pna/graph/component_recovery_utils/remove_clashing_umis
+   /api/generated/pixelator/pna/graph/component_recovery_utils/remove_umis
+   /api/generated/pixelator/pna/graph/component_recovery_utils/save_new_working_edgelist
+   /api/generated/pixelator/pna/graph/component_recovery_utils/write_hive_partitioned_edgelist_without_out_of_size_bound_components
+
+.. autoapisummary::
+
+   pixelator.pna.graph.component_recovery_utils.create_component_size_data_frame
+   pixelator.pna.graph.component_recovery_utils.create_working_edgelist
+   pixelator.pna.graph.component_recovery_utils.filter_components_by_size_dynamic
+   pixelator.pna.graph.component_recovery_utils.filter_components_by_size_hard_thresholds
+   pixelator.pna.graph.component_recovery_utils.filter_connected_components_by_size
+   pixelator.pna.graph.component_recovery_utils.filter_edgelist_by_read_count
+   pixelator.pna.graph.component_recovery_utils.find_clashing_umis
+   pixelator.pna.graph.component_recovery_utils.get_count_statistics
+   pixelator.pna.graph.component_recovery_utils.hash_component
+   pixelator.pna.graph.component_recovery_utils.initialize_graph_statistics
+   pixelator.pna.graph.component_recovery_utils.name_components_with_umi_hashes
+   pixelator.pna.graph.component_recovery_utils.name_components_with_umi_hashes_from_parquet
+   pixelator.pna.graph.component_recovery_utils.populate_component_stats_from_hybrid_detection
+   pixelator.pna.graph.component_recovery_utils.remove_clashing_umis
+   pixelator.pna.graph.component_recovery_utils.remove_umis
+   pixelator.pna.graph.component_recovery_utils.save_new_working_edgelist
+   pixelator.pna.graph.component_recovery_utils.write_hive_partitioned_edgelist_without_out_of_size_bound_components
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

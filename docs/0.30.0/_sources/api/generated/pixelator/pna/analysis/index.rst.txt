@@ -1,0 +1,43 @@
+pixelator.pna.analysis
+======================
+
+.. py:module:: pixelator.pna.analysis
+
+.. autoapi-nested-parse::
+
+   Top level module for analysis subpackage of pixelator.pna.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/analysis/analysis/index
+   /api/generated/pixelator/pna/analysis/analytical_proximity_query_helper/index
+   /api/generated/pixelator/pna/analysis/comparison/index
+   /api/generated/pixelator/pna/analysis/denoise/index
+   /api/generated/pixelator/pna/analysis/gating/index
+   /api/generated/pixelator/pna/analysis/graph_noise_analysis/index
+   /api/generated/pixelator/pna/analysis/permute/index
+   /api/generated/pixelator/pna/analysis/proximity/index
+   /api/generated/pixelator/pna/analysis/report/index
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/calculate_differential_proximity
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.calculate_differential_proximity
+
+

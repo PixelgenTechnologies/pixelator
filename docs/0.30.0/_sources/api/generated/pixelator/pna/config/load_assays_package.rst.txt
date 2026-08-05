@@ -1,0 +1,12 @@
+pixelator.pna.config.load_assays_package
+========================================
+
+.. py:function:: pixelator.pna.config.load_assays_package(config: ConfigType, package_name: str) -> ConfigType
+
+   Load default assays from a resources package.
+
+   :param config: The config object to load assays into
+   :param package_name: The name of the package to load assays from
+
+   :returns: The updated config object
+

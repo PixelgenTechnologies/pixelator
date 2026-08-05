@@ -1,0 +1,76 @@
+pixelator.pna.graph_legacy.connected_components
+===============================================
+
+.. py:module:: pixelator.pna.graph_legacy.connected_components
+
+.. autoapi-nested-parse::
+
+   Connected components module.
+
+   Functions and classes relating to building connected components in the graph step.
+
+   Copyright © 2024 Pixelgen Technologies AB
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.graph_legacy.connected_components.LEIDEN_RANDOM_SEED
+   pixelator.pna.graph_legacy.connected_components.MIN_PNA_COMPONENT_SIZE
+   pixelator.pna.graph_legacy.connected_components.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph_legacy/connected_components/MultipletRecoveryStats
+   /api/generated/pixelator/pna/graph_legacy/connected_components/RefinementOptions
+   /api/generated/pixelator/pna/graph_legacy/connected_components/StagedRefinementOptions
+
+.. autoapisummary::
+
+   pixelator.pna.graph_legacy.connected_components.MultipletRecoveryStats
+   pixelator.pna.graph_legacy.connected_components.RefinementOptions
+   pixelator.pna.graph_legacy.connected_components.StagedRefinementOptions
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph_legacy/connected_components/build_pxl_file_with_components
+   /api/generated/pixelator/pna/graph_legacy/connected_components/find_components
+   /api/generated/pixelator/pna/graph_legacy/connected_components/make_edgelist_with_component_column
+   /api/generated/pixelator/pna/graph_legacy/connected_components/merge_communities_with_many_crossing_edges
+   /api/generated/pixelator/pna/graph_legacy/connected_components/recover_multiplets
+
+.. autoapisummary::
+
+   pixelator.pna.graph_legacy.connected_components.build_pxl_file_with_components
+   pixelator.pna.graph_legacy.connected_components.find_components
+   pixelator.pna.graph_legacy.connected_components.make_edgelist_with_component_column
+   pixelator.pna.graph_legacy.connected_components.merge_communities_with_many_crossing_edges
+   pixelator.pna.graph_legacy.connected_components.recover_multiplets
+
+
+Module Contents
+---------------
+
+.. py:data:: LEIDEN_RANDOM_SEED
+   :value: 1
+
+
+.. py:data:: MIN_PNA_COMPONENT_SIZE
+   :value: 8000
+
+
+.. py:data:: logger
+

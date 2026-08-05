@@ -1,0 +1,82 @@
+pixelator.pna.pixeldataset.io.query_builder.QueryBuilder
+========================================================
+
+.. py:class:: pixelator.pna.pixeldataset.io.query_builder.QueryBuilder
+
+   Build `Query` objects for pixeldataset read operations.
+
+
+   .. py:method:: adata_X_query(db_name: str, components: list[str] | None = None) -> Query
+
+      Build AnnData X query for a single underlying sample DB.
+
+      Note: marker filtering is intentionally not pushed down into SQL (column
+      selection); consumers can filter markers in-memory after materialization.
+
+
+
+   .. py:method:: adata_obs_query(db_name: str, components: list[str] | None = None) -> Query
+
+      Build AnnData obs query for a single underlying sample DB.
+
+
+
+   .. py:method:: adata_obsm_query(db_name: str, table_name: str, components: list[str] | None = None) -> Query
+
+      Build AnnData obsm query for a given obsm table in a sample DB.
+
+
+
+   .. py:method:: adata_obsm_table_names_query(db_name: str) -> Query
+
+      Build query listing available obsm tables for a sample DB.
+
+
+
+   .. py:method:: adata_uns_query(db_name: str) -> Query
+
+      Build AnnData uns query for a single underlying sample DB.
+
+
+
+   .. py:method:: adata_var_query(db_name: str, markers: list[str] | None = None) -> Query
+
+      Build AnnData var query for a single underlying sample DB.
+
+
+
+   .. py:method:: edgelist_len_query(components: list[str] | None) -> Query
+
+      Build an edgelist count query.
+
+
+
+   .. py:method:: edgelist_query(components: list[str] | None) -> Query
+
+      Build an edgelist data query.
+
+
+
+   .. py:method:: layouts_len_query(components: list[str] | None) -> Query
+
+      Build a layouts count query.
+
+
+
+   .. py:method:: layouts_query(components: list[str] | None, add_marker_counts: bool) -> Query
+
+      Build a layouts query, optionally including marker-count join data.
+
+
+
+   .. py:method:: proximity_len_query(components: list[str] | None, markers: list[str] | None, calculate_from_edgelist: bool = False) -> Query
+
+      Build a proximity count query.
+
+
+
+   .. py:method:: proximity_query(components: list[str] | None, markers: list[str] | None, calculate_from_edgelist: bool = False) -> Query
+
+      Build a proximity data query.
+
+

@@ -1,0 +1,43 @@
+pixelator.pna.config.config_instance
+====================================
+
+.. py:module:: pixelator.pna.config.config_instance
+
+.. autoapi-nested-parse::
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.config.config_instance.assays_package
+   pixelator.pna.config.config_instance.panels_package
+   pixelator.pna.config.config_instance.pna_config
+   pixelator.pna.config.config_instance.pna_config
+   pixelator.pna.config.config_instance.pna_config
+   pixelator.pna.config.config_instance.pna_config
+
+
+Module Contents
+---------------
+
+.. py:data:: assays_package
+   :value: 'pixelator.pna.resources.assays'
+
+
+.. py:data:: panels_package
+   :value: 'pixelator.pna.resources.panels'
+
+
+.. py:data:: pna_config
+
+.. py:data:: pna_config
+
+.. py:data:: pna_config
+
+.. py:data:: pna_config
+

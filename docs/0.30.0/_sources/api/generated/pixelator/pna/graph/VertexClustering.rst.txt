@@ -1,0 +1,35 @@
+pixelator.pna.graph.VertexClustering
+====================================
+
+.. py:class:: pixelator.pna.graph.VertexClustering
+
+   Bases: :py:obj:`Iterable`\ [\ :py:obj:`VertexSequence`\ ], :py:obj:`Protocol`
+
+
+   A cluster of vertexes, such as a community in a graph.
+
+
+   .. py:method:: crossing() -> EdgeSequence
+
+      Get any crossing edges.
+
+
+
+   .. py:method:: giant() -> pixelator.mpx.graph.Graph
+
+      Get the largest component.
+
+
+
+   .. py:property:: modularity
+      :type: float
+
+
+      Get the modularity of the clusters.
+
+
+   .. py:method:: subgraphs() -> Iterable[pixelator.mpx.graph.Graph]
+
+      Get subgraphs of each cluster.
+
+

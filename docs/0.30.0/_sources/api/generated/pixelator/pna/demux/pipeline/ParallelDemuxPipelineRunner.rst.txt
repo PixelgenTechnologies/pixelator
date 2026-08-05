@@ -1,0 +1,52 @@
+pixelator.pna.demux.pipeline.ParallelDemuxPipelineRunner
+========================================================
+
+.. py:class:: pixelator.pna.demux.pipeline.ParallelDemuxPipelineRunner(inpaths: cutadapt.files.InputPaths, n_workers: int, output_directory: pathlib.Path, filename_policy: DemuxFilenamePolicy, buffer_size: Optional[int] = None)
+
+   Bases: :py:obj:`cutadapt.runners.PipelineRunner`
+
+
+   Run a Demux pipeline and dispatch work to worker threads.
+
+   - At construction, a reader process is spawned.
+   - When run() is called, as many worker processes as requested are spawned.
+   - The workers return a tuple of (file_index, data) to the main process.
+   - The writer process buffers writes to the output files and writes them in the correct order.
+   - write
+
+   If a worker needs work, it puts its own index into a Queue() (_need_work_queue).
+   The reader process listens on this queue and sends the raw data to the
+   worker that has requested work. For sending the data from reader to worker,
+   a Connection() is used. There is one such connection for each worker (self._pipes).
+
+   For sending the processed data from the worker to the main process, there
+   is a second set of connections, again one for each worker.
+
+   When the reader is finished, it sends 'poison pills' to all workers.
+   When a worker receives this, it sends a poison pill to the main process,
+   followed by a Statistics object that contains statistics about all the reads
+   processed by that worker.
+
+
+   .. py:method:: close() -> None
+
+      Close the pipeline runner.
+
+
+
+   .. py:method:: input_file_format() -> cutadapt.files.FileFormat
+
+      Return the file format of the input files.
+
+
+
+   .. py:method:: run(pipeline, progress) -> cutadapt.report.Statistics
+
+      Run a pipeline on the pipeline runner.
+
+      :param pipeline: The pipeline to run.
+      :param progress: A progress object to update with the number of processed reads.
+
+      :returns: A statistics object.
+
+

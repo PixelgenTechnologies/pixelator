@@ -1,0 +1,43 @@
+pixelator.pna.analysis.gating
+=============================
+
+.. py:module:: pixelator.pna.analysis.gating
+
+.. autoapi-nested-parse::
+
+   Functions for gating components based on marker abundance (CLR) distributions.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/gating/MarkerThreshold
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.gating.MarkerThreshold
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/gating/determine_marker_threshold
+   /api/generated/pixelator/pna/analysis/gating/gate_mask
+   /api/generated/pixelator/pna/analysis/gating/parse_gate
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.gating.determine_marker_threshold
+   pixelator.pna.analysis.gating.gate_mask
+   pixelator.pna.analysis.gating.parse_gate
+
+

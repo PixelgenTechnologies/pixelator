@@ -1,0 +1,50 @@
+pixelator.common.duckdb_utils
+=============================
+
+.. py:module:: pixelator.common.duckdb_utils
+
+.. autoapi-nested-parse::
+
+   Shared DuckDB connection helpers for Pixelator.
+
+   These helpers ensure DuckDB's spill (``temp_directory``) location is always set
+   explicitly. DuckDB otherwise defaults the spill location to a directory next to
+   the database file, which fails when the ``.pxl`` file lives on a networked
+   filesystem (e.g. Fusion/S3).
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.duckdb_utils.DEFAULT_DUCKDB_TEMP_DIR
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/duckdb_utils/connect_duckdb
+   /api/generated/pixelator/common/duckdb_utils/get_duckdb_max_temp_dir_size_from_env
+   /api/generated/pixelator/common/duckdb_utils/get_duckdb_temp_dir_from_env
+   /api/generated/pixelator/common/duckdb_utils/resolve_duckdb_temp_dir
+
+.. autoapisummary::
+
+   pixelator.common.duckdb_utils.connect_duckdb
+   pixelator.common.duckdb_utils.get_duckdb_max_temp_dir_size_from_env
+   pixelator.common.duckdb_utils.get_duckdb_temp_dir_from_env
+   pixelator.common.duckdb_utils.resolve_duckdb_temp_dir
+
+
+Module Contents
+---------------
+
+.. py:data:: DEFAULT_DUCKDB_TEMP_DIR
+

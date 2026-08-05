@@ -1,0 +1,289 @@
+pixelator.pna.graph.report.GraphSampleReport
+============================================
+
+.. py:class:: pixelator.pna.graph.report.GraphSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.base.SampleReport`
+
+
+   Model for report data returned by the graph stage.
+
+
+   .. py:attribute:: aggregate_count
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: component_count_post_component_size_filtering
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: component_count_post_recovery
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: component_count_pre_component_size_filtering
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: component_count_pre_recovery
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: component_size_max_filtering_threshold
+      :type:  int | None
+      :value: None
+
+
+
+   .. py:attribute:: component_size_min_filtering_threshold
+      :type:  int | None
+      :value: None
+
+
+
+   .. py:attribute:: crossing_edges_removed
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: crossing_edges_removed_initial_stage
+      :type:  int
+      :value: None
+
+
+
+   .. py:property:: discarded_molecules
+      :type: int
+
+
+      Return the total number of discarded reads in the graph stage.
+
+
+   .. py:property:: discarded_reads
+      :type: int
+
+
+      Return the total number of discarded reads in the graph stage.
+
+
+   .. py:attribute:: edge_count_in_aggregates
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: edge_count_post_recovery
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: edge_count_pre_recovery
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: edge_cycle_length_distribution
+      :type:  dict[int, int]
+      :value: None
+
+
+
+   .. py:property:: edge_saturation
+
+      Return the edge saturation.
+
+
+   .. py:attribute:: edges_removed_in_cycle_verification
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: fraction_nodes_in_largest_component_post_recovery
+      :type:  float
+      :value: None
+
+
+
+   .. py:attribute:: fraction_nodes_in_largest_component_pre_recovery
+      :type:  float
+      :value: None
+
+
+
+   .. py:property:: fraction_of_aggregate_components
+      :type: float
+
+
+      Calculate the fraction of aggregate components.
+
+
+   .. py:property:: fraction_of_discarded_components
+      :type: float
+
+
+      Calculate the fraction of discarded components.
+
+
+   .. py:property:: fraction_stranded_nodes_pre_recovery
+      :type: float
+
+
+      Return fraction of nodes discarded due to being in small connected components.
+
+
+   .. py:attribute:: max_recursion_depth
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: median_markers_per_component
+      :type:  float
+      :value: None
+
+
+
+   .. py:attribute:: median_reads_per_component
+      :type:  float
+      :value: None
+
+
+
+   .. py:attribute:: molecules_input
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: molecules_output
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: molecules_post_read_count_filtering
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: molecules_post_umi_collision_removal
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: node_count_in_aggregates
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: node_count_post_recovery
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: node_count_pre_recovery
+      :type:  int
+      :value: None
+
+
+
+   .. py:property:: node_saturation
+
+      Return the node saturation.
+
+
+   .. py:attribute:: post_flp_community_sizes
+      :type:  dict[int, int]
+      :value: None
+
+
+
+   .. py:attribute:: pre_filtering_component_sizes
+      :type:  dict[int, int]
+      :value: None
+
+
+
+   .. py:attribute:: read_count_in_aggregates
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: reads_input
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: reads_output
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: reads_post_read_count_filtering
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: reads_post_umi_collision_removal
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: report_type
+      :type:  str
+      :value: 'graph'
+
+
+
+   .. py:attribute:: stranded_nodes_pre_recovery
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: umi1_clashes
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: umi1_umi2_clashes
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: umi2_clashes
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: umis_input
+      :type:  int
+      :value: None
+
+

@@ -1,0 +1,7 @@
+pixelator.pna.graph.component_recovery_utils.initialize_graph_statistics
+========================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.initialize_graph_statistics(collapsed_edgelist_path: pathlib.Path) -> pixelator.pna.graph.report.GraphStatistics
+
+   Initialize and return a GraphStatistics object with all fields set to zero.
+

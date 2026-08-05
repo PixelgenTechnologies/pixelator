@@ -1,0 +1,43 @@
+pixelator.pna.anndata
+=====================
+
+.. py:module:: pixelator.pna.anndata
+
+.. autoapi-nested-parse::
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.anndata.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/anndata/add_missing_adata_info
+   /api/generated/pixelator/pna/anndata/add_panel_information
+   /api/generated/pixelator/pna/anndata/calculate_antibody_metrics
+   /api/generated/pixelator/pna/anndata/pna_edgelist_to_anndata
+
+.. autoapisummary::
+
+   pixelator.pna.anndata.add_missing_adata_info
+   pixelator.pna.anndata.add_panel_information
+   pixelator.pna.anndata.calculate_antibody_metrics
+   pixelator.pna.anndata.pna_edgelist_to_anndata
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

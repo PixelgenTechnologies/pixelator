@@ -1,0 +1,29 @@
+pixelator.pna.demux.process.finalize_batched_groups
+===================================================
+
+.. py:function:: pixelator.pna.demux.process.finalize_batched_groups(input_dir: pathlib.Path, output_dir: pathlib.Path, remove_intermediates: bool = True, strategy: Literal['paired', 'independent'] = 'independent', memory: int | None = None, threads: int | None = None, temp_dir: str | pathlib.Path | None = None)
+
+   Post-process the demuxed data by sorting and writing to Parquet.
+
+   The demuxed data is written to Arrow IPC file format (v2) in the work directory.
+   These are then sorted and written to Parquet format with ZSTD compression.
+
+   The sorting is done on the `marker_1` and `marker_2` columns and written to parquet metadata
+   which allows for fast contiguous reads [marker_1, marker_2] groups.
+
+   Params:
+   input_dir: the path to the work directory containing the demuxed data
+   output_dir: the path to the output directory
+   remove_intermediates: whether to remove the intermediate Arrow files after writing to parquet
+   strategy: the demultiplexing strategy to use. Can be "paired" or "independent"
+   memory: maximum amount of memory to use in bytes
+
+   :param input_dir: Input dir.
+   :param output_dir: The output directory.
+   :param remove_intermediates: Remove intermediates.
+   :param strategy: Strategy.
+   :param memory: Memory.
+   :param threads: The number of threads to use for processing. The default of `-1` will use all
+                   available cores.
+   :param temp_dir: Temp dir.
+

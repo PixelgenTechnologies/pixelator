@@ -1,0 +1,43 @@
+pixelator.pna.collapse.independent.combine_collapse
+===================================================
+
+.. py:module:: pixelator.pna.collapse.independent.combine_collapse
+
+.. autoapi-nested-parse::
+
+   Module for combining intermediate collapsed results into a final edgelist.
+
+   These routines are for combining data using the "independent" demuxing and collapsing strategy.
+
+   Copyright © 2025 Pixelgen Technologies AB
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/independent/combine_collapse/CombineCollapseIndependentStats
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.independent.combine_collapse.CombineCollapseIndependentStats
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/independent/combine_collapse/combine_independent_parquet_files
+   /api/generated/pixelator/pna/collapse/independent/combine_collapse/combine_independent_report_files
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.independent.combine_collapse.combine_independent_parquet_files
+   pixelator.pna.collapse.independent.combine_collapse.combine_independent_report_files
+
+

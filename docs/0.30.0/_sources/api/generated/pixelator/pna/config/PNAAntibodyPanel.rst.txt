@@ -1,0 +1,163 @@
+pixelator.pna.config.PNAAntibodyPanel
+=====================================
+
+.. py:class:: pixelator.pna.config.PNAAntibodyPanel(df: pandas.DataFrame, metadata: pixelator.common.config.panel.AntibodyPanelMetadata, file_name: Optional[str] = None, filepath: Optional[pixelator.common.types.PathType] = None)
+
+   Class representing a PNA antibody panel.
+
+
+   .. py:property:: aliases
+      :type: list[str]
+
+
+      Return the (optional) list of panel file aliases.
+
+
+   .. py:property:: archived
+      :type: Optional[bool]
+
+
+      Return whether the panel is marked as archived.
+
+
+   .. py:property:: description
+      :type: Optional[str]
+
+
+      Return the panel file description.
+
+
+   .. py:property:: df
+      :type: pandas.DataFrame
+
+
+      Return the panel dataframe.
+
+
+   .. py:property:: filename
+      :type: Optional[str]
+
+
+      Return the filename of the marker panel.
+
+
+   .. py:property:: filepath
+      :type: Optional[pathlib.Path]
+
+
+      Return the full path of the marker panel file, if any.
+
+
+   .. py:method:: from_adata(adata: anndata.AnnData, file_name: Optional[str] = None) -> Self
+      :classmethod:
+
+
+      Create an AntibodyPanel from an AnnData object.
+
+      :param adata: An AnnData object containing panel information.
+      :param file_name: The optional name of the file from which the AnnData object was loaded.
+
+      :returns: The AntibodyPanel object. (AntibodyPanel)
+
+      :raises KeyError: exception if panel information is missing in the AnnData object.
+
+
+
+   .. py:method:: from_csv(filename: pixelator.common.types.PathType) -> Self
+      :classmethod:
+
+
+      Create an AntibodyPanel from a csv panel file.
+
+      :param filename: The path to the panel file.
+
+      :returns: The AntibodyPanel object. (AntibodyPanel)
+
+      :raises AssertionError: exception if panel file is missing,
+
+
+
+   .. py:method:: from_pxl_dataset(pxl_data: pixelator.pna.pixeldataset.dataset.PNAPixelDataset, file_name: Optional[str] = None) -> Self
+      :classmethod:
+
+
+      Create an AntibodyPanel from a pxl dataset.
+
+      :param pxl_data: A PNAPixelDataset object.
+      :param file_name: The optional name of the file from which the pxl dataset was loaded.
+
+      :returns: The AntibodyPanel object. (AntibodyPanel)
+
+      :raises KeyError: exception if panel information is missing in the pxl dataset,
+
+
+
+   .. py:property:: markers
+      :type: List[str]
+
+
+      Return the list of unique markers in the panel.
+
+
+   .. py:property:: markers_control
+      :type: List[str]
+
+
+      Return a list of marker control (names).
+
+
+   .. py:attribute:: metadata
+
+
+   .. py:property:: name
+      :type: str
+
+
+      Panel name from metadata.
+
+      :returns: The panel name.
+
+
+   .. py:property:: product
+      :type: Optional[str]
+
+
+      Product identifier from metadata, if present.
+
+      :returns: Product name, or None when not provided in panel metadata.
+
+
+   .. py:property:: size
+      :type: int
+
+
+      Return the size of the marker panel.
+
+
+   .. py:method:: to_polars() -> polars.DataFrame
+
+      Convert the panel to a Polars DataFrame.
+
+
+
+   .. py:method:: validate_antibody_panel(panel_df: pandas.DataFrame, validate_types: bool = True) -> list[str]
+      :classmethod:
+
+
+      Validate antibody panel schema and content.
+
+      :param panel_df: Dataframe containing panel markers and sequences.
+      :param validate_types: If True, validate dataframe column types.
+
+      :returns: A list of validation error messages. Empty means valid input.
+
+
+
+   .. py:property:: version
+      :type: str
+
+
+      Panel version from metadata.
+
+      :returns: Semantic version string for this panel.
+

@@ -1,0 +1,19 @@
+pixelator.common.plot.create_discrete_palette
+=============================================
+
+.. py:function:: pixelator.common.plot.create_discrete_palette(conditions: collections.abc.Sequence[str]) -> list[str]
+
+   Create a discrete color palette sized to the number of unique conditions.
+
+   Colors are selected from different accent color hues and levels to ensure
+   good visual distinction between conditions. This mirrors the palette used
+   for coloring samples/conditions in QC and comparison plots.
+
+   :param conditions: A non-empty sequence of condition labels (duplicates
+                      allowed; only the number of unique values matters).
+
+   :returns: A list of hex color strings, repeated 10 times over so it is safe to
+             index into for any reasonable number of conditions.
+
+   :raises ValueError: If ``conditions`` is empty.
+

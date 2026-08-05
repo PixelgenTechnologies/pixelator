@@ -1,0 +1,68 @@
+pixelator.pna.graph
+===================
+
+.. py:module:: pixelator.pna.graph
+
+.. autoapi-nested-parse::
+
+   Graph module.
+
+   Functions and classes relating to PNA graphs.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/graph/adaptive_core_expansion/index
+   /api/generated/pixelator/pna/graph/community_detection/index
+   /api/generated/pixelator/pna/graph/component_recovery/index
+   /api/generated/pixelator/pna/graph/component_recovery_utils/index
+   /api/generated/pixelator/pna/graph/constants/index
+   /api/generated/pixelator/pna/graph/cycle_analysis/index
+   /api/generated/pixelator/pna/graph/node_pls/index
+   /api/generated/pixelator/pna/graph/report/index
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.graph.SupportedLayoutAlgorithm
+   pixelator.pna.graph.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/BaseGraph
+   /api/generated/pixelator/pna/graph/NetworkXGraphBackend
+   /api/generated/pixelator/pna/graph/PNAGraph
+   /api/generated/pixelator/pna/graph/PNAGraphBackend
+   /api/generated/pixelator/pna/graph/VertexClustering
+
+.. autoapisummary::
+
+   pixelator.pna.graph.BaseGraph
+   pixelator.pna.graph.NetworkXGraphBackend
+   pixelator.pna.graph.PNAGraph
+   pixelator.pna.graph.PNAGraphBackend
+   pixelator.pna.graph.VertexClustering
+
+
+Package Contents
+----------------
+
+.. py:data:: SupportedLayoutAlgorithm
+
+.. py:data:: logger
+

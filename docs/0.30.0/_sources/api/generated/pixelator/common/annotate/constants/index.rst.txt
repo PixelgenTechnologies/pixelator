@@ -1,0 +1,73 @@
+pixelator.common.annotate.constants
+===================================
+
+.. py:module:: pixelator.common.annotate.constants
+
+.. autoapi-nested-parse::
+
+   Constants used as part of the annotation modules.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.annotate.constants.CELL_MAX_SIZE_SMOOTHING_FACTOR
+   pixelator.common.annotate.constants.CELL_MIN_SIZE_SMOOTHING_FACTOR
+   pixelator.common.annotate.constants.DISTANCE_DEVIATION_FACTOR
+   pixelator.common.annotate.constants.MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION
+   pixelator.common.annotate.constants.MINIMUM_NBR_OF_CELLS_FOR_SIZE_LIMIT
+   pixelator.common.annotate.constants.MINIMUM_N_EDGES_CELL_SIZE
+   pixelator.common.annotate.constants.PRE_FILTER_LIMIT
+   pixelator.common.annotate.constants.TAU_HARD_THRESHOLD
+   pixelator.common.annotate.constants.TAU_IQR_LOWER_THRESHOLD
+   pixelator.common.annotate.constants.TAU_IQR_UPPER_THRESHOLD
+
+
+Module Contents
+---------------
+
+.. py:data:: CELL_MAX_SIZE_SMOOTHING_FACTOR
+   :value: 0
+
+
+.. py:data:: CELL_MIN_SIZE_SMOOTHING_FACTOR
+   :value: 0.8
+
+
+.. py:data:: DISTANCE_DEVIATION_FACTOR
+   :value: 5
+
+
+.. py:data:: MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION
+   :value: 20
+
+
+.. py:data:: MINIMUM_NBR_OF_CELLS_FOR_SIZE_LIMIT
+   :value: 20
+
+
+.. py:data:: MINIMUM_N_EDGES_CELL_SIZE
+   :value: 300
+
+
+.. py:data:: PRE_FILTER_LIMIT
+   :value: 20
+
+
+.. py:data:: TAU_HARD_THRESHOLD
+   :value: 0.995
+
+
+.. py:data:: TAU_IQR_LOWER_THRESHOLD
+   :value: 5
+
+
+.. py:data:: TAU_IQR_UPPER_THRESHOLD
+   :value: 2
+
+

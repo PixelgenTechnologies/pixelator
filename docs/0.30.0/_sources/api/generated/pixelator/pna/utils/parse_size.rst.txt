@@ -1,0 +1,11 @@
+pixelator.pna.utils.parse_size
+==============================
+
+.. py:function:: pixelator.pna.utils.parse_size(s: str) -> int | float
+
+   Parse a string as a number with optional unit suffix [K, M, G].
+
+   :param s: The string to parse
+
+   :returns: The parsed number as a float
+

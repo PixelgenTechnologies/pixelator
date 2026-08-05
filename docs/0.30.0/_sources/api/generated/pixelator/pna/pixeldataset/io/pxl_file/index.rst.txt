@@ -1,0 +1,51 @@
+pixelator.pna.pixeldataset.io.pxl_file
+======================================
+
+.. py:module:: pixelator.pna.pixeldataset.io.pxl_file
+
+.. autoapi-nested-parse::
+
+   Pxl file abstraction for pixeldatasets.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.io.pxl_file.PXL_FILE_ADATA_TABLES
+   pixelator.pna.pixeldataset.io.pxl_file.PXL_FILE_MANDATOR_TABLES
+   pixelator.pna.pixeldataset.io.pxl_file.PXL_FILE_OTHER_TABLES
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/io/pxl_file/PxlFile
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.io.pxl_file.PxlFile
+
+
+Module Contents
+---------------
+
+.. py:data:: PXL_FILE_ADATA_TABLES
+   :value: ['__adata__X', '__adata__var', '__adata__obs', '__adata__uns']
+
+
+.. py:data:: PXL_FILE_MANDATOR_TABLES
+   :value: ['__adata__X', '__adata__var', '__adata__obs', 'edgelist']
+
+
+.. py:data:: PXL_FILE_OTHER_TABLES
+   :value: ['edgelist', 'metadata', 'layouts', 'proximity']
+
+

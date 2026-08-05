@@ -1,0 +1,37 @@
+pixelator.pna.graph_legacy.connected_components.RefinementOptions
+=================================================================
+
+.. py:class:: pixelator.pna.graph_legacy.connected_components.RefinementOptions
+
+   Options for refining components.
+
+
+   .. py:attribute:: leiden_resolution
+      :type:  float
+      :value: 1.0
+
+
+
+   .. py:attribute:: max_edges_to_remove
+      :type:  int | None
+      :value: 20
+
+
+
+   .. py:attribute:: max_edges_to_remove_relative
+      :type:  float | None
+      :value: None
+
+
+
+   .. py:attribute:: min_component_size
+      :type:  int
+      :value: 10
+
+
+
+   .. py:attribute:: min_component_size_to_prune
+      :type:  int
+      :value: 100
+
+

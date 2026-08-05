@@ -1,0 +1,37 @@
+pixelator.pna.amplicon
+======================
+
+.. py:module:: pixelator.pna.amplicon
+
+.. autoapi-nested-parse::
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/amplicon/build_amplicon/index
+   /api/generated/pixelator/pna/amplicon/filters/index
+   /api/generated/pixelator/pna/amplicon/process/index
+   /api/generated/pixelator/pna/amplicon/quality/index
+   /api/generated/pixelator/pna/amplicon/report/index
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/amplicon/amplicon_fastq
+
+.. autoapisummary::
+
+   pixelator.pna.amplicon.amplicon_fastq
+
+

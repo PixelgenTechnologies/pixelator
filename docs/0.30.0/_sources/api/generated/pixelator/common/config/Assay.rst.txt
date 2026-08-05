@@ -1,0 +1,76 @@
+pixelator.common.config.Assay
+=============================
+
+.. py:class:: pixelator.common.config.Assay(name: str, assay_spec: Optional[List[Region]] = None)
+
+   Class representing a specific assay design.
+
+   An assay contains metadata and a list of (possible nested regions) defining
+   the structure of the assay reads.
+
+
+
+   :ivar name: Name of the assay
+   :ivar assay_spec: List of regions defining the assay structure
+
+
+
+   .. py:attribute:: assay_spec
+      :type:  List[Region]
+      :value: []
+
+
+
+   .. py:method:: from_yaml(filename: pixelator.common.types.PathType) -> Assay
+      :classmethod:
+
+
+      Parse an assay from a yaml file.
+
+      :param filename: path to a design config file
+
+      :returns: an Assay instance loaded from the design config
+
+
+
+   .. py:method:: get_region_by_id(region_id: str) -> Optional[Region]
+
+      Retrieve a region by its id.
+
+      :param region_id: id of the region to retrieve
+
+      :returns: region with the given id or None if not found
+
+
+
+   .. py:method:: get_regions_by_type(region_type: RegionType) -> List[Region]
+
+      Retrieve all regions of a given type.
+
+      :param region_type: region type to retrieve
+
+      :returns: list of regions with the given type
+
+
+
+   .. py:method:: get_sequence() -> str
+
+      Return a sequence representing this region.
+
+
+
+   .. py:attribute:: name
+
+
+   .. py:property:: region_ids
+      :type: Set[str]
+
+
+      Return a set with all regions ids in this assay.
+
+
+   .. py:method:: to_json()
+
+      Return a json representation of the assay.
+
+

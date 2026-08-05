@@ -1,0 +1,16 @@
+pixelator.pna.pixeldataset.io.anndata_helper.AnnDataHelper
+==========================================================
+
+.. py:class:: pixelator.pna.pixeldataset.io.anndata_helper.AnnDataHelper(view: pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer, components: str | list[str] | set[str] | None = None, markers: str | list[str] | set[str] | None = None, adata_join_strategy: Literal['inner', 'outer'] = 'inner')
+
+   Helper class to deal with materializing the AnnData object from the pxl file.
+
+
+   .. py:method:: read_adata(*, add_log1p_transform: bool = True, add_clr_transform: bool = True) -> anndata.AnnData
+
+      Return a filtered/transformed AnnData instance.
+
+      The returned object is always a defensive copy of the cached canonical
+      value, so caller mutations never leak back into the cache.
+
+

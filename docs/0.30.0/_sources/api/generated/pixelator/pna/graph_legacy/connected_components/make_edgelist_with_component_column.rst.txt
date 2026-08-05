@@ -1,0 +1,12 @@
+pixelator.pna.graph_legacy.connected_components.make_edgelist_with_component_column
+===================================================================================
+
+.. py:function:: pixelator.pna.graph_legacy.connected_components.make_edgelist_with_component_column(edgelist: polars.LazyFrame, umi_component_map: dict) -> polars.LazyFrame
+
+   Add a component column to an edgelist using a node map and remove crossing edges.
+
+   :param edgelist: The edgelist to add the component column to.
+   :param umi_component_map: A dictionary mapping nodes to components.
+
+   :returns: The edgelist with crossing edges removed and the component column added.
+

@@ -1,0 +1,10 @@
+pixelator.pna.graph.component_recovery_utils.ConnectedComponentException
+========================================================================
+
+.. py:exception:: pixelator.pna.graph.component_recovery_utils.ConnectedComponentException
+
+   Bases: :py:obj:`pixelator.common.exceptions.PixelatorBaseException`
+
+
+   Raised when connected-component computation or filtering fails.
+

@@ -1,0 +1,19 @@
+pixelator.pna.graph.component_recovery_utils.write_hive_partitioned_edgelist_without_out_of_size_bound_components
+=================================================================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.write_hive_partitioned_edgelist_without_out_of_size_bound_components(input_edgelist_path: pathlib.Path, min_component_size_to_prune: int, max_component_size_to_prune: int = np.iinfo(np.uint64).max, working_dir: pathlib.Path = DEFAULT_WORKING_DIR) -> tuple[pathlib.Path, polars.DataFrame]
+
+   Remove components outside the specified size bounds and write a hive-partitioned edgelist..
+
+   The per-component score matches hybrid community detection:
+   ``COUNT(DISTINCT umi1) + COUNT(DISTINCT umi2)``. Rows from components that pass the
+   threshold are written as Parquet with ``PARTITION_BY (component)``.
+
+   :param input_edgelist_path: Parquet file with component assignments (e.g. after hybrid detection).
+   :param min_component_size_to_prune: Components with number of UMIs strictly below this are dropped.
+   :param max_component_size_to_prune: Components with number of UMIs strictly above this are dropped.
+   :param working_dir: Directory for a temporary DuckDB file and the hive-partition output. Defaults
+                       to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+   :returns: Path to the hive-partitioned output and a frame of discarded ``component`` / ``n_umi``.
+

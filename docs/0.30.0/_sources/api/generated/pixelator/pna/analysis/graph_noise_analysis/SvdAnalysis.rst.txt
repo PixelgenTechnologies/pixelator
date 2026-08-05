@@ -1,0 +1,56 @@
+pixelator.pna.analysis.graph_noise_analysis.SvdAnalysis
+=======================================================
+
+.. py:class:: pixelator.pna.analysis.graph_noise_analysis.SvdAnalysis(pivots: int = 100)
+
+   Bases: :py:obj:`pixelator.pna.analysis_engine.PerComponentTask`
+
+
+   Run SVD variance explained on each component.
+
+
+   .. py:attribute:: TASK_NAME
+      :value: 'SVD'
+
+
+
+   .. py:method:: add_to_pixel_file(data: pandas.DataFrame, pxl_file_target: pixelator.pna.pixeldataset.io.PxlFile) -> None
+
+      Add svd variance explained for the first three singular vectors.
+
+      Add svd variance explained for the first three singular vectors across
+      all components to adata.obs in pxl_dataset.
+
+      :param data: a pandas DataFrame containing svd variance explained for the first three singular
+                   vectors across all components.
+      :param pxl_dataset: the PNAPixelDataset to add the data to.
+      :param pxl_file_target: the PxlFile to add the data to.
+
+
+
+   .. py:attribute:: pivots
+      :value: 100
+
+
+
+   .. py:method:: run_on_component_graph(component: pixelator.pna.graph.PNAGraph, component_id: str) -> pandas.DataFrame
+
+      Run SVD analysis on component.
+
+      Calls svd_pivot_distances on a component graph and returns a pandas DataFrame with variance
+      explained for the first three singular vectors. The columns in the DataFrame are named
+      'svd_var_expl_s1',
+      'svd_var_expl_s2', 'svd_var_expl_s3'. The variance explained is useful for investigating
+      spatial coherence
+      in the graph. In the best case scenario, the first three singular vectors contribute equally
+      to the variance
+      explained, and together they should explain 100% of the total variance explained.
+
+      :param component: a networkx graph for a component to run the analysis on.
+      :param component_id: the id of the component.
+
+      :returns: a pandas DataFrame containing variance explained for the first three singular vectors.
+                If the SVD computation fails, e.g. if the number of pivot points is >= the number of
+                nodes, the function returns a DataFrame with nan values.
+
+

@@ -1,0 +1,15 @@
+pixelator.pna.sample_calling.create_final_report
+================================================
+
+.. py:function:: pixelator.pna.sample_calling.create_final_report(final_dataset: pixelator.pna.pixeldataset.PNAPixelDataset, input_reads: int, undetermined_sample_name: str = 'undetermined') -> report.SampleCallingTotalReport
+
+   Create the final report for the sample calling.
+
+   :param final_dataset: The final dataset after sample calling.
+   :param input_reads: Total number of reads across all samples before sample calling.
+   :param undetermined_sample_name: Name to use for undetermined components. Defaults to
+                                    "undetermined".
+
+   :returns: The final report for the sample calling.
+   :rtype: SampleCallingTotalReport
+

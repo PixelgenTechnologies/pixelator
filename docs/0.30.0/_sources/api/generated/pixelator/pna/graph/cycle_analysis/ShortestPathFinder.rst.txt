@@ -1,0 +1,55 @@
+pixelator.pna.graph.cycle_analysis.ShortestPathFinder
+=====================================================
+
+.. py:class:: pixelator.pna.graph.cycle_analysis.ShortestPathFinder(edgelist, explore_limit=10000)
+
+   Class to find shortest paths in a graph using sparse matrix operations.
+
+
+   .. py:attribute:: adj_mat
+
+
+   .. py:attribute:: explore_limit
+      :value: 10000
+
+
+
+   .. py:attribute:: failed_edges
+      :value: []
+
+
+
+   .. py:method:: get_passing_edges()
+
+      Get edges that participate in cycles.
+
+
+
+   .. py:attribute:: node_map
+
+
+   .. py:attribute:: passing_edges
+      :value: []
+
+
+
+   .. py:method:: resolve_frontier()
+
+      Resolve the current frontier to identify reached, exceeded, and failed edges.
+
+
+
+   .. py:method:: run(max_steps=20)
+
+      Run the shortest path finder for a maximum number of steps.
+
+
+
+   .. py:attribute:: state
+
+
+   .. py:method:: step()
+
+      Perform a single step of frontier expansion.
+
+

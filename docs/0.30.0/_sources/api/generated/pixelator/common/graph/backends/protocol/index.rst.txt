@@ -1,0 +1,49 @@
+pixelator.common.graph.backends.protocol
+========================================
+
+.. py:module:: pixelator.common.graph.backends.protocol
+
+.. autoapi-nested-parse::
+
+   Protocol of graph backends used by pixelator.
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.graph.backends.protocol.SupportedLayoutAlgorithm
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/graph/backends/protocol/Edge
+   /api/generated/pixelator/common/graph/backends/protocol/EdgeSequence
+   /api/generated/pixelator/common/graph/backends/protocol/GraphBackend
+   /api/generated/pixelator/common/graph/backends/protocol/Vertex
+   /api/generated/pixelator/common/graph/backends/protocol/VertexClustering
+   /api/generated/pixelator/common/graph/backends/protocol/VertexSequence
+
+.. autoapisummary::
+
+   pixelator.common.graph.backends.protocol.Edge
+   pixelator.common.graph.backends.protocol.EdgeSequence
+   pixelator.common.graph.backends.protocol.GraphBackend
+   pixelator.common.graph.backends.protocol.Vertex
+   pixelator.common.graph.backends.protocol.VertexClustering
+   pixelator.common.graph.backends.protocol.VertexSequence
+
+
+Module Contents
+---------------
+
+.. py:data:: SupportedLayoutAlgorithm
+

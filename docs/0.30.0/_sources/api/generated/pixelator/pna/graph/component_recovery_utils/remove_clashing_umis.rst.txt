@@ -1,0 +1,16 @@
+pixelator.pna.graph.component_recovery_utils.remove_clashing_umis
+=================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.remove_clashing_umis(input_edgelist_path: pathlib.Path, component_stats: pixelator.pna.graph.report.GraphStatistics, working_dir: pathlib.Path = DEFAULT_WORKING_DIR) -> tuple[pathlib.Path, pixelator.pna.graph.report.GraphStatistics]
+
+   Remove clashing UMIs from an edgelist and save the filtered edgelist.
+
+   This function identifies clashing UMIs in the edgelist and removes any edges that contain
+   these UMIs. The filtered edgelist is written under ``working_dir``.
+
+   :param input_edgelist_path: Path to the input Parquet file containing the edgelist.
+   :param component_stats: Statistics object to update with clash information.
+   :param working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+   :returns: Path to the filtered edgelist and updated component statistics.
+

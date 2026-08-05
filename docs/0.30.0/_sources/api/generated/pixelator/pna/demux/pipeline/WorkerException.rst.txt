@@ -1,0 +1,27 @@
+pixelator.pna.demux.pipeline.WorkerException
+============================================
+
+.. py:exception:: pixelator.pna.demux.pipeline.WorkerException(wrapped_exception, tb_str)
+
+   Bases: :py:obj:`Exception`
+
+
+   Wrap an exception that occurred in a worker process.
+
+   Capture the traceback string of the original exception.
+   This is class is needed because traceback objects are not picklable.
+   To communicate the traceback in a multiprocessing setting, we need to
+   capture the traceback as a string.
+
+
+
+   :ivar e: The original exception
+   :ivar tb_str: The traceback string
+
+
+
+   .. py:attribute:: e
+
+
+   .. py:attribute:: tb_str
+

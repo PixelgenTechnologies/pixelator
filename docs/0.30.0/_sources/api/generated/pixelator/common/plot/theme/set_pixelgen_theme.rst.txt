@@ -1,0 +1,12 @@
+pixelator.common.plot.theme.set_pixelgen_theme
+==============================================
+
+.. py:function:: pixelator.common.plot.theme.set_pixelgen_theme() -> None
+
+   Apply the Pixelgen brand theme globally (until changed again).
+
+   This sets matplotlib rcParams for a white, grid-free panel style matching
+   ggplot2's ``theme_bw()`` with blanked gridlines, and sets the default
+   discrete color cycle (both matplotlib's and seaborn's) to
+   `pixelgen_discrete_colors`.
+

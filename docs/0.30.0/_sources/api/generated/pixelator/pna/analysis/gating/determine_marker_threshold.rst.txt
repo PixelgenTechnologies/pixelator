@@ -1,0 +1,28 @@
+pixelator.pna.analysis.gating.determine_marker_threshold
+========================================================
+
+.. py:function:: pixelator.pna.analysis.gating.determine_marker_threshold(values: pandas.Series | numpy.ndarray, min_separation_score: float = 3.0, marker: str = '') -> MarkerThreshold
+
+   Determine a positive/negative threshold for a marker from its CLR distribution.
+
+   A 2-component Gaussian mixture model is fit to the values, and the threshold
+   is set to the midpoint between the two component means. The separation
+   between the components is quantified as ``|mean_1 - mean_0| / (var_0 + var_1)``.
+   If this separation score is below ``min_separation_score``, the distribution
+   is considered unimodal, a warning is issued, and no threshold is returned.
+
+   Note that fitting a 2-component mixture to a genuinely unimodal
+   distribution still tends to produce a separation score around 1-3
+   (rather than 0), since the two components end up splitting the single
+   mode. The default cutoff of 3.0 was chosen empirically to reliably
+   separate unimodal distributions from clearly bimodal ones (separated by
+   several standard deviations).
+
+   :param values: The CLR values (across components) for a single marker.
+   :param min_separation_score: The minimum separation score required for the
+                                distribution to be considered bimodal. Defaults to 3.0.
+   :param marker: The name of the marker, used only for the warning message.
+
+   :returns: A `MarkerThreshold` instance with the determined threshold (or ``None``
+             if the distribution is unimodal) and the separation score.
+

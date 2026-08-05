@@ -1,0 +1,14 @@
+pixelator.pna.collapse.utilities.build_binary_index
+===================================================
+
+.. py:function:: pixelator.pna.collapse.utilities.build_binary_index(data) -> faiss.IndexBinary
+
+   Build a binary index for a batch of embeddings.
+
+   The input data is a matrix of shape (n, d) where n is the number
+   of embeddings and d is the dimensionality of each embedding.
+
+   Depending on the size of the input data, either a flat or HNSW index is built.
+
+   :param data: The data to build the index for.
+

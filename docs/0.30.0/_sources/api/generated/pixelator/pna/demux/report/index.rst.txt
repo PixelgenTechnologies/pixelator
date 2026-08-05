@@ -1,0 +1,28 @@
+pixelator.pna.demux.report
+==========================
+
+.. py:module:: pixelator.pna.demux.report
+
+.. autoapi-nested-parse::
+
+   Routines for printing a report.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/demux/report/BarcodeCorrectionStatistics
+   /api/generated/pixelator/pna/demux/report/DemuxSampleReport
+
+.. autoapisummary::
+
+   pixelator.pna.demux.report.BarcodeCorrectionStatistics
+   pixelator.pna.demux.report.DemuxSampleReport
+
+

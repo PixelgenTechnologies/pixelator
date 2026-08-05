@@ -1,0 +1,79 @@
+pixelator.pna.config.panel.PNAAntibodyPanelDiff
+===============================================
+
+.. py:class:: pixelator.pna.config.panel.PNAAntibodyPanelDiff(panel_1: PNAAntibodyPanel, panel_2: PNAAntibodyPanel)
+
+   Class representing the differences between two PNAAntibodyPanel objects.
+
+
+   .. py:property:: added_clones
+      :type: polars.DataFrame
+
+
+      Return a dataframe with the clones that are present in panel 2 but not in panel 1.
+
+
+   .. py:property:: added_columns
+      :type: List[str]
+
+
+      Return a list of columns that are present in panel 2 but not in panel 1.
+
+
+   .. py:property:: changed_columns
+      :type: List[str]
+
+
+      Return a list of columns that are different between the two panels.
+
+
+   .. py:property:: col_names_in_both_panels
+      :type: List[str]
+
+
+      Return a list of column names that are present in both panels.
+
+
+   .. py:property:: identical_columns
+      :type: List[str]
+
+
+      Return a list of columns that are identical between the two panels.
+
+
+   .. py:attribute:: join_on_columns
+      :type:  list[str]
+      :value: ['sequence_1', 'sequence_2']
+
+
+
+   .. py:attribute:: joined
+
+
+   .. py:attribute:: panel_1
+
+
+   .. py:attribute:: panel_2
+
+
+   .. py:property:: removed_clones
+      :type: polars.DataFrame
+
+
+      Return a dataframe with the clones that are present in panel 1 but not in panel 2.
+
+
+   .. py:property:: removed_columns
+      :type: List[str]
+
+
+      Return a list of columns that are present in panel 1 but not in panel 2.
+
+
+   .. py:method:: upgrade_adata(adata: anndata.AnnData) -> anndata.AnnData
+
+      Upgrade an AnnData object with the changes between the two panels.
+
+      :param adata: An AnnData object containing panel information.
+
+

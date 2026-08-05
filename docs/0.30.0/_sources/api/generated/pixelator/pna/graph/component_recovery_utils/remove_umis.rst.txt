@@ -1,0 +1,13 @@
+pixelator.pna.graph.component_recovery_utils.remove_umis
+========================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.remove_umis(input_edgelist_path: pathlib.Path, umis_to_remove: polars.Series, working_dir: pathlib.Path = DEFAULT_WORKING_DIR) -> pathlib.Path
+
+   Remove specified UMIs from an edgelist and write the filtered edgelist under ``working_dir``.
+
+   :param input_edgelist_path: Input Parquet edgelist.
+   :param umis_to_remove: UMIs whose edges should be dropped.
+   :param working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+   :returns: Path to the written Parquet file (``no_clash_edgelist.parquet`` in ``working_dir``).
+

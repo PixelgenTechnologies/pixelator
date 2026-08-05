@@ -1,0 +1,11 @@
+pixelator.pna.utils.utils.clean_suffixes
+========================================
+
+.. py:function:: pixelator.pna.utils.utils.clean_suffixes(path: pathlib.PurePath) -> pathlib.PurePath
+
+   Remove known suffixes and compression extensions from a path.
+
+   :param path: The path to clean
+
+   :returns: The path without fasta/fastq suffixes or compression extensions
+

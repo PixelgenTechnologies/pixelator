@@ -1,0 +1,16 @@
+pixelator.common.statistics.rate_diff_transformation
+====================================================
+
+.. py:function:: pixelator.common.statistics.rate_diff_transformation(df: pandas.DataFrame) -> pandas.DataFrame
+
+   Transform antibody counts as deviation from an expected baseline distribution.
+
+   The baseline distribution refers to a fixed ratio of different antibody types
+   in each component. For example, if 10% of antibodies are HLA-ABC, in a component with
+   120 antibodies, the expected count is 12. If the actual count is 8, the
+   transformation for HLA-ABC in this component will be -4.
+
+   :param df: The dataframe of raw antibody counts (antibodies as columns).
+
+   :returns: A dataframe with the counts difference from expected values.
+

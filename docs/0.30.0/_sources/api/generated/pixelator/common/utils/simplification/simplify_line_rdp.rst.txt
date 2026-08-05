@@ -1,0 +1,18 @@
+pixelator.common.utils.simplification.simplify_line_rdp
+=======================================================
+
+.. py:function:: pixelator.common.utils.simplification.simplify_line_rdp(coordinates: numpy.ndarray, epsilon: float = 0.01, return_mask=False)
+
+   Simplify a line using the Ramer-Douglas-Peucker algorithm.
+
+   :param coordinates: Array of shape ``(n, d)`` with ``n`` points in ``d`` dimensions.
+   :param epsilon: Maximum perpendicular distance for point removal.
+   :param return_mask: If True, return the boolean mask instead of simplified coordinates.
+
+   :returns: Simplified coordinates, or the boolean mask when ``return_mask`` is True.
+
+   .. rubric:: Examples
+
+   >>> simplify_line_rdp(np.array([[1, 1], [2, 2], [3, 3], [4, 4]]))
+   array([[1, 1], [4, 4]])
+

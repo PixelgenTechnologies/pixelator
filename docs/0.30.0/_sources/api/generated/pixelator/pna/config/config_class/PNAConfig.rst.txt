@@ -1,0 +1,105 @@
+pixelator.pna.config.config_class.PNAConfig
+===========================================
+
+.. py:class:: pixelator.pna.config.config_class.PNAConfig(assays: Optional[List[pixelator.pna.config.assay.PNAAssay]] = None, panels: Optional[List[pixelator.pna.config.panel.PNAAntibodyPanel]] = None)
+
+   Class containing the pixelator configuration (assay settings).
+
+
+   .. py:method:: add_panel(panel: pixelator.pna.config.panel.PNAAntibodyPanel) -> None
+
+      Register a panel and its lookup keys in the config.
+
+      The panel is indexed by panel name (or filename fallback), optional product,
+      and aliases.
+
+      :param panel: Panel object to add.
+
+      :raises PanelException: If an alias already maps to a different panel key.
+
+
+
+   .. py:attribute:: assays
+      :type:  Dict[str, pixelator.pna.config.assay.PNAAssay]
+
+
+   .. py:method:: get_assay(assay_name: str) -> Optional[pixelator.pna.config.assay.PNAAssay]
+
+      Get an assay by name.
+
+
+
+   .. py:method:: get_panel(panel_name: str, version: Optional[str] = None, allow_aliases: bool = True) -> Optional[pixelator.pna.config.panel.PNAAntibodyPanel]
+
+      Resolve a panel by name/product/alias and optional version constraint.
+
+      :param panel_name: Panel name, product name, or alias. May include an inline version specifier
+                         (for example "product==1.2.0").
+      :param version: Optional version specifier supplied separately.
+      :param allow_aliases: If True, also resolve through configured aliases.
+
+      :returns: The resolved panel, or None if no matching panel is found.
+
+      :raises ValueError: If version is specified both inline and in ``version``, or if multiple
+          ambiguous major/minor versions match.
+
+
+
+   .. py:method:: list_panel_names(include_aliases: bool = False, include_archived: bool = False) -> List[str]
+
+      Return a list of all panel names.
+
+      :param include_aliases: Include panel aliases in the list
+      :param include_archived: Include archived panels in the list
+
+      :returns: A list of panel names
+
+
+
+   .. py:method:: load_assay(path: pixelator.common.types.PathType) -> None
+
+      Load one assay definition from a YAML file.
+
+      :param path: Path to an assay YAML file.
+
+      :raises ValueError: If an assay with the same name already exists in the config.
+
+
+
+   .. py:method:: load_assays(path: pixelator.common.types.PathType)
+
+      Load all assays from a directory containing yaml files.
+
+      :param path: Path to an assay YAML file.
+
+
+
+   .. py:method:: load_panel_file(path: pixelator.common.types.PathType) -> None
+
+      Load one panel CSV file into the config.
+
+      :param path: Path to a panel CSV file.
+
+      :raises PanelException: If loading introduces a conflicting alias mapping.
+
+
+
+   .. py:method:: load_panels(path: pixelator.common.types.PathType)
+
+      Load all panel files from a directory containing csv files.
+
+      :param path: Path to an assay YAML file.
+
+
+
+   .. py:attribute:: panel_aliases
+      :type:  Dict[str, str]
+
+
+   .. py:attribute:: panels
+      :type:  MutableMapping[str, List[pixelator.pna.config.panel.PNAAntibodyPanel]]
+
+
+   .. py:attribute:: products
+      :type:  MutableMapping[str, List[pixelator.pna.config.panel.PNAAntibodyPanel]]
+

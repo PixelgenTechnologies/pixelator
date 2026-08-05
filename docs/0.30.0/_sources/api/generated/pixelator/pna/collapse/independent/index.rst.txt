@@ -1,0 +1,44 @@
+pixelator.pna.collapse.independent
+==================================
+
+.. py:module:: pixelator.pna.collapse.independent
+
+.. autoapi-nested-parse::
+
+   Collapse UMI regions independently.
+
+   Copyright © 2025 Pixelgen Technologies AB
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/collapse/independent/collapser/index
+   /api/generated/pixelator/pna/collapse/independent/combine_collapse/index
+   /api/generated/pixelator/pna/collapse/independent/report/index
+   /api/generated/pixelator/pna/collapse/independent/shared_memory_registry/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/independent/IndependentCollapseSampleReport
+   /api/generated/pixelator/pna/collapse/independent/MarkerCorrectionStats
+   /api/generated/pixelator/pna/collapse/independent/RegionCollapser
+   /api/generated/pixelator/pna/collapse/independent/SingleUMICollapseSampleReport
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.independent.IndependentCollapseSampleReport
+   pixelator.pna.collapse.independent.MarkerCorrectionStats
+   pixelator.pna.collapse.independent.RegionCollapser
+   pixelator.pna.collapse.independent.SingleUMICollapseSampleReport
+
+

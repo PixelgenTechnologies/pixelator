@@ -1,0 +1,35 @@
+pixelator.common.config.assay.RegionType
+========================================
+
+.. py:class:: pixelator.common.config.assay.RegionType
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   Enum class representing different sequence types.
+
+
+   .. py:attribute:: AMPLICON
+      :value: 'amplicon'
+
+
+
+   .. py:attribute:: BARCODE
+      :value: 'barcode'
+
+
+
+   .. py:attribute:: PBS
+      :value: 'pbs'
+
+
+
+   .. py:attribute:: UMI
+      :value: 'umi'
+
+
+
+   .. py:attribute:: UPI
+      :value: 'upi'
+
+

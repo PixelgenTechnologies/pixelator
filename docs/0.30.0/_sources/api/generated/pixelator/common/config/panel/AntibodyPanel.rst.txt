@@ -1,0 +1,115 @@
+pixelator.common.config.panel.AntibodyPanel
+===========================================
+
+.. py:class:: pixelator.common.config.panel.AntibodyPanel(df: pandas.DataFrame, metadata: AntibodyPanelMetadata, file_name: Optional[str] = None)
+
+   Class representing a Molecular Pixelation antibody panel.
+
+
+   .. py:property:: aliases
+      :type: list[str]
+
+
+      Return the (optional) list of panel file aliases.
+
+
+   .. py:property:: description
+      :type: Optional[str]
+
+
+      Return the panel file description.
+
+
+   .. py:property:: df
+      :type: pandas.DataFrame
+
+
+      Return the panel dataframe.
+
+
+   .. py:property:: filename
+      :type: Optional[str]
+
+
+      Return the filename of the marker panel.
+
+
+   .. py:method:: from_csv(filename: pixelator.common.types.PathType) -> AntibodyPanel
+      :classmethod:
+
+
+      Create an AntibodyPanel from a csv panel file.
+
+      :param filename: The path to the panel file.
+
+      :returns: The AntibodyPanel object. (AntibodyPanel)
+
+      :raises AssertionError: exception if panel file is missing,
+
+
+
+   .. py:method:: get_marker_id(seq: str) -> str
+
+      Return the marker name.
+
+
+
+   .. py:property:: markers
+      :type: List[str]
+
+
+      Return the list of unique markers in the panel.
+
+
+   .. py:property:: markers_control
+      :type: List[str]
+
+
+      Return a list of marker control (names).
+
+
+   .. py:property:: name
+      :type: Optional[str]
+
+
+      The name defined in the panel metadata.
+
+
+   .. py:property:: size
+      :type: int
+
+
+      Return the size of the marker panel.
+
+
+   .. py:method:: validate_antibody_panel(panel_df: pandas.DataFrame) -> list[str]
+      :classmethod:
+
+
+      Perform validation on an antibody panel file.
+
+      Will try to find as many issues as possible.
+
+      This will not directly raise the issue (since that makes it difficult
+      to find multiple problems at once) instead it will return a list of str
+      (one for each issue).
+
+      Usage example:
+      ```
+      >>> errors = panel.validate_antibody_panel(panel_df)
+      ... if len(errors) > 0:
+      ...     AssertionError("There was a problem with the panel data!")
+      ````
+
+      :param panel_df: Panel dataframe to validate.
+
+      :returns: A list of validation error messages. An empty list means valid input.
+
+
+
+   .. py:property:: version
+      :type: Optional[str]
+
+
+      Return the panel file version.
+

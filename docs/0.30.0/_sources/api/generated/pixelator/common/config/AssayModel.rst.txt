@@ -1,0 +1,22 @@
+pixelator.common.config.AssayModel
+==================================
+
+.. py:class:: pixelator.common.config.AssayModel(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Validation model for assay configuration.
+
+   :ivar name: Name of the assay
+   :ivar assay_spec: List of assay regions
+
+
+
+   .. py:attribute:: assay_spec
+      :type:  List[RegionModel]
+
+
+   .. py:attribute:: name
+      :type:  str
+

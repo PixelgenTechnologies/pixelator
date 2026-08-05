@@ -1,0 +1,14 @@
+pixelator.common.plot.theme.style_facet_strips
+==============================================
+
+.. py:function:: pixelator.common.plot.theme.style_facet_strips(grid: seaborn.axisgrid.FacetGrid, color: str = STRIP_BACKGROUND_COLOR) -> seaborn.axisgrid.FacetGrid
+
+   Style the strip titles of a seaborn `FacetGrid` with a colored background.
+
+   :param grid: A seaborn `FacetGrid` (e.g. as returned by ``sns.relplot`` or
+                ``sns.FacetGrid``) to style in place.
+   :param color: The background color for the facet strip titles. Defaults to
+                 `STRIP_BACKGROUND_COLOR`.
+
+   :returns: The same `grid`, styled in place.
+

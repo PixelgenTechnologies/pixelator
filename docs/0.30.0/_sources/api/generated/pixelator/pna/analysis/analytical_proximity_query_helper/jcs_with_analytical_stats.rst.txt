@@ -1,0 +1,12 @@
+pixelator.pna.analysis.analytical_proximity_query_helper.jcs_with_analytical_stats
+==================================================================================
+
+.. py:function:: pixelator.pna.analysis.analytical_proximity_query_helper.jcs_with_analytical_stats(components: str | list[str] | set[str] | None = None, markers: str | list[str] | set[str] | None = None) -> tuple[str, dict]
+
+   Construct a SQL query for calculating proximity join counts with analytical statistics.
+
+   :param components: A list of components to include in the analysis.
+   :param markers: A list of marker names to include in the analysis.
+
+   :returns: A tuple containing the SQL query string and a dictionary of parameters.
+

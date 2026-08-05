@@ -1,0 +1,14 @@
+pixelator.pna.utils.get_demux_filename_info
+===========================================
+
+.. py:function:: pixelator.pna.utils.get_demux_filename_info(filename: str | pathlib.Path | pathlib.PurePath) -> tuple[str, int]
+
+   Extract the sample name and part for a `demux` output parquet file.
+
+   The demux output file are expeted to use following schema:
+   <sample_name>.demux.part_<part_number>.parquet
+
+   :param filename: path to the file
+
+   :returns: the demux part (str)
+

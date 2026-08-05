@@ -1,0 +1,27 @@
+pixelator.pna.graph.cycle_analysis.ShortestPathState
+====================================================
+
+.. py:class:: pixelator.pna.graph.cycle_analysis.ShortestPathState(edgelist)
+
+   Class to maintain the state of the shortest path search.
+
+
+   .. py:attribute:: already_visited
+
+
+   .. py:attribute:: frontier
+
+
+   .. py:attribute:: frontier_index
+
+
+   .. py:method:: initialize_frontier(edgelist)
+
+      Initialize the frontier from the edgelist.
+
+
+
+   .. py:attribute:: n_steps
+      :value: 0
+
+

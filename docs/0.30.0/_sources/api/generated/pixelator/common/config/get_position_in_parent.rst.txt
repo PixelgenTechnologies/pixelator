@@ -1,0 +1,19 @@
+pixelator.common.config.get_position_in_parent
+==============================================
+
+.. py:function:: pixelator.common.config.get_position_in_parent(assay: Assay, region_id: str) -> Tuple[int, int]
+
+   Return the start and end position of a region relative to its parent region.
+
+   This assumes the amplicon consists of only fixed length regions in the path
+   from the start of the amplicon up until the region of interest.
+
+   :param assay: assay design
+   :param region_id: region id of the amplicon
+
+   :returns: tuple with start and end position of the region in the parent region
+
+   :raises ValueError: if the region_id is not found in the assay
+   :raises ValueError: if the region has no parent
+   :raises ValueError: if the parent_region is not found in the assay
+

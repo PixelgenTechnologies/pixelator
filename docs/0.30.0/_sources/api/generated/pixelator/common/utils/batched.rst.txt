@@ -1,0 +1,9 @@
+pixelator.common.utils.batched
+==============================
+
+.. py:function:: pixelator.common.utils.batched(iterable, n)
+
+   Batch data into tuples of length n. The last batch may be shorter.
+
+   Taken from python itertools recipes.
+

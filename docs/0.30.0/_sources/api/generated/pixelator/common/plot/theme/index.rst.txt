@@ -1,0 +1,49 @@
+pixelator.common.plot.theme
+===========================
+
+.. py:module:: pixelator.common.plot.theme
+
+.. autoapi-nested-parse::
+
+   Pixelgen brand theme shared across all plotting modules.
+
+   Python/matplotlib port of the ``theme_pixelgen()`` ggplot2 theme from
+   Pixelgen's internal ``themes_and_palettes.R``: a white, grid-free panel with a
+   light grey background for facet strip titles.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.plot.theme.STRIP_BACKGROUND_COLOR
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/plot/theme/pixelgen_theme
+   /api/generated/pixelator/common/plot/theme/set_pixelgen_theme
+   /api/generated/pixelator/common/plot/theme/style_facet_strips
+
+.. autoapisummary::
+
+   pixelator.common.plot.theme.pixelgen_theme
+   pixelator.common.plot.theme.set_pixelgen_theme
+   pixelator.common.plot.theme.style_facet_strips
+
+
+Module Contents
+---------------
+
+.. py:data:: STRIP_BACKGROUND_COLOR
+   :value: '#F2F2F2'
+
+

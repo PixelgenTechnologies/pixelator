@@ -1,0 +1,52 @@
+pixelator.pna.read_processing.runners.ReaderProcess
+===================================================
+
+.. py:class:: pixelator.pna.read_processing.runners.ReaderProcess(*paths: str, file_format_connection: multiprocessing.connection.Connection, connections: Sequence[multiprocessing.connection.Connection], queue: multiprocessing.Queue, buffer_size: int, stdin_fd)
+
+   Bases: :py:obj:`mpctx_Process`
+
+
+   Read chunks of FASTA or FASTQ data (single-end or paired) and send them to a worker.
+
+   The reader repeatedly
+
+   - reads a chunk from the file(s)
+   - reads a worker index from the Queue
+   - sends the chunk to connections[index]
+
+   and finally sends the stop token -1 ("poison pills") to all connections.
+
+
+   .. py:attribute:: buffer_size
+
+
+   .. py:attribute:: connections
+
+
+   .. py:attribute:: queue
+
+
+   .. py:method:: run()
+
+      Read chunks of data from the input files and send them to workers.
+
+
+
+   .. py:method:: send_to_worker(chunk_index, chunk1, chunk2=None)
+
+      Send a chunk of data to a worker.
+
+      :param chunk_index: The index of the chunk.
+      :param chunk1: The first chunk of data.
+      :param chunk2: The second chunk of data (if paired-end data).
+
+
+
+   .. py:method:: shutdown()
+
+      Notify all workers to shut down.
+
+
+
+   .. py:attribute:: stdin_fd
+

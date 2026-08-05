@@ -1,0 +1,28 @@
+pixelator.pna.demux.barcode_identifier
+======================================
+
+.. py:module:: pixelator.pna.demux.barcode_identifier
+
+.. autoapi-nested-parse::
+
+   Pipeline step to identify the antibody for a given barcode.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/demux/barcode_identifier/BarcodeIdentifier
+   /api/generated/pixelator/pna/demux/barcode_identifier/BarcodeIdentifierStatistics
+
+.. autoapisummary::
+
+   pixelator.pna.demux.barcode_identifier.BarcodeIdentifier
+   pixelator.pna.demux.barcode_identifier.BarcodeIdentifierStatistics
+
+

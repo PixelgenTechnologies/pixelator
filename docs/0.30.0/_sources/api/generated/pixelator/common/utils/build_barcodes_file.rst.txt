@@ -1,0 +1,20 @@
+pixelator.common.utils.build_barcodes_file
+==========================================
+
+.. py:function:: pixelator.common.utils.build_barcodes_file(panel: pixelator.common.config.AntibodyPanel, anchored: bool, rev_complement: bool) -> str
+
+   Create a FASTA file of barcodes from a panel dataframe.
+
+   The FASTA file will have the marker id as
+   name and the barcode sequence as sequence. The parameter
+   rev_complement control if sequence needs to be in reverse
+   complement form or not. When anchored is true a dollar sign
+   ($) will be added at the end of the sequences to make them
+   anchored in cutadapt.
+
+   :param panel: an Antibody panel object
+   :param anchored: make the sequences anchored if True
+   :param rev_complement: reverse complement the sequence column if True
+
+   :returns: a path to the barcodes file (str)
+

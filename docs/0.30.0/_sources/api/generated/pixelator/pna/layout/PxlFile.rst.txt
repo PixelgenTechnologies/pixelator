@@ -1,0 +1,42 @@
+pixelator.pna.layout.PxlFile
+============================
+
+.. py:class:: pixelator.pna.layout.PxlFile(path: pathlib.Path, sample_name: str | None = None)
+
+   PxlFile represents a a pxl file on disk and provides basic utility methods.
+
+
+   .. py:method:: copy_pxl_file(src: PxlFile, target: pathlib.Path) -> PxlFile
+      :staticmethod:
+
+
+      Copy a PxlFile to a new location.
+
+      :param src: The source PxlFile.
+      :param target: The target path.
+
+      :returns: The new PxlFile.
+
+
+
+   .. py:method:: is_pxl_file() -> bool
+
+      Check if the file is a PXL file.
+
+
+
+   .. py:method:: metadata() -> dict
+
+      Read the metadata from the PXL file.
+
+
+
+   .. py:attribute:: path
+
+
+   .. py:property:: sample_name
+      :type: str
+
+
+      Return the sample name of the PxlFile.
+

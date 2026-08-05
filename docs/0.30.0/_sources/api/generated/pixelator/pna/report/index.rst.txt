@@ -1,0 +1,22 @@
+pixelator.pna.report
+====================
+
+.. py:module:: pixelator.pna.report
+
+.. autoapi-nested-parse::
+
+   Package for Pixelator report generation.
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/report/models/index
+
+

@@ -1,0 +1,24 @@
+pixelator.pna.collapse.independent.collapser.CollapseInputFile
+==============================================================
+
+.. py:class:: pixelator.pna.collapse.independent.collapser.CollapseInputFile
+
+   Keep track of the input file to collapse.
+
+   :param path: Path to the input file.
+   :param file_size: The total size of the input file.
+   :param molecule_count: The number of rows in the input dataframe. i.e. The number of molecules
+                          (unique reads).
+
+
+   .. py:attribute:: file_size
+      :type:  int
+
+
+   .. py:attribute:: molecule_count
+      :type:  int
+
+
+   .. py:attribute:: path
+      :type:  str
+

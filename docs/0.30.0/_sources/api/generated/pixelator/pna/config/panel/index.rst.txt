@@ -1,0 +1,41 @@
+pixelator.pna.config.panel
+==========================
+
+.. py:module:: pixelator.pna.config.panel
+
+.. autoapi-nested-parse::
+
+   Marker panel management for different PNA assays.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/PNAAntibodyPanel
+   /api/generated/pixelator/pna/config/panel/PNAAntibodyPanelDiff
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.PNAAntibodyPanel
+   pixelator.pna.config.panel.PNAAntibodyPanelDiff
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/load_antibody_panel
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.load_antibody_panel
+
+

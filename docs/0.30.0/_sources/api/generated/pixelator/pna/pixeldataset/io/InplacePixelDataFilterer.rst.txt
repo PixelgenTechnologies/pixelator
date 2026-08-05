@@ -1,0 +1,25 @@
+pixelator.pna.pixeldataset.io.InplacePixelDataFilterer
+======================================================
+
+.. py:class:: pixelator.pna.pixeldataset.io.InplacePixelDataFilterer(pxl_file: pixelator.pna.pixeldataset.io.pxl_file.PxlFile)
+
+   Class to filter a PXL file in place.
+
+   This is mostly useful for testing purposes, when one wants to strip
+   components from a PXL file to make it smaller and faster to work with.
+
+
+   .. py:method:: filter_components(components: set[str] | list[str], metadata: dict | None = None) -> None
+
+      Filter the PXL file by components, only keeping the provided components.
+
+      Note that if you provide metadata it will overwrite the existing metadata.
+      If you do not provide metadata, the existing metadata will be kept.
+
+      :param components: The components to keep.
+      :param metadata: The metadata to write to the PXL
+
+
+
+   .. py:attribute:: pxl_file
+

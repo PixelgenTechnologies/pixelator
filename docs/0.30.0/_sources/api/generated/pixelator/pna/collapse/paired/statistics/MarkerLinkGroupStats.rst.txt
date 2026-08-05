@@ -1,0 +1,82 @@
+pixelator.pna.collapse.paired.statistics.MarkerLinkGroupStats
+=============================================================
+
+.. py:class:: pixelator.pna.collapse.paired.statistics.MarkerLinkGroupStats(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Collect statistics of groups of molecules that will be collapsed.
+
+   :ivar ----------:
+   :ivar corrected_reads_count: int
+                                The total number of reads in unique molecules that were error corrected to another
+                                "close" molecule.
+   :ivar cluster_size_distribution: 1D array of ints
+                                    The result of binning the size of each group of close molecules.
+   :ivar collapsed_molecules_count: int
+                                    The total number of unique molecules (UMI1+UMI2+UEI) after error correction.
+
+
+
+   .. py:attribute:: cluster_size_distribution
+      :type:  list[int]
+      :value: None
+
+
+
+   .. py:attribute:: collapsed_molecules_count
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: corrected_reads_count
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: input_molecules_count
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: input_reads_count
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: marker_1
+      :type:  str
+
+
+   .. py:attribute:: marker_2
+      :type:  str
+
+
+   .. py:attribute:: read_count_per_collapsed_molecule_stats
+      :type:  pixelator.common.report.models.SummaryStatistics | None
+      :value: None
+
+
+
+   .. py:attribute:: read_count_per_unique_marker_link_stats
+      :type:  pixelator.common.report.models.SummaryStatistics | None
+      :value: None
+
+
+
+   .. py:attribute:: uei_count_per_unique_marker_link_stats
+      :type:  pixelator.common.report.models.SummaryStatistics | None
+      :value: None
+
+
+
+   .. py:attribute:: unique_marker_links_count
+      :type:  int
+      :value: 0
+
+

@@ -1,0 +1,54 @@
+pixelator.pna.pixeldataset.PreComputedLayouts
+=============================================
+
+.. py:class:: pixelator.pna.pixeldataset.PreComputedLayouts(view: pixelator.pna.pixeldataset.io.PixelDataViewer, components: str | Iterable[str] | None = None, adata_helper: pixelator.pna.pixeldataset.io.anndata_helper.AnnDataHelper | None = None, add_marker_counts: bool = True, add_spherical_norm: bool = False)
+
+   Representation of precomputed layouts.
+
+   This contains precomputed layouts for one or more components.
+
+
+   .. py:property:: components
+      :type: set[str]
+
+
+      Get the component names.
+
+
+   .. py:method:: describe() -> str
+
+      Return a description of the PreComputedLayouts.
+
+
+
+   .. py:method:: is_empty() -> bool
+
+      Check if the precomputed layouts are empty.
+
+
+
+   .. py:method:: iterator(return_polars_df: bool = False) -> Iterable[tuple[str, pandas.DataFrame | polars.DataFrame]]
+
+      Get a stream of layouts.
+
+      Control the trade-off between memory usage and performance by setting
+      the `batch_size` parameter. If you set it to a large number, you will
+      use more memory, but the performance should overall be better.
+
+      :param return_polars_df: If True, return polars DataFrames, otherwise return pandas DataFrames
+
+      :returns: A stream of layouts names and associated layout dataframes
+
+
+
+   .. py:method:: to_df() -> pandas.DataFrame
+
+      Get the precomputed layouts as a pandas DataFrame.
+
+
+
+   .. py:method:: to_polars() -> polars.DataFrame
+
+      Get the precomputed layouts as a polars DataFrame.
+
+

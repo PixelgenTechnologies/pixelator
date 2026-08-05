@@ -1,0 +1,32 @@
+pixelator.pna.amplicon.build_amplicon.AmpliconRegionSlices
+==========================================================
+
+.. py:class:: pixelator.pna.amplicon.build_amplicon.AmpliconRegionSlices
+
+   Helper class to store slices for the different regions of a PNA amplicon.
+
+
+   .. py:attribute:: lbs1
+      :value: None
+
+
+
+   .. py:attribute:: lbs2
+      :value: None
+
+
+
+   .. py:attribute:: pid1_umi1
+      :value: None
+
+
+
+   .. py:attribute:: pid2_umi2
+      :value: None
+
+
+
+   .. py:attribute:: uei
+      :value: None
+
+

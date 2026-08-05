@@ -1,0 +1,104 @@
+pixelator.common.utils
+======================
+
+.. py:module:: pixelator.common.utils
+
+.. autoapi-nested-parse::
+
+   Common functions and utilities for Pixelator.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/common/utils/log_progress/index
+   /api/generated/pixelator/common/utils/simplification/index
+   /api/generated/pixelator/common/utils/testing/index
+   /api/generated/pixelator/common/utils/units/index
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.utils.PathType
+   pixelator.common.utils.R1_REGEX
+   pixelator.common.utils.R2_REGEX
+   pixelator.common.utils.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/utils/batched
+   /api/generated/pixelator/common/utils/build_barcodes_file
+   /api/generated/pixelator/common/utils/click_echo
+   /api/generated/pixelator/common/utils/create_output_stage_dir
+   /api/generated/pixelator/common/utils/flatten
+   /api/generated/pixelator/common/utils/get_extension
+   /api/generated/pixelator/common/utils/get_pool_executor
+   /api/generated/pixelator/common/utils/get_process_pool_executor
+   /api/generated/pixelator/common/utils/get_read_sample_name
+   /api/generated/pixelator/common/utils/get_sample_name
+   /api/generated/pixelator/common/utils/group_input_reads
+   /api/generated/pixelator/common/utils/gz_size
+   /api/generated/pixelator/common/utils/is_read_file
+   /api/generated/pixelator/common/utils/log_step_start
+   /api/generated/pixelator/common/utils/np_encoder
+   /api/generated/pixelator/common/utils/remove_csv_whitespaces
+   /api/generated/pixelator/common/utils/reverse_complement
+   /api/generated/pixelator/common/utils/sanity_check_inputs
+   /api/generated/pixelator/common/utils/single_value
+   /api/generated/pixelator/common/utils/timer
+   /api/generated/pixelator/common/utils/write_parameters_file
+
+.. autoapisummary::
+
+   pixelator.common.utils.batched
+   pixelator.common.utils.build_barcodes_file
+   pixelator.common.utils.click_echo
+   pixelator.common.utils.create_output_stage_dir
+   pixelator.common.utils.flatten
+   pixelator.common.utils.get_extension
+   pixelator.common.utils.get_pool_executor
+   pixelator.common.utils.get_process_pool_executor
+   pixelator.common.utils.get_read_sample_name
+   pixelator.common.utils.get_sample_name
+   pixelator.common.utils.group_input_reads
+   pixelator.common.utils.gz_size
+   pixelator.common.utils.is_read_file
+   pixelator.common.utils.log_step_start
+   pixelator.common.utils.np_encoder
+   pixelator.common.utils.remove_csv_whitespaces
+   pixelator.common.utils.reverse_complement
+   pixelator.common.utils.sanity_check_inputs
+   pixelator.common.utils.single_value
+   pixelator.common.utils.timer
+   pixelator.common.utils.write_parameters_file
+
+
+Package Contents
+----------------
+
+.. py:data:: PathType
+
+.. py:data:: R1_REGEX
+   :value: '(.[Rr]1$)|(_[Rr]?1$)|(_[Rr]?1)(?P<suffix>_[0-9]{3})$'
+
+
+.. py:data:: R2_REGEX
+   :value: '(.[Rr]2$)|(_[Rr]?2$)|(_[Rr]?2)(?P<suffix>_[0-9]{3})$'
+
+
+.. py:data:: logger
+

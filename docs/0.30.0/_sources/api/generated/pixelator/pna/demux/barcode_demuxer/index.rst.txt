@@ -1,0 +1,77 @@
+pixelator.pna.demux.barcode_demuxer
+===================================
+
+.. py:module:: pixelator.pna.demux.barcode_demuxer
+
+.. autoapi-nested-parse::
+
+   Demultiplex reads based on the PNA assay design.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.demux.barcode_demuxer.K
+
+
+Exceptions
+----------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/demux/barcode_demuxer/BarcodeDemuxingError
+
+.. autoapisummary::
+
+   pixelator.pna.demux.barcode_demuxer.BarcodeDemuxingError
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/demux/barcode_demuxer/BarcodeDemuxer
+   /api/generated/pixelator/pna/demux/barcode_demuxer/DemuxRecordBatch
+   /api/generated/pixelator/pna/demux/barcode_demuxer/IndependentBarcodeDemuxer
+   /api/generated/pixelator/pna/demux/barcode_demuxer/PNAEmbedding
+   /api/generated/pixelator/pna/demux/barcode_demuxer/PairedBarcodeDemuxer
+
+.. autoapisummary::
+
+   pixelator.pna.demux.barcode_demuxer.BarcodeDemuxer
+   pixelator.pna.demux.barcode_demuxer.DemuxRecordBatch
+   pixelator.pna.demux.barcode_demuxer.IndependentBarcodeDemuxer
+   pixelator.pna.demux.barcode_demuxer.PNAEmbedding
+   pixelator.pna.demux.barcode_demuxer.PairedBarcodeDemuxer
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/demux/barcode_demuxer/create_barcode_group_to_batch_mapping
+   /api/generated/pixelator/pna/demux/barcode_demuxer/independent_marker_groups_mapping
+   /api/generated/pixelator/pna/demux/barcode_demuxer/partition_greedy
+
+.. autoapisummary::
+
+   pixelator.pna.demux.barcode_demuxer.create_barcode_group_to_batch_mapping
+   pixelator.pna.demux.barcode_demuxer.independent_marker_groups_mapping
+   pixelator.pna.demux.barcode_demuxer.partition_greedy
+
+
+Module Contents
+---------------
+
+.. py:data:: K
+

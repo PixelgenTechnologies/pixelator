@@ -1,0 +1,1567 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Command-line interface &#8212; Pixelator  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=04f45e20" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'cli/index';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://PixelgenTechnologies.github.io/pixelator/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.30.0';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            false;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="canonical" href="https://PixelgenTechnologies.github.io/pixelator/0.30.0/cli/index.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="pixelator.read_pna" href="../api/generated/pixelator/read_pna.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/pixelator.svg" class="logo__image only-light" alt="Pixelator  documentation - Home"/>
+    <img src="" class="logo__image only-dark pst-js-only" alt="Pixelator  documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    Python API reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Command-line interface
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    Python API reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Command-line interface
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Command-line interface</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="command-line-interface">
+<h1>Command-line interface<a class="headerlink" href="#command-line-interface" title="Link to this heading">#</a></h1>
+<p>This section documents the Pixelator command-line interface.</p>
+<section id="pixelator">
+<h2>pixelator<a class="headerlink" href="#pixelator" title="Link to this heading">#</a></h2>
+<p>Run the main CLI entrypoint for pixelator.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-version">
+<span class="sig-name descname"><span class="pre">--version</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-version" title="Link to this definition">#</a></dt>
+<dd><p>Show the version and exit.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-verbose">
+<span class="sig-name descname"><span class="pre">--verbose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-verbose" title="Link to this definition">#</a></dt>
+<dd><p>Show extended messages during execution</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-profile">
+<span class="sig-name descname"><span class="pre">--profile</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-profile" title="Link to this definition">#</a></dt>
+<dd><p>Activate profiling mode</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-log-file">
+<span class="sig-name descname"><span class="pre">--log-file</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;log_file&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-log-file" title="Link to this definition">#</a></dt>
+<dd><p>The path to the log file (it is created if it does not exist)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-cores">
+<span class="sig-name descname"><span class="pre">--cores</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;cores&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-cores" title="Link to this definition">#</a></dt>
+<dd><p>The number of cpu cores to use for parallel processing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<section id="pixelator-single-cell-pna">
+<h3>single-cell-pna<a class="headerlink" href="#pixelator-single-cell-pna" title="Link to this heading">#</a></h3>
+<p>Commands related to the network proximity assay.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-list-designs">
+<span class="sig-name descname"><span class="pre">--list-designs</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-list-designs" title="Link to this definition">#</a></dt>
+<dd><p>List available designs and exit.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-list-panels-including-archived">
+<span class="sig-name descname"><span class="pre">--list-panels-including-archived</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-list-panels-including-archived" title="Link to this definition">#</a></dt>
+<dd><p>List all panels, including panels marked as archived, and exit.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-list-panels">
+<span class="sig-name descname"><span class="pre">--list-panels</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-list-panels" title="Link to this definition">#</a></dt>
+<dd><p>List available panels and exit.</p>
+</dd></dl>
+
+<section id="pixelator-single-cell-pna-amplicon">
+<h4>amplicon<a class="headerlink" href="#pixelator-single-cell-pna-amplicon" title="Link to this heading">#</a></h4>
+<p>Process diverse raw pixel data (FASTQ) formats into common amplicon.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span>amplicon<span class="w"> </span>&lt;options&gt;<span class="w"> </span>FASTQ_1<span class="w"> </span>FASTQ_2
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-output">
+<span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-output" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The path where the results will be placed (it is created if it does not exist)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-design">
+<span class="sig-name descname"><span class="pre">--design</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;design&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-design" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The design to load from the configuration file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options<span class="colon">:</span></dt>
+<dd class="field-odd"><p>proxiome-v1 | proxiome-v2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-sample-name">
+<span class="sig-name descname"><span class="pre">--sample-name</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;sample_name&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-sample-name" title="Link to this definition">#</a></dt>
+<dd><p>Override the basename of the output fastq file. Default is the basename of the first input file without extension and read 1 identifier.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-mismatches">
+<span class="sig-name descname"><span class="pre">--mismatches</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;mismatches&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-mismatches" title="Link to this definition">#</a></dt>
+<dd><p>The number of mismatches allowed (given as fraction)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0.1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-remove-polyg">
+<span class="sig-name descname"><span class="pre">--remove-polyg</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-remove-polyg" title="Link to this definition">#</a></dt>
+<dd><p>Remove PolyG sequences (length of 10 or more)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-quality-cutoff">
+<span class="sig-name descname"><span class="pre">--quality-cutoff</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;quality_cutoff&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-quality-cutoff" title="Link to this definition">#</a></dt>
+<dd><p>Remove bases from the tail with a Phred score lower then the cutoff value.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-skip-input-checks">
+<span class="sig-name descname"><span class="pre">--skip-input-checks</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-skip-input-checks" title="Link to this definition">#</a></dt>
+<dd><p>Skip all check on the filename of input fastq files.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-force-run">
+<span class="sig-name descname"><span class="pre">--force-run</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-force-run" title="Link to this definition">#</a></dt>
+<dd><p>If more than 50% of reads are filtered, this indicates some serious problem with the input data and the amplicon commandwill fail with an exit status of 1. Setting this flag will force an exit status of 0.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-low-complexity-filter">
+<span id="cmdoption-pixelator-single-cell-pna-amplicon-no-low-complexity-filter"></span><span class="sig-name descname"><span class="pre">--low-complexity-filter</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--no-low-complexity-filter</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-low-complexity-filter" title="Link to this definition">#</a></dt>
+<dd><p>Enable filtering of amplicons with low complexity UMI sequences.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-low-complexity-threshold">
+<span class="sig-name descname"><span class="pre">--low-complexity-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;low_complexity_threshold&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-low-complexity-threshold" title="Link to this definition">#</a></dt>
+<dd><p>The threshold for determining if a UMI sequence is of low complexity and will be removed.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-lbs-filter">
+<span id="cmdoption-pixelator-single-cell-pna-amplicon-no-lbs-filter"></span><span class="sig-name descname"><span class="pre">--lbs-filter</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--no-lbs-filter</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-lbs-filter" title="Link to this definition">#</a></dt>
+<dd><p>Enable filtering of amplicons with UMI sequences that show similarity to the LBS sequence.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-lbs-filter-min-overlap">
+<span class="sig-name descname"><span class="pre">--lbs-filter-min-overlap</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;lbs_filter_min_overlap&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-lbs-filter-min-overlap" title="Link to this definition">#</a></dt>
+<dd><p>The minimum overlap required in a semi-global alignment of a UMI sequence with the LBS regions. Reads with less overlap will not be removed by the LBS filter.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-lbs-filter-error-rate">
+<span class="sig-name descname"><span class="pre">--lbs-filter-error-rate</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;lbs_filter_error_rate&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-lbs-filter-error-rate" title="Link to this definition">#</a></dt>
+<dd><p>The allowed error-rate in a semi-global alignment of a UMI sequence with the LBS regions.The error rate is defined as a percentage of UMI length.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-threads">
+<span class="sig-name descname"><span class="pre">--threads</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;threads&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-threads" title="Link to this definition">#</a></dt>
+<dd><p>The number of total worker threads available for parallel processing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-arg-FASTQ_1">
+<span class="sig-name descname"><span class="pre">FASTQ_1</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-arg-FASTQ_1" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-amplicon-arg-FASTQ_2">
+<span class="sig-name descname"><span class="pre">FASTQ_2</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-amplicon-arg-FASTQ_2" title="Link to this definition">#</a></dt>
+<dd><p>Optional argument</p>
+</dd></dl>
+
+</section>
+<section id="pixelator-single-cell-pna-analysis">
+<h4>analysis<a class="headerlink" href="#pixelator-single-cell-pna-analysis" title="Link to this heading">#</a></h4>
+<p>Add analysis results to a PXL file.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span>analysis<span class="w"> </span>&lt;options&gt;<span class="w"> </span>&lt;PIXELFILE&gt;
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-analysis-compute-proximity">
+<span class="sig-name descname"><span class="pre">--compute-proximity</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-analysis-compute-proximity" title="Link to this definition">#</a></dt>
+<dd><p>Compute proximity scores matrix</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-analysis-proximity-nbr-of-permutations">
+<span class="sig-name descname"><span class="pre">--proximity-nbr-of-permutations</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;proximity_nbr_of_permutations&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-analysis-proximity-nbr-of-permutations" title="Link to this definition">#</a></dt>
+<dd><p>Number of permutations to use when calculating the expected proximity scores</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-analysis-compute-k-cores">
+<span class="sig-name descname"><span class="pre">--compute-k-cores</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-analysis-compute-k-cores" title="Link to this definition">#</a></dt>
+<dd><p>Compute k-core summary tables for each component</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-analysis-compute-svd-var-explained">
+<span class="sig-name descname"><span class="pre">--compute-svd-var-explained</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-analysis-compute-svd-var-explained" title="Link to this definition">#</a></dt>
+<dd><p>Compute variance explained for top 3 singular vectors for each component</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-analysis-svd-nbr-of-pivots">
+<span class="sig-name descname"><span class="pre">--svd-nbr-of-pivots</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;svd_nbr_of_pivots&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-analysis-svd-nbr-of-pivots" title="Link to this definition">#</a></dt>
+<dd><p>Number of pivots to use for SVD variance explained computation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-analysis-output">
+<span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-analysis-output" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The path where the results will be placed (it is created if it does not exist)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-analysis-arg-PIXELFILE">
+<span class="sig-name descname"><span class="pre">&lt;PIXELFILE&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-analysis-arg-PIXELFILE" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="pixelator-single-cell-pna-collapse">
+<h4>collapse<a class="headerlink" href="#pixelator-single-cell-pna-collapse" title="Link to this heading">#</a></h4>
+<p>Collapse Molecular Pixelation data (FASTQ) to remove duplicates and perform error correction.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span>collapse<span class="w"> </span>&lt;options&gt;<span class="w"> </span>PARQUET_FILES
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-collapse-mismatches">
+<span class="sig-name descname"><span class="pre">--mismatches</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;mismatches&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-collapse-mismatches" title="Link to this definition">#</a></dt>
+<dd><p>The number of mismatches allowed when collapsing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-collapse-algorithm">
+<span class="sig-name descname"><span class="pre">--algorithm</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;algorithm&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-collapse-algorithm" title="Link to this definition">#</a></dt>
+<dd><p>The network based algorithm to use for collapsing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'directional'</span></code></p>
+</dd>
+<dt class="field-even">Options<span class="colon">:</span></dt>
+<dd class="field-even"><p>directional | cluster</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-collapse-threads">
+<span class="sig-name descname"><span class="pre">--threads</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;threads&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-collapse-threads" title="Link to this definition">#</a></dt>
+<dd><p>The number of total worker threads available for parallel processing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-collapse-design">
+<span class="sig-name descname"><span class="pre">--design</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;design&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-collapse-design" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The design to load from the configuration file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options<span class="colon">:</span></dt>
+<dd class="field-odd"><p>proxiome-v1 | proxiome-v2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-collapse-panel">
+<span class="sig-name descname"><span class="pre">--panel</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;panel&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-collapse-panel" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The name of a panel to load from the supported panels. Optionally, provide a path to a custom panel file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-collapse-output">
+<span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-collapse-output" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The path where the results will be placed (it is created if it does not exist)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-collapse-arg-PARQUET_FILES">
+<span class="sig-name descname"><span class="pre">PARQUET_FILES</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-collapse-arg-PARQUET_FILES" title="Link to this definition">#</a></dt>
+<dd><p>Required argument(s)</p>
+</dd></dl>
+
+</section>
+<section id="pixelator-single-cell-pna-combine-collapse">
+<h4>combine-collapse<a class="headerlink" href="#pixelator-single-cell-pna-combine-collapse" title="Link to this heading">#</a></h4>
+<p>Combine parquet and JSON files from partitioned collapse results.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span>combine-collapse<span class="w"> </span>&lt;options&gt;
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-combine-collapse-parquet">
+<span class="sig-name descname"><span class="pre">--parquet</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;PARQUET&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-combine-collapse-parquet" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-combine-collapse-report">
+<span class="sig-name descname"><span class="pre">--report</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;JSON&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-combine-collapse-report" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-combine-collapse-parquet-pattern">
+<span class="sig-name descname"><span class="pre">--parquet-pattern</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;parquet_pattern&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-combine-collapse-parquet-pattern" title="Link to this definition">#</a></dt>
+<dd><p>The pattern to match parquet files.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-combine-collapse-report-pattern">
+<span class="sig-name descname"><span class="pre">--report-pattern</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;report_pattern&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-combine-collapse-report-pattern" title="Link to this definition">#</a></dt>
+<dd><p>The pattern to match report files.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-combine-collapse-memory">
+<span class="sig-name descname"><span class="pre">--memory</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;memory&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-combine-collapse-memory" title="Link to this definition">#</a></dt>
+<dd><p>The maximum amount of memory available for processing</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-combine-collapse-output">
+<span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-combine-collapse-output" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The path where the results will be placed (it is created if it does not exist)</p>
+</dd></dl>
+
+</section>
+<section id="pixelator-single-cell-pna-demux">
+<h4>demux<a class="headerlink" href="#pixelator-single-cell-pna-demux" title="Link to this heading">#</a></h4>
+<p>Demultiplex Molecular Pixelation data (FASTQ) to generate one file per antibody.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span>demux<span class="w"> </span>&lt;options&gt;<span class="w"> </span>FASTQ
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-demux-mismatches">
+<span class="sig-name descname"><span class="pre">--mismatches</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;mismatches&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-demux-mismatches" title="Link to this definition">#</a></dt>
+<dd><p>The number of mismatches allowed in marker barcodes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-demux-output-chunk-reads">
+<span class="sig-name descname"><span class="pre">--output-chunk-reads</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output_chunk_reads&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-demux-output-chunk-reads" title="Link to this definition">#</a></dt>
+<dd><p>The target number of molecules in each output parquet file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'10M'</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-demux-output-max-chunks">
+<span class="sig-name descname"><span class="pre">--output-max-chunks</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output_max_chunks&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-demux-output-max-chunks" title="Link to this definition">#</a></dt>
+<dd><p>The maximum number of marker parts to split the demuxed data into</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">8</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-demux-strategy">
+<span class="sig-name descname"><span class="pre">--strategy</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;strategy&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-demux-strategy" title="Link to this definition">#</a></dt>
+<dd><p>The strategy for splitting demuxed files. ‘paired’ will split files by batches of PID pairs’independent’ will create two partitions of files split by marker1 and marker2 independently.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options<span class="colon">:</span></dt>
+<dd class="field-odd"><p>paired | independent</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-demux-threads">
+<span class="sig-name descname"><span class="pre">--threads</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;threads&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-demux-threads" title="Link to this definition">#</a></dt>
+<dd><p>The number of total worker threads available for parallel processing</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-demux-memory">
+<span class="sig-name descname"><span class="pre">--memory</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;memory&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-demux-memory" title="Link to this definition">#</a></dt>
+<dd><p>The maximum amount of memory available for processing</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-demux-design">
+<span class="sig-name descname"><span class="pre">--design</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;design&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-demux-design" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The design to load from the configuration file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options<span class="colon">:</span></dt>
+<dd class="field-odd"><p>proxiome-v1 | proxiome-v2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-demux-panel">
+<span class="sig-name descname"><span class="pre">--panel</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;panel&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-demux-panel" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The name of a panel to load from the supported panels. Optionally, provide a path to a custom panel file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-demux-output">
+<span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-demux-output" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The path where the results will be placed (it is created if it does not exist)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-demux-arg-FASTQ">
+<span class="sig-name descname"><span class="pre">FASTQ</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-demux-arg-FASTQ" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="pixelator-single-cell-pna-denoise">
+<h4>denoise<a class="headerlink" href="#pixelator-single-cell-pna-denoise" title="Link to this heading">#</a></h4>
+<p>Denoise components of a PXL file.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span>denoise<span class="w"> </span>&lt;options&gt;<span class="w"> </span>&lt;PIXELFILE&gt;
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-run-one-core-graph-denoising">
+<span class="sig-name descname"><span class="pre">--run-one-core-graph-denoising</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-run-one-core-graph-denoising" title="Link to this definition">#</a></dt>
+<dd><p>Run the denoise step to remove markers that are over-expressed in the one-core layer of a component.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-run-ace-denoising">
+<span class="sig-name descname"><span class="pre">--run-ace-denoising</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-run-ace-denoising" title="Link to this definition">#</a></dt>
+<dd><p>Remove nodes in the peripheral-like partition from adaptive core expansion (ACE). Can be combined with –run-one-core-graph-denoising: both use the full component graph; marked nodes are merged and stranded nodes are removed once at the end.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-ace-k">
+<span class="sig-name descname"><span class="pre">--ace-k</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;ace_k&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-ace-k" title="Link to this definition">#</a></dt>
+<dd><p>Neighborhood radius (steps) for ACE when –run-ace-denoising is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-ace-max-k-core">
+<span class="sig-name descname"><span class="pre">--ace-max-k-core</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;ace_max_k_core&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-ace-max-k-core" title="Link to this definition">#</a></dt>
+<dd><p>Maximum k-core layer used for ACE seeding when –run-ace-denoising is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">4</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-ace-no-select-lcc">
+<span class="sig-name descname"><span class="pre">--ace-no-select-lcc</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-ace-no-select-lcc" title="Link to this definition">#</a></dt>
+<dd><p>When –run-ace-denoising is set, do not restrict the ACE initial seed to the largest connected component (default: seed uses the LCC).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-one-core-ratio-threshold">
+<span class="sig-name descname"><span class="pre">--one-core-ratio-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;one_core_ratio_threshold&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-one-core-ratio-threshold" title="Link to this definition">#</a></dt>
+<dd><p>ratio of the number of nodes in the one-core layer to the total number of nodes in a component. If the ratio is above this threshold, one-core denoising is skipped for that component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0.9</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-pval-threshold">
+<span class="sig-name descname"><span class="pre">--pval-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pval_threshold&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-pval-threshold" title="Link to this definition">#</a></dt>
+<dd><p>pvalue threshold for an over-expression in the one-core layer to be considered significant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-inflate-factor">
+<span class="sig-name descname"><span class="pre">--inflate-factor</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;inflate_factor&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-inflate-factor" title="Link to this definition">#</a></dt>
+<dd><p>How much to inflate number of noise markers in the one-core layer to remove.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1.5</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-run-pls-denoising">
+<span class="sig-name descname"><span class="pre">--run-pls-denoising</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-run-pls-denoising" title="Link to this definition">#</a></dt>
+<dd><p>PLS-on-coreness denoise: retain the largest connected component after filtering nodes by significant PLS score components. Uses the full graph like ACE and one-core; removals are merged with other methods.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-pls-ncomp">
+<span class="sig-name descname"><span class="pre">--pls-ncomp</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pls_ncomp&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-pls-ncomp" title="Link to this definition">#</a></dt>
+<dd><p>Requested PLS components when –run-pls-denoising is set (capped per component).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-pls-model-k">
+<span class="sig-name descname"><span class="pre">--pls-model-k</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pls_model_k&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-pls-model-k" title="Link to this definition">#</a></dt>
+<dd><p>Neighborhood steps for fitting the PLS X matrix when –run-pls-denoising is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-pls-pred-k">
+<span class="sig-name descname"><span class="pre">--pls-pred-k</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pls_pred_k&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-pls-pred-k" title="Link to this definition">#</a></dt>
+<dd><p>Neighborhood steps for PLS scores (prediction X) when –run-pls-denoising is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-pls-use-weights">
+<span id="cmdoption-pixelator-single-cell-pna-denoise-pls-no-weights"></span><span class="sig-name descname"><span class="pre">--pls-use-weights</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--pls-no-weights</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-pls-use-weights" title="Link to this definition">#</a></dt>
+<dd><p>Use edge weights in PLS neighborhood expansion when –run-pls-denoising is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-pls-normalization">
+<span class="sig-name descname"><span class="pre">--pls-normalization</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pls_normalization&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-pls-normalization" title="Link to this definition">#</a></dt>
+<dd><p>Normalization for the PLS neighborhood matrix when –run-pls-denoising is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'L1'</span></code></p>
+</dd>
+<dt class="field-even">Options<span class="colon">:</span></dt>
+<dd class="field-even"><p>L1 | CLR | LogNormalize | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-pls-residualize">
+<span class="sig-name descname"><span class="pre">--pls-residualize</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-pls-residualize" title="Link to this definition">#</a></dt>
+<dd><p>Residualize the PLS neighborhood matrix against pixel_type (A/B) when –run-pls-denoising is set.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-pls-component-p-threshold">
+<span class="sig-name descname"><span class="pre">--pls-component-p-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pls_component_p_threshold&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-pls-component-p-threshold" title="Link to this definition">#</a></dt>
+<dd><p>Pearson vs coreness: keep PLS components with p-value below this when –run-pls-denoising is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0.01</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-pls-min-coreness-correlation">
+<span class="sig-name descname"><span class="pre">--pls-min-coreness-correlation</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pls_min_coreness_correlation&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-pls-min-coreness-correlation" title="Link to this definition">#</a></dt>
+<dd><p>Keep PLS components whose Pearson correlation with coreness exceeds this.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-pls-score-threshold">
+<span class="sig-name descname"><span class="pre">--pls-score-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pls_score_threshold&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-pls-score-threshold" title="Link to this definition">#</a></dt>
+<dd><p>All retained PLS score columns must exceed this value when –run-pls-denoising is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-3.0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-output">
+<span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-output" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The path where the results will be placed (it is created if it does not exist)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-denoise-arg-PIXELFILE">
+<span class="sig-name descname"><span class="pre">&lt;PIXELFILE&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-denoise-arg-PIXELFILE" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="pixelator-single-cell-pna-graph">
+<h4>graph<a class="headerlink" href="#pixelator-single-cell-pna-graph" title="Link to this heading">#</a></h4>
+<p>Find connected components from the input molecules.</p>
+<p>The graph stage will attempt to identify connected components from the input molecules.
+When <cite>–multiplet-recovery</cite> is active we will try to break up components that are likely
+not single cells. We do so in two main stages and one optional stage.</p>
+<p>Main stages:
+1) Fast label propagation: Used as a graph coarsening step to reduce the size of the graph.
+2) Leiden community detection
+2.1) Initial stage: Attempt to break up the mega cluster that is formed due to random edges
+between cells.
+2.2) Refinement stage: Refine the connected components found in the initial stage.</p>
+<p>Optional stage:
+- Edge cycle verification: Remove edges, connecting highly connected nodes in the graph
+(k-core number &gt; 1) that are not part of any short cycles in the graph. Such nodes are likely
+crossing edges connecting different components.</p>
+<p>After the connected components have been identified we will create a pxl file that contains
+data for all of there putative cells.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span>graph<span class="w"> </span>&lt;options&gt;<span class="w"> </span>parquet
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-multiplet-recovery">
+<span class="sig-name descname"><span class="pre">--multiplet-recovery</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-multiplet-recovery" title="Link to this definition">#</a></dt>
+<dd><p>Activate the multiplet recovery using leiden community detection</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-edge-cycle-verification">
+<span class="sig-name descname"><span class="pre">--edge-cycle-verification</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-edge-cycle-verification" title="Link to this definition">#</a></dt>
+<dd><p>Activate edge cycle verification to remove edges from well connected regions that are not part of cycles in the graph.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-initial-stage-leiden-resolution">
+<span class="sig-name descname"><span class="pre">--initial-stage-leiden-resolution</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;initial_stage_leiden_resolution&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-initial-stage-leiden-resolution" title="Link to this definition">#</a></dt>
+<dd><p>The resolution parameter for the leiden algorithm at the initial stage. This should typically be set higher than the refinement stage resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-refinement-stage-leiden-resolution">
+<span class="sig-name descname"><span class="pre">--refinement-stage-leiden-resolution</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;refinement_stage_leiden_resolution&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-refinement-stage-leiden-resolution" title="Link to this definition">#</a></dt>
+<dd><p>The resolution parameter for the leiden algorithm at the refinement stage. This should typically be set lower than the initial stage resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0.01</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-min-count">
+<span class="sig-name descname"><span class="pre">--min-count</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;min_count&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-min-count" title="Link to this definition">#</a></dt>
+<dd><p>Discard edges with a read count below given value. Set to 1 to disable filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-max-refinement-recursion-depth">
+<span class="sig-name descname"><span class="pre">--max-refinement-recursion-depth</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;max_refinement_recursion_depth&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-max-refinement-recursion-depth" title="Link to this definition">#</a></dt>
+<dd><p>The maximum recursion depth for the refinement algorithm. Set to 1 to disable refinement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-initial-stage-max-edges-to-remove">
+<span class="sig-name descname"><span class="pre">--initial-stage-max-edges-to-remove</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;initial_stage_max_edges_to_remove&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-initial-stage-max-edges-to-remove" title="Link to this definition">#</a></dt>
+<dd><p>The maximum number of edges to remove between components during the initial stage (iteration == 0) of multiplet recovery.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-refinement-stage-max-edges-to-remove">
+<span class="sig-name descname"><span class="pre">--refinement-stage-max-edges-to-remove</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;refinement_stage_max_edges_to_remove&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-refinement-stage-max-edges-to-remove" title="Link to this definition">#</a></dt>
+<dd><p>The maximum number of edges to remove between components during the refinement stage (iteration &gt; 0) of multiplet recovery.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">4</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-initial-stage-max-edges-to-remove-relative">
+<span class="sig-name descname"><span class="pre">--initial-stage-max-edges-to-remove-relative</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;initial_stage_max_edges_to_remove_relative&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-initial-stage-max-edges-to-remove-relative" title="Link to this definition">#</a></dt>
+<dd><p>The maximum number of edges to remove between two components relative to the number of nodes in the smaller of the two when during the initial stage (iteration == 0) of multiplet recovery.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-refinement-stage-max-edges-to-remove-relative">
+<span class="sig-name descname"><span class="pre">--refinement-stage-max-edges-to-remove-relative</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;refinement_stage_max_edges_to_remove_relative&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-refinement-stage-max-edges-to-remove-relative" title="Link to this definition">#</a></dt>
+<dd><p>The maximum number of edges to remove between two components relative to the number of nodes in the smaller of the two when during the refinement stage (iteration &gt; 0) of multiplet recovery.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-component-size-max-threshold">
+<span class="sig-name descname"><span class="pre">--component-size-max-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;component_size_max_threshold&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-component-size-max-threshold" title="Link to this definition">#</a></dt>
+<dd><p>Components with more nodes than this will be filtered from the output data. Setting this (or –component-size-min-threshold) switches from automatic (dynamic) component size filtering to a fixed threshold.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-component-size-min-threshold">
+<span class="sig-name descname"><span class="pre">--component-size-min-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;component_size_min_threshold&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-component-size-min-threshold" title="Link to this definition">#</a></dt>
+<dd><p>Components with fewer nodes than this will be filtered from the output data. Setting this (or –component-size-max-threshold) switches from automatic (dynamic) component size filtering to a fixed threshold.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-panel">
+<span class="sig-name descname"><span class="pre">--panel</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;panel&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-panel" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The name of a panel to load from the supported panels. Optionally, provide a path to a custom panel file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-output">
+<span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-output" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The path where the results will be placed (it is created if it does not exist)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph-arg-parquet">
+<span class="sig-name descname"><span class="pre">parquet</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph-arg-parquet" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="pixelator-single-cell-pna-graph-legacy">
+<h4>graph_legacy<a class="headerlink" href="#pixelator-single-cell-pna-graph-legacy" title="Link to this heading">#</a></h4>
+<p>Find connected components from the input molecules.</p>
+<p>The graph stage will attempt to identify connected components from the input molecules
+in two stages.</p>
+<p>When <cite>–multiple-recovery</cite> is active we will try to break up components that are likely
+not single cells. We do so in two stages.</p>
+<p>In the initial stage will attempt to break up the so called mega cluster. This is a loosely
+connected but very large component that is often present in the data.</p>
+<p>In the subsequent refinement stage we inspect the resulting connected components and try
+to find components that can be split further, by identifying well-connected communities
+that have a low number of crossing edges between them. We will do so recursively until
+no more reasonable splits are found, or the maximum recursion depth is reached.</p>
+<p>After the connected components have been identified we will create a pxl file that contains
+data for all of there putative cells.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span>graph_legacy<span class="w"> </span>&lt;options&gt;<span class="w"> </span>parquet
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-multiplet-recovery">
+<span class="sig-name descname"><span class="pre">--multiplet-recovery</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-multiplet-recovery" title="Link to this definition">#</a></dt>
+<dd><p>Activate the multiplet recovery using leiden community detection</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-leiden-iterations">
+<span class="sig-name descname"><span class="pre">--leiden-iterations</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;leiden_iterations&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-leiden-iterations" title="Link to this definition">#</a></dt>
+<dd><p>Number of iterations for the leiden algorithm, high values will decrease the variance of the results but increase the runtime</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-initial-stage-leiden-resolution">
+<span class="sig-name descname"><span class="pre">--initial-stage-leiden-resolution</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;initial_stage_leiden_resolution&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-initial-stage-leiden-resolution" title="Link to this definition">#</a></dt>
+<dd><p>The resolution parameter for the leiden algorithm at the initial stage. This should typically be set higher than the refinement stage resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-refinement-stage-leiden-resolution">
+<span class="sig-name descname"><span class="pre">--refinement-stage-leiden-resolution</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;refinement_stage_leiden_resolution&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-refinement-stage-leiden-resolution" title="Link to this definition">#</a></dt>
+<dd><p>The resolution parameter for the leiden algorithm at the refinement stage. This should typically be set lower than the initial stage resolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0.01</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-min-count">
+<span class="sig-name descname"><span class="pre">--min-count</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;min_count&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-min-count" title="Link to this definition">#</a></dt>
+<dd><p>Discard edges with a read count below given value. Set to 1 to disable filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-min-component-size-in-refinement">
+<span class="sig-name descname"><span class="pre">--min-component-size-in-refinement</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;min_component_size_in_refinement&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-min-component-size-in-refinement" title="Link to this definition">#</a></dt>
+<dd><p>The minimum component size to consider for refinement</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1000</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-max-refinement-recursion-depth">
+<span class="sig-name descname"><span class="pre">--max-refinement-recursion-depth</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;max_refinement_recursion_depth&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-max-refinement-recursion-depth" title="Link to this definition">#</a></dt>
+<dd><p>The maximum recursion depth for the refinement algorithm. Set to 1 to disable refinement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-initial-stage-max-edges-to-remove">
+<span class="sig-name descname"><span class="pre">--initial-stage-max-edges-to-remove</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;initial_stage_max_edges_to_remove&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-initial-stage-max-edges-to-remove" title="Link to this definition">#</a></dt>
+<dd><p>The maximum number of edges to remove between components during the initial stage (iteration == 0) of multiplet recovery.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-refinement-stage-max-edges-to-remove">
+<span class="sig-name descname"><span class="pre">--refinement-stage-max-edges-to-remove</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;refinement_stage_max_edges_to_remove&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-refinement-stage-max-edges-to-remove" title="Link to this definition">#</a></dt>
+<dd><p>The maximum number of edges to remove between components during the refinement stage (iteration &gt; 0) of multiplet recovery.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">4</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-initial-stage-max-edges-to-remove-relative">
+<span class="sig-name descname"><span class="pre">--initial-stage-max-edges-to-remove-relative</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;initial_stage_max_edges_to_remove_relative&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-initial-stage-max-edges-to-remove-relative" title="Link to this definition">#</a></dt>
+<dd><p>The maximum number of edges to remove between two components relative to the number of nodes in the smaller of the two when during the initial stage (iteration == 0) of multiplet recovery.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-refinement-stage-max-edges-to-remove-relative">
+<span class="sig-name descname"><span class="pre">--refinement-stage-max-edges-to-remove-relative</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;refinement_stage_max_edges_to_remove_relative&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-refinement-stage-max-edges-to-remove-relative" title="Link to this definition">#</a></dt>
+<dd><p>The maximum number of edges to remove between two components relative to the number of nodes in the smaller of the two when during the refinement stage (iteration &gt; 0) of multiplet recovery.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-min-component-size-to-prune">
+<span class="sig-name descname"><span class="pre">--min-component-size-to-prune</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;min_component_size_to_prune&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-min-component-size-to-prune" title="Link to this definition">#</a></dt>
+<dd><p>The minimum number of nodes in an potential new components in order for it to be pruned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-component-size-max-threshold">
+<span class="sig-name descname"><span class="pre">--component-size-max-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;component_size_max_threshold&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-component-size-max-threshold" title="Link to this definition">#</a></dt>
+<dd><p>Components with more nodes than this will be filtered from the output data. This is typically not needed. Setting this will disable the automatic size filtering.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-component-size-min-threshold">
+<span class="sig-name descname"><span class="pre">--component-size-min-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;component_size_min_threshold&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-component-size-min-threshold" title="Link to this definition">#</a></dt>
+<dd><p>Components with fewer nodes than this will be filtered from the output data. This is typically not needed. Setting this will disable the automatic size filtering.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-panel">
+<span class="sig-name descname"><span class="pre">--panel</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;panel&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-panel" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The name of a panel to load from the supported panels. Optionally, provide a path to a custom panel file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-output">
+<span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-output" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The path where the results will be placed (it is created if it does not exist)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-graph_legacy-arg-parquet">
+<span class="sig-name descname"><span class="pre">parquet</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-graph_legacy-arg-parquet" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="pixelator-single-cell-pna-layout">
+<h4>layout<a class="headerlink" href="#pixelator-single-cell-pna-layout" title="Link to this heading">#</a></h4>
+<p>Compute graph layouts that can be used to visualize components.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span>layout<span class="w"> </span>&lt;options&gt;<span class="w"> </span>PXL
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-layout-layout-algorithm">
+<span class="sig-name descname"><span class="pre">--layout-algorithm</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;layout_algorithm&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-layout-layout-algorithm" title="Link to this definition">#</a></dt>
+<dd><p>Select a layout algorithm to use. This can be specified multiple times to compute multiple layouts. Default: coarsened_pmds_3d</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options<span class="colon">:</span></dt>
+<dd class="field-odd"><p>fruchterman_reingold | fruchterman_reingold_3d | kamada_kawai | kamada_kawai_3d | pmds | pmds_3d | wpmds_3d | coarsened_pmds_3d | spectral_3d</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-layout-pmds-pivots">
+<span class="sig-name descname"><span class="pre">--pmds-pivots</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;pmds_pivots&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-layout-pmds-pivots" title="Link to this definition">#</a></dt>
+<dd><p>Number of pivots to use for the PMDS layout algorithm. Default: 50. More give better results, but increase computation times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-layout-wpmds-k">
+<span class="sig-name descname"><span class="pre">--wpmds-k</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;wpmds_k&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-layout-wpmds-k" title="Link to this definition">#</a></dt>
+<dd><p>The window size used when computing probability weights to the wpmds layout method. Only used when the wpmds layout method is selected. Default: 3.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-layout-output">
+<span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-layout-output" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The path where the results will be placed (it is created if it does not exist)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-layout-arg-PXL">
+<span class="sig-name descname"><span class="pre">PXL</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-layout-arg-PXL" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="pixelator-single-cell-pna-sample-calling">
+<h4>sample-calling<a class="headerlink" href="#pixelator-single-cell-pna-sample-calling" title="Link to this heading">#</a></h4>
+<p>Map components to samples in sample-hashed datasets.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pixelator<span class="w"> </span>single-cell-pna<span class="w"> </span>sample-calling<span class="w"> </span>&lt;options&gt;<span class="w"> </span>INPUT_PXL_FILE
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-sample-calling-samplesheet">
+<span class="sig-name descname"><span class="pre">--samplesheet</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;samplesheet&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-sample-calling-samplesheet" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> Path to a samplesheet file with a hash_index column.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-sample-calling-remove-incompatible">
+<span class="sig-name descname"><span class="pre">--remove-incompatible</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-sample-calling-remove-incompatible" title="Link to this definition">#</a></dt>
+<dd><p>Remove antibodies that are incompatible with their component’s called sample.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-sample-calling-save-undetermined">
+<span class="sig-name descname"><span class="pre">--save-undetermined</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-sample-calling-save-undetermined" title="Link to this definition">#</a></dt>
+<dd><p>Save components that could not be confidently assigned to any sample.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-sample-calling-enrichment-threshold">
+<span class="sig-name descname"><span class="pre">--enrichment-threshold</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;enrichment_threshold&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-sample-calling-enrichment-threshold" title="Link to this definition">#</a></dt>
+<dd><p>Hash enrichment threshold for sample calling. Components with a hash enrichment factor below this threshold will be considered undetermined. Hash enrichment is calculated as the ration between highest hash count and the second highest hash count.Default is 10.0.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-sample-calling-output">
+<span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;output&gt;</span></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-sample-calling-output" title="Link to this definition">#</a></dt>
+<dd><p><strong>Required</strong> The path where the results will be placed (it is created if it does not exist)</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-pixelator-single-cell-pna-sample-calling-arg-INPUT_PXL_FILE">
+<span class="sig-name descname"><span class="pre">INPUT_PXL_FILE</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-pixelator-single-cell-pna-sample-calling-arg-INPUT_PXL_FILE" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../api/generated/pixelator/read_pna.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">pixelator.read_pna</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator">pixelator</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna">single-cell-pna</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna-amplicon">amplicon</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna-analysis">analysis</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna-collapse">collapse</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna-combine-collapse">combine-collapse</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna-demux">demux</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna-denoise">denoise</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna-graph">graph</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna-graph-legacy">graph_legacy</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna-layout">layout</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#pixelator-single-cell-pna-sample-calling">sample-calling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/cli/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026 Pixelgen Technologies.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

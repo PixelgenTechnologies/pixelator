@@ -1,0 +1,29 @@
+pixelator.pna.collapse.independent.combine_collapse.CombineCollapseIndependentStats
+===================================================================================
+
+.. py:class:: pixelator.pna.collapse.independent.combine_collapse.CombineCollapseIndependentStats
+
+   Some combine collapse statistics.
+
+   :ivar output_molecules: Total number of unique output molecules
+   :ivar corrected_reads: Total number of corrected reads
+   :ivar umi1_degree_distribution: The node degree distribution for umi1, degree->count
+   :ivar umi2_degree_distribution: The node degree distribution for umi2, degree->count
+
+
+
+   .. py:attribute:: corrected_reads
+      :type:  int
+
+
+   .. py:attribute:: output_molecules
+      :type:  int
+
+
+   .. py:attribute:: umi1_degree_distribution
+      :type:  dict[int, int]
+
+
+   .. py:attribute:: umi2_degree_distribution
+      :type:  dict[int, int]
+

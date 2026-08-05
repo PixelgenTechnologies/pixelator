@@ -1,0 +1,56 @@
+pixelator.pna.analysis_engine
+=============================
+
+.. py:module:: pixelator.pna.analysis_engine
+
+.. autoapi-nested-parse::
+
+   Analysis engine for running analysis functions on each PixelDataset component.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.analysis_engine.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis_engine/AnalysisManager
+   /api/generated/pixelator/pna/analysis_engine/LoggingSetup
+   /api/generated/pixelator/pna/analysis_engine/PerComponentTask
+
+.. autoapisummary::
+
+   pixelator.pna.analysis_engine.AnalysisManager
+   pixelator.pna.analysis_engine.LoggingSetup
+   pixelator.pna.analysis_engine.PerComponentTask
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis_engine/with_logging
+
+.. autoapisummary::
+
+   pixelator.pna.analysis_engine.with_logging
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

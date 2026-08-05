@@ -1,0 +1,18 @@
+pixelator.pna.utils.utils.get_read_sample_name
+==============================================
+
+.. py:function:: pixelator.pna.utils.utils.get_read_sample_name(read: str | pathlib.Path) -> str
+
+   Extract the sample name from a read file.
+
+   Strip fq.gz or fastq.gz extension and remove R1/R2 suffixes.
+   Supported R1 R2 identifieds are:
+
+   _R1,_R2 | _r1, _r2 | _1, _2 | .R1, .R2 | .r1, .r2
+
+   :param read: filename of a fastq read file
+
+   :returns: sample name (str)
+
+   :raises ValueError: if the read file does not have a valid extension
+

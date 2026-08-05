@@ -1,0 +1,18 @@
+pixelator.pna.analysis.graph_noise_analysis.summarize_k_cores
+=============================================================
+
+.. py:function:: pixelator.pna.analysis.graph_noise_analysis.summarize_k_cores(g: networkx.Graph) -> pandas.DataFrame
+
+   Summarize k-cores for a given component.
+
+   Computes the coreness for all nodes in a given graph and summarizes the number
+   of nodes per k-core in a table. The columns in the DataFrame are names 'k1', 'k2',
+   ..., 'kM' where M is the maximum k-core value in the component. The k-core counts
+   are useful for quantifying graph connectivity.
+
+   :param g: a networkx Graph object
+
+   :returns: a dataframe with the summarized node k-cores (pd.DataFrame)
+
+   :raises AssertionError: the input arguments are incorrect
+

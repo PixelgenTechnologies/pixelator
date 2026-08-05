@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.edgelist
+===================================
+
+.. py:module:: pixelator.pna.pixeldataset.edgelist
+
+.. autoapi-nested-parse::
+
+   Edgelist wrapper for PNA pixel datasets.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/edgelist/Edgelist
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.edgelist.Edgelist
+
+

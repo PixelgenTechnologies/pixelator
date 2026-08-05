@@ -1,0 +1,37 @@
+pixelator.pna.amplicon.report.AmpliconStatistics
+================================================
+
+.. py:class:: pixelator.pna.amplicon.report.AmpliconStatistics
+
+   Bases: :py:obj:`cutadapt.report.Statistics`
+
+
+   Statistics for the amplicon stage.
+
+
+   .. py:attribute:: FILTERS
+
+
+   .. py:method:: as_dict() -> Dict
+
+      Return a dict representation of the class.
+
+
+
+   .. py:method:: as_json(gc_content: float = 0.5, one_line: bool = False) -> Dict
+
+      Return a dict representation suitable for dumping in JSON format.
+
+
+
+   .. py:method:: collect(n: int, total_bp1: int, total_bp2: int | None, modifiers, steps, set_paired_to_none: bool = False)
+
+      Enable stats.paired to be set to None when unknown.
+
+
+
+   .. py:attribute:: paired
+      :type:  bool | None
+      :value: None
+
+

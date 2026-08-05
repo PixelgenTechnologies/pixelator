@@ -1,0 +1,66 @@
+pixelator.common.annotate
+=========================
+
+.. py:module:: pixelator.common.annotate
+
+.. autoapi-nested-parse::
+
+   Functions for filtering and annotating of pixel data in edge list format.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/common/annotate/aggregates/index
+   /api/generated/pixelator/common/annotate/annotate_celltype/index
+   /api/generated/pixelator/common/annotate/cell_calling/index
+   /api/generated/pixelator/common/annotate/constants/index
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.annotate.logger
+
+
+Exceptions
+----------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/annotate/NoCellsFoundException
+   /api/generated/pixelator/common/annotate/PixelatorBaseException
+
+.. autoapisummary::
+
+   pixelator.common.annotate.NoCellsFoundException
+   pixelator.common.annotate.PixelatorBaseException
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/annotate/filter_components_sizes
+
+.. autoapisummary::
+
+   pixelator.common.annotate.filter_components_sizes
+
+
+Package Contents
+----------------
+
+.. py:data:: logger
+

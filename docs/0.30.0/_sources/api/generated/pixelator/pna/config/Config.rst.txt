@@ -1,0 +1,73 @@
+pixelator.pna.config.Config
+===========================
+
+.. py:class:: pixelator.pna.config.Config(assays: Optional[List[pixelator.common.config.assay.Assay]] = None, panels: Optional[List[pixelator.common.config.panel.AntibodyPanel]] = None)
+
+   Class containing the pixelator configuration (assay settings).
+
+
+   .. py:attribute:: assays
+      :type:  Dict[str, pixelator.common.config.assay.Assay]
+
+
+   .. py:method:: get_assay(assay_name: str) -> Optional[pixelator.common.config.assay.Assay]
+
+      Get an assay by name.
+
+
+
+   .. py:method:: get_panel(panel_name: str, version: Optional[str] = None, allow_aliases: bool = True) -> Optional[pixelator.common.config.panel.AntibodyPanel]
+
+      Get a panel by name.
+
+      :param panel_name: The name of the panel
+      :param version: The optional version of a panel to return
+      :param allow_aliases: Allow panel aliases to be used
+
+
+
+   .. py:method:: list_panel_names(include_aliases: bool = False) -> List[str]
+
+      Return a list of all panel names.
+
+      :param include_aliases: Include panel aliases in the list
+
+      :returns: A list of panel names
+
+
+
+   .. py:method:: load_assay(path: pixelator.common.types.PathType) -> None
+
+      Load an assay from a yaml file.
+
+
+
+   .. py:method:: load_assays(path: pixelator.common.types.PathType)
+
+      Load all assays from a directory containing yaml files.
+
+
+
+   .. py:method:: load_panel_file(path: pixelator.common.types.PathType) -> None
+
+      Load the panel file.
+
+      :param path: The path to the panel file.
+
+      :raises PanelException: If the panel alias already exists in the config.
+
+
+
+   .. py:method:: load_panels(path: pixelator.common.types.PathType)
+
+      Load all panel files from a directory containing csv files.
+
+
+
+   .. py:attribute:: panel_aliases
+      :type:  Dict[str, str]
+
+
+   .. py:attribute:: panels
+      :type:  MutableMapping[str, List[pixelator.common.config.panel.AntibodyPanel]]
+

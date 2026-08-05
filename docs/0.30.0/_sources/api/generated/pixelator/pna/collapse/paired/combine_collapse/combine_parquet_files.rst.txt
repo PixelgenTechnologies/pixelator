@@ -1,0 +1,12 @@
+pixelator.pna.collapse.paired.combine_collapse.combine_parquet_files
+====================================================================
+
+.. py:function:: pixelator.pna.collapse.paired.combine_collapse.combine_parquet_files(input_files: Iterable[pathlib.Path], output_file: pathlib.Path) -> pathlib.Path
+
+   Scan a directory for parquet files and stream them into a single parquet file.
+
+   :param input_files: The folder containing the parquet files.
+   :param output_file: The path to the output parquet file.
+
+   :returns: The path to the combined parquet file. This is the same path as `output_file`.
+

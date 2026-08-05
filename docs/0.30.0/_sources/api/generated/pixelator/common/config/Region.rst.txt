@@ -1,0 +1,127 @@
+pixelator.common.config.Region
+==============================
+
+.. py:class:: pixelator.common.config.Region(region_id: str, region_type: RegionType, name: str, sequence_type: SequenceType, sequence: str = '', min_len: Optional[int] = None, max_len: Optional[int] = None, regions: Optional[List[Region]] = None, data: Optional[Mapping[str, Any]] = None)
+
+   Class representing a region in an assay.
+
+   :ivar region_id: unique ID of the region
+   :ivar region_type: type of the region
+   :ivar name: name of the region
+   :ivar sequence_type: type of the sequence
+   :ivar sequence: string representation of the region
+   :ivar min_len: minimum length of the region
+   :ivar max_len: maximum length of the region
+   :ivar regions: list of sub-regions
+   :ivar data: additional user-defined region properties
+
+
+
+   .. py:attribute:: data
+      :value: None
+
+
+
+   .. py:method:: get_leaf_region_types() -> Set[RegionType]
+
+      Return a set of all leaf region types.
+
+
+
+   .. py:method:: get_leaves() -> List[Region]
+
+      Return a depth-first list of all leaf regions.
+
+
+
+   .. py:method:: get_len() -> Tuple[int, int]
+
+      Return the minimum and maximum length of this region.
+
+
+
+   .. py:method:: get_max_length()
+
+      Get the maximum length of this region.
+
+
+
+   .. py:method:: get_region_by_id(region_id: str) -> Optional[Region]
+
+      Lookup a region by the region_id field.
+
+
+
+   .. py:method:: get_regions_by_type(region_type: str) -> List[Region]
+
+      Return all regions with specified region_type.
+
+
+
+   .. py:method:: get_sequence() -> str
+
+      Return the sequence representation of this region.
+
+
+
+   .. py:method:: get_subregion_ids() -> Set[str]
+
+      Return a set of the region_ids of all subregions.
+
+
+
+   .. py:attribute:: max_len
+      :type:  int
+
+
+   .. py:attribute:: min_len
+      :type:  int
+
+
+   .. py:attribute:: name
+
+
+   .. py:attribute:: parent_id
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: region_id
+
+
+   .. py:attribute:: region_type
+
+
+   .. py:attribute:: regions
+      :value: None
+
+
+
+   .. py:attribute:: sequence
+      :value: ''
+
+
+
+   .. py:attribute:: sequence_type
+
+
+   .. py:method:: set_parent_id(parent_id: str) -> None
+
+      Set the parent id of this region.
+
+      :param parent_id: parent id to set
+
+
+
+   .. py:method:: to_dict()
+
+      Return a dictionary representation of the region.
+
+
+
+   .. py:method:: update_attr()
+
+      Update the attributes of the region.
+
+

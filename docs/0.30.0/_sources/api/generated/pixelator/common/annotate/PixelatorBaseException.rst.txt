@@ -1,0 +1,10 @@
+pixelator.common.annotate.PixelatorBaseException
+================================================
+
+.. py:exception:: pixelator.common.annotate.PixelatorBaseException
+
+   Bases: :py:obj:`Exception`
+
+
+   Base exception for Pixelator.
+

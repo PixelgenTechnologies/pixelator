@@ -1,0 +1,12 @@
+pixelator.common.config.config_class.load_panels_package
+========================================================
+
+.. py:function:: pixelator.common.config.config_class.load_panels_package(config: Config, package_name: str) -> Config
+
+   Load default panels from a resources package.
+
+   :param config: The config object to load panel files into
+   :param package_name: The name of the package to load panels from
+
+   :returns: The updated config object
+

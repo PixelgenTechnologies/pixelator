@@ -1,0 +1,45 @@
+pixelator.pna.amplicon.build_amplicon.AmpliconBuilderFailureReason
+==================================================================
+
+.. py:class:: pixelator.pna.amplicon.build_amplicon.AmpliconBuilderFailureReason(*args, **kwds)
+
+   Bases: :py:obj:`enum.Enum`
+
+
+   Reasons for failing to build an amplicon.
+
+
+   .. py:attribute:: MISSING_PID1_UMI1
+      :value: 'missing_pid1_umi1'
+
+
+
+   .. py:attribute:: MISSING_PID2_UMI2
+      :value: 'missing_pid2_umi2'
+
+
+
+   .. py:attribute:: MISSING_UEI
+      :value: 'missing_uei'
+
+
+
+   .. py:attribute:: NO_CONSENSUS
+      :value: 'no_consensus'
+
+
+
+   .. py:attribute:: PARTIAL_PID1_UMI1
+      :value: 'partial_pid1_umi1'
+
+
+
+   .. py:attribute:: PARTIAL_PID2_UMI2
+      :value: 'partial_pid2_umi2'
+
+
+
+   .. py:attribute:: PARTIAL_UEI
+      :value: 'partial_uei'
+
+

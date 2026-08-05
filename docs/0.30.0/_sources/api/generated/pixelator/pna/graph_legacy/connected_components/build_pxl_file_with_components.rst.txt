@@ -1,0 +1,18 @@
+pixelator.pna.graph_legacy.connected_components.build_pxl_file_with_components
+==============================================================================
+
+.. py:function:: pixelator.pna.graph_legacy.connected_components.build_pxl_file_with_components(molecules_lazy_frame: polars.LazyFrame, panel: pixelator.pna.config.PNAAntibodyPanel, sample_name: str, path_output_pxl_file: pathlib.Path, multiplet_recovery: bool, leiden_iterations: int, min_count: int, refinement_options: StagedRefinementOptions | None = None, component_size_threshold: tuple[int, int] | bool = True) -> tuple[pixelator.pna.pixeldataset.PNAPixelDataset, pixelator.pna.graph.report.GraphStatistics]
+
+   Create a pxl file after having created components and removed crossing edges.
+
+   :param molecules_lazy_frame: Molecules lazy frame.
+   :param panel: Panel.
+   :param sample_name: Sample name.
+   :param path_output_pxl_file: Path output pxl file.
+   :param multiplet_recovery: if True run multiplet recovery, otherwise skip it
+   :param leiden_iterations: number of Leiden iterations to run
+   :param min_count: Min count.
+   :param refinement_options: options for component refinement
+   :param component_size_threshold: if True, filter components by dynamic size thresholds, if a tuple,
+                                    filter by hard thresholds as (min, max)
+
