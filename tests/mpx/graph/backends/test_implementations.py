@@ -26,17 +26,6 @@ def test_graph_backend_request_networkx():
     assert isinstance(result(), NetworkXGraphBackend)
 
 
-@pytest.mark.parametrize("enable_backend", ["networkx"], indirect=True)
-def test_graph_backend_request_networkx_when_env_var_set(enable_backend):
-    """Verify graph backend request networkx when env var set.
-
-    Args:
-        enable_backend: enable backend.
-    """
-    result = graph_backend()
-    assert isinstance(result(), NetworkXGraphBackend)
-
-
 def test_graph_backend_from_graph_type_networkx():
     """Verify graph backend from graph type networkx."""
     result = graph_backend_from_graph_type(graph=nx.Graph())

@@ -9,8 +9,12 @@ import random
 from typing import List
 
 import numpy as np
+from Levenshtein import hamming
 
-from pixelator.mpx.collapse.process import edit_distance
+
+def edit_distance(seq1: bytes, seq2: bytes) -> int:
+    """Compute edit distance between two sequences."""
+    return hamming(seq1, seq2, pad=False)
 
 
 def add_mutations(

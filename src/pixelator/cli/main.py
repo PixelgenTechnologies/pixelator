@@ -14,18 +14,8 @@ import yappi
 
 from pixelator import __version__
 from pixelator.common.utils import click_echo
-from pixelator.mpx.cli.adapterqc import adapterqc
-from pixelator.mpx.cli.amplicon import amplicon
-from pixelator.mpx.cli.analysis import analysis
-from pixelator.mpx.cli.annotate import annotate
-from pixelator.mpx.cli.collapse import collapse
 from pixelator.mpx.cli.common import AliasedOrderedGroup, logger
-from pixelator.mpx.cli.demux import demux
-from pixelator.mpx.cli.graph import graph
-from pixelator.mpx.cli.layout import layout
-from pixelator.mpx.cli.misc import list_single_cell_designs, list_single_cell_panels
 from pixelator.mpx.cli.plugin import add_cli_plugins
-from pixelator.mpx.cli.preqc import preqc
 from pixelator.mpx.logging import LoggingSetup
 
 
@@ -105,46 +95,6 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
         ctx.obj["DUCKDB_MAX_TEMP_DIR_SIZE"] = duckdb_tmp_dir_size.strip()
 
     return 0
-
-
-@main_cli.group(name="single-cell-mpx")
-@click.option(
-    "--list-designs",
-    is_flag=True,
-    metavar="",
-    is_eager=True,
-    expose_value=False,
-    required=False,
-    callback=list_single_cell_designs,
-    help="List available designs and exit.",
-)
-@click.option(
-    "--list-panels",
-    is_flag=True,
-    metavar="",
-    is_eager=True,
-    expose_value=False,
-    required=False,
-    callback=list_single_cell_panels,
-    help="List available panels and exit.",
-)
-def single_cell_mpx():
-    """Commands related to the molecular pixelator assay."""
-
-
-# Add single-cell top level command to cli
-main_cli.add_command(single_cell_mpx)
-
-# Add single-cell commands
-single_cell_mpx.add_command(amplicon)
-single_cell_mpx.add_command(preqc)
-single_cell_mpx.add_command(adapterqc)
-single_cell_mpx.add_command(demux)
-single_cell_mpx.add_command(collapse)
-single_cell_mpx.add_command(graph)
-single_cell_mpx.add_command(annotate)
-single_cell_mpx.add_command(layout)
-single_cell_mpx.add_command(analysis)
 
 
 # Note that the import order here is intentional.

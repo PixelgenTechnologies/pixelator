@@ -9,76 +9,7 @@ import pandas as pd
 import pytest
 
 from pixelator.common.graph.backends.implementations import graph_backend
-from pixelator.mpx.graph import Graph
-from tests.mpx.graph.networkx.test_tools import add_random_names_to_vertexes
-
-
-@pytest.fixture(name="output_dir")
-def output_dir_fixture(tmp_path):
-    """Fix an output directory.
-
-    Args:
-        tmp_path: Tmp path.
-    """
-    output_dir = tmp_path / "output"
-    output_dir.mkdir()
-    yield output_dir
-
-
-@pytest.fixture(name="metrics_file")
-def metrics_file_fixture(tmp_path):
-    """Fix a metrics file.
-
-    Args:
-        tmp_path: Tmp path.
-    """
-    metrics_file = tmp_path / "metrics.json"
-    yield metrics_file
-
-
-@pytest.fixture(name="input_edgelist")
-def input_edgelist_fixture(tmp_path, edgelist_with_communities: pd.DataFrame):
-    """Fix an input edgelist.
-
-    Args:
-        tmp_path: Tmp path.
-        edgelist_with_communities: Edgelist with communities.
-    """
-    input_edgelist = tmp_path / "tmp_edgelist.parquet"
-    edgelist_with_communities.to_parquet(
-        input_edgelist, compression="zstd", index=False
-    )
-    yield input_edgelist
-
-
-@pytest.fixture(name="graph_with_communities")
-def graph_with_communities_fixture(edgelist_with_communities: pd.DataFrame):
-    """Fix a bipartite multi-graph with communities and no marker counts.
-
-    Args:
-        edgelist_with_communities: Edgelist with communities.
-    """
-    # build the graph from the edge list
-    graph = Graph.from_edgelist(
-        edgelist=edgelist_with_communities,
-        add_marker_counts=False,
-        simplify=False,
-        use_full_bipartite=True,
-    )
-
-    return graph
-
-
-@pytest.fixture(name="graph_without_communities")
-def graph_without_communities_fixture():
-    """Fix a full graph with random names in vertexes."""
-
-    graph = Graph.from_raw(nx.fast_gnp_random_graph(100, p=0.1, seed=10))
-    # Remove any unattached nodes, since that messes up the community
-    # detection
-    graph = graph.connected_components().giant()
-    add_random_names_to_vertexes(graph)
-    return graph
+from pixelator.common.graph.graph import Graph
 
 
 @pytest.fixture(name="pentagram_graph")
