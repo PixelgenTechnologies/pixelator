@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Tuple
 import semver
 from packaging.specifiers import SpecifierSet
 
-from pixelator.common.config.config_class import Config, PanelException
+from pixelator.common.config.config_class import PanelException
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 from pixelator.pna.config.assay import PNAAssay
@@ -294,10 +294,7 @@ class PNAConfig:
         return panels_with_key[0]
 
 
-ConfigType = typing.TypeVar("ConfigType", Config, PNAConfig)
-
-
-def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
+def load_assays_package(config: PNAConfig, package_name: str) -> PNAConfig:
     """Load default assays from a resources package.
 
     Args:
@@ -314,7 +311,7 @@ def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
     return config
 
 
-def load_panels_package(config: ConfigType, package_name: str) -> ConfigType:
+def load_panels_package(config: PNAConfig, package_name: str) -> PNAConfig:
     """Load default panels from a resources package.
 
     Args:

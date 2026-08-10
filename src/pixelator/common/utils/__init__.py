@@ -22,7 +22,6 @@ from logging.handlers import SocketHandler
 from multiprocessing.pool import Pool
 from pathlib import Path, PurePath
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     Generator,
@@ -41,52 +40,10 @@ import pandas as pd
 
 from pixelator.common.types import PathType
 
-# Avoid a circular dependency
-if TYPE_CHECKING:
-    from pixelator.common.config import AntibodyPanel
-
 logger = logging.getLogger(__name__)
 
 # this tr table is used to complement DNA sequences
 _TRTABLE = str.maketrans("GTACN", "CATGN")
-
-
-def build_barcodes_file(
-    panel: AntibodyPanel, anchored: bool, rev_complement: bool
-) -> str:
-    """Create a FASTA file of barcodes from a panel dataframe.
-
-    The FASTA file will have the marker id as
-    name and the barcode sequence as sequence. The parameter
-    rev_complement control if sequence needs to be in reverse
-    complement form or not. When anchored is true a dollar sign
-    ($) will be added at the end of the sequences to make them
-    anchored in cutadapt.
-
-    Args:
-        panel: an Antibody panel object
-        anchored: make the sequences anchored if True
-        rev_complement: reverse complement the sequence column if True
-
-    Returns:
-        a path to the barcodes file (str)
-    """
-    logger.debug("Creating barcodes file from antibody panel")
-
-    fd = tempfile.NamedTemporaryFile(suffix=".fa", delete=False)
-    logger.info("Barcodes file saved in %s", fd.name)
-    with open(fd.name, "w") as fh:
-        for _, row in panel.df.iterrows():
-            marker_id = row["marker_id"]
-            sequence = row["sequence"]
-            fh.write(f">{sequence} [marker_id={marker_id}]\n")
-            seq = reverse_complement(sequence) if rev_complement else sequence
-            if anchored:
-                seq += "$"
-            fh.write(f"{seq}\n")
-
-    logger.debug("Barcodes file from antibody panel created")
-    return fd.name
 
 
 def click_echo(msg: str, multiline: bool = False):

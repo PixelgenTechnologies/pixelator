@@ -14,7 +14,7 @@ from pixelator.pna.config.assay import (
     SequenceType,
     get_position_in_parent,
 )
-from pixelator.pna.config.config_class import Config, load_assays_package
+from pixelator.pna.config.config_class import load_assays_package
 from pixelator.pna.config.config_instance import pna_config
 from pixelator.pna.config.panel import (
     PNAAntibodyPanel,
