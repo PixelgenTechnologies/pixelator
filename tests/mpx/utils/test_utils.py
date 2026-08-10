@@ -33,9 +33,11 @@ def test_gzfile_not_empty(data_root):
     assert gz_size(data_root / "test_data.fastq.gz") == 30858550
 
 
-def test_gzfile_not_gz(data_root):
+def test_gzfile_not_gz(tmp_path):
+    not_gz = tmp_path / "not_gzip.txt"
+    not_gz.write_text("this is not a gzip file\n")
     with pytest.raises(BadGzipFile):
-        gz_size(data_root / "UNO_D21_Beta.csv")
+        gz_size(not_gz)
 
 
 def test_log_step_start(caplog):
