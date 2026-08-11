@@ -28,7 +28,7 @@ class SampleReport(pydantic.BaseModel):
     """
 
     sample_id: str
-    product_id: Literal["single-cell-pna", "single-cell-mpx"]
+    product_id: Literal["single-cell-pna"]
     report_type: str
 
     @classmethod

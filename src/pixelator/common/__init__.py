@@ -1,4 +1,4 @@
-"""Shared utilities used by MPX and PNA pipelines.
+"""Shared utilities used by multiple pipelines.
 
 Copyright © 2025 Pixelgen Technologies AB.
 """
