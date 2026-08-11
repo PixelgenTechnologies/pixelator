@@ -1,17 +1,28 @@
-"""Tests for the plot module.
+"""Tests for the top-level plot package.
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
 
+from pathlib import Path
+
 import pandas as pd
 import pytest
+from anndata import AnnData, read_h5ad
 
-from pixelator.mpx.plot import density_scatter_plot
+from pixelator.plot import density_scatter_plot
+
+DATA_ROOT = Path(__file__).parent / "data"
+
+
+@pytest.fixture(name="density_scatter_plot_adata")
+def density_scatter_plot_adata_fixture() -> AnnData:
+    """Return AnnData used by the density scatter plot image-compare test."""
+    return read_h5ad(DATA_ROOT / "density_scatter_plot_input.h5ad")
 
 
 @pytest.mark.mpl_image_compare(
     deterministic=True,
-    baseline_dir="../snapshots/test_plot/test_density_scatter_plot/",
+    baseline_dir="snapshots/test_density_scatter_plot/",
 )
 @pytest.mark.parametrize(
     "marker1, marker2, extra_params",

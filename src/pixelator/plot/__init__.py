@@ -1,4 +1,4 @@
-"""Functions for creating plots that are useful with MPX data.
+"""Functions for creating plots from Pixelator data.
 
 Copyright © 2023 Pixelgen Technologies AB.
 """
@@ -15,7 +15,7 @@ from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.patches import Rectangle
 from scipy.stats import gaussian_kde
 
-from pixelator.mpx.plot.constants import Color
+from pixelator.plot.constants import Color
 
 sns.set_style("whitegrid")
 jet_colormap = LinearSegmentedColormap.from_list("jet_colormap", Color.JETSET)
