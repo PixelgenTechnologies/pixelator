@@ -27,7 +27,6 @@ import polars as pl
 from pixelator.common.config.panel import (
     AntibodyPanelMetadata,
     PanelType,
-    parse_panel_header_metadata,
 )
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger

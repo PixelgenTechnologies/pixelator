@@ -358,7 +358,7 @@ MarkerA,no,ACTTCCTAGG,ACTTCCTAGG
         tmp_file.flush()
 
         with caplog.at_level("WARNING"):
-            panel = PNAAntibodyPanel.from_csv(tmp_file.name)
+            panel = PartialPNAAntibodyPanel.from_csv(tmp_file.name)
 
     assert panel.name == "test-pna-panel"
     assert panel.version == "1.0.0"
@@ -380,4 +380,4 @@ CD45,no,no,TCCCTTGCGATTTAC,test001
         tmp_file.flush()
 
         with pytest.raises(yaml.YAMLError):
-            PNAAntibodyPanel.from_csv(tmp_file.name)
+            PartialPNAAntibodyPanel.from_csv(tmp_file.name)
