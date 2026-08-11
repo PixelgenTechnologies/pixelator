@@ -11,14 +11,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.colors import LinearSegmentedColormap, Normalize
 from matplotlib.patches import Rectangle
 from scipy.stats import gaussian_kde
 
-from pixelator.plot.constants import Color
+from pixelator.common.plot import (
+    pixelgen_sequential_colormap,
+    set_pixelgen_theme,
+    style_facet_strips,
+)
 
-sns.set_style("whitegrid")
-jet_colormap = LinearSegmentedColormap.from_list("jet_colormap", Color.JETSET)  # type: ignore
+set_pixelgen_theme()
+colormap = pixelgen_sequential_colormap("blues", min_level=5)
 
 
 def _plot_joint_distribution(data, x, y, show_marginal, **kargs):
@@ -31,7 +34,7 @@ def _plot_joint_distribution(data, x, y, show_marginal, **kargs):
         legend=False,
         data=data,
         hue="density",
-        palette=jet_colormap,
+        palette=colormap,
         size=0.1,
     )
     if not show_marginal:
@@ -161,7 +164,7 @@ def density_scatter_plot(
             x=marker1,
             y=marker2,
             hue="density",
-            palette=jet_colormap,
+            palette=colormap,
             size=0.1,
         )
         if gate is not None:
@@ -174,6 +177,7 @@ def density_scatter_plot(
                 facet_column=facet_column,
             )
         plot_grid.refline(x=0, y=0)
+        style_facet_strips(plot_grid)
     else:
         plot_grid = _plot_joint_distribution(
             data, x=marker1, y=marker2, show_marginal=show_marginal
