@@ -100,7 +100,6 @@ It will look something like this:
 * test:                                Run tests using pytest with the default flags defined in pyproject.toml.
 * test-all:                            Run all tests using pytest.
 * test-nf-core-pixelator:              Run the default nf-core/pixelator test profile with this version of pixelator.
-* test-web:                            Run web tests using pytest.
 * typecheck:                           Run type checking using mypy.
 ```
 
@@ -229,23 +228,15 @@ task test-benchmark
 ### Pytest markers
 
 Pixelator defines several additional markers for tests.
-These are usually disabled by default and can be enabled by running `uv run pytest -m <marker> tests/`
+These can be selected or deselected with `uv run pytest -m <expression> tests/`
 
 -   integration_test: Marks a test as an integration test, which is often slow
--   web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed.
-    Additionally, the full pipeline is run on the micro testdata to generate reports.
 -   slow: Marks a test as being slow
-
-The default configuration that is applied when just running `uv run pytest`
-is to run all unmarked tests and `integration_tests` (web tests are deselected by default).
 
 You can use the pytest `-m` flag to select tests based on these markers.
 e.g.
 
 ```shell
-# Include web tests
-uv run pytest -m web_test
-
 # Skip slow tests
 uv run pytest -m "not slow"
 ```

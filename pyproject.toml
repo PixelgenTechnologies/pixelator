@@ -82,9 +82,7 @@ dev = [
     "pytest-snapshot",
     "pytest-cov",
     "pytest-mock",
-    "pytest-dependency",
     "pytest-benchmark",
-    "pytest-playwright",
     "pytest-watcher",
     "ipython",
     "types-requests>=2.32.4.20260107",
@@ -129,14 +127,12 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 markers = [
     "integration_test: Marks a test as an integration test, which is often slow (deselect with '-m \"not integration_test\"')",
-    "web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed (deselect with '-m \"not web_tests\"')",
     "slow: Marks a test as being slow (deselect with '-m \"not slow\"')",
 ]
 mpl-results-path = "tests/reports_mpl"
 mpl-generate-summary = "html"
 addopts = [
     "--mpl",
-    "-m not web_test",
     "--benchmark-disable",
 ]
 filterwarnings = ["ignore::DeprecationWarning"]

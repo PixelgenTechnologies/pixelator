@@ -56,18 +56,11 @@ tasks:
     cmds:
       - uv run pytest tests {{ .CLI_ARGS }}
 
-  test-web:
-    desc: >-
-      Run web tests using pytest.
-    cmds:
-      - uv run pytest tests -m web_test {{ .CLI_ARGS }}
-
   test-all:
     desc: >-
       Run all tests using pytest.
     deps:
       - test
-      - test-web
 
   test-watch:
     desc: >-
@@ -107,7 +100,7 @@ tasks:
       - pyproject.toml
       - poetry.lock
     cmds:
-      - uv run coverage run --source src -m pytest -m "not web_test"
+      - uv run coverage run --source src -m pytest
       - uv run coverage report
 
   test-nf-core-pixelator:
