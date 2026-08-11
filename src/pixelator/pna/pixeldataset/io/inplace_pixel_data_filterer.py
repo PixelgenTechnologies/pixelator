@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import duckdb
 
+from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.pixeldataset.io.pixel_data_viewer import PixelDataViewer
 from pixelator.pna.pixeldataset.io.pixel_file_writer import PixelFileWriter
@@ -100,7 +101,7 @@ class InplacePixelDataFilterer:
 
         components_as_list: list[str] = normalize_input_to_list(components)  # type: ignore
 
-        with duckdb.connect(self.pxl_file.path) as connection:
+        with connect_duckdb(self.pxl_file.path) as connection:
             self._filter_edgelist(connection, components_as_list)
             self._filter_proximity(connection, components_as_list)
             self._filter_layouts(connection, components_as_list)

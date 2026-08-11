@@ -12,6 +12,8 @@ from typing import Iterable
 import duckdb
 import polars as pl
 
+from pixelator.common.duckdb_utils import connect_duckdb
+
 from .pxl_file import PXL_FILE_MANDATOR_TABLES, PXL_FILE_OTHER_TABLES, PxlFile
 from .query_builder import Query
 
@@ -50,9 +52,9 @@ def _validate_session_file_path(path: Path) -> None:
 
 
 class PixelDataViewer:
-    """Maps sample names to PXL files and can open a :class:`PixelDataViewerSession`.
+    """Maps sample names to PXL files and can open a :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewerSession`.
 
-    Query execution uses a :class:`PixelDataViewerSession` from ``viewer.open()``
+    Query execution uses a :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewerSession` from ``viewer.open()``
 
     .. code-block:: python
 
@@ -183,7 +185,7 @@ class PixelDataViewerSession:
     """DuckDB session over one or more attached PXL files.
 
     Pass a list of ``(sample_name, pxl_path, db_name)`` tuples, where
-    ``db_name`` is the DuckDB attach alias (see :meth:`PixelDataViewer.normalized_sample_db_name`).
+    ``db_name`` is the DuckDB attach alias (see :meth:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer.normalized_sample_db_name`).
 
     At construction time, ``sample_name``, ``db_name``, and the path string are
     validated to only use valid DuckDB identifiers.
@@ -209,7 +211,7 @@ class PixelDataViewerSession:
 
     def _create_open_connection(self) -> duckdb.DuckDBPyConnection:
         """Create an in-memory DuckDB connection with PXL files attached."""
-        connection = duckdb.connect(":memory:")
+        connection = connect_duckdb(":memory:")
         self._attach_to_files(connection)
         for table in PXL_FILE_OTHER_TABLES:
             self._simple_union_table_view(connection, table, table)

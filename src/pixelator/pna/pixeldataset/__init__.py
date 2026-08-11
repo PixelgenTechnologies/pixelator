@@ -12,7 +12,7 @@ Low-level access to those files (``PxlFile``, ``Query``, ``PixelDataViewer``, wr
 ``pixelator.pna.pixeldataset.io``; see that package’s module documentation for the IO-layer
 diagrams.
 
-## Architecture (dataset layer)
+.. rubric:: Architecture (dataset layer)
 
 :class:`~pixelator.pna.pixeldataset.dataset.PNAPixelDataset` is the façade: it holds a
 :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer` that maps sample
@@ -31,7 +31,7 @@ names to on-disk ``PxlFile`` instances, and it constructs an
   filtering samples) and updated active components/markers, rebuilding ``AnnDataHelper``
   accordingly.
 
-### Dependency overview (ASCII)
+.. rubric:: Dependency overview (ASCII)
 
 .. code-block:: none
 
@@ -69,14 +69,19 @@ from pixelator.pna.pixeldataset.types import Component
 
 
 def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
-    """Read a PNAPixelDataset from one or more provided .pxl file(s).
+    """Read data from one or more ``.pxl`` files.
 
     Args:
-        path: path to the file to read
-        paths: Paths.
+        paths: One or more paths to ``.pxl`` files. A single path or a list of
+            paths may be passed. Each path may be a ``pathlib.Path`` or ``str``.
 
     Returns:
-        an instance of `PNAPixelDataset`
+        The data from the ``.pxl`` file(s).
+
+    Raises:
+        duckdb.IOException: If a file is not a DuckDB database file.
+        ValueError: If a file is not a valid ``.pxl`` file, if a sample name cannot be determined from file metadata.
+        FileNotFoundError: If any path does not exist on disk.
     """
     if not paths:
         raise ValueError(

@@ -12,6 +12,8 @@ class SampleCallingSampleReport(SampleReport):
     report_type: str = "sample_calling"
     number_of_components: int
     number_of_incompatible_hashes_removed: int | None
+    input_reads: int
+    output_reads: int
 
 
 class SampleCallingTotalReport(SampleReport):
@@ -20,4 +22,6 @@ class SampleCallingTotalReport(SampleReport):
     report_type: str = "sample_calling_total"
     number_of_components: int
     percentage_of_components_successfully_called: float
-    sample_confidences_per_sample: dict[str, list[float]]
+    hash_enrichment_factors_per_sample: dict[str, list[float]]
+    input_reads: int
+    output_reads: int

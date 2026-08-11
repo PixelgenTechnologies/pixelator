@@ -5,14 +5,87 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [] - Unreleased
+## [Unreleased]
 
-## Added
+### Changed
+- `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
+  recovery path. When the column is absent, sample calling skips it and graph molecule
+  statistics use the number of edges.
+
+## [0.30.0] - 2026-08-05
+
+### Added
+- `pixelator.pna.analysis.comparison.compare_sample_pairs` and `compare_sample_pairs_by_gate` 
+   to check that pairs of PNA samples are similar in terms of abundance (mean marker CLR) and 
+   proximity (mean marker-pair proximity score) patterns, reporting the correlation between 
+   each pair. In case of gating (e.g. `["+CD3e", "+CD4", "-CD19"]`), components are first filtered
+   with positive/negative thresholds determined automatically from each marker's CLR distribution.
+- `pixelator.pna.analysis.gating.determine_marker_threshold` to determine a positive/negative CLR 
+   threshold for a marker, warning and skipping markers whose distribution appears unimodal.
+- `pixelator.pna.plot.plot_sample_pair_comparison` and `write_sample_pair_comparison_report` to plot
+   and collect sample pair abundance/proximity comparisons into an HTML report.
+- Setup for generating API documentation pages from source files, and a workflow for building and 
+  deploying the docs automatically.
+- `PNAAssay` and `PNAAntibodyPanel` now hold an optional path to the path they were parsed from.
+- `pixelator.common.plot` with Pixelgen's brand colors, gradients, palettes, and theme 
+  (`PIXELGEN_ACCENT_COLORS`, `PIXELGEN_CELL_PALETTE`, `pixelgen_gradient`, `pixelgen_palette`, 
+  `pixelgen_accent_colors`, `pixelgen_discrete_colors`, `create_discrete_palette`, 
+  `pixelgen_colorscale`/`pixelgen_sequential_colormap`/`pixelgen_divergent_colormap`/`pixelgen_colormap`,
+   `set_pixelgen_theme`/`pixelgen_theme`, `style_facet_strips`).
+- Spectral layout algorithm
+- `single-cell-pna denoise` and `single-cell-pna sample-calling` now report `input_reads` and 
+  `output_reads` in `report.json`.
+
+### Changed
+- The default `min_allowed_nodes_pct` in `adaptive_core_expansion` has been changed from 0.8 to 0.9,
+  meaning that a valid "high" core partition must include at least 90% of all nodes. Components that
+  don't meet this criterion will not be denoised by ACE.
+- `pixelator.mpx.plot` and `pixelator.pna.plot` functions now use the Pixelgen brand theme and color
+  palettes from `pixelator.common.plot` by default.
+- `pixelgen_divergent_colormap` and the `plot_colocalization_heatmap`/
+  `plot_colocalization_diff_volcano`/`plot_polarity_diff_volcano` plots that use it now center on a
+  light Pixelgen grey rather than white, and use a `min_level` floor on both hues, so values near
+  zero stay visible against a white background instead of fading out.
+- Color scales for signed metrics (`abundance_colocalization_plot`'s hue mapping,
+  `plot_colocalization_heatmap`'s `center=0`, and the `CenteredNorm` used by the volcano plots) are
+  now correctly centered on zero, instead of on the (potentially skewed) 10th-90th percentile midpoint
+  or raw data min/max.
+- `single-cell-pna graph` now discards components above the max size threshold before the refinement
+  step instead of only at the end, reducing peak memory usage. This only applies when
+  `--component-size-max-threshold` is set.
+
+### Fixed
+- The graph stage now raises an error instead of an internal DuckDB crash when a component-size
+  threshold discards every component in the input.
+- `single-cell-pna graph` no longer crashes with a `polars.exceptions.SchemaError` on `n_edges`
+  (`Int64` vs `UInt32`) when calculating post-recovery component statistics with
+  `--multiplet-recovery` and a `--component-size-max-threshold` that discards large components.
+- `write_parameters_file` now includes Click positional arguments (e.g. multi-file inputs) under
+  `cli.arguments` in `*.meta.json`, not only options.
+- `filter_connected_components_by_size` now ensures matching size schemas between discarded and remaining components.
+
+## [0.29.0] - 2026-06-15
+
+### Added
 - `annotate_cells` method to determine cell-types using another given set of pre-annotated cells.
+- `proxiome-v2-immuno-155-v2.0` panels (including panels for FLAG, FMC63 and G4S add ons to the immuno-155 base panel)
+- Expose `coarsened_pmds_3d` (and other supported layout algorithms) on the `single-cell-pna layout` CLI, and make `coarsened_pmds_3d` the default.
+
+
+### Changed
+- Switch sample calling evaluation metric to hash enrichment factor instead of hash purity.
+- Reduce memory usage in `pna_edgelist_to_anndata` by restricting duckdb queries to 512 components at a time.
+
+### Fixed
+- Always route DuckDB spill files to a local temp directory (`PIXELATOR_DUCKDB_TEMP_DIR` or `/tmp`)
+  instead of next to the `.pxl` database file. This prevents `denoise`, component filtering and other
+  commands from spilling onto networked filesystems (e.g. to S3 when running the pipeline in the cloud)
+  where the `.pxl` may live.
+- Fix the prerelease panel naming, rename `proxiome-v2-immuno-155-v2.0` to `proxiome-v2-immuno-155-prerelease`.
 
 ## [0.28.0] - 2026-06-03
 
-## Added
+### Added
 - `coarsened_pmds_layout` method for more performant cell layout computation.
 
 ### Fixed

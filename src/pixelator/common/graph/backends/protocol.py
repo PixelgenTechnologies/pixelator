@@ -36,6 +36,7 @@ SupportedLayoutAlgorithm = Literal[
     "pmds_3d",
     "wpmds_3d",
     "coarsened_pmds_3d",
+    "spectral_3d",
 ]
 
 
@@ -73,7 +74,7 @@ class GraphBackend(Protocol):
             a Graph instance (GraphBackend)
 
         Raises:
-            AssertionError when the input edge list is not valid
+            AssertionError: when the input edge list is not valid
         """
         ...
 
@@ -141,7 +142,7 @@ class GraphBackend(Protocol):
             node markers as a dataframe (pd.DataFrame)
 
         Raises:
-            AssertionError if graph nodes don't include markers
+            AssertionError: If graph nodes don't include markers
         """
         ...
 
@@ -167,6 +168,7 @@ class GraphBackend(Protocol):
         - pmds
         - pmds_3d
         - wpmds_3d
+        - spectral_3d
 
         For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
         preferred. On PNA data they are faster and produce better results.

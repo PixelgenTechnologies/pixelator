@@ -1,0 +1,110 @@
+name: "Docs"
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build (e.g. v0.29.0)"
+        required: true
+  release:
+    types: [published]
+  pull_request:
+
+concurrency:
+  group: deploy-docs-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOCS_BASE_URL: https://PixelgenTechnologies.github.io/pixelator
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - id: ver
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          version="${TAG#v}"
+          echo "version=${version:-latest}" >> "$GITHUB_OUTPUT"
+
+      # On pull_request events the tag output is empty, so checkout falls
+      # back to the default ref (the PR merge commit).
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ver.outputs.tag }}
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --group docs
+      - name: Build docs
+        env:
+          DOCS_VERSION: ${{ steps.ver.outputs.version }}
+        run: uv run sphinx-build -b html docs docs/_build/html --fail-on-warning -n
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-html
+          path: docs/_build/html
+
+  deploy:
+    needs: build
+    concurrency:
+      group: deploy-docs-publish
+      cancel-in-progress: false
+    if: ${{ github.event_name != 'pull_request' && (github.event_name != 'release' || github.event.release.prerelease == false) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      DOCS_VERSION: ${{ needs.build.outputs.version }}
+    steps:
+      # Needed for docs/_scripts/update_switcher.py
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: docs-html
+          path: docs/_build/html
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./docs/_build/html
+          destination_dir: docs/${{ env.DOCS_VERSION }}
+          keep_files: true
+
+      - name: Checkout gh-pages (for regenerating switcher.json)
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+          fetch-depth: 1
+
+      - name: Regenerate switcher.json
+        run: python3 docs/_scripts/update_switcher.py
+
+      - name: Ensure .nojekyll exists
+        run: touch ./switcher-out/.nojekyll
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./switcher-out
+          destination_dir: docs
+          keep_files: true
+
+      - name: Print docs URL
+        run: |
+          DOCS_URL="${DOCS_BASE_URL}/${DOCS_VERSION}/"
+          echo "Docs URL: $DOCS_URL"
+          echo "DOCS_URL=$DOCS_URL" >> "$GITHUB_ENV"
+          echo "### Docs published" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: $DOCS_URL" >> "$GITHUB_STEP_SUMMARY"

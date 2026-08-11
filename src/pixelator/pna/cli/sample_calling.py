@@ -22,7 +22,7 @@ from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.sample_calling import (
     create_final_report,
     sample_calling,
-    warn_if_undetermined_has_high_confidence,
+    warn_if_undetermined_has_high_enrichment,
 )
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
 from pixelator.pna.sample_calling.report import (
@@ -60,13 +60,14 @@ from pixelator.pna.sample_calling.report import (
     help="Save components that could not be confidently assigned to any sample.",
 )
 @click.option(
-    "--confidence-threshold",
+    "--enrichment-threshold",
     required=False,
     type=float,
-    default=0.9,
-    help="Confidence threshold for sample calling. "
-    "Components with a sample confidence below this threshold will be considered undetermined. "
-    "Default is 0.9.",
+    default=10.0,
+    help="Hash enrichment threshold for sample calling. "
+    "Components with a hash enrichment factor below this threshold will be considered undetermined. "
+    "Hash enrichment is calculated as the ration between highest hash count and the second highest hash count."
+    "Default is 10.0.",
 )
 @output_option
 @click.pass_context
@@ -77,20 +78,10 @@ def sample_calling_cli(
     samplesheet: str,
     remove_incompatible: bool,
     save_undetermined: bool,
-    confidence_threshold: float,
+    enrichment_threshold: float,
     output,
 ):
-    """Map components to samples in sample-hashed datasets.
-
-    Args:
-        ctx: Click context from the command decorator.
-        input_pxl_file: Path to the input PXL (PixelDataset) file.
-        samplesheet: Path to a samplesheet file with a hash_index column.
-        remove_incompatible: Remove antibodies that are incompatible with their component.
-        save_undetermined: Save components that could not be confidently assigned to any sample.
-        confidence_threshold: Confidence threshold for sample calling.
-        output: The path where the results will be placed (it is created if it does not exist).
-    """
+    """Map components to samples in sample-hashed datasets."""
     log_step_start(
         "sample-calling",
         input_files=input_pxl_file,
@@ -98,7 +89,7 @@ def sample_calling_cli(
         output=output,
         remove_incompatible=remove_incompatible,
         save_undetermined=save_undetermined,
-        confidence_threshold=confidence_threshold,
+        enrichment_threshold=enrichment_threshold,
     )
     # some basic sanity check on the input files
     sanity_check_inputs(input_files=input_pxl_file, allowed_extensions=("pxl",))
@@ -132,32 +123,41 @@ def sample_calling_cli(
         pool_name=pool_name,
     )
 
-    pxl = read(Path(input_pxl_file))
+    input_pxl_dataset = read(Path(input_pxl_file))
     output_files = sample_calling(
-        input_pxl=pxl,
+        input_pxl=input_pxl_dataset,
         hashing_antibody_mapping=hashed_antibodies,
         output_folder=sample_calling_output,
         remove_incompatible=remove_incompatible,
-        confidence_threshold=confidence_threshold,
+        enrichment_threshold=enrichment_threshold,
         undetermined_sample_name=undetermined_sample_name,
     )
 
     for pxl_file in output_files:
         sample_name = get_sample_name(pxl_file)
-        pxl = read(pxl_file)
+        sample_pxl = read(pxl_file)
         write_parameters_file(
             ctx,
             sample_calling_output / f"{sample_name}.meta.json",
             command_path="pixelator single-cell-pna sample-calling",
         )
         metrics = sample_calling_output / f"{sample_name}.report.json"
+        output_reads = int(sample_pxl.adata().obs["reads_in_component"].sum())
+        input_reads = int(
+            input_pxl_dataset.filter(components=sample_pxl.adata().obs.index.tolist())
+            .adata()
+            .obs["reads_in_component"]
+            .sum()
+        )
         report = SampleCallingSampleReport(
             sample_id=sample_name,
             product_id="single-cell-pna",
-            number_of_components=len(pxl.components()),
+            number_of_components=len(sample_pxl.components()),
             number_of_incompatible_hashes_removed=(
-                pxl.adata().obs["removed_incompatible_hashes"].sum()
+                sample_pxl.adata().obs["removed_incompatible_hashes"].sum()
             ),
+            input_reads=input_reads,
+            output_reads=output_reads,
         )
         report.write_json_file(metrics, indent=4)
 
@@ -165,6 +165,7 @@ def sample_calling_cli(
     final_dataset = read(output_files)
     total_report = create_final_report(
         final_dataset=final_dataset,
+        input_reads=int(input_pxl_dataset.adata().obs["reads_in_component"].sum()),
         undetermined_sample_name=undetermined_sample_name,
     )
     total_report.write_json_file(
@@ -172,13 +173,13 @@ def sample_calling_cli(
     )
 
     if undetermined_sample_name in final_dataset.sample_names():
-        warn_if_undetermined_has_high_confidence(
-            undetermined_sample_confidences=final_dataset.filter(
+        warn_if_undetermined_has_high_enrichment(
+            undetermined_enrichment_factors=final_dataset.filter(
                 samples=undetermined_sample_name
             )
             .adata()
-            .obs["sample_confidence"],
-            confidence_threshold=confidence_threshold,
+            .obs["hash_enrichment_factor"],
+            enrichment_threshold=enrichment_threshold,
             undetermined_sample_name=undetermined_sample_name,
         )
 

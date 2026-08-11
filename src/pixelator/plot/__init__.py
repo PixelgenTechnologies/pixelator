@@ -18,7 +18,7 @@ from scipy.stats import gaussian_kde
 from pixelator.plot.constants import Color
 
 sns.set_style("whitegrid")
-jet_colormap = LinearSegmentedColormap.from_list("jet_colormap", Color.JETSET)
+jet_colormap = LinearSegmentedColormap.from_list("jet_colormap", Color.JETSET)  # type: ignore
 
 
 def _plot_joint_distribution(data, x, y, show_marginal, **kargs):

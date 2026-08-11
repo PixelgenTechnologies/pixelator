@@ -44,3 +44,5 @@ class DenoiseSampleReport(SampleReport):
     report_type: str = "denoise"
     number_of_umis_removed: int | None
     ratio_of_umis_removed: float | None
+    input_reads: int
+    output_reads: int

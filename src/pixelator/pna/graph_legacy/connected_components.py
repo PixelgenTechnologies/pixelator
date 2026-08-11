@@ -753,8 +753,8 @@ def find_components(
     detection algorithm.
 
     .. [1] Traag, V.A., Waltman, L. & van Eck, N.J. From Louvain to Leiden: guaranteeing
-    well-connected communities. Sci Rep 9, 5233 (2019).
-    https://doi.org/10.1038/s4q:598-019-41695-z
+        well-connected communities. Sci Rep 9, 5233 (2019).
+        https://doi.org/10.1038/s4q:598-019-41695-z
 
     Args:
         input_edgelist: The input edgelist

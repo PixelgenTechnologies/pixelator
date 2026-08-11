@@ -12,6 +12,8 @@ import duckdb
 import polars as pl
 from anndata import AnnData
 
+from pixelator.pna.utils import init_duckdb_conn
+
 
 class PixelFileWriter:
     """Writer class for PXL files.
@@ -31,23 +33,38 @@ class PixelFileWriter:
             writer.write_edgelist(Path("edgelist.parquet"))
     """
 
-    def __init__(self, path: Path, exits_ok: bool = False):
+    def __init__(
+        self,
+        path: Path,
+        exits_ok: bool = False,
+        temp_dir: Path | str | None = None,
+        temp_dir_size_limit: str | None = None,
+    ):
         """Initialize the PixelFileWriter.
 
         Args:
             path: The path to the PXL file.
-            exists_ok: Whether to remove the file if it exists.
-            exits_ok: Exits ok.
+            exits_ok: Whether to remove the file if it exists.
+            temp_dir: DuckDB spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
+            temp_dir_size_limit: DuckDB spill size limit. Defaults to
+                ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when set.
         """
         self.path = path
         self.exists_ok = exits_ok
+        self._temp_dir = temp_dir
+        self._temp_dir_size_limit = temp_dir_size_limit
         if self.exists_ok and self.path.exists():
             self.path.unlink()
         self._connection: duckdb.DuckDBPyConnection = None  # type: ignore
 
     def open(self):
         """Open a connection to the PXL file."""
-        self._connection = duckdb.connect(self.path)
+        self._connection = init_duckdb_conn(
+            path=self.path,
+            read_only=False,
+            temp_dir=self._temp_dir,
+            temp_dir_size_limit=self._temp_dir_size_limit,
+        )
 
     def close(self):
         """Close the connection to the PXL file."""

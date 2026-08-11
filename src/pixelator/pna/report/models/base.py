@@ -33,13 +33,13 @@ class SampleReport(pydantic.BaseModel):
 
     @classmethod
     def from_json(cls, p: Path) -> Self:
-        """Initialize an :class:`SampleReport` from a report file.
+        """Initialize a SampleReport from a report file.
 
         Args:
             p: The path to the report file.
 
         Returns:
-            A: class:`SampleReport` object.
+            A :class:`~pixelator.pna.report.models.base.SampleReport` object.
         """
         with open(p) as fp:
             json_data = json.load(fp)

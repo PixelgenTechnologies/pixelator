@@ -49,12 +49,24 @@ def test_log_step_start(caplog):
             a_param="hello",
             b_param="world",
         )
-        records = [rec.message for rec in caplog.records]
-        assert len(records) == 4
-        assert records[0] == f"Start pixelator my_step {__version__}"
-        assert records[1] == "Input file(s) /foo,/bar"
-        assert records[2] == "Output /fizz"
-        assert records[3] == "Parameters:a-param=hello,b-param=world"
+        # Only consider records emitted by log_step_start's own logger. Other
+        # tests in the suite leave extra logging handlers attached to the
+        # "pixelator" logger hierarchy, which makes caplog capture each record
+        # once per attached logger. Collapse those duplicates while preserving
+        # order so the assertion checks the logical sequence of emitted lines.
+        messages = list(
+            dict.fromkeys(
+                rec.getMessage()
+                for rec in caplog.records
+                if rec.name == "pixelator.common.utils"
+            )
+        )
+        assert messages == [
+            f"Start pixelator my_step {__version__}",
+            "Input file(s) /foo,/bar",
+            "Output /fizz",
+            "Parameters:a-param=hello,b-param=world",
+        ]
 
 
 def test_sanity_check_inputs_all_ok(data_root):
