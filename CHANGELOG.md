@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
+  `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
+  use a release prior to 0.31.0 (for example `pip install 'pixelgen-pixelator<0.31.0'`).
+
 ### Changed
+- `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule
   statistics use the number of edges.
@@ -15,25 +21,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.30.0] - 2026-08-05
 
 ### Added
-- `pixelator.pna.analysis.comparison.compare_sample_pairs` and `compare_sample_pairs_by_gate` 
-   to check that pairs of PNA samples are similar in terms of abundance (mean marker CLR) and 
-   proximity (mean marker-pair proximity score) patterns, reporting the correlation between 
+- `pixelator.pna.analysis.comparison.compare_sample_pairs` and `compare_sample_pairs_by_gate`
+   to check that pairs of PNA samples are similar in terms of abundance (mean marker CLR) and
+   proximity (mean marker-pair proximity score) patterns, reporting the correlation between
    each pair. In case of gating (e.g. `["+CD3e", "+CD4", "-CD19"]`), components are first filtered
    with positive/negative thresholds determined automatically from each marker's CLR distribution.
-- `pixelator.pna.analysis.gating.determine_marker_threshold` to determine a positive/negative CLR 
+- `pixelator.pna.analysis.gating.determine_marker_threshold` to determine a positive/negative CLR
    threshold for a marker, warning and skipping markers whose distribution appears unimodal.
 - `pixelator.pna.plot.plot_sample_pair_comparison` and `write_sample_pair_comparison_report` to plot
    and collect sample pair abundance/proximity comparisons into an HTML report.
-- Setup for generating API documentation pages from source files, and a workflow for building and 
+- Setup for generating API documentation pages from source files, and a workflow for building and
   deploying the docs automatically.
 - `PNAAssay` and `PNAAntibodyPanel` now hold an optional path to the path they were parsed from.
-- `pixelator.common.plot` with Pixelgen's brand colors, gradients, palettes, and theme 
-  (`PIXELGEN_ACCENT_COLORS`, `PIXELGEN_CELL_PALETTE`, `pixelgen_gradient`, `pixelgen_palette`, 
-  `pixelgen_accent_colors`, `pixelgen_discrete_colors`, `create_discrete_palette`, 
+- `pixelator.common.plot` with Pixelgen's brand colors, gradients, palettes, and theme
+  (`PIXELGEN_ACCENT_COLORS`, `PIXELGEN_CELL_PALETTE`, `pixelgen_gradient`, `pixelgen_palette`,
+  `pixelgen_accent_colors`, `pixelgen_discrete_colors`, `create_discrete_palette`,
   `pixelgen_colorscale`/`pixelgen_sequential_colormap`/`pixelgen_divergent_colormap`/`pixelgen_colormap`,
    `set_pixelgen_theme`/`pixelgen_theme`, `style_facet_strips`).
 - Spectral layout algorithm
-- `single-cell-pna denoise` and `single-cell-pna sample-calling` now report `input_reads` and 
+- `single-cell-pna denoise` and `single-cell-pna sample-calling` now report `input_reads` and
   `output_reads` in `report.json`.
 
 ### Changed
