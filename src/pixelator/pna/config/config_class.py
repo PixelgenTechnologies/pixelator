@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Tuple
 import semver
 from packaging.specifiers import SpecifierSet
 
-from pixelator.common.config.config_class import PanelException
+from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 from pixelator.pna.config.assay import PNAAssay
@@ -379,3 +379,9 @@ def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional
         specified_version = None
 
     return version_stripped_name, specified_version
+
+
+class PanelException(PixelatorBaseException):
+    """Exception raised for failures to load a panel into the global configuration."""
+
+    pass

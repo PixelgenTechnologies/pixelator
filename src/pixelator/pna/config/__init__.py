@@ -29,7 +29,6 @@ __all__ = [
     "PNAAssay",
     "Region",
     "get_position_in_parent",
-    "Config",
     "pna_config",
     "load_assays_package",
     "load_yaml_file",

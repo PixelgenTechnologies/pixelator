@@ -339,7 +339,7 @@ def test_loading_duplicate_aliases(config_with_multiple_versions, pna_data_root)
         pna_data_root: pna data root.
     """
     this_config = copy.deepcopy(config_with_multiple_versions)
-    from pixelator.common.config.config_class import PanelException
+    from pixelator.pna.config.config_class import PanelException
 
     with pytest.raises(PanelException):
         this_config.load_panel_file(
