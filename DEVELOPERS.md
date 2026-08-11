@@ -104,8 +104,6 @@ It will look something like this:
 * test-workflow:                       Run workflow tests using pytest.
 * test-workflow-external:              Run external workflow tests using pytest.
 * typecheck:                           Run type checking using mypy.
-* tests:update-report-test-data:       Update the report test data using the nf-core/pixelator test profile.
-* tests:update-web-test-data:          Create web test data.
 ```
 
 View more detailed documentation for a specific task, for example:
