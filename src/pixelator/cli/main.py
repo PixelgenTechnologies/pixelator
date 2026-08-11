@@ -13,10 +13,10 @@ import click
 import yappi
 
 from pixelator import __version__
+from pixelator.cli.common import AliasedOrderedGroup, logger
+from pixelator.cli.logging import LoggingSetup
+from pixelator.cli.plugin import add_cli_plugins
 from pixelator.common.utils import click_echo
-from pixelator.mpx.cli.common import AliasedOrderedGroup, logger
-from pixelator.mpx.cli.plugin import add_cli_plugins
-from pixelator.mpx.logging import LoggingSetup
 
 
 @click.group(cls=AliasedOrderedGroup, name="pixelator")

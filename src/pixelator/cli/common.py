@@ -1,5 +1,4 @@
-"""
-Console script for pixelator (common functions)
+"""Console script for pixelator (common functions).
 
 Copyright © 2022 Pixelgen Technologies AB.
 """

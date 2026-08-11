@@ -1,5 +1,4 @@
-"""
-Plugin helpers for the cli.
+"""Plugin helpers for the cli.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """
