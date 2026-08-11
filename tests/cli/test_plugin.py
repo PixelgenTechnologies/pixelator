@@ -10,10 +10,10 @@ from unittest import mock
 import click
 
 from pixelator.cli.main import main_cli
-from pixelator.common.config import Config
-from pixelator.mpx.cli.plugin import add_cli_plugins, fetch_cli_plugins
-from pixelator.mpx.config import config
-from pixelator.mpx.config.plugin import fetch_config_plugins, load_config_plugins
+from pixelator.cli.plugin import add_cli_plugins, fetch_cli_plugins
+from pixelator.pna.config import pna_config
+from pixelator.pna.config.config_class import PNAConfig
+from pixelator.pna.config.plugin import fetch_config_plugins, load_config_plugins
 
 
 @click.group()
@@ -22,7 +22,7 @@ def a_plugin():
     pass
 
 
-def a_config_plugin(current_config: Config) -> Config:
+def a_config_plugin(current_config: PNAConfig) -> PNAConfig:
     """A config plugin.
 
     Args:
@@ -35,32 +35,32 @@ def a_config_plugin(current_config: Config) -> Config:
 def test_that_cli_plugins_are_loaded_in_main():
     """Verify that cli plugins are loaded in main."""
     with mock.patch(
-        "pixelator.mpx.cli.plugin.fetch_cli_plugins",
+        "pixelator.cli.plugin.fetch_cli_plugins",
         return_value=[
             EntryPoint(
                 name="a_plugin",
-                value="tests.mpx.test_plugin:a_plugin",
-                group="pixelator.mpx.cli_plugin",
+                value="tests.cli.test_plugin:a_plugin",
+                group="pixelator.cli_plugin",
             )
         ],
     ):
         add_cli_plugins(main_cli)
-        assert {"single-cell-mpx", "a-plugin"}.issubset(set(main_cli.commands.keys()))
+        assert {"single-cell-pna", "a-plugin"}.issubset(set(main_cli.commands.keys()))
 
 
 def test_that_config_plugins_are_loaded_in_main():
     """Verify that config plugins are loaded in main."""
     with mock.patch(
-        "pixelator.mpx.config.plugin.fetch_config_plugins",
+        "pixelator.pna.config.plugin.fetch_config_plugins",
         return_value=[
             EntryPoint(
                 name="a_config_plugin",
-                value="tests.mpx.test_plugin:a_config_plugin",
-                group="pixelator.mpx.config_plugin",
+                value="tests.cli.test_plugin:a_config_plugin",
+                group="pixelator_pna.config_plugin",
             )
         ],
     ):
-        new_config = load_config_plugins(config)
+        new_config = load_config_plugins(pna_config)
         assert new_config.test_attr
 
 
@@ -77,8 +77,8 @@ def test_fetch_cli_plugins():
         return_value=[
             EntryPoint(
                 name="a_plugin",
-                value="tests.test_plugin:a_plugin",
-                group="pixelator.mpx.cli_plugin",
+                value="tests.cli.test_plugin:a_plugin",
+                group="pixelator.cli_plugin",
             )
         ]
     )
@@ -96,8 +96,8 @@ def test_fetch_config_plugins():
         return_value=[
             EntryPoint(
                 name="a_config_plugin",
-                value="tests.test_plugin:a_config_plugin",
-                group="pixelator.mpx.config_plugin",
+                value="tests.cli.test_plugin:a_config_plugin",
+                group="pixelator_pna.config_plugin",
             )
         ]
     )

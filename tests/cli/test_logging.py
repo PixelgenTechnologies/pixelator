@@ -11,11 +11,11 @@ from pathlib import Path
 
 import pytest
 
+from pixelator.cli.logging import LoggingSetup
 from pixelator.common.utils import (
     get_process_pool_executor,
     timer,
 )
-from pixelator.mpx.logging import LoggingSetup
 
 
 def test_timer(caplog):
