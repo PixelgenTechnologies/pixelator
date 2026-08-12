@@ -5,9 +5,9 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import enum
 import re
 import warnings
-from enum import StrEnum
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Self
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from pixelator.common.config import Config
 
 
-class PanelType(StrEnum):
+class PanelType(str, enum.Enum):
     """Panel type values used in metadata."""
 
     PARTIAL = "partial"
