@@ -10,7 +10,12 @@ import re
 import warnings
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Self
+from typing import TYPE_CHECKING, List, Optional
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 import pandas as pd
 import pydantic
