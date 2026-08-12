@@ -14,14 +14,14 @@ import polars as pl
 
 if TYPE_CHECKING:
     from pixelator.pna.config.assay import PNAAssay
-    from pixelator.pna.config.panel import PNAAntibodyPanel
+    from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 
 
 def write_pna_fastq(
     sample_name: str,
     n_reads: int,
     edgelist: pl.DataFrame,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     assay: PNAAssay,
     substitution_error_rate: float = 1e-5,
     read1_length: int = 70,
@@ -105,9 +105,11 @@ def _random_qualities(
     n: int, length: int, rng: np.random.Generator, mean_q: int = 30, std_q: float = 2.0
 ) -> list[str]:
     """Phred+33 quality strings with scores drawn around ``mean_q`` (default Q30)."""
-    q = rng.normal(mean_q, std_q, size=(n, length)).round()
-    q = np.clip(q, 2, 40).astype(np.uint8) + 33  # Phred+33 ASCII offset
-    return [row.tobytes().decode("ascii") for row in q]
+    scores = rng.normal(mean_q, std_q, size=(n, length)).round()
+    clipped_phred = (
+        np.clip(scores, 2, 40).astype(np.uint8) + 33
+    )  # Phred+33 ASCII offset
+    return [row.tobytes().decode("ascii") for row in clipped_phred]
 
 
 def _write_fastq_records(
@@ -122,7 +124,7 @@ def _write_fastq_records(
 def _assemble_amplicons(
     edgelist: pl.DataFrame,
     n_reads: int,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     assay: PNAAssay,
     rng: np.random.Generator,
 ) -> list[str]:

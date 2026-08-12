@@ -13,7 +13,7 @@ import polars as pl
 from tests.common.data_generator.topology import generate_cell_graph
 
 if TYPE_CHECKING:
-    from pixelator.pna.config.panel import PNAAntibodyPanel
+    from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 
 
 def generate_edgelist(
@@ -21,7 +21,7 @@ def generate_edgelist(
     n_nodes: int,
     n_edges: int,
     min_neighbors: int,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     n_crossing_edges: int = 1,
     hashing_fraction: float = 0.2,
     rng=None,
@@ -96,7 +96,7 @@ def generate_edgelist(
 
 def populate_cell(
     edgelist: pl.DataFrame,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     hashing_index: int | None = None,
     hashing_fraction: float = 0.2,
     rng=None,
@@ -134,7 +134,7 @@ def populate_cell(
 
 
 def _hashing_indices_per_cell(
-    n_cells: int, panel: PNAAntibodyPanel, rng: np.random.Generator
+    n_cells: int, panel: PNAAntibodyPanelCombination, rng: np.random.Generator
 ) -> np.ndarray | list[None]:
     """Assign a hashing index to each cell, covering every panel index.
 
@@ -177,7 +177,7 @@ def _hashing_mask(df: pl.DataFrame) -> np.ndarray:
 
 
 def _marker_probabilities(
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Per-marker sampling probabilities and the hashing-marker mask.
 
@@ -211,7 +211,7 @@ def _marker_probabilities(
 
 def _assign_markers(
     node_umi_map: pl.DataFrame,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     hashing_index: int | None,
     hashing_fraction: float,
     rng: np.random.Generator,

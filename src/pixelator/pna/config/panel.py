@@ -791,6 +791,7 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
         df: pd.DataFrame,
         metadata: AntibodyPanelMetadata | list[AntibodyPanelMetadata],
         file_name: Optional[str] = None,
+        filepath: Optional[Path] = None,
     ):
         """Initialize the PNAAntibodyPanelCombination object."""
         if metadata is None:
@@ -809,7 +810,9 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
             and isinstance(metadata, AntibodyPanelMetadata)
         ):
             panel_type_class = get_panel_type_from_metadata(metadata)
-            panel = panel_type_class(df, metadata, file_name=file_name)
+            panel = panel_type_class(
+                df, metadata, file_name=file_name, filepath=filepath
+            )
             self.add_panel(panel)
             self._df = self.df  # add in the extra columns
         elif (
@@ -837,6 +840,7 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
             df=panel.df,
             metadata=panel.metadata,
             file_name=panel.filename,
+            filepath=panel.filepath,
         )
 
     @property  # type: ignore[override]
@@ -1043,6 +1047,19 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
                 "Cannot get filename for a combination of panels. "
                 + "Filename is only defined for individual panels."
             )
+
+    @property
+    def filepath(self) -> Optional[Path]:
+        """Return the full path of the panel file, if available."""
+        unique_filepaths = set(p.filepath for p in self.partial_panels())
+        if len(unique_filepaths) == 1:
+            return unique_filepaths.pop()
+        else:
+            logger.warning(
+                "Cannot get filepath for multiple sources of panels. "
+                + "Filepath is only defined if all panels have a single source e.g. the same pxl file."
+            )
+            return None
 
     @classmethod
     def from_adata(cls, adata, file_name=None):

@@ -11,12 +11,12 @@ from typing import TYPE_CHECKING
 import polars as pl
 
 if TYPE_CHECKING:
-    from pixelator.pna.config.panel import PNAAntibodyPanel
+    from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 
 
 def write_pna_pxl(
     edgelist: pl.DataFrame,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     path: str | Path,
     sample_name: str = "synthetic",
 ) -> Path:
