@@ -202,6 +202,44 @@ def test_find_components_small(
         )
 
 
+def test_find_components_raises_when_every_component_is_too_large(random_graph_path):
+    """A hard max threshold below every component's size raises cleanly instead of crashing.
+
+    Every cluster in the fixture has 100+ nodes, so a max threshold of 50 discards all of them
+    in the early filter. This must surface as a clear ``ConnectedComponentException`` (matching
+    the existing "everything too small" case), not an unrelated crash further down the pipeline
+    (e.g. a division by zero while computing the now-empty "largest component" fraction, or a
+    failure to read an emptied-out hive-partitioned edgelist).
+
+    Args:
+        random_graph_path: random graph path.
+    """
+    staged_refinement_options = StagedRefinementOptions(
+        initial_stage_options=RefinementOptions(
+            leiden_resolution=1.0,
+            min_component_size_to_prune=10,
+        ),
+        refinement_stage_options=RefinementOptions(
+            leiden_resolution=0.01,
+        ),
+        max_component_refinement_depth=3,
+    )
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        working_dir = Path(temp_dir)
+        with pytest.raises(ConnectedComponentException):
+            find_components(
+                input_edgelist_path=Path(random_graph_path),
+                working_dir=working_dir,
+                multiplet_recovery=True,
+                edge_cycle_verification=False,
+                min_read_count=1,
+                component_size_threshold=(10, 50),
+                n_threads=10,
+                refinement_options=staged_refinement_options,
+            )
+
+
 def test_find_no_components(random_graph_path):
     """Verify find no components.
 

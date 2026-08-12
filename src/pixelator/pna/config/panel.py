@@ -58,6 +58,7 @@ class PartialPNAAntibodyPanel:
         df: pd.DataFrame,
         metadata: AntibodyPanelMetadata,
         file_name: Optional[str] = None,
+        filepath: Optional[PathType] = None,
     ) -> None:
         """Load a panel from a dataframe and metadata.
 
@@ -65,6 +66,7 @@ class PartialPNAAntibodyPanel:
             df: The dataframe containing the panel information.
             metadata: The metadata for the panel.
             file_name: The optional basename of the file from which the panel is loaded.
+            filepath: The optional full path of the file from which the panel is loaded.
 
         Returns:
             None
@@ -86,6 +88,7 @@ class PartialPNAAntibodyPanel:
                 f"Panel metadata panel_type {metadata.panel_type!r} does not match "
                 + f"{self.__class__.__name__} (expected {self.__class__._panel_type.value})."
             )
+        self._filepath: Optional[Path] = Path(filepath).resolve() if filepath else None
         self.metadata = metadata
 
         self._df = df
@@ -125,7 +128,7 @@ class PartialPNAAntibodyPanel:
 
         logger.debug("Antibody panel from file %s created", filename)
 
-        return cls(df, metadata, file_name=panel_file.name)
+        return cls(df, metadata, file_name=panel_file.name, filepath=panel_file)
 
     @classmethod
     def from_pxl_dataset(
@@ -275,6 +278,11 @@ class PartialPNAAntibodyPanel:
     def filename(self) -> Optional[str]:
         """Return the filename of the marker panel."""
         return self._filename
+
+    @property
+    def filepath(self) -> Optional[Path]:
+        """Return the full path of the marker panel file, if any."""
+        return self._filepath
 
     @cached_property
     def size(self) -> int:

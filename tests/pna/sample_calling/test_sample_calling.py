@@ -18,16 +18,14 @@ from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling import (
+    _add_original_hash_counts_to_obs,
+    _collect_nodes_to_remove,
     collect_hash_info,
     create_final_report,
     sample_calling,
-    warn_if_undetermined_has_high_confidence,
+    warn_if_undetermined_has_high_enrichment,
 )
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
-from pixelator.pna.sample_calling.sample_calling import (
-    _add_original_hash_counts_to_obs,
-    _collect_nodes_to_remove,
-)
 
 
 def test_add_original_hash_counts_includes_all_panel_antibodies():
@@ -273,7 +271,7 @@ def test_collect_hash_info(sample_hashed_pixel_files):
                 "B2M-3",
             ],
         ),
-        confidence_threshold=0.8,
+        enrichment_threshold=1.5,
     )
 
     comp_counts = cc.group_by("called_sample").len("count")
@@ -304,7 +302,7 @@ def test_collect_hash_info_should_use_all_hashing_antibodies(sample_hashed_pixel
                 "B2M-3",
             ],
         ),
-        confidence_threshold=0.8,
+        enrichment_threshold=1.5,
         undetermined_sample_name="test",
     )
     # called_sample can be PBMC, Raji, or "test" (when undetermined_hash_count wins),
@@ -347,7 +345,7 @@ def test_collect_hash_info_all_undetermined(sample_hashed_pixel_files):
                 "B2M-3",
             ],
         ),
-        confidence_threshold=1.0,
+        enrichment_threshold=float("inf"),
         undetermined_sample_name="test",
     )
 
@@ -510,7 +508,7 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
         hashing_antibody_mapping=hashing_antibodies,
         output_folder=out_dir,
         remove_incompatible=True,
-        confidence_threshold=0.5,
+        enrichment_threshold=1.5,
     )
 
     output_files = list(out_dir.glob("*.dehashed.pxl"))
@@ -523,6 +521,109 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
 
 
 @pytest.mark.slow
+def test_sample_calling_without_uei_count(tmp_path: Path):
+    """sample_calling succeeds when the input edgelist has no uei_count column."""
+    panel_df = pd.DataFrame(
+        [
+            {
+                "marker_id": "PD-1",
+                "control": False,
+                "uniprot_id": "P00001",
+                "sequence_1": "ATCGATCGAA",
+                "sequence_2": "ATCGATCGAC",
+            },
+            {
+                "marker_id": "HashA",
+                "control": False,
+                "uniprot_id": "P00002",
+                "sequence_1": "ATCGATCGAT",
+                "sequence_2": "ATCGATCGAG",
+            },
+            {
+                "marker_id": "HashA-1",
+                "control": False,
+                "uniprot_id": "P00003",
+                "sequence_1": "ATCGATCGTT",
+                "sequence_2": "ATCGATCGTG",
+            },
+            {
+                "marker_id": "HashB-2",
+                "control": False,
+                "uniprot_id": "P00004",
+                "sequence_1": "ATCGATCGTA",
+                "sequence_2": "ATCGATCGTC",
+            },
+        ]
+    ).set_index("marker_id")
+
+    panel = PNAAntibodyPanelCombination(
+        df=panel_df,
+        metadata=AntibodyPanelMetadata(
+            name="test-panel",
+            version="0.1.0",
+            aliases=["test-panel"],
+            description="Synthetic panel for sample-calling without uei_count.",
+        ),
+    )
+
+    edgelist = pl.DataFrame(
+        {
+            "umi1": pl.Series([1, 2, 3], dtype=pl.UInt64),
+            "umi2": pl.Series([2, 3, 4], dtype=pl.UInt64),
+            "read_count": pl.Series([10, 10, 10], dtype=pl.UInt32),
+            "marker_1": ["PD-1", "PD-1", "HashA-1"],
+            "marker_2": ["PD-1", "HashA-1", "HashA-1"],
+            "component": ["c1", "c1", "c1"],
+        }
+    )
+    assert "uei_count" not in edgelist.columns
+
+    target = tmp_path / "input.pxl"
+    with PixelFileWriter(target) as writer:
+        writer.write_edgelist(edgelist)
+        con = writer.get_connection()
+        adata = pna_edgelist_to_anndata(con, panel=panel)
+        writer.write_adata(adata)
+        writer.write_metadata(
+            {
+                "sample_name": "input",
+                "version": "0.1.0",
+                "panel_name": "custom_panel",
+            }
+        )
+
+    input_pxl = read(target)
+    hashing_antibodies = HashedAntibodyMapping(
+        mapping={"S1": ["HashA-1"]},
+        all_hashing_antibodies=["HashA-1", "HashB-2"],
+    )
+
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    sample_calling(
+        input_pxl=input_pxl,
+        hashing_antibody_mapping=hashing_antibodies,
+        output_folder=out_dir,
+        remove_incompatible=True,
+        enrichment_threshold=1.5,
+    )
+
+    output_files = list(out_dir.glob("*.dehashed.pxl"))
+    assert len(output_files) == 1
+
+    dehashed_edgelist = read(output_files[0]).edgelist().to_polars()
+    assert "uei_count" not in dehashed_edgelist.columns
+    assert set(dehashed_edgelist.columns) >= {
+        "umi1",
+        "umi2",
+        "read_count",
+        "marker_1",
+        "marker_2",
+        "component",
+    }
+
+
+@pytest.mark.slow
 def test_sample_calling_with_undetermined(sample_hashed_pixel_files, tmp_path):
     """Test the sample calling functionality.
 
@@ -530,7 +631,7 @@ def test_sample_calling_with_undetermined(sample_hashed_pixel_files, tmp_path):
         sample_hashed_pixel_files: Sample hashed pixel files.
         tmp_path: Tmp path.
     """
-    confidence_threshold = 0.96
+    enrichment_threshold = 50.0
     pxl = read(sample_hashed_pixel_files)
     samplesheet, all_hashing = _samplesheet_and_hashing_for_three_samples()
     hashed_antibodies = HashedAntibodyMapping.from_samplesheet(
@@ -544,7 +645,7 @@ def test_sample_calling_with_undetermined(sample_hashed_pixel_files, tmp_path):
         hashing_antibody_mapping=hashed_antibodies,
         output_folder=output_folder,
         remove_incompatible=True,
-        confidence_threshold=confidence_threshold,
+        enrichment_threshold=enrichment_threshold,
     )
 
     output_files = list(output_folder.glob("*.dehashed.pxl"))
@@ -555,10 +656,11 @@ def test_sample_calling_with_undetermined(sample_hashed_pixel_files, tmp_path):
         dehashed_counts = dehashed_pxl.adata().to_df()
         sample_name = list(dehashed_pxl.metadata().keys())[0]
         if sample_name == "undetermined":
-            assert dehashed_counts.shape[0] == 2
+            assert dehashed_counts.shape[0] == 7
         else:
             assert all(
-                dehashed_pxl.adata().obs["sample_confidence"] >= confidence_threshold
+                dehashed_pxl.adata().obs["hash_enrichment_factor"]
+                >= enrichment_threshold
             )
 
 
@@ -621,16 +723,19 @@ class _FakeFilteredDataset:
         self,
         *,
         component_ids: set[str],
-        sample_confidences: list[float] | None = None,
+        hash_enrichment_factors: list[float] | None = None,
+        reads_in_component: list[int] | None = None,
     ):
         """Initialize the instance.
 
         Args:
             component_ids: Component ids.
-            sample_confidences: Sample confidences.
+            hash_enrichment_factors: Hash enrichment factors.
+            reads_in_component: Reads in component.
         """
         self._component_ids = component_ids
-        self._sample_confidences = sample_confidences
+        self._hash_enrichment_factors = hash_enrichment_factors
+        self._reads_in_component = reads_in_component
 
     def components(self) -> set[str]:
         """Components.
@@ -651,16 +756,17 @@ class _FakeFilteredDataset:
             add_log1p_transform: Add log1p transform.
             add_clr_transform: Add clr transform.
         """
-        assert self._sample_confidences is not None
-        n = len(self._sample_confidences)
+        assert self._hash_enrichment_factors is not None
+        n = len(self._hash_enrichment_factors)
         # Explicit string obs index avoids AnnData ImplicitModificationWarning on index coercion.
         obs_index = [f"comp_{i}" for i in range(n)]
+        obs = {"hash_enrichment_factor": self._hash_enrichment_factors}
+        if self._reads_in_component is not None:
+            assert len(self._reads_in_component) == n
+            obs["reads_in_component"] = self._reads_in_component  # type: ignore
         return anndata.AnnData(
             X=np.zeros((n, 1)),
-            obs=pd.DataFrame(
-                {"sample_confidence": self._sample_confidences},
-                index=obs_index,
-            ),
+            obs=pd.DataFrame(obs, index=obs_index),
         )
 
 
@@ -672,18 +778,21 @@ class _FakeMergedDataset:
         *,
         all_components: set[str],
         undetermined_components: set[str] | None,
-        confidences_per_sample: dict[str, list[float]],
+        enrichment_factors_per_sample: dict[str, list[float]],
+        reads_in_component_per_sample: dict[str, list[int]] | None = None,
     ):
         """Initialize the instance.
 
         Args:
             all_components: All components.
             undetermined_components: Undetermined components.
-            confidences_per_sample: Confidences per sample.
+            enrichment_factors_per_sample: Hash enrichment factors per sample.
+            reads_in_component_per_sample: Reads in component, per sample.
         """
         self._all_components = all_components
         self._undetermined_components = undetermined_components
-        self._confidences_per_sample = confidences_per_sample
+        self._enrichment_factors_per_sample = enrichment_factors_per_sample
+        self._reads_in_component_per_sample = reads_in_component_per_sample or {}
 
     def components(self) -> set[str]:
         """Components.
@@ -699,7 +808,7 @@ class _FakeMergedDataset:
         Returns:
             Result (set[str]).
         """
-        return set(self._confidences_per_sample.keys())
+        return set(self._enrichment_factors_per_sample.keys())
 
     def filter(
         self,
@@ -721,74 +830,99 @@ class _FakeMergedDataset:
                 )
             return _FakeFilteredDataset(
                 component_ids=self._undetermined_components,
-                sample_confidences=self._confidences_per_sample.get("undetermined"),
+                hash_enrichment_factors=self._enrichment_factors_per_sample.get(
+                    "undetermined"
+                ),
+                reads_in_component=self._reads_in_component_per_sample.get(
+                    "undetermined"
+                ),
             )
-        if samples not in self._confidences_per_sample:
+        if samples not in self._enrichment_factors_per_sample:
             raise ValueError(
                 "One or more of the specified samples do not exist in the dataset."
             )
         return _FakeFilteredDataset(
             component_ids=set(),
-            sample_confidences=self._confidences_per_sample[samples],
+            hash_enrichment_factors=self._enrichment_factors_per_sample[samples],
+            reads_in_component=self._reads_in_component_per_sample.get(samples),
         )
 
 
 def test_create_final_report_works_when_no_undetermined_sample():
-    """When ``undetermined`` is not a sample, the success rate is 100%."""
+    """When ``undetermined`` is not a sample, the success rate is 100% and all reads count as output."""
     ds = _FakeMergedDataset(
         all_components={"c1", "c2", "c3"},
         undetermined_components=None,
-        confidences_per_sample={
-            "PBMC": [0.99, 0.98],
-            "Raji": [0.97],
+        enrichment_factors_per_sample={
+            "PBMC": [10.0, 9.5],
+            "Raji": [8.0],
+        },
+        reads_in_component_per_sample={
+            "PBMC": [30, 20],
+            "Raji": [15],
         },
     )
-    report = create_final_report(ds)  # type: ignore[arg-type]
+    report = create_final_report(ds, input_reads=30 + 20 + 15)  # type: ignore[arg-type]
 
     assert report.sample_id == "all"
     assert report.product_id == "single-cell-pna"
     assert report.report_type == "sample_calling_total"
     assert report.number_of_components == 3
     assert report.percentage_of_components_successfully_called == 1.0
-    assert report.sample_confidences_per_sample == {
-        "PBMC": [0.99, 0.98],
-        "Raji": [0.97],
+    assert report.hash_enrichment_factors_per_sample == {
+        "PBMC": [10.0, 9.5],
+        "Raji": [8.0],
     }
+    assert report.input_reads == 30 + 20 + 15
+    assert report.output_reads == 30 + 20 + 15
 
 
 def test_create_final_report_percentage_excludes_undetermined_components():
-    """Success rate is 1 minus the fraction of components in the undetermined sample."""
+    """Success rate is 1 minus the fraction of components in the undetermined sample.
+
+    Reads in the undetermined sample must not count toward output_reads.
+    """
     ds = _FakeMergedDataset(
         all_components={"a", "b", "c", "d"},
         undetermined_components={"d"},
-        confidences_per_sample={
-            "PBMC": [1.0, 1.0, 1.0],
-            "undetermined": [0.2],
+        enrichment_factors_per_sample={
+            "PBMC": [10.0, 10.0, 10.0],
+            "undetermined": [1.2],
+        },
+        reads_in_component_per_sample={
+            "PBMC": [10, 20, 30],
+            "undetermined": [100],
         },
     )
-    report = create_final_report(ds)  # type: ignore[arg-type]
+    report = create_final_report(ds, input_reads=10 + 20 + 30 + 100)  # type: ignore[arg-type]
 
     assert report.number_of_components == 4
     assert report.percentage_of_components_successfully_called == pytest.approx(0.75)
-    assert report.sample_confidences_per_sample["PBMC"] == [1.0, 1.0, 1.0]
-    assert report.sample_confidences_per_sample["undetermined"] == [0.2]
+    assert report.hash_enrichment_factors_per_sample["PBMC"] == [10.0, 10.0, 10.0]
+    assert report.hash_enrichment_factors_per_sample["undetermined"] == [1.2]
+    assert report.input_reads == 10 + 20 + 30 + 100
+    assert report.output_reads == 10 + 20 + 30
 
 
 def test_create_final_report_zero_success_when_all_components_undetermined():
-    """When every component belongs to ``undetermined``, the success rate is 0."""
+    """When every component belongs to ``undetermined``, the success rate and output reads are 0."""
     ds = _FakeMergedDataset(
         all_components={"x", "y"},
         undetermined_components={"x", "y"},
-        confidences_per_sample={"undetermined": [0.1, 0.2]},
+        enrichment_factors_per_sample={"undetermined": [1.1, 1.2]},
+        reads_in_component_per_sample={"undetermined": [500, 700]},
     )
-    report = create_final_report(ds)  # type: ignore[arg-type]
+    report = create_final_report(ds, input_reads=1200)  # type: ignore[arg-type]
 
     assert report.number_of_components == 2
     assert report.percentage_of_components_successfully_called == 0.0
-    assert report.sample_confidences_per_sample["undetermined"] == [0.1, 0.2]
+    assert report.hash_enrichment_factors_per_sample["undetermined"] == [1.1, 1.2]
+    assert report.input_reads == 1200
+    # Every read ended up in undetermined, so none count as output.
+    assert report.output_reads == 0
 
 
-def test_warn_if_undetermined_has_high_confidence_logs_when_fraction_above_five_percent(
+def test_warn_if_undetermined_has_high_enrichment_logs_when_fraction_above_five_percent(
     caplog,
 ):
     """More than 5% strictly above the threshold should emit one WARNING.
@@ -796,19 +930,17 @@ def test_warn_if_undetermined_has_high_confidence_logs_when_fraction_above_five_
     Args:
         caplog: Caplog.
     """
-    with caplog.at_level(
-        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
-    ):
-        warn_if_undetermined_has_high_confidence(
-            undetermined_sample_confidences=np.array([0.95] * 6 + [0.1] * 94),
-            confidence_threshold=0.9,
+    with caplog.at_level(logging.WARNING, logger="pixelator.pna.sample_calling"):
+        warn_if_undetermined_has_high_enrichment(
+            undetermined_enrichment_factors=np.array([10.5] * 6 + [1.5] * 94),
+            enrichment_threshold=10.0,
         )
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == "WARNING"
     assert "samplesheet" in caplog.text
 
 
-def test_warn_if_undetermined_has_high_confidence_no_log_when_fraction_is_exactly_five_percent(
+def test_warn_if_undetermined_has_high_enrichment_no_log_when_fraction_is_exactly_five_percent(
     caplog,
 ):
     """The check uses ``> 0.05``, so exactly 5% above threshold must not warn.
@@ -816,49 +948,43 @@ def test_warn_if_undetermined_has_high_confidence_no_log_when_fraction_is_exactl
     Args:
         caplog: Caplog.
     """
-    with caplog.at_level(
-        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
-    ):
-        warn_if_undetermined_has_high_confidence(
-            undetermined_sample_confidences=np.array([0.95] * 5 + [0.1] * 95),
-            confidence_threshold=0.9,
+    with caplog.at_level(logging.WARNING, logger="pixelator.pna.sample_calling"):
+        warn_if_undetermined_has_high_enrichment(
+            undetermined_enrichment_factors=np.array([10.5] * 5 + [1.5] * 95),
+            enrichment_threshold=10.0,
         )
     assert caplog.records == []
 
 
-def test_warn_if_undetermined_has_high_confidence_no_log_when_all_at_or_below_threshold(
+def test_warn_if_undetermined_has_high_enrichment_no_log_when_all_at_or_below_threshold(
     caplog,
 ):
-    """Values equal to the threshold are not counted as high confidence (strict ``>``).
+    """Values equal to the threshold are not counted as high enrichment (strict ``>``).
 
     Args:
         caplog: Caplog.
     """
-    with caplog.at_level(
-        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
-    ):
-        warn_if_undetermined_has_high_confidence(
-            undetermined_sample_confidences=np.full(50, 0.9),
-            confidence_threshold=0.9,
+    with caplog.at_level(logging.WARNING, logger="pixelator.pna.sample_calling"):
+        warn_if_undetermined_has_high_enrichment(
+            undetermined_enrichment_factors=np.full(50, 10.0),
+            enrichment_threshold=10.0,
         )
-        warn_if_undetermined_has_high_confidence(
-            undetermined_sample_confidences=np.array([0.1, 0.2, 0.5]),
-            confidence_threshold=0.9,
+        warn_if_undetermined_has_high_enrichment(
+            undetermined_enrichment_factors=np.array([1.5, 2.5, 5.0]),
+            enrichment_threshold=10.0,
         )
     assert caplog.records == []
 
 
-def test_warn_if_undetermined_has_high_confidence_logs_for_single_high_value(caplog):
+def test_warn_if_undetermined_has_high_enrichment_logs_for_single_high_value(caplog):
     """One component above threshold is 100% of the undetermined set, which is > 5%.
 
     Args:
         caplog: Caplog.
     """
-    with caplog.at_level(
-        logging.WARNING, logger="pixelator.pna.sample_calling.sample_calling"
-    ):
-        warn_if_undetermined_has_high_confidence(
-            undetermined_sample_confidences=np.array([0.99]),
-            confidence_threshold=0.9,
+    with caplog.at_level(logging.WARNING, logger="pixelator.pna.sample_calling"):
+        warn_if_undetermined_has_high_enrichment(
+            undetermined_enrichment_factors=np.array([10.5]),
+            enrichment_threshold=10.0,
         )
     assert len(caplog.records) == 1

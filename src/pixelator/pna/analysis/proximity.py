@@ -106,7 +106,7 @@ def proximity_with_permute_stats(
         min_marker_count: Minimum marker count threshold for filtering the edgelist. Defaults to 0.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the proximity results augmented with
+        A DataFrame containing the proximity results augmented with
         statistical measures, including expected means, standard deviations,
         z-scores, and p-values for the specified result columns.
     """
@@ -159,7 +159,7 @@ def jcs_with_permute_stats(
         min_marker_count: Minimum marker count to consider. Defaults to 0.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the proximity statistics.
+        A DataFrame containing the proximity statistics.
     """
     return proximity_with_permute_stats(
         edgelist,
@@ -213,32 +213,48 @@ def calculate_differential_proximity(
         "bonferroni", "holm", "hochberg", "hommel", "fdr_bh", "fdr_by", "sidak"
     ] = "bonferroni",
 ) -> pd.DataFrame:
-    """Perform differential analysis on marker-pair proximity data.
+    """Perform differential proximity analysis between groups of marker-pair data.
+
+    Compare a proximity metric between a reference group and one or more target
+    groups for marker pairs using the two-sided `Mann-Whitney U test <https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test>`_.
+    P-values are adjusted to counteract the `multiple comparisons problem <https://en.wikipedia.org/wiki/Multiple_comparisons_problem>`_.
+    See references below for resources on p-value adjustment methods.
 
     Args:
-        proximity_df: Input data containing proximity metrics and grouping information. Must include
-            columns for `contrast_column`, `marker_1`, `marker_2`, and the proximity metric
-            (default: "join_count_z").
-        contrast_column: The column name representing the grouping variable
-        reference: The reference group in the `contrast_column`.
-        targets: List of target groups to compare against the reference. If None, all groups in
-            `contrast_column` except the reference are used. Defaults to None.
-        metric: Column name representing the proximity metric to analyze. Defaults to
-            "join_count_z".
-        metric_type: Type of measures to analyze ("self", "co", or "all" proximities). Defaults to
-            "all".
-        min_n_obs: Minimum number of observations required for a group to be included in the
-            analysis. Defaults to 0.
-        p_adjust_method: Method for adjusting p-values for multiple comparisons. Defaults to
-            "bonferroni".
+        proximity_df: Input data containing proximity metrics and grouping information.
+            Must include ``contrast_column``, ``marker_1``, ``marker_2``,
+            and the column determined by ``metric``.
+        contrast_column: Column name of the grouping variable.
+        reference: Reference group label in ``contrast_column``.
+        targets: Target group labels to compare against ``reference``. If ``None``,
+            all other groups in ``contrast_column`` except ``reference`` are used. Defaults to ``None``.
+        metric: Column name of the proximity metric to analyze. Defaults to
+            ``join_count_z``.
+        metric_type: Marker pairs to include: ``"self"`` (includes pairs for which ``marker_1`` and
+            ``marker_2`` are the same), ``"co"``
+            (includes pairs for which ``marker_1`` and ``marker_2`` are different), or
+            ``"all"``. This parameter defaults to ``"all"``.
+        min_n_obs: When greater than zero, marker pairs must have more than this
+            many observations in both ``reference`` and each target group. Defaults to 0.
+        p_adjust_method: Method for adjusting p-values for multiple comparisons.
+            ``p_adjust_method`` is passed to ``statsmodels.stats.multitest.multipletests``.
+            Defaults to ``"bonferroni"``.
 
     Returns:
-        pd.DataFrame: A DataFrame containing the results of the differential
+        DataFrame containing the results of the differential
         proximity analysis, including statistical metrics and adjusted p-values.
 
     Raises:
-        ValueError: If `contrast_column` is not in `proximity_df`.
-        ValueError: If no data is found for the specified `metric_type`.
+        ValueError: If ``contrast_column`` is not in ``proximity_df``.
+        ValueError: If no data remains after applying ``metric_type`` filtering.
+
+    References:
+        * `Bonferroni correction <https://en.wikipedia.org/wiki/Bonferroni_correction>`_
+        * `Holm–Bonferroni method <https://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method>`_
+        * `Hochberg method <https://www.sciencedirect.com/topics/mathematics/hochberg-method#:~:text=Hochberg's%20method%20is%20defined%20as,applicable%20when%20testing%20multiple%20hypotheses.>`_
+        * `Hommel <https://academic.oup.com/biomet/article-abstract/75/2/383/292949?redirectedFrom=fulltext&login=false>`_
+        * `False discovery rate <https://en.wikipedia.org/wiki/False_discovery_rate>`_
+        * `Sidak correction <https://en.wikipedia.org/wiki/%C5%A0id%C3%A1k_correction>`_
     """
     if contrast_column not in proximity_df.columns:
         raise ValueError(f"{contrast_column} must be a column in the data.")

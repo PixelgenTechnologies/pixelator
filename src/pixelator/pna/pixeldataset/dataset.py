@@ -27,9 +27,10 @@ class PNAPixelDataset:
 
     This class provides a high-level interface to the data stored in one or more .pxl files.
     You can build a PixelDataset from one or more .pxl files, and then use the various methods
-    to filer and access the underlying data in different ways.
+    to filter and access the underlying data in different ways.
 
     .. code-block:: python
+
         from pathlib import Path
         from pixelator.pna.pixeldataset import PixelDataset
 
@@ -37,7 +38,9 @@ class PNAPixelDataset:
         pxl_dataset = PixelDataset.from_pxl_files(pxl_files)
 
     To filter data you can do:
+
     .. code-block:: python
+
         ten_components = pxl_dataset.adata.obs.index[:10]
         pxl_dataset.filter(components=ten_components)
     """
@@ -180,16 +183,16 @@ class PNAPixelDataset:
         by quite a bit.
 
         .. code-block:: python
-        from pixelator.pna.pixeldataset import PixelDataset
-        from pixelator.pna.pixeldataset.io import Query
 
-        pxl_files = ...
-        pxl_dataset = PixelDataset.from_pxl_files(pxl_files)
-        with pxl_dataset.view.open() as session:
-        df = session.execute_eager(
-        Query("SELECT * FROM edgelist WHERE marker_1 = $m", {"m": "CD3"})
-        ).to_pandas()
+            from pixelator.pna.pixeldataset import PixelDataset
+            from pixelator.pna.pixeldataset.io import Query
 
+            pxl_files = ...
+            pxl_dataset = PixelDataset.from_pxl_files(pxl_files)
+            with pxl_dataset.view.open() as session:
+                df = session.execute_eager(
+                    Query("SELECT * FROM edgelist WHERE marker_1 = $m", {"m": "CD3"})
+                ).to_pandas()
 
 
         Returns:

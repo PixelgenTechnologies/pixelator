@@ -275,36 +275,6 @@ def test_plot_polarity_diff_volcano(setup_basic_pixel_dataset):
 
 @pytest.mark.mpl_image_compare(
     deterministic=True,
-    baseline_dir="../snapshots/test_plot/test_plot_colocalization_diff_volcano_multiple",
-)
-def test_plot_colocalization_diff_volcano_multiple(setup_basic_pixel_dataset):
-    """Verify plot colocalization diff volcano multiple.
-
-    Args:
-        setup_basic_pixel_dataset: setup basic pixel dataset.
-    """
-    np.random.seed(0)
-    pxl_data, *_ = setup_basic_pixel_dataset
-    colocalization_data = pxl_data.colocalization
-    colocalization_data.loc[5] = [
-        "CD3",
-        "CD19",
-        0.5,
-        "701ec72d3bda62d5",
-    ]  # Adding a new pair of colocalization data as the volcano needs at least 2 rows
-    colocalization_data.loc[6] = ["CD3", "CD19", 0.7, "ce2709afa8ebd1c9"]
-    fig, _ = plot_colocalization_diff_volcano(
-        colocalization_data,
-        reference="701ec72d3bda62d5",
-        contrast_column="component",
-        value_column="pearson",
-        min_log_p=-1,
-    )
-    return fig
-
-
-@pytest.mark.mpl_image_compare(
-    deterministic=True,
     baseline_dir="../snapshots/test_plot/test_plot_polarity_diff_volcano_multiple",
 )
 def test_plot_polarity_diff_volcano_multiple(setup_basic_pixel_dataset):

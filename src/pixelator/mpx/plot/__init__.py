@@ -11,10 +11,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.colors import LinearSegmentedColormap, Normalize
+from matplotlib.colors import CenteredNorm, Normalize
 from matplotlib.patches import Rectangle
 from scipy.stats import gaussian_kde
 
+from pixelator.common.plot import (
+    pixelgen_discrete_colors,
+    pixelgen_divergent_colormap,
+    pixelgen_sequential_colormap,
+    set_pixelgen_theme,
+    style_facet_strips,
+)
 from pixelator.mpx.plot.constants import Color
 from pixelator.mpx.plot.layout_plots import (
     plot_2d_graph,
@@ -29,8 +36,10 @@ from pixelator.mpx.plot.spatial_analysis_plots import (
     plot_polarity_diff_volcano,
 )
 
-sns.set_style("whitegrid")
-jet_colormap = LinearSegmentedColormap.from_list("jet_colormap", Color.JETSET)
+set_pixelgen_theme()
+# min_level=5 keeps the lightest end of the scale well clear of white, so that
+# low-density points remain clearly visible against the plot's white background.
+jet_colormap = pixelgen_sequential_colormap("blues", min_level=5)
 
 
 def scatter_umi_per_upia_vs_tau(
@@ -95,6 +104,8 @@ def scatter_umi_per_upia_vs_tau(
     grid.set(yscale="log")
     grid.set_axis_labels("Marker specificity (Tau)", "Pixel content (UMI/UPIA)")
     grid.add_legend(title="Tau Type")
+    if group_by is not None:
+        style_facet_strips(grid)
 
     return plt.gcf(), plt.gca()
 
@@ -147,7 +158,16 @@ def molecule_rank_plot(
 
     (
         sns.relplot(
-            data=edge_rank_df, x="rank", y="molecules", hue=group_by, aspect=1.6
+            data=edge_rank_df,
+            x="rank",
+            y="molecules",
+            hue=group_by,
+            palette=(
+                pixelgen_discrete_colors(n=data[group_by].nunique())
+                if group_by is not None
+                else None
+            ),
+            aspect=1.6,
         )
         .set(xscale="log", yscale="log")
         .set_xlabels("Component rank (by number of molecules)")
@@ -206,7 +226,18 @@ def edge_rank_plot(
         )
 
     (
-        sns.relplot(data=edge_rank_df, x="rank", y="edges", hue=group_by, aspect=1.6)
+        sns.relplot(
+            data=edge_rank_df,
+            x="rank",
+            y="edges",
+            hue=group_by,
+            palette=(
+                pixelgen_discrete_colors(n=data[group_by].nunique())
+                if group_by is not None
+                else None
+            ),
+            aspect=1.6,
+        )
         .set(xscale="log", yscale="log")
         .set_xlabels("Component rank (by number of edges)")
         .set_ylabels("Number of edges")
@@ -264,7 +295,14 @@ def cell_count_plot(
             with warnings.catch_warnings():
                 warnings.simplefilter(action="ignore", category=FutureWarning)
                 p = sns.barplot(
-                    x="n", y=group_by, hue=color_by, data=grouped_data, dodge=True
+                    x="n",
+                    y=group_by,
+                    hue=color_by,
+                    data=grouped_data,
+                    dodge=True,
+                    palette=pixelgen_discrete_colors(
+                        n=grouped_data[color_by].nunique()
+                    ),
                 )
             p.set_xlabel("Count")
             p.set_ylabel(group_by)
@@ -272,7 +310,14 @@ def cell_count_plot(
             with warnings.catch_warnings():
                 warnings.simplefilter(action="ignore", category=FutureWarning)
                 p = sns.barplot(
-                    x=group_by, y="n", hue=color_by, data=grouped_data, dodge=True
+                    x=group_by,
+                    y="n",
+                    hue=color_by,
+                    data=grouped_data,
+                    dodge=True,
+                    palette=pixelgen_discrete_colors(
+                        n=grouped_data[color_by].nunique()
+                    ),
                 )
             p.set_ylabel("Count")
             p.set_xlabel(group_by)
@@ -283,13 +328,29 @@ def cell_count_plot(
         if flip_axes:
             with warnings.catch_warnings():
                 warnings.simplefilter(action="ignore", category=FutureWarning)
-                p = sns.barplot(x="n", y=color_by, hue=color_by, data=grouped_data)
+                p = sns.barplot(
+                    x="n",
+                    y=color_by,
+                    hue=color_by,
+                    data=grouped_data,
+                    palette=pixelgen_discrete_colors(
+                        n=grouped_data[color_by].nunique()
+                    ),
+                )
             p.set_xlabel("Count")
             p.set_ylabel(color_by)
         else:
             with warnings.catch_warnings():
                 warnings.simplefilter(action="ignore", category=FutureWarning)
-                p = sns.barplot(x=color_by, y="n", hue=color_by, data=grouped_data)
+                p = sns.barplot(
+                    x=color_by,
+                    y="n",
+                    hue=color_by,
+                    data=grouped_data,
+                    palette=pixelgen_discrete_colors(
+                        n=grouped_data[color_by].nunique()
+                    ),
+                )
             p.set_ylabel("Count")
             p.set_xlabel(color_by)
         p.set_title(f"Cell counts per {color_by}")
@@ -450,6 +511,7 @@ def density_scatter_plot(
                 facet_column=facet_column,
             )
         plot_grid.refline(x=0, y=0)
+        style_facet_strips(plot_grid)
     else:
         plot_grid = _plot_joint_distribution(
             data, x=marker1, y=marker2, show_marginal=show_marginal
@@ -504,7 +566,7 @@ def abundance_colocalization_plot(
             data["y_abundance"] = data[my]
             data["marker_x"] = mx
             data["marker_y"] = my
-            data.fillna(0)
+            data = data.fillna(0)
             merged_data = pd.concat((merged_data, data), axis=0)
     plot_grid = sns.FacetGrid(data=merged_data, col="marker_x", row="marker_y")
     plot_grid.map_dataframe(
@@ -512,10 +574,11 @@ def abundance_colocalization_plot(
         x="x_abundance",
         y="y_abundance",
         hue="colocalization",
+        palette=pixelgen_divergent_colormap("blues", "reds"),
         size="colocalization_abs",
-        hue_norm=Normalize(
-            vmin=merged_data["colocalization"].quantile(0.1),
-            vmax=merged_data["colocalization"].quantile(0.9),
+        hue_norm=CenteredNorm(
+            vcenter=0,
+            halfrange=merged_data["colocalization"].abs().quantile(0.9),
             clip=True,
         ),
         size_norm=Normalize(
@@ -538,4 +601,5 @@ def abundance_colocalization_plot(
         i: plot_grid._legend_data[i] for i in list(plot_grid._legend_data.keys())[:6]
     }
     plot_grid.add_legend(legend_data=legend_data)
+    style_facet_strips(plot_grid)
     return plt.gcf(), plt.gca()

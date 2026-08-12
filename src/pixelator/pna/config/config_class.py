@@ -5,12 +5,14 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import atexit
 import importlib
 import importlib.resources
 import itertools
 import re
 import typing
 from collections import defaultdict
+from contextlib import ExitStack
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -297,6 +299,16 @@ class PNAConfig:
 ConfigType = typing.TypeVar("ConfigType", Config, PNAConfig)
 
 
+# Keep resource files materialized by ``importlib.resources.as_file`` alive for the
+# lifetime of the process. For packages imported from a zip (zipimport), ``as_file``
+# extracts the resource to a temporary file that is removed when its context manager
+# exits. Since assays/panels store the path they were loaded from (for forwarding to
+# e.g. a Rust binding), that temporary file must remain available for the whole run.
+# The stack is closed at interpreter exit to clean up any such temporary files.
+_resource_file_stack = ExitStack()
+atexit.register(_resource_file_stack.close)
+
+
 def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
     """Load default assays from a resources package.
 
@@ -308,8 +320,10 @@ def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
     """
     for resource in importlib.resources.files(package_name).iterdir():
         if resource.is_file():
-            with importlib.resources.as_file(resource) as file_path:
-                config.load_assay(file_path)
+            file_path = _resource_file_stack.enter_context(
+                importlib.resources.as_file(resource)
+            )
+            config.load_assay(file_path)
 
     return config
 
@@ -325,8 +339,10 @@ def load_panels_package(config: ConfigType, package_name: str) -> ConfigType:
     """
     for resource in importlib.resources.files(package_name).iterdir():
         if resource.is_file():
-            with importlib.resources.as_file(resource) as file_path:
-                config.load_panel_file(file_path)
+            file_path = _resource_file_stack.enter_context(
+                importlib.resources.as_file(resource)
+            )
+            config.load_panel_file(file_path)
 
     return config
 

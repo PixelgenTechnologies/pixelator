@@ -1,10 +1,48 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+from pathlib import Path
+
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 
 
 class TestPixelFileWriter:
     """Represent test pixel file writer."""
+
+    def test_open_honors_duckdb_temp_dir_env(self, tmp_path, monkeypatch):
+        """The writer's DuckDB connection should use PIXELATOR_DUCKDB_TEMP_DIR for spilling.
+
+        Args:
+            tmp_path: tmp path.
+            monkeypatch: pytest monkeypatch fixture.
+        """
+        duckdb_tmp = tmp_path / "duckdb_scratch"
+        duckdb_tmp.mkdir()
+        monkeypatch.setenv("PIXELATOR_DUCKDB_TEMP_DIR", str(duckdb_tmp))
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            setting = (
+                writer.get_connection()
+                .execute("SELECT current_setting('temp_directory')")
+                .fetchone()[0]
+            )
+        assert setting == str(duckdb_tmp.absolute())
+
+    def test_open_defaults_temp_directory_to_tmp(self, tmp_path, monkeypatch):
+        """The writer should default the DuckDB spill directory to /tmp when env is unset.
+
+        Args:
+            tmp_path: tmp path.
+            monkeypatch: pytest monkeypatch fixture.
+        """
+        monkeypatch.delenv("PIXELATOR_DUCKDB_TEMP_DIR", raising=False)
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            setting = (
+                writer.get_connection()
+                .execute("SELECT current_setting('temp_directory')")
+                .fetchone()[0]
+            )
+        assert setting == str(Path("/tmp").absolute())
 
     def test_write_edgelist(self, tmp_path, edgelist_parquet_path):
         """Verify write edgelist.

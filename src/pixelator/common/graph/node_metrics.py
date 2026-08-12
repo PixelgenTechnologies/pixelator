@@ -24,7 +24,7 @@ def local_g(
 ) -> pd.DataFrame:
     """Compute local G-scores for each node and marker.
 
-    Local G([1]_) is a spatial node metric that measures the spatial association.
+    Local G [1]_ is a spatial node metric that measures the spatial association.
     The metric can for instance be used to detect hot spots for marker counts in a graph, where
     nodes
     that are close to each other have similar values. The metric is a Z-score that
@@ -50,8 +50,8 @@ def local_g(
     ensuring that this contract is fulfilled.
 
     .. [1] Bivand, R.S., Wong, D.W.S. Comparing implementations of global and
-    local indicators of spatial association. TEST 27, 716–748 (2018).
-    https://doi.org/10.1007/s11749-018-0599-x
+        local indicators of spatial association. TEST 27, 716–748 (2018).
+        https://doi.org/10.1007/s11749-018-0599-x
 
     Args:
         A: A sparse adjacency matrix representing the graph.

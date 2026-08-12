@@ -14,6 +14,7 @@ import duckdb as dd
 import pandas as pd
 import polars as pl
 
+from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.common.utils import (
     R1_REGEX,
     R2_REGEX,
@@ -250,15 +251,20 @@ def init_duckdb_conn(
         read_only: Whether to open the database in read-only mode. Defaults to False.
         memory_limit: The memory limit in bytes. If None, no limit is set. Defaults to None.
         threads: The number of threads to use. If None, duckdb will decide. Defaults to None.
-        temp_dir: The directory to use for temporary files. If None, duckdb will decide (defaults to
-            /tmp). Defaults to None.
-        temp_dir_size_limit: The maximum size of the temporary directory. If None, no limit is set.
-            Defaults to None.
+        temp_dir: The directory to use for temporary files. If None, defaults to
+            ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp`` (never next to the database file).
+        temp_dir_size_limit: The maximum size of the temporary directory. If None, defaults to
+            ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when set, otherwise no limit.
 
     Returns:
         A duckdb connection object.
     """
-    conn = dd.connect(database=str(path), read_only=read_only)
+    conn = connect_duckdb(
+        database=path,
+        read_only=read_only,
+        temp_dir=temp_dir,
+        temp_dir_size_limit=temp_dir_size_limit,
+    )
 
     commands = []
     if memory_limit is not None:
@@ -267,13 +273,6 @@ def init_duckdb_conn(
     if threads is not None:
         commands.append(f"SET threads = {threads};")
         logger.debug("Using DuckDB threads limit: %s", threads)
-    if temp_dir is not None:
-        temp_dir = str(Path(temp_dir).absolute())
-        commands.append(f"SET temp_directory = '{temp_dir}';")
-        logger.debug("Using DuckDB temp directory: %s", temp_dir)
-    if temp_dir_size_limit is not None:
-        commands.append(f"SET max_temp_directory_size = '{temp_dir_size_limit}';")
-        logger.debug("Using DuckDB temp directory size limit: %s", temp_dir_size_limit)
 
     if commands:
         conn.execute("\n".join(commands))

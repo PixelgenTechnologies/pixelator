@@ -58,7 +58,7 @@ def find_component_size_limits(
     cutoff.
 
     .. [1] Lun, A., Riesenfeld, S., Andrews, T. et al. EmptyDrops: distinguishing
-    cells from empty droplets in droplet-based single-cell RNA sequencing
+        cells from empty droplets in droplet-based single-cell RNA sequencing
 
     Args:
         component_sizes: a numpy array of component sizes

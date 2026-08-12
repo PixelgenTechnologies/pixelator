@@ -76,7 +76,7 @@ class Graph:
             a Graph instance (Graph)
 
         Raises:
-            AssertionError when the input edge list is not valid
+            AssertionError: when the input edge list is not valid
         """
         backend = graph_backend().from_edgelist(
             edgelist=edgelist,
@@ -191,6 +191,7 @@ class Graph:
         - pmds
         - pmds_3d
         - wpmds_3d
+        - spectral_3d
 
         For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
         preferred. On PNA data they are faster and produce better results.

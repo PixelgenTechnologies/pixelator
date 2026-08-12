@@ -211,48 +211,7 @@ def denoise(
     pls_score_threshold,
     output,
 ):
-    """Denoise components of a PXL file.
-
-    Args:
-        ctx: Click context from the command decorator.
-        pxl_file: Path to the input PXL (PixelDataset) file.
-        run_one_core_graph_denoising: Run the denoise step to remove markers that are over-expressed
-            in the one-core layer of a component.
-        run_ace_denoising: Remove nodes in the peripheral-like partition from adaptive core
-            expansion (ACE). Can be combined with --run-one-core-graph-denoising: both use the full
-            component graph; marked nodes are merged and stranded nodes are removed once at the end.
-        ace_k: Neighborhood radius (steps) for ACE when --run-ace-denoising is set.
-        ace_max_k_core: Maximum k-core layer used for ACE seeding when --run-ace-denoising is set.
-        ace_no_select_lcc: When --run-ace-denoising is set, do not restrict the ACE initial seed to
-            the largest connected component (default: seed uses the LCC).
-        one_core_ratio_threshold: ratio of the number of nodes in the one-core layer to the total
-            number of nodes in a component. If the ratio is above this threshold, one-core denoising
-            is skipped for that component.
-        pval_threshold: pvalue threshold for an over-expression in the one-core layer to be
-            considered significant.
-        inflate_factor: How much to inflate number of noise markers in the one-core layer to remove.
-        run_pls_denoising: PLS-on-coreness denoise: retain the largest connected component after
-            filtering nodes by significant PLS score components. Uses the full graph like ACE and
-            one-core; removals are merged with other methods.
-        pls_ncomp: Requested PLS components when --run-pls-denoising is set (capped per component).
-        pls_model_k: Neighborhood steps for fitting the PLS X matrix when --run-pls-denoising is
-            set.
-        pls_pred_k: Neighborhood steps for PLS scores (prediction X) when --run-pls-denoising is
-            set.
-        pls_use_weights: Use edge weights in PLS neighborhood expansion when --run-pls-denoising is
-            set.
-        pls_normalization: Normalization for the PLS neighborhood matrix when --run-pls-denoising is
-            set.
-        pls_residualize: Residualize the PLS neighborhood matrix against pixel_type (A/B) when
-            --run-pls-denoising is set.
-        pls_component_p_threshold: Pearson vs coreness: keep PLS components with p-value below this
-            when --run-pls-denoising is set.
-        pls_min_coreness_correlation: Keep PLS components whose Pearson correlation with coreness
-            exceeds this.
-        pls_score_threshold: All retained PLS score columns must exceed this value when
-            --run-pls-denoising is set.
-        output: The path where the results will be placed (it is created if it does not exist).
-    """
+    """Denoise components of a PXL file."""
     input_files = [pxl_file]
     log_step_start(
         "denoise",
@@ -294,6 +253,9 @@ def denoise(
     )
     metrics = denoise_output / f"{sample_name}.report.json"
 
+    pxl_dataset = read(pxl_file.path)
+    input_reads = int(pxl_dataset.adata().obs["reads_in_component"].sum())
+
     if (
         not run_one_core_graph_denoising
         and not run_ace_denoising
@@ -304,6 +266,9 @@ def denoise(
             product_id="single-cell-pna",
             number_of_umis_removed=None,
             ratio_of_umis_removed=None,
+            # When denoising is turned off input_reads=output_reads
+            input_reads=input_reads,
+            output_reads=input_reads,
         )
         report.write_json_file(metrics, indent=4)
         return
@@ -332,7 +297,6 @@ def denoise(
     ]
     logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
     manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
-    pxl_dataset = read(pxl_file.path)
 
     pxl_dataset_denoised = manager.execute(pxl_dataset, output_pxl_file_target)
 
@@ -343,11 +307,14 @@ def denoise(
         number_of_umis_removed
         / (pxl_dataset.adata().obs["n_umi"].sum() + number_of_umis_removed)
     )
+    output_reads = int(pxl_dataset_denoised.adata().obs["reads_in_component"].sum())
     report = DenoiseSampleReport(
         sample_id=sample_name,
         product_id="single-cell-pna",
         number_of_umis_removed=number_of_umis_removed,
         ratio_of_umis_removed=ratio_of_umis_removed,
+        input_reads=input_reads,
+        output_reads=output_reads,
     )
 
     report.write_json_file(metrics, indent=4)

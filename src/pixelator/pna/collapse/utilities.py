@@ -230,7 +230,7 @@ def _find_connected_components_cluster(
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class CollapseInputs:
-    """Output object for :func:`check_collapse_strategy_inputs`."""
+    """Output object for :func:`~pixelator.pna.collapse.utilities.check_collapse_strategy_inputs`."""
 
     parquet: list[Path] | tuple[list[Path], list[Path]]
     reports: list[Path] | tuple[list[Path], list[Path]]

@@ -109,18 +109,7 @@ def collapse(
     algorithm,
     threads,
 ):
-    """Collapse Molecular Pixelation data (FASTQ) to remove duplicates and perform error correction.
-
-    Args:
-        ctx: Click context from the command decorator.
-        input_files: The UM1 and UMI2 demuxed files.
-        design: The design to load from the configuration file.
-        panels: The panels configuration.
-        output: The path where the results will be placed (it is created if it does not exist).
-        mismatches: The number of mismatches allowed when error-correcting.
-        algorithm: The collapse strategy to use.
-        threads: The number of threads to use.
-    """
+    """Collapse Molecular Pixelation data (FASTQ) to remove duplicates and perform error correction."""
     # log input parameters
     log_step_start(
         "collapse",

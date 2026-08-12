@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import click
+import numpy as np
 
 from pixelator.common.utils import (
     create_output_stage_dir,
@@ -154,7 +155,8 @@ from pixelator.pna.graph.report import GraphSampleReport
     show_default=True,
     help=(
         "Components with more nodes than this will be filtered from the output data. "
-        "This is typically not needed. Setting this will disable the automatic size filtering."
+        "Setting this (or --component-size-min-threshold) switches from automatic "
+        "(dynamic) component size filtering to a fixed threshold."
     ),
 )
 @click.option(
@@ -165,7 +167,8 @@ from pixelator.pna.graph.report import GraphSampleReport
     show_default=True,
     help=(
         "Components with fewer nodes than this will be filtered from the output data. "
-        "This is typically not needed. Setting this will disable the automatic size filtering."
+        "Setting this (or --component-size-max-threshold) switches from automatic "
+        "(dynamic) component size filtering to a fixed threshold."
     ),
 )
 @panel_option
@@ -210,39 +213,6 @@ def graph(
 
     After the connected components have been identified we will create a pxl file that contains
     data for all of there putative cells.
-
-    Args:
-        ctx: Click context from the command decorator.
-        parquet_file: Path to the input parquet edge-list file.
-        multiplet_recovery: Activate the multiplet recovery using leiden community detection.
-        edge_cycle_verification: Activate edge cycle verification to remove edges from well
-            connected regions that are not part of cycles in the graph.
-        initial_stage_leiden_resolution: The resolution parameter for the leiden algorithm at the
-            initial stage. This should typically be set higher than the refinement stage resolution.
-        refinement_stage_leiden_resolution: The resolution parameter for the leiden algorithm at the
-            refinement stage. This should typically be set lower than the initial stage resolution.
-        min_count: Discard edges with a read count below given value. Set to 1 to disable filtering.
-        max_refinement_recursion_depth: The maximum recursion depth for the refinement algorithm.
-            Set to 1 to disable refinement.
-        initial_stage_max_edges_to_remove: The maximum number of edges to remove between components
-            during the initial stage (iteration == 0) of multiplet recovery.
-        refinement_stage_max_edges_to_remove: The maximum number of edges to remove between
-            components during the refinement stage (iteration > 0) of multiplet recovery.
-        initial_stage_max_edges_to_remove_relative: The maximum number of edges to remove between
-            two components relative to the number of nodes in the smaller of the two when during the
-            initial stage (iteration == 0) of multiplet recovery.
-        refinement_stage_max_edges_to_remove_relative: The maximum number of edges to remove between
-            two components relative to the number of nodes in the smaller of the two when during the
-            refinement stage (iteration > 0) of multiplet recovery.
-        component_size_max_threshold: Components with more nodes than this will be filtered from the
-            output data. This is typically not needed. Setting this will disable the automatic size
-            filtering.
-        component_size_min_threshold: Components with fewer nodes than this will be filtered from
-            the output data. This is typically not needed. Setting this will disable the automatic
-            size filtering.
-        panels: The name of a panels to load from the supported panels. Optionally, provide a path
-            to custom panel files.
-        output: The path where the results will be placed (it is created if it does not exist).
     """
     # log input parameters
     input_files = [parquet_file]
@@ -303,11 +273,15 @@ def graph(
         refinement_stage_options=refinement_stage_refinement_options,
     )
 
-    component_size_threshold = True
+    component_size_threshold: bool | tuple[int, int] = True
     if any([component_size_min_threshold, component_size_max_threshold]):
-        component_size_threshold = (  # type: ignore[assignment]
-            component_size_min_threshold,
-            component_size_max_threshold,
+        component_size_threshold = (
+            component_size_min_threshold
+            if component_size_min_threshold is not None
+            else MIN_PNA_COMPONENT_SIZE,
+            component_size_max_threshold
+            if component_size_max_threshold is not None
+            else int(np.iinfo(np.uint32).max),
         )
 
     n_cores = ctx.obj.get("CORES")

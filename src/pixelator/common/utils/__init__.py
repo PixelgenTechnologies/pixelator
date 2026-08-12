@@ -372,6 +372,24 @@ def timer(func):
     return wrapper
 
 
+def _serialize_parameter_value(param: click.Parameter, value):
+    """Serialize a Click parameter value for the parameters JSON file."""
+    if value is None:
+        return None
+
+    # NB: that this checks the type of the parameter, not the value
+    is_path = isinstance(param.type, click.Path)
+    if isinstance(value, (list, tuple)):
+        if is_path:
+            return [str(Path(v).resolve()) for v in value]
+        return list(value)
+
+    if is_path:
+        return str(Path(value).resolve())
+
+    return value
+
+
 def write_parameters_file(
     click_context: click.Context, output_file: Path, command_path: Optional[str] = None
 ) -> None:
@@ -386,23 +404,22 @@ def write_parameters_file(
     parameters = click_context.command.params
     parameter_values = click_context.params
 
-    param_data = {}
+    options_data = {}
+    arguments_data = {}
 
     for param in parameters:
-        if not isinstance(param, click.core.Option):
-            continue
+        value = _serialize_parameter_value(param, parameter_values.get(str(param.name)))
 
-        name = param.opts[0]
-        value = parameter_values.get(str(param.name))
-        if value is not None and param.type == click.Path:
-            value = str(Path(value).resolve())
-
-        param_data[name] = value
+        if isinstance(param, click.core.Option):
+            options_data[param.opts[0]] = value
+        elif isinstance(param, click.core.Argument):
+            arguments_data[str(param.name)] = value
 
     data = {
         "cli": {
             "command": command_path_fixed,
-            "options": param_data,
+            "options": options_data,
+            "arguments": arguments_data,
         }
     }
 
