@@ -323,6 +323,8 @@ def test_panel_from_pxl(pxl_file):
     assert panel.version == "0.1.0"
     assert panel.description == "Test R&D panel for RNA"
     assert panel.aliases == ["test-pna"]
+    assert panel.filename == Path(pxl_file).name
+    assert panel.filepath == Path(pxl_file).resolve()
 
     expected_data = {
         "marker_id": ["MarkerA", "MarkerB", "MarkerC"],

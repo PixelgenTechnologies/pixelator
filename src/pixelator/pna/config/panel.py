@@ -6,6 +6,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import warnings
+from abc import ABC, abstractmethod
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Set
@@ -36,12 +37,14 @@ if TYPE_CHECKING:
     from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
 
 
-class PartialPNAAntibodyPanel:
-    """Class representing a PNA antibody panel."""
+class PNAPanel(ABC):
+    """Shared read interface for single PNA panels and panel combinations.
 
-    _panel_type: PanelType = PanelType.PARTIAL
+    Subclasses must provide :attr:`df` (and typically :meth:`from_adata`).
+    Marker helpers, size, Polars conversion, and schema validation are
+    implemented here in terms of that dataframe.
+    """
 
-    # required columns
     _INDEX_COLUMN = "marker_id"
     _INDEX_COLUMN_TYPE = str
     _REQUIRED_COLUMNS = {
@@ -49,215 +52,61 @@ class PartialPNAAntibodyPanel:
         "sequence_1": str,
         "sequence_2": str,
     }
-
-    # and these should have unique values
     _UNIQUE_COLUMNS = ["sequence_1", "sequence_2"]
 
-    def __init__(
-        self,
-        df: pd.DataFrame,
-        metadata: AntibodyPanelMetadata,
-        file_name: Optional[str] = None,
-        filepath: Optional[PathType] = None,
-    ) -> None:
-        """Load a panel from a dataframe and metadata.
+    @property
+    @abstractmethod
+    def df(self) -> pd.DataFrame:
+        """Return the panel marker dataframe indexed by ``marker_id``."""
 
-        Args:
-            df: The dataframe containing the panel information.
-            metadata: The metadata for the panel.
-            file_name: The optional basename of the file from which the panel is loaded.
-            filepath: The optional full path of the file from which the panel is loaded.
-
-        Returns:
-            None
-        Raises:
-            AssertionError: exception if panel file is missing, invalid or with incorrect format
-        """
-        self._filename = file_name
-
-        if metadata is None:
-            raise ValueError("Panel metadata cannot be None")
-        if (
-            self.__class__._panel_type is PanelType.PARTIAL
-            and metadata.panel_type is None
-        ):
-            # if panel type is missing from metadata use partial as default legacy behavior
-            metadata.panel_type = PanelType.PARTIAL
-        elif metadata.panel_type != self.__class__._panel_type:
-            raise ValueError(
-                f"Panel metadata panel_type {metadata.panel_type!r} does not match "
-                + f"{self.__class__.__name__} (expected {self.__class__._panel_type.value})."
-            )
-        self._filepath: Optional[Path] = Path(filepath).resolve() if filepath else None
-        self.metadata = metadata
-
-        self._df = df
-
-        # validate the panel
-        errors = self.validate_antibody_panel(df)
-        if len(errors) > 0:
-            msg_str = "\n".join(errors)
-            raise AssertionError(
-                f"The following errors were found validating the panel: {msg_str}"
-            )
+    @property
+    @abstractmethod
+    def metadata(self) -> AntibodyPanelMetadata | list[AntibodyPanelMetadata]:
+        """Return panel metadata (one entry, or one per member for combinations)."""
 
     @classmethod
-    def from_csv(cls, filename: PathType) -> Self:
-        """Create an AntibodyPanel from a csv panel file.
+    @abstractmethod
+    def from_adata(
+        cls,
+        adata: AnnData,
+        file_name: Optional[str] = None,
+        filepath: Optional[PathType] = None,
+    ) -> Self:
+        """Create a panel instance from AnnData-embedded panel data.
 
         Args:
-            filename: The path to the panel file.
-
-        Returns:
-            The AntibodyPanel object. (AntibodyPanel)
-
-        Raises:
-            AssertionError: exception if panel file is missing,
+            adata: AnnData with embedded panel information.
+            file_name: Optional basename of the source file.
+            filepath: Optional full path of the source file.
         """
-        panel_file = Path(filename)
-
-        if not panel_file.is_file() or panel_file.suffix != ".csv":
-            raise AssertionError(
-                f"Panel file {filename} not found or has an incorrect format"
-            )
-
-        logger.debug("Creating Antibody panel from file %s", filename)
-
-        df = cls._parse_panel(panel_file)
-        metadata = cls._parse_header(panel_file)
-
-        logger.debug("Antibody panel from file %s created", filename)
-
-        return cls(df, metadata, file_name=panel_file.name, filepath=panel_file)
 
     @classmethod
     def from_pxl_dataset(
-        cls, pxl_data: PNAPixelDataset, file_name: Optional[str] = None
+        cls,
+        pxl_data: PNAPixelDataset,
+        file_name: Optional[str] = None,
+        filepath: Optional[PathType] = None,
     ) -> Self:
-        """Create an AntibodyPanel from a pxl dataset.
+        """Create a panel from a PNA pixel dataset via :meth:`from_adata`.
+
+        When ``file_name`` / ``filepath`` are omitted and ``pxl_data`` wraps a
+        single ``.pxl`` file, those values are taken from that file path.
 
         Args:
-            pxl_data: A PNAPixelDataset object.
-            file_name: The optional name of the file from which the pxl dataset was loaded.
+            pxl_data: Dataset whose ``adata()`` holds panel information.
+            file_name: Optional source file basename to attach to the panel.
+            filepath: Optional full source path to attach to the panel.
 
         Returns:
-            The AntibodyPanel object. (AntibodyPanel)
-
-        Raises:
-            KeyError: exception if panel information is missing in the pxl dataset,
+            A panel of this class.
         """
-        logger.debug("Creating Antibody panel from PNAPixelDataset object")
-        adata = pxl_data.adata()
-        panel = cls.from_adata(adata, file_name=file_name)
-        logger.debug("Antibody panel from PNAPixelDataset created")
-        return panel
-
-    @classmethod
-    def from_adata(cls, adata: AnnData, file_name: Optional[str] = None):
-        """Create an AntibodyPanel from an AnnData object.
-
-        Args:
-            adata: An AnnData object containing panel information.
-            file_name: The optional name of the file from which the AnnData object was loaded.
-
-        Returns:
-            The AntibodyPanel object. (AntibodyPanel)
-
-        Raises:
-            KeyError: exception if panel information is missing in the AnnData object.
-        """
-        logger.debug("Creating Antibody panel from AnnData object")
-        try:
-            panel_metadata = adata.uns["panel_metadata"]
-        except KeyError as err:
-            logger.error(  # pylint: disable=logging-not-lazy
-                f"The provided AnnData object does not contain {err}. "
-                + "Please, regenerate your data with the most recent version of pixelator."
-            )
-            raise
-        panel_columns = panel_metadata.get("panel_columns")
-        if not panel_columns:
-            raise KeyError(
-                "The provided AnnData object does not contain panel columns information in the "
-                + "metadata. Please, regenerate your data with the most recent version of "
-                + "pixelator."
-            )
-        df = adata.var[panel_columns]
-        metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
-
-        logger.debug("Antibody panel from AnnData object created")
-        return cls(df, metadata, file_name=file_name)
-
-    @property
-    def name(self) -> str:
-        """Panel name from metadata.
-
-        Returns:
-            The panel name.
-        """
-        return self.metadata.name
-
-    @property
-    def product(self) -> Optional[str]:
-        """Product identifier from metadata, if present.
-
-        Returns:
-            Product name, or None when not provided in panel metadata.
-        """
-        return self.metadata.product
-
-    @property
-    def version(self) -> str:
-        """Panel version from metadata.
-
-        Returns:
-            Semantic version string for this panel.
-        """
-        return self.metadata.version
-
-    @property
-    def description(self) -> Optional[str]:
-        """Return the panel file description."""
-        return self.metadata.description
-
-    @property
-    def aliases(self) -> list[str]:
-        """Return the (optional) list of panel file aliases."""
-        return self.metadata.aliases
-
-    @property
-    def archived(self) -> Optional[bool]:
-        """Return whether the panel is marked as archived."""
-        return self.metadata.archived
-
-    @classmethod
-    def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
-        """Parse front-matter YAML metadata from a panel file.
-
-        Args:
-            file: Panel CSV file whose leading comment block contains YAML metadata.
-
-        Returns:
-            Parsed panel metadata.
-
-        Raises:
-            ValueError: If no metadata header is present in the file.
-        """
-        return AntibodyPanelMetadata.from_panel_csv(file)
-
-    @classmethod
-    def _parse_panel(cls, panel_file: Path) -> pd.DataFrame:
-        panel = pd.read_csv(str(panel_file), comment="#", index_col="marker_id").fillna(
-            ""
+        logger.debug("Creating panel from PNAPixelDataset object")
+        file_name, filepath = _resolve_panel_source_from_pxl(
+            pxl_data, file_name=file_name, filepath=filepath
         )
-
-        panel["control"] = panel["control"].map(lambda s: s.lower() == "yes")
-        if "sample_hashing" in panel.columns:
-            panel["sample_hashing"] = panel["sample_hashing"].map(
-                lambda s: s.lower() == "yes"
-            )
-
-        return panel.copy()
+        panel = cls.from_adata(pxl_data.adata(), file_name=file_name, filepath=filepath)
+        logger.debug("Panel from PNAPixelDataset created")
+        return panel
 
     @cached_property
     def markers_control(self) -> List[str]:
@@ -269,25 +118,14 @@ class PartialPNAAntibodyPanel:
         """Return the list of unique markers in the panel."""
         return list(self.df.index.unique())
 
-    @property
-    def df(self) -> pd.DataFrame:
-        """Return the panel dataframe."""
-        return self._df
-
-    @property
-    def filename(self) -> Optional[str]:
-        """Return the filename of the marker panel."""
-        return self._filename
-
-    @property
-    def filepath(self) -> Optional[Path]:
-        """Return the full path of the marker panel file, if any."""
-        return self._filepath
-
     @cached_property
     def size(self) -> int:
         """Return the size of the marker panel."""
         return self.df.shape[0]
+
+    def to_polars(self) -> pl.DataFrame:
+        """Convert the panel to a Polars DataFrame."""
+        return pl.from_pandas(self.df, include_index=True)
 
     @staticmethod
     def _validate_sequences(panel_df, sequence_col):
@@ -409,18 +247,236 @@ class PartialPNAAntibodyPanel:
 
         return errors
 
-    def to_polars(self) -> pl.DataFrame:
-        """Convert the panel to a Polars DataFrame."""
-        return pl.from_pandas(self.df, include_index=True)
+
+class PartialPNAAntibodyPanel(PNAPanel):
+    """A single PNA antibody panel loaded from a CSV (or equivalent source).
+
+    Concrete subclasses bind a fixed
+    :class:`~pixelator.common.config.panel.PanelType`
+    (:class:`PNABasePanel`, :class:`PNAAddonPanel`,
+    :class:`PNASampleHashingPanel`). For multiple panels in one sample, see
+    :class:`PNAAntibodyPanelCombination`.
+    """
+
+    _panel_type: PanelType = PanelType.PARTIAL
+
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        metadata: AntibodyPanelMetadata,
+        file_name: Optional[str] = None,
+        filepath: Optional[PathType] = None,
+    ) -> None:
+        """Load a panel from a dataframe and metadata.
+
+        Args:
+            df: The dataframe containing the panel information.
+            metadata: The metadata for the panel.
+            file_name: The optional basename of the file from which the panel is loaded.
+            filepath: The optional full path of the file from which the panel is loaded.
+
+        Raises:
+            ValueError: If ``metadata`` is ``None`` or ``panel_type`` mismatches.
+            AssertionError: If the panel dataframe fails validation.
+        """
+        self._filename = file_name
+
+        if metadata is None:
+            raise ValueError("Panel metadata cannot be None")
+        if (
+            self.__class__._panel_type is PanelType.PARTIAL
+            and metadata.panel_type is None
+        ):
+            # if panel type is missing from metadata use partial as default legacy behavior
+            metadata.panel_type = PanelType.PARTIAL
+        elif metadata.panel_type != self.__class__._panel_type:
+            raise ValueError(
+                f"Panel metadata panel_type {metadata.panel_type!r} does not match "
+                + f"{self.__class__.__name__} (expected {self.__class__._panel_type.value})."
+            )
+        self._filepath: Optional[Path] = Path(filepath).resolve() if filepath else None
+        self._metadata = metadata
+
+        self._df = df
+
+        # validate the panel
+        errors = self.validate_antibody_panel(df)
+        if len(errors) > 0:
+            msg_str = "\n".join(errors)
+            raise AssertionError(
+                f"The following errors were found validating the panel: {msg_str}"
+            )
+
+    @property
+    def metadata(self) -> AntibodyPanelMetadata:
+        """Return the panel metadata."""
+        return self._metadata
+
+    @classmethod
+    def from_csv(cls, filename: PathType) -> Self:
+        """Create a single panel from a CSV panel file.
+
+        Args:
+            filename: The path to the panel file.
+
+        Returns:
+            A panel of this class.
+
+        Raises:
+            AssertionError: If the panel file is missing or not a ``.csv``.
+        """
+        panel_file = Path(filename)
+
+        if not panel_file.is_file() or panel_file.suffix != ".csv":
+            raise AssertionError(
+                f"Panel file {filename} not found or has an incorrect format"
+            )
+
+        logger.debug("Creating Antibody panel from file %s", filename)
+
+        df = cls._parse_panel(panel_file)
+        metadata = cls._parse_header(panel_file)
+
+        logger.debug("Antibody panel from file %s created", filename)
+
+        return cls(df, metadata, file_name=panel_file.name, filepath=panel_file)
+
+    @classmethod
+    def from_adata(
+        cls,
+        adata: AnnData,
+        file_name: Optional[str] = None,
+        filepath: Optional[PathType] = None,
+    ) -> Self:
+        """Create a single panel from legacy AnnData ``uns`` / ``var`` data.
+
+        Args:
+            adata: An AnnData object containing panel information.
+            file_name: Optional basename of the source file.
+            filepath: Optional full path of the source file.
+
+        Returns:
+            A panel of this class.
+
+        Raises:
+            KeyError: If panel information is missing in the AnnData object.
+        """
+        logger.debug("Creating Antibody panel from AnnData object")
+        try:
+            panel_metadata = adata.uns["panel_metadata"]
+        except KeyError as err:
+            logger.error(  # pylint: disable=logging-not-lazy
+                f"The provided AnnData object does not contain {err}. "
+                + "Please, regenerate your data with the most recent version of pixelator."
+            )
+            raise
+        panel_columns = panel_metadata.get("panel_columns")
+        if not panel_columns:
+            raise KeyError(
+                "The provided AnnData object does not contain panel columns information in the "
+                + "metadata. Please, regenerate your data with the most recent version of "
+                + "pixelator."
+            )
+        df = adata.var[panel_columns]
+        metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
+
+        logger.debug("Antibody panel from AnnData object created")
+        return cls(df, metadata, file_name=file_name, filepath=filepath)
+
+    @property
+    def name(self) -> str:
+        """Panel name from metadata.
+
+        Returns:
+            The panel name.
+        """
+        return self.metadata.name
+
+    @property
+    def product(self) -> Optional[str]:
+        """Product identifier from metadata, if present.
+
+        Returns:
+            Product name, or None when not provided in panel metadata.
+        """
+        return self.metadata.product
+
+    @property
+    def version(self) -> str:
+        """Panel version from metadata.
+
+        Returns:
+            Semantic version string for this panel.
+        """
+        return self.metadata.version
+
+    @property
+    def description(self) -> Optional[str]:
+        """Return the panel file description."""
+        return self.metadata.description
+
+    @property
+    def aliases(self) -> list[str]:
+        """Return the (optional) list of panel file aliases."""
+        return self.metadata.aliases
+
+    @property
+    def archived(self) -> Optional[bool]:
+        """Return whether the panel is marked as archived."""
+        return self.metadata.archived
+
+    @classmethod
+    def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
+        """Parse front-matter YAML metadata from a panel file.
+
+        Args:
+            file: Panel CSV file whose leading comment block contains YAML metadata.
+
+        Returns:
+            Parsed panel metadata.
+
+        Raises:
+            ValueError: If no metadata header is present in the file.
+        """
+        return AntibodyPanelMetadata.from_panel_csv(file)
+
+    @classmethod
+    def _parse_panel(cls, panel_file: Path) -> pd.DataFrame:
+        panel = pd.read_csv(str(panel_file), comment="#", index_col="marker_id").fillna(
+            ""
+        )
+
+        panel["control"] = panel["control"].map(lambda s: s.lower() == "yes")
+        if "sample_hashing" in panel.columns:
+            panel["sample_hashing"] = panel["sample_hashing"].map(
+                lambda s: s.lower() == "yes"
+            )
+
+        return panel.copy()
+
+    @property
+    def df(self) -> pd.DataFrame:
+        """Return the panel dataframe."""
+        return self._df
+
+    @property
+    def filename(self) -> Optional[str]:
+        """Return the filename of the marker panel."""
+        return self._filename
+
+    @property
+    def filepath(self) -> Optional[Path]:
+        """Return the full path of the marker panel file, if any."""
+        return self._filepath
 
     def __eq__(self, other: object) -> bool:
-        """Check if two panels are equal based on their dataframes and metadata.
+        """Check if two panels are equal based on dataframe and metadata.
 
         Args:
             other: Panel to compare for equality.
         """
-        if not isinstance(other, PartialPNAAntibodyPanel):
-            raise ValueError("Can only compare with another PartialPNAAntibodyPanel")
+        if not isinstance(other, PNAPanel):
+            raise ValueError("Can only compare with another PNAPanel")
         return self.df.equals(other.df) and self.metadata == other.metadata
 
 
@@ -453,21 +509,63 @@ def get_panel_type_from_metadata(
             return PartialPNAAntibodyPanel
 
 
-def panel_from_adata(adata: AnnData) -> PartialPNAAntibodyPanel:
-    """Create a PartialPNAAntibodyPanel from an AnnData object."""
+def _resolve_panel_source_from_pxl(
+    pxl_data: PNAPixelDataset,
+    file_name: Optional[str] = None,
+    filepath: Optional[PathType] = None,
+) -> tuple[Optional[str], Optional[PathType]]:
+    """Fill missing file_name/filepath from a single-file PNAPixelDataset."""
+    if file_name is not None and filepath is not None:
+        return file_name, filepath
+
+    file_mapping = getattr(pxl_data.view, "_db_to_file_mapping", None) or {}
+    if len(file_mapping) == 1:
+        source_path = Path(next(iter(file_mapping.values())).path)
+        if filepath is None:
+            filepath = source_path
+        if file_name is None:
+            file_name = source_path.name
+    return file_name, filepath
+
+
+def panel_from_adata(
+    adata: AnnData,
+    file_name: Optional[str] = None,
+    filepath: Optional[PathType] = None,
+) -> PNAPanel:
+    """Create a :class:`PNAPanel` from an AnnData object.
+
+    Args:
+        adata: AnnData with embedded panel information.
+        file_name: Optional basename of the source file.
+        filepath: Optional full path of the source file.
+    """
     if "num_partial_panels" in adata.uns:
-        return PNAAntibodyPanelCombination.from_adata(adata)
+        return PNAAntibodyPanelCombination.from_adata(
+            adata, file_name=file_name, filepath=filepath
+        )
     panel_type = get_panel_type_from_metadata(
         AntibodyPanelMetadata.from_adata(adata)[0]
     )
-    return panel_type.from_adata(adata)
+    return panel_type.from_adata(adata, file_name=file_name, filepath=filepath)
 
 
 def panel_from_pxl_dataset(
     pxl_data: PNAPixelDataset,
-) -> PartialPNAAntibodyPanel | PNAAntibodyPanelCombination:
-    """Create a PartialPNAAntibodyPanel or PNAAntibodyPanelCombination from a PNAPixelDataset object."""
-    return panel_from_adata(pxl_data.adata())
+    file_name: Optional[str] = None,
+    filepath: Optional[PathType] = None,
+) -> PNAPanel:
+    """Create a :class:`PNAPanel` from a PNAPixelDataset object.
+
+    Args:
+        pxl_data: Dataset that embeds panel information in its AnnData.
+        file_name: Optional basename of the source file.
+        filepath: Optional full path of the source file.
+    """
+    file_name, filepath = _resolve_panel_source_from_pxl(
+        pxl_data, file_name=file_name, filepath=filepath
+    )
+    return panel_from_adata(pxl_data.adata(), file_name=file_name, filepath=filepath)
 
 
 def panel_from_csv(panel_file: PathType) -> PartialPNAAntibodyPanel:
@@ -766,18 +864,18 @@ class PNAAntibodyPanelDiff:
         return adata
 
 
-class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
-    """Class representing a combination of PNA antibody panels used in a sample.
+class PNAAntibodyPanelCombination(PNAPanel):
+    """Combination of PNA antibody panels used together in one sample.
 
-    This can be a combination of base panels, sample hashing panels and addon panels.
-    This represent the concat of the panels i.e. all the antibodies added to the same tube.
+    Concatenates base, addon, and sample-hashing panels into one marker table
+    while keeping members separately.
 
-    Should raise loud errors if the panels are not compatible (e.g. different sequences for the same
-      marker or same sequences is present in multiple panels).
+    Raises loud errors if panels are incompatible (conflicting ``marker_id``
+    rows or duplicate clone sequences).
     """
 
     _REQUIRED_COLUMNS = {
-        **PartialPNAAntibodyPanel._REQUIRED_COLUMNS,
+        **PNAPanel._REQUIRED_COLUMNS,
         "partial_panel_name": str,
         "partial_panel_type": str,
     }
@@ -791,7 +889,7 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
         df: pd.DataFrame,
         metadata: AntibodyPanelMetadata | list[AntibodyPanelMetadata],
         file_name: Optional[str] = None,
-        filepath: Optional[Path] = None,
+        filepath: Optional[PathType] = None,
     ):
         """Initialize the PNAAntibodyPanelCombination object."""
         if metadata is None:
@@ -832,9 +930,16 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
         self._df = self.df
 
     @classmethod
-    def from_panel(
-        cls, panel: PartialPNAAntibodyPanel
-    ) -> "PNAAntibodyPanelCombination":
+    def from_csv(cls, filename: PathType) -> Self:
+        """Create a one-member combination from a CSV panel file.
+
+        Loads the panel with :func:`panel_from_csv` and wraps it via
+        :meth:`from_panel`.
+        """
+        return cls.from_panel(panel_from_csv(filename))
+
+    @classmethod
+    def from_panel(cls, panel: PartialPNAAntibodyPanel) -> Self:
         """Initialize a panel combination from a single panel."""
         return cls(
             df=panel.df,
@@ -843,13 +948,23 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
             filepath=panel.filepath,
         )
 
-    @property  # type: ignore[override]
-    def metadata(self) -> list[AntibodyPanelMetadata]:  # type: ignore[override]
+    def __eq__(self, other: object) -> bool:
+        """Check if two panels are equal based on dataframe and metadata.
+
+        Args:
+            other: Panel to compare for equality.
+        """
+        if not isinstance(other, PNAPanel):
+            raise ValueError("Can only compare with another PNAPanel")
+        return self.df.equals(other.df) and self.metadata == other.metadata
+
+    @property
+    def metadata(self) -> list[AntibodyPanelMetadata]:
         """Return the metadata for all the panels that are part of the combination."""
         return [p.metadata for p in self.partial_panels()]
 
-    @metadata.setter  # type: ignore[override]
-    def metadata(self, _value: list[AntibodyPanelMetadata]):  # type: ignore[override]
+    @metadata.setter
+    def metadata(self, _value: list[AntibodyPanelMetadata]):
         """Set the metadata for all the panels that are part of the combination."""
         raise AttributeError("Metadata for combination panels is read-only.")
 
@@ -880,8 +995,8 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
                     seen_markers[marker_id] = row
 
     @property
-    def df(self):
-        """Return the panel dataframe for the combination of panels."""
+    def df(self) -> pd.DataFrame:
+        """Return the concatenated marker dataframe for all member panels."""
         partial_dfs = [panel.df for panel in self.partial_panels()]
         if len(partial_dfs) > 1:
             self._validate_no_conflicting_duplicate_markers(partial_dfs)
@@ -913,7 +1028,7 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
 
     def add_base_panel(self, base_panel: PNABasePanel | PartialPNAAntibodyPanel):
         """Add a base panel."""
-        if isinstance(base_panel, PartialPNAAntibodyPanel):
+        if type(base_panel) is PartialPNAAntibodyPanel:
             logger.warning(
                 "Adding a PartialPNAAntibodyPanel as a base panel. "
                 + "this is expected legacy behavior for panels without a defined type."
@@ -968,7 +1083,7 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
             | PNASampleHashingPanel
             | PNAAddonPanel
         ],
-    ) -> "PNAAntibodyPanelCombination":
+    ) -> Self:
         """Create a panel combination from a list of subpanels."""
         if not panels:
             raise ValueError("At least one panel is required to build a combination.")
@@ -1062,10 +1177,28 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
             return None
 
     @classmethod
-    def from_adata(cls, adata, file_name=None):
-        """Create a panel combination from an AnnData object."""
+    def from_adata(
+        cls,
+        adata: AnnData,
+        file_name: Optional[str] = None,
+        filepath: Optional[PathType] = None,
+    ) -> Self:
+        """Create a panel combination from an AnnData object.
+
+        Args:
+            adata: AnnData with embedded panel information.
+            file_name: Optional basename of the source file; applied to each
+                restored member panel.
+            filepath: Optional full path of the source file; applied to each
+                restored member panel.
+        """
         if "num_partial_panels" not in adata.uns:
-            subpanels = [PartialPNAAntibodyPanel.from_adata(adata, file_name)]
+            panel_type = get_panel_type_from_metadata(
+                AntibodyPanelMetadata.from_adata(adata)[0]
+            )
+            subpanels = [
+                panel_type.from_adata(adata, file_name=file_name, filepath=filepath)
+            ]
         else:
             list_of_metadatas = AntibodyPanelMetadata.from_adata(adata)
             logger.debug(
@@ -1086,9 +1219,13 @@ class PNAAntibodyPanelCombination(PartialPNAAntibodyPanel):
                     .fillna("")
                 )
                 panel_type_class = get_panel_type_from_metadata(metadata)
-                subpanels.append(panel_type_class(df, metadata))
+                subpanels.append(
+                    panel_type_class(
+                        df, metadata, file_name=file_name, filepath=filepath
+                    )
+                )
 
-        return PNAAntibodyPanelCombination.from_list_of_subpanels(subpanels)
+        return cls.from_list_of_subpanels(subpanels)
 
 
 class PNABasePanel(PartialPNAAntibodyPanel):
@@ -1109,7 +1246,7 @@ class PNASampleHashingPanel(PartialPNAAntibodyPanel):
     _panel_type = PanelType.SAMPLE_HASHING
 
     _REQUIRED_COLUMNS = {
-        **PartialPNAAntibodyPanel._REQUIRED_COLUMNS,
+        **PNAPanel._REQUIRED_COLUMNS,
         "sample_hashing": bool,
     }
 
