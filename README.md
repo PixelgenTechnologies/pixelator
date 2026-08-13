@@ -70,7 +70,7 @@ docker pull quay.io/pixelgen-technologies/pixelator:latest
 docker run quay.io/pixelgen-technologies/pixelator:latest pixelator --help
 ```
 
-For MPX workflows, pin an image tag from a release prior to 0.31.0 (for example `0.30.0`) instead of `latest`.
+For deprecated MPX workflows, pin an image tag from a release prior to 0.31.0 (for example `0.30.0`) instead of `latest`.
 
 ## Usage
 

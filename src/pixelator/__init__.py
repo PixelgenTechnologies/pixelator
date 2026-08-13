@@ -14,8 +14,8 @@ except metadata.PackageNotFoundError:
 
 
 # Adding imports here as shortcuts to be able to import like
-# import pixelator as mpx
-# mpx.read("<file path>")
+# import pixelator.pna as pna
+# pna.read("<file path>")
 # and similar
 
 from pixelator.pna import DownloadableDatasets
