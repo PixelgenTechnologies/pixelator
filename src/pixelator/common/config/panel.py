@@ -31,7 +31,23 @@ if TYPE_CHECKING:
 
 
 class PanelType(str, enum.Enum):
-    """Panel type values used in metadata."""
+    """Type of antibody panel described by panel CSV metadata.
+
+    Stored in :attr:`AntibodyPanelMetadata.panel_type` and used by PNA helpers
+    such as :func:`pixelator.pna.config.panel.get_panel_type_from_metadata` to
+    select a concrete panel class:
+
+    * ``partial`` — generic / legacy single panel
+      (:class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel`)
+    * ``base`` — core marker panel
+      (:class:`~pixelator.pna.config.panel.PNABasePanel`)
+    * ``addon`` — markers used together with a base panel
+      (:class:`~pixelator.pna.config.panel.PNAAddonPanel`)
+    * ``sample_hashing`` — sample-hashing panel
+      (:class:`~pixelator.pna.config.panel.PNASampleHashingPanel`)
+
+    ``None`` in metadata is treated as legacy ``partial``.
+    """
 
     PARTIAL = "partial"
     BASE = "base"
@@ -40,7 +56,17 @@ class PanelType(str, enum.Enum):
 
 
 class AntibodyPanelMetadata(pydantic.BaseModel):
-    """Class representing the metadata of a Molecular Pixelation antibody panel."""
+    """Metadata for a Molecular Pixelation antibody panel CSV.
+
+    Parsed from the YAML front-matter of a panel file (comment lines that
+    start with ``#`` followed by a space). Optional :attr:`panel_type` selects
+    the concrete PNA panel class; ``None`` means legacy / untyped and is
+    treated as
+    :attr:`~pixelator.common.config.panel.PanelType.PARTIAL`.
+
+    When several panels are combined in one sample, each member has its own
+    metadata entry (see :meth:`from_adata`).
+    """
 
     model_config = pydantic.ConfigDict(extra="ignore")
 
@@ -70,7 +96,12 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
         return v
 
     def to_dict(self) -> dict:
-        """Serialize panel metadata for storage in andata or hdf5."""
+        """Serialize metadata for storage in AnnData ``uns`` or HDF5.
+
+        Returns:
+            A plain dict from the pydantic model. ``panel_type`` is stored as
+            its string value (or ``None``) so HDF5-backed AnnData can persist it.
+        """
         serialized = self.model_dump()
         # panel type needs to be explicitly serialized as its value for hdf5 storage of anndata
         serialized["panel_type"] = (
@@ -80,7 +111,19 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
 
     @classmethod
     def _deserialize_from_adata_key(cls, adata: AnnData, key: str) -> Self:
-        """Deserialize panel metadata from a specified key in adata.uns."""
+        """Deserialize panel metadata from a key in ``adata.uns``.
+
+        Args:
+            adata: AnnData that stores panel metadata under ``uns``.
+            key: ``uns`` key to read (for example ``panel_metadata`` or
+                ``panel_metadata__0``).
+
+        Returns:
+            Validated metadata instance.
+
+        Raises:
+            KeyError: If ``key`` is missing from ``adata.uns``.
+        """
         if key not in adata.uns:
             raise KeyError(
                 f"Key {key!r} not found in adata.uns for panel metadata deserialization."
@@ -95,12 +138,40 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
 
     @classmethod
     def from_panel_csv(cls, panel_file: PathType) -> AntibodyPanelMetadata:
-        """Create an AntibodyPanelMetadata object from a panel csv file."""
+        """Parse panel metadata from a CSV file's YAML front-matter.
+
+        Args:
+            panel_file: Path to a panel ``.csv`` whose YAML header lines start
+                with ``#`` followed by a space.
+
+        Returns:
+            Parsed :class:`AntibodyPanelMetadata`.
+
+        Raises:
+            ValueError: If the file has no metadata header or YAML is invalid.
+        """
         return parse_panel_header_metadata(Path(panel_file))
 
     @classmethod
     def from_adata(cls, adata: AnnData) -> list[Self]:
-        """Create a list of AntibodyPanelMetadata objects from an AnnData object."""
+        """Load panel metadata entries stored on an AnnData object.
+
+        Prefers multi-panel keys (``num_partial_panels`` and
+        ``panel_metadata__{i}``). Falls back to a single ``panel_metadata``
+        entry, or a placeholder ``unknown`` / ``0.0.0`` metadata object when
+        none is present.
+
+        Args:
+            adata: AnnData that may contain panel metadata in ``uns``.
+
+        Returns:
+            One metadata object per partial panel (length 1 for legacy data).
+
+        Raises:
+            KeyError: If multi-panel metadata indexes are incomplete.
+            ValueError: If the number of metadata entries does not match
+                ``num_partial_panels``.
+        """
         if "num_partial_panels" in adata.uns:
             logger.debug(
                 "Found metadata for %s partial panels in adata.uns",
@@ -165,7 +236,23 @@ def _load_header_frontmatter(metadata: str) -> AntibodyPanelMetadata:
 
 
 def parse_panel_header_metadata(file: Path) -> AntibodyPanelMetadata:
-    """Parse panel front-matter metadata and recover from trailing commas."""
+    """Parse YAML front-matter from a panel CSV comment header.
+
+    Reads leading lines that start with ``#`` followed by a space. If the YAML
+    fails to parse, retries after stripping trailing commas (a common
+    spreadsheet export artifact) and emits a warning when that recovery
+    succeeds.
+
+    Args:
+        file: Path to the panel CSV file.
+
+    Returns:
+        Validated :class:`AntibodyPanelMetadata`.
+
+    Raises:
+        ValueError: If no header is found or metadata cannot be parsed or
+            validated (including invalid YAML / pydantic validation failures).
+    """
     metadata_lines = []
     with open(str(file), "r") as handle:
         for line in handle:

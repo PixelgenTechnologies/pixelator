@@ -251,11 +251,22 @@ class PNAPanel(ABC):
 class PartialPNAAntibodyPanel(PNAPanel):
     """A single PNA antibody panel loaded from a CSV (or equivalent source).
 
-    Concrete subclasses bind a fixed
-    :class:`~pixelator.common.config.panel.PanelType`
-    (:class:`PNABasePanel`, :class:`PNAAddonPanel`,
-    :class:`PNASampleHashingPanel`). For multiple panels in one sample, see
-    :class:`PNAAntibodyPanelCombination`.
+    This is the base type for typed panels. Concrete subclasses bind a fixed
+    :class:`~pixelator.common.config.panel.PanelType`:
+
+    * :class:`~pixelator.pna.config.panel.PNABasePanel` — core markers
+    * :class:`~pixelator.pna.config.panel.PNAAddonPanel` — addon markers used
+      with a base panel
+    * :class:`~pixelator.pna.config.panel.PNASampleHashingPanel` —
+      sample-hashing markers
+
+    Prefer the module-level helpers
+    :func:`~pixelator.pna.config.panel.panel_from_csv`,
+    :func:`~pixelator.pna.config.panel.panel_from_adata`, and
+    :func:`~pixelator.pna.config.panel.load_antibody_panel` when the concrete
+    type should follow metadata. Use
+    :class:`~pixelator.pna.config.panel.PNAAntibodyPanelCombination` when
+    several panels are used together in one sample.
     """
 
     _panel_type: PanelType = PanelType.PARTIAL
@@ -270,13 +281,16 @@ class PartialPNAAntibodyPanel(PNAPanel):
         """Load a panel from a dataframe and metadata.
 
         Args:
-            df: The dataframe containing the panel information.
-            metadata: The metadata for the panel.
-            file_name: The optional basename of the file from which the panel is loaded.
-            filepath: The optional full path of the file from which the panel is loaded.
+            df: Panel rows indexed by ``marker_id`` with required columns.
+            metadata: Panel YAML metadata. Missing ``panel_type`` is defaulted
+                to :attr:`~pixelator.common.config.panel.PanelType.PARTIAL` for
+                legacy files when constructing this base class.
+            file_name: Optional basename of the source file.
+            filepath: Optional full path of the source file.
 
         Raises:
-            ValueError: If ``metadata`` is ``None`` or ``panel_type`` mismatches.
+            ValueError: If ``metadata`` is ``None`` or its ``panel_type`` does
+                not match this class.
             AssertionError: If the panel dataframe fails validation.
         """
         self._filename = file_name
@@ -314,16 +328,23 @@ class PartialPNAAntibodyPanel(PNAPanel):
 
     @classmethod
     def from_csv(cls, filename: PathType) -> Self:
-        """Create a single panel from a CSV panel file.
+        """Create a panel instance from a CSV panel file.
+
+        Does not dispatch on ``panel_type``; the caller must use the matching
+        class (or :func:`~pixelator.pna.config.panel.panel_from_csv` for
+        automatic dispatch).
 
         Args:
-            filename: The path to the panel file.
+            filename: Path to a ``.csv`` panel file with YAML front-matter.
 
         Returns:
             A panel of this class.
 
         Raises:
-            AssertionError: If the panel file is missing or not a ``.csv``.
+            AssertionError: If the file is missing, not a ``.csv``, or fails
+                validation.
+            ValueError: If metadata ``panel_type`` is incompatible with this
+                class.
         """
         panel_file = Path(filename)
 
@@ -348,10 +369,16 @@ class PartialPNAAntibodyPanel(PNAPanel):
         file_name: Optional[str] = None,
         filepath: Optional[PathType] = None,
     ) -> Self:
-        """Create a single panel from legacy AnnData ``uns`` / ``var`` data.
+        """Create a panel from legacy single-panel AnnData ``uns`` / ``var`` data.
+
+        Expects ``adata.uns["panel_metadata"]`` with ``panel_columns`` naming
+        the ``adata.var`` columns that form the panel table. For multi-panel
+        AnnData, use
+        :meth:`~pixelator.pna.config.panel.PNAAntibodyPanelCombination.from_adata`
+        or :func:`~pixelator.pna.config.panel.panel_from_adata`.
 
         Args:
-            adata: An AnnData object containing panel information.
+            adata: AnnData with embedded panel metadata and marker columns.
             file_name: Optional basename of the source file.
             filepath: Optional full path of the source file.
 
@@ -359,7 +386,7 @@ class PartialPNAAntibodyPanel(PNAPanel):
             A panel of this class.
 
         Raises:
-            KeyError: If panel information is missing in the AnnData object.
+            KeyError: If panel metadata or ``panel_columns`` are missing.
         """
         logger.debug("Creating Antibody panel from AnnData object")
         try:
@@ -483,7 +510,20 @@ class PartialPNAAntibodyPanel(PNAPanel):
 def get_panel_type_from_metadata(
     metadata: AntibodyPanelMetadata,
 ) -> type[PartialPNAAntibodyPanel]:
-    """Get the panel class type from the panel metadata."""
+    """Map panel metadata to the concrete panel class to instantiate.
+
+    Args:
+        metadata: Panel metadata, typically from CSV front-matter.
+
+    Returns:
+        :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel`,
+        :class:`~pixelator.pna.config.panel.PNABasePanel`,
+        :class:`~pixelator.pna.config.panel.PNAAddonPanel`, or
+        :class:`~pixelator.pna.config.panel.PNASampleHashingPanel`. Missing
+        or unknown ``panel_type`` values fall back to
+        :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel` (with a
+        warning).
+    """
     match metadata.panel_type:
         case PanelType.PARTIAL:
             return PartialPNAAntibodyPanel
@@ -533,12 +573,23 @@ def panel_from_adata(
     file_name: Optional[str] = None,
     filepath: Optional[PathType] = None,
 ) -> PNAPanel:
-    """Create a :class:`PNAPanel` from an AnnData object.
+    """Create a panel (or combination) from AnnData panel metadata.
+
+    If ``adata.uns`` contains ``num_partial_panels``, returns a
+    :class:`~pixelator.pna.config.panel.PNAAntibodyPanelCombination`.
+    Otherwise returns a single typed panel whose class follows the stored
+    ``panel_type``.
 
     Args:
-        adata: AnnData with embedded panel information.
+        adata: AnnData with panel metadata in ``uns`` (and marker columns in
+            ``var`` for single-panel data).
         file_name: Optional basename of the source file.
         filepath: Optional full path of the source file.
+
+    Returns:
+        A :class:`~pixelator.pna.config.panel.PNAPanel` — typically a typed
+        :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel`
+        subclass, or a combination when multiple partial panels are stored.
     """
     if "num_partial_panels" in adata.uns:
         return PNAAntibodyPanelCombination.from_adata(
@@ -555,12 +606,21 @@ def panel_from_pxl_dataset(
     file_name: Optional[str] = None,
     filepath: Optional[PathType] = None,
 ) -> PNAPanel:
-    """Create a :class:`PNAPanel` from a PNAPixelDataset object.
+    """Create a panel (or combination) from a PNA pixel dataset.
+
+    Equivalent to :func:`~pixelator.pna.config.panel.panel_from_adata` on
+    ``pxl_data.adata()``. When ``file_name`` / ``filepath`` are omitted and
+    ``pxl_data`` wraps a single ``.pxl`` file, those values are taken from
+    that file path.
 
     Args:
         pxl_data: Dataset that embeds panel information in its AnnData.
         file_name: Optional basename of the source file.
         filepath: Optional full path of the source file.
+
+    Returns:
+        A typed single panel or
+        :class:`~pixelator.pna.config.panel.PNAAntibodyPanelCombination`.
     """
     file_name, filepath = _resolve_panel_source_from_pxl(
         pxl_data, file_name=file_name, filepath=filepath
@@ -569,7 +629,23 @@ def panel_from_pxl_dataset(
 
 
 def panel_from_csv(panel_file: PathType) -> PartialPNAAntibodyPanel:
-    """Create a PartialPNAAntibodyPanel from a csv panel file."""
+    """Create a typed panel from a CSV file, dispatching on metadata ``panel_type``.
+
+    Prefer this over
+    :meth:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel.from_csv` when
+    the concrete class should follow the file header.
+
+    Args:
+        panel_file: Path to a ``.csv`` panel file with YAML front-matter.
+
+    Returns:
+        An instance of
+        :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel` or a
+        typed subclass.
+
+    Raises:
+        AssertionError: If the file is missing or not a ``.csv``.
+    """
     panel_file = Path(panel_file)
     if not panel_file.is_file() or panel_file.suffix != ".csv":
         raise AssertionError(
@@ -584,15 +660,24 @@ def panel_from_csv(panel_file: PathType) -> PartialPNAAntibodyPanel:
 def load_antibody_panel(
     config: PNAConfig, requested_panels: PathType | list[PathType] | list[str]
 ) -> PNAAntibodyPanelCombination:
-    """Load an antibody panel from a file or from the config file.
+    """Load one or more panels from config names and/or CSV paths.
+
+    Each entry is resolved from ``config`` when possible, otherwise loaded with
+    :func:`~pixelator.pna.config.panel.panel_from_csv`. All resolved panels
+    are returned as a
+    :class:`~pixelator.pna.config.panel.PNAAntibodyPanelCombination`
+    (including when only one panel is requested).
 
     Args:
-        config: the config object.
-        requested_panels: the path to the panel file(s) or the name(s) of the
-            panel(s) in the config file.
+        config: PNA configuration that may already contain named panels.
+        requested_panels: Panel path(s) and/or config panel name(s).
 
     Returns:
-        The loaded antibody panel as a PNAAntibodyPanelCombination.
+        Combination containing the loaded panel(s).
+
+    Raises:
+        ValueError: If the resulting panel list is empty or panels conflict.
+        AssertionError: If a CSV path cannot be loaded.
     """
     return_panels = []
     for panel in (
@@ -619,7 +704,11 @@ def load_antibody_panel(
 
 
 class PNAAntibodyPanelDiff:
-    """Class representing the differences between two PNAAntibodyPanel objects."""
+    """Compare two :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel` instances by clone sequences.
+
+    Used to describe column-level differences between panel versions and to
+    support automatic AnnData panel patch upgrades via :meth:`upgrade_adata`.
+    """
 
     join_on_columns: list[str] = ["sequence_1", "sequence_2"]
 
@@ -770,10 +859,20 @@ class PNAAntibodyPanelDiff:
         )
 
     def upgrade_adata(self, adata: AnnData) -> AnnData:
-        """Upgrade an AnnData object with the changes between the two panels.
+        """Apply a patch-level panel upgrade to AnnData marker annotations.
+
+        Updates overlapping clone rows from ``panel_2`` when the two panels
+        share the same product and only patch-compatible differences exist.
 
         Args:
-            adata: An AnnData object containing panel information.
+            adata: AnnData whose ``var`` table embeds panel columns.
+
+        Returns:
+            The same AnnData instance after in-place panel column updates.
+
+        Raises:
+            ValueError: If clones were added/removed, products differ, panels
+                do not match the AnnData contents, or row counts diverge.
         """
         if len(self.added_clones) > 0:
             raise ValueError(
@@ -865,12 +964,22 @@ class PNAAntibodyPanelDiff:
 
 
 class PNAAntibodyPanelCombination(PNAPanel):
-    """Combination of PNA antibody panels used together in one sample.
+    """Concatenation of the antibody panels used together in one sample.
 
-    Concatenates base, addon, and sample-hashing panels into one marker table
-    while keeping members separately.
+    Combines base, addon, and sample-hashing panels into a single view of all
+    antibodies present in the same tube. Subpanels are kept separately in
+    :attr:`base_panels`, :attr:`addon_panels`, and :attr:`hashing_panels`, while
+    :attr:`df` exposes the concatenated marker table (with
+    ``partial_panel_name`` / ``partial_panel_type`` columns).
 
-    Raises loud errors if panels are incompatible (conflicting ``marker_id``
+    Shares the :class:`~pixelator.pna.config.panel.PNAPanel` read interface for
+    callers that only need the combined marker table, but several properties
+    differ: :attr:`metadata` is a list, and display fields such as :attr:`name`
+    / :attr:`version` join member values with ``" + "``.
+
+    Prefer :meth:`from_list_of_subpanels`, :meth:`from_panel`, or
+    :func:`~pixelator.pna.config.panel.load_antibody_panel` to construct
+    instances. Raises if panels are incompatible (conflicting ``marker_id``
     rows or duplicate clone sequences).
     """
 
@@ -891,7 +1000,25 @@ class PNAAntibodyPanelCombination(PNAPanel):
         file_name: Optional[str] = None,
         filepath: Optional[PathType] = None,
     ):
-        """Initialize the PNAAntibodyPanelCombination object."""
+        """Initialize a combination from a single-panel dataframe and metadata.
+
+        Supported shape is a normal panel ``df`` plus one
+        :class:`~pixelator.common.config.panel.AntibodyPanelMetadata` instance;
+        the panel is wrapped via :meth:`add_panel`. Multi-panel dataframes that
+        already include ``partial_panel_*`` columns are not constructed here.
+
+        Args:
+            df: Marker dataframe for the first (or only) member panel.
+            metadata: Metadata for that panel (not a list).
+            file_name: Optional basename of the source file.
+            filepath: Optional full path of the source file.
+
+        Raises:
+            ValueError: If ``metadata`` is ``None`` or the ``df`` / metadata
+                shape is not supported.
+            NotImplementedError: If a pre-combined multi-panel dataframe is
+                passed; use :meth:`from_list_of_subpanels` instead.
+        """
         if metadata is None:
             raise ValueError("Panel metadata cannot be None")
 
@@ -933,14 +1060,29 @@ class PNAAntibodyPanelCombination(PNAPanel):
     def from_csv(cls, filename: PathType) -> Self:
         """Create a one-member combination from a CSV panel file.
 
-        Loads the panel with :func:`panel_from_csv` and wraps it via
-        :meth:`from_panel`.
+        Loads the panel with :func:`~pixelator.pna.config.panel.panel_from_csv`
+        and wraps it via :meth:`from_panel`.
+
+        Args:
+            filename: Path to a ``.csv`` panel file with YAML front-matter.
+
+        Returns:
+            Combination containing the loaded panel.
         """
         return cls.from_panel(panel_from_csv(filename))
 
     @classmethod
     def from_panel(cls, panel: PartialPNAAntibodyPanel) -> Self:
-        """Initialize a panel combination from a single panel."""
+        """Wrap a single panel as a one-member combination.
+
+        Args:
+            panel: Any
+                :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel`
+                (including typed subclasses).
+
+        Returns:
+            Combination containing only ``panel``.
+        """
         return cls(
             df=panel.df,
             metadata=panel.metadata,
@@ -960,23 +1102,40 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
     @property
     def metadata(self) -> list[AntibodyPanelMetadata]:
-        """Return the metadata for all the panels that are part of the combination."""
+        """Metadata for each member panel, in :meth:`partial_panels` order.
+
+        Returns:
+            One :class:`~pixelator.common.config.panel.AntibodyPanelMetadata`
+            per subpanel. Read-only; assignment raises :class:`AttributeError`.
+        """
         return [p.metadata for p in self.partial_panels()]
 
     @metadata.setter
     def metadata(self, _value: list[AntibodyPanelMetadata]):
-        """Set the metadata for all the panels that are part of the combination."""
+        """Reject writes; combination metadata is derived from member panels.
+
+        Raises:
+            AttributeError: Always, because metadata is read-only.
+        """
         raise AttributeError("Metadata for combination panels is read-only.")
 
     def partial_panels(self):
-        """Return a list of all the partial panels that are part of the combination."""
+        """Return member panels in base, hashing, then addon order.
+
+        Returns:
+            Flat list of all subpanels in the combination.
+        """
         return (
             self.base_panels + (self.hashing_panels or []) + (self.addon_panels or [])
         )
 
     @property
     def num_partial_panels(self):
-        """Return the number of all the partial panels that are part of the combination."""
+        """Number of member panels in the combination.
+
+        Returns:
+            Count of base, hashing, and addon panels.
+        """
         return sum(1 for _ in self.partial_panels())
 
     @staticmethod
@@ -996,7 +1155,18 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
     @property
     def df(self) -> pd.DataFrame:
-        """Return the concatenated marker dataframe for all member panels."""
+        """Concatenated marker table for all member panels.
+
+        Adds ``partial_panel_name`` and ``partial_panel_type`` columns and
+        rejects conflicting duplicate ``marker_id`` rows or duplicate clone
+        sequences across members.
+
+        Returns:
+            Combined panel dataframe indexed by ``marker_id``.
+
+        Raises:
+            ValueError: On conflicting markers or duplicate sequences.
+        """
         partial_dfs = [panel.df for panel in self.partial_panels()]
         if len(partial_dfs) > 1:
             self._validate_no_conflicting_duplicate_markers(partial_dfs)
@@ -1027,7 +1197,17 @@ class PNAAntibodyPanelCombination(PNAPanel):
         return df
 
     def add_base_panel(self, base_panel: PNABasePanel | PartialPNAAntibodyPanel):
-        """Add a base panel."""
+        """Add a base (or legacy untyped) panel to the combination.
+
+        Args:
+            base_panel: A :class:`~pixelator.pna.config.panel.PNABasePanel`,
+                or a legacy
+                :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel`
+                without a defined type (emits a warning).
+
+        Raises:
+            ValueError: If adding the panel creates marker/sequence conflicts.
+        """
         if type(base_panel) is PartialPNAAntibodyPanel:
             logger.warning(
                 "Adding a PartialPNAAntibodyPanel as a base panel. "
@@ -1038,14 +1218,28 @@ class PNAAntibodyPanelCombination(PNAPanel):
         self._df = self.df
 
     def add_addon_panel(self, addon_panel: PNAAddonPanel):
-        """Add an addon panel."""
+        """Add an addon panel to the combination.
+
+        Args:
+            addon_panel: Addon marker panel to append.
+
+        Raises:
+            ValueError: If adding the panel creates marker/sequence conflicts.
+        """
         if self.addon_panels is None:
             self.addon_panels = []
         self.addon_panels.append(addon_panel)
         self._df = self.df
 
     def add_hashing_panel(self, hashing_panel: PNASampleHashingPanel):
-        """Add a sample hashing panel."""
+        """Add a sample-hashing panel to the combination.
+
+        Args:
+            hashing_panel: Sample-hashing panel to append.
+
+        Raises:
+            ValueError: If adding the panel creates marker/sequence conflicts.
+        """
         if self.hashing_panels is None:
             self.hashing_panels = []
         self.hashing_panels.append(hashing_panel)
@@ -1058,7 +1252,19 @@ class PNAAntibodyPanelCombination(PNAPanel):
         | PNASampleHashingPanel
         | PNAAddonPanel,
     ):
-        """Add another panel to the combination."""
+        """Add a panel, routing it to the matching member list by type.
+
+        Typed subclasses go to hashing / addon / base lists. A plain
+        :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel` is
+        treated as a legacy base panel.
+
+        Args:
+            panel: Panel instance to add.
+
+        Raises:
+            ValueError: If the panel type is unsupported or conflicts with
+                existing members.
+        """
         # Match subclasses before PartialPNAAntibodyPanel; class patterns also
         # match instances of subclasses.
         match panel:
@@ -1084,7 +1290,17 @@ class PNAAntibodyPanelCombination(PNAPanel):
             | PNAAddonPanel
         ],
     ) -> Self:
-        """Create a panel combination from a list of subpanels."""
+        """Build a combination by adding panels in order.
+
+        Args:
+            panels: Non-empty list of member panels.
+
+        Returns:
+            Combination containing all ``panels``.
+
+        Raises:
+            ValueError: If ``panels`` is empty or members conflict.
+        """
         if not panels:
             raise ValueError("At least one panel is required to build a combination.")
         combination = cls.from_panel(panels[0])
@@ -1094,21 +1310,21 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
     @property
     def name(self) -> str:
-        """Panel name from metadata.
+        """Joined display name of all member panels.
 
         Returns:
-            The panel name.
-
+            Member ``name`` values joined with ``" + "``.
         """
         return " + ".join(p.metadata.name for p in self.partial_panels())
 
     @property
     def product(self) -> Optional[str]:
-        """Product identifier from metadata, if present.
+        """Joined display product string for member panels.
 
         Returns:
-            Product name, or None when not provided in panel metadata.
-
+            Member ``product`` values joined with ``" + "``, or ``None`` if no
+            member defines a product. Intended for display; version-bump logic
+            uses the individual member panels.
         """
         # ok to drop None values here since we anyway use the partial panels when checking this
         # property for e.g. bumping panel versions, i.e. this string is only for display
@@ -1123,22 +1339,32 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
     @property
     def version(self) -> str:
-        """Panel version from metadata.
+        """Joined display version of all member panels.
 
         Returns:
-            Semantic version string for this panel.
-
+            Member ``version`` values joined with ``" + "``.
         """
         return " + ".join(p.metadata.version for p in self.partial_panels())
 
     @property
     def description(self) -> Optional[str]:
-        """Return the panel file description."""
+        """Joined display description of all member panels.
+
+        Returns:
+            Member descriptions joined with ``" + "``.
+        """
         return " + ".join(str(p.metadata.description) for p in self.partial_panels())
 
     @property
     def aliases(self) -> list[str]:
-        """Return the (optional) list of panel file aliases."""
+        """Aliases of the sole member panel.
+
+        Returns:
+            Alias list when the combination has exactly one member.
+
+        Raises:
+            AttributeError: If more than one member panel is present.
+        """
         if self.num_partial_panels == 1:
             return self.partial_panels()[0].aliases
         else:
@@ -1149,12 +1375,23 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
     @property
     def archived(self) -> Optional[bool]:
-        """Return whether the panel is marked as archived."""
+        """Whether any member panel is marked archived.
+
+        Returns:
+            ``True`` if any member has ``archived`` set.
+        """
         return any(p.metadata.archived for p in self.partial_panels())
 
     @property
     def filename(self) -> Optional[str]:
-        """Return the filename of the panel, if available."""
+        """Filename of the sole member panel, if available.
+
+        Returns:
+            Member filename when the combination has exactly one panel.
+
+        Raises:
+            AttributeError: If more than one member panel is present.
+        """
         if self.num_partial_panels == 1:
             return self.partial_panels()[0].filename
         else:
@@ -1165,7 +1402,12 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
     @property
     def filepath(self) -> Optional[Path]:
-        """Return the full path of the panel file, if available."""
+        """Shared source path when all members come from one file.
+
+        Returns:
+            The common filepath, or ``None`` (with a warning) when members
+            come from different paths.
+        """
         unique_filepaths = set(p.filepath for p in self.partial_panels())
         if len(unique_filepaths) == 1:
             return unique_filepaths.pop()
@@ -1183,14 +1425,25 @@ class PNAAntibodyPanelCombination(PNAPanel):
         file_name: Optional[str] = None,
         filepath: Optional[PathType] = None,
     ) -> Self:
-        """Create a panel combination from an AnnData object.
+        """Create a combination from AnnData multi-panel ``uns`` entries.
+
+        Uses ``num_partial_panels``, ``panel_metadata__{i}``, and
+        ``panel_df__{i}`` when present. If those keys are missing, wraps a
+        single panel from the appropriate typed ``from_adata`` constructor.
 
         Args:
-            adata: AnnData with embedded panel information.
+            adata: AnnData with embedded panel metadata and dataframes.
             file_name: Optional basename of the source file; applied to each
                 restored member panel.
             filepath: Optional full path of the source file; applied to each
                 restored member panel.
+
+        Returns:
+            Combination of all panels stored on ``adata``.
+
+        Raises:
+            KeyError: If a multi-panel index is missing its dataframe.
+            ValueError: If the restored panels conflict.
         """
         if "num_partial_panels" not in adata.uns:
             panel_type = get_panel_type_from_metadata(
@@ -1229,19 +1482,36 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
 
 class PNABasePanel(PartialPNAAntibodyPanel):
-    """Class representing a base panel for PNA."""
+    """Core / base marker panel for a PNA assay.
+
+    Requires metadata ``panel_type``
+    :attr:`~pixelator.common.config.panel.PanelType.BASE`. Typically the main
+    marker set in a
+    :class:`~pixelator.pna.config.panel.PNAAntibodyPanelCombination`.
+    """
 
     _panel_type = PanelType.BASE
 
 
 class PNAAddonPanel(PartialPNAAntibodyPanel):
-    """Class representing an addon panel for PNA."""
+    """Addon marker panel used together with a base panel.
+
+    Requires metadata ``panel_type``
+    :attr:`~pixelator.common.config.panel.PanelType.ADDON`. Addon markers are
+    concatenated with base (and optional hashing) panels in a
+    :class:`~pixelator.pna.config.panel.PNAAntibodyPanelCombination`.
+    """
 
     _panel_type = PanelType.ADDON
 
 
 class PNASampleHashingPanel(PartialPNAAntibodyPanel):
-    """Class representing a sample hashing panel for PNA."""
+    """Sample-hashing antibody panel for PNA.
+
+    Requires metadata ``panel_type``
+    :attr:`~pixelator.common.config.panel.PanelType.SAMPLE_HASHING` and a
+    ``sample_hashing`` column that is ``True`` / ``yes`` for every row.
+    """
 
     _panel_type = PanelType.SAMPLE_HASHING
 
@@ -1252,7 +1522,17 @@ class PNASampleHashingPanel(PartialPNAAntibodyPanel):
 
     @classmethod
     def validate_antibody_panel(cls, panel_df, validate_types=True):
-        """Validate that the panel dataframe is a valid sample hashing panel."""
+        """Validate panel schema plus the sample-hashing column constraint.
+
+        Args:
+            panel_df: Panel dataframe to validate.
+            validate_types: If True, also check column dtypes.
+
+        Returns:
+            Validation error messages; empty means the panel is valid. Includes
+            parent checks and an error when any row has ``sample_hashing`` not
+            set.
+        """
         return super().validate_antibody_panel(panel_df, validate_types) + (
             []
             if (panel_df["sample_hashing"]).all()

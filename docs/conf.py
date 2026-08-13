@@ -110,6 +110,9 @@ autoapi_member_order = "alphabetical"
 autoapi_python_class_content = "class"
 autoapi_python_use_implicit_namespaces = True
 autoapi_own_page_level = "function"
+# Custom templates: class.rst sets py:currentmodule + qual_name on own pages
+# and qualifies short Bases: names so AutoAPI inheritance links resolve.
+autoapi_template_dir = "_templates/autoapi"
 
 
 templates_path = ["_templates"]
