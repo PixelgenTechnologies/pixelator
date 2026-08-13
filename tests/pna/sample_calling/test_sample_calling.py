@@ -15,7 +15,10 @@ import pytest
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna import read
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanelCombination
+from pixelator.pna.config.panel import (
+    PartialPNAAntibodyPanel,
+    PNAAntibodyPanelCombination,
+)
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling import (
     _add_original_hash_counts_to_obs,
@@ -456,13 +459,15 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
     ).set_index("marker_id")
 
     panel = PNAAntibodyPanelCombination(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(
-            name="test-panel",
-            version="0.1.0",
-            aliases=["test-panel"],
-            description="Synthetic panel for sample-calling dehashing regression test.",
-        ),
+        PartialPNAAntibodyPanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="test-panel",
+                version="0.1.0",
+                aliases=["test-panel"],
+                description="Synthetic panel for sample-calling dehashing regression test.",
+            ),
+        )
     )
 
     # Keep the edgelist graph connected so "stranded node" removal
@@ -557,13 +562,15 @@ def test_sample_calling_without_uei_count(tmp_path: Path):
     ).set_index("marker_id")
 
     panel = PNAAntibodyPanelCombination(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(
-            name="test-panel",
-            version="0.1.0",
-            aliases=["test-panel"],
-            description="Synthetic panel for sample-calling without uei_count.",
-        ),
+        PartialPNAAntibodyPanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="test-panel",
+                version="0.1.0",
+                aliases=["test-panel"],
+                description="Synthetic panel for sample-calling without uei_count.",
+            ),
+        )
     )
 
     edgelist = pl.DataFrame(

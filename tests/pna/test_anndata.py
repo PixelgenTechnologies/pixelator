@@ -291,9 +291,7 @@ def test_pna_edgelist_to_anndata_save_adata(pixelconnection, tmp_path):
 
 def test_add_panel_information_multi_panel(panel, hashing_panel):
     """Verify multi-panel combinations are serialized and round-tripped from AnnData."""
-    combo = PNAAntibodyPanelCombination.from_list_of_subpanels(
-        [panel.partial_panels()[0], hashing_panel]
-    )
+    combo = PNAAntibodyPanelCombination([panel.partial_panels()[0], hashing_panel])
     adata = AnnData(
         obs=pd.DataFrame(index=["component-1"]),
         var=pd.DataFrame(index=["MarkerA"]),

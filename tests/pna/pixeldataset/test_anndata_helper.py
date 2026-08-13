@@ -233,12 +233,8 @@ class TestTryBumpAdataPanelVersion:
         dataset = _build_two_sample_dataset_with_panels(
             tmp_path=tmp_path,
             edgelist_parquet_path=edgelist_parquet_path,
-            panel_old=PNAAntibodyPanelCombination.from_list_of_subpanels(
-                [panel_old, hashing_panel]
-            ),
-            panel_new=PNAAntibodyPanelCombination.from_list_of_subpanels(
-                [panel_new, hashing_panel]
-            ),
+            panel_old=PNAAntibodyPanelCombination([panel_old, hashing_panel]),
+            panel_new=PNAAntibodyPanelCombination([panel_new, hashing_panel]),
         )
         helper = AnnDataHelper(dataset.view)
 
@@ -290,10 +286,11 @@ class TestTryBumpAdataPanelVersion:
         assert adata_new[:, hashing_marker_ids].var.equals(
             bumped[1][:, hashing_marker_ids].var
         )
-        reconstructed_hp = PNAAntibodyPanelCombination.from_adata(
+        reconstructed_hashing = PNAAntibodyPanelCombination.from_adata(
             bumped[0]
-        ).hashing_panels[0]
-        assert reconstructed_hp == hashing_panel
+        ).hashing_panels
+        assert reconstructed_hashing is not None
+        assert reconstructed_hashing[0] == hashing_panel
 
     @pytest.mark.parametrize(
         "new_version,new_product",
@@ -339,12 +336,8 @@ class TestTryBumpAdataPanelVersion:
         dataset = _build_two_sample_dataset_with_panels(
             tmp_path=tmp_path,
             edgelist_parquet_path=edgelist_parquet_path,
-            panel_old=PNAAntibodyPanelCombination.from_list_of_subpanels(
-                [panel_old, hashing_panel]
-            ),
-            panel_new=PNAAntibodyPanelCombination.from_list_of_subpanels(
-                [panel_new, hashing_panel]
-            ),
+            panel_old=PNAAntibodyPanelCombination([panel_old, hashing_panel]),
+            panel_new=PNAAntibodyPanelCombination([panel_new, hashing_panel]),
         )
         helper = AnnDataHelper(dataset.view)
 

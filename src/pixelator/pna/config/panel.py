@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Set
@@ -700,7 +701,7 @@ def load_antibody_panel(
             panel_obj.filename,
         )
         return_panels.append(panel_obj)
-    return PNAAntibodyPanelCombination.from_list_of_subpanels(return_panels)
+    return PNAAntibodyPanelCombination(return_panels)
 
 
 class PNAAntibodyPanelDiff:
@@ -977,10 +978,10 @@ class PNAAntibodyPanelCombination(PNAPanel):
     differ: :attr:`metadata` is a list, and display fields such as :attr:`name`
     / :attr:`version` join member values with ``" + "``.
 
-    Prefer :meth:`from_list_of_subpanels`, :meth:`from_panel`, or
-    :func:`~pixelator.pna.config.panel.load_antibody_panel` to construct
-    instances. Raises if panels are incompatible (conflicting ``marker_id``
-    rows or duplicate clone sequences).
+    Construct with one or more member panels, or use :meth:`from_csv` /
+    :func:`~pixelator.pna.config.panel.load_antibody_panel`. Raises if panels
+    are incompatible (conflicting ``marker_id`` rows or duplicate clone
+    sequences).
     """
 
     _REQUIRED_COLUMNS = {
@@ -995,33 +996,18 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
     def __init__(
         self,
-        df: pd.DataFrame,
-        metadata: AntibodyPanelMetadata | list[AntibodyPanelMetadata],
-        file_name: Optional[str] = None,
-        filepath: Optional[PathType] = None,
-    ):
-        """Initialize a combination from a single-panel dataframe and metadata.
-
-        Supported shape is a normal panel ``df`` plus one
-        :class:`~pixelator.common.config.panel.AntibodyPanelMetadata` instance;
-        the panel is wrapped via :meth:`add_panel`. Multi-panel dataframes that
-        already include ``partial_panel_*`` columns are not constructed here.
+        panels: PartialPNAAntibodyPanel | Sequence[PartialPNAAntibodyPanel],
+    ) -> None:
+        """Initialize a combination from one panel or a sequence of panels.
 
         Args:
-            df: Marker dataframe for the first (or only) member panel.
-            metadata: Metadata for that panel (not a list).
-            file_name: Optional basename of the source file.
-            filepath: Optional full path of the source file.
+            panels: A single
+                :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel`
+                (including typed subclasses), or a non-empty sequence of them.
 
         Raises:
-            ValueError: If ``metadata`` is ``None`` or the ``df`` / metadata
-                shape is not supported.
-            NotImplementedError: If a pre-combined multi-panel dataframe is
-                passed; use :meth:`from_list_of_subpanels` instead.
+            ValueError: If ``panels`` is empty or members conflict.
         """
-        if metadata is None:
-            raise ValueError("Panel metadata cannot be None")
-
         self.base_panels = []
         self.hashing_panels = None
         self.addon_panels = None
@@ -1029,39 +1015,23 @@ class PNAAntibodyPanelCombination(PNAPanel):
         # a combination never has a filename itself but the partial panel member might have
         self._filename = None
 
-        if (
-            "partial_panel_name" not in df.columns
-            and "partial_panel_type" not in df.columns
-            and isinstance(metadata, AntibodyPanelMetadata)
-        ):
-            panel_type_class = get_panel_type_from_metadata(metadata)
-            panel = panel_type_class(
-                df, metadata, file_name=file_name, filepath=filepath
-            )
-            self.add_panel(panel)
-            self._df = self.df  # add in the extra columns
-        elif (
-            "partial_panel_name" in df.columns
-            and "partial_panel_type" in df.columns
-            and isinstance(metadata, list)
-            and all(isinstance(m, AntibodyPanelMetadata) for m in metadata)
-        ):
-            raise NotImplementedError(
-                "Please initialise using from_list_of_subpanels instead"
-            )
+        if isinstance(panels, PartialPNAAntibodyPanel):
+            panel_list: list[PartialPNAAntibodyPanel] = [panels]
         else:
-            raise ValueError(
-                "Cannot initialise PNAAntibodyPanelCombination with the provided dataframe and "
-                "metadata."
-            )
-        self._df = self.df
+            panel_list = list(panels)
+
+        if not panel_list:
+            raise ValueError("At least one panel is required to build a combination.")
+
+        for panel in panel_list:
+            self.add_panel(panel)
 
     @classmethod
     def from_csv(cls, filename: PathType) -> Self:
         """Create a one-member combination from a CSV panel file.
 
         Loads the panel with :func:`~pixelator.pna.config.panel.panel_from_csv`
-        and wraps it via :meth:`from_panel`.
+        and wraps it as a one-member combination.
 
         Args:
             filename: Path to a ``.csv`` panel file with YAML front-matter.
@@ -1069,26 +1039,7 @@ class PNAAntibodyPanelCombination(PNAPanel):
         Returns:
             Combination containing the loaded panel.
         """
-        return cls.from_panel(panel_from_csv(filename))
-
-    @classmethod
-    def from_panel(cls, panel: PartialPNAAntibodyPanel) -> Self:
-        """Wrap a single panel as a one-member combination.
-
-        Args:
-            panel: Any
-                :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel`
-                (including typed subclasses).
-
-        Returns:
-            Combination containing only ``panel``.
-        """
-        return cls(
-            df=panel.df,
-            metadata=panel.metadata,
-            file_name=panel.filename,
-            filepath=panel.filepath,
-        )
+        return cls(panel_from_csv(filename))
 
     def __eq__(self, other: object) -> bool:
         """Check if two panels are equal based on dataframe and metadata.
@@ -1280,34 +1231,6 @@ class PNAAntibodyPanelCombination(PNAPanel):
                 raise ValueError(f"Unknown panel type: {panel.__class__.__name__}")
         self._df = self.df
 
-    @classmethod
-    def from_list_of_subpanels(
-        cls,
-        panels: list[
-            PartialPNAAntibodyPanel
-            | PNABasePanel
-            | PNASampleHashingPanel
-            | PNAAddonPanel
-        ],
-    ) -> Self:
-        """Build a combination by adding panels in order.
-
-        Args:
-            panels: Non-empty list of member panels.
-
-        Returns:
-            Combination containing all ``panels``.
-
-        Raises:
-            ValueError: If ``panels`` is empty or members conflict.
-        """
-        if not panels:
-            raise ValueError("At least one panel is required to build a combination.")
-        combination = cls.from_panel(panels[0])
-        for panel in panels[1:]:
-            combination.add_panel(panel)
-        return combination
-
     @property
     def name(self) -> str:
         """Joined display name of all member panels.
@@ -1478,7 +1401,7 @@ class PNAAntibodyPanelCombination(PNAPanel):
                     )
                 )
 
-        return cls.from_list_of_subpanels(subpanels)
+        return cls(subpanels)
 
 
 class PNABasePanel(PartialPNAAntibodyPanel):

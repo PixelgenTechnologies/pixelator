@@ -19,6 +19,7 @@ import pytest
 from pixelator.common.config import AntibodyPanelMetadata, PanelType
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import (
+    PartialPNAAntibodyPanel,
     PNAAntibodyPanelCombination,
     PNASampleHashingPanel,
 )
@@ -267,13 +268,15 @@ def panel_fixture():
     )
 
     return PNAAntibodyPanelCombination(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(
-            name="test-pna-panel",
-            version="0.1.0",
-            aliases=["test-pna"],
-            description="Test R&D panel for RNA",
-        ),
+        PartialPNAAntibodyPanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="test-pna-panel",
+                version="0.1.0",
+                aliases=["test-pna"],
+                description="Test R&D panel for PNA",
+            ),
+        )
     )
 
 

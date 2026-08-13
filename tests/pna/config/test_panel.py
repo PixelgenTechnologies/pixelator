@@ -47,9 +47,11 @@ def test_panel_validation(panel_df):
         "aliases": ["test_alias"],
     }
     panel = PNAAntibodyPanelCombination(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(**metadata),
-        file_name="test.csv",
+        PartialPNAAntibodyPanel(
+            panel_df,
+            AntibodyPanelMetadata(**metadata),
+            file_name="test.csv",
+        )
     )
 
     assert panel.name == metadata["name"]
@@ -78,12 +80,8 @@ def test_panel_combination_classifies_hashing_panel_regardless_of_order(
             panel_type=PanelType.BASE,
         ),
     )
-    combo_hashing_first = PNAAntibodyPanelCombination.from_list_of_subpanels(
-        [hashing_panel, base]
-    )
-    combo_base_first = PNAAntibodyPanelCombination.from_list_of_subpanels(
-        [base, hashing_panel]
-    )
+    combo_hashing_first = PNAAntibodyPanelCombination([hashing_panel, base])
+    combo_base_first = PNAAntibodyPanelCombination([base, hashing_panel])
 
     for combo in (combo_hashing_first, combo_base_first):
         assert len(combo.base_panels) == 1
@@ -99,7 +97,7 @@ def test_combination_rejects_duplicate_sequences(panel_df):
         name="panel-b", version="0.0.0", panel_type=PanelType.BASE
     )
     with pytest.raises(ValueError, match="Duplicate sequences found"):
-        PNAAntibodyPanelCombination.from_list_of_subpanels(
+        PNAAntibodyPanelCombination(
             [
                 PNABasePanel(panel_df, meta1),
                 PNABasePanel(panel_df.copy(), meta2),
@@ -118,7 +116,7 @@ def test_combination_rejects_conflicting_duplicate_marker_id(panel_df):
     conflicting_df.loc["marker1", "sequence_1"] = "TTTT"
 
     with pytest.raises(ValueError, match="Conflicting duplicate marker_id"):
-        PNAAntibodyPanelCombination.from_list_of_subpanels(
+        PNAAntibodyPanelCombination(
             [
                 PNABasePanel(panel_df, meta1),
                 PNABasePanel(conflicting_df, meta2),
@@ -133,7 +131,7 @@ def test_combination_aliases_raises_for_multi_panel(panel_df, hashing_panel):
             name="base-panel", version="0.0.0", panel_type=PanelType.BASE
         ),
     )
-    combo = PNAAntibodyPanelCombination.from_list_of_subpanels([base, hashing_panel])
+    combo = PNAAntibodyPanelCombination([base, hashing_panel])
 
     with pytest.raises(AttributeError, match="Cannot get aliases"):
         _ = combo.aliases
@@ -152,11 +150,13 @@ def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
         match=r".*The marker_id column should not contain underscores.*Offending values:.*",
     ):
         PNAAntibodyPanelCombination(
-            df=panel_df,
-            metadata=AntibodyPanelMetadata(
-                name="mock-name",
-                version="0.0.0",
-            ),
+            PartialPNAAntibodyPanel(
+                panel_df,
+                AntibodyPanelMetadata(
+                    name="mock-name",
+                    version="0.0.0",
+                ),
+            )
         )
 
 
@@ -173,11 +173,13 @@ def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
         match=r".*The marker_id column should not contain white-spaces.*Offending values:.*",
     ):
         PNAAntibodyPanelCombination(
-            df=panel_df,
-            metadata=AntibodyPanelMetadata(
-                name="mock-name",
-                version="0.0.0",
-            ),
+            PartialPNAAntibodyPanel(
+                panel_df,
+                AntibodyPanelMetadata(
+                    name="mock-name",
+                    version="0.0.0",
+                ),
+            )
         )
 
 
@@ -194,11 +196,13 @@ def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
         match=r".*Invalid UniProt IDs found.*Please conform to the naming convention or remove the following IDs:.*",
     ):
         PNAAntibodyPanelCombination(
-            df=panel_df,
-            metadata=AntibodyPanelMetadata(
-                name="mock-name",
-                version="0.0.0",
-            ),
+            PartialPNAAntibodyPanel(
+                panel_df,
+                AntibodyPanelMetadata(
+                    name="mock-name",
+                    version="0.0.0",
+                ),
+            )
         )
 
 
@@ -210,11 +214,13 @@ def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
     """
     panel_df.loc["marker1", "uniprot_id"] = "P05107;P15391"
     PNAAntibodyPanelCombination(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(
-            name="mock-name",
-            version="0.0.0",
-        ),
+        PartialPNAAntibodyPanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="mock-name",
+                version="0.0.0",
+            ),
+        )
     )
 
 
@@ -226,11 +232,13 @@ def test_panel_validation_ok_uniprotid_empty(panel_df):
     """
     panel_df.loc["marker1", "uniprot_id"] = ""
     PNAAntibodyPanelCombination(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(
-            name="mock-name",
-            version="0.0.0",
-        ),
+        PartialPNAAntibodyPanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="mock-name",
+                version="0.0.0",
+            ),
+        )
     )
 
 
@@ -269,9 +277,7 @@ def test_antibody_panel_metadata_from_adata_rejects_incomplete_schema():
 def test_combination_from_adata_rejects_missing_panel_df(panel, hashing_panel):
     from pixelator.pna.anndata import add_panel_information
 
-    combo = PNAAntibodyPanelCombination.from_list_of_subpanels(
-        [panel.partial_panels()[0], hashing_panel]
-    )
+    combo = PNAAntibodyPanelCombination([panel.partial_panels()[0], hashing_panel])
     adata = AnnData(
         obs=pd.DataFrame(index=["c1"]),
         var=pd.DataFrame(index=["MarkerA"]),
@@ -321,7 +327,7 @@ def test_panel_from_pxl(pxl_file):
     panel = PNAAntibodyPanelCombination.from_pxl_dataset(read(pxl_file))
     assert panel.name == "test-pna-panel"
     assert panel.version == "0.1.0"
-    assert panel.description == "Test R&D panel for RNA"
+    assert panel.description == "Test R&D panel for PNA"
     assert panel.aliases == ["test-pna"]
     assert panel.filename == Path(pxl_file).name
     assert panel.filepath == Path(pxl_file).resolve()

@@ -8,7 +8,10 @@ import pandas as pd
 import pytest
 
 from pixelator.common.config.panel import AntibodyPanelMetadata
-from pixelator.pna.config import PNAAntibodyPanelCombination
+from pixelator.pna.config.panel import (
+    PartialPNAAntibodyPanel,
+    PNAAntibodyPanelCombination,
+)
 
 
 @pytest.fixture(name="mock_panel")
@@ -50,8 +53,7 @@ def mock_panel_fixture(request):
     )
 
     mock_antibody_panel = PNAAntibodyPanelCombination(
-        df=df.set_index("marker_id"),
-        metadata=metadata,
+        PartialPNAAntibodyPanel(df.set_index("marker_id"), metadata)
     )
     return mock_antibody_panel
 
