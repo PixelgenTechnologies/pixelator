@@ -20,10 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - The default number of cores and the fallbacks used when `--cores` is not set now respect the
-  CPU affinity and cgroup/container limits of the running process (via `os.process_cpu_count()`
-  or `os.sched_getaffinity()`) instead of always reporting the host machine's core count. This
-  prevents multiprocessing oversubscription and slowdowns when running inside a container or pod
-  with a restricted CPU allocation.
+  CPU affinity of the running process (via `os.process_cpu_count()` or `os.sched_getaffinity()`)
+  as well as the cgroup CPU bandwidth quota used by container CPU limits such as
+  `docker run --cpus` and Kubernetes `limits.cpu` (via `cpu.max` on cgroup v2 and
+  `cpu.cfs_quota_us`/`cpu.cfs_period_us` on cgroup v1), instead of always reporting the host
+  machine's core count. This prevents multiprocessing oversubscription and slowdowns when running
+  inside a container or pod with a restricted CPU allocation.
 
 ## [0.30.0] - 2026-08-05
 

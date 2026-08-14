@@ -10,6 +10,7 @@ import gzip
 import itertools
 import json
 import logging
+import math
 import multiprocessing
 import os
 import re
@@ -394,19 +395,11 @@ def _add_handlers_to_root_logger(port, log_level):
     root_logger.addHandler(socket_handler)
 
 
-def get_available_cpu_count() -> int:
-    """Return the number of CPU cores available to the current process.
+_CGROUP_ROOT = Path("/sys/fs/cgroup")
 
-    Prefer CPU counts that respect the process' CPU affinity and cgroup or
-    container limits over the total number of cores on the host machine. When
-    running inside a constrained environment such as a container or a scheduler
-    pod, ``multiprocessing.cpu_count()`` reports the host core count rather than
-    the cores actually assigned to the process, which leads to oversubscription
-    and slower multiprocessing.
 
-    Returns:
-        The number of usable CPU cores, always at least 1.
-    """
+def _affinity_cpu_count() -> int:
+    """Return the number of CPU cores the current process may be scheduled on."""
     # os.process_cpu_count() (Python 3.13+) already accounts for CPU affinity.
     process_cpu_count = getattr(os, "process_cpu_count", None)
     if process_cpu_count is not None:
@@ -425,6 +418,68 @@ def get_available_cpu_count() -> int:
 
     # Fall back to the total number of cores on the machine (e.g. on Windows).
     return os.cpu_count() or 1
+
+
+def _cgroup_cpu_quota_count() -> Optional[int]:
+    """Return the number of CPU cores allowed by the cgroup CPU bandwidth limit.
+
+    Container CPU limits (``docker run --cpus``, Kubernetes ``limits.cpu``) are
+    usually enforced with a CFS bandwidth quota rather than a cpuset, and are
+    therefore invisible to the CPU affinity APIs. Inside a container the
+    container's own cgroup is what is mounted at ``/sys/fs/cgroup``, so the quota
+    can be read from the cgroup v2 or v1 files there.
+
+    Returns:
+        The number of cores the quota corresponds to, rounded up, or None if no
+        quota is set or it cannot be read.
+    """
+    cpu_max_file = _CGROUP_ROOT / "cpu.max"
+    quota_file = _CGROUP_ROOT / "cpu" / "cpu.cfs_quota_us"
+    period_file = _CGROUP_ROOT / "cpu" / "cpu.cfs_period_us"
+
+    try:
+        if cpu_max_file.is_file():
+            quota, period = cpu_max_file.read_text().split()
+        elif quota_file.is_file() and period_file.is_file():
+            quota = quota_file.read_text().strip()
+            period = period_file.read_text().strip()
+        else:
+            return None
+
+        # "max" (cgroup v2) and a negative quota (cgroup v1) mean "no limit".
+        if quota == "max":
+            return None
+        quota_us = int(quota)
+        period_us = int(period)
+    except (OSError, ValueError):
+        return None
+
+    if quota_us <= 0 or period_us <= 0:
+        return None
+
+    return max(1, math.ceil(quota_us / period_us))
+
+
+def get_available_cpu_count() -> int:
+    """Return the number of CPU cores available to the current process.
+
+    Prefer CPU counts that respect the process' CPU affinity and cgroup or
+    container limits over the total number of cores on the host machine. When
+    running inside a constrained environment such as a container or a scheduler
+    pod, ``multiprocessing.cpu_count()`` reports the host core count rather than
+    the cores actually assigned to the process, which leads to oversubscription
+    and slower multiprocessing.
+
+    Returns:
+        The number of usable CPU cores, always at least 1.
+    """
+    count = _affinity_cpu_count()
+
+    quota_count = _cgroup_cpu_quota_count()
+    if quota_count is not None:
+        count = min(count, quota_count)
+
+    return max(1, count)
 
 
 def _pre_multiprocessing_args(
