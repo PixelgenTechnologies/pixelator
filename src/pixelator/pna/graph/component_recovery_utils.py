@@ -391,63 +391,47 @@ def remove_clashing_umis(
     return no_clash_edgelist_path, updated_stats
 
 
-def create_working_edgelist(
+def write_community_detection_input(
     input_edgelist_path: Path,
     working_dir: Path = DEFAULT_WORKING_DIR,
-) -> tuple[Path, Path]:
-    """Build a dense node-id edgelist and a map from original to working node names.
+) -> Path:
+    """Project an edgelist to the columns consumed by native community detection.
+
+    The native ``run_hybrid_community_detection`` builds a dense node index from the ``umi1``
+    and ``umi2`` values internally, so no Python-side densification is required; the original
+    UMI values are passed through unchanged. Only the columns used downstream are kept, and any
+    pre-existing ``component`` column is dropped so the native code can add its own.
 
     Args:
         input_edgelist_path: Path to the input edgelist in Parquet format.
-        working_dir: Directory for ``node_map.parquet`` and ``working_edgelist.parquet``; defaults
-            to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+        working_dir: Directory for ``community_detection_edgelist.parquet``; defaults to
+            ``DEFAULT_WORKING_DIR`` (``/tmp``).
 
     Returns:
-        ``(working_edgelist_path, node_map_path)``.
+        Path to the written ``community_detection_edgelist.parquet``.
     """
-    node_map_path = working_dir / "node_map.parquet"
-    working_edgelist_path = working_dir / "working_edgelist.parquet"
+    community_detection_edgelist_path = (
+        working_dir / "community_detection_edgelist.parquet"
+    )
     with connect_duckdb() as con:
         con.execute(
             f"CREATE VIEW input_edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
         )
-
-        con.execute("""
-            CREATE VIEW node_map AS
-            WITH all_umis AS (
-                SELECT umi1 AS original_name FROM input_edgelist
-                UNION
-                SELECT umi2 AS original_name FROM input_edgelist
-            )
-            SELECT
-                original_name,
-                CAST(ROW_NUMBER() OVER (ORDER BY original_name) - 1 AS UINT64) AS working_name
-            FROM all_umis
-        """)
-
-        uei_count_sql = "ie.uei_count," if has_uei_count(con, "input_edgelist") else ""
+        uei_count_sql = "uei_count," if has_uei_count(con, "input_edgelist") else ""
         con.execute(f"""
-            CREATE VIEW working_edgelist AS
-            SELECT
-                nm1.working_name AS umi1,
-                nm2.working_name AS umi2,
-                ie.read_count,
-                {uei_count_sql}
-                ie.marker_1,
-                ie.marker_2
-            FROM input_edgelist ie
-            JOIN node_map nm1 ON ie.umi1 = nm1.original_name
-            JOIN node_map nm2 ON ie.umi2 = nm2.original_name
+            COPY (
+                SELECT
+                    umi1,
+                    umi2,
+                    read_count,
+                    {uei_count_sql}
+                    marker_1,
+                    marker_2
+                FROM input_edgelist
+            ) TO '{str(community_detection_edgelist_path)}' (FORMAT PARQUET)
         """)
 
-        con.execute(
-            f"COPY (SELECT * FROM node_map) TO '{str(node_map_path)}' (FORMAT PARQUET)"
-        )
-        con.execute(
-            f"COPY (SELECT * FROM working_edgelist) TO '{str(working_edgelist_path)}' (FORMAT PARQUET)"
-        )
-
-    return working_edgelist_path, node_map_path
+    return community_detection_edgelist_path
 
 
 def filter_edgelist_by_read_count(

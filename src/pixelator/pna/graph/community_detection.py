@@ -23,7 +23,6 @@ from pixelator.common.utils import get_process_pool_executor
 from pixelator.pna.cli.common import logger
 from pixelator.pna.graph.component_recovery_utils import (
     ConnectedComponentException,
-    create_working_edgelist,
     filter_connected_components_by_size,
     filter_edgelist_by_read_count,
     initialize_graph_statistics,
@@ -31,6 +30,7 @@ from pixelator.pna.graph.component_recovery_utils import (
     name_components_with_umi_hashes_from_parquet,
     populate_component_stats_from_hybrid_detection,
     remove_clashing_umis,
+    write_community_detection_input,
     write_hive_partitioned_edgelist_without_out_of_size_bound_components,
 )
 from pixelator.pna.graph.constants import (
@@ -84,40 +84,6 @@ class MultipletRecoveryStats:
     crossing_edges_removed: int = 0
     crossing_edges_removed_in_initial_stage: int = 0
     max_recursion_depth: int = 0
-
-
-def map_working_to_original_umi_names(
-    input_edgelist_path: Path, node_map_path: Path, working_dir: Path
-) -> Path:
-    """Replace working UMI names in an edgelist with original names and write parquet."""
-    output_path = working_dir / "edgelist_with_original_umis.parquet"
-    with connect_duckdb() as con:
-        missing_count_row = con.execute(f"""
-            SELECT COUNT(*) AS n_missing
-            FROM parquet_scan('{str(input_edgelist_path)}') e
-            LEFT JOIN read_parquet('{str(node_map_path)}') m1 ON e.umi1 = m1.working_name
-            LEFT JOIN read_parquet('{str(node_map_path)}') m2 ON e.umi2 = m2.working_name
-            WHERE m1.original_name IS NULL OR m2.original_name IS NULL
-        """).fetchone()
-        if missing_count_row is None:
-            msg = "Failed to compute missing UMI mapping count"
-            raise RuntimeError(msg)
-        missing_count = int(missing_count_row[0])
-        if missing_count > 0:
-            raise ValueError("Missing UMI mapping for one or more edges")
-
-        con.execute(f"""
-            COPY (
-                SELECT
-                    e.* EXCLUDE (umi1, umi2),
-                    m1.original_name AS umi1,
-                    m2.original_name AS umi2
-                FROM parquet_scan('{str(input_edgelist_path)}') e
-                JOIN read_parquet('{str(node_map_path)}') m1 ON e.umi1 = m1.working_name
-                JOIN read_parquet('{str(node_map_path)}') m2 ON e.umi2 = m2.working_name
-            ) TO '{str(output_path)}' (FORMAT PARQUET)
-        """)
-    return output_path
 
 
 def calculate_post_recovery_component_statistics(
@@ -535,8 +501,8 @@ def find_components(
         working_dir=working_dir,
     )
 
-    logger.info("Starting component finding process.")
-    working_edgelist_path, node_map_path = create_working_edgelist(
+    logger.info("Preparing edgelist for community detection.")
+    community_detection_edgelist_path = write_community_detection_input(
         input_edgelist_path=filtered_edgelist_path,
         working_dir=working_dir,
     )
@@ -548,7 +514,7 @@ def find_components(
         post_flp_stats,
         post_recovery_stats,
     ) = run_hybrid_community_detection(
-        parquet_file=str(working_edgelist_path),
+        parquet_file=str(community_detection_edgelist_path),
         resolution=refinement_options.initial_stage_options.leiden_resolution,
         output=str(working_dir / "partitioned_edgelist.parquet"),
         flp_epochs=2,
@@ -678,12 +644,6 @@ def find_components(
         working_dir=working_dir,
     )
 
-    logger.info("Mapping UMIs to original names.")
-    latest_working_edgelist_path = map_working_to_original_umi_names(
-        input_edgelist_path=latest_working_edgelist_path,
-        node_map_path=node_map_path,
-        working_dir=working_dir,
-    )
     logger.info("Creating component names from UMIs.")
     final_edgelist_with_components = name_components_with_umi_hashes_from_parquet(
         input_edgelist_path=latest_working_edgelist_path,

@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - The deprecated `pixelator single-cell-pna graph_legacy` command and its underlying
   `pixelator.pna.graph_legacy` implementation. Use `pixelator single-cell-pna graph` instead.
+- The PNA graph step no longer densifies UMI node ids in Python before community detection.
+  The native `run_hybrid_community_detection` already builds a dense node index internally and
+  returns the original UMIs, so the redundant `create_working_edgelist` /
+  `map_working_to_original_umi_names` round-trip has been removed (replaced by a lightweight
+  `write_community_detection_input` column projection). The recovered components are unchanged.
 
 ## [0.30.0] - 2026-08-05
 
