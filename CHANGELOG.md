@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
   `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
   use a release prior to 0.31.0 (for example `pip install 'pixelgen-pixelator<0.31.0'`).
+- The deprecated `pixelator single-cell-pna graph_legacy` command and its underlying
+  `pixelator.pna.graph_legacy` implementation. Use `pixelator single-cell-pna graph` instead.
 
 ### Changed
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
