@@ -7,11 +7,11 @@ import pytest
 
 from pixelator.pna.graph.component_recovery_utils import (
     create_component_size_data_frame,
-    create_working_edgelist,
     filter_connected_components_by_size,
     get_count_statistics,
     name_components_with_umi_hashes,
     name_components_with_umi_hashes_from_parquet,
+    write_community_detection_input,
     write_hive_partitioned_edgelist_without_out_of_size_bound_components,
 )
 from pixelator.pna.graph.report import GraphStatistics
@@ -64,8 +64,8 @@ def test_get_count_statistics_without_uei_count(tmp_path: Path) -> None:
     }
 
 
-def test_create_working_edgelist_without_uei_count(tmp_path: Path) -> None:
-    """Working edgelist omits uei_count when the input column is missing."""
+def test_write_community_detection_input_without_uei_count(tmp_path: Path) -> None:
+    """Community-detection input omits uei_count when the input column is missing."""
     path = tmp_path / "edgelist.parquet"
     pl.DataFrame(
         {
@@ -79,19 +79,62 @@ def test_create_working_edgelist_without_uei_count(tmp_path: Path) -> None:
         {"umi1": pl.UInt64, "umi2": pl.UInt64, "read_count": pl.UInt32}
     ).write_parquet(path)
 
-    working_edgelist_path, _ = create_working_edgelist(
+    community_detection_edgelist_path = write_community_detection_input(
         input_edgelist_path=path, working_dir=tmp_path
     )
-    working = pl.read_parquet(working_edgelist_path)
+    result = pl.read_parquet(community_detection_edgelist_path)
 
-    assert "uei_count" not in working.columns
-    assert set(working.columns) >= {
+    assert "uei_count" not in result.columns
+    assert set(result.columns) == {
         "umi1",
         "umi2",
         "read_count",
         "marker_1",
         "marker_2",
     }
+
+
+def test_write_community_detection_input_keeps_original_umis_and_drops_component(
+    tmp_path: Path,
+) -> None:
+    """Original UMI values pass through unchanged and any component column is dropped."""
+    path = tmp_path / "edgelist.parquet"
+    pl.DataFrame(
+        {
+            "umi1": [111, 222],
+            "umi2": [333, 444],
+            "component": ["c1", "c2"],
+            "read_count": [10, 20],
+            "uei_count": [1, 2],
+            "marker_1": ["A", "B"],
+            "marker_2": ["C", "D"],
+        }
+    ).cast(
+        {
+            "umi1": pl.UInt64,
+            "umi2": pl.UInt64,
+            "read_count": pl.UInt32,
+            "uei_count": pl.UInt16,
+        }
+    ).write_parquet(path)
+
+    community_detection_edgelist_path = write_community_detection_input(
+        input_edgelist_path=path, working_dir=tmp_path
+    )
+    result = pl.read_parquet(community_detection_edgelist_path)
+
+    assert "component" not in result.columns
+    assert set(result.columns) == {
+        "umi1",
+        "umi2",
+        "read_count",
+        "uei_count",
+        "marker_1",
+        "marker_2",
+    }
+    # UMIs are passed through unchanged (no densification to 0..n-1).
+    assert result["umi1"].to_list() == [111, 222]
+    assert result["umi2"].to_list() == [333, 444]
 
 
 def test_write_hive_partitioned_edgelist_without_out_of_size_bound_components_prunes(
