@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   recovery path. When the column is absent, sample calling skips it and graph molecule
   statistics use the number of edges.
 
+### Fixed
+- The default number of cores and the fallbacks used when `--cores` is not set now respect the
+  CPU affinity and cgroup/container limits of the running process (via `os.process_cpu_count()`
+  or `os.sched_getaffinity()`) instead of always reporting the host machine's core count. This
+  prevents multiprocessing oversubscription and slowdowns when running inside a container or pod
+  with a restricted CPU allocation.
+
 ## [0.30.0] - 2026-08-05
 
 ### Added
