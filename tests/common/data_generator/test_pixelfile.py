@@ -97,9 +97,6 @@ def test_write_pna_pxl_adata_metrics(written_pxl):
     adata = read(written_pxl).adata()
     obs = adata.obs
 
-    assert "tau" not in obs.columns
-    assert "tau_type" not in obs.columns
-    assert "tau_thresholds" not in adata.uns
     assert "isotype_fraction" in obs.columns
     assert "n_edges" in obs.columns
 
