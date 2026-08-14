@@ -7,10 +7,11 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
+from anndata import AnnData
 from pandas.testing import assert_frame_equal
 
 from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.pna.anndata import pna_edgelist_to_anndata
+from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 
@@ -286,3 +287,27 @@ def test_pna_edgelist_to_anndata_save_adata(pixelconnection, tmp_path):
     adata = pna_edgelist_to_anndata(pixelconnection, panel)
 
     adata.write_h5ad(tmp_path / "test.h5ad")
+
+
+def test_add_missing_adata_info_excludes_retired_tau_fields():
+    """Legacy Tau fields are not copied into rebuilt AnnData."""
+    old_adata = AnnData(
+        X=np.ones((1, 1)),
+        obs=pd.DataFrame(
+            {"retained": [1], "tau": [0.5], "tau_type": ["normal"]},
+            index=["component"],
+        ),
+        var=pd.DataFrame({"retained_var": [1]}, index=["marker"]),
+    )
+    new_adata = AnnData(
+        X=np.ones((1, 1)),
+        obs=pd.DataFrame(index=["component"]),
+        var=pd.DataFrame(index=["marker"]),
+    )
+
+    result = add_missing_adata_info(new_adata, old_adata)
+
+    assert "retained" in result.obs
+    assert "retained_var" in result.var
+    assert "tau" not in result.obs
+    assert "tau_type" not in result.obs
