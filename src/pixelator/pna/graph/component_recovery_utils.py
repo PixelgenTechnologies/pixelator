@@ -391,49 +391,6 @@ def remove_clashing_umis(
     return no_clash_edgelist_path, updated_stats
 
 
-def write_community_detection_input(
-    input_edgelist_path: Path,
-    working_dir: Path = DEFAULT_WORKING_DIR,
-) -> Path:
-    """Project an edgelist to the columns consumed by native community detection.
-
-    The native ``run_hybrid_community_detection`` builds a dense node index from the ``umi1``
-    and ``umi2`` values internally, so no Python-side densification is required; the original
-    UMI values are passed through unchanged. Only the columns used downstream are kept, and any
-    pre-existing ``component`` column is dropped so the native code can add its own.
-
-    Args:
-        input_edgelist_path: Path to the input edgelist in Parquet format.
-        working_dir: Directory for ``community_detection_edgelist.parquet``; defaults to
-            ``DEFAULT_WORKING_DIR`` (``/tmp``).
-
-    Returns:
-        Path to the written ``community_detection_edgelist.parquet``.
-    """
-    community_detection_edgelist_path = (
-        working_dir / "community_detection_edgelist.parquet"
-    )
-    with connect_duckdb() as con:
-        con.execute(
-            f"CREATE VIEW input_edgelist AS SELECT * FROM parquet_scan('{str(input_edgelist_path)}')"
-        )
-        uei_count_sql = "uei_count," if has_uei_count(con, "input_edgelist") else ""
-        con.execute(f"""
-            COPY (
-                SELECT
-                    umi1,
-                    umi2,
-                    read_count,
-                    {uei_count_sql}
-                    marker_1,
-                    marker_2
-                FROM input_edgelist
-            ) TO '{str(community_detection_edgelist_path)}' (FORMAT PARQUET)
-        """)
-
-    return community_detection_edgelist_path
-
-
 def filter_edgelist_by_read_count(
     input_edgelist_path: Path,
     min_read_count: int,
