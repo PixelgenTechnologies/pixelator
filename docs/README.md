@@ -35,7 +35,7 @@ Key files:
 
 - Imported members (`imported-members`) are intentionally included in the docs generation via `autoapi_options`.
 - Private members (`private-members`) are not included via `autoapi_options`.
-- Parts of the codebase, e.g. names related to MPX, are ignored via `autoapi_ignore`.
+- Parts of the codebase, e.g. cli related functions, are ignored via `autoapi_ignore`.
 
 
 
@@ -43,7 +43,7 @@ Key files:
 
 - Builds run in nitpicky mode (`nitpicky = True` in `docs/conf.py`, and the `-n` flag), so unresolved cross-references are reported as warnings. CI builds additionally pass `--fail-on-warning`, which means any warning fails the build.
 - Known-acceptable warnings are suppressed:
-  - `nitpick_ignore_regex` silences specific cross-reference targets that cannot be resolved (e.g. MPX names).
+  - `nitpick_ignore_regex` silences specific cross-reference targets that cannot be resolved (e.g. external dependencies).
   - `suppress_warnings` silences whole Sphinx warning categories (`ref.python`, `autoapi.python_import_resolution`).
   - A logging filter (`_keep_warning`) drops a small set of warnings that are emitted without a Sphinx type/subtype and so cannot be matched by `suppress_warnings`.
 - When new code introduces a cross-reference warning, prefer fixing the reference.

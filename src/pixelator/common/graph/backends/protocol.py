@@ -25,7 +25,7 @@ import polars as pl
 from scipy.sparse import csr_matrix
 
 if TYPE_CHECKING:
-    from pixelator.mpx.graph import Graph
+    from pixelator.common.graph.graph import Graph
 
 SupportedLayoutAlgorithm = Literal[
     "fruchterman_reingold",

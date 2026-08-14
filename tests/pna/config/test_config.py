@@ -9,10 +9,7 @@ import copy
 import pandas as pd
 import pytest
 
-from pixelator.common.config import (
-    RegionType,
-    get_position_in_parent,
-)
+from pixelator.pna.config.assay import PNARegionType, get_position_in_parent
 from pixelator.pna.config.config_class import (
     PNAConfig,
     load_assays_package,
@@ -82,7 +79,7 @@ def test_assay_get_regions_by_type():
 
     regions = assay.get_regions_by_type("lbs-1")
     for r in regions:
-        assert r.region_type is RegionType.LBS
+        assert r.region_type is PNARegionType.LBS
 
 
 def test_get_position_in_amplicon_pna_1():
@@ -388,7 +385,7 @@ def test_loading_duplicate_aliases(config_with_multiple_versions, pna_data_root)
         pna_data_root: pna data root.
     """
     this_config = copy.deepcopy(config_with_multiple_versions)
-    from pixelator.common.config.config_class import PanelException
+    from pixelator.pna.config.config_class import PanelException
 
     with pytest.raises(PanelException):
         this_config.load_panel_file(

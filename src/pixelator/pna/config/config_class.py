@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Tuple
 import semver
 from packaging.specifiers import SpecifierSet
 
-from pixelator.common.config.config_class import Config, PanelException
+from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 from pixelator.pna.config.assay import PNAAssay
@@ -296,9 +296,6 @@ class PNAConfig:
         return panels_with_key[0]
 
 
-ConfigType = typing.TypeVar("ConfigType", Config, PNAConfig)
-
-
 # Keep resource files materialized by ``importlib.resources.as_file`` alive for the
 # lifetime of the process. For packages imported from a zip (zipimport), ``as_file``
 # extracts the resource to a temporary file that is removed when its context manager
@@ -309,7 +306,7 @@ _resource_file_stack = ExitStack()
 atexit.register(_resource_file_stack.close)
 
 
-def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
+def load_assays_package(config: PNAConfig, package_name: str) -> PNAConfig:
     """Load default assays from a resources package.
 
     Args:
@@ -328,7 +325,7 @@ def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
     return config
 
 
-def load_panels_package(config: ConfigType, package_name: str) -> ConfigType:
+def load_panels_package(config: PNAConfig, package_name: str) -> PNAConfig:
     """Load default panels from a resources package.
 
     Args:
@@ -398,3 +395,9 @@ def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional
         specified_version = None
 
     return version_stripped_name, specified_version
+
+
+class PanelException(PixelatorBaseException):
+    """Exception raised for failures to load a panel into the global configuration."""
+
+    pass

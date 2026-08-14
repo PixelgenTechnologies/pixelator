@@ -44,7 +44,7 @@ from pixelator.common.graph.backends.protocol import (
 from pixelator.common.graph.math import mat_pow
 
 if TYPE_CHECKING:
-    from pixelator.mpx.graph import Graph
+    from pixelator.common.graph.graph import Graph
 
 logger = logging.getLogger(__name__)
 
@@ -719,7 +719,7 @@ class NetworkxBasedVertexClustering(VertexClustering):
 
     def giant(self) -> Graph:
         """Get the largest component."""
-        from pixelator.mpx.graph import Graph
+        from pixelator.common.graph.graph import Graph
 
         return Graph(
             NetworkXGraphBackend(
@@ -729,7 +729,7 @@ class NetworkxBasedVertexClustering(VertexClustering):
 
     def subgraphs(self) -> Iterable[Graph]:
         """Get subgraphs of each cluster."""
-        from pixelator.mpx.graph import Graph
+        from pixelator.common.graph.graph import Graph
 
         return [
             Graph(NetworkXGraphBackend(self._graph.subgraph(cluster).copy()))
