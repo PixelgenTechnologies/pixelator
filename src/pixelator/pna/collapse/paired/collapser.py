@@ -6,7 +6,6 @@ Copyright © 2024 Pixelgen Technologies AB.
 import dataclasses
 import logging
 import math
-import multiprocessing
 import time
 import typing
 from contextlib import contextmanager
@@ -26,6 +25,7 @@ import pyarrow.compute
 import pyarrow.parquet
 
 from pixelator.common.report.models import SummaryStatistics
+from pixelator.common.utils import get_available_cpu_count
 from pixelator.pna.collapse.adjacency import (
     build_network_cluster,
     build_network_directional,
@@ -228,7 +228,7 @@ class MoleculeCollapser:
     @cached_property
     def _effective_threads(self):
         if self.threads <= -1:
-            return multiprocessing.cpu_count() + 1 - abs(self.threads)
+            return get_available_cpu_count() + 1 - abs(self.threads)
 
         return self.threads
 
