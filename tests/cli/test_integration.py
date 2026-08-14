@@ -38,7 +38,6 @@ def test_command_line_interface():
         "demux",
         "collapse",
         "graph",
-        "graph_legacy",
         "sample-calling",
         "denoise",
         "analysis",
