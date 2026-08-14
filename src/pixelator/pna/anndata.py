@@ -214,10 +214,7 @@ def pna_edgelist_to_anndata(
 
 def add_missing_adata_info(new_adata: AnnData, old_adata: AnnData) -> AnnData:
     """Add missing obs and var columns from old_adata to new_adata."""
-    retired_obs_columns = {"tau", "tau_type"}
-    missing_obs = (
-        set(old_adata.obs.columns) - set(new_adata.obs.columns) - retired_obs_columns
-    )
+    missing_obs = set(old_adata.obs.columns) - set(new_adata.obs.columns)
     missing_var = set(old_adata.var.columns) - set(new_adata.var.columns)
 
     new_adata.obs = new_adata.obs.join(old_adata.obs[list(missing_obs)], how="left")
