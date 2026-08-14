@@ -4,7 +4,6 @@ Copyright © 2022 Pixelgen Technologies AB.
 """
 
 import atexit
-import multiprocessing
 import sys
 
 import click
@@ -18,7 +17,7 @@ from pixelator.common.duckdb_utils import (
     get_duckdb_max_temp_dir_size_from_env,
     get_duckdb_temp_dir_from_env,
 )
-from pixelator.common.utils import click_echo
+from pixelator.common.utils import click_echo, get_available_cpu_count
 
 
 @click.group(cls=AliasedOrderedGroup, name="pixelator")
@@ -46,7 +45,7 @@ from pixelator.common.utils import click_echo
 )
 @click.option(
     "--cores",
-    default=max(1, multiprocessing.cpu_count() - 1),
+    default=max(1, get_available_cpu_count() - 1),
     required=False,
     type=click.INT,
     show_default=True,

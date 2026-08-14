@@ -6,7 +6,6 @@ Copyright © 2024 Pixelgen Technologies AB.
 import dataclasses
 import logging
 import math
-import multiprocessing
 import os
 import time
 import typing
@@ -26,6 +25,7 @@ import pyarrow.compute
 import pyarrow.parquet
 import pydantic
 
+from pixelator.common.utils import get_available_cpu_count
 from pixelator.pna.collapse.adjacency import (
     build_network_cluster,
     build_network_directional,
@@ -489,7 +489,7 @@ class RegionCollapser:
     @cached_property
     def _effective_threads(self):
         if self.threads <= -1:
-            return multiprocessing.cpu_count() + 1 - abs(self.threads)
+            return get_available_cpu_count() + 1 - abs(self.threads)
 
         return self.threads
 

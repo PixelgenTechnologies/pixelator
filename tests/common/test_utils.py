@@ -1,12 +1,17 @@
 """Copyright © 2023 Pixelgen Technologies AB."""
 
 import json
+import os
 
 import click
 import pytest
 from click.testing import CliRunner
 
-from pixelator.common.utils import flatten, write_parameters_file
+from pixelator.common.utils import (
+    flatten,
+    get_available_cpu_count,
+    write_parameters_file,
+)
 
 
 @pytest.mark.parametrize(
@@ -85,3 +90,39 @@ def test_write_parameters_file_includes_single_file_argument(tmp_path):
     data = json.loads(meta_file.read_text())
     assert data["cli"]["options"]["--flag"] is True
     assert data["cli"]["arguments"]["pxl_file"] == str(input_file.resolve())
+
+
+def test_get_available_cpu_count_prefers_process_cpu_count(monkeypatch):
+    """process_cpu_count (affinity-aware, Python 3.13+) is used when available."""
+    monkeypatch.setattr(os, "process_cpu_count", lambda: 4, raising=False)
+    monkeypatch.setattr(os, "sched_getaffinity", lambda pid: {0, 1}, raising=False)
+    monkeypatch.setattr(os, "cpu_count", lambda: 128)
+
+    assert get_available_cpu_count() == 4
+
+
+def test_get_available_cpu_count_falls_back_to_sched_getaffinity(monkeypatch):
+    """sched_getaffinity is used when process_cpu_count is unavailable or None."""
+    monkeypatch.setattr(os, "process_cpu_count", lambda: None, raising=False)
+    monkeypatch.setattr(os, "sched_getaffinity", lambda pid: {0, 1, 2}, raising=False)
+    monkeypatch.setattr(os, "cpu_count", lambda: 128)
+
+    assert get_available_cpu_count() == 3
+
+
+def test_get_available_cpu_count_falls_back_to_cpu_count(monkeypatch):
+    """os.cpu_count is used when no affinity-aware API is available (e.g. Windows)."""
+    monkeypatch.setattr(os, "process_cpu_count", None, raising=False)
+    monkeypatch.delattr(os, "sched_getaffinity", raising=False)
+    monkeypatch.setattr(os, "cpu_count", lambda: 8)
+
+    assert get_available_cpu_count() == 8
+
+
+def test_get_available_cpu_count_is_always_at_least_one(monkeypatch):
+    """The count never drops below 1, even when every source returns None."""
+    monkeypatch.setattr(os, "process_cpu_count", lambda: None, raising=False)
+    monkeypatch.delattr(os, "sched_getaffinity", raising=False)
+    monkeypatch.setattr(os, "cpu_count", lambda: None)
+
+    assert get_available_cpu_count() == 1
