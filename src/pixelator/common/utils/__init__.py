@@ -11,6 +11,7 @@ import itertools
 import json
 import logging
 import multiprocessing
+import os
 import re
 import tempfile
 import textwrap
@@ -393,6 +394,39 @@ def _add_handlers_to_root_logger(port, log_level):
     root_logger.addHandler(socket_handler)
 
 
+def get_available_cpu_count() -> int:
+    """Return the number of CPU cores available to the current process.
+
+    Prefer CPU counts that respect the process' CPU affinity and cgroup or
+    container limits over the total number of cores on the host machine. When
+    running inside a constrained environment such as a container or a scheduler
+    pod, ``multiprocessing.cpu_count()`` reports the host core count rather than
+    the cores actually assigned to the process, which leads to oversubscription
+    and slower multiprocessing.
+
+    Returns:
+        The number of usable CPU cores, always at least 1.
+    """
+    # os.process_cpu_count() (Python 3.13+) already accounts for CPU affinity.
+    process_cpu_count = getattr(os, "process_cpu_count", None)
+    if process_cpu_count is not None:
+        count = process_cpu_count()
+        if count:
+            return count
+
+    # os.sched_getaffinity() accounts for CPU affinity but is only available on
+    # some Unix platforms (e.g. Linux); this covers the pre-3.13 pod use case.
+    sched_getaffinity = getattr(os, "sched_getaffinity", None)
+    if sched_getaffinity is not None:
+        try:
+            return len(sched_getaffinity(0))
+        except OSError:
+            pass
+
+    # Fall back to the total number of cores on the machine (e.g. on Windows).
+    return os.cpu_count() or 1
+
+
 def _pre_multiprocessing_args(
     nbr_cores=None, logging_setup=None, context="spawn", **kwargs
 ):
@@ -405,9 +439,7 @@ def _pre_multiprocessing_args(
         click_logging_setup = current_click_context.obj.get("LOGGER")
         click_nbr_cores = current_click_context.obj.get("CORES")
 
-    nbr_cores = (
-        nbr_cores if nbr_cores else click_nbr_cores or multiprocessing.cpu_count()
-    )
+    nbr_cores = nbr_cores if nbr_cores else click_nbr_cores or get_available_cpu_count()
     args_dict = {
         "max_workers": nbr_cores,
         "mp_context": multiprocessing.get_context(context),
