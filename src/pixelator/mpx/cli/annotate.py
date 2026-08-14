@@ -68,15 +68,6 @@ from pixelator.mpx.config import config, load_antibody_panel
         "max: estimates the maximum component size. Note that this cannot be set at the same time as --min-size or --max-size."
     ),
 )
-@click.option(
-    "--aggregate-calling",
-    default=False,
-    is_flag=True,
-    help=(
-        "Enable aggregate calling, information on "
-        "potential aggregates will be added to the output data"
-    ),
-)
 @output_option
 @click.pass_context
 @timer
@@ -87,7 +78,6 @@ def annotate(
     min_size,
     max_size,
     dynamic_filter,
-    aggregate_calling,
     output,
 ):
     """Filter, annotate and call cells from an edge list
@@ -106,8 +96,6 @@ def annotate(
             estimates the minimum component size (or uses {MINIMUM_N_EDGES_CELL_SIZE} edges,
             whichever is smallest), max: estimates the maximum component size. Note that this cannot
             be set at the same time as --min-size or --max-size.
-        aggregate_calling: Enable aggregate calling, information on potential aggregates will be
-            added to the output data.
         output: The path where the results will be placed (it is created if it does not exist).
     """
     input_files = [parquet_file]
@@ -120,7 +108,6 @@ def annotate(
         min_size=min_size,
         max_size=max_size,
         dynamic_filter=dynamic_filter,
-        aggregate_calling=aggregate_calling,
     )
 
     # some basic sanity check on the input files
@@ -178,6 +165,5 @@ def annotate(
         min_size=min_size,
         max_size=max_size,
         dynamic_filter=dynamic_filter,
-        aggregate_calling=aggregate_calling,
         verbose=ctx.obj["VERBOSE"],
     )

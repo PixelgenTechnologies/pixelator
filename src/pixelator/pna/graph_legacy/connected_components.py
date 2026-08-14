@@ -18,7 +18,6 @@ import pandas as pd
 import polars as pl
 from graspologic_native import leiden
 
-from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config import PNAAntibodyPanel
 from pixelator.pna.graph.component_recovery_utils import (
@@ -564,7 +563,6 @@ def build_pxl_file_with_components(
             adata = pna_edgelist_to_anndata(
                 pxl_file_writer.get_connection(), panel=panel
             )
-            call_aggregates(adata)
 
             component_statics.reads_output = adata.obs["reads_in_component"].sum()
 
@@ -572,25 +570,6 @@ def build_pxl_file_with_components(
                 "reads_in_component"
             ].median()
             component_statics.median_markers_per_component = adata.obs["n_umi"].median()
-
-            # Add tau_type metrics
-            aggregates_mask = adata.obs["tau_type"] != "normal"
-            number_of_aggregates = np.sum(aggregates_mask)
-
-            component_statics.aggregate_count = number_of_aggregates
-            aggregate_stats = (
-                adata[aggregates_mask]
-                .obs[["n_edges", "n_umi", "reads_in_component"]]
-                .sum()
-            )
-
-            component_statics.read_count_in_aggregates = aggregate_stats[
-                "reads_in_component"
-            ].item()
-            component_statics.node_count_in_aggregates = aggregate_stats["n_umi"].item()
-            component_statics.edge_count_in_aggregates = aggregate_stats[
-                "n_edges"
-            ].item()
 
             # Sort adata on component names for stable output
             adata = adata[adata.obs_names.sort_values(), :]

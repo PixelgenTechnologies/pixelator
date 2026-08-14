@@ -58,11 +58,6 @@ class GraphStatistics:
 
     median_markers_per_component: float = 0
 
-    aggregate_count: int = 0
-    read_count_in_aggregates: int = 0
-    edge_count_in_aggregates: int = 0
-    node_count_in_aggregates: int = 0
-
     umis_input: int = 0
     umi1_clashes: int = 0
     umi2_clashes: int = 0
@@ -199,23 +194,6 @@ class GraphSampleReport(SampleReport):
         ..., description="The median number of markers per cell component."
     )
 
-    aggregate_count: int = pydantic.Field(
-        ..., description="The number of aggregates in the graph."
-    )
-
-    read_count_in_aggregates: int = pydantic.Field(
-        ..., description="The number of reads in aggregates."
-    )
-
-    edge_count_in_aggregates: int = pydantic.Field(
-        ..., description="The number of edges in aggregates."
-    )
-
-    node_count_in_aggregates: int = pydantic.Field(
-        default=0,
-        description="The number of UMIs (nodes) in aggregate components.",
-    )
-
     umis_input: int = pydantic.Field(
         default=0, description="Number of UMIs in the input edgelist."
     )
@@ -273,17 +251,6 @@ class GraphSampleReport(SampleReport):
             - self.component_count_post_component_size_filtering
             / self.component_count_pre_component_size_filtering
         )
-
-    @pydantic.computed_field(  # type: ignore
-        description="The fraction of components marked as aggregates by the tau_type outlier detection. ",
-        return_type=float,
-    )  # type: ignore
-    @property
-    def fraction_of_aggregate_components(self) -> float:
-        """Calculate the fraction of aggregate components."""
-        if self.component_count_post_component_size_filtering == 0:
-            return 0.0
-        return self.aggregate_count / self.component_count_post_component_size_filtering
 
     @pydantic.computed_field(  # type: ignore
         description="The redundancy of edge detection. The saturation is calculated as: `1 - # graph edges / # graph reads`",

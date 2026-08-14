@@ -14,6 +14,7 @@ from pixelator.common.annotate import NoCellsFoundException, filter_components_s
 from pixelator.common.config import AntibodyPanel
 from pixelator.mpx.annotate import cluster_components
 from pixelator.mpx.cli.annotate import annotate_components
+from pixelator.mpx.pixeldataset import PixelDataset
 from pixelator.mpx.pixeldataset.utils import read_anndata
 
 
@@ -162,10 +163,14 @@ def test_annotate_adata(edgelist: pd.DataFrame, tmp_path: Path, panel: AntibodyP
         max_size=None,
         dynamic_filter=None,
         verbose=True,
-        aggregate_calling=True,
     )
     assert (tmp_path / f"{output_prefix}.raw_components_metrics.csv.gz").is_file()
-    assert (tmp_path / f"{output_prefix}.annotate.dataset.pxl").is_file()
+    dataset_path = tmp_path / f"{output_prefix}.annotate.dataset.pxl"
+    assert dataset_path.is_file()
+    adata = PixelDataset.from_file(dataset_path).adata
+    assert "tau" not in adata.obs
+    assert "tau_type" not in adata.obs
+    assert "tau_thresholds" not in adata.uns
     assert metrics_file.is_file()
 
 
@@ -197,5 +202,4 @@ def test_annotate_adata_should_raise_no_cells_count_exception(
             max_size=None,
             dynamic_filter=None,
             verbose=True,
-            aggregate_calling=True,
         )

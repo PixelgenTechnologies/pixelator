@@ -17,7 +17,6 @@ from graspologic_native import leiden
 
 from pixelator import __version__
 from pixelator.common.annotate import filter_components_sizes
-from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.common.annotate.cell_calling import find_component_size_limits
 from pixelator.common.annotate.constants import (
     MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION,
@@ -54,7 +53,6 @@ def annotate_components(
     min_size: Optional[int],
     max_size: Optional[int],
     dynamic_filter: Optional[Literal["both", "min", "max"]],
-    aggregate_calling: bool,
     verbose: bool,
 ) -> None:
     """Create a pixeldataset from a provided edgelist.
@@ -79,12 +77,6 @@ def annotate_components(
     The filtered edge list is then converted to an `AnnData` object. The values used
     for filtering the components are stored in the `uns` layer.
 
-    When `aggregate_calling` is True aggregates will be called based on marker
-    specificity. This will add to keys to the AnnDAta object's `obs`,
-    `is_aggregate` and `tau`. The former gives an estimate of if the component
-    is an aggregate or not, and the latter contains the computed tau specificity
-    score.
-
     The following files and QC figures are generated after the filtering:
 
     - a dataframe with the components metrics before filtering (csv)
@@ -99,7 +91,6 @@ def annotate_components(
         min_size: the minimum size a component must have
         max_size: the maximum size a component must have
         dynamic_filter: use a rank based approach to define the min and or max size
-        aggregate_calling: activate aggregate calling
         verbose: run if verbose mode when true
     Returns:
         None (None)
@@ -188,9 +179,6 @@ def annotate_components(
             ("Skipping clustering since there are less than %s components"),
             MINIMUM_NBR_OF_CELLS_FOR_ANNOTATION,
         )
-
-    if aggregate_calling:
-        call_aggregates(adata, inplace=True)
 
     # create filtered PixelDataset and save it
     adata.uns["version"] = __version__
@@ -354,10 +342,6 @@ class AnnotateAnndataStatistics(typing.TypedDict):
     marker_count_per_cell_stats: SummaryStatistics
     a_pixel_b_pixel_ratio_per_cell_stats: SummaryStatistics
 
-    aggregate_count: Optional[int]
-    reads_in_aggregates_count: Optional[int]
-    molecules_in_aggregates_count: Optional[int]
-
     min_size_threshold: Optional[int]
     max_size_threshold: Optional[int]
     doublet_size_threshold: Optional[int]
@@ -395,25 +379,12 @@ def anndata_metrics(adata: AnnData) -> AnnotateAnndataStatistics:
         "b_pixel_count_per_cell_stats": b_pixels_per_cell_stats,
         "marker_count_per_cell_stats": markers_per_cell_stats,
         "a_pixel_b_pixel_ratio_per_cell_stats": a_pixel_b_pixel_ratio_per_cell_stats,
-        "aggregate_count": None,
-        "reads_in_aggregates_count": None,
-        "molecules_in_aggregates_count": None,
         "min_size_threshold": None,
         "max_size_threshold": None,
         "doublet_size_threshold": None,
         "fraction_potential_doublets": None,
         "n_edges_to_split_potential_doublets": None,
     }
-
-    # Tau type will only be available if it has been added in the annotate step
-    if "tau_type" in adata.obs:
-        aggregates_mask = adata.obs["tau_type"] != "normal"
-        number_of_aggregates = np.sum(aggregates_mask)
-        metrics["aggregate_count"] = number_of_aggregates
-        metrics["reads_in_aggregates_count"] = adata[aggregates_mask].obs["reads"].sum()
-        metrics["molecules_in_aggregates_count"] = (
-            adata[aggregates_mask].obs["molecules"].sum()
-        )
 
     if "min_size_threshold" in adata.uns:
         metrics["min_size_threshold"] = adata.uns["min_size_threshold"]

@@ -22,7 +22,6 @@ from pixelator.common.plot import (
     set_pixelgen_theme,
     style_facet_strips,
 )
-from pixelator.mpx.plot.constants import Color
 from pixelator.mpx.plot.layout_plots import (
     plot_2d_graph,
     plot_3d_from_coordinates,
@@ -40,74 +39,6 @@ set_pixelgen_theme()
 # min_level=5 keeps the lightest end of the scale well clear of white, so that
 # low-density points remain clearly visible against the plot's white background.
 jet_colormap = pixelgen_sequential_colormap("blues", min_level=5)
-
-
-def scatter_umi_per_upia_vs_tau(
-    data: pd.DataFrame, group_by: Optional[str] = None
-) -> Tuple[plt.Figure, plt.Axes]:
-    """Create a scatter plot of pixel content vs marker specificity (Tau).
-
-    Args:
-        data: a pandas DataFrame with the columns 'umi_per_upia', 'tau', and 'tau_type'.
-        group_by: a column in the DataFrame to group the plot by.
-
-    Returns:
-        a scatter plot of pixel content vs marker specificity (Tau). (Tuple[plt.Figure, plt.Axes])
-
-    Raises:
-        ValueError if the required columns are not present in the DataFrame
-        AssertionError if the data types are invalid
-    """
-    # Validate data
-    required_columns = ["umi_per_upia", "tau", "tau_type"]
-    if not all(col in data.columns for col in required_columns):
-        raise ValueError(
-            "'umi_per_upia', 'tau' and 'tau_type' must be available in the DataFrame"
-        )
-    if not all(
-        [
-            data["umi_per_upia"].dtype == "float64",
-            data["tau"].dtype == "float64",
-            data["tau_type"].dtype in ["object", "category"],
-        ]
-    ):
-        raise AssertionError("Invalid data types")
-
-    if group_by is not None:
-        if group_by not in data.columns:
-            raise ValueError(f"'{group_by}' is missing")
-        assert data[group_by].dtype in [
-            "object",
-            "category",
-        ], "'group_by' must be a character or factor"
-
-    # Define palette
-    palette = {
-        "high": Color.ORANGERED2,
-        "low": Color.SKYBLUE3,
-        "normal": Color.LIGHTGREY,
-    }
-
-    # create plot
-    grid = (
-        sns.FacetGrid(
-            data,
-            col=group_by,
-            hue="tau_type",
-            palette=palette,
-            height=4,
-        )
-        if group_by is not None
-        else sns.FacetGrid(data, hue="tau_type", palette=palette, height=4)
-    )
-    grid.map(sns.scatterplot, "tau", "umi_per_upia")
-    grid.set(yscale="log")
-    grid.set_axis_labels("Marker specificity (Tau)", "Pixel content (UMI/UPIA)")
-    grid.add_legend(title="Tau Type")
-    if group_by is not None:
-        style_facet_strips(grid)
-
-    return plt.gcf(), plt.gca()
 
 
 def molecule_rank_plot(

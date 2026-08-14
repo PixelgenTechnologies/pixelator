@@ -24,7 +24,6 @@ from pixelator.mpx.plot import (
     plot_colocalization_diff_volcano,
     plot_colocalization_heatmap,
     plot_polarity_diff_volcano,
-    scatter_umi_per_upia_vs_tau,
 )
 from pixelator.mpx.plot.layout_plots import (
     _calculate_densities,
@@ -294,25 +293,6 @@ def test_plot_polarity_diff_volcano_multiple(setup_basic_pixel_dataset):
         min_log_p=-1,
     )
     return fig
-
-
-@pytest.mark.mpl_image_compare(
-    deterministic=False,
-    baseline_dir="../snapshots/test_plot/test_scatter_umi_per_upia_vs_tau",
-)
-def test_scatter_umi_per_upia_vs_tau():
-    """Verify scatter umi per upia vs tau."""
-    np.random.seed(0)
-    data = pd.DataFrame(
-        {
-            "umi_per_upia": np.random.uniform(1, 10, 100),
-            "tau": np.random.uniform(0.9, 1, 100),
-            "tau_type": np.random.choice(["high", "low", "normal"], 100),
-            "group": np.random.choice(["A", "B"], 100),
-        }
-    )
-    plot, _ = scatter_umi_per_upia_vs_tau(data, group_by="group")
-    return plot
 
 
 @pytest.mark.mpl_image_compare(
