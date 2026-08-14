@@ -95,7 +95,7 @@ def random_graph_path():
             schema={
                 "umi1": pl.UInt64,
                 "umi2": pl.UInt64,
-                "component": pl.String,
+                "expected_component": pl.String,
                 "read_count": pl.UInt32,
                 "uei_count": pl.UInt16,
                 "marker_1": pl.String,
@@ -120,8 +120,9 @@ def test_find_components_small(
     ground_truth_umi_map = (
         (
             pl.read_parquet(random_graph_path)
-            .group_by("component")
+            .group_by("expected_component")
             .agg(pl.col("umi1").append(pl.col("umi2")).unique().alias("umi"))
+            .rename({"expected_component": "component"})
         )
         .explode("umi")
         .filter(pl.col("component") != "crossing")
@@ -322,7 +323,6 @@ def test_find_components_empty_parquet_file():
     empty_schema = {
         "umi1": pl.UInt64,
         "umi2": pl.UInt64,
-        "component": pl.String,
         "read_count": pl.UInt32,
         "uei_count": pl.UInt16,
         "marker_1": pl.String,
@@ -382,8 +382,12 @@ def test_find_components_big(
 
     with tempfile.TemporaryDirectory() as temp_dir:
         working_dir = Path(temp_dir)
+        input_path = working_dir / "input.parquet"
+        pl.scan_parquet(testdata_3pc_crossing_parquet).drop("component").sink_parquet(
+            input_path
+        )
         component_stats, resolved_edgelist_path = find_components(
-            input_edgelist_path=Path(testdata_3pc_crossing_parquet),
+            input_edgelist_path=input_path,
             working_dir=working_dir,
             multiplet_recovery=True,
             edge_cycle_verification=edge_cycle_verification,

@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
   use a release prior to 0.31.0 (for example `pip install 'pixelgen-pixelator<0.31.0'`).
 - Removed `pixelator single-cell-pna graph_legacy` command. Use `pixelator single-cell-pna graph` instead.
+- The PNA graph step no longer densifies UMI node ids in Python before community detection.
+  The native `run_hybrid_community_detection` already builds a dense node index internally and
+  returns the original UMIs, so the redundant `create_working_edgelist` /
+  `map_working_to_original_umi_names` round-trip has been removed. The filtered edgelist is now
+  passed directly to native community detection, and the recovered components are unchanged.
 
 ### Changed
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
