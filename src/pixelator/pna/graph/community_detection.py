@@ -30,7 +30,6 @@ from pixelator.pna.graph.component_recovery_utils import (
     name_components_with_umi_hashes_from_parquet,
     populate_component_stats_from_hybrid_detection,
     remove_clashing_umis,
-    write_community_detection_input,
     write_hive_partitioned_edgelist_without_out_of_size_bound_components,
 )
 from pixelator.pna.graph.constants import (
@@ -501,12 +500,6 @@ def find_components(
         working_dir=working_dir,
     )
 
-    logger.info("Preparing edgelist for community detection.")
-    community_detection_edgelist_path = write_community_detection_input(
-        input_edgelist_path=filtered_edgelist_path,
-        working_dir=working_dir,
-    )
-
     logger.info("Running FLP + Leiden native step")
     (
         partitioned_edgelist_path,
@@ -514,7 +507,7 @@ def find_components(
         post_flp_stats,
         post_recovery_stats,
     ) = run_hybrid_community_detection(
-        parquet_file=str(community_detection_edgelist_path),
+        parquet_file=str(filtered_edgelist_path),
         resolution=refinement_options.initial_stage_options.leiden_resolution,
         output=str(working_dir / "partitioned_edgelist.parquet"),
         flp_epochs=2,
