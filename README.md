@@ -16,11 +16,19 @@
 [**License**](#license) |
 [**Credits**](#credits)
 
-Pixelator is a software package to process sequencing FASTQ from Molecular Pixelation (MPX) and
-Proximity Network (PNA) assays and analyze PXL data.
+Pixelator is a software package to process sequencing FASTQ from Proximity Network
+Assay (PNA) experiments and analyze PXL data.
 
-It provides the `pixelator` commandline tool to process FASTQ files and generate PXL files and reports
-and can be used as a python library for further downstream processing.
+It provides the `pixelator` command-line tool to process FASTQ files and generate PXL files and reports
+and can be used as a Python library for further downstream processing.
+
+> [!NOTE]
+> Molecular Pixelation (MPX) support has been removed. To process MPX data, use a
+> pixelator release **prior to 0.31.0** (the last release with MPX support is 0.30.x):
+>
+> ```shell
+> pip install 'pixelgen-pixelator<0.31.0'
+> ```
 
 <p align="center">
     <img src="https://www.pixelgen.com/wp-content/uploads/2022/12/share-image-pixelgen.png" height=200
@@ -36,16 +44,11 @@ More information about pixelator is available on the [Pixelgen Technologies Soft
 
 Pixelgen Technologies has developed and tested pixelator extensively in Ubuntu 20.04.6 LTS. However, pixelator should run on computers installed with any recent version of the major Linux distributions.
 
-Pixelator is available on PyPi as `pixelgen-pixelator` and can be installed with pip. It is recommended to install pixelator in a separate virtual environment.
+Pixelator is available on PyPI as `pixelgen-pixelator` and can be installed with pip. It is recommended to install pixelator in a separate virtual environment.
 
 ```shell
 pip install pixelgen-pixelator
 ```
-
-### Additional installation instructions
-
-For running some of the MPX related pixelator commands you will need to have `fastp` installed on
-you system. For installation instructions, please visit the [fastp GitHub repository](https://github.com/OpenGene/fastp).
 
 ### Installation from source
 
@@ -67,13 +70,13 @@ docker pull quay.io/pixelgen-technologies/pixelator:latest
 docker run quay.io/pixelgen-technologies/pixelator:latest pixelator --help
 ```
 
+For deprecated MPX workflows, pin an image tag from a release prior to 0.31.0 (for example `0.30.0`) instead of `latest`.
+
 ## Usage
 
 Our recommendation is to use pixelator via the specific Nextflow pipeline, [nf-core/pixelator](https://github.com/nf-core/pixelator).
 
 It should take only a few seconds to download the pipeline and approx. 20 min to run the default test dataset in a normal commodity computer.
-
-However, with MPX data, we recommend running pixelator in specialized hardware with at least 32GB RAM.
 
 ## Contributing
 

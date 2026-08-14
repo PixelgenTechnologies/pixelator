@@ -56,37 +56,11 @@ tasks:
     cmds:
       - uv run pytest tests {{ .CLI_ARGS }}
 
-  test-workflow:
-    desc: >-
-      Run workflow tests using pytest.
-    cmds:
-      - uv run pytest tests -m "workflow_test and not external_workflow_test" {{ .CLI_ARGS }}
-
-  test-workflow-external:
-    desc: >-
-      Run external workflow tests using pytest.
-    summary: |
-      Run external workflow tests using pytest.
-
-      This will run the tests marked with the `external_workflow_test` marker using pytest.
-      These tests can take a very long time to run and require input data to be available in a fixed location.
-      External workflow test are not included in the `test-all` task.
-    cmds:
-      - uv run pytest tests -m external_workflow_test
-
-  test-web:
-    desc: >-
-      Run web tests using pytest.
-    cmds:
-      - uv run pytest tests -m web_test {{ .CLI_ARGS }}
-
   test-all:
     desc: >-
       Run all tests using pytest.
     deps:
       - test
-      - test-workflow
-      - test-web
 
   test-watch:
     desc: >-
@@ -120,25 +94,13 @@ tasks:
 
       This will run the tests using pytest and generate a coverage report.
       The coverage report will be output to the terminal.
-
-      The `WORKFLOW_TEST` environment variable can be set to "true" to run
-      the workflow tests as well. This will include the tests marked with the
-      `workflow_test` marker (but not the `external_workflow_test` marker).
-      This is disabled by default to reduce the runtime.
     sources:
       - src/**
       - tests/**
       - pyproject.toml
       - poetry.lock
-    vars:
-      WORKFLOW_TEST: '{{ .WORKFLOW_TEST | default "false" }}'
     cmds:
-      - 'uv run coverage run --source src -m pytest
-        {{ if eq .WORKFLOW_TEST "true" }}
-        -m "not external_workflow_test and not web_test"
-        {{else}}
-        -m "not workflow_test and not web_test"
-        {{end}}'
+      - uv run coverage run --source src -m pytest
       - uv run coverage report
 
   test-nf-core-pixelator:
@@ -175,5 +137,5 @@ tasks:
 
 includes:
   tests:
-    taskfile: ./tests/mpx/Taskfile.yml
-    dir: ./tests/mpx
+    taskfile: ./tests/Taskfile.yml
+    dir: ./tests
