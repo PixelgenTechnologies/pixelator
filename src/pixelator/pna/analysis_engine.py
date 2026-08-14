@@ -5,7 +5,6 @@ Copyright © 2024 Pixelgen Technologies AB.
 
 import itertools
 import logging
-import multiprocessing
 import typing
 from collections import defaultdict
 from dataclasses import dataclass
@@ -19,6 +18,7 @@ import pandas as pd
 import polars as pl
 from joblib import Parallel, delayed
 
+from pixelator.common.utils import get_available_cpu_count
 from pixelator.pna import read
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import Component, PNAPixelDataset
@@ -74,9 +74,7 @@ def _get_joblib_executor(nbr_cores=None, **kwargs) -> Parallel:
     if current_click_context:
         click_nbr_cores = current_click_context.obj.get("CORES")
 
-    nbr_cores = (
-        nbr_cores if nbr_cores else click_nbr_cores or multiprocessing.cpu_count()
-    )
+    nbr_cores = nbr_cores if nbr_cores else click_nbr_cores or get_available_cpu_count()
     return _ParallelWithLogging(n_jobs=nbr_cores, **kwargs)
 
 
