@@ -1,0 +1,82 @@
+version: "3"
+
+tasks:
+  test-tox:
+    desc: >-
+      Run the test suite using tox.
+    summary: |
+      Run the test suite using tox.
+
+      This allows running tests agains multiple python version easily
+    vars:
+      TOXENV: '{{ .TOXENV | default "py311" }}'
+
+    cmds:
+      - tox -e {{ .TOXENV }}
+
+  pull-nf-core-pixelator:
+    internal: true
+    desc: >-
+      Pull the nf-core/pixelator pipeline from github.
+    summary: |
+      Pull the nf-core/pixelator pipeline from github.
+
+      This task will clone the nf-core/pixelator repository from github.
+
+      The GitHub repo can be configured using `PIPELINE_REPO`.
+      By default the Pixelgen Technologies fork is used (PixelgenTechnologies/nf-core-pixelator).
+
+      The branch to checkout can be configured using `PIPELINE_BRANCH`.
+      By default the "pixelator-next" branch is used.
+
+      The code will be cloned to `PIPELINE_SOURCE_DIR`.
+      The default is to clone it to "../nf-core-pixelator".
+
+      If the `PIPELINE_SOURCE_DIR` directory already exists, this task will do nothing.
+      This also means that the `PIPELINE_BRANCH` will be ignored if the pipeline directory
+      is manually checked out into a different branch.
+
+    dir: "{{ .USER_WORKING_DIR }}"
+    vars:
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
+      PIPELINE_REPO: '{{ .PIPELINE_REPO | default "git@github.com:PixelgenTechnologies/nf-core-pixelator.git" }}'
+      PIPELINE_BRANCH: '{{ .PIPELINE_BRANCH | default "pixelator-next" }}'
+    cmds:
+      - '[[ ! -d "{{ .PIPELINE_SOURCE_DIR }}" ]]
+        && git clone {{ .PIPELINE_REPO }}
+        --branch {{ .PIPELINE_BRANCH }}
+        --single-branch --depth 1 {{ .PIPELINE_SOURCE_DIR }}
+        || echo "Skipping clone: nf-core-pixelator already exists in {{ .PIPELINE_SOURCE_DIR }} ."'
+
+  run-nf-core-pixelator-test-profile:
+    internal: true
+    desc: >-
+      Run the nf-core/pixelator pipeline using the test profile.
+    summary: |
+      Run the nf-core/pixelator pipeline using the test profile.
+
+      Variables:
+        - `PIPELINE_SOURCE_DIR`: The root directory of the nf-core/pixelator repository. Default is "../nf-core-pixelator".
+        - `RESUME`: Whether to use the `-resume` option. Default is "false".
+        - `PIPELINE_RESULTS_DIR`: The directory to store the pipeline results in.
+          Default is "results" inside the PIPELINE_SOURCE_DIR.
+
+    dir: "{{ .USER_WORKING_DIR }}"
+    vars:
+      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default "../nf-core-pixelator" }}'
+      PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "results" }}'
+      RESUME: '{{ .RESUME | default "false" }}'
+    cmds:
+      - nf_options=(' --save_all ');
+        [[ {{ .RESUME }} == 'true' ]] && nf_options+=('-resume ');
+        cd "{{ .PIPELINE_SOURCE_DIR }}";
+        nextflow run . -profile test --outdir {{ .PIPELINE_RESULTS_DIR }} ${nf_options[@]};
+
+  remove-pipeline-run:
+    internal: true
+    prompt: "Cleanup the pipeline run in {{ .PIPELINE_RESULTS_DIR }}?"
+    dir: "{{ .USER_WORKING_DIR }}"
+    vars:
+      PIPELINE_RESULTS_DIR: '{{ .PIPELINE_RESULTS_DIR | default "../nf-core-pixelator/tmp" }}'
+    cmds:
+      - rm -r "{{ .PIPELINE_RESULTS_DIR }}"

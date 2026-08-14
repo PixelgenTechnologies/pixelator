@@ -11,24 +11,14 @@ import click
 import yappi
 
 from pixelator import __version__
+from pixelator.cli.common import AliasedOrderedGroup, logger
+from pixelator.cli.logging import LoggingSetup
+from pixelator.cli.plugin import add_cli_plugins
 from pixelator.common.duckdb_utils import (
     get_duckdb_max_temp_dir_size_from_env,
     get_duckdb_temp_dir_from_env,
 )
 from pixelator.common.utils import click_echo
-from pixelator.mpx.cli.adapterqc import adapterqc
-from pixelator.mpx.cli.amplicon import amplicon
-from pixelator.mpx.cli.analysis import analysis
-from pixelator.mpx.cli.annotate import annotate
-from pixelator.mpx.cli.collapse import collapse
-from pixelator.mpx.cli.common import AliasedOrderedGroup, logger
-from pixelator.mpx.cli.demux import demux
-from pixelator.mpx.cli.graph import graph
-from pixelator.mpx.cli.layout import layout
-from pixelator.mpx.cli.misc import list_single_cell_designs, list_single_cell_panels
-from pixelator.mpx.cli.plugin import add_cli_plugins
-from pixelator.mpx.cli.preqc import preqc
-from pixelator.mpx.logging import LoggingSetup
 
 
 @click.group(cls=AliasedOrderedGroup, name="pixelator")
@@ -109,46 +99,6 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     return 0
 
 
-@main_cli.group(name="single-cell-mpx")
-@click.option(
-    "--list-designs",
-    is_flag=True,
-    metavar="",
-    is_eager=True,
-    expose_value=False,
-    required=False,
-    callback=list_single_cell_designs,
-    help="List available designs and exit.",
-)
-@click.option(
-    "--list-panels",
-    is_flag=True,
-    metavar="",
-    is_eager=True,
-    expose_value=False,
-    required=False,
-    callback=list_single_cell_panels,
-    help="List available panels and exit.",
-)
-def single_cell_mpx():
-    """Commands related to the molecular pixelator assay."""
-
-
-# Add single-cell top level command to cli
-main_cli.add_command(single_cell_mpx)
-
-# Add single-cell commands
-single_cell_mpx.add_command(amplicon)
-single_cell_mpx.add_command(preqc)
-single_cell_mpx.add_command(adapterqc)
-single_cell_mpx.add_command(demux)
-single_cell_mpx.add_command(collapse)
-single_cell_mpx.add_command(graph)
-single_cell_mpx.add_command(annotate)
-single_cell_mpx.add_command(layout)
-single_cell_mpx.add_command(analysis)
-
-
 # Note that the import order here is intentional.
 # The PNA commands needs to be imported here, rather than
 # at the top, because otherwise things like importing
@@ -160,7 +110,6 @@ from pixelator.pna.cli.combine_collapse import combine_collapse
 from pixelator.pna.cli.demux import demux
 from pixelator.pna.cli.denoise import denoise
 from pixelator.pna.cli.graph import graph
-from pixelator.pna.cli.graph_legacy import graph_legacy
 from pixelator.pna.cli.layout import layout
 from pixelator.pna.cli.misc import (
     list_single_cell_pna_designs,
@@ -213,7 +162,6 @@ single_cell_pna.add_command(amplicon)
 single_cell_pna.add_command(demux)
 single_cell_pna.add_command(collapse)
 single_cell_pna.add_command(graph)
-single_cell_pna.add_command(graph_legacy)
 single_cell_pna.add_command(sample_calling_cli, name="sample-calling")
 single_cell_pna.add_command(denoise)
 single_cell_pna.add_command(analysis)
