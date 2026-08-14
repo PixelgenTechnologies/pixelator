@@ -7,6 +7,7 @@ import click
 import pytest
 from click.testing import CliRunner
 
+from pixelator.common import utils
 from pixelator.common.utils import (
     flatten,
     get_available_cpu_count,
@@ -92,7 +93,16 @@ def test_write_parameters_file_includes_single_file_argument(tmp_path):
     assert data["cli"]["arguments"]["pxl_file"] == str(input_file.resolve())
 
 
-def test_get_available_cpu_count_prefers_process_cpu_count(monkeypatch):
+@pytest.fixture(name="cgroup_root")
+def cgroup_root_fixture(tmp_path, monkeypatch):
+    """Point the cgroup lookup at an empty directory, i.e. no CPU quota set."""
+    root = tmp_path / "cgroup"
+    (root / "cpu").mkdir(parents=True)
+    monkeypatch.setattr(utils, "_CGROUP_ROOT", root)
+    return root
+
+
+def test_get_available_cpu_count_prefers_process_cpu_count(cgroup_root, monkeypatch):
     """process_cpu_count (affinity-aware, Python 3.13+) is used when available."""
     monkeypatch.setattr(os, "process_cpu_count", lambda: 4, raising=False)
     monkeypatch.setattr(os, "sched_getaffinity", lambda pid: {0, 1}, raising=False)
@@ -101,7 +111,9 @@ def test_get_available_cpu_count_prefers_process_cpu_count(monkeypatch):
     assert get_available_cpu_count() == 4
 
 
-def test_get_available_cpu_count_falls_back_to_sched_getaffinity(monkeypatch):
+def test_get_available_cpu_count_falls_back_to_sched_getaffinity(
+    cgroup_root, monkeypatch
+):
     """sched_getaffinity is used when process_cpu_count is unavailable or None."""
     monkeypatch.setattr(os, "process_cpu_count", lambda: None, raising=False)
     monkeypatch.setattr(os, "sched_getaffinity", lambda pid: {0, 1, 2}, raising=False)
@@ -110,7 +122,7 @@ def test_get_available_cpu_count_falls_back_to_sched_getaffinity(monkeypatch):
     assert get_available_cpu_count() == 3
 
 
-def test_get_available_cpu_count_falls_back_to_cpu_count(monkeypatch):
+def test_get_available_cpu_count_falls_back_to_cpu_count(cgroup_root, monkeypatch):
     """os.cpu_count is used when no affinity-aware API is available (e.g. Windows)."""
     monkeypatch.setattr(os, "process_cpu_count", None, raising=False)
     monkeypatch.delattr(os, "sched_getaffinity", raising=False)
@@ -119,10 +131,83 @@ def test_get_available_cpu_count_falls_back_to_cpu_count(monkeypatch):
     assert get_available_cpu_count() == 8
 
 
-def test_get_available_cpu_count_is_always_at_least_one(monkeypatch):
+def test_get_available_cpu_count_is_always_at_least_one(cgroup_root, monkeypatch):
     """The count never drops below 1, even when every source returns None."""
     monkeypatch.setattr(os, "process_cpu_count", lambda: None, raising=False)
     monkeypatch.delattr(os, "sched_getaffinity", raising=False)
     monkeypatch.setattr(os, "cpu_count", lambda: None)
 
     assert get_available_cpu_count() == 1
+
+
+def test_get_available_cpu_count_respects_cgroup_v2_quota(cgroup_root, monkeypatch):
+    """A cgroup v2 CFS quota limits the count even when all host cores are allowed."""
+    monkeypatch.setattr(os, "process_cpu_count", lambda: 128, raising=False)
+    monkeypatch.setattr(os, "sched_getaffinity", lambda pid: set(range(128)))
+    (cgroup_root / "cpu.max").write_text("200000 100000\n")
+
+    assert get_available_cpu_count() == 2
+
+
+def test_get_available_cpu_count_rounds_up_fractional_cgroup_v2_quota(
+    cgroup_root, monkeypatch
+):
+    """A fractional quota (e.g. `--cpus=1.5`) is rounded up to a whole core."""
+    monkeypatch.setattr(os, "process_cpu_count", lambda: 128, raising=False)
+    (cgroup_root / "cpu.max").write_text("150000 100000\n")
+
+    assert get_available_cpu_count() == 2
+
+    (cgroup_root / "cpu.max").write_text("50000 100000\n")
+
+    assert get_available_cpu_count() == 1
+
+
+def test_get_available_cpu_count_ignores_unlimited_cgroup_v2_quota(
+    cgroup_root, monkeypatch
+):
+    """`cpu.max` set to "max" means no quota, so the affinity count is used."""
+    monkeypatch.setattr(os, "process_cpu_count", lambda: 8, raising=False)
+    (cgroup_root / "cpu.max").write_text("max 100000\n")
+
+    assert get_available_cpu_count() == 8
+
+
+def test_get_available_cpu_count_respects_cgroup_v1_quota(cgroup_root, monkeypatch):
+    """A cgroup v1 CFS quota limits the count."""
+    monkeypatch.setattr(os, "process_cpu_count", lambda: 128, raising=False)
+    (cgroup_root / "cpu" / "cpu.cfs_quota_us").write_text("300000\n")
+    (cgroup_root / "cpu" / "cpu.cfs_period_us").write_text("100000\n")
+
+    assert get_available_cpu_count() == 3
+
+
+def test_get_available_cpu_count_ignores_unlimited_cgroup_v1_quota(
+    cgroup_root, monkeypatch
+):
+    """A negative cgroup v1 quota means no limit, so the affinity count is used."""
+    monkeypatch.setattr(os, "process_cpu_count", lambda: 8, raising=False)
+    (cgroup_root / "cpu" / "cpu.cfs_quota_us").write_text("-1\n")
+    (cgroup_root / "cpu" / "cpu.cfs_period_us").write_text("100000\n")
+
+    assert get_available_cpu_count() == 8
+
+
+def test_get_available_cpu_count_uses_the_most_restrictive_limit(
+    cgroup_root, monkeypatch
+):
+    """A cpuset narrower than the quota still wins."""
+    monkeypatch.setattr(os, "process_cpu_count", lambda: 2, raising=False)
+    (cgroup_root / "cpu.max").write_text("800000 100000\n")
+
+    assert get_available_cpu_count() == 2
+
+
+def test_get_available_cpu_count_ignores_unreadable_cgroup_files(
+    cgroup_root, monkeypatch
+):
+    """Unexpected cgroup file contents do not break the core count."""
+    monkeypatch.setattr(os, "process_cpu_count", lambda: 8, raising=False)
+    (cgroup_root / "cpu.max").write_text("this is not a quota\n")
+
+    assert get_available_cpu_count() == 8
