@@ -15,6 +15,7 @@ import pytest
 
 from pixelator import __version__
 from pixelator.common.utils import (
+    get_available_cpu_count,
     get_pool_executor,
     get_process_pool_executor,
     get_read_sample_name,
@@ -207,7 +208,7 @@ def test_get_process_pool_executor():
     # Test with default parameters
     executor = get_process_pool_executor()
     assert isinstance(executor, ProcessPoolExecutor)
-    assert executor._max_workers == multiprocessing.cpu_count()
+    assert executor._max_workers == get_available_cpu_count()
     assert executor._mp_context == multiprocessing.get_context("spawn")
 
     # Test with specified number of cores
@@ -227,7 +228,7 @@ def test_get_pool_executor():
     # Test with default parameters
     pool = get_pool_executor()
     assert isinstance(pool, Pool)
-    assert pool._processes == multiprocessing.cpu_count()
+    assert pool._processes == get_available_cpu_count()
     assert pool._ctx == multiprocessing.get_context("spawn")
 
     # Test with specified number of cores
