@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   recovery path. When the column is absent, sample calling skips it and graph molecule
   statistics use the number of edges.
 
+### Removed
+- The deprecated `pixelator single-cell-pna graph_legacy` command and its underlying
+  `pixelator.pna.graph_legacy` implementation. Use `pixelator single-cell-pna graph` instead.
+
 ## [0.30.0] - 2026-08-05
 
 ### Added
