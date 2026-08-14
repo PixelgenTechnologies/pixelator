@@ -18,7 +18,6 @@ import pandas as pd
 import polars as pl
 
 from pixelator import __version__
-from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel
@@ -255,7 +254,6 @@ def _build_post_sample_calling_anndata(
     ]
     new_adata = new_adata[:, non_hashing_markers].copy()
 
-    call_aggregates(new_adata)
     new_adata = _add_missing_adata_info(new_adata, old_adata)
     new_adata.obs = new_adata.obs.join(
         hash_info.select(["component", "hash_enrichment_factor"])
