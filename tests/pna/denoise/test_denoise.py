@@ -230,8 +230,8 @@ def test_denoise_one_core_analysis(synthetic_denoise_pxl_dataset, tmp_path):
             synthetic_denoise_pxl_dataset, pxl_file_target
         )
 
-    obs = denoised_dataset.adata().obs
-    assert "tau_type" in obs.columns
+    adata = denoised_dataset.adata()
+    obs = adata.obs
     components = synthetic_denoise_pxl_dataset.adata().obs.index
 
     # denoising actually removed nodes, otherwise the per-component checks

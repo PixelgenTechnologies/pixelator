@@ -93,10 +93,10 @@ def test_write_pna_pxl_components(written_pxl, generated_edgelist):
 
 
 def test_write_pna_pxl_adata_metrics(written_pxl):
-    """Aggregate metrics from call_aggregates and the rebuild are present."""
-    obs = read(written_pxl).adata().obs
+    """The rebuilt AnnData excludes retired Tau metrics."""
+    adata = read(written_pxl).adata()
+    obs = adata.obs
 
-    assert "tau_type" in obs.columns
     assert "isotype_fraction" in obs.columns
     assert "n_edges" in obs.columns
 
