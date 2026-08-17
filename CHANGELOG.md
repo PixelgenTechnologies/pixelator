@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule
   statistics use the number of edges.
+- Refactor `pixelator.common.utils.__init__.py`
 
 ### Fixed
 - The default number of cores and the fallbacks used when `--cores` is not set now respect the
