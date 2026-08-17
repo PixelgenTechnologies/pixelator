@@ -49,3 +49,14 @@ def test_get_demux_filename_info():
 
     assert res[0] == "PNA055_Sample07_filtered_S7"
     assert res[1] == 10
+
+
+def test_get_demux_filename_info_with_dots_in_sample_name():
+    """Verify a sample name containing a dot is not truncated."""
+    sample = "QC2504_sample01_downsample_0.365_S1"
+
+    assert get_demux_filename_info(f"{sample}.demux.part_000.parquet") == (sample, 0)
+    assert get_demux_filename_info(f"{sample}.demux.m1.part_012.parquet") == (
+        sample,
+        12,
+    )

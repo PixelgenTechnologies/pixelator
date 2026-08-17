@@ -17,14 +17,43 @@ from pixelator import __version__
 from pixelator.common.utils import cli as common_cli
 from pixelator.common.utils import (
     get_available_cpu_count,
+    get_part_number,
     get_pool_executor,
     get_process_pool_executor,
     get_read_sample_name,
+    get_sample_name,
     gz_size,
     is_read_file,
     log_step_start,
     sanity_check_inputs,
+    strip_sequence_file_suffixes,
 )
+
+# Every filename template that a pixelator stage writes, relative to a sample name.
+STAGE_OUTPUT_TEMPLATES = [
+    "{sample}.amplicon.fq.zst",
+    "{sample}.report.json",
+    "{sample}.meta.json",
+    "{sample}.failed.fq.zst",
+    "{sample}.amplicon.post_failed.fq.zst",
+    "{sample}.demux.passed.fq.zst",
+    "{sample}.demux.failed.fq.zst",
+    "{sample}.demux.part_000.parquet",
+    "{sample}.demux.m1.part_012.parquet",
+    "{sample}.demux.m2.part_012.parquet",
+    "{sample}.part_000.collapsed.parquet",
+    "{sample}.collapsed.parquet",
+    "{sample}.collapse.m1.part_010.parquet",
+    "{sample}.collapse.m2.part_010.parquet",
+    "{sample}.collapse.parquet",
+    "{sample}.parquet",
+    "{sample}.graph.pxl",
+    "{sample}.denoised_graph.pxl",
+    "{sample}.analysis.pxl",
+    "{sample}.layout.pxl",
+    "{sample}.dehashed.pxl",
+    "{sample}.sample_calling.report.json",
+]
 
 
 def test_gzfile_is_empty(data_root):
@@ -113,6 +142,70 @@ def test_sanity_check_inputs_failed_criteria(data_root):
         )
 
 
+@pytest.mark.parametrize("template", STAGE_OUTPUT_TEMPLATES)
+@pytest.mark.parametrize(
+    "sample",
+    [
+        "sample1",
+        # A dot in the sample name must survive every stage suffix
+        "QC2504_sample01_downsample_0.365_S1",
+        "PNA055_Sample07_filtered_S7",
+        "sample.with.several.dots",
+    ],
+)
+def test_get_sample_name_round_trips_stage_outputs(sample, template):
+    assert get_sample_name(template.format(sample=sample)) == sample
+
+
+def test_get_sample_name_ignores_directories():
+    assert get_sample_name("/tmp/some.dir/sample_0.365.graph.pxl") == "sample_0.365"
+
+
+def test_get_sample_name_keeps_unknown_suffixes():
+    # Only suffixes pixelator itself appends are stripped
+    assert get_sample_name("sample_S1_L001") == "sample_S1_L001"
+    assert get_sample_name("sample_R1.fastq.gz") == "sample_R1"
+    assert get_sample_name("sample.v2.txt") == "sample.v2.txt"
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("sample1.demux.part_000.parquet", 0),
+        ("sample1.demux.m1.part_012.parquet", 12),
+        ("sample1.part_003", 3),
+        ("QC2504_sample01_0.365_S1.demux.part_007.parquet", 7),
+        # The last part suffix wins, as with the stage prefixes pixelator writes
+        ("sample1.part_001.collapse.part_002.parquet", 2),
+        ("sample1.demux.parquet", None),
+        ("sample1.demux.part_abc.parquet", None),
+        # A part suffix on a directory is not part of the file name
+        ("/tmp/run.part_005/sample1.demux.parquet", None),
+    ],
+)
+def test_get_part_number(name, expected):
+    assert get_part_number(name) == expected
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        # Only sequence formats and compression are stripped, stage suffixes remain
+        ("sample1.demux.passed.fq.zst", "sample1.demux.passed"),
+        ("sample1.amplicon.fq.zst", "sample1.amplicon"),
+        ("sample1_R1.fastq.gz", "sample1_R1"),
+        ("sample1.parquet", "sample1.parquet"),
+        (
+            "QC2504_sample01_0.365_S1.demux.passed.fq.zst",
+            "QC2504_sample01_0.365_S1.demux.passed",
+        ),
+        ("QC2504_sample01_0.365_S1_R1.fastq.gz", "QC2504_sample01_0.365_S1_R1"),
+    ],
+)
+def test_strip_sequence_file_suffixes(name, expected):
+    assert strip_sequence_file_suffixes(name) == expected
+
+
 def test_get_read_sample_name():
     with pytest.raises(ValueError, match="Invalid file extension.*"):
         get_read_sample_name("qwdwqwdqwd")
@@ -147,6 +240,26 @@ def test_get_read_sample_name():
         get_read_sample_name("sample_ABCD_2234_2___2_66_2.fastq.gz")
         == "sample_ABCD_2234_2___2_66"
     )
+
+
+@pytest.mark.parametrize(
+    "extension", ["fastq.gz", "fq.gz", "fastq.zst", "fq.zst", "fastq", "fq"]
+)
+def test_get_read_sample_name_with_dots_in_sample_name(extension):
+    sample = "QC2504_sample01_downsample_0.365_S1"
+    assert get_read_sample_name(f"{sample}_R1.{extension}") == sample
+    assert get_read_sample_name(f"{sample}_R2.{extension}") == sample
+
+
+@pytest.mark.parametrize(
+    "extension", ["fastq.gz", "fq.gz", "fastq.zst", "fq.zst", "fastq", "fq"]
+)
+def test_is_read_file_with_dots_in_sample_name(extension):
+    sample = "QC2504_sample01_downsample_0.365_S1"
+    assert is_read_file(f"{sample}_R1.{extension}", read_type="r1")
+    assert not is_read_file(f"{sample}_R1.{extension}", read_type="r2")
+    assert is_read_file(f"{sample}_R2.{extension}", read_type="r2")
+    assert not is_read_file(f"{sample}_R2.{extension}", read_type="r1")
 
 
 def test_is_read_file():

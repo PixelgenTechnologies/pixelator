@@ -16,7 +16,10 @@ from cutadapt.modifiers import (
 from cutadapt.steps import PairedEndStep, SingleEndFilter, SingleEndSink, SingleEndStep
 from cutadapt.utils import DummyProgress, Progress
 
-from pixelator.common.utils import get_available_cpu_count
+from pixelator.common.utils import (
+    get_available_cpu_count,
+    strip_sequence_file_suffixes,
+)
 from pixelator.common.utils.log_progress import LogProgress
 from pixelator.pna.amplicon.build_amplicon import (
     PairedEndAmpliconBuilder,
@@ -33,7 +36,6 @@ from pixelator.pna.amplicon.report import AmpliconStatistics
 from pixelator.pna.config.assay import PNAAssay
 from pixelator.pna.read_processing.pipeline import AmpliconPipeline
 from pixelator.pna.read_processing.runners import ParallelPipelineRunner
-from pixelator.pna.utils import clean_suffixes
 
 logger = logging.getLogger(__name__)
 
@@ -107,13 +109,12 @@ def amplicon_fastq(
 
     # Open file handles for failed reads
     # TODO: Should this be configurable?
-    output_filename = clean_suffixes(Path(inputs[0])).name
-    failed_1 = Path(
-        output.parent / f"{clean_suffixes(Path(inputs[0])).name}.failed.fq.zst"
-    )
+    output_filename = strip_sequence_file_suffixes(Path(inputs[0]).name)
+    failed_1 = Path(output.parent / f"{output_filename}.failed.fq.zst")
     if len(inputs) == 2:
         failed_2 = Path(
-            output.parent / f"{clean_suffixes(Path(inputs[1])).name}.failed.fq.zst"
+            output.parent
+            / f"{strip_sequence_file_suffixes(Path(inputs[1]).name)}.failed.fq.zst"
         )
 
     amplicon_failed_writer = None

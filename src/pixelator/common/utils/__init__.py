@@ -29,9 +29,11 @@ from pixelator.common.utils.parallel import (
 from pixelator.common.utils.paths import (
     create_output_stage_dir,
     get_extension,
+    get_part_number,
     get_sample_name,
     gz_size,
     sanity_check_inputs,
+    strip_sequence_file_suffixes,
 )
 from pixelator.common.utils.sequences import reverse_complement
 from pixelator.common.utils.serialization import np_encoder, remove_csv_whitespaces
@@ -47,6 +49,7 @@ __all__ = [
     "flatten",
     "get_available_cpu_count",
     "get_extension",
+    "get_part_number",
     "get_pool_executor",
     "get_process_pool_executor",
     "get_read_sample_name",
@@ -61,6 +64,7 @@ __all__ = [
     "reverse_complement",
     "sanity_check_inputs",
     "single_value",
+    "strip_sequence_file_suffixes",
     "timer",
     "write_parameters_file",
 ]

@@ -14,17 +14,44 @@ from typing import Dict, List, Literal, Sequence
 import click
 
 from pixelator.common.types import PathType
-from pixelator.common.utils.paths import get_extension, get_sample_name
+from pixelator.common.utils.paths import get_sample_name, strip_sequence_file_suffixes
 
 R1_REGEX = R"(.[Rr]1$)|(_[Rr]?1$)|(_[Rr]?1)(?P<suffix>_[0-9]{3})$"
 R2_REGEX = R"(.[Rr]2$)|(_[Rr]?2$)|(_[Rr]?2)(?P<suffix>_[0-9]{3})$"
 
 
-def get_read_sample_name(read: str) -> str:
+def _check_read_extensions(read: str | Path) -> None:
+    """Raise if a read file does not use a supported fastq extension.
+
+    Args:
+        read: filename of a fastq read file
+
+    Raises:
+        ValueError: if the read file does not have a valid extension
+    """
+    allowed_extensions = {
+        ".fastq.gz",
+        ".fq.gz",
+        ".fastq",
+        ".fq",
+        ".fastq.zst",
+        ".fq.zst",
+    }
+
+    read = str(read)
+
+    if not any(read.endswith(e) for e in allowed_extensions):
+        raise ValueError(
+            "Invalid file extension: expected .fq or .fastq (with .gz or .zst compression)"
+        )
+
+
+def get_read_sample_name(read: str | Path) -> str:
     """Extract the sample name from a read file.
 
-    Strip fq.gz or fastq.gz extension and remove R1/R2 suffixes.
-    Supported R1 R2 identifiers are:
+    Strip the fastq extension and any compression extension, then remove the
+    R1/R2 suffix. Supported R1 R2 identifiers are:
+
     _R1,_R2 | _r1, _r2 | _1, _2 | .R1, .R2 | .r1, .r2
 
     Args:
@@ -37,11 +64,9 @@ def get_read_sample_name(read: str) -> str:
         ValueError: if the read file does not have a valid extension
     """
     # group input file by sample id and order reads by R1 and R2
-    if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
-        raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
+    _check_read_extensions(read)
 
-    read_stem = Path(read).name
-    read_stem = read_stem.removesuffix(get_extension(read_stem, 2)).rstrip(".")
+    read_stem = strip_sequence_file_suffixes(Path(read).name)
     r1_match = re.search(R1_REGEX, read_stem)
     r2_match = re.search(R2_REGEX, read_stem)
 
@@ -84,11 +109,10 @@ def is_read_file(read: Path | str, read_type: Literal["r1"] | Literal["r2"]) -> 
     if read_type not in ("r1", "r2"):
         raise AssertionError("Invalid read type: expected 'r1' or 'r2'")
 
-    if not (read.endswith("fq.gz") or read.endswith("fastq.gz")):
-        raise ValueError("Invalid file extension: expected .fq.gz or .fastq.gz")
+    _check_read_extensions(read)
 
     match: re.Match[str] | None = None
-    read_stem = Path(read.removesuffix(get_extension(read, 2)).rstrip(".")).name
+    read_stem = strip_sequence_file_suffixes(read)
     if read_type == "r1":
         match = re.search(R1_REGEX, read_stem)
     elif read_type == "r2":

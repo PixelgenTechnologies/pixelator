@@ -18,7 +18,11 @@ from cutadapt.steps import SingleEndSink
 from cutadapt.utils import DummyProgress, Progress
 
 from pixelator.common.exceptions import PixelatorBaseException
-from pixelator.common.utils import get_available_cpu_count, get_sample_name
+from pixelator.common.utils import (
+    get_available_cpu_count,
+    get_sample_name,
+    strip_sequence_file_suffixes,
+)
 from pixelator.common.utils.log_progress import LogProgress
 from pixelator.pna.config import PNAAntibodyPanel, PNAAssay
 from pixelator.pna.demux.barcode_demuxer import (
@@ -38,7 +42,7 @@ from pixelator.pna.demux.pipeline import (
 )
 from pixelator.pna.demux.report import BarcodeCorrectionStatistics
 from pixelator.pna.read_processing.runners import ParallelPipelineRunner
-from pixelator.pna.utils import clean_suffixes, init_duckdb_conn
+from pixelator.pna.utils import init_duckdb_conn
 
 logger = logging.getLogger("demux")
 
@@ -173,7 +177,7 @@ def demux_barcode_groups(
 
     # 1 Reader and 1 Writer thread but these do not require much CPU
     worker_threads = max(threads - 1, 1)
-    prefix = clean_suffixes(PurePath(input_files.paths[0])).name
+    prefix = strip_sequence_file_suffixes(PurePath(input_files.paths[0]).name)
     prefix = prefix.replace(".demux.passed", ".demux")
     filename_policy: DemuxFilenamePolicy
 
@@ -338,7 +342,7 @@ def _finalize_batched_groups_paired(
     conn = init_duckdb_conn(memory_limit=memory, threads=threads, temp_dir=temp_dir)
 
     for f in tmp_parquet_files:
-        output_name = str(clean_suffixes(f).name)
+        output_name = strip_sequence_file_suffixes(f.name)
         output_name = output_name.removesuffix(".parquet")
 
         output_path = Path(output_dir) / f"{output_name}.parquet"
@@ -422,7 +426,7 @@ def _finalize_batched_groups_independent(
                 f"Unrecognised marker suffix. Could not determine sorting order"
             )
 
-        output_name = str(clean_suffixes(f).name)
+        output_name = strip_sequence_file_suffixes(f.name)
         output_name = output_name.removesuffix(".parquet")
 
         output_path = Path(output_dir) / f"{output_name}.parquet"

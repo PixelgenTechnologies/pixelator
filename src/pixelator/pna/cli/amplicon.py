@@ -13,6 +13,8 @@ import click
 
 from pixelator.common.utils import (
     create_output_stage_dir,
+    get_read_sample_name,
+    is_read_file,
     log_step_start,
     sanity_check_inputs,
     timer,
@@ -27,7 +29,6 @@ from pixelator.pna.cli.common import (
     threads_option,
 )
 from pixelator.pna.config import pna_config
-from pixelator.pna.utils import get_read_sample_name, is_read_file
 
 
 @click.command(

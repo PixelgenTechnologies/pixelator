@@ -96,7 +96,7 @@ def sample_calling_cli(
 
     sample_calling_output = create_output_stage_dir(output, "sample_calling")
 
-    pool_name = Path(input_pxl_file).name.split(".")[0]
+    pool_name = get_sample_name(input_pxl_file)
     undetermined_sample_name = f"{pool_name}_undetermined"
 
     panel_info = PNAAntibodyPanel.from_pxl_dataset(read(input_pxl_file))

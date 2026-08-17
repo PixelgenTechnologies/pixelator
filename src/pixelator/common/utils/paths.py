@@ -8,6 +8,8 @@ from __future__ import annotations
 import collections.abc
 import gzip
 import logging
+import re
+import typing
 from pathlib import Path, PurePath
 from typing import Optional, Sequence, Union
 
@@ -45,11 +47,104 @@ def get_extension(filename: PathType, len_ext: int = 2) -> str:
     return "".join(PurePath(filename).suffixes[-len_ext:]).lstrip(".")
 
 
+# Compression extensions that may be appended to any pixelator output file.
+_KNOWN_COMPRESSION_SUFFIXES = frozenset({".gz", ".bz2", ".zst", ".xz"})
+
+# Extensions of the sequence file formats read and written by pixelator.
+_KNOWN_SEQUENCE_SUFFIXES = frozenset({".fastq", ".fq", ".fasta", ".fa"})
+
+# Extensions of the non-sequence file formats written by pixelator.
+_KNOWN_DATA_SUFFIXES = frozenset({".parquet", ".pxl", ".json", ".csv"})
+
+# Suffixes that pixelator stages append to a sample name to describe the
+# content of a file, e.g. `<sample>.demux.m1.part_000.parquet`.
+_KNOWN_STAGE_SUFFIXES = frozenset(
+    {
+        ".amplicon",
+        ".analysis",
+        ".collapse",
+        ".collapsed",
+        ".dehashed",
+        ".demux",
+        ".denoised_graph",
+        ".failed",
+        ".graph",
+        ".layout",
+        ".m1",
+        ".m2",
+        ".meta",
+        ".passed",
+        ".post_failed",
+        ".report",
+        ".sample_calling",
+    }
+)
+
+_PART_SUFFIX_PATTERN = re.compile(r"\.part_(\d+)\Z")
+
+
+def _strip_known_suffixes(
+    name: str, is_known_suffix: typing.Callable[[str], bool]
+) -> str:
+    """Repeatedly remove trailing dot-separated suffixes accepted by a predicate.
+
+    Args:
+        name: the file name (without directory components) to strip
+        is_known_suffix: predicate deciding whether a suffix (including the
+            leading dot) should be removed
+
+    Returns:
+        the name without its trailing known suffixes (str)
+    """
+    while True:
+        stem, dot, suffix = name.rpartition(".")
+        # An empty stem means a leading dot, which is part of the name itself.
+        if not dot or not stem or not is_known_suffix(f".{suffix}"):
+            return name
+        name = stem
+
+
+def _is_sequence_file_suffix(suffix: str) -> bool:
+    """Return True for sequence file format and compression suffixes."""
+    return suffix in _KNOWN_SEQUENCE_SUFFIXES or suffix in _KNOWN_COMPRESSION_SUFFIXES
+
+
+def _is_sample_name_suffix(suffix: str) -> bool:
+    """Return True for any suffix pixelator appends after a sample name."""
+    return (
+        _is_sequence_file_suffix(suffix)
+        or suffix in _KNOWN_DATA_SUFFIXES
+        or suffix in _KNOWN_STAGE_SUFFIXES
+        or _PART_SUFFIX_PATTERN.fullmatch(suffix) is not None
+    )
+
+
+def strip_sequence_file_suffixes(name: str) -> str:
+    """Remove trailing sequence file format and compression suffixes from a name.
+
+    Args:
+        name: the file name (without directory components) to strip
+
+    Returns:
+        the name without e.g. a trailing ``.fastq.gz`` or ``.fq.zst`` (str)
+    """
+    return _strip_known_suffixes(name, _is_sequence_file_suffix)
+
+
 def get_sample_name(filename: PathType) -> str:
     """Extract the sample name from a sample's filename.
 
-    The sample name is expected to be from the start of the filename until
-    the first dot.
+    All trailing suffixes that pixelator itself appends to a sample name are
+    removed, i.e. the file format extension, any compression extension and the
+    stage suffixes describing the content of the file. Everything that remains
+    is the sample name, so sample names are allowed to contain dots::
+
+        QC2504_sample01_downsample_0.365_S1.demux.part_000.parquet
+        -> QC2504_sample01_downsample_0.365_S1
+
+    Since the suffixes are stripped by name, a sample whose name ends in one of
+    the pixelator stage suffixes (e.g. ``donor1.graph``) cannot be distinguished
+    from a stage suffix and will be stripped as well.
 
     Args:
         filename: path to the file
@@ -57,7 +152,26 @@ def get_sample_name(filename: PathType) -> str:
     Returns:
         the sample name (str)
     """
-    return Path(filename).stem.split(".")[0]
+    return _strip_known_suffixes(PurePath(filename).name, _is_sample_name_suffix)
+
+
+def get_part_number(filename: PathType) -> int | None:
+    """Extract the part number from the name of a file written in parts.
+
+    Stages that split their output tag each file with a ``.part_<number>``
+    suffix, e.g. ``<sample>.demux.m1.part_000.parquet``.
+
+    Args:
+        filename: path to the file
+
+    Returns:
+        the part number, or None if the name carries no part suffix (int | None)
+    """
+    for suffix in reversed(PurePath(filename).suffixes):
+        match = _PART_SUFFIX_PATTERN.fullmatch(suffix)
+        if match:
+            return int(match.group(1))
+    return None
 
 
 def gz_size(filename: str) -> int:
