@@ -26,10 +26,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from pixelator.common.config.panel import (
-    AntibodyPanelMetadata,
-    PanelType,
-)
+from pixelator.common.config.panel import AntibodyPanelMetadata, PanelType
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 
@@ -978,10 +975,8 @@ class PNAAntibodyPanelCombination(PNAPanel):
     differ: :attr:`metadata` is a list, and display fields such as :attr:`name`
     / :attr:`version` join member values with ``" + "``.
 
-    Construct with one or more member panels, or use :meth:`from_csv` /
-    :func:`~pixelator.pna.config.panel.load_antibody_panel`. Raises if panels
-    are incompatible (conflicting ``marker_id`` rows or duplicate clone
-    sequences).
+    Raises if panels are incompatible (conflicting ``marker_id`` rows or
+    duplicate clone sequences).
     """
 
     _REQUIRED_COLUMNS = {
@@ -1463,3 +1458,28 @@ class PNASampleHashingPanel(PartialPNAAntibodyPanel):
                 "All entries in `sample_hashing` column must be 'yes' (True) for a sample hashing panel"
             ]
         )
+
+
+if TYPE_CHECKING:
+    # Deprecated alias of :class:`PartialPNAAntibodyPanel` (warns on runtime access).
+    PNAAntibodyPanel = PartialPNAAntibodyPanel
+
+
+def __getattr__(name: str):
+    """Resolve the deprecated ``PNAAntibodyPanel`` alias with a warning."""
+    if name == "PNAAntibodyPanel":
+        warnings.warn(
+            "PNAAntibodyPanel is deprecated and will be removed in a future release. "
+            "Use PartialPNAAntibodyPanel (or a typed subclass), or "
+            "PNAAntibodyPanelCombination for multi-panel samples.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        # Cache so repeated access does not re-warn.
+        globals()["PNAAntibodyPanel"] = PartialPNAAntibodyPanel
+        return PartialPNAAntibodyPanel
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    return sorted({*globals(), "PNAAntibodyPanel"})
