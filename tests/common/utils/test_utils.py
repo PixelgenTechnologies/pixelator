@@ -14,6 +14,7 @@ from unittest.mock import patch
 import pytest
 
 from pixelator import __version__
+from pixelator.common.utils import cli as common_cli
 from pixelator.common.utils import (
     get_available_cpu_count,
     get_pool_executor,
@@ -59,7 +60,7 @@ def test_log_step_start(caplog):
             dict.fromkeys(
                 rec.getMessage()
                 for rec in caplog.records
-                if rec.name == "pixelator.common.utils"
+                if rec.name == common_cli.logger.name
             )
         )
         assert messages == [
@@ -250,7 +251,7 @@ def test_get_pool_executor_with_click_context():
         def obj(self):
             return {"CORES": 3}
 
-    with patch("pixelator.common.utils.click") as click:
+    with patch("pixelator.common.utils.parallel.click") as click:
         click.get_current_context.return_value = MockContext()
         pool = get_pool_executor()
         assert isinstance(pool, Pool)

@@ -7,13 +7,13 @@ import click
 import pytest
 from click.testing import CliRunner
 
-import pixelator.common.utils as common_utils
 from pixelator.common.utils import (
-    _read_cgroup_cpu_quota,
     flatten,
     get_available_cpu_count,
     write_parameters_file,
 )
+from pixelator.common.utils import parallel as common_parallel
+from pixelator.common.utils.parallel import _read_cgroup_cpu_quota
 
 
 @pytest.mark.parametrize(
@@ -97,7 +97,7 @@ def test_write_parameters_file_includes_single_file_argument(tmp_path):
 @pytest.fixture
 def no_cgroup_quota(monkeypatch):
     """Neutralize the cgroup CPU quota so only the affinity path is exercised."""
-    monkeypatch.setattr(common_utils, "_read_cgroup_cpu_quota", lambda: None)
+    monkeypatch.setattr(common_parallel, "_read_cgroup_cpu_quota", lambda: None)
 
 
 def test_get_available_cpu_count_prefers_process_cpu_count(
@@ -153,9 +153,9 @@ def _point_cgroup_paths(
         quota_path.write_text(v1_quota)
     if v1_period is not None:
         period_path.write_text(v1_period)
-    monkeypatch.setattr(common_utils, "_CGROUP_V2_CPU_MAX", str(v2_path))
-    monkeypatch.setattr(common_utils, "_CGROUP_V1_CFS_QUOTA", str(quota_path))
-    monkeypatch.setattr(common_utils, "_CGROUP_V1_CFS_PERIOD", str(period_path))
+    monkeypatch.setattr(common_parallel, "_CGROUP_V2_CPU_MAX", str(v2_path))
+    monkeypatch.setattr(common_parallel, "_CGROUP_V1_CFS_QUOTA", str(quota_path))
+    monkeypatch.setattr(common_parallel, "_CGROUP_V1_CFS_PERIOD", str(period_path))
 
 
 def test_read_cgroup_cpu_quota_cgroup_v2(monkeypatch, tmp_path):
@@ -203,7 +203,7 @@ def test_read_cgroup_cpu_quota_no_files(monkeypatch, tmp_path):
 def test_get_available_cpu_count_quota_narrower_than_affinity(monkeypatch):
     """The cgroup quota wins when it is more restrictive than CPU affinity."""
     monkeypatch.setattr(os, "process_cpu_count", lambda: 8, raising=False)
-    monkeypatch.setattr(common_utils, "_read_cgroup_cpu_quota", lambda: 2)
+    monkeypatch.setattr(common_parallel, "_read_cgroup_cpu_quota", lambda: 2)
 
     assert get_available_cpu_count() == 2
 
@@ -211,6 +211,6 @@ def test_get_available_cpu_count_quota_narrower_than_affinity(monkeypatch):
 def test_get_available_cpu_count_affinity_narrower_than_quota(monkeypatch):
     """The CPU affinity (cpuset) wins when it is more restrictive than the quota."""
     monkeypatch.setattr(os, "process_cpu_count", lambda: 2, raising=False)
-    monkeypatch.setattr(common_utils, "_read_cgroup_cpu_quota", lambda: 8)
+    monkeypatch.setattr(common_parallel, "_read_cgroup_cpu_quota", lambda: 8)
 
     assert get_available_cpu_count() == 2
