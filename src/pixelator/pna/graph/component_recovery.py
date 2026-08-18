@@ -7,10 +7,8 @@ import tempfile
 from copy import copy
 from pathlib import Path
 
-import numpy as np
 from anndata import AnnData
 
-from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.cli.common import logger
 from pixelator.pna.config import PNAAntibodyPanelCombination
@@ -36,21 +34,6 @@ def update_stats_from_adata(adata: AnnData, stats: GraphStatistics) -> GraphStat
         "reads_in_component"
     ].median()
     component_stats.median_markers_per_component = adata.obs["n_umi"].median()
-
-    # Add tau_type metrics
-    aggregates_mask = adata.obs["tau_type"] != "normal"
-    number_of_aggregates = np.sum(aggregates_mask)
-
-    component_stats.aggregate_count = number_of_aggregates
-    aggregate_stats = (
-        adata[aggregates_mask].obs[["n_edges", "n_umi", "reads_in_component"]].sum()
-    )
-
-    component_stats.read_count_in_aggregates = aggregate_stats[
-        "reads_in_component"
-    ].item()
-    component_stats.node_count_in_aggregates = aggregate_stats["n_umi"].item()
-    component_stats.edge_count_in_aggregates = aggregate_stats["n_edges"].item()
 
     return component_stats
 
@@ -126,7 +109,6 @@ def build_pxl_file_with_components(
 
             logger.debug("Building edgelist from anndata")
             adata = pna_edgelist_to_anndata(pxl_connection, panel=panel)
-            call_aggregates(adata)
 
             component_stats = update_stats_from_adata(adata, component_stats)
 

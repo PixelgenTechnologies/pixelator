@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
   `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
   use a release prior to 0.31.0 (for example `pip install 'pixelgen-pixelator<0.31.0'`).
+- Removed `pixelator single-cell-pna graph_legacy` command. Use `pixelator single-cell-pna graph` instead.
+- The PNA graph step no longer densifies UMI node ids in Python before community detection.
+  The native `run_hybrid_community_detection` already builds a dense node index internally and
+  returns the original UMIs, so the redundant `create_working_edgelist` /
+  `map_working_to_original_umi_names` round-trip has been removed. The filtered edgelist is now
+  passed directly to native community detection, and the recovered components are unchanged.
 
 ### Changed
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
@@ -18,9 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   recovery path. When the column is absent, sample calling skips it and graph molecule
   statistics use the number of edges.
 
-### Removed
-- The deprecated `pixelator single-cell-pna graph_legacy` command and its underlying
-  `pixelator.pna.graph_legacy` implementation. Use `pixelator single-cell-pna graph` instead.
+### Fixed
+- The default number of cores and the fallbacks used when `--cores` is not set now respect the
+  CPU affinity mask (via `os.process_cpu_count()` or `os.sched_getaffinity()`) and the cgroup
+  CPU bandwidth quota (`docker run --cpus`, Kubernetes `limits.cpu`), taking the most restrictive
+  of the two, instead of always reporting the host machine's core count. This prevents
+  multiprocessing oversubscription and slowdowns when running inside a container or pod with a
+  restricted CPU allocation.
 
 ## [0.30.0] - 2026-08-05
 

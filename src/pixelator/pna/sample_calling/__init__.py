@@ -18,9 +18,8 @@ import pandas as pd
 import polars as pl
 
 from pixelator import __version__
-from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
-from pixelator.pna.anndata import pna_edgelist_to_anndata
+from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
@@ -210,16 +209,6 @@ def _add_original_hash_counts_to_obs(
             old_adata.obs[f"original_hash_counts_{ab}"] = 0
 
 
-def _add_missing_adata_info(new_adata, old_adata):
-    missing_obs = set(old_adata.obs.columns) - set(new_adata.obs.columns)
-    missing_var = set(old_adata.var.columns) - set(new_adata.var.columns)
-
-    new_adata.obs = new_adata.obs.join(old_adata.obs[list(missing_obs)], how="left")
-    new_adata.var = new_adata.var.join(old_adata.var[list(missing_var)], how="left")
-
-    return new_adata
-
-
 def _build_post_sample_calling_anndata(
     con: duckdb.DuckDBPyConnection,
     old_adata: anndata.AnnData,
@@ -255,8 +244,7 @@ def _build_post_sample_calling_anndata(
     ]
     new_adata = new_adata[:, non_hashing_markers].copy()
 
-    call_aggregates(new_adata)
-    new_adata = _add_missing_adata_info(new_adata, old_adata)
+    new_adata = add_missing_adata_info(new_adata, old_adata)
     new_adata.obs = new_adata.obs.join(
         hash_info.select(["component", "hash_enrichment_factor"])
         .to_pandas()

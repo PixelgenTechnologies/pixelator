@@ -18,7 +18,7 @@ from cutadapt.steps import SingleEndSink
 from cutadapt.utils import DummyProgress, Progress
 
 from pixelator.common.exceptions import PixelatorBaseException
-from pixelator.common.utils import get_sample_name
+from pixelator.common.utils import get_available_cpu_count, get_sample_name
 from pixelator.common.utils.log_progress import LogProgress
 from pixelator.pna.config import PNAAntibodyPanelCombination, PNAAssay
 from pixelator.pna.demux.barcode_demuxer import (
@@ -41,8 +41,6 @@ from pixelator.pna.read_processing.runners import ParallelPipelineRunner
 from pixelator.pna.utils import clean_suffixes, init_duckdb_conn
 
 logger = logging.getLogger("demux")
-
-import multiprocessing as mp
 
 
 def correct_marker_barcodes(
@@ -71,7 +69,7 @@ def correct_marker_barcodes(
         threads: The number of threads to use for processing. By default all available cores are
             used.
     """
-    threads = threads if threads > 0 else mp.cpu_count()
+    threads = threads if threads > 0 else get_available_cpu_count()
 
     # Open file handles for input files
     input_files = InputPaths(str(input))
@@ -169,7 +167,7 @@ def demux_barcode_groups(
     """
     # Open file handles for input files
 
-    threads = threads if threads > 0 else max(mp.cpu_count(), 1)
+    threads = threads if threads > 0 else max(get_available_cpu_count(), 1)
 
     input_files = InputPaths(str(corrected_reads))
 
