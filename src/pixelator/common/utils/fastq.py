@@ -24,8 +24,7 @@ def get_read_sample_name(read: str) -> str:
     """Extract the sample name from a read file.
 
     Strip fq.gz or fastq.gz extension and remove R1/R2 suffixes.
-    Supported R1 R2 identifieds are:
-
+    Supported R1 R2 identifiers are:
     _R1,_R2 | _r1, _r2 | _1, _2 | .R1, .R2 | .r1, .r2
 
     Args:

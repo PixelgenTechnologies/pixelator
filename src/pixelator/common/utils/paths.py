@@ -67,7 +67,7 @@ def gz_size(filename: str) -> int:
         filename: file name
 
     Returns:
-        size of the file uncompressed (in bits) (int)
+        size of the file uncompressed (in bytes) (int)
     """
     with gzip.open(filename, "rb") as f:
         return f.seek(0, whence=2)
