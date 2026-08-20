@@ -14,6 +14,7 @@ from pixelator.pna.config.panel import (
     PanelType,
     PartialPNAAntibodyPanel,
     PNAAntibodyPanelCombination,
+    PNAAntibodyPanelDiff,
     PNABasePanel,
 )
 from pixelator.pna.pixeldataset import read
@@ -316,6 +317,40 @@ def test_legacy_panel_metadata_roundtrip(panel_df):
     combo = PNAAntibodyPanelCombination.from_adata(adata)
     assert combo.num_partial_panels == 1
     assert combo.name == "legacy-panel"
+
+
+def test_upgrade_adata_migrates_legacy_panel_metadata(panel_df):
+    """Patch bump migrates legacy uns keys to the multi-panel layout."""
+    meta_old = AntibodyPanelMetadata(
+        name="legacy-panel", version="1.0.0", product="test-product"
+    )
+    meta_new = AntibodyPanelMetadata(
+        name="legacy-panel", version="1.0.1", product="test-product"
+    )
+    panel_old = PartialPNAAntibodyPanel(panel_df.copy(), meta_old)
+    df_new = panel_df.copy()
+    df_new.loc["marker1", "uniprot_id"] = "Q9UPN0"
+    panel_new = PartialPNAAntibodyPanel(df_new, meta_new)
+
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=panel_df.copy(),
+    )
+    adata.uns["panel_metadata"] = {
+        **meta_old.to_dict(),
+        "panel_columns": list(panel_df.columns),
+    }
+
+    upgraded = PNAAntibodyPanelDiff(panel_old, panel_new).upgrade_adata(adata)
+
+    assert "panel_metadata" not in upgraded.uns
+    assert "panel_columns" not in upgraded.uns
+    assert upgraded.uns["num_partial_panels"] == 1
+    assert upgraded.uns["panel_metadata__0"]["version"] == "1.0.1"
+    assert upgraded.var.loc["marker1", "uniprot_id"] == "Q9UPN0"
+    reconstructed = PNAAntibodyPanelCombination.from_adata(upgraded)
+    assert reconstructed.version == "1.0.1"
+    assert reconstructed.num_partial_panels == 1
 
 
 def test_panel_from_pxl(pxl_file):

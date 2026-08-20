@@ -921,16 +921,24 @@ class PNAAntibodyPanelDiff:
             )
 
         # first update the uns variables
-        for idx in range(adata.uns.get("num_partial_panels", 0)):
-            metadata_key = f"panel_metadata__{idx}"
-            metadata = AntibodyPanelMetadata.model_validate(adata.uns[metadata_key])
-            if (
-                metadata.name == self.panel_1.name
-                and metadata.version == self.panel_1.version
-            ):
-                adata.uns[metadata_key] = self.panel_2.metadata.to_dict()
-                adata.uns[f"panel_df__{idx}"] = self.panel_2.df.to_csv()
-                break
+        if "num_partial_panels" in adata.uns:
+            for idx in range(adata.uns["num_partial_panels"]):
+                metadata_key = f"panel_metadata__{idx}"
+                metadata = AntibodyPanelMetadata.model_validate(adata.uns[metadata_key])
+                if (
+                    metadata.name == self.panel_1.name
+                    and metadata.version == self.panel_1.version
+                ):
+                    adata.uns[metadata_key] = self.panel_2.metadata.to_dict()
+                    adata.uns[f"panel_df__{idx}"] = self.panel_2.df.to_csv()
+                    break
+        elif "panel_metadata" in adata.uns:
+            # Migrate legacy single-panel uns keys to the multi-panel layout.
+            del adata.uns["panel_metadata"]
+            adata.uns.pop("panel_columns", None)
+            adata.uns["num_partial_panels"] = 1
+            adata.uns["panel_metadata__0"] = self.panel_2.metadata.to_dict()
+            adata.uns["panel_df__0"] = self.panel_2.df.to_csv()
 
         # update the andata var table
         org_var_shape = adata.var.shape

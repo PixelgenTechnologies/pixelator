@@ -42,7 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ``panel_metadata`` + ``panel_columns`` shape. New files always use
   ``num_partial_panels``, ``panel_metadata__{i}``, and ``panel_df__{i}``
   (including when only one panel is present). Readers still accept the legacy
-  format for older files.
+  format for older files. ``PNAAntibodyPanelDiff.upgrade_adata`` migrates
+  legacy ``panel_metadata`` / ``panel_columns`` to the multi-panel layout when
+  applying a patch bump.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule
