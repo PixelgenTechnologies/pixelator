@@ -537,8 +537,8 @@ def get_panel_type_from_metadata(
         :class:`~pixelator.pna.config.panel.PNAAddonPanel`, or
         :class:`~pixelator.pna.config.panel.PNASampleHashingPanel`. Missing
         or unknown ``panel_type`` values fall back to
-        :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel` (with a
-        warning).
+        :class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel` (logged
+        at debug).
     """
     match metadata.panel_type:
         case PanelType.PARTIAL:
