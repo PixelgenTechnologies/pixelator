@@ -501,7 +501,7 @@ class PartialPNAAntibodyPanel(PNAPanel):
             other: Panel to compare for equality.
         """
         if not isinstance(other, PNAPanel):
-            raise ValueError("Can only compare with another PNAPanel")
+            return NotImplemented
         return self.df.equals(other.df) and self.metadata == other.metadata
 
 
@@ -1060,7 +1060,7 @@ class PNAAntibodyPanelCombination(PNAPanel):
             other: Panel to compare for equality.
         """
         if not isinstance(other, PNAPanel):
-            raise ValueError("Can only compare with another PNAPanel")
+            return NotImplemented
         return self.df.equals(other.df) and self.metadata == other.metadata
 
     @property
