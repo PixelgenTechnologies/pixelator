@@ -122,7 +122,7 @@ class AntibodyPanelMetadata(pydantic.BaseModel):
             raise KeyError(
                 f"Key {key!r} not found in adata.uns for panel metadata deserialization."
             )
-        deserialized_metadata = adata.uns[key]
+        deserialized_metadata = adata.uns[key].copy()
         deserialized_metadata["panel_type"] = (
             PanelType(deserialized_metadata["panel_type"])
             if deserialized_metadata.get("panel_type") is not None
