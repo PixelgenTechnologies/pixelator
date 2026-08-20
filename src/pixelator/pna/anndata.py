@@ -33,7 +33,28 @@ def calculate_antibody_metrics(counts_df):
 def add_panel_information(
     adata: AnnData, panel: PNAAntibodyPanelCombination
 ) -> AnnData:
-    """Add panel data to var."""
+    """Embed panel marker columns and metadata on an AnnData object.
+
+    Joins the combination marker table onto ``adata.var`` and stores panel
+    payloads in ``uns`` using the multi-panel layout even when there is only
+    one member panel:
+
+    * ``num_partial_panels``
+    * ``panel_metadata__{i}``
+    * ``panel_df__{i}``
+
+    The legacy single-key ``panel_metadata`` / ``panel_columns`` shape is not
+    written. Older files that still use that layout remain readable via
+    :meth:`~pixelator.pna.config.panel.PNAAntibodyPanelCombination.from_adata`
+    and related helpers.
+
+    Args:
+        adata: AnnData whose ``var`` index is marker ids.
+        panel: Combination of panels used for this sample.
+
+    Returns:
+        The same AnnData instance after in-place updates.
+    """
     assert isinstance(panel, PNAAntibodyPanelCombination), (
         "Only PNAAntibodyPanelCombination is supported for adata conversion."
     )

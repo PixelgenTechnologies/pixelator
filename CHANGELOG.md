@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PNAAntibodyPanelCombination` is constructed from one panel or a sequence of
   panels, e.g. `PNAAntibodyPanelCombination(panel)` or
   `PNAAntibodyPanelCombination([p1, p2, ...])`.
+- AnnData / `.pxl` panel storage no longer writes the legacy single-key
+  ``panel_metadata`` + ``panel_columns`` shape. New files always use
+  ``num_partial_panels``, ``panel_metadata__{i}``, and ``panel_df__{i}``
+  (including when only one panel is present). Readers still accept the legacy
+  format for older files.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule
