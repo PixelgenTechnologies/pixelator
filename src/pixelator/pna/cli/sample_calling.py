@@ -18,7 +18,10 @@ from pixelator.common.utils import (
 )
 from pixelator.pna import read
 from pixelator.pna.cli.common import output_option
-from pixelator.pna.config.panel import PNAAntibodyPanelCombination
+from pixelator.pna.config.panel import (
+    PNAAntibodyPanelCombination,
+    sample_hashing_mask,
+)
 from pixelator.pna.sample_calling import (
     create_final_report,
     sample_calling,
@@ -101,7 +104,9 @@ def sample_calling_cli(
 
     panel_info = PNAAntibodyPanelCombination.from_pxl_dataset(read(input_pxl_file))
     hashing_antibodies_in_panel = set(
-        panel_info.df[panel_info.df["sample_hashing"] == "yes"].index.to_list()
+        panel_info.df[
+            sample_hashing_mask(panel_info.df["sample_hashing"])
+        ].index.to_list()
     )
     samplesheet_df = pl.read_csv(samplesheet)
     if "undetermined" in samplesheet_df["sample"].to_list():

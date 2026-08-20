@@ -168,12 +168,15 @@ def _assign_umis(edgelist: pl.DataFrame, rng: np.random.Generator) -> pl.DataFra
 def _hashing_mask(df: pl.DataFrame) -> np.ndarray:
     """Boolean mask of hashing markers; all ``False`` when the panel has none.
 
-    Panels without a ``sample_hashing`` column (or with no ``"yes"`` entries) are
+    Panels without a ``sample_hashing`` column (or with no hashing markers) are
     treated as having no hashing markers, so hashing degrades gracefully.
+    Accepts bool columns and legacy ``yes``/``no`` (or ``True``/``False``) strings.
     """
-    if "sample_hashing" in df.columns:
-        return (df["sample_hashing"] == "yes").to_numpy()
-    return np.zeros(df.height, dtype=bool)
+    if "sample_hashing" not in df.columns:
+        return np.zeros(df.height, dtype=bool)
+    from pixelator.pna.config.panel import sample_hashing_mask
+
+    return sample_hashing_mask(df["sample_hashing"].to_pandas()).to_numpy()
 
 
 def _marker_probabilities(
@@ -184,7 +187,7 @@ def _marker_probabilities(
     Abundance tiers apply only to non-hashing markers: the first sixth make 50%
     of all umis (high abundance) and the next third make 40% (medium). The
     low-abundance tier (the remaining non-hashing markers) and the hashing
-    markers (``sample_hashing == "yes"``) together share the final 10%, every one
+    markers (boolean ``sample_hashing``) together share the final 10%, every one
     of them sampled at the same per-marker rate ``0.1 / (n_low + n_hashing)``.
     Folding the hashing markers into the low tier's budget keeps the high and
     medium tiers at 50% and 40% regardless of how many hashing markers the panel

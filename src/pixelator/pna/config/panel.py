@@ -505,6 +505,24 @@ class PartialPNAAntibodyPanel(PNAPanel):
         return self.df.equals(other.df) and self.metadata == other.metadata
 
 
+def sample_hashing_mask(sample_hashing: pd.Series) -> pd.Series:
+    """Normalize a ``sample_hashing`` column to a boolean mask.
+
+    Panel CSV parsing converts ``yes``/``no`` to bool; AnnData / Polars
+    round-trips may still expose strings (``yes``/``no`` or ``True``/``False``).
+
+    Args:
+        sample_hashing: Column values from a panel dataframe.
+
+    Returns:
+        Boolean series aligned to ``sample_hashing`` (``True`` = hashing marker).
+    """
+    if pd.api.types.is_bool_dtype(sample_hashing):
+        return sample_hashing.fillna(False)
+    normalized = sample_hashing.astype(str).str.strip().str.lower()
+    return normalized.isin(["yes", "true", "1"])
+
+
 def get_panel_type_from_metadata(
     metadata: AntibodyPanelMetadata,
 ) -> type[PartialPNAAntibodyPanel]:
