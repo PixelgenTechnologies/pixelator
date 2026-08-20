@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Typed PNA panel hierarchy under `PNAPanel`: `PartialPNAAntibodyPanel` with
+  `PNABasePanel`, `PNAAddonPanel`, and `PNASampleHashingPanel`, plus
+  `PNAAntibodyPanelCombination` for multi-panel samples. Panel CSV metadata
+  may set `panel_type`; helpers `panel_from_csv`, `panel_from_adata`, and
+  `panel_from_pxl_dataset` dispatch to the concrete type or a combination.
+- CLI `--panel` may be repeated so demux/collapse/graph can load several panels
+  into one combination.
+
 ### Removed
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
   `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
@@ -17,8 +26,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returns the original UMIs, so the redundant `create_working_edgelist` /
   `map_working_to_original_umi_names` round-trip has been removed. The filtered edgelist is now
   passed directly to native community detection, and the recovered components are unchanged.
+- The single-panel `PNAAntibodyPanel` type as the primary API. Use
+  `PartialPNAAntibodyPanel` (or a typed subclass) for one panel, and
+  `PNAAntibodyPanelCombination` when several panels are used together.
+  `PNAAntibodyPanel` remains as a deprecated alias of `PartialPNAAntibodyPanel`
+  for import compatibility (emits a ``DeprecationWarning`` when accessed).
 
 ### Changed
+- `load_antibody_panel` returns a `PNAAntibodyPanelCombination` (including when
+  only one panel is requested).
+- `PNAAntibodyPanelCombination` is constructed from one panel or a sequence of
+  panels, e.g. `PNAAntibodyPanelCombination(panel)` or
+  `PNAAntibodyPanelCombination([p1, p2, ...])`.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule
