@@ -1470,7 +1470,8 @@ class PNASampleHashingPanel(PartialPNAAntibodyPanel):
         """
         return super().validate_antibody_panel(panel_df, validate_types) + (
             []
-            if (panel_df["sample_hashing"]).all()
+            if "sample_hashing" in panel_df.columns
+            and (panel_df["sample_hashing"]).all()
             else [
                 "All entries in `sample_hashing` column must be 'yes' (True) for a sample hashing panel"
             ]
