@@ -550,17 +550,16 @@ def get_panel_type_from_metadata(
         case PanelType.SAMPLE_HASHING:
             return PNASampleHashingPanel
         case None:
-            warnings.warn(
+            logger.debug(
                 "Panel metadata has no panel_type. "
                 + "Falling back to generic PartialPNAAntibodyPanel.",
-                UserWarning,
             )
             return PartialPNAAntibodyPanel
         case _:
-            warnings.warn(
-                f"Unknown panel type {metadata.panel_type} in panel metadata. "
+            logger.debug(
+                "Unknown panel type %s in panel metadata. "
                 + "Falling back to generic PartialPNAAntibodyPanel.",
-                UserWarning,
+                metadata.panel_type,
             )
             return PartialPNAAntibodyPanel
 
