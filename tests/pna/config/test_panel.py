@@ -353,6 +353,75 @@ def test_upgrade_adata_migrates_legacy_panel_metadata(panel_df):
     assert reconstructed.num_partial_panels == 1
 
 
+def test_upgrade_adata_maps_annotations_by_clone_identity():
+    """Patch upgrades must keep each clone's panel_2 annotations on that clone.
+
+    ``upgrade_adata`` writes join output into ``adata.var`` by ``panel_1`` row
+    position. A Polars full join does not preserve that order unless
+    ``maintain_order='left'``. This test gives ``panel_2`` the same clones in
+    reverse row order, each with a distinct updated ``note`` and added
+    ``extra`` value, and checks that marker *i* still receives ``new{i}`` /
+    ``extra{i}`` instead of another clone's annotations.
+    """
+    sequences = [
+        "ATCGAA",
+        "GCTAAA",
+        "ATCCAA",
+        "TTTTAA",
+        "AAAAAA",
+        "CCCCAA",
+        "GGGGAA",
+        "TATAAA",
+    ]
+    uniprot_ids = [
+        "P61769",
+        "P05107",
+        "P15391",
+        "Q9UPN0",
+        "P12345",
+        "P56890",
+        "P65470",
+        "Q8WWI5",
+    ]
+    panel_df = pd.DataFrame(
+        {
+            "marker_id": [f"marker{i}" for i in range(1, 9)],
+            "uniprot_id": uniprot_ids,
+            "control": [False] * 8,
+            "note": [f"old{i}" for i in range(1, 9)],
+            "sequence_1": sequences,
+            "sequence_2": sequences,
+        }
+    ).set_index("marker_id")
+    df_new = panel_df.copy().iloc[::-1]
+    df_new["note"] = [f"new{marker[-1]}" for marker in df_new.index]
+    df_new["extra"] = [f"extra{marker[-1]}" for marker in df_new.index]
+
+    meta_old = AntibodyPanelMetadata(
+        name="clone-order-panel", version="1.0.0", product="test-product"
+    )
+    meta_new = AntibodyPanelMetadata(
+        name="clone-order-panel", version="1.0.1", product="test-product"
+    )
+    panel_old = PartialPNAAntibodyPanel(panel_df.copy(), meta_old)
+    panel_new = PartialPNAAntibodyPanel(df_new, meta_new)
+
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=panel_df.copy(),
+    )
+    adata.uns["panel_metadata"] = {
+        **meta_old.to_dict(),
+        "panel_columns": list(panel_df.columns),
+    }
+
+    upgraded = PNAAntibodyPanelDiff(panel_old, panel_new).upgrade_adata(adata)
+
+    for i in range(1, 9):
+        assert upgraded.var.loc[f"marker{i}", "note"] == f"new{i}"
+        assert upgraded.var.loc[f"marker{i}", "extra"] == f"extra{i}"
+
+
 def test_panel_from_pxl(pxl_file):
     """Verify panel from pxl.
 

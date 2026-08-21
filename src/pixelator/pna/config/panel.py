@@ -752,6 +752,7 @@ class PNAAntibodyPanelDiff:
             on=self.join_on_columns,
             how="full",
             suffix="_panel_2",
+            maintain_order="left",
         )
 
         self._identical_columns: List[str] | None = None
