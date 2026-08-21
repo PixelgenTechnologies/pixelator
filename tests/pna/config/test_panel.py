@@ -13,6 +13,7 @@ from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import (
     PanelType,
     PartialPNAAntibodyPanel,
+    PNAAddonPanel,
     PNAAntibodyPanelCombination,
     PNAAntibodyPanelDiff,
     PNABasePanel,
@@ -68,6 +69,56 @@ def test_panel_validation(panel_df):
     assert panel.filename == "test.csv"
     assert panel.filepath is None
     assert panel.size == 3
+
+
+def test_combination_marker_helpers_follow_df_after_add_panel(panel_df, hashing_panel):
+    """Marker helpers must stay in sync with df after mutating membership."""
+    base = PNABasePanel(
+        panel_df,
+        AntibodyPanelMetadata(
+            name="base-panel",
+            version="0.0.0",
+            panel_type=PanelType.BASE,
+        ),
+    )
+    combo = PNAAntibodyPanelCombination(base)
+
+    # Prime any former cache before membership changes.
+    assert combo.markers == ["marker1", "marker2", "marker3"]
+    assert combo.markers_control == ["marker2"]
+    assert combo.size == 3
+
+    combo.add_hashing_panel(hashing_panel)
+    assert combo.markers == list(combo.df.index.unique())
+    assert combo.markers_control == list(combo.df[combo.df["control"]].index)
+    assert combo.size == combo.df.shape[0]
+    assert "HM-1" in combo.markers
+    assert combo.size == 5
+
+    addon_df = pd.DataFrame(
+        {
+            "marker_id": ["addon1"],
+            "uniprot_id": ["P12345"],
+            "control": [True],
+            "nuclear": [False],
+            "sequence_1": ["AAAA"],
+            "sequence_2": ["TTTT"],
+        }
+    ).set_index("marker_id")
+    addon = PNAAddonPanel(
+        addon_df,
+        AntibodyPanelMetadata(
+            name="addon-panel",
+            version="0.0.0",
+            panel_type=PanelType.ADDON,
+        ),
+    )
+    combo.add_panel(addon)
+    assert combo.markers == list(combo.df.index.unique())
+    assert combo.markers_control == list(combo.df[combo.df["control"]].index)
+    assert combo.size == combo.df.shape[0]
+    assert combo.markers_control == ["marker2", "addon1"]
+    assert combo.size == 6
 
 
 def test_panel_combination_classifies_hashing_panel_regardless_of_order(

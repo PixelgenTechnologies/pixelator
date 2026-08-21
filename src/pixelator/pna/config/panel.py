@@ -106,17 +106,17 @@ class PNAPanel(ABC):
         logger.debug("Panel from PNAPixelDataset created")
         return panel
 
-    @cached_property
+    @property
     def markers_control(self) -> List[str]:
         """Return a list of marker control (names)."""
         return list(self.df[self.df["control"]].index)
 
-    @cached_property
+    @property
     def markers(self) -> List[str]:
         """Return the list of unique markers in the panel."""
         return list(self.df.index.unique())
 
-    @cached_property
+    @property
     def size(self) -> int:
         """Return the size of the marker panel."""
         return self.df.shape[0]
