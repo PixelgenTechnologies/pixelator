@@ -33,6 +33,7 @@ from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
 from pixelator.common.graph.backends.protocol import (
+    DEFAULT_LAYOUT_ALGORITHM,
     Edge,
     EdgeSequence,
     GraphBackend,
@@ -295,7 +296,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def _layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         random_seed: Optional[int] = None,
         **kwargs,
     ) -> pd.DataFrame:
@@ -381,7 +382,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,

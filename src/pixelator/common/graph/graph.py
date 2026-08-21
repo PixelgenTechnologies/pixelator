@@ -18,6 +18,7 @@ from pixelator.common.graph.backends.implementations import (
     graph_backend_from_graph_type,
 )
 from pixelator.common.graph.backends.protocol import (
+    DEFAULT_LAYOUT_ALGORITHM,
     GraphBackend,
     SupportedLayoutAlgorithm,
     VertexClustering,
@@ -170,7 +171,7 @@ class Graph:
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         cache: bool = False,

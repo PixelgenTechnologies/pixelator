@@ -39,6 +39,8 @@ SupportedLayoutAlgorithm = Literal[
     "spectral_3d",
 ]
 
+DEFAULT_LAYOUT_ALGORITHM: SupportedLayoutAlgorithm = "coarsened_pmds_3d"
+
 
 class GraphBackend(Protocol):
     """Protocol for graph backends."""
@@ -148,7 +150,7 @@ class GraphBackend(Protocol):
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,

@@ -20,6 +20,7 @@ from pixelator.common.graph.backends.implementations._networkx import (
     NetworkXGraphBackend,
 )
 from pixelator.common.graph.backends.protocol import (
+    DEFAULT_LAYOUT_ALGORITHM,
     SupportedLayoutAlgorithm,
     VertexClustering,
 )
@@ -61,7 +62,7 @@ class PNAGraph(BaseGraph):
 
     def layout_coordinates(  # type: ignore
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
         **kwargs,
@@ -72,6 +73,7 @@ class PNAGraph(BaseGraph):
         counts to use that can be used for plotting.
 
         The layout options are:
+        - spectral_3d
         - coarsened_pmds_3d
         - fruchterman_reingold
         - fruchterman_reingold_3d
@@ -80,10 +82,8 @@ class PNAGraph(BaseGraph):
         - pmds
         - pmds_3d
         - wpmds_3d
-        - spectral_3d
 
-        For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
-        preferred. On PNA data they are faster and produce better results.
+        The default is `DEFAULT_LAYOUT_ALGORITHM` (`coarsened_pmds_3d`).
 
         Args:
             layout_algorithm: Layout algorithm to use for coordinate generation.
@@ -198,7 +198,7 @@ class PNAGraphBackend(NetworkXGraphBackend):
 
     def layout_coordinates(  # type: ignore
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
         **kwargs,
