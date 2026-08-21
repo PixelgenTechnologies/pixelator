@@ -7,16 +7,22 @@ from __future__ import annotations
 
 import copy
 import json
+import warnings
 from functools import cache
 from pathlib import Path
 from typing import Iterable
 
 from anndata import AnnData
 
+from pixelator.common.graph.backends.protocol import (
+    DEFAULT_LAYOUT_ALGORITHM,
+    SupportedLayoutAlgorithm,
+)
 from pixelator.pna.pixeldataset.config import PixelDatasetConfig
 from pixelator.pna.pixeldataset.edgelist import Edgelist
 from pixelator.pna.pixeldataset.io import PixelDataViewer, PxlFile, Query
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
+from pixelator.pna.pixeldataset.layouts import Layouts
 from pixelator.pna.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pna.pixeldataset.proximity import Proximity
 from pixelator.pna.utils import normalize_input_to_set
@@ -271,6 +277,8 @@ class PNAPixelDataset:
     ) -> PreComputedLayouts:
         """Return the PreComputedLayouts instance for the dataset.
 
+        Deprecated: prefer :meth:`layouts` to compute Layouts on the fly.
+
         Args:
             add_marker_counts: If True, add the marker counts to the precomputed layouts.
             add_spherical_norm: If True, add spherical coordinates to dataframe This will be
@@ -279,12 +287,53 @@ class PNAPixelDataset:
         Returns:
             The PreComputedLayouts instance for the dataset.
         """
+        warnings.warn(
+            "precomputed_layouts() is deprecated; use layouts() to compute "
+            "Layouts on the fly.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return PreComputedLayouts(
             self.view,
             components=self._active_components,
             adata_helper=self._adata_helper,
             add_marker_counts=add_marker_counts,
             add_spherical_norm=add_spherical_norm,
+        )
+
+    def layouts(
+        self,
+        algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
+        add_marker_counts: bool = True,
+        add_spherical_norm: bool = False,
+        random_seed: int | None = None,
+        **kwargs,
+    ) -> Layouts:
+        """Compute Layouts on the fly for the active Components.
+
+        This always computes coordinates from each Component graph. It does not
+        read Precomputed layouts from the PXL ``layouts`` table.
+
+        Args:
+            algorithm: Layout algorithm to use. Defaults to
+                ``DEFAULT_LAYOUT_ALGORITHM`` (``coarsened_pmds_3d``).
+            add_marker_counts: If True, add per-node marker counts.
+            add_spherical_norm: If True, add spherical unit-vector columns.
+            random_seed: Seed for Layout algorithms with a stochastic element.
+            **kwargs: Forwarded to the underlying Layout algorithm.
+
+        Returns:
+            A lazy Layouts collection.
+        """
+        return Layouts(
+            self.view,
+            components=self._active_components,
+            adata_helper=self._adata_helper,
+            algorithm=algorithm,
+            add_marker_counts=add_marker_counts,
+            add_spherical_norm=add_spherical_norm,
+            random_seed=random_seed,
+            algorithm_kwargs=kwargs,
         )
 
     def metadata(
@@ -317,7 +366,7 @@ class PNAPixelDataset:
         """Filter the dataset to only include the specified samples, components, and markers.
 
         Filtering by components will apply to all data modalities (i.e. adata, edgelist, proximity,
-        and precomputed layouts).
+        layouts, and precomputed layouts).
         However, filtering by markers will only apply to the adata and proximity data modalities,
         since filtering
         by markers in the edgelist and precomputed layouts will cause components to break up.

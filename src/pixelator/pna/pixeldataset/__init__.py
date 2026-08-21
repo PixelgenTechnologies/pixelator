@@ -23,7 +23,7 @@ names to on-disk ``PxlFile`` instances, and it constructs an
   objects, then wrap it in ``PNAPixelDataset``.
 - ``adata()`` delegates to ``AnnDataHelper.read_adata()`` (which opens the viewer’s DuckDB
   session and runs queries built via ``QueryBuilder`` in the IO package).
-- ``edgelist()``, ``proximity()``, and ``precomputed_layouts()`` take the same ``view`` and
+- ``edgelist()``, ``proximity()``, ``layouts()``, and ``precomputed_layouts()`` take the same ``view`` and
   reuse the dataset’s ``AnnDataHelper`` so AnnData-backed joins stay consistent with the
   active filters.
 - ``metadata()`` queries DuckDB through ``view.open()`` and ``Query`` directly.
@@ -49,6 +49,7 @@ names to on-disk ``PxlFile`` instances, and it constructs an
     ┌────────────────────┐
     │ Edgelist           ├──┐
     │ Proximity          │  ├── view + shared AnnDataHelper (from PNAPixelDataset)
+    │ Layouts            │  │
     │ PreComputedLayouts ├──┘
     └────────────────────┘
 
@@ -62,6 +63,7 @@ from pathlib import Path
 from pixelator.pna.pixeldataset.config import PixelDatasetConfig
 from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.edgelist import Edgelist
+from pixelator.pna.pixeldataset.layouts import Layouts
 from pixelator.pna.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pna.pixeldataset.proximity import Proximity
 from pixelator.pna.pixeldataset.saver import PixelDatasetSaver
@@ -96,6 +98,7 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
 __all__ = [
     "Component",
     "Edgelist",
+    "Layouts",
     "PixelDatasetConfig",
     "PixelDatasetSaver",
     "PNAPixelDataset",
