@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `PNAPixelDataset.layouts()` computes Layouts on the fly from Component graphs.
+  Choose the Layout algorithm with `algorithm=` (default `coarsened_pmds_3d`, via
+  `DEFAULT_LAYOUT_ALGORITHM`). The collection supports `.first()`, `.iterator()`,
+  `.to_df()`, and `.to_polars()`.
+
+### Changed
+- Layout algorithm defaults go through `DEFAULT_LAYOUT_ALGORITHM` (`coarsened_pmds_3d`)
+  for `PNAPixelDataset.layouts()`, `layout_coordinates`, and
+  `pixelator single-cell-pna layout`.
+- `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
+- `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
+  recovery path. When the column is absent, sample calling skips it and graph molecule
+  statistics use the number of edges.
+- Refactor `pixelator.common.utils.__init__.py`
+
+### Deprecated
+- `PNAPixelDataset.precomputed_layouts()` is deprecated. Use `layouts()` to
+  compute Layouts on the fly. The method still reads a stored `layouts` table
+  when one exists.
+
 ### Removed
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
   `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
@@ -17,13 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returns the original UMIs, so the redundant `create_working_edgelist` /
   `map_working_to_original_umi_names` round-trip has been removed. The filtered edgelist is now
   passed directly to native community detection, and the recovered components are unchanged.
-
-### Changed
-- `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
-- `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
-  recovery path. When the column is absent, sample calling skips it and graph molecule
-  statistics use the number of edges.
-- Refactor `pixelator.common.utils.__init__.py`
 
 ### Fixed
 - The default number of cores and the fallbacks used when `--cores` is not set now respect the
