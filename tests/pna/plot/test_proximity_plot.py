@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from matplotlib.patches import Rectangle
+
 from pixelator.pna.plot import proximity_heatmap
 
 
