@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Choose the Layout algorithm with `algorithm=` (default `coarsened_pmds_3d`, via
   `DEFAULT_LAYOUT_ALGORITHM`). The collection supports `.first()`, `.iterator()`,
   `.to_df()`, and `.to_polars()`.
+- `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
 
 ### Changed
 - Layout algorithm defaults go through `DEFAULT_LAYOUT_ALGORITHM` (`coarsened_pmds_3d`)

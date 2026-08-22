@@ -30,3 +30,4 @@ for usage examples.
 **Analysis**
 
 * :func:`pixelator.pna.analysis.calculate_differential_proximity`
+* :func:`pixelator.pna.analysis.summarize_proximity_scores`

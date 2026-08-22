@@ -14,6 +14,12 @@ from statsmodels.stats.multitest import multipletests
 from pixelator.pna.analysis.permute import edgelist_permutations
 from pixelator.pna.utils.utils import normalize_input_to_list
 
+_PROXIMITY_METRICS = ("log2_ratio", "join_count_z")
+_SUMMARY_STATS: dict[str, Callable[[np.ndarray], float]] = {
+    "mean": np.mean,
+    "median": np.median,
+}
+
 
 def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
     """Compute the number of edges for each marker pair in the given edgelist.
@@ -170,6 +176,162 @@ def jcs_with_permute_stats(
         min_std=1.0,
         min_marker_count=min_marker_count,
     )
+
+
+def summarize_proximity_scores(
+    proximity_df: pd.DataFrame,
+    proximity_metric: Literal["log2_ratio", "join_count_z"] = "log2_ratio",
+    group_vars: str | List[str] | None = None,
+    include_missing_obs: bool = True,
+    summary_stat: Literal["mean", "median"] = "mean",
+    detailed: bool = False,
+) -> pd.DataFrame:
+    """Summarize per-component proximity scores across components, for each marker pair.
+
+    Collapses a long-format proximity score table (one row per component and
+    marker pair) into one row per marker pair (optionally stratified by
+    ``group_vars``, e.g. sample or cell type), reporting the number of
+    components the pair was detected in and a summary statistic of
+    ``proximity_metric`` across those components.
+
+    A marker pair is only present for a component if it passed detection in
+    that component's proximity analysis. When ``include_missing_obs`` is
+    ``True`` (the default), components where a pair was not detected are
+    treated as having a ``proximity_metric`` value of 0 and are included when
+    computing the summary statistic, since an undetected pair corresponds to
+    no deviation from the expected join count.
+
+    Args:
+        proximity_df: A long-format proximity score table, e.g. from
+            `Proximity.to_df`, with one row per ``component`` and marker
+            pair. Must contain the columns ``component``, ``marker_1``,
+            ``marker_2``, ``proximity_metric``, and (if ``detailed`` is
+            ``True``) ``join_count`` and ``join_count_expected_mean``.
+        proximity_metric: The proximity score column to summarize, either
+            ``"log2_ratio"`` or ``"join_count_z"``. Defaults to
+            ``"log2_ratio"``.
+        group_vars: Additional column(s) to stratify the summary by, e.g.
+            ``"sample"`` or ``["sample", "cell_type"]``. Each component must
+            map to a single, consistent value of every ``group_vars`` column.
+            Defaults to ``None``, which summarizes across all components in
+            ``proximity_df``.
+        include_missing_obs: If ``True``, pad the values used to compute the
+            summary statistic with a 0 for every component where the marker
+            pair was not detected. Defaults to ``True``.
+        summary_stat: The summary statistic to compute, either ``"mean"`` or
+            ``"median"``. Defaults to ``"mean"``.
+        detailed: If ``True``, also return the per-component values that went
+            into the summary statistic (``{proximity_metric}_list``,
+            ``join_count_list``, and ``join_count_expected_mean_list``), so
+            that other statistics (e.g. standard deviation or quantiles) can
+            be computed downstream. Defaults to ``False``.
+
+    Returns:
+        A DataFrame with one row per unique combination of ``group_vars``,
+        ``marker_1`` and ``marker_2``, containing ``n_cells_detected`` (the
+        number of components the pair was detected in), ``n_cells`` (the
+        total number of components in that ``group_vars`` stratum),
+        ``n_cells_missing``, ``pct_detected``, and
+        ``{summary_stat}_{proximity_metric}`` (e.g. ``mean_log2_ratio``). If
+        ``detailed`` is ``True``, the per-component value list columns
+        described above are also included.
+
+    Raises:
+        ValueError: If ``proximity_metric`` or ``summary_stat`` is not one of
+            the supported options, if a required column is missing from
+            ``proximity_df``, or if ``proximity_df`` has more than one row for
+            some combination of ``component``, ``marker_1``, ``marker_2`` and
+            ``group_vars``.
+    """
+    if proximity_metric not in _PROXIMITY_METRICS:
+        raise ValueError(
+            f"proximity_metric must be one of {_PROXIMITY_METRICS}, "
+            f"got {proximity_metric!r}."
+        )
+    if summary_stat not in _SUMMARY_STATS:
+        raise ValueError(
+            f"summary_stat must be one of {tuple(_SUMMARY_STATS)}, "
+            f"got {summary_stat!r}."
+        )
+
+    group_vars = normalize_input_to_list(group_vars) or []
+    detail_columns = ["join_count", "join_count_expected_mean"] if detailed else []
+
+    required_columns = {
+        "component",
+        "marker_1",
+        "marker_2",
+        proximity_metric,
+        *detail_columns,
+        *group_vars,
+    }
+    missing_columns = required_columns - set(proximity_df.columns)
+    if missing_columns:
+        raise ValueError(
+            f"proximity_df is missing required column(s): {sorted(missing_columns)}."
+        )
+
+    pair_group_vars = [*group_vars, "marker_1", "marker_2"]
+    duplicate_key = ["component", *pair_group_vars]
+    duplicates = proximity_df.duplicated(subset=duplicate_key, keep=False)
+    if duplicates.any():
+        example = proximity_df.loc[duplicates, duplicate_key].iloc[0].to_dict()
+        raise ValueError(
+            "proximity_df must have at most one row per component, marker "
+            "pair and group_vars combination, found duplicate rows, e.g. "
+            f"{example}."
+        )
+
+    if group_vars:
+        n_cells = proximity_df.groupby(group_vars)["component"].nunique()
+        n_cells = n_cells.rename("n_cells").reset_index()
+    else:
+        n_cells = proximity_df["component"].nunique()
+
+    value_columns = [proximity_metric, *detail_columns]
+    summary = proximity_df.groupby(pair_group_vars).agg(
+        n_cells_detected=(proximity_metric, "size"),
+        **{f"{col}_list": (col, list) for col in value_columns},
+    )
+    summary = summary.reset_index()
+
+    if group_vars:
+        summary = summary.merge(n_cells, on=group_vars, how="left")
+    else:
+        summary["n_cells"] = n_cells
+
+    summary["n_cells_missing"] = summary["n_cells"] - summary["n_cells_detected"]
+    summary["pct_detected"] = summary["n_cells_detected"] / summary["n_cells"]
+
+    if include_missing_obs:
+        for col in value_columns:
+            list_col = f"{col}_list"
+            summary[list_col] = [
+                values + [0] * n_missing
+                for values, n_missing in zip(
+                    summary[list_col], summary["n_cells_missing"]
+                )
+            ]
+
+    metric_list_col = f"{proximity_metric}_list"
+    stat_func = _SUMMARY_STATS[summary_stat]
+    summary_col = f"{summary_stat}_{proximity_metric}"
+    summary[summary_col] = [stat_func(values) for values in summary[metric_list_col]]
+
+    output_columns = [
+        *group_vars,
+        "marker_1",
+        "marker_2",
+        "n_cells_detected",
+        "n_cells",
+        "n_cells_missing",
+        "pct_detected",
+        summary_col,
+    ]
+    if detailed:
+        output_columns += [f"{col}_list" for col in value_columns]
+
+    return summary[output_columns]
 
 
 def _filter_target_data(
