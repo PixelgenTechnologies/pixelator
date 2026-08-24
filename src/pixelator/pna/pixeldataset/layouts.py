@@ -110,14 +110,11 @@ class Layouts:
 
     def _post_process(self, df: pl.DataFrame) -> pl.DataFrame:
         if self._add_spherical_norm:
-            coordinates = df.select(["x", "y", "z"]).to_numpy()
+            coord_cols = [c for c in ("x", "y", "z") if c in df.columns]
+            coordinates = df.select(coord_cols).to_numpy()
             normalized_coordinates = pl.DataFrame(
                 coordinates / (1 * np.linalg.norm(coordinates, axis=1))[:, None],
-                schema={
-                    "x_norm": pl.Float32,
-                    "y_norm": pl.Float32,
-                    "z_norm": pl.Float32,
-                },
+                schema={f"{c}_norm": pl.Float32 for c in coord_cols},
             )
             df = df.hstack(normalized_coordinates)
         return df

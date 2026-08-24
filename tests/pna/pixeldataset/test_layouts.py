@@ -20,6 +20,7 @@ from pixelator.pna.pixeldataset.layouts import Layouts
 # Tiny fixture graphs are too small for spectral_3d; use a force-directed
 # algorithm to exercise the public Layouts API quickly.
 _FAST_ALGORITHM: SupportedLayoutAlgorithm = "fruchterman_reingold_3d"
+_FAST_2D_ALGORITHM: SupportedLayoutAlgorithm = "fruchterman_reingold"
 
 _COORD_COLUMNS = {
     "sample",
@@ -148,6 +149,23 @@ class TestLayoutsApi:
             .to_polars()
         )
         assert {"x_norm", "y_norm", "z_norm"}.issubset(df.columns)
+
+    def test_spherical_norm_adds_norm_columns_for_2d_algorithm(
+        self, pxl_dataset: PNAPixelDataset
+    ):
+        component_id = _one_component(pxl_dataset)
+        df = (
+            pxl_dataset.filter(components=component_id)
+            .layouts(
+                algorithm=_FAST_2D_ALGORITHM,
+                add_marker_counts=False,
+                add_spherical_norm=True,
+            )
+            .to_polars()
+        )
+        assert "z" not in df.columns
+        assert {"x_norm", "y_norm"}.issubset(df.columns)
+        assert "z_norm" not in df.columns
 
 
 class TestPrecomputedLayoutsDeprecation:
