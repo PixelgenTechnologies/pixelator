@@ -58,7 +58,9 @@ class PartialPNAAntibodyPanel(PNAPanel):
             df: Panel rows indexed by ``marker_id`` with required columns.
             metadata: Panel YAML metadata. Missing ``panel_type`` is defaulted
                 to :attr:`~pixelator.common.config.panel.PanelType.PARTIAL` for
-                legacy files when constructing this base class.
+                legacy files when constructing this base class. The default is
+                applied on a copy; the caller's metadata instance is not
+                modified.
             file_name: Optional basename of the source file.
             filepath: Optional full path of the source file.
 
@@ -75,8 +77,10 @@ class PartialPNAAntibodyPanel(PNAPanel):
             self.__class__._panel_type is PanelType.PARTIAL
             and metadata.panel_type is None
         ):
-            # if panel type is missing from metadata use partial as default legacy behavior
-            metadata.panel_type = PanelType.PARTIAL
+            # Default missing panel_type to PARTIAL for legacy files without
+            # mutating the caller's metadata instance (shared objects may be
+            # reused for construction, registration, or later comparison).
+            metadata = metadata.model_copy(update={"panel_type": PanelType.PARTIAL})
         elif metadata.panel_type != self.__class__._panel_type:
             raise ValueError(
                 f"Panel metadata panel_type {metadata.panel_type!r} does not match "

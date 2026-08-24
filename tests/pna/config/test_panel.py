@@ -478,12 +478,15 @@ def test_panel_metadata_panel_type_must_match_class(panel_df):
         )
 
 
-def test_base_panel_sets_panel_type_when_missing(panel_df):
-    panel = PartialPNAAntibodyPanel(
-        panel_df,
-        AntibodyPanelMetadata(name="base-panel", version="0.0.0"),
-    )
+def test_partial_panel_defaults_missing_panel_type_without_mutating_caller(panel_df):
+    metadata = AntibodyPanelMetadata(name="legacy-panel", version="0.0.0")
+    assert metadata.panel_type is None
+
+    panel = PartialPNAAntibodyPanel(panel_df, metadata)
+
     assert panel.metadata.panel_type == PanelType.PARTIAL
+    assert metadata.panel_type is None
+    assert panel.metadata is not metadata
 
 
 def test_antibody_panel_metadata_from_adata_rejects_incomplete_schema():
