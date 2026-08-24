@@ -51,6 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   statistics use the number of edges.
 
 ### Fixed
+- Combining a base panel that omits `sample_hashing` with a hashing panel no
+  longer drops hashing markers. `pd.concat` could upcast bool flags to float
+  (`True` → `1.0`), and `sample_hashing_mask` did not treat `"1.0"` as hashing,
+  so sample calling saw an empty hashing set for multi-panel samples.
 - The default number of cores and the fallbacks used when `--cores` is not set now respect the
   CPU affinity mask (via `os.process_cpu_count()` or `os.sched_getaffinity()`) and the cgroup
   CPU bandwidth quota (`docker run --cpus`, Kubernetes `limits.cpu`), taking the most restrictive

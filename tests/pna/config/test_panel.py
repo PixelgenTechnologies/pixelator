@@ -17,6 +17,7 @@ from pixelator.pna.config.panel import (
     PNAAntibodyPanelCombination,
     PNAAntibodyPanelDiff,
     PNABasePanel,
+    sample_hashing_mask,
 )
 from pixelator.pna.pixeldataset import read
 
@@ -119,6 +120,47 @@ def test_combination_marker_helpers_follow_df_after_add_panel(panel_df, hashing_
     assert combo.size == combo.df.shape[0]
     assert combo.markers_control == ["marker2", "addon1"]
     assert combo.size == 6
+
+
+def test_sample_hashing_mask_accepts_bool_string_and_float_upcast():
+    """Hashing flags must survive concat upcasts and legacy string encodings."""
+    bool_col = pd.Series([True, False, pd.NA], dtype="boolean")
+    assert sample_hashing_mask(bool_col).tolist() == [True, False, False]
+
+    yes_no = pd.Series(["yes", "no", "YES", None, ""])
+    assert sample_hashing_mask(yes_no).tolist() == [True, False, True, False, False]
+
+    true_false = pd.Series(["True", "False", "true"])
+    assert sample_hashing_mask(true_false).tolist() == [True, False, True]
+
+    float_upcast = pd.Series([1.0, 0.0, float("nan")])
+    assert sample_hashing_mask(float_upcast).tolist() == [True, False, False]
+
+    object_float = pd.Series([1.0, float("nan"), True, False])
+    assert sample_hashing_mask(object_float).tolist() == [True, False, True, False]
+
+
+def test_combination_keeps_hashing_flags_when_base_omits_sample_hashing(
+    panel_df, hashing_panel
+):
+    """Base panels without sample_hashing must not hide hashing markers after concat."""
+    base = PNABasePanel(
+        panel_df,
+        AntibodyPanelMetadata(
+            name="base-panel",
+            version="0.0.0",
+            panel_type=PanelType.BASE,
+        ),
+    )
+    assert "sample_hashing" not in base.df.columns
+    assert hashing_panel.df["sample_hashing"].dtype == bool
+
+    combo = PNAAntibodyPanelCombination([base, hashing_panel])
+    hashing_col = combo.df["sample_hashing"]
+    assert pd.api.types.is_bool_dtype(hashing_col)
+    assert hashing_col.loc[["HM-1", "HM-2"]].all()
+    assert not hashing_col.loc[panel_df.index].any()
+    assert combo.df[sample_hashing_mask(hashing_col)].index.tolist() == ["HM-1", "HM-2"]
 
 
 def test_panel_combination_classifies_hashing_panel_regardless_of_order(

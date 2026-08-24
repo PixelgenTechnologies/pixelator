@@ -19,7 +19,9 @@ if TYPE_CHECKING:
 def sample_hashing_mask(sample_hashing: pd.Series) -> pd.Series:
     """Normalize a ``sample_hashing`` column to a boolean mask.
 
-    Panel CSV parsing converts ``yes``/``no`` to bool; AnnData / Polars
+    Panel CSV parsing converts ``yes``/``no`` to bool. Concatenating a panel
+    that omits the column with one that has bool values can upcast to float
+    (``True`` → ``1.0``) because missing cells become NaN. AnnData / Polars
     round-trips may still expose strings (``yes``/``no`` or ``True``/``False``).
 
     Args:
@@ -29,9 +31,11 @@ def sample_hashing_mask(sample_hashing: pd.Series) -> pd.Series:
         Boolean series aligned to ``sample_hashing`` (``True`` = hashing marker).
     """
     if pd.api.types.is_bool_dtype(sample_hashing):
-        return sample_hashing.fillna(False)
+        return sample_hashing.fillna(False).astype(bool)
+    if pd.api.types.is_numeric_dtype(sample_hashing):
+        return sample_hashing.fillna(0).astype(bool)
     normalized = sample_hashing.astype(str).str.strip().str.lower()
-    return normalized.isin(["yes", "true", "1"])
+    return normalized.isin(["yes", "true", "1", "1.0"])
 
 
 def _resolve_panel_source_from_pxl(

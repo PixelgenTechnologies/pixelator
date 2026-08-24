@@ -33,6 +33,7 @@ from pixelator.pna.config.panel.partial import (
     PNABasePanel,
     PNASampleHashingPanel,
 )
+from pixelator.pna.config.panel.utils import sample_hashing_mask
 
 
 class PNAAntibodyPanelCombination(PNAPanel):
@@ -180,7 +181,10 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
         Adds ``partial_panel_name`` and ``partial_panel_type`` columns and
         rejects conflicting duplicate ``marker_id`` rows or duplicate clone
-        sequences across members.
+        sequences across members. When any member has ``sample_hashing``,
+        the combined column is normalized to bool (missing cells become
+        ``False``) so concat upcasts such as ``True`` → ``1.0`` do not hide
+        hashing markers.
 
         Returns:
             Combined panel dataframe indexed by ``marker_id``.
@@ -212,6 +216,9 @@ class PNAAntibodyPanelCombination(PNAPanel):
             if len(df_list) > 1
             else df_list[0]
         )
+        if "sample_hashing" in df.columns:
+            df = df.copy()
+            df["sample_hashing"] = sample_hashing_mask(df["sample_hashing"])
         # make sure clone sequences are unique! Otherwise raise an error
         if df.duplicated(subset=["sequence_1", "sequence_2"]).any():
             raise ValueError("Duplicate sequences found in the panel combination.")
