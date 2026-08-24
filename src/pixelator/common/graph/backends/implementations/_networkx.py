@@ -311,31 +311,33 @@ class NetworkXGraphBackend(GraphBackend):
         if not self._raw:
             raise ValueError("Trying to get layout for empty Graph instance.")
         raw = self._raw  # type: nx.Graph
+        # Public callers use random_seed=; algorithms take seed=. Accept both.
+        seed = kwargs.pop("seed", random_seed)
 
         if layout_algorithm == "kamada_kawai":
             layout_inst = nx.kamada_kawai_layout(
-                raw, pos=nx.random_layout(raw, seed=random_seed)
+                raw, pos=nx.random_layout(raw, seed=seed)
             )
         if layout_algorithm == "kamada_kawai_3d":
             layout_inst = nx.kamada_kawai_layout(
-                raw, pos=nx.random_layout(raw, seed=random_seed, dim=3), dim=3
+                raw, pos=nx.random_layout(raw, seed=seed, dim=3), dim=3
             )
         if layout_algorithm == "fruchterman_reingold":
-            layout_inst = nx.spring_layout(raw, seed=random_seed)
+            layout_inst = nx.spring_layout(raw, seed=seed)
         if layout_algorithm == "fruchterman_reingold_3d":
-            layout_inst = nx.spring_layout(raw, dim=3, seed=random_seed)
+            layout_inst = nx.spring_layout(raw, dim=3, seed=seed)
         if layout_algorithm == "pmds":
-            layout_inst = pmds_layout(raw, seed=random_seed, **kwargs)
+            layout_inst = pmds_layout(raw, seed=seed, **kwargs)
         if layout_algorithm == "pmds_3d":
-            layout_inst = pmds_layout(raw, dim=3, seed=random_seed, **kwargs)
+            layout_inst = pmds_layout(raw, dim=3, seed=seed, **kwargs)
         if layout_algorithm == "wpmds_3d":
             layout_inst = pmds_layout(
-                raw, dim=3, weights="prob_dist", seed=random_seed, **kwargs
+                raw, dim=3, weights="prob_dist", seed=seed, **kwargs
             )
         if layout_algorithm == "coarsened_pmds_3d":
-            layout_inst = coarsened_pmds_layout(raw, seed=random_seed, **kwargs)
+            layout_inst = coarsened_pmds_layout(raw, seed=seed, **kwargs)
         if layout_algorithm == "spectral_3d":
-            layout_inst = spectral_layout(raw, dim=3, seed=random_seed, **kwargs)
+            layout_inst = spectral_layout(raw, dim=3, seed=seed, **kwargs)
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,

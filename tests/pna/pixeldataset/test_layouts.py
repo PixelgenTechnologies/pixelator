@@ -159,6 +159,16 @@ class TestLayoutsApi:
         )
         assert len(df) > 0
 
+    def test_seed_kwarg_seeds_the_default_algorithm(self, pxl_dataset: PNAPixelDataset):
+        """`.layouts(seed=42)` must seed the default algorithm, not TypeError."""
+        component_id = _one_component(pxl_dataset)
+        filtered = pxl_dataset.filter(components=component_id)
+        via_seed = filtered.layouts(add_marker_counts=False, seed=42).to_df()
+        via_random_seed = filtered.layouts(
+            add_marker_counts=False, random_seed=42
+        ).to_df()
+        pd.testing.assert_frame_equal(via_seed, via_random_seed)
+
     def test_spherical_norm_adds_norm_columns(self, pxl_dataset: PNAPixelDataset):
         component_id = _one_component(pxl_dataset)
         df = (
