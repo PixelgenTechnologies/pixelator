@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `panel_from_pxl_dataset` dispatch to the concrete type or a combination.
 - CLI `--panel` may be repeated so demux/collapse/graph can load several panels
   into one combination.
+- `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
 
 ### Removed
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
@@ -49,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule
   statistics use the number of edges.
+- Refactor `pixelator.common.utils.__init__.py`
 
 ### Fixed
 - Combining a base panel that omits `sample_hashing` with a hashing panel no
