@@ -296,6 +296,58 @@ def test_add_panel_methods_roll_back_on_conflict(panel_df):
     assert list(combo.df.index) == list(panel_df.index)
 
 
+def test_combination_description_skips_none_and_returns_none_when_empty(
+    panel_df, hashing_panel
+):
+    """Joined description must omit None members rather than the literal 'None'."""
+    base = PNABasePanel(
+        panel_df,
+        AntibodyPanelMetadata(
+            name="base-panel",
+            version="0.0.0",
+            description="Test panel",
+            panel_type=PanelType.BASE,
+        ),
+    )
+    mixed = PNAAntibodyPanelCombination([base, hashing_panel])
+    assert hashing_panel.metadata.description is None
+    assert mixed.description == "Test panel"
+
+    addon_df = pd.DataFrame(
+        {
+            "marker_id": ["addon1"],
+            "uniprot_id": ["P12345"],
+            "control": [False],
+            "nuclear": [False],
+            "sequence_1": ["AAAA"],
+            "sequence_2": ["TTTT"],
+        }
+    ).set_index("marker_id")
+    addon = PNAAddonPanel(
+        addon_df,
+        AntibodyPanelMetadata(
+            name="addon-panel",
+            version="0.0.0",
+            description="Addon panel",
+            panel_type=PanelType.ADDON,
+        ),
+    )
+    both = PNAAntibodyPanelCombination([base, addon])
+    assert both.description == "Test panel + Addon panel"
+
+    none_combo = PNAAntibodyPanelCombination(
+        PNABasePanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="base-panel",
+                version="0.0.0",
+                panel_type=PanelType.BASE,
+            ),
+        )
+    )
+    assert none_combo.description is None
+
+
 def test_combination_aliases_raises_for_multi_panel(panel_df, hashing_panel):
     base = PNABasePanel(
         panel_df,

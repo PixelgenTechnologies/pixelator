@@ -373,9 +373,17 @@ class PNAAntibodyPanelCombination(PNAPanel):
         """Joined display description of all member panels.
 
         Returns:
-            Member descriptions joined with ``" + "``.
+            Member ``description`` values joined with ``" + "``, or ``None`` if no
+            member defines a description.
         """
-        return " + ".join(str(p.metadata.description) for p in self.partial_panels())
+        descriptions = [
+            p.metadata.description
+            for p in self.partial_panels()
+            if p.metadata.description is not None
+        ]
+        if not descriptions:
+            return None
+        return " + ".join(descriptions)
 
     @property
     def aliases(self) -> list[str]:
