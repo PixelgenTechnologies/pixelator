@@ -106,8 +106,8 @@ def _random_qualities(
 ) -> list[str]:
     """Phred+33 quality strings with scores drawn around ``mean_q`` (default Q30)."""
     q = rng.normal(mean_q, std_q, size=(n, length)).round()
-    q = np.clip(q, 2, 40).astype(np.uint8) + 33  # Phred+33 ASCII offset
-    return [row.tobytes().decode("ascii") for row in q]
+    q_ascii = np.clip(q, 2, 40).astype(np.uint8) + 33  # Phred+33 ASCII offset
+    return [row.tobytes().decode("ascii") for row in q_ascii]
 
 
 def _write_fastq_records(

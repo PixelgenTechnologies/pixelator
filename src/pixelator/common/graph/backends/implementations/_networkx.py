@@ -874,6 +874,24 @@ def pmds_layout(
     return coordinates
 
 
+def _pmds_layout_normalized(
+    g: nx.Graph,
+    dim: int,
+    pivots: int,
+    seed: Optional[int],
+) -> Dict[Any, np.ndarray]:
+    """Run PMDS on ``g`` and normalize coordinates like coarsened PMDS."""
+    nodes = list(g.nodes)
+    n = len(nodes)
+    pmds_pivots = min(pivots, n)
+    if pmds_pivots >= n and n > dim:
+        pmds_pivots = n - 1
+    coords = pmds_layout(g, dim=dim, pivots=pmds_pivots, seed=seed)
+    xyz = np.vstack([coords[node] for node in nodes])
+    xyz = normalize_layout_coordinates(xyz)
+    return {nodes[i]: xyz[i] for i in range(len(nodes))}
+
+
 def coarsened_pmds_layout(
     g: nx.Graph,
     dim: int = 3,
@@ -905,6 +923,9 @@ def coarsened_pmds_layout(
         their coordinates with a weighted average of their neighbors' coordinates + some random
         jitter (`jitter_sd`).
 
+    When the graph has fewer nodes than ``pivots``, or Leiden produces too few
+    communities to embed, the layout falls back to PMDS on the original graph.
+
     Args:
         g: A connected NetworkX graph.
         dim: Number of output dimensions (default 3).
@@ -925,7 +946,7 @@ def coarsened_pmds_layout(
         ValueError: If the graph is directed.
         ValueError: If the dim is not 2 or 3.
         ValueError: If the resolution is not between 0.01 and 10.
-        ValueError: If pivots is not between 10 and min(#nodes, 1000).
+        ValueError: If pivots is not between 10 and 1000.
         ValueError: If n_iter is not between 1 and 100.
         ValueError: If jitter_sd is not between 0.001 and 0.1.
         ValueError: If weight_edges_by is not "tp" or "crossing_edges".
@@ -938,6 +959,12 @@ def coarsened_pmds_layout(
 
     n_nodes = len(g.nodes)
     n_edges = len(g.edges)
+
+    # Coarsening is for graphs larger than the pivot set. On smaller graphs
+    # the default pivots=200 would previously raise, even though PNA Components
+    # (and filtered subsets) can be well below that size.
+    if pivots >= n_nodes:
+        return _pmds_layout_normalized(g, dim=dim, pivots=n_nodes, seed=seed)
 
     # Normalize resolution parameter to fit PNA graphs
     # Here we use the number of edges to scale the resolution parameter
@@ -966,6 +993,11 @@ def coarsened_pmds_layout(
 
     unique_communities = np.unique(membership)
     n_communities = len(unique_communities)
+
+    if n_communities <= dim:
+        return _pmds_layout_normalized(
+            g, dim=dim, pivots=min(pivots, n_nodes), seed=seed
+        )
 
     community_to_idx = {comm: i for i, comm in enumerate(unique_communities)}
 
@@ -1395,12 +1427,8 @@ def _validate_coarsened_pmds_parameters(
     if not (isinstance(resolution, (float, int)) and 0.01 <= resolution <= 10):
         raise ValueError("resolution must be a float between 0.01 and 10.")
 
-    n_nodes = len(g.nodes)
-    pivots_max = min(n_nodes, 1000)
-    if not (isinstance(pivots, int) and 10 <= pivots <= pivots_max):
-        raise ValueError(
-            f"pivots must be an integer between 10 and {pivots_max} (number of nodes or 1000, whichever is smaller)."
-        )
+    if not (isinstance(pivots, int) and 10 <= pivots <= 1000):
+        raise ValueError("pivots must be an integer between 10 and 1000.")
 
     if not (isinstance(n_iter, int) and 1 <= n_iter <= 100):
         raise ValueError("n_iter must be an integer between 1 and 100.")

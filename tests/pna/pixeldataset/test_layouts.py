@@ -59,6 +59,28 @@ class TestDefaultLayoutAlgorithm:
 
 
 class TestLayoutsApi:
+    def test_default_algorithm_computes_on_components_smaller_than_default_pivots(
+        self, pxl_dataset: PNAPixelDataset
+    ):
+        """The default algorithm must work on Components smaller than its default pivot count.
+
+        ``coarsened_pmds_3d`` defaults to 200 pivots. Callers migrating from
+        ``precomputed_layouts()`` (which only read stored coordinates) can have
+        valid Components well below that size.
+        """
+        component_id = _one_component(pxl_dataset)
+        n_umi = int(pxl_dataset.adata().obs.loc[component_id, "n_umi"])
+        assert n_umi < 200
+
+        df = (
+            pxl_dataset.filter(components=component_id)
+            .layouts(add_marker_counts=False)
+            .to_df()
+        )
+        assert len(df) > 0
+        assert set(df["layout"].unique()) == {DEFAULT_LAYOUT_ALGORITHM}
+        assert _COORD_COLUMNS.issubset(df.columns)
+
     def test_to_df_has_precomputed_coordinate_columns(
         self, pxl_dataset: PNAPixelDataset
     ):
