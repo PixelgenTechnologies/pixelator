@@ -124,7 +124,10 @@ class Layouts:
         frames = [frame for _, frame in self.iterator(return_polars_df=True)]
         if not frames:
             return pl.DataFrame()
-        return pl.concat(frames, how="diagonal_relaxed")
+        df = pl.concat(frames, how="diagonal_relaxed")
+        if self._add_marker_counts:
+            df = df.with_columns(pl.selectors.unsigned_integer().fill_null(0))
+        return df
 
     def to_df(self) -> pd.DataFrame:
         """Get the Layouts as a pandas DataFrame."""

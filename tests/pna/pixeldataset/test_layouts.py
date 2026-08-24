@@ -167,6 +167,22 @@ class TestLayoutsApi:
         assert {"x_norm", "y_norm"}.issubset(df.columns)
         assert "z_norm" not in df.columns
 
+    def test_to_polars_fills_missing_marker_counts_with_zero(
+        self, pxl_dataset: PNAPixelDataset
+    ):
+        # Component e7d82bca9694eea7 has MarkerA/MarkerB only; others have MarkerC.
+        df = pxl_dataset.layouts(
+            algorithm=_FAST_ALGORITHM, add_marker_counts=True
+        ).to_polars()
+        marker_cols = ["MarkerA", "MarkerB", "MarkerC"]
+        assert set(marker_cols).issubset(df.columns)
+        for col in marker_cols:
+            assert df[col].null_count() == 0
+
+        missing_c = df.filter(pl.col("component") == "e7d82bca9694eea7")
+        assert missing_c.height > 0
+        assert (missing_c["MarkerC"] == 0).all()
+
 
 class TestPrecomputedLayoutsDeprecation:
     @pytest.mark.filterwarnings("always::DeprecationWarning")
