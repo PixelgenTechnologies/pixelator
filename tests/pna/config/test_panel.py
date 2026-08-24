@@ -17,6 +17,7 @@ from pixelator.pna.config.panel import (
     PNAAntibodyPanelCombination,
     PNAAntibodyPanelDiff,
     PNABasePanel,
+    PNASampleHashingPanel,
     sample_hashing_mask,
 )
 from pixelator.pna.pixeldataset import read
@@ -216,6 +217,83 @@ def test_combination_rejects_conflicting_duplicate_marker_id(panel_df):
                 PNABasePanel(conflicting_df, meta2),
             ]
         )
+
+
+def test_add_panel_methods_roll_back_on_conflict(panel_df):
+    """Failed adds must not leave a half-updated combination that keeps failing df."""
+    combo = PNAAntibodyPanelCombination(
+        PNABasePanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="panel-a", version="0.0.0", panel_type=PanelType.BASE
+            ),
+        )
+    )
+
+    with pytest.raises(ValueError, match="Duplicate sequences found"):
+        combo.add_base_panel(
+            PNABasePanel(
+                panel_df.copy(),
+                AntibodyPanelMetadata(
+                    name="panel-b", version="0.0.0", panel_type=PanelType.BASE
+                ),
+            )
+        )
+    assert [p.name for p in combo.base_panels] == ["panel-a"]
+    assert combo.hashing_panels is None
+    assert combo.addon_panels is None
+    assert list(combo.df.index) == list(panel_df.index)
+
+    overlapping_seq_df = pd.DataFrame(
+        {
+            "marker_id": ["extra"],
+            "uniprot_id": ["P12345"],
+            "control": [False],
+            "nuclear": [False],
+            "sequence_1": [panel_df.loc["marker1", "sequence_1"]],
+            "sequence_2": [panel_df.loc["marker1", "sequence_2"]],
+        }
+    ).set_index("marker_id")
+
+    with pytest.raises(ValueError, match="Duplicate sequences found"):
+        combo.add_hashing_panel(
+            PNASampleHashingPanel(
+                overlapping_seq_df.assign(sample_hashing=True),
+                AntibodyPanelMetadata(
+                    name="hash-bad",
+                    version="0.0.0",
+                    panel_type=PanelType.SAMPLE_HASHING,
+                ),
+            )
+        )
+    assert combo.hashing_panels is None
+    assert list(combo.df.index) == list(panel_df.index)
+
+    with pytest.raises(ValueError, match="Duplicate sequences found"):
+        combo.add_addon_panel(
+            PNAAddonPanel(
+                overlapping_seq_df,
+                AntibodyPanelMetadata(
+                    name="addon-bad", version="0.0.0", panel_type=PanelType.ADDON
+                ),
+            )
+        )
+    assert combo.addon_panels is None
+    assert list(combo.df.index) == list(panel_df.index)
+
+    conflicting_df = panel_df.copy()
+    conflicting_df.loc["marker1", "sequence_1"] = "TTTT"
+    with pytest.raises(ValueError, match="Conflicting duplicate marker_id"):
+        combo.add_base_panel(
+            PNABasePanel(
+                conflicting_df,
+                AntibodyPanelMetadata(
+                    name="panel-c", version="0.0.0", panel_type=PanelType.BASE
+                ),
+            )
+        )
+    assert [p.name for p in combo.base_panels] == ["panel-a"]
+    assert list(combo.df.index) == list(panel_df.index)
 
 
 def test_combination_aliases_raises_for_multi_panel(panel_df, hashing_panel):

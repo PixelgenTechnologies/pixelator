@@ -224,6 +224,34 @@ class PNAAntibodyPanelCombination(PNAPanel):
             raise ValueError("Duplicate sequences found in the panel combination.")
         return df
 
+    def _append_and_validate(
+        self,
+        attr: str,
+        panel: PartialPNAAntibodyPanel
+        | PNABasePanel
+        | PNASampleHashingPanel
+        | PNAAddonPanel,
+    ) -> None:
+        """Append ``panel`` to member list ``attr``, rolling back on conflict.
+
+        Conflict checks run via :attr:`df` after the append. If they raise,
+        the member list is restored so a failed add leaves the combination
+        unchanged.
+        """
+        current = getattr(self, attr)
+        created = current is None
+        if created:
+            current = []
+            setattr(self, attr, current)
+        current.append(panel)
+        try:
+            self._df = self.df
+        except Exception:
+            current.pop()
+            if created:
+                setattr(self, attr, None)
+            raise
+
     def add_base_panel(self, base_panel: PNABasePanel | PartialPNAAntibodyPanel):
         """Add a base (or legacy untyped) panel to the combination.
 
@@ -243,8 +271,7 @@ class PNAAntibodyPanelCombination(PNAPanel):
                 + "this is expected legacy behavior for panels without a defined type."
                 + " Consider updating the panel metadata to set the panel type."
             )
-        self.base_panels.append(base_panel)
-        self._df = self.df
+        self._append_and_validate("base_panels", base_panel)
 
     def add_addon_panel(self, addon_panel: PNAAddonPanel):
         """Add an addon panel to the combination.
@@ -255,10 +282,7 @@ class PNAAntibodyPanelCombination(PNAPanel):
         Raises:
             ValueError: If adding the panel creates marker/sequence conflicts.
         """
-        if self.addon_panels is None:
-            self.addon_panels = []
-        self.addon_panels.append(addon_panel)
-        self._df = self.df
+        self._append_and_validate("addon_panels", addon_panel)
 
     def add_hashing_panel(self, hashing_panel: PNASampleHashingPanel):
         """Add a sample-hashing panel to the combination.
@@ -269,10 +293,7 @@ class PNAAntibodyPanelCombination(PNAPanel):
         Raises:
             ValueError: If adding the panel creates marker/sequence conflicts.
         """
-        if self.hashing_panels is None:
-            self.hashing_panels = []
-        self.hashing_panels.append(hashing_panel)
-        self._df = self.df
+        self._append_and_validate("hashing_panels", hashing_panel)
 
     def add_panel(
         self,
