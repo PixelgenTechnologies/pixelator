@@ -45,7 +45,7 @@ def add_panel_information(
 
     The legacy single-key ``panel_metadata`` / ``panel_columns`` shape is not
     written. Older files that still use that layout remain readable via
-    :meth:`~pixelator.pna.config.panel.PNAAntibodyPanelCombination.from_adata`
+    :meth:`~pixelator.pna.config.panel.combination.PNAAntibodyPanelCombination.from_adata`
     and related helpers.
 
     Args:

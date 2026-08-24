@@ -28,17 +28,18 @@ class PanelType(str, enum.Enum):
     """Type of antibody panel described by panel CSV metadata.
 
     Stored in :attr:`AntibodyPanelMetadata.panel_type` and used by PNA helpers
-    such as :func:`pixelator.pna.config.panel.get_panel_type_from_metadata` to
+    such as
+    :func:`pixelator.pna.config.panel.dispatch.get_panel_type_from_metadata` to
     select a concrete panel class:
 
     * ``partial`` — generic / legacy single panel
-      (:class:`~pixelator.pna.config.panel.PartialPNAAntibodyPanel`)
+      (:class:`~pixelator.pna.config.panel.partial.PartialPNAAntibodyPanel`)
     * ``base`` — core marker panel
-      (:class:`~pixelator.pna.config.panel.PNABasePanel`)
+      (:class:`~pixelator.pna.config.panel.partial.PNABasePanel`)
     * ``addon`` — markers used together with a base panel
-      (:class:`~pixelator.pna.config.panel.PNAAddonPanel`)
+      (:class:`~pixelator.pna.config.panel.partial.PNAAddonPanel`)
     * ``sample_hashing`` — sample-hashing panel
-      (:class:`~pixelator.pna.config.panel.PNASampleHashingPanel`)
+      (:class:`~pixelator.pna.config.panel.partial.PNASampleHashingPanel`)
 
     ``None`` in metadata is treated as legacy ``partial``.
     """
