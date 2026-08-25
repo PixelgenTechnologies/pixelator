@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   passed directly to native community detection, and the recovered components are unchanged.
 
 ### Fixed
+- `coarsened_pmds_layout` sizes PMDS pivots from the full graph when Leiden
+  yields too few communities, so a valid low `pivots` no longer fails
+  `pmds_layout`'s `0.2 * n` lower bound.
 - The default number of cores and the fallbacks used when `--cores` is not set now respect the
   CPU affinity mask (via `os.process_cpu_count()` or `os.sched_getaffinity()`) and the cgroup
   CPU bandwidth quota (`docker run --cpus`, Kubernetes `limits.cpu`), taking the most restrictive

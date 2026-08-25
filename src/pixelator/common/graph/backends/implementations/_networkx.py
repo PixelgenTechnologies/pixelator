@@ -997,9 +997,10 @@ def coarsened_pmds_layout(
     n_communities = len(unique_communities)
 
     if n_communities <= dim:
-        return _pmds_layout_normalized(
-            g, dim=dim, pivots=min(pivots, n_nodes), seed=seed
-        )
+        # Size pivots from the full graph, as in the small-graph fallback.
+        # Reusing the coarse-level pivot count can fall below pmds_layout's
+        # 0.2 * n lower bound even when the caller passed a valid pivots.
+        return _pmds_layout_normalized(g, dim=dim, pivots=n_nodes, seed=seed)
 
     community_to_idx = {comm: i for i, comm in enumerate(unique_communities)}
 
