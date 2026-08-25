@@ -649,13 +649,12 @@ class DenoiseGraph(PerComponentTask):
                 read(pxl_file_target.path)
             )
         except KeyError:
-            # If pxl file does not contain panel data, try to load it from
-            # the panel name.
-            # This will happen when old pxl files generated before v0.22.0
-            # are used.
-            panel_names = (
-                pxl.metadata().popitem()[1]["panel_name"].split("+")
-            )  # Could be a "+" separated list of panel names
+            # Old pxl files (pre-v0.22.0) omit AnnData panel payloads; recover
+            # from metadata. Combination names are joined with " + ".
+            panel_names = [
+                name.strip()
+                for name in pxl.metadata().popitem()[1]["panel_name"].split("+")
+            ]
             panel = load_antibody_panel(pna_config, panel_names)
         nodes_to_remove = (
             data.loc[~data["umi"].isna(), "umi"].astype(np.uint64).tolist()

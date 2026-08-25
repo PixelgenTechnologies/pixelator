@@ -157,6 +157,7 @@ def test_combination_keeps_hashing_flags_when_base_omits_sample_hashing(
     assert hashing_panel.df["sample_hashing"].dtype == bool
 
     combo = PNAAntibodyPanelCombination([base, hashing_panel])
+    assert combo.name == "base-panel + hash-set-1"
     hashing_col = combo.df["sample_hashing"]
     assert pd.api.types.is_bool_dtype(hashing_col)
     assert hashing_col.loc[["HM-1", "HM-2"]].all()
