@@ -105,29 +105,40 @@ class PixelFileWriter:
             },
         )
 
-    def _assert_single_sample(self, table_name: str) -> None:
+    def _assert_single_sample(self, edgelist: Path | pl.DataFrame) -> None:
         """Ensure that the ``sample`` column, if present, has a single unique value.
 
         Args:
-            table_name: The name of the table to check.
+            edgelist: The path to the edgelist parquet file, or a DataFrame.
 
         Raises:
-            ValueError: If the table contains a ``sample`` column with more
+            ValueError: If the edgelist contains a ``sample`` column with more
                 than one unique value.
         """
-        columns = self._connection.sql(f'DESCRIBE "{table_name}"').pl()["column_name"]
-        if "sample" not in columns:
-            return
+        if isinstance(edgelist, Path):
+            columns = self._connection.sql(
+                "SELECT * FROM read_parquet($parquet_file) LIMIT 0",
+                params={"parquet_file": str(edgelist)},
+            ).columns
+            if "sample" not in columns:
+                return
+            samples = (
+                self._connection.sql(
+                    'SELECT DISTINCT "sample" FROM read_parquet($parquet_file)',
+                    params={"parquet_file": str(edgelist)},
+                )
+                .pl()["sample"]
+                .to_list()
+            )
+        else:
+            if "sample" not in edgelist.columns:
+                return
+            samples = edgelist["sample"].unique().to_list()
 
-        samples = (
-            self._connection.sql(f'SELECT DISTINCT "sample" FROM "{table_name}"')
-            .pl()["sample"]
-            .to_list()
-        )
         if len(samples) > 1:
             raise ValueError(
-                f"Table {table_name!r} contains data for multiple samples "
-                f"({samples}), but a PXL file may only contain a single sample."
+                f"Edgelist contains data for multiple samples ({samples}), "
+                "but a PXL file may only contain a single sample."
             )
 
     def write_edgelist(self, edgelist: Path | pl.DataFrame) -> None:
@@ -139,11 +150,10 @@ class PixelFileWriter:
         Raises:
             ValueError: If the edgelist contains data for more than one sample.
         """
+        self._assert_single_sample(edgelist)
         if isinstance(edgelist, Path):
             self._write_parquet_file_to_table("edgelist", edgelist)
-            self._assert_single_sample("edgelist")
             return
-
         try:
             with tempfile.NamedTemporaryFile(suffix=".parquet") as f:
                 file_path = Path(f.name)
@@ -151,7 +161,6 @@ class PixelFileWriter:
                 self._write_parquet_file_to_table("edgelist", file_path)
         except AttributeError:
             raise ValueError(f"Invalid input type for edgelist: {type(edgelist)}")
-        self._assert_single_sample("edgelist")
 
     def _clean_existing_adata_tables(self):
         tables = self._connection.sql("SHOW ALL TABLES")
