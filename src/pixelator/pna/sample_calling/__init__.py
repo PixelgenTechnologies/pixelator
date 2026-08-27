@@ -245,6 +245,12 @@ def _build_post_sample_calling_anndata(
     new_adata = new_adata[:, non_hashing_markers].copy()
 
     new_adata = add_missing_adata_info(new_adata, old_adata)
+    # `sample` is a reserved, transient column added when reading a
+    # multi-file view (see AnnDataHelper) and reflects the *original*
+    # physical input file(s) i.e. pool(s) names, which may no longer match the single
+    # dehashed `sample_name` this output file represents. Drop it here
+    # so each written PXL file only ever contains a single sample.
+    new_adata.obs = new_adata.obs.drop(columns=["sample"], errors="ignore")
     new_adata.obs = new_adata.obs.join(
         hash_info.select(["component", "hash_enrichment_factor"])
         .to_pandas()
