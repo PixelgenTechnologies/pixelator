@@ -105,14 +105,43 @@ class PixelFileWriter:
             },
         )
 
+    def _assert_single_sample(self, table_name: str) -> None:
+        """Ensure that the ``sample`` column, if present, has a single unique value.
+
+        Args:
+            table_name: The name of the table to check.
+
+        Raises:
+            ValueError: If the table contains a ``sample`` column with more
+                than one unique value.
+        """
+        columns = self._connection.sql(f'DESCRIBE "{table_name}"').pl()["column_name"]
+        if "sample" not in columns:
+            return
+
+        samples = (
+            self._connection.sql(f'SELECT DISTINCT "sample" FROM "{table_name}"')
+            .pl()["sample"]
+            .to_list()
+        )
+        if len(samples) > 1:
+            raise ValueError(
+                f"Table {table_name!r} contains data for multiple samples "
+                f"({samples}), but a PXL file may only contain a single sample."
+            )
+
     def write_edgelist(self, edgelist: Path | pl.DataFrame) -> None:
         """Write the edgelist to the PXL file.
 
         Args:
             edgelist: The path to the edgelist parquet file.
+
+        Raises:
+            ValueError: If the edgelist contains data for more than one sample.
         """
         if isinstance(edgelist, Path):
             self._write_parquet_file_to_table("edgelist", edgelist)
+            self._assert_single_sample("edgelist")
             return
 
         try:
@@ -122,6 +151,7 @@ class PixelFileWriter:
                 self._write_parquet_file_to_table("edgelist", file_path)
         except AttributeError:
             raise ValueError(f"Invalid input type for edgelist: {type(edgelist)}")
+        self._assert_single_sample("edgelist")
 
     def _clean_existing_adata_tables(self):
         tables = self._connection.sql("SHOW ALL TABLES")
@@ -136,7 +166,18 @@ class PixelFileWriter:
 
         Args:
             adata: The AnnData object to write.
+
+        Raises:
+            ValueError: If ``adata.obs`` contains data for more than one sample.
         """
+        if "sample" in adata.obs.columns:
+            samples = adata.obs["sample"].unique().tolist()
+            if len(samples) > 1:
+                raise ValueError(
+                    f"`adata.obs` contains data for multiple samples ({samples}), "
+                    "but a PXL file may only contain a single sample."
+                )
+
         self._clean_existing_adata_tables()
 
         X = adata.to_df().reset_index(names="index")
