@@ -62,43 +62,7 @@ class Edgelist:
 
     def _apply_panel_patch_marker_renames(self, df: pl.DataFrame) -> pl.DataFrame:
         """Rename marker ids that a panel patch bump changed in AnnData ``var``."""
-        remaps = self._adata_helper.marker_id_renames_by_sample()
-        if not remaps or not any(remaps.values()):
-            return df
-        rows: list[dict[str, str]] = [
-            {"sample": sample, "old_id": old, "new_id": new}
-            for sample, mapping in remaps.items()
-            for old, new in mapping.items()
-        ]
-        if not rows:
-            return df
-        map_df = pl.DataFrame(rows)
-        upgraded = df
-        join_on_sample = "sample" in upgraded.columns
-        for column in ("marker_1", "marker_2"):
-            if column not in upgraded.columns:
-                continue
-            if join_on_sample:
-                upgraded = (
-                    upgraded.join(
-                        map_df,
-                        left_on=["sample", column],
-                        right_on=["sample", "old_id"],
-                        how="left",
-                    )
-                    .with_columns(pl.coalesce("new_id", column).alias(column))
-                    .drop("new_id")
-                )
-            else:
-                per_id = map_df.select("old_id", "new_id").unique(
-                    subset=["old_id"], keep="first"
-                )
-                upgraded = (
-                    upgraded.join(per_id, left_on=column, right_on="old_id", how="left")
-                    .with_columns(pl.coalesce("new_id", column).alias(column))
-                    .drop("new_id")
-                )
-        return upgraded
+        return self._adata_helper.apply_marker_id_renames(df)
 
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""

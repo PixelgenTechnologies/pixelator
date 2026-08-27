@@ -16,7 +16,10 @@ from pixelator.pna.config.panel import (
     PNASampleHashingPanel,
 )
 from pixelator.pna.pixeldataset import PNAPixelDataset
-from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
+from pixelator.pna.pixeldataset.io.anndata_helper import (
+    AnnDataHelper,
+    remap_marker_id_columns,
+)
 from tests.pna.conftest import create_pxl_file
 
 
@@ -74,6 +77,8 @@ def _build_two_sample_dataset_with_panels(
     edgelist_parquet_path: Path,
     panel_old: PNAAntibodyPanelCombination,
     panel_new: PNAAntibodyPanelCombination,
+    proximity_parquet_path: Path | None = None,
+    layout_parquet_path: Path | None = None,
 ) -> PNAPixelDataset:
     """Create two on-disk PXL samples with distinct panels for bumping patch version tests.
 
@@ -82,13 +87,15 @@ def _build_two_sample_dataset_with_panels(
         edgelist_parquet_path: Edgelist parquet path.
         panel_old: Panel old.
         panel_new: Panel new.
+        proximity_parquet_path: Optional proximity table written to both samples.
+        layout_parquet_path: Optional layouts table written to both samples.
     """
     sample_old = create_pxl_file(
         target=tmp_path / "sample_old.pxl",
         sample_name="sample_old",
         edgelist_parquet_path=edgelist_parquet_path,
-        proximity_parquet_path=None,
-        layout_parquet_path=None,
+        proximity_parquet_path=proximity_parquet_path,
+        layout_parquet_path=layout_parquet_path,
         panel=panel_old,
     )
 
@@ -100,12 +107,30 @@ def _build_two_sample_dataset_with_panels(
         suffix="_sample_new",
     )
 
+    sample_new_proximity = None
+    if proximity_parquet_path is not None:
+        sample_new_proximity = tmp_path / "sample_new_proximity.parquet"
+        _write_component_suffix_parquet(
+            source=proximity_parquet_path,
+            target=sample_new_proximity,
+            suffix="_sample_new",
+        )
+
+    sample_new_layout = None
+    if layout_parquet_path is not None:
+        sample_new_layout = tmp_path / "sample_new_layout.parquet"
+        _write_component_suffix_parquet(
+            source=layout_parquet_path,
+            target=sample_new_layout,
+            suffix="_sample_new",
+        )
+
     sample_new = create_pxl_file(
         target=tmp_path / "sample_new.pxl",
         sample_name="sample_new",
         edgelist_parquet_path=sample_new_edgelist,
-        proximity_parquet_path=None,
-        layout_parquet_path=None,
+        proximity_parquet_path=sample_new_proximity,
+        layout_parquet_path=sample_new_layout,
         panel=panel_new,
     )
     return PNAPixelDataset.from_pxl_files([sample_old, sample_new])
@@ -196,6 +221,26 @@ def test_anndata_helper_basic_smoke(pxl_dataset, components, markers):
     res = helper.read_adata(add_clr_transform=False, add_log1p_transform=False)
     assert res.n_obs >= 0
     assert res.n_vars >= 0
+
+
+def test_remap_marker_id_columns_renames_with_and_without_sample():
+    """Per-sample maps win when a sample column is present."""
+    df = pl.DataFrame(
+        {
+            "sample": ["old", "new"],
+            "marker_1": ["MarkerA", "MarkerA"],
+            "marker_2": ["MarkerB", "MarkerB"],
+        }
+    )
+    remaps = {"old": {"MarkerA": "MarkerANew"}}
+    upgraded = remap_marker_id_columns(df, remaps)
+    assert upgraded["marker_1"].to_list() == ["MarkerANew", "MarkerA"]
+    assert upgraded["marker_2"].to_list() == ["MarkerB", "MarkerB"]
+
+    no_sample = remap_marker_id_columns(
+        df.drop("sample"), remaps, columns=("marker_1",)
+    )
+    assert no_sample["marker_1"].to_list() == ["MarkerANew", "MarkerANew"]
 
 
 class TestTryBumpAdataPanelVersion:
@@ -296,6 +341,72 @@ class TestTryBumpAdataPanelVersion:
         assert helper._marker_id_renames_by_sample["sample_old"]["MarkerA"] == (
             "MarkerANew"
         )
+
+    def test_proximity_and_layout_marker_ids_follow_panel_patch_bump(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        proximity_parquet_path: Path,
+        layout_parquet_path: Path,
+        panel: PNAAntibodyPanelCombination,
+        hashing_panel: PNASampleHashingPanel,
+    ):
+        """Proximity pairs and layout count columns use bumped marker ids."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel.base_panels[0],
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel.base_panels[0],
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+            added_column_name="target_class",
+            added_column_value="new-value",
+        )
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=PNAAntibodyPanelCombination([panel_old, hashing_panel]),
+            panel_new=PNAAntibodyPanelCombination([panel_new, hashing_panel]),
+            proximity_parquet_path=proximity_parquet_path,
+            layout_parquet_path=layout_parquet_path,
+        )
+
+        proximity = dataset.proximity(add_marker_counts=False, add_logratio=False)
+        prox_df = proximity.to_polars()
+        old_prox = (
+            prox_df.filter(pl.col("sample") == "sample_old")
+            if "sample" in prox_df.columns
+            else prox_df.filter(~pl.col("component").str.ends_with("_sample_new"))
+        )
+        old_prox_markers = set(old_prox["marker_1"].to_list()) | set(
+            old_prox["marker_2"].to_list()
+        )
+        assert "MarkerA" not in old_prox_markers
+        assert "MarkerANew" in old_prox_markers
+
+        filtered = dataset.filter(markers={"MarkerANew", "MarkerB"}).proximity(
+            add_marker_counts=False, add_logratio=False
+        )
+        filtered_df = filtered.to_polars()
+        filtered_markers = set(filtered_df["marker_1"].to_list()) | set(
+            filtered_df["marker_2"].to_list()
+        )
+        assert filtered_markers <= {"MarkerANew", "MarkerB"}
+        assert "MarkerANew" in filtered_markers
+
+        layouts = dataset.precomputed_layouts(add_marker_counts=True).to_polars()
+        assert "MarkerANew" in layouts.columns
+        old_layouts = (
+            layouts.filter(pl.col("sample") == "sample_old")
+            if "sample" in layouts.columns
+            else layouts.filter(~pl.col("component").str.ends_with("_sample_new"))
+        )
+        assert old_layouts["MarkerANew"].sum() > 0
 
     @pytest.mark.parametrize(
         "new_version,new_product",
