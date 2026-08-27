@@ -4,7 +4,6 @@ Copyright © 2025 Pixelgen Technologies AB.
 """
 
 import logging
-import re
 import tempfile
 from itertools import chain
 from pathlib import Path
@@ -19,12 +18,22 @@ import polars as pl
 
 from pixelator import __version__
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
-from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
+from pixelator.pna.anndata import (
+    add_missing_adata_info,
+    pna_edgelist_to_anndata,
+)
 from pixelator.pna.config.panel import PNAAntibodyPanelCombination
+from pixelator.pna.config.panel.utils import collapsed_hashing_marker_id
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
 from pixelator.pna.sample_calling.report import SampleCallingTotalReport
+from pixelator.pna.utils.sample_calling_uns import (
+    SAMPLE_CALLING_COLLAPSED_KEY,
+    SAMPLE_CALLING_UNS_KEY,
+    sample_calling_hashing_collapsed,
+    set_sample_calling_collapsed,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -256,6 +265,7 @@ def _build_post_sample_calling_anndata(
         new_adata.obs["removed_incompatible_hashes"] = 0
         new_adata.obs["removed_stranded_nodes"] = 0
         new_adata.obs["total_removed_in_sample_calling"] = 0
+        set_sample_calling_collapsed(new_adata, collapsed=True)
         return new_adata
 
     removal_info = (
@@ -278,6 +288,7 @@ def _build_post_sample_calling_anndata(
         removal_info.to_pandas().set_index("component", drop=True), how="left"
     ).fillna(0)
 
+    set_sample_calling_collapsed(new_adata, collapsed=True)
     return new_adata
 
 
@@ -376,15 +387,16 @@ def sample_calling(
             con.register("nodes_to_remove_tbl", nodes_to_remove[["umi"]])
             con.register("sample_components", pl.DataFrame({"component": comps}))
 
-            # Dehashing should only strip the `-<hash_index>` suffix for *known*
-            # hashing antibody names (e.g. `B2M-1` -> `B2M`), not for other
-            # biological marker IDs like `PD-1`.
+            # Dehashing should only strip the `-<hash_index>` suffix for
+            # antibodies flagged by the panel `sample_hashing` column
+            # (e.g. `B2M-1` -> `B2M`), not for biological marker IDs that
+            # happen to end with `-<digits>` such as `PD-1` or `TIM-3`.
             hashed_markers = sorted(list(hashing_antibody_mapping.hashing_antibodies))
             hash_marker_map = pl.DataFrame(
                 {
                     "hashed_marker": hashed_markers,
                     "base_marker": [
-                        re.sub(r"-\d+$", "", marker) for marker in hashed_markers
+                        collapsed_hashing_marker_id(marker) for marker in hashed_markers
                     ],
                 }
             )
@@ -585,8 +597,12 @@ def warn_if_undetermined_has_high_enrichment(
 
 
 __all__ = [
+    "SAMPLE_CALLING_COLLAPSED_KEY",
+    "SAMPLE_CALLING_UNS_KEY",
     "collect_hash_info",
-    "sample_calling",
     "create_final_report",
+    "sample_calling",
+    "sample_calling_hashing_collapsed",
+    "set_sample_calling_collapsed",
     "warn_if_undetermined_has_high_enrichment",
 ]

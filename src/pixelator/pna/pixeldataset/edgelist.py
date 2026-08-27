@@ -60,6 +60,46 @@ class Edgelist:
         # Handle legacy marker names
         return df.rename({"marker1": "marker_1", "marker2": "marker_2"}, strict=False)
 
+    def _apply_panel_patch_marker_renames(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Rename marker ids that a panel patch bump changed in AnnData ``var``."""
+        remaps = self._adata_helper.marker_id_renames_by_sample()
+        if not remaps or not any(remaps.values()):
+            return df
+        rows: list[dict[str, str]] = [
+            {"sample": sample, "old_id": old, "new_id": new}
+            for sample, mapping in remaps.items()
+            for old, new in mapping.items()
+        ]
+        if not rows:
+            return df
+        map_df = pl.DataFrame(rows)
+        upgraded = df
+        join_on_sample = "sample" in upgraded.columns
+        for column in ("marker_1", "marker_2"):
+            if column not in upgraded.columns:
+                continue
+            if join_on_sample:
+                upgraded = (
+                    upgraded.join(
+                        map_df,
+                        left_on=["sample", column],
+                        right_on=["sample", "old_id"],
+                        how="left",
+                    )
+                    .with_columns(pl.coalesce("new_id", column).alias(column))
+                    .drop("new_id")
+                )
+            else:
+                per_id = map_df.select("old_id", "new_id").unique(
+                    subset=["old_id"], keep="first"
+                )
+                upgraded = (
+                    upgraded.join(per_id, left_on=column, right_on="old_id", how="left")
+                    .with_columns(pl.coalesce("new_id", column).alias(column))
+                    .drop("new_id")
+                )
+        return upgraded
+
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""
         query = self._query_builder.edgelist_len_query(
@@ -78,12 +118,10 @@ class Edgelist:
             normalize_input_to_list(self.components)
         )
         with self._view.open() as session:
-            df = (
-                self._handle_backwards_compatibility(session.execute_lazy(query))
-                .collect()
-                .to_pandas()
-            )
-        return df
+            df = self._handle_backwards_compatibility(
+                session.execute_lazy(query)
+            ).collect()
+        return self._apply_panel_patch_marker_renames(df).to_pandas()
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
@@ -94,7 +132,7 @@ class Edgelist:
             df = self._handle_backwards_compatibility(
                 session.execute_lazy(query)
             ).collect()
-        return df
+        return self._apply_panel_patch_marker_renames(df)
 
     def to_record_batches(
         self, batch_size: int = 1_000_000
@@ -104,7 +142,16 @@ class Edgelist:
             normalize_input_to_list(self.components)
         )
         with self._view.open() as session:
-            yield from session.execute_arrow_reader(query=query, batch_size=batch_size)
+            for batch in session.execute_arrow_reader(
+                query=query, batch_size=batch_size
+            ):
+                table = pa.Table.from_batches([batch])
+                df = pl.from_arrow(table)
+                if isinstance(df, pl.Series):
+                    continue
+                df = self._handle_backwards_compatibility(df.lazy()).collect()
+                df = self._apply_panel_patch_marker_renames(df)
+                yield from df.to_arrow().to_batches()
 
     def _iterator(self) -> Iterable[tuple[str, pl.LazyFrame]]:
         with self._view.open() as session:
@@ -127,7 +174,9 @@ class Edgelist:
                 # here is that otherwise the object is not pickable, and thus not handled
                 # well by the analysis manager. We should revisit this in the future.
                 component_id=name,
-                frame=self._handle_backwards_compatibility(df).collect().lazy(),
+                frame=self._apply_panel_patch_marker_renames(
+                    self._handle_backwards_compatibility(df).collect()
+                ).lazy(),
             )
 
     def __str__(self) -> str:

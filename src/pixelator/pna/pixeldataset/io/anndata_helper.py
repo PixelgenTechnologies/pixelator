@@ -25,6 +25,7 @@ from pixelator.pna.config.panel import (
 )
 from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
+from pixelator.pna.utils.sample_calling_uns import sample_calling_hashing_collapsed
 
 from .pixel_data_viewer import PixelDataViewer, PixelDataViewerSession
 from .query_builder import QueryBuilder
@@ -45,6 +46,7 @@ class AnnDataHelper:
         self._components = normalize_input_to_set(components)
         self._markers = normalize_input_to_set(markers)
         self._adata_join_strategy = adata_join_strategy
+        self._marker_id_renames_by_sample: dict[str, dict[str, str]] = {}
 
     def _read_all_samples(self) -> AnnData:
         """Read and concatenate AnnData from all samples in the current view.
@@ -57,15 +59,17 @@ class AnnDataHelper:
             ValueError: If sample-level ``var`` tables cannot be aligned during
                 concatenation.
         """
+        sample_names: list[str] = []
+        adatas: list[AnnData] = []
         with self._view.open() as session:
-            adatas: list[AnnData] = []
             for sample_name in self._view.sample_names():
                 adata = self._read_adata_from_sample(
                     session=session, sample=sample_name
                 )
+                sample_names.append(sample_name)
                 adatas.append(adata)
 
-        self._try_bump_adata_panel_version(adatas)
+        self._try_bump_adata_panel_version(adatas, sample_names)
 
         if not adatas:
             return AnnData()
@@ -81,15 +85,36 @@ class AnnDataHelper:
         update_metrics_anndata(concatenated, inplace=True)
         return concatenated
 
+    def marker_id_renames_by_sample(self) -> dict[str, dict[str, str]]:
+        """Return old→new marker_id maps applied by panel patch bumps, per sample.
+
+        Triggers the same AnnData materialization path as :meth:`read_adata` so
+        the maps match the upgraded ``var`` index.
+        """
+        self._read_adata_cached(add_log1p_transform=False, add_clr_transform=False)
+        return dict(self._marker_id_renames_by_sample)
+
     def _try_bump_adata_panel_version(
         self,
         adatas: list[AnnData],
+        sample_names: list[str],
     ) -> list[AnnData]:
         """Try to bump the panel version of the given AnnData.
 
         Only try to upgrade to the latest version available in the view,
         if the panels differ in patch version and have the same product.
+
+        ``sample_names`` must be aligned with ``adatas`` (one name per ``.pxl``).
+        Each file is treated as a single sample or pool. Marker remaps are
+        recorded under that file name so edgelist joins match the ``sample``
+        column injected from the view.
         """
+        if len(adatas) != len(sample_names):
+            raise ValueError(
+                "Panel bump requires one sample name per AnnData object, "
+                f"got {len(adatas)} objects and {len(sample_names)} names."
+            )
+        self._marker_id_renames_by_sample = {}
         if any(
             (
                 ("panel_metadata" not in adata.uns)
@@ -136,7 +161,9 @@ class AnnDataHelper:
                 )
 
                 latest_panel = versions[latest_panel_version]
-                for i, (adata, pc) in enumerate(zip(adatas, panel_combinations)):
+                for i, (adata, pc, sample_name) in enumerate(
+                    zip(adatas, panel_combinations, sample_names, strict=True)
+                ):
                     panel = {pp.metadata.product: pp for pp in pc.partial_panels()}.get(
                         product
                     )
@@ -145,6 +172,15 @@ class AnnDataHelper:
                     if panel.version != latest_panel.version:
                         diff = PNAAntibodyPanelDiff(panel, latest_panel)
                         adatas[i] = diff.upgrade_adata(adata)
+                        mapping = diff.edgelist_marker_id_mapping(
+                            collapsed=sample_calling_hashing_collapsed(adatas[i])
+                        )
+                        if mapping:
+                            merged = dict(
+                                self._marker_id_renames_by_sample.get(sample_name, {})
+                            )
+                            merged.update(mapping)
+                            self._marker_id_renames_by_sample[sample_name] = merged
         return adatas
 
     def _read_adata_from_sample(

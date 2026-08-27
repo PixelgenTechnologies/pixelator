@@ -310,3 +310,12 @@ def test_add_panel_information_multi_panel(panel, hashing_panel):
     assert roundtrip.num_partial_panels == 2
     assert len(roundtrip.base_panels) == 1
     assert len(roundtrip.hashing_panels) == 1
+
+
+def test_pna_edgelist_to_anndata_marker_subset_keeps_original_panels(pixelconnection):
+    """Rebuilding with a var subset still stores the original panel in uns."""
+    adata = pna_edgelist_to_anndata(
+        pixelconnection, mock_antibody_panel, markers=["A", "B"]
+    )
+    assert list(adata.var.index) == ["A", "B"]
+    assert adata.shape == (3, 2)

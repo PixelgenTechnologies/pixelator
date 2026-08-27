@@ -255,7 +255,9 @@ class TestTryBumpAdataPanelVersion:
         assert "target_class" not in adata_old.var.columns
         assert "target_class" in adata_new.var.columns
 
-        bumped = helper._try_bump_adata_panel_version([adata_old, adata_new])
+        bumped = helper._try_bump_adata_panel_version(
+            [adata_old, adata_new], ["sample_old", "sample_new"]
+        )
 
         assert "target_class" in bumped[0].var.columns
         assert bumped[0].var.loc["MarkerANew", "target_class"] == "new-value"
@@ -291,6 +293,9 @@ class TestTryBumpAdataPanelVersion:
         ).hashing_panels
         assert reconstructed_hashing is not None
         assert reconstructed_hashing[0] == hashing_panel
+        assert helper._marker_id_renames_by_sample["sample_old"]["MarkerA"] == (
+            "MarkerANew"
+        )
 
     @pytest.mark.parametrize(
         "new_version,new_product",
@@ -349,7 +354,9 @@ class TestTryBumpAdataPanelVersion:
                 session=session, sample="sample_new"
             )
 
-        not_bumped = helper._try_bump_adata_panel_version([adata_old, adata_new])
+        not_bumped = helper._try_bump_adata_panel_version(
+            [adata_old, adata_new], ["sample_old", "sample_new"]
+        )
 
         assert "target_class" not in not_bumped[0].var.columns
 

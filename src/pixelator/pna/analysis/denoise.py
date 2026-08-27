@@ -18,7 +18,10 @@ import pandas as pd
 from scipy.stats import fisher_exact, pearsonr
 
 from pixelator.pna.analysis_engine import PerComponentTask
-from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
+from pixelator.pna.anndata import (
+    add_missing_adata_info,
+    pna_edgelist_to_anndata,
+)
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanelCombination, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
@@ -30,6 +33,7 @@ from pixelator.pna.graph.node_pls import (
 )
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
+from pixelator.pna.utils.sample_calling_uns import SAMPLE_CALLING_UNS_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -665,12 +669,24 @@ class DenoiseGraph(PerComponentTask):
             write_denoised_edgelist(pxl, nodes_to_remove, denoised_edgelist_path)
             with PixelFileWriter(pxl_file_target.path) as writer:
                 writer.write_edgelist(Path(denoised_edgelist_path))
-                adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
+                adata = pna_edgelist_to_anndata(
+                    writer.get_connection(),
+                    panel,
+                    markers=list(old_adata.var.index),
+                )
                 old_adata.obs.rename(
                     columns={"isotype_fraction": "pre_denoise_isotype_fraction"},
                     inplace=True,
                 )
                 adata = add_missing_adata_info(adata, old_adata)
+                # Rebuild writes a fresh uns from the panel. Copy sample-calling
+                # metadata (including the collapsed flag) so later panel patch
+                # upgrades still know if hashing clones are absent from var.
+                if SAMPLE_CALLING_UNS_KEY in old_adata.uns:
+                    payload = old_adata.uns[SAMPLE_CALLING_UNS_KEY]
+                    adata.uns[SAMPLE_CALLING_UNS_KEY] = (
+                        dict(payload) if isinstance(payload, dict) else payload
+                    )
 
                 denoise_info = _collect_denoise_summary_info(
                     data, comp_index=adata.obs.index

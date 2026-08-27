@@ -4,12 +4,14 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 import pandas as pd
+import polars as pl
 import pytest
 import ruamel.yaml as yaml
 from anndata import AnnData
 from pandas.testing import assert_frame_equal
 
 from pixelator.common.config import AntibodyPanelMetadata
+from pixelator.pna.anndata import add_panel_information
 from pixelator.pna.config.panel import (
     PanelType,
     PartialPNAAntibodyPanel,
@@ -18,9 +20,12 @@ from pixelator.pna.config.panel import (
     PNAAntibodyPanelDiff,
     PNABasePanel,
     PNASampleHashingPanel,
+    collapsed_hashing_marker_id,
     sample_hashing_mask,
+    split_hashing_marker_id,
 )
 from pixelator.pna.pixeldataset import read
+from pixelator.pna.utils.sample_calling_uns import set_sample_calling_collapsed
 
 
 @pytest.fixture
@@ -35,6 +40,31 @@ def panel_df():
         "sequence_2": ["ATCG", "GCTA", "ATCC"],
     }
     return pd.DataFrame(data).set_index("marker_id")
+
+
+def _apply_edgelist_marker_id_mapping(
+    diff: PNAAntibodyPanelDiff,
+    edgelist: pl.DataFrame,
+    *,
+    collapsed: bool = False,
+) -> pl.DataFrame:
+    """Apply ``diff.edgelist_marker_id_mapping`` to a standalone edgelist."""
+    mapping = diff.edgelist_marker_id_mapping(collapsed=collapsed)
+    if not mapping:
+        return edgelist
+    map_df = pl.DataFrame(
+        {"old_id": list(mapping.keys()), "new_id": list(mapping.values())}
+    )
+    upgraded = edgelist
+    for column in ("marker_1", "marker_2"):
+        if column not in upgraded.columns:
+            continue
+        upgraded = (
+            upgraded.join(map_df, left_on=column, right_on="old_id", how="left")
+            .with_columns(pl.coalesce("new_id", column).alias(column))
+            .drop("new_id")
+        )
+    return upgraded
 
 
 def test_panel_validation(panel_df):
@@ -139,6 +169,79 @@ def test_sample_hashing_mask_accepts_bool_string_and_float_upcast():
 
     object_float = pd.Series([1.0, float("nan"), True, False])
     assert sample_hashing_mask(object_float).tolist() == [True, False, True, False]
+
+
+def test_split_hashing_marker_id_strips_hash_group_only():
+    """Suffix parsing is for hashing ids already selected via sample_hashing."""
+    assert split_hashing_marker_id("B2M-1") == ("B2M", "1")
+    assert split_hashing_marker_id("IL-2-8") == ("IL-2", "8")
+    assert split_hashing_marker_id("MarkerA") is None
+    assert collapsed_hashing_marker_id("B2M-1") == "B2M"
+    assert collapsed_hashing_marker_id("MarkerA") == "MarkerA"
+
+
+def _mixed_hyphen_name_panel(
+    *, version: str = "0.1.0", rename: dict[str, str] | None = None
+):
+    """Panel with biological PD-1/TIM-3 and hashing B2M-1/B2M-2."""
+    df = pd.DataFrame(
+        {
+            "marker_id": ["PD-1", "TIM-3", "B2M-1", "B2M-2"],
+            "control": [False, False, False, False],
+            "sequence_1": ["AAAAAA", "CCCCCC", "GGGGGG", "TTTTTT"],
+            "sequence_2": ["AAAAAA", "CCCCCC", "GGGGGG", "TTTTTT"],
+            "sample_hashing": [False, False, True, True],
+        }
+    ).set_index("marker_id")
+    if rename:
+        df = df.rename(index=rename)
+    return PartialPNAAntibodyPanel(
+        df,
+        AntibodyPanelMetadata(
+            name="mixed-hyphen", version=version, product="mixed-hyphen"
+        ),
+    )
+
+
+def test_hyphenated_biological_markers_are_not_hashing_by_name():
+    """PD-1 / TIM-3 match the hashing name pattern but only the column counts."""
+    panel_old = _mixed_hyphen_name_panel()
+    panel_new = _mixed_hyphen_name_panel(
+        version="0.1.1",
+        rename={"PD-1": "PD-9", "B2M-1": "NEWB2M-1", "B2M-2": "NEWB2M-2"},
+    )
+    diff = PNAAntibodyPanelDiff(panel_old, panel_new)
+
+    assert diff._panel_1_hashing_marker_ids() == {"B2M-1", "B2M-2"}
+    assert diff.marker_id_mapping()["PD-1"] == "PD-9"
+    assert "PD-1" not in diff.collapsed_hashing_marker_id_mapping()
+    assert "TIM-3" not in diff.collapsed_hashing_marker_id_mapping()
+    assert diff.collapsed_hashing_marker_id_mapping() == {"B2M": "NEWB2M"}
+
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=pd.Index(["PD-1", "TIM-3", "B2M"], name="marker_id")),
+    )
+    adata = add_panel_information(adata, PNAAntibodyPanelCombination(panel_old))
+    set_sample_calling_collapsed(adata, True)
+    upgraded = diff.upgrade_adata(adata)
+
+    assert "PD-9" in upgraded.var.index
+    assert "PD-1" not in upgraded.var.index
+    assert "TIM-3" in upgraded.var.index
+    assert "B2M" not in upgraded.var.index
+    assert "NEWB2M" in upgraded.var.index
+
+    missing_pd1 = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=pd.Index(["TIM-3", "B2M"], name="marker_id")),
+    )
+    missing_pd1 = add_panel_information(
+        missing_pd1, PNAAntibodyPanelCombination(panel_old)
+    )
+    set_sample_calling_collapsed(missing_pd1, True)
+    with pytest.raises(ValueError, match="missing panel clones"):
+        diff.upgrade_adata(missing_pd1)
 
 
 def test_combination_keeps_hashing_flags_when_base_omits_sample_hashing(
@@ -647,6 +750,169 @@ def test_upgrade_adata_maps_annotations_by_clone_identity():
     for i in range(1, 9):
         assert upgraded.var.loc[f"marker{i}", "note"] == f"new{i}"
         assert upgraded.var.loc[f"marker{i}", "extra"] == f"extra{i}"
+
+
+def test_upgrade_adata_skips_hashing_rows_when_collapsed(panel, hashing_panel):
+    """Collapsed sample-calling files keep hashing panels in uns, not in var."""
+    base = panel.partial_panels()[0]
+    combo = PNAAntibodyPanelCombination([base, hashing_panel])
+    hashing_new_df = hashing_panel.df.copy()
+    hashing_new_df["note"] = "updated"
+    hashing_new = PNASampleHashingPanel(
+        hashing_new_df,
+        hashing_panel.metadata.model_copy(update={"version": "0.1.1"}),
+    )
+
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=pd.Index(list(combo.markers), name="marker_id")),
+    )
+    adata = add_panel_information(adata, combo)
+    adata = adata[:, list(base.markers)].copy()
+    set_sample_calling_collapsed(adata, True)
+
+    uncollapsed = add_panel_information(
+        AnnData(
+            obs=pd.DataFrame(index=["c1"]),
+            var=pd.DataFrame(index=pd.Index(list(base.markers), name="marker_id")),
+        ),
+        combo,
+    )
+    with pytest.raises(ValueError, match="missing panel clones"):
+        PNAAntibodyPanelDiff(hashing_panel, hashing_new).upgrade_adata(uncollapsed)
+
+    upgraded = PNAAntibodyPanelDiff(hashing_panel, hashing_new).upgrade_adata(adata)
+    assert "HM-1" not in upgraded.var.index
+    reconstructed = PNAAntibodyPanelCombination.from_adata(upgraded)
+    assert reconstructed.hashing_panels is not None
+    assert reconstructed.hashing_panels[0].version == "0.1.1"
+    assert reconstructed.hashing_panels[0].df.loc["HM-1", "note"] == "updated"
+
+
+def test_upgrade_adata_raises_when_collapsed_but_biological_clone_missing(
+    panel, hashing_panel
+):
+    """Collapsed upgrades may skip hashing clones, not missing biological markers."""
+    base = panel.partial_panels()[0]
+    combo = PNAAntibodyPanelCombination([base, hashing_panel])
+    base_new = type(base)(
+        base.df.assign(note="updated"),
+        base.metadata.model_copy(update={"version": "0.1.1"}),
+    )
+    remaining = [marker for marker in base.markers if marker != "MarkerA"]
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=pd.Index(remaining, name="marker_id")),
+    )
+    adata = add_panel_information(adata, combo)
+    set_sample_calling_collapsed(adata, True)
+
+    with pytest.raises(ValueError, match="missing panel clones"):
+        PNAAntibodyPanelDiff(base, base_new).upgrade_adata(adata)
+
+
+def _renamed_hashing_panel(
+    hashing_panel: PNASampleHashingPanel, mapping: dict[str, str]
+):
+    return PNASampleHashingPanel(
+        hashing_panel.df.copy().rename(index=mapping),
+        hashing_panel.metadata.model_copy(update={"version": "0.1.1"}),
+    )
+
+
+def test_upgrade_adata_renames_collapsed_hashing_marker_and_hash_counts(
+    panel, hashing_panel
+):
+    """Hashing id bumps update collapsed var names and original_hash_counts_*."""
+    base = panel.partial_panels()[0]
+    combo = PNAAntibodyPanelCombination([base, hashing_panel])
+    hashing_new = _renamed_hashing_panel(
+        hashing_panel, {"HM-1": "NEW-1", "HM-2": "NEW-2"}
+    )
+
+    adata = AnnData(
+        obs=pd.DataFrame(
+            {
+                "original_hash_counts_HM-1": [1.0],
+                "original_hash_counts_HM-2": [2.0],
+            },
+            index=["c1"],
+        ),
+        var=pd.DataFrame(index=pd.Index(list(base.markers) + ["HM"], name="marker_id")),
+    )
+    adata = add_panel_information(adata, combo)
+    set_sample_calling_collapsed(adata, True)
+
+    diff = PNAAntibodyPanelDiff(hashing_panel, hashing_new)
+    assert diff.collapsed_hashing_marker_id_mapping() == {"HM": "NEW"}
+    assert diff.edgelist_marker_id_mapping(collapsed=True)["HM"] == "NEW"
+    assert diff.edgelist_marker_id_mapping(collapsed=True)["HM-1"] == "NEW-1"
+
+    upgraded = diff.upgrade_adata(adata)
+    assert "HM" not in upgraded.var.index
+    assert "NEW" in upgraded.var.index
+    assert "original_hash_counts_HM-1" not in upgraded.obs.columns
+    assert "original_hash_counts_NEW-1" in upgraded.obs.columns
+    assert upgraded.obs["original_hash_counts_NEW-1"].tolist() == [1.0]
+    assert upgraded.obs["original_hash_counts_NEW-2"].tolist() == [2.0]
+    reconstructed = PNAAntibodyPanelCombination.from_adata(upgraded)
+    assert reconstructed.hashing_panels is not None
+    assert list(reconstructed.hashing_panels[0].df.index) == ["NEW-1", "NEW-2"]
+
+    edgelist = pl.DataFrame({"marker_1": ["HM", "MarkerA"], "marker_2": ["HM", "HM-1"]})
+    collapsed_edges = _apply_edgelist_marker_id_mapping(diff, edgelist, collapsed=True)
+    assert collapsed_edges["marker_1"].to_list() == ["NEW", "MarkerA"]
+    assert collapsed_edges["marker_2"].to_list() == ["NEW", "NEW-1"]
+
+
+def test_upgrade_adata_rejects_hashing_hash_group_change(panel, hashing_panel):
+    """Hashing patch bumps cannot change the -<digits> suffix."""
+    hashing_new = _renamed_hashing_panel(hashing_panel, {"HM-1": "HM-9"})
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=pd.Index(list(panel.markers), name="marker_id")),
+    )
+    adata = add_panel_information(
+        adata, PNAAntibodyPanelCombination([panel.partial_panels()[0], hashing_panel])
+    )
+    set_sample_calling_collapsed(adata, True)
+    with pytest.raises(ValueError, match="hash group suffix"):
+        PNAAntibodyPanelDiff(hashing_panel, hashing_new).upgrade_adata(adata)
+
+
+def test_upgrade_adata_rejects_inconsistent_hashing_base_rename(hashing_panel):
+    """All hashing ids that collapse to the same base must keep one new base."""
+    hashing_new = _renamed_hashing_panel(hashing_panel, {"HM-1": "NEW-1"})
+    with pytest.raises(ValueError, match="multiple names"):
+        PNAAntibodyPanelDiff(
+            hashing_panel, hashing_new
+        ).collapsed_hashing_marker_id_mapping()
+
+
+def test_edgelist_marker_id_mapping_renames_marker_columns(panel_df):
+    """Patch bumps that rename marker_id rewrite edgelist marker columns."""
+    meta_old = AntibodyPanelMetadata(
+        name="rename-panel", version="1.0.0", product="test-product"
+    )
+    meta_new = AntibodyPanelMetadata(
+        name="rename-panel", version="1.0.1", product="test-product"
+    )
+    panel_old = PartialPNAAntibodyPanel(panel_df.copy(), meta_old)
+    df_new = panel_df.copy().rename(index={"marker1": "marker1-renamed"})
+    panel_new = PartialPNAAntibodyPanel(df_new, meta_new)
+
+    edgelist = pl.DataFrame(
+        {
+            "marker_1": ["marker1", "marker2"],
+            "marker_2": ["marker3", "marker1"],
+            "component": ["c1", "c1"],
+        }
+    )
+    diff = PNAAntibodyPanelDiff(panel_old, panel_new)
+    assert diff.marker_id_mapping() == {"marker1": "marker1-renamed"}
+    upgraded = _apply_edgelist_marker_id_mapping(diff, edgelist)
+    assert upgraded["marker_1"].to_list() == ["marker1-renamed", "marker2"]
+    assert upgraded["marker_2"].to_list() == ["marker3", "marker1-renamed"]
 
 
 def test_panel_from_pxl(pxl_file):

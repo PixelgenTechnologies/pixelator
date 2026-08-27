@@ -410,6 +410,11 @@ def test_sample_calling(sample_hashed_pixel_files, tmp_path):
                 )
                 == set()
             )
+            assert dehashed_adata.uns["sample_calling"]["collapsed"] is True
+            reconstructed = PNAAntibodyPanelCombination.from_adata(dehashed_adata)
+            assert set(reconstructed.markers) == set(
+                PNAAntibodyPanelCombination.from_pxl_dataset(pxl).markers
+            )
 
 
 @pytest.mark.slow

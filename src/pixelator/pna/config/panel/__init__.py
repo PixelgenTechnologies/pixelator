@@ -43,7 +43,11 @@ from .partial import (
     PNABasePanel,
     PNASampleHashingPanel,
 )
-from .utils import sample_hashing_mask
+from .utils import (
+    collapsed_hashing_marker_id,
+    sample_hashing_mask,
+    split_hashing_marker_id,
+)
 
 if TYPE_CHECKING:
     # Deprecated alias of :class:`PartialPNAAntibodyPanel` (warns on runtime access).
@@ -66,6 +70,8 @@ __all__ = [
     "panel_from_csv",
     "panel_from_pxl_dataset",
     "sample_hashing_mask",
+    "split_hashing_marker_id",
+    "collapsed_hashing_marker_id",
 ]
 
 
