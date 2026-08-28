@@ -8,7 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
+
+### Changed
+- `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
+- `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
+  recovery path. When the column is absent, sample calling skips it and graph molecule
+  statistics use the number of edges.
+- Refactor `pixelator.common.utils.__init__.py`
+
+### Deprecated
+- `PNAPixelDataset.precomputed_layouts()` is deprecated. Use `layouts()` to
+  compute Layouts on the fly. The method still reads a stored `layouts` table
+  when one exists.
 
 ### Removed
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
@@ -21,14 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `map_working_to_original_umi_names` round-trip has been removed. The filtered edgelist is now
   passed directly to native community detection, and the recovered components are unchanged.
 
-### Changed
-- `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
-- `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
-  recovery path. When the column is absent, sample calling skips it and graph molecule
-  statistics use the number of edges.
-- Refactor `pixelator.common.utils.__init__.py`
-
 ### Fixed
+- `coarsened_pmds_layout` sizes PMDS pivots from the full graph when Leiden
+  yields too few communities, so a valid low `pivots` no longer fails
+  `pmds_layout`'s `0.2 * n` lower bound.
 - The default number of cores and the fallbacks used when `--cores` is not set now respect the
   CPU affinity mask (via `os.process_cpu_count()` or `os.sched_getaffinity()`) and the cgroup
   CPU bandwidth quota (`docker run --cpus`, Kubernetes `limits.cpu`), taking the most restrictive
