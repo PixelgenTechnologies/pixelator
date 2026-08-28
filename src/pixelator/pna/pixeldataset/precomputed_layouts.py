@@ -18,7 +18,13 @@ from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
 
 class PreComputedLayouts:
-    """Representation of precomputed layouts.
+    """Representation of precomputed layouts stored in a PXL file.
+
+    .. deprecated:: Unreleased
+        Use :class:`~pixelator.pna.pixeldataset.layouts.Layouts` from
+        :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.layouts` instead.
+        This class reads a stored ``layouts`` table when one exists, and will
+        be removed in a future release.
 
     This contains precomputed layouts for one or more components.
     """

@@ -33,6 +33,7 @@ from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
 from pixelator.common.graph.backends.protocol import (
+    DEFAULT_LAYOUT_ALGORITHM,
     Edge,
     EdgeSequence,
     GraphBackend,
@@ -295,7 +296,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def _layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         random_seed: Optional[int] = None,
         **kwargs,
     ) -> pd.DataFrame:
@@ -310,31 +311,33 @@ class NetworkXGraphBackend(GraphBackend):
         if not self._raw:
             raise ValueError("Trying to get layout for empty Graph instance.")
         raw = self._raw  # type: nx.Graph
+        # Public callers use random_seed=; algorithms take seed=. Accept both.
+        seed = kwargs.pop("seed", random_seed)
 
         if layout_algorithm == "kamada_kawai":
             layout_inst = nx.kamada_kawai_layout(
-                raw, pos=nx.random_layout(raw, seed=random_seed)
+                raw, pos=nx.random_layout(raw, seed=seed)
             )
         if layout_algorithm == "kamada_kawai_3d":
             layout_inst = nx.kamada_kawai_layout(
-                raw, pos=nx.random_layout(raw, seed=random_seed, dim=3), dim=3
+                raw, pos=nx.random_layout(raw, seed=seed, dim=3), dim=3
             )
         if layout_algorithm == "fruchterman_reingold":
-            layout_inst = nx.spring_layout(raw, seed=random_seed)
+            layout_inst = nx.spring_layout(raw, seed=seed)
         if layout_algorithm == "fruchterman_reingold_3d":
-            layout_inst = nx.spring_layout(raw, dim=3, seed=random_seed)
+            layout_inst = nx.spring_layout(raw, dim=3, seed=seed)
         if layout_algorithm == "pmds":
-            layout_inst = pmds_layout(raw, seed=random_seed, **kwargs)
+            layout_inst = pmds_layout(raw, seed=seed, **kwargs)
         if layout_algorithm == "pmds_3d":
-            layout_inst = pmds_layout(raw, dim=3, seed=random_seed, **kwargs)
+            layout_inst = pmds_layout(raw, dim=3, seed=seed, **kwargs)
         if layout_algorithm == "wpmds_3d":
             layout_inst = pmds_layout(
-                raw, dim=3, weights="prob_dist", seed=random_seed, **kwargs
+                raw, dim=3, weights="prob_dist", seed=seed, **kwargs
             )
         if layout_algorithm == "coarsened_pmds_3d":
-            layout_inst = coarsened_pmds_layout(raw, seed=random_seed, **kwargs)
+            layout_inst = coarsened_pmds_layout(raw, seed=seed, **kwargs)
         if layout_algorithm == "spectral_3d":
-            layout_inst = spectral_layout(raw, dim=3, seed=random_seed, **kwargs)
+            layout_inst = spectral_layout(raw, dim=3, seed=seed, **kwargs)
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
@@ -381,7 +384,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
@@ -873,6 +876,24 @@ def pmds_layout(
     return coordinates
 
 
+def _pmds_layout_normalized(
+    g: nx.Graph,
+    dim: int,
+    pivots: int,
+    seed: Optional[int],
+) -> Dict[Any, np.ndarray]:
+    """Run PMDS on ``g`` and normalize coordinates like coarsened PMDS."""
+    nodes = list(g.nodes)
+    n = len(nodes)
+    pmds_pivots = min(pivots, n)
+    if pmds_pivots >= n and n > dim:
+        pmds_pivots = n - 1
+    coords = pmds_layout(g, dim=dim, pivots=pmds_pivots, seed=seed)
+    xyz = np.vstack([coords[node] for node in nodes])
+    xyz = normalize_layout_coordinates(xyz)
+    return {nodes[i]: xyz[i] for i in range(len(nodes))}
+
+
 def coarsened_pmds_layout(
     g: nx.Graph,
     dim: int = 3,
@@ -904,6 +925,9 @@ def coarsened_pmds_layout(
         their coordinates with a weighted average of their neighbors' coordinates + some random
         jitter (`jitter_sd`).
 
+    When the graph has fewer nodes than ``pivots``, or Leiden produces too few
+    communities to embed, the layout falls back to PMDS on the original graph.
+
     Args:
         g: A connected NetworkX graph.
         dim: Number of output dimensions (default 3).
@@ -924,7 +948,7 @@ def coarsened_pmds_layout(
         ValueError: If the graph is directed.
         ValueError: If the dim is not 2 or 3.
         ValueError: If the resolution is not between 0.01 and 10.
-        ValueError: If pivots is not between 10 and min(#nodes, 1000).
+        ValueError: If pivots is not between 10 and 1000.
         ValueError: If n_iter is not between 1 and 100.
         ValueError: If jitter_sd is not between 0.001 and 0.1.
         ValueError: If weight_edges_by is not "tp" or "crossing_edges".
@@ -937,6 +961,12 @@ def coarsened_pmds_layout(
 
     n_nodes = len(g.nodes)
     n_edges = len(g.edges)
+
+    # Coarsening is for graphs larger than the pivot set. On smaller graphs
+    # the default pivots=200 would previously raise, even though PNA Components
+    # (and filtered subsets) can be well below that size.
+    if pivots >= n_nodes:
+        return _pmds_layout_normalized(g, dim=dim, pivots=n_nodes, seed=seed)
 
     # Normalize resolution parameter to fit PNA graphs
     # Here we use the number of edges to scale the resolution parameter
@@ -965,6 +995,12 @@ def coarsened_pmds_layout(
 
     unique_communities = np.unique(membership)
     n_communities = len(unique_communities)
+
+    if n_communities <= dim:
+        # Size pivots from the full graph, as in the small-graph fallback.
+        # Reusing the coarse-level pivot count can fall below pmds_layout's
+        # 0.2 * n lower bound even when the caller passed a valid pivots.
+        return _pmds_layout_normalized(g, dim=dim, pivots=n_nodes, seed=seed)
 
     community_to_idx = {comm: i for i, comm in enumerate(unique_communities)}
 
@@ -1394,12 +1430,8 @@ def _validate_coarsened_pmds_parameters(
     if not (isinstance(resolution, (float, int)) and 0.01 <= resolution <= 10):
         raise ValueError("resolution must be a float between 0.01 and 10.")
 
-    n_nodes = len(g.nodes)
-    pivots_max = min(n_nodes, 1000)
-    if not (isinstance(pivots, int) and 10 <= pivots <= pivots_max):
-        raise ValueError(
-            f"pivots must be an integer between 10 and {pivots_max} (number of nodes or 1000, whichever is smaller)."
-        )
+    if not (isinstance(pivots, int) and 10 <= pivots <= 1000):
+        raise ValueError("pivots must be an integer between 10 and 1000.")
 
     if not (isinstance(n_iter, int) and 1 <= n_iter <= 100):
         raise ValueError("n_iter must be an integer between 1 and 100.")

@@ -15,23 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `panel_from_pxl_dataset` dispatch to the concrete type or a combination.
 - CLI `--panel` may be repeated so demux/collapse/graph can load several panels
   into one combination.
+- `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
-
-### Removed
-- Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
-  `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
-  use a release prior to 0.31.0 (for example `pip install 'pixelgen-pixelator<0.31.0'`).
-- Removed `pixelator single-cell-pna graph_legacy` command. Use `pixelator single-cell-pna graph` instead.
-- The PNA graph step no longer densifies UMI node ids in Python before community detection.
-  The native `run_hybrid_community_detection` already builds a dense node index internally and
-  returns the original UMIs, so the redundant `create_working_edgelist` /
-  `map_working_to_original_umi_names` round-trip has been removed. The filtered edgelist is now
-  passed directly to native community detection, and the recovered components are unchanged.
-- The single-panel `PNAAntibodyPanel` type as the primary API. Use
-  `PartialPNAAntibodyPanel` (or a typed subclass) for one panel, and
-  `PNAAntibodyPanelCombination` when several panels are used together.
-  `PNAAntibodyPanel` remains as a deprecated alias of `PartialPNAAntibodyPanel`
-  for import compatibility (emits a ``DeprecationWarning`` when accessed).
 
 ### Changed
 - Hashing `marker_id` values must end with `-<digits>` (e.g. `B2M-1`) and must
@@ -55,6 +40,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   recovery path. When the column is absent, sample calling skips it and graph molecule
   statistics use the number of edges.
 - Refactor `pixelator.common.utils.__init__.py`
+
+### Deprecated
+- `PNAPixelDataset.precomputed_layouts()` is deprecated. Use `layouts()` to
+  compute Layouts on the fly. The method still reads a stored `layouts` table
+  when one exists.
+
+### Removed
+- Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
+  `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
+  use a release prior to 0.31.0 (for example `pip install 'pixelgen-pixelator<0.31.0'`).
+- Removed `pixelator single-cell-pna graph_legacy` command. Use `pixelator single-cell-pna graph` instead.
+- The PNA graph step no longer densifies UMI node ids in Python before community detection.
+  The native `run_hybrid_community_detection` already builds a dense node index internally and
+  returns the original UMIs, so the redundant `create_working_edgelist` /
+  `map_working_to_original_umi_names` round-trip has been removed. The filtered edgelist is now
+  passed directly to native community detection, and the recovered components are unchanged.
+- The single-panel `PNAAntibodyPanel` type as the primary API. Use
+  `PartialPNAAntibodyPanel` (or a typed subclass) for one panel, and
+  `PNAAntibodyPanelCombination` when several panels are used together.
+  `PNAAntibodyPanel` remains as a deprecated alias of `PartialPNAAntibodyPanel`
+  for import compatibility (emits a ``DeprecationWarning`` when accessed).
 
 ### Fixed
 - Combining a base panel that omits `sample_hashing` with a hashing panel no
@@ -82,6 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hashing family may not collapse to a name used by another hashing family or
   non-hashing marker. Denoise rebuilds AnnData from the current markers so
   hashing antibodies are not added back.
+- `coarsened_pmds_layout` sizes PMDS pivots from the full graph when Leiden
+  yields too few communities, so a valid low `pivots` no longer fails
+  `pmds_layout`'s `0.2 * n` lower bound.
 - The default number of cores and the fallbacks used when `--cores` is not set now respect the
   CPU affinity mask (via `os.process_cpu_count()` or `os.sched_getaffinity()`) and the cgroup
   CPU bandwidth quota (`docker run --cpus`, Kubernetes `limits.cpu`), taking the most restrictive

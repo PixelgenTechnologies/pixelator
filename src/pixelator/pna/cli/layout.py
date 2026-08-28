@@ -10,7 +10,10 @@ from typing import get_args
 
 import click
 
-from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
+from pixelator.common.graph.backends.protocol import (
+    DEFAULT_LAYOUT_ALGORITHM,
+    SupportedLayoutAlgorithm,
+)
 from pixelator.common.utils import (
     create_output_stage_dir,
     get_sample_name,
@@ -48,8 +51,9 @@ logger = logging.getLogger(__name__)
     "--layout-algorithm",
     required=False,
     multiple=True,
-    default=["coarsened_pmds_3d"],
-    help="Select a layout algorithm to use. This can be specified multiple times to compute multiple layouts. Default: coarsened_pmds_3d",
+    default=[DEFAULT_LAYOUT_ALGORITHM],
+    help="Select a layout algorithm to use. This can be specified multiple times to compute multiple layouts. "
+    f"Default: {DEFAULT_LAYOUT_ALGORITHM}",
     type=click.Choice(get_args(SupportedLayoutAlgorithm)),
 )
 @click.option(

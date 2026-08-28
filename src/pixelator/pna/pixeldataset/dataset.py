@@ -7,16 +7,22 @@ from __future__ import annotations
 
 import copy
 import json
+import warnings
 from functools import cache
 from pathlib import Path
 from typing import Iterable
 
 from anndata import AnnData
 
+from pixelator.common.graph.backends.protocol import (
+    DEFAULT_LAYOUT_ALGORITHM,
+    SupportedLayoutAlgorithm,
+)
 from pixelator.pna.pixeldataset.config import PixelDatasetConfig
 from pixelator.pna.pixeldataset.edgelist import Edgelist
 from pixelator.pna.pixeldataset.io import PixelDataViewer, PxlFile, Query
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
+from pixelator.pna.pixeldataset.layouts import Layouts
 from pixelator.pna.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pna.pixeldataset.proximity import Proximity
 from pixelator.pna.utils import normalize_input_to_set
@@ -271,6 +277,11 @@ class PNAPixelDataset:
     ) -> PreComputedLayouts:
         """Return the PreComputedLayouts instance for the dataset.
 
+        .. deprecated:: Unreleased
+            Use :meth:`layouts` to compute Layouts on the fly instead. This
+            method still reads a stored ``layouts`` table when one exists, and
+            will be removed in a future release.
+
         Args:
             add_marker_counts: If True, add the marker counts to the precomputed layouts.
             add_spherical_norm: If True, add spherical coordinates to dataframe This will be
@@ -279,12 +290,82 @@ class PNAPixelDataset:
         Returns:
             The PreComputedLayouts instance for the dataset.
         """
+        warnings.warn(
+            "precomputed_layouts() is deprecated; use layouts() to compute "
+            "Layouts on the fly. In the future this method will be removed.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return PreComputedLayouts(
             self.view,
             components=self._active_components,
             adata_helper=self._adata_helper,
             add_marker_counts=add_marker_counts,
             add_spherical_norm=add_spherical_norm,
+        )
+
+    def layouts(
+        self,
+        algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
+        add_marker_counts: bool = True,
+        add_spherical_norm: bool = False,
+        random_seed: int | None = None,
+        **kwargs,
+    ) -> Layouts:
+        """Return Layouts for the active Components.
+
+        A Layout places each node of a Component graph in 2D or 3D so
+        you can visualize the cell and for example color nodes by marker.
+        Computation runs when you materialize the result (for example
+        :meth:`~pixelator.pna.pixeldataset.layouts.Layouts.to_df`).
+        This replaces the deprecated :meth:`precomputed_layouts`.
+
+        Choose a Layout algorithm with ``algorithm``. The default
+        ``coarsened_pmds_3d`` is the usual choice for PNA: it is fast on large
+        Components and produces a 3D Layout suitable for plotting.
+
+        Available Layout algorithms:
+
+        - ``coarsened_pmds_3d`` (default): 3D layout algorithm that uses a
+          pre-coarsening step. Fast and robust to structural artifacts.
+        - ``wpmds_3d``: 3D weighted PMDS; a good alternative when you want a
+          full (non-coarsened) PMDS Layout.
+        - ``pmds`` / ``pmds_3d``: 2D or 3D PMDS without coarsening.
+        - ``spectral_3d``: 3D spectral Layout. Extremely fast, generates high
+          quality layouts but can be sensitive to structural artifacts.
+        - ``fruchterman_reingold`` / ``fruchterman_reingold_3d``: force-directed;
+          slower on large Components.
+        - ``kamada_kawai`` / ``kamada_kawai_3d``: force-directed; slower on
+          large Components.
+
+        For most cases prefer ``coarsened_pmds_3d``, ``wpmds_3d``, or ``pmds`` (in that order).
+        On PNA data they are faster and produce better results than the
+        force-directed algorithms.
+
+        .. code-block:: python
+
+                df = pxl_dataset.filter(components=component_id).layouts().to_df()
+
+        Args:
+            algorithm: Layout algorithm to use. Defaults to
+                ``DEFAULT_LAYOUT_ALGORITHM`` (``coarsened_pmds_3d``).
+            add_marker_counts: If True, add per-node marker counts.
+            add_spherical_norm: If True, add spherical unit-vector columns.
+            random_seed: Seed for Layout algorithms with a stochastic element.
+            **kwargs: Forwarded to the underlying Layout algorithm.
+
+        Returns:
+            A Layouts collection for the active Components.
+        """
+        return Layouts(
+            self.view,
+            components=self._active_components,
+            adata_helper=self._adata_helper,
+            algorithm=algorithm,
+            add_marker_counts=add_marker_counts,
+            add_spherical_norm=add_spherical_norm,
+            random_seed=random_seed,
+            algorithm_kwargs=kwargs,
         )
 
     def metadata(
@@ -317,7 +398,7 @@ class PNAPixelDataset:
         """Filter the dataset to only include the specified samples, components, and markers.
 
         Filtering by components will apply to all data modalities (i.e. adata, edgelist, proximity,
-        and precomputed layouts).
+        layouts, and precomputed layouts).
         However, filtering by markers will only apply to the adata and proximity data modalities,
         since filtering
         by markers in the edgelist and precomputed layouts will cause components to break up.

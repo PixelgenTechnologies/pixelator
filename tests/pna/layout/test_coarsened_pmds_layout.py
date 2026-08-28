@@ -29,9 +29,9 @@ WEIGHT_MODES = ["tp", "crossing_edges"]
 def layout_graph() -> nx.Graph:
     """A connected synthetic cell graph with nodes on a unit sphere.
 
-    ``coarsened_pmds_layout`` requires a connected, undirected graph with at
-    least ``pivots`` (default 200) nodes, so we generate a larger graph and keep
-    its largest connected component.
+    ``coarsened_pmds_layout`` coarsens large graphs; tests of neighborhood
+    preservation use a graph bigger than the default pivot count so the
+    coarsening path is exercised.
     """
     edgelist = generate_cell_graph(n_nodes=800, n_edges=2500, min_neighbors=25, rng=42)
     graph = nx.Graph()
@@ -57,6 +57,50 @@ def _sample_non_edges(
         if not graph.has_edge(a, b):
             non_edges.append((a, b))
     return non_edges
+
+
+def test_coarsened_pmds_layout_accepts_graphs_smaller_than_default_pivots():
+    """Default pivots=200 must not reject a connected graph with fewer nodes."""
+    graph = nx.cycle_graph(80)
+    assert graph.number_of_nodes() < 200
+
+    layout = coarsened_pmds_layout(graph, seed=42)
+
+    assert set(layout.keys()) == set(graph.nodes())
+    coords = np.vstack([layout[node] for node in graph.nodes()])
+    assert coords.shape == (graph.number_of_nodes(), 3)
+    assert np.isfinite(coords).all()
+
+
+def test_coarsened_pmds_layout_falls_back_when_leiden_yields_too_few_communities(
+    monkeypatch,
+):
+    """Valid low pivots must still work when coarsening cannot embed.
+
+    ``coarsened_pmds_layout`` allows ``pivots`` down to 10, but ``pmds_layout``
+    requires at least ``0.2 * n_nodes``. The too-few-communities fallback must
+    size pivots from the full graph, not reuse the coarse-level pivot count.
+    """
+    n_nodes = 80
+    graph = nx.cycle_graph(n_nodes)
+    pivots = 10
+    assert pivots < 0.2 * n_nodes
+
+    def _single_community(edges, **kwargs):
+        nodes = {u for u, v, _weight in edges} | {v for u, v, _weight in edges}
+        return 1.0, {node: 0 for node in nodes}
+
+    monkeypatch.setattr(
+        "pixelator.common.graph.backends.implementations._networkx.leiden",
+        _single_community,
+    )
+
+    layout = coarsened_pmds_layout(graph, pivots=pivots, seed=42)
+
+    assert set(layout.keys()) == set(graph.nodes())
+    coords = np.vstack([layout[node] for node in graph.nodes()])
+    assert coords.shape == (n_nodes, 3)
+    assert np.isfinite(coords).all()
 
 
 @pytest.mark.parametrize("weight_edges_by", WEIGHT_MODES)
