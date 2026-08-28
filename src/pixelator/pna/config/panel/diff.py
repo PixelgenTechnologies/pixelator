@@ -19,12 +19,12 @@ from pixelator.pna.config.panel.combination import PNAAntibodyPanelCombination
 from pixelator.pna.config.panel.partial import PartialPNAAntibodyPanel
 from pixelator.pna.config.panel.utils import (
     collapsed_hashing_marker_id,
-    sample_hashing_mask,
     split_hashing_marker_id,
 )
-from pixelator.pna.utils.sample_calling_uns import sample_calling_hashing_collapsed
-
-_ORIGINAL_HASH_COUNTS_PREFIX = "original_hash_counts_"
+from pixelator.pna.utils.sample_calling_uns import (
+    ORIGINAL_HASH_COUNTS_PREFIX,
+    sample_calling_hashing_collapsed,
+)
 
 
 class PNAAntibodyPanelDiff:
@@ -203,21 +203,9 @@ class PNAAntibodyPanelDiff:
             mapping[str(old)] = str(new)
         return mapping
 
-    def _panel_1_hashing_marker_ids(self) -> set[str]:
-        """Return marker ids on ``panel_1`` flagged by the ``sample_hashing`` column.
-
-        Names such as ``PD-1`` or ``TIM-3`` are not hashing markers unless
-        that column is true for the row.
-        """
-        df = self.panel_1.df
-        if "sample_hashing" not in df.columns:
-            return set()
-        mask = sample_hashing_mask(df["sample_hashing"])
-        return {str(marker_id) for marker_id in df.index[mask]}
-
     def _iter_hashing_marker_id_pairs(self) -> list[tuple[str, str]]:
         """Return ``(panel_1, panel_2)`` marker ids for ``sample_hashing`` clones."""
-        hashing_ids = self._panel_1_hashing_marker_ids()
+        hashing_ids = self.panel_1.hashing_marker_ids
         if not hashing_ids or "marker_id" not in self.joined.columns:
             return []
         new_col = (
@@ -302,13 +290,13 @@ class PNAAntibodyPanelDiff:
 
     def _rename_original_hash_counts(self, adata: AnnData) -> None:
         """Rename ``original_hash_counts_{id}`` columns when hashing ids change."""
-        hashing_ids = self._panel_1_hashing_marker_ids()
+        hashing_ids = self.panel_1.hashing_marker_ids
         rename: dict[str, str] = {}
         for old, new in self.marker_id_mapping().items():
             if old not in hashing_ids or old == new:
                 continue
-            old_col = f"{_ORIGINAL_HASH_COUNTS_PREFIX}{old}"
-            new_col = f"{_ORIGINAL_HASH_COUNTS_PREFIX}{new}"
+            old_col = f"{ORIGINAL_HASH_COUNTS_PREFIX}{old}"
+            new_col = f"{ORIGINAL_HASH_COUNTS_PREFIX}{new}"
             if old_col not in adata.obs.columns:
                 continue
             if new_col in adata.obs.columns:
@@ -344,10 +332,13 @@ class PNAAntibodyPanelDiff:
         share the same product and only patch-compatible differences exist.
 
         Original panel snapshots in ``uns`` are always updated. ``var`` is
-        patched only for clones that are present there. After sample calling
-        (``uns["sample_calling"]["collapsed"]``), hashing clones are expected
-        to be absent from ``var``; missing hashing clones then do not raise.
-        Missing non-hashing clones still raise.
+        patched only for clones that are present there. After sample calling,
+        hashing clones are expected to be absent from ``var``; missing hashing
+        clones then do not raise. That layout is taken from
+        ``uns["sample_calling"]["collapsed"]`` when the key is present, and
+        otherwise inferred from ``original_hash_counts_*`` on ``obs`` or from
+        hashing clones missing in ``var``. Missing non-hashing clones
+        still raise.
         Hashing ``marker_id`` bumps may only change the base name
         (``B2M-1`` → ``NEWB2MNAME-1``), never the hash group. That rename is
         applied to ``original_hash_counts_*`` and, when collapsed, to the
@@ -421,6 +412,7 @@ class PNAAntibodyPanelDiff:
         # update the anndata var table
         org_var_shape = adata.var.shape
         org_index = adata.var.index.name
+        collapsed = sample_calling_hashing_collapsed(adata)
         adata.var.reset_index(inplace=True)
         panel1_pl = self.panel_1.to_polars()
         panel1_row_identifiers = list(
@@ -431,8 +423,7 @@ class PNAAntibodyPanelDiff:
             adata.var[self.join_on_columns].itertuples(index=False, name=None)
         )
         var_id_to_pos = {ident: i for i, ident in enumerate(var_identifiers)}
-        collapsed = sample_calling_hashing_collapsed(adata)
-        hashing_marker_ids = self._panel_1_hashing_marker_ids()
+        hashing_marker_ids = self.panel_1.hashing_marker_ids
         panel_rows_present: list[int] = []
         row_indexes_in_var: list[int] = []
         missing_non_hashing: list[tuple] = []
@@ -451,9 +442,10 @@ class PNAAntibodyPanelDiff:
             raise ValueError(
                 "The provided AnnData object is missing panel clones required "
                 "for a 1:1 var upgrade. After sample calling, hashing clones "
-                "are expected to be absent from var when "
-                "uns['sample_calling']['collapsed'] is set and that is not an "
-                "error; missing non-hashing clones still raise. "
+                "are expected to be absent from var when the layout is "
+                "collapsed (uns['sample_calling']['collapsed'], or inferred "
+                "from missing hashing clones / original_hash_counts_*) and "
+                "that is not an error; missing non-hashing clones still raise. "
                 f"Missing sequence pairs: {missing_non_hashing[:5]}"
             )
 

@@ -25,7 +25,10 @@ from pixelator.pna.config.panel import (
     split_hashing_marker_id,
 )
 from pixelator.pna.pixeldataset import read
-from pixelator.pna.utils.sample_calling_uns import set_sample_calling_collapsed
+from pixelator.pna.utils.sample_calling_uns import (
+    sample_calling_hashing_collapsed,
+    set_sample_calling_collapsed,
+)
 
 
 @pytest.fixture
@@ -212,7 +215,7 @@ def test_hyphenated_biological_markers_are_not_hashing_by_name():
     )
     diff = PNAAntibodyPanelDiff(panel_old, panel_new)
 
-    assert diff._panel_1_hashing_marker_ids() == {"B2M-1", "B2M-2"}
+    assert panel_old.hashing_marker_ids == {"B2M-1", "B2M-2"}
     assert diff.marker_id_mapping()["PD-1"] == "PD-9"
     assert "PD-1" not in diff.collapsed_hashing_marker_id_mapping()
     assert "TIM-3" not in diff.collapsed_hashing_marker_id_mapping()
@@ -266,6 +269,56 @@ def test_combination_keeps_hashing_flags_when_base_omits_sample_hashing(
     assert hashing_col.loc[["HM-1", "HM-2"]].all()
     assert not hashing_col.loc[panel_df.index].any()
     assert combo.df[sample_hashing_mask(hashing_col)].index.tolist() == ["HM-1", "HM-2"]
+    assert combo.hashing_marker_ids == {"HM-1", "HM-2"}
+
+
+def test_hashing_marker_ids_from_sample_hashing_column_on_base_panel():
+    """v2-style combined CSVs flag hashing on the base panel, not a hashing member."""
+    combo = PNAAntibodyPanelCombination(_mixed_hyphen_name_panel())
+    assert combo.hashing_panels is None
+    assert combo.hashing_marker_ids == {"B2M-1", "B2M-2"}
+
+
+def test_addon_panel_rejects_hashing_markers_with_string_flags(panel_df):
+    """Addon validation must treat 'yes' as hashing, not any non-empty string."""
+    hashing_addon = panel_df.copy()
+    hashing_addon["sample_hashing"] = ["no", "yes", "no"]
+    with pytest.raises(AssertionError, match="cannot include hashing markers"):
+        PNAAddonPanel(
+            hashing_addon,
+            AntibodyPanelMetadata(
+                name="addon-hash",
+                version="0.0.0",
+                panel_type=PanelType.ADDON,
+            ),
+        )
+
+    non_hashing_addon = panel_df.copy()
+    non_hashing_addon["sample_hashing"] = "no"
+    addon = PNAAddonPanel(
+        non_hashing_addon,
+        AntibodyPanelMetadata(
+            name="addon-ok",
+            version="0.0.0",
+            panel_type=PanelType.ADDON,
+        ),
+    )
+    assert list(addon.df.index) == list(panel_df.index)
+
+
+def test_hashing_panel_rejects_mixed_string_sample_hashing_flags(panel_df):
+    """A hashing panel must be all hashing after yes/no normalization."""
+    mixed = panel_df.copy()
+    mixed["sample_hashing"] = ["yes", "no", "yes"]
+    with pytest.raises(AssertionError, match="must be 'yes'"):
+        PNASampleHashingPanel(
+            mixed,
+            AntibodyPanelMetadata(
+                name="hash-mixed",
+                version="0.0.0",
+                panel_type=PanelType.SAMPLE_HASHING,
+            ),
+        )
 
 
 def test_panel_combination_classifies_hashing_panel_regardless_of_order(
@@ -778,6 +831,7 @@ def test_upgrade_adata_skips_hashing_rows_when_collapsed(panel, hashing_panel):
         ),
         combo,
     )
+    set_sample_calling_collapsed(uncollapsed, False)
     with pytest.raises(ValueError, match="missing panel clones"):
         PNAAntibodyPanelDiff(hashing_panel, hashing_new).upgrade_adata(uncollapsed)
 
@@ -787,6 +841,64 @@ def test_upgrade_adata_skips_hashing_rows_when_collapsed(panel, hashing_panel):
     assert reconstructed.hashing_panels is not None
     assert reconstructed.hashing_panels[0].version == "0.1.1"
     assert reconstructed.hashing_panels[0].df.loc["HM-1", "note"] == "updated"
+
+
+def test_upgrade_adata_skips_hashing_rows_when_collapsed_inferred(panel, hashing_panel):
+    """Legacy sample-called files without the collapsed flag still skip hashing clones."""
+    base = panel.partial_panels()[0]
+    combo = PNAAntibodyPanelCombination([base, hashing_panel])
+    hashing_new_df = hashing_panel.df.copy()
+    hashing_new_df["note"] = "updated"
+    hashing_new = PNASampleHashingPanel(
+        hashing_new_df,
+        hashing_panel.metadata.model_copy(update={"version": "0.1.1"}),
+    )
+
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=pd.Index(list(combo.markers), name="marker_id")),
+    )
+    adata = add_panel_information(adata, combo)
+    adata = adata[:, list(base.markers)].copy()
+    assert "sample_calling" not in adata.uns
+    assert sample_calling_hashing_collapsed(adata) is True
+
+    upgraded = PNAAntibodyPanelDiff(hashing_panel, hashing_new).upgrade_adata(adata)
+    assert "HM-1" not in upgraded.var.index
+    reconstructed = PNAAntibodyPanelCombination.from_adata(upgraded)
+    assert reconstructed.hashing_panels is not None
+    assert reconstructed.hashing_panels[0].version == "0.1.1"
+    assert reconstructed.hashing_panels[0].df.loc["HM-1", "note"] == "updated"
+
+
+def test_upgrade_adata_renames_collapsed_hashing_when_inferred_from_hash_counts(
+    panel, hashing_panel
+):
+    """original_hash_counts_* infers collapsed layout for hashing id remaps."""
+    base = panel.partial_panels()[0]
+    combo = PNAAntibodyPanelCombination([base, hashing_panel])
+    hashing_new = _renamed_hashing_panel(
+        hashing_panel, {"HM-1": "NEW-1", "HM-2": "NEW-2"}
+    )
+
+    adata = AnnData(
+        obs=pd.DataFrame(
+            {
+                "original_hash_counts_HM-1": [1.0],
+                "original_hash_counts_HM-2": [2.0],
+            },
+            index=["c1"],
+        ),
+        var=pd.DataFrame(index=pd.Index(list(base.markers) + ["HM"], name="marker_id")),
+    )
+    adata = add_panel_information(adata, combo)
+    assert sample_calling_hashing_collapsed(adata) is True
+
+    upgraded = PNAAntibodyPanelDiff(hashing_panel, hashing_new).upgrade_adata(adata)
+    assert "HM" not in upgraded.var.index
+    assert "NEW" in upgraded.var.index
+    assert "original_hash_counts_NEW-1" in upgraded.obs.columns
+    assert upgraded.obs["original_hash_counts_NEW-1"].tolist() == [1.0]
 
 
 def test_upgrade_adata_raises_when_collapsed_but_biological_clone_missing(
@@ -809,6 +921,16 @@ def test_upgrade_adata_raises_when_collapsed_but_biological_clone_missing(
 
     with pytest.raises(ValueError, match="missing panel clones"):
         PNAAntibodyPanelDiff(base, base_new).upgrade_adata(adata)
+
+    inferred = add_panel_information(
+        AnnData(
+            obs=pd.DataFrame(index=["c1"]),
+            var=pd.DataFrame(index=pd.Index(remaining, name="marker_id")),
+        ),
+        combo,
+    )
+    with pytest.raises(ValueError, match="missing panel clones"):
+        PNAAntibodyPanelDiff(base, base_new).upgrade_adata(inferred)
 
 
 def _renamed_hashing_panel(

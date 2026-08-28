@@ -62,8 +62,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (e.g. `B2M-1`…`B2M-8` become `B2M`) but still stores the original panels in
   `uns`. The upgrade used to require every panel clone to still be in `var`.
   It now records `uns["sample_calling"]["collapsed"]` and treats missing
-  hashing clones as expected; missing biological clones still error. The
-  same bump updates edgelist `marker_1` / `marker_2`, proximity
+  hashing clones as expected; missing biological clones still error. Legacy
+  sample-called files that omit the flag are inferred as collapsed when
+  `original_hash_counts_*` columns are present on `obs`, or when hashing
+  clones from the stored panels are absent from `var`.
+  The same bump updates edgelist `marker_1` / `marker_2`, proximity
   `marker_1` / `marker_2`, and layout marker-count columns. A hashing `marker_id`
   may only change its base name (`B2M-1` → `NEWB2MNAME-1`), not the hash-group
   suffix; that rename is applied to `original_hash_counts_*` and the collapsed

@@ -29,6 +29,7 @@ from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
 from pixelator.pna.sample_calling.report import SampleCallingTotalReport
 from pixelator.pna.utils.sample_calling_uns import (
+    ORIGINAL_HASH_COUNTS_PREFIX,
     SAMPLE_CALLING_COLLAPSED_KEY,
     SAMPLE_CALLING_UNS_KEY,
     sample_calling_hashing_collapsed,
@@ -212,10 +213,11 @@ def _add_original_hash_counts_to_obs(
     """
     old_anndata_counts = old_adata.to_df()
     for ab in sorted(list(antibodies_for_obs)):
+        column = f"{ORIGINAL_HASH_COUNTS_PREFIX}{ab}"
         if ab in old_anndata_counts.columns:
-            old_adata.obs[f"original_hash_counts_{ab}"] = old_anndata_counts[ab].values
+            old_adata.obs[column] = old_anndata_counts[ab].values
         else:
-            old_adata.obs[f"original_hash_counts_{ab}"] = 0
+            old_adata.obs[column] = 0
 
 
 def _build_post_sample_calling_anndata(
@@ -597,6 +599,7 @@ def warn_if_undetermined_has_high_enrichment(
 
 
 __all__ = [
+    "ORIGINAL_HASH_COUNTS_PREFIX",
     "SAMPLE_CALLING_COLLAPSED_KEY",
     "SAMPLE_CALLING_UNS_KEY",
     "collect_hash_info",

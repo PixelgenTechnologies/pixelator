@@ -21,7 +21,10 @@ except ImportError:
 from pixelator.common.config.panel import AntibodyPanelMetadata
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
-from pixelator.pna.config.panel.utils import _resolve_panel_source_from_pxl
+from pixelator.pna.config.panel.utils import (
+    _resolve_panel_source_from_pxl,
+    sample_hashing_mask,
+)
 
 if TYPE_CHECKING:
     from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
@@ -107,6 +110,21 @@ class PNAPanel(ABC):
     def markers(self) -> List[str]:
         """Return the list of unique markers in the panel."""
         return list(self.df.index.unique())
+
+    @property
+    def hashing_marker_ids(self) -> set[str]:
+        """Return ``marker_id`` values flagged by the ``sample_hashing`` column.
+
+        Names such as ``PD-1`` or ``TIM-3`` are not hashing markers unless
+        that column is true for the row. Combinations use the concatenated
+        ``df``, so hashing rows on a base panel and members of a hashing
+        panel are both included.
+        """
+        df = self.df
+        if "sample_hashing" not in df.columns:
+            return set()
+        mask = sample_hashing_mask(df["sample_hashing"])
+        return {str(marker_id) for marker_id in df.index[mask]}
 
     @property
     def size(self) -> int:

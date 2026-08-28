@@ -20,6 +20,7 @@ from pixelator.common.config.panel import AntibodyPanelMetadata, PanelType
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 from pixelator.pna.config.panel.base import PNAPanel
+from pixelator.pna.config.panel.utils import sample_hashing_mask
 
 
 class PartialPNAAntibodyPanel(PNAPanel):
@@ -308,6 +309,33 @@ class PNAAddonPanel(PartialPNAAntibodyPanel):
 
     _panel_type = PanelType.ADDON
 
+    @classmethod
+    def validate_antibody_panel(
+        cls, panel_df: pd.DataFrame, validate_types: bool = True
+    ) -> list[str]:
+        """Validate panel schema plus the constraint that no rows are sample-hashing markers.
+
+        Args:
+            panel_df: Panel dataframe to validate.
+            validate_types: If True, also check column dtypes.
+
+        Returns:
+            Validation error messages; empty means the panel is valid. Includes
+            parent checks and an error if any row has ``sample_hashing`` set.
+        """
+        has_hashing = (
+            "sample_hashing" in panel_df.columns
+            and sample_hashing_mask(panel_df["sample_hashing"]).any()
+        )
+        return super().validate_antibody_panel(panel_df, validate_types) + (
+            [
+                "Addon panels cannot include hashing markers; "
+                "put those markers in a hashing panel"
+            ]
+            if has_hashing
+            else []
+        )
+
 
 class PNASampleHashingPanel(PartialPNAAntibodyPanel):
     """Sample-hashing antibody panel for PNA.
@@ -325,7 +353,9 @@ class PNASampleHashingPanel(PartialPNAAntibodyPanel):
     }
 
     @classmethod
-    def validate_antibody_panel(cls, panel_df, validate_types=True):
+    def validate_antibody_panel(
+        cls, panel_df: pd.DataFrame, validate_types: bool = True
+    ) -> list[str]:
         """Validate panel schema plus the sample-hashing column constraint.
 
         Args:
@@ -337,10 +367,13 @@ class PNASampleHashingPanel(PartialPNAAntibodyPanel):
             parent checks and an error when any row has ``sample_hashing`` not
             set.
         """
+        all_hashing = (
+            "sample_hashing" in panel_df.columns
+            and sample_hashing_mask(panel_df["sample_hashing"]).all()
+        )
         return super().validate_antibody_panel(panel_df, validate_types) + (
             []
-            if "sample_hashing" in panel_df.columns
-            and (panel_df["sample_hashing"]).all()
+            if all_hashing
             else [
                 "All entries in `sample_hashing` column must be 'yes' (True) for a sample hashing panel"
             ]
