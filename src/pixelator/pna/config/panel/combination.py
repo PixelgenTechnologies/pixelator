@@ -53,8 +53,9 @@ class PNAAntibodyPanelCombination(PNAPanel):
     differ: :attr:`metadata` is a list, and display fields such as :attr:`name`
     / :attr:`version` join member values with ``" + "``.
 
-    Raises if panels are incompatible (conflicting ``marker_id`` rows or
-    duplicate clone sequences).
+    Raises if panels are incompatible (conflicting ``marker_id`` rows,
+    duplicate clone sequences, or more than one member with the same
+    ``product``, including more than one member with ``product`` unset).
     """
 
     _REQUIRED_COLUMNS = {
@@ -79,7 +80,8 @@ class PNAAntibodyPanelCombination(PNAPanel):
                 (including typed subclasses), or a non-empty sequence of them.
 
         Raises:
-            ValueError: If ``panels`` is empty or members conflict.
+            ValueError: If ``panels`` is empty or members conflict
+                (markers, sequences, or duplicate ``product``).
         """
         self.base_panels = []
         self.hashing_panels = None
@@ -235,6 +237,28 @@ class PNAAntibodyPanelCombination(PNAPanel):
             raise ValueError("Duplicate sequences found in the panel combination.")
         return df
 
+    def _validate_unique_product(self, panel: PartialPNAAntibodyPanel) -> None:
+        """Reject a member whose ``product`` is already used in this combination.
+
+        ``product`` is the panel lineage identity (including ``None`` for an
+        unlabeled panel). A combination may contain at most one member per
+        product, so automatic patch bumps can key members by product alone.
+
+        Args:
+            panel: Candidate member that has not been appended yet.
+
+        Raises:
+            ValueError: If another member already has the same ``product``.
+        """
+        product = panel.metadata.product
+        for existing in self.partial_panels():
+            if existing.metadata.product == product:
+                raise ValueError(
+                    f"Cannot add panel {panel.name!r} with product {product!r}: "
+                    f"panel {existing.name!r} already uses that product in "
+                    "this combination."
+                )
+
     def _append_and_validate(
         self,
         attr: str,
@@ -245,10 +269,11 @@ class PNAAntibodyPanelCombination(PNAPanel):
     ) -> None:
         """Append ``panel`` to member list ``attr``, rolling back on conflict.
 
-        Conflict checks run via :attr:`df` after the append. If they raise,
-        the member list is restored so a failed add leaves the combination
-        unchanged.
+        Product uniqueness is checked before the append. Marker and sequence
+        checks run via :attr:`df` after the append. If they raise, the member
+        list is restored so a failed add leaves the combination unchanged.
         """
+        self._validate_unique_product(panel)
         current = getattr(self, attr)
         created = current is None
         if created:
@@ -274,7 +299,8 @@ class PNAAntibodyPanelCombination(PNAPanel):
                 without a defined type (emits a warning).
 
         Raises:
-            ValueError: If adding the panel creates marker/sequence conflicts.
+            ValueError: If adding the panel creates marker, sequence, or
+                duplicate-product conflicts.
         """
         if type(base_panel) is PartialPNAAntibodyPanel:
             logger.warning(
@@ -291,7 +317,8 @@ class PNAAntibodyPanelCombination(PNAPanel):
             addon_panel: Addon marker panel to append.
 
         Raises:
-            ValueError: If adding the panel creates marker/sequence conflicts.
+            ValueError: If adding the panel creates marker, sequence, or
+                duplicate-product conflicts.
         """
         self._append_and_validate("addon_panels", addon_panel)
 
@@ -302,7 +329,8 @@ class PNAAntibodyPanelCombination(PNAPanel):
             hashing_panel: Sample-hashing panel to append.
 
         Raises:
-            ValueError: If adding the panel creates marker/sequence conflicts.
+            ValueError: If adding the panel creates marker, sequence, or
+                duplicate-product conflicts.
         """
         self._append_and_validate("hashing_panels", hashing_panel)
 
@@ -324,7 +352,8 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
         Raises:
             ValueError: If the panel type is unsupported or conflicts with
-                existing members.
+                existing members (markers, sequences, or duplicate
+                ``product``).
         """
         # Match subclasses before PartialPNAAntibodyPanel; class patterns also
         # match instances of subclasses.
@@ -484,7 +513,8 @@ class PNAAntibodyPanelCombination(PNAPanel):
 
         Raises:
             KeyError: If a multi-panel index is missing its dataframe.
-            ValueError: If the restored panels conflict.
+            ValueError: If the restored panels conflict (markers, sequences,
+                or duplicate ``product``).
         """
         if "num_partial_panels" not in adata.uns:
             panel_type = get_panel_type_from_metadata(

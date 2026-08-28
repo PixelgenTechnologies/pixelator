@@ -145,6 +145,7 @@ def test_combination_marker_helpers_follow_df_after_add_panel(panel_df, hashing_
         AntibodyPanelMetadata(
             name="addon-panel",
             version="0.0.0",
+            product="addon-panel",
             panel_type=PanelType.ADDON,
         ),
     )
@@ -414,6 +415,7 @@ def test_combination_rejects_nested_hashing_ids_across_members():
         AntibodyPanelMetadata(
             name="b2m-nested-hash",
             version="0.1.0",
+            product="b2m-nested-hash",
             panel_type=PanelType.SAMPLE_HASHING,
         ),
     )
@@ -443,10 +445,16 @@ def test_panel_combination_classifies_hashing_panel_regardless_of_order(
 
 def test_combination_rejects_duplicate_sequences(panel_df):
     meta1 = AntibodyPanelMetadata(
-        name="panel-a", version="0.0.0", panel_type=PanelType.BASE
+        name="panel-a",
+        version="0.0.0",
+        product="product-a",
+        panel_type=PanelType.BASE,
     )
     meta2 = AntibodyPanelMetadata(
-        name="panel-b", version="0.0.0", panel_type=PanelType.BASE
+        name="panel-b",
+        version="0.0.0",
+        product="product-b",
+        panel_type=PanelType.BASE,
     )
     with pytest.raises(ValueError, match="Duplicate sequences found"):
         PNAAntibodyPanelCombination(
@@ -459,10 +467,16 @@ def test_combination_rejects_duplicate_sequences(panel_df):
 
 def test_combination_rejects_conflicting_duplicate_marker_id(panel_df):
     meta1 = AntibodyPanelMetadata(
-        name="panel-a", version="0.0.0", panel_type=PanelType.BASE
+        name="panel-a",
+        version="0.0.0",
+        product="product-a",
+        panel_type=PanelType.BASE,
     )
     meta2 = AntibodyPanelMetadata(
-        name="panel-b", version="0.0.0", panel_type=PanelType.BASE
+        name="panel-b",
+        version="0.0.0",
+        product="product-b",
+        panel_type=PanelType.BASE,
     )
     conflicting_df = panel_df.copy()
     conflicting_df.loc["marker1", "sequence_1"] = "TTTT"
@@ -492,7 +506,10 @@ def test_add_panel_methods_roll_back_on_conflict(panel_df):
             PNABasePanel(
                 panel_df.copy(),
                 AntibodyPanelMetadata(
-                    name="panel-b", version="0.0.0", panel_type=PanelType.BASE
+                    name="panel-b",
+                    version="0.0.0",
+                    product="product-b",
+                    panel_type=PanelType.BASE,
                 ),
             )
         )
@@ -519,6 +536,7 @@ def test_add_panel_methods_roll_back_on_conflict(panel_df):
                 AntibodyPanelMetadata(
                     name="hash-bad",
                     version="0.0.0",
+                    product="hash-bad",
                     panel_type=PanelType.SAMPLE_HASHING,
                 ),
             )
@@ -531,7 +549,10 @@ def test_add_panel_methods_roll_back_on_conflict(panel_df):
             PNAAddonPanel(
                 overlapping_seq_df,
                 AntibodyPanelMetadata(
-                    name="addon-bad", version="0.0.0", panel_type=PanelType.ADDON
+                    name="addon-bad",
+                    version="0.0.0",
+                    product="addon-bad",
+                    panel_type=PanelType.ADDON,
                 ),
             )
         )
@@ -545,12 +566,103 @@ def test_add_panel_methods_roll_back_on_conflict(panel_df):
             PNABasePanel(
                 conflicting_df,
                 AntibodyPanelMetadata(
-                    name="panel-c", version="0.0.0", panel_type=PanelType.BASE
+                    name="panel-c",
+                    version="0.0.0",
+                    product="product-c",
+                    panel_type=PanelType.BASE,
                 ),
             )
         )
     assert [p.name for p in combo.base_panels] == ["panel-a"]
     assert list(combo.df.index) == list(panel_df.index)
+
+
+def test_combination_rejects_duplicate_product(panel_df):
+    """Product is the panel lineage; two members cannot share it."""
+    first = PNABasePanel(
+        panel_df,
+        AntibodyPanelMetadata(
+            name="panel-a",
+            version="0.1.0",
+            product="shared-product",
+            panel_type=PanelType.BASE,
+        ),
+    )
+    second_df = pd.DataFrame(
+        {
+            "marker_id": ["extra-1"],
+            "uniprot_id": ["P12345"],
+            "control": [False],
+            "nuclear": [False],
+            "sequence_1": ["AAAA"],
+            "sequence_2": ["TTTT"],
+        }
+    ).set_index("marker_id")
+    second = PNAAddonPanel(
+        second_df,
+        AntibodyPanelMetadata(
+            name="panel-a-addon",
+            version="0.1.1",
+            product="shared-product",
+            panel_type=PanelType.ADDON,
+        ),
+    )
+    with pytest.raises(ValueError, match="already uses that product"):
+        PNAAntibodyPanelCombination([first, second])
+
+    combo = PNAAntibodyPanelCombination(first)
+    with pytest.raises(ValueError, match="already uses that product"):
+        combo.add_panel(second)
+    assert combo.num_partial_panels == 1
+    assert combo.addon_panels is None
+
+
+def test_combination_rejects_second_panel_without_product(panel_df):
+    """Unset product is still a key; only one unlabeled member is allowed."""
+    first = PNABasePanel(
+        panel_df,
+        AntibodyPanelMetadata(
+            name="panel-a",
+            version="0.0.0",
+            panel_type=PanelType.BASE,
+        ),
+    )
+    second_df = pd.DataFrame(
+        {
+            "marker_id": ["extra-1"],
+            "uniprot_id": ["P12345"],
+            "control": [False],
+            "nuclear": [False],
+            "sequence_1": ["AAAA"],
+            "sequence_2": ["TTTT"],
+        }
+    ).set_index("marker_id")
+    second = PNAAddonPanel(
+        second_df,
+        AntibodyPanelMetadata(
+            name="panel-b",
+            version="0.0.0",
+            panel_type=PanelType.ADDON,
+        ),
+    )
+    with pytest.raises(ValueError, match="already uses that product"):
+        PNAAntibodyPanelCombination([first, second])
+
+
+def test_combination_allows_single_panel_without_product(panel_df):
+    """A one-member combination may omit product (legacy single-panel files)."""
+    combo = PNAAntibodyPanelCombination(
+        PNABasePanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="panel-a",
+                version="0.0.0",
+                panel_type=PanelType.BASE,
+            ),
+        )
+    )
+    assert combo.num_partial_panels == 1
+    assert combo.partial_panels()[0].metadata.product is None
 
 
 def test_combination_description_skips_none_and_returns_none_when_empty(
@@ -585,6 +697,7 @@ def test_combination_description_skips_none_and_returns_none_when_empty(
         AntibodyPanelMetadata(
             name="addon-panel",
             version="0.0.0",
+            product="addon-panel",
             description="Addon panel",
             panel_type=PanelType.ADDON,
         ),
