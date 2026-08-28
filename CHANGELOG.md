@@ -8,16 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `PNAPixelDataset.layouts()` computes Layouts on the fly from Component graphs.
-  Choose the Layout algorithm with `algorithm=` (default `coarsened_pmds_3d`, via
-  `DEFAULT_LAYOUT_ALGORITHM`). The collection supports `.first()`, `.iterator()`,
-  `.to_df()`, and `.to_polars()`.
+- `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
 
 ### Changed
-- Layout algorithm defaults go through `DEFAULT_LAYOUT_ALGORITHM` (`coarsened_pmds_3d`)
-  for `PNAPixelDataset.layouts()`, `layout_coordinates`, and
-  `pixelator single-cell-pna layout`.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule

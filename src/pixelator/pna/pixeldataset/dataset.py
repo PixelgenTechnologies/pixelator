@@ -277,7 +277,7 @@ class PNAPixelDataset:
     ) -> PreComputedLayouts:
         """Return the PreComputedLayouts instance for the dataset.
 
-        Deprecated: prefer :meth:`layouts` to compute Layouts on the fly.
+        Deprecated: prefer :meth:`layouts` to compute Layouts on the fly instead. In the future this method will be removed.
 
         Args:
             add_marker_counts: If True, add the marker counts to the precomputed layouts.
@@ -289,7 +289,7 @@ class PNAPixelDataset:
         """
         warnings.warn(
             "precomputed_layouts() is deprecated; use layouts() to compute "
-            "Layouts on the fly.",
+            "Layouts on the fly. In the future this method will be removed.",
             DeprecationWarning,
             stacklevel=2,
         )

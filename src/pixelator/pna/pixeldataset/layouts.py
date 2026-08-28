@@ -24,8 +24,7 @@ from pixelator.pna.utils import normalize_input_to_set
 class Layouts:
     """On-the-fly Layouts for one or more Components.
 
-    Coordinates are always computed from each Component graph. This collection
-    never reads the PXL ``layouts`` table.
+    Coordinates are computed from each Component graph.
     """
 
     def __init__(
