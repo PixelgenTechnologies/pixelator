@@ -37,7 +37,11 @@ class Layouts:
 
         layouts = pxl_dataset.filter(components=component_id).layouts()
         df = layouts.to_df()  # pandas: all selected Components
+
+        # Then either for a single Component:
         first = layouts.first().to_df()  # only the first Component
+
+        # Or iterate over all Components in the collection:
         for component_id, frame in layouts.iterator():
             # one Component at a time (use this for many or large cells)
             ...

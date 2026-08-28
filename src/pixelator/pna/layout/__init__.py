@@ -156,3 +156,6 @@ class CreateLayout(PerComponentTask):
 
         for fname in data:
             os.remove(Path(fname))
+
+
+__all__ = ["CreateLayout"]
