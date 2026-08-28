@@ -391,7 +391,7 @@ def sample_calling(
 
             # Dehashing should only strip the `-<hash_index>` suffix for
             # antibodies flagged by the panel `sample_hashing` column
-            # (e.g. `B2M-1` -> `B2M`), not for biological marker IDs that
+            # (e.g. `B2M-1` -> `B2M`), not for non-hashing marker IDs that
             # happen to end with `-<digits>` such as `PD-1` or `TIM-3`.
             hashed_markers = sorted(list(hashing_antibody_mapping.hashing_antibodies))
             hash_marker_map = pl.DataFrame(

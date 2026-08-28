@@ -33,7 +33,10 @@ from pixelator.pna.config.panel.partial import (
     PNABasePanel,
     PNASampleHashingPanel,
 )
-from pixelator.pna.config.panel.utils import sample_hashing_mask
+from pixelator.pna.config.panel.utils import (
+    nested_hashing_marker_ids,
+    sample_hashing_mask,
+)
 
 
 class PNAAntibodyPanelCombination(PNAPanel):
@@ -219,6 +222,14 @@ class PNAAntibodyPanelCombination(PNAPanel):
         if "sample_hashing" in df.columns:
             df = df.copy()
             df["sample_hashing"] = sample_hashing_mask(df["sample_hashing"])
+            nested = nested_hashing_marker_ids(
+                str(marker_id) for marker_id in df.index[df["sample_hashing"]]
+            )
+            if nested:
+                raise ValueError(
+                    "Hashing marker ids must not collapse to another hashing id "
+                    f"(e.g. B2M-1-1 next to B2M-1). Offending values: {nested}"
+                )
         # make sure clone sequences are unique! Otherwise raise an error
         if df.duplicated(subset=["sequence_1", "sequence_2"]).any():
             raise ValueError("Duplicate sequences found in the panel combination.")

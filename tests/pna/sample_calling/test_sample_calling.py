@@ -424,7 +424,7 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
     """Regression test for markers like `PD-1` being mangled to `PD`.
 
     The dehashing step should only strip `-<hash_index>` for *known hashing*
-    antibodies, not for arbitrary biological marker IDs that happen to end
+    antibodies, not for arbitrary non-hashing marker IDs that happen to end
     with `-<digits>`.
 
     Args:

@@ -222,13 +222,27 @@ class PNAAntibodyPanelDiff:
             pairs.append((str(old), str(new)))
         return pairs
 
-    def _validate_hashing_marker_id_renames(self) -> None:
+    def _validate_hashing_marker_id_renames(
+        self,
+        *,
+        non_hashing_marker_ids: set[str] | None = None,
+        hashing_marker_ids: set[str] | None = None,
+    ) -> None:
         """Reject hashing marker_id changes that alter the hash-group suffix.
 
         ``B2M-1`` may become ``NEWB2MNAME-1``. Changing ``-1`` is not allowed.
         All hashing ids that share a collapsed base name must map to the same
-        new base.
+        new base. If that base is also a non-hashing ``marker_id`` (v2 ``B2M``
+        next to ``B2M-1``), it must be renamed to the same new base so
+        collapsed remaps do not retarget the non-hashing marker alone.
+
+        ``upgrade_adata`` passes the stored combination's hashing and
+        non-hashing ids so a hashing-member bump still sees non-hashing rows
+        on another partial panel. A hashing family may not collapse to a
+        name occupied by a different hashing family or non-hashing marker.
         """
+        # Collect collapsed base names for hashing clones on this Diff
+        # (B2M-1 / B2M-2 → B2M). Renames may only change the base, not -N.
         base_to_new_bases: dict[str, set[str]] = {}
         for old, new in self._iter_hashing_marker_id_pairs():
             if old != new:
@@ -248,6 +262,8 @@ class PNAAntibodyPanelDiff:
             old_base = collapsed_hashing_marker_id(old)
             new_base = collapsed_hashing_marker_id(new)
             base_to_new_bases.setdefault(old_base, set()).add(new_base)
+
+        # One hashing family (all B2M-* clones) must share a single new base.
         for old_base, new_bases in base_to_new_bases.items():
             if len(new_bases) != 1:
                 raise ValueError(
@@ -256,12 +272,75 @@ class PNAAntibodyPanelDiff:
                     "A patch bump must keep a single base name per hash group family."
                 )
 
+        # Default to panel_1; upgrade_adata passes the stored combination so a
+        # hashing-member bump still sees non-hashing rows on another panel.
+        if hashing_marker_ids is None:
+            hashing_marker_ids = self.panel_1.hashing_marker_ids
+        if non_hashing_marker_ids is None:
+            panel_hashing = self.panel_1.hashing_marker_ids
+            non_hashing_marker_ids = {
+                str(marker_id)
+                for marker_id in self.panel_1.df.index
+                if str(marker_id) not in panel_hashing
+            }
+
+        # Resolved new collapsed name per old family. Families not renamed on
+        # this Diff keep their current base (identity).
+        hashing_new_by_old: dict[str, str] = {}
+        for old_base in {
+            collapsed_hashing_marker_id(marker_id) for marker_id in hashing_marker_ids
+        }:
+            mapped_bases = base_to_new_bases.get(old_base)
+            hashing_new_by_old[old_base] = (
+                next(iter(mapped_bases)) if mapped_bases else old_base
+            )
+
+        # Distinct hashing families must not land on the same collapsed name.
+        new_to_olds: dict[str, list[str]] = {}
+        for old_base, hashing_new in hashing_new_by_old.items():
+            new_to_olds.setdefault(hashing_new, []).append(old_base)
+        for hashing_new, olds in new_to_olds.items():
+            if len(olds) > 1:
+                raise ValueError(
+                    "Hashing marker families "
+                    f"{sorted(olds)} collapse to the same name {hashing_new!r}."
+                )
+
+        # Shared names with non-hashing markers (v2 B2M next to B2M-1) must be
+        # renamed together, and must not collapse onto a different non-hashing
+        # marker.
+        marker_map = self.marker_id_mapping()
+        for old_base, hashing_new in hashing_new_by_old.items():
+            if old_base in non_hashing_marker_ids:
+                non_hashing_new = marker_map.get(old_base, old_base)
+                if non_hashing_new != hashing_new:
+                    raise ValueError(
+                        "Hashing collapsed base "
+                        f"{old_base!r} and non-hashing marker {old_base!r} "
+                        "must rename together "
+                        f"(hashing maps to {hashing_new!r}, "
+                        f"non-hashing maps to {non_hashing_new!r})."
+                    )
+            for other in non_hashing_marker_ids:
+                if other == old_base:
+                    continue
+                other_new = marker_map.get(other, other)
+                if other_new == hashing_new:
+                    raise ValueError(
+                        "Hashing collapsed base "
+                        f"{old_base!r} -> {hashing_new!r} collides with "
+                        f"non-hashing marker {other!r} "
+                        f"(it maps to {other_new!r})."
+                    )
+
     def collapsed_hashing_marker_id_mapping(self) -> dict[str, str]:
         """Return collapsed hashing names ``panel_1`` → ``panel_2``.
 
         ``B2M-1`` / ``B2M-2`` collapsing to ``B2M`` become ``NEWB2MNAME`` when
         those clones are renamed to ``NEWB2MNAME-1`` / ``NEWB2MNAME-2``. All
         hashing ids that share an old base must map to the same new base.
+        If that base is also a non-hashing ``marker_id``, it must rename to
+        the same new base.
         """
         self._validate_hashing_marker_id_renames()
         mapping: dict[str, str] = {}
@@ -342,7 +421,11 @@ class PNAAntibodyPanelDiff:
         Hashing ``marker_id`` bumps may only change the base name
         (``B2M-1`` → ``NEWB2MNAME-1``), never the hash group. That rename is
         applied to ``original_hash_counts_*`` and, when collapsed, to the
-        collapsed marker id in ``var``.
+        collapsed marker id in ``var``. If the hashing collapsed base is also
+        a non-hashing ``marker_id`` on this panel or on another member of the
+        stored combination, both names must move together. A hashing family
+        may not collapse to a name used by another hashing family or
+        non-hashing marker.
 
         Args:
             adata: AnnData whose ``var`` table embeds panel columns.
@@ -354,7 +437,11 @@ class PNAAntibodyPanelDiff:
             ValueError: If clones were added/removed, products differ, panels
                 do not match the AnnData contents, row counts diverge, a
                 non-hashing clone is missing from ``var``, or a hashing
-                marker_id rename changes the hash-group suffix.
+                marker_id rename changes the hash-group suffix, or a hashing
+                collapsed base and a same-named non-hashing marker do not
+                rename together, hashing families collapse to the same name,
+                or a hashing collapsed name collides with another non-hashing
+                marker.
         """
         if len(self.added_clones) > 0:
             raise ValueError(
@@ -367,10 +454,11 @@ class PNAAntibodyPanelDiff:
                 + "Please check the differences between the panels and upgrade manually."
             )
 
+        combo = PNAAntibodyPanelCombination.from_adata(adata)
         adata_panel = (
             [
                 pp
-                for pp in PNAAntibodyPanelCombination.from_adata(adata).partial_panels()
+                for pp in combo.partial_panels()
                 if pp.metadata.name == self.panel_1.name
                 and pp.metadata.version == self.panel_1.version
             ]
@@ -387,7 +475,15 @@ class PNAAntibodyPanelDiff:
                 + f"but got panel {adata_panel.name} v{adata_panel.version}."
             )
 
-        self._validate_hashing_marker_id_renames()
+        combo_hashing = combo.hashing_marker_ids
+        self._validate_hashing_marker_id_renames(
+            non_hashing_marker_ids={
+                str(marker_id)
+                for marker_id in combo.df.index
+                if str(marker_id) not in combo_hashing
+            },
+            hashing_marker_ids=combo_hashing,
+        )
 
         # first update the uns variables
         if "num_partial_panels" in adata.uns:

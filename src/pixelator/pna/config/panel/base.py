@@ -23,7 +23,9 @@ from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 from pixelator.pna.config.panel.utils import (
     _resolve_panel_source_from_pxl,
+    nested_hashing_marker_ids,
     sample_hashing_mask,
+    split_hashing_marker_id,
 )
 
 if TYPE_CHECKING:
@@ -174,6 +176,32 @@ class PNAPanel(ABC):
             )
         return errors
 
+    @staticmethod
+    def _validate_hashing_marker_id_suffixes(panel_df: pd.DataFrame) -> list[str]:
+        if "sample_hashing" not in panel_df.columns:
+            return []
+        mask = sample_hashing_mask(panel_df["sample_hashing"])
+        missing_suffix = [
+            str(marker_id)
+            for marker_id in panel_df.index[mask]
+            if split_hashing_marker_id(str(marker_id)) is None
+        ]
+        errors: list[str] = []
+        if missing_suffix:
+            errors.append(
+                "Hashing marker ids must end with -<digits> (e.g. B2M-1). "
+                f"Offending values: {missing_suffix}"
+            )
+        nested = nested_hashing_marker_ids(
+            str(marker_id) for marker_id in panel_df.index[mask]
+        )
+        if nested:
+            errors.append(
+                "Hashing marker ids must not collapse to another hashing id "
+                f"(e.g. B2M-1-1 next to B2M-1). Offending values: {nested}"
+            )
+        return errors
+
     @classmethod
     def validate_antibody_panel(
         cls, panel_df: pd.DataFrame, validate_types: bool = True
@@ -221,6 +249,7 @@ class PNAPanel(ABC):
             return errors
 
         errors += cls._validate_marker_names(panel_df)
+        errors += cls._validate_hashing_marker_id_suffixes(panel_df)
 
         if panel_df["control"].dtype != bool:
             errors.append("`control` column is not boolean")

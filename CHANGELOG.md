@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for import compatibility (emits a ``DeprecationWarning`` when accessed).
 
 ### Changed
+- Hashing `marker_id` values must end with `-<digits>` (e.g. `B2M-1`) and must
+  not collapse to another hashing id (`B2M-1-1` next to `B2M-1`). This is
+  checked for `PNASampleHashingPanel`, any panel row flagged `sample_hashing`,
+  and hashing ids across a panel combination.
 - `load_antibody_panel` returns a `PNAAntibodyPanelCombination` (including when
   only one panel is requested).
 - `PNAAntibodyPanelCombination` is constructed from one panel or a sequence of
@@ -62,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (e.g. `B2M-1`…`B2M-8` become `B2M`) but still stores the original panels in
   `uns`. The upgrade used to require every panel clone to still be in `var`.
   It now records `uns["sample_calling"]["collapsed"]` and treats missing
-  hashing clones as expected; missing biological clones still error. Legacy
+  hashing clones as expected; missing non-hashing clones still error. Legacy
   sample-called files that omit the flag are inferred as collapsed when
   `original_hash_counts_*` columns are present on `obs`, or when hashing
   clones from the stored panels are absent from `var`.
@@ -70,7 +74,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `marker_1` / `marker_2`, and layout marker-count columns. A hashing `marker_id`
   may only change its base name (`B2M-1` → `NEWB2MNAME-1`), not the hash-group
   suffix; that rename is applied to `original_hash_counts_*` and the collapsed
-  marker in `var`. Denoise rebuilds AnnData from the current markers so
+  marker in `var`. If the hashing base is also a non-hashing `marker_id`
+  (v2 `B2M` next to `B2M-1`), that non-hashing marker must be renamed to the
+  same new base so sample-called files are not rewritten as hashing-only
+  remaps. Hashing and non-hashing rows that share a name must still be renamed
+  together when they live on different members of the stored combination. A
+  hashing family may not collapse to a name used by another hashing family or
+  non-hashing marker. Denoise rebuilds AnnData from the current markers so
   hashing antibodies are not added back.
 - The default number of cores and the fallbacks used when `--cores` is not set now respect the
   CPU affinity mask (via `os.process_cpu_count()` or `os.sched_getaffinity()`) and the cgroup

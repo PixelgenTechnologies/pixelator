@@ -6,6 +6,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
@@ -41,7 +42,7 @@ def sample_hashing_mask(sample_hashing: pd.Series) -> pd.Series:
 
 # Trailing ``-<digits>`` on a hashing antibody id is the hash group
 # (``B2M-1`` → base ``B2M``, group ``1``). Sample calling collapses those
-# ids to the base name. This pattern also matches biological markers such as
+# ids to the base name. This pattern also matches non-hashing markers such as
 # ``PD-1`` and ``TIM-3``; it must only be applied to ids already selected via
 # the panel ``sample_hashing`` column.
 _HASHING_MARKER_ID_RE = re.compile(r"^(?P<base>.+)-(?P<index>\d+)$")
@@ -77,6 +78,20 @@ def collapsed_hashing_marker_id(marker_id: str) -> str:
     """
     parts = split_hashing_marker_id(marker_id)
     return parts[0] if parts is not None else marker_id
+
+
+def nested_hashing_marker_ids(hashing_marker_ids: Iterable[str]) -> list[str]:
+    """Return hashing ids whose collapsed name is itself a hashing id.
+
+    ``B2M-1-1`` collapses to ``B2M-1``. That is invalid when ``B2M-1`` is
+    also a hashing marker.
+    """
+    ids = {str(marker_id) for marker_id in hashing_marker_ids}
+    return sorted(
+        hid
+        for hid in ids
+        if (base := collapsed_hashing_marker_id(hid)) != hid and base in ids
+    )
 
 
 def _resolve_panel_source_from_pxl(

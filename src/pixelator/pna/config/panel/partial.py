@@ -343,6 +343,8 @@ class PNASampleHashingPanel(PartialPNAAntibodyPanel):
     Requires metadata ``panel_type``
     :attr:`~pixelator.common.config.panel.PanelType.SAMPLE_HASHING` and a
     ``sample_hashing`` column that is ``True`` / ``yes`` for every row.
+    Every ``marker_id`` must end with ``-<digits>`` (e.g. ``B2M-1``) and must
+    not collapse to another hashing id (e.g. ``B2M-1-1`` next to ``B2M-1``).
     """
 
     _panel_type = PanelType.SAMPLE_HASHING
@@ -364,8 +366,8 @@ class PNASampleHashingPanel(PartialPNAAntibodyPanel):
 
         Returns:
             Validation error messages; empty means the panel is valid. Includes
-            parent checks and an error when any row has ``sample_hashing`` not
-            set.
+            parent checks, an error when any ``marker_id`` lacks a ``-<digits>``
+            suffix, and an error when any row has ``sample_hashing`` not set.
         """
         all_hashing = (
             "sample_hashing" in panel_df.columns

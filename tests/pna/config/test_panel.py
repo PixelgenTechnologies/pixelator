@@ -186,7 +186,7 @@ def test_split_hashing_marker_id_strips_hash_group_only():
 def _mixed_hyphen_name_panel(
     *, version: str = "0.1.0", rename: dict[str, str] | None = None
 ):
-    """Panel with biological PD-1/TIM-3 and hashing B2M-1/B2M-2."""
+    """Panel with non-hashing PD-1/TIM-3 and hashing B2M-1/B2M-2."""
     df = pd.DataFrame(
         {
             "marker_id": ["PD-1", "TIM-3", "B2M-1", "B2M-2"],
@@ -206,7 +206,7 @@ def _mixed_hyphen_name_panel(
     )
 
 
-def test_hyphenated_biological_markers_are_not_hashing_by_name():
+def test_hyphenated_non_hashing_markers_are_not_hashing_by_name():
     """PD-1 / TIM-3 match the hashing name pattern but only the column counts."""
     panel_old = _mixed_hyphen_name_panel()
     panel_new = _mixed_hyphen_name_panel(
@@ -321,6 +321,106 @@ def test_hashing_panel_rejects_mixed_string_sample_hashing_flags(panel_df):
         )
 
 
+def test_hashing_panel_requires_hash_group_suffix_on_marker_ids():
+    """Hashing marker ids must be NAME-<digits>, e.g. HM-1."""
+    df = pd.DataFrame(
+        {
+            "marker_id": ["HM-1", "HM"],
+            "control": [False, False],
+            "sequence_1": ["ACTTCCTACC", "GGGCTATGGT"],
+            "sequence_2": ["ACTTCCTACC", "GGGCTATGGT"],
+            "sample_hashing": [True, True],
+        }
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match=r"-<digits>"):
+        PNASampleHashingPanel(
+            df,
+            AntibodyPanelMetadata(
+                name="hash-nosuffix",
+                version="0.0.0",
+                panel_type=PanelType.SAMPLE_HASHING,
+            ),
+        )
+
+
+def test_hashing_flagged_rows_on_any_panel_require_hash_group_suffix():
+    """Combined v2 CSVs flag hashing on a base/partial panel, not only hashing members."""
+    df = pd.DataFrame(
+        {
+            "marker_id": ["B2M", "B2M-1"],
+            "control": [False, False],
+            "sequence_1": ["AAAAAA", "CCCCCC"],
+            "sequence_2": ["AAAAAA", "CCCCCC"],
+            "sample_hashing": [True, True],
+        }
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match=r"-<digits>"):
+        PartialPNAAntibodyPanel(
+            df,
+            AntibodyPanelMetadata(name="mixed-hash", version="0.0.0"),
+        )
+
+
+def test_hashing_panel_rejects_nested_hash_group_suffixes():
+    """B2M-1-1 is invalid when B2M-1 is also a hashing marker."""
+    df = pd.DataFrame(
+        {
+            "marker_id": ["HM-1", "HM-1-1"],
+            "control": [False, False],
+            "sequence_1": ["ACTTCCTACC", "GGGCTATGGT"],
+            "sequence_2": ["ACTTCCTACC", "GGGCTATGGT"],
+            "sample_hashing": [True, True],
+        }
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match="collapse to another hashing id"):
+        PNASampleHashingPanel(
+            df,
+            AntibodyPanelMetadata(
+                name="hash-nested",
+                version="0.0.0",
+                panel_type=PanelType.SAMPLE_HASHING,
+            ),
+        )
+
+
+def test_combination_rejects_nested_hashing_ids_across_members():
+    """Nested hashing ids are invalid even when they sit on different members."""
+    base = PNABasePanel(
+        pd.DataFrame(
+            {
+                "marker_id": ["B2M-1"],
+                "control": [False],
+                "sequence_1": ["AAAAAA"],
+                "sequence_2": ["AAAAAA"],
+                "sample_hashing": [True],
+            }
+        ).set_index("marker_id"),
+        AntibodyPanelMetadata(
+            name="b2m-hash-base",
+            version="0.1.0",
+            panel_type=PanelType.BASE,
+        ),
+    )
+    hashing = PNASampleHashingPanel(
+        pd.DataFrame(
+            {
+                "marker_id": ["B2M-1-1"],
+                "control": [False],
+                "sequence_1": ["CCCCCC"],
+                "sequence_2": ["CCCCCC"],
+                "sample_hashing": [True],
+            }
+        ).set_index("marker_id"),
+        AntibodyPanelMetadata(
+            name="b2m-nested-hash",
+            version="0.1.0",
+            panel_type=PanelType.SAMPLE_HASHING,
+        ),
+    )
+    with pytest.raises(ValueError, match="collapse to another hashing id"):
+        PNAAntibodyPanelCombination([base, hashing])
+
+
 def test_panel_combination_classifies_hashing_panel_regardless_of_order(
     panel_df, hashing_panel
 ):
@@ -403,7 +503,7 @@ def test_add_panel_methods_roll_back_on_conflict(panel_df):
 
     overlapping_seq_df = pd.DataFrame(
         {
-            "marker_id": ["extra"],
+            "marker_id": ["extra-1"],
             "uniprot_id": ["P12345"],
             "control": [False],
             "nuclear": [False],
@@ -901,10 +1001,10 @@ def test_upgrade_adata_renames_collapsed_hashing_when_inferred_from_hash_counts(
     assert upgraded.obs["original_hash_counts_NEW-1"].tolist() == [1.0]
 
 
-def test_upgrade_adata_raises_when_collapsed_but_biological_clone_missing(
+def test_upgrade_adata_raises_when_collapsed_but_non_hashing_clone_missing(
     panel, hashing_panel
 ):
-    """Collapsed upgrades may skip hashing clones, not missing biological markers."""
+    """Collapsed upgrades may skip hashing clones, not missing non-hashing markers."""
     base = panel.partial_panels()[0]
     combo = PNAAntibodyPanelCombination([base, hashing_panel])
     base_new = type(base)(
@@ -1008,6 +1108,219 @@ def test_upgrade_adata_rejects_inconsistent_hashing_base_rename(hashing_panel):
     with pytest.raises(ValueError, match="multiple names"):
         PNAAntibodyPanelDiff(
             hashing_panel, hashing_new
+        ).collapsed_hashing_marker_id_mapping()
+
+
+def _v2_style_b2m_panel(
+    *, version: str = "0.1.0", rename: dict[str, str] | None = None
+):
+    """Non-hashing B2M plus hashing B2M-1/B2M-2 on one CSV (v2 layout)."""
+    df = pd.DataFrame(
+        {
+            "marker_id": ["B2M", "CD3", "B2M-1", "B2M-2"],
+            "control": [False, False, False, False],
+            "sequence_1": ["AAAAAA", "CCCCCC", "GGGGGG", "TTTTTT"],
+            "sequence_2": ["AAAAAA", "CCCCCC", "GGGGGG", "TTTTTT"],
+            "sample_hashing": [False, False, True, True],
+        }
+    ).set_index("marker_id")
+    if rename:
+        df = df.rename(index=rename)
+    return PartialPNAAntibodyPanel(
+        df,
+        AntibodyPanelMetadata(name="v2-b2m", version=version, product="v2-b2m"),
+    )
+
+
+def test_hashing_base_rename_requires_matching_non_hashing_marker():
+    """Hashing-only B2M rename would clobber the non-hashing B2M row after collapse."""
+    panel_old = _v2_style_b2m_panel()
+    panel_new = _v2_style_b2m_panel(
+        version="0.1.1",
+        rename={"B2M-1": "NEWB2M-1", "B2M-2": "NEWB2M-2"},
+    )
+    with pytest.raises(ValueError, match="must rename together"):
+        PNAAntibodyPanelDiff(panel_old, panel_new).collapsed_hashing_marker_id_mapping()
+
+
+def test_non_hashing_base_rename_requires_matching_hashing_markers():
+    """Non-hashing-only B2M rename must move the hashing family as well."""
+    panel_old = _v2_style_b2m_panel()
+    panel_new = _v2_style_b2m_panel(version="0.1.1", rename={"B2M": "NEWB2M"})
+    with pytest.raises(ValueError, match="must rename together"):
+        PNAAntibodyPanelDiff(panel_old, panel_new).collapsed_hashing_marker_id_mapping()
+
+
+def test_hashing_and_non_hashing_base_rename_together_on_collapsed_adata():
+    """B2M hashing and non-hashing names renamed together apply to the remaining row after collapse."""
+    panel_old = _v2_style_b2m_panel()
+    panel_new = _v2_style_b2m_panel(
+        version="0.1.1",
+        rename={"B2M": "NEWB2M", "B2M-1": "NEWB2M-1", "B2M-2": "NEWB2M-2"},
+    )
+    diff = PNAAntibodyPanelDiff(panel_old, panel_new)
+    assert diff.collapsed_hashing_marker_id_mapping() == {"B2M": "NEWB2M"}
+    assert diff.marker_id_mapping()["B2M"] == "NEWB2M"
+
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=pd.Index(["B2M", "CD3"], name="marker_id")),
+    )
+    adata = add_panel_information(adata, PNAAntibodyPanelCombination(panel_old))
+    set_sample_calling_collapsed(adata, True)
+    upgraded = diff.upgrade_adata(adata)
+    assert "B2M" not in upgraded.var.index
+    assert "NEWB2M" in upgraded.var.index
+    assert "CD3" in upgraded.var.index
+
+
+def _b2m_base_panel(*, version: str = "0.1.0", rename: dict[str, str] | None = None):
+    df = pd.DataFrame(
+        {
+            "marker_id": ["B2M", "CD3"],
+            "control": [False, False],
+            "sequence_1": ["AAAAAA", "CCCCCC"],
+            "sequence_2": ["AAAAAA", "CCCCCC"],
+        }
+    ).set_index("marker_id")
+    if rename:
+        df = df.rename(index=rename)
+    return PNABasePanel(
+        df,
+        AntibodyPanelMetadata(
+            name="b2m-base",
+            version=version,
+            product="b2m-base",
+            panel_type=PanelType.BASE,
+        ),
+    )
+
+
+def _b2m_hashing_member(
+    *, version: str = "0.1.0", rename: dict[str, str] | None = None
+):
+    df = pd.DataFrame(
+        {
+            "marker_id": ["B2M-1", "B2M-2"],
+            "control": [False, False],
+            "sequence_1": ["GGGGGG", "TTTTTT"],
+            "sequence_2": ["GGGGGG", "TTTTTT"],
+            "sample_hashing": [True, True],
+        }
+    ).set_index("marker_id")
+    if rename:
+        df = df.rename(index=rename)
+    return PNASampleHashingPanel(
+        df,
+        AntibodyPanelMetadata(
+            name="b2m-hash",
+            version=version,
+            product="b2m-hash",
+            panel_type=PanelType.SAMPLE_HASHING,
+        ),
+    )
+
+
+def test_upgrade_adata_rejects_hashing_member_rename_that_clobbers_non_hashing_b2m():
+    """A hashing-member bump still sees non-hashing B2M on the stored combination."""
+    base = _b2m_base_panel()
+    hashing = _b2m_hashing_member()
+    hashing_new = _b2m_hashing_member(
+        version="0.1.1", rename={"B2M-1": "NEWB2M-1", "B2M-2": "NEWB2M-2"}
+    )
+    assert PNAAntibodyPanelDiff(
+        hashing, hashing_new
+    ).collapsed_hashing_marker_id_mapping() == {"B2M": "NEWB2M"}
+
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=pd.Index(["B2M", "CD3"], name="marker_id")),
+    )
+    adata = add_panel_information(adata, PNAAntibodyPanelCombination([base, hashing]))
+    set_sample_calling_collapsed(adata, True)
+    with pytest.raises(ValueError, match="must rename together"):
+        PNAAntibodyPanelDiff(hashing, hashing_new).upgrade_adata(adata)
+
+
+def test_upgrade_adata_rejects_non_hashing_rename_that_leaves_hashing_b2m_behind():
+    """A base-panel B2M rename must not leave hashing clones collapsing to B2M."""
+    base = _b2m_base_panel()
+    hashing = _b2m_hashing_member()
+    base_new = _b2m_base_panel(version="0.1.1", rename={"B2M": "NEWB2M"})
+
+    adata = AnnData(
+        obs=pd.DataFrame(index=["c1"]),
+        var=pd.DataFrame(index=pd.Index(["B2M", "CD3"], name="marker_id")),
+    )
+    adata = add_panel_information(adata, PNAAntibodyPanelCombination([base, hashing]))
+    set_sample_calling_collapsed(adata, True)
+    with pytest.raises(ValueError, match="must rename together"):
+        PNAAntibodyPanelDiff(base, base_new).upgrade_adata(adata)
+
+
+def _hm_and_b2m_panel(*, version: str = "0.1.0", rename: dict[str, str] | None = None):
+    """Non-hashing B2M plus hashing HM-1/HM-2 (distinct collapsed names)."""
+    df = pd.DataFrame(
+        {
+            "marker_id": ["B2M", "HM-1", "HM-2"],
+            "control": [False, False, False],
+            "sequence_1": ["AAAAAA", "CCCCCC", "GGGGGG"],
+            "sequence_2": ["AAAAAA", "CCCCCC", "GGGGGG"],
+            "sample_hashing": [False, True, True],
+        }
+    ).set_index("marker_id")
+    if rename:
+        df = df.rename(index=rename)
+    return PartialPNAAntibodyPanel(
+        df,
+        AntibodyPanelMetadata(name="hm-b2m", version=version, product="hm-b2m"),
+    )
+
+
+def test_hashing_rename_rejects_collapsed_name_collision_with_non_hashing():
+    """HM-1 → B2M-1 must not rewrite non-hashing B2M after collapse."""
+    panel_old = _hm_and_b2m_panel()
+    panel_new = _hm_and_b2m_panel(
+        version="0.1.1", rename={"HM-1": "B2M-1", "HM-2": "B2M-2"}
+    )
+    with pytest.raises(ValueError, match="collides with"):
+        PNAAntibodyPanelDiff(panel_old, panel_new).collapsed_hashing_marker_id_mapping()
+
+
+def test_hashing_families_cannot_collapse_to_the_same_name():
+    """Two hashing families must not share a collapsed name after a bump."""
+    df = pd.DataFrame(
+        {
+            "marker_id": ["HM-1", "HM-2", "XX-3", "XX-4"],
+            "control": [False, False, False, False],
+            "sequence_1": ["AAAAAA", "CCCCCC", "GGGGGG", "TTTTTT"],
+            "sequence_2": ["AAAAAA", "CCCCCC", "GGGGGG", "TTTTTT"],
+            "sample_hashing": [True, True, True, True],
+        }
+    ).set_index("marker_id")
+    hashing_old = PNASampleHashingPanel(
+        df,
+        AntibodyPanelMetadata(
+            name="two-fam",
+            version="0.1.0",
+            product="two-fam",
+            panel_type=PanelType.SAMPLE_HASHING,
+        ),
+    )
+    hashing_new = PNASampleHashingPanel(
+        df.rename(
+            index={
+                "HM-1": "NEW-1",
+                "HM-2": "NEW-2",
+                "XX-3": "NEW-3",
+                "XX-4": "NEW-4",
+            }
+        ),
+        hashing_old.metadata.model_copy(update={"version": "0.1.1"}),
+    )
+    with pytest.raises(ValueError, match="collapse to the same name"):
+        PNAAntibodyPanelDiff(
+            hashing_old, hashing_new
         ).collapsed_hashing_marker_id_mapping()
 
 
