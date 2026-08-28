@@ -9,7 +9,10 @@ import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config import pna_config
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import (
+    PartialPNAAntibodyPanel,
+    PNAAntibodyPanelCombination,
+)
 
 # Six regular markers and two groups of hashing markers, indexed 1-8 via the
 # `-X` suffix (mirroring the real panel naming). A hashing marker is placed
@@ -41,9 +44,11 @@ def marker_panel_fixture():
         }
     ).set_index("marker_id")
 
-    return PNAAntibodyPanel(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(name="test-marker-panel", version="0.1.0"),
+    return PNAAntibodyPanelCombination(
+        PartialPNAAntibodyPanel(
+            panel_df,
+            AntibodyPanelMetadata(name="test-marker-panel", version="0.1.0"),
+        )
     )
 
 
@@ -59,9 +64,11 @@ def no_hashing_panel_fixture():
         }
     ).set_index("marker_id")
 
-    return PNAAntibodyPanel(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(name="test-no-hashing-panel", version="0.1.0"),
+    return PNAAntibodyPanelCombination(
+        PartialPNAAntibodyPanel(
+            panel_df,
+            AntibodyPanelMetadata(name="test-no-hashing-panel", version="0.1.0"),
+        )
     )
 
 

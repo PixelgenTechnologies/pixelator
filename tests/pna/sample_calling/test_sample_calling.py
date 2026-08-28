@@ -15,7 +15,10 @@ import pytest
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna import read
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import (
+    PartialPNAAntibodyPanel,
+    PNAAntibodyPanelCombination,
+)
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling import (
     _add_original_hash_counts_to_obs,
@@ -407,6 +410,11 @@ def test_sample_calling(sample_hashed_pixel_files, tmp_path):
                 )
                 == set()
             )
+            assert dehashed_adata.uns["sample_calling"]["collapsed"] is True
+            reconstructed = PNAAntibodyPanelCombination.from_adata(dehashed_adata)
+            assert set(reconstructed.markers) == set(
+                PNAAntibodyPanelCombination.from_pxl_dataset(pxl).markers
+            )
 
 
 @pytest.mark.slow
@@ -416,7 +424,7 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
     """Regression test for markers like `PD-1` being mangled to `PD`.
 
     The dehashing step should only strip `-<hash_index>` for *known hashing*
-    antibodies, not for arbitrary biological marker IDs that happen to end
+    antibodies, not for arbitrary non-hashing marker IDs that happen to end
     with `-<digits>`.
 
     Args:
@@ -455,14 +463,16 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
         ]
     ).set_index("marker_id")
 
-    panel = PNAAntibodyPanel(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(
-            name="test-panel",
-            version="0.1.0",
-            aliases=["test-panel"],
-            description="Synthetic panel for sample-calling dehashing regression test.",
-        ),
+    panel = PNAAntibodyPanelCombination(
+        PartialPNAAntibodyPanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="test-panel",
+                version="0.1.0",
+                aliases=["test-panel"],
+                description="Synthetic panel for sample-calling dehashing regression test.",
+            ),
+        )
     )
 
     # Keep the edgelist graph connected so "stranded node" removal
@@ -556,14 +566,16 @@ def test_sample_calling_without_uei_count(tmp_path: Path):
         ]
     ).set_index("marker_id")
 
-    panel = PNAAntibodyPanel(
-        df=panel_df,
-        metadata=AntibodyPanelMetadata(
-            name="test-panel",
-            version="0.1.0",
-            aliases=["test-panel"],
-            description="Synthetic panel for sample-calling without uei_count.",
-        ),
+    panel = PNAAntibodyPanelCombination(
+        PartialPNAAntibodyPanel(
+            panel_df,
+            AntibodyPanelMetadata(
+                name="test-panel",
+                version="0.1.0",
+                aliases=["test-panel"],
+                description="Synthetic panel for sample-calling without uei_count.",
+            ),
+        )
     )
 
     edgelist = pl.DataFrame(
@@ -763,7 +775,7 @@ class _FakeFilteredDataset:
         obs = {"hash_enrichment_factor": self._hash_enrichment_factors}
         if self._reads_in_component is not None:
             assert len(self._reads_in_component) == n
-            obs["reads_in_component"] = self._reads_in_component
+            obs["reads_in_component"] = self._reads_in_component  # type: ignore
         return anndata.AnnData(
             X=np.zeros((n, 1)),
             obs=pd.DataFrame(obs, index=obs_index),

@@ -8,10 +8,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Typed PNA panel hierarchy under `PNAPanel`: `PartialPNAAntibodyPanel` with
+  `PNABasePanel`, `PNAAddonPanel`, and `PNASampleHashingPanel`, plus
+  `PNAAntibodyPanelCombination` for multi-panel samples. Panel CSV metadata
+  may set `panel_type`; `panel_from_csv` dispatches to the concrete type.
+  `panel_from_adata` and `panel_from_pxl_dataset` return that type, or a
+  combination when several partial panels are stored.
+- CLI `--panel` may be repeated so demux/collapse/graph can load several panels
+  into one combination.
 - `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
 
 ### Changed
+- Hashing `marker_id` values must end with `-<digits>` (e.g. `B2M-1`) and must
+  not collapse to another hashing id (`B2M-1-1` next to `B2M-1`). This is
+  checked for `PNASampleHashingPanel`, any panel row flagged `sample_hashing`,
+  and hashing ids across a panel combination.
+- `load_antibody_panel` returns a `PNAAntibodyPanelCombination` (including when
+  only one panel is requested).
+- `PNAAntibodyPanelCombination` is constructed from one panel or a sequence of
+  panels, e.g. `PNAAntibodyPanelCombination(panel)` or
+  `PNAAntibodyPanelCombination([p1, p2, ...])`. Members must not share the same
+  `product` (including more than one member with `product` unset), so patch
+  bumps can key combination members by product.
+- AnnData / `.pxl` panel storage no longer writes the legacy single-key
+  ``panel_metadata`` + ``panel_columns`` shape. New files always use
+  ``num_partial_panels``, ``panel_metadata__{i}``, and ``panel_df__{i}``
+  (including when only one panel is present). Readers still accept the legacy
+  format for older files. ``PNAAntibodyPanelDiff.upgrade_adata`` migrates
+  legacy ``panel_metadata`` / ``panel_columns`` to the multi-panel layout when
+  applying a patch bump.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule
@@ -22,6 +48,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PNAPixelDataset.precomputed_layouts()` is deprecated. Use `layouts()` to
   compute Layouts on the fly. The method still reads a stored `layouts` table
   when one exists.
+- `PNAAntibodyPanel` as the primary single-panel type. Use
+  `PartialPNAAntibodyPanel` (or a typed subclass) for one panel, and
+  `PNAAntibodyPanelCombination` when several panels are used together.
+  `PNAAntibodyPanel` remains as a deprecated alias of `PartialPNAAntibodyPanel`
+  (emits a ``DeprecationWarning`` when accessed).
 
 ### Removed
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
@@ -35,6 +66,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   passed directly to native community detection, and the recovered components are unchanged.
 
 ### Fixed
+- Opening a sample-called `.pxl` with a newer panel patch version no longer
+  fails. Sample calling removes hashing antibodies from the count matrix
+  (e.g. `B2M-1`…`B2M-8` become `B2M`) but still stores the original panels in
+  `uns`. The upgrade used to require every panel clone to still be in `var`.
+  It now records `uns["sample_calling"]["collapsed"]` and treats missing
+  hashing clones as expected; missing non-hashing clones still error. Legacy
+  sample-called files that omit the flag are inferred as collapsed when
+  `original_hash_counts_*` columns are present on `obs`, or when hashing
+  clones from the stored panels are absent from `var`.
+  The same bump updates edgelist `marker_1` / `marker_2`, proximity
+  `marker_1` / `marker_2`, and layout marker-count columns. A hashing
+  `marker_id` may only change its base name (`B2M-1` → `NEWB2MNAME-1`), not
+  the hash-group suffix. Denoise rebuilds AnnData from the current markers so
+  hashing antibodies are not added back.
 - `coarsened_pmds_layout` sizes PMDS pivots from the full graph when Leiden
   yields too few communities, so a valid low `pivots` no longer fails
   `pmds_layout`'s `0.2 * n` lower bound.

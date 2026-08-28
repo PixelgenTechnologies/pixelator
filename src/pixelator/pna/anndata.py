@@ -1,13 +1,14 @@
 """Copyright © 2024 Pixelgen Technologies AB."""
 
 import logging
+from collections.abc import Sequence
 
 import duckdb
 import numpy as np
 import pandas as pd
 from anndata import AnnData
 
-from pixelator.pna.config import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 
 logger = logging.getLogger(__name__)
 
@@ -30,25 +31,62 @@ def calculate_antibody_metrics(counts_df):
     return pd.concat([total_antibody, relative_antibody, components_detected], axis=1)
 
 
-def add_panel_information(adata: AnnData, panel: PNAAntibodyPanel) -> AnnData:
-    """Add panel data to var."""
+def add_panel_information(
+    adata: AnnData, panel: PNAAntibodyPanelCombination
+) -> AnnData:
+    """Embed panel marker columns and metadata on an AnnData object.
+
+    Joins the combination marker table onto ``adata.var`` and stores panel
+    payloads in ``uns`` using the multi-panel layout even when there is only
+    one member panel:
+
+    * ``num_partial_panels``
+    * ``panel_metadata__{i}``
+    * ``panel_df__{i}``
+
+    The legacy single-key ``panel_metadata`` / ``panel_columns`` shape is not
+    written. Older files that still use that layout remain readable via
+    :meth:`~pixelator.pna.config.panel.combination.PNAAntibodyPanelCombination.from_adata`
+    and related helpers.
+
+    Args:
+        adata: AnnData whose ``var`` index is marker ids.
+        panel: Combination of panels used for this sample.
+
+    Returns:
+        The same AnnData instance after in-place updates.
+    """
+    assert isinstance(panel, PNAAntibodyPanelCombination), (
+        "Only PNAAntibodyPanelCombination is supported for adata conversion."
+    )
+
     adata.var = adata.var.join(panel.df, how="left")
 
-    adata.uns["panel_metadata"] = panel.metadata.model_dump()
-    adata.uns["panel_metadata"]["panel_columns"] = list(panel.df.columns)
+    adata.uns["num_partial_panels"] = panel.num_partial_panels
+    for i, pp in enumerate(panel.partial_panels()):
+        adata.uns[f"panel_metadata__{i}"] = pp.metadata.to_dict()
+        adata.uns[f"panel_df__{i}"] = pp.df.to_csv()
 
     return adata
 
 
 def pna_edgelist_to_anndata(
-    pixel_connection: duckdb.DuckDBPyConnection, panel: PNAAntibodyPanel
+    pixel_connection: duckdb.DuckDBPyConnection,
+    panel: PNAAntibodyPanelCombination,
+    markers: Sequence[str] | None = None,
 ) -> AnnData:
     """Build an AnnData object from a DuckDB connection to a pixel file and a panel object.
 
     Args:
         pixel_connection: A DuckDB connection to a pixel file. The connection must contain an 'edgelist' table
             with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
-        panel: The antibody panel object containing marker metadata.
+        panel: The antibody panel object containing marker metadata. Original
+            member snapshots are always stored in ``uns``, even when ``markers``
+            is a subset of ``panel.markers``.
+        markers: Marker ids to use as the count-matrix schema (``var`` index).
+            Defaults to ``panel.markers``. Pass ``adata.var.index`` when
+            rebuilding a file whose current marker set may differ from the
+            original panels (for example after sample calling).
 
     Returns:
         An AnnData object with counts and panel information.
@@ -73,10 +111,11 @@ def pna_edgelist_to_anndata(
         .tolist()
     )
 
+    marker_names = list(markers) if markers is not None else list(panel.markers)
     n_components = len(components)
-    n_markers = len(panel.markers)
+    n_markers = len(marker_names)
     component_to_idx = {c: i for i, c in enumerate(components)}
-    marker_to_idx = {m: i for i, m in enumerate(panel.markers)}
+    marker_to_idx = {m: i for i, m in enumerate(marker_names)}
 
     X = np.zeros((n_components, n_markers), dtype=np.uint32)
     n_umi1_arr = np.zeros(n_components, dtype=np.uint64)
@@ -152,7 +191,7 @@ def pna_edgelist_to_anndata(
     node_counts_df = pd.DataFrame(
         X,
         index=component_index,
-        columns=pd.Index(panel.markers, name="marker_id"),
+        columns=pd.Index(marker_names, name="marker_id"),
     )
 
     logger.debug("Computing component metrics.")
@@ -182,7 +221,7 @@ def pna_edgelist_to_anndata(
 
     logger.debug("Computing antibody metrics.")
     antibody_metrics_df = calculate_antibody_metrics(counts_df=node_counts_df)
-    antibody_metrics_df = antibody_metrics_df.reindex(index=panel.markers, fill_value=0)
+    antibody_metrics_df = antibody_metrics_df.reindex(index=marker_names, fill_value=0)
     antibody_metrics_df.index.name = "marker_id"
     # Do a dtype conversion of the columns here since AnnData cannot handle
     # a pyarrow arrays.

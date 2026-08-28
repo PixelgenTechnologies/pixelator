@@ -42,7 +42,7 @@ from pixelator.pna.collapse.utilities import (
     _find_connected_components_directional,
     _split_chunks,
 )
-from pixelator.pna.config import PNAAntibodyPanel, PNAAssay
+from pixelator.pna.config import PNAAntibodyPanelCombination, PNAAssay
 from pixelator.pna.demux.barcode_demuxer import PNAEmbedding
 from pixelator.pna.report.models import SampleReport
 
@@ -386,7 +386,7 @@ class RegionCollapser:
     def __init__(
         self,
         assay: PNAAssay,
-        panel: PNAAntibodyPanel,
+        panel: PNAAntibodyPanelCombination,
         region_id: CollapsibleRegion,
         max_mismatches: int | float = 0.1,
         algorithm: MoleculeCollapserAlgorithm = "directional",

@@ -14,14 +14,14 @@ import polars as pl
 
 if TYPE_CHECKING:
     from pixelator.pna.config.assay import PNAAssay
-    from pixelator.pna.config.panel import PNAAntibodyPanel
+    from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 
 
 def write_pna_fastq(
     sample_name: str,
     n_reads: int,
     edgelist: pl.DataFrame,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     assay: PNAAssay,
     substitution_error_rate: float = 1e-5,
     read1_length: int = 70,
@@ -122,7 +122,7 @@ def _write_fastq_records(
 def _assemble_amplicons(
     edgelist: pl.DataFrame,
     n_reads: int,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     assay: PNAAssay,
     rng: np.random.Generator,
 ) -> list[str]:

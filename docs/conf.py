@@ -24,6 +24,10 @@ nitpick_ignore_regex = [
     (r"py:.*", r"numpy\..*"),
     (r"py:.*", r"duckdb\..*"),
     (r"py:.*", r"faiss\..*"),
+    # --- Typing syntax AutoAPI turns into cross-references ---
+    # A variadic tuple annotation such as ``tuple[str, ...]`` is rendered with
+    # the ``...`` as a class reference to ``Ellipsis``, which has no target.
+    (r"py:class", r"Ellipsis"),
     # --- Private, internal, TypeVar, protocol-base, and native targets ---
     # These come from annotations, base-class lists, or TypeVars in the source code.
     (
@@ -106,6 +110,9 @@ autoapi_member_order = "alphabetical"
 autoapi_python_class_content = "class"
 autoapi_python_use_implicit_namespaces = True
 autoapi_own_page_level = "function"
+# Custom templates: class.rst sets py:currentmodule + qual_name on own pages
+# and qualifies short Bases: names so AutoAPI inheritance links resolve.
+autoapi_template_dir = "_templates/autoapi"
 
 
 templates_path = ["_templates"]

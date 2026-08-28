@@ -190,7 +190,7 @@ def graph(
     refinement_stage_max_edges_to_remove_relative,
     component_size_max_threshold,
     component_size_min_threshold,
-    panel,
+    panel: list[str],
     output,
 ):
     """Find connected components from the input molecules.
@@ -252,7 +252,7 @@ def graph(
     )
     output_path = graph_output / f"{sample_name}.graph.pxl"
 
-    panel = load_antibody_panel(pna_config, panel)
+    panels = load_antibody_panel(pna_config, panel)
     initial_stage_refinement_options = RefinementOptions(
         leiden_resolution=initial_stage_leiden_resolution,
         max_edges_to_remove=initial_stage_max_edges_to_remove,
@@ -273,7 +273,7 @@ def graph(
         refinement_stage_options=refinement_stage_refinement_options,
     )
 
-    component_size_threshold = True
+    component_size_threshold: bool | tuple[int, int] = True
     if any([component_size_min_threshold, component_size_max_threshold]):
         component_size_threshold = (
             component_size_min_threshold
@@ -288,7 +288,7 @@ def graph(
     try:
         _, component_statics = build_pxl_file_with_components(
             parquet_file=Path(parquet_file),
-            panel=panel,
+            panel=panels,
             sample_name=sample_name,
             path_output_pxl_file=output_path,
             multiplet_recovery=multiplet_recovery,
