@@ -17,6 +17,13 @@ for usage examples.
 **PNAPixelDataset**
 
 * :class:`pixelator.pna.pixeldataset.PNAPixelDataset`
+* :meth:`pixelator.pna.pixeldataset.PNAPixelDataset.layouts`
+* :class:`pixelator.pna.pixeldataset.layouts.Layouts`
+
+  :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.precomputed_layouts` and
+  :class:`~pixelator.pna.pixeldataset.precomputed_layouts.PreComputedLayouts`
+  are deprecated; use :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.layouts`
+  instead.
 
 **Plotting**
 

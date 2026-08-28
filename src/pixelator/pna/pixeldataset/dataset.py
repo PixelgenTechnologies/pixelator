@@ -277,7 +277,10 @@ class PNAPixelDataset:
     ) -> PreComputedLayouts:
         """Return the PreComputedLayouts instance for the dataset.
 
-        Deprecated: prefer :meth:`layouts` to compute Layouts on the fly instead. In the future this method will be removed.
+        .. deprecated:: Unreleased
+            Use :meth:`layouts` to compute Layouts on the fly instead. This
+            method still reads a stored ``layouts`` table when one exists, and
+            will be removed in a future release.
 
         Args:
             add_marker_counts: If True, add the marker counts to the precomputed layouts.
@@ -309,10 +312,39 @@ class PNAPixelDataset:
         random_seed: int | None = None,
         **kwargs,
     ) -> Layouts:
-        """Compute Layouts on the fly for the active Components.
+        """Return Layouts for the active Components.
 
-        This always computes coordinates from each Component graph. It does not
-        read Precomputed layouts from the PXL ``layouts`` table.
+        A Layout places each node of a Component graph in 2D or 3D so
+        you can visualize the cell and for example color nodes by marker.
+        Computation runs when you materialize the result (for example
+        :meth:`~pixelator.pna.pixeldataset.layouts.Layouts.to_df`).
+        This replaces the deprecated :meth:`precomputed_layouts`.
+
+        Choose a Layout algorithm with ``algorithm``. The default
+        ``coarsened_pmds_3d`` is the usual choice for PNA: it is fast on large
+        Components and produces a 3D Layout suitable for plotting.
+
+        Available Layout algorithms:
+
+        - ``coarsened_pmds_3d`` (default): 3D layout algorithm that uses a
+          pre-coarsening step. Fast and robust to structural artifacts.
+        - ``wpmds_3d``: 3D weighted PMDS; a good alternative when you want a
+          full (non-coarsened) PMDS Layout.
+        - ``pmds`` / ``pmds_3d``: 2D or 3D PMDS without coarsening.
+        - ``spectral_3d``: 3D spectral Layout. Extremely fast, generates high
+          quality layouts but can be sensitive to structural artifacts.
+        - ``fruchterman_reingold`` / ``fruchterman_reingold_3d``: force-directed;
+          slower on large Components.
+        - ``kamada_kawai`` / ``kamada_kawai_3d``: force-directed; slower on
+          large Components.
+
+        For most cases prefer ``coarsened_pmds_3d``, ``wpmds_3d``, or ``pmds`` (in that order).
+        On PNA data they are faster and produce better results than the
+        force-directed algorithms.
+
+        .. code-block:: python
+
+                df = pxl_dataset.filter(components=component_id).layouts().to_df()
 
         Args:
             algorithm: Layout algorithm to use. Defaults to
@@ -323,7 +355,7 @@ class PNAPixelDataset:
             **kwargs: Forwarded to the underlying Layout algorithm.
 
         Returns:
-            A lazy Layouts collection.
+            A Layouts collection for the active Components.
         """
         return Layouts(
             self.view,

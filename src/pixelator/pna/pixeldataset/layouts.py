@@ -22,9 +22,30 @@ from pixelator.pna.utils import normalize_input_to_set
 
 
 class Layouts:
-    """On-the-fly Layouts for one or more Components.
+    """Collection of layouts for one or more Components.
 
-    Coordinates are computed from each Component graph.
+    A Layout places each pixel (node) of a Component graph in 2D or 3D so you
+    can visualise a representation of the cell (for example a scatter of
+    ``x``/``y``/``z`` points colored by marker abundance).
+    Get a collection from :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.layouts`; coordinates
+    are computed when you materialize data. Prefer this over the deprecated
+    :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.precomputed_layouts`.
+
+    Example usage:
+
+    .. code-block:: python
+
+        layouts = pxl_dataset.filter(components=component_id).layouts()
+        df = layouts.to_df()  # pandas: all selected Components
+        first = layouts.first().to_df()  # only the first Component
+        for component_id, frame in layouts.iterator():
+            # one Component at a time (use this for many or large cells)
+            ...
+
+    Use :meth:`to_polars` instead of :meth:`to_df` when you want a polars
+    DataFrame. Each row is one node; columns include ``x``, ``y``, and for 3D
+    algorithms ``z``, plus ``component``, ``sample``, ``layout``, and (by
+    default) per-marker counts.
     """
 
     def __init__(
@@ -38,7 +59,11 @@ class Layouts:
         random_seed: int | None = None,
         algorithm_kwargs: dict | None = None,
     ):
-        """Create a new Layouts collection."""
+        """Create a new Layouts collection.
+
+        Prefer :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.layouts` over
+        constructing this class directly.
+        """
         self._view = view
         self._components = normalize_input_to_set(components)
         self._adata_helper = (
@@ -71,7 +96,11 @@ class Layouts:
         return set(self._ordered_components())
 
     def first(self) -> Layouts:
-        """Return a Layouts collection with only the first Component."""
+        """Return a Layouts collection with only the first Component.
+
+        Useful when you want to inspect or plot a single component without
+        computing Layouts for every Component in the collection.
+        """
         ordered = self._ordered_components()
         if not ordered:
             raise ValueError("No components available to compute a Layout.")
@@ -119,7 +148,7 @@ class Layouts:
         return df
 
     def to_polars(self) -> pl.DataFrame:
-        """Get the Layouts as a polars DataFrame."""
+        """Return Layouts for all selected Components as a polars DataFrame."""
         frames = [frame for _, frame in self.iterator(return_polars_df=True)]
         if not frames:
             return pl.DataFrame()
@@ -129,13 +158,18 @@ class Layouts:
         return df
 
     def to_df(self) -> pd.DataFrame:
-        """Get the Layouts as a pandas DataFrame."""
+        """Return Layouts for all selected Components as a pandas DataFrame."""
         return self.to_polars().to_pandas()
 
     def iterator(
         self, return_polars_df: bool = False
     ) -> Iterable[tuple[str, pd.DataFrame | pl.DataFrame]]:
-        """Yield (component id, Layout dataframe) pairs, one Component at a time."""
+        """Yield ``(component_id, dataframe)`` pairs, one Component at a time.
+
+        Prefer this over :meth:`to_df` when working with many or large
+        Components so each Layout can be processed without holding all of
+        them in memory.
+        """
         for component_id in self._ordered_components():
             frame = self._compute_component(component_id)
             if return_polars_df:

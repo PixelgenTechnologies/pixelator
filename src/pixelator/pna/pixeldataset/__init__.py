@@ -4,8 +4,13 @@ This package defines the high-level
 :class:`~pixelator.pna.pixeldataset.dataset.PNAPixelDataset` API and the
 modality helpers (:class:`~pixelator.pna.pixeldataset.edgelist.Edgelist`,
 :class:`~pixelator.pna.pixeldataset.proximity.Proximity`,
-:class:`~pixelator.pna.pixeldataset.precomputed_layouts.PreComputedLayouts`)
+:class:`~pixelator.pna.pixeldataset.layouts.Layouts`)
 used to read filtered views of data stored in ``.pxl`` DuckDB files.
+
+:class:`~pixelator.pna.pixeldataset.precomputed_layouts.PreComputedLayouts`
+(from :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.precomputed_layouts`)
+is deprecated; use :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.layouts`
+instead.
 
 Low-level access to those files (``PxlFile``, ``Query``, ``PixelDataViewer``, writers, and
 :class:`~pixelator.pna.pixeldataset.io.anndata_helper.AnnDataHelper`) lives under
@@ -23,9 +28,9 @@ names to on-disk ``PxlFile`` instances, and it constructs an
   objects, then wrap it in ``PNAPixelDataset``.
 - ``adata()`` delegates to ``AnnDataHelper.read_adata()`` (which opens the viewer’s DuckDB
   session and runs queries built via ``QueryBuilder`` in the IO package).
-- ``edgelist()``, ``proximity()``, ``layouts()``, and ``precomputed_layouts()`` take the same ``view`` and
+- ``edgelist()``, ``proximity()``, and ``layouts()`` take the same ``view`` and
   reuse the dataset’s ``AnnDataHelper`` so AnnData-backed joins stay consistent with the
-  active filters.
+  active filters. ``precomputed_layouts()`` is deprecated.
 - ``metadata()`` queries DuckDB through ``view.open()`` and ``Query`` directly.
 - ``filter()`` returns a new ``PNAPixelDataset`` with a narrowed ``PixelDataViewer`` (when
   filtering samples) and updated active components/markers, rebuilding ``AnnDataHelper``
@@ -50,7 +55,7 @@ names to on-disk ``PxlFile`` instances, and it constructs an
     │ Edgelist           ├──┐
     │ Proximity          │  ├── view + shared AnnDataHelper (from PNAPixelDataset)
     │ Layouts            │  │
-    │ PreComputedLayouts ├──┘
+    │ PreComputedLayouts ├──┘  (deprecated; use Layouts)
     └────────────────────┘
 
 Copyright © 2025 Pixelgen Technologies AB.
