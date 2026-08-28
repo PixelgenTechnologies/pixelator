@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Typed PNA panel hierarchy under `PNAPanel`: `PartialPNAAntibodyPanel` with
   `PNABasePanel`, `PNAAddonPanel`, and `PNASampleHashingPanel`, plus
   `PNAAntibodyPanelCombination` for multi-panel samples. Panel CSV metadata
-  may set `panel_type`; helpers `panel_from_csv`, `panel_from_adata`, and
-  `panel_from_pxl_dataset` dispatch to the concrete type or a combination.
+  may set `panel_type`; `panel_from_csv` dispatches to the concrete type.
+  `panel_from_adata` and `panel_from_pxl_dataset` return that type, or a
+  combination when several partial panels are stored.
 - CLI `--panel` may be repeated so demux/collapse/graph can load several panels
   into one combination.
 - `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
@@ -27,7 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   only one panel is requested).
 - `PNAAntibodyPanelCombination` is constructed from one panel or a sequence of
   panels, e.g. `PNAAntibodyPanelCombination(panel)` or
-  `PNAAntibodyPanelCombination([p1, p2, ...])`.
+  `PNAAntibodyPanelCombination([p1, p2, ...])`. Members must not share the same
+  `product` (including more than one member with `product` unset), so patch
+  bumps can key combination members by product.
 - AnnData / `.pxl` panel storage no longer writes the legacy single-key
   ``panel_metadata`` + ``panel_columns`` shape. New files always use
   ``num_partial_panels``, ``panel_metadata__{i}``, and ``panel_df__{i}``
@@ -45,6 +48,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PNAPixelDataset.precomputed_layouts()` is deprecated. Use `layouts()` to
   compute Layouts on the fly. The method still reads a stored `layouts` table
   when one exists.
+- `PNAAntibodyPanel` as the primary single-panel type. Use
+  `PartialPNAAntibodyPanel` (or a typed subclass) for one panel, and
+  `PNAAntibodyPanelCombination` when several panels are used together.
+  `PNAAntibodyPanel` remains as a deprecated alias of `PartialPNAAntibodyPanel`
+  (emits a ``DeprecationWarning`` when accessed).
 
 ### Removed
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
@@ -56,17 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   returns the original UMIs, so the redundant `create_working_edgelist` /
   `map_working_to_original_umi_names` round-trip has been removed. The filtered edgelist is now
   passed directly to native community detection, and the recovered components are unchanged.
-- The single-panel `PNAAntibodyPanel` type as the primary API. Use
-  `PartialPNAAntibodyPanel` (or a typed subclass) for one panel, and
-  `PNAAntibodyPanelCombination` when several panels are used together.
-  `PNAAntibodyPanel` remains as a deprecated alias of `PartialPNAAntibodyPanel`
-  for import compatibility (emits a ``DeprecationWarning`` when accessed).
 
 ### Fixed
-- Combining a base panel that omits `sample_hashing` with a hashing panel no
-  longer drops hashing markers. `pd.concat` could upcast bool flags to float
-  (`True` → `1.0`), and `sample_hashing_mask` did not treat `"1.0"` as hashing,
-  so sample calling saw an empty hashing set for multi-panel samples.
 - Opening a sample-called `.pxl` with a newer panel patch version no longer
   fails. Sample calling removes hashing antibodies from the count matrix
   (e.g. `B2M-1`…`B2M-8` become `B2M`) but still stores the original panels in
@@ -77,16 +76,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `original_hash_counts_*` columns are present on `obs`, or when hashing
   clones from the stored panels are absent from `var`.
   The same bump updates edgelist `marker_1` / `marker_2`, proximity
-  `marker_1` / `marker_2`, and layout marker-count columns. A hashing `marker_id`
-  may only change its base name (`B2M-1` → `NEWB2MNAME-1`), not the hash-group
-  suffix; that rename is applied to `original_hash_counts_*` and the collapsed
-  marker in `var`. If the hashing base is also a non-hashing `marker_id`
-  (v2 `B2M` next to `B2M-1`), that non-hashing marker must be renamed to the
-  same new base so sample-called files are not rewritten as hashing-only
-  remaps. Hashing and non-hashing rows that share a name must still be renamed
-  together when they live on different members of the stored combination. A
-  hashing family may not collapse to a name used by another hashing family or
-  non-hashing marker. Denoise rebuilds AnnData from the current markers so
+  `marker_1` / `marker_2`, and layout marker-count columns. A hashing
+  `marker_id` may only change its base name (`B2M-1` → `NEWB2MNAME-1`), not
+  the hash-group suffix. Denoise rebuilds AnnData from the current markers so
   hashing antibodies are not added back.
 - `coarsened_pmds_layout` sizes PMDS pivots from the full graph when Leiden
   yields too few communities, so a valid low `pivots` no longer fails
