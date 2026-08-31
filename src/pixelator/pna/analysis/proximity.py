@@ -404,55 +404,80 @@ def filter_proximity_scores(
     background_threshold_count: float | None = None,
     min_cells_count: int | None = None,
 ) -> pd.DataFrame:
-    """Filter a long-format proximity score table by abundance and detection.
+    """Remove marker pairs with too little signal from a proximity score table.
 
-    Python analog of pixelatorR ``FilterProximityScores``. At least one
-    threshold must be set. Filters are applied in this order:
+    Proximity scores are reported for every marker pair detected in a cell,
+    including pairs where one or both markers are barely present. Such pairs
+    may reflect background and can distort downstream summaries and
+    heatmaps, so it is usually worth dropping them before further analysis.
 
-    1. ``background_threshold_pct`` — keep rows where
-       ``min(p1, p2) >= background_threshold_pct`` (fractions of UMI counts
-       in the component).
-    2. ``background_threshold_count`` — keep rows where
-       ``min(count_1, count_2) >= background_threshold_count``.
-    3. ``min_cells_count`` — keep marker pairs detected in at least this many
-       components.
+    At least one threshold must be given. When several are given, they are
+    applied in this order:
 
-    Tutorials typically use only ``background_threshold_pct`` (for example the
-    isotype-control fraction cutoff). That filter does not depend on cell
-    size, unlike a raw UMI count cutoff.
+    1. ``background_threshold_pct`` keeps a pair only if both of its markers
+       make up at least this fraction of the cell's UMI counts. The isotype
+       control fraction for your panel is a good choice of cutoff.
+    2. ``background_threshold_count`` keeps a pair only if both of its markers
+       have at least this many UMI counts.
+    3. ``min_cells_count`` keeps a marker pair only if it is detected in at
+       least this many cells.
 
-    Proportion and count columns may use either the R names from
-    ``ProximityScores(..., add_marker_proportions = TRUE)`` (``p1`` / ``p2``,
-    ``count_1`` / ``count_2``) or the Python names from
-    ``Proximity.to_df()`` with ``add_marker_counts=True`` (the default):
-    ``marker_1_freq`` / ``marker_2_freq`` and ``marker_1_count`` /
-    ``marker_2_count``.
+    Using ``background_threshold_pct`` on its own is usually enough. Unlike
+    a raw count cutoff, a fraction does not depend on how many molecules a
+    cell has, so the same threshold is meaningful for both small and large cells.
+
+    The filters need the per-cell marker abundance columns that
+    :meth:`~pixelator.pna.pixeldataset.proximity.Proximity.to_df` adds by
+    default (``add_marker_counts=True``): ``marker_1_freq`` and
+    ``marker_2_freq`` for the fraction filter, ``marker_1_count`` and
+    ``marker_2_count`` for the count filter. Proximity tables exported from
+    pixelatorR also work, where the same columns are named ``p1`` and ``p2``,
+    and ``count_1`` and ``count_2``.
 
     Args:
-        proximity_df: A long-format proximity score table, e.g. from
-            ``Proximity.to_df``, with one row per ``component`` and marker
-            pair.
-        background_threshold_pct: Minimum UMI fraction that both markers in a
-            pair must reach. Must be in ``[0, 1]``. Requires ``p1`` and
-            ``p2``, or ``marker_1_freq`` and ``marker_2_freq``.
-        background_threshold_count: Minimum UMI count that both markers in a
-            pair must reach. Requires ``count_1`` and ``count_2``, or
-            ``marker_1_count`` and ``marker_2_count``.
-        min_cells_count: Minimum number of components in which a marker pair
-            must be detected. Requires ``marker_1`` and ``marker_2``.
+        proximity_df: Proximity scores with one row per cell (``component``)
+            and marker pair, for example from
+            ``dataset.proximity().to_df()``.
+        background_threshold_pct: Minimum fraction of a cell's UMI counts that
+            both markers in a pair must reach, as a value between 0 and 1. For
+            example, 0.001 in a cell with 20,000 molecules requires at least
+            20 counts for both markers.
+        background_threshold_count: Minimum number of UMI counts that both
+            markers in a pair must reach. This is an absolute cutoff, so it
+            removes more pairs in small cells than in large ones.
+        min_cells_count: Minimum number of cells a marker pair must be
+            detected in. Useful for dropping pairs seen in only a handful of
+            cells.
 
     Returns:
-        A DataFrame with the same columns as ``proximity_df``, containing
-        only the rows that pass every requested filter.
+        The rows of ``proximity_df`` that pass every threshold you set, with
+        the columns unchanged.
 
     Raises:
         ValueError: If no threshold is set, if a threshold is outside its
-            allowed range, or if columns required by a requested filter are
-            missing.
+            allowed range, or if the table lacks the columns a requested
+            filter needs.
+
+    Examples:
+        Keep the marker pairs where both markers are above the isotype
+        control fraction, and see how much of the table that leaves::
+
+            from pixelator.pna.analysis import filter_proximity_scores
+            from pixelator.pna.pixeldataset import read
+
+            dataset = read("sample.pxl")
+            proximity_table = dataset.proximity().to_df()
+            filtered = filter_proximity_scores(
+                proximity_table,
+                background_threshold_pct=0.001,
+            )
+            pct_rows_kept = round(
+                len(filtered) / len(proximity_table) * 100, 2
+            )
 
     See Also:
-        FilterProximityScores in pixelatorR
-        (`R/filter_and_summarize_proximity_scores.R`).
+        ``FilterProximityScores`` in pixelatorR, the equivalent function for
+        R users.
     """
     _validate_optional_threshold(
         "background_threshold_pct",
@@ -488,9 +513,8 @@ def filter_proximity_scores(
             filtered,
             _PCT_COLUMN_PAIRS,
             "background_threshold_pct",
-            "Fetch proximity with add_marker_counts=True "
-            "(Python Proximity.to_df) or add_marker_proportions=TRUE "
-            "(R ProximityScores).",
+            "Read the proximity table with dataset.proximity().to_df() and "
+            "add_marker_counts=True (the default) to include them.",
         )
         filtered = filtered[
             np.minimum(filtered[p1_col], filtered[p2_col]) >= background_threshold_pct
@@ -501,9 +525,8 @@ def filter_proximity_scores(
             filtered,
             _COUNT_COLUMN_PAIRS,
             "background_threshold_count",
-            "Fetch proximity with add_marker_counts=True "
-            "(Python Proximity.to_df) or add_marker_proportions=TRUE "
-            "(R ProximityScores).",
+            "Read the proximity table with dataset.proximity().to_df() and "
+            "add_marker_counts=True (the default) to include them.",
         )
         filtered = filtered[
             np.minimum(filtered[c1_col], filtered[c2_col]) >= background_threshold_count
