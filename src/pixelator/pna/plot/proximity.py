@@ -295,7 +295,10 @@ def proximity_heatmap(
 
     # Size mapping is only used for dots; skip the transform for tiles so a
     # default ``size_col`` (or an explicit transform) cannot look up a column
-    # that was dropped from ``required_columns``.
+    # that was dropped from ``required_columns``. Keep the original column name
+    # for the size-legend title so the internal ``{size_col}_transformed``
+    # column is not shown to the user.
+    size_legend_title = size_col
     if kind == "dots" and size_col is not None and size_col_transform is not None:
         transformed_col = f"{size_col}_transformed"
         data[transformed_col] = size_col_transform(data[size_col])
@@ -343,6 +346,7 @@ def proximity_heatmap(
         marker2_col,
         value_col,
         size_col,
+        size_legend_title,
         size_range,
         cmap,
         cluster_rows,
@@ -431,6 +435,7 @@ def _plot_dots(
     marker2_col,
     value_col,
     size_col,
+    size_legend_title,
     size_range,
     cmap,
     cluster_rows,
@@ -522,7 +527,7 @@ def _plot_dots(
     cbar_to_legend_gap = 0.25
 
     if size_col is not None:
-        legend_title_w, _ = _text_size_inches(size_col)
+        legend_title_w, _ = _text_size_inches(size_legend_title)
         legend_entry_w = max(_text_size_inches(lbl)[0] for lbl in legend_labels)
         marker_diameter_in = 2 * np.sqrt(max(size_range) / np.pi) / 72
         legend_width = (
@@ -616,7 +621,7 @@ def _plot_dots(
         ) / fig_width
         fig.legend(
             handles=handles,
-            title=size_col,
+            title=size_legend_title,
             loc="center left",
             bbox_to_anchor=(legend_x, 0.5),
             frameon=False,

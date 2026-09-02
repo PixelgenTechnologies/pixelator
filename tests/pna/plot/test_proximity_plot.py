@@ -117,6 +117,18 @@ def test_size_col_transform_renames_column(proximity_data):
     )
 
 
+def test_size_col_transform_keeps_original_legend_title(proximity_data):
+    """The size legend title stays ``size_col``, not ``{size_col}_transformed``."""
+    fig, _ = proximity_heatmap(
+        proximity_data,
+        kind="dots",
+        size_col_transform=lambda p: -np.log10(p),
+    )
+    assert fig.legends
+    assert fig.legends[0].get_title().get_text() == "p_adj"
+    plt.close(fig)
+
+
 def test_tiles_ignores_size_col_transform(proximity_data):
     """kind='tiles' does not look up size_col, even when a transform is given."""
     tiles_data = proximity_data.drop(columns=["p_adj"])
