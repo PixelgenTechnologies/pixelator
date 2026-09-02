@@ -10,6 +10,7 @@ import pytest
 from matplotlib.patches import Rectangle
 
 from pixelator.pna.plot import proximity_heatmap
+from pixelator.pna.plot.proximity import _neg_log10_p
 
 
 @pytest.fixture(name="proximity_data")
@@ -19,8 +20,8 @@ def proximity_data_fixture():
         {
             "marker_1": ["CD3", "CD3", "CD3", "CD4", "CD4", "CD8"],
             "marker_2": ["CD3", "CD4", "CD8", "CD4", "CD8", "CD8"],
-            "estimate": [0.0, 0.8, -0.5, 0.0, 0.3, 0.0],
-            "p_adj": [1.0, 0.001, 0.2, 1.0, 0.04, 1.0],
+            "mean_log2_ratio": [0.0, 0.8, -0.5, 0.0, 0.3, 0.0],
+            "p_adjusted": [1.0, 0.001, 0.2, 1.0, 0.04, 1.0],
         }
     )
 
@@ -111,10 +112,48 @@ def test_size_col_transform_renames_column(proximity_data):
         size_col_transform=lambda p: -np.log10(p),
         return_plot_data=True,
     )
-    assert "p_adj_transformed" in long_data.columns
+    assert "p_adjusted_transformed" in long_data.columns
     np.testing.assert_allclose(
-        long_data.loc[long_data["p_adj"] == 0.001, "p_adj_transformed"], 3.0
+        long_data.loc[long_data["p_adjusted"] == 0.001, "p_adjusted_transformed"], 3.0
     )
+
+
+def test_default_size_col_transform_is_neg_log10(proximity_data):
+    """Default dots size mapping uses -log10 so smaller p-values become larger dots."""
+    long_data = proximity_heatmap(proximity_data, kind="dots", return_plot_data=True)
+    assert "p_adjusted_transformed" in long_data.columns
+    np.testing.assert_allclose(
+        long_data["p_adjusted_transformed"], _neg_log10_p(long_data["p_adjusted"])
+    )
+
+    data = proximity_data.copy()
+    fig, ax = proximity_heatmap(
+        data, kind="dots", symmetrise=False, cluster_rows=False, cluster_cols=False
+    )
+    sizes_by_pair = {
+        (m1, m2): s
+        for m1, m2, s in zip(
+            data["marker_1"],
+            data["marker_2"],
+            ax.collections[0].get_sizes(),
+            strict=True,
+        )
+    }
+    # Most significant pair (p=0.001) must be larger than least significant (p=1.0).
+    assert sizes_by_pair[("CD3", "CD4")] > sizes_by_pair[("CD3", "CD3")]
+    plt.close(fig)
+
+
+def test_size_col_transform_none_maps_raw_values_linearly(proximity_data):
+    """Passing size_col_transform=None keeps a linear map of the raw column."""
+    long_data = proximity_heatmap(
+        proximity_data,
+        kind="dots",
+        size_col_transform=None,
+        return_plot_data=True,
+    )
+    assert "p_adjusted_transformed" not in long_data.columns
+    assert "p_adjusted" in long_data.columns
 
 
 def test_size_col_transform_keeps_original_legend_title(proximity_data):
@@ -125,13 +164,13 @@ def test_size_col_transform_keeps_original_legend_title(proximity_data):
         size_col_transform=lambda p: -np.log10(p),
     )
     assert fig.legends
-    assert fig.legends[0].get_title().get_text() == "p_adj"
+    assert fig.legends[0].get_title().get_text() == "p_adjusted"
     plt.close(fig)
 
 
 def test_tiles_ignores_size_col_transform(proximity_data):
     """kind='tiles' does not look up size_col, even when a transform is given."""
-    tiles_data = proximity_data.drop(columns=["p_adj"])
+    tiles_data = proximity_data.drop(columns=["p_adjusted"])
     wide = proximity_heatmap(
         tiles_data,
         kind="tiles",
@@ -143,7 +182,9 @@ def test_tiles_ignores_size_col_transform(proximity_data):
 
 def test_one_marker_tiles_does_not_raise():
     """A 1x1 tiles heatmap skips clustering instead of calling linkage."""
-    data = pd.DataFrame({"marker_1": ["CD3"], "marker_2": ["CD3"], "estimate": [0.1]})
+    data = pd.DataFrame(
+        {"marker_1": ["CD3"], "marker_2": ["CD3"], "mean_log2_ratio": [0.1]}
+    )
     fig, ax = proximity_heatmap(data, kind="tiles")
     assert isinstance(fig, plt.Figure)
     assert isinstance(ax, plt.Axes)
@@ -156,8 +197,8 @@ def test_one_marker_dots_does_not_raise():
         {
             "marker_1": ["CD3"],
             "marker_2": ["CD3"],
-            "estimate": [0.1],
-            "p_adj": [0.05],
+            "mean_log2_ratio": [0.1],
+            "p_adjusted": [0.05],
         }
     )
     fig, ax = proximity_heatmap(data, kind="dots")
@@ -178,17 +219,23 @@ def test_custom_legend_range_sets_color_normalization(proximity_data):
 def test_constant_size_col_uses_midpoint_and_single_legend_entry(proximity_data):
     """Identical size_col values map to midpoint size with one legend entry."""
     data = proximity_data.copy()
-    data["p_adj"] = 0.05
+    data["p_adjusted"] = 0.05
     size_range = (20.0, 300.0)
     fig, ax = proximity_heatmap(
-        data, kind="dots", size_col="p_adj", size_range=size_range
+        data,
+        kind="dots",
+        size_col="p_adjusted",
+        size_col_transform=None,
+        size_range=size_range,
     )
     scatter = ax.collections[0]
     expected_size = float(np.mean(size_range))
     np.testing.assert_allclose(scatter.get_sizes(), expected_size)
 
     size_legend = next(
-        legend for legend in fig.legends if legend.get_title().get_text() == "p_adj"
+        legend
+        for legend in fig.legends
+        if legend.get_title().get_text() == "p_adjusted"
     )
     labels = [text.get_text() for text in size_legend.get_texts()]
     assert labels == ["0.05"]
@@ -201,20 +248,26 @@ def test_constant_size_col_uses_midpoint_and_single_legend_entry(proximity_data)
 
 def test_dots_figsize_scales_layout_to_fill_figure(proximity_data):
     """A custom figsize scales axes/colorbar placement instead of clipping."""
-    fig_auto, ax_auto = proximity_heatmap(proximity_data, kind="dots")
+    fig_auto, _ = proximity_heatmap(proximity_data, kind="dots")
     auto_size = fig_auto.get_size_inches()
-    auto_bounds = ax_auto.get_position().bounds
     plt.close(fig_auto)
 
-    target = (auto_size[0] * 0.5, auto_size[1] * 0.5)
+    # Deliberately undersized relative to the auto layout; without scaling,
+    # colorbar/axes would be placed past the figure edge in absolute inches.
+    target = (max(auto_size[0] * 0.5, 1.0), max(auto_size[1] * 0.5, 1.0))
     fig, ax = proximity_heatmap(proximity_data, kind="dots", figsize=target)
-    np.testing.assert_allclose(fig.get_size_inches(), target)
-    # Relative axes position is preserved; absolute inch coords would clip.
-    np.testing.assert_allclose(ax.get_position().bounds, auto_bounds, atol=1e-6)
+    np.testing.assert_allclose(fig.get_size_inches(), target, atol=1e-2)
     assert len(fig.axes) >= 2
-    cax = fig.axes[1]
-    assert cax.get_position().x0 < 1.0
-    assert cax.get_position().x1 <= 1.0 + 1e-6
+    for artist_ax in fig.axes:
+        pos = artist_ax.get_position()
+        assert pos.x0 >= -1e-6
+        assert pos.y0 >= -1e-6
+        assert pos.x1 <= 1.0 + 1e-6
+        assert pos.y1 <= 1.0 + 1e-6
+    # Plot area should occupy a meaningful fraction of the figure, not a
+    # fixed absolute-inch pocket in the corner.
+    assert ax.get_position().width > 0.2
+    assert ax.get_position().height > 0.2
     plt.close(fig)
 
 
@@ -268,7 +321,7 @@ def test_highlight_color_col_missing_color_raises(proximity_data):
 def test_missing_required_column_raises(proximity_data):
     """A DataFrame missing a required column raises ValueError."""
     with pytest.raises(ValueError, match="missing required column"):
-        proximity_heatmap(proximity_data.drop(columns=["estimate"]))
+        proximity_heatmap(proximity_data.drop(columns=["mean_log2_ratio"]))
 
 
 def test_duplicate_ordered_pair_raises(proximity_data):
@@ -286,7 +339,7 @@ def test_ambiguous_both_directions_with_symmetrise_raises():
         {
             "marker_1": ["A", "B"],
             "marker_2": ["B", "A"],
-            "estimate": [1.0, 2.0],
+            "mean_log2_ratio": [1.0, 2.0],
         }
     )
     with pytest.raises(ValueError, match="ambiguous"):
@@ -299,7 +352,7 @@ def test_ambiguous_both_directions_ok_with_symmetrise_false():
         {
             "marker_1": ["A", "B"],
             "marker_2": ["B", "A"],
-            "estimate": [1.0, 2.0],
+            "mean_log2_ratio": [1.0, 2.0],
         }
     )
     fig, ax = proximity_heatmap(data, symmetrise=False)

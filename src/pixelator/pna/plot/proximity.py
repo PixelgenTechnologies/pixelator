@@ -23,6 +23,11 @@ from pixelator.common.plot import pixelgen_divergent_colormap
 __all__ = ["proximity_heatmap"]
 
 
+def _neg_log10_p(values: pd.Series) -> pd.Series:
+    """Map p-values to ``-log10`` so smaller (more significant) values yield larger dots."""
+    return -np.log10(values.clip(lower=np.finfo(float).tiny))
+
+
 def _validate_columns(data, required):
     missing = set(required) - set(data.columns)
     if missing:
@@ -166,9 +171,9 @@ def proximity_heatmap(
     data: pd.DataFrame,
     marker1_col: str = "marker_1",
     marker2_col: str = "marker_2",
-    value_col: str = "estimate",
-    size_col: Union[str, None] = "p_adj",
-    size_col_transform: Union[Callable[[pd.Series], pd.Series], None] = None,
+    value_col: str = "mean_log2_ratio",
+    size_col: Union[str, None] = "p_adjusted",
+    size_col_transform: Union[Callable[[pd.Series], pd.Series], None] = _neg_log10_p,
     size_range: Tuple[float, float] = (20.0, 300.0),
     cmap: Union[str, Colormap, None] = None,
     cluster_rows: bool = True,
@@ -195,6 +200,12 @@ def proximity_heatmap(
     either as a clustered heatmap of tiles, or as a dot plot where dot size
     encodes a second (e.g. significance) column.
 
+    Defaults match `summarize_proximity_scores` (``mean_log2_ratio``). For
+    `calculate_differential_proximity` results, pass
+    ``value_col="median_diff"`` (and keep the default ``size_col="p_adjusted"``
+    for ``kind="dots"``). Summary tables have no p-value column, so use
+    ``size_col=None`` when drawing them as dots.
+
     Args:
         data: A long-format DataFrame with one row per marker pair, containing
             at least ``marker1_col``, ``marker2_col`` and ``value_col``,
@@ -205,13 +216,16 @@ def proximity_heatmap(
         marker2_col: Column with the second marker of each pair. Defaults to
             ``"marker_2"``.
         value_col: Numeric column to map to tile/dot color. Defaults to
-            ``"estimate"``.
+            ``"mean_log2_ratio"`` (from `summarize_proximity_scores`). Use
+            ``"median_diff"`` for `calculate_differential_proximity` results.
         size_col: Numeric column to map to dot size, only used when
             ``kind="dots"``. Set to ``None`` to draw all dots at the same
-            size. Defaults to ``"p_adj"``.
+            size. Defaults to ``"p_adjusted"`` (from
+            `calculate_differential_proximity`).
         size_col_transform: Optional function applied to ``data[size_col]``
-            before mapping it to dot size, e.g. ``lambda p: -np.log10(p)`` to
-            emphasize small p-values with larger dots. Defaults to ``None``.
+            before mapping it to dot size. Defaults to ``-log10``, so smaller
+            (more significant) p-values become larger dots. Pass ``None`` for
+            a linear mapping of the raw column onto ``size_range``.
         size_range: The ``(min, max)`` marker area (in points²) that
             ``size_col`` is scaled to. Defaults to ``(20.0, 300.0)``.
         cmap: The colormap used for ``value_col``. Defaults to a Pixelgen
