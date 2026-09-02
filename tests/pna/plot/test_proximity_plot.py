@@ -175,6 +175,47 @@ def test_custom_legend_range_sets_color_normalization(proximity_data):
     plt.close(fig)
 
 
+def test_constant_size_col_uses_midpoint_and_single_legend_entry(proximity_data):
+    """Identical size_col values map to midpoint size with one legend entry."""
+    data = proximity_data.copy()
+    data["p_adj"] = 0.05
+    size_range = (20.0, 300.0)
+    fig, ax = proximity_heatmap(
+        data, kind="dots", size_col="p_adj", size_range=size_range
+    )
+    scatter = ax.collections[0]
+    expected_size = float(np.mean(size_range))
+    np.testing.assert_allclose(scatter.get_sizes(), expected_size)
+
+    size_legend = next(
+        legend for legend in fig.legends if legend.get_title().get_text() == "p_adj"
+    )
+    labels = [text.get_text() for text in size_legend.get_texts()]
+    assert labels == ["0.05"]
+    handle_sizes = [handle.get_markersize() ** 2 for handle in size_legend.legend_handles]
+    np.testing.assert_allclose(handle_sizes, expected_size)
+    plt.close(fig)
+
+
+def test_dots_figsize_scales_layout_to_fill_figure(proximity_data):
+    """A custom figsize scales axes/colorbar placement instead of clipping."""
+    fig_auto, ax_auto = proximity_heatmap(proximity_data, kind="dots")
+    auto_size = fig_auto.get_size_inches()
+    auto_bounds = ax_auto.get_position().bounds
+    plt.close(fig_auto)
+
+    target = (auto_size[0] * 0.5, auto_size[1] * 0.5)
+    fig, ax = proximity_heatmap(proximity_data, kind="dots", figsize=target)
+    np.testing.assert_allclose(fig.get_size_inches(), target)
+    # Relative axes position is preserved; absolute inch coords would clip.
+    np.testing.assert_allclose(ax.get_position().bounds, auto_bounds, atol=1e-6)
+    assert len(fig.axes) >= 2
+    cax = fig.axes[1]
+    assert cax.get_position().x0 < 1.0
+    assert cax.get_position().x1 <= 1.0 + 1e-6
+    plt.close(fig)
+
+
 def test_highlight_pairs_draws_rectangles(proximity_data):
     """highlight_pairs adds rectangle outlines to the plot."""
     highlight = pd.DataFrame({"marker_1": ["CD3"], "marker_2": ["CD4"]})

@@ -258,7 +258,9 @@ def proximity_heatmap(
             the full cell/grid spacing, as a fraction in ``[0, 1)``. Defaults
             to ``0.1``.
         figsize: The figure size, in inches. Defaults to ``None``, which uses
-            a size proportional to the number of markers.
+            a size proportional to the number of markers. When set for
+            ``kind="dots"``, the auto-computed layout is scaled to fill the
+            given size.
 
     Returns:
         A tuple of the created figure and its main axes (the heatmap axes for
@@ -476,29 +478,25 @@ def _plot_dots(
     if size_col is not None:
         size_values = data[size_col].to_numpy(dtype=float)
         lo, hi = np.nanmin(size_values), np.nanmax(size_values)
-        sizes = (
-            np.full(len(size_values), np.mean(size_range))
-            if lo == hi
-            else np.interp(size_values, (lo, hi), size_range)
-        )
+        if lo == hi:
+            # Constant size_col: one midpoint marker, one legend entry.
+            # np.interp with identical xp endpoints is undefined and would
+            # produce invalid sizes plus duplicate labels.
+            mid_size = float(np.mean(size_range))
+            sizes = np.full(len(size_values), mid_size)
+            legend_sizes = [mid_size]
+            legend_labels = [f"{lo:.2g}"]
+        else:
+            sizes = np.interp(size_values, (lo, hi), size_range)
+            legend_values = np.linspace(lo, hi, 4)
+            legend_sizes = np.interp(legend_values, (lo, hi), size_range)
+            legend_labels = [f"{value:.2g}" for value in legend_values]
     else:
         sizes = np.full(len(data), size_range[-1])
+        legend_sizes = legend_labels = []
 
     x = data[marker2_col].cat.codes.to_numpy()
     y = data[marker1_col].cat.codes.to_numpy()
-
-    if size_col is not None:
-        legend_values = np.linspace(
-            np.nanmin(data[size_col]), np.nanmax(data[size_col]), 4
-        )
-        legend_sizes = np.interp(
-            legend_values,
-            (np.nanmin(data[size_col]), np.nanmax(data[size_col])),
-            size_range,
-        )
-        legend_labels = [f"{value:.2g}" for value in legend_values]
-    else:
-        legend_values = legend_sizes = legend_labels = []
 
     # Axes and the colorbar/size-legend are placed at explicit, absolute-inch
     # positions (rather than via `plt.subplots` + `fig.tight_layout()`)
@@ -548,10 +546,26 @@ def _plot_dots(
         + 0.15
     )
 
-    fig_width, fig_height = figsize or (
-        left_margin + plot_width + right_margin,
-        top_margin + plot_height + bottom_margin,
-    )
+    natural_width = left_margin + plot_width + right_margin
+    natural_height = top_margin + plot_height + bottom_margin
+    fig_width, fig_height = figsize or (natural_width, natural_height)
+
+    # When the caller supplies figsize, scale the auto layout so axes,
+    # colorbar, and size-legend keep their relative positions and fill the
+    # figure instead of staying at absolute-inch coordinates (which clip on
+    # smaller figures and leave unused space on larger ones).
+    if figsize is not None:
+        sx = fig_width / natural_width
+        sy = fig_height / natural_height
+        left_margin *= sx
+        plot_width *= sx
+        cbar_gap *= sx
+        cbar_width *= sx
+        tick_label_w *= sx
+        cbar_label_w *= sx
+        cbar_to_legend_gap *= sx
+        bottom_margin *= sy
+        plot_height *= sy
 
     fig = plt.figure(figsize=(fig_width, fig_height))
     ax = fig.add_axes(
