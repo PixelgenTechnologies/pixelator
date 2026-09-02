@@ -192,7 +192,9 @@ def test_constant_size_col_uses_midpoint_and_single_legend_entry(proximity_data)
     )
     labels = [text.get_text() for text in size_legend.get_texts()]
     assert labels == ["0.05"]
-    handle_sizes = [handle.get_markersize() ** 2 for handle in size_legend.legend_handles]
+    handle_sizes = [
+        handle.get_markersize() ** 2 for handle in size_legend.legend_handles
+    ]
     np.testing.assert_allclose(handle_sizes, expected_size)
     plt.close(fig)
 
