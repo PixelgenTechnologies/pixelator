@@ -28,6 +28,7 @@ for usage examples.
 **Plotting**
 
 * :func:`pixelator.pna.plot.molecule_rank_plot`
+* :func:`pixelator.pna.plot.proximity_heatmap`
 
 **Abundance normalization**
 
