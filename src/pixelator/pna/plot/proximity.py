@@ -125,7 +125,8 @@ def _highlight_positions(
         zip(highlight_pairs[marker1_col], highlight_pairs[marker2_col], colors)
     )
     if symmetrise:
-        positions += [(m2, m1, c) for m1, m2, c in positions]
+        # Skip self-pairs: swapping (m, m) would duplicate the same cell.
+        positions += [(m2, m1, c) for m1, m2, c in positions if m1 != m2]
     return positions
 
 
@@ -299,6 +300,9 @@ def proximity_heatmap(
     required_columns = [marker1_col, marker2_col, value_col]
     if kind == "dots" and size_col is not None:
         required_columns.append(size_col)
+    # Preserve order while dropping duplicates (e.g. size_col == value_col);
+    # indexing with repeated names would yield a DataFrame instead of a Series.
+    required_columns = list(dict.fromkeys(required_columns))
     _validate_columns(data, required_columns)
     if highlight_pairs is not None:
         _validate_columns(highlight_pairs, [marker1_col, marker2_col])
