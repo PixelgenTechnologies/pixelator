@@ -131,9 +131,7 @@ def test_tiles_ignores_size_col_transform(proximity_data):
 
 def test_one_marker_tiles_does_not_raise():
     """A 1x1 tiles heatmap skips clustering instead of calling linkage."""
-    data = pd.DataFrame(
-        {"marker_1": ["CD3"], "marker_2": ["CD3"], "estimate": [0.1]}
-    )
+    data = pd.DataFrame({"marker_1": ["CD3"], "marker_2": ["CD3"], "estimate": [0.1]})
     fig, ax = proximity_heatmap(data, kind="tiles")
     assert isinstance(fig, plt.Figure)
     assert isinstance(ax, plt.Axes)
