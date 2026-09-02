@@ -61,8 +61,18 @@ def _wide_matrix(data, marker1_col, marker2_col, value_col):
     return wide.reindex(index=markers, columns=markers)
 
 
+def _can_cluster(n_observations: int) -> bool:
+    """Hierarchical clustering needs at least three observations.
+
+    `scipy.cluster.hierarchy.linkage` cannot build a tree from a single
+    observation, and both plot kinds skip clustering for 1- and 2-marker
+    matrices so the ordering stays consistent.
+    """
+    return n_observations >= 3
+
+
 def _cluster_order(wide: pd.DataFrame, metric: str, method: str) -> list:
-    if wide.shape[0] < 3:
+    if not _can_cluster(wide.shape[0]):
         return list(wide.index)
     link = linkage(wide.fillna(0.0).to_numpy(), method=method, metric=metric)
     return [wide.index[i] for i in leaves_list(link)]
@@ -283,7 +293,10 @@ def proximity_heatmap(
     if symmetrise:
         data = _symmetrise_data(data, marker1_col, marker2_col)
 
-    if size_col is not None and size_col_transform is not None:
+    # Size mapping is only used for dots; skip the transform for tiles so a
+    # default ``size_col`` (or an explicit transform) cannot look up a column
+    # that was dropped from ``required_columns``.
+    if kind == "dots" and size_col is not None and size_col_transform is not None:
         transformed_col = f"{size_col}_transformed"
         data[transformed_col] = size_col_transform(data[size_col])
         size_col = transformed_col
@@ -371,8 +384,8 @@ def _plot_tiles(
     grid = sns.clustermap(
         wide.fillna(0.0),
         mask=wide.isna(),
-        row_cluster=cluster_rows,
-        col_cluster=cluster_cols,
+        row_cluster=cluster_rows and _can_cluster(wide.shape[0]),
+        col_cluster=cluster_cols and _can_cluster(wide.shape[1]),
         metric=clustering_metric,
         method=clustering_method,
         cmap=cmap,

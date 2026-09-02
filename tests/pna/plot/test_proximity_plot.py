@@ -117,6 +117,45 @@ def test_size_col_transform_renames_column(proximity_data):
     )
 
 
+def test_tiles_ignores_size_col_transform(proximity_data):
+    """kind='tiles' does not look up size_col, even when a transform is given."""
+    tiles_data = proximity_data.drop(columns=["p_adj"])
+    wide = proximity_heatmap(
+        tiles_data,
+        kind="tiles",
+        size_col_transform=lambda p: -np.log10(p),
+        return_plot_data=True,
+    )
+    assert set(wide.index) == {"CD3", "CD4", "CD8"}
+
+
+def test_one_marker_tiles_does_not_raise():
+    """A 1x1 tiles heatmap skips clustering instead of calling linkage."""
+    data = pd.DataFrame(
+        {"marker_1": ["CD3"], "marker_2": ["CD3"], "estimate": [0.1]}
+    )
+    fig, ax = proximity_heatmap(data, kind="tiles")
+    assert isinstance(fig, plt.Figure)
+    assert isinstance(ax, plt.Axes)
+    plt.close(fig)
+
+
+def test_one_marker_dots_does_not_raise():
+    """A 1-marker dots plot skips clustering the same way tiles does."""
+    data = pd.DataFrame(
+        {
+            "marker_1": ["CD3"],
+            "marker_2": ["CD3"],
+            "estimate": [0.1],
+            "p_adj": [0.05],
+        }
+    )
+    fig, ax = proximity_heatmap(data, kind="dots")
+    assert isinstance(fig, plt.Figure)
+    assert isinstance(ax, plt.Axes)
+    plt.close(fig)
+
+
 def test_custom_legend_range_sets_color_normalization(proximity_data):
     """A custom legend_range is used as the vmin/vmax of the dot color scale."""
     fig, ax = proximity_heatmap(proximity_data, kind="dots", legend_range=(-2.0, 2.0))
