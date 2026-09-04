@@ -83,25 +83,47 @@ class TestRegionCollapserInternals:
     def test_build_output_table_drops_overflow_reads_and_keeps_corrected_umis_aligned(
         self, caplog
     ):
-        new_data, corrected_umis = self._sample_output_rows([1, 2**16, 3, 2**16 + 1])
+        read_counts = [1, 2**16, 3, 2**16 + 1]
+        new_data, corrected_umis = self._sample_output_rows(read_counts)
+        stats = MarkerCorrectionStats(
+            marker="CD8",
+            region_id="umi-1",
+            input_reads=sum(read_counts),
+            input_molecules=len(read_counts),
+        )
 
         with caplog.at_level("INFO", logger="collapse"):
-            table = self.collapser._build_output_table(new_data, corrected_umis, "CD8")
+            table = self.collapser._build_output_table(
+                new_data, corrected_umis, "CD8", stats
+            )
 
         assert len(table) == 2
         assert table.schema.equals(self.collapser._output_schema)
         assert table.column("read_count").to_pylist() == [1, 3]
         assert table.column("corrected_umi1").to_pylist() == [100, 102]
+        assert stats.output_molecules == 2
+        assert stats.output_reads == 4
         assert "Dropping of 2 entries with too many reads (>=2^16)" in caplog.text
 
     def test_build_output_table_keeps_all_rows_when_read_counts_fit_uint16(self):
-        new_data, corrected_umis = self._sample_output_rows([1, 2**16 - 1, 3])
+        read_counts = [1, 2**16 - 1, 3]
+        new_data, corrected_umis = self._sample_output_rows(read_counts)
+        stats = MarkerCorrectionStats(
+            marker="CD8",
+            region_id="umi-1",
+            input_reads=sum(read_counts),
+            input_molecules=len(read_counts),
+        )
 
-        table = self.collapser._build_output_table(new_data, corrected_umis, "CD8")
+        table = self.collapser._build_output_table(
+            new_data, corrected_umis, "CD8", stats
+        )
 
         assert len(table) == 3
         assert table.column("read_count").to_pylist() == [1, 2**16 - 1, 3]
         assert table.column("corrected_umi1").to_pylist() == [100, 101, 102]
+        assert stats.output_molecules == 3
+        assert stats.output_reads == sum(read_counts)
 
 
 def _fake_allocate_array(self, name, shape, dtype, zero_init=True):
