@@ -7,8 +7,13 @@ from pixelator.pna.analysis.proximity import (
     calculate_differential_proximity,
     summarize_proximity_scores,
 )
+from pixelator.pna.analysis.segmentation import distance_from_node_set
 
-__all__ = ["calculate_differential_proximity", "summarize_proximity_scores"]
+__all__ = [
+    "calculate_differential_proximity",
+    "distance_from_node_set",
+    "summarize_proximity_scores",
+]
 
 # Note: pixelator.pna.analysis.comparison is intentionally not imported here.
 # It depends on pixelator.pna.pixeldataset, which itself imports
