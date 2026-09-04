@@ -17,6 +17,7 @@
             "corrected_unique_umis": 93,
             "output_unique_umis": 1120,
             "output_reads": 15565,
+            "output_molecules": 9350,
             "corrected_reads_fraction": 0.006810150979762287,
             "corrected_unique_umis_fraction": 0.07666941467436109
         },
@@ -30,6 +31,7 @@
             "corrected_unique_umis": 5,
             "output_unique_umis": 51,
             "output_reads": 760,
+            "output_molecules": 462,
             "corrected_reads_fraction": 0.006578947368421052,
             "corrected_unique_umis_fraction": 0.08928571428571429
         },
@@ -43,6 +45,7 @@
             "corrected_unique_umis": 2,
             "output_unique_umis": 41,
             "output_reads": 390,
+            "output_molecules": 238,
             "corrected_reads_fraction": 0.005128205128205128,
             "corrected_unique_umis_fraction": 0.046511627906976744
         },
@@ -56,6 +59,7 @@
             "corrected_unique_umis": 2,
             "output_unique_umis": 83,
             "output_reads": 868,
+            "output_molecules": 500,
             "corrected_reads_fraction": 0.002304147465437788,
             "corrected_unique_umis_fraction": 0.023529411764705882
         },
@@ -69,6 +73,7 @@
             "corrected_unique_umis": 49,
             "output_unique_umis": 610,
             "output_reads": 5795,
+            "output_molecules": 3541,
             "corrected_reads_fraction": 0.008973252804141501,
             "corrected_unique_umis_fraction": 0.07435508345978756
         },
@@ -82,6 +87,7 @@
             "corrected_unique_umis": 6,
             "output_unique_umis": 51,
             "output_reads": 581,
+            "output_molecules": 364,
             "corrected_reads_fraction": 0.010327022375215147,
             "corrected_unique_umis_fraction": 0.10526315789473684
         },
@@ -95,6 +101,7 @@
             "corrected_unique_umis": 3,
             "output_unique_umis": 41,
             "output_reads": 456,
+            "output_molecules": 291,
             "corrected_reads_fraction": 0.013157894736842105,
             "corrected_unique_umis_fraction": 0.06818181818181818
         },
@@ -108,6 +115,7 @@
             "corrected_unique_umis": 1,
             "output_unique_umis": 17,
             "output_reads": 196,
+            "output_molecules": 120,
             "corrected_reads_fraction": 0.00510204081632653,
             "corrected_unique_umis_fraction": 0.05555555555555555
         },
@@ -121,6 +129,7 @@
             "corrected_unique_umis": 2,
             "output_unique_umis": 21,
             "output_reads": 303,
+            "output_molecules": 186,
             "corrected_reads_fraction": 0.006600660066006601,
             "corrected_unique_umis_fraction": 0.08695652173913043
         },
@@ -134,6 +143,7 @@
             "corrected_unique_umis": 4,
             "output_unique_umis": 76,
             "output_reads": 704,
+            "output_molecules": 421,
             "corrected_reads_fraction": 0.005681818181818182,
             "corrected_unique_umis_fraction": 0.05
         },
@@ -147,6 +157,7 @@
             "corrected_unique_umis": 4,
             "output_unique_umis": 38,
             "output_reads": 407,
+            "output_molecules": 243,
             "corrected_reads_fraction": 0.009828009828009828,
             "corrected_unique_umis_fraction": 0.09523809523809523
         },
@@ -160,6 +171,7 @@
             "corrected_unique_umis": 9,
             "output_unique_umis": 104,
             "output_reads": 1320,
+            "output_molecules": 800,
             "corrected_reads_fraction": 0.009848484848484848,
             "corrected_unique_umis_fraction": 0.07964601769911504
         },
@@ -173,6 +185,7 @@
             "corrected_unique_umis": 3,
             "output_unique_umis": 34,
             "output_reads": 381,
+            "output_molecules": 234,
             "corrected_reads_fraction": 0.007874015748031496,
             "corrected_unique_umis_fraction": 0.08108108108108109
         },
@@ -186,6 +199,7 @@
             "corrected_unique_umis": 10,
             "output_unique_umis": 73,
             "output_reads": 982,
+            "output_molecules": 592,
             "corrected_reads_fraction": 0.01120162932790224,
             "corrected_unique_umis_fraction": 0.12048192771084337
         },
@@ -199,6 +213,7 @@
             "corrected_unique_umis": 39,
             "output_unique_umis": 259,
             "output_reads": 3957,
+            "output_molecules": 2378,
             "corrected_reads_fraction": 0.012130401819560273,
             "corrected_unique_umis_fraction": 0.13087248322147652
         },
@@ -212,6 +227,7 @@
             "corrected_unique_umis": 8,
             "output_unique_umis": 107,
             "output_reads": 1164,
+            "output_molecules": 717,
             "corrected_reads_fraction": 0.006872852233676976,
             "corrected_unique_umis_fraction": 0.06956521739130435
         },
@@ -225,6 +241,7 @@
             "corrected_unique_umis": 0,
             "output_unique_umis": 20,
             "output_reads": 149,
+            "output_molecules": 91,
             "corrected_reads_fraction": 0.0,
             "corrected_unique_umis_fraction": 0.0
         },
@@ -238,6 +255,7 @@
             "corrected_unique_umis": 0,
             "output_unique_umis": 16,
             "output_reads": 161,
+            "output_molecules": 105,
             "corrected_reads_fraction": 0.0,
             "corrected_unique_umis_fraction": 0.0
         },
@@ -251,6 +269,7 @@
             "corrected_unique_umis": 18,
             "output_unique_umis": 202,
             "output_reads": 2125,
+            "output_molecules": 1248,
             "corrected_reads_fraction": 0.009411764705882352,
             "corrected_unique_umis_fraction": 0.08181818181818182
         },
@@ -264,6 +283,7 @@
             "corrected_unique_umis": 0,
             "output_unique_umis": 9,
             "output_reads": 104,
+            "output_molecules": 62,
             "corrected_reads_fraction": 0.0,
             "corrected_unique_umis_fraction": 0.0
         },
@@ -277,6 +297,7 @@
             "corrected_unique_umis": 17,
             "output_unique_umis": 235,
             "output_reads": 2529,
+            "output_molecules": 1545,
             "corrected_reads_fraction": 0.00830367734282325,
             "corrected_unique_umis_fraction": 0.06746031746031746
         },
@@ -290,6 +311,7 @@
             "corrected_unique_umis": 4,
             "output_unique_umis": 28,
             "output_reads": 356,
+            "output_molecules": 220,
             "corrected_reads_fraction": 0.011235955056179775,
             "corrected_unique_umis_fraction": 0.125
         },
@@ -303,6 +325,7 @@
             "corrected_unique_umis": 1,
             "output_unique_umis": 18,
             "output_reads": 150,
+            "output_molecules": 91,
             "corrected_reads_fraction": 0.02,
             "corrected_unique_umis_fraction": 0.05263157894736842
         },
@@ -316,6 +339,7 @@
             "corrected_unique_umis": 8,
             "output_unique_umis": 108,
             "output_reads": 1355,
+            "output_molecules": 826,
             "corrected_reads_fraction": 0.007380073800738007,
             "corrected_unique_umis_fraction": 0.06896551724137931
         },
@@ -329,6 +353,7 @@
             "corrected_unique_umis": 30,
             "output_unique_umis": 316,
             "output_reads": 4077,
+            "output_molecules": 2465,
             "corrected_reads_fraction": 0.008094186902133923,
             "corrected_unique_umis_fraction": 0.08670520231213873
         },
@@ -342,6 +367,7 @@
             "corrected_unique_umis": 3,
             "output_unique_umis": 28,
             "output_reads": 390,
+            "output_molecules": 224,
             "corrected_reads_fraction": 0.007692307692307693,
             "corrected_unique_umis_fraction": 0.0967741935483871
         },
@@ -355,6 +381,7 @@
             "corrected_unique_umis": 8,
             "output_unique_umis": 47,
             "output_reads": 676,
+            "output_molecules": 389,
             "corrected_reads_fraction": 0.011834319526627219,
             "corrected_unique_umis_fraction": 0.14545454545454545
         },
@@ -368,6 +395,7 @@
             "corrected_unique_umis": 14,
             "output_unique_umis": 143,
             "output_reads": 1784,
+            "output_molecules": 1070,
             "corrected_reads_fraction": 0.008408071748878924,
             "corrected_unique_umis_fraction": 0.08917197452229299
         },
@@ -381,6 +409,7 @@
             "corrected_unique_umis": 5,
             "output_unique_umis": 37,
             "output_reads": 383,
+            "output_molecules": 238,
             "corrected_reads_fraction": 0.013054830287206266,
             "corrected_unique_umis_fraction": 0.11904761904761904
         },
@@ -394,6 +423,7 @@
             "corrected_unique_umis": 1,
             "output_unique_umis": 8,
             "output_reads": 90,
+            "output_molecules": 56,
             "corrected_reads_fraction": 0.011111111111111112,
             "corrected_unique_umis_fraction": 0.1111111111111111
         },
@@ -407,6 +437,7 @@
             "corrected_unique_umis": 3,
             "output_unique_umis": 63,
             "output_reads": 833,
+            "output_molecules": 477,
             "corrected_reads_fraction": 0.003601440576230492,
             "corrected_unique_umis_fraction": 0.045454545454545456
         },
@@ -420,6 +451,7 @@
             "corrected_unique_umis": 32,
             "output_unique_umis": 79,
             "output_reads": 1170,
+            "output_molecules": 703,
             "corrected_reads_fraction": 0.02905982905982906,
             "corrected_unique_umis_fraction": 0.2882882882882883
         },
@@ -433,6 +465,7 @@
             "corrected_unique_umis": 18,
             "output_unique_umis": 63,
             "output_reads": 877,
+            "output_molecules": 486,
             "corrected_reads_fraction": 0.027366020524515394,
             "corrected_unique_umis_fraction": 0.2222222222222222
         },
@@ -446,6 +479,7 @@
             "corrected_unique_umis": 143,
             "output_unique_umis": 495,
             "output_reads": 7907,
+            "output_molecules": 4816,
             "corrected_reads_fraction": 0.02036170481851524,
             "corrected_unique_umis_fraction": 0.22413793103448276
         },
@@ -459,6 +493,7 @@
             "corrected_unique_umis": 23,
             "output_unique_umis": 100,
             "output_reads": 1099,
+            "output_molecules": 688,
             "corrected_reads_fraction": 0.02183803457688808,
             "corrected_unique_umis_fraction": 0.18699186991869918
         },
@@ -472,6 +507,7 @@
             "corrected_unique_umis": 171,
             "output_unique_umis": 603,
             "output_reads": 9821,
+            "output_molecules": 5883,
             "corrected_reads_fraction": 0.02005905712249262,
             "corrected_unique_umis_fraction": 0.22093023255813954
         },
@@ -485,6 +521,7 @@
             "corrected_unique_umis": 39,
             "output_unique_umis": 183,
             "output_reads": 2076,
+            "output_molecules": 1251,
             "corrected_reads_fraction": 0.0197495183044316,
             "corrected_unique_umis_fraction": 0.17567567567567569
         },
@@ -498,6 +535,7 @@
             "corrected_unique_umis": 10,
             "output_unique_umis": 52,
             "output_reads": 598,
+            "output_molecules": 360,
             "corrected_reads_fraction": 0.023411371237458192,
             "corrected_unique_umis_fraction": 0.16129032258064516
         },
@@ -511,6 +549,7 @@
             "corrected_unique_umis": 6,
             "output_unique_umis": 45,
             "output_reads": 633,
+            "output_molecules": 391,
             "corrected_reads_fraction": 0.011058451816745656,
             "corrected_unique_umis_fraction": 0.11764705882352941
         },
@@ -524,6 +563,7 @@
             "corrected_unique_umis": 3,
             "output_unique_umis": 19,
             "output_reads": 285,
+            "output_molecules": 166,
             "corrected_reads_fraction": 0.010526315789473684,
             "corrected_unique_umis_fraction": 0.13636363636363635
         },
@@ -537,6 +577,7 @@
             "corrected_unique_umis": 12,
             "output_unique_umis": 28,
             "output_reads": 377,
+            "output_molecules": 227,
             "corrected_reads_fraction": 0.034482758620689655,
             "corrected_unique_umis_fraction": 0.3
         },
@@ -550,6 +591,7 @@
             "corrected_unique_umis": 14,
             "output_unique_umis": 71,
             "output_reads": 901,
+            "output_molecules": 548,
             "corrected_reads_fraction": 0.01553829078801332,
             "corrected_unique_umis_fraction": 0.16470588235294117
         },
@@ -563,6 +605,7 @@
             "corrected_unique_umis": 12,
             "output_unique_umis": 64,
             "output_reads": 996,
+            "output_molecules": 590,
             "corrected_reads_fraction": 0.01706827309236948,
             "corrected_unique_umis_fraction": 0.15789473684210525
         },
@@ -576,6 +619,7 @@
             "corrected_unique_umis": 15,
             "output_unique_umis": 58,
             "output_reads": 702,
+            "output_molecules": 420,
             "corrected_reads_fraction": 0.021367521367521368,
             "corrected_unique_umis_fraction": 0.2054794520547945
         },
@@ -589,6 +633,7 @@
             "corrected_unique_umis": 13,
             "output_unique_umis": 48,
             "output_reads": 721,
+            "output_molecules": 444,
             "corrected_reads_fraction": 0.020804438280166437,
             "corrected_unique_umis_fraction": 0.21311475409836064
         },
@@ -602,6 +647,7 @@
             "corrected_unique_umis": 16,
             "output_unique_umis": 46,
             "output_reads": 643,
+            "output_molecules": 388,
             "corrected_reads_fraction": 0.03110419906687403,
             "corrected_unique_umis_fraction": 0.25806451612903225
         },
@@ -615,6 +661,7 @@
             "corrected_unique_umis": 5,
             "output_unique_umis": 33,
             "output_reads": 429,
+            "output_molecules": 273,
             "corrected_reads_fraction": 0.018648018648018648,
             "corrected_unique_umis_fraction": 0.13157894736842105
         },
@@ -628,6 +675,7 @@
             "corrected_unique_umis": 14,
             "output_unique_umis": 54,
             "output_reads": 661,
+            "output_molecules": 409,
             "corrected_reads_fraction": 0.02118003025718608,
             "corrected_unique_umis_fraction": 0.20588235294117646
         },
@@ -641,6 +689,7 @@
             "corrected_unique_umis": 10,
             "output_unique_umis": 37,
             "output_reads": 444,
+            "output_molecules": 270,
             "corrected_reads_fraction": 0.02252252252252252,
             "corrected_unique_umis_fraction": 0.2127659574468085
         },
@@ -654,6 +703,7 @@
             "corrected_unique_umis": 49,
             "output_unique_umis": 180,
             "output_reads": 2550,
+            "output_molecules": 1574,
             "corrected_reads_fraction": 0.02392156862745098,
             "corrected_unique_umis_fraction": 0.21397379912663755
         },
@@ -667,6 +717,7 @@
             "corrected_unique_umis": 13,
             "output_unique_umis": 19,
             "output_reads": 391,
+            "output_molecules": 229,
             "corrected_reads_fraction": 0.03324808184143223,
             "corrected_unique_umis_fraction": 0.40625
         },
@@ -680,6 +731,7 @@
             "corrected_unique_umis": 15,
             "output_unique_umis": 117,
             "output_reads": 1277,
+            "output_molecules": 750,
             "corrected_reads_fraction": 0.014878621769772905,
             "corrected_unique_umis_fraction": 0.11363636363636363
         },
@@ -693,6 +745,7 @@
             "corrected_unique_umis": 8,
             "output_unique_umis": 15,
             "output_reads": 231,
+            "output_molecules": 138,
             "corrected_reads_fraction": 0.05194805194805195,
             "corrected_unique_umis_fraction": 0.34782608695652173
         },
@@ -706,6 +759,7 @@
             "corrected_unique_umis": 3,
             "output_unique_umis": 19,
             "output_reads": 185,
+            "output_molecules": 115,
             "corrected_reads_fraction": 0.016216216216216217,
             "corrected_unique_umis_fraction": 0.13636363636363635
         },
@@ -719,6 +773,7 @@
             "corrected_unique_umis": 2,
             "output_unique_umis": 21,
             "output_reads": 209,
+            "output_molecules": 123,
             "corrected_reads_fraction": 0.009569377990430622,
             "corrected_unique_umis_fraction": 0.08695652173913043
         },
@@ -732,6 +787,7 @@
             "corrected_unique_umis": 76,
             "output_unique_umis": 416,
             "output_reads": 4283,
+            "output_molecules": 2573,
             "corrected_reads_fraction": 0.02124678963343451,
             "corrected_unique_umis_fraction": 0.15447154471544716
         },
@@ -745,6 +801,7 @@
             "corrected_unique_umis": 8,
             "output_unique_umis": 36,
             "output_reads": 478,
+            "output_molecules": 305,
             "corrected_reads_fraction": 0.01882845188284519,
             "corrected_unique_umis_fraction": 0.18181818181818182
         },
@@ -758,6 +815,7 @@
             "corrected_unique_umis": 12,
             "output_unique_umis": 42,
             "output_reads": 484,
+            "output_molecules": 304,
             "corrected_reads_fraction": 0.024793388429752067,
             "corrected_unique_umis_fraction": 0.2222222222222222
         },
@@ -771,6 +829,7 @@
             "corrected_unique_umis": 73,
             "output_unique_umis": 340,
             "output_reads": 3321,
+            "output_molecules": 2071,
             "corrected_reads_fraction": 0.022884673291177358,
             "corrected_unique_umis_fraction": 0.17675544794188863
         },
@@ -784,6 +843,7 @@
             "corrected_unique_umis": 21,
             "output_unique_umis": 64,
             "output_reads": 650,
+            "output_molecules": 411,
             "corrected_reads_fraction": 0.03538461538461538,
             "corrected_unique_umis_fraction": 0.24705882352941178
         },
@@ -797,6 +857,7 @@
             "corrected_unique_umis": 7,
             "output_unique_umis": 28,
             "output_reads": 298,
+            "output_molecules": 180,
             "corrected_reads_fraction": 0.02348993288590604,
             "corrected_unique_umis_fraction": 0.2
         },
@@ -810,6 +871,7 @@
             "corrected_unique_umis": 1,
             "output_unique_umis": 13,
             "output_reads": 184,
+            "output_molecules": 106,
             "corrected_reads_fraction": 0.005434782608695652,
             "corrected_unique_umis_fraction": 0.07142857142857142
         }

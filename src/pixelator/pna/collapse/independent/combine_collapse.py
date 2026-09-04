@@ -261,6 +261,8 @@ def combine_independent_report_files(
             "input_molecules",
             "input_unique_umis",
             "output_unique_umis",
+            "output_reads",
+            "output_molecules",
             "corrected_unique_umis",
             "corrected_reads",
         )
@@ -300,6 +302,7 @@ def combine_independent_report_files(
         markers=umi1_markers + umi2_markers,
         input_reads=umi1_summary_stats["input_reads"],
         input_molecules=umi1_summary_stats["input_molecules"],
+        output_reads=umi1_summary_stats["output_reads"],
         corrected_reads=stats.corrected_reads,
         output_molecules=stats.output_molecules,
         umi1_degree_distribution=stats.umi1_degree_distribution,

@@ -3,6 +3,8 @@
 Copyright © 2024 Pixelgen Technologies AB
 """
 
+import typing
+
 import pydantic
 
 from pixelator.pna.collapse.independent.collapser import MarkerCorrectionStats
@@ -26,17 +28,6 @@ class IndependentCollapseSampleReport(SampleReport):
     output_molecules: int = pydantic.Field(
         ..., description="The total number of error-corrected molecules detected."
     )
-
-    @pydantic.computed_field(  # type: ignore
-        description="The number of output reads.", return_type=int
-    )
-    @property
-    def output_reads(self) -> int:
-        """The total number of error-corrected output reads.
-
-        This is an alias for the input reads as no reads are removed during the collapse step.
-        """
-        return self.input_reads
 
     @pydantic.computed_field(  # type: ignore
         description="The number of UMI1 reads that had error and were corrected.",
@@ -72,3 +63,16 @@ class IndependentCollapseSampleReport(SampleReport):
     umi2_degree_distribution: dict[int, int] = pydantic.Field(
         ..., description="The degree distribution of the umi2."
     )
+
+    output_reads: int = pydantic.Field(
+        default=0,
+        description="The number of reads written after uint16 overflow filtering.",
+    )
+
+    @pydantic.model_validator(mode="before")
+    @classmethod
+    def _default_output_reads(cls, data: typing.Any) -> typing.Any:
+        """Mirror input reads when output reads are omitted (legacy reports)."""
+        if isinstance(data, dict) and data.get("output_reads") is None:
+            data["output_reads"] = data.get("input_reads", 0)
+        return data

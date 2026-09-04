@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
+import polars as pl
+import pyarrow as pa
 import pytest
 
 from pixelator.pna.cli.collapse import process_independent_files
@@ -61,6 +63,67 @@ class TestRegionCollapserInternals:
         umi2_seq2 = unpack_2bits(self.collapser._umi2_data[0], 28)
 
         assert umi2_seq == umi2_seq2
+
+    def _sample_output_rows(self, read_counts):
+        n = len(read_counts)
+        return (
+            pl.DataFrame(
+                {
+                    "marker_1": ["CD8"] * n,
+                    "marker_2": ["CD3e"] * n,
+                    "read_count": read_counts,
+                    "original_umi1": list(range(n)),
+                    "original_umi2": list(range(10, 10 + n)),
+                    "uei": list(range(20, 20 + n)),
+                }
+            ),
+            pa.array(list(range(100, 100 + n)), type=pa.uint64()),
+        )
+
+    def test_build_output_table_drops_overflow_reads_and_keeps_corrected_umis_aligned(
+        self, caplog
+    ):
+        read_counts = [1, 2**16, 3, 2**16 + 1]
+        new_data, corrected_umis = self._sample_output_rows(read_counts)
+        stats = MarkerCorrectionStats(
+            marker="CD8",
+            region_id="umi-1",
+            input_reads=sum(read_counts),
+            input_molecules=len(read_counts),
+        )
+
+        with caplog.at_level("INFO", logger="collapse"):
+            table = self.collapser._build_output_table(
+                new_data, corrected_umis, "CD8", stats
+            )
+
+        assert len(table) == 2
+        assert table.schema.equals(self.collapser._output_schema)
+        assert table.column("read_count").to_pylist() == [1, 3]
+        assert table.column("corrected_umi1").to_pylist() == [100, 102]
+        assert stats.output_molecules == 2
+        assert stats.output_reads == 4
+        assert "Dropping of 2 entries with too many reads (>=2^16)" in caplog.text
+
+    def test_build_output_table_keeps_all_rows_when_read_counts_fit_uint16(self):
+        read_counts = [1, 2**16 - 1, 3]
+        new_data, corrected_umis = self._sample_output_rows(read_counts)
+        stats = MarkerCorrectionStats(
+            marker="CD8",
+            region_id="umi-1",
+            input_reads=sum(read_counts),
+            input_molecules=len(read_counts),
+        )
+
+        table = self.collapser._build_output_table(
+            new_data, corrected_umis, "CD8", stats
+        )
+
+        assert len(table) == 3
+        assert table.column("read_count").to_pylist() == [1, 2**16 - 1, 3]
+        assert table.column("corrected_umi1").to_pylist() == [100, 101, 102]
+        assert stats.output_molecules == 3
+        assert stats.output_reads == sum(read_counts)
 
 
 def _fake_allocate_array(self, name, shape, dtype, zero_init=True):
@@ -282,6 +345,8 @@ class TestIndependentCollapseStatisticsCollector:
             "corrected_reads": 19868,
             "corrected_unique_umis": 17028,
             "output_unique_umis": 122205,
+            "output_reads": 1414029,
+            "output_molecules": 897116,
         }
 
     def test_to_sample_report(self):
@@ -295,6 +360,8 @@ class TestIndependentCollapseStatisticsCollector:
         assert report.report_type == "collapse-umi"
         assert report.region_id == "umi-1"
         assert len(report.markers) == 2
+        assert report.output_reads == 1414029
+        assert report.output_molecules == 897116
 
     def test_to_dict(self):
         stats = IndependentCollapseStatisticsCollector(region_id="umi-1")
@@ -317,6 +384,7 @@ class TestIndependentCollapseStatisticsCollector:
                     "corrected_unique_umis": 17028,
                     "output_unique_umis": 122104,
                     "output_reads": 1413845,
+                    "output_molecules": 896960,
                     "corrected_reads_fraction": 0.014052459781659234,
                     "corrected_unique_umis_fraction": 0.12238737314205216,
                 },
@@ -330,6 +398,7 @@ class TestIndependentCollapseStatisticsCollector:
                     "corrected_unique_umis": 0,
                     "output_unique_umis": 101,
                     "output_reads": 184,
+                    "output_molecules": 156,
                     "corrected_reads_fraction": 0.0,
                     "corrected_unique_umis_fraction": 0.0,
                 },
@@ -340,4 +409,105 @@ class TestIndependentCollapseStatisticsCollector:
             "corrected_reads": 19868,
             "corrected_unique_umis": 17028,
             "output_unique_umis": 122205,
+            "output_reads": 1414029,
+            "output_molecules": 897116,
         }
+
+
+def _make_region_collapser(region_id="umi-1") -> RegionCollapser:
+    assay = pna_config.get_assay("proxiome-v1")
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
+    return RegionCollapser(
+        assay=assay,
+        panel=panel,
+        region_id=region_id,
+        threads=1,
+        max_mismatches=1,
+    )
+
+
+def _output_rows(read_counts: list[int]) -> pl.DataFrame:
+    n = len(read_counts)
+    return pl.DataFrame(
+        {
+            "marker_1": ["CD8"] * n,
+            "marker_2": ["CD3"] * n,
+            "read_count": read_counts,
+            "original_umi1": np.arange(n, dtype=np.uint64),
+            "original_umi2": np.arange(n, dtype=np.uint64) + 10,
+            "uei": np.arange(n, dtype=np.uint64) + 20,
+        }
+    )
+
+
+class TestUniqueUmiReadCountWeights:
+    """Unique-UMI weights must not wrap at 2**16 before directional collapse."""
+
+    def test_unique_umi_weights_use_uint64_and_do_not_wrap(self, umi1_partition):
+        overflow_count = 2**16
+        read_counts = np.zeros(len(umi1_partition), dtype=np.uint64)
+        read_counts[0] = overflow_count
+        data = umi1_partition.with_columns(pl.Series("read_count", read_counts))
+
+        class _FakeMemory:
+            def allocate_array(self, name, shape, dtype, zero_init=True):
+                return np.zeros(shape, dtype=dtype)
+
+            def unlink_buffer(self, name):
+                return None
+
+        collapser = _make_region_collapser()
+        collapser._memory = _FakeMemory()
+        with collapser._init_shared_memory(data) as (_db, unique_umi_weights):
+            assert unique_umi_weights.dtype == np.uint64
+            assert unique_umi_weights.max() == overflow_count
+            expected = np.zeros_like(unique_umi_weights)
+            np.add.at(expected, collapser._db_to_molecule_idx, read_counts)
+            np.testing.assert_array_equal(unique_umi_weights, expected)
+
+
+class TestBuildOutputTableStats:
+    """Overflow drops must be reflected in streamed output statistics."""
+
+    def test_overflow_rows_are_excluded_from_output_stats(self):
+        collapser = _make_region_collapser()
+        read_counts = [1, 2**16, 2]
+        new_data = _output_rows(read_counts)
+        corrected = pa.array(
+            np.arange(len(read_counts), dtype=np.uint64), type=pa.uint64()
+        )
+        stats = MarkerCorrectionStats(
+            marker="CD8",
+            region_id="umi-1",
+            input_reads=sum(read_counts),
+            input_molecules=len(read_counts),
+        )
+
+        table = collapser._build_output_table(new_data, corrected, "CD8", stats)
+
+        assert stats.output_molecules == 2
+        assert stats.output_reads == 3
+        assert stats.input_molecules == 3
+        assert stats.input_reads == sum(read_counts)
+        assert table.num_rows == 2
+        assert table.column("read_count").to_pylist() == [1, 2]
+
+    def test_no_overflow_keeps_output_stats_equal_to_input(self):
+        collapser = _make_region_collapser()
+        read_counts = [1, 4, 7]
+        new_data = _output_rows(read_counts)
+        corrected = pa.array(
+            np.arange(len(read_counts), dtype=np.uint64), type=pa.uint64()
+        )
+        stats = MarkerCorrectionStats(
+            marker="CD8",
+            region_id="umi-1",
+            input_reads=sum(read_counts),
+            input_molecules=len(read_counts),
+        )
+
+        table = collapser._build_output_table(new_data, corrected, "CD8", stats)
+
+        assert stats.output_molecules == 3
+        assert stats.output_reads == 12
+        assert table.num_rows == 3
