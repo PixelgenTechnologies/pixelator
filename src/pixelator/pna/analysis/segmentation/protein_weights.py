@@ -82,8 +82,9 @@ def cc_protein_weights(
         max_freq: Drop a protein if its frequency in *both* populations is
             at least this value. Default 0.01 (1%).
         min_diff: Minimum relative frequency difference between the two
-            populations, ``|(freq1 - freq2) / (freq1 + freq2)|``. Default
-            0.5.
+            populations, ``|(freq1 - freq2) / (freq1 + freq2)|``. Markers
+            at this value are kept. Perfectly exclusive markers score 1.
+            Default 0.5.
         mode: How to build the abundance matrix. ``"cell_abundance"``
             (default) uses whole-cell protein counts.
             ``"k_neighborhood"`` is not available yet.
@@ -314,7 +315,7 @@ def _filter_markers(
 ) -> pd.Series:
     diff = (pop1_props - pop2_props) / (pop1_props + pop2_props)
     diff = diff.replace([np.inf, -np.inf], np.nan).fillna(0.0)
-    keep = diff.abs() > min_diff
+    keep = diff.abs() >= min_diff
     keep &= np.minimum(pop1_props, pop2_props) < max_freq
     if masked_markers is not None:
         keep &= ~marker_names.isin(list(masked_markers))

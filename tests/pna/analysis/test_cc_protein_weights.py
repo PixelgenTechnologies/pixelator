@@ -127,6 +127,20 @@ def test_cc_protein_weights_masked_markers_are_excluded(two_pop_adata):
     assert not set(masked).intersection(weights.index)
 
 
+def test_cc_protein_weights_min_diff_one_keeps_exclusive_markers(two_pop_adata):
+    """A relative-diff of 1.0 is reachable; min_diff=1.0 must not drop exclusive markers."""
+    weights = cc_protein_weights(
+        two_pop_adata,
+        group_by="cell_type",
+        population_1=POP1,
+        population_2=POP2,
+        min_diff=1.0,
+    )
+    kept_exclusive = [m for m in POP1_MARKERS + POP2_MARKERS if m in weights.index]
+    assert len(kept_exclusive) >= 5
+    assert SHARED_MARKER not in weights.index
+
+
 def test_cc_protein_weights_too_few_markers_raises(two_pop_adata):
     with pytest.raises(ValueError, match="markers are kept after filtering"):
         cc_protein_weights(
@@ -134,7 +148,6 @@ def test_cc_protein_weights_too_few_markers_raises(two_pop_adata):
             group_by="cell_type",
             population_1=POP1,
             population_2=POP2,
-            min_diff=1.0,
             max_freq=0.0,
         )
 
