@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
+- `pixelator.pna.analysis.distance_from_node_set` to compute integer hop distances from a set of seed nodes on a `PNAGraph` (unreached nodes stay missing).
 
 ### Changed
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
