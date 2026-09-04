@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
+- `pixelator.pna.analysis.cc_protein_weights` to derive rank-2 NMF protein weights for two labeled populations (`mode="cell_abundance"`), for use as `w` in cell:cell conjugate segmentation.
 
 ### Changed
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).

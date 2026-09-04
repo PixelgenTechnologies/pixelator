@@ -38,3 +38,4 @@ for usage examples.
 
 * :func:`pixelator.pna.analysis.calculate_differential_proximity`
 * :func:`pixelator.pna.analysis.summarize_proximity_scores`
+* :func:`pixelator.pna.analysis.cc_protein_weights`
