@@ -89,6 +89,8 @@ class MarkerCorrectionStats(pydantic.BaseModel):
         corrected_unique_umis: The total number of unique UMIs of type `region_id` that were
             modified by the error correction process.
         output_unique_umis: The total number of unique UMIs of type `region_id` after correction.
+        output_reads: The number of reads written after overflow filtering.
+        output_molecules: The number of molecules written after overflow filtering.
     """
 
     marker: str
@@ -102,15 +104,19 @@ class MarkerCorrectionStats(pydantic.BaseModel):
     corrected_unique_umis: int = 0
 
     output_unique_umis: int = 0
+    output_reads: int = 0
+    output_molecules: int = 0
 
-    @pydantic.computed_field(return_type=int)  # type: ignore
-    @property
-    def output_reads(self) -> int:
-        """The total number of reads after correction.
-
-        This is always the same as `input_reads_count` but is included for consistency.
-        """
-        return self.input_reads
+    @pydantic.model_validator(mode="before")
+    @classmethod
+    def _default_output_counts(cls, data: typing.Any) -> typing.Any:
+        """Mirror input counts when output counts are omitted."""
+        if isinstance(data, dict):
+            if data.get("output_reads") is None:
+                data["output_reads"] = data.get("input_reads", 0)
+            if data.get("output_molecules") is None:
+                data["output_molecules"] = data.get("input_molecules", 0)
+        return data
 
     @pydantic.computed_field(return_type=float)  # type: ignore
     @property
@@ -173,6 +179,27 @@ class SingleUMICollapseSampleReport(SampleReport):
         description="The number of unique UMIs after correction.",
     )
 
+    output_reads: int = pydantic.Field(
+        default=0,
+        description="The number of reads written after uint16 overflow filtering.",
+    )
+
+    output_molecules: int = pydantic.Field(
+        default=0,
+        description="The number of molecules written after uint16 overflow filtering.",
+    )
+
+    @pydantic.model_validator(mode="before")
+    @classmethod
+    def _default_output_counts(cls, data: typing.Any) -> typing.Any:
+        """Mirror input counts when output counts are omitted (legacy reports)."""
+        if isinstance(data, dict):
+            if data.get("output_reads") is None:
+                data["output_reads"] = data.get("input_reads", 0)
+            if data.get("output_molecules") is None:
+                data["output_molecules"] = data.get("input_molecules", 0)
+        return data
+
     corrected_unique_umis: int = pydantic.Field(
         ...,
         description="The number of UMIs with errors that were corrected.",
@@ -205,6 +232,8 @@ class IndependentCollapseStatisticsCollector:
         corrected_reads: int
         corrected_unique_umis: int
         output_unique_umis: int
+        output_reads: int
+        output_molecules: int
 
     def __init__(self, region_id: CollapsibleRegion) -> None:
         """Initialize the statistics collector."""
@@ -293,6 +322,8 @@ class IndependentCollapseStatisticsCollector:
             "corrected_reads",
             "corrected_unique_umis",
             "output_unique_umis",
+            "output_reads",
+            "output_molecules",
         ]
 
         sums = df[aggregate_cols].sum()
@@ -580,7 +611,7 @@ class RegionCollapser:
         # Warn when required shared memory exceeds available (avoids Bus error in Docker).
         shm_bytes = (
             num_unique_umis * (vector_length * np.dtype(np.uint8).itemsize)
-            + num_unique_umis * np.dtype(np.uint16).itemsize
+            + num_unique_umis * np.dtype(np.uint64).itemsize
         )
         available = _get_shm_available_bytes()
         logger.debug(
@@ -605,16 +636,19 @@ class RegionCollapser:
         for idx, umi in enumerate(unique_umis):
             db[idx, 0 : len(umi)] = np.frombuffer(umi, dtype=np.uint8)
 
+        # Unique-UMI weights can exceed the per-molecule uint16 output schema
+        # (many molecules may share a UMI). Store them in uint64 so counts at or
+        # above 2**16 cannot wrap before directional collapse.
         read_counts = self._memory.allocate_array(
-            "read_counts", shape=(num_unique_umis,), dtype=np.uint16, zero_init=False
+            "read_counts", shape=(num_unique_umis,), dtype=np.uint64, zero_init=True
         )
 
         # Sum the read counts for all molecules that map to the same unique umi.
-        # These read_counts are than used as weights in the network based deduplication.
-        read_counts[:] = np.bincount(
+        # These read_counts are then used as weights in the network based deduplication.
+        np.add.at(
+            read_counts,
             self._db_to_molecule_idx,
-            weights=data["read_count"],
-            minlength=num_unique_umis,
+            np.asarray(data["read_count"], dtype=np.uint64),
         )
 
         yield db, read_counts
@@ -789,7 +823,9 @@ class RegionCollapser:
                 uei=uei_data,
             ).drop(["molecule"])
 
-            table = self._build_output_table(new_data, corrected_umis, marker_name)
+            table = self._build_output_table(
+                new_data, corrected_umis, marker_name, cluster_stats
+            )
 
             logger.info("Streaming %s records to parquet", len(table))
             writer.write_table(table)
@@ -810,16 +846,19 @@ class RegionCollapser:
         new_data: pl.DataFrame,
         corrected_umis: pa.Array,
         marker_name: str,
+        stats: MarkerCorrectionStats,
     ) -> pa.Table:
         """Assemble the parquet output table, dropping uint16-overflowing read counts.
 
         The corrected UMI array is joined onto ``new_data`` before any row filtering so
-        that overflow drops cannot desynchronize the two.
+        that overflow drops cannot desynchronize the two. ``stats.output_reads`` and
+        ``stats.output_molecules`` are set to the rows that are actually streamed.
 
         Args:
             new_data: Collapsed molecule rows without the corrected UMI column.
             corrected_umis: Corrected UMI values, one per row of ``new_data``.
             marker_name: Marker name for logging.
+            stats: Marker statistics to update with streamed output counts.
 
         Returns:
             An Arrow table matching ``self._output_schema``.
@@ -835,6 +874,9 @@ class RegionCollapser:
                 marker_name,
             )
             new_data = new_data.filter(pl.col("read_count").lt(2**16))
+
+        stats.output_molecules = new_data.height
+        stats.output_reads = int(new_data["read_count"].sum() or 0)
 
         return new_data.to_arrow().cast(self._output_schema)
 
