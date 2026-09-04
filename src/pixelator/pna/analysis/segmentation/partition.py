@@ -28,9 +28,10 @@ def partition_counts(
 
     Provide exactly one of ``partition`` or ``partition_column``. A positional
     ``partition`` vector is aligned to graph node order. A :class:`~pandas.Series`
-    whose index matches the node names is aligned by name. A pandas
+    whose index matches the node names is aligned by name.     A pandas
     :class:`~pandas.Categorical` keeps its category order, including unused
-    levels as all-zero rows.
+    levels as all-zero rows. Missing labels (``NA``) are kept as their own
+    row so those nodes still contribute to the totals.
 
     Args:
         graph: A :class:`~pixelator.pna.graph.PNAGraph` with node marker
@@ -81,9 +82,7 @@ def partition_counts(
         labels = _align_partition(partition, node_order)
 
     grouped = counts.groupby(labels, sort=False, observed=False, dropna=False).sum()
-    grouped = grouped.reindex(_group_levels(labels), fill_value=0)
-    grouped.index.name = "partition"
-    return grouped
+    return _reindex_groups(grouped, _group_levels(labels))
 
 
 def _labels_from_column(
@@ -134,5 +133,27 @@ def _align_partition(
 
 def _group_levels(labels: pd.Series) -> pd.Index:
     if isinstance(labels.dtype, pd.CategoricalDtype):
-        return pd.Index(labels.cat.categories)
+        levels = pd.Index(labels.cat.categories)
+        if labels.isna().any():
+            return levels.append(pd.Index([pd.NA]))
+        return levels
     return pd.Index(pd.unique(labels))
+
+
+def _reindex_groups(grouped: pd.DataFrame, levels: pd.Index) -> pd.DataFrame:
+    """Order group sums by ``levels``, keeping an NA row when it is a level."""
+    non_na_levels = levels[~pd.isna(levels)]
+    result = grouped.loc[~grouped.index.isna()].reindex(non_na_levels, fill_value=0)
+    if pd.isna(levels).any():
+        na_vals = grouped.loc[grouped.index.isna()]
+        if na_vals.empty:
+            na_row = pd.DataFrame(0, index=pd.Index([pd.NA]), columns=grouped.columns)
+        else:
+            na_row = pd.DataFrame(
+                na_vals.to_numpy(),
+                index=pd.Index([pd.NA]),
+                columns=grouped.columns,
+            )
+        result = pd.concat([result, na_row])
+    result.index.name = "partition"
+    return result

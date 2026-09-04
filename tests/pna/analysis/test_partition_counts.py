@@ -129,3 +129,28 @@ def test_partition_counts_exported_from_analysis():
     from pixelator.pna.analysis import partition_counts as exported
 
     assert exported is partition_counts
+
+
+def test_partition_counts_keeps_categorical_na_group(graph, node_order):
+    labels = pd.Series(
+        pd.Categorical(
+            [
+                CELL1
+                if node in {"a1", "b1"}
+                else CELL2
+                if node in {"a2", "b2"}
+                else pd.NA
+                for node in node_order
+            ],
+            categories=[CELL1, CELL2, INTERFACE],
+        ),
+        index=node_order,
+    )
+    result = partition_counts(graph, partition=labels)
+
+    assert list(result.index[:3]) == [CELL1, CELL2, INTERFACE]
+    assert result.index.isna().any()
+    assert result.loc[CELL1, "CD3e"] == 1
+    assert result.loc[CELL2, "CD20"] == 1
+    assert (result.loc[INTERFACE] == 0).all()
+    assert result.loc[result.index.isna(), "HLA-ABC"].item() == 2
