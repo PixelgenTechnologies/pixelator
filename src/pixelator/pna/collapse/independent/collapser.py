@@ -789,6 +789,15 @@ class RegionCollapser:
                 uei=uei_data,
             ).drop(["molecule"])
 
+            if drop_count := new_data.filter(pl.col("read_count").ge(2**16)).height:
+                logger.info(
+                    "Dropping of %s entries with too many reads (>=2^16) for %s, markers %s",
+                    drop_count,
+                    self.region_id,
+                    marker_name,
+                )
+                new_data = new_data.filter(pl.col("read_count").lt(2**16))
+
             table = new_data.to_arrow()
 
             corrected_name = self._region_id_choice("corrected_umi1", "corrected_umi2")
