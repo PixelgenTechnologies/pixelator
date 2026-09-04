@@ -6,19 +6,17 @@ Copyright © 2026 Pixelgen Technologies AB.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, TypeAlias
+from typing import Any
 
 import networkx as nx
 import pandas as pd
 
 from pixelator.pna.graph import PNAGraph
 
-PartitionLabels: TypeAlias = Sequence[Any] | pd.Series | pd.Categorical | pd.Index
-
 
 def partition_counts(
     graph: PNAGraph,
-    partition: PartitionLabels | None = None,
+    partition: Sequence[Any] | pd.Series | None = None,
     partition_column: str | None = None,
 ) -> pd.DataFrame:
     """Sum node protein counts by partition group.
@@ -102,7 +100,9 @@ def _labels_from_column(
     return pd.Series([attrs[node] for node in node_order], index=node_order)
 
 
-def _align_partition(partition: PartitionLabels, node_order: list[Any]) -> pd.Series:
+def _align_partition(
+    partition: Sequence[Any] | pd.Series, node_order: list[Any]
+) -> pd.Series:
     n_nodes = len(node_order)
     if isinstance(partition, pd.Series) and set(partition.index) == set(node_order):
         return partition.reindex(node_order)
