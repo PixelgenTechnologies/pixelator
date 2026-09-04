@@ -789,24 +789,7 @@ class RegionCollapser:
                 uei=uei_data,
             ).drop(["molecule"])
 
-            if drop_count := new_data.filter(pl.col("read_count").ge(2**16)).height:
-                logger.info(
-                    "Dropping of %s entries with too many reads (>=2^16) for %s, markers %s",
-                    drop_count,
-                    self.region_id,
-                    marker_name,
-                )
-                new_data = new_data.filter(pl.col("read_count").lt(2**16))
-
-            table = new_data.to_arrow()
-
-            corrected_name = self._region_id_choice("corrected_umi1", "corrected_umi2")
-            table = table.add_column(
-                6,
-                self._output_schema.field(corrected_name),
-                corrected_umis,
-            )
-            table = table.cast(self._output_schema)
+            table = self._build_output_table(new_data, corrected_umis, marker_name)
 
             logger.info("Streaming %s records to parquet", len(table))
             writer.write_table(table)
@@ -821,6 +804,39 @@ class RegionCollapser:
             )
 
         return cluster_stats
+
+    def _build_output_table(
+        self,
+        new_data: pl.DataFrame,
+        corrected_umis: pa.Array,
+        marker_name: str,
+    ) -> pa.Table:
+        """Assemble the parquet output table, dropping uint16-overflowing read counts.
+
+        The corrected UMI array is joined onto ``new_data`` before any row filtering so
+        that overflow drops cannot desynchronize the two.
+
+        Args:
+            new_data: Collapsed molecule rows without the corrected UMI column.
+            corrected_umis: Corrected UMI values, one per row of ``new_data``.
+            marker_name: Marker name for logging.
+
+        Returns:
+            An Arrow table matching ``self._output_schema``.
+        """
+        corrected_name = self._region_id_choice("corrected_umi1", "corrected_umi2")
+        new_data = new_data.with_columns(pl.Series(corrected_name, corrected_umis))
+
+        if drop_count := new_data.filter(pl.col("read_count").ge(2**16)).height:
+            self._logger.info(
+                "Dropping of %s entries with too many reads (>=2^16) for %s, markers %s",
+                drop_count,
+                self.region_id,
+                marker_name,
+            )
+            new_data = new_data.filter(pl.col("read_count").lt(2**16))
+
+        return new_data.to_arrow().cast(self._output_schema)
 
     def _process_molecule_graph(
         self, csgraph, marker_name: str, local_stats: MarkerCorrectionStats
