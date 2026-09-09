@@ -13,6 +13,7 @@ Key files:
 - `docs/api/overview.rst` — curated list of primary API entry points.
 - `docs/cli/index.rst` — CLI reference.
 - `docs/_static/` — custom CSS and logo.
+- `docs/_templates/autoapi/` — AutoAPI template overrides (`autoapi_template_dir`); `python/class.rst` sets `py:currentmodule` and uses `qual_name` on own-page class docs so shortened same-module `Bases:` links resolve (imported-member pages also re-qualify local bases with the defining module).
 - `docs/_scripts/update_switcher.py` — regenerates the version switcher during deployment.
 - `.github/workflows/deploy-docs.yml` — the workflow that builds and deploys the docs.
 

@@ -544,6 +544,45 @@ def test_denoise_ace_analysis(synthetic_denoise_pxl_dataset, tmp_path):
         assert denoised_graph.vcount() == orig_graph.vcount() - removed
 
 
+def test_add_to_pixel_file_strips_whitespace_when_splitting_multi_panel_name():
+    """Legacy files store combination names as ``"a + b"``; recovery must strip.
+
+    ``PNAAntibodyPanelCombination.name`` joins members with ``" + "``. Splitting
+    on ``+`` without stripping yields ``"a "`` / ``" b"``, which
+    ``load_antibody_panel`` cannot resolve.
+    """
+    denoise = DenoiseGraph(run_one_core=True, run_ace=False)
+    mock_pxl = mock.Mock()
+    mock_pxl.metadata.return_value = {
+        "sample": {"panel_name": "base-panel + hash-set-1"}
+    }
+    mock_pxl.adata.return_value = mock.Mock()
+    pxl_file_target = mock.Mock()
+    pxl_file_target.path = "unused.pxl"
+
+    with (
+        mock.patch(
+            "pixelator.pna.analysis.denoise.PNAPixelDataset.from_files",
+            return_value=mock_pxl,
+        ),
+        mock.patch("pixelator.pna.analysis.denoise.read"),
+        mock.patch(
+            "pixelator.pna.analysis.denoise.PNAAntibodyPanelCombination.from_pxl_dataset",
+            side_effect=KeyError("missing panel payload"),
+        ),
+        mock.patch(
+            "pixelator.pna.analysis.denoise.load_antibody_panel",
+            side_effect=RuntimeError("stop after panel load"),
+        ) as mock_load,
+    ):
+        with pytest.raises(RuntimeError, match="stop after panel load"):
+            denoise.add_to_pixel_file(pd.DataFrame({"umi": []}), pxl_file_target)
+
+    mock_load.assert_called_once()
+    _, panel_names = mock_load.call_args[0]
+    assert panel_names == ["base-panel", "hash-set-1"]
+
+
 def test_denoise_ace_pls_one_core(synthetic_denoise_pxl_dataset, tmp_path):
     """ACE, PLS, and One Core graph denoising records removal counts.
 

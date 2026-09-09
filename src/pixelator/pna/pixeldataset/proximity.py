@@ -77,7 +77,9 @@ class Proximity:
         """Get the number of proximity scores."""
         query = self._query_builder.proximity_len_query(
             normalize_input_to_list(self._components),
-            normalize_input_to_list(self._markers),
+            self._adata_helper.marker_ids_for_on_disk_query(
+                normalize_input_to_list(self._markers)
+            ),
             calculate_from_edgelist=self._calculate_from_edgelist,
         )
         with self._view.open() as session:
@@ -150,6 +152,14 @@ class Proximity:
             )  # setting values <1 to 1 to avoid division by zero
         )
 
+    def _filter_to_requested_markers(self, df: pl.DataFrame) -> pl.DataFrame:
+        if not self._markers:
+            return df
+        allowed = self._adata_helper.current_marker_ids(list(self._markers))
+        return df.filter(
+            pl.col("marker_1").is_in(allowed) & pl.col("marker_2").is_in(allowed)
+        )
+
     def _post_process(self, df: pl.DataFrame) -> pl.DataFrame:
         if self._add_marker_counts:
             adata = self._adata_helper.read_adata(
@@ -170,7 +180,9 @@ class Proximity:
         """Get the edgelist as a polars DataFrame."""
         query = self._query_builder.proximity_query(
             normalize_input_to_list(self._components),
-            normalize_input_to_list(self._markers),
+            self._adata_helper.marker_ids_for_on_disk_query(
+                normalize_input_to_list(self._markers)
+            ),
             calculate_from_edgelist=self._calculate_from_edgelist,
         )
         with self._view.open() as session:
@@ -178,6 +190,8 @@ class Proximity:
             # to execute the analytical proximity query.
             session.load_stochastic_extension()
             df = session.execute_lazy(query).collect()
+        df = self._adata_helper.apply_marker_id_renames(df)
+        df = self._filter_to_requested_markers(df)
         return self._post_process(df)
 
     def __str__(self) -> str:

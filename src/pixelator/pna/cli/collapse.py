@@ -103,7 +103,7 @@ def collapse(
     ctx,
     input_files,
     design,
-    panel,
+    panel: list[str],
     output,
     mismatches,
     algorithm,
@@ -113,7 +113,7 @@ def collapse(
     # log input parameters
     log_step_start(
         "collapse",
-        panel=panel,
+        panels=panel,
         design=design,
         output=output,
         mismatches=mismatches,
@@ -124,7 +124,7 @@ def collapse(
     sanity_check_inputs(input_files=input_files, allowed_extensions=("parquet",))
 
     assay = pna_config.get_assay(design)
-    panel = load_antibody_panel(pna_config, panel)
+    panels = load_antibody_panel(pna_config, panel)
 
     # create the output directory
     collapse_output = create_output_stage_dir(output, "collapse")
@@ -138,7 +138,7 @@ def collapse(
             umi1_files,
             umi2_files,
             assay=assay,
-            panel=panel,
+            panel=panels,
             collapse_output=collapse_output,
             mismatches=mismatches,
             algorithm=algorithm,
@@ -148,7 +148,7 @@ def collapse(
 
     logger.info("Detected paired UMI1 and UMI2 demuxed input.")
     return process_paired_input(
-        ctx, input_files, panel, mismatches, algorithm, threads, assay, collapse_output
+        ctx, input_files, panels, mismatches, algorithm, threads, assay, collapse_output
     )
 
 

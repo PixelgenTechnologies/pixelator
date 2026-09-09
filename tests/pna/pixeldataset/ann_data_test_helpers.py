@@ -38,6 +38,22 @@ class StubAnnDataHelper:
         self.read_adata_calls += 1
         return self._adata
 
+    def marker_id_renames_by_sample(self) -> dict[str, dict[str, str]]:
+        """Return old→new marker_id maps (none for this stub)."""
+        return {}
+
+    def apply_marker_id_renames(self, df, columns=("marker_1", "marker_2")):
+        """Pass through marker columns unchanged."""
+        return df
+
+    def marker_ids_for_on_disk_query(self, markers):
+        """Return marker ids unchanged."""
+        return markers
+
+    def current_marker_ids(self, markers):
+        """Return marker ids unchanged."""
+        return markers
+
 
 def make_test_adata(
     components: list[str], markers: list[str], x: np.ndarray
