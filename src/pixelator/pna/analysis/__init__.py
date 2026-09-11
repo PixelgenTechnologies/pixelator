@@ -11,6 +11,7 @@ from pixelator.pna.analysis.segmentation import (
     cc_protein_weights,
     distance_from_node_set,
     partition_counts,
+    segment_cell,
 )
 
 __all__ = [
@@ -18,6 +19,7 @@ __all__ = [
     "cc_protein_weights",
     "distance_from_node_set",
     "partition_counts",
+    "segment_cell",
     "summarize_proximity_scores",
 ]
 

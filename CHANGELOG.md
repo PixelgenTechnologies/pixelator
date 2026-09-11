@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.cc_protein_weights` to derive rank-2 NMF protein weights for two labeled populations (`mode="cell_abundance"`), for use as `w` in cell:cell conjugate segmentation.
 - `pixelator.pna.analysis.distance_from_node_set` to compute integer hop distances from a set of seed nodes on a `PNAGraph` (unreached nodes stay missing).
 - `pixelator.pna.analysis.partition_counts` to sum node protein counts by partition group (cell1 / cell2 / interface / other) on a `PNAGraph`.
+- `pixelator.pna.analysis.segment_cell` to classify conjugate-graph nodes into two cell types (plus optional interface / `other`) using NMF weights from `cc_protein_weights`.
 
 ### Changed
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
