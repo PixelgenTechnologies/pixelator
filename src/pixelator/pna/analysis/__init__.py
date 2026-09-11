@@ -5,10 +5,15 @@ Copyright © 2024 Pixelgen Technologies AB.
 
 from pixelator.pna.analysis.proximity import (
     calculate_differential_proximity,
+    filter_proximity_scores,
     summarize_proximity_scores,
 )
 
-__all__ = ["calculate_differential_proximity", "summarize_proximity_scores"]
+__all__ = [
+    "calculate_differential_proximity",
+    "filter_proximity_scores",
+    "summarize_proximity_scores",
+]
 
 # Note: pixelator.pna.analysis.comparison is intentionally not imported here.
 # It depends on pixelator.pna.pixeldataset, which itself imports
