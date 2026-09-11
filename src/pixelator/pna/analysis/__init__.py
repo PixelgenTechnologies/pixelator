@@ -7,10 +7,11 @@ from pixelator.pna.analysis.proximity import (
     calculate_differential_proximity,
     summarize_proximity_scores,
 )
-from pixelator.pna.analysis.segmentation import partition_counts
+from pixelator.pna.analysis.segmentation import distance_from_node_set, partition_counts
 
 __all__ = [
     "calculate_differential_proximity",
+    "distance_from_node_set",
     "partition_counts",
     "summarize_proximity_scores",
 ]
