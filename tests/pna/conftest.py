@@ -63,6 +63,18 @@ def pna_pxl_file_fixture(pna_data_root):
     return pna_data_root / "PNA055_Sample07_S7.layout.pxl"
 
 
+@pytest.fixture(name="minimal_pna_pbmc_pxl_file", scope="module")
+def minimal_pna_pbmc_pxl_file_fixture(pna_data_root):
+    """Path to the frozen 5-cell PNA PBMC fixture from pixelatorR.
+
+    Copied from ``inst/extdata/five_cells/minimal_PNA_PBMC.pxl``.
+
+    Args:
+        pna_data_root: Pna data root.
+    """
+    return pna_data_root / "minimal_PNA_PBMC.pxl"
+
+
 @pytest.fixture(name="pna_pxl_dataset", scope="module")
 def pna_pxl_dataset_fixture(pna_pxl_file):
     """Load an example pna pixel from disk.
