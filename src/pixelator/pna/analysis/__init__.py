@@ -7,10 +7,15 @@ from pixelator.pna.analysis.proximity import (
     calculate_differential_proximity,
     summarize_proximity_scores,
 )
-from pixelator.pna.analysis.segmentation import distance_from_node_set, partition_counts
+from pixelator.pna.analysis.segmentation import (
+    cc_protein_weights,
+    distance_from_node_set,
+    partition_counts,
+)
 
 __all__ = [
     "calculate_differential_proximity",
+    "cc_protein_weights",
     "distance_from_node_set",
     "partition_counts",
     "summarize_proximity_scores",
