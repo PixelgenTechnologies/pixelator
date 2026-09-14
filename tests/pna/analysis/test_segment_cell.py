@@ -31,6 +31,7 @@ from pixelator.pna.analysis.segmentation import cc_protein_weights, segment_cell
 from pixelator.pna.analysis.segmentation.segment import (
     _expand_adjacency_matrix,
     _kmeans_midpoint,
+    _retained_component_nodes,
 )
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PNAPixelDataset
@@ -207,6 +208,32 @@ def test_segment_cell_applies_component_filtering(graph, weights):
     assert lcc[ISLAND_A] == "other"
 
 
+def test_retained_component_nodes_filters_when_every_node_is_kept(graph):
+    node_order = list(graph.raw.nodes())
+    keep_mask = np.ones(len(node_order), dtype=bool)
+
+    lcc = _retained_component_nodes(
+        graph=graph,
+        node_order=node_order,
+        keep_mask=keep_mask,
+        keep_largest_comp=True,
+        min_comp_size=10,
+    )
+    assert ISLAND_A not in lcc
+    assert ISLAND_B not in lcc
+    assert "ta0" in lcc
+
+    min_size = _retained_component_nodes(
+        graph=graph,
+        node_order=node_order,
+        keep_mask=keep_mask,
+        keep_largest_comp=False,
+        min_comp_size=10,
+    )
+    assert ISLAND_A not in min_size
+    assert "ta0" in min_size
+
+
 def test_segment_cell_interface_expansion_one_hop(graph, weights):
     segment_cell(graph, w=weights, k_interface_expansion=1, verbose=False)
     labels = _compartments(graph)
@@ -381,7 +408,7 @@ def _segment_pbmc_r_component(
     dataset: PNAPixelDataset, weights: pd.DataFrame, **kwargs
 ) -> dict:
     graph = next(
-        dataset.filter(components=[_R_SEGMENT_COMPONENT]).edgelist().iterator()
+        iter(dataset.filter(components=[_R_SEGMENT_COMPONENT]).edgelist().iterator())
     ).graph
     segment_cell(graph, w=weights, verbose=False, **kwargs)
     return nx.get_node_attributes(graph.raw, "compartment")

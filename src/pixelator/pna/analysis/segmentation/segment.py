@@ -390,8 +390,6 @@ def _retained_component_nodes(
     nodes = [node for node, keep in zip(node_order, keep_mask) if keep]
     if not nodes:
         return []
-    if len(nodes) == len(node_order):
-        return nodes
 
     components = list(nx.connected_components(graph.raw.subgraph(nodes)))
     if keep_largest_comp:
