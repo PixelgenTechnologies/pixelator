@@ -185,10 +185,6 @@ class Graph:
 
         The layout options are:
         - coarsened_pmds_3d
-        - fruchterman_reingold
-        - fruchterman_reingold_3d
-        - kamada_kawai
-        - kamada_kawai_3d
         - pmds
         - pmds_3d
         - wpmds_3d

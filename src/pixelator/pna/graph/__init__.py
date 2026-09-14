@@ -75,10 +75,6 @@ class PNAGraph(BaseGraph):
         The layout options are:
         - spectral_3d
         - coarsened_pmds_3d
-        - fruchterman_reingold
-        - fruchterman_reingold_3d
-        - kamada_kawai
-        - kamada_kawai_3d
         - pmds
         - pmds_3d
         - wpmds_3d
@@ -210,15 +206,10 @@ class PNAGraphBackend(NetworkXGraphBackend):
 
         The layout options are:
         - coarsened_pmds_3d
-        - fruchterman_reingold
-        - fruchterman_reingold_3d
-        - kamada_kawai
-        - kamada_kawai_3d
         - pmds
         - pmds_3d
         - wpmds_3d
         - spectral_3d
-
 
         For most cases the `coarsened_pmds_3d`, `wpmds_3d`, and `pmds` options should be
         preferred. On PNA data they are faster and produce better results.
