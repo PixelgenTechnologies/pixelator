@@ -2,16 +2,19 @@
 
 Copyright © 2026 Pixelgen Technologies AB.
 
-CI fixture: a synthetic two-community conjugate ``PNAGraph`` (path-like
-bipartite communities with exclusive markers, two crossing edges, and a
-small disconnected island). This is the PNA-3546 / DAT-189 recommendation:
-do not use 5-cell PBMC as a conjugate-correctness test, and do not commit
-R gold CSVs.
+Two fixtures:
 
-R ``tests/testthat/test-segment_cell.R`` is the behavioral spec (label
-set, optional interface, LCC vs min-size filtering). Core compartments
-must be stable; boundary-node disagreements vs R are acceptable because
-NNLS projection here has no RcppML L1=0.2 penalty.
+* Synthetic two-community conjugate ``PNAGraph`` (path-like bipartite
+  communities, exclusive markers, two crossing edges, a disconnected
+  island). This is the conjugate-correctness test from PNA-3546 / DAT-189.
+* The shared five-cell PBMC ``.pxl`` (``pna_pxl_dataset``), same cells,
+  labels, and second component as pixelatorR
+  ``tests/testthat/test-segment_cell.R``. Those tests check the R
+  contract on a real graph; they are not a biological conjugate gold
+  table, and they do not commit R label CSVs.
+
+Boundary-node disagreements vs R are expected because NNLS projection
+here has no RcppML L1=0.2 penalty.
 """
 
 from __future__ import annotations
@@ -24,12 +27,13 @@ import pandas as pd
 import pytest
 from scipy.sparse import csr_matrix
 
-from pixelator.pna.analysis.segmentation import segment_cell
+from pixelator.pna.analysis.segmentation import cc_protein_weights, segment_cell
 from pixelator.pna.analysis.segmentation.segment import (
     _expand_adjacency_matrix,
     _kmeans_midpoint,
 )
 from pixelator.pna.graph import PNAGraph
+from pixelator.pna.pixeldataset import PNAPixelDataset
 
 POP1 = "T"
 POP2 = "B"
@@ -337,3 +341,100 @@ def test_expand_adjacency_matrix_k1_and_k2_on_a_line():
     assert two_hop[2, 0] == 1
     assert two_hop[0, 0] == 0
     assert two_hop[0, 1] == 1
+
+
+# Same 5-cell PBMC file as pixelatorR `minimal_pna_pxl_file()`.
+# R loads colnames(se)[2] and assigns:
+#   se$cell_type <- c("Mono", "pDC", "CD4T", "CD4T", "CD4T")
+# Python obs order matches that Seurat colnames order (see
+# test_distance_from_node_set.py: colnames(se)[4] == d4074c845bb62800).
+_R_CELL_TYPES = ("Mono", "pDC", "CD4T", "CD4T", "CD4T")
+_R_POP1 = "Mono"
+_R_POP2 = "CD4T"
+_R_WEIGHTS_SEED = 7331
+_R_SEGMENT_COMPONENT = "2708240b908e2eba"
+_R_ALLOWED = {_R_POP1, _R_POP2, "interface", "other"}
+
+
+@pytest.fixture(scope="module")
+def pbmc_r_weights(pna_pxl_dataset: PNAPixelDataset) -> pd.DataFrame:
+    adata = pna_pxl_dataset.adata().copy()
+    assert list(adata.obs.index) == [
+        "0a45497c6bfbfb22",
+        _R_SEGMENT_COMPONENT,
+        "c3c393e9a17c1981",
+        "d4074c845bb62800",
+        "efe0ed189cb499fc",
+    ]
+    adata.obs["cell_type"] = list(_R_CELL_TYPES)
+    return cc_protein_weights(
+        adata,
+        group_by="cell_type",
+        population_1=_R_POP1,
+        population_2=_R_POP2,
+        random_state=_R_WEIGHTS_SEED,
+        verbose=False,
+    )
+
+
+def _segment_pbmc_r_component(
+    dataset: PNAPixelDataset, weights: pd.DataFrame, **kwargs
+) -> dict:
+    graph = next(
+        dataset.filter(components=[_R_SEGMENT_COMPONENT]).edgelist().iterator()
+    ).graph
+    segment_cell(graph, w=weights, verbose=False, **kwargs)
+    return nx.get_node_attributes(graph.raw, "compartment")
+
+
+@pytest.fixture(scope="module")
+def pbmc_r_compartments(pna_pxl_dataset: PNAPixelDataset, pbmc_r_weights: pd.DataFrame):
+    def run(**kwargs):
+        return _segment_pbmc_r_component(pna_pxl_dataset, pbmc_r_weights, k=2, **kwargs)
+
+    return {
+        "default": run(),
+        "no_interface": run(detect_interface=False),
+        "expansion4": run(k_interface_expansion=4),
+        "lcc": run(detect_interface=False, keep_largest_comp=True),
+        "min_size": run(
+            detect_interface=False, keep_largest_comp=False, min_comp_size=1
+        ),
+    }
+
+
+def test_pbmc_r_weights_have_population_columns(pbmc_r_weights):
+    assert list(pbmc_r_weights.columns) == [_R_POP1, _R_POP2]
+    assert pbmc_r_weights.shape[0] >= 5
+    assert (pbmc_r_weights >= 0).all().all()
+
+
+def test_pbmc_r_segment_cell_returns_expected_compartments(pbmc_r_compartments):
+    labels = pbmc_r_compartments["default"]
+    assert set(labels.values()) <= _R_ALLOWED
+    assert {_R_POP1, _R_POP2} & set(labels.values())
+    assert not any(value.startswith("intra_") for value in labels.values())
+
+
+def test_pbmc_r_segment_cell_without_interface_detection(pbmc_r_compartments):
+    labels = pbmc_r_compartments["no_interface"]
+    assert "interface" not in labels.values()
+    assert set(labels.values()) <= {_R_POP1, _R_POP2, "other"}
+
+
+def test_pbmc_r_segment_cell_high_interface_expansion(pbmc_r_compartments):
+    labels = pbmc_r_compartments["expansion4"]
+    assert set(labels.values()) <= _R_ALLOWED
+
+
+def test_pbmc_r_segment_cell_applies_component_filtering(pbmc_r_compartments):
+    lcc = pbmc_r_compartments["lcc"]
+    min_size = pbmc_r_compartments["min_size"]
+    n_non_other_lcc = sum(label in {_R_POP1, _R_POP2} for label in lcc.values())
+    n_non_other_min_size = sum(
+        label in {_R_POP1, _R_POP2} for label in min_size.values()
+    )
+    assert n_non_other_lcc <= n_non_other_min_size
+    assert sum(label == "other" for label in lcc.values()) > sum(
+        label == "other" for label in min_size.values()
+    )
