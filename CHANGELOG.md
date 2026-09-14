@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Stale nf-core/pixelator integration tests (`task test-nf-core-pixelator` and
   `.github/workflows/nf-core-pixelator-tests.yml`).
+- The `fruchterman_reingold`, `fruchterman_reingold_3d`, `kamada_kawai`, and
+  `kamada_kawai_3d` layout algorithms. Use `coarsened_pmds_3d`, `wpmds_3d`,
+  `pmds`, `pmds_3d`, or `spectral_3d` instead.
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
   `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
   use a release prior to 0.31.0 (for example `pip install 'pixelgen-pixelator<0.31.0'`).
