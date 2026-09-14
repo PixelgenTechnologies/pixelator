@@ -9,7 +9,6 @@ This document covers how to get up and running with developing pixelator.
 -   [Adding new dependencies](#adding-new-dependencies)
 -   [Testing pixelator](#testing-pixelator)
     -   [Pixelator unit tests](#pixelator-unit-tests)
-    -   [Pixelator nf-core/pixelator integration tests](#pixelator-nf-corepixelator-integration-tests)
 -   [Understanding the pixelator plugin system](#understanding-the-pixelator-plugin-system)
 
 ## Setup the developer environment
@@ -99,35 +98,22 @@ It will look something like this:
 * lint:                                Run linting using ruff.
 * test:                                Run tests using pytest with the default flags defined in pyproject.toml.
 * test-all:                            Run all tests using pytest.
-* test-nf-core-pixelator:              Run the default nf-core/pixelator test profile with this version of pixelator.
 * typecheck:                           Run type checking using mypy.
 ```
 
 View more detailed documentation for a specific task, for example:
 
 ```shell
-task test-nf-core-pixelator --summary
+task test --summary
 ```
 
 ```console
-task: test-nf-core-pixelator
+task: test
 
-Run the default nf-core/pixelator test profile with this version of pixelator.
-
-If the pipeline is not found in the directory `PIPELINE_SOURCE_DIR`, it will be cloned
-from the PixelgenTechnologies/nf-core-pixelator repository using the `PIPELINE_BRANCH` branch.
-By default the "pixelator-next" branch of nf-core-pixelator will be used.
-
-If the `PIPELINE_SOURCE_DIR` exists this task will assume that the pipeline is already present and checked out
-in the right branch.
-
-Note that the current dev version of pixelator must be installed and available in the PATH.
-
-If the `RESUME` environment variable is set to "true", the pipeline will be resumed if it was previously run.
+Run tests using pytest with the default flags defined in pyproject.toml.
 
 commands:
- - Task: tests:pull-nf-core-pixelator
- - Task: tests:run-nf-core-pixelator-test-profile
+ - uv run pytest tests {{ .CLI_ARGS }}
 ```
 
 Some commands have confirmation prompts for potentially dangerous actions such as deleting files.
@@ -139,7 +125,7 @@ These variables are passed as environment variables to the command.
 For example:
 
 ```shell
-RESUME=true task test-nf-core-pixelator
+FIX=true task lint
 ```
 
 ## Adding new dependencies
@@ -195,23 +181,6 @@ by using something like below:
 
 ```shell
 TEST_PATH="tests/pixeldataset" task test-watch
-```
-
-### Pixelator nf-core/pixelator integration tests
-
-Pixelator is built to be orchestrated by the nextflow pipeline [nf-core/pixelator](https://github.com/nf-core/pixelator).
-This means that is is useful to have a simple way to test the integration between the two.
-
-You can do this using tasks:
-
-```shell
-task test-nf-core-pixelator
-```
-
-It can also be triggered on Github Actions:
-
-```
-gh workflow run --ref <your-branch-name> nf-core-pixelator-tests.yml
 ```
 
 ### Pixelator benchmark tests
