@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
 ### Changed
+- Dependency: `pixelgen-pixelator-core` 0.2.0 (Python bindings for the native graph step).
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule
