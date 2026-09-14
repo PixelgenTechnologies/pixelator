@@ -92,20 +92,23 @@ def segment_cell(
             a numeric argument is outside its allowed range.
 
     Examples:
-        Segment a conjugate component after fitting protein weights::
+        ``cc_protein_weights`` needs cell type labels in ``adata.obs``
+        (here ``"cell_type"``). Assigning those labels is not shown::
 
             from pixelator.pna.analysis import cc_protein_weights, segment_cell
             from pixelator.pna.pixeldataset import read
 
             dataset = read("sample.pxl")
+            adata = dataset.adata()
+            # here cell types need to be annotated in adata.obs["cell_type"] before calling cc_protein_weights
             w = cc_protein_weights(
-                dataset.adata(),
+                adata,
                 group_by="cell_type",
                 population_1="B",
                 population_2="T",
             )
-            component = next(dataset.edgelist().iterator())
-            segment_cell(component.graph, w)
+            for component in dataset.edgelist().iterator():
+                segment_cell(component.graph, w)
 
     See Also:
         ``segment_cell`` in pixelatorR, the equivalent function for
