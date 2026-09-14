@@ -333,14 +333,8 @@ class PNAPixelDataset:
         - ``pmds`` / ``pmds_3d``: 2D or 3D PMDS without coarsening.
         - ``spectral_3d``: 3D spectral Layout. Extremely fast, generates high
           quality layouts but can be sensitive to structural artifacts.
-        - ``fruchterman_reingold`` / ``fruchterman_reingold_3d``: force-directed;
-          slower on large Components.
-        - ``kamada_kawai`` / ``kamada_kawai_3d``: force-directed; slower on
-          large Components.
 
         For most cases prefer ``coarsened_pmds_3d``, ``wpmds_3d``, or ``pmds`` (in that order).
-        On PNA data they are faster and produce better results than the
-        force-directed algorithms.
 
         .. code-block:: python
 
