@@ -41,3 +41,4 @@ for usage examples.
 * :func:`pixelator.pna.analysis.summarize_proximity_scores`
 * :func:`pixelator.pna.analysis.cc_protein_weights`
 * :func:`pixelator.pna.analysis.partition_counts`
+* :func:`pixelator.pna.analysis.segment_cell`
