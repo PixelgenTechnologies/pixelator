@@ -14,13 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.distance_from_node_set` to compute integer hop distances from a set of seed nodes on a `PNAGraph` (unreached nodes stay missing).
 - `pixelator.pna.analysis.partition_counts` to sum node protein counts by partition group (cell1 / cell2 / interface / other) on a `PNAGraph`.
 - `pixelator.pna.analysis.segment_cell` to classify conjugate-graph nodes into two cell types (plus optional interface / `other`) using NMF weights from `cc_protein_weights`.
+- `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
 ### Changed
+- Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule
   statistics use the number of edges.
-- Refactor `pixelator.common.utils.__init__.py`
 
 ### Deprecated
 - `PNAPixelDataset.precomputed_layouts()` is deprecated. Use `layouts()` to
@@ -28,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when one exists.
 
 ### Removed
+- Stale nf-core/pixelator integration tests (`task test-nf-core-pixelator` and
+  `.github/workflows/nf-core-pixelator-tests.yml`).
+- The `fruchterman_reingold`, `fruchterman_reingold_3d`, `kamada_kawai`, and
+  `kamada_kawai_3d` layout algorithms. Use `coarsened_pmds_3d`, `wpmds_3d`,
+  `pmds`, `pmds_3d`, or `spectral_3d` instead.
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
   `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
   use a release prior to 0.31.0 (for example `pip install 'pixelgen-pixelator<0.31.0'`).

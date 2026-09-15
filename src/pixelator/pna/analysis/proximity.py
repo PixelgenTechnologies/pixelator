@@ -19,6 +19,10 @@ _SUMMARY_STATS: dict[str, Callable[[np.ndarray], float]] = {
     "mean": np.mean,
     "median": np.median,
 }
+# R FilterProximityScores uses p1/p2 and count_1/count_2. Python Proximity.to_df()
+# with add_marker_counts=True emits marker_*_freq and marker_*_count.
+_PCT_COLUMN_PAIRS = (("p1", "p2"), ("marker_1_freq", "marker_2_freq"))
+_COUNT_COLUMN_PAIRS = (("count_1", "count_2"), ("marker_1_count", "marker_2_count"))
 
 
 def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
@@ -332,6 +336,215 @@ def summarize_proximity_scores(
         output_columns += [f"{col}_list" for col in value_columns]
 
     return summary[output_columns]
+
+
+def _resolve_column_pair(
+    proximity_df: pd.DataFrame,
+    column_pairs: tuple[tuple[str, str], ...],
+    filter_name: str,
+    missing_hint: str,
+) -> tuple[str, str]:
+    """Return the first column pair present in ``proximity_df``.
+
+    Args:
+        proximity_df: Proximity score table to inspect.
+        column_pairs: Candidate (left, right) column name pairs, in preference
+            order.
+        filter_name: Name of the filter that requires the columns, used in the
+            error message.
+        missing_hint: Extra guidance included in the error message.
+
+    Returns:
+        The first pair of column names that both exist in ``proximity_df``.
+
+    Raises:
+        ValueError: If none of the candidate pairs are fully present.
+    """
+    for left, right in column_pairs:
+        if left in proximity_df.columns and right in proximity_df.columns:
+            return left, right
+
+    expected = " or ".join(f"{left!r} and {right!r}" for left, right in column_pairs)
+    raise ValueError(f"{filter_name} requires columns {expected}. {missing_hint}")
+
+
+def _validate_optional_threshold(
+    name: str,
+    value: float | int | None,
+    *,
+    minimum: float,
+    maximum: float | None = None,
+) -> None:
+    """Validate an optional numeric threshold.
+
+    Args:
+        name: Argument name, used in the error message.
+        value: Threshold value, or ``None`` if the filter is unused.
+        minimum: Inclusive lower bound when ``value`` is not ``None``.
+        maximum: Inclusive upper bound when not ``None``.
+
+    Raises:
+        ValueError: If ``value`` is not a real number or is outside the
+            allowed range.
+    """
+    if value is None:
+        return
+    if isinstance(value, bool) or not isinstance(
+        value, (int, float, np.integer, np.floating)
+    ):
+        raise ValueError(f"{name} must be a number, got {value!r}.")
+    if value < minimum or (maximum is not None and value > maximum):
+        bounds = f"[{minimum}, {maximum}]" if maximum is not None else f">= {minimum}"
+        raise ValueError(f"{name} must be within {bounds}, got {value!r}.")
+
+
+def filter_proximity_scores(
+    proximity_df: pd.DataFrame,
+    background_threshold_pct: float | None = None,
+    background_threshold_count: float | None = None,
+    min_cells_count: int | None = None,
+) -> pd.DataFrame:
+    """Remove marker pairs with too little signal from a proximity score table.
+
+    Proximity scores are reported for every marker pair detected in a cell,
+    including pairs where one or both markers are barely present. Such pairs
+    may reflect background and can distort downstream summaries and
+    heatmaps, so it is usually worth dropping them before further analysis.
+
+    At least one threshold must be given. When several are given, they are
+    applied in this order:
+
+    1. ``background_threshold_pct`` keeps a pair only if both of its markers
+       make up at least this fraction of the cell's UMI counts. The isotype
+       control fraction for your panel is a good choice of cutoff.
+    2. ``background_threshold_count`` keeps a pair only if both of its markers
+       have at least this many UMI counts.
+    3. ``min_cells_count`` keeps a marker pair only if it is detected in at
+       least this many cells.
+
+    Using ``background_threshold_pct`` on its own is usually enough. Unlike
+    a raw count cutoff, a fraction does not depend on how many molecules a
+    cell has, so the same threshold is meaningful for both small and large cells.
+
+    The filters need the per-cell marker abundance columns that
+    :meth:`~pixelator.pna.pixeldataset.proximity.Proximity.to_df` adds by
+    default (``add_marker_counts=True``): ``marker_1_freq`` and
+    ``marker_2_freq`` for the fraction filter, ``marker_1_count`` and
+    ``marker_2_count`` for the count filter. Proximity tables exported from
+    pixelatorR also work, where the same columns are named ``p1`` and ``p2``,
+    and ``count_1`` and ``count_2``.
+
+    Args:
+        proximity_df: Proximity scores with one row per cell (``component``)
+            and marker pair, for example from
+            ``dataset.proximity().to_df()``.
+        background_threshold_pct: Minimum fraction of a cell's UMI counts that
+            both markers in a pair must reach, as a value between 0 and 1. For
+            example, 0.001 in a cell with 20,000 molecules requires at least
+            20 counts for both markers.
+        background_threshold_count: Minimum number of UMI counts that both
+            markers in a pair must reach. This is an absolute cutoff, so it
+            removes more pairs in small cells than in large ones.
+        min_cells_count: Minimum number of cells a marker pair must be
+            detected in. Useful for dropping pairs seen in only a handful of
+            cells.
+
+    Returns:
+        The rows of ``proximity_df`` that pass every threshold you set, with
+        the columns unchanged.
+
+    Raises:
+        ValueError: If no threshold is set, if a threshold is outside its
+            allowed range, or if the table lacks the columns a requested
+            filter needs.
+
+    Examples:
+        Keep the marker pairs where both markers are above the isotype
+        control fraction, and see how much of the table that leaves::
+
+            from pixelator.pna.analysis import filter_proximity_scores
+            from pixelator.pna.pixeldataset import read
+
+            dataset = read("sample.pxl")
+            proximity_table = dataset.proximity().to_df()
+            filtered = filter_proximity_scores(
+                proximity_table,
+                background_threshold_pct=0.001,
+            )
+            pct_rows_kept = round(
+                len(filtered) / len(proximity_table) * 100, 2
+            )
+
+    See Also:
+        ``FilterProximityScores`` in pixelatorR, the equivalent function for
+        R users.
+    """
+    _validate_optional_threshold(
+        "background_threshold_pct",
+        background_threshold_pct,
+        minimum=0,
+        maximum=1,
+    )
+    _validate_optional_threshold(
+        "background_threshold_count",
+        background_threshold_count,
+        minimum=0,
+    )
+    _validate_optional_threshold(
+        "min_cells_count",
+        min_cells_count,
+        minimum=0,
+    )
+
+    if (
+        background_threshold_pct is None
+        and background_threshold_count is None
+        and min_cells_count is None
+    ):
+        raise ValueError(
+            "At least one of background_threshold_pct, "
+            "background_threshold_count, or min_cells_count must be set."
+        )
+
+    filtered = proximity_df
+
+    if background_threshold_pct is not None:
+        p1_col, p2_col = _resolve_column_pair(
+            filtered,
+            _PCT_COLUMN_PAIRS,
+            "background_threshold_pct",
+            "Read the proximity table with dataset.proximity().to_df() and "
+            "add_marker_counts=True (the default) to include them.",
+        )
+        filtered = filtered[
+            np.minimum(filtered[p1_col], filtered[p2_col]) >= background_threshold_pct
+        ]
+
+    if background_threshold_count is not None:
+        c1_col, c2_col = _resolve_column_pair(
+            filtered,
+            _COUNT_COLUMN_PAIRS,
+            "background_threshold_count",
+            "Read the proximity table with dataset.proximity().to_df() and "
+            "add_marker_counts=True (the default) to include them.",
+        )
+        filtered = filtered[
+            np.minimum(filtered[c1_col], filtered[c2_col]) >= background_threshold_count
+        ]
+
+    if min_cells_count is not None:
+        missing = {"marker_1", "marker_2"} - set(filtered.columns)
+        if missing:
+            raise ValueError(
+                "min_cells_count requires columns 'marker_1' and "
+                f"'marker_2'. Missing: {sorted(missing)}."
+            )
+        n_cells = filtered.groupby(["marker_1", "marker_2"], sort=False)[
+            "marker_1"
+        ].transform("size")
+        filtered = filtered[n_cells >= min_cells_count]
+
+    return filtered.copy()
 
 
 def _filter_target_data(

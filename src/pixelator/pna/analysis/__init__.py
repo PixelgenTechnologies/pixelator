@@ -5,6 +5,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 
 from pixelator.pna.analysis.proximity import (
     calculate_differential_proximity,
+    filter_proximity_scores,
     summarize_proximity_scores,
 )
 from pixelator.pna.analysis.segmentation import (
@@ -20,6 +21,7 @@ __all__ = [
     "distance_from_node_set",
     "partition_counts",
     "segment_cell",
+    "filter_proximity_scores",
     "summarize_proximity_scores",
 ]
 

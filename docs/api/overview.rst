@@ -37,8 +37,9 @@ for usage examples.
 **Analysis**
 
 * :func:`pixelator.pna.analysis.calculate_differential_proximity`
-* :func:`pixelator.pna.analysis.distance_from_node_set`
-* :func:`pixelator.pna.analysis.summarize_proximity_scores`
 * :func:`pixelator.pna.analysis.cc_protein_weights`
+* :func:`pixelator.pna.analysis.distance_from_node_set`
+* :func:`pixelator.pna.analysis.filter_proximity_scores`
 * :func:`pixelator.pna.analysis.partition_counts`
 * :func:`pixelator.pna.analysis.segment_cell`
+* :func:`pixelator.pna.analysis.summarize_proximity_scores`
