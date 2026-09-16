@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
+- `pixelator.pna.plot.proximity_heatmap` to plot a clustered heatmap or dot plot of a summary proximity statistic between marker pairs.
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
 ### Changed
