@@ -278,14 +278,12 @@ def proximity_heatmap(
             given size.
 
     Example:
-        proximity_df = pixel_dataset.proximity()
-        summary = summarize_proximity_scores(proximity_df)
-        fig, ax = proximity_heatmap(summary)
+        >>> proximity_df = pixel_dataset.proximity()
+        >>> summary = summarize_proximity_scores(proximity_df)
+        >>> fig, ax = proximity_heatmap(summary)
 
-        diff = calculate_differential_proximity(proximity_df, ...)
-        fig, ax = proximity_heatmap(
-            diff, value_col="median_diff", kind="dots"
-        )
+        >>> diff = calculate_differential_proximity(proximity_df, group1, group2)
+        >>> fig, ax = proximity_heatmap(diff, value_col="median_diff", kind="dots")
 
     Returns:
         A tuple of the created figure and its main axes (the heatmap axes for
