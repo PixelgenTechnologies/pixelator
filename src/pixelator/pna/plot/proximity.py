@@ -277,6 +277,16 @@ def proximity_heatmap(
             ``kind="dots"``, the auto-computed layout is scaled to fill the
             given size.
 
+    Example:
+        proximity_df = pixel_dataset.proximity()
+        summary = summarize_proximity_scores(proximity_df)
+        fig, ax = proximity_heatmap(summary)
+
+        diff = calculate_differential_proximity(proximity_df, ...)
+        fig, ax = proximity_heatmap(
+            diff, value_col="median_diff", kind="dots"
+        )
+
     Returns:
         A tuple of the created figure and its main axes (the heatmap axes for
         ``kind="tiles"``, the dot plot axes for ``kind="dots"``), unless
