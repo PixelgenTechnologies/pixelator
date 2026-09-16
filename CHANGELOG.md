@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the two, instead of always reporting the host machine's core count. This prevents
   multiprocessing oversubscription and slowdowns when running inside a container or pod with a
   restricted CPU allocation.
+- Panel header parsing now recovers from multiple trailing commas per line (e.g. `name: foo,,,,,,,`).
 
 ## [0.30.0] - 2026-08-05
 
