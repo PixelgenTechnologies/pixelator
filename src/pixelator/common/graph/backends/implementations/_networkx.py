@@ -314,30 +314,25 @@ class NetworkXGraphBackend(GraphBackend):
         # Public callers use random_seed=; algorithms take seed=. Accept both.
         seed = kwargs.pop("seed", random_seed)
 
-        if layout_algorithm == "kamada_kawai":
-            layout_inst = nx.kamada_kawai_layout(
-                raw, pos=nx.random_layout(raw, seed=seed)
-            )
-        if layout_algorithm == "kamada_kawai_3d":
-            layout_inst = nx.kamada_kawai_layout(
-                raw, pos=nx.random_layout(raw, seed=seed, dim=3), dim=3
-            )
-        if layout_algorithm == "fruchterman_reingold":
-            layout_inst = nx.spring_layout(raw, seed=seed)
-        if layout_algorithm == "fruchterman_reingold_3d":
-            layout_inst = nx.spring_layout(raw, dim=3, seed=seed)
         if layout_algorithm == "pmds":
             layout_inst = pmds_layout(raw, seed=seed, **kwargs)
-        if layout_algorithm == "pmds_3d":
+        elif layout_algorithm == "pmds_3d":
             layout_inst = pmds_layout(raw, dim=3, seed=seed, **kwargs)
-        if layout_algorithm == "wpmds_3d":
+        elif layout_algorithm == "wpmds_3d":
             layout_inst = pmds_layout(
                 raw, dim=3, weights="prob_dist", seed=seed, **kwargs
             )
-        if layout_algorithm == "coarsened_pmds_3d":
+        elif layout_algorithm == "coarsened_pmds_3d":
             layout_inst = coarsened_pmds_layout(raw, seed=seed, **kwargs)
-        if layout_algorithm == "spectral_3d":
+        elif layout_algorithm == "spectral_3d":
             layout_inst = spectral_layout(raw, dim=3, seed=seed, **kwargs)
+        else:
+            raise AssertionError(
+                (
+                    f"{layout_algorithm} not allowed `layout_algorithm` option. "
+                    f"Options are: {'/'.join(get_args(SupportedLayoutAlgorithm))}"
+                )
+            )
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
@@ -397,10 +392,6 @@ class NetworkXGraphBackend(GraphBackend):
 
         The layout options are:
         - coarsened_pmds_3d
-        - fruchterman_reingold
-        - fruchterman_reingold_3d
-        - kamada_kawai
-        - kamada_kawai_3d
         - pmds
         - pmds_3d
         - wpmds_3d

@@ -3,9 +3,13 @@
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+from typing import get_args
+
 import networkx as nx
 import pandas as pd
+import pytest
 
+from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
 from pixelator.common.graph.graph import Graph
 
 
@@ -25,3 +29,23 @@ def test_layout_coordinates_seed_kwarg_seeds_the_default_algorithm():
     via_seed = graph.layout_coordinates(**common, seed=42)
     via_random_seed = graph.layout_coordinates(**common, random_seed=42)
     pd.testing.assert_frame_equal(via_seed, via_random_seed)
+
+
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        "fruchterman_reingold",
+        "fruchterman_reingold_3d",
+        "kamada_kawai",
+        "kamada_kawai_3d",
+    ],
+)
+def test_removed_force_directed_layout_algorithms_are_rejected(algorithm):
+    assert algorithm not in get_args(SupportedLayoutAlgorithm)
+    graph = _attributed_cycle()
+    with pytest.raises(AssertionError, match="not allowed"):
+        graph.layout_coordinates(
+            layout_algorithm=algorithm,  # type: ignore[arg-type]
+            get_node_marker_matrix=False,
+            only_keep_a_pixels=False,
+        )
