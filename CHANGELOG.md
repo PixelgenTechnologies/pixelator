@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.distance_from_node_set` to compute integer hop distances from a set of seed nodes on a `PNAGraph` (unreached nodes stay missing).
 - `pixelator.pna.analysis.partition_counts` to sum node protein counts by partition group (cell1 / cell2 / interface / other) on a `PNAGraph`.
 - `pixelator.pna.analysis.segment_cell` to classify conjugate-graph nodes into two cell types (plus optional interface / `other`) using NMF weights from `cc_protein_weights`.
+- `pixelator.pna.plot.proximity_heatmap` to plot a clustered heatmap or dot plot of a summary proximity statistic between marker pairs.
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
 ### Changed
@@ -54,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the two, instead of always reporting the host machine's core count. This prevents
   multiprocessing oversubscription and slowdowns when running inside a container or pod with a
   restricted CPU allocation.
+- Panel header parsing now recovers from multiple trailing commas per line (e.g. `name: foo,,,,,,,`).
 
 ## [0.30.0] - 2026-08-05
 

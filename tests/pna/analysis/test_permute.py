@@ -1,5 +1,5 @@
 """
-Tests for the colocalization modules
+Tests for the pna permutation analysis module.
 
 Copyright © 2024 Pixelgen Technologies AB.
 """
