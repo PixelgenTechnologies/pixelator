@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- The PNA graph step now peels the core-1 layer off the edgelist before fast label propagation and Leiden,
+  then reattaches it to the resolved components in an iterative absorption phase (capped at 5 iterations
+  by default, configurable via `--core1-absorption-max-iterations`).
+- The graph report now includes the size of the core-1 layer and the fraction of it that was reabsorbed.
 - `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
 - `pixelator.pna.plot.proximity_heatmap` to plot a clustered heatmap or dot plot of a summary proximity statistic between marker pairs.

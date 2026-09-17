@@ -46,10 +46,17 @@
     "stranded_nodes_pre_recovery": 0,
     "edge_cycle_length_distribution": {},
     "post_flp_community_sizes": {},
+    "core1_peel_iterations_run": 0,
+    "core1_layer_edges": 0,
+    "edges_post_core1_peel": 0,
+    "core1_absorption_iterations_run": 0,
+    "core1_edges_reabsorbed": 0,
+    "core1_edges_discarded": 0,
     "fraction_of_discarded_components": 0.25,
     "edge_saturation": 0.0,
     "node_saturation": 0.5,
     "discarded_reads": 200,
     "discarded_molecules": 100,
-    "fraction_stranded_nodes_pre_recovery": 0.0
+    "fraction_stranded_nodes_pre_recovery": 0.0,
+    "fraction_core1_edges_reabsorbed": 0.0
 }

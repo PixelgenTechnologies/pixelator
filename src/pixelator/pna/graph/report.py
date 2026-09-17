@@ -67,6 +67,14 @@ class GraphStatistics:
     edge_cycle_length_distribution: dict[int, int] = field(default_factory=dict)
     post_flp_community_sizes: dict[int, int] = field(default_factory=dict)
 
+    # Core-1 layer peeling (before FLP + Leiden) and absorption (after components are resolved)
+    core1_peel_iterations_run: int = 0
+    core1_layer_edges: int = 0
+    edges_post_core1_peel: int = 0
+    core1_absorption_iterations_run: int = 0
+    core1_edges_reabsorbed: int = 0
+    core1_edges_discarded: int = 0
+
     def to_dict(self):
         """Convert the object to a dictionary."""
         return asdict(self)
@@ -237,6 +245,47 @@ class GraphSampleReport(SampleReport):
         description="Component size distribution after Fast label propagation.",
     )
 
+    core1_peel_iterations_run: int = pydantic.Field(
+        default=0,
+        description=(
+            "Number of leaf-pruning rounds run to peel the core-1 layer off the graph before "
+            "fast label propagation and Leiden."
+        ),
+    )
+
+    core1_layer_edges: int = pydantic.Field(
+        default=0,
+        description=(
+            "Number of edges in the core-1 layer peeled off before community detection, i.e. "
+            "how large the core-1 layer was."
+        ),
+    )
+
+    edges_post_core1_peel: int = pydantic.Field(
+        default=0,
+        description="Number of edges remaining in the 2-core graph fed into fast label propagation and Leiden.",
+    )
+
+    core1_absorption_iterations_run: int = pydantic.Field(
+        default=0,
+        description=(
+            "Number of iterations run to absorb the core-1 layer back into resolved components."
+        ),
+    )
+
+    core1_edges_reabsorbed: int = pydantic.Field(
+        default=0,
+        description="Number of core-1 layer edges successfully reattached to a resolved component.",
+    )
+
+    core1_edges_discarded: int = pydantic.Field(
+        default=0,
+        description=(
+            "Number of core-1 layer edges that could not be reattached to a resolved component "
+            "(conflicting or still unresolved after the maximum number of absorption iterations)."
+        ),
+    )
+
     @pydantic.computed_field(  # type: ignore
         description="The fraction of components discarded by filtering.",
         return_type=float,
@@ -297,3 +346,14 @@ class GraphSampleReport(SampleReport):
         if self.umis_input == 0:
             return 0.0
         return self.stranded_nodes_pre_recovery / self.umis_input
+
+    @pydantic.computed_field(  # type: ignore
+        description="The fraction of the core-1 layer (peeled off before community detection) that was reabsorbed into a resolved component.",
+        return_type=float,
+    )
+    @property
+    def fraction_core1_edges_reabsorbed(self) -> float:
+        """Return the fraction of core-1 layer edges that were reabsorbed."""
+        if self.core1_layer_edges == 0:
+            return 0.0
+        return self.core1_edges_reabsorbed / self.core1_layer_edges
