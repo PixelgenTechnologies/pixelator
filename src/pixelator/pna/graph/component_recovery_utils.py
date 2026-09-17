@@ -966,7 +966,8 @@ def absorb_core1_layer(
 
             if n_rescued == 0:
                 logger.debug(
-                    "No core-1 edges rescued in absorption iteration %d, stopping early", i
+                    "No core-1 edges rescued in absorption iteration %d, stopping early",
+                    i,
                 )
                 break
 

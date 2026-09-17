@@ -565,7 +565,9 @@ def test_peel_core1_nodes_peels_a_chain_over_multiple_rounds(tmp_path: Path) -> 
     """A length-5 chain hangs off the cluster: unrolling it takes 5 rounds, one hop at a time."""
     core_edges = _complete_bipartite(CLUSTER_UMI1, CLUSTER_UMI2)
     chain_edges = [(9003, 2000), (9003, 8002), (9002, 8002), (9002, 8001), (9001, 8001)]
-    edgelist_path = _write_edgelist(tmp_path / "input.parquet", core_edges + chain_edges)
+    edgelist_path = _write_edgelist(
+        tmp_path / "input.parquet", core_edges + chain_edges
+    )
 
     stats = GraphStatistics()
     kept_path, discard_path, stats = peel_core1_nodes(
@@ -587,7 +589,9 @@ def test_peel_core1_nodes_respects_max_iterations(tmp_path: Path) -> None:
     """Capping ``max_iterations`` stops peeling before the full 2-core is reached."""
     core_edges = _complete_bipartite(CLUSTER_UMI1, CLUSTER_UMI2)
     chain_edges = [(9003, 2000), (9003, 8002), (9002, 8002), (9002, 8001), (9001, 8001)]
-    edgelist_path = _write_edgelist(tmp_path / "input.parquet", core_edges + chain_edges)
+    edgelist_path = _write_edgelist(
+        tmp_path / "input.parquet", core_edges + chain_edges
+    )
 
     stats = GraphStatistics()
     kept_path, discard_path, stats = peel_core1_nodes(
@@ -694,7 +698,9 @@ def test_absorb_core1_layer_propagates_evidence_across_iterations(
     tmp_path: Path,
 ) -> None:
     """A chain of core-1 edges is resolved one hop per iteration."""
-    base_path = _write_component_edgelist(tmp_path / "base.parquet", [(1, 101)], component=1)
+    base_path = _write_component_edgelist(
+        tmp_path / "base.parquet", [(1, 101)], component=1
+    )
 
     # umi1=101 is known from round 0. Each subsequent edge only becomes a frontier edge once
     # its predecessor has been rescued, so a 3-edge chain needs 3 rounds to fully resolve.
@@ -720,7 +726,9 @@ def test_absorb_core1_layer_propagates_evidence_across_iterations(
 
 def test_absorb_core1_layer_respects_max_iterations(tmp_path: Path) -> None:
     """Capping ``max_iterations`` leaves edges beyond the reachable hop count unresolved."""
-    base_path = _write_component_edgelist(tmp_path / "base.parquet", [(1, 101)], component=1)
+    base_path = _write_component_edgelist(
+        tmp_path / "base.parquet", [(1, 101)], component=1
+    )
     discard_edges = [(101, 900), (900, 901), (901, 902)]
     discard_path = _write_edgelist(tmp_path / "discard.parquet", discard_edges)
 
@@ -742,7 +750,9 @@ def test_absorb_core1_layer_respects_max_iterations(tmp_path: Path) -> None:
 
 def test_absorb_core1_layer_handles_empty_discard_pile(tmp_path: Path) -> None:
     """An empty core-1 discard pile leaves the base edgelist untouched."""
-    base_path = _write_component_edgelist(tmp_path / "base.parquet", [(1, 101)], component=1)
+    base_path = _write_component_edgelist(
+        tmp_path / "base.parquet", [(1, 101)], component=1
+    )
     empty_discard_path = tmp_path / "discard.parquet"
     pl.DataFrame(
         {
@@ -768,7 +778,9 @@ def test_absorb_core1_layer_handles_empty_discard_pile(tmp_path: Path) -> None:
     assert stats.core1_edges_discarded == 0
 
 
-def _dataframe_for_component(edges: list[tuple[int, int]], component: int) -> pl.DataFrame:
+def _dataframe_for_component(
+    edges: list[tuple[int, int]], component: int
+) -> pl.DataFrame:
     return pl.DataFrame(
         {
             "umi1": [e[0] for e in edges],
