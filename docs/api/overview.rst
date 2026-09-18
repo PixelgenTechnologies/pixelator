@@ -28,6 +28,7 @@ for usage examples.
 **Plotting**
 
 * :func:`pixelator.pna.plot.molecule_rank_plot`
+* :func:`pixelator.pna.plot.proximity_heatmap`
 
 **Abundance normalization**
 
@@ -37,4 +38,5 @@ for usage examples.
 **Analysis**
 
 * :func:`pixelator.pna.analysis.calculate_differential_proximity`
+* :func:`pixelator.pna.analysis.filter_proximity_scores`
 * :func:`pixelator.pna.analysis.summarize_proximity_scores`

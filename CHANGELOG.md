@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   into one combination.
 - `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
+- `pixelator.pna.plot.proximity_heatmap` to plot a clustered heatmap or dot plot of a summary proximity statistic between marker pairs.
+- `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
 ### Changed
 - Hashing `marker_id` values must end with `-<digits>` (e.g. `B2M-1`) and must
@@ -38,11 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   format for older files. ``PNAAntibodyPanelDiff.upgrade_adata`` migrates
   legacy ``panel_metadata`` / ``panel_columns`` to the multi-panel layout when
   applying a patch bump.
+- Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
   recovery path. When the column is absent, sample calling skips it and graph molecule
   statistics use the number of edges.
-- Refactor `pixelator.common.utils.__init__.py`
 
 ### Deprecated
 - `PNAPixelDataset.precomputed_layouts()` is deprecated. Use `layouts()` to
@@ -55,6 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (emits a ``DeprecationWarning`` when accessed).
 
 ### Removed
+- Stale nf-core/pixelator integration tests (`task test-nf-core-pixelator` and
+  `.github/workflows/nf-core-pixelator-tests.yml`).
+- The `fruchterman_reingold`, `fruchterman_reingold_3d`, `kamada_kawai`, and
+  `kamada_kawai_3d` layout algorithms. Use `coarsened_pmds_3d`, `wpmds_3d`,
+  `pmds`, `pmds_3d`, or `spectral_3d` instead.
 - Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
   `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
   use a release prior to 0.31.0 (for example `pip install 'pixelgen-pixelator<0.31.0'`).
@@ -89,6 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the two, instead of always reporting the host machine's core count. This prevents
   multiprocessing oversubscription and slowdowns when running inside a container or pod with a
   restricted CPU allocation.
+- Panel header parsing now recovers from multiple trailing commas per line (e.g. `name: foo,,,,,,,`).
 
 ## [0.30.0] - 2026-08-05
 

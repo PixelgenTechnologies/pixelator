@@ -103,38 +103,6 @@ tasks:
       - uv run coverage run --source src -m pytest
       - uv run coverage report
 
-  test-nf-core-pixelator:
-    desc: >-
-      Run the default nf-core/pixelator test profile with this version of pixelator.
-    summary: |
-      Run the default nf-core/pixelator test profile with this version of pixelator.
-
-      If the pipeline is not found in the directory `PIPELINE_SOURCE_DIR`, it will be cloned
-      from the PixelgenTechnologies/nf-core-pixelator repository using the `PIPELINE_BRANCH` branch.
-      By default the "pixelator-next" branch of nf-core-pixelator will be used.
-
-      If the `PIPELINE_SOURCE_DIR` exists this task will assume that the pipeline is already present and checked out
-      in the right branch.
-
-      Note that the current dev version of pixelator must be installed and available in the PATH.
-
-      If the `RESUME` environment variable is set to "true", the pipeline will be resumed if it was previously run.
-
-    dir: "{{ .USER_WORKING_DIR }}"
-    vars:
-      RESUME: '{{ .RESUME | default "false" }}'
-      PIPELINE_BRANCH: '{{ .PIPELINE_BRANCH | default "pixelator-next" }}'
-      PIPELINE_SOURCE_DIR: '{{ .PIPELINE_SOURCE_DIR | default ".nf-core-pixelator-{{ .BRANCH }}" }}'
-    cmds:
-      - task: tests:pull-nf-core-pixelator
-        vars:
-          {
-            PIPELINE_BRANCH: "{{ .PIPELINE_BRANCH }}",
-            PIPELINE_SOURCE_DIR: "{{ .PIPELINE_SOURCE_DIR }}",
-          }
-      - task: tests:run-nf-core-pixelator-test-profile
-        vars: { PIPELINE_SOURCE_DIR: "{{ .PIPELINE_SOURCE_DIR }}" }
-
 includes:
   tests:
     taskfile: ./tests/Taskfile.yml

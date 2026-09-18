@@ -28,10 +28,6 @@ if TYPE_CHECKING:
     from pixelator.common.graph.graph import Graph
 
 SupportedLayoutAlgorithm = Literal[
-    "fruchterman_reingold",
-    "fruchterman_reingold_3d",
-    "kamada_kawai",
-    "kamada_kawai_3d",
     "pmds",
     "pmds_3d",
     "wpmds_3d",
@@ -163,10 +159,6 @@ class GraphBackend(Protocol):
 
         The layout options are:
         - coarsened_pmds_3d
-        - fruchterman_reingold
-        - fruchterman_reingold_3d
-        - kamada_kawai
-        - kamada_kawai_3d
         - pmds
         - pmds_3d
         - wpmds_3d

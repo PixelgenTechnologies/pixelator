@@ -1554,6 +1554,38 @@ MarkerA,no,ACTTCCTAGG,ACTTCCTAGG
     assert "trailing comma" in caplog.text.lower()
 
 
+def test_panel_header_multiple_trailing_commas_warns_and_recovers(caplog):
+    """Verify panel header with multiple trailing commas per line warns and recovers.
+
+    This reproduces the pattern left behind when a spreadsheet application
+    pads every row (including the YAML front-matter comment lines) to a
+    fixed column count on save.
+
+    Args:
+        caplog: caplog.
+    """
+    panel_content = """# ---,,,,,,,
+# name: test-pna-panel,,,,,,,
+# product: test-product,,,,,,,
+# description: Test R&D panel for PNA,,,,,,,
+# version: 1.0.0,,,,,,,
+# ---,,,,,,,
+marker_id,control,sequence_1,sequence_2
+MarkerA,no,ACTTCCTAGG,ACTTCCTAGG
+"""
+    with NamedTemporaryFile(suffix=".csv", mode="w", encoding="utf-8") as tmp_file:
+        tmp_file.write(panel_content)
+        tmp_file.flush()
+
+        with caplog.at_level("WARNING"):
+            panel = PNAAntibodyPanel.from_csv(tmp_file.name)
+
+    assert panel.name == "test-pna-panel"
+    assert panel.version == "1.0.0"
+    assert panel.filepath == Path(tmp_file.name).resolve()
+    assert "trailing comma" in caplog.text.lower()
+
+
 def test_panel_header_non_recoverable_yaml_still_fails():
     """Verify panel header non recoverable yaml still fails."""
     panel_content = """# ---

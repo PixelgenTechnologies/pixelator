@@ -214,7 +214,7 @@ def _strip_trailing_commas(metadata: str) -> tuple[str, bool]:
 
     This keeps recovery narrow to the malformed pattern we want to tolerate.
     """
-    normalized = re.sub(r",(\s*(?:\n|$))", r"\1", metadata)
+    normalized = re.sub(r",+$", "", metadata, flags=re.MULTILINE)
     return normalized, normalized != metadata
 
 

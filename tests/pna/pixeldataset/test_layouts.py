@@ -17,10 +17,10 @@ from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.layouts import Layouts
 
-# Tiny fixture graphs are too small for spectral_3d; use a force-directed
-# algorithm to exercise the public Layouts API quickly.
-_FAST_ALGORITHM: SupportedLayoutAlgorithm = "fruchterman_reingold_3d"
-_FAST_2D_ALGORITHM: SupportedLayoutAlgorithm = "fruchterman_reingold"
+# Tiny fixture graphs are too small for spectral_3d; use coarsened PMDS
+# (3D) and PMDS (2D) to exercise the public Layouts API quickly.
+_FAST_ALGORITHM: SupportedLayoutAlgorithm = "coarsened_pmds_3d"
+_FAST_2D_ALGORITHM: SupportedLayoutAlgorithm = "pmds"
 
 _COORD_COLUMNS = {
     "sample",
@@ -192,6 +192,7 @@ class TestLayoutsApi:
                 algorithm=_FAST_2D_ALGORITHM,
                 add_marker_counts=False,
                 add_spherical_norm=True,
+                pivots=4,
             )
             .to_polars()
         )
