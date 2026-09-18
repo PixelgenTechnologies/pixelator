@@ -949,6 +949,111 @@ def test_upgrade_adata_migrates_legacy_panel_metadata(panel_df):
     assert reconstructed.num_partial_panels == 1
 
 
+def test_upgrade_adata_matches_combination_member_by_product(panel_df):
+    """Same name and version members are disambiguated by product.
+
+    This is a very theoretical edge case where two panels share the same name and version but differ in product.
+    """
+    addon_df = pd.DataFrame(
+        {
+            "marker_id": ["extra-1"],
+            "uniprot_id": ["P12345"],
+            "control": [False],
+            "nuclear": [False],
+            "sequence_1": ["GGGG"],
+            "sequence_2": ["CCCC"],
+        }
+    ).set_index("marker_id")
+    base_meta = AntibodyPanelMetadata(
+        name="shared-name",
+        version="0.1.0",
+        product="product-base",
+        panel_type=PanelType.BASE,
+    )
+    addon_meta = AntibodyPanelMetadata(
+        name="shared-name",
+        version="0.1.0",
+        product="product-addon",
+        panel_type=PanelType.ADDON,
+    )
+    base = PNABasePanel(panel_df.copy(), base_meta)
+    addon = PNAAddonPanel(addon_df.copy(), addon_meta)
+    combo = PNAAntibodyPanelCombination([base, addon])
+    adata = add_panel_information(
+        AnnData(
+            obs=pd.DataFrame(index=["c1"]),
+            var=pd.DataFrame(index=pd.Index(list(combo.markers), name="marker_id")),
+        ),
+        combo,
+    )
+
+    addon_new_df = addon_df.copy()
+    addon_new_df.loc["extra-1", "uniprot_id"] = "Q9UPN0"
+    addon_new = PNAAddonPanel(
+        addon_new_df,
+        addon_meta.model_copy(update={"version": "0.1.1"}),
+    )
+    upgraded_addon = PNAAntibodyPanelDiff(addon, addon_new).upgrade_adata(adata)
+    reconstructed = PNAAntibodyPanelCombination.from_adata(upgraded_addon)
+    assert reconstructed.base_panels[0].version == "0.1.0"
+    assert reconstructed.base_panels[0].metadata.product == "product-base"
+    assert reconstructed.addon_panels is not None
+    assert reconstructed.addon_panels[0].version == "0.1.1"
+    assert reconstructed.addon_panels[0].df.loc["extra-1", "uniprot_id"] == "Q9UPN0"
+    assert reconstructed.addon_panels[0].metadata.product == "product-addon"
+    assert upgraded_addon.var.loc["extra-1", "uniprot_id"] == "Q9UPN0"
+    assert upgraded_addon.var.loc["marker1", "uniprot_id"] == "P61769"
+
+    base_new_df = panel_df.copy()
+    base_new_df.loc["marker1", "uniprot_id"] = "Q11111"
+    base_new = PNABasePanel(
+        base_new_df,
+        base_meta.model_copy(update={"version": "0.1.1"}),
+    )
+    adata_base = add_panel_information(
+        AnnData(
+            obs=pd.DataFrame(index=["c1"]),
+            var=pd.DataFrame(index=pd.Index(list(combo.markers), name="marker_id")),
+        ),
+        combo,
+    )
+    upgraded_base = PNAAntibodyPanelDiff(base, base_new).upgrade_adata(adata_base)
+    reconstructed_base = PNAAntibodyPanelCombination.from_adata(upgraded_base)
+    assert reconstructed_base.base_panels[0].version == "0.1.1"
+    assert reconstructed_base.addon_panels is not None
+    assert reconstructed_base.addon_panels[0].version == "0.1.0"
+    assert upgraded_base.var.loc["marker1", "uniprot_id"] == "Q11111"
+    assert upgraded_base.var.loc["extra-1", "uniprot_id"] == "P12345"
+
+
+def test_upgrade_adata_rejects_same_product_with_different_version(panel_df):
+    """A matching product is not enough; stored name and version must be panel_1."""
+    meta = AntibodyPanelMetadata(
+        name="test-panel",
+        version="0.1.0",
+        product="test-product",
+        panel_type=PanelType.BASE,
+    )
+    stored = PNABasePanel(panel_df.copy(), meta)
+    panel_1_newer = PNABasePanel(
+        panel_df.copy(),
+        meta.model_copy(update={"version": "0.1.1"}),
+    )
+    panel_2 = PNABasePanel(
+        panel_df.copy(),
+        meta.model_copy(update={"version": "0.1.2"}),
+    )
+    adata = add_panel_information(
+        AnnData(
+            obs=pd.DataFrame(index=["c1"]),
+            var=pd.DataFrame(index=pd.Index(list(stored.markers), name="marker_id")),
+        ),
+        PNAAntibodyPanelCombination(stored),
+    )
+    with pytest.raises(ValueError, match="does not contain the panel"):
+        PNAAntibodyPanelDiff(panel_1_newer, panel_2).upgrade_adata(adata)
+
+
 def test_upgrade_adata_maps_annotations_by_clone_identity():
     """Patch upgrades must keep each clone's panel_2 annotations on that clone.
 

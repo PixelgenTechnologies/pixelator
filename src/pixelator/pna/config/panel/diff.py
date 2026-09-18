@@ -404,6 +404,19 @@ class PNAAntibodyPanelDiff:
             )
         adata.var.index = new_index
 
+    def _matches_panel_1_identity(self, metadata: AntibodyPanelMetadata) -> bool:
+        """Return whether ``metadata`` is the stored ``panel_1`` member.
+
+        ``product`` identifies the lineage in a combination. ``name`` and
+        ``version`` must also match so a different patch of the same product
+        is not used as the upgrade source.
+        """
+        return (
+            metadata.product == self.panel_1.metadata.product
+            and metadata.name == self.panel_1.name
+            and metadata.version == self.panel_1.version
+        )
+
     def upgrade_adata(self, adata: AnnData) -> AnnData:
         """Apply a patch-level panel upgrade to AnnData marker annotations.
 
@@ -457,19 +470,16 @@ class PNAAntibodyPanelDiff:
             )
 
         combo = PNAAntibodyPanelCombination.from_adata(adata)
-        adata_panel = (
-            [
-                pp
-                for pp in combo.partial_panels()
-                if pp.metadata.name == self.panel_1.name
-                and pp.metadata.version == self.panel_1.version
-            ]
-            or [None]
-        ).pop()
-        if adata_panel is None:
+        matches = [
+            pp
+            for pp in combo.partial_panels()
+            if self._matches_panel_1_identity(pp.metadata)
+        ]
+        if len(matches) != 1:
             raise ValueError(
                 "The provided AnnData object does not contain the panel. Cannot upgrade."
             )
+        adata_panel = matches[0]
         if self.panel_1 != adata_panel:
             raise ValueError(
                 "The provided AnnData object does not match the panel. Cannot upgrade."
@@ -494,10 +504,7 @@ class PNAAntibodyPanelDiff:
             for idx in range(adata.uns["num_partial_panels"]):
                 metadata_key = f"panel_metadata__{idx}"
                 metadata = AntibodyPanelMetadata.model_validate(adata.uns[metadata_key])
-                if (
-                    metadata.name == self.panel_1.name
-                    and metadata.version == self.panel_1.version
-                ):
+                if self._matches_panel_1_identity(metadata):
                     adata.uns[metadata_key] = self.panel_2.metadata.to_dict()
                     adata.uns[f"panel_df__{idx}"] = self.panel_2.df.to_csv()
                     break
