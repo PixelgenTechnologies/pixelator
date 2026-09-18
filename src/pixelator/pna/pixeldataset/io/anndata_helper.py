@@ -169,11 +169,26 @@ class AnnDataHelper:
 
     def current_marker_ids(self, markers: list[str]) -> list[str]:
         """Map requested marker ids through any applied panel patch rename."""
-        remaps = self.marker_id_renames_by_sample()
+        self.marker_id_renames_by_sample()
+        return self._map_requested_markers_to_var_index(markers)
+
+    def _map_requested_markers_to_var_index(self, markers: list[str]) -> list[str]:
+        """Translate ids with already-recorded patch-bump maps; do not re-read AnnData.
+
+        ``current_marker_ids`` triggers materialization first. This helper is
+        safe to call from ``_read_adata_cached`` after ``_read_all_samples``.
+        """
         old_to_new: dict[str, str] = {}
-        for mapping in remaps.values():
+        for mapping in self._marker_id_renames_by_sample.values():
             old_to_new.update(mapping)
-        return [old_to_new.get(marker, marker) for marker in markers]
+        seen: set[str] = set()
+        current: list[str] = []
+        for marker in markers:
+            mapped = old_to_new.get(marker, marker)
+            if mapped not in seen:
+                seen.add(mapped)
+                current.append(mapped)
+        return current
 
     def _try_bump_adata_panel_version(
         self,
@@ -362,7 +377,8 @@ class AnnDataHelper:
         if self._components:
             adata = adata[normalize_input_to_list(self._components), :]
         if self._markers:
-            adata = adata[:, normalize_input_to_list(self._markers)]
+            marker_ids = normalize_input_to_list(self._markers) or []
+            adata = adata[:, self._map_requested_markers_to_var_index(marker_ids)]
 
         adata = self._apply_transformations(
             adata,

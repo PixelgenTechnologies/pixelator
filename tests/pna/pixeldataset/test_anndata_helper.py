@@ -408,6 +408,54 @@ class TestTryBumpAdataPanelVersion:
         )
         assert old_layouts["MarkerANew"].sum() > 0
 
+    def test_adata_marker_filter_accepts_pre_bump_ids(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        proximity_parquet_path: Path,
+        panel: PNAAntibodyPanelCombination,
+        hashing_panel: PNASampleHashingPanel,
+    ):
+        """Var subset uses current ids so a pre-bump filter still keeps the clone."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel.base_panels[0],
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel.base_panels[0],
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=PNAAntibodyPanelCombination([panel_old, hashing_panel]),
+            panel_new=PNAAntibodyPanelCombination([panel_new, hashing_panel]),
+            proximity_parquet_path=proximity_parquet_path,
+        )
+
+        helper = AnnDataHelper(dataset.view, markers={"MarkerA"})
+        adata = helper.read_adata(add_clr_transform=False, add_log1p_transform=False)
+        assert set(adata.var.index) == {"MarkerANew"}
+
+        filtered = dataset.filter(markers={"MarkerA"})
+        filtered_adata = filtered.adata(
+            add_clr_transform=False, add_log1p_transform=False
+        )
+        assert set(filtered_adata.var.index) == {"MarkerANew"}
+
+        prox_df = filtered.proximity(
+            add_marker_counts=False, add_logratio=False
+        ).to_polars()
+        prox_markers = set(prox_df["marker_1"].to_list()) | set(
+            prox_df["marker_2"].to_list()
+        )
+        assert "MarkerA" not in prox_markers
+
     @pytest.mark.parametrize(
         "new_version,new_product",
         [
