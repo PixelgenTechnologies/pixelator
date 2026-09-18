@@ -416,8 +416,10 @@ class PNAAntibodyPanelDiff:
         clones then do not raise. That layout is taken from
         ``uns["sample_calling"]["collapsed"]`` when the key is present, and
         otherwise inferred from ``original_hash_counts_*`` on ``obs`` or from
-        hashing clones missing in ``var``. Missing non-hashing clones
-        still raise.
+        hashing clones missing in ``var``. Inference runs before ``uns``
+        snapshots are rewritten so a hashing ``marker_id`` rename cannot
+        look collapsed against still-old ``var`` names. Missing
+        non-hashing clones still raise.
         Hashing ``marker_id`` bumps may only change the base name
         (``B2M-1`` → ``NEWB2MNAME-1``), never the hash group. That rename is
         applied to ``original_hash_counts_*`` and, when collapsed, to the
@@ -485,6 +487,8 @@ class PNAAntibodyPanelDiff:
             hashing_marker_ids=combo_hashing,
         )
 
+        collapsed = sample_calling_hashing_collapsed(adata)
+
         # first update the uns variables
         if "num_partial_panels" in adata.uns:
             for idx in range(adata.uns["num_partial_panels"]):
@@ -508,7 +512,6 @@ class PNAAntibodyPanelDiff:
         # update the anndata var table
         org_var_shape = adata.var.shape
         org_index = adata.var.index.name
-        collapsed = sample_calling_hashing_collapsed(adata)
         adata.var.reset_index(inplace=True)
         panel1_pl = self.panel_1.to_polars()
         panel1_row_identifiers = list(

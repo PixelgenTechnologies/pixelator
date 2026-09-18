@@ -1114,6 +1114,39 @@ def test_upgrade_adata_renames_collapsed_hashing_when_inferred_from_hash_counts(
     assert upgraded.obs["original_hash_counts_NEW-1"].tolist() == [1.0]
 
 
+def test_upgrade_adata_renames_uncollapsed_hashing_without_collapsed_flag(
+    panel, hashing_panel
+):
+    """Hashing id renames must not infer collapsed from already-upgraded uns.
+
+    A leftover ``HM`` var row is a collapsed-base name. If inference ran after
+    rewriting ``uns``, that row would be remapped to ``NEW``.
+    """
+    combo = PNAAntibodyPanelCombination([panel.partial_panels()[0], hashing_panel])
+    hashing_new = _renamed_hashing_panel(
+        hashing_panel, {"HM-1": "NEW-1", "HM-2": "NEW-2"}
+    )
+    adata = add_panel_information(
+        AnnData(
+            obs=pd.DataFrame(index=["c1"]),
+            var=pd.DataFrame(
+                index=pd.Index(list(combo.markers) + ["HM"], name="marker_id")
+            ),
+        ),
+        combo,
+    )
+    assert "sample_calling" not in adata.uns
+    assert sample_calling_hashing_collapsed(adata) is False
+
+    upgraded = PNAAntibodyPanelDiff(hashing_panel, hashing_new).upgrade_adata(adata)
+    assert "HM-1" not in upgraded.var.index
+    assert "HM-2" not in upgraded.var.index
+    assert "NEW-1" in upgraded.var.index
+    assert "NEW-2" in upgraded.var.index
+    assert "HM" in upgraded.var.index
+    assert "NEW" not in upgraded.var.index
+
+
 def test_upgrade_adata_raises_when_collapsed_but_non_hashing_clone_missing(
     panel, hashing_panel
 ):
