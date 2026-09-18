@@ -1578,7 +1578,7 @@ MarkerA,no,ACTTCCTAGG,ACTTCCTAGG
         tmp_file.flush()
 
         with caplog.at_level("WARNING"):
-            panel = PNAAntibodyPanel.from_csv(tmp_file.name)
+            panel = PartialPNAAntibodyPanel.from_csv(tmp_file.name)
 
     assert panel.name == "test-pna-panel"
     assert panel.version == "1.0.0"
