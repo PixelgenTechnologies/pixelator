@@ -11,7 +11,7 @@ from anndata import AnnData
 
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.cli.common import logger
-from pixelator.pna.config import PNAAntibodyPanel
+from pixelator.pna.config import PNAAntibodyPanelCombination
 from pixelator.pna.graph.community_detection import (
     StagedRefinementOptions,
     find_components,
@@ -40,7 +40,7 @@ def update_stats_from_adata(adata: AnnData, stats: GraphStatistics) -> GraphStat
 
 def build_pxl_file_with_components(
     parquet_file: Path,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     sample_name: str,
     path_output_pxl_file: Path,
     multiplet_recovery: bool,

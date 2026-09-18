@@ -75,6 +75,13 @@ class PreComputedLayouts:
             .fill_null(0)
         )
 
+    def _layouts_with_marker_counts(self, layouts: pl.DataFrame) -> pl.DataFrame:
+        layouts = self._adata_helper.apply_marker_id_renames(
+            layouts, columns=("marker",)
+        )
+        layouts = self._pivot_marker_table(layouts)
+        return layouts.drop(["umi", "marker"], strict=False)
+
     def __len__(self) -> int:
         """Get the nodes in the layouts."""
         query = self._query_builder.layouts_len_query(
@@ -116,6 +123,16 @@ class PreComputedLayouts:
 
         return df
 
+    def _layouts_from_query(self, session, query) -> pl.DataFrame:
+        """Load layouts for ``query``, or an empty frame if the table is missing."""
+        try:
+            layouts = session.execute_eager(query)
+        except duckdb.CatalogException:
+            return pl.DataFrame()
+        if self._add_marker_counts:
+            return self._layouts_with_marker_counts(layouts)
+        return layouts
+
     def to_polars(self) -> pl.DataFrame:
         """Get the precomputed layouts as a polars DataFrame."""
         query = self._query_builder.layouts_query(
@@ -123,15 +140,7 @@ class PreComputedLayouts:
             add_marker_counts=self._add_marker_counts,
         )
         with self._view.open() as session:
-            try:
-                if self._add_marker_counts:
-                    layouts = session.execute_eager(query)
-                    layouts = self._pivot_marker_table(layouts)
-                    layouts = layouts.drop(["umi", "marker"], strict=False)
-                else:
-                    layouts = session.execute_eager(query)
-            except duckdb.CatalogException:
-                layouts = pl.DataFrame()
+            layouts = self._layouts_from_query(session, query)
         return self._post_process(layouts)
 
     def iterator(
@@ -154,15 +163,7 @@ class PreComputedLayouts:
                     components=[component],
                     add_marker_counts=self._add_marker_counts,
                 )
-                try:
-                    if self._add_marker_counts:
-                        layouts = session.execute_eager(query)
-                        layouts = self._pivot_marker_table(layouts)
-                        layouts = layouts.drop(["umi", "marker"], strict=False)
-                    else:
-                        layouts = session.execute_eager(query)
-                except duckdb.CatalogException:
-                    layouts = pl.DataFrame()
+                layouts = self._layouts_from_query(session, query)
                 component_df = self._post_process(layouts)
                 if return_polars_df:
                     yield (component, component_df)

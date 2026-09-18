@@ -5,7 +5,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 
 import numpy as np
 
-from pixelator.pna.config import PNAAntibodyPanel
+from pixelator.pna.config import PNAAntibodyPanelCombination
 
 
 class BKTreeItem:
@@ -222,7 +222,7 @@ def hamming_distance_i8(s1: BKTreeItem, s2: BKTreeItem | bytes) -> int:
     return int(np.sum(b1 != b2))
 
 
-def build_bktree(panel: PNAAntibodyPanel, sequence_key: str) -> BKTree:
+def build_bktree(panel: PNAAntibodyPanelCombination, sequence_key: str) -> BKTree:
     """Create a BKTree from the panel sequences.
 
     This allows us to quickly find the closest sequence to a given query sequence with up to a given
@@ -245,7 +245,7 @@ def build_bktree(panel: PNAAntibodyPanel, sequence_key: str) -> BKTree:
 
 
 def build_exact_dict_lookup(
-    panel: PNAAntibodyPanel, sequence_key: str
+    panel: PNAAntibodyPanelCombination, sequence_key: str
 ) -> dict[bytes, str]:
     """Create a set from the panel sequences.
 

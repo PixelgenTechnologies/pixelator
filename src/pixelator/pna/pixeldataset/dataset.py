@@ -430,10 +430,12 @@ class PNAPixelDataset:
                 "One or more of the specified components do not exist in the dataset."
             )
 
-        if markers and not markers.issubset(self.markers()):
-            errors.append(
-                "One or more of the specified markers do not exist in the dataset."
-            )
+        if markers:
+            markers = set(self._adata_helper.current_marker_ids(list(markers)))
+            if not markers.issubset(self.markers()):
+                errors.append(
+                    "One or more of the specified markers do not exist in the dataset."
+                )
 
         if errors:
             message = ["Failed to filter, for the following reasons: "]

@@ -13,7 +13,7 @@ import polars as pl
 from tests.common.data_generator.topology import generate_cell_graph
 
 if TYPE_CHECKING:
-    from pixelator.pna.config.panel import PNAAntibodyPanel
+    from pixelator.pna.config.panel import PNAAntibodyPanelCombination
 
 
 def generate_edgelist(
@@ -21,7 +21,7 @@ def generate_edgelist(
     n_nodes: int,
     n_edges: int,
     min_neighbors: int,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     n_crossing_edges: int = 1,
     hashing_fraction: float = 0.2,
     rng=None,
@@ -96,7 +96,7 @@ def generate_edgelist(
 
 def populate_cell(
     edgelist: pl.DataFrame,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     hashing_index: int | None = None,
     hashing_fraction: float = 0.2,
     rng=None,
@@ -134,7 +134,7 @@ def populate_cell(
 
 
 def _hashing_indices_per_cell(
-    n_cells: int, panel: PNAAntibodyPanel, rng: np.random.Generator
+    n_cells: int, panel: PNAAntibodyPanelCombination, rng: np.random.Generator
 ) -> np.ndarray | list[None]:
     """Assign a hashing index to each cell, covering every panel index.
 
@@ -168,23 +168,26 @@ def _assign_umis(edgelist: pl.DataFrame, rng: np.random.Generator) -> pl.DataFra
 def _hashing_mask(df: pl.DataFrame) -> np.ndarray:
     """Boolean mask of hashing markers; all ``False`` when the panel has none.
 
-    Panels without a ``sample_hashing`` column (or with no ``"yes"`` entries) are
+    Panels without a ``sample_hashing`` column (or with no hashing markers) are
     treated as having no hashing markers, so hashing degrades gracefully.
+    Accepts bool columns and legacy ``yes``/``no`` (or ``True``/``False``) strings.
     """
-    if "sample_hashing" in df.columns:
-        return (df["sample_hashing"] == "yes").to_numpy()
-    return np.zeros(df.height, dtype=bool)
+    if "sample_hashing" not in df.columns:
+        return np.zeros(df.height, dtype=bool)
+    from pixelator.pna.config.panel import sample_hashing_mask
+
+    return sample_hashing_mask(df["sample_hashing"].to_pandas()).to_numpy()
 
 
 def _marker_probabilities(
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Per-marker sampling probabilities and the hashing-marker mask.
 
     Abundance tiers apply only to non-hashing markers: the first sixth make 50%
     of all umis (high abundance) and the next third make 40% (medium). The
     low-abundance tier (the remaining non-hashing markers) and the hashing
-    markers (``sample_hashing == "yes"``) together share the final 10%, every one
+    markers (boolean ``sample_hashing``) together share the final 10%, every one
     of them sampled at the same per-marker rate ``0.1 / (n_low + n_hashing)``.
     Folding the hashing markers into the low tier's budget keeps the high and
     medium tiers at 50% and 40% regardless of how many hashing markers the panel
@@ -211,7 +214,7 @@ def _marker_probabilities(
 
 def _assign_markers(
     node_umi_map: pl.DataFrame,
-    panel: PNAAntibodyPanel,
+    panel: PNAAntibodyPanelCombination,
     hashing_index: int | None,
     hashing_fraction: float,
     rng: np.random.Generator,
