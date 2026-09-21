@@ -1,0 +1,10 @@
+# ---
+# name: proxiome-v1-FMC63-v1.0
+# product: proxiome-v1-FMC63-v1
+# description: >-
+#     Panel for the FMC63 marker
+# version: 1.0.1
+# panel_type: addon
+# ---
+marker_id,control,full_name,alt_id,uniprot_id,sequence_1,sequence_2
+FMC63,,,,,CGATTGGCAC,CGATTGGCAC

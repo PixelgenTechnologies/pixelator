@@ -1,0 +1,10 @@
+# ---
+# name: proxiome-v1-FLAG-v1.0
+# product: proxiome-v1-FLAG-v1
+# description: >-
+#     Panel for the FLAG marker
+# version: 1.0.1
+# panel_type: addon
+# ---
+marker_id,control,full_name,alt_id,uniprot_id,sequence_1,sequence_2
+FLAG,,,,,CTTAACATCT,CTTAACATCT
