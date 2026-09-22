@@ -34,20 +34,6 @@ _P_ADJUST_METHOD_MAP = {
     "benjamini-hochberg": "fdr_bh",
 }
 
-PAdjustMethod = Literal[
-    "bonferroni",
-    "holm",
-    "hochberg",
-    "hommel",
-    "BH",
-    "BY",
-    "fdr",
-    "fdr_bh",
-    "fdr_by",
-    "sidak",
-    "benjamini-hochberg",
-]
-
 _SCANPY_KEY = "_pixelator_rank_genes_groups"
 _RESULT_COLUMNS = [
     "marker",
@@ -69,7 +55,19 @@ def differential_abundance(
     group_vars: str | Sequence[str] | None = None,
     features: str | Sequence[str] | None = None,
     layer: str | None = None,
-    p_adjust_method: PAdjustMethod = "bonferroni",
+    p_adjust_method: Literal[
+        "bonferroni",
+        "holm",
+        "hochberg",
+        "hommel",
+        "BH",
+        "BY",
+        "fdr",
+        "fdr_bh",
+        "fdr_by",
+        "sidak",
+        "benjamini-hochberg",
+    ] = "bonferroni",
 ) -> pd.DataFrame:
     """Compare marker abundance between a reference group and one or more targets.
 
@@ -314,10 +312,10 @@ def _run_one_scanpy_wilcoxon(
     is_reference = contrast.eq(reference).to_numpy()
     n_target = int((in_stratum & is_target).sum())
     n_reference = int((in_stratum & is_reference).sum())
-    if n_target == 0 or n_reference == 0:
+    if n_target < 2 or n_reference < 2:
         logger.warning(
-            "Skipping contrast %s vs %s: need cells in both groups (found "
-            "%d target, %d reference).",
+            "Skipping contrast %s vs %s: need at least two cells in both "
+            "groups (found %d target, %d reference).",
             target,
             reference,
             n_target,
@@ -326,9 +324,10 @@ def _run_one_scanpy_wilcoxon(
         return None, warned_negatives
 
     keep = in_stratum & (is_target | is_reference)
-    marker_idx = features if features is not None else slice(None)
-    work = adata[keep, marker_idx].copy()
+    work = adata[keep].copy()
     work, layer = _ensure_anndata_layer(work, layer)
+    if features is not None:
+        work = work[:, features].copy()
     matrix = _values_matrix(work, layer)
     has_negatives = _has_negatives(matrix)
     if not warned_negatives and has_negatives:

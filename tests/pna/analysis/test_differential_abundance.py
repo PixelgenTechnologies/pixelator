@@ -114,6 +114,51 @@ def test_differential_abundance_invalid_reference_raises():
         )
 
 
+def test_differential_abundance_skips_singleton_group_vars_stratum():
+    rng = np.random.default_rng(0)
+    n_t = 10
+    n_cells = n_t * 2 + 2
+    n_markers = 4
+    x = rng.poisson(5, size=(n_cells, n_markers)).astype(float)
+    x[:n_t, 0] += 8
+    obs = pd.DataFrame(
+        {
+            "condition": ["treated"] * n_t + ["control"] * n_t + ["treated", "control"],
+            "cell_type": ["T"] * (n_t * 2) + ["B", "B"],
+        },
+        index=[f"c{i}" for i in range(n_cells)],
+    )
+    var = pd.DataFrame(index=[f"M{i}" for i in range(n_markers)])
+    adata = AnnData(X=x, obs=obs, var=var)
+    result = differential_abundance(
+        adata,
+        contrast_column="condition",
+        reference="control",
+        targets="treated",
+        group_vars="cell_type",
+    )
+
+    assert set(result["cell_type"]) == {"T"}
+    assert set(result["marker"]) == {"M0", "M1", "M2", "M3"}
+    assert len(result) == 4
+
+
+def test_differential_abundance_numpy_obsm_with_features():
+    adata = _tiny_adata()
+    adata.obsm["clr"] = np.asarray(adata.X)
+    result = differential_abundance(
+        adata,
+        contrast_column="condition",
+        reference="control",
+        targets="treated",
+        layer="clr",
+        features=["M0", "M2"],
+    )
+
+    assert set(result["marker"]) == {"M0", "M2"}
+    assert len(result) == 2
+
+
 def test_differential_abundance_clr_like_negatives_do_not_crash():
     adata = _tiny_adata(with_negatives=True)
     result = differential_abundance(
