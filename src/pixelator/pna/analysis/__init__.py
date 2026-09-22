@@ -3,6 +3,7 @@
 Copyright © 2024 Pixelgen Technologies AB.
 """
 
+from pixelator.pna.analysis.differential_abundance import differential_abundance
 from pixelator.pna.analysis.proximity import (
     calculate_differential_proximity,
     filter_proximity_scores,
@@ -11,6 +12,7 @@ from pixelator.pna.analysis.proximity import (
 
 __all__ = [
     "calculate_differential_proximity",
+    "differential_abundance",
     "filter_proximity_scores",
     "summarize_proximity_scores",
 ]
