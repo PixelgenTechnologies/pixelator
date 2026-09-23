@@ -11,6 +11,7 @@ import pytest
 from anndata import AnnData
 
 from pixelator.pna.analysis import differential_abundance
+from pixelator.pna.analysis._differential_abundance import _adjust_pvalues
 
 EXPECTED_COLUMNS = [
     "marker",
@@ -126,6 +127,16 @@ def test_differential_abundance_hochberg_p_adjust_runs():
 
     assert result["p_adj"].notna().all()
     assert (result["p_adj"] >= result["p"]).all()
+
+
+def test_adjust_pvalues_skips_nonfinite_for_fdr():
+    p = np.array([0.01, np.nan, 0.04])
+    adjusted = _adjust_pvalues(p, "fdr_bh")
+
+    assert np.isnan(adjusted[1])
+    assert np.isfinite(adjusted[0]) and np.isfinite(adjusted[2])
+    finite_only = _adjust_pvalues(np.array([0.01, 0.04]), "fdr_bh")
+    np.testing.assert_allclose(adjusted[[0, 2]], finite_only)
 
 
 def test_differential_abundance_skips_singleton_group_vars_stratum():

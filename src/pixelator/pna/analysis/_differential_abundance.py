@@ -134,7 +134,9 @@ def differential_abundance(
 
         * ``marker`` — marker name
         * ``p`` — Wilcoxon p-value from ``scanpy.tl.rank_genes_groups``
-        * ``p_adj`` — adjusted p-value (see above)
+        * ``p_adj`` — adjusted p-value (see above). Non-finite raw p-values
+          are left as NaN and excluded from the adjustment, like R
+          ``p.adjust``.
         * ``difference`` — mean(target) − mean(reference) on the selected matrix
         * ``pct_1`` — fraction of target cells with value ``> 0`` (scanpy
           ``pts`` / Seurat ``pct.1``)
@@ -203,7 +205,7 @@ def differential_abundance(
         )
 
     result = pd.concat(pieces, ignore_index=True)
-    result["p_adj"] = multipletests(result["p"].to_numpy(), method=adjust_method)[1]
+    result["p_adj"] = _adjust_pvalues(result["p"].to_numpy(), adjust_method)
     return result[[*_RESULT_COLUMNS, *group_var_list]]
 
 
@@ -281,6 +283,16 @@ def _resolve_p_adjust_method(p_adjust_method: str) -> str:
         raise ValueError(
             f"Unknown p_adjust_method {p_adjust_method!r}. Valid options: {valid}."
         ) from exc
+
+
+def _adjust_pvalues(p_values: np.ndarray, method: str) -> np.ndarray:
+    """Adjust finite p-values; leave non-finite entries as NaN, like R ``p.adjust``."""
+    adjusted = np.full(p_values.shape, np.nan, dtype=float)
+    finite = np.isfinite(p_values)
+    if not finite.any():
+        return adjusted
+    adjusted[finite] = multipletests(p_values[finite], method=method)[1]
+    return adjusted
 
 
 def _iter_group_strata(
