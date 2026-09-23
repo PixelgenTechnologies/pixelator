@@ -50,6 +50,7 @@
     "core1_layer_edges": 0,
     "edges_post_core1_peel": 0,
     "core1_absorption_iterations_run": 0,
+    "core1_umis_absorbed_per_iteration": [],
     "core1_edges_reabsorbed": 0,
     "core1_edges_discarded": 0,
     "fraction_of_discarded_components": 0.25,

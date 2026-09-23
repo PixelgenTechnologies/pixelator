@@ -650,7 +650,6 @@ def test_absorb_core1_layer_rescues_frontier_edge_and_discards_conflict(
         core1_discard_path=discard_path,
         working_dir=tmp_path,
         stats=stats,
-        max_iterations=5,
     )
 
     final = pl.read_parquet(final_path)
@@ -660,6 +659,7 @@ def test_absorb_core1_layer_rescues_frontier_edge_and_discards_conflict(
     assert final.filter(pl.col("umi1") == 4, pl.col("umi2") == 101).height == 0
 
     assert stats.core1_absorption_iterations_run == 1
+    assert stats.core1_umis_absorbed_per_iteration == [1]
     assert stats.core1_edges_reabsorbed == 1
     assert stats.core1_edges_discarded == 1
 
@@ -685,11 +685,11 @@ def test_absorb_core1_layer_treats_multiple_claims_as_fused(tmp_path: Path) -> N
         core1_discard_path=discard_path,
         working_dir=tmp_path,
         stats=stats,
-        max_iterations=5,
     )
 
     final = pl.read_parquet(final_path)
     assert final.filter(pl.col("umi2") == 999).height == 0
+    assert stats.core1_umis_absorbed_per_iteration == [0]
     assert stats.core1_edges_reabsorbed == 0
     assert stats.core1_edges_discarded == 2
 
@@ -713,23 +713,32 @@ def test_absorb_core1_layer_propagates_evidence_across_iterations(
         core1_discard_path=discard_path,
         working_dir=tmp_path,
         stats=stats,
-        max_iterations=5,
     )
 
     final = pl.read_parquet(final_path)
     assert final.height == 1 + len(discard_edges)
     assert (final["component"] == 1).all()
     assert stats.core1_absorption_iterations_run == 3
+    assert stats.core1_umis_absorbed_per_iteration == [1, 1, 1]
     assert stats.core1_edges_reabsorbed == len(discard_edges)
     assert stats.core1_edges_discarded == 0
 
 
-def test_absorb_core1_layer_respects_max_iterations(tmp_path: Path) -> None:
-    """Capping ``max_iterations`` leaves edges beyond the reachable hop count unresolved."""
+def test_absorb_core1_layer_iterates_until_no_new_umis_are_absorbed(
+    tmp_path: Path,
+) -> None:
+    """Absorption runs past any fixed round count and stops once no new UMIs are absorbed."""
     base_path = _write_component_edgelist(
         tmp_path / "base.parquet", [(1, 101)], component=1
     )
-    discard_edges = [(101, 900), (900, 901), (901, 902)]
+
+    # A long chain hanging off umi 101 needs one round per hop. The (500, 501) edge is never
+    # connected to known structure, so it stays orphaned and the loop must stop on its own once
+    # the chain is exhausted.
+    chain_length = 12
+    chain_umis = [101, *range(900, 900 + chain_length)]
+    chain_edges = list(zip(chain_umis[:-1], chain_umis[1:]))
+    discard_edges = [*chain_edges, (500, 501)]
     discard_path = _write_edgelist(tmp_path / "discard.parquet", discard_edges)
 
     stats = GraphStatistics()
@@ -738,14 +747,17 @@ def test_absorb_core1_layer_respects_max_iterations(tmp_path: Path) -> None:
         core1_discard_path=discard_path,
         working_dir=tmp_path,
         stats=stats,
-        max_iterations=2,
     )
 
     final = pl.read_parquet(final_path)
-    assert stats.core1_absorption_iterations_run == 2
-    assert stats.core1_edges_reabsorbed == 2
+    assert final.height == 1 + len(chain_edges)
+    assert (final["component"] == 1).all()
+    # One round per hop, plus a final round that absorbs nothing and signals convergence.
+    assert stats.core1_absorption_iterations_run == chain_length + 1
+    assert stats.core1_umis_absorbed_per_iteration == [1] * chain_length + [0]
+    assert stats.core1_edges_reabsorbed == len(chain_edges)
     assert stats.core1_edges_discarded == 1
-    assert final.filter(pl.col("umi1") == 901, pl.col("umi2") == 902).height == 0
+    assert final.filter(pl.col("umi1") == 500).height == 0
 
 
 def test_absorb_core1_layer_handles_empty_discard_pile(tmp_path: Path) -> None:
@@ -768,12 +780,12 @@ def test_absorb_core1_layer_handles_empty_discard_pile(tmp_path: Path) -> None:
         core1_discard_path=empty_discard_path,
         working_dir=tmp_path,
         stats=stats,
-        max_iterations=5,
     )
 
     final = pl.read_parquet(final_path)
     assert final.height == 1
     assert stats.core1_absorption_iterations_run == 0
+    assert stats.core1_umis_absorbed_per_iteration == []
     assert stats.core1_edges_reabsorbed == 0
     assert stats.core1_edges_discarded == 0
 

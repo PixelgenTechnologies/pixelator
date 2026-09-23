@@ -72,6 +72,7 @@ class GraphStatistics:
     core1_layer_edges: int = 0
     edges_post_core1_peel: int = 0
     core1_absorption_iterations_run: int = 0
+    core1_umis_absorbed_per_iteration: list[int] = field(default_factory=list)
     core1_edges_reabsorbed: int = 0
     core1_edges_discarded: int = 0
 
@@ -273,6 +274,14 @@ class GraphSampleReport(SampleReport):
         ),
     )
 
+    core1_umis_absorbed_per_iteration: list[int] = pydantic.Field(
+        default_factory=list,
+        description=(
+            "Number of new UMIs assigned to a resolved component in each core-1 absorption "
+            "iteration. Absorption stops once an iteration assigns no new UMIs."
+        ),
+    )
+
     core1_edges_reabsorbed: int = pydantic.Field(
         default=0,
         description="Number of core-1 layer edges successfully reattached to a resolved component.",
@@ -282,7 +291,7 @@ class GraphSampleReport(SampleReport):
         default=0,
         description=(
             "Number of core-1 layer edges that could not be reattached to a resolved component "
-            "(conflicting or still unresolved after the maximum number of absorption iterations)."
+            "(conflicting, or still unresolved once absorption converged)."
         ),
     )
 

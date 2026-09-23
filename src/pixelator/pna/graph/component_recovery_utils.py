@@ -22,7 +22,6 @@ from pixelator.common.annotate.cell_calling import find_component_size_limits
 from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.pna.graph.constants import (
-    DEFAULT_CORE1_ABSORPTION_MAX_ITERATIONS,
     DEFAULT_WORKING_DIR,
     MIN_PNA_COMPONENT_SIZE,
 )
@@ -820,7 +819,6 @@ def absorb_core1_layer(
     core1_discard_path: Path,
     working_dir: Path,
     stats: GraphStatistics,
-    max_iterations: int = DEFAULT_CORE1_ABSORPTION_MAX_ITERATIONS,
 ) -> tuple[Path, GraphStatistics]:
     """Reattach the core-1 layer to the components resolved without it.
 
@@ -830,8 +828,10 @@ def absorb_core1_layer(
     different frontier edges in the same round, all those edges are instead treated as "fused"
     and discarded, since attaching them would silently merge two different components together.
     Edges whose two UMIs already map to two different components ("conflict") are discarded
-    outright. This repeats, growing the known-component map each round, until no core-1 edges
-    remain unresolved, no further rescues happen in a round, or ``max_iterations`` is reached.
+    outright. This repeats, growing the known-component map each round, until it converges:
+    either no core-1 edges remain unresolved, or a round assigns no new UMIs to a component (at
+    which point no further round could make progress). The loop always terminates, since every
+    round that does not stop it strictly grows the set of UMIs with a known component.
 
     A single piece of frontier evidence is enough to rescue an edge: a peeled UMI's path back to
     the known structure is a tree, not a graph with redundant paths, so there is usually no
@@ -842,7 +842,6 @@ def absorb_core1_layer(
         core1_discard_path: The core-1 discard pile produced by ``peel_core1_nodes``.
         working_dir: Directory to write intermediate parquet files to.
         stats: Statistics object to update.
-        max_iterations: Maximum number of rescue rounds to run.
 
     Returns:
         Path to the final edgelist (base edgelist plus every rescued core-1 edge), and updated
@@ -862,8 +861,9 @@ def absorb_core1_layer(
         n_rescued_total = 0
         n_discarded_total = 0
         iterations_run = 0
+        umis_absorbed_per_iteration: list[int] = []
 
-        for i in range(max_iterations):
+        for i in itertools.count():
             n_orphans_remaining = con.execute(
                 f"SELECT COUNT(*) FROM parquet_scan('{current_orphans_path}')"
             ).fetchone()[0]  # type: ignore[index]
@@ -948,7 +948,7 @@ def absorb_core1_layer(
                 ) TO '{iter_still_orphaned_path}' (FORMAT PARQUET);
             """)
 
-            con.execute("""
+            n_umis_absorbed = con.execute("""
                 INSERT INTO current_comps
                 SELECT DISTINCT umi, component FROM (
                     SELECT umi1 AS umi, component FROM tmp_staged_orphans
@@ -957,16 +957,17 @@ def absorb_core1_layer(
                     SELECT umi2 AS umi, component FROM tmp_staged_orphans
                     WHERE edge_status IN ('labeled', 'frontier') AND comp2 IS NULL
                 );
-            """)
+            """).fetchone()[0]  # type: ignore[index]
 
             labeled_chunks.append(iter_labeled_path)
             n_rescued_total += n_rescued
             n_discarded_total += n_discarded
+            umis_absorbed_per_iteration.append(int(n_umis_absorbed))
             current_orphans_path = iter_still_orphaned_path
 
-            if n_rescued == 0:
+            if n_umis_absorbed == 0:
                 logger.debug(
-                    "No core-1 edges rescued in absorption iteration %d, stopping early",
+                    "No new UMIs absorbed in core-1 absorption iteration %d, converged",
                     i,
                 )
                 break
@@ -989,6 +990,7 @@ def absorb_core1_layer(
         con.execute(f"COPY ({full_sql}) TO '{final_path}' (FORMAT PARQUET);")
 
     stats.core1_absorption_iterations_run = iterations_run
+    stats.core1_umis_absorbed_per_iteration = umis_absorbed_per_iteration
     stats.core1_edges_reabsorbed = int(n_rescued_total)
     stats.core1_edges_discarded = int(n_discarded_total + n_still_orphaned)
 

@@ -20,7 +20,6 @@ from pixelator.pna.graph.component_recovery_utils import (
     has_uei_count,
     n_molecules_sql,
 )
-from pixelator.pna.graph.constants import DEFAULT_CORE1_ABSORPTION_MAX_ITERATIONS
 from pixelator.pna.graph.report import GraphStatistics
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
@@ -50,7 +49,6 @@ def build_pxl_file_with_components(
     refinement_options: StagedRefinementOptions,
     component_size_threshold: bool | tuple[int, int],
     n_cores: int = 1,
-    core1_absorption_max_iterations: int = DEFAULT_CORE1_ABSORPTION_MAX_ITERATIONS,
 ) -> tuple[PNAPixelDataset, GraphStatistics]:
     """Build a new PXL file with components recovered from edgelist.
 
@@ -72,8 +70,6 @@ def build_pxl_file_with_components(
         component_size_threshold: Min/Max size threshold for components to be retained. Can be a
             boolean for dynamic sizing or a tuple of two integers (Min, Max).
         n_cores: Number of CPU cores to use for parallel processing.
-        core1_absorption_max_iterations: Maximum number of rounds used to reattach the core-1
-            layer (peeled off before fast label propagation and Leiden) to resolved components.
 
     Returns:
         Tuple of PNAPixelDataset and GraphStatistics
@@ -89,7 +85,6 @@ def build_pxl_file_with_components(
             refinement_options=refinement_options,
             component_size_threshold=component_size_threshold,
             n_threads=n_cores,
-            core1_absorption_max_iterations=core1_absorption_max_iterations,
         )
 
         logger.info("Writing pxl file to %s", path_output_pxl_file)

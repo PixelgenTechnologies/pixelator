@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - The PNA graph step now peels the core-1 layer off the edgelist before fast label propagation and Leiden,
-  then reattaches it to the resolved components in an iterative absorption phase (capped at 5 iterations
-  by default, configurable via `--core1-absorption-max-iterations`). This improves runtime by 2x and lower memory usage in some scenarios.
-- The graph report now includes the size of the core-1 layer and the fraction of it that was reabsorbed.
+  then reattaches it to the resolved components in an iterative absorption phase that runs until no more
+  UMIs can be absorbed. This improves runtime by 2x and lower memory usage in some scenarios.
+- The graph report now includes the size of the core-1 layer, the fraction of it that was reabsorbed, and the number
+  of UMIs absorbed in each core-1 absorption iteration (`core1_umis_absorbed_per_iteration`).
 - `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
 - `pixelator.pna.plot.proximity_heatmap` to plot a clustered heatmap or dot plot of a summary proximity statistic between marker pairs.

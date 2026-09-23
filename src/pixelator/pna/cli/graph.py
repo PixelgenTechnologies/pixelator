@@ -25,10 +25,7 @@ from pixelator.pna.graph.community_detection import (
 )
 from pixelator.pna.graph.component_recovery import build_pxl_file_with_components
 from pixelator.pna.graph.component_recovery_utils import ConnectedComponentException
-from pixelator.pna.graph.constants import (
-    DEFAULT_CORE1_ABSORPTION_MAX_ITERATIONS,
-    MIN_PNA_COMPONENT_SIZE,
-)
+from pixelator.pna.graph.constants import MIN_PNA_COMPONENT_SIZE
 from pixelator.pna.graph.report import GraphSampleReport
 
 
@@ -174,17 +171,6 @@ from pixelator.pna.graph.report import GraphSampleReport
         "(dynamic) component size filtering to a fixed threshold."
     ),
 )
-@click.option(
-    "--core1-absorption-max-iterations",
-    default=DEFAULT_CORE1_ABSORPTION_MAX_ITERATIONS,
-    required=False,
-    type=click.IntRange(min=0, max=None),
-    show_default=True,
-    help=(
-        "The maximum number of rounds used to reattach the core-1 layer (nodes peeled off "
-        "before fast label propagation and Leiden) to the resolved components."
-    ),
-)
 @panel_option
 @output_option
 @click.pass_context
@@ -204,7 +190,6 @@ def graph(
     refinement_stage_max_edges_to_remove_relative,
     component_size_max_threshold,
     component_size_min_threshold,
-    core1_absorption_max_iterations,
     panel,
     output,
 ):
@@ -229,8 +214,8 @@ def graph(
     (k-core number > 1) that are not part of any short cycles in the graph. Such nodes are likely
     crossing edges connecting different components.
 
-    Once components have been resolved, the core-1 layer set aside earlier is reattached to them
-    (see `--core1-absorption-max-iterations`). After the connected components have been
+    Once components have been resolved, the core-1 layer set aside earlier is iteratively
+    reattached to them until no more UMIs can be absorbed. After the connected components have been
     identified we will create a pxl file that contains data for all of there putative cells.
     """
     # log input parameters
@@ -251,7 +236,6 @@ def graph(
         refinement_stage_max_edges_to_remove_relative=refinement_stage_max_edges_to_remove_relative,
         component_size_max_threshold=component_size_max_threshold,
         component_size_min_threshold=component_size_min_threshold,
-        core1_absorption_max_iterations=core1_absorption_max_iterations,
         panel=panel,
     )
 
@@ -317,7 +301,6 @@ def graph(
             refinement_options=refinement_options,
             component_size_threshold=component_size_threshold,
             n_cores=n_cores,
-            core1_absorption_max_iterations=core1_absorption_max_iterations,
         )
     except ConnectedComponentException as e:
         logger.error(e)

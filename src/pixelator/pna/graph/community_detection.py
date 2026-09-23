@@ -35,7 +35,6 @@ from pixelator.pna.graph.component_recovery_utils import (
     write_hive_partitioned_edgelist_without_out_of_size_bound_components,
 )
 from pixelator.pna.graph.constants import (
-    DEFAULT_CORE1_ABSORPTION_MAX_ITERATIONS,
     LEIDEN_RANDOM_SEED,
     MIN_PNA_COMPONENT_SIZE,
 )
@@ -466,7 +465,6 @@ def find_components(
         np.iinfo(np.uint64).max,
     ),
     n_threads: int = 1,
-    core1_absorption_max_iterations: int = DEFAULT_CORE1_ABSORPTION_MAX_ITERATIONS,
 ) -> tuple[GraphStatistics, Path]:
     """Find components in the given edgelist.
 
@@ -479,8 +477,6 @@ def find_components(
         refinement_options: Options for staged refinement during community detection.
         component_size_threshold: Minimum and maximum size threshold for components to be retained.
         n_threads: Number of threads to use for parallel processing.
-        core1_absorption_max_iterations: Maximum number of rounds used to reattach the core-1
-            layer (peeled off before fast label propagation and Leiden) to resolved components.
 
     Returns:
         A tuple of the component statistics and the path to the edgelist with
@@ -647,7 +643,6 @@ def find_components(
         core1_discard_path=core1_discard_path,
         working_dir=working_dir,
         stats=component_stats,
-        max_iterations=core1_absorption_max_iterations,
     )
 
     logger.info("Filtering connected components by size.")
