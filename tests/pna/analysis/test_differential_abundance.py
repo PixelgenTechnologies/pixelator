@@ -114,6 +114,20 @@ def test_differential_abundance_invalid_reference_raises():
         )
 
 
+def test_differential_abundance_hochberg_p_adjust_runs():
+    adata = _tiny_adata()
+    result = differential_abundance(
+        adata,
+        contrast_column="condition",
+        reference="control",
+        targets="treated",
+        p_adjust_method="hochberg",
+    )
+
+    assert result["p_adj"].notna().all()
+    assert (result["p_adj"] >= result["p"]).all()
+
+
 def test_differential_abundance_skips_singleton_group_vars_stratum():
     rng = np.random.default_rng(0)
     n_t = 10

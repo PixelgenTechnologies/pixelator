@@ -23,7 +23,8 @@ from pixelator.pna.utils.utils import normalize_input_to_list
 _P_ADJUST_METHOD_MAP = {
     "bonferroni": "bonferroni",
     "holm": "holm",
-    "hochberg": "hochberg",
+    "hochberg": "simes-hochberg",
+    "simes-hochberg": "simes-hochberg",
     "hommel": "hommel",
     "BH": "fdr_bh",
     "BY": "fdr_by",
@@ -59,6 +60,7 @@ def differential_abundance(
         "bonferroni",
         "holm",
         "hochberg",
+        "simes-hochberg",
         "hommel",
         "BH",
         "BY",
@@ -122,8 +124,9 @@ def differential_abundance(
             p-values, matching ``RunDAA(p_adjust_method=...)``. RunDAA /
             ``p.adjust`` names (``bonferroni``, ``holm``, ``hochberg``,
             ``hommel``, ``BH``, ``BY``, ``fdr``) and statsmodels names
-            (``fdr_bh``, ``fdr_by``, ``sidak``) are accepted. Defaults to
-            ``"bonferroni"``, the ``RunDAA`` default.
+            (``fdr_bh``, ``fdr_by``, ``sidak``, ``simes-hochberg``) are
+            accepted. ``hochberg`` maps to statsmodels ``simes-hochberg``.
+            Defaults to ``"bonferroni"``, the ``RunDAA`` default.
 
     Returns:
         A DataFrame with one row per marker and contrast (and ``group_vars``
