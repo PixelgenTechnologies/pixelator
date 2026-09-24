@@ -195,9 +195,12 @@ def graph(
 ):
     """Find connected components from the input molecules.
 
-    The graph stage will attempt to identify connected components from the input molecules.
-    When `--multiplet-recovery` is active we will try to break up components that are likely
-    not single cells. We do so in two main stages and one optional stage.
+    Before community detection, the core-1 layer (nodes that can be peeled off by repeatedly
+    removing degree-1 UMIs, i.e. everything outside the graph's 2-core) is set aside, since it
+    carries no ambiguity about which component it belongs to. The graph stage will attempt to
+    identify connected components from the remaining 2-core. When `--multiplet-recovery` is
+    active we will try to break up components that are likely not single cells. We do so in two
+    main stages and one optional stage.
 
     Main stages:
     1) Fast label propagation: Used as a graph coarsening step to reduce the size of the graph.
@@ -211,8 +214,9 @@ def graph(
     (k-core number > 1) that are not part of any short cycles in the graph. Such nodes are likely
     crossing edges connecting different components.
 
-    After the connected components have been identified we will create a pxl file that contains
-    data for all of there putative cells.
+    Once components have been resolved, the core-1 layer set aside earlier is iteratively
+    reattached to them until no more UMIs can be absorbed. After the connected components have been
+    identified we will create a pxl file that contains data for all of there putative cells.
     """
     # log input parameters
     input_files = [parquet_file]
