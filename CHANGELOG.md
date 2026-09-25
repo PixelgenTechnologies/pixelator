@@ -9,8 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `pixelator.pna.analysis.differential_abundance` to run marker differential abundance (Wilcoxon via `scanpy.tl.rank_genes_groups`), the Python analog of pixelatorR `RunDAA`.
+- The PNA graph step now peels the core-1 layer off the edgelist before fast label propagation and Leiden,
+  then reattaches it to the resolved components in an iterative absorption phase that runs until no more
+  UMIs can be absorbed. This improves runtime by 2x and lower memory usage in some scenarios.
+- The graph report now includes the size of the core-1 layer, the fraction of it that was reabsorbed, and the number
+  of UMIs absorbed in each core-1 absorption iteration (`core1_umis_absorbed_per_iteration`).
 - `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
 - `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
+- `pixelator.pna.analysis.cc_protein_weights` to derive rank-2 NMF protein weights for two labeled populations (`mode="cell_abundance"`), for use as `w` in cell:cell conjugate segmentation.
+- `pixelator.pna.analysis.distance_from_node_set` to compute integer hop distances from a set of seed nodes on a `PNAGraph` (unreached nodes stay missing).
+- `pixelator.pna.analysis.partition_counts` to sum node protein counts by partition group (cell1 / cell2 / interface / other) on a `PNAGraph`.
+- `pixelator.pna.analysis.segment_cell` to classify conjugate-graph nodes into two cell types (plus optional interface / `other`) using NMF weights from `cc_protein_weights`.
 - `pixelator.pna.plot.proximity_heatmap` to plot a clustered heatmap or dot plot of a summary proximity statistic between marker pairs.
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
