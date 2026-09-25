@@ -3,6 +3,7 @@
 Copyright © 2024 Pixelgen Technologies AB.
 """
 
+from pixelator.pna.analysis._differential_abundance import differential_abundance
 from pixelator.pna.analysis.proximity import (
     calculate_differential_proximity,
     filter_proximity_scores,
@@ -18,10 +19,11 @@ from pixelator.pna.analysis.segmentation import (
 __all__ = [
     "calculate_differential_proximity",
     "cc_protein_weights",
+    "differential_abundance",
     "distance_from_node_set",
+    "filter_proximity_scores",
     "partition_counts",
     "segment_cell",
-    "filter_proximity_scores",
     "summarize_proximity_scores",
 ]
 
