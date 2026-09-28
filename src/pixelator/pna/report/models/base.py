@@ -24,7 +24,10 @@ class SampleReport(pydantic.BaseModel):
     Attributes:
         sample_id: The sample id for which the report is generated.
         product_id: The product id for which the report is generated.
-        command_id: The command for which the report is generated.
+        report_type: The command for which the report is generated.
+        status: ``passed`` or ``failed``. JSON omits this field when the step passed.
+        null_reason: Why a failed step produced a null file. JSON includes this
+            string only when ``status`` is ``failed``.
     """
 
     sample_id: str

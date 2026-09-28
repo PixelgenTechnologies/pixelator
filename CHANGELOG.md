@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- A null pxl file (`metadata.null` plus `metadata.null_reason`) for samples that fail for a data reason, starting with the graph step when no cells remain above the component-size threshold. Denoise, analysis, layout, and sample calling copy a null file through and keep the reason. `pixelator single-cell-pna experiment-summary` still includes the sample, the statistics gathered before the failure, and which steps passed or failed. Unexpected exceptions still abort the run. (PNA-2364)
+- A null pxl file for samples that fail for a data reason, starting with the graph step when no cells remain above the component-size threshold. The file's `metadata` JSON has `null` (boolean) and `null_reason` (string). Denoise, analysis, layout, and sample calling copy that file through and keep the reason. The step's `report.json` sets top-level `status` to `"failed"` and repeats `null_reason`. Unexpected exceptions still abort the run. (PNA-2364)
 - The PNA graph step now peels the core-1 layer off the edgelist before fast label propagation and Leiden,
   then reattaches it to the resolved components in an iterative absorption phase that runs until no more
   UMIs can be absorbed. This improves runtime by 2x and lower memory usage in some scenarios.
