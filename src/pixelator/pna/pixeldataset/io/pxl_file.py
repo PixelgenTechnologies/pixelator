@@ -156,6 +156,12 @@ CREATE TABLE "__adata__uns" (value JSON);
 """
 
 
+# Fields that identify this null file. A copied source must not overwrite them.
+_NULL_PXL_IDENTITY_KEYS = frozenset(
+    {"sample_name", "version", "technology", "null", "null_reason"}
+)
+
+
 def write_null_pxl(
     path: Path,
     *,
@@ -163,18 +169,23 @@ def write_null_pxl(
     reason: str,
     panel_name: str | None = None,
     panel_version: str | None = None,
+    source_metadata: dict | None = None,
 ) -> PxlFile:
     """Write a null pxl file that records why a sample is empty.
 
     The file contains the mandatory pxl tables (empty) and metadata with
-    ``null`` set and a non-empty ``null_reason``.
+    ``null`` set and a non-empty ``null_reason``. Keys from ``source_metadata``
+    other than the file's own identity (sample name, null flag, reason,
+    version, technology) are copied through, so panel fields and any other
+    reader-facing metadata survive a pass-through.
 
     Args:
         path: Destination ``.pxl`` path.
         sample_name: Sample the file stands in for.
         reason: Why the sample is null. Must be non-empty.
-        panel_name: Antibody panel name, when known.
-        panel_version: Antibody panel version, when known.
+        panel_name: Antibody panel name, when known. Overrides a copied value.
+        panel_version: Antibody panel version, when known. Overrides a copied value.
+        source_metadata: Metadata from an upstream null file to carry forward.
 
     Returns:
         The written null pxl file.
@@ -198,6 +209,10 @@ def write_null_pxl(
         "null": True,
         "null_reason": cleaned_reason,
     }
+    if source_metadata:
+        for key, value in source_metadata.items():
+            if key not in _NULL_PXL_IDENTITY_KEYS and value is not None:
+                metadata[key] = value
     if panel_name is not None:
         metadata["panel_name"] = panel_name
     if panel_version is not None:
