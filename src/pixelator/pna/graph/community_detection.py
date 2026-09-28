@@ -606,6 +606,12 @@ def find_components(
                 discard_sizes.height
             )
         component_stats.component_count_post_component_size_filtering = 0
+        component_stats.component_size_min_filtering_threshold = (
+            refinement_options.initial_stage_options.min_component_size_to_prune
+        )
+        component_stats.component_size_max_filtering_threshold = int(
+            upper_component_size_bound
+        )
         raise ConnectedComponentException(msg, statistics=component_stats)
 
     latest_working_edgelist_path = hive_partitioned_edgelist_path
