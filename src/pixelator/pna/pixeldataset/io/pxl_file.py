@@ -99,7 +99,7 @@ class PxlFile:
         except duckdb.CatalogException:
             return {}
 
-    def is_null(self) -> bool:
+    def is_null_file(self) -> bool:
         """Return True when this file is a null pxl file."""
         return self.metadata().get("null") is True
 
@@ -109,7 +109,7 @@ class PxlFile:
         Returns:
             The stripped reason string, or None.
         """
-        if not self.is_null():
+        if not self.is_null_file():
             return None
         reason = self.metadata().get("null_reason")
         if reason is None:
@@ -223,7 +223,7 @@ def reject_null_pxl(pxl_file: PxlFile) -> None:
         NullPxlFileError: If the file is null and stores a reason.
         ValueError: If the file is null but has no reason.
     """
-    if not pxl_file.is_null():
+    if not pxl_file.is_null_file():
         return
     reason = pxl_file.null_reason()
     if not reason:

@@ -39,7 +39,7 @@ def test_sample_calling_emits_null_file_per_samplesheet_sample(tmp_path):
 
     for sample_name in ("sample1", "sample2"):
         pxl_file = PxlFile(output / "sample_calling" / f"{sample_name}.dehashed.pxl")
-        assert pxl_file.is_null()
+        assert pxl_file.is_null_file()
         assert pxl_file.null_reason() == reason
         assert pxl_file.sample_name == sample_name
         report = json.loads(

@@ -52,7 +52,7 @@ def test_graph_cli_writes_null_pxl_when_no_cells_pass(tmp_path, monkeypatch):
 
     pxl_path = output / "graph" / "sampleA.graph.pxl"
     pxl_file = PxlFile(pxl_path)
-    assert pxl_file.is_null()
+    assert pxl_file.is_null_file()
     assert pxl_file.null_reason() == reason
 
     report = json.loads((output / "graph" / "sampleA.report.json").read_text())

@@ -34,7 +34,7 @@ def test_denoise_cli_passes_null_pxl_through(tmp_path):
     assert result.exit_code == 0, result.output
 
     passed = PxlFile(output / "denoise" / "sampleA.denoised_graph.pxl")
-    assert passed.is_null()
+    assert passed.is_null_file()
     assert passed.null_reason() == reason
 
     report = json.loads((output / "denoise" / "sampleA.report.json").read_text())

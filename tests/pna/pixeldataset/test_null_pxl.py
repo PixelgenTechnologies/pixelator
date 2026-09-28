@@ -19,7 +19,7 @@ def test_write_null_pxl_stores_reason_and_is_a_pxl_file(tmp_path):
     )
 
     assert written.is_pxl_file()
-    assert written.is_null()
+    assert written.is_null_file()
     assert written.null_reason() == "No cells above the component size threshold."
     assert written.sample_name == "empty.sample"
     metadata = written.metadata()
@@ -27,7 +27,7 @@ def test_write_null_pxl_stores_reason_and_is_a_pxl_file(tmp_path):
     assert metadata["panel_name"] == "proxiome-v1"
 
     copied = PxlFile.copy_pxl_file(written, tmp_path / "copied.pxl")
-    assert copied.is_null()
+    assert copied.is_null_file()
     assert copied.null_reason() == written.null_reason()
 
 
@@ -43,7 +43,7 @@ def test_regular_pxl_is_not_null(tmp_path):
     with PixelFileWriter(path) as writer:
         writer.write_metadata({"sample_name": "ok", "null": False})
     pxl_file = PxlFile(path)
-    assert pxl_file.is_null() is False
+    assert pxl_file.is_null_file() is False
     assert pxl_file.null_reason() is None
 
 
