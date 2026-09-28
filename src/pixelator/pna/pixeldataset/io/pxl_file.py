@@ -17,6 +17,7 @@ from pathlib import Path
 import duckdb
 
 from pixelator.common.duckdb_utils import connect_duckdb
+from pixelator.common.exceptions import PixelatorBaseException
 
 PXL_FILE_MANDATOR_TABLES = [
     "__adata__X",
@@ -28,6 +29,32 @@ PXL_FILE_MANDATOR_TABLES = [
 # Should this be a "metadata" be a mandatory table?
 PXL_FILE_ADATA_TABLES = ["__adata__X", "__adata__var", "__adata__obs", "__adata__uns"]
 PXL_FILE_OTHER_TABLES = ["edgelist", "metadata", "layouts", "proximity"]
+
+
+class NullPxlFileError(PixelatorBaseException):
+    """Raised when a reader is asked to open a null pxl file.
+
+    A null file means an upstream step produced no usable data for the sample.
+    The stored reason is included in the message and on ``reason``.
+
+    Attributes:
+        path: Path of the null pxl file.
+        reason: Why the upstream step produced no usable data.
+    """
+
+    def __init__(self, path: Path, reason: str) -> None:
+        """Initialize the error.
+
+        Args:
+            path: Path of the null pxl file.
+            reason: Why the file is null.
+        """
+        self.path = Path(path)
+        self.reason = reason
+        super().__init__(
+            f"{self.path} is a null pxl file: an upstream step produced no usable "
+            f"data for this sample. Reason: {reason}"
+        )
 
 
 class PxlFile:
@@ -182,27 +209,26 @@ def write_null_pxl(
     return PxlFile(path, sample_name=sample_name)
 
 
-def null_passthrough_reason(pxl_file: PxlFile) -> str | None:
-    """Return the reason to copy forward, or None when the file is not null.
+def reject_null_pxl(pxl_file: PxlFile) -> None:
+    """Raise if ``pxl_file`` is a null pxl file.
 
-    A null file without a reason is treated as a broken file and raises,
-    rather than being passed through as a recoverable data error.
+    A null file with a reason raises :class:`NullPxlFileError`. A null file
+    with no reason is a broken file and raises ``ValueError`` instead, so
+    callers cannot treat it as a recoverable data failure.
 
     Args:
-        pxl_file: Pxl file to inspect.
-
-    Returns:
-        The null reason, or None when ``pxl_file`` is a normal pxl file.
+        pxl_file: Pxl file being opened.
 
     Raises:
+        NullPxlFileError: If the file is null and stores a reason.
         ValueError: If the file is null but has no reason.
     """
     if not pxl_file.is_null():
-        return None
+        return
     reason = pxl_file.null_reason()
     if not reason:
         raise ValueError(
             f"{pxl_file.path} is a null pxl file but has no reason. "
             "This is not a recoverable data error."
         )
-    return reason
+    raise NullPxlFileError(pxl_file.path, reason)

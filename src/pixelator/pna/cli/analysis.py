@@ -29,7 +29,8 @@ from pixelator.pna.analysis.report import (
 )
 from pixelator.pna.analysis_engine import AnalysisManager, LoggingSetup
 from pixelator.pna.cli.common import output_option
-from pixelator.pna.pixeldataset.io import PxlFile, null_passthrough_reason
+from pixelator.pna.pixeldataset import NullPxlFileError
+from pixelator.pna.pixeldataset.io import PxlFile
 
 logger = logging.getLogger(__name__)
 
@@ -143,13 +144,10 @@ def analysis(
     metrics = analysis_output / f"{sample_name}.report.json"
 
     output_pxl_file_target = PxlFile.copy_pxl_file(pxl_file, output_file)
-    null_reason = null_passthrough_reason(pxl_file)
-    if null_reason is not None:
-        logger.warning(
-            "Passing null pxl file through analysis for %s: %s",
-            sample_name,
-            null_reason,
-        )
+    try:
+        pxl_dataset = read(pxl_file.path)
+    except NullPxlFileError as exc:
+        logger.warning("%s", exc)
         write_parameters_file(
             ctx,
             analysis_output / f"{sample_name}.meta.json",
@@ -162,14 +160,13 @@ def analysis(
             k_cores=None,
             svd=None,
             status="failed",
-            null_reason=null_reason,
+            null_reason=exc.reason,
         )
         report.write_json_file(metrics, indent=4)
         return
 
     logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
     manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
-    pxl_dataset = read(pxl_file.path)
     pxl_dataset_with_analysis = manager.execute(pxl_dataset, output_pxl_file_target)
 
     write_parameters_file(

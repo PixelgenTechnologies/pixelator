@@ -3,6 +3,7 @@
 Copyright © 2025 Pixelgen Technologies AB.
 """
 
+import logging
 from pathlib import Path
 
 import click
@@ -19,11 +20,8 @@ from pixelator.common.utils import (
 from pixelator.pna import read
 from pixelator.pna.cli.common import output_option
 from pixelator.pna.config.panel import PNAAntibodyPanel
-from pixelator.pna.pixeldataset.io import (
-    PxlFile,
-    null_passthrough_reason,
-    write_null_pxl,
-)
+from pixelator.pna.pixeldataset import NullPxlFileError
+from pixelator.pna.pixeldataset.io import write_null_pxl
 from pixelator.pna.sample_calling import (
     create_final_report,
     sample_calling,
@@ -34,6 +32,8 @@ from pixelator.pna.sample_calling.report import (
     SampleCallingSampleReport,
     SampleCallingTotalReport,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @click.command(
@@ -105,19 +105,18 @@ def sample_calling_cli(
     pool_name = Path(input_pxl_file).name.split(".")[0]
     undetermined_sample_name = f"{pool_name}_undetermined"
 
-    input_pxl = PxlFile(Path(input_pxl_file))
-    null_reason = null_passthrough_reason(input_pxl)
-    if null_reason is not None:
+    try:
+        panel_info = PNAAntibodyPanel.from_pxl_dataset(read(input_pxl_file))
+    except NullPxlFileError as exc:
+        logger.warning("%s", exc)
         _pass_through_null_sample_calling(
             ctx,
             samplesheet=samplesheet,
             pool_name=pool_name,
-            null_reason=null_reason,
+            null_reason=exc.reason,
             sample_calling_output=sample_calling_output,
         )
         return
-
-    panel_info = PNAAntibodyPanel.from_pxl_dataset(read(input_pxl_file))
     hashing_antibodies_in_panel = set(
         panel_info.df[panel_info.df["sample_hashing"] == "yes"].index.to_list()
     )

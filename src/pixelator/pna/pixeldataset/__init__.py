@@ -68,6 +68,7 @@ from pathlib import Path
 from pixelator.pna.pixeldataset.config import PixelDatasetConfig
 from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.edgelist import Edgelist
+from pixelator.pna.pixeldataset.io import NullPxlFileError, PxlFile, reject_null_pxl
 from pixelator.pna.pixeldataset.layouts import Layouts
 from pixelator.pna.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pna.pixeldataset.proximity import Proximity
@@ -87,7 +88,10 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
 
     Raises:
         duckdb.IOException: If a file is not a DuckDB database file.
-        ValueError: If a file is not a valid ``.pxl`` file, if a sample name cannot be determined from file metadata.
+        NullPxlFileError: If a file is a null pxl file. The message includes the
+            stored reason. An upstream step produced no usable data for that sample.
+        ValueError: If a file is not a valid ``.pxl`` file, if a sample name cannot
+            be determined from file metadata, or if a null file has no reason.
         FileNotFoundError: If any path does not exist on disk.
     """
     if not paths:
@@ -97,6 +101,8 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
     if not isinstance(paths, list):
         paths = [paths]  # type: ignore
     normalized_paths = [Path(p) for p in paths]  # type: ignore
+    for path in normalized_paths:
+        reject_null_pxl(PxlFile(path))
     return PNAPixelDataset.from_pxl_files(normalized_paths)
 
 
@@ -104,6 +110,7 @@ __all__ = [
     "Component",
     "Edgelist",
     "Layouts",
+    "NullPxlFileError",
     "PixelDatasetConfig",
     "PixelDatasetSaver",
     "PNAPixelDataset",
