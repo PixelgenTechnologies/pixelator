@@ -30,6 +30,8 @@ class SampleReport(pydantic.BaseModel):
     sample_id: str
     product_id: Literal["single-cell-pna"]
     report_type: str
+    status: Literal["passed", "failed"] = "passed"
+    null_reason: str | None = None
 
     @classmethod
     def from_json(cls, p: Path) -> Self:
@@ -46,6 +48,19 @@ class SampleReport(pydantic.BaseModel):
 
         return cls(**json_data)
 
+    def _json_payload(self) -> dict[str, Any]:
+        """Serialize the report, omitting a passed status and an empty reason.
+
+        Successful reports stay compatible with existing JSON. A failed step
+        keeps ``status`` and ``null_reason``.
+        """
+        data = self.model_dump(mode="json")
+        if data.get("status") == "passed":
+            data.pop("status", None)
+        if data.get("null_reason") is None:
+            data.pop("null_reason", None)
+        return data
+
     def to_json(self, **kwargs: Any) -> str:  # noqa: DOC103
         """Dump the report to a json string.
 
@@ -55,7 +70,7 @@ class SampleReport(pydantic.BaseModel):
         Returns:
             The report serialized to JSON as a string.
         """
-        return json.dumps(self.model_dump(mode="json"), **kwargs)
+        return json.dumps(self._json_payload(), **kwargs)
 
     def write_json_file(self, p: str | os.PathLike, **kwargs: Any) -> None:
         """Write a JSON serialized SampleReport to a file.
@@ -64,10 +79,9 @@ class SampleReport(pydantic.BaseModel):
 
         Args:
             p: The path to the file to write.
-            kwargs: Additional arguments to pass to pydantics `model_dump_json`.
+            kwargs: Additional arguments to pass to `json.dumps`.
         """
         Path(p).resolve().parent.mkdir(parents=True, exist_ok=True)
 
         with open(p, "w") as fp:
-            r = self.model_dump_json(**kwargs)
-            fp.write(r)
+            fp.write(self.to_json(**kwargs))

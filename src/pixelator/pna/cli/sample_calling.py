@@ -19,6 +19,11 @@ from pixelator.common.utils import (
 from pixelator.pna import read
 from pixelator.pna.cli.common import output_option
 from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.pixeldataset.io import (
+    PxlFile,
+    null_passthrough_reason,
+    write_null_pxl,
+)
 from pixelator.pna.sample_calling import (
     create_final_report,
     sample_calling,
@@ -27,6 +32,7 @@ from pixelator.pna.sample_calling import (
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
 from pixelator.pna.sample_calling.report import (
     SampleCallingSampleReport,
+    SampleCallingTotalReport,
 )
 
 
@@ -98,6 +104,18 @@ def sample_calling_cli(
 
     pool_name = Path(input_pxl_file).name.split(".")[0]
     undetermined_sample_name = f"{pool_name}_undetermined"
+
+    input_pxl = PxlFile(Path(input_pxl_file))
+    null_reason = null_passthrough_reason(input_pxl)
+    if null_reason is not None:
+        _pass_through_null_sample_calling(
+            ctx,
+            samplesheet=samplesheet,
+            pool_name=pool_name,
+            null_reason=null_reason,
+            sample_calling_output=sample_calling_output,
+        )
+        return
 
     panel_info = PNAAntibodyPanel.from_pxl_dataset(read(input_pxl_file))
     hashing_antibodies_in_panel = set(
@@ -188,3 +206,69 @@ def sample_calling_cli(
             sample_calling_output / f"{undetermined_sample_name}.dehashed.pxl"
         )
         undetermined_pxl.unlink(missing_ok=True)
+
+
+def _pass_through_null_sample_calling(
+    ctx,
+    *,
+    samplesheet: str,
+    pool_name: str,
+    null_reason: str,
+    sample_calling_output: Path,
+) -> None:
+    """Write a null pxl for every samplesheet sample in this pool.
+
+    A missing or unmatched samplesheet is a configuration error and still
+    raises. Samples that the sheet names are kept so they show up downstream.
+    """
+    samplesheet_df = pl.read_csv(samplesheet)
+    if "pool" not in samplesheet_df.columns or "sample" not in samplesheet_df.columns:
+        raise ValueError(
+            "The samplesheet must contain 'pool' and 'sample' columns to "
+            "pass a null pxl file through sample calling."
+        )
+    sample_names = samplesheet_df.filter(pl.col("pool") == pool_name)[
+        "sample"
+    ].to_list()
+    if not sample_names:
+        raise ValueError(
+            f"No matching entries found in samplesheet for pool '{pool_name}'."
+        )
+
+    for sample_name in sample_names:
+        target = sample_calling_output / f"{sample_name}.dehashed.pxl"
+        write_null_pxl(target, sample_name=str(sample_name), reason=null_reason)
+        write_parameters_file(
+            ctx,
+            sample_calling_output / f"{sample_name}.meta.json",
+            command_path="pixelator single-cell-pna sample-calling",
+        )
+        report = SampleCallingSampleReport(
+            sample_id=str(sample_name),
+            product_id="single-cell-pna",
+            number_of_components=0,
+            number_of_incompatible_hashes_removed=0,
+            input_reads=0,
+            output_reads=0,
+            status="failed",
+            null_reason=null_reason,
+        )
+        report.write_json_file(
+            sample_calling_output / f"{sample_name}.report.json", indent=4
+        )
+
+    total_report = SampleCallingTotalReport(
+        sample_id="all",
+        product_id="single-cell-pna",
+        number_of_components=0,
+        percentage_of_components_successfully_called=0.0,
+        hash_enrichment_factors_per_sample={},
+        input_reads=0,
+        output_reads=0,
+        status="failed",
+        null_reason=null_reason,
+    )
+    total_report.write_json_file(
+        sample_calling_output / f"{pool_name}.sample_calling.report.json",
+        indent=4,
+    )

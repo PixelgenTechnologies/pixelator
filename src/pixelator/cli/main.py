@@ -108,6 +108,7 @@ from pixelator.pna.cli.collapse import collapse
 from pixelator.pna.cli.combine_collapse import combine_collapse
 from pixelator.pna.cli.demux import demux
 from pixelator.pna.cli.denoise import denoise
+from pixelator.pna.cli.experiment_summary import experiment_summary
 from pixelator.pna.cli.graph import graph
 from pixelator.pna.cli.layout import layout
 from pixelator.pna.cli.misc import (
@@ -166,6 +167,7 @@ single_cell_pna.add_command(denoise)
 single_cell_pna.add_command(analysis)
 single_cell_pna.add_command(layout)
 single_cell_pna.add_command(combine_collapse, name="combine-collapse")
+single_cell_pna.add_command(experiment_summary, name="experiment-summary")
 
 # Add cli plugins as commands on top level
 add_cli_plugins(main_cli)
