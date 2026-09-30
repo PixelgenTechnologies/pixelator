@@ -18,7 +18,7 @@ from statsmodels.stats.multitest import multipletests
 from pixelator.common.utils import logger
 from pixelator.pna.utils.utils import normalize_input_to_list
 
-# Names accepted from pixelatorR RunDAA / p.adjust, plus statsmodels aliases.
+# Names accepted from p.adjust, plus statsmodels aliases.
 _P_ADJUST_METHOD_MAP = {
     "bonferroni": "bonferroni",
     "holm": "holm",
@@ -73,22 +73,18 @@ def differential_abundance(
 ) -> pd.DataFrame:
     """Compare marker abundance between a reference group and one or more targets.
 
-    This is the Python analog of pixelatorR ``RunDAA``. For each ``target`` vs
-    ``reference`` in ``contrast_column``, and optionally within each combination
-    of ``group_vars`` (for example cell type), it calls
-    ``scanpy.tl.rank_genes_groups`` with ``method="wilcoxon"``. It does not
-    reimplement the Wilcoxon test.
+    For each ``target`` vs ``reference`` in ``contrast_column``, and optionally
+    within each combination of ``group_vars`` (for example cell type), this
+    calls ``scanpy.tl.rank_genes_groups`` with ``method="wilcoxon"``. It does
+    not reimplement the Wilcoxon test.
 
-    The result matches ``RunDAA``'s table more closely than raw scanpy
-    output: effect size is a **mean difference** (``mean(target) -
-    mean(reference)``), like Seurat ``FindMarkers`` with ``mean.fxn = rowMeans``
-    and ``fc.name = "difference"``, not scanpy's log-fold change. P-values vs
-    Seurat need not match.
+    Effect size is a **mean difference** (``mean(target) - mean(reference)``),
+    not scanpy's log-fold change.
 
     ``p_adj`` is computed once across every test this helper runs (all markers
-    × targets × ``group_vars`` strata), replacing scanpy's per-call adjustment,
-    the same as ``RunDAA``. A further **global FDR** across separately computed
-    cell-type tables (PAT 05 notebook glue) is **not** applied here.
+    × targets × ``group_vars`` strata), replacing scanpy's per-call adjustment.
+    A further **global FDR** across separately computed tables is **not**
+    applied here.
 
     For each target vs reference (and each ``group_vars`` stratum) the
     procedure is:
@@ -96,9 +92,7 @@ def differential_abundance(
     1. Restrict to those cells and to ``features`` if given.
     2. On that original matrix, compute ``difference`` as
        ``mean(target) - mean(reference)`` and ``pct_1`` / ``pct_2`` as the
-       fraction of cells with value ``> 0``. This is the effect size
-       ``RunDAA`` reports with Seurat ``mean.fxn = rowMeans`` and
-       ``fc.name = "difference"``, not scanpy's log-fold change.
+       fraction of cells with value ``> 0``.
     3. If any value is negative (signed CLR), build a **test-only** copy:
        for each marker, subtract its minimum when that minimum is negative,
        so every marker is non-negative. The same additive shift is applied
@@ -116,31 +110,29 @@ def differential_abundance(
     Args:
         adata: AnnData of components × markers. ``contrast_column`` and any
             ``group_vars`` must be columns of ``adata.obs``.
-        contrast_column: ``obs`` column that defines the contrast, matching
-            ``RunDAA(contrast_column=...)``. Passed to scanpy as ``groupby``.
-        reference: Reference level of ``contrast_column``, matching
-            ``RunDAA(reference=...)``. Passed to scanpy as ``reference``.
+        contrast_column: ``obs`` column that defines the contrast. Passed to
+            scanpy as ``groupby``.
+        reference: Reference level of ``contrast_column``. Passed to scanpy as
+            ``reference``.
         targets: Target level(s) of ``contrast_column`` to compare against
-            ``reference``, matching ``RunDAA(targets=...)``. If ``None``, every
-            other level is used. Passed to scanpy as ``groups``.
+            ``reference``. If ``None``, every other level is used. Passed to
+            scanpy as ``groups``.
         group_vars: Optional ``obs`` column(s) that split the data before each
-            contrast, matching ``RunDAA(group_vars=...)`` (for example
-            ``"cell_type"``). Each combination is tested separately and the
-            grouping values are added as columns on the result.
-        features: Optional marker names to test, matching Seurat
-            ``FindMarkers(features=...)``. Default is all markers in
+            contrast (for example ``"cell_type"``). Each combination is tested
+            separately and the grouping values are added as columns on the
+            result.
+        features: Optional marker names to test. Default is all markers in
             ``adata.var_names``.
         layer: Matrix to test. ``None`` uses ``adata.X``. Otherwise the name is
             looked up in ``adata.layers``, then ``adata.obsm`` (PNA CLR is
-            stored in ``adata.obsm["clr"]`` by default). Maps to
-            ``RunDAA``'s assay/data slot and to scanpy ``layer``.
+            stored in ``adata.obsm["clr"]`` by default). Passed to scanpy as
+            ``layer``.
         p_adjust_method: Multiple-testing method applied to the collected raw
-            p-values, matching ``RunDAA(p_adjust_method=...)``. RunDAA /
-            ``p.adjust`` names (``bonferroni``, ``holm``, ``hochberg``,
-            ``hommel``, ``BH``, ``BY``, ``fdr``) and statsmodels names
-            (``fdr_bh``, ``fdr_by``, ``sidak``, ``simes-hochberg``) are
+            p-values. ``p.adjust`` names (``bonferroni``, ``holm``,
+            ``hochberg``, ``hommel``, ``BH``, ``BY``, ``fdr``) and statsmodels
+            names (``fdr_bh``, ``fdr_by``, ``sidak``, ``simes-hochberg``) are
             accepted. ``hochberg`` maps to statsmodels ``simes-hochberg``.
-            Defaults to ``"bonferroni"``, the ``RunDAA`` default.
+            Defaults to ``"bonferroni"``.
 
     Returns:
         A DataFrame with one row per marker and contrast (and ``group_vars``
@@ -153,10 +145,8 @@ def differential_abundance(
           ``p.adjust``.
         * ``difference`` — mean(target) − mean(reference) on the original
           selected matrix (not on the non-negative test copy)
-        * ``pct_1`` — fraction of target cells with value ``> 0`` (scanpy
-          ``pts`` / Seurat ``pct.1``)
-        * ``pct_2`` — fraction of reference cells with value ``> 0`` (Seurat
-          ``pct.2``)
+        * ``pct_1`` — fraction of target cells with value ``> 0``
+        * ``pct_2`` — fraction of reference cells with value ``> 0``
         * ``target``, ``reference``
         * one column per ``group_vars`` entry, when given
 
@@ -166,13 +156,28 @@ def differential_abundance(
             are invalid, or if no target-vs-reference comparison can be run.
 
     Examples:
-        Compare stimulated vs resting CD8 T cells on a non-negative CLR
-        layer::
+        Load a PNA dataset and compare stimulated vs resting cells on the
+        default CLR matrix, separately within each cell type::
 
             from pixelator.pna.analysis import differential_abundance
+            from pixelator.pna.pixeldataset import read
 
+            adata = read("sample.pxl").adata()
             da = differential_abundance(
-                adata[adata.obs["cell_type"] == "CD8 T"],
+                adata,
+                contrast_column="condition",
+                reference="resting",
+                targets="stimulated",
+                group_vars="cell_type",
+                layer="clr",
+            )
+            da.sort_values("p_adj").head()
+
+        Restrict to one cell type first if you do not want ``group_vars``::
+
+            cd8 = adata[adata.obs["cell_type"] == "CD8 T"]
+            da_cd8 = differential_abundance(
+                cd8,
                 contrast_column="condition",
                 reference="resting",
                 targets="stimulated",
@@ -180,7 +185,6 @@ def differential_abundance(
             )
 
     See Also:
-        ``RunDAA`` in pixelatorR, which wraps Seurat ``FindMarkers``.
         ``scanpy.tl.rank_genes_groups`` (Wilcoxon) is the test used here.
     """
     group_var_list = normalize_input_to_list(group_vars) or []
@@ -290,7 +294,7 @@ def _resolve_targets(
 
 
 def _resolve_p_adjust_method(p_adjust_method: str) -> str:
-    """Map a RunDAA / scanpy p-adjust name to a statsmodels method string."""
+    """Map a p-adjust name to a statsmodels method string."""
     try:
         return _P_ADJUST_METHOD_MAP[p_adjust_method]
     except KeyError as exc:
