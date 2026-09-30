@@ -184,8 +184,11 @@ def test_differential_abundance_numpy_obsm_with_features():
     assert len(result) == 2
 
 
-def test_differential_abundance_clr_like_negatives_do_not_crash():
+def test_differential_abundance_signed_clr_keeps_original_difference_sign():
     adata = _tiny_adata(with_negatives=True)
+    original = np.asarray(adata.X).copy()
+    assert original.min() < 0
+
     result = differential_abundance(
         adata,
         contrast_column="condition",
@@ -194,6 +197,10 @@ def test_differential_abundance_clr_like_negatives_do_not_crash():
     )
 
     assert list(result.columns) == EXPECTED_COLUMNS
-    assert result["difference"].notna().all()
+    np.testing.assert_allclose(np.asarray(adata.X), original)
     planted = result.set_index("marker").loc["M0"]
+    treated = original[adata.obs["condition"].eq("treated").to_numpy(), 0].mean()
+    control = original[adata.obs["condition"].eq("control").to_numpy(), 0].mean()
+    assert planted["difference"] == pytest.approx(treated - control)
     assert planted["difference"] > 0
+    assert np.isfinite(planted["p"])

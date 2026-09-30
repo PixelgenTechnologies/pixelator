@@ -5,7 +5,6 @@ Copyright © 2026 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Iterable, Sequence
 from typing import Literal
 
@@ -36,6 +35,7 @@ _P_ADJUST_METHOD_MAP = {
 }
 
 _SCANPY_KEY = "_pixelator_rank_genes_groups"
+_NONNEG_TEST_LAYER = "_pixelator_daa_nonneg"
 _RESULT_COLUMNS = [
     "marker",
     "p",
@@ -90,14 +90,28 @@ def differential_abundance(
     the same as ``RunDAA``. A further **global FDR** across separately computed
     cell-type tables (PAT 05 notebook glue) is **not** applied here.
 
-    Scanpy's Wilcoxon historically assumes non-negative values. Pixelator's
-    default CLR (``clr_transformation(..., non_negative=True)``) is
-    non-negative and is safe to pass via ``layer``. Signed CLR (negatives) does
-    not crash the Wilcoxon call in current scanpy, but percent-expressed
-    (values ``> 0``) is uninformative and log-fold changes would be invalid;
-    this helper therefore reports mean difference on the original matrix.
-    For signed CLR, pass counts in ``X``, a non-negative CLR layer (the
-    pixelator default), or shift each marker so its minimum is 0.
+    For each target vs reference (and each ``group_vars`` stratum) the
+    procedure is:
+
+    1. Restrict to those cells and to ``features`` if given.
+    2. On that original matrix, compute ``difference`` as
+       ``mean(target) - mean(reference)`` and ``pct_1`` / ``pct_2`` as the
+       fraction of cells with value ``> 0``. This is the effect size
+       ``RunDAA`` reports with Seurat ``mean.fxn = rowMeans`` and
+       ``fc.name = "difference"``, not scanpy's log-fold change.
+    3. If any value is negative (signed CLR), build a **test-only** copy:
+       for each marker, subtract its minimum when that minimum is negative,
+       so every marker is non-negative. The same additive shift is applied
+       to every cell, so ranks between groups are unchanged.
+    4. Call ``scanpy.tl.rank_genes_groups(..., method="wilcoxon")`` on that
+       non-negative matrix (the original matrix if it was already
+       non-negative). Keep the raw p-values; discard scanpy's log-fold
+       changes and its per-call p-adjustment.
+
+    Pixelator's default CLR (``clr_transformation(..., non_negative=True)``)
+    is already non-negative, so step 3 is a no-op. Percent-expressed on
+    signed CLR remains the fraction of cells with value ``> 0`` on the
+    original matrix, which is not a count-based detection rate.
 
     Args:
         adata: AnnData of components × markers. ``contrast_column`` and any
@@ -137,7 +151,8 @@ def differential_abundance(
         * ``p_adj`` — adjusted p-value (see above). Non-finite raw p-values
           are left as NaN and excluded from the adjustment, like R
           ``p.adjust``.
-        * ``difference`` — mean(target) − mean(reference) on the selected matrix
+        * ``difference`` — mean(target) − mean(reference) on the original
+          selected matrix (not on the non-negative test copy)
         * ``pct_1`` — fraction of target cells with value ``> 0`` (scanpy
           ``pts`` / Seurat ``pct.1``)
         * ``pct_2`` — fraction of reference cells with value ``> 0`` (Seurat
@@ -344,39 +359,34 @@ def _run_one_scanpy_wilcoxon(
     if features is not None:
         work = work[:, features].copy()
     matrix = _values_matrix(work, layer)
-    has_negatives = _has_negatives(matrix)
-    if not warned_negatives and has_negatives:
-        logger.warning(
-            "Selected matrix contains negative values. scanpy Wilcoxon p-values "
-            "are still computed, but percent-expressed (value > 0) is not "
-            "meaningful on signed CLR. Mean difference is reported on the "
-            "original values. Use counts, or non-negative CLR "
-            "(clr_transformation(..., non_negative=True))."
-        )
-        warned_negatives = True
-
-    # Scanpy still computes log-fold changes internally; they are unused here
-    # (we report mean difference) and are NaN on signed CLR.
-    with warnings.catch_warnings():
-        if has_negatives:
-            warnings.filterwarnings(
-                "ignore",
-                message="invalid value encountered in log2",
-                category=RuntimeWarning,
-            )
-        sc.tl.rank_genes_groups(
-            work,
-            groupby=contrast_column,
-            groups=[target],
-            reference=reference,
-            method="wilcoxon",
-            use_raw=False,
-            layer=layer,
-            n_genes=work.n_vars,
-            key_added=_SCANPY_KEY,
-        )
-    ranked = sc.get.rank_genes_groups_df(work, group=target, key=_SCANPY_KEY)
     effects = _mean_difference_and_pct(work, contrast_column, target, reference, layer)
+    has_negatives = _has_negatives(matrix)
+    scanpy_layer: str | None
+    if has_negatives:
+        if not warned_negatives:
+            logger.info(
+                "Selected matrix contains negative values. Wilcoxon is run on a "
+                "per-marker shift to non-negative values; mean difference is "
+                "still computed on the original matrix."
+            )
+            warned_negatives = True
+        work.layers[_NONNEG_TEST_LAYER] = _shift_markers_to_nonnegative(matrix)
+        scanpy_layer = _NONNEG_TEST_LAYER
+    else:
+        scanpy_layer = layer
+
+    sc.tl.rank_genes_groups(
+        work,
+        groupby=contrast_column,
+        groups=[target],
+        reference=reference,
+        method="wilcoxon",
+        use_raw=False,
+        layer=scanpy_layer,
+        n_genes=work.n_vars,
+        key_added=_SCANPY_KEY,
+    )
+    ranked = sc.get.rank_genes_groups_df(work, group=target, key=_SCANPY_KEY)
     result = pd.DataFrame(
         {
             "marker": ranked["names"].astype(str),
@@ -437,6 +447,13 @@ def _has_negatives(matrix) -> bool:
     """Return True if any value in the matrix is negative."""
     minimum = matrix.min() if issparse(matrix) else np.nanmin(matrix)
     return bool(minimum < 0)
+
+
+def _shift_markers_to_nonnegative(matrix) -> np.ndarray:
+    """Shift each marker so its minimum is at least 0, for the Wilcoxon test only."""
+    dense = matrix.toarray() if issparse(matrix) else np.asarray(matrix)
+    mins = np.nanmin(dense, axis=0)
+    return dense - np.minimum(mins, 0)
 
 
 def _mean_difference_and_pct(
