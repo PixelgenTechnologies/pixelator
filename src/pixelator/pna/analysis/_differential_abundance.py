@@ -73,8 +73,6 @@ def differential_abundance(
 ) -> pd.DataFrame:
     """Compare marker abundance between a reference group and one or more targets.
 
-    Designed to match pixelatorR ``RunDAA``.
-
     For each ``target`` vs ``reference`` in ``contrast_column``, and optionally
     within each combination of ``group_vars`` (for example cell type), this
     calls ``scanpy.tl.rank_genes_groups`` with ``method="wilcoxon"``.
