@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `pixelator.pna.analysis.differential_abundance` to run marker differential abundance (Wilcoxon via `scanpy.tl.rank_genes_groups`), the Python analog of pixelatorR `RunDAA`.
+- `pixelator.pna.analysis.differential_abundance` to run marker differential abundance (Wilcoxon via `scanpy.tl.rank_genes_groups`), the Python analog of pixelatorR `RunDAA`. Effect size is a mean difference on the original matrix; when values are negative (signed CLR), Wilcoxon runs on a per-marker shift to non-negative values.
 - Samples with no cells above the size threshold no longer fail the pipeline. A null pxl file
   with a reason is written and passed through later steps, so the sample still shows up downstream.
 - The PNA graph step now peels the core-1 layer off the edgelist before fast label propagation and Leiden,
@@ -26,9 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
 ### Changed
-- `differential_abundance` runs Wilcoxon on a per-marker shift to non-negative
-  values when the selected matrix contains negatives, and still reports mean
-  difference on the original matrix.
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
