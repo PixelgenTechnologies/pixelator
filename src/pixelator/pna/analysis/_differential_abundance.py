@@ -5,6 +5,7 @@ Copyright © 2026 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Iterable, Sequence
 from typing import Literal
 
@@ -35,14 +36,13 @@ _P_ADJUST_METHOD_MAP = {
 }
 
 _SCANPY_KEY = "_pixelator_rank_genes_groups"
-_NONNEG_TEST_LAYER = "_pixelator_daa_nonneg"
 _RESULT_COLUMNS = [
     "marker",
-    "p",
-    "p_adj",
+    "pvals",
+    "pvals_adj",
     "difference",
-    "pct_1",
-    "pct_2",
+    "pct_nz_group",
+    "pct_nz_reference",
     "target",
     "reference",
 ]
@@ -73,39 +73,30 @@ def differential_abundance(
 ) -> pd.DataFrame:
     """Compare marker abundance between a reference group and one or more targets.
 
+    Designed to match pixelatorR ``RunDAA``.
+
     For each ``target`` vs ``reference`` in ``contrast_column``, and optionally
     within each combination of ``group_vars`` (for example cell type), this
-    calls ``scanpy.tl.rank_genes_groups`` with ``method="wilcoxon"``. It does
-    not reimplement the Wilcoxon test.
+    calls ``scanpy.tl.rank_genes_groups`` with ``method="wilcoxon"``.
 
     Effect size is a **mean difference** (``mean(target) - mean(reference)``),
-    not scanpy's log-fold change.
+    not scanpy's log-fold change. Whether the matrix is non-negative is a
+    normalization choice (for PNA, ``clr_transformation(..., non_negative=True)``);
+    this helper tests the values it is given.
 
-    ``p_adj`` is computed once across every test this helper runs (all markers
-    × targets × ``group_vars`` strata), replacing scanpy's per-call adjustment.
-    A further **global FDR** across separately computed tables is **not**
-    applied here.
+    ``pvals_adj`` is computed once across every test this helper runs (all
+    markers × targets × ``group_vars`` strata), replacing scanpy's per-call
+    adjustment.
 
-    For each target vs reference (and each ``group_vars`` stratum) the
-    procedure is:
+    For each target vs reference (and each ``group_vars`` stratum):
 
     1. Restrict to those cells and to ``features`` if given.
-    2. On that original matrix, compute ``difference`` as
-       ``mean(target) - mean(reference)`` and ``pct_1`` / ``pct_2`` as the
-       fraction of cells with value ``> 0``.
-    3. If any value is negative (signed CLR), build a **test-only** copy:
-       for each marker, subtract its minimum when that minimum is negative,
-       so every marker is non-negative. The same additive shift is applied
-       to every cell, so ranks between groups are unchanged.
-    4. Call ``scanpy.tl.rank_genes_groups(..., method="wilcoxon")`` on that
-       non-negative matrix (the original matrix if it was already
-       non-negative). Keep the raw p-values; discard scanpy's log-fold
-       changes and its per-call p-adjustment.
-
-    Pixelator's default CLR (``clr_transformation(..., non_negative=True)``)
-    is already non-negative, so step 3 is a no-op. Percent-expressed on
-    signed CLR remains the fraction of cells with value ``> 0`` on the
-    original matrix, which is not a count-based detection rate.
+    2. Compute ``difference`` as ``mean(target) - mean(reference)`` and
+       ``pct_nz_group`` / ``pct_nz_reference`` as the fraction of cells with
+       value ``> 0``.
+    3. Call ``scanpy.tl.rank_genes_groups(..., method="wilcoxon")``. Keep the
+       raw p-values; discard scanpy's log-fold changes and its per-call
+       p-adjustment.
 
     Args:
         adata: AnnData of components × markers. ``contrast_column`` and any
@@ -128,25 +119,25 @@ def differential_abundance(
             stored in ``adata.obsm["clr"]`` by default). Passed to scanpy as
             ``layer``.
         p_adjust_method: Multiple-testing method applied to the collected raw
-            p-values. ``p.adjust`` names (``bonferroni``, ``holm``,
-            ``hochberg``, ``hommel``, ``BH``, ``BY``, ``fdr``) and statsmodels
-            names (``fdr_bh``, ``fdr_by``, ``sidak``, ``simes-hochberg``) are
-            accepted. ``hochberg`` maps to statsmodels ``simes-hochberg``.
-            Defaults to ``"bonferroni"``.
+            p-values. Accepted names include ``bonferroni``, ``holm``,
+            ``hochberg``, ``hommel``, ``BH``, ``BY``, ``fdr``, ``fdr_bh``,
+            ``fdr_by``, ``sidak``, and ``simes-hochberg``. ``hochberg`` maps
+            to statsmodels ``simes-hochberg``. Defaults to ``"bonferroni"``.
 
     Returns:
         A DataFrame with one row per marker and contrast (and ``group_vars``
-        stratum, if any). Columns:
+        stratum, if any). Column names follow
+        ``scanpy.get.rank_genes_groups_df`` where they overlap. Columns:
 
         * ``marker`` — marker name
-        * ``p`` — Wilcoxon p-value from ``scanpy.tl.rank_genes_groups``
-        * ``p_adj`` — adjusted p-value (see above). Non-finite raw p-values
-          are left as NaN and excluded from the adjustment, like R
-          ``p.adjust``.
-        * ``difference`` — mean(target) − mean(reference) on the original
-          selected matrix (not on the non-negative test copy)
-        * ``pct_1`` — fraction of target cells with value ``> 0``
-        * ``pct_2`` — fraction of reference cells with value ``> 0``
+        * ``pvals`` — Wilcoxon p-value from ``scanpy.tl.rank_genes_groups``
+        * ``pvals_adj`` — adjusted p-value (see above). Non-finite raw
+          p-values are left as NaN and excluded from the adjustment.
+        * ``difference`` — mean(target) − mean(reference) on the selected
+          matrix
+        * ``pct_nz_group`` — fraction of target cells with value ``> 0``
+        * ``pct_nz_reference`` — fraction of reference cells with value
+          ``> 0``
         * ``target``, ``reference``
         * one column per ``group_vars`` entry, when given
 
@@ -171,7 +162,7 @@ def differential_abundance(
                 group_vars="cell_type",
                 layer="clr",
             )
-            da.sort_values("p_adj").head()
+            da.sort_values("pvals_adj").head()
 
         Restrict to one cell type first if you do not want ``group_vars``::
 
@@ -196,11 +187,10 @@ def differential_abundance(
     if group_var_list:
         logger.info("Splitting data by: %s", ", ".join(group_var_list))
 
-    warned_negatives = False
     pieces: list[pd.DataFrame] = []
     for stratum_key, cells in _iter_group_strata(adata, group_var_list):
         for target in target_list:
-            one, warned_negatives = _run_one_scanpy_wilcoxon(
+            one = _run_one_scanpy_wilcoxon(
                 adata,
                 cells,
                 contrast_column=contrast_column,
@@ -208,7 +198,6 @@ def differential_abundance(
                 reference=reference,
                 features=feature_list,
                 layer=layer,
-                warned_negatives=warned_negatives,
             )
             if one is None:
                 continue
@@ -224,7 +213,7 @@ def differential_abundance(
         )
 
     result = pd.concat(pieces, ignore_index=True)
-    result["p_adj"] = _adjust_pvalues(result["p"].to_numpy(), adjust_method)
+    result["pvals_adj"] = _adjust_pvalues(result["pvals"].to_numpy(), adjust_method)
     return result[[*_RESULT_COLUMNS, *group_var_list]]
 
 
@@ -337,8 +326,7 @@ def _run_one_scanpy_wilcoxon(
     reference: str,
     features: list[str] | None,
     layer: str | None,
-    warned_negatives: bool,
-) -> tuple[pd.DataFrame | None, bool]:
+) -> pd.DataFrame | None:
     """Run scanpy Wilcoxon for one target vs reference and return a DataFrame."""
     in_stratum = np.asarray(adata.obs_names.isin(cells))
     contrast = adata.obs[contrast_column]
@@ -355,52 +343,46 @@ def _run_one_scanpy_wilcoxon(
             n_target,
             n_reference,
         )
-        return None, warned_negatives
+        return None
 
     keep = in_stratum & (is_target | is_reference)
     work = adata[keep].copy()
     work, layer = _ensure_anndata_layer(work, layer)
     if features is not None:
         work = work[:, features].copy()
-    matrix = _values_matrix(work, layer)
     effects = _mean_difference_and_pct(work, contrast_column, target, reference, layer)
-    has_negatives = _has_negatives(matrix)
-    scanpy_layer: str | None
-    if has_negatives:
-        if not warned_negatives:
-            logger.info(
-                "Selected matrix contains negative values. Wilcoxon is run on a "
-                "per-marker shift to non-negative values; mean difference is "
-                "still computed on the original matrix."
-            )
-            warned_negatives = True
-        work.layers[_NONNEG_TEST_LAYER] = _shift_markers_to_nonnegative(matrix)
-        scanpy_layer = _NONNEG_TEST_LAYER
-    else:
-        scanpy_layer = layer
 
-    sc.tl.rank_genes_groups(
-        work,
-        groupby=contrast_column,
-        groups=[target],
-        reference=reference,
-        method="wilcoxon",
-        use_raw=False,
-        layer=scanpy_layer,
-        n_genes=work.n_vars,
-        key_added=_SCANPY_KEY,
-    )
+    # With statement to suppress warnings about negative values in log-fold changes.
+    # scanpy.tl.rank_genes_groups always computes log-fold changes, which warns on negative values.
+    # wilcoxon p-values are unaffected (and we discard the fold changes).
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=RuntimeWarning,
+            message="invalid value encountered in log2",
+        )
+        sc.tl.rank_genes_groups(
+            work,
+            groupby=contrast_column,
+            groups=[target],
+            reference=reference,
+            method="wilcoxon",
+            use_raw=False,
+            layer=layer,
+            n_genes=work.n_vars,
+            key_added=_SCANPY_KEY,
+        )
     ranked = sc.get.rank_genes_groups_df(work, group=target, key=_SCANPY_KEY)
     result = pd.DataFrame(
         {
             "marker": ranked["names"].astype(str),
-            "p": ranked["pvals"].to_numpy(),
+            "pvals": ranked["pvals"].to_numpy(),
         }
     )
     result = result.merge(effects, on="marker", how="left")
     result["target"] = target
     result["reference"] = reference
-    return result, warned_negatives
+    return result
 
 
 def _ensure_anndata_layer(
@@ -447,19 +429,6 @@ def _values_matrix(adata: AnnData, layer: str | None):
     return adata.layers[layer]
 
 
-def _has_negatives(matrix) -> bool:
-    """Return True if any value in the matrix is negative."""
-    minimum = matrix.min() if issparse(matrix) else np.nanmin(matrix)
-    return bool(minimum < 0)
-
-
-def _shift_markers_to_nonnegative(matrix) -> np.ndarray:
-    """Shift each marker so its minimum is at least 0, for the Wilcoxon test only."""
-    dense = matrix.toarray() if issparse(matrix) else np.asarray(matrix)
-    mins = np.nanmin(dense, axis=0)
-    return dense - np.minimum(mins, 0)
-
-
 def _mean_difference_and_pct(
     adata: AnnData,
     contrast_column: str,
@@ -476,8 +445,8 @@ def _mean_difference_and_pct(
             "marker": adata.var_names.astype(str),
             "difference": _column_means(matrix, target_mask)
             - _column_means(matrix, reference_mask),
-            "pct_1": _pct_expressed(matrix, target_mask),
-            "pct_2": _pct_expressed(matrix, reference_mask),
+            "pct_nz_group": _pct_expressed(matrix, target_mask),
+            "pct_nz_reference": _pct_expressed(matrix, reference_mask),
         }
     )
 

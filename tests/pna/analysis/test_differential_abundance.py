@@ -5,6 +5,8 @@ Copyright © 2026 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -15,11 +17,11 @@ from pixelator.pna.analysis._differential_abundance import _adjust_pvalues
 
 EXPECTED_COLUMNS = [
     "marker",
-    "p",
-    "p_adj",
+    "pvals",
+    "pvals_adj",
     "difference",
-    "pct_1",
-    "pct_2",
+    "pct_nz_group",
+    "pct_nz_reference",
     "target",
     "reference",
 ]
@@ -125,8 +127,8 @@ def test_differential_abundance_hochberg_p_adjust_runs():
         p_adjust_method="hochberg",
     )
 
-    assert result["p_adj"].notna().all()
-    assert (result["p_adj"] >= result["p"]).all()
+    assert result["pvals_adj"].notna().all()
+    assert (result["pvals_adj"] >= result["pvals"]).all()
 
 
 def test_adjust_pvalues_skips_nonfinite_for_fdr():
@@ -184,17 +186,23 @@ def test_differential_abundance_numpy_obsm_with_features():
     assert len(result) == 2
 
 
-def test_differential_abundance_signed_clr_keeps_original_difference_sign():
+def test_differential_abundance_accepts_negative_values():
     adata = _tiny_adata(with_negatives=True)
     original = np.asarray(adata.X).copy()
     assert original.min() < 0
 
-    result = differential_abundance(
-        adata,
-        contrast_column="condition",
-        reference="control",
-        targets="treated",
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "error",
+            category=RuntimeWarning,
+            message="invalid value encountered in log2",
+        )
+        result = differential_abundance(
+            adata,
+            contrast_column="condition",
+            reference="control",
+            targets="treated",
+        )
 
     assert list(result.columns) == EXPECTED_COLUMNS
     np.testing.assert_allclose(np.asarray(adata.X), original)
@@ -203,4 +211,4 @@ def test_differential_abundance_signed_clr_keeps_original_difference_sign():
     control = original[adata.obs["condition"].eq("control").to_numpy(), 0].mean()
     assert planted["difference"] == pytest.approx(treated - control)
     assert planted["difference"] > 0
-    assert np.isfinite(planted["p"])
+    assert np.isfinite(planted["pvals"])
