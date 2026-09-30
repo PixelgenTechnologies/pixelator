@@ -28,6 +28,7 @@ def write_pna_fastq(
     read2_length: int = 90,
     output_dir: str | Path = ".",
     rng=None,
+    quality_std: float = 2.0,
 ) -> tuple[Path, Path]:
     """Convert a populated edge list into reads and write paired-end fastq files.
 
@@ -62,6 +63,8 @@ def write_pna_fastq(
             amplicon end.
         output_dir: directory to write the fastq files into.
         rng: a seed or numpy Generator for the random number generator.
+        quality_std: standard deviation of the per-base quality scores around
+            Q30. ``0`` writes a constant Q30, which compresses much better.
 
     Returns:
         The paths of the written ``R1`` and ``R2`` fastq files.
@@ -70,7 +73,13 @@ def write_pna_fastq(
     amplicons = _assemble_amplicons(edgelist, n_reads, panel, assay, rng)
     amplicons = _add_substitutions(amplicons, substitution_error_rate, rng)
     return _write_paired_reads(
-        amplicons, sample_name, read1_length, read2_length, output_dir, rng
+        amplicons,
+        sample_name,
+        read1_length,
+        read2_length,
+        output_dir,
+        rng,
+        quality_std,
     )
 
 
@@ -178,12 +187,13 @@ def _write_paired_reads(
     read2_length: int,
     output_dir: str | Path,
     rng: np.random.Generator,
+    quality_std: float = 2.0,
 ) -> tuple[Path, Path]:
     """Split amplicons into R1/R2 mates, add qualities, and write fastq.gz files.
 
     R1 is taken from the amplicon start, R2 is reverse-complemented from the
     amplicon end, and both mates of a pair share the same read name. Quality
-    scores are distributed around Q30.
+    scores are distributed around Q30 with standard deviation ``quality_std``.
     """
     n = len(amplicons)
     headers = [f"{sample_name}:{i}" for i in range(n)]
@@ -194,9 +204,15 @@ def _write_paired_reads(
     r1_path = output_dir / f"{sample_name}_R1.fastq.gz"
     r2_path = output_dir / f"{sample_name}_R2.fastq.gz"
     _write_fastq_records(
-        r1_path, headers, r1_seqs, _random_qualities(n, read1_length, rng)
+        r1_path,
+        headers,
+        r1_seqs,
+        _random_qualities(n, read1_length, rng, std_q=quality_std),
     )
     _write_fastq_records(
-        r2_path, headers, r2_seqs, _random_qualities(n, read2_length, rng)
+        r2_path,
+        headers,
+        r2_seqs,
+        _random_qualities(n, read2_length, rng, std_q=quality_std),
     )
     return r1_path, r2_path

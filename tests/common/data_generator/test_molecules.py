@@ -7,11 +7,14 @@ from collections import defaultdict
 
 import numpy as np
 import polars as pl
+import pytest
 from polars.testing import assert_frame_equal
 
+from pixelator.pna.config import pna_config
 from tests.common.data_generator.molecules import (
     _assign_markers,
     _assign_umis,
+    _cell_types_per_cell,
     _correlate_neighbors,
     _hashing_indices_per_cell,
     _marker_probabilities,
@@ -173,6 +176,97 @@ def test_hashing_indices_per_cell_covers_all(marker_panel):
     assert len(result) == n_cells
     # the panel has hashing markers indexed 1-8
     assert set(result.tolist()) == set(range(1, 9))
+
+
+def test_hashing_indices_per_cell_restricted(marker_panel):
+    """Only the requested hashing indices are assigned, each at least once."""
+    result = _hashing_indices_per_cell(
+        10, marker_panel, np.random.default_rng(0), hashing_indices=[1, 5]
+    )
+
+    assert len(result) == 10
+    assert set(result.tolist()) == {1, 5}
+
+
+def test_marker_probabilities_cell_type():
+    """A cell type boosts its own block of high markers and nothing else."""
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
+    _, base, is_hashing = _marker_probabilities(panel)
+    regular = np.flatnonzero(~is_hashing)
+    # 158 regular markers: the first 26 form the high tier; its non-control
+    # markers are split into three blocks
+    high = regular[:26]
+    high = high[~panel.to_polars()["control"].to_numpy()[high]]
+    blocks = np.array_split(high, 3)
+
+    for cell_type, block in enumerate(blocks):
+        _, probs, _ = _marker_probabilities(
+            panel, cell_type, n_cell_types=3, cell_type_effect=4.0
+        )
+        # the block gains 4-fold relative to every other marker, which all keep
+        # their original ratios
+        ratio = probs / base
+        others = np.delete(ratio, block)
+        assert np.allclose(others, others[0])
+        assert np.allclose(ratio[block] / others[0], 4.0)
+        assert np.isclose(probs.sum(), 1.0)
+
+
+def test_marker_probabilities_shared_markers():
+    """Shared markers are boosted for every cell type and excluded from the blocks."""
+    panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
+    _, base, is_hashing = _marker_probabilities(panel)
+    high = np.flatnonzero(~is_hashing)[:26]
+    high = high[~panel.to_polars()["control"].to_numpy()[high]]
+    shared, blocks = high[:3], np.array_split(high[3:], 3)
+
+    for cell_type, block in enumerate(blocks):
+        _, probs, _ = _marker_probabilities(
+            panel, cell_type, n_cell_types=3, cell_type_effect=4.0, n_shared_markers=3
+        )
+        ratio = probs / base
+        others = np.delete(ratio, np.concatenate([shared, block]))
+        assert np.allclose(others, others[0])
+        assert np.allclose(ratio[shared] / others[0], 4.0)
+        assert np.allclose(ratio[block] / others[0], 4.0)
+
+
+@pytest.mark.parametrize("seed", range(10))
+def test_cell_types_cross_hashing_indices(marker_panel, seed):
+    """Every hashing index carries every cell type, whatever the seed."""
+    n_cell_types = 3
+    hashing = _hashing_indices_per_cell(
+        12, marker_panel, np.random.default_rng(seed), hashing_indices=[1, 5]
+    )
+    cell_types = _cell_types_per_cell(hashing, n_cell_types)
+
+    for index in (1, 5):
+        types = cell_types[hashing == index]
+        assert np.bincount(types, minlength=n_cell_types).tolist() == [2, 2, 2]
+
+
+def test_cell_types_without_hashing():
+    """Cells without a hashing index are cycled through the cell types as one group."""
+    assert _cell_types_per_cell([None] * 5, 2).tolist() == [0, 1, 0, 1, 0]
+
+
+def test_generate_edgelist_default_cell_type_is_neutral(marker_panel):
+    """The default cell-type arguments reproduce the edge list without them."""
+    kwargs = dict(
+        n_cells=4,
+        n_nodes=40,
+        n_edges=80,
+        min_neighbors=10,
+        panel=marker_panel,
+        n_crossing_edges=2,
+        rng=0,
+    )
+    assert_frame_equal(
+        generate_edgelist(**kwargs),
+        generate_edgelist(
+            **kwargs, n_cell_types=3, cell_type_effect=1.0, n_shared_markers=2
+        ),
+    )
 
 
 def test_generate_edgelist_uses_all_hashing_indices(marker_panel):
