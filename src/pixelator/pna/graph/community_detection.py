@@ -23,11 +23,13 @@ from pixelator.common.utils import get_process_pool_executor
 from pixelator.pna.cli.common import logger
 from pixelator.pna.graph.component_recovery_utils import (
     ConnectedComponentException,
+    absorb_core1_layer,
     filter_connected_components_by_size,
     filter_edgelist_by_read_count,
     initialize_graph_statistics,
     name_components_with_umi_hashes,
     name_components_with_umi_hashes_from_parquet,
+    peel_core1_nodes,
     populate_component_stats_from_hybrid_detection,
     remove_clashing_umis,
     write_hive_partitioned_edgelist_without_out_of_size_bound_components,
@@ -500,6 +502,13 @@ def find_components(
         working_dir=working_dir,
     )
 
+    logger.info("Peeling core-1 layer nodes before community detection.")
+    core2_edgelist_path, core1_discard_path, component_stats = peel_core1_nodes(
+        input_edgelist_path=filtered_edgelist_path,
+        working_dir=working_dir,
+        stats=component_stats,
+    )
+
     logger.info("Running FLP + Leiden native step")
     (
         partitioned_edgelist_path,
@@ -507,7 +516,7 @@ def find_components(
         post_flp_stats,
         post_recovery_stats,
     ) = run_hybrid_community_detection(
-        parquet_file=str(filtered_edgelist_path),
+        parquet_file=str(core2_edgelist_path),
         resolution=refinement_options.initial_stage_options.leiden_resolution,
         output=str(working_dir / "partitioned_edgelist.parquet"),
         flp_epochs=2,
@@ -627,6 +636,14 @@ def find_components(
         logger.info(
             f"Edge cycle verification completed in {time.time() - time_start:.2f} seconds."
         )
+
+    logger.info("Absorbing core-1 layer nodes back into resolved components.")
+    latest_working_edgelist_path, component_stats = absorb_core1_layer(
+        base_edgelist_path=latest_working_edgelist_path,
+        core1_discard_path=core1_discard_path,
+        working_dir=working_dir,
+        stats=component_stats,
+    )
 
     logger.info("Filtering connected components by size.")
     latest_working_edgelist_path, component_stats = filter_connected_components_by_size(

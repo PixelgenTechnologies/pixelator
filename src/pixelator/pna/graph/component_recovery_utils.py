@@ -8,6 +8,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import itertools
 import logging
 import typing
 from pathlib import Path
@@ -20,7 +21,10 @@ from pixelator_core import PyGraphProperties
 from pixelator.common.annotate.cell_calling import find_component_size_limits
 from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.common.exceptions import PixelatorBaseException
-from pixelator.pna.graph.constants import DEFAULT_WORKING_DIR, MIN_PNA_COMPONENT_SIZE
+from pixelator.pna.graph.constants import (
+    DEFAULT_WORKING_DIR,
+    MIN_PNA_COMPONENT_SIZE,
+)
 from pixelator.pna.graph.report import GraphStatistics
 
 logger = logging.getLogger(__name__)
@@ -692,3 +696,302 @@ def filter_components_by_size_hard_thresholds(
     return component_sizes.filter(
         (pl.col("n_umi") >= lower_bound) & (pl.col("n_umi") <= higher_bound)
     )["component"]
+
+
+def peel_core1_nodes(
+    input_edgelist_path: Path,
+    working_dir: Path,
+    stats: GraphStatistics,
+    max_iterations: int | None = None,
+) -> tuple[Path, Path, GraphStatistics]:
+    """Peel the core-1 layer off an edgelist iteratively, leaving its 2-core.
+
+    A UMI's core number is 1 if it is not part of the graph's 2-core -- equivalently, if it can
+    be removed by repeatedly deleting whichever UMI currently has degree 1 (leaf pruning) until
+    none remain. Each round removes every currently-degree-1 UMI's edges from the graph and adds
+    them to the discard pile, then repeats on what's left, so a UMI that only becomes a leaf
+    after one of its neighbors was itself pruned away in an earlier round is peeled too, rather
+    than left in the graph. The loop always converges on its own -- each round strictly shrinks
+    the graph, so it must eventually reach a fixed point.
+
+    Removing the core-1 layer before fast label propagation and Leiden lets community detection
+    run on the structurally unambiguous part of the graph: a core-1 UMI has exactly one edge and
+    therefore no ambiguity about which component it belongs to once its single neighbor is
+    resolved. ``absorb_core1_layer`` reattaches this layer once components have been resolved.
+
+    Args:
+        input_edgelist_path: Path to the edgelist to peel.
+        working_dir: Directory to write intermediate parquet files to.
+        stats: Statistics object to update.
+        max_iterations: Maximum number of peeling rounds. ``None`` (the default) peels to full
+            convergence, i.e. the true 2-core.
+
+    Returns:
+        Path to the retained 2-core edgelist, path to the core-1 discard pile (everything peeled,
+        across all rounds), and updated statistics.
+
+    """
+    current_path = input_edgelist_path
+    previous_intermediate_path: Path | None = None
+    discard_chunks: list[Path] = []
+    iterations_run = 0
+
+    iteration_range = (
+        itertools.count() if max_iterations is None else range(max_iterations)
+    )
+
+    with connect_duckdb() as con:
+        for i in iteration_range:
+            con.execute(f"""
+                CREATE OR REPLACE TEMP TABLE umi_degree AS
+                SELECT umi, SUM(degree) AS degree FROM (
+                    SELECT umi1 AS umi, COUNT(*) AS degree FROM parquet_scan('{current_path}') GROUP BY umi1
+                    UNION ALL
+                    SELECT umi2 AS umi, COUNT(*) AS degree FROM parquet_scan('{current_path}') GROUP BY umi2
+                )
+                GROUP BY umi
+            """)
+            n_degree1 = con.execute(
+                "SELECT COUNT(*) FROM umi_degree WHERE degree = 1"
+            ).fetchone()[0]  # type: ignore[index]
+            if n_degree1 == 0:
+                break
+            iterations_run += 1
+
+            con.execute("""
+                CREATE OR REPLACE TEMP TABLE degree1_umis AS
+                SELECT umi FROM umi_degree WHERE degree = 1
+            """)
+
+            iter_kept_path = working_dir / f"core1_peel_kept_iter_{i}.parquet"
+            iter_discard_path = working_dir / f"core1_peel_discard_iter_{i}.parquet"
+            con.execute(f"""
+                COPY (
+                    SELECT * FROM parquet_scan('{current_path}')
+                    WHERE umi1 IN (SELECT umi FROM degree1_umis)
+                       OR umi2 IN (SELECT umi FROM degree1_umis)
+                ) TO '{iter_discard_path}' (FORMAT PARQUET);
+            """)
+            con.execute(f"""
+                COPY (
+                    SELECT * FROM parquet_scan('{current_path}')
+                    WHERE umi1 NOT IN (SELECT umi FROM degree1_umis)
+                      AND umi2 NOT IN (SELECT umi FROM degree1_umis)
+                ) TO '{iter_kept_path}' (FORMAT PARQUET);
+            """)
+
+            discard_chunks.append(iter_discard_path)
+            if previous_intermediate_path is not None:
+                previous_intermediate_path.unlink(missing_ok=True)
+            previous_intermediate_path = iter_kept_path
+            current_path = iter_kept_path
+
+        discard_path = working_dir / "core1_discard_pile.parquet"
+        if discard_chunks:
+            union_sql = " UNION ALL ".join(
+                f"SELECT * FROM parquet_scan('{p}')" for p in discard_chunks
+            )
+            con.execute(f"COPY ({union_sql}) TO '{discard_path}' (FORMAT PARQUET);")
+            for p in discard_chunks:
+                p.unlink(missing_ok=True)
+        else:
+            con.execute(f"""
+                COPY (SELECT * FROM parquet_scan('{input_edgelist_path}') WHERE FALSE)
+                TO '{discard_path}' (FORMAT PARQUET);
+            """)
+
+        n_discarded = con.execute(
+            f"SELECT COUNT(*) FROM parquet_scan('{discard_path}')"
+        ).fetchone()[0]  # type: ignore[index]
+        n_kept = con.execute(
+            f"SELECT COUNT(*) FROM parquet_scan('{current_path}')"
+        ).fetchone()[0]  # type: ignore[index]
+
+    stats.core1_peel_iterations_run = iterations_run
+    stats.core1_layer_edges = int(n_discarded)
+    stats.edges_post_core1_peel = int(n_kept)
+
+    return current_path, discard_path, stats
+
+
+def absorb_core1_layer(
+    base_edgelist_path: Path,
+    core1_discard_path: Path,
+    working_dir: Path,
+    stats: GraphStatistics,
+) -> tuple[Path, GraphStatistics]:
+    """Reattach the core-1 layer to the components resolved without it.
+
+    A core-1 edge can be rescued if exactly one of its two UMIs already belongs to a known
+    component (a "frontier" edge); the peeled UMI is then assigned to that component too. If the
+    peeled UMI of a frontier edge would end up claiming more than one distinct component across
+    different frontier edges in the same round, all those edges are instead treated as "fused"
+    and discarded, since attaching them would silently merge two different components together.
+    Edges whose two UMIs already map to two different components ("conflict") are discarded
+    outright. This repeats, growing the known-component map each round, until it converges:
+    either no core-1 edges remain unresolved, or a round assigns no new UMIs to a component (at
+    which point no further round could make progress). The loop always terminates, since every
+    round that does not stop it strictly grows the set of UMIs with a known component.
+
+    A single piece of frontier evidence is enough to rescue an edge: a peeled UMI's path back to
+    the known structure is a tree, not a graph with redundant paths, so there is usually no
+    second independent piece of evidence to demand.
+
+    Args:
+        base_edgelist_path: Path to the edgelist with final ``component`` labels to absorb into.
+        core1_discard_path: The core-1 discard pile produced by ``peel_core1_nodes``.
+        working_dir: Directory to write intermediate parquet files to.
+        stats: Statistics object to update.
+
+    Returns:
+        Path to the final edgelist (base edgelist plus every rescued core-1 edge), and updated
+        statistics.
+
+    """
+    with connect_duckdb() as con:
+        con.execute(f"""
+            CREATE TEMP TABLE current_comps AS
+            SELECT umi1 AS umi, component FROM parquet_scan('{base_edgelist_path}')
+            UNION
+            SELECT umi2 AS umi, component FROM parquet_scan('{base_edgelist_path}')
+        """)
+
+        current_orphans_path = core1_discard_path
+        labeled_chunks: list[Path] = []
+        n_rescued_total = 0
+        n_discarded_total = 0
+        iterations_run = 0
+        umis_absorbed_per_iteration: list[int] = []
+
+        for i in itertools.count():
+            n_orphans_remaining = con.execute(
+                f"SELECT COUNT(*) FROM parquet_scan('{current_orphans_path}')"
+            ).fetchone()[0]  # type: ignore[index]
+            if n_orphans_remaining == 0:
+                break
+
+            iterations_run += 1
+            iter_labeled_path = working_dir / f"core1_absorbed_iter_{i}.parquet"
+            iter_still_orphaned_path = (
+                working_dir / f"core1_still_orphaned_iter_{i}.parquet"
+            )
+            iter_discarded_path = working_dir / f"core1_discarded_iter_{i}.parquet"
+
+            con.execute(f"""
+                CREATE OR REPLACE TEMP TABLE tmp_staged_orphans AS
+                SELECT
+                    o.*,
+                    m1.component AS comp1,
+                    m2.component AS comp2,
+                    COALESCE(m1.component, m2.component) AS component,
+                    CASE
+                        WHEN m1.component IS NOT NULL AND m2.component IS NOT NULL
+                             AND m1.component = m2.component THEN 'labeled'
+                        WHEN m1.component IS NULL AND m2.component IS NULL THEN 'orphan'
+                        WHEN (m1.component IS NOT NULL AND m2.component IS NULL)
+                          OR (m1.component IS NULL AND m2.component IS NOT NULL) THEN 'frontier'
+                        ELSE 'conflict'
+                    END AS edge_status
+                FROM parquet_scan('{current_orphans_path}') o
+                LEFT JOIN current_comps m1 ON o.umi1 = m1.umi
+                LEFT JOIN current_comps m2 ON o.umi2 = m2.umi;
+            """)
+
+            con.execute("""
+                WITH fused_bridge_nodes AS (
+                    SELECT
+                        CASE WHEN comp1 IS NULL THEN umi1 ELSE umi2 END AS unmapped_umi,
+                        CASE WHEN comp1 IS NULL THEN comp2 ELSE comp1 END AS claiming_component
+                    FROM tmp_staged_orphans
+                    WHERE edge_status = 'frontier'
+                ),
+                conflicting_nodes AS (
+                    SELECT unmapped_umi
+                    FROM fused_bridge_nodes
+                    GROUP BY unmapped_umi
+                    HAVING COUNT(DISTINCT claiming_component) > 1
+                )
+                UPDATE tmp_staged_orphans
+                SET edge_status = 'fused'
+                WHERE edge_status = 'frontier'
+                  AND (
+                      (comp1 IS NULL AND umi1 IN (SELECT unmapped_umi FROM conflicting_nodes)) OR
+                      (comp2 IS NULL AND umi2 IN (SELECT unmapped_umi FROM conflicting_nodes))
+                  );
+            """)
+
+            con.execute(f"""
+                COPY (
+                    SELECT * EXCLUDE (comp1, comp2, edge_status)
+                    FROM tmp_staged_orphans
+                    WHERE edge_status IN ('labeled', 'frontier')
+                ) TO '{iter_labeled_path}' (FORMAT PARQUET);
+            """)
+            n_rescued = con.execute(
+                f"SELECT COUNT(*) FROM parquet_scan('{iter_labeled_path}')"
+            ).fetchone()[0]  # type: ignore[index]
+
+            con.execute(f"""
+                COPY (
+                    SELECT * EXCLUDE (comp1, comp2, component, edge_status)
+                    FROM tmp_staged_orphans WHERE edge_status IN ('conflict', 'fused')
+                ) TO '{iter_discarded_path}' (FORMAT PARQUET);
+            """)
+            n_discarded = con.execute(
+                f"SELECT COUNT(*) FROM parquet_scan('{iter_discarded_path}')"
+            ).fetchone()[0]  # type: ignore[index]
+
+            con.execute(f"""
+                COPY (
+                    SELECT * EXCLUDE (comp1, comp2, component, edge_status)
+                    FROM tmp_staged_orphans WHERE edge_status = 'orphan'
+                ) TO '{iter_still_orphaned_path}' (FORMAT PARQUET);
+            """)
+
+            n_umis_absorbed = con.execute("""
+                INSERT INTO current_comps
+                SELECT DISTINCT umi, component FROM (
+                    SELECT umi1 AS umi, component FROM tmp_staged_orphans
+                    WHERE edge_status IN ('labeled', 'frontier') AND comp1 IS NULL
+                    UNION
+                    SELECT umi2 AS umi, component FROM tmp_staged_orphans
+                    WHERE edge_status IN ('labeled', 'frontier') AND comp2 IS NULL
+                );
+            """).fetchone()[0]  # type: ignore[index]
+
+            labeled_chunks.append(iter_labeled_path)
+            n_rescued_total += n_rescued
+            n_discarded_total += n_discarded
+            umis_absorbed_per_iteration.append(int(n_umis_absorbed))
+            current_orphans_path = iter_still_orphaned_path
+
+            if n_umis_absorbed == 0:
+                logger.debug(
+                    "No new UMIs absorbed in core-1 absorption iteration %d, converged",
+                    i,
+                )
+                break
+
+        n_still_orphaned = con.execute(
+            f"SELECT COUNT(*) FROM parquet_scan('{current_orphans_path}')"
+        ).fetchone()[0]  # type: ignore[index]
+
+        final_path = working_dir / "edgelist_with_core1_absorbed.parquet"
+        base_sql = f"SELECT * FROM parquet_scan('{base_edgelist_path}')"
+        if labeled_chunks:
+            chunks_union_sql = " UNION ALL ".join(
+                f"SELECT * FROM parquet_scan('{p}')" for p in labeled_chunks
+            )
+            full_sql = (
+                f"{base_sql} UNION ALL BY NAME SELECT * FROM ({chunks_union_sql})"
+            )
+        else:
+            full_sql = base_sql
+        con.execute(f"COPY ({full_sql}) TO '{final_path}' (FORMAT PARQUET);")
+
+    stats.core1_absorption_iterations_run = iterations_run
+    stats.core1_umis_absorbed_per_iteration = umis_absorbed_per_iteration
+    stats.core1_edges_reabsorbed = int(n_rescued_total)
+    stats.core1_edges_discarded = int(n_discarded_total + n_still_orphaned)
+
+    return final_path, stats
