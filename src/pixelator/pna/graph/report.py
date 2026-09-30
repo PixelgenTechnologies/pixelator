@@ -317,6 +317,8 @@ class GraphSampleReport(SampleReport):
     @property
     def edge_saturation(self):
         """Return the edge saturation."""
+        if self.reads_output == 0:
+            return 0.0
         return 1 - self.edge_count_post_recovery / self.reads_output
 
     @pydantic.computed_field(  # type: ignore
@@ -326,6 +328,8 @@ class GraphSampleReport(SampleReport):
     @property
     def node_saturation(self):
         """Return the node saturation."""
+        if self.reads_output == 0:
+            return 0.0
         return 1 - self.node_count_post_recovery / self.reads_output
 
     @pydantic.computed_field(  # type: ignore

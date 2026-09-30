@@ -228,7 +228,7 @@ def test_find_components_raises_when_every_component_is_too_large(random_graph_p
 
     with tempfile.TemporaryDirectory() as temp_dir:
         working_dir = Path(temp_dir)
-        with pytest.raises(ConnectedComponentException):
+        with pytest.raises(ConnectedComponentException) as exc_info:
             find_components(
                 input_edgelist_path=Path(random_graph_path),
                 working_dir=working_dir,
@@ -239,6 +239,9 @@ def test_find_components_raises_when_every_component_is_too_large(random_graph_p
                 n_threads=10,
                 refinement_options=staged_refinement_options,
             )
+    assert exc_info.value.statistics is not None
+    assert exc_info.value.statistics.component_size_min_filtering_threshold == 10
+    assert exc_info.value.statistics.component_size_max_filtering_threshold == 50
 
 
 def test_find_no_components(random_graph_path):

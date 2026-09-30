@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Samples with no cells above the size threshold no longer fail the pipeline. A null pxl file
+  with a reason is written and passed through later steps, so the sample still shows up downstream.
 - The PNA graph step now peels the core-1 layer off the edgelist before fast label propagation and Leiden,
   then reattaches it to the resolved components in an iterative absorption phase that runs until no more
   UMIs can be absorbed. This improves runtime by 2x and lower memory usage in some scenarios.
