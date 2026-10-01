@@ -21,6 +21,7 @@ from pixelator.pna.analysis.denoise import DenoiseGraph
 from pixelator.pna.analysis.report import DenoiseSampleReport
 from pixelator.pna.analysis_engine import AnalysisManager, LoggingSetup
 from pixelator.pna.cli.common import output_option
+from pixelator.pna.pixeldataset import NullPxlFileError
 from pixelator.pna.pixeldataset.io import PxlFile
 
 logger = logging.getLogger(__name__)
@@ -253,7 +254,22 @@ def denoise(
     )
     metrics = denoise_output / f"{sample_name}.report.json"
 
-    pxl_dataset = read(pxl_file.path)
+    try:
+        pxl_dataset = read(pxl_file.path)
+    except NullPxlFileError as exc:
+        logger.warning("%s", exc)
+        report = DenoiseSampleReport(
+            sample_id=sample_name,
+            product_id="single-cell-pna",
+            number_of_umis_removed=None,
+            ratio_of_umis_removed=None,
+            input_reads=0,
+            output_reads=0,
+            status="failed",
+            null_reason=exc.reason,
+        )
+        report.write_json_file(metrics, indent=4)
+        return
     input_reads = int(pxl_dataset.adata().obs["reads_in_component"].sum())
 
     if (

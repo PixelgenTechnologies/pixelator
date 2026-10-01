@@ -526,6 +526,14 @@ def find_components(
         multiplet_recovery=multiplet_recovery,
     )
 
+    logger.debug("Populating component statistics from hybrid detection.")
+    populate_component_stats_from_hybrid_detection(
+        component_stats=component_stats,
+        pre_recovery_stats=pre_recovery_stats,
+        post_flp_stats=post_flp_stats,
+        post_recovery_stats=post_recovery_stats,
+    )
+
     max_post_recovery_component_size = max(
         post_recovery_stats.component_size_distribution.keys(),
         default=0,
@@ -538,15 +546,18 @@ def find_components(
             "No connected components found in the graph. Likely they were all filtered away for being too small. "
             "This indicates some serious issue with the data. Will not continue with the rest of the computations."
         )
-        raise ConnectedComponentException(msg)
-
-    logger.debug("Populating component statistics from hybrid detection.")
-    populate_component_stats_from_hybrid_detection(
-        component_stats=component_stats,
-        pre_recovery_stats=pre_recovery_stats,
-        post_flp_stats=post_flp_stats,
-        post_recovery_stats=post_recovery_stats,
-    )
+        sizes = post_recovery_stats.component_size_distribution
+        component_stats.pre_filtering_component_sizes = {
+            int(size): int(count) for size, count in sizes.items()
+        }
+        component_stats.component_count_pre_component_size_filtering = sum(
+            component_stats.pre_filtering_component_sizes.values()
+        )
+        component_stats.component_count_post_component_size_filtering = 0
+        component_stats.component_size_min_filtering_threshold = (
+            refinement_options.initial_stage_options.min_component_size_to_prune
+        )
+        raise ConnectedComponentException(msg, statistics=component_stats)
 
     logger.info(
         "Writing hive partitioned edgelist without out-of-size-bound components."
@@ -583,7 +594,25 @@ def find_components(
             "This indicates some serious issue with the data, or that the configured size "
             "thresholds are too strict. Will not continue with the rest of the computations."
         )
-        raise ConnectedComponentException(msg)
+        if discard_sizes.height > 0:
+            unique, counts = np.unique(
+                discard_sizes["n_umi"].cast(pl.Int32).to_numpy(),
+                return_counts=True,
+            )
+            component_stats.pre_filtering_component_sizes = {
+                int(size): int(count) for size, count in zip(unique, counts)
+            }
+            component_stats.component_count_pre_component_size_filtering = int(
+                discard_sizes.height
+            )
+        component_stats.component_count_post_component_size_filtering = 0
+        component_stats.component_size_min_filtering_threshold = (
+            refinement_options.initial_stage_options.min_component_size_to_prune
+        )
+        component_stats.component_size_max_filtering_threshold = int(
+            upper_component_size_bound
+        )
+        raise ConnectedComponentException(msg, statistics=component_stats)
 
     latest_working_edgelist_path = hive_partitioned_edgelist_path
 

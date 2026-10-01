@@ -43,7 +43,29 @@ def n_molecules_sql(has_uei_count: bool) -> str:
 
 
 class ConnectedComponentException(PixelatorBaseException):
-    """Raised when connected-component computation or filtering fails."""
+    """Raised when the data yields no cells during component recovery.
+
+    This is a recoverable, data-caused error: the graph step should emit a
+    null pxl file and continue. Unexpected exceptions are not wrapped in this
+    type and must still fail the run.
+
+    Attributes:
+        statistics: Graph statistics gathered before the failure, when available.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        statistics: GraphStatistics | None = None,
+    ) -> None:
+        """Initialize the exception.
+
+        Args:
+            message: Why component recovery could not produce cells.
+            statistics: Statistics collected before the failure.
+        """
+        super().__init__(message)
+        self.statistics = statistics
 
 
 def populate_component_stats_from_hybrid_detection(
@@ -593,7 +615,7 @@ def filter_connected_components_by_size(
                     "If you are running on the command line you can try to use --component-size-max-threshold and "
                     " --component-size-min-threshold to set hard thresholds, but most likely the problem is with the input data."
                 )
-                raise ConnectedComponentException(msg)
+                raise ConnectedComponentException(msg, statistics=component_stats)
             else:
                 raise e
     else:
@@ -619,7 +641,8 @@ def filter_connected_components_by_size(
             "No connected components found in the graph. Likely they were all filtered away for being to small. "
             "This indicates some serious issue with the data. Will not continue with the rest of the computations."
         )
-        raise ConnectedComponentException(msg)
+        component_stats.component_count_post_component_size_filtering = 0
+        raise ConnectedComponentException(msg, statistics=component_stats)
 
     component_stats.component_count_post_component_size_filtering = len(
         passing_components
