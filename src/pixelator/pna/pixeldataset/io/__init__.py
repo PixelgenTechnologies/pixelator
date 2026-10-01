@@ -118,6 +118,7 @@ from .pxl_file import (
     PXL_FILE_MANDATOR_TABLES,
     PXL_FILE_OTHER_TABLES,
     PxlFile,
+    read_dataset_panel,
 )
 from .query_builder import Query, QueryBuilder
 
@@ -131,6 +132,7 @@ __all__ = [
     "PxlFile",
     "Query",
     "QueryBuilder",
+    "read_dataset_panel",
 ]
 
 

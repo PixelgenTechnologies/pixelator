@@ -78,11 +78,12 @@ class Edgelist:
             normalize_input_to_list(self.components)
         )
         with self._view.open() as session:
-            df = (
-                self._handle_backwards_compatibility(session.execute_lazy(query))
-                .collect()
-                .to_pandas()
-            )
+            df = self._view.apply_marker_renames(
+                self._handle_backwards_compatibility(
+                    session.execute_lazy(query)
+                ).collect(),
+                ("marker_1", "marker_2"),
+            ).to_pandas()
         return df
 
     def to_polars(self) -> pl.DataFrame:
@@ -91,9 +92,12 @@ class Edgelist:
             normalize_input_to_list(self.components)
         )
         with self._view.open() as session:
-            df = self._handle_backwards_compatibility(
-                session.execute_lazy(query)
-            ).collect()
+            df = self._view.apply_marker_renames(
+                self._handle_backwards_compatibility(
+                    session.execute_lazy(query)
+                ).collect(),
+                ("marker_1", "marker_2"),
+            )
         return df
 
     def to_record_batches(
@@ -127,7 +131,10 @@ class Edgelist:
                 # here is that otherwise the object is not pickable, and thus not handled
                 # well by the analysis manager. We should revisit this in the future.
                 component_id=name,
-                frame=self._handle_backwards_compatibility(df).collect().lazy(),
+                frame=self._view.apply_marker_renames(
+                    self._handle_backwards_compatibility(df).collect(),
+                    ("marker_1", "marker_2"),
+                ).lazy(),
             )
 
     def __str__(self) -> str:

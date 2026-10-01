@@ -5,12 +5,14 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import json
+import os
 import warnings
+from collections import defaultdict
+from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Set
-
-from anndata import AnnData
+from typing import TYPE_CHECKING, List, Optional, Sequence, Set
 
 try:
     from typing import Self
@@ -21,6 +23,8 @@ import re
 
 import pandas as pd
 import polars as pl
+from anndata import AnnData
+from packaging.version import Version
 
 from pixelator.common.config.panel import (
     AntibodyPanelMetadata,
@@ -31,7 +35,52 @@ from pixelator.common.utils import logger
 
 if TYPE_CHECKING:
     from pixelator.pna.config.config_class import PNAConfig
-    from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
+
+# Trailing ``-<digits>`` is the hash group (``B2M-1`` → ``B2M``). The same
+# pattern matches ordinary names such as ``PD-1``, so it is only applied to
+# rows already flagged by ``sample_hashing``.
+_HASHING_MARKER_ID_RE = re.compile(r"^(?P<base>.+)-(?P<index>\d+)$")
+
+
+@dataclass(frozen=True)
+class PanelSource:
+    """One panel file that contributed markers to a ``PNAAntibodyPanel``."""
+
+    metadata: AntibodyPanelMetadata
+    file_name: str | None = None
+    filepath: str | None = None
+
+
+def sample_hashing_mask(sample_hashing: pd.Series) -> pd.Series:
+    """Return a boolean mask for values that flag a hashing marker."""
+    if pd.api.types.is_bool_dtype(sample_hashing):
+        return sample_hashing.fillna(False).astype(bool)
+    if pd.api.types.is_numeric_dtype(sample_hashing):
+        return sample_hashing.fillna(0).astype(bool)
+    normalized = sample_hashing.astype(str).str.strip().str.lower()
+    return normalized.isin(["yes", "true"])
+
+
+def split_hashing_marker_id(marker_id: str) -> tuple[str, str] | None:
+    """Return ``(base, index)`` for a hashing id such as ``B2M-1``."""
+    match = _HASHING_MARKER_ID_RE.fullmatch(str(marker_id))
+    if match is None:
+        return None
+    return match.group("base"), match.group("index")
+
+
+def collapsed_hashing_marker_id(marker_id: str) -> str:
+    """Return the marker id sample calling stores for a hashing antibody."""
+    parts = split_hashing_marker_id(marker_id)
+    return parts[0] if parts is not None else str(marker_id)
+
+
+def _hashing_marker_ids(panel_df: pd.DataFrame) -> set[str]:
+    """Return hashing marker ids, or an empty set when the column is absent."""
+    if "sample_hashing" not in panel_df.columns:
+        return set()
+    mask = sample_hashing_mask(panel_df["sample_hashing"])
+    return {str(marker_id) for marker_id in panel_df.index[mask]}
 
 
 class PNAAntibodyPanel:
@@ -52,27 +101,60 @@ class PNAAntibodyPanel:
     def __init__(
         self,
         df: pd.DataFrame,
-        metadata: AntibodyPanelMetadata,
+        metadata: AntibodyPanelMetadata | None = None,
         file_name: Optional[str] = None,
         filepath: Optional[PathType] = None,
+        *,
+        sources: list[PanelSource] | None = None,
+        marker_source_ids: pd.Series | None = None,
     ) -> None:
-        """Load a panel from a dataframe and metadata.
+        """Build a panel from a marker table.
+
+        Pass ``metadata`` or ``sources``, not both. ``metadata`` becomes one
+        source, using ``file_name`` and ``filepath``. Pass ``sources`` for a
+        panel that already names its files. The ``metadata`` property returns
+        that entry only when the panel has one source.
 
         Args:
-            df: The dataframe containing the panel information.
-            metadata: The metadata for the panel.
-            file_name: The optional basename of the file from which the panel is loaded.
-            filepath: The optional full path of the file from which the panel is loaded.
+            df: Marker table, indexed by marker id.
+            metadata: Metadata for the single source. Omit when passing
+                ``sources``.
+            file_name: Basename of the file this panel was loaded from.
+            filepath: Full path of the file this panel was loaded from.
+            sources: Panel files that contributed markers. Omit when passing
+                ``metadata``.
+            marker_source_ids: Source index for each marker. Required when
+                there is more than one source.
 
-        Returns:
-            None
         Raises:
-            AssertionError: exception if panel file is missing, invalid or with incorrect format
+            ValueError: If both ``metadata`` and ``sources`` are omitted or
+                both are given, or if several sources are given without
+                ``marker_source_ids``.
+            AssertionError: If the marker table fails panel validation.
         """
         self._filename = file_name
         self._filepath: Optional[Path] = Path(filepath).resolve() if filepath else None
-        self.metadata = metadata
         self._df = df
+        if sources is not None and metadata is not None:
+            raise ValueError("Pass metadata or sources, not both.")
+        if sources is None:
+            if metadata is None:
+                raise ValueError("Pass metadata or sources.")
+            sources = [
+                PanelSource(
+                    metadata=metadata,
+                    file_name=file_name,
+                    filepath=str(self._filepath) if self._filepath else None,
+                )
+            ]
+        self.sources: list[PanelSource] = list(sources)
+        if marker_source_ids is None:
+            if len(self.sources) > 1:
+                raise ValueError(
+                    "marker_source_ids is required when a panel has multiple sources."
+                )
+            marker_source_ids = pd.Series(0, index=df.index, dtype="int64")
+        self._marker_source_ids = marker_source_ids
 
         # validate the panel
         errors = self.validate_antibody_panel(df)
@@ -112,103 +194,204 @@ class PNAAntibodyPanel:
         return cls(df, metadata, file_name=panel_file.name, filepath=panel_file)
 
     @classmethod
-    def from_pxl_dataset(
-        cls, pxl_data: PNAPixelDataset, file_name: Optional[str] = None
+    def from_legacy_var(
+        cls,
+        var: pd.DataFrame,
+        panel_metadata: dict,
+        *,
+        file_name: str | None = None,
     ) -> Self:
-        """Create an AntibodyPanel from a pxl dataset.
+        """Build a panel from a pixelator 0.22.0 through 0.30.0 ``var`` table.
 
-        Args:
-            pxl_data: A PNAPixelDataset object.
-            file_name: The optional name of the file from which the pxl dataset was loaded.
-
-        Returns:
-            The AntibodyPanel object. (AntibodyPanel)
-
-        Raises:
-            KeyError: exception if panel information is missing in the pxl dataset,
+        ``panel_metadata`` is the ``uns['panel_metadata']`` entry, and ``var``
+        is indexed by marker id. Those releases wrote ``panel_columns`` and
+        the columns it names together.
         """
-        logger.debug("Creating Antibody panel from PNAPixelDataset object")
-        adata = pxl_data.adata()
-        panel = cls.from_adata(adata, file_name=file_name)
-        logger.debug("Antibody panel from PNAPixelDataset created")
-        return panel
+        df = var[list(panel_metadata["panel_columns"])]
+        metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
+        return cls(df, metadata, file_name=file_name)
 
     @classmethod
-    def from_adata(cls, adata: AnnData, file_name: Optional[str] = None) -> Self:
-        """Create an AntibodyPanel from an AnnData object.
+    def _from_panel_tables(cls, markers: pd.DataFrame, sources: pd.DataFrame) -> Self:
+        """Build a panel from the stored marker and source tables."""
+        panel_sources: list[PanelSource] = []
+        for row in sources.sort_values("source_id").itertuples(index=False):
+            aliases = json.loads(row.aliases) if isinstance(row.aliases, str) else []
+            metadata = AntibodyPanelMetadata(
+                name=row.name,
+                version=row.version,
+                product=None if pd.isna(row.product) else row.product,
+                description=None if pd.isna(row.description) else row.description,
+                aliases=aliases or [],
+                archived=bool(row.archived) if not pd.isna(row.archived) else False,
+            )
+            file_name = None if pd.isna(row.file_name) else row.file_name
+            filepath = None if pd.isna(row.filepath) else row.filepath
+            panel_sources.append(
+                PanelSource(metadata=metadata, file_name=file_name, filepath=filepath)
+            )
 
-        Args:
-            adata: An AnnData object containing panel information.
-            file_name: The optional name of the file from which the AnnData object was loaded.
+        markers = markers.sort_values("row_nr")
+        source_ids = markers["source_id"].astype(int)
+        drop_cols = ["row_nr", "source_id"]
+        df = markers.drop(columns=[col for col in drop_cols if col in markers.columns])
+        df = df.set_index("marker_id")
+        df.index.name = "marker_id"
+        source_ids.index = df.index
+        file_name = panel_sources[0].file_name if len(panel_sources) == 1 else None
+        filepath = panel_sources[0].filepath if len(panel_sources) == 1 else None
+        return cls(
+            df,
+            file_name=file_name,
+            filepath=filepath,
+            sources=panel_sources,
+            marker_source_ids=source_ids.astype("int64"),
+        )
 
-        Returns:
-            The AntibodyPanel object. (AntibodyPanel)
+    @classmethod
+    def concatenate(cls, panels: Sequence[PNAAntibodyPanel]) -> PNAAntibodyPanel:
+        """Concatenate panels into one panel.
+
+        One panel is returned unchanged. Several panels are stacked in the
+        given order. The result keeps every input source.
+        ``marker_id``, ``sequence_1``, and ``sequence_2`` must be unique
+        across the concatenation.
+        """
+        if not panels:
+            raise ValueError("At least one panel is required to concatenate.")
+        if len(panels) == 1:
+            return panels[0]
+
+        frames: list[pd.DataFrame] = []
+        sources: list[PanelSource] = []
+        source_id_frames: list[pd.Series] = []
+        for panel in panels:
+            if not panel.sources:
+                raise ValueError("Cannot concatenate a panel that has no sources.")
+            for source_index, source in enumerate(panel.sources):
+                new_source_id = len(sources)
+                sources.append(source)
+                marker_index = panel.marker_source_ids.index[
+                    panel.marker_source_ids == source_index
+                ]
+                part = panel.df.loc[list(marker_index)]
+                frames.append(part)
+                source_id_frames.append(
+                    pd.Series(new_source_id, index=part.index, dtype="int64")
+                )
+
+        df = pd.concat(frames)
+        df.index.name = cls._INDEX_COLUMN
+        if "control" in df.columns:
+            df["control"] = df["control"].map(
+                lambda value: bool(value) if pd.notna(value) else False
+            )
+        marker_source_ids = pd.concat(source_id_frames)
+        marker_source_ids.index = df.index
+        return cls(
+            df,
+            sources=sources,
+            marker_source_ids=marker_source_ids.astype("int64"),
+        )
+
+    def _single_metadata(self) -> AntibodyPanelMetadata | None:
+        """Return metadata when this panel has exactly one source."""
+        if len(self.sources) != 1:
+            return None
+        return self.sources[0].metadata
+
+    def _require_single_metadata(self, field: str) -> AntibodyPanelMetadata:
+        """Return the only source metadata, refusing a concatenated panel."""
+        metadata = self._single_metadata()
+        if metadata is None:
+            raise ValueError(
+                f"Panel {field} is only available for a single source. "
+                "Read it from each entry in sources."
+            )
+        return metadata
+
+    @property
+    def metadata(self) -> AntibodyPanelMetadata:
+        """Metadata for the only source in this panel.
 
         Raises:
-            KeyError: exception if panel information is missing in the AnnData object.
+            ValueError: When this panel does not have exactly one source.
+                Read ``sources`` instead.
         """
-        logger.debug("Creating Antibody panel from AnnData object")
-        try:
-            panel_metadata = adata.uns["panel_metadata"]
-        except KeyError as err:
-            logger.error(  # pylint: disable=logging-not-lazy
-                f"The provided AnnData object does not contain {err}. "
-                + "Please, regenerate your data with the most recent version of pixelator."
-            )
-            raise
-        panel_columns = panel_metadata.get("panel_columns")
-        if not panel_columns:
-            raise KeyError(
-                "The provided AnnData object does not contain panel columns information in the metadata. "
-                + "Please, regenerate your data with the most recent version of pixelator."
-            )
-        df = adata.var[panel_columns]
-        metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
-
-        logger.debug("Antibody panel from AnnData object created")
-        return cls(df, metadata, file_name=file_name)
+        return self._require_single_metadata("metadata")
 
     @property
     def name(self) -> str:
-        """Panel name from metadata.
+        """Panel name.
 
-        Returns:
-            The panel name.
+        Raises:
+            ValueError: When this panel does not have exactly one source.
+                Read ``sources`` instead.
         """
-        return self.metadata.name
+        return self._require_single_metadata("name").name
 
     @property
     def product(self) -> Optional[str]:
         """Product identifier from metadata, if present.
 
         Returns:
-            Product name, or None when not provided in panel metadata.
+            Product name, or None when the single source does not set one.
+
+        Raises:
+            ValueError: When this panel does not have exactly one source.
+                Read ``sources`` instead.
         """
-        return self.metadata.product
+        return self._require_single_metadata("product").product
 
     @property
     def version(self) -> str:
-        """Panel version from metadata.
+        """Panel version.
 
-        Returns:
-            Semantic version string for this panel.
+        Raises:
+            ValueError: When this panel does not have exactly one source.
+                Read ``sources`` instead.
         """
-        return self.metadata.version
+        return self._require_single_metadata("version").version
 
     @property
     def description(self) -> Optional[str]:
-        """Return the panel file description."""
-        return self.metadata.description
+        """Return the panel file description.
+
+        Raises:
+            ValueError: When this panel does not have exactly one source.
+                Read ``sources`` instead.
+        """
+        return self._require_single_metadata("description").description
 
     @property
     def aliases(self) -> list[str]:
-        """Return the (optional) list of panel file aliases."""
-        return self.metadata.aliases
+        """Return the (optional) list of panel file aliases.
+
+        Raises:
+            ValueError: When this panel does not have exactly one source.
+                Read ``sources`` instead.
+        """
+        return self._require_single_metadata("aliases").aliases
 
     @property
     def archived(self) -> Optional[bool]:
-        """Return whether the panel is marked as archived."""
-        return self.metadata.archived
+        """Return whether the panel is marked as archived.
+
+        Raises:
+            ValueError: When this panel does not have exactly one source.
+                Read ``sources`` instead.
+        """
+        return self._require_single_metadata("archived").archived
+
+    @property
+    def marker_source_ids(self) -> pd.Series:
+        """Return the panel-source index of each marker."""
+        return self._marker_source_ids
+
+    @property
+    def hashing_marker_ids(self) -> set[str]:
+        """Return marker ids flagged by the ``sample_hashing`` column."""
+        return _hashing_marker_ids(self.df)
 
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
@@ -227,6 +410,7 @@ class PNAAntibodyPanel:
 
     @classmethod
     def _parse_panel(cls, panel_file: Path) -> pd.DataFrame:
+        """Read the marker table from a panel CSV and convert ``control`` to bool."""
         panel = pd.read_csv(str(panel_file), comment="#", index_col="marker_id").fillna(
             ""
         )
@@ -260,6 +444,54 @@ class PNAAntibodyPanel:
         """Return the full path of the marker panel file, if any."""
         return self._filepath
 
+    def copy(self) -> Self:
+        """Return a shallow copy with its own marker table and source list."""
+        return type(self)(
+            self.df.copy(),
+            file_name=self.filename,
+            filepath=self.filepath,
+            sources=list(self.sources),
+            marker_source_ids=self.marker_source_ids.copy(),
+        )
+
+    def source_as_panel(self, source_index: int) -> Self:
+        """Return one source as its own single-source panel."""
+        source = self.sources[source_index]
+        marker_index = self.marker_source_ids.index[
+            self.marker_source_ids == source_index
+        ]
+        df = self.df.loc[list(marker_index)].copy()
+        return type(self)(
+            df,
+            source.metadata,
+            file_name=source.file_name,
+            filepath=source.filepath,
+        )
+
+    def replace_source(self, source_index: int, replacement: PNAAntibodyPanel) -> Self:
+        """Return a copy with one source replaced by a single-source panel."""
+        if len(replacement.sources) != 1:
+            raise ValueError("Replacement panel must come from a single source.")
+        keep = self.marker_source_ids.index[self.marker_source_ids != source_index]
+        df = pd.concat([self.df.loc[list(keep)], replacement.df])
+        df.index.name = self._INDEX_COLUMN
+        source_ids = pd.concat(
+            [
+                self.marker_source_ids.loc[list(keep)],
+                pd.Series(source_index, index=replacement.df.index, dtype="int64"),
+            ]
+        )
+        sources = list(self.sources)
+        sources[source_index] = replacement.sources[0]
+        single_source = len(sources) == 1
+        return type(self)(
+            df,
+            file_name=self.filename if single_source else None,
+            filepath=self.filepath if single_source else None,
+            sources=sources,
+            marker_source_ids=source_ids.astype("int64"),
+        )
+
     @cached_property
     def size(self) -> int:
         """Return the size of the marker panel."""
@@ -267,6 +499,7 @@ class PNAAntibodyPanel:
 
     @staticmethod
     def _validate_sequences(panel_df, sequence_col):
+        """Return errors when sequences differ in length or are not ATCG."""
         errors = []
         sequences = panel_df[sequence_col]
         ref_length = len(sequences.iloc[0])
@@ -283,6 +516,7 @@ class PNAAntibodyPanel:
 
     @staticmethod
     def _validate_marker_names(panel_df):
+        """Return errors when marker ids contain underscores or whitespace."""
         errors = []
         if any(panel_df.index.str.contains("_")):
             # Markers should not contain underscores since this messes
@@ -349,6 +583,13 @@ class PNAAntibodyPanel:
             errors.append(f"`{cls._INDEX_COLUMN}` is missing or is not set as index")
             return errors
 
+        if panel_df.index.duplicated().any():
+            duplicated = panel_df.index[panel_df.index.duplicated()].unique().tolist()
+            errors.append(
+                "All values in column: marker_id were not unique. "
+                f"Offending values: {duplicated}"
+            )
+
         errors += cls._validate_marker_names(panel_df)
 
         if panel_df["control"].dtype != bool:
@@ -380,7 +621,38 @@ class PNAAntibodyPanel:
 
         errors += cls._validate_sequences(panel_df, "sequence_1")
         errors += cls._validate_sequences(panel_df, "sequence_2")
+        errors += cls._validate_hashing_marker_ids(panel_df)
 
+        return errors
+
+    @staticmethod
+    def _validate_hashing_marker_ids(panel_df: pd.DataFrame) -> list[str]:
+        """Return errors when hashing ids lack a ``-<digits>`` suffix or nest."""
+        hashing_ids = _hashing_marker_ids(panel_df)
+        if not hashing_ids:
+            return []
+        errors: list[str] = []
+        missing_suffix = [
+            marker_id
+            for marker_id in sorted(hashing_ids)
+            if split_hashing_marker_id(marker_id) is None
+        ]
+        if missing_suffix:
+            errors.append(
+                "Hashing marker ids must end with -<digits> (e.g. B2M-1). "
+                f"Offending values: {missing_suffix}"
+            )
+        nested = sorted(
+            marker_id
+            for marker_id in hashing_ids
+            if (base := collapsed_hashing_marker_id(marker_id)) != marker_id
+            and base in hashing_ids
+        )
+        if nested:
+            errors.append(
+                "Hashing marker ids must not collapse to another hashing id "
+                f"(e.g. B2M-1-1 next to B2M-1). Offending values: {nested}"
+            )
         return errors
 
     def to_polars(self) -> pl.DataFrame:
@@ -388,14 +660,27 @@ class PNAAntibodyPanel:
         return pl.from_pandas(self.df, include_index=True)
 
     def __eq__(self, other: object) -> bool:
-        """Check if two panels are equal based on their dataframes and metadata.
+        """Return whether two panels describe the same sources and markers.
+
+        Row order and the file a source was loaded from are ignored. Each
+        marker must still belong to the same source.
 
         Args:
             other: Panel to compare for equality.
         """
         if not isinstance(other, PNAAntibodyPanel):
             raise ValueError("Can only compare with another PNAAntibodyPanel")
-        return self.df.equals(other.df) and self.metadata == other.metadata
+        if [source.metadata for source in self.sources] != [
+            source.metadata for source in other.sources
+        ]:
+            return False
+        if not self.df.sort_index().equals(other.df.sort_index()):
+            return False
+        left_sources = self.marker_source_ids.sort_index().rename(None).astype("int64")
+        right_sources = (
+            other.marker_source_ids.sort_index().rename(None).astype("int64")
+        )
+        return left_sources.equals(right_sources)
 
 
 def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
@@ -418,6 +703,20 @@ def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
     return panel_obj
 
 
+def load_antibody_panels(
+    config: PNAConfig, panels: PathType | Sequence[PathType]
+) -> PNAAntibodyPanel:
+    """Load one or more panels and concatenate them.
+
+    A single path or name is returned as that panel. Several inputs are
+    concatenated in order.
+    """
+    if isinstance(panels, (str, os.PathLike)):
+        return load_antibody_panel(config, panels)
+    loaded = [load_antibody_panel(config, panel) for panel in panels]
+    return PNAAntibodyPanel.concatenate(loaded)
+
+
 class PNAAntibodyPanelDiff:
     """Class representing the differences between two PNAAntibodyPanel objects."""
 
@@ -429,7 +728,15 @@ class PNAAntibodyPanelDiff:
         Args:
             panel_1: The first panel to compare.
             panel_2: The second panel to compare.
+
+        Raises:
+            ValueError: When either panel does not have exactly one source.
         """
+        if len(panel_1.sources) != 1 or len(panel_2.sources) != 1:
+            raise ValueError(
+                "PNAAntibodyPanelDiff only compares panels with a single source. "
+                "Split a concatenated panel with source_as_panel first."
+            )
         self.panel_1 = panel_1
         self.panel_2 = panel_2
 
@@ -567,57 +874,310 @@ class PNAAntibodyPanelDiff:
             ]
         )
 
-    def upgrade_adata(self, adata: AnnData) -> AnnData:
-        """Upgrade an AnnData object with the changes between the two panels.
+    def changed_marker_ids(self) -> dict[str, str]:
+        """Return ``old marker_id -> new marker_id`` for markers whose id changed."""
+        if (
+            "marker_id" not in self.joined.columns
+            or "marker_id_panel_2" not in self.joined.columns
+        ):
+            return {}
+        both = self.joined.filter(
+            pl.col("marker_id").is_not_null()
+            & pl.col("marker_id_panel_2").is_not_null()
+        )
+        mapping: dict[str, str] = {}
+        for old, new in zip(
+            both["marker_id"].to_list(), both["marker_id_panel_2"].to_list()
+        ):
+            if str(old) != str(new):
+                mapping[str(old)] = str(new)
+        return mapping
 
-        Args:
-            adata: An AnnData object containing panel information.
-        """
-        adata_panel = PNAAntibodyPanel.from_adata(adata)
-        if self.panel_1 != adata_panel:
-            raise ValueError(
-                "The provided AnnData object does not match the panel. Cannot upgrade."
-                f"Expected panel {self.panel_2.name} v{self.panel_2.version}, but got panel {adata_panel.name} v{adata_panel.version}."
+
+def sample_calling_hashing_collapsed(
+    hashing_ids: set[str],
+    *,
+    adata: AnnData | None = None,
+    pxl_file_metadata: dict | None = None,
+) -> bool:
+    """Return whether sample calling has already collapsed hashing clones.
+
+    Explicit ``hashing_collapsed`` on the pixel file metadata wins. Older
+    files are inferred from ``original_hash_counts_*`` columns or from hashing
+    clones that are absent from ``var``. Without an AnnData and without that
+    key, there is nothing to infer from, so this returns False.
+    """
+    if pxl_file_metadata is not None and "hashing_collapsed" in pxl_file_metadata:
+        return bool(pxl_file_metadata["hashing_collapsed"])
+    if adata is None:
+        return False
+    if any(str(col).startswith("original_hash_counts_") for col in adata.obs.columns):
+        return True
+    if not hashing_ids:
+        return False
+    var_names = {str(name) for name in adata.var_names}
+    return hashing_ids.isdisjoint(var_names)
+
+
+def align_panel_patches(
+    panels: list[PNAAntibodyPanel],
+    adatas: list[AnnData] | None = None,
+    *,
+    pxl_file_metadata: list[dict] | None = None,
+) -> tuple[list[PNAAntibodyPanel], list[dict[str, str]], list[dict[str, str]]]:
+    """Bump each source to the newest patch carried by another panel.
+
+    Sources match on name and product, and only when major and minor versions
+    agree. A source that is not already on a panel is left alone.
+    ``pxl_file_metadata`` is the pixel file metadata for each panel, in the same
+    order, and carries ``hashing_collapsed`` when sample calling wrote the file.
+
+    Returns:
+        Updated panel copies, marker renames to apply to stored data (var,
+        edgelist, proximity, layouts), and hashing-clone renames for
+        ``original_hash_counts_*`` columns. Renames are keyed by input order.
+    """
+    updated = [panel.copy() for panel in panels]
+    data_renames: list[dict[str, str]] = [{} for _ in panels]
+    hash_renames: list[dict[str, str]] = [{} for _ in panels]
+
+    families: dict[tuple[str, str, tuple[int, ...]], list[tuple[int, int, Version]]] = (
+        defaultdict(list)
+    )
+    for panel_index, panel in enumerate(updated):
+        for source_index, source in enumerate(panel.sources):
+            identity = _source_identity(source)
+            if identity is None:
+                continue
+            version = Version(source.metadata.version)
+            minor = version.release[:2]
+            families[(*identity, minor)].append((panel_index, source_index, version))
+
+    for members in families.values():
+        latest_idx, latest_source_idx, latest_version = max(
+            members, key=lambda member: member[2]
+        )
+        latest_panel = updated[latest_idx].source_as_panel(latest_source_idx)
+        for panel_index, source_index, version in members:
+            if version == latest_version:
+                continue
+            current = updated[panel_index].source_as_panel(source_index)
+            logger.info(
+                "Upgrading panel source %s %s from %s to %s.",
+                current.name,
+                current.product,
+                current.version,
+                latest_panel.version,
             )
-
-        non_panel_columns = adata.var.copy()[
-            [
-                col
-                for col in adata.var.columns
-                if col not in adata.uns["panel_metadata"]["panel_columns"]
-            ]
-            + self.join_on_columns
-        ]
-        adata.var = (
-            self.joined.select(
-                list(
-                    set(
-                        self.join_on_columns
-                        + self.identical_columns
-                        + [f"{col}_panel_2" for col in self.changed_columns]
-                        + self.added_columns
-                    )
+            diff = PNAAntibodyPanelDiff(current, latest_panel)
+            clone_map = diff.changed_marker_ids()
+            _validate_hashing_renames(current, latest_panel, clone_map)
+            hashing_ids = current.hashing_marker_ids
+            pxl_metadata = (
+                None if pxl_file_metadata is None else pxl_file_metadata[panel_index]
+            )
+            collapsed = sample_calling_hashing_collapsed(
+                hashing_ids,
+                adata=None if adatas is None else adatas[panel_index],
+                pxl_file_metadata=pxl_metadata,
+            )
+            if adatas is not None:
+                _require_expected_markers(
+                    adata=adatas[panel_index],
+                    old_panel=current,
+                    new_panel=latest_panel,
+                    clone_map=clone_map,
+                    collapsed=collapsed,
                 )
+            data_map = _data_rename_map(clone_map, hashing_ids, collapsed=collapsed)
+            _merge_renames(data_renames[panel_index], data_map)
+            _merge_renames(
+                hash_renames[panel_index],
+                {old: new for old, new in clone_map.items() if old in hashing_ids},
             )
-            .rename({f"{col}_panel_2": col for col in self.changed_columns})
-            # keep order and append new to the end
-            .select(
-                ["marker_id"]  # index not in panel_metadata panel_columns below
-                + adata.uns["panel_metadata"]["panel_columns"]
-                + self.added_columns
+            updated[panel_index] = updated[panel_index].replace_source(
+                source_index, latest_panel
             )
-            .to_pandas()
-            .set_index("marker_id")
-        )
-        if adata.var.shape[0] != non_panel_columns.shape[0]:
+
+    return updated, data_renames, hash_renames
+
+
+def aligned_dataset_panel(panels: list[PNAAntibodyPanel]) -> PNAAntibodyPanel:
+    """Return one panel after per-source patch alignment across files.
+
+    Several files that describe the same sources collapse to a single panel.
+    """
+    if len(panels) == 1:
+        return panels[0]
+    updated, _, _ = align_panel_patches(panels)
+    first = updated[0]
+    for other in updated[1:]:
+        if first != other:
             raise ValueError(
-                "Row count mismatch in automatic patch panel patch version bump."
+                "Samples do not share the same panel sources after patch alignment."
             )
-        adata.var = adata.var.join(
-            non_panel_columns.set_index(self.join_on_columns),
-            how="outer",
-            on=self.join_on_columns,
+    return first
+
+
+def _source_identity(source: PanelSource) -> tuple[str, str] | None:
+    """Return ``(name, product)`` for a source, or None when product is unset."""
+    product = source.metadata.product
+    if not product:
+        return None
+    return (source.metadata.name, product)
+
+
+def _data_rename_map(
+    clone_map: dict[str, str], hashing_ids: set[str], *, collapsed: bool
+) -> dict[str, str]:
+    """Return marker renames, collapsing hashing clones when ``collapsed`` is set."""
+    if not collapsed:
+        return dict(clone_map)
+    data_map = {old: new for old, new in clone_map.items() if old not in hashing_ids}
+    families: dict[str, str] = {}
+    for old, new in clone_map.items():
+        if old not in hashing_ids:
+            continue
+        old_base = collapsed_hashing_marker_id(old)
+        new_base = collapsed_hashing_marker_id(new)
+        if old_base in families and families[old_base] != new_base:
+            raise ValueError(
+                f"Hashing markers with collapsed name {old_base!r} do not share "
+                "a single new base name."
+            )
+        families[old_base] = new_base
+    for old_base, new_base in families.items():
+        if old_base != new_base:
+            data_map[old_base] = new_base
+    return data_map
+
+
+def _validate_hashing_renames(
+    old_panel: PNAAntibodyPanel,
+    new_panel: PNAAntibodyPanel,
+    clone_map: dict[str, str],
+) -> None:
+    """Reject a hashing rename that breaks the collapsed-name rules.
+
+    Each of these fails:
+
+    * ``B2M-1`` → ``C2M``: a hashing id must end with ``-<digits>``.
+    * ``B2M-1`` → ``C2M-2``: the numeric suffix stays.
+    * ``B2M-1`` → ``C2M-1`` and ``B2M-2`` → ``D2M-2``: clones in one family
+      share one new base.
+    * ``B2M`` stays while ``B2M-1`` → ``C2M-1``, or ``B2M`` → ``C2M`` while
+      ``B2M-1`` stays: a non-hashing marker that already has the collapsed
+      name renames with the family.
+    * ``CD19`` → ``C2M`` while ``B2M-1`` → ``C2M-1``: the family must not
+      land on a different non-hashing marker.
+    """
+    old_hashing = old_panel.hashing_marker_ids
+    new_hashing = new_panel.hashing_marker_ids
+    if not old_hashing:
+        return
+
+    families: dict[str, str] = {}
+    for old in sorted(old_hashing):
+        new = clone_map.get(old, old)
+        if new not in new_hashing and old not in clone_map:
+            continue
+        old_parts = split_hashing_marker_id(old)
+        new_parts = split_hashing_marker_id(new)
+        if old_parts is None or new_parts is None:
+            raise ValueError(
+                "Hashing marker ids must end with -<digits> to be renamed "
+                f"({old!r} -> {new!r})."
+            )
+        if old_parts[1] != new_parts[1]:
+            raise ValueError(
+                "Hashing marker rename may only change the base name, not the "
+                f"hash group suffix {old_parts[1]}. Got {old!r} -> {new!r}."
+            )
+        old_base = collapsed_hashing_marker_id(old)
+        new_base = collapsed_hashing_marker_id(new)
+        if old_base in families and families[old_base] != new_base:
+            raise ValueError(
+                f"Hashing markers with collapsed name {old_base!r} must keep a "
+                "single base name per hash group family."
+            )
+        families[old_base] = new_base
+
+    non_hashing = {
+        str(marker_id)
+        for marker_id in old_panel.markers
+        if str(marker_id) not in old_hashing
+    }
+    for old_base, new_base in families.items():
+        if old_base in non_hashing:
+            moved = clone_map.get(old_base, old_base)
+            if moved != new_base:
+                # TODO: we should think about if we want this check or not in the long run.
+                # adding it here now we can always remove it later if we decide it's too strict.
+                raise ValueError(
+                    f"Hashing collapsed base {old_base!r} and non-hashing marker "
+                    f"{old_base!r} must be renamed together "
+                    f"(hashing maps to {new_base!r}, non-hashing maps to {moved!r})."
+                )
+        for other in non_hashing:
+            if other == old_base:
+                continue
+            if clone_map.get(other, other) == new_base:
+                raise ValueError(
+                    f"Hashing collapsed base {old_base!r} -> {new_base!r} collides "
+                    f"with non-hashing marker {other!r}."
+                )
+
+
+def _require_expected_markers(
+    *,
+    adata: AnnData,
+    old_panel: PNAAntibodyPanel,
+    new_panel: PNAAntibodyPanel,
+    clone_map: dict[str, str],
+    collapsed: bool,
+) -> None:
+    """Raise when a patch bump is missing a marker the file should still contain.
+
+    After sample calling, hashing clones may be absent when the file is
+    collapsed. A missing non-hashing marker still fails.
+    """
+    var_names = {str(name) for name in adata.var_names}
+    old_hashing = old_panel.hashing_marker_ids
+    new_hashing = new_panel.hashing_marker_ids
+    old_markers = {str(marker_id) for marker_id in old_panel.markers}
+    missing: list[str] = []
+    for marker_id in old_panel.markers:
+        marker = str(marker_id)
+        if marker in var_names or marker in clone_map:
+            continue
+        if collapsed and marker in old_hashing:
+            continue
+        missing.append(marker)
+    for marker_id in new_panel.markers:
+        marker = str(marker_id)
+        if marker in var_names or marker in old_markers:
+            continue
+        old_ids = [old for old, new in clone_map.items() if new == marker]
+        if any(old in var_names for old in old_ids):
+            continue
+        if collapsed and (
+            marker in new_hashing or any(old in old_hashing for old in old_ids)
+        ):
+            continue
+        missing.append(marker)
+    if missing:
+        raise ValueError(
+            "Row count mismatch in automatic panel patch version bump. "
+            f"Missing markers: {sorted(set(missing))[:5]}"
         )
-        adata.uns["panel_metadata"] = self.panel_2.metadata.model_dump()
-        adata.uns["panel_metadata"]["panel_columns"] = self.panel_2.df.columns.tolist()
-        return adata
+
+
+def _merge_renames(target: dict[str, str], extra: dict[str, str]) -> None:
+    """Copy renames into ``target``, rejecting two destinations for one marker."""
+    for old, new in extra.items():
+        if old in target and target[old] != new:
+            raise ValueError(
+                f"Marker {old!r} is renamed to both {target[old]!r} and {new!r}."
+            )
+        if old != new:
+            target[old] = new

@@ -9,6 +9,7 @@ import copy
 import pandas as pd
 import pytest
 
+from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.assay import PNARegionType, get_position_in_parent
 from pixelator.pna.config.config_class import (
     PNAConfig,
@@ -17,6 +18,31 @@ from pixelator.pna.config.config_class import (
 )
 from pixelator.pna.config.config_instance import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
+
+
+def test_add_panel_rejects_multiple_sources():
+    """A config panel is one CSV, so a concatenation cannot be registered."""
+
+    def panel(name: str, marker: str, sequence: str) -> PNAAntibodyPanel:
+        frame = pd.DataFrame(
+            [
+                {
+                    "marker_id": marker,
+                    "control": False,
+                    "sequence_1": sequence,
+                    "sequence_2": sequence,
+                }
+            ]
+        ).set_index("marker_id")
+        return PNAAntibodyPanel(
+            frame, AntibodyPanelMetadata(name=name, version="1.0.0")
+        )
+
+    combined = PNAAntibodyPanel.concatenate(
+        [panel("base", "CD3", "AAAA"), panel("addon", "CD19", "CCCC")]
+    )
+    with pytest.raises(ValueError, match="single-source"):
+        PNAConfig().add_panel(combined)
 
 
 def test_config_creation():

@@ -18,7 +18,7 @@ from pixelator.common.utils import (
 )
 from pixelator.pna import read
 from pixelator.pna.cli.common import output_option
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.pixeldataset.io import read_dataset_panel
 from pixelator.pna.sample_calling import (
     create_final_report,
     sample_calling,
@@ -99,10 +99,14 @@ def sample_calling_cli(
     pool_name = Path(input_pxl_file).name.split(".")[0]
     undetermined_sample_name = f"{pool_name}_undetermined"
 
-    panel_info = PNAAntibodyPanel.from_pxl_dataset(read(input_pxl_file))
-    hashing_antibodies_in_panel = set(
-        panel_info.df[panel_info.df["sample_hashing"] == "yes"].index.to_list()
-    )
+    panel = read_dataset_panel(read(input_pxl_file))
+    if "sample_hashing" not in panel.df.columns:
+        raise ValueError(
+            "Sample calling requires a sample_hashing column on the panel "
+            "so hashing markers can be identified. This panel has no "
+            "sample_hashing column."
+        )
+    hashing_antibodies_in_panel = panel.hashing_marker_ids
     samplesheet_df = pl.read_csv(samplesheet)
     if "undetermined" in samplesheet_df["sample"].to_list():
         raise ValueError(

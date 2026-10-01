@@ -129,15 +129,19 @@ class TestPNAPixelDataset:
         """
         assert isinstance(pxl_dataset.view, PixelDataViewer)
 
-    def test_adata(self, pxl_dataset: PNAPixelDataset, adata_data):
+    def test_adata(self, pxl_dataset: PNAPixelDataset, adata_data, panel):
         """Verify adata.
 
         Args:
             adata_data: adata data.
             pxl_dataset: Pxl dataset.
+            panel: panel.
         """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
+        adata_data.var = adata_data.var.join(
+            panel.df.reindex(adata_data.var_names), how="left"
+        )
 
         adata = pxl_dataset.adata(add_clr_transform=False, add_log1p_transform=False)
         adata_assert_equal(adata, adata_data)
@@ -187,7 +191,7 @@ class TestPNAPixelDataset:
         assert metadata.keys() == {"test_sample"}
         assert metadata["test_sample"]["sample_name"] == "test_sample"
         assert metadata["test_sample"]["version"] == "0.1.0"
-        assert metadata["test_sample"]["panel_name"] == "custom_panel"
+        assert "panel_name" not in metadata["test_sample"]
 
     def test_metadata_returns_empty_dict_when_metadata_table_is_empty(
         self,

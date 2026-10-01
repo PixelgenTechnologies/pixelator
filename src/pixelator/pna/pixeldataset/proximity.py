@@ -178,6 +178,7 @@ class Proximity:
             # to execute the analytical proximity query.
             session.load_stochastic_extension()
             df = session.execute_lazy(query).collect()
+        df = self._view.apply_marker_renames(df, ("marker_1", "marker_2"))
         return self._post_process(df)
 
     def __str__(self) -> str:

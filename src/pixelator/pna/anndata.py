@@ -30,18 +30,10 @@ def calculate_antibody_metrics(counts_df):
     return pd.concat([total_antibody, relative_antibody, components_detected], axis=1)
 
 
-def add_panel_information(adata: AnnData, panel: PNAAntibodyPanel) -> AnnData:
-    """Add panel data to var."""
-    adata.var = adata.var.join(panel.df, how="left")
-
-    adata.uns["panel_metadata"] = panel.metadata.model_dump()
-    adata.uns["panel_metadata"]["panel_columns"] = list(panel.df.columns)
-
-    return adata
-
-
 def pna_edgelist_to_anndata(
-    pixel_connection: duckdb.DuckDBPyConnection, panel: PNAAntibodyPanel
+    pixel_connection: duckdb.DuckDBPyConnection,
+    panel: PNAAntibodyPanel,
+    markers: list[str] | None = None,
 ) -> AnnData:
     """Build an AnnData object from a DuckDB connection to a pixel file and a panel object.
 
@@ -49,6 +41,9 @@ def pna_edgelist_to_anndata(
         pixel_connection: A DuckDB connection to a pixel file. The connection must contain an 'edgelist' table
             with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
         panel: The antibody panel object containing marker metadata.
+        markers: Marker ids to use as the count-matrix columns. Defaults to
+            every marker on ``panel``. Denoise passes the markers already in
+            ``var`` so hashing clones removed by sample calling are not added back.
 
     Returns:
         An AnnData object with counts and panel information.
@@ -73,10 +68,11 @@ def pna_edgelist_to_anndata(
         .tolist()
     )
 
+    marker_list = list(panel.markers if markers is None else markers)
     n_components = len(components)
-    n_markers = len(panel.markers)
+    n_markers = len(marker_list)
     component_to_idx = {c: i for i, c in enumerate(components)}
-    marker_to_idx = {m: i for i, m in enumerate(panel.markers)}
+    marker_to_idx = {m: i for i, m in enumerate(marker_list)}
 
     X = np.zeros((n_components, n_markers), dtype=np.uint32)
     n_umi1_arr = np.zeros(n_components, dtype=np.uint64)
@@ -152,7 +148,7 @@ def pna_edgelist_to_anndata(
     node_counts_df = pd.DataFrame(
         X,
         index=component_index,
-        columns=pd.Index(panel.markers, name="marker_id"),
+        columns=pd.Index(marker_list, name="marker_id"),
     )
 
     logger.debug("Computing component metrics.")
@@ -182,7 +178,7 @@ def pna_edgelist_to_anndata(
 
     logger.debug("Computing antibody metrics.")
     antibody_metrics_df = calculate_antibody_metrics(counts_df=node_counts_df)
-    antibody_metrics_df = antibody_metrics_df.reindex(index=panel.markers, fill_value=0)
+    antibody_metrics_df = antibody_metrics_df.reindex(index=marker_list, fill_value=0)
     antibody_metrics_df.index.name = "marker_id"
     # Do a dtype conversion of the columns here since AnnData cannot handle
     # a pyarrow arrays.
@@ -198,10 +194,17 @@ def pna_edgelist_to_anndata(
         var=antibody_metrics_df,
     )
 
-    adata = add_panel_information(adata, panel)
-
     total_marker_counts = node_counts_df.sum(axis=1)
-    isotype_markers = adata.var[adata.var["control"]].index
+    control = panel.df["control"]
+    if pd.api.types.is_bool_dtype(control):
+        control_mask = control.fillna(False).astype(bool)
+    else:
+        control_mask = control.astype(str).str.lower().eq("yes")
+    isotype_markers = [
+        marker
+        for marker in control_mask.index[control_mask]
+        if marker in node_counts_df.columns
+    ]
     isotype_counts = node_counts_df[isotype_markers].sum(axis=1)
     adata.obs["isotype_fraction"] = isotype_counts / total_marker_counts
 
