@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `single-cell-pna demux`, `collapse`, and `graph` accept repeated `--panel` options. The panels are concatenated, and `marker_id`, `sequence_1`, and `sequence_2` must be unique across the result.
 - The PNA graph step now peels the core-1 layer off the edgelist before fast label propagation and Leiden,
   then reattaches it to the resolved components in an iterative absorption phase that runs until no more
   UMIs can be absorbed. This improves runtime by 2x and lower memory usage in some scenarios.
@@ -23,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
 ### Changed
+- New `.pxl` files store the antibody panel in the `panels` and `panel_sources` tables. Panel columns are joined onto the AnnData in memory when the file is read, and are not written to `var`. `uns['panel_metadata']` is no longer written, and pixel-file metadata no longer includes `panel_name` or `panel_version`.
+- When several `.pxl` files are read together, each panel source is updated to the newest patch those files carry, matching on name, product, and major.minor. A source that is not already on a file is left alone.
+- `PNAConfig.add_panel` only accepts a panel with a single source.
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
@@ -35,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when one exists.
 
 ### Removed
+- `PNAAntibodyPanel.from_adata`. Panels are read from the `.pxl` file. Files from pixelator 0.22.0 through 0.30.0 are still read from `uns['panel_metadata']` and `var`. Denoise still uses `panel_name` for files from before 0.22.0.
 - Stale nf-core/pixelator integration tests (`task test-nf-core-pixelator` and
   `.github/workflows/nf-core-pixelator-tests.yml`).
 - The `fruchterman_reingold`, `fruchterman_reingold_3d`, `kamada_kawai`, and
@@ -51,6 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   passed directly to native community detection, and the recovered components are unchanged.
 
 ### Fixed
+- A panel patch bump renames markers in the edgelist, proximity, and layouts, not only in `var`.
+- A panel patch bump of a sample-called file no longer fails because hashing clones are missing from `var`. A missing non-hashing marker still fails.
+- Denoise rebuilds the count matrix from the markers already in `var`, so hashing clones removed by sample calling do not come back. The full panel is still stored in the panel tables.
 - `coarsened_pmds_layout` sizes PMDS pivots from the full graph when Leiden
   yields too few communities, so a valid low `pivots` no longer fails
   `pmds_layout`'s `0.2 * n` lower bound.
