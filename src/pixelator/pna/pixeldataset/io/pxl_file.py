@@ -182,20 +182,18 @@ def read_dataset_panel(dataset: PNAPixelDataset) -> PNAAntibodyPanel:
     newest patch of each source they share.
 
     Raises:
-        KeyError: If a file has no panel. Pixelator 0.22.0 through 0.30.0
+        ValueError: If a file has no panel. Pixelator 0.22.0 through 0.30.0
             stored it in ``uns['panel_metadata']``. Later files store it in
             the ``panels`` and ``panel_sources`` tables. Earlier files have
-            neither.
+            neither and must be rerun with a current version of the software.
     """
     panels = []
     for path in dataset.view.sample_to_file_mappings.values():
         panel = PxlFile(path).read_panel()
         if panel is None:
-            raise KeyError(
-                f"{path} has no panel. Pixelator 0.22.0 through 0.30.0 "
-                "stored it in uns['panel_metadata']. Later files store it "
-                "in the panels and panel_sources tables. Earlier files "
-                "have neither."
+            raise ValueError(
+                f"{path} was written before pixelator 0.22.0 and has no panel. "
+                "Rerun this sample with a current version of the software."
             )
         panels.append(panel)
     if len(panels) == 1:

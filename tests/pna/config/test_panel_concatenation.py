@@ -326,6 +326,21 @@ def test_patch_bump_is_per_source_and_skips_collapsed_hashing_clones():
     assert "B2M-1" in upgraded[0].markers
 
 
+def test_read_dataset_panel_rejects_a_file_from_before_0_22(tmp_path: Path):
+    path = tmp_path / "old.pxl"
+    with PixelFileWriter(path) as writer:
+        writer.write_metadata({"sample_name": "old", "panel_name": "base"})
+        connection = writer.get_connection()
+        connection.execute("CREATE TABLE edgelist (umi1 INTEGER)")
+        connection.execute('CREATE TABLE "__adata__X" (index VARCHAR)')
+        connection.execute('CREATE TABLE "__adata__obs" (index VARCHAR)')
+        connection.execute('CREATE TABLE "__adata__var" (index VARCHAR)')
+        connection.execute('CREATE TABLE "__adata__uns" (value JSON)')
+
+    with pytest.raises(ValueError, match="current version of the software"):
+        read_dataset_panel(read(path))
+
+
 def test_pxl_fixture_roundtrip(pxl_file):
     panel = read_dataset_panel(read(pxl_file))
     assert panel.name == "test-pna-panel"
