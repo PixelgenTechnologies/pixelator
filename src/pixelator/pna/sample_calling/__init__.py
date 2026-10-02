@@ -4,7 +4,6 @@ Copyright © 2025 Pixelgen Technologies AB.
 """
 
 import logging
-import re
 import tempfile
 from itertools import chain
 from pathlib import Path
@@ -20,9 +19,9 @@ import polars as pl
 from pixelator import __version__
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
 from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanel, collapsed_hashing_marker_id
 from pixelator.pna.pixeldataset import PNAPixelDataset
-from pixelator.pna.pixeldataset.io import PixelFileWriter
+from pixelator.pna.pixeldataset.io import PixelFileWriter, read_dataset_panel
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
 from pixelator.pna.sample_calling.report import SampleCallingTotalReport
 
@@ -209,6 +208,25 @@ def _add_original_hash_counts_to_obs(
             old_adata.obs[f"original_hash_counts_{ab}"] = 0
 
 
+def _count_markers_after_hash_collapse(
+    panel: PNAAntibodyPanel, hashing_antibodies: set[str]
+) -> list[str]:
+    """Return count-matrix markers after hashing ids collapse to their base name.
+
+    Hashing clones are left out. A collapsed base that is not already on the
+    panel is appended, so edgelist counts under that name are kept.
+    """
+    hashing = {str(marker) for marker in hashing_antibodies}
+    kept = [str(marker) for marker in panel.markers if str(marker) not in hashing]
+    present = set(kept)
+    for marker in sorted(hashing):
+        base = collapsed_hashing_marker_id(marker)
+        if base not in present:
+            kept.append(base)
+            present.add(base)
+    return kept
+
+
 def _build_post_sample_calling_anndata(
     con: duckdb.DuckDBPyConnection,
     old_adata: anndata.AnnData,
@@ -235,14 +253,15 @@ def _build_post_sample_calling_anndata(
         old_adata, hashing_antibody_mapping.hashing_antibodies
     )
 
-    # Create the anndata object and remove all panel hashing markers from var
-    new_adata = pna_edgelist_to_anndata(con, panel)
-    non_hashing_markers = [
-        marker
-        for marker in new_adata.var.index
-        if marker not in hashing_antibody_mapping.hashing_antibodies
-    ]
-    new_adata = new_adata[:, non_hashing_markers].copy()
+    # The edgelist already uses collapsed hashing ids (B2M-1 -> B2M). Include
+    # a collapsed base that the panel does not define, and leave the clones out.
+    new_adata = pna_edgelist_to_anndata(
+        con,
+        panel,
+        markers=_count_markers_after_hash_collapse(
+            panel, hashing_antibody_mapping.hashing_antibodies
+        ),
+    )
 
     new_adata = add_missing_adata_info(new_adata, old_adata)
     # `sample` is a reserved, transient column added when reading a
@@ -345,7 +364,7 @@ def sample_calling(
         enrichment_threshold,
         undetermined_sample_name,
     )
-    panel = PNAAntibodyPanel.from_pxl_dataset(input_pxl)
+    panel = read_dataset_panel(input_pxl)
 
     dehashed = hash_info.group_by("called_sample")
     output_files: list[Path] = []
@@ -360,8 +379,7 @@ def sample_calling(
             "sample_name": sample_name,
             "version": __version__,
             "technology": "single-cell-pna",
-            "panel_name": panel.name,
-            "panel_version": panel.version,
+            "hashing_collapsed": True,
         }
 
         nodes_to_remove = _find_nodes_to_remove(
@@ -390,7 +408,7 @@ def sample_calling(
                 {
                     "hashed_marker": hashed_markers,
                     "base_marker": [
-                        re.sub(r"-\d+$", "", marker) for marker in hashed_markers
+                        collapsed_hashing_marker_id(marker) for marker in hashed_markers
                     ],
                 }
             )
@@ -435,6 +453,7 @@ def sample_calling(
 
             with PixelFileWriter(target_path) as pxl_file_writer:
                 pxl_file_writer.write_metadata(metadata)
+                pxl_file_writer.write_panel(panel)
                 pxl_file_writer.write_edgelist(Path(tmp_edgelist_parquet.name))
                 pxl_file_writer.write_adata(adata)
             output_files.append(target_path)

@@ -12,6 +12,10 @@ import duckdb
 import polars as pl
 from anndata import AnnData
 
+from pixelator.pna.config.panel_tables import (
+    stored_panel_marker_columns,
+    write_panel_tables,
+)
 from pixelator.pna.utils import init_duckdb_conn
 
 
@@ -173,6 +177,10 @@ class PixelFileWriter:
     def write_adata(self, adata: AnnData) -> None:
         """Write the AnnData object to the PXL file.
 
+        When the panel tables are already on this file, marker columns from
+        that panel are left out of ``var``. Those columns are joined back
+        on read.
+
         Args:
             adata: The AnnData object to write.
 
@@ -191,6 +199,11 @@ class PixelFileWriter:
 
         X = adata.to_df().reset_index(names="index")
         var = adata.var.reset_index(names="index")
+        panel_columns = stored_panel_marker_columns(self._connection)
+        if panel_columns:
+            var = var.drop(
+                columns=[column for column in var.columns if column in panel_columns]
+            )
         obs = adata.obs.reset_index(names="index")
         uns = adata.uns
 
@@ -213,6 +226,14 @@ class PixelFileWriter:
                 CREATE TABLE __adata__obsm_{key} AS SELECT * FROM obsm_layer;
                 """,
             )
+
+    def write_panel(self, panel) -> None:
+        """Write ``panels`` and ``panel_sources`` for ``panel``.
+
+        Args:
+            panel: The antibody panel to store.
+        """
+        write_panel_tables(self.get_connection(), panel)
 
     def write_metadata(self, metadata: dict) -> None:
         """Write the metadata to the PXL file.

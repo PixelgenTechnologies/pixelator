@@ -11,6 +11,11 @@ from pandas.testing import assert_frame_equal
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import read
+from pixelator.pna.pixeldataset.io import read_dataset_panel
+
+
+def _one_metadata() -> AntibodyPanelMetadata:
+    return AntibodyPanelMetadata(name="test_panel", version="0.0.0")
 
 
 @pytest.fixture
@@ -65,7 +70,7 @@ def test_panel_properties(panel_df):
     Args:
         panel_df: panel df.
     """
-    panel = PNAAntibodyPanel(df=panel_df, metadata=None)
+    panel = PNAAntibodyPanel(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
@@ -80,7 +85,7 @@ def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
         AssertionError,
         match=r".*The marker_id column should not contain underscores.*Offending values:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanel(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
@@ -95,7 +100,7 @@ def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
         AssertionError,
         match=r".*The marker_id column should not contain white-spaces.*Offending values:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanel(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
@@ -110,7 +115,7 @@ def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
         AssertionError,
         match=r".*Invalid UniProt IDs found.*Please conform to the naming convention or remove the following IDs:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanel(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
@@ -120,7 +125,7 @@ def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
         panel_df: panel df.
     """
     panel_df.loc["marker1", "uniprot_id"] = "P05107;P15391"
-    PNAAntibodyPanel(df=panel_df, metadata=None)
+    PNAAntibodyPanel(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_ok_uniprotid_empty(panel_df):
@@ -130,7 +135,7 @@ def test_panel_validation_ok_uniprotid_empty(panel_df):
         panel_df: panel df.
     """
     panel_df.loc["marker1", "uniprot_id"] = ""
-    PNAAntibodyPanel(df=panel_df, metadata=None)
+    PNAAntibodyPanel(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_from_pxl(pxl_file):
@@ -139,7 +144,7 @@ def test_panel_from_pxl(pxl_file):
     Args:
         pxl_file: pxl file.
     """
-    panel = PNAAntibodyPanel.from_pxl_dataset(read(pxl_file))
+    panel = read_dataset_panel(read(pxl_file))
     assert panel.name == "test-pna-panel"
     assert panel.version == "0.1.0"
     assert panel.description == "Test R&D panel for RNA"

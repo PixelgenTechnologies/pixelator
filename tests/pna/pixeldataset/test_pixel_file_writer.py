@@ -2,9 +2,14 @@
 
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import polars as pl
 import pytest
+from anndata import AnnData
 
+from pixelator.common.config import AntibodyPanelMetadata
+from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 
 
@@ -129,3 +134,71 @@ class TestPixelFileWriter:
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
             writer.write_layouts(layout_parquet_path)
+
+    def test_write_adata_omits_panel_columns_already_stored_in_the_panel_tables(
+        self, tmp_path
+    ):
+        """Panel fields joined onto var in memory stay out of the written var."""
+        panel = PNAAntibodyPanel(
+            pd.DataFrame(
+                {
+                    "control": [False],
+                    "sequence_1": ["AAAA"],
+                    "sequence_2": ["AAAA"],
+                    "uniprot_id": ["P01730"],
+                },
+                index=pd.Index(["CD3"], name="marker_id"),
+            ),
+            AntibodyPanelMetadata(name="base", version="1.0.0", product="proxiome"),
+        )
+        adata = AnnData(
+            X=np.zeros((1, 1)),
+            obs=pd.DataFrame(index=["c1"]),
+            var=pd.DataFrame(
+                {
+                    "antibody_count": [1],
+                    "control": [False],
+                    "sequence_1": ["AAAA"],
+                    "sequence_2": ["AAAA"],
+                    "uniprot_id": ["P01730"],
+                },
+                index=pd.Index(["CD3"], name="marker_id"),
+            ),
+        )
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            writer.write_panel(panel)
+            writer.write_adata(adata)
+            columns = set(
+                writer.get_connection()
+                .execute("SELECT * FROM __adata__var LIMIT 0")
+                .fetchdf()
+                .columns
+            )
+        assert "antibody_count" in columns
+        assert "control" not in columns
+        assert "sequence_1" not in columns
+        assert "sequence_2" not in columns
+        assert "uniprot_id" not in columns
+
+    def test_write_adata_keeps_var_columns_when_no_panel_is_stored(self, tmp_path):
+        """A file without panel tables keeps whatever columns var already has."""
+        adata = AnnData(
+            X=np.zeros((1, 1)),
+            obs=pd.DataFrame(index=["c1"]),
+            var=pd.DataFrame(
+                {"antibody_count": [1], "control": [False]},
+                index=pd.Index(["CD3"], name="marker_id"),
+            ),
+        )
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            writer.write_adata(adata)
+            columns = set(
+                writer.get_connection()
+                .execute("SELECT * FROM __adata__var LIMIT 0")
+                .fetchdf()
+                .columns
+            )
+        assert "antibody_count" in columns
+        assert "control" in columns

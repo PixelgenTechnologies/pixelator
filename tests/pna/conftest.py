@@ -297,12 +297,12 @@ def create_pxl_file(
         writer.write_edgelist(edgelist_parquet_path)
         con = writer.get_connection()
         adata = pna_edgelist_to_anndata(con, panel=panel)
+        writer.write_panel(panel)
         writer.write_adata(adata)
         writer.write_metadata(
             {
                 "sample_name": sample_name,
                 "version": "0.1.0",
-                "panel_name": "custom_panel",
             }
         )
         if proximity_parquet_path:

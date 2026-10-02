@@ -29,7 +29,8 @@ from pixelator.pna.collapse.independent.collapser import (
 )
 from pixelator.pna.collapse.paired.collapser import MoleculeCollapser
 from pixelator.pna.collapse.utilities import split_collapse_inputs
-from pixelator.pna.config import load_antibody_panel, pna_config
+from pixelator.pna.config import pna_config
+from pixelator.pna.config.panel import load_antibody_panels
 from pixelator.pna.utils import get_demux_filename_info
 
 logger = logging.getLogger("collapse")
@@ -124,7 +125,7 @@ def collapse(
     sanity_check_inputs(input_files=input_files, allowed_extensions=("parquet",))
 
     assay = pna_config.get_assay(design)
-    panel = load_antibody_panel(pna_config, panel)
+    panel = load_antibody_panels(pna_config, panel)
 
     # create the output directory
     collapse_output = create_output_stage_dir(output, "collapse")
