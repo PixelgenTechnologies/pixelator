@@ -103,12 +103,41 @@ class Edgelist:
     def to_record_batches(
         self, batch_size: int = 1_000_000
     ) -> Iterable[pa.RecordBatch]:
-        """Get the edgelist as a stream of pyarrow RecordBatches."""
+        """Get the edgelist as a stream of pyarrow RecordBatches.
+
+        Marker ids are renamed the same way as :meth:`to_polars`.
+        """
         query = self._query_builder.edgelist_query(
             normalize_input_to_list(self.components)
         )
+        renames = self._view.marker_renames_by_sample()
+        needs_patch_rename = any(renames.values())
         with self._view.open() as session:
-            yield from session.execute_arrow_reader(query=query, batch_size=batch_size)
+            for batch in session.execute_arrow_reader(
+                query=query, batch_size=batch_size
+            ):
+                names = set(batch.schema.names)
+                if (
+                    not needs_patch_rename
+                    and "marker1" not in names
+                    and "marker2" not in names
+                ):
+                    yield batch
+                    continue
+                frame = pl.from_arrow(batch)
+                if not isinstance(frame, pl.DataFrame):
+                    yield batch
+                    continue
+                renamed = self._view.apply_marker_renames(
+                    self._handle_backwards_compatibility(frame.lazy()).collect(),
+                    ("marker_1", "marker_2"),
+                )
+                table = renamed.to_arrow()
+                batches = table.to_batches(max_chunksize=max(batch.num_rows, 1))
+                if batches:
+                    yield from batches
+                else:
+                    yield pa.RecordBatch.from_pylist([], schema=table.schema)
 
     def _iterator(self) -> Iterable[tuple[str, pl.LazyFrame]]:
         with self._view.open() as session:

@@ -344,6 +344,43 @@ class TestTryBumpAdataPanelVersion:
         assert pairs == {("MarkerANew", "MarkerANew")}
         assert len(proximity) == 2
 
+    def test_record_batches_use_renamed_marker_ids(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        panel: PNAAntibodyPanel,
+    ):
+        """The streamed edgelist uses the same marker ids as ``to_polars``."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=panel_old,
+            panel_new=panel_new,
+        )
+        streamed = pl.concat(
+            [pl.from_arrow(batch) for batch in dataset.edgelist().to_record_batches()],
+            how="vertical",
+        )
+        loaded = dataset.edgelist().to_polars()
+        assert streamed.sort(streamed.columns).equals(loaded.sort(loaded.columns))
+        assert (
+            "MarkerANew"
+            in streamed["marker_1"].to_list() + streamed["marker_2"].to_list()
+        )
+
     @pytest.mark.parametrize(
         "new_version,new_product",
         [

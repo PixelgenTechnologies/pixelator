@@ -74,7 +74,7 @@ class Proximity:
         )
 
     def _markers_for_query(self) -> list[str] | dict[str, list[str]] | None:
-        """Return on-disk marker ids for the caller's filter.
+        """Return on-disk stored marker ids for the caller's filter.
 
         One shared list is enough when every sample stores the same ids.
         Otherwise each sample keeps its own list, because a patch bump can
