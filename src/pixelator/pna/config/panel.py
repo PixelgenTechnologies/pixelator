@@ -255,7 +255,8 @@ class PNAAntibodyPanel:
         One panel is returned unchanged. Several panels are stacked in the
         given order. The result keeps every input source.
         ``marker_id``, ``sequence_1``, and ``sequence_2`` must be unique
-        across the concatenation.
+        across the concatenation. An optional column present on only some
+        sources is blank on the others, the same as an empty cell in a panel CSV.
         """
         if not panels:
             raise ValueError("At least one panel is required to concatenate.")
@@ -280,7 +281,7 @@ class PNAAntibodyPanel:
                     pd.Series(new_source_id, index=part.index, dtype="int64")
                 )
 
-        df = pd.concat(frames)
+        df = pd.concat(cls._align_optional_columns(frames))
         df.index.name = cls._INDEX_COLUMN
         if "control" in df.columns:
             df["control"] = df["control"].map(
@@ -293,6 +294,61 @@ class PNAAntibodyPanel:
             sources=sources,
             marker_source_ids=marker_source_ids.astype("int64"),
         )
+
+    @staticmethod
+    def _align_optional_columns(frames: list[pd.DataFrame]) -> list[pd.DataFrame]:
+        """Give every frame the same columns before they are stacked.
+
+        ``pd.concat`` inserts NaN where a column exists on only some frames.
+        A blank UniProt id is an empty string, and a missing hashing flag is
+        false. Filling after the stack mixes those types and breaks validation.
+        """
+        columns = list(
+            dict.fromkeys(column for frame in frames for column in frame.columns)
+        )
+        missing_on_some = [
+            column
+            for column in columns
+            if any(column not in frame.columns for frame in frames)
+        ]
+        if not missing_on_some:
+            return frames
+        fills = {
+            column: PNAAntibodyPanel._missing_optional_value(frames, column)
+            for column in missing_on_some
+        }
+        aligned: list[pd.DataFrame] = []
+        for frame in frames:
+            missing = {
+                column: fill
+                for column, fill in fills.items()
+                if column not in frame.columns
+            }
+            if not missing:
+                aligned.append(frame)
+                continue
+            extra = pd.DataFrame(missing, index=frame.index)
+            aligned.append(pd.concat([frame, extra], axis=1))
+        return aligned
+
+    @staticmethod
+    def _missing_optional_value(frames: list[pd.DataFrame], column: str):
+        """Return the blank value for a column some sources do not have."""
+        if column == "control":
+            return False
+        present = [
+            frame[column].dropna() for frame in frames if column in frame.columns
+        ]
+        values = pd.concat(present) if present else pd.Series(dtype=object)
+        if values.empty:
+            return ""
+        if pd.api.types.is_bool_dtype(values) or all(
+            isinstance(value, bool) for value in values
+        ):
+            return False
+        if pd.api.types.is_numeric_dtype(values):
+            return 0
+        return ""
 
     def _single_metadata(self) -> AntibodyPanelMetadata | None:
         """Return metadata when this panel has exactly one source."""

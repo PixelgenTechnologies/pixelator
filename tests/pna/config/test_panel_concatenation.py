@@ -107,6 +107,28 @@ def test_concatenate_one_panel_keeps_its_metadata():
     assert panel.name == "base"
 
 
+def test_concatenate_blanks_optional_columns_missing_from_one_source():
+    with_uniprot = _panel(
+        "base",
+        "1.0.0",
+        [_marker("CD3", "AAAA", uniprot_id="P01730")],
+    )
+    without_uniprot = _panel("addon", "1.0.0", [_marker("CD19", "CCCC")])
+
+    combined = PNAAntibodyPanel.concatenate([with_uniprot, without_uniprot])
+
+    assert combined.df.loc["CD3", "uniprot_id"] == "P01730"
+    assert combined.df.loc["CD19", "uniprot_id"] == ""
+
+    hashing = _panel(
+        "hashing",
+        "1.0.0",
+        [_marker("B2M-1", "GGGG", sample_hashing=True)],
+    )
+    combined_hashing = PNAAntibodyPanel.concatenate([without_uniprot, hashing])
+    assert combined_hashing.hashing_marker_ids == {"B2M-1"}
+
+
 def test_concatenate_rejects_duplicate_marker_and_sequence():
     left = _panel("base", "1.0.0", [_marker("CD3", "AAAA")])
     same_marker = _panel("addon", "1.0.0", [_marker("CD3", "CCCC")])
