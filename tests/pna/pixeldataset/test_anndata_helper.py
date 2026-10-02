@@ -3,8 +3,10 @@
 Copyright © 2025 Pixelgen Technologies AB.
 """
 
+import shutil
 from pathlib import Path
 
+import duckdb
 import numpy as np
 import polars as pl
 import pytest
@@ -415,6 +417,27 @@ class TestTryBumpAdataPanelVersion:
             "MarkerANew"
             in streamed["marker_1"].to_list() + streamed["marker_2"].to_list()
         )
+
+    def test_record_batches_rename_legacy_marker_columns(
+        self, tmp_path: Path, pxl_file: Path
+    ):
+        """A legacy edgelist stream uses the same column names as ``to_polars``."""
+        legacy = tmp_path / "legacy.pxl"
+        shutil.copy(pxl_file, legacy)
+        with duckdb.connect(str(legacy)) as connection:
+            connection.execute("ALTER TABLE edgelist RENAME COLUMN marker_1 TO marker1")
+            connection.execute("ALTER TABLE edgelist RENAME COLUMN marker_2 TO marker2")
+        dataset = PNAPixelDataset.from_files(legacy)
+        streamed = pl.concat(
+            [pl.from_arrow(batch) for batch in dataset.edgelist().to_record_batches()],
+            how="vertical",
+        )
+        loaded = dataset.edgelist().to_polars()
+        assert "marker_1" in streamed.columns
+        assert "marker_2" in streamed.columns
+        assert "marker1" not in streamed.columns
+        assert "marker2" not in streamed.columns
+        assert streamed.sort(streamed.columns).equals(loaded.sort(loaded.columns))
 
     @pytest.mark.parametrize(
         "new_version,new_product",

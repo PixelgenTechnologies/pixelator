@@ -99,12 +99,33 @@ class Edgelist:
     def to_record_batches(
         self, batch_size: int = 1_000_000
     ) -> Iterable[pa.RecordBatch]:
-        """Get the edgelist as a stream of pyarrow RecordBatches."""
+        """Get the edgelist as a stream of pyarrow RecordBatches.
+
+        Legacy ``marker1`` and ``marker2`` columns are renamed to
+        ``marker_1`` and ``marker_2``, matching :meth:`to_polars`.
+        """
         query = self._query_builder.edgelist_query(
             normalize_input_to_list(self.components)
         )
         with self._view.open() as session:
-            yield from session.execute_arrow_reader(query=query, batch_size=batch_size)
+            for batch in session.execute_arrow_reader(
+                query=query, batch_size=batch_size
+            ):
+                names = set(batch.schema.names)
+                if "marker1" not in names and "marker2" not in names:
+                    yield batch
+                    continue
+                frame = pl.from_arrow(batch)
+                if not isinstance(frame, pl.DataFrame):
+                    yield batch
+                    continue
+                renamed = self._handle_backwards_compatibility(frame.lazy()).collect()
+                table = renamed.to_arrow()
+                batches = table.to_batches(max_chunksize=max(batch.num_rows, 1))
+                if batches:
+                    yield from batches
+                else:
+                    yield pa.RecordBatch.from_pylist([], schema=table.schema)
 
     def _iterator(self) -> Iterable[tuple[str, pl.LazyFrame]]:
         with self._view.open() as session:
