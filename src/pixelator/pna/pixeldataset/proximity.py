@@ -73,20 +73,15 @@ class Proximity:
             )
         )
 
-    def _markers_for_query(self) -> list[str] | dict[str, list[str]] | None:
-        """Return on-disk stored marker ids for the caller's filter.
+    def _markers_for_query(self) -> list[str] | None:
+        """Return the caller's marker names.
 
-        One shared list is enough when every sample stores the same ids.
-        Otherwise each sample keeps its own list, because a patch bump can
-        rename a marker in only some of the files.
+        The session view already exposes bumped marker ids, so a filter uses
+        those names directly.
         """
         if self._markers is None:
             return None
-        by_sample = self._view.stored_markers_by_sample(self._markers)
-        unique = {tuple(ids) for ids in by_sample.values()}
-        if len(unique) <= 1:
-            return list(next(iter(unique))) if unique else sorted(self._markers)
-        return by_sample
+        return sorted(self._markers)
 
     def __len__(self) -> int:
         """Get the number of proximity scores."""
@@ -193,7 +188,6 @@ class Proximity:
             # to execute the analytical proximity query.
             session.load_stochastic_extension()
             df = session.execute_lazy(query).collect()
-        df = self._view.apply_marker_renames(df, ("marker_1", "marker_2"))
         return self._post_process(df)
 
     def __str__(self) -> str:

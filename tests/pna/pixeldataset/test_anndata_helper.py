@@ -12,7 +12,7 @@ import pytest
 from pixelator.common.utils.testing import adata_assert_equal
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import PNAPixelDataset
-from pixelator.pna.pixeldataset.io import read_dataset_panel
+from pixelator.pna.pixeldataset.io import Query, read_dataset_panel
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from tests.pna.conftest import create_pxl_file
 
@@ -288,6 +288,41 @@ class TestTryBumpAdataPanelVersion:
 
         assert (adata_old[:, "MarkerC"].X == bumped[0][:, "MarkerC"].X).all()
         assert (adata_new[:, "MarkerC"].X == bumped[1][:, "MarkerC"].X).all()
+
+    def test_edgelist_view_exposes_bumped_marker_ids(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        panel: PNAAntibodyPanel,
+    ):
+        """The session edgelist uses bumped ids before any later query."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=panel_old,
+            panel_new=panel_new,
+        )
+        with dataset.view.open() as session:
+            frame = session.execute_eager(
+                Query("SELECT sample, marker_1, marker_2 FROM edgelist", {})
+            )
+        old = frame.filter(pl.col("sample") == "sample_old")
+        old_ids = set(old["marker_1"].to_list() + old["marker_2"].to_list())
+        assert "MarkerA" not in old_ids
+        assert "MarkerANew" in old_ids
 
     def test_proximity_filter_uses_renamed_marker_ids(
         self,

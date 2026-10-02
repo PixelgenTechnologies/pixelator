@@ -78,13 +78,10 @@ class Edgelist:
             normalize_input_to_list(self.components)
         )
         with self._view.open() as session:
-            df = self._view.apply_marker_renames(
-                self._handle_backwards_compatibility(
-                    session.execute_lazy(query)
-                ).collect(),
-                ("marker_1", "marker_2"),
-            ).to_pandas()
-        return df
+            df = self._handle_backwards_compatibility(
+                session.execute_lazy(query)
+            ).collect()
+        return df.to_pandas()
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
@@ -92,12 +89,9 @@ class Edgelist:
             normalize_input_to_list(self.components)
         )
         with self._view.open() as session:
-            df = self._view.apply_marker_renames(
-                self._handle_backwards_compatibility(
-                    session.execute_lazy(query)
-                ).collect(),
-                ("marker_1", "marker_2"),
-            )
+            df = self._handle_backwards_compatibility(
+                session.execute_lazy(query)
+            ).collect()
         return df
 
     def to_record_batches(
@@ -105,33 +99,26 @@ class Edgelist:
     ) -> Iterable[pa.RecordBatch]:
         """Get the edgelist as a stream of pyarrow RecordBatches.
 
-        Marker ids are renamed the same way as :meth:`to_polars`.
+        Marker ids already use the patch bump from the session view.
+        Legacy ``marker1`` and ``marker2`` columns are renamed to
+        ``marker_1`` and ``marker_2``.
         """
         query = self._query_builder.edgelist_query(
             normalize_input_to_list(self.components)
         )
-        renames = self._view.marker_renames_by_sample()
-        needs_patch_rename = any(renames.values())
         with self._view.open() as session:
             for batch in session.execute_arrow_reader(
                 query=query, batch_size=batch_size
             ):
                 names = set(batch.schema.names)
-                if (
-                    not needs_patch_rename
-                    and "marker1" not in names
-                    and "marker2" not in names
-                ):
+                if "marker1" not in names and "marker2" not in names:
                     yield batch
                     continue
                 frame = pl.from_arrow(batch)
                 if not isinstance(frame, pl.DataFrame):
                     yield batch
                     continue
-                renamed = self._view.apply_marker_renames(
-                    self._handle_backwards_compatibility(frame.lazy()).collect(),
-                    ("marker_1", "marker_2"),
-                )
+                renamed = self._handle_backwards_compatibility(frame.lazy()).collect()
                 table = renamed.to_arrow()
                 batches = table.to_batches(max_chunksize=max(batch.num_rows, 1))
                 if batches:
@@ -160,10 +147,7 @@ class Edgelist:
                 # here is that otherwise the object is not pickable, and thus not handled
                 # well by the analysis manager. We should revisit this in the future.
                 component_id=name,
-                frame=self._view.apply_marker_renames(
-                    self._handle_backwards_compatibility(df).collect(),
-                    ("marker_1", "marker_2"),
-                ).lazy(),
+                frame=self._handle_backwards_compatibility(df).collect().lazy(),
             )
 
     def __str__(self) -> str:
