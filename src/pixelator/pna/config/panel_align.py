@@ -1,78 +1,14 @@
-"""Apply marker renames from a panel patch bump onto stored data.
+"""Apply a panel patch bump to AnnData marker ids.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-import polars as pl
-
 if TYPE_CHECKING:
-    import pandas as pd
     from anndata import AnnData
-
-
-def stored_marker_ids(requested: set[str], old_to_new: dict[str, str]) -> set[str]:
-    """Return the stored ids for marker names already renamed in memory.
-
-    ``old_to_new`` maps a stored id to the id a patch bump exposes. A name
-    with no entry is already the stored id.
-    """
-    new_to_old: dict[str, set[str]] = {}
-    for old, new in old_to_new.items():
-        if old == new:
-            continue
-        new_to_old.setdefault(new, set()).add(old)
-    stored: set[str] = set()
-    for name in requested:
-        if name in new_to_old:
-            stored.update(new_to_old[name])
-        else:
-            stored.add(name)
-    return stored
-
-
-def apply_marker_renames_to_frame(
-    df: pd.DataFrame | object,
-    renames_by_sample: dict[str, dict[str, str]],
-    columns: Sequence[str],
-):
-    """Rename marker columns, using ``sample`` when maps differ across files."""
-    if not isinstance(df, pl.DataFrame):
-        raise TypeError("Expected a polars DataFrame.")
-    active = {
-        sample: mapping for sample, mapping in renames_by_sample.items() if mapping
-    }
-    if df.is_empty() or not active:
-        return df
-
-    rows = [
-        {"__sample": sample, "__old": old, "__new": new}
-        for sample, mapping in active.items()
-        for old, new in mapping.items()
-    ]
-    map_df = pl.DataFrame(rows)
-    has_sample = "sample" in df.columns
-    for column in columns:
-        if column not in df.columns:
-            continue
-        if has_sample:
-            joined = df.join(
-                map_df,
-                left_on=["sample", column],
-                right_on=["__sample", "__old"],
-                how="left",
-            )
-            df = joined.with_columns(
-                pl.coalesce([pl.col("__new"), pl.col(column)]).alias(column)
-            ).drop("__new")
-        else:
-            only = next(iter(active.values()))
-            df = df.with_columns(pl.col(column).replace(only).alias(column))
-    return df
 
 
 def apply_marker_renames_to_adata(adata: AnnData, mapping: dict[str, str]) -> None:

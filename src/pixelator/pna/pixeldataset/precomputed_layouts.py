@@ -126,7 +126,6 @@ class PreComputedLayouts:
             try:
                 if self._add_marker_counts:
                     layouts = session.execute_eager(query)
-                    layouts = self._view.apply_marker_renames(layouts, ("marker",))
                     layouts = self._pivot_marker_table(layouts)
                     layouts = layouts.drop(["umi", "marker"], strict=False)
                 else:
@@ -158,7 +157,6 @@ class PreComputedLayouts:
                 try:
                     if self._add_marker_counts:
                         layouts = session.execute_eager(query)
-                        layouts = self._view.apply_marker_renames(layouts, ("marker",))
                         layouts = self._pivot_marker_table(layouts)
                         layouts = layouts.drop(["umi", "marker"], strict=False)
                     else:

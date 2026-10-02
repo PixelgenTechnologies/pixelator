@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable
 
 import duckdb
 import polars as pl
@@ -18,8 +18,6 @@ from pixelator.pna.config.panel import PNAAntibodyPanel, align_panel_patches
 from pixelator.pna.config.panel_align import (
     apply_hash_count_renames,
     apply_marker_renames_to_adata,
-    apply_marker_renames_to_frame,
-    stored_marker_ids,
 )
 
 from .pxl_file import PXL_FILE_MANDATOR_TABLES, PXL_FILE_OTHER_TABLES, PxlFile
@@ -30,6 +28,31 @@ _SESSION_SQL_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\Z")
 
 # Characters / substrings that must not appear in sample labels embedded as '...' literals.
 _SAMPLE_LABEL_UNSAFE_RE = re.compile(r"['\";\x00-\x1f\\]|--|/\*|\*/")
+
+# Marker-id columns in the union views. A patch bump renames these in the
+# view, so later queries see the bumped ids. The attached files are unchanged.
+_TABLE_MARKER_COLUMNS: dict[str, tuple[str, ...]] = {
+    "edgelist": ("marker_1", "marker_2", "marker1", "marker2"),
+    "proximity": ("marker_1", "marker_2"),
+    "layouts": ("marker",),
+}
+
+
+def _sql_string_literal(value: str) -> str:
+    """Return a single-quoted SQL literal."""
+    return "'" + value.replace("'", "''") + "'"
+
+
+def _marker_rename_expr(column: str, old_to_new: dict[str, str]) -> str | None:
+    """Return a CASE expression that maps stored marker ids to bumped ids."""
+    branches = [
+        f"WHEN {_sql_string_literal(old)} THEN {_sql_string_literal(new)}"
+        for old, new in old_to_new.items()
+        if old != new
+    ]
+    if not branches:
+        return None
+    return f"CASE {column} {' '.join(branches)} ELSE {column} END"
 
 
 def _validate_session_sql_identifier(value: str, *, what: str) -> None:
@@ -177,12 +200,27 @@ class PixelDataViewer:
         }
 
     def open(self) -> PixelDataViewerSession:
-        """Return a new session with an open DuckDB connection (context manager or ``close()``)."""
+        """Return a session whose marker columns use the patch bump.
+
+        Edgelist, proximity, and layouts are renamed in the session views.
+        The files on disk are not rewritten. One sample has nothing to bump
+        against, so that session shows the stored ids. Computing the bump
+        reads AnnData through a session that still shows the stored ids.
+        """
+        renames: dict[str, dict[str, str]] = {}
+        if len(self._db_to_file_mapping) >= 2:
+            renames = self.marker_renames_by_sample()
+        return self._open_session(renames)
+
+    def _open_session(
+        self, marker_renames: dict[str, dict[str, str]] | None = None
+    ) -> PixelDataViewerSession:
+        """Open a session, optionally renaming marker columns in its views."""
         sources: list[tuple[str, Path, str]] = [
             (sample_name, pxl_file.path, self._get_normalized_name(sample_name))
             for sample_name, pxl_file in self._db_to_file_mapping.items()
         ]
-        return PixelDataViewerSession(sources)  # type: ignore[arg-type]
+        return PixelDataViewerSession(sources, marker_renames=marker_renames)  # type: ignore[arg-type]
 
     def sample_names(self) -> list[str]:
         """Return the list of sample names known to the view."""
@@ -203,24 +241,6 @@ class PixelDataViewer:
                 samples, self._read_adatas_for_panel_patch(samples)
             )
         return dict(self._marker_renames or {})
-
-    def stored_markers_by_sample(self, markers: set[str]) -> dict[str, list[str]]:
-        """Return the stored marker ids for each sample.
-
-        ``markers`` are the names exposed after the in-memory patch bump.
-        The proximity tables still use the ids written in the file.
-        """
-        renames = self.marker_renames_by_sample()
-        return {
-            sample: sorted(stored_marker_ids(markers, renames.get(sample, {})))
-            for sample in self.sample_names()
-        }
-
-    def apply_marker_renames(self, df, columns: Sequence[str]):
-        """Rename marker columns in ``df`` using this view's patch-bump map."""
-        return apply_marker_renames_to_frame(
-            df, self.marker_renames_by_sample(), columns
-        )
 
     def apply_panel_patch_to_adatas(
         self,
@@ -250,7 +270,7 @@ class PixelDataViewer:
         from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 
         helper = AnnDataHelper(self)
-        with self.open() as session:
+        with self._open_session() as session:
             return [
                 helper._read_adata_from_sample(session=session, sample=sample)
                 for sample in samples
@@ -341,8 +361,17 @@ class PixelDataViewerSession:
     calls ``close()``). Each session uses its own connection.
     """
 
-    def __init__(self, sources: list[tuple[str, Path | str, str]]) -> None:
-        """Open a DuckDB connection and attach each PXL file in ``sources``."""
+    def __init__(
+        self,
+        sources: list[tuple[str, Path | str, str]],
+        marker_renames: dict[str, dict[str, str]] | None = None,
+    ) -> None:
+        """Open a DuckDB connection and attach each PXL file in ``sources``.
+
+        ``marker_renames`` maps each sample to its old-to-new marker ids.
+        The union views apply that map. An empty map leaves the stored ids.
+        """
+        self._marker_renames = marker_renames or {}
         normalized: list[tuple[str, Path, str]] = [
             (sample_name, Path(path), db_name) for sample_name, path, db_name in sources
         ]
@@ -369,6 +398,31 @@ class PixelDataViewerSession:
             query += f"ATTACH DATABASE '{path}' AS {db_name} (READ_ONLY);\n"
         connection.execute(query)
 
+    def _sample_select(
+        self,
+        sample_name: str,
+        db_name: str,
+        table_name: str,
+        columns: set[str],
+    ) -> str:
+        """Select one sample's table, renaming marker ids when this session has a map."""
+        mapping = self._marker_renames.get(sample_name, {})
+        replacements = []
+        for column in _TABLE_MARKER_COLUMNS.get(table_name, ()):
+            if column not in columns:
+                continue
+            expr = _marker_rename_expr(column, mapping)
+            if expr is not None:
+                replacements.append(f"{expr} AS {column}")
+        sample_sql = _sql_string_literal(sample_name)
+        if not replacements:
+            return f"SELECT *, {sample_sql} AS sample FROM {db_name}.{table_name}"
+        replaced = ", ".join(replacements)
+        return (
+            f"SELECT * REPLACE ({replaced}), {sample_sql} AS sample "
+            f"FROM {db_name}.{table_name}"
+        )
+
     def _simple_union_table_view(
         self,
         connection: duckdb.DuckDBPyConnection,
@@ -384,8 +438,12 @@ class PixelDataViewerSession:
             # see: https://github.com/duckdb/duckdb/issues/13069
             table_queries: list[str] = []
             for sample_name, _path, db_name in self._sources:
+                described = connection.execute(
+                    f"DESCRIBE {db_name}.{table_name}"
+                ).fetchall()
+                columns = {str(row[0]) for row in described}
                 table_queries.append(
-                    f"SELECT *, '{sample_name}' AS sample FROM {db_name}.{table_name}"
+                    self._sample_select(sample_name, db_name, table_name, columns)
                 )
             if not table_queries:
                 return

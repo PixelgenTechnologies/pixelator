@@ -3,69 +3,29 @@
 Copyright © 2026 Pixelgen Technologies AB
 """
 
-from collections.abc import Sequence
-
 from pixelator.pna.utils.utils import normalize_input_to_list
-
-
-def marker_filter_sql(
-    markers: list[str] | dict[str, list[str]] | None,
-    columns: Sequence[str],
-    *,
-    sample_column: str = "sample",
-) -> tuple[str, dict[str, object]]:
-    """Build a marker filter for the ids stored in the file.
-
-    A list applies to every sample. A dict gives each sample its own ids,
-    which is needed when a patch bump renamed markers in only some files.
-    ``sample_column`` names the sample column in that filter. Qualify it when
-    the query joins more than one table that has ``sample``.
-    """
-    if not markers:
-        return "TRUE", {}
-    if isinstance(markers, dict):
-        parts: list[str] = []
-        params: dict[str, object] = {}
-        for index, (sample, ids) in enumerate(markers.items()):
-            sample_key = f"marker_sample_{index}"
-            ids_key = f"markers_{index}"
-            params[sample_key] = sample
-            params[ids_key] = list(ids)
-            membership = " AND ".join(f"{column} IN ${ids_key}" for column in columns)
-            parts.append(f"({sample_column} = ${sample_key} AND {membership})")
-        return "(" + " OR ".join(parts) + ")", params
-    membership = " AND ".join(f"{column} IN $markers" for column in columns)
-    return f"({membership})", {"markers": list(markers)}
 
 
 def jcs_with_analytical_stats(
     components: str | list[str] | set[str] | None = None,
-    markers: list[str] | dict[str, list[str]] | None = None,
+    markers: str | list[str] | set[str] | None = None,
 ) -> tuple[str, dict]:
     """Construct a SQL query for calculating proximity join counts with analytical statistics.
 
     Args:
         components: A list of components to include in the analysis.
-        markers: Marker ids stored on disk. A dict gives each sample its own ids.
+        markers: A list of marker names to include in the analysis.
 
     Returns:
         A tuple containing the SQL query string and a dictionary of parameters.
     """
-    if not isinstance(markers, dict):
-        markers = normalize_input_to_list(markers)
+    markers = normalize_input_to_list(markers)
     components = normalize_input_to_list(components)
-    params: dict = {}
+    params = {}
     if components:
         params["components"] = components
-    observed_filter, marker_params = marker_filter_sql(
-        markers, ("marker_1", "marker_2")
-    )
-    expected_filter, _ = marker_filter_sql(
-        markers,
-        ("t1.marker_1", "t2.marker_2"),
-        sample_column="t1.sample",
-    )
-    params.update(marker_params)
+    if markers:
+        params["markers"] = markers
 
     get_current_edgelist = f"""
         current_edgelist AS (
@@ -152,7 +112,7 @@ def jcs_with_analytical_stats(
             ON t1.sample = t2.sample AND t1.component = t2.component
             JOIN group_edges ge
             ON t1.sample = ge.sample AND t1.component = ge.component
-            WHERE {expected_filter}
+            WHERE {"t1.marker_1 IN $markers AND t2.marker_2 IN $markers" if markers else "TRUE"}
         ),
         expected_agg AS (
             SELECT sample, component, marker_A, marker_B, SUM(exp_count_raw) as join_count_expected_mean, SQRT(SUM(exp_count_var)) as join_count_expected_sd
@@ -169,7 +129,7 @@ def jcs_with_analytical_stats(
                 GREATEST(marker_1, marker_2) as marker_B,
                 COUNT(*) as join_count
             FROM current_edgelist
-            WHERE {observed_filter}
+            WHERE {"marker_1 IN $markers AND marker_2 IN $markers" if markers else "TRUE"}
             GROUP BY sample, component, marker_A, marker_B
         )"""
 
