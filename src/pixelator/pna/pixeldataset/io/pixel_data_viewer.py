@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Sequence
 
 import duckdb
 import polars as pl
@@ -216,7 +216,7 @@ class PixelDataViewer:
             for sample in self.sample_names()
         }
 
-    def apply_marker_renames(self, df, columns: tuple[str, ...]):
+    def apply_marker_renames(self, df, columns: Sequence[str]):
         """Rename marker columns in ``df`` using this view's patch-bump map."""
         return apply_marker_renames_to_frame(
             df, self.marker_renames_by_sample(), columns

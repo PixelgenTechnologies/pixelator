@@ -5,6 +5,7 @@ Copyright © 2024 Pixelgen Technologies AB
 
 import functools
 import logging
+import os
 from pathlib import Path
 
 import click
@@ -139,7 +140,7 @@ def validate_panel(ctx, param, value):
     """
     if value is None:
         return value
-    if isinstance(value, str):
+    if isinstance(value, (str, os.PathLike)):
         return _validate_one_panel(value)
     return tuple(_validate_one_panel(item) for item in value)
 

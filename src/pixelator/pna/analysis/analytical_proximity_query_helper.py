@@ -3,12 +3,14 @@
 Copyright © 2026 Pixelgen Technologies AB
 """
 
+from collections.abc import Sequence
+
 from pixelator.pna.utils.utils import normalize_input_to_list
 
 
 def marker_filter_sql(
     markers: list[str] | dict[str, list[str]] | None,
-    columns: tuple[str, ...],
+    columns: Sequence[str],
 ) -> tuple[str, dict[str, object]]:
     """Build a marker filter for the ids stored in the file.
 

@@ -5,6 +5,7 @@ Copyright © 2026 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -37,7 +38,7 @@ def stored_marker_ids(requested: set[str], old_to_new: dict[str, str]) -> set[st
 def apply_marker_renames_to_frame(
     df: pd.DataFrame | object,
     renames_by_sample: dict[str, dict[str, str]],
-    columns: tuple[str, ...],
+    columns: Sequence[str],
 ):
     """Rename marker columns, using ``sample`` when maps differ across files."""
     if not isinstance(df, pl.DataFrame):
