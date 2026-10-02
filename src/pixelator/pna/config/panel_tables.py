@@ -17,12 +17,25 @@ if TYPE_CHECKING:
 
 
 _PANEL_TABLES = ("panels", "panel_sources")
+_PANEL_STORAGE_COLUMNS = frozenset({"row_nr", "source_id", "marker_id"})
 
 
 def panel_tables_present(connection: duckdb.DuckDBPyConnection) -> bool:
     """Return whether both panel tables exist on this connection."""
     names = set(connection.execute("SHOW TABLES").fetchdf()["name"].tolist())
     return set(_PANEL_TABLES).issubset(names)
+
+
+def stored_panel_marker_columns(connection: duckdb.DuckDBPyConnection) -> set[str]:
+    """Return marker columns stored in ``panels``.
+
+    Empty when the panel tables are absent. ``row_nr``, ``source_id``, and
+    ``marker_id`` are storage columns, not marker fields.
+    """
+    if not panel_tables_present(connection):
+        return set()
+    frame = connection.execute("SELECT * FROM panels LIMIT 0").fetchdf()
+    return {str(name) for name in frame.columns if name not in _PANEL_STORAGE_COLUMNS}
 
 
 def write_panel_tables(
