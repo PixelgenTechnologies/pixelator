@@ -104,6 +104,21 @@ def test_equality_ignores_row_order_and_filename_but_not_marker_source():
     )
     assert assigned != swapped
 
+    reordered = PNAAntibodyPanel.concatenate([addon, base])
+    assert PNAAntibodyPanel.concatenate([base, addon]) == reordered
+
+
+def test_aligned_dataset_panel_ignores_source_order():
+    base_old = _panel("base", "1.0.0", [_marker("CD3", "AAAA")], product="kit")
+    base_new = _panel("base", "1.0.1", [_marker("CD3E", "AAAA")], product="kit")
+    addon = _panel("addon", "2.0.0", [_marker("CD19", "CCCC")], product="kit")
+    forward = PNAAntibodyPanel.concatenate([base_old, addon])
+    reverse = PNAAntibodyPanel.concatenate([addon, base_new])
+
+    assert aligned_dataset_panel([forward, reverse]) == PNAAntibodyPanel.concatenate(
+        [base_new, addon]
+    )
+
 
 def test_concatenate_one_panel_keeps_its_metadata():
     panel = _panel("base", "1.0.0", [_marker("CD3", "AAAA")])

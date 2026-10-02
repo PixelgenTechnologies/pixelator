@@ -724,32 +724,43 @@ class PNAAntibodyPanel:
         """Convert the panel to a Polars DataFrame."""
         return pl.from_pandas(self.df, include_index=True)
 
+    def _source_marker_groups(
+        self,
+    ) -> list[tuple[AntibodyPanelMetadata, frozenset[str]]]:
+        """Return each source with its marker ids, independent of source order."""
+        groups = []
+        for source_index, source in enumerate(self.sources):
+            marker_ids = frozenset(
+                str(marker_id)
+                for marker_id in self.marker_source_ids.index[
+                    self.marker_source_ids == source_index
+                ]
+            )
+            groups.append((source.metadata, marker_ids))
+        return sorted(
+            groups,
+            key=lambda group: (group[0].model_dump_json(), tuple(sorted(group[1]))),
+        )
+
     def __eq__(self, other: object) -> bool:
         """Return whether two panels describe the same sources and markers.
 
-        Row order, column order, and the file a source was loaded from are
-        ignored. Each marker must still belong to the same source.
+        Row order, column order, source order, and the file a source was
+        loaded from are ignored. Each marker must still belong to the same
+        source.
 
         Args:
             other: Panel to compare for equality.
         """
         if not isinstance(other, PNAAntibodyPanel):
             raise ValueError("Can only compare with another PNAAntibodyPanel")
-        if [source.metadata for source in self.sources] != [
-            source.metadata for source in other.sources
-        ]:
+        if self._source_marker_groups() != other._source_marker_groups():
             return False
         left = self.df.sort_index()
         right = other.df.sort_index()
         if set(left.columns) != set(right.columns):
             return False
-        if not left.equals(right[list(left.columns)]):
-            return False
-        left_sources = self.marker_source_ids.sort_index().rename(None).astype("int64")
-        right_sources = (
-            other.marker_source_ids.sort_index().rename(None).astype("int64")
-        )
-        return left_sources.equals(right_sources)
+        return left.equals(right[list(left.columns)])
 
 
 def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
@@ -1075,6 +1086,7 @@ def aligned_dataset_panel(panels: list[PNAAntibodyPanel]) -> PNAAntibodyPanel:
     """Return one panel after per-source patch alignment across files.
 
     Several files that describe the same sources collapse to a single panel.
+    The order of ``--panel`` inputs does not have to match.
     """
     if len(panels) == 1:
         return panels[0]
