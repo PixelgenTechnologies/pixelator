@@ -11,11 +11,15 @@ from pixelator.pna.utils.utils import normalize_input_to_list
 def marker_filter_sql(
     markers: list[str] | dict[str, list[str]] | None,
     columns: Sequence[str],
+    *,
+    sample_column: str = "sample",
 ) -> tuple[str, dict[str, object]]:
     """Build a marker filter for the ids stored in the file.
 
     A list applies to every sample. A dict gives each sample its own ids,
     which is needed when a patch bump renamed markers in only some files.
+    ``sample_column`` names the sample column in that filter. Qualify it when
+    the query joins more than one table that has ``sample``.
     """
     if not markers:
         return "TRUE", {}
@@ -28,7 +32,7 @@ def marker_filter_sql(
             params[sample_key] = sample
             params[ids_key] = list(ids)
             membership = " AND ".join(f"{column} IN ${ids_key}" for column in columns)
-            parts.append(f"(sample = ${sample_key} AND {membership})")
+            parts.append(f"({sample_column} = ${sample_key} AND {membership})")
         return "(" + " OR ".join(parts) + ")", params
     membership = " AND ".join(f"{column} IN $markers" for column in columns)
     return f"({membership})", {"markers": list(markers)}
@@ -56,7 +60,11 @@ def jcs_with_analytical_stats(
     observed_filter, marker_params = marker_filter_sql(
         markers, ("marker_1", "marker_2")
     )
-    expected_filter, _ = marker_filter_sql(markers, ("t1.marker_1", "t2.marker_2"))
+    expected_filter, _ = marker_filter_sql(
+        markers,
+        ("t1.marker_1", "t2.marker_2"),
+        sample_column="t1.sample",
+    )
     params.update(marker_params)
 
     get_current_edgelist = f"""
