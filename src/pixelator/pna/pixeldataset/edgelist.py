@@ -78,10 +78,12 @@ class Edgelist:
             normalize_input_to_list(self.components)
         )
         with self._view.open() as session:
-            df = self._handle_backwards_compatibility(
-                session.execute_lazy(query)
-            ).collect()
-        return df.to_pandas()
+            df = (
+                self._handle_backwards_compatibility(session.execute_lazy(query))
+                .collect()
+                .to_pandas()
+            )
+        return df
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
@@ -97,34 +99,12 @@ class Edgelist:
     def to_record_batches(
         self, batch_size: int = 1_000_000
     ) -> Iterable[pa.RecordBatch]:
-        """Get the edgelist as a stream of pyarrow RecordBatches.
-
-        Marker ids already use the patch bump from the session view.
-        Legacy ``marker1`` and ``marker2`` columns are renamed to
-        ``marker_1`` and ``marker_2``.
-        """
+        """Get the edgelist as a stream of pyarrow RecordBatches."""
         query = self._query_builder.edgelist_query(
             normalize_input_to_list(self.components)
         )
         with self._view.open() as session:
-            for batch in session.execute_arrow_reader(
-                query=query, batch_size=batch_size
-            ):
-                names = set(batch.schema.names)
-                if "marker1" not in names and "marker2" not in names:
-                    yield batch
-                    continue
-                frame = pl.from_arrow(batch)
-                if not isinstance(frame, pl.DataFrame):
-                    yield batch
-                    continue
-                renamed = self._handle_backwards_compatibility(frame.lazy()).collect()
-                table = renamed.to_arrow()
-                batches = table.to_batches(max_chunksize=max(batch.num_rows, 1))
-                if batches:
-                    yield from batches
-                else:
-                    yield pa.RecordBatch.from_pylist([], schema=table.schema)
+            yield from session.execute_arrow_reader(query=query, batch_size=batch_size)
 
     def _iterator(self) -> Iterable[tuple[str, pl.LazyFrame]]:
         with self._view.open() as session:

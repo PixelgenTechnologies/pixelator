@@ -73,21 +73,11 @@ class Proximity:
             )
         )
 
-    def _markers_for_query(self) -> list[str] | None:
-        """Return the caller's marker names.
-
-        The session view already exposes bumped marker ids, so a filter uses
-        those names directly.
-        """
-        if self._markers is None:
-            return None
-        return sorted(self._markers)
-
     def __len__(self) -> int:
         """Get the number of proximity scores."""
         query = self._query_builder.proximity_len_query(
             normalize_input_to_list(self._components),
-            self._markers_for_query(),
+            normalize_input_to_list(self._markers),
             calculate_from_edgelist=self._calculate_from_edgelist,
         )
         with self._view.open() as session:
@@ -180,7 +170,7 @@ class Proximity:
         """Get the edgelist as a polars DataFrame."""
         query = self._query_builder.proximity_query(
             normalize_input_to_list(self._components),
-            self._markers_for_query(),
+            normalize_input_to_list(self._markers),
             calculate_from_edgelist=self._calculate_from_edgelist,
         )
         with self._view.open() as session:
