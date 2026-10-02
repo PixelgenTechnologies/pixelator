@@ -525,11 +525,20 @@ class PNAAntibodyPanel:
         )
 
     def replace_source(self, source_index: int, replacement: PNAAntibodyPanel) -> Self:
-        """Return a copy with one source replaced by a single-source panel."""
+        """Return a copy with one source replaced by a single-source panel.
+
+        An optional column present on only one side is blank on the other,
+        the same as an empty cell in a panel CSV.
+        """
         if len(replacement.sources) != 1:
             raise ValueError("Replacement panel must come from a single source.")
         keep = self.marker_source_ids.index[self.marker_source_ids != source_index]
-        df = pd.concat([self.df.loc[list(keep)], replacement.df])
+        kept = self.df.loc[list(keep)]
+        if kept.empty:
+            df = replacement.df.copy()
+        else:
+            kept, incoming = self._align_optional_columns([kept, replacement.df])
+            df = pd.concat([kept, incoming])
         df.index.name = self._INDEX_COLUMN
         source_ids = pd.concat(
             [
@@ -718,8 +727,8 @@ class PNAAntibodyPanel:
     def __eq__(self, other: object) -> bool:
         """Return whether two panels describe the same sources and markers.
 
-        Row order and the file a source was loaded from are ignored. Each
-        marker must still belong to the same source.
+        Row order, column order, and the file a source was loaded from are
+        ignored. Each marker must still belong to the same source.
 
         Args:
             other: Panel to compare for equality.
@@ -730,7 +739,11 @@ class PNAAntibodyPanel:
             source.metadata for source in other.sources
         ]:
             return False
-        if not self.df.sort_index().equals(other.df.sort_index()):
+        left = self.df.sort_index()
+        right = other.df.sort_index()
+        if set(left.columns) != set(right.columns):
+            return False
+        if not left.equals(right[list(left.columns)]):
             return False
         left_sources = self.marker_source_ids.sort_index().rename(None).astype("int64")
         right_sources = (

@@ -12,7 +12,11 @@ from anndata import AnnData
 from pandas.testing import assert_frame_equal
 
 from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.pna.config.panel import PNAAntibodyPanel, align_panel_patches
+from pixelator.pna.config.panel import (
+    PNAAntibodyPanel,
+    align_panel_patches,
+    aligned_dataset_panel,
+)
 from pixelator.pna.pixeldataset import read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile, read_dataset_panel
 
@@ -127,6 +131,58 @@ def test_concatenate_blanks_optional_columns_missing_from_one_source():
     )
     combined_hashing = PNAAntibodyPanel.concatenate([without_uniprot, hashing])
     assert combined_hashing.hashing_marker_ids == {"B2M-1"}
+
+
+def test_replace_source_blanks_optional_columns_missing_from_one_side():
+    old_base = _panel("base", "1.0.0", [_marker("CD3", "AAAA")], product="kit")
+    new_base = _panel(
+        "base",
+        "1.0.1",
+        [_marker("CD3E", "AAAA", uniprot_id="P07766")],
+        product="kit",
+    )
+    addon = _panel("addon", "2.0.0", [_marker("CD19", "CCCC")], product="kit")
+    old = PNAAntibodyPanel.concatenate([old_base, addon])
+    new = PNAAntibodyPanel.concatenate([new_base, addon])
+
+    replaced = old.replace_source(0, new_base)
+
+    assert replaced.df.loc["CD3E", "uniprot_id"] == "P07766"
+    assert replaced.df.loc["CD19", "uniprot_id"] == ""
+    assert replaced == new
+    assert aligned_dataset_panel([old, new]) == new
+
+    addon_with_uniprot = _panel(
+        "addon",
+        "2.0.0",
+        [_marker("CD19", "CCCC", uniprot_id="P15391")],
+        product="kit",
+    )
+    newer_without = _panel("base", "1.0.1", [_marker("CD3E", "AAAA")], product="kit")
+    kept_column = PNAAntibodyPanel.concatenate([old_base, addon_with_uniprot])
+    replaced_other_side = kept_column.replace_source(0, newer_without)
+    assert replaced_other_side.df.loc["CD3E", "uniprot_id"] == ""
+    assert replaced_other_side.df.loc["CD19", "uniprot_id"] == "P15391"
+
+
+def test_patch_bump_matches_when_the_added_column_is_not_last():
+    old_base = _panel("base", "1.0.0", [_marker("CD3", "AAAA")], product="kit")
+    new_frame = pd.DataFrame([_marker("CD3E", "AAAA")]).set_index("marker_id")
+    new_frame["uniprot_id"] = "P07766"
+    new_frame = new_frame[["control", "uniprot_id", "sequence_1", "sequence_2"]]
+    new_base = PNAAntibodyPanel(
+        new_frame,
+        AntibodyPanelMetadata(name="base", version="1.0.1", product="kit"),
+        file_name="base.csv",
+    )
+    addon = _panel("addon", "2.0.0", [_marker("CD19", "CCCC")], product="kit")
+    old = PNAAntibodyPanel.concatenate([old_base, addon])
+    new = PNAAntibodyPanel.concatenate([new_base, addon])
+    updated, _, _ = align_panel_patches([old, new])
+
+    assert list(updated[0].df.columns) != list(updated[1].df.columns)
+    assert updated[0] == updated[1]
+    assert aligned_dataset_panel([old, new]) == new
 
 
 def test_concatenate_rejects_duplicate_marker_and_sequence():
