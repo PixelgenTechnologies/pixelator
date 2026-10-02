@@ -71,6 +71,8 @@ def _build_two_sample_dataset_with_panels(
     edgelist_parquet_path: Path,
     panel_old: PNAAntibodyPanel,
     panel_new: PNAAntibodyPanel,
+    proximity_old: Path | None = None,
+    proximity_new: Path | None = None,
 ) -> PNAPixelDataset:
     """Create two on-disk PXL samples with distinct panels for bumping patch version tests.
 
@@ -84,7 +86,7 @@ def _build_two_sample_dataset_with_panels(
         target=tmp_path / "sample_old.pxl",
         sample_name="sample_old",
         edgelist_parquet_path=edgelist_parquet_path,
-        proximity_parquet_path=None,
+        proximity_parquet_path=proximity_old,
         layout_parquet_path=None,
         panel=panel_old,
     )
@@ -101,7 +103,7 @@ def _build_two_sample_dataset_with_panels(
         target=tmp_path / "sample_new.pxl",
         sample_name="sample_new",
         edgelist_parquet_path=sample_new_edgelist,
-        proximity_parquet_path=None,
+        proximity_parquet_path=proximity_new,
         layout_parquet_path=None,
         panel=panel_new,
     )
@@ -286,6 +288,61 @@ class TestTryBumpAdataPanelVersion:
 
         assert (adata_old[:, "MarkerC"].X == bumped[0][:, "MarkerC"].X).all()
         assert (adata_new[:, "MarkerC"].X == bumped[1][:, "MarkerC"].X).all()
+
+    def test_proximity_filter_uses_renamed_marker_ids(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        panel: PNAAntibodyPanel,
+    ):
+        """A filter on the bumped name still finds rows stored under the old id."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        old_proximity = tmp_path / "old_proximity.parquet"
+        new_proximity = tmp_path / "new_proximity.parquet"
+        pl.DataFrame(
+            {
+                "component": ["fc07dea9b679aca7", "fc07dea9b679aca7"],
+                "marker_1": ["MarkerA", "MarkerB"],
+                "marker_2": ["MarkerA", "MarkerC"],
+            }
+        ).write_parquet(old_proximity)
+        pl.DataFrame(
+            {
+                "component": ["fc07dea9b679aca7_sample_new"],
+                "marker_1": ["MarkerANew"],
+                "marker_2": ["MarkerANew"],
+            }
+        ).write_parquet(new_proximity)
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=panel_old,
+            panel_new=panel_new,
+            proximity_old=old_proximity,
+            proximity_new=new_proximity,
+        )
+
+        proximity = dataset.filter(markers={"MarkerANew"}).proximity(
+            add_marker_counts=False, add_logratio=False
+        )
+        frame = proximity.to_polars()
+        pairs = set(
+            zip(frame["marker_1"].to_list(), frame["marker_2"].to_list(), strict=True)
+        )
+        assert pairs == {("MarkerANew", "MarkerANew")}
+        assert len(proximity) == 2
 
     @pytest.mark.parametrize(
         "new_version,new_product",

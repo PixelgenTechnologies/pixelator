@@ -19,6 +19,7 @@ from pixelator.pna.config.panel_align import (
     apply_hash_count_renames,
     apply_marker_renames_to_adata,
     apply_marker_renames_to_frame,
+    stored_marker_ids,
 )
 
 from .pxl_file import PXL_FILE_MANDATOR_TABLES, PXL_FILE_OTHER_TABLES, PxlFile
@@ -202,6 +203,18 @@ class PixelDataViewer:
                 samples, self._read_adatas_for_panel_patch(samples)
             )
         return dict(self._marker_renames or {})
+
+    def stored_markers_by_sample(self, markers: set[str]) -> dict[str, list[str]]:
+        """Return the stored marker ids for each sample.
+
+        ``markers`` are the names exposed after the in-memory patch bump.
+        The proximity tables still use the ids written in the file.
+        """
+        renames = self.marker_renames_by_sample()
+        return {
+            sample: sorted(stored_marker_ids(markers, renames.get(sample, {})))
+            for sample in self.sample_names()
+        }
 
     def apply_marker_renames(self, df, columns: tuple[str, ...]):
         """Rename marker columns in ``df`` using this view's patch-bump map."""

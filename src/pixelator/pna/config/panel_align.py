@@ -14,6 +14,26 @@ if TYPE_CHECKING:
     from anndata import AnnData
 
 
+def stored_marker_ids(requested: set[str], old_to_new: dict[str, str]) -> set[str]:
+    """Return the stored ids for marker names already renamed in memory.
+
+    ``old_to_new`` maps a stored id to the id a patch bump exposes. A name
+    with no entry is already the stored id.
+    """
+    new_to_old: dict[str, set[str]] = {}
+    for old, new in old_to_new.items():
+        if old == new:
+            continue
+        new_to_old.setdefault(new, set()).add(old)
+    stored: set[str] = set()
+    for name in requested:
+        if name in new_to_old:
+            stored.update(new_to_old[name])
+        else:
+            stored.add(name)
+    return stored
+
+
 def apply_marker_renames_to_frame(
     df: pd.DataFrame | object,
     renames_by_sample: dict[str, dict[str, str]],

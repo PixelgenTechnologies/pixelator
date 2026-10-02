@@ -73,11 +73,26 @@ class Proximity:
             )
         )
 
+    def _markers_for_query(self) -> list[str] | dict[str, list[str]] | None:
+        """Return on-disk marker ids for the caller's filter.
+
+        One shared list is enough when every sample stores the same ids.
+        Otherwise each sample keeps its own list, because a patch bump can
+        rename a marker in only some of the files.
+        """
+        if self._markers is None:
+            return None
+        by_sample = self._view.stored_markers_by_sample(self._markers)
+        unique = {tuple(ids) for ids in by_sample.values()}
+        if len(unique) <= 1:
+            return list(next(iter(unique))) if unique else sorted(self._markers)
+        return by_sample
+
     def __len__(self) -> int:
         """Get the number of proximity scores."""
         query = self._query_builder.proximity_len_query(
             normalize_input_to_list(self._components),
-            normalize_input_to_list(self._markers),
+            self._markers_for_query(),
             calculate_from_edgelist=self._calculate_from_edgelist,
         )
         with self._view.open() as session:
@@ -170,7 +185,7 @@ class Proximity:
         """Get the edgelist as a polars DataFrame."""
         query = self._query_builder.proximity_query(
             normalize_input_to_list(self._components),
-            normalize_input_to_list(self._markers),
+            self._markers_for_query(),
             calculate_from_edgelist=self._calculate_from_edgelist,
         )
         with self._view.open() as session:
