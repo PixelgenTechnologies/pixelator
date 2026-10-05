@@ -5,6 +5,7 @@ Copyright © 2024 Pixelgen Technologies AB
 
 import functools
 import logging
+import os
 from pathlib import Path
 
 import click
@@ -103,16 +104,7 @@ def design_option(func):
     return wrapper
 
 
-def validate_panel(ctx, param, value):
-    """Validate the panel commandline option.
-
-    Args:
-        ctx: The click context
-        param: The click parameter
-        value: The click value
-    Returns:
-        The validated value
-    """
+def _validate_one_panel(value: str) -> str:
     try:
         if Path(value).exists():
             return value
@@ -133,6 +125,26 @@ def validate_panel(ctx, param, value):
     return value
 
 
+def validate_panel(ctx, param, value):
+    """Validate the panel commandline option.
+
+    ``--panel`` may be repeated. Each value is a supported panel name or a path
+    to a panel CSV.
+
+    Args:
+        ctx: The click context
+        param: The click parameter
+        value: The click value
+    Returns:
+        The validated value
+    """
+    if value is None:
+        return value
+    if isinstance(value, (str, os.PathLike)):
+        return _validate_one_panel(value)
+    return tuple(_validate_one_panel(item) for item in value)
+
+
 def panel_option(func):
     """Decorate a click command and add the --panel option."""
     from pixelator.pna.config import pna_config
@@ -144,10 +156,13 @@ def panel_option(func):
     @click.option(
         "--panel",
         required=True,
-        default=None,
+        multiple=True,
         type=click.UNPROCESSED,
         callback=validate_panel,
-        help="The name of a panel to load from the supported panels. Optionally, provide a path to a custom panel file.",
+        help=(
+            "The name of a panel to load from the supported panels, or a path to a "
+            "custom panel file. Repeat to concatenate several panels."
+        ),
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):

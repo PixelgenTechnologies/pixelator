@@ -13,10 +13,13 @@ from anndata import AnnData
 from pandas.testing import assert_frame_equal
 
 from pixelator.common.config import AntibodyPanelMetadata
+from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import (
     PNAAntibodyPanel,
     align_panel_patches,
     aligned_dataset_panel,
+    load_antibody_panel,
+    load_antibody_panels,
 )
 from pixelator.pna.pixeldataset import read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile, read_dataset_panel
@@ -42,6 +45,13 @@ def _marker(marker_id: str, sequence: str, **extra) -> dict:
     }
     row.update(extra)
     return row
+
+
+def test_load_antibody_panels_accepts_one_name_or_a_sequence():
+    name = "proxiome-v1-immuno-155-v1.0"
+    single = load_antibody_panel(pna_config, name)
+    assert load_antibody_panels(pna_config, name) == single
+    assert load_antibody_panels(pna_config, [name]) == single
 
 
 def test_concatenate_keeps_metadata_for_each_source():

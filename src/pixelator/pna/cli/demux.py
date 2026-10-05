@@ -25,7 +25,7 @@ from pixelator.pna.cli.common import (
     threads_option,
 )
 from pixelator.pna.config import pna_config
-from pixelator.pna.config.panel import load_antibody_panel
+from pixelator.pna.config.panel import load_antibody_panels
 from pixelator.pna.demux import (
     correct_marker_barcodes,
     demux_barcode_groups,
@@ -143,7 +143,7 @@ def demux(
     # load assay design
     assay = pna_config.get_assay(design)
     # load marker panel
-    panel = load_antibody_panel(pna_config, panel)
+    panel = load_antibody_panels(pna_config, panel)
 
     logger.info(f"Correcting marker barcodes for input: {fastq_file}")
 

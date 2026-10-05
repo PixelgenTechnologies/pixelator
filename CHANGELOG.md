@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `single-cell-pna demux`, `collapse`, and `graph` accept repeated `--panel` options. The panels are concatenated, and `marker_id`, `sequence_1`, and `sequence_2` must be unique across the result.
 - `pixelator.pna.analysis.differential_abundance` to run marker differential abundance (Wilcoxon via `scanpy.tl.rank_genes_groups`). Effect size is a mean difference, not scanpy's log-fold change.
 - Samples with no cells above the size threshold no longer fail the pipeline. A null pxl file
   with a reason is written and passed through later steps, so the sample still shows up downstream.
