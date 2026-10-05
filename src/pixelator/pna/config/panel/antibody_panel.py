@@ -173,12 +173,6 @@ class PNAAntibodyPanel:
         the columns it names together.
         """
         df = var[list(panel_metadata["panel_columns"])]
-        # Sample calling can leave a collapsed hashing id in var. That row is
-        # not a panel marker, so its panel columns are empty.
-        if "sequence_1" in df.columns:
-            df = df[df["sequence_1"].notna()].copy()
-        if "control" in df.columns and df["control"].dtype != bool:
-            df["control"] = df["control"].fillna(False).astype(bool)
         metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
         return cls.from_metadata(df, metadata, file_name=file_name)
 
