@@ -19,8 +19,6 @@ from scipy.stats import fisher_exact, pearsonr
 
 from pixelator.pna.analysis_engine import PerComponentTask
 from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
-from pixelator.pna.config import pna_config
-from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.graph.adaptive_core_expansion import adaptive_core_expansion
 from pixelator.pna.graph.node_pls import (
@@ -29,7 +27,7 @@ from pixelator.pna.graph.node_pls import (
     node_pls,
 )
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
-from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
+from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile, read_dataset_panel
 
 logger = logging.getLogger(__name__)
 
@@ -644,15 +642,7 @@ class DenoiseGraph(PerComponentTask):
         """Filter edgelist by removed nodes and write denoise metrics to AnnData."""
         pxl = PNAPixelDataset.from_files(pxl_file_target)
         old_adata = pxl.adata()
-        try:
-            panel = PNAAntibodyPanel.from_pxl_dataset(read(pxl_file_target.path))
-        except KeyError:
-            # If pxl file does not contain panel data, try to load it from
-            # the panel name.
-            # This will happen when old pxl files generated before v0.22.0
-            # are used.
-            panel_name = pxl.metadata().popitem()[1]["panel_name"]
-            panel = load_antibody_panel(pna_config, panel_name)
+        panel = read_dataset_panel(read(pxl_file_target.path))
         nodes_to_remove = (
             data.loc[~data["umi"].isna(), "umi"].astype(np.uint64).tolist()
         )

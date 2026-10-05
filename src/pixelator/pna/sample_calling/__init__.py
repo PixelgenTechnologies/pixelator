@@ -21,7 +21,7 @@ from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
 from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel, collapsed_hashing_marker_id
 from pixelator.pna.pixeldataset import PNAPixelDataset
-from pixelator.pna.pixeldataset.io import PixelFileWriter
+from pixelator.pna.pixeldataset.io import PixelFileWriter, read_dataset_panel
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
 from pixelator.pna.sample_calling.report import SampleCallingTotalReport
 
@@ -358,7 +358,7 @@ def sample_calling(
         enrichment_threshold,
         undetermined_sample_name,
     )
-    panel = PNAAntibodyPanel.from_pxl_dataset(input_pxl)
+    panel = read_dataset_panel(input_pxl)
 
     dehashed = hash_info.group_by("called_sample")
     output_files: list[Path] = []
@@ -375,6 +375,7 @@ def sample_calling(
             "technology": "single-cell-pna",
             "panel_name": panel.name,
             "panel_version": panel.version,
+            "hashing_collapsed": True,
         }
 
         nodes_to_remove = _find_nodes_to_remove(

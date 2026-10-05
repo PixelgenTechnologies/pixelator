@@ -19,9 +19,8 @@ from pixelator.common.utils import (
 )
 from pixelator.pna import read
 from pixelator.pna.cli.common import output_option
-from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import NullPxlFileError
-from pixelator.pna.pixeldataset.io import PxlFile, write_null_pxl
+from pixelator.pna.pixeldataset.io import PxlFile, read_dataset_panel, write_null_pxl
 from pixelator.pna.sample_calling import (
     create_final_report,
     sample_calling,
@@ -106,7 +105,7 @@ def sample_calling_cli(
     undetermined_sample_name = f"{pool_name}_undetermined"
 
     try:
-        panel_info = PNAAntibodyPanel.from_pxl_dataset(read(input_pxl_file))
+        panel_info = read_dataset_panel(read(input_pxl_file))
     except NullPxlFileError as exc:
         logger.warning("%s", exc)
         _pass_through_null_sample_calling(

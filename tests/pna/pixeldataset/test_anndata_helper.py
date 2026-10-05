@@ -32,6 +32,8 @@ class TestAnnDataHelper:
         """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
+        if adata_data.uns is not None and "panel_metadata" in adata_data.uns:
+            del adata_data.uns["panel_metadata"]
 
         helper = AnnDataHelper(pxl_dataset.view)
         res = helper.read_adata(add_clr_transform=False, add_log1p_transform=False)
