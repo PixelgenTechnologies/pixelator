@@ -9,7 +9,6 @@ from functools import cached_property
 from typing import List, Set
 
 import polars as pl
-from anndata import AnnData
 
 from pixelator.common.utils import logger
 from pixelator.pna.config.panel.antibody_panel import PNAAntibodyPanel
@@ -190,58 +189,3 @@ class PNAAntibodyPanelDiff:
             if str(old) != str(new):
                 mapping[str(old)] = str(new)
         return mapping
-
-    def upgrade_adata(self, adata: AnnData) -> AnnData:
-        """Upgrade an AnnData object with the changes between the two panels.
-
-        Args:
-            adata: An AnnData object containing panel information.
-        """
-        adata_panel = PNAAntibodyPanel.from_adata(adata)
-        if self.panel_1 != adata_panel:
-            raise ValueError(
-                "The provided AnnData object does not match the panel. Cannot upgrade."
-                f"Expected panel {self.panel_2.name} v{self.panel_2.version}, but got panel {adata_panel.name} v{adata_panel.version}."
-            )
-
-        non_panel_columns = adata.var.copy()[
-            [
-                col
-                for col in adata.var.columns
-                if col not in adata.uns["panel_metadata"]["panel_columns"]
-            ]
-            + self.join_on_columns
-        ]
-        adata.var = (
-            self.joined.select(
-                list(
-                    set(
-                        self.join_on_columns
-                        + self.identical_columns
-                        + [f"{col}_panel_2" for col in self.changed_columns]
-                        + self.added_columns
-                    )
-                )
-            )
-            .rename({f"{col}_panel_2": col for col in self.changed_columns})
-            # keep order and append new to the end
-            .select(
-                ["marker_id"]  # index not in panel_metadata panel_columns below
-                + adata.uns["panel_metadata"]["panel_columns"]
-                + self.added_columns
-            )
-            .to_pandas()
-            .set_index("marker_id")
-        )
-        if adata.var.shape[0] != non_panel_columns.shape[0]:
-            raise ValueError(
-                "Row count mismatch in automatic patch panel patch version bump."
-            )
-        adata.var = adata.var.join(
-            non_panel_columns.set_index(self.join_on_columns),
-            how="outer",
-            on=self.join_on_columns,
-        )
-        adata.uns["panel_metadata"] = self.panel_2.metadata.model_dump()
-        adata.uns["panel_metadata"]["panel_columns"] = self.panel_2.df.columns.tolist()
-        return adata

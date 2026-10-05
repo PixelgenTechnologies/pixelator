@@ -123,6 +123,8 @@ class TestAnnDataHelper:
         """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
+        if adata_data.uns is not None and "panel_metadata" in adata_data.uns:
+            del adata_data.uns["panel_metadata"]
 
         helper = AnnDataHelper(pxl_dataset.view)
         res = helper.read_adata(add_clr_transform=False, add_log1p_transform=False)
@@ -252,7 +254,9 @@ class TestTryBumpAdataPanelVersion:
         assert "target_class" not in adata_old.var.columns
         assert "target_class" in adata_new.var.columns
 
-        bumped = helper._try_bump_adata_panel_version([adata_old, adata_new])
+        bumped = dataset.view.apply_panel_patch_to_adatas([adata_old, adata_new])
+        assert "panel_metadata" not in bumped[0].uns
+        assert "panel_metadata" not in bumped[1].uns
 
         assert "target_class" in bumped[0].var.columns
         assert bumped[0].var.loc["MarkerANew", "target_class"] == "new-value"
@@ -327,7 +331,7 @@ class TestTryBumpAdataPanelVersion:
                 session=session, sample="sample_new"
             )
 
-        not_bumped = helper._try_bump_adata_panel_version([adata_old, adata_new])
+        not_bumped = dataset.view.apply_panel_patch_to_adatas([adata_old, adata_new])
 
         assert "target_class" not in not_bumped[0].var.columns
 

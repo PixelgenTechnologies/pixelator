@@ -415,6 +415,7 @@ def test_sample_calling(sample_hashed_pixel_files, tmp_path):
         dehashed_counts = dehashed_adata.to_df()
         assert dehashed_counts.shape[0] == 10
         sample_name = list(dehashed_pxl.metadata().keys())[0]
+        assert dehashed_pxl.metadata()[sample_name]["hashing_collapsed"] is True
         for ab in hashed_antibodies[sample_name]:
             base_name = collapsed_hashing_marker_id(ab)
             assert all(

@@ -5,6 +5,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import json
 import tempfile
 from pathlib import Path
 
@@ -187,12 +188,12 @@ class PixelFileWriter:
                     "but a PXL file may only contain a single sample."
                 )
 
+        uns = self._uns_keeping_stored_panel(adata)
         self._clean_existing_adata_tables()
 
         X = adata.to_df().reset_index(names="index")
         var = adata.var.reset_index(names="index")
         obs = adata.obs.reset_index(names="index")
-        uns = adata.uns
 
         self._connection.sql(
             """
@@ -213,6 +214,29 @@ class PixelFileWriter:
                 CREATE TABLE __adata__obsm_{key} AS SELECT * FROM obsm_layer;
                 """,
             )
+
+    def _uns_keeping_stored_panel(self, adata: AnnData) -> dict:
+        """Return ``uns`` to write, keeping a panel already stored in the file.
+
+        Reading a file drops ``panel_metadata`` from the in-memory AnnData.
+        A later rewrite, such as saving a filtered copy, must not drop the
+        panel from the file.
+        """
+        uns = dict(adata.uns) if adata.uns is not None else {}
+        if "panel_metadata" in uns:
+            return uns
+        try:
+            uns_row = self._connection.execute(
+                "SELECT value FROM __adata__uns"
+            ).fetchone()
+        except duckdb.CatalogException:
+            return uns
+        if uns_row is None:
+            return uns
+        existing = json.loads(uns_row[0]) if isinstance(uns_row[0], str) else uns_row[0]
+        if isinstance(existing, dict) and "panel_metadata" in existing:
+            uns["panel_metadata"] = existing["panel_metadata"]
+        return uns
 
     def write_metadata(self, metadata: dict) -> None:
         """Write the metadata to the PXL file.
