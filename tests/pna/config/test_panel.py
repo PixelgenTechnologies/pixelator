@@ -234,3 +234,50 @@ CD45,no,no,TCCCTTGCGATTTAC,test001
 
         with pytest.raises(yaml.YAMLError):
             PNAAntibodyPanel.from_csv(tmp_file.name)
+
+
+def _marker_row(marker_id: str, sequence: str, **extra) -> dict:
+    row = {
+        "marker_id": marker_id,
+        "control": False,
+        "sequence_1": sequence,
+        "sequence_2": sequence,
+    }
+    row.update(extra)
+    return row
+
+
+def test_duplicate_marker_ids_are_rejected():
+    """Marker ids must be unique even when sequences differ."""
+    frame = pd.DataFrame(
+        [_marker_row("CD3", "AAAA"), _marker_row("CD3", "CCCC")]
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match="marker_id were not unique"):
+        PNAAntibodyPanel(
+            frame,
+            AntibodyPanelMetadata(name="base", version="1.0.0"),
+        )
+
+
+def test_hashing_marker_ids_need_a_numeric_suffix_and_must_not_nest():
+    """Hashing ids end with -<digits> and must not collapse onto each other."""
+    missing_suffix = pd.DataFrame(
+        [_marker_row("B2M", "AAAA", sample_hashing=True)]
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match="must end with -<digits>"):
+        PNAAntibodyPanel(
+            missing_suffix,
+            AntibodyPanelMetadata(name="base", version="1.0.0"),
+        )
+
+    nested = pd.DataFrame(
+        [
+            _marker_row("B2M-1", "AAAA", sample_hashing=True),
+            _marker_row("B2M-1-1", "CCCC", sample_hashing=True),
+        ]
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match="must not collapse"):
+        PNAAntibodyPanel(
+            nested,
+            AntibodyPanelMetadata(name="base", version="1.0.0"),
+        )

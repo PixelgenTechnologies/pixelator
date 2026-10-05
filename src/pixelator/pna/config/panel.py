@@ -33,6 +33,43 @@ if TYPE_CHECKING:
     from pixelator.pna.config.config_class import PNAConfig
     from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
 
+# Trailing ``-<digits>`` is the hash group (``B2M-1`` → ``B2M``). The same
+# pattern matches ordinary names such as ``PD-1``, so it is only applied to
+# rows already flagged by ``sample_hashing``.
+_HASHING_MARKER_ID_RE = re.compile(r"^(?P<base>.+)-(?P<index>\d+)$")
+
+
+def sample_hashing_mask(sample_hashing: pd.Series) -> pd.Series:
+    """Return a boolean mask for values that flag a hashing marker."""
+    if pd.api.types.is_bool_dtype(sample_hashing):
+        return sample_hashing.fillna(False).astype(bool)
+    if pd.api.types.is_numeric_dtype(sample_hashing):
+        return sample_hashing.fillna(0).astype(bool)
+    normalized = sample_hashing.astype(str).str.strip().str.lower()
+    return normalized.isin(["yes", "true"])
+
+
+def split_hashing_marker_id(marker_id: str) -> tuple[str, str] | None:
+    """Return ``(base, index)`` for a hashing id such as ``B2M-1``."""
+    match = _HASHING_MARKER_ID_RE.fullmatch(str(marker_id))
+    if match is None:
+        return None
+    return match.group("base"), match.group("index")
+
+
+def collapsed_hashing_marker_id(marker_id: str) -> str:
+    """Return the marker id sample calling stores for a hashing antibody."""
+    parts = split_hashing_marker_id(marker_id)
+    return parts[0] if parts is not None else str(marker_id)
+
+
+def _hashing_marker_ids(panel_df: pd.DataFrame) -> set[str]:
+    """Return hashing marker ids, or an empty set when the column is absent."""
+    if "sample_hashing" not in panel_df.columns:
+        return set()
+    mask = sample_hashing_mask(panel_df["sample_hashing"])
+    return {str(marker_id) for marker_id in panel_df.index[mask]}
+
 
 class PNAAntibodyPanel:
     """Class representing a PNA antibody panel."""
@@ -210,6 +247,11 @@ class PNAAntibodyPanel:
         """Return whether the panel is marked as archived."""
         return self.metadata.archived
 
+    @property
+    def hashing_marker_ids(self) -> set[str]:
+        """Return marker ids flagged by the ``sample_hashing`` column."""
+        return _hashing_marker_ids(self.df)
+
     @classmethod
     def _parse_header(cls, file: Path) -> AntibodyPanelMetadata:
         """Parse front-matter YAML metadata from a panel file.
@@ -349,6 +391,13 @@ class PNAAntibodyPanel:
             errors.append(f"`{cls._INDEX_COLUMN}` is missing or is not set as index")
             return errors
 
+        if panel_df.index.duplicated().any():
+            duplicated = panel_df.index[panel_df.index.duplicated()].unique().tolist()
+            errors.append(
+                "All values in column: marker_id were not unique. "
+                f"Offending values: {duplicated}"
+            )
+
         errors += cls._validate_marker_names(panel_df)
 
         if panel_df["control"].dtype != bool:
@@ -380,7 +429,38 @@ class PNAAntibodyPanel:
 
         errors += cls._validate_sequences(panel_df, "sequence_1")
         errors += cls._validate_sequences(panel_df, "sequence_2")
+        errors += cls._validate_hashing_marker_ids(panel_df)
 
+        return errors
+
+    @staticmethod
+    def _validate_hashing_marker_ids(panel_df: pd.DataFrame) -> list[str]:
+        """Return errors when hashing ids lack a ``-<digits>`` suffix or nest."""
+        hashing_ids = _hashing_marker_ids(panel_df)
+        if not hashing_ids:
+            return []
+        errors: list[str] = []
+        missing_suffix = [
+            marker_id
+            for marker_id in sorted(hashing_ids)
+            if split_hashing_marker_id(marker_id) is None
+        ]
+        if missing_suffix:
+            errors.append(
+                "Hashing marker ids must end with -<digits> (e.g. B2M-1). "
+                f"Offending values: {missing_suffix}"
+            )
+        nested = sorted(
+            marker_id
+            for marker_id in hashing_ids
+            if (base := collapsed_hashing_marker_id(marker_id)) != marker_id
+            and base in hashing_ids
+        )
+        if nested:
+            errors.append(
+                "Hashing marker ids must not collapse to another hashing id "
+                f"(e.g. B2M-1-1 next to B2M-1). Offending values: {nested}"
+            )
         return errors
 
     def to_polars(self) -> pl.DataFrame:

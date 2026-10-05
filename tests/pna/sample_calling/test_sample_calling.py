@@ -15,7 +15,7 @@ import pytest
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna import read
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanel, collapsed_hashing_marker_id
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling import (
     _add_original_hash_counts_to_obs,
@@ -386,7 +386,7 @@ def test_sample_calling(sample_hashed_pixel_files, tmp_path):
         assert dehashed_counts.shape[0] == 10
         sample_name = list(dehashed_pxl.metadata().keys())[0]
         for ab in hashed_antibodies[sample_name]:
-            base_name = ab.split("-")[0]
+            base_name = collapsed_hashing_marker_id(ab)
             assert all(
                 original_counts.loc[
                     dehashed_counts.index,
@@ -518,6 +518,70 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
     dehashed_counts = dehashed_pxl.adata().to_df()
 
     assert dehashed_counts.loc["c1", "PD-1"] == original_counts.loc["c1", "PD-1"]
+
+
+def test_sample_calling_keeps_collapsed_hash_marker_missing_from_panel(
+    tmp_path: Path,
+):
+    """A collapsed hashing id stays in var when the panel has no such marker."""
+    panel_df = pd.DataFrame(
+        [
+            {
+                "marker_id": "PD-1",
+                "control": False,
+                "uniprot_id": "P00001",
+                "sequence_1": "ATCGATCGAA",
+                "sequence_2": "ATCGATCGAC",
+            },
+            {
+                "marker_id": "HashA-1",
+                "control": False,
+                "uniprot_id": "P00003",
+                "sequence_1": "ATCGATCGTT",
+                "sequence_2": "ATCGATCGTG",
+            },
+        ]
+    ).set_index("marker_id")
+    panel = PNAAntibodyPanel(
+        df=panel_df,
+        metadata=AntibodyPanelMetadata(name="test-panel", version="0.1.0"),
+    )
+    edgelist = pl.DataFrame(
+        {
+            "umi1": pl.Series([1, 2, 3], dtype=pl.UInt64),
+            "umi2": pl.Series([2, 3, 4], dtype=pl.UInt64),
+            "read_count": pl.Series([10, 10, 10], dtype=pl.UInt32),
+            "uei_count": pl.Series([5, 5, 5], dtype=pl.UInt32),
+            "marker_1": ["PD-1", "PD-1", "HashA-1"],
+            "marker_2": ["PD-1", "HashA-1", "HashA-1"],
+            "component": ["c1", "c1", "c1"],
+        }
+    )
+    target = tmp_path / "input.pxl"
+    with PixelFileWriter(target) as writer:
+        writer.write_edgelist(edgelist)
+        con = writer.get_connection()
+        adata = pna_edgelist_to_anndata(con, panel=panel)
+        writer.write_adata(adata)
+        writer.write_metadata({"sample_name": "input", "version": "0.1.0"})
+
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    sample_calling(
+        input_pxl=read(target),
+        hashing_antibody_mapping=HashedAntibodyMapping(
+            mapping={"S1": ["HashA-1"]},
+            all_hashing_antibodies=["HashA-1"],
+        ),
+        output_folder=out_dir,
+        remove_incompatible=True,
+        enrichment_threshold=1.5,
+    )
+
+    dehashed_counts = read(next(out_dir.glob("*.dehashed.pxl"))).adata().to_df()
+    assert "HashA" not in panel.markers
+    assert "HashA-1" not in dehashed_counts.columns
+    assert dehashed_counts.loc["c1", "HashA"] == 3
 
 
 @pytest.mark.slow
