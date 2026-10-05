@@ -27,9 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
 ### Changed
-- New `.pxl` files store the antibody panel in the `panels` and `panel_sources` tables. Panel columns are joined onto the AnnData in memory when the file is read, and are not written to `var`. `uns['panel_metadata']` is no longer written, and pixel-file metadata no longer includes `panel_name` or `panel_version`.
-- When several `.pxl` files are read together, each panel source is updated to the newest patch those files carry, matching on name, product, and major.minor. A source that is not already on a file is left alone.
-- `PNAConfig.add_panel` only accepts a panel with a single source.
+- New `.pxl` files store the antibody panel in the `panels` and `panel_sources` tables. Rewriting a pixelator 0.22.0–0.30.0 file stores that panel there as well. Panel columns are joined onto the AnnData in memory when the file is read, and are not written to `var`. `uns['panel_metadata']` is no longer written, and pixel-file metadata no longer includes `panel_name` or `panel_version`.
+- When several `.pxl` files are read together, each source is updated to the newest patch those files carry, matching on name, product, and major.minor. The in-memory edgelist, proximity, layouts, and `var` use the updated marker ids. The files on disk are not rewritten.
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
@@ -59,10 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   passed directly to native community detection, and the recovered components are unchanged.
 
 ### Fixed
-- Rewriting a pixelator 0.22.0–0.30.0 file stores its panel in the panel tables.
-- A panel patch bump renames markers in the edgelist, proximity, and layouts, not only in `var`. Filtering that dataset keeps those names, including when one sample remains.
 - `Edgelist.to_record_batches` renames legacy `marker1` and `marker2` columns to `marker_1` and `marker_2`, matching `to_polars`, `to_df`, and `iterator`. The stream on dev left those column names unchanged.
-- A panel patch bump of a sample-called file no longer fails because hashing clones are missing from `var`. A missing non-hashing marker still fails.
 - Denoise rebuilds the count matrix from the markers already in `var`, so hashing clones removed by sample calling do not come back. The full panel is still stored in the panel tables.
 - `coarsened_pmds_layout` sizes PMDS pivots from the full graph when Leiden
   yields too few communities, so a valid low `pivots` no longer fails
