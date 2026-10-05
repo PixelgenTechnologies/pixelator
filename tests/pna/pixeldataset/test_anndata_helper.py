@@ -12,7 +12,7 @@ import polars as pl
 import pytest
 
 from pixelator.common.utils.testing import adata_assert_equal
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanel, align_panel_patches
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import Query, read_dataset_panel
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
@@ -373,6 +373,55 @@ class TestTryBumpAdataPanelVersion:
         alone_adata = alone.adata(add_clr_transform=False, add_log1p_transform=False)
         assert "MarkerA" in alone_adata.var_names
         assert "MarkerANew" not in alone_adata.var_names
+
+    def test_failed_patch_bump_leaves_the_cache_unset(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        panel: PNAAntibodyPanel,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        """A failed bump can be read again and then uses the new marker ids."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=panel_old,
+            panel_new=panel_new,
+        )
+        attempts = {"count": 0}
+
+        def fail_once(*args, **kwargs):
+            attempts["count"] += 1
+            if attempts["count"] == 1:
+                raise ValueError("bump failed")
+            return align_panel_patches(*args, **kwargs)
+
+        monkeypatch.setattr(
+            "pixelator.pna.pixeldataset.io.pixel_data_viewer.align_panel_patches",
+            fail_once,
+        )
+        with pytest.raises(ValueError, match="bump failed"):
+            dataset.view.marker_renames_by_sample()
+        assert dataset.view._marker_renames is None
+        assert dataset.view._hash_count_renames is None
+        assert dataset.view._upgraded_panels is None
+
+        adata = dataset.adata(add_clr_transform=False, add_log1p_transform=False)
+        assert "MarkerANew" in adata.var_names
+        assert "MarkerA" not in adata.var_names
 
     def test_proximity_filter_uses_renamed_marker_ids(
         self,

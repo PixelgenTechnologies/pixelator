@@ -312,11 +312,15 @@ class PixelDataViewer:
             indexed_samples.append(sample)
             indexed_metadata.append(pxl_file.metadata())
 
-        self._marker_renames = {sample: {} for sample in samples}
-        self._hash_count_renames = {sample: {} for sample in samples}
-        self._upgraded_panels = {sample: None for sample in samples}
+        marker_renames: dict[str, dict[str, str]] = {sample: {} for sample in samples}
+        hash_count_renames: dict[str, dict[str, str]] = {
+            sample: {} for sample in samples
+        }
+        upgraded_panels: dict[str, PNAAntibodyPanel | None] = {
+            sample: None for sample in samples
+        }
         for sample, panel in zip(indexed_samples, panels):
-            self._upgraded_panels[sample] = panel
+            upgraded_panels[sample] = panel
         if len(panels) >= 2:
             upgraded, data_renames, hash_renames = align_panel_patches(
                 panels, indexed_adatas, pxl_file_metadata=indexed_metadata
@@ -324,9 +328,12 @@ class PixelDataViewer:
             for sample, panel, data_map, hash_map in zip(
                 indexed_samples, upgraded, data_renames, hash_renames
             ):
-                self._marker_renames[sample] = data_map
-                self._hash_count_renames[sample] = hash_map
-                self._upgraded_panels[sample] = panel
+                marker_renames[sample] = data_map
+                hash_count_renames[sample] = hash_map
+                upgraded_panels[sample] = panel
+        self._marker_renames = marker_renames
+        self._hash_count_renames = hash_count_renames
+        self._upgraded_panels = upgraded_panels
         self._apply_cached_panel_patch(samples, adatas)
 
     def _apply_cached_panel_patch(
