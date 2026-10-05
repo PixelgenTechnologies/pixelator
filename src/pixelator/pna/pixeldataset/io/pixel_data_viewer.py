@@ -183,13 +183,34 @@ class PixelDataViewer:
         return PixelDataViewer(sample_name_to_pxl_file_mapping)
 
     def filter_samples(self, sample_names: set[str]) -> "PixelDataViewer":
-        """Create a new PixelDataViewer with only a subset of the samples."""
+        """Create a new PixelDataViewer with only a subset of the samples.
+
+        When this view holds several files, the new view keeps the patch bump
+        settled for those files. A later read of one remaining sample still
+        uses those marker names.
+        """
         filtered_mapping = {
             sample_name: pxl_file
             for sample_name, pxl_file in self._db_to_file_mapping.items()
             if sample_name in sample_names
         }
-        return PixelDataViewer.from_sample_to_file_mappings(filtered_mapping)
+        viewer = PixelDataViewer.from_sample_to_file_mappings(filtered_mapping)
+        if len(self._db_to_file_mapping) < 2:
+            return viewer
+        self.marker_renames_by_sample()
+        marker_renames = self._marker_renames or {}
+        hash_renames = self._hash_count_renames or {}
+        upgraded = self._upgraded_panels or {}
+        viewer._marker_renames = {
+            sample: marker_renames[sample] for sample in filtered_mapping
+        }
+        viewer._hash_count_renames = {
+            sample: hash_renames[sample] for sample in filtered_mapping
+        }
+        viewer._upgraded_panels = {
+            sample: upgraded[sample] for sample in filtered_mapping
+        }
+        return viewer
 
     @property
     def sample_to_file_mappings(self) -> dict[str, Path]:
@@ -203,14 +224,14 @@ class PixelDataViewer:
         """Return a session whose marker columns use the patch bump.
 
         Edgelist, proximity, and layouts are renamed in the session views.
-        The files on disk are not rewritten. One sample has nothing to bump
-        against, so that session shows the stored ids. Computing the bump
-        reads AnnData through a session that still shows the stored ids.
+        The files on disk are not rewritten. A view opened on one file shows
+        the stored ids. A view narrowed from several files keeps that bump.
+        Computing the bump reads AnnData through a session that still shows
+        the stored ids.
         """
-        renames: dict[str, dict[str, str]] = {}
-        if len(self._db_to_file_mapping) >= 2:
-            renames = self.marker_renames_by_sample()
-        return self._open_session(renames)
+        if self._marker_renames is None and len(self._db_to_file_mapping) >= 2:
+            self.marker_renames_by_sample()
+        return self._open_session(self._marker_renames or {})
 
     def _open_session(
         self, marker_renames: dict[str, dict[str, str]] | None = None

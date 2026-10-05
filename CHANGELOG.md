@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Rewriting a pixelator 0.22.0–0.30.0 file stores its panel in the panel tables.
-- A panel patch bump renames markers in the edgelist, proximity, and layouts, not only in `var`.
+- A panel patch bump renames markers in the edgelist, proximity, and layouts, not only in `var`. Filtering that dataset keeps those names, including when one sample remains.
 - `Edgelist.to_record_batches` renames legacy `marker1` and `marker2` columns to `marker_1` and `marker_2`, matching `to_polars`, `to_df`, and `iterator`. The stream on dev left those column names unchanged.
 - A panel patch bump of a sample-called file no longer fails because hashing clones are missing from `var`. A missing non-hashing marker still fails.
 - Denoise rebuilds the count matrix from the markers already in `var`, so hashing clones removed by sample calling do not come back. The full panel is still stored in the panel tables.

@@ -326,6 +326,54 @@ class TestTryBumpAdataPanelVersion:
         assert "MarkerA" not in old_ids
         assert "MarkerANew" in old_ids
 
+    def test_sample_filter_keeps_the_patch_bump(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        panel: PNAAntibodyPanel,
+    ):
+        """A cohort narrowed to one sample still uses the bumped marker ids."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=panel_old,
+            panel_new=panel_new,
+        )
+
+        filtered = dataset.filter(samples={"sample_old"})
+        adata = filtered.adata(add_clr_transform=False, add_log1p_transform=False)
+        assert "MarkerANew" in adata.var_names
+        assert "MarkerA" not in adata.var_names
+        edgelist = filtered.edgelist().to_polars()
+        ids = set(edgelist["marker_1"].to_list() + edgelist["marker_2"].to_list())
+        assert "MarkerA" not in ids
+        assert "MarkerANew" in ids
+
+        narrowed = dataset.filter(samples={"sample_old"}, markers={"MarkerANew"})
+        narrowed_adata = narrowed.adata(
+            add_clr_transform=False, add_log1p_transform=False
+        )
+        assert list(narrowed_adata.var_names) == ["MarkerANew"]
+        assert narrowed_adata.n_obs > 0
+
+        alone = PNAPixelDataset.from_pxl_files([tmp_path / "sample_old.pxl"])
+        alone_adata = alone.adata(add_clr_transform=False, add_log1p_transform=False)
+        assert "MarkerA" in alone_adata.var_names
+        assert "MarkerANew" not in alone_adata.var_names
+
     def test_proximity_filter_uses_renamed_marker_ids(
         self,
         tmp_path: Path,
