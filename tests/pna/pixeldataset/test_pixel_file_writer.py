@@ -1,5 +1,6 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -10,7 +11,7 @@ from anndata import AnnData
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import PNAAntibodyPanel
-from pixelator.pna.pixeldataset.io import PixelFileWriter
+from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 
 
 class TestPixelFileWriter:
@@ -202,3 +203,59 @@ class TestPixelFileWriter:
             )
         assert "antibody_count" in columns
         assert "control" in columns
+
+    def test_write_adata_stores_a_legacy_panel_before_replacing_it(self, tmp_path):
+        """A 0.22–0.30 file keeps its panel when AnnData is written again."""
+        legacy = AnnData(
+            X=np.zeros((1, 1)),
+            obs=pd.DataFrame(index=["c1"]),
+            var=pd.DataFrame(
+                {
+                    "antibody_count": [1],
+                    "control": [False],
+                    "sequence_1": ["AAAA"],
+                    "sequence_2": ["AAAA"],
+                },
+                index=pd.Index(["CD3"], name="marker_id"),
+            ),
+        )
+        legacy.uns["panel_metadata"] = {
+            "name": "base",
+            "version": "1.0.0",
+            "product": "proxiome",
+            "panel_columns": ["control", "sequence_1", "sequence_2"],
+        }
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            writer.write_adata(legacy)
+
+        rewritten = AnnData(
+            X=np.zeros((1, 1)),
+            obs=pd.DataFrame({"k_core_1": [3]}, index=["c1"]),
+            var=legacy.var.copy(),
+        )
+        with PixelFileWriter(target) as writer:
+            writer.write_adata(rewritten)
+            columns = set(
+                writer.get_connection()
+                .execute("SELECT * FROM __adata__var LIMIT 0")
+                .fetchdf()
+                .columns
+            )
+            uns_row = (
+                writer.get_connection()
+                .execute("SELECT value FROM __adata__uns")
+                .fetchone()
+            )
+
+        uns = json.loads(uns_row[0]) if isinstance(uns_row[0], str) else uns_row[0]
+        panel = PxlFile(target).read_panel()
+        assert panel is not None
+        assert panel.name == "base"
+        assert panel.version == "1.0.0"
+        assert list(panel.markers) == ["CD3"]
+        assert "panel_metadata" not in uns
+        assert "antibody_count" in columns
+        assert "control" not in columns
+        assert "sequence_1" not in columns
+        assert "sequence_2" not in columns

@@ -5,6 +5,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import json
 import tempfile
 from pathlib import Path
 
@@ -12,7 +13,9 @@ import duckdb
 import polars as pl
 from anndata import AnnData
 
+from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.config.panel_tables import (
+    panel_tables_present,
     stored_panel_marker_columns,
     write_panel_tables,
 )
@@ -179,7 +182,9 @@ class PixelFileWriter:
 
         When the panel tables are already on this file, marker columns from
         that panel are left out of ``var``. Those columns are joined back
-        on read.
+        on read. A file from pixelator 0.22.0 through 0.30.0 stores the
+        panel in ``uns`` instead. That panel is copied into the panel
+        tables before the AnnData tables are replaced.
 
         Args:
             adata: The AnnData object to write.
@@ -195,6 +200,7 @@ class PixelFileWriter:
                     "but a PXL file may only contain a single sample."
                 )
 
+        self._store_legacy_panel()
         self._clean_existing_adata_tables()
 
         X = adata.to_df().reset_index(names="index")
@@ -226,6 +232,36 @@ class PixelFileWriter:
                 CREATE TABLE __adata__obsm_{key} AS SELECT * FROM obsm_layer;
                 """,
             )
+
+    def _store_legacy_panel(self) -> None:
+        """Copy a 0.22.0–0.30.0 panel into the panel tables.
+
+        The panel still sits in ``__adata__uns`` until this write replaces
+        those tables. Files that already have panel tables, and files from
+        before 0.22.0, are left unchanged.
+        """
+        if panel_tables_present(self._connection):
+            return
+        try:
+            uns_row = self._connection.execute(
+                "SELECT value FROM __adata__uns"
+            ).fetchone()
+        except duckdb.CatalogException:
+            return
+        if uns_row is None:
+            return
+        uns = json.loads(uns_row[0]) if isinstance(uns_row[0], str) else uns_row[0]
+        if not isinstance(uns, dict) or "panel_metadata" not in uns:
+            return
+        try:
+            var = self._connection.execute("SELECT * FROM __adata__var").fetchdf()
+        except duckdb.CatalogException:
+            return
+        var = var.set_index("index").rename_axis(index={"index": "marker_id"})
+        panel = PNAAntibodyPanel.from_legacy_var(
+            var, uns["panel_metadata"], file_name=self.path.name
+        )
+        write_panel_tables(self._connection, panel)
 
     def write_panel(self, panel) -> None:
         """Write ``panels`` and ``panel_sources`` for ``panel``.
