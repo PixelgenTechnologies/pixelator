@@ -207,7 +207,16 @@ def pna_edgelist_to_anndata(
     adata = add_panel_information(adata, panel)
 
     total_marker_counts = node_counts_df.sum(axis=1)
-    isotype_markers = adata.var[adata.var["control"]].index
+    control = panel.df["control"]
+    if pd.api.types.is_bool_dtype(control):
+        control_mask = control.fillna(False).astype(bool)
+    else:
+        control_mask = control.astype(str).str.lower().eq("yes")
+    isotype_markers = [
+        marker
+        for marker in control_mask.index[control_mask]
+        if marker in node_counts_df.columns
+    ]
     isotype_counts = node_counts_df[isotype_markers].sum(axis=1)
     adata.obs["isotype_fraction"] = isotype_counts / total_marker_counts
 
