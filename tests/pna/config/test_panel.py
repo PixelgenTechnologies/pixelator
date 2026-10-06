@@ -283,6 +283,18 @@ def test_hashing_marker_ids_need_a_numeric_suffix_and_must_not_nest():
         )
 
 
+def test_control_markers_cannot_be_hashing_markers():
+    """A marker cannot be both a control and a hashing marker."""
+    frame = pd.DataFrame(
+        [_marker_row("B2M-1", "AAAA", control=True, sample_hashing=True)]
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match="cannot be hashing markers"):
+        PNAAntibodyPanel(
+            frame,
+            AntibodyPanelMetadata(name="base", version="1.0.0"),
+        )
+
+
 def test_panel_validation_reports_missing_required_columns(panel_df):
     """A panel missing a required column is rejected before later checks."""
     errors = PNAAntibodyPanel.validate_antibody_panel(

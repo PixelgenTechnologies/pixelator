@@ -13,6 +13,7 @@ import polars as pl
 from pixelator.pna.config.panel.hashing import (
     _hashing_marker_ids,
     collapsed_hashing_marker_id,
+    sample_hashing_mask,
     split_hashing_marker_id,
 )
 
@@ -178,6 +179,26 @@ def _validate_hashing_marker_ids(panel_df: pd.DataFrame) -> list[str]:
     return errors
 
 
+def _validate_control_is_not_hashing(panel_df: pd.DataFrame) -> list[str]:
+    """Return an error when a marker is both a control and a hashing marker."""
+    if (
+        "sample_hashing" in panel_df.columns
+        and panel_df["control"].dtype == bool
+        and len(
+            both := panel_df.index[
+                panel_df["control"] & sample_hashing_mask(panel_df["sample_hashing"])
+            ]
+        )
+        > 0
+    ):
+        return [
+            "Control markers cannot be hashing markers. "
+            f"Offending values: {sorted(map(str, both))}"
+        ]
+    else:
+        return []
+
+
 def validate_antibody_panel(
     panel_df: pd.DataFrame, validate_types: bool = True
 ) -> list[str]:
@@ -202,4 +223,5 @@ def validate_antibody_panel(
     errors += _validate_sequences(panel_df, "sequence_1")
     errors += _validate_sequences(panel_df, "sequence_2")
     errors += _validate_hashing_marker_ids(panel_df)
+    errors += _validate_control_is_not_hashing(panel_df)
     return errors

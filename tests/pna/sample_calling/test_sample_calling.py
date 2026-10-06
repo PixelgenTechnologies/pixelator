@@ -50,9 +50,12 @@ def test_markers_after_hash_collapse_appends_missing_bases():
         ["PD-1", "B2M", "CD29-1", "CD29-2", "ACTB-1"],
         {"CD29-1", "CD29-2", "ACTB-1"},
     )
-    assert _markers_after_hash_collapse(
-        panel, {"CD29-1", "CD29-2", "ACTB-1"}
-    ) == ["PD-1", "B2M", "ACTB", "CD29"]
+    assert _markers_after_hash_collapse(panel, {"CD29-1", "CD29-2", "ACTB-1"}) == [
+        "PD-1",
+        "B2M",
+        "ACTB",
+        "CD29",
+    ]
 
 
 def test_add_original_hash_counts_includes_all_panel_antibodies():
