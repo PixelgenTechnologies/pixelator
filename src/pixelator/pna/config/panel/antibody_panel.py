@@ -65,63 +65,83 @@ class PNAAntibodyPanel:
     def __init__(
         self,
         df: pd.DataFrame,
-        metadata: AntibodyPanelMetadata | None = None,
+        metadata: AntibodyPanelMetadata,
         file_name: Optional[str] = None,
         filepath: Optional[PathType] = None,
-        *,
-        sources: list[PanelSource] | None = None,
-        marker_source_ids: pd.Series | None = None,
     ) -> None:
-        """Build a panel from a marker table.
-
-        Pass ``metadata`` or ``sources``, not both. ``metadata`` becomes one
-        source, using ``file_name`` and ``filepath``. Pass ``sources`` for a
-        panel that already names its files. The ``metadata`` property returns
-        that entry only when the panel has one source.
+        """Build a single-source panel from a marker table.
 
         Args:
             df: Marker table, indexed by marker id.
-            metadata: Metadata for the single source. Omit when passing
-                ``sources``.
+            metadata: Metadata for this panel file.
             file_name: Basename of the file this panel was loaded from.
             filepath: Full path of the file this panel was loaded from.
-            sources: Panel files that contributed markers. Omit when passing
-                ``metadata``.
-            marker_source_ids: Source index for each marker. Required when
-                there is more than one source.
 
         Raises:
-            ValueError: If both ``metadata`` and ``sources`` are omitted or
-                both are given, or if several sources are given without
-                ``marker_source_ids``.
             AssertionError: If the marker table fails panel validation.
         """
-        self._filename = file_name
-        self._filepath: Optional[Path] = Path(filepath).resolve() if filepath else None
-        self._df = df
-        if sources is not None and metadata is not None:
-            raise ValueError("Pass metadata or sources, not both.")
-        if sources is None:
-            if metadata is None:
-                raise ValueError("Pass metadata or sources.")
-            sources = [
+        resolved = Path(filepath).resolve() if filepath else None
+        self._install(
+            df,
+            sources=[
                 PanelSource(
                     metadata=metadata,
                     file_name=file_name,
-                    filepath=str(self._filepath) if self._filepath else None,
+                    filepath=str(resolved) if resolved else None,
                     columns=tuple(map(str, df.columns)),
                 )
-            ]
-        self.sources: list[PanelSource] = list(sources)
-        if marker_source_ids is None:
-            if len(self.sources) > 1:
-                raise ValueError(
-                    "marker_source_ids is required when a panel has multiple sources."
-                )
-            marker_source_ids = pd.Series(0, index=df.index, dtype="int64")
-        self._marker_source_ids = marker_source_ids
+            ],
+            marker_source_ids=pd.Series(0, index=df.index, dtype="int64"),
+            file_name=file_name,
+            filepath=resolved,
+        )
 
-        # validate the panel
+    @classmethod
+    def from_sources(
+        cls,
+        df: pd.DataFrame,
+        sources: list[PanelSource],
+        marker_source_ids: pd.Series,
+        *,
+        file_name: Optional[str] = None,
+        filepath: Optional[PathType] = None,
+    ) -> Self:
+        """Build a panel from a marker table that already names its sources.
+
+        Args:
+            df: Marker table, indexed by marker id.
+            sources: Panel files that contributed markers, in source-index order.
+            marker_source_ids: Source index for each marker.
+            file_name: Basename of the file this panel was loaded from.
+            filepath: Full path of the file this panel was loaded from.
+
+        Raises:
+            AssertionError: If the marker table fails panel validation.
+        """
+        panel = cls.__new__(cls)
+        panel._install(
+            df,
+            sources=list(sources),
+            marker_source_ids=marker_source_ids,
+            file_name=file_name,
+            filepath=Path(filepath).resolve() if filepath else None,
+        )
+        return panel
+
+    def _install(
+        self,
+        df: pd.DataFrame,
+        sources: list[PanelSource],
+        marker_source_ids: pd.Series,
+        file_name: Optional[str],
+        filepath: Optional[Path],
+    ) -> None:
+        """Store the marker table and its sources, then validate the table."""
+        self._filename = file_name
+        self._filepath = filepath
+        self._df = df
+        self.sources = list(sources)
+        self._marker_source_ids = marker_source_ids
         errors = self.validate_antibody_panel(df)
         if len(errors) > 0:
             msg_str = "\n".join(errors)
@@ -257,10 +277,10 @@ class PNAAntibodyPanel:
             )
         marker_source_ids = pd.concat(source_id_frames)
         marker_source_ids.index = df.index
-        return cls(
+        return cls.from_sources(
             df,
-            sources=sources,
-            marker_source_ids=marker_source_ids.astype("int64"),
+            sources,
+            marker_source_ids.astype("int64"),
         )
 
     @staticmethod
@@ -469,12 +489,12 @@ class PNAAntibodyPanel:
 
     def copy(self) -> Self:
         """Return a shallow copy with its own marker table and source list."""
-        return type(self)(
+        return type(self).from_sources(
             self.df.copy(),
+            list(self.sources),
+            self.marker_source_ids.copy(),
             file_name=self.filename,
             filepath=self.filepath,
-            sources=list(self.sources),
-            marker_source_ids=self.marker_source_ids.copy(),
         )
 
     def source_as_panel(self, source_index: int) -> Self:
@@ -522,12 +542,12 @@ class PNAAntibodyPanel:
         sources = list(self.sources)
         sources[source_index] = replacement.sources[0]
         single_source = len(sources) == 1
-        return type(self)(
+        return type(self).from_sources(
             df,
+            sources,
+            source_ids.astype("int64"),
             file_name=self.filename if single_source else None,
             filepath=self.filepath if single_source else None,
-            sources=sources,
-            marker_source_ids=source_ids.astype("int64"),
         )
 
     @cached_property

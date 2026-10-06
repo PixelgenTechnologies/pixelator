@@ -81,15 +81,15 @@ def test_equality_ignores_row_order_and_filename_but_not_marker_source():
     frame = pd.concat([base.df, addon.df])
     frame.index.name = "marker_id"
     sources = [*base.sources, *addon.sources]
-    assigned = PNAAntibodyPanel(
+    assigned = PNAAntibodyPanel.from_sources(
         frame,
-        sources=sources,
-        marker_source_ids=pd.Series({"CD3": 0, "CD19": 1}, dtype="int64"),
+        sources,
+        pd.Series({"CD3": 0, "CD19": 1}, dtype="int64"),
     )
-    swapped = PNAAntibodyPanel(
+    swapped = PNAAntibodyPanel.from_sources(
         frame,
-        sources=sources,
-        marker_source_ids=pd.Series({"CD3": 1, "CD19": 0}, dtype="int64"),
+        sources,
+        pd.Series({"CD3": 1, "CD19": 0}, dtype="int64"),
     )
     assert assigned != swapped
 
