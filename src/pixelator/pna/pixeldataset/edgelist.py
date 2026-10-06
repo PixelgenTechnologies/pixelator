@@ -11,17 +11,11 @@ import pandas as pd
 import polars as pl
 import pyarrow as pa
 
-from pixelator.pna.pixeldataset.io import (
-    PixelDataViewer,
-    PixelDataViewerSession,
-    Query,
-    QueryBuilder,
-)
+from pixelator.pna.pixeldataset.io import PixelDataViewer, Query, QueryBuilder
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
+from pixelator.pna.pixeldataset.legacy import LegacyMarkerQueryAdapter
 from pixelator.pna.pixeldataset.types import Component
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
-
-_LEGACY_MARKER_COLUMNS = (("marker1", "marker_1"), ("marker2", "marker_2"))
 
 
 class Edgelist:
@@ -64,30 +58,10 @@ class Edgelist:
         return set(adata.obs.index.to_list())
 
     def _edgelist_query(
-        self, session: PixelDataViewerSession, components: list[str] | None
+        self, adapter: LegacyMarkerQueryAdapter, components: list[str] | None
     ) -> Query:
-        """Build the edgelist query, aliasing legacy marker column names."""
-        query = self._query_builder.edgelist_query(components)
-        columns = set(
-            session.execute_eager(
-                Query(
-                    "SELECT column_name FROM (DESCRIBE SELECT * FROM edgelist)",
-                    {},
-                )
-            )["column_name"].to_list()
-        )
-        replacements = [
-            f"{old} AS {new}" for old, new in _LEGACY_MARKER_COLUMNS if old in columns
-        ]
-        if not replacements:
-            return query
-        return Query(
-            sql=(
-                f"SELECT * RENAME ({', '.join(replacements)}) "
-                f"FROM ({query.sql}) AS edgelist"
-            ),
-            params=query.params,
-        )
+        """Build the edgelist query, adapted for a legacy marker schema when needed."""
+        return adapter.adapt(self._query_builder.edgelist_query(components))
 
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""
@@ -105,8 +79,9 @@ class Edgelist:
         """Get the edgelist as a pandas DataFrame."""
         components = normalize_input_to_list(self.components)
         with self._view.open() as session:
+            adapter = LegacyMarkerQueryAdapter(session)
             df = (
-                session.execute_lazy(self._edgelist_query(session, components))
+                session.execute_lazy(self._edgelist_query(adapter, components))
                 .collect()
                 .to_pandas()
             )
@@ -116,8 +91,9 @@ class Edgelist:
         """Get the edgelist as a polars DataFrame."""
         components = normalize_input_to_list(self.components)
         with self._view.open() as session:
+            adapter = LegacyMarkerQueryAdapter(session)
             df = session.execute_lazy(
-                self._edgelist_query(session, components)
+                self._edgelist_query(adapter, components)
             ).collect()
         return df
 
@@ -131,17 +107,19 @@ class Edgelist:
         """
         components = normalize_input_to_list(self.components)
         with self._view.open() as session:
+            adapter = LegacyMarkerQueryAdapter(session)
             yield from session.execute_arrow_reader(
-                query=self._edgelist_query(session, components),
+                query=self._edgelist_query(adapter, components),
                 batch_size=batch_size,
             )
 
     def _iterator(self) -> Iterable[tuple[str, pl.LazyFrame]]:
         with self._view.open() as session:
+            adapter = LegacyMarkerQueryAdapter(session)
             for component in self.components:
                 yield (
                     component,
-                    session.execute_lazy(self._edgelist_query(session, [component])),
+                    session.execute_lazy(self._edgelist_query(adapter, [component])),
                 )
 
     def iterator(self) -> Iterable[Component]:
