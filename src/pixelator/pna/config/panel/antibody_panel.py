@@ -65,48 +65,12 @@ class PNAAntibodyPanel:
     def __init__(
         self,
         df: pd.DataFrame,
-        metadata: AntibodyPanelMetadata,
+        sources: list[PanelSource],
+        marker_source_ids: pd.Series,
         file_name: Optional[str] = None,
         filepath: Optional[PathType] = None,
     ) -> None:
-        """Build a single-source panel from a marker table.
-
-        Args:
-            df: Marker table, indexed by marker id.
-            metadata: Metadata for this panel file.
-            file_name: Basename of the file this panel was loaded from.
-            filepath: Full path of the file this panel was loaded from.
-
-        Raises:
-            AssertionError: If the marker table fails panel validation.
-        """
-        resolved = Path(filepath).resolve() if filepath else None
-        self._install(
-            df,
-            sources=[
-                PanelSource(
-                    metadata=metadata,
-                    file_name=file_name,
-                    filepath=str(resolved) if resolved else None,
-                    columns=tuple(map(str, df.columns)),
-                )
-            ],
-            marker_source_ids=pd.Series(0, index=df.index, dtype="int64"),
-            file_name=file_name,
-            filepath=resolved,
-        )
-
-    @classmethod
-    def from_sources(
-        cls,
-        df: pd.DataFrame,
-        sources: list[PanelSource],
-        marker_source_ids: pd.Series,
-        *,
-        file_name: Optional[str] = None,
-        filepath: Optional[PathType] = None,
-    ) -> Self:
-        """Build a panel from a marker table that already names its sources.
+        """Build a panel from a marker table and the sources that contributed it.
 
         Args:
             df: Marker table, indexed by marker id.
@@ -118,27 +82,8 @@ class PNAAntibodyPanel:
         Raises:
             AssertionError: If the marker table fails panel validation.
         """
-        panel = cls.__new__(cls)
-        panel._install(
-            df,
-            sources=list(sources),
-            marker_source_ids=marker_source_ids,
-            file_name=file_name,
-            filepath=Path(filepath).resolve() if filepath else None,
-        )
-        return panel
-
-    def _install(
-        self,
-        df: pd.DataFrame,
-        sources: list[PanelSource],
-        marker_source_ids: pd.Series,
-        file_name: Optional[str],
-        filepath: Optional[Path],
-    ) -> None:
-        """Store the marker table and its sources, then validate the table."""
         self._filename = file_name
-        self._filepath = filepath
+        self._filepath = Path(filepath).resolve() if filepath else None
         self._df = df
         self.sources = list(sources)
         self._marker_source_ids = marker_source_ids
@@ -148,6 +93,41 @@ class PNAAntibodyPanel:
             raise AssertionError(
                 f"The following errors were found validating the panel: {msg_str}"
             )
+
+    @classmethod
+    def from_metadata(
+        cls,
+        df: pd.DataFrame,
+        metadata: AntibodyPanelMetadata,
+        file_name: Optional[str] = None,
+        filepath: Optional[PathType] = None,
+    ) -> Self:
+        """Build a single-source panel from a marker table and its metadata.
+
+        Args:
+            df: Marker table, indexed by marker id.
+            metadata: Metadata for this panel file.
+            file_name: Basename of the file this panel was loaded from.
+            filepath: Full path of the file this panel was loaded from.
+
+        Raises:
+            AssertionError: If the marker table fails panel validation.
+        """
+        resolved = Path(filepath).resolve() if filepath else None
+        return cls(
+            df,
+            [
+                PanelSource(
+                    metadata=metadata,
+                    file_name=file_name,
+                    filepath=str(resolved) if resolved else None,
+                    columns=tuple(map(str, df.columns)),
+                )
+            ],
+            pd.Series(0, index=df.index, dtype="int64"),
+            file_name=file_name,
+            filepath=resolved,
+        )
 
     @classmethod
     def from_csv(cls, filename: PathType) -> Self:
@@ -176,7 +156,9 @@ class PNAAntibodyPanel:
 
         logger.debug("Antibody panel from file %s created", filename)
 
-        return cls(df, metadata, file_name=panel_file.name, filepath=panel_file)
+        return cls.from_metadata(
+            df, metadata, file_name=panel_file.name, filepath=panel_file
+        )
 
     @classmethod
     def from_pxl_dataset(
@@ -233,7 +215,7 @@ class PNAAntibodyPanel:
         metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
 
         logger.debug("Antibody panel from AnnData object created")
-        return cls(df, metadata, file_name=file_name)
+        return cls.from_metadata(df, metadata, file_name=file_name)
 
     @classmethod
     def concatenate(cls, panels: Sequence[PNAAntibodyPanel]) -> PNAAntibodyPanel:
@@ -277,11 +259,7 @@ class PNAAntibodyPanel:
             )
         marker_source_ids = pd.concat(source_id_frames)
         marker_source_ids.index = df.index
-        return cls.from_sources(
-            df,
-            sources,
-            marker_source_ids.astype("int64"),
-        )
+        return cls(df, sources, marker_source_ids.astype("int64"))
 
     @staticmethod
     def _align_optional_columns(frames: list[pd.DataFrame]) -> list[pd.DataFrame]:
@@ -489,7 +467,7 @@ class PNAAntibodyPanel:
 
     def copy(self) -> Self:
         """Return a shallow copy with its own marker table and source list."""
-        return type(self).from_sources(
+        return type(self)(
             self.df.copy(),
             list(self.sources),
             self.marker_source_ids.copy(),
@@ -510,7 +488,7 @@ class PNAAntibodyPanel:
         df = self.df.loc[list(marker_index)].copy()
         if source.columns is not None:
             df = df.loc[:, list(source.columns)]
-        return type(self)(
+        return type(self).from_metadata(
             df,
             source.metadata,
             file_name=source.file_name,
@@ -542,7 +520,7 @@ class PNAAntibodyPanel:
         sources = list(self.sources)
         sources[source_index] = replacement.sources[0]
         single_source = len(sources) == 1
-        return type(self).from_sources(
+        return type(self)(
             df,
             sources,
             source_ids.astype("int64"),

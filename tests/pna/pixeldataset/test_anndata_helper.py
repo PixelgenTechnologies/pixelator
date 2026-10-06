@@ -48,7 +48,7 @@ def _panel_with_version_product_and_uniprot(
     metadata = panel.metadata.model_copy(
         update={"version": version, "product": product}
     )
-    return PNAAntibodyPanel(df=panel_df, metadata=metadata)
+    return PNAAntibodyPanel.from_metadata(df=panel_df, metadata=metadata)
 
 
 def _write_component_suffix_parquet(source: Path, target: Path, suffix: str) -> None:

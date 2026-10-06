@@ -34,7 +34,7 @@ def test_add_panel_rejects_multiple_sources():
                 }
             ]
         ).set_index("marker_id")
-        return PNAAntibodyPanel(
+        return PNAAntibodyPanel.from_metadata(
             frame, AntibodyPanelMetadata(name=name, version="1.0.0")
         )
 

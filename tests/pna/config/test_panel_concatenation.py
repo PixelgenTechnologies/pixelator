@@ -14,7 +14,7 @@ def _panel(
     name: str, version: str, rows: list[dict], product: str = "proxiome"
 ) -> PNAAntibodyPanel:
     frame = pd.DataFrame(rows).set_index("marker_id")
-    return PNAAntibodyPanel(
+    return PNAAntibodyPanel.from_metadata(
         frame,
         AntibodyPanelMetadata(name=name, version=version, product=product),
         file_name=f"{name}.csv",
@@ -69,7 +69,7 @@ def test_concatenate_keeps_metadata_for_each_source():
 
 def test_equality_ignores_row_order_and_filename_but_not_marker_source():
     left = _panel("base", "1.0.0", [_marker("CD3", "AAAA"), _marker("CD19", "CCCC")])
-    right = PNAAntibodyPanel(
+    right = PNAAntibodyPanel.from_metadata(
         left.df.iloc[::-1],
         AntibodyPanelMetadata(name="base", version="1.0.0", product="proxiome"),
         file_name="other.csv",
@@ -81,12 +81,12 @@ def test_equality_ignores_row_order_and_filename_but_not_marker_source():
     frame = pd.concat([base.df, addon.df])
     frame.index.name = "marker_id"
     sources = [*base.sources, *addon.sources]
-    assigned = PNAAntibodyPanel.from_sources(
+    assigned = PNAAntibodyPanel(
         frame,
         sources,
         pd.Series({"CD3": 0, "CD19": 1}, dtype="int64"),
     )
-    swapped = PNAAntibodyPanel.from_sources(
+    swapped = PNAAntibodyPanel(
         frame,
         sources,
         pd.Series({"CD3": 1, "CD19": 0}, dtype="int64"),
