@@ -207,11 +207,7 @@ def pna_edgelist_to_anndata(
     adata = add_panel_information(adata, panel)
 
     total_marker_counts = node_counts_df.sum(axis=1)
-    control = panel.df["control"]
-    if pd.api.types.is_bool_dtype(control):
-        control_mask = control.fillna(False).astype(bool)
-    else:
-        control_mask = control.astype(str).str.lower().eq("yes")
+    control_mask = panel.df["control"]
     isotype_markers = [
         marker
         for marker in control_mask.index[control_mask]
