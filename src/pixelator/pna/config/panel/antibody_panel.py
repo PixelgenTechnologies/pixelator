@@ -42,11 +42,16 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class PanelSource:
-    """One panel file that contributed markers to a ``PNAAntibodyPanel``."""
+    """One panel file that contributed markers to a ``PNAAntibodyPanel``.
+
+    ``columns`` is the marker columns this source was loaded with, in that
+    order. It is None when the file did not store them.
+    """
 
     metadata: AntibodyPanelMetadata
     file_name: str | None = None
     filepath: str | None = None
+    columns: Sequence[str] | None = None
 
 
 class PNAAntibodyPanel:
@@ -104,6 +109,7 @@ class PNAAntibodyPanel:
                     metadata=metadata,
                     file_name=file_name,
                     filepath=str(self._filepath) if self._filepath else None,
+                    columns=tuple(map(str, df.columns)),
                 )
             ]
         self.sources: list[PanelSource] = list(sources)
@@ -218,6 +224,7 @@ class PNAAntibodyPanel:
         ``marker_id``, ``sequence_1``, and ``sequence_2`` must be unique
         across the concatenation. An optional column present on only some
         sources is blank on the others, the same as an empty cell in a panel CSV.
+        Each source still remembers the columns it was loaded with.
         """
         if not panels:
             raise ValueError("At least one panel is required to concatenate.")
@@ -471,12 +478,18 @@ class PNAAntibodyPanel:
         )
 
     def source_as_panel(self, source_index: int) -> Self:
-        """Return one source as its own single-source panel."""
+        """Return one source as its own single-source panel.
+
+        Columns added because another source had them are left behind. A
+        source that was stored without its column list keeps every column.
+        """
         source = self.sources[source_index]
         marker_index = self.marker_source_ids.index[
             self.marker_source_ids == source_index
         ]
         df = self.df.loc[list(marker_index)].copy()
+        if source.columns is not None:
+            df = df.loc[:, list(source.columns)]
         return type(self)(
             df,
             source.metadata,

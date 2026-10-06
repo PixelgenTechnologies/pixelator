@@ -175,3 +175,32 @@ def test_concatenate_rejects_duplicate_marker_and_sequence():
     same_sequence = _panel("addon", "1.0.0", [_marker("CD19", "AAAA")])
     with pytest.raises(AssertionError, match="sequence_1"):
         PNAAntibodyPanel.concatenate([left, same_sequence])
+
+
+def test_source_as_panel_drops_columns_added_by_another_source():
+    with_uniprot = _panel(
+        "base",
+        "1.0.0",
+        [_marker("CD3", "AAAA", uniprot_id="P01730")],
+    )
+    blank_uniprot = _panel(
+        "blank",
+        "1.0.0",
+        [_marker("CD19", "CCCC", uniprot_id="")],
+    )
+    no_uniprot = _panel("addon", "1.0.0", [_marker("CD4", "TTTT")])
+    hashing_flag = _panel(
+        "hash",
+        "1.0.0",
+        [_marker("ACTB", "GGGG", sample_hashing=False)],
+    )
+    combined = PNAAntibodyPanel.concatenate(
+        [with_uniprot, blank_uniprot, no_uniprot, hashing_flag]
+    )
+
+    assert list(combined.source_as_panel(0).df.columns) == list(with_uniprot.df.columns)
+    assert combined.df.loc["CD4", "uniprot_id"] == ""
+    assert combined.source_as_panel(1).df.loc["CD19", "uniprot_id"] == ""
+    assert "uniprot_id" not in combined.source_as_panel(2).df.columns
+    assert "sample_hashing" not in combined.source_as_panel(2).df.columns
+    assert list(combined.source_as_panel(3).df.columns) == list(hashing_flag.df.columns)
