@@ -20,12 +20,39 @@ from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling import (
     _add_original_hash_counts_to_obs,
     _collect_nodes_to_remove,
+    _markers_after_hash_collapse,
     collect_hash_info,
     create_final_report,
     sample_calling,
     warn_if_undetermined_has_high_enrichment,
 )
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
+
+
+def _panel(marker_ids: list[str], hashing: set[str]) -> PNAAntibodyPanel:
+    frame = pd.DataFrame(
+        {
+            "marker_id": marker_ids,
+            "control": [False] * len(marker_ids),
+            "sequence_1": ["AAAA", "AAAC", "AAAG", "AAAT", "AACA"][: len(marker_ids)],
+            "sequence_2": ["CCCC", "CCCA", "CCCG", "CCCT", "CCAC"][: len(marker_ids)],
+            "sample_hashing": [marker_id in hashing for marker_id in marker_ids],
+        }
+    ).set_index("marker_id")
+    return PNAAntibodyPanel(
+        frame, AntibodyPanelMetadata(name="hashing", version="1.0.0")
+    )
+
+
+def test_markers_after_hash_collapse_appends_missing_bases():
+    """Hashing clones drop out, and each new collapsed base is appended once, sorted."""
+    panel = _panel(
+        ["PD-1", "B2M", "CD29-1", "CD29-2", "ACTB-1"],
+        {"CD29-1", "CD29-2", "ACTB-1"},
+    )
+    assert _markers_after_hash_collapse(
+        panel, {"CD29-1", "CD29-2", "ACTB-1"}
+    ) == ["PD-1", "B2M", "ACTB", "CD29"]
 
 
 def test_add_original_hash_counts_includes_all_panel_antibodies():

@@ -208,23 +208,17 @@ def _add_original_hash_counts_to_obs(
             old_adata.obs[f"original_hash_counts_{ab}"] = 0
 
 
-def _count_markers_after_hash_collapse(
+def _markers_after_hash_collapse(
     panel: PNAAntibodyPanel, hashing_antibodies: set[str]
 ) -> list[str]:
     """Return count-matrix markers after hashing ids collapse to their base name.
 
-    Hashing clones are left out. A collapsed base that is not already on the
-    panel is appended, so edgelist counts under that name are kept.
+    Hashing clones are left out. Each collapsed base that is not already on the
+    panel is appended in sorted order, so edgelist counts under that name are kept.
     """
-    hashing = {str(marker) for marker in hashing_antibodies}
-    kept = [str(marker) for marker in panel.markers if str(marker) not in hashing]
-    present = set(kept)
-    for marker in sorted(hashing):
-        base = collapsed_hashing_marker_id(marker)
-        if base not in present:
-            kept.append(base)
-            present.add(base)
-    return kept
+    kept = [marker for marker in panel.markers if marker not in hashing_antibodies]
+    bases = {collapsed_hashing_marker_id(marker) for marker in hashing_antibodies}
+    return kept + sorted(bases - set(kept))
 
 
 def _build_post_sample_calling_anndata(
@@ -258,7 +252,7 @@ def _build_post_sample_calling_anndata(
     new_adata = pna_edgelist_to_anndata(
         con,
         panel,
-        markers=_count_markers_after_hash_collapse(
+        markers=_markers_after_hash_collapse(
             panel, hashing_antibody_mapping.hashing_antibodies
         ),
     )
