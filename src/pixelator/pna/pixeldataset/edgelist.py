@@ -11,10 +11,17 @@ import pandas as pd
 import polars as pl
 import pyarrow as pa
 
-from pixelator.pna.pixeldataset.io import PixelDataViewer, QueryBuilder
+from pixelator.pna.pixeldataset.io import (
+    PixelDataViewer,
+    PixelDataViewerSession,
+    Query,
+    QueryBuilder,
+)
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.pixeldataset.types import Component
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
+
+_LEGACY_MARKER_COLUMNS = (("marker1", "marker_1"), ("marker2", "marker_2"))
 
 
 class Edgelist:
@@ -56,9 +63,31 @@ class Edgelist:
         )
         return set(adata.obs.index.to_list())
 
-    def _handle_backwards_compatibility(self, df: pl.LazyFrame) -> pl.LazyFrame:
-        # Handle legacy marker names
-        return df.rename({"marker1": "marker_1", "marker2": "marker_2"}, strict=False)
+    def _edgelist_query(
+        self, session: PixelDataViewerSession, components: list[str] | None
+    ) -> Query:
+        """Build the edgelist query, aliasing legacy marker column names."""
+        query = self._query_builder.edgelist_query(components)
+        columns = set(
+            session.execute_eager(
+                Query(
+                    "SELECT column_name FROM (DESCRIBE SELECT * FROM edgelist)",
+                    {},
+                )
+            )["column_name"].to_list()
+        )
+        replacements = [
+            f"{old} AS {new}" for old, new in _LEGACY_MARKER_COLUMNS if old in columns
+        ]
+        if not replacements:
+            return query
+        return Query(
+            sql=(
+                f"SELECT * RENAME ({', '.join(replacements)}) "
+                f"FROM ({query.sql}) AS edgelist"
+            ),
+            params=query.params,
+        )
 
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""
@@ -74,12 +103,10 @@ class Edgelist:
 
     def to_df(self) -> pd.DataFrame:
         """Get the edgelist as a pandas DataFrame."""
-        query = self._query_builder.edgelist_query(
-            normalize_input_to_list(self.components)
-        )
+        components = normalize_input_to_list(self.components)
         with self._view.open() as session:
             df = (
-                self._handle_backwards_compatibility(session.execute_lazy(query))
+                session.execute_lazy(self._edgelist_query(session, components))
                 .collect()
                 .to_pandas()
             )
@@ -87,12 +114,10 @@ class Edgelist:
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
-        query = self._query_builder.edgelist_query(
-            normalize_input_to_list(self.components)
-        )
+        components = normalize_input_to_list(self.components)
         with self._view.open() as session:
-            df = self._handle_backwards_compatibility(
-                session.execute_lazy(query)
+            df = session.execute_lazy(
+                self._edgelist_query(session, components)
             ).collect()
         return df
 
@@ -104,36 +129,19 @@ class Edgelist:
         Legacy ``marker1`` and ``marker2`` columns are renamed to
         ``marker_1`` and ``marker_2``, matching :meth:`to_polars`.
         """
-        query = self._query_builder.edgelist_query(
-            normalize_input_to_list(self.components)
-        )
+        components = normalize_input_to_list(self.components)
         with self._view.open() as session:
-            for batch in session.execute_arrow_reader(
-                query=query, batch_size=batch_size
-            ):
-                names = set(batch.schema.names)
-                if "marker1" not in names and "marker2" not in names:
-                    yield batch
-                    continue
-                frame = pl.from_arrow(batch)
-                if not isinstance(frame, pl.DataFrame):
-                    yield batch
-                    continue
-                renamed = self._handle_backwards_compatibility(frame.lazy()).collect()
-                table = renamed.to_arrow()
-                batches = table.to_batches(max_chunksize=max(batch.num_rows, 1))
-                if batches:
-                    yield from batches
-                else:
-                    yield pa.RecordBatch.from_pylist([], schema=table.schema)
+            yield from session.execute_arrow_reader(
+                query=self._edgelist_query(session, components),
+                batch_size=batch_size,
+            )
 
     def _iterator(self) -> Iterable[tuple[str, pl.LazyFrame]]:
         with self._view.open() as session:
             for component in self.components:
-                query = self._query_builder.edgelist_query([component])
                 yield (
                     component,
-                    session.execute_lazy(query),
+                    session.execute_lazy(self._edgelist_query(session, [component])),
                 )
 
     def iterator(self) -> Iterable[Component]:
@@ -148,7 +156,7 @@ class Edgelist:
                 # here is that otherwise the object is not pickable, and thus not handled
                 # well by the analysis manager. We should revisit this in the future.
                 component_id=name,
-                frame=self._handle_backwards_compatibility(df).collect().lazy(),
+                frame=df.collect().lazy(),
             )
 
     def __str__(self) -> str:
