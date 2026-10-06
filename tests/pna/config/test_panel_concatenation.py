@@ -5,6 +5,7 @@ Copyright © 2026 Pixelgen Technologies AB.
 
 from pathlib import Path
 
+import duckdb
 import numpy as np
 import pandas as pd
 import pytest
@@ -322,6 +323,50 @@ def test_patch_bump_is_per_source_and_skips_collapsed_hashing_clones():
     )
     assert renames[0]["CD3"] == "CD3E"
     assert "B2M-1" in upgraded[0].markers
+
+
+def test_read_panel_drops_columns_added_by_another_source(tmp_path: Path):
+    with_uniprot = _panel(
+        "base",
+        "1.0.0",
+        [_marker("CD3", "AAAA", uniprot_id="P01730")],
+    )
+    blank_uniprot = _panel(
+        "blank",
+        "1.0.0",
+        [_marker("CD19", "CCCC", uniprot_id="")],
+    )
+    no_uniprot = _panel("addon", "1.0.0", [_marker("CD4", "TTTT")])
+    hashing_flag = _panel(
+        "hash",
+        "1.0.0",
+        [_marker("ACTB", "GGGG", sample_hashing=False)],
+    )
+    combined = PNAAntibodyPanel.concatenate(
+        [with_uniprot, blank_uniprot, no_uniprot, hashing_flag]
+    )
+
+    path = tmp_path / "combined.pxl"
+    with PixelFileWriter(path) as writer:
+        writer.write_metadata({"sample_name": "combined"})
+        writer.write_panel(combined)
+        connection = writer.get_connection()
+        connection.execute("CREATE TABLE edgelist (umi1 INTEGER)")
+        connection.execute('CREATE TABLE "__adata__X" (index VARCHAR)')
+        connection.execute('CREATE TABLE "__adata__obs" (index VARCHAR)')
+        connection.execute('CREATE TABLE "__adata__var" (index VARCHAR)')
+
+    loaded = PxlFile(path).read_panel()
+    assert loaded is not None
+    assert "uniprot_id" not in loaded.source_as_panel(2).df.columns
+    assert list(loaded.source_as_panel(1).df.columns) == list(blank_uniprot.df.columns)
+    assert loaded.source_as_panel(1).df.loc["CD19", "uniprot_id"] == ""
+
+    with duckdb.connect(str(path)) as connection:
+        connection.execute("ALTER TABLE panel_sources DROP COLUMN columns")
+    without_column_list = PxlFile(path).read_panel()
+    assert without_column_list is not None
+    assert "uniprot_id" in without_column_list.source_as_panel(2).df.columns
 
 
 def test_panel_tables_roundtrip_and_legacy_uns(tmp_path: Path):
