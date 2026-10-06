@@ -11,8 +11,9 @@ import pandas as pd
 import polars as pl
 import pyarrow as pa
 
-from pixelator.pna.pixeldataset.io import PixelDataViewer, QueryBuilder
+from pixelator.pna.pixeldataset.io import PixelDataViewer, Query, QueryBuilder
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
+from pixelator.pna.pixeldataset.legacy import LegacyMarkerQueryAdapter
 from pixelator.pna.pixeldataset.types import Component
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
@@ -56,9 +57,11 @@ class Edgelist:
         )
         return set(adata.obs.index.to_list())
 
-    def _handle_backwards_compatibility(self, df: pl.LazyFrame) -> pl.LazyFrame:
-        # Handle legacy marker names
-        return df.rename({"marker1": "marker_1", "marker2": "marker_2"}, strict=False)
+    def _edgelist_query(
+        self, adapter: LegacyMarkerQueryAdapter, components: list[str] | None
+    ) -> Query:
+        """Build the edgelist query, adapted for a legacy marker schema when needed."""
+        return adapter.adapt(self._query_builder.edgelist_query(components))
 
     def __len__(self) -> int:
         """Get the number of edges in the edgelist."""
@@ -74,12 +77,11 @@ class Edgelist:
 
     def to_df(self) -> pd.DataFrame:
         """Get the edgelist as a pandas DataFrame."""
-        query = self._query_builder.edgelist_query(
-            normalize_input_to_list(self.components)
-        )
+        components = normalize_input_to_list(self.components)
         with self._view.open() as session:
+            adapter = LegacyMarkerQueryAdapter(session)
             df = (
-                self._handle_backwards_compatibility(session.execute_lazy(query))
+                session.execute_lazy(self._edgelist_query(adapter, components))
                 .collect()
                 .to_pandas()
             )
@@ -87,32 +89,37 @@ class Edgelist:
 
     def to_polars(self) -> pl.DataFrame:
         """Get the edgelist as a polars DataFrame."""
-        query = self._query_builder.edgelist_query(
-            normalize_input_to_list(self.components)
-        )
+        components = normalize_input_to_list(self.components)
         with self._view.open() as session:
-            df = self._handle_backwards_compatibility(
-                session.execute_lazy(query)
+            adapter = LegacyMarkerQueryAdapter(session)
+            df = session.execute_lazy(
+                self._edgelist_query(adapter, components)
             ).collect()
         return df
 
     def to_record_batches(
         self, batch_size: int = 1_000_000
     ) -> Iterable[pa.RecordBatch]:
-        """Get the edgelist as a stream of pyarrow RecordBatches."""
-        query = self._query_builder.edgelist_query(
-            normalize_input_to_list(self.components)
-        )
+        """Get the edgelist as a stream of pyarrow RecordBatches.
+
+        Legacy ``marker1`` and ``marker2`` columns are renamed to
+        ``marker_1`` and ``marker_2``, matching :meth:`to_polars`.
+        """
+        components = normalize_input_to_list(self.components)
         with self._view.open() as session:
-            yield from session.execute_arrow_reader(query=query, batch_size=batch_size)
+            adapter = LegacyMarkerQueryAdapter(session)
+            yield from session.execute_arrow_reader(
+                query=self._edgelist_query(adapter, components),
+                batch_size=batch_size,
+            )
 
     def _iterator(self) -> Iterable[tuple[str, pl.LazyFrame]]:
         with self._view.open() as session:
+            adapter = LegacyMarkerQueryAdapter(session)
             for component in self.components:
-                query = self._query_builder.edgelist_query([component])
                 yield (
                     component,
-                    session.execute_lazy(query),
+                    session.execute_lazy(self._edgelist_query(adapter, [component])),
                 )
 
     def iterator(self) -> Iterable[Component]:
@@ -127,7 +134,7 @@ class Edgelist:
                 # here is that otherwise the object is not pickable, and thus not handled
                 # well by the analysis manager. We should revisit this in the future.
                 component_id=name,
-                frame=self._handle_backwards_compatibility(df).collect().lazy(),
+                frame=df.collect().lazy(),
             )
 
     def __str__(self) -> str:
