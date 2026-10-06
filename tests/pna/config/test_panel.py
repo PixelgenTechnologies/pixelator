@@ -285,7 +285,9 @@ def test_hashing_marker_ids_need_a_numeric_suffix_and_must_not_nest():
 
 def test_panel_validation_reports_missing_required_columns(panel_df):
     """A panel missing a required column is rejected before later checks."""
-    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df.drop(columns=["sequence_1"]))
+    errors = PNAAntibodyPanel.validate_antibody_panel(
+        panel_df.drop(columns=["sequence_1"])
+    )
     assert len(errors) == 1
     assert "missing required columns" in errors[0]
     assert "sequence_1" in errors[0]
@@ -322,4 +324,6 @@ def test_panel_validation_reports_column_type_mismatch(panel_df):
     """Column types are checked when validate_types is left on."""
     panel_df["control"] = ["no", "yes", "no"]
     errors = PNAAntibodyPanel.validate_antibody_panel(panel_df)
-    assert any(error.startswith("Column control has incorrect type.") for error in errors)
+    assert any(
+        error.startswith("Column control has incorrect type.") for error in errors
+    )
