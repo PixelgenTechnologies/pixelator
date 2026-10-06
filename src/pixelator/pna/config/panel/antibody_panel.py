@@ -1,14 +1,14 @@
-"""Marker panel management for different PNA assays.
+"""PNA antibody panel loading and validation.
 
 Copyright © 2022 Pixelgen Technologies AB.
 """
 
 from __future__ import annotations
 
-import warnings
+import re
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Set
+from typing import TYPE_CHECKING, List, Optional
 
 from anndata import AnnData
 
@@ -16,8 +16,6 @@ try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
-
-import re
 
 import pandas as pd
 import polars as pl
@@ -28,47 +26,25 @@ from pixelator.common.config.panel import (
 )
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
+from pixelator.pna.config.panel.hashing import (
+    _hashing_marker_ids,
+    collapsed_hashing_marker_id,
+    split_hashing_marker_id,
+)
 
 if TYPE_CHECKING:
     from pixelator.pna.config.config_class import PNAConfig
     from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
 
-# Trailing ``-<digits>`` is the hash group (``B2M-1`` → ``B2M``). The same
-# pattern matches ordinary names such as ``PD-1``, so it is only applied to
-# rows already flagged by ``sample_hashing``.
-_HASHING_MARKER_ID_RE = re.compile(r"^(?P<base>.+)-(?P<index>\d+)$")
+# UniProt accession naming convention. The trailing alternative allows an empty id.
+_UNIPROT_ID_RE = re.compile(
+    r"^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}|$"
+)
 
 
-def sample_hashing_mask(sample_hashing: pd.Series) -> pd.Series:
-    """Return a boolean mask for values that flag a hashing marker."""
-    if pd.api.types.is_bool_dtype(sample_hashing):
-        return sample_hashing.fillna(False).astype(bool)
-    if pd.api.types.is_numeric_dtype(sample_hashing):
-        return sample_hashing.fillna(0).astype(bool)
-    normalized = sample_hashing.astype(str).str.strip().str.lower()
-    return normalized.isin(["yes", "true"])
-
-
-def split_hashing_marker_id(marker_id: str) -> tuple[str, str] | None:
-    """Return ``(base, index)`` for a hashing id such as ``B2M-1``."""
-    match = _HASHING_MARKER_ID_RE.fullmatch(str(marker_id))
-    if match is None:
-        return None
-    return match.group("base"), match.group("index")
-
-
-def collapsed_hashing_marker_id(marker_id: str) -> str:
-    """Return the marker id sample calling stores for a hashing antibody."""
-    parts = split_hashing_marker_id(marker_id)
-    return parts[0] if parts is not None else str(marker_id)
-
-
-def _hashing_marker_ids(panel_df: pd.DataFrame) -> set[str]:
-    """Return hashing marker ids, or an empty set when the column is absent."""
-    if "sample_hashing" not in panel_df.columns:
-        return set()
-    mask = sample_hashing_mask(panel_df["sample_hashing"])
-    return {str(marker_id) for marker_id in panel_df.index[mask]}
+def _uniprot_ids_are_valid(id_str: object) -> bool:
+    """Return whether every semicolon-separated UniProt id matches the convention."""
+    return all(bool(_UNIPROT_ID_RE.match(part)) for part in str(id_str).split(";"))
 
 
 class PNAAntibodyPanel:
@@ -347,6 +323,76 @@ class PNAAntibodyPanel:
         return errors
 
     @classmethod
+    def _validate_structure(cls, panel_df: pd.DataFrame) -> list[str]:
+        """Return the first error that makes the remaining checks meaningless."""
+        if not set(cls._REQUIRED_COLUMNS).issubset(set(panel_df.columns)):
+            missing_columns = set(cls._REQUIRED_COLUMNS) - set(panel_df.columns)
+            return [f"Panel has missing required columns: {missing_columns}"]
+
+        if panel_df.shape[0] == 0:
+            return ["Panel file is empty"]
+
+        if panel_df.index.name != cls._INDEX_COLUMN:
+            return [f"`{cls._INDEX_COLUMN}` is missing or is not set as index"]
+
+        return []
+
+    @classmethod
+    def _validate_column_types(cls, panel_df: pd.DataFrame) -> list[str]:
+        """Return errors for required columns whose dtype does not match the schema."""
+        errors = []
+        panel_pl_df = pl.from_pandas(panel_df, include_index=True)
+        for col, expected_type in (
+            cls._REQUIRED_COLUMNS | {cls._INDEX_COLUMN: cls._INDEX_COLUMN_TYPE}
+        ).items():
+            found_type = panel_pl_df[col].dtype.to_python()
+            if not found_type == expected_type:
+                errors.append(
+                    f"Column {col} has incorrect type. Expected {expected_type}, got {found_type}"
+                )
+        return errors
+
+    @classmethod
+    def _validate_unique_values(cls, panel_df: pd.DataFrame) -> list[str]:
+        """Return errors when a unique column or the marker id repeats."""
+        errors = []
+        for col in cls._UNIQUE_COLUMNS:
+            if not len(panel_df[col].unique()) == len(panel_df[col]):
+                errors.append(f"All values in column: {col} were not unique")
+
+        if panel_df.index.duplicated().any():
+            duplicated = panel_df.index[panel_df.index.duplicated()].unique().tolist()
+            errors.append(
+                "All values in column: marker_id were not unique. "
+                f"Offending values: {duplicated}"
+            )
+        return errors
+
+    @staticmethod
+    def _validate_control_column(panel_df: pd.DataFrame) -> list[str]:
+        """Return an error when the control column is not boolean."""
+        if panel_df["control"].dtype != bool:
+            return ["`control` column is not boolean"]
+        return []
+
+    @staticmethod
+    def _validate_uniprot_ids(panel_df: pd.DataFrame) -> list[str]:
+        """Return an error when a present UniProt id breaks the naming convention."""
+        if "uniprot_id" not in panel_df.columns:
+            return []
+
+        bad_ids = panel_df[~panel_df["uniprot_id"].apply(_uniprot_ids_are_valid)][
+            "uniprot_id"
+        ]
+        if len(bad_ids) > 0:
+            return [
+                "Invalid UniProt IDs found."
+                "Please conform to the naming convention or remove the following IDs:"
+                f"{bad_ids.tolist()}"
+            ]
+        return []
+
+    @classmethod
     def validate_antibody_panel(
         cls, panel_df: pd.DataFrame, validate_types: bool = True
     ) -> list[str]:
@@ -359,78 +405,18 @@ class PNAAntibodyPanel:
         Returns:
             A list of validation error messages. Empty means valid input.
         """
-        errors = []
-
-        # some basic sanity check on the panel size and columns
-        if not set(cls._REQUIRED_COLUMNS).issubset(set(panel_df.columns)):
-            missing_columns = set(cls._REQUIRED_COLUMNS) - set(panel_df.columns)
-            errors.append(f"Panel has missing required columns: {missing_columns}")
+        errors = cls._validate_structure(panel_df)
+        if errors:
             return errors
-
         if validate_types:
-            panel_pl_df = pl.from_pandas(panel_df, include_index=True)
-            for col, expected_type in (
-                cls._REQUIRED_COLUMNS | {cls._INDEX_COLUMN: cls._INDEX_COLUMN_TYPE}
-            ).items():
-                found_type = panel_pl_df[col].dtype.to_python()
-                if not found_type == expected_type:
-                    errors.append(
-                        f"Column {col} has incorrect type. Expected {expected_type}, got {found_type}"
-                    )
-
-        if panel_df.shape[0] == 0:
-            errors.append("Panel file is empty")
-            return errors
-
-        # sanity check on the unique columns
-        for col in cls._UNIQUE_COLUMNS:
-            if not len(panel_df[col].unique()) == len(panel_df[col]):
-                errors.append(f"All values in column: {col} were not unique")
-
-        if panel_df.index.name != cls._INDEX_COLUMN:
-            errors.append(f"`{cls._INDEX_COLUMN}` is missing or is not set as index")
-            return errors
-
-        if panel_df.index.duplicated().any():
-            duplicated = panel_df.index[panel_df.index.duplicated()].unique().tolist()
-            errors.append(
-                "All values in column: marker_id were not unique. "
-                f"Offending values: {duplicated}"
-            )
-
+            errors += cls._validate_column_types(panel_df)
+        errors += cls._validate_unique_values(panel_df)
         errors += cls._validate_marker_names(panel_df)
-
-        if panel_df["control"].dtype != bool:
-            errors.append("`control` column is not boolean")
-
-        # Check UniProt IDs format conforming to the UniProt naming convention. Empty IDs are allowed.
-        if "uniprot_id" in panel_df.columns:
-            # Pattern for valid UniProt IDs
-            pattern = r"^[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}|$"
-
-            def check_id(id_str):
-                """Check id.
-
-                Args:
-                    id_str: id str.
-                """
-                return all(
-                    bool(re.match(pattern, id_)) for id_ in str(id_str).split(";")
-                )
-
-            bad_ids = panel_df[~panel_df["uniprot_id"].apply(check_id)]["uniprot_id"]
-
-            if len(bad_ids) > 0:
-                errors.append(
-                    "Invalid UniProt IDs found."
-                    "Please conform to the naming convention or remove the following IDs:"
-                    f"{bad_ids.tolist()}"
-                )
-
+        errors += cls._validate_control_column(panel_df)
+        errors += cls._validate_uniprot_ids(panel_df)
         errors += cls._validate_sequences(panel_df, "sequence_1")
         errors += cls._validate_sequences(panel_df, "sequence_2")
         errors += cls._validate_hashing_marker_ids(panel_df)
-
         return errors
 
     @staticmethod
@@ -496,208 +482,3 @@ def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
 
     panel_obj = PNAAntibodyPanel.from_csv(panel)
     return panel_obj
-
-
-class PNAAntibodyPanelDiff:
-    """Class representing the differences between two PNAAntibodyPanel objects."""
-
-    join_on_columns: list[str] = ["sequence_1", "sequence_2"]
-
-    def __init__(self, panel_1: PNAAntibodyPanel, panel_2: PNAAntibodyPanel) -> None:
-        """Initialize the PNAAntibodyPanelDiff object.
-
-        Args:
-            panel_1: The first panel to compare.
-            panel_2: The second panel to compare.
-        """
-        self.panel_1 = panel_1
-        self.panel_2 = panel_2
-
-        logger.debug(
-            "Comparing panels %s v%s and %s v%s",
-            panel_1.name,
-            panel_1.version,
-            panel_2.name,
-            panel_2.version,
-        )
-
-        self.joined = self.panel_1.to_polars().join(
-            self.panel_2.to_polars(),
-            on=self.join_on_columns,
-            how="full",
-            suffix="_panel_2",
-        )
-
-        self._identical_columns: List[str] | None = None
-        self._changed_columns: List[str] | None = None
-        self._removed_columns: Set[str] | None = None
-        self._added_columns: Set[str] | None = None
-
-    @property
-    def col_names_in_both_panels(self) -> List[str]:
-        """Return a list of column names that are present in both panels."""
-        return list(
-            set(self.panel_1.to_polars().columns).intersection(
-                set(self.panel_2.to_polars().columns)
-            )
-        )
-
-    @property
-    def identical_columns(self) -> List[str]:
-        """Return a list of columns that are identical between the two panels."""
-        return [
-            col_name
-            for col_name in self.col_names_in_both_panels
-            if self.joined[col_name]
-            .eq_missing(self.joined[col_name + "_panel_2"])
-            .all()
-        ]
-
-    @cached_property
-    def changed_columns(self) -> List[str]:
-        """Return a list of columns that are different between the two panels."""
-        changed_columns = [
-            col_name
-            for col_name in set(self.col_names_in_both_panels).difference(
-                set(self.join_on_columns)
-            )
-            if not self.joined[col_name]
-            .eq_missing(self.joined[col_name + "_panel_2"])
-            .all()
-        ]
-        for col_name in changed_columns:
-            diff_count = self.joined.filter(
-                pl.col(col_name).ne_missing(pl.col(col_name + "_panel_2"))
-            ).shape[0]
-            logger.debug(
-                "Column %s is different between the two panels %s and %s (%d differing entries).",
-                col_name,
-                self.panel_1.name,
-                self.panel_2.name,
-                diff_count,
-            )
-        return changed_columns
-
-    @cached_property
-    def removed_columns(self) -> List[str]:
-        """Return a list of columns that are present in panel 1 but not in panel 2."""
-        removed_columns = set(self.panel_1.to_polars().columns).difference(
-            set(self.panel_2.to_polars().columns)
-        )
-        for col_name in removed_columns:
-            logger.debug(
-                "Column %s is present in panel %s but not in panel %s.",
-                col_name,
-                self.panel_1.name,
-                self.panel_2.name,
-            )
-        return sorted(removed_columns)
-
-    @cached_property
-    def added_columns(self) -> List[str]:
-        """Return a list of columns that are present in panel 2 but not in panel 1."""
-        added_columns = set(self.panel_2.to_polars().columns).difference(
-            set(self.panel_1.to_polars().columns)
-        )
-        for col_name in added_columns:
-            logger.debug(
-                "Column %s is present in panel %s but not in panel %s.",
-                col_name,
-                self.panel_2.name,
-                self.panel_1.name,
-            )
-        return sorted(added_columns)
-
-    @property
-    def added_clones(self) -> pl.DataFrame:
-        """Return a dataframe with the clones that are present in panel 2 but not in panel 1."""
-        return (
-            self.joined.filter(
-                pl.any_horizontal(
-                    pl.col(col_name).is_null()
-                    & pl.col(col_name + "_panel_2").is_not_null()
-                    for col_name in self.join_on_columns
-                )
-            )
-            .drop([col_name for col_name in self.panel_1.to_polars().columns])
-            .rename(
-                {
-                    col_name + "_panel_2": col_name
-                    for col_name in self.panel_2.to_polars().columns
-                    if col_name + "_panel_2" in self.joined.columns
-                }
-            )
-        )
-
-    @property
-    def removed_clones(self) -> pl.DataFrame:
-        """Return a dataframe with the clones that are present in panel 1 but not in panel 2."""
-        return self.joined.filter(
-            pl.any_horizontal(
-                pl.col(col_name).is_not_null() & pl.col(col_name + "_panel_2").is_null()
-                for col_name in self.join_on_columns
-            )
-        ).drop(
-            [
-                col_name + "_panel_2"
-                if col_name in self.joined.columns
-                and col_name not in self.added_columns
-                else col_name
-                for col_name in self.panel_2.to_polars().columns
-            ]
-        )
-
-    def upgrade_adata(self, adata: AnnData) -> AnnData:
-        """Upgrade an AnnData object with the changes between the two panels.
-
-        Args:
-            adata: An AnnData object containing panel information.
-        """
-        adata_panel = PNAAntibodyPanel.from_adata(adata)
-        if self.panel_1 != adata_panel:
-            raise ValueError(
-                "The provided AnnData object does not match the panel. Cannot upgrade."
-                f"Expected panel {self.panel_2.name} v{self.panel_2.version}, but got panel {adata_panel.name} v{adata_panel.version}."
-            )
-
-        non_panel_columns = adata.var.copy()[
-            [
-                col
-                for col in adata.var.columns
-                if col not in adata.uns["panel_metadata"]["panel_columns"]
-            ]
-            + self.join_on_columns
-        ]
-        adata.var = (
-            self.joined.select(
-                list(
-                    set(
-                        self.join_on_columns
-                        + self.identical_columns
-                        + [f"{col}_panel_2" for col in self.changed_columns]
-                        + self.added_columns
-                    )
-                )
-            )
-            .rename({f"{col}_panel_2": col for col in self.changed_columns})
-            # keep order and append new to the end
-            .select(
-                ["marker_id"]  # index not in panel_metadata panel_columns below
-                + adata.uns["panel_metadata"]["panel_columns"]
-                + self.added_columns
-            )
-            .to_pandas()
-            .set_index("marker_id")
-        )
-        if adata.var.shape[0] != non_panel_columns.shape[0]:
-            raise ValueError(
-                "Row count mismatch in automatic patch panel patch version bump."
-            )
-        adata.var = adata.var.join(
-            non_panel_columns.set_index(self.join_on_columns),
-            how="outer",
-            on=self.join_on_columns,
-        )
-        adata.uns["panel_metadata"] = self.panel_2.metadata.model_dump()
-        adata.uns["panel_metadata"]["panel_columns"] = self.panel_2.df.columns.tolist()
-        return adata

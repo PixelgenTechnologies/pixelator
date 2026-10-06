@@ -281,3 +281,45 @@ def test_hashing_marker_ids_need_a_numeric_suffix_and_must_not_nest():
             nested,
             AntibodyPanelMetadata(name="base", version="1.0.0"),
         )
+
+
+def test_panel_validation_reports_missing_required_columns(panel_df):
+    """A panel missing a required column is rejected before later checks."""
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df.drop(columns=["sequence_1"]))
+    assert len(errors) == 1
+    assert "missing required columns" in errors[0]
+    assert "sequence_1" in errors[0]
+
+
+def test_panel_validation_reports_an_empty_panel(panel_df):
+    """An empty panel is rejected."""
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df.iloc[0:0])
+    assert "Panel file is empty" in errors
+
+
+def test_panel_validation_requires_marker_id_index(panel_df):
+    """The marker id must be the dataframe index."""
+    panel_df.index.name = "other"
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df, validate_types=False)
+    assert "`marker_id` is missing or is not set as index" in errors
+
+
+def test_panel_validation_requires_unique_sequences(panel_df):
+    """Sequence columns must contain unique values."""
+    panel_df.loc["marker2", "sequence_1"] = panel_df.loc["marker1", "sequence_1"]
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df)
+    assert "All values in column: sequence_1 were not unique" in errors
+
+
+def test_panel_validation_requires_boolean_control(panel_df):
+    """The control column must be boolean once types are not re-checked."""
+    panel_df["control"] = ["no", "yes", "no"]
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df, validate_types=False)
+    assert "`control` column is not boolean" in errors
+
+
+def test_panel_validation_reports_column_type_mismatch(panel_df):
+    """Column types are checked when validate_types is left on."""
+    panel_df["control"] = ["no", "yes", "no"]
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df)
+    assert any(error.startswith("Column control has incorrect type.") for error in errors)
