@@ -4,7 +4,6 @@ Copyright © 2025 Pixelgen Technologies AB.
 """
 
 import logging
-import re
 import tempfile
 from itertools import chain
 from pathlib import Path
@@ -20,7 +19,7 @@ import polars as pl
 from pixelator import __version__
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
 from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanel, collapsed_hashing_marker_id
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
@@ -209,6 +208,19 @@ def _add_original_hash_counts_to_obs(
             old_adata.obs[f"original_hash_counts_{ab}"] = 0
 
 
+def _markers_after_hash_collapse(
+    panel: PNAAntibodyPanel, hashing_antibodies: set[str]
+) -> list[str]:
+    """Return count-matrix markers after hashing ids collapse to their base name.
+
+    Hashing clones are left out. Each collapsed base that is not already on the
+    panel is appended in sorted order, so edgelist counts under that name are kept.
+    """
+    kept = [marker for marker in panel.markers if marker not in hashing_antibodies]
+    bases = {collapsed_hashing_marker_id(marker) for marker in hashing_antibodies}
+    return kept + sorted(bases - set(kept))
+
+
 def _build_post_sample_calling_anndata(
     con: duckdb.DuckDBPyConnection,
     old_adata: anndata.AnnData,
@@ -235,14 +247,15 @@ def _build_post_sample_calling_anndata(
         old_adata, hashing_antibody_mapping.hashing_antibodies
     )
 
-    # Create the anndata object and remove all panel hashing markers from var
-    new_adata = pna_edgelist_to_anndata(con, panel)
-    non_hashing_markers = [
-        marker
-        for marker in new_adata.var.index
-        if marker not in hashing_antibody_mapping.hashing_antibodies
-    ]
-    new_adata = new_adata[:, non_hashing_markers].copy()
+    # The edgelist already uses collapsed hashing ids (B2M-1 -> B2M). Include
+    # a collapsed base that the panel does not define, and leave the clones out.
+    new_adata = pna_edgelist_to_anndata(
+        con,
+        panel,
+        markers=_markers_after_hash_collapse(
+            panel, hashing_antibody_mapping.hashing_antibodies
+        ),
+    )
 
     new_adata = add_missing_adata_info(new_adata, old_adata)
     # `sample` is a reserved, transient column added when reading a
@@ -390,7 +403,7 @@ def sample_calling(
                 {
                     "hashed_marker": hashed_markers,
                     "base_marker": [
-                        re.sub(r"-\d+$", "", marker) for marker in hashed_markers
+                        collapsed_hashing_marker_id(marker) for marker in hashed_markers
                     ],
                 }
             )

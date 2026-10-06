@@ -118,9 +118,13 @@ def sample_calling_cli(
             pool_metadata=PxlFile(Path(input_pxl_file)).metadata(),
         )
         return
-    hashing_antibodies_in_panel = set(
-        panel_info.df[panel_info.df["sample_hashing"] == "yes"].index.to_list()
-    )
+    if "sample_hashing" not in panel_info.df.columns:
+        raise ValueError(
+            "Sample calling requires a sample_hashing column on the panel "
+            "so hashing markers can be identified. This panel has no "
+            "sample_hashing column."
+        )
+    hashing_antibodies_in_panel = panel_info.hashing_marker_ids
     samplesheet_df = pl.read_csv(samplesheet)
     _reject_reserved_samplesheet_names(
         samplesheet_df["sample"].to_list(),

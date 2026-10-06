@@ -11,6 +11,7 @@ import pytest
 from polars.testing import assert_frame_equal
 
 from pixelator.pna.config import pna_config
+from pixelator.pna.config.panel import split_hashing_marker_id
 from tests.common.data_generator.molecules import (
     _assign_markers,
     _assign_umis,
@@ -154,7 +155,7 @@ def test_assign_markers_hashing_index(marker_panel):
     by_index = defaultdict(list)
     for marker, hashing in zip(markers, is_hashing):
         if hashing:
-            by_index[int(marker.rsplit("-", 1)[-1])].append(marker)
+            by_index[int(split_hashing_marker_id(marker)[1])].append(marker)
 
     # the chosen index's markers share the extra ~f and sit above the base
     chosen = by_index[hashing_index]
