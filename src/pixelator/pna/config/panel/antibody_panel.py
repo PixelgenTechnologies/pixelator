@@ -59,6 +59,19 @@ def _stack_marker_tables(frames: list[pd.DataFrame]) -> pd.DataFrame:
     return df
 
 
+def _source_columns(value: object) -> tuple[str, ...] | None:
+    """Return a source's own marker columns stored as JSON, if any."""
+    if isinstance(value, str):
+        parsed = json.loads(value)
+    elif isinstance(value, (list, tuple)):
+        parsed = value
+    else:
+        return None
+    if not isinstance(parsed, (list, tuple)) or not parsed:
+        return None
+    return tuple(str(column) for column in parsed)
+
+
 class PNAAntibodyPanel:
     """Class representing a PNA antibody panel."""
 
@@ -203,7 +216,12 @@ class PNAAntibodyPanel:
             file_name = None if pd.isna(row.file_name) else row.file_name
             filepath = None if pd.isna(row.filepath) else row.filepath
             panel_sources.append(
-                PanelSource(metadata=metadata, file_name=file_name, filepath=filepath)
+                PanelSource(
+                    metadata=metadata,
+                    file_name=file_name,
+                    filepath=filepath,
+                    columns=_source_columns(getattr(row, "columns", None)),
+                )
             )
 
         markers = markers.sort_values("row_nr")

@@ -61,6 +61,9 @@ def write_panel_tables(
                 else False,
                 "file_name": source.file_name,
                 "filepath": source.filepath,
+                "columns": None
+                if source.columns is None
+                else json.dumps(list(source.columns)),
             }
         )
     sources_df = pd.DataFrame(source_rows)
