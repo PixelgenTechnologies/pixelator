@@ -1,4 +1,7 @@
-"""Functions for comparing abundance and proximity similarity between sample pairs.
+"""Load PNA samples and compare abundance and proximity similarity.
+
+File loading stays here. The comparisons themselves are
+`compare_abundance` and `compare_proximity`, which take tables.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
@@ -12,6 +15,11 @@ import pandas as pd
 
 from pixelator.common.utils import logger
 from pixelator.pna.analysis.gating import MarkerThreshold, gate_mask
+from pixelator.pna.analysis.sample_comparison import (
+    _expressed_markers,
+    compare_abundance,
+    compare_proximity,
+)
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
 
 
@@ -63,42 +71,6 @@ def _resolve_sample_name(dataset: PNAPixelDataset, provided_name: str | None) ->
             f"(found {sorted(sample_names)}). Please provide a sample name explicitly."
         )
     return next(iter(sample_names))
-
-
-def _summarize_abundance(clr: pd.DataFrame, markers: set[str]) -> pd.Series:
-    return clr[sorted(markers)].mean(axis=0)
-
-
-def _summarize_proximity(
-    proximity_df: pd.DataFrame,
-    min_expected_join_count: int,
-    min_n_cells: int,
-) -> pd.DataFrame:
-    """Summarize the proximity data by marker pairs.
-
-    Filters out marker pairs with a low expected join count, and only keeps
-    marker pairs supported by at least ``min_n_cells`` components.
-    """
-    filtered = proximity_df[
-        proximity_df["join_count_expected_mean"] >= min_expected_join_count
-    ]
-
-    summary = filtered.groupby(["marker_1", "marker_2"]).agg(
-        mean_log2_ratio=("log2_ratio", "mean"), n_cells=("log2_ratio", "size")
-    )
-    summary = summary[summary["n_cells"] >= min_n_cells].reset_index()
-    return summary
-
-
-def _expressed_markers(
-    clr1: pd.DataFrame,
-    clr2: pd.DataFrame,
-    candidate_markers: set[str],
-    min_mean_clr: float,
-) -> set[str]:
-    markers_1 = {m for m in candidate_markers if clr1[m].mean() > min_mean_clr}
-    markers_2 = {m for m in candidate_markers if clr2[m].mean() > min_mean_clr}
-    return markers_1 & markers_2
 
 
 def compare_sample_pair(
@@ -156,89 +128,38 @@ def compare_sample_pair(
     clr1 = dataset1.adata().obsm["clr"]
     clr2 = dataset2.adata().obsm["clr"]
 
-    candidate_markers = (
-        markers if markers is not None else set(clr1.columns) & set(clr2.columns)
-    )
-
-    expressed_markers = _expressed_markers(clr1, clr2, candidate_markers, min_mean_clr)
-
+    expressed_markers = _expressed_markers(clr1, clr2, markers, min_mean_clr)
     if not expressed_markers:
         raise ValueError(
             "No markers passed the min_mean_clr filter in both samples. "
             "Try lowering min_mean_clr."
         )
 
-    abundance_1 = _summarize_abundance(clr1, candidate_markers)
-    abundance_2 = _summarize_abundance(clr2, candidate_markers)
-    abundance = pd.DataFrame(
-        {
-            "marker": sorted(candidate_markers),
-            f"mean_clr_{sample1_name}": abundance_1.loc[
-                sorted(candidate_markers)
-            ].values,
-            f"mean_clr_{sample2_name}": abundance_2.loc[
-                sorted(candidate_markers)
-            ].values,
-        }
+    abundance_result = compare_abundance(
+        clr1,
+        clr2,
+        name_a=sample1_name,
+        name_b=sample2_name,
+        markers=markers,
     )
-    abundance_correlation = float(
-        abundance[f"mean_clr_{sample1_name}"].corr(
-            abundance[f"mean_clr_{sample2_name}"]
-        )
-    )
-    if pd.isna(abundance_correlation):
-        raise ValueError(
-            "Abundance correlation is undefined. "
-            "(need >=2 markers with non-constant values)."
-        )
-
     proximity_1 = dataset1.filter(markers=expressed_markers).proximity().to_df()
     proximity_2 = dataset2.filter(markers=expressed_markers).proximity().to_df()
-
-    summary_1 = _summarize_proximity(
-        proximity_1, min_expected_join_count, min_n_cells
-    ).rename(
-        columns={
-            "mean_log2_ratio": f"log2_ratio_{sample1_name}",
-            "n_cells": f"n_cells_{sample1_name}",
-        }
+    proximity_result = compare_proximity(
+        proximity_1,
+        proximity_2,
+        name_a=sample1_name,
+        name_b=sample2_name,
+        min_expected_join_count=min_expected_join_count,
+        min_n_cells=min_n_cells,
     )
-    summary_2 = _summarize_proximity(
-        proximity_2, min_expected_join_count, min_n_cells
-    ).rename(
-        columns={
-            "mean_log2_ratio": f"log2_ratio_{sample2_name}",
-            "n_cells": f"n_cells_{sample2_name}",
-        }
-    )
-
-    proximity = summary_1.merge(summary_2, on=["marker_1", "marker_2"], how="inner")
-
-    if proximity.empty:
-        raise ValueError(
-            "No marker pairs passed the proximity filtering criteria in both "
-            "samples. Try lowering min_expected_join_count or min_n_cells."
-        )
-
-    proximity_correlation = float(
-        proximity[f"log2_ratio_{sample1_name}"].corr(
-            proximity[f"log2_ratio_{sample2_name}"]
-        )
-    )
-    if pd.isna(proximity_correlation):
-        raise ValueError(
-            "Proximity correlation is undefined. "
-            "(need >=2 marker pairs with non-constant values). "
-            "Try lowering min_expected_join_count or min_n_cells."
-        )
 
     return SamplePairComparisonResult(
         sample1_name=sample1_name,
         sample2_name=sample2_name,
-        abundance=abundance,
-        abundance_correlation=abundance_correlation,
-        proximity=proximity,
-        proximity_correlation=proximity_correlation,
+        abundance=abundance_result.abundance,
+        abundance_correlation=abundance_result.correlation,
+        proximity=proximity_result.proximity,
+        proximity_correlation=proximity_result.correlation,
     )
 
 
