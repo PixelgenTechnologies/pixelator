@@ -8,6 +8,7 @@ from pixelator.pna.config.panel.antibody_panel import (
     PanelSource,
     PNAAntibodyPanel,
     load_antibody_panel,
+    load_antibody_panels,
 )
 from pixelator.pna.config.panel.diff import PNAAntibodyPanelDiff
 from pixelator.pna.config.panel.hashing import (
@@ -24,6 +25,7 @@ __all__ = [
     "aligned_dataset_panel",
     "collapsed_hashing_marker_id",
     "load_antibody_panel",
+    "load_antibody_panels",
     "sample_hashing_mask",
     "split_hashing_marker_id",
 ]

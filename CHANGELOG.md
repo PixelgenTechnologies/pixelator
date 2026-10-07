@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `single-cell-pna demux`, `collapse`, and `graph` accept repeated `--panel` options. The panels are concatenated, and `marker_id`, `sequence_1`, and `sequence_2` must be unique across the result.
 - `pixelator.pna.analysis.differential_abundance` to run marker differential abundance (Wilcoxon via `scanpy.tl.rank_genes_groups`). Effect size is a mean difference, not scanpy's log-fold change.
 - Samples with no cells above the size threshold no longer fail the pipeline. A null pxl file
   with a reason is written and passed through later steps, so the sample still shows up downstream.
@@ -26,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
 ### Changed
+- New `.pxl` files store the antibody panel in the `panels` and `panel_sources` tables. Rewriting a pixelator 0.22.0–0.30.0 file stores that panel there as well. Panel columns are joined onto the AnnData in memory when the file is read, and are not written to `var`. `uns['panel_metadata']` is no longer written, and pixel-file metadata no longer includes `panel_name` or `panel_version`.
+- When several `.pxl` files are read together, each source is updated to the newest patch those files carry, matching on name, product, and major.minor. The in-memory edgelist, proximity, layouts, and `var` use the updated marker ids. The files on disk are not rewritten.
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
@@ -59,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `coarsened_pmds_layout` sizes PMDS pivots from the full graph when Leiden
   yields too few communities, so a valid low `pivots` no longer fails
   `pmds_layout`'s `0.2 * n` lower bound.
+- Denoise rebuilds the count matrix from the markers already in `var`, so hashing clones removed by sample calling do not come back. The full panel is still stored in the panel tables.
 - The default number of cores and the fallbacks used when `--cores` is not set now respect the
   CPU affinity mask (via `os.process_cpu_count()` or `os.sched_getaffinity()`) and the cgroup
   CPU bandwidth quota (`docker run --cpus`, Kubernetes `limits.cpu`), taking the most restrictive
