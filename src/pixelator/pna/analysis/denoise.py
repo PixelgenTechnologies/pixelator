@@ -652,7 +652,14 @@ class DenoiseGraph(PerComponentTask):
             write_denoised_edgelist(pxl, nodes_to_remove, denoised_edgelist_path)
             with PixelFileWriter(pxl_file_target.path) as writer:
                 writer.write_edgelist(Path(denoised_edgelist_path))
-                adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
+                # Rebuild counts from the markers already in var. Using the full
+                # panel would put hashing clones removed by sample calling back.
+                adata = pna_edgelist_to_anndata(
+                    writer.get_connection(),
+                    panel,
+                    markers=list(old_adata.var_names),
+                )
+                writer.write_panel(panel)
                 old_adata.obs.rename(
                     columns={"isotype_fraction": "pre_denoise_isotype_fraction"},
                     inplace=True,

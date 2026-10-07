@@ -13,6 +13,12 @@ import duckdb
 import polars as pl
 from anndata import AnnData
 
+from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel_tables import (
+    panel_tables_present,
+    stored_panel_marker_columns,
+    write_panel_tables,
+)
 from pixelator.pna.utils import init_duckdb_conn
 
 
@@ -174,6 +180,12 @@ class PixelFileWriter:
     def write_adata(self, adata: AnnData) -> None:
         """Write the AnnData object to the PXL file.
 
+        When the panel tables are already on this file, marker columns from
+        that panel are left out of ``var``. Those columns are joined back
+        on read. A file from pixelator 0.22.0 through 0.30.0 stores the
+        panel in ``uns`` instead. That panel is copied into the panel
+        tables before the AnnData tables are replaced.
+
         Args:
             adata: The AnnData object to write.
 
@@ -188,12 +200,18 @@ class PixelFileWriter:
                     "but a PXL file may only contain a single sample."
                 )
 
-        uns = self._uns_keeping_stored_panel(adata)
+        self._store_legacy_panel()
         self._clean_existing_adata_tables()
 
         X = adata.to_df().reset_index(names="index")
         var = adata.var.reset_index(names="index")
+        panel_columns = stored_panel_marker_columns(self._connection)
+        if panel_columns:
+            var = var.drop(
+                columns=[column for column in var.columns if column in panel_columns]
+            )
         obs = adata.obs.reset_index(names="index")
+        uns = adata.uns
 
         self._connection.sql(
             """
@@ -215,28 +233,43 @@ class PixelFileWriter:
                 """,
             )
 
-    def _uns_keeping_stored_panel(self, adata: AnnData) -> dict:
-        """Return ``uns`` to write, keeping a panel already stored in the file.
+    def _store_legacy_panel(self) -> None:
+        """Copy a 0.22.0–0.30.0 panel into the panel tables.
 
-        Reading a file drops ``panel_metadata`` from the in-memory AnnData.
-        A later rewrite, such as saving a filtered copy, must not drop the
-        panel from the file.
+        The panel still sits in ``__adata__uns`` until this write replaces
+        those tables. Files that already have panel tables, and files from
+        before 0.22.0, are left unchanged.
         """
-        uns = dict(adata.uns) if adata.uns is not None else {}
-        if "panel_metadata" in uns:
-            return uns
+        if panel_tables_present(self._connection):
+            return
         try:
             uns_row = self._connection.execute(
                 "SELECT value FROM __adata__uns"
             ).fetchone()
         except duckdb.CatalogException:
-            return uns
+            return
         if uns_row is None:
-            return uns
-        existing = json.loads(uns_row[0]) if isinstance(uns_row[0], str) else uns_row[0]
-        if isinstance(existing, dict) and "panel_metadata" in existing:
-            uns["panel_metadata"] = existing["panel_metadata"]
-        return uns
+            return
+        uns = json.loads(uns_row[0]) if isinstance(uns_row[0], str) else uns_row[0]
+        if not isinstance(uns, dict) or "panel_metadata" not in uns:
+            return
+        try:
+            var = self._connection.execute("SELECT * FROM __adata__var").fetchdf()
+        except duckdb.CatalogException:
+            return
+        var = var.set_index("index").rename_axis(index={"index": "marker_id"})
+        panel = PNAAntibodyPanel.from_legacy_var(
+            var, uns["panel_metadata"], file_name=self.path.name
+        )
+        write_panel_tables(self._connection, panel)
+
+    def write_panel(self, panel) -> None:
+        """Write ``panels`` and ``panel_sources`` for ``panel``.
+
+        Args:
+            panel: The antibody panel to store.
+        """
+        write_panel_tables(self.get_connection(), panel)
 
     def write_metadata(self, metadata: dict) -> None:
         """Write the metadata to the PXL file.
