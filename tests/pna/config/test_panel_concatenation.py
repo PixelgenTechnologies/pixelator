@@ -5,9 +5,14 @@ Copyright © 2026 Pixelgen Technologies AB.
 
 import pandas as pd
 import pytest
+from anndata import AnnData
 
 from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import (
+    PNAAntibodyPanel,
+    align_panel_patches,
+    aligned_dataset_panel,
+)
 
 
 def _panel(
@@ -157,6 +162,7 @@ def test_replace_source_blanks_optional_columns_missing_from_one_side():
     assert replaced.df.loc["CD3E", "uniprot_id"] == "P07766"
     assert replaced.df.loc["CD19", "uniprot_id"] == ""
     assert replaced == new
+    assert aligned_dataset_panel([old, new]) == new
 
     addon_with_uniprot = _panel(
         "addon",
@@ -209,3 +215,89 @@ def test_source_as_panel_drops_columns_added_by_another_source():
     assert "uniprot_id" not in combined.source_as_panel(2).df.columns
     assert "sample_hashing" not in combined.source_as_panel(2).df.columns
     assert list(combined.source_as_panel(3).df.columns) == list(hashing_flag.df.columns)
+
+
+def test_aligned_dataset_panel_ignores_source_order():
+    base_old = _panel("base", "1.0.0", [_marker("CD3", "AAAA")], product="kit")
+    base_new = _panel("base", "1.0.1", [_marker("CD3E", "AAAA")], product="kit")
+    addon = _panel("addon", "2.0.0", [_marker("CD19", "CCCC")], product="kit")
+    forward = PNAAntibodyPanel.concatenate([base_old, addon])
+    reverse = PNAAntibodyPanel.concatenate([addon, base_new])
+
+    assert aligned_dataset_panel([forward, reverse]) == PNAAntibodyPanel.concatenate(
+        [base_new, addon]
+    )
+
+
+def test_patch_bump_matches_when_the_added_column_is_not_last():
+    old_base = _panel("base", "1.0.0", [_marker("CD3", "AAAA")], product="kit")
+    new_frame = pd.DataFrame([_marker("CD3E", "AAAA")]).set_index("marker_id")
+    new_frame["uniprot_id"] = "P07766"
+    new_frame = new_frame[["control", "uniprot_id", "sequence_1", "sequence_2"]]
+    new_base = PNAAntibodyPanel.from_metadata(
+        new_frame,
+        AntibodyPanelMetadata(name="base", version="1.0.1", product="kit"),
+        file_name="base.csv",
+    )
+    addon = _panel("addon", "2.0.0", [_marker("CD19", "CCCC")], product="kit")
+    old = PNAAntibodyPanel.concatenate([old_base, addon])
+    new = PNAAntibodyPanel.concatenate([new_base, addon])
+    updated, _, _ = align_panel_patches([old, new])
+
+    assert list(updated[0].df.columns) != list(updated[1].df.columns)
+    assert updated[0] == updated[1]
+    assert aligned_dataset_panel([old, new]) == new
+
+
+def test_patch_bump_is_per_source_and_skips_collapsed_hashing_clones():
+    old_base = _panel("base", "1.0.0", [_marker("CD3", "AAAA")], product="kit")
+    new_base = _panel("base", "1.0.1", [_marker("CD3E", "AAAA")], product="kit")
+    addon = _panel("addon", "2.0.0", [_marker("CD19", "CCCC")], product="kit")
+    old = PNAAntibodyPanel.concatenate([old_base, addon])
+    new = PNAAntibodyPanel.concatenate([new_base, addon])
+
+    old_adata = AnnData(var=pd.DataFrame(index=["CD3", "CD19"]))
+    new_adata = AnnData(var=pd.DataFrame(index=["CD3E", "CD19"]))
+    upgraded, renames, _hash_renames = align_panel_patches(
+        [old, new], [old_adata, new_adata]
+    )
+
+    assert upgraded[0].sources[0].metadata.version == "1.0.1"
+    assert upgraded[0].sources[1].metadata.version == "2.0.0"
+    assert "CD3E" in upgraded[0].markers
+    assert renames[0] == {"CD3": "CD3E"}
+    assert renames[1] == {}
+
+    hashing = _panel(
+        "hash",
+        "1.0.0",
+        [
+            _marker("B2M-1", "GGGG", sample_hashing=True),
+            _marker("CD3", "AAAA"),
+        ],
+        product="kit",
+    )
+    hashing_next = _panel(
+        "hash",
+        "1.0.1",
+        [
+            _marker("B2M-1", "GGGG", sample_hashing=True),
+            _marker("CD3E", "AAAA"),
+        ],
+        product="kit",
+    )
+    collapsed = AnnData(var=pd.DataFrame(index=["B2M", "CD3"]))
+    current = AnnData(var=pd.DataFrame(index=["B2M-1", "CD3E"]))
+    with pytest.raises(ValueError, match="Missing markers"):
+        align_panel_patches(
+            [hashing, hashing_next],
+            [collapsed, current],
+            pxl_file_metadata=[{"hashing_collapsed": False}, {}],
+        )
+    upgraded, renames, _hash_renames = align_panel_patches(
+        [hashing, hashing_next],
+        [collapsed, current],
+        pxl_file_metadata=[{"hashing_collapsed": True}, {}],
+    )
+    assert renames[0]["CD3"] == "CD3E"
+    assert "B2M-1" in upgraded[0].markers
