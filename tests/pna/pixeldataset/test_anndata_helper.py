@@ -12,8 +12,9 @@ import polars as pl
 import pytest
 
 from pixelator.common.utils.testing import adata_assert_equal
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanel, align_panel_patches
 from pixelator.pna.pixeldataset import PNAPixelDataset
+from pixelator.pna.pixeldataset.io import Query
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from tests.pna.conftest import create_pxl_file
 
@@ -72,6 +73,8 @@ def _build_two_sample_dataset_with_panels(
     edgelist_parquet_path: Path,
     panel_old: PNAAntibodyPanel,
     panel_new: PNAAntibodyPanel,
+    proximity_old: Path | None = None,
+    proximity_new: Path | None = None,
 ) -> PNAPixelDataset:
     """Create two on-disk PXL samples with distinct panels for bumping patch version tests.
 
@@ -85,7 +88,7 @@ def _build_two_sample_dataset_with_panels(
         target=tmp_path / "sample_old.pxl",
         sample_name="sample_old",
         edgelist_parquet_path=edgelist_parquet_path,
-        proximity_parquet_path=None,
+        proximity_parquet_path=proximity_old,
         layout_parquet_path=None,
         panel=panel_old,
     )
@@ -102,7 +105,7 @@ def _build_two_sample_dataset_with_panels(
         target=tmp_path / "sample_new.pxl",
         sample_name="sample_new",
         edgelist_parquet_path=sample_new_edgelist,
-        proximity_parquet_path=None,
+        proximity_parquet_path=proximity_new,
         layout_parquet_path=None,
         panel=panel_new,
     )
@@ -275,6 +278,230 @@ class TestTryBumpAdataPanelVersion:
 
         assert (adata_old[:, "MarkerC"].X == bumped[0][:, "MarkerC"].X).all()
         assert (adata_new[:, "MarkerC"].X == bumped[1][:, "MarkerC"].X).all()
+
+    def test_edgelist_view_exposes_bumped_marker_ids(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        panel: PNAAntibodyPanel,
+    ):
+        """The session edgelist uses bumped ids before any later query."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=panel_old,
+            panel_new=panel_new,
+        )
+        with dataset.view.open() as session:
+            frame = session.execute_eager(
+                Query("SELECT sample, marker_1, marker_2 FROM edgelist", {})
+            )
+        old = frame.filter(pl.col("sample") == "sample_old")
+        old_ids = set(old["marker_1"].to_list() + old["marker_2"].to_list())
+        assert "MarkerA" not in old_ids
+        assert "MarkerANew" in old_ids
+
+    def test_sample_filter_keeps_the_patch_bump(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        panel: PNAAntibodyPanel,
+    ):
+        """A cohort narrowed to one sample still uses the bumped marker ids."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=panel_old,
+            panel_new=panel_new,
+        )
+
+        filtered = dataset.filter(samples={"sample_old"})
+        adata = filtered.adata(add_clr_transform=False, add_log1p_transform=False)
+        assert "MarkerANew" in adata.var_names
+        assert "MarkerA" not in adata.var_names
+        edgelist = filtered.edgelist().to_polars()
+        ids = set(edgelist["marker_1"].to_list() + edgelist["marker_2"].to_list())
+        assert "MarkerA" not in ids
+        assert "MarkerANew" in ids
+
+        narrowed = dataset.filter(samples={"sample_old"}, markers={"MarkerANew"})
+        narrowed_adata = narrowed.adata(
+            add_clr_transform=False, add_log1p_transform=False
+        )
+        assert list(narrowed_adata.var_names) == ["MarkerANew"]
+        assert narrowed_adata.n_obs > 0
+
+        alone = PNAPixelDataset.from_pxl_files([tmp_path / "sample_old.pxl"])
+        alone_adata = alone.adata(add_clr_transform=False, add_log1p_transform=False)
+        assert "MarkerA" in alone_adata.var_names
+        assert "MarkerANew" not in alone_adata.var_names
+
+    def test_failed_patch_bump_leaves_the_cache_unset(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        panel: PNAAntibodyPanel,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        """A failed bump can be read again and then uses the new marker ids."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=panel_old,
+            panel_new=panel_new,
+        )
+        attempts = {"count": 0}
+
+        def fail_once(*args, **kwargs):
+            attempts["count"] += 1
+            if attempts["count"] == 1:
+                raise ValueError("bump failed")
+            return align_panel_patches(*args, **kwargs)
+
+        monkeypatch.setattr(
+            "pixelator.pna.pixeldataset.io.pixel_data_viewer.align_panel_patches",
+            fail_once,
+        )
+        with pytest.raises(ValueError, match="bump failed"):
+            dataset.view.marker_renames_by_sample()
+        assert dataset.view._marker_renames is None
+        assert dataset.view._hash_count_renames is None
+        assert dataset.view._upgraded_panels is None
+
+        adata = dataset.adata(add_clr_transform=False, add_log1p_transform=False)
+        assert "MarkerANew" in adata.var_names
+        assert "MarkerA" not in adata.var_names
+
+    def test_proximity_filter_uses_renamed_marker_ids(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        panel: PNAAntibodyPanel,
+    ):
+        """A filter on the bumped name still finds rows stored under the old id."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        old_proximity = tmp_path / "old_proximity.parquet"
+        new_proximity = tmp_path / "new_proximity.parquet"
+        pl.DataFrame(
+            {
+                "component": ["fc07dea9b679aca7", "fc07dea9b679aca7"],
+                "marker_1": ["MarkerA", "MarkerB"],
+                "marker_2": ["MarkerA", "MarkerC"],
+            }
+        ).write_parquet(old_proximity)
+        pl.DataFrame(
+            {
+                "component": ["fc07dea9b679aca7_sample_new"],
+                "marker_1": ["MarkerANew"],
+                "marker_2": ["MarkerANew"],
+            }
+        ).write_parquet(new_proximity)
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=panel_old,
+            panel_new=panel_new,
+            proximity_old=old_proximity,
+            proximity_new=new_proximity,
+        )
+
+        proximity = dataset.filter(markers={"MarkerANew"}).proximity(
+            add_marker_counts=False, add_logratio=False
+        )
+        frame = proximity.to_polars()
+        pairs = set(
+            zip(frame["marker_1"].to_list(), frame["marker_2"].to_list(), strict=True)
+        )
+        assert pairs == {("MarkerANew", "MarkerANew")}
+        assert len(proximity) == 2
+
+    def test_record_batches_use_renamed_marker_ids(
+        self,
+        tmp_path: Path,
+        edgelist_parquet_path: Path,
+        panel: PNAAntibodyPanel,
+    ):
+        """The streamed edgelist uses the same marker ids as ``to_polars``."""
+        panel_old = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.0",
+            product="test-product",
+            marker_a_uniprot="P12345",
+        )
+        panel_new = _panel_with_version_product_and_uniprot(
+            panel,
+            version="0.1.1",
+            product="test-product",
+            marker_a_uniprot="Q9UPN0",
+            marker_a_new_name="MarkerANew",
+        )
+        dataset = _build_two_sample_dataset_with_panels(
+            tmp_path=tmp_path,
+            edgelist_parquet_path=edgelist_parquet_path,
+            panel_old=panel_old,
+            panel_new=panel_new,
+        )
+        streamed = pl.concat(
+            [pl.from_arrow(batch) for batch in dataset.edgelist().to_record_batches()],
+            how="vertical",
+        )
+        loaded = dataset.edgelist().to_polars()
+        assert streamed.sort(streamed.columns).equals(loaded.sort(loaded.columns))
+        assert (
+            "MarkerANew"
+            in streamed["marker_1"].to_list() + streamed["marker_2"].to_list()
+        )
 
     @pytest.mark.parametrize(
         "new_version,new_product",
