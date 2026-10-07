@@ -113,16 +113,20 @@ class TestAnnDataHelper:
     """Represent test ann data helper."""
 
     def test_anndata_helper_matches_dataset_adata_no_transforms(
-        self, pxl_dataset, adata_data
+        self, pxl_dataset, adata_data, panel
     ):
         """Verify anndata helper matches dataset adata no transforms.
 
         Args:
             pxl_dataset: pxl dataset.
             adata_data: adata data.
+            panel: panel.
         """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
+        adata_data.var = adata_data.var.join(
+            panel.df.reindex(adata_data.var_names), how="left"
+        )
         if adata_data.uns is not None and "panel_metadata" in adata_data.uns:
             del adata_data.uns["panel_metadata"]
 
@@ -249,10 +253,10 @@ class TestTryBumpAdataPanelVersion:
         positive_cells_count = np.random.randint(0, 100, adata_old.var.shape[0])
         adata_old.var["positive_cells_count"] = positive_cells_count
 
-        assert adata_old.var.loc["MarkerA", "uniprot_id"] == "P12345"
-        assert adata_new.var.loc["MarkerANew", "uniprot_id"] == "Q9UPN0"
+        assert "MarkerA" in adata_old.var_names
+        assert "MarkerANew" in adata_new.var_names
+        assert "uniprot_id" not in adata_old.var.columns
         assert "target_class" not in adata_old.var.columns
-        assert "target_class" in adata_new.var.columns
 
         bumped = dataset.view.apply_panel_patch_to_adatas([adata_old, adata_new])
         assert "panel_metadata" not in bumped[0].uns

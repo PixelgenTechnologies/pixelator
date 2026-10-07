@@ -30,16 +30,6 @@ def calculate_antibody_metrics(counts_df):
     return pd.concat([total_antibody, relative_antibody, components_detected], axis=1)
 
 
-def add_panel_information(adata: AnnData, panel: PNAAntibodyPanel) -> AnnData:
-    """Add panel data to var."""
-    adata.var = adata.var.join(panel.df, how="left")
-
-    adata.uns["panel_metadata"] = panel.metadata.model_dump()
-    adata.uns["panel_metadata"]["panel_columns"] = list(panel.df.columns)
-
-    return adata
-
-
 def pna_edgelist_to_anndata(
     pixel_connection: duckdb.DuckDBPyConnection,
     panel: PNAAntibodyPanel,
@@ -52,8 +42,8 @@ def pna_edgelist_to_anndata(
             with the required columns (e.g., component, marker_1, marker_2, umi1, umi2, read_count).
         panel: The antibody panel object containing marker metadata.
         markers: Marker ids to use as the count-matrix columns. Defaults to
-            every marker on ``panel``. Sample calling passes the markers left
-            after hashing clones collapse to their base name.
+            every marker on ``panel``. Denoise passes the markers already in
+            ``var`` so hashing clones removed by sample calling are not added back.
 
     Returns:
         An AnnData object with counts and panel information.
@@ -203,8 +193,6 @@ def pna_edgelist_to_anndata(
         obs=components_metrics_df,
         var=antibody_metrics_df,
     )
-
-    adata = add_panel_information(adata, panel)
 
     total_marker_counts = node_counts_df.sum(axis=1)
     isotype_markers = panel.df.index[panel.df["control"]]

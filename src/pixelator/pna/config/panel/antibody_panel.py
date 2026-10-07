@@ -5,6 +5,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
@@ -180,6 +181,43 @@ class PNAAntibodyPanel:
             df["control"] = df["control"].fillna(False).astype(bool)
         metadata = AntibodyPanelMetadata.model_validate(panel_metadata)
         return cls.from_metadata(df, metadata, file_name=file_name)
+
+    @classmethod
+    def _from_panel_tables(cls, markers: pd.DataFrame, sources: pd.DataFrame) -> Self:
+        """Build a panel from the stored marker and source tables."""
+        panel_sources: list[PanelSource] = []
+        for row in sources.sort_values("source_id").itertuples(index=False):
+            aliases = json.loads(row.aliases) if isinstance(row.aliases, str) else []
+            metadata = AntibodyPanelMetadata(
+                name=row.name,
+                version=row.version,
+                product=None if pd.isna(row.product) else row.product,
+                description=None if pd.isna(row.description) else row.description,
+                aliases=aliases or [],
+                archived=bool(row.archived) if not pd.isna(row.archived) else False,
+            )
+            file_name = None if pd.isna(row.file_name) else row.file_name
+            filepath = None if pd.isna(row.filepath) else row.filepath
+            panel_sources.append(
+                PanelSource(metadata=metadata, file_name=file_name, filepath=filepath)
+            )
+
+        markers = markers.sort_values("row_nr")
+        source_ids = markers["source_id"].astype(int)
+        drop_cols = ["row_nr", "source_id"]
+        df = markers.drop(columns=[col for col in drop_cols if col in markers.columns])
+        df = df.set_index("marker_id")
+        df.index.name = "marker_id"
+        source_ids.index = df.index
+        file_name = panel_sources[0].file_name if len(panel_sources) == 1 else None
+        filepath = panel_sources[0].filepath if len(panel_sources) == 1 else None
+        return cls(
+            df,
+            panel_sources,
+            source_ids.astype("int64"),
+            file_name=file_name,
+            filepath=filepath,
+        )
 
     @classmethod
     def concatenate(cls, panels: Sequence[PNAAntibodyPanel]) -> PNAAntibodyPanel:

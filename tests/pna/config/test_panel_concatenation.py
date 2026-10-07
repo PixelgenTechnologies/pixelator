@@ -5,9 +5,11 @@ Copyright © 2026 Pixelgen Technologies AB.
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 from anndata import AnnData
+from pandas.testing import assert_frame_equal
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import (
@@ -16,7 +18,7 @@ from pixelator.pna.config.panel import (
     aligned_dataset_panel,
 )
 from pixelator.pna.pixeldataset import read
-from pixelator.pna.pixeldataset.io import PixelFileWriter, read_dataset_panel
+from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile, read_dataset_panel
 
 
 def _panel(
@@ -320,3 +322,47 @@ def test_patch_bump_is_per_source_and_skips_collapsed_hashing_clones():
     )
     assert renames[0]["CD3"] == "CD3E"
     assert "B2M-1" in upgraded[0].markers
+
+
+def test_panel_tables_roundtrip_and_legacy_uns(tmp_path: Path):
+    panel = _panel(
+        "base",
+        "1.0.0",
+        [_marker("CD3", "AAAA"), _marker("CD19", "CCCC", control=True)],
+    )
+    path = tmp_path / "sample.pxl"
+    with PixelFileWriter(path) as writer:
+        writer.write_metadata({"sample_name": "sample"})
+        writer.write_panel(panel)
+        # A minimal AnnData so the file is still a pxl for readers that only
+        # need the panel tables.
+        connection = writer.get_connection()
+        connection.execute("CREATE TABLE edgelist (umi1 INTEGER)")
+        connection.execute('CREATE TABLE "__adata__X" (index VARCHAR)')
+        connection.execute('CREATE TABLE "__adata__obs" (index VARCHAR)')
+        connection.execute('CREATE TABLE "__adata__var" (index VARCHAR)')
+
+    loaded = PxlFile(path).read_panel()
+    assert loaded is not None
+    assert loaded.name == "base"
+    assert loaded.version == "1.0.0"
+    assert loaded.sources[0].metadata.product == "proxiome"
+    assert_frame_equal(loaded.df, panel.df)
+
+    legacy = tmp_path / "legacy.pxl"
+    adata = AnnData(X=np.zeros((1, panel.df.shape[0])), var=panel.df.copy())
+    adata.uns["panel_metadata"] = panel.metadata.model_dump()
+    adata.uns["panel_metadata"]["panel_columns"] = list(panel.df.columns)
+    with PixelFileWriter(legacy) as writer:
+        writer.write_metadata({"sample_name": "legacy"})
+        writer.write_adata(adata)
+    legacy_panel = PxlFile(legacy).read_panel()
+    assert legacy_panel is not None
+    assert legacy_panel.name == "base"
+    assert_frame_equal(legacy_panel.df, panel.df)
+
+
+def test_pxl_fixture_roundtrip(pxl_file):
+    panel = read_dataset_panel(read(pxl_file))
+    assert panel.name == "test-pna-panel"
+    assert "panel_metadata" not in read(pxl_file).adata().uns

@@ -20,6 +20,7 @@ import duckdb
 from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.pna.config.panel import PNAAntibodyPanel, aligned_dataset_panel
+from pixelator.pna.config.panel_tables import read_panel_table_frames
 
 if TYPE_CHECKING:
     from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
@@ -107,11 +108,15 @@ class PxlFile:
     def read_panel(self) -> PNAAntibodyPanel | None:
         """Load the panel stored in this file.
 
+        New files are read from the ``panels`` and ``panel_sources`` tables.
         Files from pixelator 0.22.0 through 0.30.0 are read from
         ``uns['panel_metadata']`` and the panel columns stored on ``var``.
         Returns None when the file has neither.
         """
         with connect_duckdb(self.path, read_only=True) as connection:
+            frames = read_panel_table_frames(connection)
+            if frames is not None:
+                return PNAAntibodyPanel._from_panel_tables(*frames)
             try:
                 uns_row = connection.execute(
                     "SELECT value FROM __adata__uns"
@@ -178,7 +183,8 @@ def read_dataset_panel(dataset: PNAPixelDataset) -> PNAAntibodyPanel:
 
     Raises:
         ValueError: If a file has no panel. Pixelator 0.22.0 through 0.30.0
-            stored it in ``uns['panel_metadata']``. Earlier files have
+            stored it in ``uns['panel_metadata']``. Later files store it in
+            the ``panels`` and ``panel_sources`` tables. Earlier files have
             neither and must be rerun with a current version of the software.
     """
     panels = []

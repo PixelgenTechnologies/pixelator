@@ -155,8 +155,6 @@ def create_pixel_dataset_connection(edgelist):
                     "sample_name": "temp",
                     "version": __version__,
                     "technology": "single-cell-pna",
-                    "panel_name": "mock.name",
-                    "panel_version": "mock.version",
                 }
             )
             writer.write_edgelist(edgelist.collect())
@@ -192,28 +190,16 @@ def test_pna_edgelist_to_anndata(pixelconnection):
                 "antibody_count": 7,
                 "antibody_pct": np.float32(0.4375),
                 "components": 3,
-                "uniprot_id": "P61769",
-                "control": False,
-                "nuclear": "yes",
-                "sequence_1": "AAAA",
             },
             "B": {
                 "antibody_count": 5,
                 "antibody_pct": np.float32(0.3125),
                 "components": 3,
-                "uniprot_id": "P05107",
-                "control": False,
-                "nuclear": "no",
-                "sequence_1": "CCCC",
             },
             "C": {
                 "antibody_count": 4,
                 "antibody_pct": np.float32(0.25),
                 "components": 2,
-                "uniprot_id": "",
-                "control": True,
-                "nuclear": "no",
-                "sequence_1": "GGGG",
             },
         },
         orient="index",
