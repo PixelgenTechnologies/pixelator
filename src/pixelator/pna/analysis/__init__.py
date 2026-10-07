@@ -28,8 +28,5 @@ __all__ = [
 ]
 
 # Note: pixelator.pna.analysis.comparison is intentionally not imported here.
-# It depends on pixelator.pna.pixeldataset, which itself imports
-# pixelator.pna.analysis.analytical_proximity_query_helper during its own
-# initialization. Eagerly importing comparison here would create a circular
-# import. Import it directly, e.g. `from pixelator.pna.analysis.comparison
-# import compare_sample_pairs`.
+# It depends on pixelator.pna.pixeldataset. Import it directly, e.g.
+# `from pixelator.pna.analysis.comparison import compare_sample_pairs`.
