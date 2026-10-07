@@ -15,6 +15,11 @@ from pixelator.pna.analysis.comparison import (
     compare_sample_pairs,
     compare_sample_pairs_by_gate,
 )
+from pixelator.pna.analysis.sample_comparison import (
+    _expressed_markers,
+    compare_abundance,
+    compare_proximity,
+)
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from tests.pna.conftest import create_pxl_file
 from tests.pna.data.pxl_data import EDGELIST_DATA, PROXIMITY_DATA
@@ -115,6 +120,39 @@ def test_compare_sample_pair(pxl_dataset, pxl_dataset_2, lenient_kwargs):
     # correlated in both abundance and proximity.
     assert result.abundance_correlation == pytest.approx(1.0)
     assert result.proximity_correlation == pytest.approx(1.0)
+
+
+def test_compare_sample_pair_matches_frame_functions(
+    pxl_dataset, pxl_dataset_2, lenient_kwargs
+):
+    """Verify the loader's result is the frame functions applied to loaded tables."""
+    result = compare_sample_pair(
+        pxl_dataset,
+        pxl_dataset_2,
+        sample1_name="sample1",
+        sample2_name="sample2",
+        **lenient_kwargs,
+    )
+
+    clr1 = pxl_dataset.adata().obsm["clr"]
+    clr2 = pxl_dataset_2.adata().obsm["clr"]
+    abundance = compare_abundance(clr1, clr2, name_a="sample1", name_b="sample2")
+    pd.testing.assert_frame_equal(result.abundance, abundance.abundance)
+    assert result.abundance_correlation == abundance.correlation
+
+    expressed = _expressed_markers(
+        clr1, clr2, markers=None, min_mean_clr=lenient_kwargs["min_mean_clr"]
+    )
+    proximity = compare_proximity(
+        pxl_dataset.filter(markers=expressed).proximity().to_df(),
+        pxl_dataset_2.filter(markers=expressed).proximity().to_df(),
+        name_a="sample1",
+        name_b="sample2",
+        min_expected_join_count=lenient_kwargs["min_expected_join_count"],
+        min_n_cells=lenient_kwargs["min_n_cells"],
+    )
+    pd.testing.assert_frame_equal(result.proximity, proximity.proximity)
+    assert result.proximity_correlation == proximity.correlation
 
 
 def test_compare_sample_pair_requires_distinct_sample_names(

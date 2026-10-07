@@ -39,6 +39,8 @@ for usage examples.
 
 * :func:`pixelator.pna.analysis.calculate_differential_proximity`
 * :func:`pixelator.pna.analysis.cc_protein_weights`
+* :func:`pixelator.pna.analysis.compare_abundance`
+* :func:`pixelator.pna.analysis.compare_proximity`
 * :func:`pixelator.pna.analysis.differential_abundance`
 * :func:`pixelator.pna.analysis.distance_from_node_set`
 * :func:`pixelator.pna.analysis.filter_proximity_scores`

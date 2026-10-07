@@ -9,6 +9,10 @@ from pixelator.pna.analysis.proximity import (
     filter_proximity_scores,
     summarize_proximity_scores,
 )
+from pixelator.pna.analysis.sample_comparison import (
+    compare_abundance,
+    compare_proximity,
+)
 from pixelator.pna.analysis.segmentation import (
     cc_protein_weights,
     distance_from_node_set,
@@ -19,6 +23,8 @@ from pixelator.pna.analysis.segmentation import (
 __all__ = [
     "calculate_differential_proximity",
     "cc_protein_weights",
+    "compare_abundance",
+    "compare_proximity",
     "differential_abundance",
     "distance_from_node_set",
     "filter_proximity_scores",
@@ -28,8 +34,9 @@ __all__ = [
 ]
 
 # Note: pixelator.pna.analysis.comparison is intentionally not imported here.
-# It depends on pixelator.pna.pixeldataset, which itself imports
+# It loads `.pxl` files through pixelator.pna.pixeldataset, which itself imports
 # pixelator.pna.analysis.analytical_proximity_query_helper during its own
 # initialization. Eagerly importing comparison here would create a circular
 # import. Import it directly, e.g. `from pixelator.pna.analysis.comparison
-# import compare_sample_pairs`.
+# import compare_sample_pairs`. The table comparisons `compare_abundance` and
+# `compare_proximity` do not load datasets and are safe to import here.
