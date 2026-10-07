@@ -3,6 +3,8 @@
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+from pathlib import Path
+
 import pandas as pd
 import pytest
 from anndata import AnnData
@@ -13,6 +15,8 @@ from pixelator.pna.config.panel import (
     align_panel_patches,
     aligned_dataset_panel,
 )
+from pixelator.pna.pixeldataset import read
+from pixelator.pna.pixeldataset.io import PixelFileWriter, read_dataset_panel
 
 
 def _panel(
@@ -215,6 +219,21 @@ def test_source_as_panel_drops_columns_added_by_another_source():
     assert "uniprot_id" not in combined.source_as_panel(2).df.columns
     assert "sample_hashing" not in combined.source_as_panel(2).df.columns
     assert list(combined.source_as_panel(3).df.columns) == list(hashing_flag.df.columns)
+
+
+def test_read_dataset_panel_rejects_a_file_from_before_0_22(tmp_path: Path):
+    path = tmp_path / "old.pxl"
+    with PixelFileWriter(path) as writer:
+        writer.write_metadata({"sample_name": "old", "panel_name": "base"})
+        connection = writer.get_connection()
+        connection.execute("CREATE TABLE edgelist (umi1 INTEGER)")
+        connection.execute('CREATE TABLE "__adata__X" (index VARCHAR)')
+        connection.execute('CREATE TABLE "__adata__obs" (index VARCHAR)')
+        connection.execute('CREATE TABLE "__adata__var" (index VARCHAR)')
+        connection.execute('CREATE TABLE "__adata__uns" (value JSON)')
+
+    with pytest.raises(ValueError, match="current version of the software"):
+        read_dataset_panel(read(path))
 
 
 def test_aligned_dataset_panel_ignores_source_order():
