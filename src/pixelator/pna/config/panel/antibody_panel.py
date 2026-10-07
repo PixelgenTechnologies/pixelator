@@ -481,6 +481,8 @@ class PNAAntibodyPanel:
         Columns added because another source had them are left behind. A
         source that was stored without its column list keeps every column.
         """
+        if source_index < 0:
+            raise ValueError("Source index must be zero or greater.")
         source = self.sources[source_index]
         marker_index = self.marker_source_ids.index[
             self.marker_source_ids == source_index
@@ -501,6 +503,8 @@ class PNAAntibodyPanel:
         An optional column present on only one side is blank on the other,
         the same as an empty cell in a panel CSV.
         """
+        if source_index < 0:
+            raise ValueError("Source index must be zero or greater.")
         if len(replacement.sources) != 1:
             raise ValueError("Replacement panel must come from a single source.")
         keep = self.marker_source_ids.index[self.marker_source_ids != source_index]

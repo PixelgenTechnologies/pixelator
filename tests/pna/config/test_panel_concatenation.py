@@ -134,6 +134,11 @@ def test_source_as_panel_splits_a_concatenation():
     assert combined.source_as_panel(1) == addon
     assert combined.copy() == combined
 
+    with pytest.raises(ValueError, match="zero or greater"):
+        combined.source_as_panel(-1)
+    with pytest.raises(ValueError, match="zero or greater"):
+        combined.replace_source(-1, base)
+
 
 def test_replace_source_blanks_optional_columns_missing_from_one_side():
     old_base = _panel("base", "1.0.0", [_marker("CD3", "AAAA")], product="kit")
