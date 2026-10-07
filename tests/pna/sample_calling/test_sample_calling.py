@@ -39,7 +39,7 @@ def _panel(marker_ids: list[str], hashing: set[str]) -> PNAAntibodyPanel:
             "sample_hashing": [marker_id in hashing for marker_id in marker_ids],
         }
     ).set_index("marker_id")
-    return PNAAntibodyPanel(
+    return PNAAntibodyPanel.from_metadata(
         frame, AntibodyPanelMetadata(name="hashing", version="1.0.0")
     )
 
@@ -485,7 +485,7 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
         ]
     ).set_index("marker_id")
 
-    panel = PNAAntibodyPanel(
+    panel = PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(
             name="test-panel",
@@ -572,7 +572,7 @@ def test_sample_calling_keeps_collapsed_hash_marker_missing_from_panel(
             },
         ]
     ).set_index("marker_id")
-    panel = PNAAntibodyPanel(
+    panel = PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(name="test-panel", version="0.1.0"),
     )
@@ -650,7 +650,7 @@ def test_sample_calling_without_uei_count(tmp_path: Path):
         ]
     ).set_index("marker_id")
 
-    panel = PNAAntibodyPanel(
+    panel = PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(
             name="test-panel",

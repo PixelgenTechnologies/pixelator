@@ -26,7 +26,15 @@ class PNAAntibodyPanelDiff:
         Args:
             panel_1: The first panel to compare.
             panel_2: The second panel to compare.
+
+        Raises:
+            ValueError: When either panel does not have exactly one source.
         """
+        if len(panel_1.sources) != 1 or len(panel_2.sources) != 1:
+            raise ValueError(
+                "PNAAntibodyPanelDiff only compares panels with a single source. "
+                "Split a concatenated panel with source_as_panel first."
+            )
         self.panel_1 = panel_1
         self.panel_2 = panel_2
 
@@ -163,6 +171,25 @@ class PNAAntibodyPanelDiff:
                 for col_name in self.panel_2.to_polars().columns
             ]
         )
+
+    def changed_marker_ids(self) -> dict[str, str]:
+        """Return ``old marker_id -> new marker_id`` for markers whose id changed."""
+        if (
+            "marker_id" not in self.joined.columns
+            or "marker_id_panel_2" not in self.joined.columns
+        ):
+            return {}
+        both = self.joined.filter(
+            pl.col("marker_id").is_not_null()
+            & pl.col("marker_id_panel_2").is_not_null()
+        )
+        mapping: dict[str, str] = {}
+        for old, new in zip(
+            both["marker_id"].to_list(), both["marker_id_panel_2"].to_list()
+        ):
+            if str(old) != str(new):
+                mapping[str(old)] = str(new)
+        return mapping
 
     def upgrade_adata(self, adata: AnnData) -> AnnData:
         """Upgrade an AnnData object with the changes between the two panels.
