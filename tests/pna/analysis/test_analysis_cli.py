@@ -1,35 +1,27 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import shutil
 import tempfile
 from pathlib import Path
 
-import pytest
 from click.testing import CliRunner
 
 from pixelator import cli
 from pixelator.pna.pixeldataset import read
 
 
-@pytest.mark.slow
-def test_runs_ok(mocker, pna_data_root):
+def test_runs_ok(synthetic_analysis_pxl_file, tmp_path):
     """Verify runs ok.
 
     Args:
-        mocker: mocker.
-        pna_data_root: pna data root.
+        synthetic_analysis_pxl_file: synthetic analysis pxl file.
+        tmp_path: tmp path.
     """
     runner = CliRunner()
 
-    # Picking a two components here to run to speed up the computations...
-    def downsample_read():
-        def f(paths):
-            pxl_dataset = read(paths)
-            single_component = list(pxl_dataset.components())[:2]
-            return pxl_dataset.filter(components=single_component)
-
-        return f
-
-    mocker.patch("pixelator.pna.cli.analysis.read", new_callable=downsample_read)
+    # The output file name is derived from the input file name.
+    input_pxl = tmp_path / "PNA055_Sample07_S7.layout.pxl"
+    shutil.copy(synthetic_analysis_pxl_file, input_pxl)
 
     with tempfile.TemporaryDirectory() as d:
         args = [
@@ -37,7 +29,7 @@ def test_runs_ok(mocker, pna_data_root):
             "1",
             "single-cell-pna",
             "analysis",
-            str(pna_data_root / "PNA055_Sample07_S7.layout.pxl"),
+            str(input_pxl),
             "--output",
             d,
             "--compute-proximity",

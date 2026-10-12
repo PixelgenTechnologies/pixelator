@@ -46,17 +46,20 @@ class FailingTask(PerComponentTask):
         raise RuntimeError("Simulated failure")
 
 
-def test_tempfile_cleanup_on_failure(pna_pxl_dataset: PNAPixelDataset, tmp_path):
+def test_tempfile_cleanup_on_failure(
+    synthetic_analysis_pxl_dataset: PNAPixelDataset, tmp_path
+):
     """Verify tempfile cleanup on failure.
 
     Args:
         tmp_path: tmp path.
-        pna_pxl_dataset: Pna pxl dataset.
+        synthetic_analysis_pxl_dataset: Synthetic analysis pxl dataset.
     """
     mock_task = FailingTask()  # type: ignore
-    manager = AnalysisManager([mock_task])
-    pna_pixel_filtered = pna_pxl_dataset.filter(
-        components=pna_pxl_dataset.adata().obs.index[:2]
+    # Setup and teardown run in the main process, so no worker pool is needed.
+    manager = AnalysisManager([mock_task], n_cores=1)
+    pna_pixel_filtered = synthetic_analysis_pxl_dataset.filter(
+        components=synthetic_analysis_pxl_dataset.adata().obs.index[:2]
     )
 
     pxl_file_target = PixelDatasetSaver(pxl_dataset=pna_pixel_filtered).save(

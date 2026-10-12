@@ -33,22 +33,20 @@ MarkerB,MarkerC,9864156ed5c9eb6c,c925e4e5eeb989b9,0.0,1.0,0.0,0.061,0.062,0.001,
 """
 
 
-@pytest.mark.slow
-def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
-    """Verify proximity analysis jcs.
+def test_proximity_analysis_jcs(synthetic_analysis_pxl_file: Path, tmp_path):
+    """Verify permutation proximity analysis agrees with the analytic proximity.
 
     Args:
-        pna_data_root: pna data root.
+        synthetic_analysis_pxl_file: Synthetic analysis pxl file.
         tmp_path: tmp path.
-        pna_pxl_file: Pna pxl file.
     """
-    pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
+    pna_pxl_dataset = PNAPixelDataset.from_files(synthetic_analysis_pxl_file)
     manager = AnalysisManager(
         [ProximityAnalysis(n_permutations=25, min_marker_count=0)],
-        n_cores=3,
+        n_cores=2,
     )
     output_pxl_file = PxlFile.copy_pxl_file(
-        PxlFile(pna_pxl_file), tmp_path / "proximity.pxl"
+        PxlFile(synthetic_analysis_pxl_file), tmp_path / "proximity.pxl"
     )
     dataset = manager.execute(pna_pxl_dataset, output_pxl_file)
     proximity = dataset.proximity().to_df()
@@ -61,69 +59,65 @@ def test_proximity_analysis_jcs(pna_pxl_file: Path, pna_data_root, tmp_path):
         assert comp_proximity.shape[0] == (
             marker_types_count[comp] * (marker_types_count[comp] + 1) / 2
         )
-    proximity = proximity.set_index(["component", "marker_1", "marker_2"], drop=True)
+    index = ["component", "marker_1", "marker_2"]
+    proximity = proximity.set_index(index, drop=True)
 
-    expected_proximity = pd.read_csv(pna_data_root / "jcs_proximity.csv").set_index(
-        ["component", "marker_1", "marker_2"], drop=True
+    # The analytic proximity computed from the edgelist is the oracle: the
+    # permutation based estimates must converge towards it.
+    expected_proximity = (
+        pna_pxl_dataset.proximity(calculate_from_edgelist=True)
+        .to_df()
+        .set_index(index, drop=True)
     )
-    expected_proximity = expected_proximity.astype({"join_count": "uint32"})
+    assert expected_proximity.shape == proximity.shape
+    expected_proximity = expected_proximity.loc[proximity.index]
 
-    # Drop non numerical columns, as well as join_count_p since it varies too much between two different seeds
-    drop_columns = ["join_count_p", "sample"]
-    high_join_count_expected = expected_proximity.query(
-        "join_count_expected_mean > 1000"
-    ).drop(columns=drop_columns)
-    high_join_count_observed = proximity.loc[high_join_count_expected.index].drop(
-        columns=drop_columns
+    # The observed join counts do not depend on the permutations.
+    assert (
+        proximity["join_count"].to_numpy()
+        == expected_proximity["join_count"].to_numpy()
+    ).all()
+
+    # Pairs with very few expected joins are too noisy to compare.
+    stable = expected_proximity["join_count_expected_mean"] > 5
+    assert stable.sum() > 100
+    corr = proximity[stable][
+        ["join_count_expected_mean", "log2_ratio", "join_count_z"]
+    ].corrwith(
+        expected_proximity[stable][
+            ["join_count_expected_mean", "log2_ratio", "join_count_z"]
+        ]
     )
-
-    # Check that the computed values are within relative tolerance. Some variables are very unstable.
-    rtols = {
-        "join_count": 1.0e-5,
-        "join_count_expected_mean": 0.02,
-        "join_count_expected_sd": 0.75,
-        "join_count_z": 15,
-        "marker_1_count": 1.0e-5,
-        "marker_1_freq": 1.0e-5,
-        "marker_2_count": 1.0e-5,
-        "marker_2_freq": 1.0e-5,
-        "min_count": 1.0e-5,
-        "log2_ratio": 15,
-    }
-    tol_series = pd.Series(rtols)
-    percent_diff = abs(high_join_count_expected - high_join_count_observed) / (
-        abs(high_join_count_expected) + 1e-9
-    )
-
-    assert not (percent_diff > tol_series).any().any()
+    assert corr["join_count_expected_mean"] > 0.99
+    assert corr["log2_ratio"] > 0.9
+    assert corr["join_count_z"] > 0.9
 
 
-@pytest.mark.slow
 def test_proximity_analysis_jcs_marker_count_filtering(
-    pna_pxl_file: Path, pna_data_root, tmp_path
+    synthetic_analysis_pxl_file: Path, tmp_path
 ):
     """Verify proximity analysis jcs marker count filtering.
 
     Args:
-        pna_data_root: pna data root.
+        synthetic_analysis_pxl_file: Synthetic analysis pxl file.
         tmp_path: tmp path.
-        pna_pxl_file: Pna pxl file.
     """
-    pna_pxl_dataset = PNAPixelDataset.from_files(pna_pxl_file)
+    pna_pxl_dataset = PNAPixelDataset.from_files(synthetic_analysis_pxl_file)
     min_marker_count = 10
+    # Observed join counts are compared, so few permutations are enough.
     manager_unfiltered = AnalysisManager(
-        [ProximityAnalysis(n_permutations=100, min_marker_count=0)],
-        n_cores=3,
+        [ProximityAnalysis(n_permutations=10, min_marker_count=0)],
+        n_cores=1,
     )
     manager_filtered = AnalysisManager(
-        [ProximityAnalysis(n_permutations=100, min_marker_count=min_marker_count)],
-        n_cores=3,
+        [ProximityAnalysis(n_permutations=10, min_marker_count=min_marker_count)],
+        n_cores=1,
     )
     output_pxl_file_unfiltered = PxlFile.copy_pxl_file(
-        PxlFile(pna_pxl_file), tmp_path / "proximity_unfiltered.pxl"
+        PxlFile(synthetic_analysis_pxl_file), tmp_path / "proximity_unfiltered.pxl"
     )
     output_pxl_file_filtered = PxlFile.copy_pxl_file(
-        PxlFile(pna_pxl_file), tmp_path / "proximity_filtered.pxl"
+        PxlFile(synthetic_analysis_pxl_file), tmp_path / "proximity_filtered.pxl"
     )
     dataset_unfiltered = manager_unfiltered.execute(
         pna_pxl_dataset, output_pxl_file_unfiltered
@@ -135,6 +129,7 @@ def test_proximity_analysis_jcs_marker_count_filtering(
     proximity_unfiltered = dataset_unfiltered.proximity().to_df()
     proximity_filtered = dataset_filtered.proximity().to_df()
 
+    assert (proximity_unfiltered["min_count"] < min_marker_count).any()
     assert proximity_filtered.shape[0] == (
         proximity_unfiltered.shape[0]
         - (proximity_unfiltered["min_count"] < min_marker_count).sum()
