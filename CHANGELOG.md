@@ -64,6 +64,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the two, instead of always reporting the host machine's core count. This prevents
   multiprocessing oversubscription and slowdowns when running inside a container or pod with a
   restricted CPU allocation.
+- The PNA analysis engine now pins each `--cores` worker process to one Polars thread and one
+  BLAS/OpenMP thread. Previously every worker built a Polars pool sized to the host CPU count, so
+  `--cores N` ran `N` processes × a host-wide pool and oversubscribed large machines. `--cores` is
+  still the number of worker processes; the parent process's Polars pool is unchanged.
 - Panel header parsing now recovers from multiple trailing commas per line (e.g. `name: foo,,,,,,,`).
 
 ## [0.30.0] - 2026-08-05

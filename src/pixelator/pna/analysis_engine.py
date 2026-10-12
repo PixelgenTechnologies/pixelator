@@ -5,6 +5,7 @@ Copyright © 2024 Pixelgen Technologies AB.
 
 import itertools
 import logging
+import os
 import typing
 from collections import defaultdict
 from dataclasses import dataclass
@@ -16,7 +17,7 @@ from typing import Callable, Generic, Iterable, Protocol, TypeVar
 import click
 import pandas as pd
 import polars as pl
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, parallel_config
 
 from pixelator.common.utils import get_available_cpu_count
 from pixelator.pna import read
@@ -266,42 +267,57 @@ class AnalysisManager:
     def _execute_computations_in_parallel(
         self, component_stream: Iterable[Component | str]
     ):
-        with _get_joblib_executor(
-            nbr_cores=self._n_cores, verbose=100, return_as="generator_unordered"
-        ) as parallel:
+        # Polars sizes its pool from POLARS_MAX_THREADS at import, so this only
+        # affects the freshly spawned loky workers, not the parent process.
+        previous_polars_max_threads = os.environ.get("POLARS_MAX_THREADS")
+        os.environ["POLARS_MAX_THREADS"] = "1"
+        try:
+            with (
+                parallel_config(backend="loky", inner_max_num_threads=1),
+                _get_joblib_executor(
+                    nbr_cores=self._n_cores,
+                    verbose=100,
+                    return_as="generator_unordered",
+                ) as parallel,
+            ):
 
-            def func(component, analysis_to_run):
-                """Func.
+                def func(component, analysis_to_run):
+                    """Func.
 
-                Args:
-                    component: component.
-                    analysis_to_run: analysis to run.
-                """
-                results = []
-                for analysis_name, analysis in analysis_to_run.items():
-                    logger.debug(
-                        f"running {analysis_name} on {component.component_id if isinstance(component, Component) else component}"
-                    )
-                    results.append(
-                        (
-                            analysis_name,
-                            analysis.run_on_component(
-                                component, logging_setup=self._logging_setup
-                            ),
+                    Args:
+                        component: component.
+                        analysis_to_run: analysis to run.
+                    """
+                    results = []
+                    for analysis_name, analysis in analysis_to_run.items():
+                        logger.debug(
+                            f"running {analysis_name} on {component.component_id if isinstance(component, Component) else component}"
                         )
-                    )
+                        results.append(
+                            (
+                                analysis_name,
+                                analysis.run_on_component(
+                                    component, logging_setup=self._logging_setup
+                                ),
+                            )
+                        )
 
-                return results
+                    return results
 
-            yield from itertools.chain.from_iterable(
-                parallel(
-                    delayed(func)(
-                        component,
-                        self.analysis_to_run,
+                yield from itertools.chain.from_iterable(
+                    parallel(
+                        delayed(func)(
+                            component,
+                            self.analysis_to_run,
+                        )
+                        for component in component_stream
                     )
-                    for component in component_stream
                 )
-            )
+        finally:
+            if previous_polars_max_threads is None:
+                os.environ.pop("POLARS_MAX_THREADS", None)
+            else:
+                os.environ["POLARS_MAX_THREADS"] = previous_polars_max_threads
 
     def _execute_computations_sequentially(
         self, component_stream: Iterable[Component | str]
