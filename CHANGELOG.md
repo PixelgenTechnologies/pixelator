@@ -67,7 +67,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The PNA analysis engine now pins each `--cores` worker process to one Polars thread and one
   BLAS/OpenMP thread. Previously every worker built a Polars pool sized to the host CPU count, so
   `--cores N` ran `N` processes × a host-wide pool and oversubscribed large machines. `--cores` is
-  still the number of worker processes; the parent process's Polars pool is unchanged.
+  still the number of worker processes; the parent process's Polars pool is unchanged. DuckDB
+  connections opened inside a worker (e.g. by `layout`) are similarly capped at one thread, via the
+  new `PIXELATOR_DUCKDB_THREADS` environment variable.
 - Panel header parsing now recovers from multiple trailing commas per line (e.g. `name: foo,,,,,,,`).
 
 ## [0.30.0] - 2026-08-05

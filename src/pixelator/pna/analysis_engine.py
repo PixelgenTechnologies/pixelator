@@ -288,6 +288,9 @@ class AnalysisManager:
                         component: component.
                         analysis_to_run: analysis to run.
                     """
+                    # This runs in the worker, so only worker DuckDB connections are
+                    # capped. connect_duckdb reads it on every connect.
+                    os.environ["PIXELATOR_DUCKDB_THREADS"] = "1"
                     results = []
                     for analysis_name, analysis in analysis_to_run.items():
                         logger.debug(

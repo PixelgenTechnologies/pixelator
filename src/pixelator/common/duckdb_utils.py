@@ -30,6 +30,12 @@ def get_duckdb_max_temp_dir_size_from_env() -> str | None:
     return value.strip() if value else None
 
 
+def get_duckdb_threads_from_env() -> str | None:
+    """Return ``PIXELATOR_DUCKDB_THREADS``, or ``None`` if unset."""
+    value = os.environ.get("PIXELATOR_DUCKDB_THREADS")
+    return value.strip() if value else None
+
+
 def resolve_duckdb_temp_dir(temp_dir: Path | str | None = None) -> Path:
     """Resolve the DuckDB spill directory.
 
@@ -63,16 +69,20 @@ def connect_duckdb(
         database: The database to connect to. Defaults to an in-memory database.
         read_only: Whether to open the database in read-only mode.
         config: A DuckDB configuration dict passed through to ``duckdb.connect``.
-        temp_dir: The spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
+            If it has no ``threads`` entry, ``PIXELATOR_DUCKDB_THREADS`` is used when set.
+        temp_dir:The spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
         temp_dir_size_limit: The spill directory size limit. Defaults to
             ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when unset.
 
     Returns:
         A DuckDB connection with ``temp_directory`` configured.
     """
-    conn = duckdb.connect(
-        database=str(database), read_only=read_only, config=config or {}
-    )
+    config = dict(config or {})
+    env_threads = get_duckdb_threads_from_env()
+    if env_threads is not None:
+        config.setdefault("threads", env_threads)
+
+    conn = duckdb.connect(database=str(database), read_only=read_only, config=config)
 
     resolved_temp_dir = str(resolve_duckdb_temp_dir(temp_dir).absolute())
     commands = [f"SET temp_directory = '{resolved_temp_dir}';"]

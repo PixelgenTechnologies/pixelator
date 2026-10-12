@@ -7,6 +7,7 @@ import polars as pl
 import pytest
 from joblib.externals.loky import get_reusable_executor
 
+from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
 from pixelator.pna.pixeldataset import PixelDatasetSaver, PNAPixelDataset
 
@@ -23,10 +24,15 @@ class ThreadProbeTask(PerComponentTask):
             component_id: Component id.
         """
         pl.DataFrame({"a": [1, 2, 3]}).group_by("a").len()
+        with connect_duckdb() as con:
+            duckdb_threads = con.execute(
+                "SELECT current_setting('threads')"
+            ).fetchone()[0]  # type: ignore
         return {
             "pid": os.getpid(),
             "polars_pool": pl.thread_pool_size(),
             "omp_num_threads": os.environ.get("OMP_NUM_THREADS"),
+            "duckdb_threads": duckdb_threads,
         }
 
 
@@ -51,6 +57,8 @@ def test_parallel_workers_use_one_thread(monkeypatch, previous_polars_max_thread
     assert len({probe["pid"] for probe in probes}) <= 2
     assert all(probe["polars_pool"] == 1 for probe in probes)
     assert all(probe["omp_num_threads"] == "1" for probe in probes)
+    assert all(probe["duckdb_threads"] == 1 for probe in probes)
+    assert "PIXELATOR_DUCKDB_THREADS" not in os.environ
     assert pl.thread_pool_size() == parent_pool_size
     assert os.environ.get("POLARS_MAX_THREADS") == previous_polars_max_threads
 
