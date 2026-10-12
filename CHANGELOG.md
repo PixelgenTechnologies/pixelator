@@ -39,14 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   statistics use the number of edges.
 
 ### Deprecated
-- The `--proximity-nbr-of-permutations` option of `pixelator single-cell-pna analysis` is deprecated and ignored,
-  since proximity scores are no longer computed with permutations. It is hidden from the help and logs a warning
-  when used, and will be removed in a future release.
 - `PNAPixelDataset.precomputed_layouts()` is deprecated. Use `layouts()` to
   compute Layouts on the fly. The method still reads a stored `layouts` table
   when one exists.
 
 ### Removed
+- The `--proximity-nbr-of-permutations` option of `pixelator single-cell-pna analysis`, since proximity scores
+  are no longer computed with permutations.
 - Stale nf-core/pixelator integration tests (`task test-nf-core-pixelator` and
   `.github/workflows/nf-core-pixelator-tests.yml`).
 - The `fruchterman_reingold`, `fruchterman_reingold_3d`, `kamada_kawai`, and

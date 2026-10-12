@@ -53,14 +53,6 @@ logger = logging.getLogger(__name__)
     help="Compute proximity scores matrix",
 )
 @click.option(
-    "--proximity-nbr-of-permutations",
-    default=None,
-    required=False,
-    type=int,
-    hidden=True,
-    help="Deprecated: proximity scores are calculated analytically and this option is ignored",
-)
-@click.option(
     "--compute-k-cores",
     required=False,
     is_flag=True,
@@ -87,7 +79,6 @@ def analysis(
     ctx,
     pxl_file,
     compute_proximity,
-    proximity_nbr_of_permutations,
     compute_k_cores,
     compute_svd_var_explained,
     svd_nbr_of_pivots,
@@ -104,13 +95,6 @@ def analysis(
         compute_svd_var_explained=compute_svd_var_explained,
         svd_nbr_of_pivots=svd_nbr_of_pivots,
     )
-
-    if proximity_nbr_of_permutations is not None:
-        logger.warning(
-            "--proximity-nbr-of-permutations is deprecated and will be removed in a "
-            "future release. Proximity scores are now calculated analytically, so "
-            "this option is ignored."
-        )
 
     # some basic sanity check on the input files
     sanity_check_inputs(input_files=input_files, allowed_extensions=("pxl",))
