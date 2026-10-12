@@ -383,16 +383,3 @@ def adata_data_fixture(edgelist_parquet_path, panel):
         adata = pna_edgelist_to_anndata(con, panel=panel)
 
     return adata
-
-
-@pytest.fixture(name="sample_hashed_pixel_files", scope="module")
-def sample_hashed_pxl(pna_data_root) -> list[Path]:
-    """Fixture for a sample pixel file with hashed antibodies.
-
-    Args:
-        pna_data_root: Pna data root.
-    """
-    return [
-        pna_data_root / "sample_calling/small_hashed_sample_1.pxl",
-        pna_data_root / "sample_calling/small_hashed_sample_2.pxl",
-    ]
