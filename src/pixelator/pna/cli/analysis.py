@@ -54,13 +54,11 @@ logger = logging.getLogger(__name__)
 )
 @click.option(
     "--proximity-nbr-of-permutations",
-    default=100,
+    default=None,
     required=False,
-    type=click.IntRange(
-        50,
-    ),
-    show_default=True,
-    help="Number of permutations to use when calculating the expected proximity scores",
+    type=int,
+    hidden=True,
+    help="Deprecated: proximity scores are calculated analytically and this option is ignored",
 )
 @click.option(
     "--compute-k-cores",
@@ -102,11 +100,17 @@ def analysis(
         input_files=input_files,
         output=output,
         compute_proximity=compute_proximity,
-        proximity_nbr_of_permutations=proximity_nbr_of_permutations,
         compute_k_cores=compute_k_cores,
         compute_svd_var_explained=compute_svd_var_explained,
         svd_nbr_of_pivots=svd_nbr_of_pivots,
     )
+
+    if proximity_nbr_of_permutations is not None:
+        logger.warning(
+            "--proximity-nbr-of-permutations is deprecated and will be removed in a "
+            "future release. Proximity scores are now calculated analytically, so "
+            "this option is ignored."
+        )
 
     # some basic sanity check on the input files
     sanity_check_inputs(input_files=input_files, allowed_extensions=("pxl",))
@@ -125,9 +129,7 @@ def analysis(
 
     if compute_proximity:
         logger.info("Proximity score computation is activated")
-        analysis_to_run.append(
-            ProximityAnalysis(n_permutations=proximity_nbr_of_permutations)
-        )
+        analysis_to_run.append(ProximityAnalysis())
 
     if compute_k_cores:
         logger.info("K-core computation is activated")

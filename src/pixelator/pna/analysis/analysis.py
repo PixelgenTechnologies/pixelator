@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 
-from pixelator.pna.analysis.proximity import jcs_with_permute_stats
+from pixelator.pna.analysis.proximity import jcs_with_analytical_stats_from_edgelist
 from pixelator.pna.analysis_engine import PerComponentTask
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PNAPixelDataset
@@ -28,20 +28,16 @@ class ProximityAnalysis(PerComponentTask):
 
     def __init__(
         self,
-        n_permutations: int = 100,
         min_marker_count: int = 10,
     ) -> None:
         """Initialize a ProximityAnalysis instance.
 
         Args:
-            n_permutations: the number of permutations to use for the method (only used with methods
-                that use permutations).
             min_marker_count: Min marker count.
         """
         self.method = "join_count_statistics"
         self._proxmimity_function = partial(
-            jcs_with_permute_stats,
-            n_permutations=n_permutations,
+            jcs_with_analytical_stats_from_edgelist,
             min_marker_count=min_marker_count,
         )
 

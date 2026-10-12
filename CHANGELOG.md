@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   DuckDB connections. An explicit `threads` setting passed to a connection takes precedence.
 
 ### Changed
+- `pixelator single-cell-pna analysis --compute-proximity` now calculates the expected join counts and their
+  standard deviations analytically instead of with marker permutations. The statistics are exact under the
+  same null model as the permutation test, so the results match permutation-based scores up to permutation noise,
+  and proximity scores are computed much faster. The output format is unchanged.
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
@@ -35,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   statistics use the number of edges.
 
 ### Deprecated
+- The `--proximity-nbr-of-permutations` option of `pixelator single-cell-pna analysis` is deprecated and ignored,
+  since proximity scores are no longer computed with permutations. It is hidden from the help and logs a warning
+  when used, and will be removed in a future release.
 - `PNAPixelDataset.precomputed_layouts()` is deprecated. Use `layouts()` to
   compute Layouts on the fly. The method still reads a stored `layouts` table
   when one exists.
@@ -56,6 +63,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   passed directly to native community detection, and the recovered components are unchanged.
 
 ### Fixed
+- `PNAPixelDataset.proximity(calculate_from_edgelist=True)` underestimated `join_count_expected_sd`
+  (by ~4% on average and up to ~20% on the test data) since it did not account for edges sharing the same node, and used a minimum
+  standard deviation of 1e-6 for `join_count_z`, giving very large z-scores for rare marker pairs.
+  It now uses the exact variance and a minimum standard deviation of 1, consistent with
+  `pixelator single-cell-pna analysis`. The DuckDB `stochastic` extension is no longer needed.
 - `Edgelist.to_record_batches` renames legacy `marker1` and `marker2` columns to `marker_1` and `marker_2`, matching `to_polars`, `to_df`, and `iterator`.
 - `coarsened_pmds_layout` sizes PMDS pivots from the full graph when Leiden
   yields too few communities, so a valid low `pivots` no longer fails

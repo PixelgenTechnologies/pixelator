@@ -30,8 +30,6 @@ def test_runs_ok(synthetic_analysis_pxl_file, tmp_path):
         "--output",
         str(output_dir),
         "--compute-proximity",
-        "--proximity-nbr-of-permutations",
-        "50",
         "--compute-svd-var-explained",
         "--svd-nbr-of-pivots",
         "10",
