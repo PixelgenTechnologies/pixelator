@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.segment_cell` to classify conjugate-graph nodes into two cell types (plus optional interface / `other`) using NMF weights from `cc_protein_weights`.
 - `pixelator.pna.plot.proximity_heatmap` to plot a clustered heatmap or dot plot of a summary proximity statistic between marker pairs.
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
+- The `PIXELATOR_DUCKDB_THREADS` environment variable sets the default thread count of Pixelator's
+  DuckDB connections. An explicit `threads` setting passed to a connection takes precedence.
 
 ### Changed
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
@@ -67,9 +69,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The PNA analysis engine now pins each `--cores` worker process to one Polars thread and one
   BLAS/OpenMP thread. Previously every worker built a Polars pool sized to the host CPU count, so
   `--cores N` ran `N` processes × a host-wide pool and oversubscribed large machines. `--cores` is
-  still the number of worker processes; the parent process's Polars pool is unchanged. DuckDB
-  connections opened inside a worker (e.g. by `layout`) are similarly capped at one thread, via the
-  new `PIXELATOR_DUCKDB_THREADS` environment variable.
+  still the number of worker processes; the parent process's Polars pool is unchanged.
+- DuckDB connections opened inside PNA analysis-engine workers (e.g. by `layout`) are now capped at
+  one thread.
 - Panel header parsing now recovers from multiple trailing commas per line (e.g. `name: foo,,,,,,,`).
 
 ## [0.30.0] - 2026-08-05

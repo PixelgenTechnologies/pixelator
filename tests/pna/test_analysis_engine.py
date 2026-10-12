@@ -40,6 +40,7 @@ class ThreadProbeTask(PerComponentTask):
 def test_parallel_workers_use_one_thread(monkeypatch, previous_polars_max_threads):
     """Verify each loky worker gets one Polars thread and one BLAS thread."""
     get_reusable_executor().shutdown(wait=True)
+    monkeypatch.delenv("PIXELATOR_DUCKDB_THREADS", raising=False)
     if previous_polars_max_threads is None:
         monkeypatch.delenv("POLARS_MAX_THREADS", raising=False)
     else:
@@ -61,6 +62,32 @@ def test_parallel_workers_use_one_thread(monkeypatch, previous_polars_max_thread
     assert "PIXELATOR_DUCKDB_THREADS" not in os.environ
     assert pl.thread_pool_size() == parent_pool_size
     assert os.environ.get("POLARS_MAX_THREADS") == previous_polars_max_threads
+
+
+@pytest.mark.parametrize("previous_duckdb_threads", [None, "4"])
+def test_single_job_does_not_leak_duckdb_threads_to_parent(
+    monkeypatch, previous_duckdb_threads
+):
+    """With one job, joblib runs in the parent; the DuckDB pin must not outlive it."""
+    if previous_duckdb_threads is None:
+        monkeypatch.delenv("PIXELATOR_DUCKDB_THREADS", raising=False)
+    else:
+        monkeypatch.setenv("PIXELATOR_DUCKDB_THREADS", previous_duckdb_threads)
+    # n_cores=None takes the parallel path with n_jobs from the available CPU count.
+    monkeypatch.setattr(
+        "pixelator.pna.analysis_engine.get_available_cpu_count", lambda: 1
+    )
+
+    manager = AnalysisManager([ThreadProbeTask()], n_cores=None)  # type: ignore
+    results = manager._execute_computations_in_parallel(
+        [f"component{i}" for i in range(4)]
+    )
+    probes = [probe for _, probe in results]
+
+    assert len(probes) == 4
+    assert all(probe["pid"] == os.getpid() for probe in probes)
+    assert all(probe["duckdb_threads"] == 1 for probe in probes)
+    assert os.environ.get("PIXELATOR_DUCKDB_THREADS") == previous_duckdb_threads
 
 
 class FailingTask(PerComponentTask):

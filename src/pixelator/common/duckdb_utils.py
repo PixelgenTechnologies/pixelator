@@ -70,7 +70,7 @@ def connect_duckdb(
         read_only: Whether to open the database in read-only mode.
         config: A DuckDB configuration dict passed through to ``duckdb.connect``.
             If it has no ``threads`` entry, ``PIXELATOR_DUCKDB_THREADS`` is used when set.
-        temp_dir:The spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
+        temp_dir: The spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
         temp_dir_size_limit: The spill directory size limit. Defaults to
             ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when unset.
 
