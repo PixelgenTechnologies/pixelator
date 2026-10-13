@@ -18,9 +18,11 @@ import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config import pna_config
+from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter
+from tests.common.data_generator import generate_edgelist, write_pna_pxl
 from tests.pna.data.pxl_data import (
     EDGELIST_DATA,
     LAYOUT_DATA,
@@ -72,6 +74,48 @@ def pna_pxl_dataset_fixture(pna_pxl_file):
     """
     pixel = read(pna_pxl_file)
     return pixel
+
+
+@pytest.fixture(name="synthetic_analysis_pxl_file", scope="session")
+def synthetic_analysis_pxl_file_fixture(tmp_path_factory) -> Path:
+    """A small synthetic pxl file, a fast stand-in for the real PBMC example.
+
+    Four cells (two cell types) are generated with the first 40 markers of the
+    proxiome-v1 panel, with about 3000 edges each instead of the ~100k of the
+    real file. Proximity analysis cost grows with the number of marker pairs, so
+    the smaller panel matters as much as the smaller graphs. The seed is fixed,
+    so the same file is produced on every run, and every cell is a single
+    connected graph (analyses such as the SVD noise estimate need that).
+
+    Args:
+        tmp_path_factory: Pytest tmp path factory.
+    """
+    full_panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")
+    panel = PNAAntibodyPanel(df=full_panel.df.iloc[:40], metadata=full_panel.metadata)
+    edgelist = generate_edgelist(
+        n_cells=4,
+        n_nodes=1500,
+        n_edges=3000,
+        min_neighbors=20,
+        panel=panel,
+        n_crossing_edges=0,
+        rng=0,
+        n_cell_types=2,
+        cell_type_effect=5.0,
+        n_shared_markers=3,
+    )
+    path = tmp_path_factory.mktemp("synthetic_analysis") / "synthetic_analysis.pxl"
+    return write_pna_pxl(edgelist, panel, path, sample_name="PNA055_Sample07_S7")
+
+
+@pytest.fixture(name="synthetic_analysis_pxl_dataset", scope="module")
+def synthetic_analysis_pxl_dataset_fixture(synthetic_analysis_pxl_file):
+    """A `PNAPixelDataset` for the synthetic analysis pxl file.
+
+    Args:
+        synthetic_analysis_pxl_file: Synthetic analysis pxl file.
+    """
+    return read(synthetic_analysis_pxl_file)
 
 
 @pytest.fixture(name="pna_pxl_panel_dataset", scope="module")
