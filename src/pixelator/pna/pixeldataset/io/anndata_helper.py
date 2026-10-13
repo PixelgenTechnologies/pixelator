@@ -17,7 +17,7 @@ from anndata import concat as anndata_concat
 
 from pixelator.common.statistics import clr_transformation, log1p_transformation
 from pixelator.common.utils import logger
-from pixelator.pna.config.panel import PNAAntibodyPanel, PNAAntibodyPanelDiff
+from pixelator.pna.config.panel import PNAAntibodyPanel, upgrade_adata
 from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
@@ -115,8 +115,7 @@ class AnnDataHelper:
             for i, adata in enumerate(adatas):
                 panel = PNAAntibodyPanel.from_adata(adata)
                 if panel.version != latest_panel.version:
-                    diff = PNAAntibodyPanelDiff(panel, latest_panel)
-                    adatas[i] = diff.upgrade_adata(adata)
+                    adatas[i] = upgrade_adata(adata, latest_panel)
         return adatas
 
     def _read_adata_from_sample(
