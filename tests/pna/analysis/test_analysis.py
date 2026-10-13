@@ -33,121 +33,118 @@ MarkerB,MarkerC,9864156ed5c9eb6c,c925e4e5eeb989b9,0.0,1.0,0.0,0.061,0.062,0.001,
 """
 
 
+PROXIMITY_KEY = ["component", "marker_1", "marker_2"]
+
+
+def _run_proximity_analysis(
+    pxl_file: Path, output_path: Path, n_cores: int, **proximity_kwargs
+) -> pd.DataFrame:
+    """Run the permutation based proximity analysis and return its results.
+
+    Args:
+        pxl_file: Pxl file to analyze. It is copied, so it is left untouched.
+        output_path: Where the copy holding the analysis results is written.
+        n_cores: Number of cores used by the analysis manager.
+        proximity_kwargs: Arguments for `ProximityAnalysis`.
+    """
+    dataset = PNAPixelDataset.from_files(pxl_file)
+    manager = AnalysisManager([ProximityAnalysis(**proximity_kwargs)], n_cores=n_cores)
+    output_pxl_file = PxlFile.copy_pxl_file(PxlFile(pxl_file), output_path)
+    return manager.execute(dataset, output_pxl_file).proximity().to_df()
+
+
 def test_proximity_analysis_jcs(synthetic_analysis_pxl_file: Path, tmp_path):
-    """Verify permutation proximity analysis agrees with the analytic proximity.
+    """The permutation based proximity analysis agrees with the analytic proximity.
+
+    The analytic proximity (computed directly from the edgelist) is the
+    reference: the permutation estimates must be close to it.
 
     Args:
         synthetic_analysis_pxl_file: Synthetic analysis pxl file.
         tmp_path: tmp path.
     """
-    pna_pxl_dataset = PNAPixelDataset.from_files(synthetic_analysis_pxl_file)
-    manager = AnalysisManager(
-        [ProximityAnalysis(n_permutations=25, min_marker_count=0)],
+    # Two cores on purpose: this is the one test that runs the analysis in a
+    # worker pool.
+    proximity = _run_proximity_analysis(
+        synthetic_analysis_pxl_file,
+        tmp_path / "proximity.pxl",
         n_cores=2,
+        n_permutations=25,
+        min_marker_count=0,
     )
-    output_pxl_file = PxlFile.copy_pxl_file(
-        PxlFile(synthetic_analysis_pxl_file), tmp_path / "proximity.pxl"
-    )
-    dataset = manager.execute(pna_pxl_dataset, output_pxl_file)
-    proximity = dataset.proximity().to_df()
+    dataset = PNAPixelDataset.from_files(synthetic_analysis_pxl_file)
+    analytic = dataset.proximity(calculate_from_edgelist=True).to_df()
 
+    # Structure: no leftover index column, and every component has one row per
+    # unordered pair of the markers it contains (including a marker with itself).
     assert "component" in proximity.columns
-
     assert "__index_level_0__" not in proximity.columns
-    marker_types_count = (pna_pxl_dataset.adata().to_df() > 0).sum(axis=1)
-    for comp, comp_proximity in proximity.groupby("component"):
-        assert comp_proximity.shape[0] == (
-            marker_types_count[comp] * (marker_types_count[comp] + 1) / 2
-        )
-    index = ["component", "marker_1", "marker_2"]
-    proximity = proximity.set_index(index, drop=True)
+    n_markers = (dataset.adata().to_df() > 0).sum(axis=1)
+    for component, rows in proximity.groupby("component"):
+        assert len(rows) == n_markers[component] * (n_markers[component] + 1) / 2
 
-    # The analytic proximity computed from the edgelist is the oracle: the
-    # permutation based estimates must converge towards it.
-    expected_proximity = (
-        pna_pxl_dataset.proximity(calculate_from_edgelist=True)
-        .to_df()
-        .set_index(index, drop=True)
-    )
-    assert expected_proximity.shape == proximity.shape
-    expected_proximity = expected_proximity.loc[proximity.index]
+    # Line the two results up row by row.
+    proximity = proximity.set_index(PROXIMITY_KEY)
+    analytic = analytic.set_index(PROXIMITY_KEY)
+    assert set(analytic.index) == set(proximity.index)
+    analytic = analytic.loc[proximity.index]
 
-    # The observed join counts do not depend on the permutations.
+    # The observed join counts are exact, they do not depend on the permutations.
+    assert (proximity["join_count"] == analytic["join_count"]).all()
+
+    # The permutation estimates are noisy for marker pairs with few expected
+    # joins, so only compare the pairs with enough of them.
+    enough_joins = analytic["join_count_expected_mean"] > 5
+    assert enough_joins.sum() > 100
+    estimated = proximity[enough_joins]
+    reference = analytic[enough_joins]
     assert (
-        proximity["join_count"].to_numpy()
-        == expected_proximity["join_count"].to_numpy()
-    ).all()
-
-    # Pairs with very few expected joins are too noisy to compare.
-    stable = expected_proximity["join_count_expected_mean"] > 5
-    assert stable.sum() > 100
-    corr = proximity[stable][
-        ["join_count_expected_mean", "log2_ratio", "join_count_z"]
-    ].corrwith(
-        expected_proximity[stable][
-            ["join_count_expected_mean", "log2_ratio", "join_count_z"]
-        ]
+        estimated["join_count_expected_mean"].corr(
+            reference["join_count_expected_mean"]
+        )
+        > 0.99
     )
-    assert corr["join_count_expected_mean"] > 0.99
-    assert corr["log2_ratio"] > 0.9
-    assert corr["join_count_z"] > 0.9
+    assert estimated["log2_ratio"].corr(reference["log2_ratio"]) > 0.9
+    assert estimated["join_count_z"].corr(reference["join_count_z"]) > 0.9
 
 
 def test_proximity_analysis_jcs_marker_count_filtering(
     synthetic_analysis_pxl_file: Path, tmp_path
 ):
-    """Verify proximity analysis jcs marker count filtering.
+    """`min_marker_count` removes exactly the marker pairs with too few markers.
 
     Args:
         synthetic_analysis_pxl_file: Synthetic analysis pxl file.
         tmp_path: tmp path.
     """
-    pna_pxl_dataset = PNAPixelDataset.from_files(synthetic_analysis_pxl_file)
     min_marker_count = 10
-    # Observed join counts are compared, so few permutations are enough.
-    manager_unfiltered = AnalysisManager(
-        [ProximityAnalysis(n_permutations=10, min_marker_count=0)],
+    # Only the observed join counts are compared, which do not depend on the
+    # permutations, so a handful of them is enough.
+    unfiltered = _run_proximity_analysis(
+        synthetic_analysis_pxl_file,
+        tmp_path / "proximity_unfiltered.pxl",
         n_cores=1,
+        n_permutations=10,
+        min_marker_count=0,
     )
-    manager_filtered = AnalysisManager(
-        [ProximityAnalysis(n_permutations=10, min_marker_count=min_marker_count)],
+    filtered = _run_proximity_analysis(
+        synthetic_analysis_pxl_file,
+        tmp_path / "proximity_filtered.pxl",
         n_cores=1,
-    )
-    output_pxl_file_unfiltered = PxlFile.copy_pxl_file(
-        PxlFile(synthetic_analysis_pxl_file), tmp_path / "proximity_unfiltered.pxl"
-    )
-    output_pxl_file_filtered = PxlFile.copy_pxl_file(
-        PxlFile(synthetic_analysis_pxl_file), tmp_path / "proximity_filtered.pxl"
-    )
-    dataset_unfiltered = manager_unfiltered.execute(
-        pna_pxl_dataset, output_pxl_file_unfiltered
-    )
-    dataset_filtered = manager_filtered.execute(
-        pna_pxl_dataset, output_pxl_file_filtered
+        n_permutations=10,
+        min_marker_count=min_marker_count,
     )
 
-    proximity_unfiltered = dataset_unfiltered.proximity().to_df()
-    proximity_filtered = dataset_filtered.proximity().to_df()
+    # Without this the test would pass even if nothing could be filtered out.
+    too_few_markers = unfiltered["min_count"] < min_marker_count
+    assert too_few_markers.any()
 
-    assert (proximity_unfiltered["min_count"] < min_marker_count).any()
-    assert proximity_filtered.shape[0] == (
-        proximity_unfiltered.shape[0]
-        - (proximity_unfiltered["min_count"] < min_marker_count).sum()
-    )
-
-    proximity_unfiltered = proximity_unfiltered.set_index(
-        ["component", "marker_1", "marker_2"]
-    ).sort_index()
-    proximity_filtered = proximity_filtered.set_index(
-        ["component", "marker_1", "marker_2"]
-    ).sort_index()
-
-    assert all(
-        proximity_filtered["join_count"]
-        == proximity_unfiltered.loc[
-            proximity_unfiltered["min_count"] >= min_marker_count, "join_count"
-        ]
-    )
+    # The filtered result is the unfiltered one minus the pairs with too few
+    # markers, with unchanged join counts.
+    assert len(filtered) == len(unfiltered) - too_few_markers.sum()
+    kept = unfiltered[~too_few_markers].set_index(PROXIMITY_KEY).sort_index()
+    filtered = filtered.set_index(PROXIMITY_KEY).sort_index()
+    assert (filtered["join_count"] == kept["join_count"]).all()
 
 
 def test_calculate_differential_proximity():

@@ -371,52 +371,62 @@ def test_expand_adjacency_matrix_k1_and_k2_on_a_line():
     assert two_hop[0, 1] == 1
 
 
+def _segment_graph(graph: PNAGraph, weights: pd.DataFrame, **kwargs) -> dict:
+    """Segment the graph and return the compartment label of each node."""
+    segment_cell(graph, w=weights, verbose=False, **kwargs)
+    return nx.get_node_attributes(graph.raw, "compartment")
+
+
 def _segment_component(
     dataset: PNAPixelDataset, weights: pd.DataFrame, component: str, **kwargs
 ) -> dict:
+    """Segment one component of the dataset and return the node labels."""
     graph = next(
         iter(dataset.filter(components=[component]).edgelist().iterator())
     ).graph
-    segment_cell(graph, w=weights, verbose=False, **kwargs)
-    return nx.get_node_attributes(graph.raw, "compartment")
+    return _segment_graph(graph, weights, **kwargs)
+
+
+# --- Synthetic dataset ------------------------------------------------------
+#
+# `synthetic_analysis_pxl_dataset` has four connected cells of two cell types.
+# Component filtering (`keep_largest_comp`, `min_comp_size`) only has an effect
+# on a graph with several connected pieces, so a two-node island is attached to
+# the segmented component. Its nodes get umis that no generated node can have
+# (generated umis are below 2**56).
+_SYN_POP1 = "A"
+_SYN_POP2 = "B"
+_SYN_CELL_TYPES = (_SYN_POP1, _SYN_POP2, _SYN_POP1, _SYN_POP2)  # one per cell
+_SYN_WEIGHTS_SEED = 7331
+_SYN_SEGMENT_COMPONENT = "0000000000000001"
+_SYN_ISLAND_NODES = (2**60, 2**60 + 1)
+_SYN_ALLOWED_LABELS = {_SYN_POP1, _SYN_POP2, "interface", "other"}
 
 
 def _segment_component_with_island(
     dataset: PNAPixelDataset, weights: pd.DataFrame, component: str, **kwargs
 ) -> dict:
-    """Segment a component with an extra two-node island attached to no node."""
+    """Segment a component that also has a two-node island, return node labels."""
     edgelist = (
         dataset.filter(components=[component])
         .edgelist()
         .to_polars()
         .select("umi1", "umi2", "marker_1", "marker_2", "read_count")
     )
-    max_umi = max(edgelist["umi1"].max(), edgelist["umi2"].max())
-    island = edgelist.head(1).with_columns(
-        umi1=pl.lit(max_umi + 1, dtype=edgelist.schema["umi1"]),
-        umi2=pl.lit(max_umi + 2, dtype=edgelist.schema["umi2"]),
+    # One extra edge, linked to nothing else, copying the markers of an existing edge.
+    island_umi1, island_umi2 = _SYN_ISLAND_NODES
+    island_edge = edgelist.head(1).with_columns(
+        umi1=pl.lit(island_umi1, dtype=edgelist.schema["umi1"]),
+        umi2=pl.lit(island_umi2, dtype=edgelist.schema["umi2"]),
     )
-    graph = PNAGraph.from_edgelist(pl.concat([edgelist, island]).lazy())
-    segment_cell(graph, w=weights, verbose=False, **kwargs)
-    return nx.get_node_attributes(graph.raw, "compartment")
-
-
-# Small synthetic dataset (`synthetic_analysis_pxl_dataset`), four cells of two
-# cell types. The generated cells are connected, so a small disconnected island
-# is added to the segmented component to give the component filtering options
-# something to act on.
-_SYN_CELL_TYPES = ("A", "B", "A", "B")
-_SYN_POP1 = "A"
-_SYN_POP2 = "B"
-_SYN_WEIGHTS_SEED = 7331
-_SYN_SEGMENT_COMPONENT = "0000000000000001"
-_SYN_ALLOWED = {_SYN_POP1, _SYN_POP2, "interface", "other"}
+    graph = PNAGraph.from_edgelist(pl.concat([edgelist, island_edge]).lazy())
+    return _segment_graph(graph, weights, **kwargs)
 
 
 @pytest.fixture(scope="module")
 def synthetic_weights(synthetic_analysis_pxl_dataset: PNAPixelDataset) -> pd.DataFrame:
+    """Marker weights telling the two synthetic cell types apart."""
     adata = synthetic_analysis_pxl_dataset.adata().copy()
-    assert _SYN_SEGMENT_COMPONENT in adata.obs.index
     adata.obs["cell_type"] = list(_SYN_CELL_TYPES)
     return cc_protein_weights(
         adata,
@@ -424,19 +434,25 @@ def synthetic_weights(synthetic_analysis_pxl_dataset: PNAPixelDataset) -> pd.Dat
         population_1=_SYN_POP1,
         population_2=_SYN_POP2,
         random_state=_SYN_WEIGHTS_SEED,
-        # The generator boosts a block of markers per cell type but never
-        # removes the others, so no marker is near-absent from a population
-        # as the default ``max_freq`` of 0.01 requires.
+        # The generator boosts a block of markers for each cell type but never
+        # removes the others, so no marker is almost absent from a population,
+        # which the default `max_freq` of 0.01 would require.
         max_freq=1.0,
         verbose=False,
     )
 
 
 @pytest.fixture(scope="module")
-def synthetic_compartments(
+def synthetic_labels(
     synthetic_analysis_pxl_dataset: PNAPixelDataset, synthetic_weights: pd.DataFrame
-):
-    def run(**kwargs):
+) -> dict[str, dict]:
+    """Node labels of the segmented synthetic component, for several options.
+
+    Segmenting is the slow part, so each option set is computed once and shared
+    by the tests below.
+    """
+
+    def segment(**kwargs):
         return _segment_component_with_island(
             synthetic_analysis_pxl_dataset,
             synthetic_weights,
@@ -446,51 +462,56 @@ def synthetic_compartments(
         )
 
     return {
-        "default": run(),
-        "no_interface": run(detect_interface=False),
-        "expansion4": run(k_interface_expansion=4),
-        "lcc": run(detect_interface=False, keep_largest_comp=True),
-        "min_size": run(
+        "default": segment(),
+        "no_interface": segment(detect_interface=False),
+        "large_interface_expansion": segment(k_interface_expansion=4),
+        "largest_component_only": segment(
+            detect_interface=False, keep_largest_comp=True
+        ),
+        "all_components": segment(
             detect_interface=False, keep_largest_comp=False, min_comp_size=1
         ),
     }
 
 
 def test_synthetic_weights_have_population_columns(synthetic_weights):
+    """There is one non-negative weight column per population."""
     assert list(synthetic_weights.columns) == [_SYN_POP1, _SYN_POP2]
     assert synthetic_weights.shape[0] >= 5
     assert (synthetic_weights >= 0).all().all()
 
 
-def test_synthetic_segment_cell_returns_expected_compartments(synthetic_compartments):
-    labels = synthetic_compartments["default"]
-    assert set(labels.values()) <= _SYN_ALLOWED
-    assert {_SYN_POP1, _SYN_POP2} & set(labels.values())
-    assert not any(value.startswith("intra_") for value in labels.values())
+def test_synthetic_segment_cell_returns_expected_compartments(synthetic_labels):
+    """By default nodes are labelled with a population, the interface or other."""
+    labels = set(synthetic_labels["default"].values())
+    assert labels <= _SYN_ALLOWED_LABELS
+    assert labels & {_SYN_POP1, _SYN_POP2}
+    assert not any(label.startswith("intra_") for label in labels)
 
 
-def test_synthetic_segment_cell_without_interface_detection(synthetic_compartments):
-    labels = synthetic_compartments["no_interface"]
-    assert "interface" not in labels.values()
-    assert set(labels.values()) <= {_SYN_POP1, _SYN_POP2, "other"}
+def test_synthetic_segment_cell_without_interface_detection(synthetic_labels):
+    """Disabling interface detection leaves no node labelled as interface."""
+    labels = set(synthetic_labels["no_interface"].values())
+    assert "interface" not in labels
+    assert labels <= {_SYN_POP1, _SYN_POP2, "other"}
 
 
-def test_synthetic_segment_cell_high_interface_expansion(synthetic_compartments):
-    labels = synthetic_compartments["expansion4"]
-    assert set(labels.values()) <= _SYN_ALLOWED
+def test_synthetic_segment_cell_high_interface_expansion(synthetic_labels):
+    """A large interface expansion still only produces the allowed labels."""
+    labels = set(synthetic_labels["large_interface_expansion"].values())
+    assert labels <= _SYN_ALLOWED_LABELS
 
 
-def test_synthetic_segment_cell_applies_component_filtering(synthetic_compartments):
-    lcc = synthetic_compartments["lcc"]
-    min_size = synthetic_compartments["min_size"]
-    n_non_other_lcc = sum(label in {_SYN_POP1, _SYN_POP2} for label in lcc.values())
-    n_non_other_min_size = sum(
-        label in {_SYN_POP1, _SYN_POP2} for label in min_size.values()
-    )
-    assert n_non_other_lcc <= n_non_other_min_size
-    assert sum(label == "other" for label in lcc.values()) > sum(
-        label == "other" for label in min_size.values()
-    )
+def test_synthetic_segment_cell_applies_component_filtering(synthetic_labels):
+    """The island is dropped with `keep_largest_comp` and kept otherwise.
+
+    "other" is the label of nodes that are filtered out.
+    """
+    largest_only = synthetic_labels["largest_component_only"]
+    all_components = synthetic_labels["all_components"]
+    for node in _SYN_ISLAND_NODES:
+        assert largest_only[node] == "other"
+        assert all_components[node] in {_SYN_POP1, _SYN_POP2}
 
 
 # Same 5-cell PBMC file as pixelatorR `minimal_pna_pxl_file()`.
