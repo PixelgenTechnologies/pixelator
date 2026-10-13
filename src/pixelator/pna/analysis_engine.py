@@ -288,21 +288,33 @@ class AnalysisManager:
                         component: component.
                         analysis_to_run: analysis to run.
                     """
-                    results = []
-                    for analysis_name, analysis in analysis_to_run.items():
-                        logger.debug(
-                            f"running {analysis_name} on {component.component_id if isinstance(component, Component) else component}"
-                        )
-                        results.append(
-                            (
-                                analysis_name,
-                                analysis.run_on_component(
-                                    component, logging_setup=self._logging_setup
-                                ),
+                    # connect_duckdb reads this on every connect. It is restored
+                    # afterwards because with n_jobs=1 joblib runs this in the parent.
+                    previous_duckdb_threads = os.environ.get("PIXELATOR_DUCKDB_THREADS")
+                    os.environ["PIXELATOR_DUCKDB_THREADS"] = "1"
+                    try:
+                        results = []
+                        for analysis_name, analysis in analysis_to_run.items():
+                            logger.debug(
+                                f"running {analysis_name} on {component.component_id if isinstance(component, Component) else component}"
                             )
-                        )
+                            results.append(
+                                (
+                                    analysis_name,
+                                    analysis.run_on_component(
+                                        component, logging_setup=self._logging_setup
+                                    ),
+                                )
+                            )
 
-                    return results
+                        return results
+                    finally:
+                        if previous_duckdb_threads is None:
+                            os.environ.pop("PIXELATOR_DUCKDB_THREADS", None)
+                        else:
+                            os.environ["PIXELATOR_DUCKDB_THREADS"] = (
+                                previous_duckdb_threads
+                            )
 
                 yield from itertools.chain.from_iterable(
                     parallel(
