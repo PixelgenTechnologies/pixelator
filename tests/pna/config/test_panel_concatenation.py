@@ -8,7 +8,6 @@ import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import PNAAntibodyPanel
-from pixelator.pna.config.panel.antibody_panel import _OPTIONAL_COLUMNS
 
 
 def _panel(
@@ -207,17 +206,9 @@ def test_source_as_panel_drops_columns_added_by_another_source():
     assert list(combined.source_as_panel(0).df.columns) == list(with_uniprot.df.columns)
     assert combined.df.loc["CD4", "uniprot_id"] == ""
     assert combined.source_as_panel(1).df.loc["CD19", "uniprot_id"] == ""
-    assert "uniprot_id" not in combined.sources[2].columns
-    assert "sample_hashing" not in combined.sources[2].columns
+    assert "uniprot_id" not in combined.source_as_panel(2).df.columns
+    assert "sample_hashing" not in combined.source_as_panel(2).df.columns
     assert list(combined.source_as_panel(3).df.columns) == list(hashing_flag.df.columns)
-
-
-def test_panel_always_has_optional_columns():
-    panel = _panel("base", "1.0.0", [_marker("CD3", "AAAA")])
-
-    for column in _OPTIONAL_COLUMNS:
-        assert (panel.df[column] == "").all()
-    assert panel.sources[0].columns == ("control", "sequence_1", "sequence_2")
 
 
 def test_concatenate_blanks_unknown_column_missing_from_one_source():

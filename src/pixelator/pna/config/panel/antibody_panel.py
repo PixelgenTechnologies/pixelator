@@ -39,10 +39,6 @@ if TYPE_CHECKING:
     from pixelator.pna.config.config_class import PNAConfig
     from pixelator.pna.pixeldataset.dataset import PNAPixelDataset
 
-# Every panel has these columns. A blank is an empty string, the same as an
-# empty cell in a panel CSV.
-_OPTIONAL_COLUMNS = ("full_name", "alt_id", "uniprot_id", "sample_hashing")
-
 
 @dataclass(frozen=True)
 class PanelSource:
@@ -96,7 +92,6 @@ class PNAAntibodyPanel:
         """
         if not sources:
             raise ValueError("A panel needs at least one source.")
-        df = df.assign(**{c: "" for c in _OPTIONAL_COLUMNS if c not in df.columns})
         self._filename = file_name
         self._filepath = Path(filepath).resolve() if filepath else None
         self._df = df
