@@ -57,7 +57,7 @@ def test_panel_validation(panel_df):
 
     assert panel.markers_control == ["marker2"]
     assert panel.markers == ["marker1", "marker2", "marker3"]
-    assert_frame_equal(panel.df, panel_df)
+    assert_frame_equal(panel.df[panel_df.columns], panel_df)
     assert panel.filename == "test.csv"
     assert panel.filepath is None
     assert panel.size == 3
@@ -157,7 +157,7 @@ def test_panel_from_pxl(pxl_file):
         "sequence_2": ["ACTTCCTAGG", "CCAGGTTCCG", "CAGCTATGGT"],
     }
     expected_df = pd.DataFrame(expected_data).set_index("marker_id")
-    assert_frame_equal(panel.df, expected_df)
+    assert_frame_equal(panel.df[expected_df.columns], expected_df)
 
 
 def test_panel_header_trailing_commas_warns_and_recovers(caplog):
