@@ -8,7 +8,7 @@ from pixelator.pna.config.panel.antibody_panel import (
     PNAAntibodyPanel,
     load_antibody_panel,
 )
-from pixelator.pna.config.panel.diff import changed_marker_ids, upgrade_adata
+from pixelator.pna.config.panel.diff import changed_marker_ids
 from pixelator.pna.config.panel.hashing import (
     collapsed_hashing_marker_id,
     sample_hashing_mask,
@@ -23,5 +23,4 @@ __all__ = [
     "load_antibody_panel",
     "sample_hashing_mask",
     "split_hashing_marker_id",
-    "upgrade_adata",
 ]
