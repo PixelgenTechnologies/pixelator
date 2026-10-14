@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 
 ### Changed
+- `calculate_differential_proximity` zero-pads the tested proximity metric for every component in the two groups being compared. Pass `cell_groups` to include components that have no proximity rows; without it, only components present in the proximity table are used. A component with two contrast labels, or two different values of the tested metric for the same marker pair, is rejected.
+- The default metric of `calculate_differential_proximity` is `log2_ratio` (previously `join_count_z`).
+- `calculate_differential_proximity` skips a comparison, with a warning, when either group has fewer than 10 components. The returned frame keeps its columns when it has no rows.
+- `calculate_differential_proximity` uses the normal approximation with a continuity correction. Small samples without ties previously used SciPy's exact test.
+- `calculate_differential_proximity` drops pairs whose absolute median difference is below `diff_threshold` (default 0.01), or whose detection rates fail `min_pct` / `min_diff_pct`, before adjusting p-values. The adjustment covers only the pairs that remain.
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
