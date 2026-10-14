@@ -119,7 +119,7 @@ def test_concatenate_blanks_optional_columns_missing_from_one_source():
     hashing = _panel(
         "hashing",
         "1.0.0",
-        [_marker("B2M-1", "GGGG", sample_hashing=True)],
+        [_marker("B2M-1", "GGGG", sample_hashing="yes")],
     )
     combined_hashing = PNAAntibodyPanel.concatenate([without_uniprot, hashing])
     assert combined_hashing.hashing_marker_ids == {"B2M-1"}
@@ -197,7 +197,7 @@ def test_source_as_panel_drops_columns_added_by_another_source():
     hashing_flag = _panel(
         "hash",
         "1.0.0",
-        [_marker("ACTB", "GGGG", sample_hashing=False)],
+        [_marker("ACTB", "GGGG", sample_hashing="")],
     )
     combined = PNAAntibodyPanel.concatenate(
         [with_uniprot, blank_uniprot, no_uniprot, hashing_flag]
@@ -209,3 +209,21 @@ def test_source_as_panel_drops_columns_added_by_another_source():
     assert "uniprot_id" not in combined.source_as_panel(2).df.columns
     assert "sample_hashing" not in combined.source_as_panel(2).df.columns
     assert list(combined.source_as_panel(3).df.columns) == list(hashing_flag.df.columns)
+
+
+def test_concatenate_blanks_unknown_column_missing_from_one_source():
+    flagged = _panel("base", "1.0.0", [_marker("CD3", "AAAA", nuclear="yes")])
+    plain = _panel("addon", "1.0.0", [_marker("CD19", "CCCC")])
+
+    combined = PNAAntibodyPanel.concatenate([flagged, plain])
+
+    assert combined.df.loc["CD3", "nuclear"] == "yes"
+    assert combined.df.loc["CD19", "nuclear"] == ""
+    assert "nuclear" not in combined.source_as_panel(1).df.columns
+
+
+def test_panel_requires_a_source():
+    panel = _panel("base", "1.0.0", [_marker("CD3", "AAAA")])
+
+    with pytest.raises(ValueError, match="at least one source"):
+        PNAAntibodyPanel(panel.df, [], panel.marker_source_ids)

@@ -54,6 +54,13 @@ class PanelSource:
     columns: Sequence[str] | None = None
 
 
+def _stack_marker_tables(frames: list[pd.DataFrame]) -> pd.DataFrame:
+    """Stack marker tables, blanking columns that only some of them have."""
+    df = pd.concat(frames).fillna("")
+    df.index.name = _INDEX_COLUMN
+    return df
+
+
 class PNAAntibodyPanel:
     """Class representing a PNA antibody panel."""
 
@@ -80,8 +87,11 @@ class PNAAntibodyPanel:
             filepath: Full path of the file this panel was loaded from.
 
         Raises:
+            ValueError: If no source is given.
             AssertionError: If the marker table fails panel validation.
         """
+        if not sources:
+            raise ValueError("A panel needs at least one source.")
         self._filename = file_name
         self._filepath = Path(filepath).resolve() if filepath else None
         self._df = df
@@ -224,8 +234,8 @@ class PNAAntibodyPanel:
         One panel is returned unchanged. Several panels are stacked in the
         given order. The result keeps every input source.
         ``marker_id``, ``sequence_1``, and ``sequence_2`` must be unique
-        across the concatenation. An optional column present on only some
-        sources is blank on the others, the same as an empty cell in a panel CSV.
+        across the concatenation. A column present on only some sources is
+        blank on the others, the same as an empty cell in a panel CSV.
         Each source still remembers the columns it was loaded with.
         """
         if not panels:
@@ -233,88 +243,25 @@ class PNAAntibodyPanel:
         if len(panels) == 1:
             return panels[0]
 
-        frames: list[pd.DataFrame] = []
-        sources: list[PanelSource] = []
-        source_id_frames: list[pd.Series] = []
-        for panel in panels:
-            if not panel.sources:
-                raise ValueError("Cannot concatenate a panel that has no sources.")
-            for source_index, source in enumerate(panel.sources):
-                new_source_id = len(sources)
-                sources.append(source)
-                marker_index = panel.marker_source_ids.index[
-                    panel.marker_source_ids == source_index
-                ]
-                part = panel.df.loc[list(marker_index)]
-                frames.append(part)
-                source_id_frames.append(
-                    pd.Series(new_source_id, index=part.index, dtype="int64")
-                )
-
-        df = pd.concat(cls._align_optional_columns(frames))
-        df.index.name = cls._INDEX_COLUMN
-        if "control" in df.columns:
-            df["control"] = df["control"].map(
-                lambda value: bool(value) if pd.notna(value) else False
-            )
-        marker_source_ids = pd.concat(source_id_frames)
-        marker_source_ids.index = df.index
-        return cls(df, sources, marker_source_ids.astype("int64"))
-
-    @staticmethod
-    def _align_optional_columns(frames: list[pd.DataFrame]) -> list[pd.DataFrame]:
-        """Give every frame the same columns before they are stacked.
-
-        ``pd.concat`` inserts NaN where a column exists on only some frames.
-        A blank UniProt id is an empty string, and a missing hashing flag is
-        false. Filling after the stack mixes those types and breaks validation.
-        """
-        columns = list(
-            dict.fromkeys(column for frame in frames for column in frame.columns)
+        parts = [
+            (source, panel._source_rows(i))
+            for panel in panels
+            for i, source in enumerate(panel.sources)
+        ]
+        sources = [source for source, _ in parts]
+        frames = [frame for _, frame in parts]
+        df = _stack_marker_tables(frames)
+        source_ids = pd.Series(
+            [i for i, frame in enumerate(frames) for _ in range(len(frame))],
+            index=df.index,
+            dtype="int64",
         )
-        missing_on_some = [
-            column
-            for column in columns
-            if any(column not in frame.columns for frame in frames)
-        ]
-        if not missing_on_some:
-            return frames
-        fills = {
-            column: PNAAntibodyPanel._missing_optional_value(frames, column)
-            for column in missing_on_some
-        }
-        aligned: list[pd.DataFrame] = []
-        for frame in frames:
-            missing = {
-                column: fill
-                for column, fill in fills.items()
-                if column not in frame.columns
-            }
-            if not missing:
-                aligned.append(frame)
-                continue
-            extra = pd.DataFrame(missing, index=frame.index)
-            aligned.append(pd.concat([frame, extra], axis=1))
-        return aligned
+        return cls(df, sources, source_ids)
 
-    @staticmethod
-    def _missing_optional_value(frames: list[pd.DataFrame], column: str):
-        """Return the blank value for a column some sources do not have."""
-        if column == "control":
-            return False
-        present = [
-            frame[column].dropna() for frame in frames if column in frame.columns
-        ]
-        values = pd.concat(present) if present else pd.Series(dtype=object)
-        if values.empty:
-            return ""
-        if pd.api.types.is_bool_dtype(values) or all(
-            isinstance(value, bool) for value in values
-        ):
-            return False
-        if pd.api.types.is_numeric_dtype(values):
-            return 0
-        return ""
+    def _source_rows(self, source_index: int) -> pd.DataFrame:
+        """Return the marker rows that belong to one source."""
+        markers = self.marker_source_ids.index[self.marker_source_ids == source_index]
+        return self.df.loc[markers]
 
     def _single_metadata(self) -> AntibodyPanelMetadata | None:
         """Return metadata when this panel has exactly one source."""
@@ -484,10 +431,7 @@ class PNAAntibodyPanel:
         if source_index < 0:
             raise ValueError("Source index must be zero or greater.")
         source = self.sources[source_index]
-        marker_index = self.marker_source_ids.index[
-            self.marker_source_ids == source_index
-        ]
-        df = self.df.loc[list(marker_index)].copy()
+        df = self._source_rows(source_index).copy()
         if source.columns is not None:
             df = df.loc[:, list(source.columns)]
         return type(self).from_metadata(
@@ -500,8 +444,8 @@ class PNAAntibodyPanel:
     def replace_source(self, source_index: int, replacement: PNAAntibodyPanel) -> Self:
         """Return a copy with one source replaced by a single-source panel.
 
-        An optional column present on only one side is blank on the other,
-        the same as an empty cell in a panel CSV.
+        A column present on only one side is blank on the other, the same as
+        an empty cell in a panel CSV.
         """
         if source_index < 0:
             raise ValueError("Source index must be zero or greater.")
@@ -512,9 +456,7 @@ class PNAAntibodyPanel:
         if kept.empty:
             df = replacement.df.copy()
         else:
-            kept, incoming = self._align_optional_columns([kept, replacement.df])
-            df = pd.concat([kept, incoming])
-        df.index.name = self._INDEX_COLUMN
+            df = _stack_marker_tables([kept, replacement.df])
         source_ids = pd.concat(
             [
                 self.marker_source_ids.loc[list(keep)],
