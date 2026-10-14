@@ -5,243 +5,40 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
-from functools import cached_property
-from typing import List, Set
+import pandas as pd
 
-import polars as pl
-from anndata import AnnData
-
-from pixelator.common.utils import logger
 from pixelator.pna.config.panel.antibody_panel import PNAAntibodyPanel
 
+_SEQUENCE_COLUMNS = ["sequence_1", "sequence_2"]
 
-class PNAAntibodyPanelDiff:
-    """Class representing the differences between two PNAAntibodyPanel objects."""
 
-    join_on_columns: list[str] = ["sequence_1", "sequence_2"]
+def _by_sequences(panel: PNAAntibodyPanel) -> pd.DataFrame:
+    """Return the panel table keyed by its sequence pair, which identifies a marker."""
+    return panel.df.reset_index().set_index(_SEQUENCE_COLUMNS, drop=False)
 
-    def __init__(self, panel_1: PNAAntibodyPanel, panel_2: PNAAntibodyPanel) -> None:
-        """Initialize the PNAAntibodyPanelDiff object.
 
-        Args:
-            panel_1: The first panel to compare.
-            panel_2: The second panel to compare.
+def changed_marker_ids(old: PNAAntibodyPanel, new: PNAAntibodyPanel) -> dict[str, str]:
+    """Return ``old marker_id -> new marker_id`` for markers whose id changed.
 
-        Raises:
-            ValueError: When either panel does not have exactly one source.
-        """
-        if len(panel_1.sources) != 1 or len(panel_2.sources) != 1:
-            raise ValueError(
-                "PNAAntibodyPanelDiff only compares panels with a single source. "
-                "Split a concatenated panel with source_as_panel first."
-            )
-        self.panel_1 = panel_1
-        self.panel_2 = panel_2
+    Markers are matched on their sequences. Markers present in only one panel
+    are ignored. Each panel must have exactly one source.
 
-        logger.debug(
-            "Comparing panels %s v%s and %s v%s",
-            panel_1.name,
-            panel_1.version,
-            panel_2.name,
-            panel_2.version,
+    Args:
+        old: The panel before the change.
+        new: The panel after the change.
+
+    Raises:
+        ValueError: When either panel does not have exactly one source.
+    """
+    if len(old.sources) != 1 or len(new.sources) != 1:
+        raise ValueError(
+            "changed_marker_ids only compares panels with a single source. "
+            "Split a concatenated panel with source_as_panel first."
         )
-
-        self.joined = self.panel_1.to_polars().join(
-            self.panel_2.to_polars(),
-            on=self.join_on_columns,
-            how="full",
-            suffix="_panel_2",
-        )
-
-        self._identical_columns: List[str] | None = None
-        self._changed_columns: List[str] | None = None
-        self._removed_columns: Set[str] | None = None
-        self._added_columns: Set[str] | None = None
-
-    @property
-    def col_names_in_both_panels(self) -> List[str]:
-        """Return a list of column names that are present in both panels."""
-        return list(
-            set(self.panel_1.to_polars().columns).intersection(
-                set(self.panel_2.to_polars().columns)
-            )
-        )
-
-    @property
-    def identical_columns(self) -> List[str]:
-        """Return a list of columns that are identical between the two panels."""
-        return [
-            col_name
-            for col_name in self.col_names_in_both_panels
-            if self.joined[col_name]
-            .eq_missing(self.joined[col_name + "_panel_2"])
-            .all()
-        ]
-
-    @cached_property
-    def changed_columns(self) -> List[str]:
-        """Return a list of columns that are different between the two panels."""
-        changed_columns = [
-            col_name
-            for col_name in set(self.col_names_in_both_panels).difference(
-                set(self.join_on_columns)
-            )
-            if not self.joined[col_name]
-            .eq_missing(self.joined[col_name + "_panel_2"])
-            .all()
-        ]
-        for col_name in changed_columns:
-            diff_count = self.joined.filter(
-                pl.col(col_name).ne_missing(pl.col(col_name + "_panel_2"))
-            ).shape[0]
-            logger.debug(
-                "Column %s is different between the two panels %s and %s (%d differing entries).",
-                col_name,
-                self.panel_1.name,
-                self.panel_2.name,
-                diff_count,
-            )
-        return changed_columns
-
-    @cached_property
-    def removed_columns(self) -> List[str]:
-        """Return a list of columns that are present in panel 1 but not in panel 2."""
-        removed_columns = set(self.panel_1.to_polars().columns).difference(
-            set(self.panel_2.to_polars().columns)
-        )
-        for col_name in removed_columns:
-            logger.debug(
-                "Column %s is present in panel %s but not in panel %s.",
-                col_name,
-                self.panel_1.name,
-                self.panel_2.name,
-            )
-        return sorted(removed_columns)
-
-    @cached_property
-    def added_columns(self) -> List[str]:
-        """Return a list of columns that are present in panel 2 but not in panel 1."""
-        added_columns = set(self.panel_2.to_polars().columns).difference(
-            set(self.panel_1.to_polars().columns)
-        )
-        for col_name in added_columns:
-            logger.debug(
-                "Column %s is present in panel %s but not in panel %s.",
-                col_name,
-                self.panel_2.name,
-                self.panel_1.name,
-            )
-        return sorted(added_columns)
-
-    @property
-    def added_clones(self) -> pl.DataFrame:
-        """Return a dataframe with the clones that are present in panel 2 but not in panel 1."""
-        return (
-            self.joined.filter(
-                pl.any_horizontal(
-                    pl.col(col_name).is_null()
-                    & pl.col(col_name + "_panel_2").is_not_null()
-                    for col_name in self.join_on_columns
-                )
-            )
-            .drop([col_name for col_name in self.panel_1.to_polars().columns])
-            .rename(
-                {
-                    col_name + "_panel_2": col_name
-                    for col_name in self.panel_2.to_polars().columns
-                    if col_name + "_panel_2" in self.joined.columns
-                }
-            )
-        )
-
-    @property
-    def removed_clones(self) -> pl.DataFrame:
-        """Return a dataframe with the clones that are present in panel 1 but not in panel 2."""
-        return self.joined.filter(
-            pl.any_horizontal(
-                pl.col(col_name).is_not_null() & pl.col(col_name + "_panel_2").is_null()
-                for col_name in self.join_on_columns
-            )
-        ).drop(
-            [
-                col_name + "_panel_2"
-                if col_name in self.joined.columns
-                and col_name not in self.added_columns
-                else col_name
-                for col_name in self.panel_2.to_polars().columns
-            ]
-        )
-
-    def changed_marker_ids(self) -> dict[str, str]:
-        """Return ``old marker_id -> new marker_id`` for markers whose id changed."""
-        if (
-            "marker_id" not in self.joined.columns
-            or "marker_id_panel_2" not in self.joined.columns
-        ):
-            return {}
-        both = self.joined.filter(
-            pl.col("marker_id").is_not_null()
-            & pl.col("marker_id_panel_2").is_not_null()
-        )
-        mapping: dict[str, str] = {}
-        for old, new in zip(
-            both["marker_id"].to_list(), both["marker_id_panel_2"].to_list()
-        ):
-            if str(old) != str(new):
-                mapping[str(old)] = str(new)
-        return mapping
-
-    def upgrade_adata(self, adata: AnnData) -> AnnData:
-        """Upgrade an AnnData object with the changes between the two panels.
-
-        Args:
-            adata: An AnnData object containing panel information.
-        """
-        adata_panel = PNAAntibodyPanel.from_adata(adata)
-        if self.panel_1 != adata_panel:
-            raise ValueError(
-                "The provided AnnData object does not match the panel. Cannot upgrade."
-                f"Expected panel {self.panel_2.name} v{self.panel_2.version}, but got panel {adata_panel.name} v{adata_panel.version}."
-            )
-
-        non_panel_columns = adata.var.copy()[
-            [
-                col
-                for col in adata.var.columns
-                if col not in adata.uns["panel_metadata"]["panel_columns"]
-            ]
-            + self.join_on_columns
-        ]
-        adata.var = (
-            self.joined.select(
-                list(
-                    set(
-                        self.join_on_columns
-                        + self.identical_columns
-                        + [f"{col}_panel_2" for col in self.changed_columns]
-                        + self.added_columns
-                    )
-                )
-            )
-            .rename({f"{col}_panel_2": col for col in self.changed_columns})
-            # keep order and append new to the end
-            .select(
-                ["marker_id"]  # index not in panel_metadata panel_columns below
-                + adata.uns["panel_metadata"]["panel_columns"]
-                + self.added_columns
-            )
-            .to_pandas()
-            .set_index("marker_id")
-        )
-        if adata.var.shape[0] != non_panel_columns.shape[0]:
-            raise ValueError(
-                "Row count mismatch in automatic patch panel patch version bump."
-            )
-        adata.var = adata.var.join(
-            non_panel_columns.set_index(self.join_on_columns),
-            how="outer",
-            on=self.join_on_columns,
-        )
-        adata.uns["panel_metadata"] = self.panel_2.metadata.model_dump()
-        adata.uns["panel_metadata"]["panel_columns"] = self.panel_2.df.columns.tolist()
-        return adata
+    both = _by_sequences(old)[["marker_id"]].join(
+        _by_sequences(new)[["marker_id"]], how="inner", rsuffix="_new"
+    )
+    renamed = both[both["marker_id"] != both["marker_id_new"]]
+    return dict(
+        zip(renamed["marker_id"].astype(str), renamed["marker_id_new"].astype(str))
+    )
