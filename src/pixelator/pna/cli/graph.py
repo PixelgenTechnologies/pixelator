@@ -316,8 +316,6 @@ def graph(
             output_path,
             sample_name=sample_name,
             reason=str(exc),
-            panel_name=panel.name,
-            panel_version=panel.version,
         )
         report = _graph_report(
             sample_name,

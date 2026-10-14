@@ -373,8 +373,6 @@ def sample_calling(
             "sample_name": sample_name,
             "version": __version__,
             "technology": "single-cell-pna",
-            "panel_name": panel.name,
-            "panel_version": panel.version,
             "hashing_collapsed": True,
         }
 
@@ -449,6 +447,7 @@ def sample_calling(
 
             with PixelFileWriter(target_path) as pxl_file_writer:
                 pxl_file_writer.write_metadata(metadata)
+                pxl_file_writer.write_panel(panel)
                 pxl_file_writer.write_edgelist(Path(tmp_edgelist_parquet.name))
                 pxl_file_writer.write_adata(adata)
             output_files.append(target_path)

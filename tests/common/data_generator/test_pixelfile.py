@@ -9,6 +9,7 @@ import pytest
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import load_antibody_panel
 from pixelator.pna.pixeldataset import read
+from pixelator.pna.pixeldataset.io import read_dataset_panel
 from tests.common.data_generator import (
     generate_edgelist,
     write_pna_pxl,
@@ -102,11 +103,12 @@ def test_write_pna_pxl_adata_metrics(written_pxl):
 
 
 def test_write_pna_pxl_metadata(written_pxl, real_panel):
-    """Metadata records the sample name, technology and panel identity."""
-    metadata = read(written_pxl).metadata()
-
-    assert set(metadata) == {SAMPLE_NAME}
-    entry = metadata[SAMPLE_NAME]
+    """Sample metadata does not duplicate the panel tables."""
+    dataset = read(written_pxl)
+    entry = dataset.metadata()[SAMPLE_NAME]
     assert entry["technology"] == "single-cell-pna"
-    assert entry["panel_name"] == real_panel.name
-    assert entry["panel_version"] == real_panel.version
+    assert "panel_name" not in entry
+    assert "panel_version" not in entry
+    panel = read_dataset_panel(dataset)
+    assert panel.name == real_panel.name
+    assert panel.version == real_panel.version
