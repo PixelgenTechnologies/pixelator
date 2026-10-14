@@ -4,6 +4,7 @@ Copyright © 2026 Pixelgen Technologies AB.
 """
 
 import pandas as pd
+import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import PNAAntibodyPanel
@@ -32,6 +33,17 @@ def test_changed_marker_ids_returns_renamed_markers():
     new = _panel("0.1.1", [_marker("CD3E", "AAAA"), _marker("CD4", "CCCC")])
 
     assert changed_marker_ids(old, new) == {"CD3": "CD3E"}
+
+
+def test_changed_marker_ids_rejects_a_concatenated_panel():
+    left = _panel("0.1.0", [_marker("CD3", "AAAA")])
+    right = _panel("0.1.0", [_marker("CD19", "CCCC")])
+    combined = PNAAntibodyPanel.concatenate([left, right])
+
+    with pytest.raises(ValueError, match="single source"):
+        changed_marker_ids(combined, left)
+    with pytest.raises(ValueError, match="single source"):
+        changed_marker_ids(left, combined)
 
 
 def test_changed_marker_ids_ignores_markers_present_on_one_side_only():

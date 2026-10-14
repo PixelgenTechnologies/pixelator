@@ -21,12 +21,20 @@ def changed_marker_ids(old: PNAAntibodyPanel, new: PNAAntibodyPanel) -> dict[str
     """Return ``old marker_id -> new marker_id`` for markers whose id changed.
 
     Markers are matched on their sequences. Markers present in only one panel
-    are ignored.
+    are ignored. Each panel must have exactly one source.
 
     Args:
         old: The panel before the change.
         new: The panel after the change.
+
+    Raises:
+        ValueError: When either panel does not have exactly one source.
     """
+    if len(old.sources) != 1 or len(new.sources) != 1:
+        raise ValueError(
+            "changed_marker_ids only compares panels with a single source. "
+            "Split a concatenated panel with source_as_panel first."
+        )
     both = _by_sequences(old)[["marker_id"]].join(
         _by_sequences(new)[["marker_id"]], how="inner", rsuffix="_new"
     )
