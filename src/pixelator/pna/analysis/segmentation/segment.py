@@ -57,7 +57,7 @@ def segment_cell(
             iterator.
         w: Protein weights with one row per protein and exactly two
             columns named after the two cell types. Usually the return
-            value of ``cc_protein_weights``.
+            value of ``cc_protein_weights`` (each column sums to 1).
         k: Hop distance used to build local neighborhood abundance
             profiles before projecting ``w``. Default 2. Must be between
             1 and 6.
