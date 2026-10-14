@@ -53,16 +53,6 @@ logger = logging.getLogger(__name__)
     help="Compute proximity scores matrix",
 )
 @click.option(
-    "--proximity-nbr-of-permutations",
-    default=100,
-    required=False,
-    type=click.IntRange(
-        50,
-    ),
-    show_default=True,
-    help="Number of permutations to use when calculating the expected proximity scores",
-)
-@click.option(
     "--compute-k-cores",
     required=False,
     is_flag=True,
@@ -89,7 +79,6 @@ def analysis(
     ctx,
     pxl_file,
     compute_proximity,
-    proximity_nbr_of_permutations,
     compute_k_cores,
     compute_svd_var_explained,
     svd_nbr_of_pivots,
@@ -102,7 +91,6 @@ def analysis(
         input_files=input_files,
         output=output,
         compute_proximity=compute_proximity,
-        proximity_nbr_of_permutations=proximity_nbr_of_permutations,
         compute_k_cores=compute_k_cores,
         compute_svd_var_explained=compute_svd_var_explained,
         svd_nbr_of_pivots=svd_nbr_of_pivots,
@@ -125,9 +113,7 @@ def analysis(
 
     if compute_proximity:
         logger.info("Proximity score computation is activated")
-        analysis_to_run.append(
-            ProximityAnalysis(n_permutations=proximity_nbr_of_permutations)
-        )
+        analysis_to_run.append(ProximityAnalysis())
 
     if compute_k_cores:
         logger.info("K-core computation is activated")
