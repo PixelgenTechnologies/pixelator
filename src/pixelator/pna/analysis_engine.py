@@ -7,6 +7,7 @@ import itertools
 import logging
 import os
 import typing
+import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import wraps
@@ -26,6 +27,24 @@ from pixelator.pna.pixeldataset import Component, PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PxlFile
 
 logger = logging.getLogger(__name__)
+
+# loky restarts a worker once its RSS grows more than 300 MB above its size after
+# the first task. Large components legitimately need more than that (the allocator
+# keeps the peak), so the restarts are false positives, and the warning loky emits
+# for each restart is just noise.
+_LOKY_MAX_MEMORY_LEAK_SIZE = int(2e9)
+warnings.filterwarnings(
+    "ignore",
+    message="A worker stopped while some jobs were given to the executor",
+    category=UserWarning,
+)
+
+
+def _relax_loky_memory_leak_check():
+    """Raise the loky worker memory leak threshold (run in each loky worker)."""
+    from joblib.externals.loky import process_executor
+
+    process_executor._MAX_MEMORY_LEAK_SIZE = _LOKY_MAX_MEMORY_LEAK_SIZE
 
 
 @dataclass(frozen=True)
@@ -273,7 +292,11 @@ class AnalysisManager:
         os.environ["POLARS_MAX_THREADS"] = "1"
         try:
             with (
-                parallel_config(backend="loky", inner_max_num_threads=1),
+                parallel_config(
+                    backend="loky",
+                    inner_max_num_threads=1,
+                    initializer=_relax_loky_memory_leak_check,
+                ),
                 _get_joblib_executor(
                     nbr_cores=self._n_cores,
                     verbose=100,
