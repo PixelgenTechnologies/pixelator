@@ -41,7 +41,7 @@ def marker_panel_fixture():
         }
     ).set_index("marker_id")
 
-    return PNAAntibodyPanel(
+    return PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(name="test-marker-panel", version="0.1.0"),
     )
@@ -59,7 +59,7 @@ def no_hashing_panel_fixture():
         }
     ).set_index("marker_id")
 
-    return PNAAntibodyPanel(
+    return PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(name="test-no-hashing-panel", version="0.1.0"),
     )

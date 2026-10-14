@@ -264,7 +264,7 @@ def panel_fixture():
         panel_df["control"].astype(str).map(lambda s: s.lower() == "yes")
     )
 
-    return PNAAntibodyPanel(
+    return PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(
             name="test-pna-panel",
