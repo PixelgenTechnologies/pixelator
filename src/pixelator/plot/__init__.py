@@ -4,7 +4,7 @@ Copyright © 2023 Pixelgen Technologies AB.
 """
 
 import warnings
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 
 import anndata
 import matplotlib.pyplot as plt
@@ -24,19 +24,21 @@ set_pixelgen_theme()
 colormap = pixelgen_sequential_colormap("blues", min_level=5)
 
 
-def _plot_joint_distribution(data, x, y, show_marginal, **kargs):
+def _plot_joint_distribution(data, x, y, show_marginal, hue_norm=None, **kargs):
     g = sns.JointGrid(data, x=x, y=y)
     g.plot_marginals(sns.kdeplot, fill=True)
     g.ax_marg_x.axis("off")
     g.ax_marg_y.axis("off")
-    g.plot_joint(
-        sns.scatterplot,
-        legend=False,
-        data=data,
-        hue="density",
-        palette=colormap,
-        size=0.1,
-    )
+    scatter_kwargs = {
+        "legend": False,
+        "data": data,
+        "hue": "density",
+        "palette": colormap,
+        "size": 0.1,
+    }
+    if hue_norm is not None:
+        scatter_kwargs["hue_norm"] = hue_norm
+    g.plot_joint(sns.scatterplot, **scatter_kwargs)
     if not show_marginal:
         g.ax_marg_x.set_visible(False)
         g.ax_marg_y.set_visible(False)
@@ -102,6 +104,108 @@ def _add_gate_box(
     return
 
 
+def _density_hue_norm(
+    density: pd.Series, scale_to_max: bool
+) -> tuple[float | None, float | None] | None:
+    """Color-scale limits for a density hue.
+
+    A 0–1 scale keeps a facet peak at the top of the colormap. Without scaling,
+    limits are left to seaborn, except when every value is 0 or 1: seaborn
+    would otherwise treat that hue as categorical and reject the colormap.
+
+    Args:
+        density: Density used to color the points.
+        scale_to_max: Whether ``density`` was divided by its maximum.
+
+    Returns:
+        ``(0, 1)`` when scaled, ``(None, None)`` when every value is 0 or 1,
+        and None when seaborn can infer a numeric scale on its own.
+    """
+    if scale_to_max:
+        return (0.0, 1.0)
+    values = density.to_numpy(dtype=float)
+    if values.size and np.isin(values, [0.0, 1.0]).all():
+        return (None, None)
+    return None
+
+
+def _kde_density(points: np.ndarray) -> np.ndarray:
+    """Gaussian KDE at each row of ``points``.
+
+    Facets with fewer than two points, or with no two-dimensional spread, cannot
+    support a kernel estimate. Those points get a constant density of 1 so the
+    plot still draws.
+
+    Args:
+        points: Array of shape ``(n, 2)``.
+
+    Returns:
+        Density of shape ``(n,)``.
+    """
+    n_points = points.shape[0]
+    if n_points < 2:
+        return np.ones(n_points, dtype=float)
+    try:
+        return np.asarray(gaussian_kde(points.T)(points.T), dtype=float)
+    except (ValueError, np.linalg.LinAlgError):
+        return np.ones(n_points, dtype=float)
+
+
+def _scale_density_to_max(density: np.ndarray) -> np.ndarray:
+    """Divide ``density`` by its maximum so the peak is 1."""
+    if density.size == 0:
+        return density
+    peak = float(np.max(density))
+    if not np.isfinite(peak) or peak <= 0:
+        return np.ones_like(density, dtype=float)
+    return density / peak
+
+
+def _estimate_point_density(
+    points: np.ndarray,
+    groups: pd.DataFrame | None = None,
+    *,
+    per_group: bool = False,
+    scale_to_max: bool = False,
+) -> np.ndarray:
+    """Estimate scatter density, optionally separately inside each facet.
+
+    Args:
+        points: Array of shape ``(n, 2)`` with the plotted coordinates.
+        groups: Facet labels, one row per point. Required when ``per_group``
+            is True.
+        per_group: Estimate a separate density for each combination of
+            ``groups``.
+        scale_to_max: Divide each estimate by its maximum. When ``per_group``
+            is True this is the maximum inside that facet.
+
+    Returns:
+        Density of shape ``(n,)``, aligned with ``points``.
+    """
+    if points.ndim != 2 or points.shape[1] != 2:
+        raise ValueError("points must have shape (n, 2).")
+
+    if not per_group:
+        density = _kde_density(points)
+        return _scale_density_to_max(density) if scale_to_max else density
+
+    if groups is None:
+        raise ValueError("groups is required when per_group is True.")
+    if len(groups) != points.shape[0]:
+        raise ValueError("groups must have one row per point.")
+
+    density = np.empty(points.shape[0], dtype=float)
+    grouped = groups.reset_index(drop=True).groupby(
+        list(groups.columns), sort=False, dropna=False, observed=True
+    )
+    for positions in grouped.indices.values():
+        values = _kde_density(points[positions])
+        if scale_to_max:
+            values = _scale_density_to_max(values)
+        density[positions] = values
+    return density
+
+
 def density_scatter_plot(
     adata: anndata.AnnData,
     marker1: str,
@@ -110,7 +214,9 @@ def density_scatter_plot(
     facet_row: str | None = None,
     facet_column: str | None = None,
     gate: pd.Series | pd.DataFrame | None = None,
-    show_marginal=False,
+    show_marginal: bool = False,
+    density_scope: Literal["facet", "joint"] = "facet",
+    scale_to_max: bool | None = None,
 ):
     """Pseudocolor density scatter plot.
 
@@ -136,6 +242,13 @@ def density_scatter_plot(
     fig, ax = density_scatter_plot(pixel.adata, "CD3E", "CD4", layer="dsb",
     facet_column="sample", gate=gate)
 
+    Faceted plots estimate the density inside each facet and scale it to that
+    facet's maximum, so each panel's colors reflect its own density.
+    ``density_scope="joint"`` keeps the previous behavior: one density
+    estimated on every point. Non-faceted plots are unchanged unless
+    ``scale_to_max=True``. A facet with too few points, or with no
+    two-dimensional spread, is drawn at a constant density.
+
     Args:
         adata: Anndata object containing the marker abundance data per component.
         marker1: The first marker to plot (x-axis).
@@ -145,25 +258,52 @@ def density_scatter_plot(
         facet_column: The column to use for faceting the plot by columns. Defaults to None.
         gate: The gate to use for marking a range of interest. Defaults to None.
         show_marginal: Whether to show marginal distributions. Defaults to False.
-    """
-    layer_data = adata.to_df(layer)
-    data = layer_data.loc[:, [marker1, marker2]]
-    data.loc[:, "density"] = gaussian_kde(data.T)(data.T)
-    if facet_column is not None:
-        data.loc[:, facet_column] = adata.obs.loc[:, facet_column]
+        density_scope: ``"facet"`` estimates density inside each facet.
+            ``"joint"`` estimates one density on the whole dataset. Defaults to
+            ``"facet"``. Has no effect when the plot is not faceted.
+        scale_to_max: Divide each density by its maximum. Defaults to True for
+            per-facet densities and False otherwise.
 
-    if facet_row is not None:
-        data.loc[:, facet_row] = adata.obs.loc[:, facet_row]
+    Raises:
+        ValueError: If ``density_scope`` is not ``"facet"`` or ``"joint"``.
+    """
+    if density_scope not in ("facet", "joint"):
+        raise ValueError(
+            f"density_scope must be 'facet' or 'joint', got {density_scope!r}."
+        )
+
+    layer_data = adata.to_df(layer)
+    data = layer_data.loc[:, [marker1, marker2]].copy()
+    facet_columns = [name for name in (facet_row, facet_column) if name is not None]
+    for name in facet_columns:
+        data.loc[:, name] = adata.obs.loc[:, name]
+
+    per_group = density_scope == "facet" and bool(facet_columns)
+    if scale_to_max is None:
+        scale_to_max = per_group
+    points = data.loc[:, [marker1, marker2]].to_numpy(dtype=float)
+    groups = data.loc[:, facet_columns] if per_group else None
+    data.loc[:, "density"] = _estimate_point_density(
+        points,
+        groups,
+        per_group=per_group,
+        scale_to_max=scale_to_max,
+    )
 
     if facet_column is not None or facet_row is not None:
         if show_marginal:
             warnings.warn("show_marginal is not supported for faceted plots.")
         plot_grid = sns.FacetGrid(data=data, col=facet_column, row=facet_row)
+        # A fresh norm per panel. (0, 1) puts a scaled peak at the top of the
+        # colormap. (None, None) still autoscales, but keeps a flat 0/1 density
+        # numeric so seaborn does not reject the colormap.
+        hue_norm = (0.0, 1.0) if scale_to_max else (None, None)
         plot_grid.map_dataframe(
             sns.scatterplot,
             x=marker1,
             y=marker2,
             hue="density",
+            hue_norm=hue_norm,
             palette=colormap,
             size=0.1,
         )
@@ -180,7 +320,11 @@ def density_scatter_plot(
         style_facet_strips(plot_grid)
     else:
         plot_grid = _plot_joint_distribution(
-            data, x=marker1, y=marker2, show_marginal=show_marginal
+            data,
+            x=marker1,
+            y=marker2,
+            show_marginal=show_marginal,
+            hue_norm=_density_hue_norm(data["density"], scale_to_max),
         )
         if gate is not None:
             _add_gate_box(
