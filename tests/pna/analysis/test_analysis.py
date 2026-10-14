@@ -8,11 +8,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
 from pandas.testing import assert_frame_equal
 
 from pixelator.pna.analysis.analysis import ProximityAnalysis
-from pixelator.pna.analysis.proximity import calculate_differential_proximity
+from pixelator.pna.analysis.permute import edgelist_permutations
+from pixelator.pna.analysis.proximity import (
+    calculate_differential_proximity,
+    jcs_with_analytical_stats_from_edgelist,
+)
 from pixelator.pna.analysis_engine import AnalysisManager
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PxlFile
@@ -39,7 +44,7 @@ PROXIMITY_KEY = ["component", "marker_1", "marker_2"]
 def _run_proximity_analysis(
     pxl_file: Path, output_path: Path, n_cores: int, **proximity_kwargs
 ) -> pd.DataFrame:
-    """Run the permutation based proximity analysis and return its results.
+    """Run the proximity analysis and return its results.
 
     Args:
         pxl_file: Pxl file to analyze. It is copied, so it is left untouched.
@@ -54,10 +59,10 @@ def _run_proximity_analysis(
 
 
 def test_proximity_analysis_jcs(synthetic_analysis_pxl_file: Path, tmp_path):
-    """The permutation based proximity analysis agrees with the analytic proximity.
+    """The proximity analysis gives the same scores as the analytic proximity.
 
-    The analytic proximity (computed directly from the edgelist) is the
-    reference: the permutation estimates must be close to it.
+    Both calculate the expected join counts analytically from the edgelist, so
+    the scores stored by the analysis must match the ones calculated on the fly.
 
     Args:
         synthetic_analysis_pxl_file: Synthetic analysis pxl file.
@@ -69,7 +74,6 @@ def test_proximity_analysis_jcs(synthetic_analysis_pxl_file: Path, tmp_path):
         synthetic_analysis_pxl_file,
         tmp_path / "proximity.pxl",
         n_cores=2,
-        n_permutations=25,
         min_marker_count=0,
     )
     dataset = PNAPixelDataset.from_files(synthetic_analysis_pxl_file)
@@ -89,23 +93,105 @@ def test_proximity_analysis_jcs(synthetic_analysis_pxl_file: Path, tmp_path):
     assert set(analytic.index) == set(proximity.index)
     analytic = analytic.loc[proximity.index]
 
-    # The observed join counts are exact, they do not depend on the permutations.
     assert (proximity["join_count"] == analytic["join_count"]).all()
+    for column in [
+        "join_count_expected_mean",
+        "join_count_expected_sd",
+        "join_count_z",
+        "join_count_p",
+        "log2_ratio",
+    ]:
+        np.testing.assert_allclose(proximity[column], analytic[column], err_msg=column)
 
-    # The permutation estimates are noisy for marker pairs with few expected
-    # joins, so only compare the pairs with enough of them.
-    enough_joins = analytic["join_count_expected_mean"] > 5
-    assert enough_joins.sum() > 100
-    estimated = proximity[enough_joins]
-    reference = analytic[enough_joins]
-    assert (
-        estimated["join_count_expected_mean"].corr(
-            reference["join_count_expected_mean"]
-        )
-        > 0.99
+
+def _random_edgelist(seed: int = 7) -> pl.DataFrame:
+    """Create a random bipartite edgelist with uneven node degrees."""
+    rng = np.random.default_rng(seed)
+    n_edges, n_umi1, n_umi2 = 3000, 300, 400
+    # Skewed node weights give a wide degree distribution
+    umi1 = rng.choice(n_umi1, size=n_edges, p=rng.dirichlet(np.full(n_umi1, 0.5)))
+    umi2 = rng.choice(n_umi2, size=n_edges, p=rng.dirichlet(np.full(n_umi2, 0.5)))
+    edgelist = pl.DataFrame(
+        {"umi1": umi1.astype(np.uint64), "umi2": umi2.astype(np.uint64)}
+    ).unique()
+    markers = np.array(["A", "B", "C", "D"])
+    marker_p = [0.5, 0.25, 0.15, 0.1]
+    umi1_markers = rng.choice(markers, size=n_umi1, p=marker_p)
+    umi2_markers = rng.choice(markers, size=n_umi2, p=marker_p)
+    return edgelist.with_columns(
+        marker_1=pl.Series(umi1_markers[edgelist["umi1"].to_numpy()]),
+        marker_2=pl.Series(umi2_markers[edgelist["umi2"].to_numpy()]),
     )
-    assert estimated["log2_ratio"].corr(reference["log2_ratio"]) > 0.9
-    assert estimated["join_count_z"].corr(reference["join_count_z"]) > 0.9
+
+
+def test_analytical_proximity_stats_match_permutations():
+    """Verify that the analytical expectations match the marker permutation null."""
+    edgelist = _random_edgelist()
+    result = jcs_with_analytical_stats_from_edgelist(edgelist).set_index(
+        ["marker_1", "marker_2"]
+    )
+
+    n_permutations = 2000
+    permuted_join_counts = pd.concat(
+        perm.select(
+            marker_1=pl.min_horizontal("marker_1", "marker_2"),
+            marker_2=pl.max_horizontal("marker_1", "marker_2"),
+        )
+        .group_by("marker_1", "marker_2")
+        .len()
+        .with_columns(perm_idx=pl.lit(idx))
+        .to_pandas()
+        for idx, perm in enumerate(
+            edgelist_permutations(edgelist, n=n_permutations, random_seed=1)
+        )
+    )
+    permuted_join_counts = (
+        permuted_join_counts.pivot_table(
+            index=["marker_1", "marker_2"], columns="perm_idx", values="len"
+        )
+        .reindex(columns=range(n_permutations))
+        .fillna(0)
+    )
+    permuted_mean = permuted_join_counts.mean(axis=1)
+    permuted_sd = permuted_join_counts.std(axis=1)
+
+    assert set(permuted_mean.index) == set(result.index)
+    np.testing.assert_allclose(
+        result["join_count_expected_mean"],
+        permuted_mean.loc[result.index],
+        rtol=0.02,
+    )
+    # The Monte Carlo standard error of the permutation sd is ~1.6% with 2000 permutations
+    np.testing.assert_allclose(
+        result["join_count_expected_sd"],
+        permuted_sd.loc[result.index],
+        rtol=0.08,
+    )
+    np.testing.assert_allclose(
+        result["join_count_z"],
+        (result["join_count"] - result["join_count_expected_mean"])
+        / np.maximum(result["join_count_expected_sd"], 1.0),
+    )
+
+
+def test_analytical_proximity_stats_output_format():
+    """Verify the output format of the analytical proximity statistics."""
+    edgelist = _random_edgelist()
+    result = jcs_with_analytical_stats_from_edgelist(edgelist)
+
+    assert list(result.columns) == [
+        "marker_1",
+        "marker_2",
+        "join_count",
+        "join_count_expected_mean",
+        "join_count_expected_sd",
+        "join_count_z",
+        "join_count_p",
+    ]
+    assert result["join_count"].dtype == np.uint32
+    assert (result["marker_1"] <= result["marker_2"]).all()
+    assert result.shape[0] == 4 * 5 / 2
+    assert result["join_count"].sum() == edgelist.height
 
 
 def test_proximity_analysis_jcs_marker_count_filtering(
@@ -118,20 +204,16 @@ def test_proximity_analysis_jcs_marker_count_filtering(
         tmp_path: tmp path.
     """
     min_marker_count = 10
-    # Only the observed join counts are compared, which do not depend on the
-    # permutations, so a handful of them is enough.
     unfiltered = _run_proximity_analysis(
         synthetic_analysis_pxl_file,
         tmp_path / "proximity_unfiltered.pxl",
         n_cores=1,
-        n_permutations=10,
         min_marker_count=0,
     )
     filtered = _run_proximity_analysis(
         synthetic_analysis_pxl_file,
         tmp_path / "proximity_filtered.pxl",
         n_cores=1,
-        n_permutations=10,
         min_marker_count=min_marker_count,
     )
 

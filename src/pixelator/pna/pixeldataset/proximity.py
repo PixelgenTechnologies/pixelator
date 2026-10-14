@@ -10,6 +10,7 @@ import pandas as pd
 import polars as pl
 from anndata import AnnData
 
+from pixelator.pna.analysis.analytical_proximity_query_helper import add_join_count_p
 from pixelator.pna.pixeldataset.io import PixelDataViewer, QueryBuilder
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
@@ -151,6 +152,9 @@ class Proximity:
         )
 
     def _post_process(self, df: pl.DataFrame) -> pl.DataFrame:
+        if self._calculate_from_edgelist:
+            df = add_join_count_p(df)
+
         if self._add_marker_counts:
             adata = self._adata_helper.read_adata(
                 add_clr_transform=False, add_log1p_transform=False
@@ -174,9 +178,6 @@ class Proximity:
             calculate_from_edgelist=self._calculate_from_edgelist,
         )
         with self._view.open() as session:
-            # Only load the stochastic extension since it is needed
-            # to execute the analytical proximity query.
-            session.load_stochastic_extension()
             df = session.execute_lazy(query).collect()
         return self._post_process(df)
 
