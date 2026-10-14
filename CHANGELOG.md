@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when one exists.
 
 ### Removed
+- `PNAAntibodyPanel.from_adata`. Panels are read from the `.pxl` file. Files from pixelator 0.22.0 through 0.30.0 are still read from `uns['panel_metadata']` and `var`. A file from before 0.22.0 has no panel; denoise and sample calling ask for the sample to be rerun with a current version of the software.
 - Stale nf-core/pixelator integration tests (`task test-nf-core-pixelator` and
   `.github/workflows/nf-core-pixelator-tests.yml`).
 - The `fruchterman_reingold`, `fruchterman_reingold_3d`, `kamada_kawai`, and

@@ -11,6 +11,7 @@ from pandas.testing import assert_frame_equal
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import read
+from pixelator.pna.pixeldataset.io import read_dataset_panel
 
 
 def _one_metadata() -> AntibodyPanelMetadata:
@@ -143,7 +144,7 @@ def test_panel_from_pxl(pxl_file):
     Args:
         pxl_file: pxl file.
     """
-    panel = PNAAntibodyPanel.from_pxl_dataset(read(pxl_file))
+    panel = read_dataset_panel(read(pxl_file))
     assert panel.name == "test-pna-panel"
     assert panel.version == "0.1.0"
     assert panel.description == "Test R&D panel for RNA"

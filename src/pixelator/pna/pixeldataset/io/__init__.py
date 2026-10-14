@@ -119,6 +119,7 @@ from .pxl_file import (
     PXL_FILE_OTHER_TABLES,
     NullPxlFileError,
     PxlFile,
+    read_dataset_panel,
     reject_null_pxl,
     write_null_pxl,
 )
@@ -135,6 +136,7 @@ __all__ = [
     "PxlFile",
     "Query",
     "QueryBuilder",
+    "read_dataset_panel",
     "reject_null_pxl",
     "write_null_pxl",
 ]

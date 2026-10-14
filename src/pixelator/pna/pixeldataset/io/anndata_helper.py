@@ -57,6 +57,8 @@ class AnnDataHelper:
                 )
                 adatas.append(adata)
 
+        self._view.apply_panel_patch_to_adatas(list(self._view.sample_names()), adatas)
+
         if not adatas:
             return AnnData()
 

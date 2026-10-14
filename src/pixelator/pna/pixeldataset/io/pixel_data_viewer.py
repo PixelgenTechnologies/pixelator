@@ -11,8 +11,14 @@ from typing import Iterable
 
 import duckdb
 import polars as pl
+from anndata import AnnData
 
 from pixelator.common.duckdb_utils import connect_duckdb
+from pixelator.pna.config.panel import PNAAntibodyPanel, align_panel_patches
+from pixelator.pna.config.panel_align import (
+    apply_hash_count_renames,
+    apply_marker_renames_to_adata,
+)
 
 from .pxl_file import PXL_FILE_MANDATOR_TABLES, PXL_FILE_OTHER_TABLES, PxlFile
 from .query_builder import Query
@@ -88,6 +94,10 @@ class PixelDataViewer:
         ]
         if invalid_files:
             raise ValueError(f"{invalid_files} are not valid PXL files.")
+
+        self._marker_renames: dict[str, dict[str, str]] | None = None
+        self._hash_count_renames: dict[str, dict[str, str]] | None = None
+        self._upgraded_panels: dict[str, PNAAntibodyPanel | None] | None = None
 
     def _map_sample_names_to_db_names(
         self, sample_name_to_pxl_file_mapping: dict[str, PxlFile]
@@ -179,6 +189,106 @@ class PixelDataViewer:
     def normalized_sample_db_name(self, sample_name: str) -> str:
         """Return the attached DuckDB database name for a sample."""
         return self._get_normalized_name(sample_name)
+
+    def apply_panel_patch_to_adatas(
+        self,
+        samples: list[str] | list[AnnData],
+        adatas: list[AnnData] | None = None,
+    ) -> list[AnnData]:
+        """Apply the view's panel patch bump and attach panel columns.
+
+        Marker ids are renamed first. Panel columns already on ``var`` are
+        then replaced by the panel this view settled on, so a legacy file and
+        a new file end up with the same in-memory columns. ``uns`` panel
+        metadata is removed. ``samples`` may be omitted by passing only the
+        AnnData list. Sample names are then taken from the view, in view order.
+        """
+        if adatas is None:
+            adatas = list(samples)  # type: ignore[arg-type]
+            samples = list(self.sample_names())
+        sample_names = [str(sample) for sample in samples]
+        if self._marker_renames is None:
+            self._compute_panel_patch(sample_names, adatas)
+        else:
+            self._apply_cached_panel_patch(sample_names, adatas)
+        return adatas
+
+    def _compute_panel_patch(self, samples: list[str], adatas: list[AnnData]) -> None:
+        panels: list[PNAAntibodyPanel] = []
+        indexed_adatas: list[AnnData] = []
+        indexed_samples: list[str] = []
+        indexed_metadata: list[dict] = []
+        for sample, adata in zip(samples, adatas):
+            pxl_file = self._db_to_file_mapping[sample]
+            panel = pxl_file.read_panel()
+            if panel is None:
+                continue
+            panels.append(panel)
+            indexed_adatas.append(adata)
+            indexed_samples.append(sample)
+            indexed_metadata.append(pxl_file.metadata())
+
+        marker_renames: dict[str, dict[str, str]] = {sample: {} for sample in samples}
+        hash_count_renames: dict[str, dict[str, str]] = {
+            sample: {} for sample in samples
+        }
+        upgraded_panels: dict[str, PNAAntibodyPanel | None] = {
+            sample: None for sample in samples
+        }
+        for sample, panel in zip(indexed_samples, panels):
+            upgraded_panels[sample] = panel
+        if len(panels) >= 2:
+            upgraded, data_renames, hash_renames = align_panel_patches(
+                panels, indexed_adatas, pxl_file_metadata=indexed_metadata
+            )
+            for sample, panel, data_map, hash_map in zip(
+                indexed_samples, upgraded, data_renames, hash_renames
+            ):
+                marker_renames[sample] = data_map
+                hash_count_renames[sample] = hash_map
+                upgraded_panels[sample] = panel
+        self._marker_renames = marker_renames
+        self._hash_count_renames = hash_count_renames
+        self._upgraded_panels = upgraded_panels
+        self._apply_cached_panel_patch(samples, adatas)
+
+    def _apply_cached_panel_patch(
+        self, samples: list[str], adatas: list[AnnData]
+    ) -> None:
+        marker_renames = self._marker_renames or {}
+        hash_renames = self._hash_count_renames or {}
+        upgraded = self._upgraded_panels or {}
+        for sample, adata in zip(samples, adatas):
+            apply_marker_renames_to_adata(adata, marker_renames.get(sample, {}))
+            apply_hash_count_renames(adata, hash_renames.get(sample, {}))
+            panel = upgraded.get(sample)
+            if panel is not None:
+                _attach_panel_columns(adata, panel)
+
+
+def _attach_panel_columns(adata: AnnData, panel: PNAAntibodyPanel) -> None:
+    """Join ``panel`` onto ``var`` and drop legacy ``uns`` panel metadata.
+
+    Columns already on ``var`` that also belong to the panel are removed
+    first, so a legacy file does not keep the pre-bump values. A column the
+    stored panel listed and this panel no longer has is removed as well.
+    Markers that are not already in ``var`` are not added.
+    """
+    metadata = adata.uns.get("panel_metadata") if adata.uns is not None else None
+    legacy_columns = set()
+    if isinstance(metadata, dict):
+        legacy_columns = {str(column) for column in metadata.get("panel_columns", [])}
+    panel_columns = set(map(str, panel.df.columns))
+    to_drop = [
+        column
+        for column in adata.var.columns
+        if str(column) in panel_columns or str(column) in legacy_columns
+    ]
+    if to_drop:
+        adata.var = adata.var.drop(columns=to_drop)
+    adata.var = adata.var.join(panel.df.reindex(adata.var_names), how="left")
+    if adata.uns is not None and "panel_metadata" in adata.uns:
+        del adata.uns["panel_metadata"]
 
 
 class PixelDataViewerSession:
