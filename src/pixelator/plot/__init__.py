@@ -129,26 +129,33 @@ def _density_hue_norm(
     return None
 
 
-def _kde_density(points: np.ndarray) -> np.ndarray:
+def _kde_density(points: np.ndarray, *, fallback: bool = False) -> np.ndarray:
     """Gaussian KDE at each row of ``points``.
 
-    Facets with fewer than two points, or with no two-dimensional spread, cannot
-    support a kernel estimate. Those points get a constant density of 1 so the
-    plot still draws.
+    A facet with fewer than two points, or with no two-dimensional spread, cannot
+    support a kernel estimate. When ``fallback`` is True those points get a
+    constant density of 1 so that panel still draws. Otherwise the kernel error
+    propagates, which is the previous behavior for a non-faceted plot and for
+    ``density_scope="joint"``.
 
     Args:
         points: Array of shape ``(n, 2)``.
+        fallback: Replace a failed kernel estimate with a constant density of 1.
 
     Returns:
         Density of shape ``(n,)``.
+
+    Raises:
+        ValueError: If the kernel cannot be estimated and ``fallback`` is False.
+        numpy.linalg.LinAlgError: If the points have no two-dimensional spread
+            and ``fallback`` is False.
     """
-    n_points = points.shape[0]
-    if n_points < 2:
-        return np.ones(n_points, dtype=float)
     try:
         return np.asarray(gaussian_kde(points.T)(points.T), dtype=float)
     except (ValueError, np.linalg.LinAlgError):
-        return np.ones(n_points, dtype=float)
+        if not fallback:
+            raise
+        return np.ones(points.shape[0], dtype=float)
 
 
 def _scale_density_to_max(density: np.ndarray) -> np.ndarray:
@@ -180,13 +187,15 @@ def _estimate_point_density(
             is True this is the maximum inside that facet.
 
     Returns:
-        Density of shape ``(n,)``, aligned with ``points``.
+        Density of shape ``(n,)``, aligned with ``points``. A facet that cannot
+        support a kernel estimate is filled with 1. A single estimate is not:
+        the kernel error propagates.
     """
     if points.ndim != 2 or points.shape[1] != 2:
         raise ValueError("points must have shape (n, 2).")
 
     if not per_group:
-        density = _kde_density(points)
+        density = _kde_density(points, fallback=False)
         return _scale_density_to_max(density) if scale_to_max else density
 
     if groups is None:
@@ -199,7 +208,7 @@ def _estimate_point_density(
         list(groups.columns), sort=False, dropna=False, observed=True
     )
     for positions in grouped.indices.values():
-        values = _kde_density(points[positions])
+        values = _kde_density(points[positions], fallback=True)
         if scale_to_max:
             values = _scale_density_to_max(values)
         density[positions] = values

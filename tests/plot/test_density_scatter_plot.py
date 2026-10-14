@@ -196,6 +196,31 @@ def test_small_or_flat_facets_get_a_constant_density():
     assert density.tolist() == pytest.approx([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
 
 
+def test_joint_density_still_raises_when_the_kernel_cannot_be_estimated():
+    """The constant-density fallback is per facet, not for one joint estimate."""
+    collinear = np.array([[0.0, 1.0], [1.0, 1.0], [2.0, 1.0]])
+    with pytest.raises(np.linalg.LinAlgError):
+        _estimate_point_density(collinear, per_group=False)
+
+    one_point = np.array([[0.0, 0.0]])
+    with pytest.raises(ValueError):
+        _estimate_point_density(one_point, per_group=False)
+
+    adata = AnnData(
+        X=np.array([[0.0, 1.0], [1.0, 1.0], [2.0, 1.0], [3.0, 1.0]]),
+        obs=pd.DataFrame({"sample": ["a", "a", "b", "b"]}),
+        var=pd.DataFrame(index=["m1", "m2"]),
+    )
+    fig, _ = density_scatter_plot(adata, "m1", "m2", facet_column="sample")
+    plt.close(fig)
+    with pytest.raises(np.linalg.LinAlgError):
+        density_scatter_plot(
+            adata, "m1", "m2", facet_column="sample", density_scope="joint"
+        )
+    with pytest.raises(np.linalg.LinAlgError):
+        density_scatter_plot(adata, "m1", "m2")
+
+
 def test_density_scatter_plot_draws_a_facet_with_too_few_points():
     """A panel with one cell, and a flat panel, still produce a figure."""
     values = np.array(
