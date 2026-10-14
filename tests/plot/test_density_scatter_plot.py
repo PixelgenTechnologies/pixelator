@@ -199,11 +199,11 @@ def test_small_or_flat_facets_get_a_constant_density():
 def test_joint_density_still_raises_when_the_kernel_cannot_be_estimated():
     """The constant-density fallback is per facet, not for one joint estimate."""
     collinear = np.array([[0.0, 1.0], [1.0, 1.0], [2.0, 1.0]])
-    with pytest.raises(np.linalg.LinAlgError):
+    with pytest.raises(ValueError, match="no area"):
         _estimate_point_density(collinear, per_group=False)
 
     one_point = np.array([[0.0, 0.0]])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="at least two cells"):
         _estimate_point_density(one_point, per_group=False)
 
     adata = AnnData(
@@ -213,11 +213,11 @@ def test_joint_density_still_raises_when_the_kernel_cannot_be_estimated():
     )
     fig, _ = density_scatter_plot(adata, "m1", "m2", facet_column="sample")
     plt.close(fig)
-    with pytest.raises(np.linalg.LinAlgError):
+    with pytest.raises(ValueError, match="m1 against m2"):
         density_scatter_plot(
             adata, "m1", "m2", facet_column="sample", density_scope="joint"
         )
-    with pytest.raises(np.linalg.LinAlgError):
+    with pytest.raises(ValueError, match="Choose two markers"):
         density_scatter_plot(adata, "m1", "m2")
 
 
@@ -256,7 +256,9 @@ def test_density_scope_selects_per_facet_or_joint_estimation(monkeypatch):
     """The plot keyword chooses a per-facet estimate or one joint estimate."""
     seen = {}
 
-    def record(points, groups=None, *, per_group=False, scale_to_max=False):
+    def record(
+        points, groups=None, *, per_group=False, scale_to_max=False, coordinates=""
+    ):
         seen["per_group"] = per_group
         seen["scale_to_max"] = scale_to_max
         seen["n_groups"] = None if groups is None else groups["sample"].nunique()

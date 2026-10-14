@@ -129,32 +129,60 @@ def _density_hue_norm(
     return None
 
 
-def _kde_density(points: np.ndarray, *, fallback: bool = False) -> np.ndarray:
+def _kde_failure_message(n_points: int, error: Exception, coordinates: str) -> str:
+    """Explain a failed kernel estimate and what to change."""
+    cell = "cell" if n_points == 1 else "cells"
+    subject = f"Cannot estimate the density of {coordinates} ({n_points} {cell})."
+    if n_points < 2:
+        return (
+            f"{subject} "
+            "A 2D kernel density needs at least two cells in different positions. "
+            "Add cells, or facet the plot: a plot with density_scope='facet' "
+            "with too few cells is drawn at a constant density instead of failing."
+        )
+    if isinstance(error, np.linalg.LinAlgError):
+        return (
+            f"{subject} "
+            "The points have no area: they are identical or lie on a line. "
+            "Choose two markers that vary independently. "
+            "A non-faceted plot and density_scope='joint' fail in this case. "
+            "A plot with density_scope='facet' that cannot be estimated "
+            "is drawn at a constant density instead."
+        )
+    return f"{subject} {error}"
+
+
+def _kde_density(
+    points: np.ndarray,
+    *,
+    fallback: bool = False,
+    coordinates: str = "these coordinates",
+) -> np.ndarray:
     """Gaussian KDE at each row of ``points``.
 
     A facet with fewer than two points, or with no two-dimensional spread, cannot
     support a kernel estimate. When ``fallback`` is True those points get a
-    constant density of 1 so that panel still draws. Otherwise the kernel error
-    propagates, which is the previous behavior for a non-faceted plot and for
-    ``density_scope="joint"``.
+    constant density of 1 so that panel still draws. Otherwise a ``ValueError``
+    names the coordinates and whether the problem is too few cells or no area.
 
     Args:
         points: Array of shape ``(n, 2)``.
         fallback: Replace a failed kernel estimate with a constant density of 1.
+        coordinates: Marker names, or another label, used in the error message.
 
     Returns:
         Density of shape ``(n,)``.
 
     Raises:
         ValueError: If the kernel cannot be estimated and ``fallback`` is False.
-        numpy.linalg.LinAlgError: If the points have no two-dimensional spread
-            and ``fallback`` is False.
     """
     try:
         return np.asarray(gaussian_kde(points.T)(points.T), dtype=float)
-    except (ValueError, np.linalg.LinAlgError):
+    except (ValueError, np.linalg.LinAlgError) as error:
         if not fallback:
-            raise
+            raise ValueError(
+                _kde_failure_message(points.shape[0], error, coordinates)
+            ) from error
         return np.ones(points.shape[0], dtype=float)
 
 
@@ -174,6 +202,7 @@ def _estimate_point_density(
     *,
     per_group: bool = False,
     scale_to_max: bool = False,
+    coordinates: str = "these coordinates",
 ) -> np.ndarray:
     """Estimate scatter density, optionally separately inside each facet.
 
@@ -185,17 +214,19 @@ def _estimate_point_density(
             ``groups``.
         scale_to_max: Divide each estimate by its maximum. When ``per_group``
             is True this is the maximum inside that facet.
+        coordinates: Marker names, or another label, used when a single
+            estimate fails.
 
     Returns:
         Density of shape ``(n,)``, aligned with ``points``. A facet that cannot
-        support a kernel estimate is filled with 1. A single estimate is not:
-        the kernel error propagates.
+        support a kernel estimate is filled with 1. A single estimate raises
+        ``ValueError`` instead.
     """
     if points.ndim != 2 or points.shape[1] != 2:
         raise ValueError("points must have shape (n, 2).")
 
     if not per_group:
-        density = _kde_density(points, fallback=False)
+        density = _kde_density(points, fallback=False, coordinates=coordinates)
         return _scale_density_to_max(density) if scale_to_max else density
 
     if groups is None:
@@ -256,7 +287,9 @@ def density_scatter_plot(
     ``density_scope="joint"`` keeps the previous behavior: one density
     estimated on every point. Non-faceted plots are unchanged unless
     ``scale_to_max=True``. A facet with too few points, or with no
-    two-dimensional spread, is drawn at a constant density.
+    two-dimensional spread, is drawn at a constant density. A non-faceted
+    plot, and ``density_scope="joint"``, raise ``ValueError`` naming the
+    markers and whether there are too few cells or the cells have no area.
 
     Args:
         adata: Anndata object containing the marker abundance data per component.
@@ -274,7 +307,9 @@ def density_scatter_plot(
             per-facet densities and False otherwise.
 
     Raises:
-        ValueError: If ``density_scope`` is not ``"facet"`` or ``"joint"``.
+        ValueError: If ``density_scope`` is not ``"facet"`` or ``"joint"``,
+            or if a non-faceted plot or ``density_scope="joint"`` has fewer
+            than two cells or cells with no area.
     """
     if density_scope not in ("facet", "joint"):
         raise ValueError(
@@ -297,6 +332,7 @@ def density_scatter_plot(
         groups,
         per_group=per_group,
         scale_to_max=scale_to_max,
+        coordinates=f"{marker1} against {marker2}",
     )
 
     if facet_column is not None or facet_row is not None:
