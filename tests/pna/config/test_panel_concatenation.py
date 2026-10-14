@@ -358,7 +358,7 @@ def test_read_panel_drops_columns_added_by_another_source(tmp_path: Path):
     hashing_flag = _panel(
         "hash",
         "1.0.0",
-        [_marker("ACTB", "GGGG", sample_hashing=False)],
+        [_marker("ACTB", "GGGG", sample_hashing="")],
     )
     combined = PNAAntibodyPanel.concatenate(
         [with_uniprot, blank_uniprot, no_uniprot, hashing_flag]
