@@ -32,6 +32,7 @@ from pixelator.pna.analysis.segmentation import cc_protein_weights, segment_cell
 from pixelator.pna.analysis.segmentation.segment import (
     _expand_adjacency_matrix,
     _kmeans_midpoint,
+    _project_weights,
     _retained_component_nodes,
 )
 from pixelator.pna.graph import PNAGraph
@@ -339,6 +340,38 @@ def test_segment_cell_exported_from_analysis():
     assert (
         inspect.signature(segment_cell).parameters["detect_interface"].default is True
     )
+
+
+def _row_normalized_scores(scores: np.ndarray) -> np.ndarray:
+    adjusted = scores + 1e-8
+    return adjusted / adjusted.sum(axis=1, keepdims=True)
+
+
+def test_segment_cell_ignores_a_shared_weight_scale(graph, weights):
+    """Multiplying both columns by the same factor does not change labels."""
+    segment_cell(graph, w=weights, verbose=False)
+    baseline = _compartments(graph)
+
+    rescaled = PNAGraph.from_edgelist(_conjugate_edgelist())
+    segment_cell(rescaled, w=weights * 7, verbose=False)
+    assert _compartments(rescaled) == baseline
+
+
+def test_projection_keeps_a_shared_scale_but_not_per_column_scales():
+    """Row-normalized scores cancel one scale, not a different scale per column.
+
+    ``cc_protein_weights`` therefore scales each column to sum to 1 before
+    returning it.
+    """
+    profiles = np.array([[0.7, 0.2, 0.1], [0.1, 0.2, 0.7]])
+    raw_weights = np.array([[8.0, 0.2], [0.5, 0.2], [0.2, 1.5]])
+    raw = _row_normalized_scores(_project_weights(profiles, raw_weights))
+    shared = _row_normalized_scores(_project_weights(profiles, raw_weights * 4))
+    per_column = raw_weights / raw_weights.sum(axis=0, keepdims=True)
+    rescaled = _row_normalized_scores(_project_weights(profiles, per_column))
+
+    np.testing.assert_allclose(shared, raw, atol=1e-6)
+    assert not np.allclose(rescaled, raw, atol=1e-3)
 
 
 def test_kmeans_midpoint_is_center_average():

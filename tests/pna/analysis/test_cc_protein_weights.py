@@ -8,11 +8,17 @@ from __future__ import annotations
 import inspect
 
 import anndata as ad
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
+from matplotlib.colors import to_hex
 
 from pixelator.pna.analysis.segmentation import cc_protein_weights
+from pixelator.pna.analysis.segmentation.protein_weights import (
+    _plot_protein_weights,
+    _scale_columns_to_unit_sum,
+)
 
 POP1 = "Mono"
 POP2 = "CD4T"
@@ -75,6 +81,7 @@ def test_cc_protein_weights_shape_and_column_names(two_pop_adata):
     assert weights.shape[0] >= 5
     assert set(weights.index).issubset(set(two_pop_adata.var_names))
     assert (weights >= 0).all().all()
+    np.testing.assert_allclose(weights.sum(axis=0), 1.0)
     assert weights.attrs["model_type"] == "cell_abundance"
 
 
@@ -189,6 +196,70 @@ def test_cc_protein_weights_show_plot_default_is_false():
     )
 
 
+def test_scale_columns_to_unit_sum_keeps_a_zero_column():
+    """A zero column stays zero; every other column sums to 1."""
+    raw = np.array([[2.0, 0.0], [2.0, 0.0], [1.0, 0.0]])
+    scaled = _scale_columns_to_unit_sum(raw)
+    np.testing.assert_allclose(scaled[:, 0], [0.4, 0.4, 0.2])
+    np.testing.assert_allclose(scaled[:, 1], 0.0)
+    np.testing.assert_array_equal(raw, [[2.0, 0.0], [2.0, 0.0], [1.0, 0.0]])
+
+
+def test_plot_protein_weights_stacks_by_mean_with_r_labels():
+    """Highest mean is at the top, even when another marker has a higher max."""
+    weights = pd.DataFrame(
+        {"Mono": [0.50, 0.90, 0.10], "CD4T": [0.50, 0.00, 0.20]},
+        index=["A", "B", "C"],
+    )
+    fig, ax = _plot_protein_weights(weights)
+    try:
+        # Tick labels run bottom to top. Means are A 0.50, B 0.45, C 0.15,
+        # so A is at the top. Ordering by max would put B above A.
+        assert [tick.get_text() for tick in ax.get_yticklabels()] == ["C", "B", "A"]
+        assert ax.get_title() == "NMF model weights"
+        assert ax.get_xlabel() == "Weights"
+        assert ax.get_ylabel() == "Protein"
+        legend = ax.get_legend()
+        assert legend.get_title().get_text() == "Population"
+        assert [text.get_text() for text in legend.get_texts()] == ["Mono", "CD4T"]
+
+        assert len(ax.containers) == 2
+        first_widths = [bar.get_width() for bar in ax.containers[0]]
+        second_lefts = [bar.get_x() for bar in ax.containers[1]]
+        np.testing.assert_allclose(second_lefts, first_widths)
+        assert to_hex(ax.containers[0][0].get_facecolor()) == "#6588cf"
+        assert to_hex(ax.containers[1][0].get_facecolor()) == "#f19da7"
+        fig.canvas.draw()
+        assert ax.get_xgridlines()
+        assert all(line.get_visible() for line in ax.get_xgridlines())
+        assert ax.get_facecolor()[:3] == (1.0, 1.0, 1.0)
+        ymin, ymax = ax.get_ylim()
+        assert -1.0 < ymin < 0
+        assert 2 < ymax < 3
+    finally:
+        plt.close(fig)
+
+
+def test_plot_protein_weights_keeps_union_of_top_40():
+    markers = [f"m{i:02d}" for i in range(90)]
+    pop1 = np.zeros(90)
+    pop2 = np.zeros(90)
+    pop1[:40] = np.linspace(40, 1, 40)
+    pop2[40:80] = np.linspace(40, 1, 40)
+    pop1[80:] = 0.01
+    pop2[80:] = 0.01
+    weights = pd.DataFrame({"P1": pop1, "P2": pop2}, index=markers)
+    fig, ax = _plot_protein_weights(weights)
+    try:
+        shown = {tick.get_text() for tick in ax.get_yticklabels()}
+        assert shown == set(markers[:80])
+        ymin, ymax = ax.get_ylim()
+        assert ymin > -1
+        assert ymax < 80
+    finally:
+        plt.close(fig)
+
+
 def test_cc_protein_weights_show_plot_smoke(two_pop_adata, monkeypatch):
     monkeypatch.setattr("matplotlib.pyplot.show", lambda: None)
     weights = cc_protein_weights(
@@ -199,6 +270,10 @@ def test_cc_protein_weights_show_plot_smoke(two_pop_adata, monkeypatch):
         show_plot=True,
     )
     assert list(weights.columns) == [POP1, POP2]
+    ax = plt.gcf().axes[0]
+    assert ax.get_title() == "NMF model weights"
+    assert len(ax.containers) == 2
+    plt.close("all")
 
 
 def test_cc_protein_weights_exported_from_analysis():

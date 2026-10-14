@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import Literal, Sequence
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from anndata import AnnData
@@ -58,9 +59,9 @@ def cc_protein_weights(
     abundance difference, pass those proteins as ``masked_markers`` so they
     are left out of the model. CD41, CD36, CD62P, and CD9 are common choices.
 
-    Set ``show_plot=True`` to inspect the top weights. A useful model has
-    high weights on proteins that are mutually exclusive between the two
-    cell types (for example CD20 on B cells and CD3e on T cells).
+    Set ``show_plot=True`` to inspect the top weights. A useful model has high
+    weights on proteins that are mutually exclusive between the two cell
+    types (for example CD20 on B cells and CD3e on T cells).
 
     Pass ``random_state`` if you want the same weights on repeated runs.
     NMF can otherwise vary slightly because cells may be downsampled and
@@ -106,7 +107,7 @@ def cc_protein_weights(
     Returns:
         A DataFrame with one row per protein kept in the model and two
         columns named after the two populations. Values are non-negative
-        NMF weights.
+        NMF weights scaled so each column sums to 1.
 
     Raises:
         ValueError: If the labels are missing, a population is not present,
@@ -184,6 +185,10 @@ def cc_protein_weights(
     )
     if _population_1_component(cell_loadings, pop1_mask) == 1:
         weights_array = weights_array[:, ::-1]
+    # sklearn leaves each component's scale in W. A weight should be that
+    # protein's share of the population: segment_cell does not cancel a
+    # different scale on each column.
+    weights_array = _scale_columns_to_unit_sum(weights_array)
 
     weights = pd.DataFrame(
         weights_array,
@@ -196,6 +201,7 @@ def cc_protein_weights(
 
     if show_plot:
         _plot_protein_weights(weights)
+        plt.show()
 
     return weights
 
@@ -373,43 +379,81 @@ def _population_1_component(cell_loadings: np.ndarray, pop1_mask: np.ndarray) ->
     return int(np.argmax(cell_loadings[:, pop1_mask].sum(axis=1)))
 
 
-def _plot_protein_weights(weights: pd.DataFrame) -> None:
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+def _scale_columns_to_unit_sum(weights: np.ndarray) -> np.ndarray:
+    """Scale each column so its entries sum to 1.
 
-    plot_data = (
+    A column that sums to 0 is left unchanged.
+    """
+    scaled = np.array(weights, dtype=float, copy=True)
+    totals = scaled.sum(axis=0)
+    nonzero = totals > 0
+    scaled[:, nonzero] /= totals[nonzero]
+    return scaled
+
+
+def _plot_protein_weights(weights: pd.DataFrame):
+    """Draw stacked protein weights, matching pixelatorR ``show_plot``.
+
+    One horizontal bar per marker in the union of the top 40 markers of
+    each population. Both populations share that bar. Markers are ordered
+    by mean weight, highest at the top.
+
+    Args:
+        weights: Population weights, proteins by populations.
+
+    Returns:
+        The matplotlib figure and axes. The caller displays them.
+    """
+    populations = [str(name) for name in weights.columns]
+    long = (
         weights.rename_axis(index="marker")
         .reset_index()
         .melt(id_vars="marker", var_name="population", value_name="score")
     )
     top_markers = (
-        plot_data.sort_values("score", ascending=False)
+        long.sort_values("score", ascending=False)
         .groupby("population", sort=False)
         .head(_PLOT_TOP_N)["marker"]
         .unique()
     )
-    plot_subset = plot_data[plot_data["marker"].isin(top_markers)]
-    marker_order = (
-        plot_subset.groupby("marker")["score"].max().sort_values().index.tolist()
-    )
-    populations = list(weights.columns)
-    palette = {
-        populations[0]: _POPULATION_PALETTE[0],
-        populations[1]: _POPULATION_PALETTE[1],
-    }
+    # ``reorder(marker, score)`` uses the mean. Ascending puts the highest
+    # mean at the top of a horizontal bar chart.
+    subset = weights.loc[weights.index.isin(top_markers)]
+    order = subset.mean(axis=1).sort_values(ascending=True).index
+    subset = subset.loc[order]
 
-    fig, ax = plt.subplots(figsize=(8, max(4.0, 0.25 * len(marker_order))))
-    sns.barplot(
-        data=plot_subset,
-        y="marker",
-        x="score",
-        hue="population",
-        order=marker_order,
-        palette=palette,
-        ax=ax,
-    )
+    fig, ax = plt.subplots(figsize=(8, max(4.0, 0.28 * len(order))))
+    left = np.zeros(len(order), dtype=float)
+    y = np.arange(len(order))
+    bar_height = 0.8
+    for population, color in zip(populations, _POPULATION_PALETTE, strict=True):
+        values = subset[population].to_numpy(dtype=float)
+        ax.barh(y, values, left=left, color=color, label=population, height=bar_height)
+        left = left + values
+    # Matplotlib's default 5% margin grows with the number of proteins, which
+    # leaves a large gap above the top bar and below the bottom bar.
+    edge_pad = 0.25
+    half = bar_height / 2
+    ax.set_ylim(-half - edge_pad, len(order) - 1 + half + edge_pad)
+
+    ax.set_yticks(y)
+    ax.set_yticklabels(list(order))
     ax.set_title("NMF model weights")
     ax.set_xlabel("Weights")
     ax.set_ylabel("Protein")
+    ax.legend(
+        title="Population",
+        frameon=True,
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+    )
+    ax.set_facecolor("white")
+    fig.patch.set_facecolor("white")
+    ax.set_axisbelow(True)
+    ax.grid(True, color="0.9", linewidth=0.8)
+    for spine in ax.spines.values():
+        spine.set_visible(True)
+        spine.set_color("black")
+        spine.set_linewidth(0.8)
     fig.tight_layout()
-    plt.show()
+    return fig, ax
