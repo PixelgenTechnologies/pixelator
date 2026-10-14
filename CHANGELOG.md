@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   DuckDB connections. An explicit `threads` setting passed to a connection takes precedence.
 
 ### Changed
-- Faceted `density_scatter_plot` now estimates density inside each facet and scales it to that facet's maximum, so panel colors follow the panel's own density. Pass `density_scope="joint"` for the previous behavior (one density on all panels). Non-faceted plots are unchanged. A facet that is too small, or has no two-dimensional spread, is drawn at a constant density. A non-faceted plot, and `density_scope="joint"`, raise an error that names the markers and whether the plot has too few cells or the cells have no area.
+- Faceted `density_scatter_plot` now estimates density inside each facet and scales it to that facet's maximum by default, so panel colors follow the panel's own density. Pass `density_scope="joint"` for the previous behavior (one density on all panels). Non-faceted plots are unchanged. A facet that contains fewer than two cells, or has no two-dimensional spread, is drawn at a constant density. A non-faceted plot, and `density_scope="joint"`, still raise an error.
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
