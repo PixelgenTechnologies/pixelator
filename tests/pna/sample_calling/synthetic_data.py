@@ -58,7 +58,7 @@ def build_hashing_panel() -> PNAAntibodyPanel:
             "sample_hashing": [hashing for _, hashing in markers],
         }
     ).set_index("marker_id")
-    return PNAAntibodyPanel(
+    return PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(name="test-hashing-panel", version="0.1.0"),
     )

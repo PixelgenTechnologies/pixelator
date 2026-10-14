@@ -91,7 +91,9 @@ def synthetic_analysis_pxl_file_fixture(tmp_path_factory) -> Path:
         tmp_path_factory: Pytest tmp path factory.
     """
     full_panel = load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")
-    panel = PNAAntibodyPanel(df=full_panel.df.iloc[:40], metadata=full_panel.metadata)
+    panel = PNAAntibodyPanel.from_metadata(
+        df=full_panel.df.iloc[:40], metadata=full_panel.metadata
+    )
     edgelist = generate_edgelist(
         n_cells=4,
         n_nodes=1500,
@@ -308,7 +310,7 @@ def panel_fixture():
         panel_df["control"].astype(str).map(lambda s: s.lower() == "yes")
     )
 
-    return PNAAntibodyPanel(
+    return PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(
             name="test-pna-panel",

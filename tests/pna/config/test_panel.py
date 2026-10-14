@@ -13,6 +13,10 @@ from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import read
 
 
+def _one_metadata() -> AntibodyPanelMetadata:
+    return AntibodyPanelMetadata(name="test_panel", version="0.0.0")
+
+
 @pytest.fixture
 def panel_df():
     """Panel df."""
@@ -40,7 +44,7 @@ def test_panel_validation(panel_df):
         "description": "panel description",
         "aliases": ["test_alias"],
     }
-    panel = PNAAntibodyPanel(
+    panel = PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(**metadata),
         file_name="test.csv",
@@ -65,7 +69,7 @@ def test_panel_properties(panel_df):
     Args:
         panel_df: panel df.
     """
-    panel = PNAAntibodyPanel(df=panel_df, metadata=None)
+    panel = PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
@@ -80,7 +84,7 @@ def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
         AssertionError,
         match=r".*The marker_id column should not contain underscores.*Offending values:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
@@ -95,7 +99,7 @@ def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
         AssertionError,
         match=r".*The marker_id column should not contain white-spaces.*Offending values:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
@@ -110,7 +114,7 @@ def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
         AssertionError,
         match=r".*Invalid UniProt IDs found.*Please conform to the naming convention or remove the following IDs:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
@@ -120,7 +124,7 @@ def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
         panel_df: panel df.
     """
     panel_df.loc["marker1", "uniprot_id"] = "P05107;P15391"
-    PNAAntibodyPanel(df=panel_df, metadata=None)
+    PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_ok_uniprotid_empty(panel_df):
@@ -130,7 +134,7 @@ def test_panel_validation_ok_uniprotid_empty(panel_df):
         panel_df: panel df.
     """
     panel_df.loc["marker1", "uniprot_id"] = ""
-    PNAAntibodyPanel(df=panel_df, metadata=None)
+    PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_from_pxl(pxl_file):
@@ -253,7 +257,7 @@ def test_duplicate_marker_ids_are_rejected():
         [_marker_row("CD3", "AAAA"), _marker_row("CD3", "CCCC")]
     ).set_index("marker_id")
     with pytest.raises(AssertionError, match="marker_id were not unique"):
-        PNAAntibodyPanel(
+        PNAAntibodyPanel.from_metadata(
             frame,
             AntibodyPanelMetadata(name="base", version="1.0.0"),
         )
@@ -265,7 +269,7 @@ def test_hashing_marker_ids_need_a_numeric_suffix_and_must_not_nest():
         [_marker_row("B2M", "AAAA", sample_hashing=True)]
     ).set_index("marker_id")
     with pytest.raises(AssertionError, match="must end with -<digits>"):
-        PNAAntibodyPanel(
+        PNAAntibodyPanel.from_metadata(
             missing_suffix,
             AntibodyPanelMetadata(name="base", version="1.0.0"),
         )
@@ -277,7 +281,7 @@ def test_hashing_marker_ids_need_a_numeric_suffix_and_must_not_nest():
         ]
     ).set_index("marker_id")
     with pytest.raises(AssertionError, match="must not collapse"):
-        PNAAntibodyPanel(
+        PNAAntibodyPanel.from_metadata(
             nested,
             AntibodyPanelMetadata(name="base", version="1.0.0"),
         )
@@ -289,7 +293,7 @@ def test_control_markers_cannot_be_hashing_markers():
         [_marker_row("B2M-1", "AAAA", control=True, sample_hashing=True)]
     ).set_index("marker_id")
     with pytest.raises(AssertionError, match="cannot be hashing markers"):
-        PNAAntibodyPanel(
+        PNAAntibodyPanel.from_metadata(
             frame,
             AntibodyPanelMetadata(name="base", version="1.0.0"),
         )
