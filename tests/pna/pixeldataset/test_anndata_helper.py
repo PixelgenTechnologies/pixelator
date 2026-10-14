@@ -14,6 +14,7 @@ import pytest
 from pixelator.common.utils.testing import adata_assert_equal
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import PNAPixelDataset
+from pixelator.pna.pixeldataset.io import read_dataset_panel
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from tests.pna.conftest import create_pxl_file
 
@@ -253,18 +254,29 @@ class TestTryBumpAdataPanelVersion:
         assert adata_new.var.loc["MarkerANew", "uniprot_id"] == "Q9UPN0"
         assert "target_class" not in adata_old.var.columns
         assert "target_class" in adata_new.var.columns
+        adata_old.var["uniprot_id"] = "STALE"
+        adata_old.var["retired_field"] = "old-value"
+        adata_old.uns["panel_metadata"] = {
+            "name": "stale",
+            "panel_columns": ["uniprot_id", "retired_field"],
+        }
 
         bumped = dataset.view.apply_panel_patch_to_adatas([adata_old, adata_new])
-        assert "panel_metadata" not in bumped[0].uns
-        assert "panel_metadata" not in bumped[1].uns
 
-        assert "target_class" in bumped[0].var.columns
-        assert bumped[0].var.loc["MarkerANew", "target_class"] == "new-value"
+        assert "MarkerANew" in bumped[0].var_names
+        assert "MarkerA" not in bumped[0].var_names
         assert bumped[0].var.loc["MarkerANew", "uniprot_id"] == "Q9UPN0"
-
+        assert bumped[0].var.loc["MarkerANew", "target_class"] == "new-value"
+        assert "retired_field" not in bumped[0].var.columns
         assert "target_class" in bumped[1].var.columns
         assert bumped[1].var.loc["MarkerANew", "uniprot_id"] == "Q9UPN0"
         assert bumped[1].var.loc["MarkerANew", "target_class"] == "new-value"
+        assert "panel_metadata" not in bumped[0].uns
+        assert "panel_metadata" not in bumped[1].uns
+
+        aligned = read_dataset_panel(dataset)
+        assert aligned.df.loc["MarkerANew", "uniprot_id"] == "Q9UPN0"
+        assert aligned.df.loc["MarkerANew", "target_class"] == "new-value"
 
         assert "positive_cells_count" in bumped[0].var.columns
         assert "positive_cells_count" not in bumped[1].var.columns
@@ -333,7 +345,12 @@ class TestTryBumpAdataPanelVersion:
 
         not_bumped = dataset.view.apply_panel_patch_to_adatas([adata_old, adata_new])
 
+        assert "MarkerA" in not_bumped[0].var_names
+        assert not_bumped[0].var.loc["MarkerA", "uniprot_id"] == "P12345"
         assert "target_class" not in not_bumped[0].var.columns
+        assert not_bumped[1].var.loc["MarkerA", "uniprot_id"] == "Q9UPN0"
+        assert not_bumped[1].var.loc["MarkerA", "target_class"] == "new-version"
+        assert "panel_metadata" not in not_bumped[0].uns
 
         assert (adata_old[:, "MarkerC"].X == not_bumped[0][:, "MarkerC"].X).all()
         assert (adata_new[:, "MarkerC"].X == not_bumped[1][:, "MarkerC"].X).all()
