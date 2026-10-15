@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `calculate_differential_proximity` skips a comparison, with a warning, when either group has fewer than 10 components. The returned frame keeps its columns when it has no rows.
 - `calculate_differential_proximity` uses the normal approximation with a continuity correction. Small samples without ties previously used SciPy's exact test.
 - `calculate_differential_proximity` drops pairs whose absolute median difference is below `diff_threshold` (default 0.01), or whose detection rates fail `min_pct` / `min_diff_pct`, before adjusting p-values. The adjustment covers only the pairs that remain.
+- `calculate_differential_proximity` accepts `group_vars`. The comparison then runs once inside each combination of those columns, and p-values are adjusted inside that combination.
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component

@@ -621,6 +621,87 @@ def test_calculate_differential_proximity_threshold_keeps_result_columns():
     assert "median_diff" in result.columns
 
 
+def _stratum_block(sample: str, ref_value: float, tgt_value: float) -> pd.DataFrame:
+    components = [f"{sample}_a{i}" for i in range(10)] + [
+        f"{sample}_b{i}" for i in range(10)
+    ]
+    return pd.DataFrame(
+        {
+            "component": components,
+            "sample": [sample] * 20,
+            "cell_type": ["A"] * 10 + ["B"] * 10,
+            "marker_1": ["M1"] * 20,
+            "marker_2": ["M1"] * 20,
+            "log2_ratio": [ref_value] * 10 + [tgt_value] * 10,
+        }
+    )
+
+
+def test_calculate_differential_proximity_group_vars_adjusts_within_stratum():
+    """Each grouping combination is tested and adjusted on its own."""
+    proximity = pd.concat(
+        [_stratum_block("s1", 1.0, 5.0), _stratum_block("s2", 2.0, 9.0)],
+        ignore_index=True,
+    )
+    result = calculate_differential_proximity(
+        proximity,
+        contrast_column="cell_type",
+        reference="A",
+        targets=["B"],
+        group_vars="sample",
+    )
+    assert list(result["sample"]) == ["s1", "s2"]
+    assert result["n_ref"].tolist() == [10, 10]
+    assert result["n_tgt"].tolist() == [10, 10]
+    assert result["p_adjusted"].tolist() == pytest.approx(result["p_value"].tolist())
+
+
+def test_calculate_differential_proximity_group_vars_skips_a_small_stratum():
+    """A grouping combination with too few cells is skipped on its own."""
+    small = _stratum_block("s2", 1.0, 5.0).iloc[:9]
+    proximity = pd.concat([_stratum_block("s1", 1.0, 5.0), small], ignore_index=True)
+    with pytest.warns(UserWarning, match=r"sample=s2"):
+        result = calculate_differential_proximity(
+            proximity,
+            contrast_column="cell_type",
+            reference="A",
+            targets=["B"],
+            group_vars="sample",
+        )
+    assert result["sample"].tolist() == ["s1"]
+    assert result.loc[0, "n_ref"] == 10
+
+
+def test_calculate_differential_proximity_group_vars_rejects_two_values():
+    """A component cannot belong to two values of a grouping column."""
+    proximity = _stratum_block("s1", 1.0, 5.0)
+    extra = proximity.iloc[[0]].copy()
+    extra["sample"] = "s2"
+    extra["marker_2"] = "M2"
+    proximity = pd.concat([proximity, extra], ignore_index=True)
+    with pytest.raises(ValueError, match="more than one value"):
+        calculate_differential_proximity(
+            proximity,
+            contrast_column="cell_type",
+            reference="A",
+            targets=["B"],
+            group_vars="sample",
+        )
+
+
+def test_calculate_differential_proximity_group_vars_rejects_the_contrast_column():
+    """The contrast column is not a grouping variable."""
+    proximity = _stratum_block("s1", 1.0, 5.0)
+    with pytest.raises(ValueError, match="cannot be one of"):
+        calculate_differential_proximity(
+            proximity,
+            contrast_column="cell_type",
+            reference="A",
+            targets=["B"],
+            group_vars="cell_type",
+        )
+
+
 @pytest.mark.parametrize(
     "components,markers",
     [
