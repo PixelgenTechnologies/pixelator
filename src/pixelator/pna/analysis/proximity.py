@@ -762,12 +762,7 @@ def calculate_differential_proximity(
 
     When ``proximity_df`` contains ``component``, each tested pair is aligned
     to every component in the two groups and missing values of ``metric`` are
-    filled with 0. Those zeros enter the rank test, the medians, the group
-    sizes, and the detection rates. Only ``metric`` is filled in. Components
-    that have no proximity rows at all are included only when they are listed
-    in ``cell_groups``; otherwise the universe is the components present in
-    ``proximity_df``. A component listed in both must carry the same contrast
-    label in both. A pair never detected in either group of a comparison is
+    filled with 0. A marker pair never detected in either group of a comparison is
     left out. Without ``component`` and without ``cell_groups``, only observed
     rows are tested, and a pair missing from one of the two groups is skipped.
 
@@ -775,13 +770,9 @@ def calculate_differential_proximity(
     ``min_cells_per_group`` components. After the tests, pairs are removed
     when the absolute median difference is below ``diff_threshold``, when the
     larger detection rate is below ``min_pct``, or when the difference
-    between the two detection rates is below ``min_diff_pct``. A detection
-    rate is the fraction of non-zero values, rounded to 3 decimals. An exact
-    0 counts as undetected, including a ``log2_ratio`` of 0. Adjusted
+    between the two detection rates is below ``min_diff_pct``. Adjusted
     p-values are computed on the pairs that remain, across every target in
-    the call. Pairs removed by these thresholds are not part of that family.
-    See the references below for the adjustment methods. A comparison in
-    which every value is tied has p-value 1.
+    the call. 
 
     Args:
         proximity_df: Long-format proximity table. Must contain
