@@ -752,7 +752,7 @@ class TestPNAPixelDatasetSnapshots:
 
         layouts_df = layouts.to_polars()
         assert isinstance(layouts_df, pl.DataFrame)
-        layouts_df = layouts_df.sort("component").select(sorted(layouts_df.columns))
+        layouts_df = layouts_df.select(sorted(layouts_df.columns)).sort(pl.all())
 
         result = StringIO()
         layouts_df.write_csv(result)

@@ -93,16 +93,37 @@ class PixelFileWriter:
     def _write_parquet_file_to_table(
         self, table_name, edgelist_file: Path | list[Path]
     ):
+        """Materialize parquet file(s) as a table, ordered by component when present.
+
+        Rows are stored sorted by ``component`` so that each DuckDB row group
+        covers a narrow range of components. This lets filters on ``component``
+        skip row groups via min/max statistics instead of scanning the whole
+        table, which matters most when the file is read remotely (e.g. S3).
+        Upstream steps such as sample calling and denoising rewrite the
+        edgelist through joins, which do not preserve any earlier ordering, so
+        the sort is applied here, where every table write ends up.
+
+        Args:
+            table_name: Name of the table to create or replace.
+            edgelist_file: Path or list of paths to parquet file(s).
+        """
+        parquet_file = (
+            [str(f) for f in edgelist_file]
+            if isinstance(edgelist_file, list)
+            else str(edgelist_file)
+        )
+        columns = self._connection.sql(
+            "SELECT * FROM read_parquet($parquet_file) LIMIT 0",
+            params={"parquet_file": parquet_file},
+        ).columns
+        order_by = "ORDER BY component" if "component" in columns else ""
         self._connection.sql(
             f"""
             CREATE OR REPLACE TABLE {table_name} AS
-            SELECT * FROM read_parquet($parquet_file);
+            SELECT * FROM read_parquet($parquet_file)
+            {order_by};
             """,
-            params={
-                "parquet_file": [str(f) for f in edgelist_file]
-                if isinstance(edgelist_file, list)
-                else str(edgelist_file)
-            },
+            params={"parquet_file": parquet_file},
         )
 
     def _assert_single_sample(self, edgelist: Path | pl.DataFrame) -> None:
