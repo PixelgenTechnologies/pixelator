@@ -22,6 +22,16 @@ class PixelFileWriter:
     In addition to writing data tables it will should take care of
     creating any indexes that can be used to speed up queries downstream.
 
+    Storage order: tables that have a ``component`` column (``edgelist``,
+    ``proximity``, ``layouts``) are stored sorted by ``component``, then by
+    ``marker_1`` and ``marker_2`` where those columns exist. DuckDB keeps
+    min/max statistics per row group, so with this order a filter on
+    ``component`` reads only the row groups that hold the requested
+    components instead of scanning the table. This matters most when a PXL
+    file is read over the network. The marker keys additionally make Parquet
+    exported from these tables considerably smaller. Row order within a sort
+    key is not defined; readers that need a specific order should sort.
+
     When writing using this it is recommended to use the writer as a
     context manager.
 
@@ -105,9 +115,10 @@ class PixelFileWriter:
 
         ``marker_1`` and ``marker_2`` are used as secondary keys when present.
         They do not change the ``.pxl`` size or the pruning, but Parquet
-        written from the table compresses much better: every edge of a node
-        then sits in one marker slice per component, so row groups contain few
-        enough distinct ``umi1`` values for dictionary encoding.
+        written from the table compresses much better: the marker columns
+        become long runs, and a row group that covers part of a component
+        then holds only the nodes of a few markers, which keeps the number of
+        distinct ``umi1`` values low enough for Parquet dictionary encoding.
 
         Args:
             table_name: Name of the table to create or replace.
