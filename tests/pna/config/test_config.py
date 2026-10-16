@@ -326,6 +326,7 @@ def test_list_panel_names(pna_data_root):
             "proxiome-v2-immuno-156-FMC63-prerelease",
             "proxiome-v2-immuno-156-FMC63-v2.0",
             "proxiome-v2-immuno-156-G4S-v2.0",
+            "proxiome-v2-immuno-156-Whitlow-v2.0",
         ]
     )
 
@@ -343,6 +344,7 @@ def test_list_panel_names(pna_data_root):
         "proxiome-v2-immuno-156-FMC63-prerelease",
         "proxiome-v2-immuno-156-FMC63-v2.0",
         "proxiome-v2-immuno-156-G4S-v2.0",
+        "proxiome-v2-immuno-156-Whitlow-v2.0",
     ]
 
 
