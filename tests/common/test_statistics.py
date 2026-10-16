@@ -181,10 +181,11 @@ def test_rel_normalization():
 
 def test_wilcoxon_test():
     """Verify wilcoxon test."""
+    rng = np.random.default_rng(0)
     same_dist_df = pd.DataFrame(
         {
             "group": ["A"] * 50 + ["B"] * 50,
-            "value": np.random.normal(size=100),
+            "value": rng.normal(size=100),
         }
     )
     same_dist_result = wilcoxon_test(same_dist_df, "A", "B", "group", "value")
@@ -192,9 +193,7 @@ def test_wilcoxon_test():
     diff_dist_df = pd.DataFrame(
         {
             "group": ["A"] * 50 + ["B"] * 50,
-            "value": np.concatenate(
-                [np.random.normal(size=50), np.random.normal(loc=1, size=50)]
-            ),
+            "value": np.concatenate([rng.normal(size=50), rng.normal(loc=1, size=50)]),
         }
     )
     diff_dist_result = wilcoxon_test(diff_dist_df, "A", "B", "group", "value")

@@ -27,7 +27,7 @@ def write_pna_pxl(
     ``read_count``. Crossing edges (rows with a null ``component``) are dropped
     before the AnnData is built, so only genuine per-cell components are
     aggregated. The edge list is selected down to the pxl schema, written to the
-    file, and an AnnData with aggregate metrics is built and stored alongside it.
+    file, and an AnnData is built and stored alongside it.
 
     Args:
         edgelist: populated edge list from :func:`generate_edgelist`.
@@ -39,7 +39,6 @@ def write_pna_pxl(
         The path to the written pxl file.
     """
     from pixelator import __version__
-    from pixelator.common.annotate.aggregates import call_aggregates
     from pixelator.pna.anndata import pna_edgelist_to_anndata
     from pixelator.pna.pixeldataset.io import PixelFileWriter
 
@@ -62,7 +61,6 @@ def write_pna_pxl(
         )
         writer.write_edgelist(pxl_edgelist)
         adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
-        call_aggregates(adata)
         writer.write_adata(adata)
 
     return path

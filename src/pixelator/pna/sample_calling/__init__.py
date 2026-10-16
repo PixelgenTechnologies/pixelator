@@ -18,9 +18,8 @@ import pandas as pd
 import polars as pl
 
 from pixelator import __version__
-from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
-from pixelator.pna.anndata import pna_edgelist_to_anndata
+from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
@@ -210,16 +209,6 @@ def _add_original_hash_counts_to_obs(
             old_adata.obs[f"original_hash_counts_{ab}"] = 0
 
 
-def _add_missing_adata_info(new_adata, old_adata):
-    missing_obs = set(old_adata.obs.columns) - set(new_adata.obs.columns)
-    missing_var = set(old_adata.var.columns) - set(new_adata.var.columns)
-
-    new_adata.obs = new_adata.obs.join(old_adata.obs[list(missing_obs)], how="left")
-    new_adata.var = new_adata.var.join(old_adata.var[list(missing_var)], how="left")
-
-    return new_adata
-
-
 def _build_post_sample_calling_anndata(
     con: duckdb.DuckDBPyConnection,
     old_adata: anndata.AnnData,
@@ -255,8 +244,13 @@ def _build_post_sample_calling_anndata(
     ]
     new_adata = new_adata[:, non_hashing_markers].copy()
 
-    call_aggregates(new_adata)
-    new_adata = _add_missing_adata_info(new_adata, old_adata)
+    new_adata = add_missing_adata_info(new_adata, old_adata)
+    # `sample` is a reserved, transient column added when reading a
+    # multi-file view (see AnnDataHelper) and reflects the *original*
+    # physical input file(s) i.e. pool(s) names, which may no longer match the single
+    # dehashed `sample_name` this output file represents. Drop it here
+    # so each written PXL file only ever contains a single sample.
+    new_adata.obs = new_adata.obs.drop(columns=["sample"], errors="ignore")
     new_adata.obs = new_adata.obs.join(
         hash_info.select(["component", "hash_enrichment_factor"])
         .to_pandas()
@@ -404,8 +398,12 @@ def sample_calling(
 
             marker_1_sql = "COALESCE(hm1.base_marker, e.marker_1) AS marker_1"
             marker_2_sql = "COALESCE(hm2.base_marker, e.marker_2) AS marker_2"
+            edgelist_columns = {
+                row[0] for row in con.execute("DESCRIBE edgelist").fetchall()
+            }
+            uei_count_sql = "e.uei_count, " if "uei_count" in edgelist_columns else ""
             select_cols = (
-                "e.umi1, e.umi2, e.read_count, e.uei_count, "
+                f"e.umi1, e.umi2, e.read_count, {uei_count_sql}"
                 f"{marker_1_sql}, {marker_2_sql}, e.component"
             )
 

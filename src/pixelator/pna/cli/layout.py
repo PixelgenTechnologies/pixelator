@@ -10,7 +10,10 @@ from typing import get_args
 
 import click
 
-from pixelator.common.graph.backends.protocol import SupportedLayoutAlgorithm
+from pixelator.common.graph.backends.protocol import (
+    DEFAULT_LAYOUT_ALGORITHM,
+    SupportedLayoutAlgorithm,
+)
 from pixelator.common.utils import (
     create_output_stage_dir,
     get_sample_name,
@@ -26,7 +29,7 @@ from pixelator.pna.analysis_engine import (
 from pixelator.pna.cli.common import output_option
 from pixelator.pna.layout import CreateLayout
 from pixelator.pna.layout.report import LayoutSampleReport
-from pixelator.pna.pixeldataset import read
+from pixelator.pna.pixeldataset import NullPxlFileError
 from pixelator.pna.pixeldataset.io import PxlFile
 
 logger = logging.getLogger(__name__)
@@ -48,8 +51,9 @@ logger = logging.getLogger(__name__)
     "--layout-algorithm",
     required=False,
     multiple=True,
-    default=["coarsened_pmds_3d"],
-    help="Select a layout algorithm to use. This can be specified multiple times to compute multiple layouts. Default: coarsened_pmds_3d",
+    default=[DEFAULT_LAYOUT_ALGORITHM],
+    help="Select a layout algorithm to use. This can be specified multiple times to compute multiple layouts. "
+    f"Default: {DEFAULT_LAYOUT_ALGORITHM}",
     type=click.Choice(get_args(SupportedLayoutAlgorithm)),
 )
 @click.option(
@@ -111,17 +115,29 @@ def layout(
     ]
 
     pxl_file = PxlFile(Path(pxl_file))
-
-    logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
-    analysis_manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
+    metrics_file = layout_output_dir / f"{clean_name}.report.json"
     pxl_file_target = PxlFile.copy_pxl_file(
         pxl_file, layout_output_dir / f"{clean_name}.layout.pxl"
     )
-    analysis_manager.execute_from_path(
-        input_pxl_file_path=pxl_file.path, pxl_file_target=pxl_file_target
-    )
 
-    metrics_file = layout_output_dir / f"{clean_name}.report.json"
+    logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
+    analysis_manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
+    try:
+        analysis_manager.execute_from_path(
+            input_pxl_file_path=pxl_file.path, pxl_file_target=pxl_file_target
+        )
+    except NullPxlFileError as exc:
+        logger.warning("%s", exc)
+        report = LayoutSampleReport(
+            sample_id=clean_name,
+            product_id="single-cell-pna",
+            report_type="layout",
+            status="failed",
+            null_reason=exc.reason,
+        )
+        report.write_json_file(metrics_file, indent=4)
+        return
+
     report = LayoutSampleReport(
         sample_id=clean_name,
         product_id="single-cell-pna",

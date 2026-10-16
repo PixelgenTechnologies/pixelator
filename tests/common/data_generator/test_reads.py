@@ -256,6 +256,24 @@ def test_write_pna_fastq_end_to_end(tmp_path, populated_edgelist, marker_panel, 
     assert set("".join(rec[1] for rec in r2)) <= set("ACGT")
 
 
+def test_write_pna_fastq_constant_quality(
+    tmp_path, populated_edgelist, marker_panel, assay
+):
+    """quality_std=0 writes a constant Q30 quality for every base."""
+    paths = write_pna_fastq(
+        "s",
+        30,
+        populated_edgelist,
+        marker_panel,
+        assay,
+        output_dir=tmp_path,
+        rng=0,
+        quality_std=0,
+    )
+    for path in paths:
+        assert {c for rec in _read_fastq(path) for c in rec[2]} == {chr(30 + 33)}
+
+
 def test_write_pna_fastq_reproducible(
     tmp_path, populated_edgelist, marker_panel, assay
 ):

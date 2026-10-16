@@ -29,6 +29,7 @@ from pixelator.pna.analysis.report import (
 )
 from pixelator.pna.analysis_engine import AnalysisManager, LoggingSetup
 from pixelator.pna.cli.common import output_option
+from pixelator.pna.pixeldataset import NullPxlFileError
 from pixelator.pna.pixeldataset.io import PxlFile
 
 logger = logging.getLogger(__name__)
@@ -50,16 +51,6 @@ logger = logging.getLogger(__name__)
     required=False,
     is_flag=True,
     help="Compute proximity scores matrix",
-)
-@click.option(
-    "--proximity-nbr-of-permutations",
-    default=100,
-    required=False,
-    type=click.IntRange(
-        50,
-    ),
-    show_default=True,
-    help="Number of permutations to use when calculating the expected proximity scores",
 )
 @click.option(
     "--compute-k-cores",
@@ -88,7 +79,6 @@ def analysis(
     ctx,
     pxl_file,
     compute_proximity,
-    proximity_nbr_of_permutations,
     compute_k_cores,
     compute_svd_var_explained,
     svd_nbr_of_pivots,
@@ -101,7 +91,6 @@ def analysis(
         input_files=input_files,
         output=output,
         compute_proximity=compute_proximity,
-        proximity_nbr_of_permutations=proximity_nbr_of_permutations,
         compute_k_cores=compute_k_cores,
         compute_svd_var_explained=compute_svd_var_explained,
         svd_nbr_of_pivots=svd_nbr_of_pivots,
@@ -124,9 +113,7 @@ def analysis(
 
     if compute_proximity:
         logger.info("Proximity score computation is activated")
-        analysis_to_run.append(
-            ProximityAnalysis(n_permutations=proximity_nbr_of_permutations)
-        )
+        analysis_to_run.append(ProximityAnalysis())
 
     if compute_k_cores:
         logger.info("K-core computation is activated")
@@ -141,18 +128,32 @@ def analysis(
     analysis_output = create_output_stage_dir(output, "analysis")
     output_file = analysis_output / f"{sample_name}.analysis.pxl"
     metrics = analysis_output / f"{sample_name}.report.json"
-
-    logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
-    manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
     output_pxl_file_target = PxlFile.copy_pxl_file(pxl_file, output_file)
-    pxl_dataset = read(pxl_file.path)
-    pxl_dataset_with_analysis = manager.execute(pxl_dataset, output_pxl_file_target)
-
     write_parameters_file(
         ctx,
         analysis_output / f"{sample_name}.meta.json",
         command_path="pixelator single-cell-pna analysis",
     )
+
+    try:
+        pxl_dataset = read(pxl_file.path)
+    except NullPxlFileError as exc:
+        logger.warning("%s", exc)
+        report = AnalysisSampleReport(
+            sample_id=sample_name,
+            product_id="single-cell-pna",
+            proximity=None,
+            k_cores=None,
+            svd=None,
+            status="failed",
+            null_reason=exc.reason,
+        )
+        report.write_json_file(metrics, indent=4)
+        return
+
+    logging_setup = LoggingSetup.from_logger(ctx.obj.get("LOGGER"))
+    manager = AnalysisManager(analysis_to_run, logging_setup=logging_setup)
+    pxl_dataset_with_analysis = manager.execute(pxl_dataset, output_pxl_file_target)
 
     proximity_report = ProximityReport() if compute_proximity else None
 

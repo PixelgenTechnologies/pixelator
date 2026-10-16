@@ -9,7 +9,6 @@ This document covers how to get up and running with developing pixelator.
 -   [Adding new dependencies](#adding-new-dependencies)
 -   [Testing pixelator](#testing-pixelator)
     -   [Pixelator unit tests](#pixelator-unit-tests)
-    -   [Pixelator integration tests](#pixelator-integration-tests)
 -   [Understanding the pixelator plugin system](#understanding-the-pixelator-plugin-system)
 
 ## Setup the developer environment
@@ -99,40 +98,22 @@ It will look something like this:
 * lint:                                Run linting using ruff.
 * test:                                Run tests using pytest with the default flags defined in pyproject.toml.
 * test-all:                            Run all tests using pytest.
-* test-nf-core-pixelator:              Run the default nf-core/pixelator test profile with this version of pixelator.
-* test-web:                            Run web tests using pytest.
-* test-workflow:                       Run workflow tests using pytest.
-* test-workflow-external:              Run external workflow tests using pytest.
 * typecheck:                           Run type checking using mypy.
-* tests:update-report-test-data:       Update the report test data using the nf-core/pixelator test profile.
-* tests:update-web-test-data:          Create web test data.
 ```
 
 View more detailed documentation for a specific task, for example:
 
 ```shell
-task test-nf-core-pixelator --summary
+task test --summary
 ```
 
 ```console
-task: test-nf-core-pixelator
+task: test
 
-Run the default nf-core/pixelator test profile with this version of pixelator.
-
-If the pipeline is not found in the directory `PIPELINE_SOURCE_DIR`, it will be cloned
-from the PixelgenTechnologies/nf-core-pixelator repository using the `PIPELINE_BRANCH` branch.
-By default the "pixelator-next" branch of nf-core-pixelator will be used.
-
-If the `PIPELINE_SOURCE_DIR` exists this task will assume that the pipeline is already present and checked out
-in the right branch.
-
-Note that the current dev version of pixelator must be installed and available in the PATH.
-
-If the `RESUME` environment variable is set to "true", the pipeline will be resumed if it was previously run.
+Run tests using pytest with the default flags defined in pyproject.toml.
 
 commands:
- - Task: tests:pull-nf-core-pixelator
- - Task: tests:run-nf-core-pixelator-test-profile
+ - uv run pytest tests {{ .CLI_ARGS }}
 ```
 
 Some commands have confirmation prompts for potentially dangerous actions such as deleting files.
@@ -144,7 +125,7 @@ These variables are passed as environment variables to the command.
 For example:
 
 ```shell
-RESUME=true task test-nf-core-pixelator
+FIX=true task lint
 ```
 
 ## Adding new dependencies
@@ -202,54 +183,6 @@ by using something like below:
 TEST_PATH="tests/pixeldataset" task test-watch
 ```
 
-### Pixelator integration tests
-
-#### Pixelator internal integration tests
-
-Pixelator has a basic set of integration tests that that will run all pixelator commands and
-check that they run without errors. Note that these do not verify the outputs of each command in
-any comprehensive way, but are useful for catching basic errors.
-
-These tests can be run by using:
-
-```shell
-task test-workflow
-```
-
-The code necessary to run these tests are defined in `src/pixelator/test_utils`, and it allows you
-to run a pipeline of all commands using `pytest`.
-
-Tests can be easily defined in YAML files.
-See `tests/integration/test_small_D21.yaml` for an example.
-
-To pass the panel you can use `panel` or `panel_file`.
-Use panel with the key of a build in panel or panel_file with the path to a custom panel.
-Only one of the two should be set and the other left empty or set to null.
-
-e.g.:
-
-```{yaml}
-panel: "human-sc-immunology-spatial-proteomics"
-panel_file: null
-```
-
-#### Pixelator nf-core/pixelator integration tests
-
-Pixelator is built to be orchestrated by the nextflow pipeline [nf-core/pixelator](https://github.com/nf-core/pixelator).
-This means that is is useful to have a simple way to test the integration between the two.
-
-You can do this using tasks:
-
-```shell
-task test-nf-core-pixelator
-```
-
-It can also be triggered on Github Actions:
-
-```
-gh workflow run --ref <your-branch-name> nf-core-pixelator-tests.yml
-```
-
 ### Pixelator benchmark tests
 
 Sometimes it is useful to be able to run micro-benchmarks to see how changes affect performance.
@@ -264,28 +197,17 @@ task test-benchmark
 ### Pytest markers
 
 Pixelator defines several additional markers for tests.
-These are usually disabled by default and can be enabled by running `uv run pytest -m <marker> tests/`
+These can be selected or deselected with `uv run pytest -m <expression> tests/`
 
 -   integration_test: Marks a test as an integration test, which is often slow
--   workflow_test: Marks a test as a complete pixelator workflow, which is extremely slow
--   external_workflow_test: Marks a test as a complete pixelator workflow that requires external data, which is extremely slow and requires additional setup before running
--   web_test: Marks a test as a browser integration test, which requires a playwright browser to be installed.
-    Additionally, the full pipeline is run on the micro testdata to generate reports.
-
-All `external_workflow_test` tests are also `workflow_tests`.
-
-The default configuration that is applied when just running `uv run pytest`
-is to run all unmarked tests and `integration_tests`.
+-   slow: Marks a test as being slow
 
 You can use the pytest `-m` flag to select tests based on these markers.
 e.g.
 
 ```shell
-# Only internal workflow_tests
-uv run pytest -m "workflow_test and not external_workflow_test"
-
-# All test except external workflow tests
-uv run pytest -m "not external_workflow_test"
+# Skip slow tests
+uv run pytest -m "not slow"
 ```
 
 You can list all available markers using:

@@ -8,34 +8,40 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-import pytest
 from click.testing import CliRunner
 
 from pixelator import cli
 from pixelator.common.utils import get_sample_name
 from pixelator.pna import read
+from tests.pna.sample_calling.synthetic_data import (
+    ENRICHMENT_THRESHOLD,
+    N_CELLS,
+    N_UNDETERMINED,
+    POOL_NAME,
+    SAMPLE_NAMES,
+)
 
 
-@pytest.mark.slow
-def test_runs_ok(pna_data_root):
+def test_runs_ok(synthetic_hashed_pxl, synthetic_samplesheet):
     """Verify runs ok.
 
     Args:
-        pna_data_root: pna data root.
+        synthetic_hashed_pxl: Synthetic hashed pixel file.
+        synthetic_samplesheet: Samplesheet of the synthetic pool.
     """
     runner = CliRunner()
 
     with tempfile.TemporaryDirectory() as d:
-        pool_name = "small_hashed_sample_1"
+        pool_name = POOL_NAME
         args = [
             "single-cell-pna",
             "sample-calling",
-            str(pna_data_root / f"sample_calling/{pool_name}.pxl"),
+            str(synthetic_hashed_pxl),
             "--samplesheet",
-            str(pna_data_root) + "/sample_calling/samplesheet.csv",
+            str(synthetic_samplesheet),
             "--remove-incompatible",
             "--enrichment-threshold",
-            "40.0",
+            str(ENRICHMENT_THRESHOLD),
             "--save-undetermined",
             "--output",
             d,
@@ -47,7 +53,7 @@ def test_runs_ok(pna_data_root):
         out_dir = Path(d) / "sample_calling"
         outputs = list(sorted(out_dir.glob("*.dehashed.pxl")))
         # One per sample + one for undetermined
-        assert len(outputs) == 4
+        assert len(outputs) == len(SAMPLE_NAMES) + 1
         assert f"{pool_name}_undetermined.dehashed.pxl" in [o.name for o in outputs]
 
         for pxl_path in outputs:
@@ -79,7 +85,7 @@ def test_runs_ok(pna_data_root):
         assert total_data["sample_id"] == "all"
         assert "hash_enrichment_factors_per_sample" in total_data
         assert "percentage_of_components_successfully_called" in total_data
-        input_pxl = read(str(pna_data_root / f"sample_calling/{pool_name}.pxl"))
+        input_pxl = read(str(synthetic_hashed_pxl))
         expected_input_reads = int(input_pxl.adata().obs["reads_in_component"].sum())
         assert total_data["input_reads"] == expected_input_reads
 
@@ -93,11 +99,14 @@ def test_runs_ok(pna_data_root):
         assert total_data["output_reads"] == expected_output_reads
         assert total_data["output_reads"] < total_data["input_reads"]
         assert (
-            np.abs(total_data["percentage_of_components_successfully_called"] - 12 / 15)
+            np.abs(
+                total_data["percentage_of_components_successfully_called"]
+                - (N_CELLS - N_UNDETERMINED) / N_CELLS
+            )
             < 1e-6
         )
         total_components = 0
         for output in outputs:
             pxl = read(output)
             total_components += pxl.adata().obs.shape[0]
-        assert total_components == 15
+        assert total_components == N_CELLS

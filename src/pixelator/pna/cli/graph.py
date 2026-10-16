@@ -3,8 +3,8 @@
 Copyright © 2025 Pixelgen Technologies AB.
 """
 
-import sys
 from pathlib import Path
+from typing import Literal
 
 import click
 import numpy as np
@@ -26,7 +26,8 @@ from pixelator.pna.graph.community_detection import (
 from pixelator.pna.graph.component_recovery import build_pxl_file_with_components
 from pixelator.pna.graph.component_recovery_utils import ConnectedComponentException
 from pixelator.pna.graph.constants import MIN_PNA_COMPONENT_SIZE
-from pixelator.pna.graph.report import GraphSampleReport
+from pixelator.pna.graph.report import GraphSampleReport, GraphStatistics
+from pixelator.pna.pixeldataset.io import write_null_pxl
 
 
 @click.command(
@@ -195,9 +196,12 @@ def graph(
 ):
     """Find connected components from the input molecules.
 
-    The graph stage will attempt to identify connected components from the input molecules.
-    When `--multiplet-recovery` is active we will try to break up components that are likely
-    not single cells. We do so in two main stages and one optional stage.
+    Before community detection, the core-1 layer (nodes that can be peeled off by repeatedly
+    removing degree-1 UMIs, i.e. everything outside the graph's 2-core) is set aside, since it
+    carries no ambiguity about which component it belongs to. The graph stage will attempt to
+    identify connected components from the remaining 2-core. When `--multiplet-recovery` is
+    active we will try to break up components that are likely not single cells. We do so in two
+    main stages and one optional stage.
 
     Main stages:
     1) Fast label propagation: Used as a graph coarsening step to reduce the size of the graph.
@@ -211,8 +215,9 @@ def graph(
     (k-core number > 1) that are not part of any short cycles in the graph. Such nodes are likely
     crossing edges connecting different components.
 
-    After the connected components have been identified we will create a pxl file that contains
-    data for all of there putative cells.
+    Once components have been resolved, the core-1 layer set aside earlier is iteratively
+    reattached to them until no more UMIs can be absorbed. After the connected components have been
+    identified we will create a pxl file that contains data for all of there putative cells.
     """
     # log input parameters
     input_files = [parquet_file]
@@ -285,6 +290,7 @@ def graph(
         )
 
     n_cores = ctx.obj.get("CORES")
+    metrics_file = graph_output / f"{sample_name}.report.json"
     try:
         _, component_statics = build_pxl_file_with_components(
             parquet_file=Path(parquet_file),
@@ -298,14 +304,54 @@ def graph(
             component_size_threshold=component_size_threshold,
             n_cores=n_cores,
         )
-    except ConnectedComponentException as e:
-        logger.error(e)
-        sys.exit(1)
+    except ConnectedComponentException as exc:
+        # Data-caused: no cells passed filtering. Emit a null pxl so the
+        # sample stays in the run. Other exceptions still fail the process.
+        logger.warning(
+            "No cells passed filtering for %s. Writing a null pxl file: %s",
+            sample_name,
+            exc,
+        )
+        write_null_pxl(
+            output_path,
+            sample_name=sample_name,
+            reason=str(exc),
+            panel_name=panel.name,
+            panel_version=panel.version,
+        )
+        report = _graph_report(
+            sample_name,
+            exc.statistics or GraphStatistics(),
+            status="failed",
+            null_reason=str(exc),
+        )
+        report.write_json_file(metrics_file, indent=4)
+        return
 
-    metrics_file = graph_output / f"{sample_name}.report.json"
-    report = GraphSampleReport(
+    report = _graph_report(sample_name, component_statics)
+    report.write_json_file(metrics_file, indent=4)
+
+
+def _graph_report(
+    sample_name: str,
+    stats: GraphStatistics,
+    *,
+    status: Literal["passed", "failed"] = "passed",
+    null_reason: str | None = None,
+) -> GraphSampleReport:
+    """Build a graph report from statistics collected so far."""
+    payload = stats.to_dict()
+    sizes = payload.get("pre_filtering_component_sizes") or {}
+    payload["pre_filtering_component_sizes"] = {
+        int(size): int(count) for size, count in sizes.items()
+    }
+    for key in ("post_flp_community_sizes", "edge_cycle_length_distribution"):
+        raw = payload.get(key) or {}
+        payload[key] = {int(size): int(count) for size, count in raw.items()}
+    return GraphSampleReport(
         sample_id=sample_name,
         product_id="single-cell-pna",
-        **component_statics.to_dict(),
+        status=status,
+        null_reason=null_reason,
+        **payload,
     )
-    report.write_json_file(metrics_file, indent=4)

@@ -17,7 +17,6 @@ import numpy as np
 import pandas as pd
 from scipy.stats import fisher_exact, pearsonr
 
-from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import PerComponentTask
 from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
 from pixelator.pna.config import pna_config
@@ -664,7 +663,6 @@ class DenoiseGraph(PerComponentTask):
             with PixelFileWriter(pxl_file_target.path) as writer:
                 writer.write_edgelist(Path(denoised_edgelist_path))
                 adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
-                call_aggregates(adata)
                 old_adata.obs.rename(
                     columns={"isotype_fraction": "pre_denoise_isotype_fraction"},
                     inplace=True,

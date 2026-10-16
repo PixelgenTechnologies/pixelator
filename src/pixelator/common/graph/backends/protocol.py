@@ -25,19 +25,17 @@ import polars as pl
 from scipy.sparse import csr_matrix
 
 if TYPE_CHECKING:
-    from pixelator.mpx.graph import Graph
+    from pixelator.common.graph.graph import Graph
 
 SupportedLayoutAlgorithm = Literal[
-    "fruchterman_reingold",
-    "fruchterman_reingold_3d",
-    "kamada_kawai",
-    "kamada_kawai_3d",
     "pmds",
     "pmds_3d",
     "wpmds_3d",
     "coarsened_pmds_3d",
     "spectral_3d",
 ]
+
+DEFAULT_LAYOUT_ALGORITHM: SupportedLayoutAlgorithm = "coarsened_pmds_3d"
 
 
 class GraphBackend(Protocol):
@@ -148,7 +146,7 @@ class GraphBackend(Protocol):
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
@@ -161,10 +159,6 @@ class GraphBackend(Protocol):
 
         The layout options are:
         - coarsened_pmds_3d
-        - fruchterman_reingold
-        - fruchterman_reingold_3d
-        - kamada_kawai
-        - kamada_kawai_3d
         - pmds
         - pmds_3d
         - wpmds_3d

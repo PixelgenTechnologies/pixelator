@@ -115,6 +115,3 @@ ENV/
 .task
 
 pytest-results
-
-# Exclude test data run for report integration testing
-tests/pixelator/mpx/report/assets/full_run

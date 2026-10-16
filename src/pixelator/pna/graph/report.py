@@ -58,11 +58,6 @@ class GraphStatistics:
 
     median_markers_per_component: float = 0
 
-    aggregate_count: int = 0
-    read_count_in_aggregates: int = 0
-    edge_count_in_aggregates: int = 0
-    node_count_in_aggregates: int = 0
-
     umis_input: int = 0
     umi1_clashes: int = 0
     umi2_clashes: int = 0
@@ -71,6 +66,15 @@ class GraphStatistics:
     stranded_nodes_pre_recovery: int = 0
     edge_cycle_length_distribution: dict[int, int] = field(default_factory=dict)
     post_flp_community_sizes: dict[int, int] = field(default_factory=dict)
+
+    # Core-1 layer peeling (before FLP + Leiden) and absorption (after components are resolved)
+    core1_peel_iterations_run: int = 0
+    core1_layer_edges: int = 0
+    edges_post_core1_peel: int = 0
+    core1_absorption_iterations_run: int = 0
+    core1_umis_absorbed_per_iteration: list[int] = field(default_factory=list)
+    core1_edges_reabsorbed: int = 0
+    core1_edges_discarded: int = 0
 
     def to_dict(self):
         """Convert the object to a dictionary."""
@@ -199,23 +203,6 @@ class GraphSampleReport(SampleReport):
         ..., description="The median number of markers per cell component."
     )
 
-    aggregate_count: int = pydantic.Field(
-        ..., description="The number of aggregates in the graph."
-    )
-
-    read_count_in_aggregates: int = pydantic.Field(
-        ..., description="The number of reads in aggregates."
-    )
-
-    edge_count_in_aggregates: int = pydantic.Field(
-        ..., description="The number of edges in aggregates."
-    )
-
-    node_count_in_aggregates: int = pydantic.Field(
-        default=0,
-        description="The number of UMIs (nodes) in aggregate components.",
-    )
-
     umis_input: int = pydantic.Field(
         default=0, description="Number of UMIs in the input edgelist."
     )
@@ -259,6 +246,55 @@ class GraphSampleReport(SampleReport):
         description="Component size distribution after Fast label propagation.",
     )
 
+    core1_peel_iterations_run: int = pydantic.Field(
+        default=0,
+        description=(
+            "Number of leaf-pruning rounds run to peel the core-1 layer off the graph before "
+            "fast label propagation and Leiden."
+        ),
+    )
+
+    core1_layer_edges: int = pydantic.Field(
+        default=0,
+        description=(
+            "Number of edges in the core-1 layer peeled off before community detection, i.e. "
+            "how large the core-1 layer was."
+        ),
+    )
+
+    edges_post_core1_peel: int = pydantic.Field(
+        default=0,
+        description="Number of edges remaining in the 2-core graph fed into fast label propagation and Leiden.",
+    )
+
+    core1_absorption_iterations_run: int = pydantic.Field(
+        default=0,
+        description=(
+            "Number of iterations run to absorb the core-1 layer back into resolved components."
+        ),
+    )
+
+    core1_umis_absorbed_per_iteration: list[int] = pydantic.Field(
+        default_factory=list,
+        description=(
+            "Number of new UMIs assigned to a resolved component in each core-1 absorption "
+            "iteration. Absorption stops once an iteration assigns no new UMIs."
+        ),
+    )
+
+    core1_edges_reabsorbed: int = pydantic.Field(
+        default=0,
+        description="Number of core-1 layer edges successfully reattached to a resolved component.",
+    )
+
+    core1_edges_discarded: int = pydantic.Field(
+        default=0,
+        description=(
+            "Number of core-1 layer edges that could not be reattached to a resolved component "
+            "(conflicting, or still unresolved once absorption converged)."
+        ),
+    )
+
     @pydantic.computed_field(  # type: ignore
         description="The fraction of components discarded by filtering.",
         return_type=float,
@@ -275,23 +311,14 @@ class GraphSampleReport(SampleReport):
         )
 
     @pydantic.computed_field(  # type: ignore
-        description="The fraction of components marked as aggregates by the tau_type outlier detection. ",
-        return_type=float,
-    )  # type: ignore
-    @property
-    def fraction_of_aggregate_components(self) -> float:
-        """Calculate the fraction of aggregate components."""
-        if self.component_count_post_component_size_filtering == 0:
-            return 0.0
-        return self.aggregate_count / self.component_count_post_component_size_filtering
-
-    @pydantic.computed_field(  # type: ignore
         description="The redundancy of edge detection. The saturation is calculated as: `1 - # graph edges / # graph reads`",
         return_type=float,
     )
     @property
     def edge_saturation(self):
         """Return the edge saturation."""
+        if self.reads_output == 0:
+            return 0.0
         return 1 - self.edge_count_post_recovery / self.reads_output
 
     @pydantic.computed_field(  # type: ignore
@@ -301,6 +328,8 @@ class GraphSampleReport(SampleReport):
     @property
     def node_saturation(self):
         """Return the node saturation."""
+        if self.reads_output == 0:
+            return 0.0
         return 1 - self.node_count_post_recovery / self.reads_output
 
     @pydantic.computed_field(  # type: ignore
@@ -330,3 +359,14 @@ class GraphSampleReport(SampleReport):
         if self.umis_input == 0:
             return 0.0
         return self.stranded_nodes_pre_recovery / self.umis_input
+
+    @pydantic.computed_field(  # type: ignore
+        description="The fraction of the core-1 layer (peeled off before community detection) that was reabsorbed into a resolved component.",
+        return_type=float,
+    )
+    @property
+    def fraction_core1_edges_reabsorbed(self) -> float:
+        """Return the fraction of core-1 layer edges that were reabsorbed."""
+        if self.core1_layer_edges == 0:
+            return 0.0
+        return self.core1_edges_reabsorbed / self.core1_layer_edges

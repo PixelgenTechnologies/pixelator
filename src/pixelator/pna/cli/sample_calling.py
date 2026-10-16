@@ -3,6 +3,7 @@
 Copyright © 2025 Pixelgen Technologies AB.
 """
 
+import logging
 from pathlib import Path
 
 import click
@@ -19,6 +20,8 @@ from pixelator.common.utils import (
 from pixelator.pna import read
 from pixelator.pna.cli.common import output_option
 from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.pixeldataset import NullPxlFileError
+from pixelator.pna.pixeldataset.io import PxlFile, write_null_pxl
 from pixelator.pna.sample_calling import (
     create_final_report,
     sample_calling,
@@ -27,7 +30,10 @@ from pixelator.pna.sample_calling import (
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
 from pixelator.pna.sample_calling.report import (
     SampleCallingSampleReport,
+    SampleCallingTotalReport,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @click.command(
@@ -99,23 +105,27 @@ def sample_calling_cli(
     pool_name = Path(input_pxl_file).name.split(".")[0]
     undetermined_sample_name = f"{pool_name}_undetermined"
 
-    panel_info = PNAAntibodyPanel.from_pxl_dataset(read(input_pxl_file))
+    try:
+        panel_info = PNAAntibodyPanel.from_pxl_dataset(read(input_pxl_file))
+    except NullPxlFileError as exc:
+        logger.warning("%s", exc)
+        _pass_through_null_sample_calling(
+            ctx,
+            samplesheet=samplesheet,
+            pool_name=pool_name,
+            null_reason=exc.reason,
+            sample_calling_output=sample_calling_output,
+            pool_metadata=PxlFile(Path(input_pxl_file)).metadata(),
+        )
+        return
     hashing_antibodies_in_panel = set(
         panel_info.df[panel_info.df["sample_hashing"] == "yes"].index.to_list()
     )
     samplesheet_df = pl.read_csv(samplesheet)
-    if "undetermined" in samplesheet_df["sample"].to_list():
-        raise ValueError(
-            f"The sample 'undetermined' is not allowed in the samplesheet as it "
-            "is reserved for undetermined components. Please edit your "
-            "samplesheet to use a different sample name."
-        )
-    if undetermined_sample_name in samplesheet_df["sample"].to_list():
-        raise ValueError(
-            f"The sample '{undetermined_sample_name}' is not allowed in the samplesheet as it "
-            "is reserved for undetermined components. Please edit your "
-            "samplesheet to use a different sample name."
-        )
+    _reject_reserved_samplesheet_names(
+        samplesheet_df["sample"].to_list(),
+        undetermined_sample_name,
+    )
 
     hashed_antibodies = HashedAntibodyMapping.from_samplesheet(
         samplesheet_df,
@@ -188,3 +198,99 @@ def sample_calling_cli(
             sample_calling_output / f"{undetermined_sample_name}.dehashed.pxl"
         )
         undetermined_pxl.unlink(missing_ok=True)
+
+
+def _reject_reserved_samplesheet_names(
+    sample_names: list, undetermined_sample_name: str
+) -> None:
+    """Reject samplesheet names reserved for components that were not called."""
+    if "undetermined" in sample_names:
+        raise ValueError(
+            "The sample 'undetermined' is not allowed in the samplesheet as it "
+            "is reserved for undetermined components. Please edit your "
+            "samplesheet to use a different sample name."
+        )
+    if undetermined_sample_name in sample_names:
+        raise ValueError(
+            f"The sample '{undetermined_sample_name}' is not allowed in the samplesheet as it "
+            "is reserved for undetermined components. Please edit your "
+            "samplesheet to use a different sample name."
+        )
+
+
+def _pass_through_null_sample_calling(
+    ctx,
+    *,
+    samplesheet: str,
+    pool_name: str,
+    null_reason: str,
+    sample_calling_output: Path,
+    pool_metadata: dict | None = None,
+) -> None:
+    """Write a null pxl for every samplesheet sample in this pool.
+
+    A missing or unmatched samplesheet is a configuration error and still
+    raises. Samples that the sheet names are kept so they show up downstream.
+    Reserved sample names are rejected the same way as a successful run.
+    Panel metadata from the pool file is copied onto each null file.
+    """
+    samplesheet_df = pl.read_csv(samplesheet)
+    if "pool" not in samplesheet_df.columns or "sample" not in samplesheet_df.columns:
+        raise ValueError(
+            "The samplesheet must contain 'pool' and 'sample' columns to "
+            "pass a null pxl file through sample calling."
+        )
+    _reject_reserved_samplesheet_names(
+        samplesheet_df["sample"].to_list(),
+        f"{pool_name}_undetermined",
+    )
+    sample_names = samplesheet_df.filter(pl.col("pool") == pool_name)[
+        "sample"
+    ].to_list()
+    if not sample_names:
+        raise ValueError(
+            f"No matching entries found in samplesheet for pool '{pool_name}'."
+        )
+
+    for sample_name in sample_names:
+        target = sample_calling_output / f"{sample_name}.dehashed.pxl"
+        write_null_pxl(
+            target,
+            sample_name=str(sample_name),
+            reason=null_reason,
+            source_metadata=pool_metadata,
+        )
+        write_parameters_file(
+            ctx,
+            sample_calling_output / f"{sample_name}.meta.json",
+            command_path="pixelator single-cell-pna sample-calling",
+        )
+        report = SampleCallingSampleReport(
+            sample_id=str(sample_name),
+            product_id="single-cell-pna",
+            number_of_components=0,
+            number_of_incompatible_hashes_removed=0,
+            input_reads=0,
+            output_reads=0,
+            status="failed",
+            null_reason=null_reason,
+        )
+        report.write_json_file(
+            sample_calling_output / f"{sample_name}.report.json", indent=4
+        )
+
+    total_report = SampleCallingTotalReport(
+        sample_id="all",
+        product_id="single-cell-pna",
+        number_of_components=0,
+        percentage_of_components_successfully_called=0.0,
+        hash_enrichment_factors_per_sample={},
+        input_reads=0,
+        output_reads=0,
+        status="failed",
+        null_reason=null_reason,
+    )
+    total_report.write_json_file(
+        sample_calling_output / f"{pool_name}.sample_calling.report.json",
+        indent=4,
+    )

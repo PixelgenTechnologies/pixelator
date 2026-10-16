@@ -117,7 +117,10 @@ from .pxl_file import (
     PXL_FILE_ADATA_TABLES,
     PXL_FILE_MANDATOR_TABLES,
     PXL_FILE_OTHER_TABLES,
+    NullPxlFileError,
     PxlFile,
+    reject_null_pxl,
+    write_null_pxl,
 )
 from .query_builder import Query, QueryBuilder
 
@@ -128,9 +131,12 @@ __all__ = [
     "PixelDataViewer",
     "PixelDataViewerSession",
     "PixelFileWriter",
+    "NullPxlFileError",
     "PxlFile",
     "Query",
     "QueryBuilder",
+    "reject_null_pxl",
+    "write_null_pxl",
 ]
 
 

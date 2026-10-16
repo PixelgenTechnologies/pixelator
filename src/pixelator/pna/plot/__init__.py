@@ -15,8 +15,10 @@ from pixelator.pna.plot.comparison import (
     plot_sample_pair_comparison,
     write_sample_pair_comparison_report,
 )
+from pixelator.pna.plot.proximity import proximity_heatmap
 
 __all__ = [
+    "proximity_heatmap",
     "molecule_rank_plot",
     "plot_sample_pair_comparison",
     "write_sample_pair_comparison_report",

@@ -33,6 +33,7 @@ from networkx.algorithms import bipartite as nx_bipartite
 from scipy.sparse import csr_matrix
 
 from pixelator.common.graph.backends.protocol import (
+    DEFAULT_LAYOUT_ALGORITHM,
     Edge,
     EdgeSequence,
     GraphBackend,
@@ -44,7 +45,7 @@ from pixelator.common.graph.backends.protocol import (
 from pixelator.common.graph.math import mat_pow
 
 if TYPE_CHECKING:
-    from pixelator.mpx.graph import Graph
+    from pixelator.common.graph.graph import Graph
 
 logger = logging.getLogger(__name__)
 
@@ -295,7 +296,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def _layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         random_seed: Optional[int] = None,
         **kwargs,
     ) -> pd.DataFrame:
@@ -310,31 +311,28 @@ class NetworkXGraphBackend(GraphBackend):
         if not self._raw:
             raise ValueError("Trying to get layout for empty Graph instance.")
         raw = self._raw  # type: nx.Graph
+        # Public callers use random_seed=; algorithms take seed=. Accept both.
+        seed = kwargs.pop("seed", random_seed)
 
-        if layout_algorithm == "kamada_kawai":
-            layout_inst = nx.kamada_kawai_layout(
-                raw, pos=nx.random_layout(raw, seed=random_seed)
-            )
-        if layout_algorithm == "kamada_kawai_3d":
-            layout_inst = nx.kamada_kawai_layout(
-                raw, pos=nx.random_layout(raw, seed=random_seed, dim=3), dim=3
-            )
-        if layout_algorithm == "fruchterman_reingold":
-            layout_inst = nx.spring_layout(raw, seed=random_seed)
-        if layout_algorithm == "fruchterman_reingold_3d":
-            layout_inst = nx.spring_layout(raw, dim=3, seed=random_seed)
         if layout_algorithm == "pmds":
-            layout_inst = pmds_layout(raw, seed=random_seed, **kwargs)
-        if layout_algorithm == "pmds_3d":
-            layout_inst = pmds_layout(raw, dim=3, seed=random_seed, **kwargs)
-        if layout_algorithm == "wpmds_3d":
+            layout_inst = pmds_layout(raw, seed=seed, **kwargs)
+        elif layout_algorithm == "pmds_3d":
+            layout_inst = pmds_layout(raw, dim=3, seed=seed, **kwargs)
+        elif layout_algorithm == "wpmds_3d":
             layout_inst = pmds_layout(
-                raw, dim=3, weights="prob_dist", seed=random_seed, **kwargs
+                raw, dim=3, weights="prob_dist", seed=seed, **kwargs
             )
-        if layout_algorithm == "coarsened_pmds_3d":
-            layout_inst = coarsened_pmds_layout(raw, seed=random_seed, **kwargs)
-        if layout_algorithm == "spectral_3d":
-            layout_inst = spectral_layout(raw, dim=3, seed=random_seed, **kwargs)
+        elif layout_algorithm == "coarsened_pmds_3d":
+            layout_inst = coarsened_pmds_layout(raw, seed=seed, **kwargs)
+        elif layout_algorithm == "spectral_3d":
+            layout_inst = spectral_layout(raw, dim=3, seed=seed, **kwargs)
+        else:
+            raise AssertionError(
+                (
+                    f"{layout_algorithm} not allowed `layout_algorithm` option. "
+                    f"Options are: {'/'.join(get_args(SupportedLayoutAlgorithm))}"
+                )
+            )
 
         coordinates = pd.DataFrame.from_dict(
             layout_inst,
@@ -381,7 +379,7 @@ class NetworkXGraphBackend(GraphBackend):
 
     def layout_coordinates(
         self,
-        layout_algorithm: SupportedLayoutAlgorithm = "coarsened_pmds_3d",
+        layout_algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
         only_keep_a_pixels: bool = True,
         get_node_marker_matrix: bool = True,
         random_seed: Optional[int] = None,
@@ -394,10 +392,6 @@ class NetworkXGraphBackend(GraphBackend):
 
         The layout options are:
         - coarsened_pmds_3d
-        - fruchterman_reingold
-        - fruchterman_reingold_3d
-        - kamada_kawai
-        - kamada_kawai_3d
         - pmds
         - pmds_3d
         - wpmds_3d
@@ -719,7 +713,7 @@ class NetworkxBasedVertexClustering(VertexClustering):
 
     def giant(self) -> Graph:
         """Get the largest component."""
-        from pixelator.mpx.graph import Graph
+        from pixelator.common.graph.graph import Graph
 
         return Graph(
             NetworkXGraphBackend(
@@ -729,7 +723,7 @@ class NetworkxBasedVertexClustering(VertexClustering):
 
     def subgraphs(self) -> Iterable[Graph]:
         """Get subgraphs of each cluster."""
-        from pixelator.mpx.graph import Graph
+        from pixelator.common.graph.graph import Graph
 
         return [
             Graph(NetworkXGraphBackend(self._graph.subgraph(cluster).copy()))
@@ -873,6 +867,24 @@ def pmds_layout(
     return coordinates
 
 
+def _pmds_layout_normalized(
+    g: nx.Graph,
+    dim: int,
+    pivots: int,
+    seed: Optional[int],
+) -> Dict[Any, np.ndarray]:
+    """Run PMDS on ``g`` and normalize coordinates like coarsened PMDS."""
+    nodes = list(g.nodes)
+    n = len(nodes)
+    pmds_pivots = min(pivots, n)
+    if pmds_pivots >= n and n > dim:
+        pmds_pivots = n - 1
+    coords = pmds_layout(g, dim=dim, pivots=pmds_pivots, seed=seed)
+    xyz = np.vstack([coords[node] for node in nodes])
+    xyz = normalize_layout_coordinates(xyz)
+    return {nodes[i]: xyz[i] for i in range(len(nodes))}
+
+
 def coarsened_pmds_layout(
     g: nx.Graph,
     dim: int = 3,
@@ -904,6 +916,9 @@ def coarsened_pmds_layout(
         their coordinates with a weighted average of their neighbors' coordinates + some random
         jitter (`jitter_sd`).
 
+    When the graph has fewer nodes than ``pivots``, or Leiden produces too few
+    communities to embed, the layout falls back to PMDS on the original graph.
+
     Args:
         g: A connected NetworkX graph.
         dim: Number of output dimensions (default 3).
@@ -924,7 +939,7 @@ def coarsened_pmds_layout(
         ValueError: If the graph is directed.
         ValueError: If the dim is not 2 or 3.
         ValueError: If the resolution is not between 0.01 and 10.
-        ValueError: If pivots is not between 10 and min(#nodes, 1000).
+        ValueError: If pivots is not between 10 and 1000.
         ValueError: If n_iter is not between 1 and 100.
         ValueError: If jitter_sd is not between 0.001 and 0.1.
         ValueError: If weight_edges_by is not "tp" or "crossing_edges".
@@ -937,6 +952,12 @@ def coarsened_pmds_layout(
 
     n_nodes = len(g.nodes)
     n_edges = len(g.edges)
+
+    # Coarsening is for graphs larger than the pivot set. On smaller graphs
+    # the default pivots=200 would previously raise, even though PNA Components
+    # (and filtered subsets) can be well below that size.
+    if pivots >= n_nodes:
+        return _pmds_layout_normalized(g, dim=dim, pivots=n_nodes, seed=seed)
 
     # Normalize resolution parameter to fit PNA graphs
     # Here we use the number of edges to scale the resolution parameter
@@ -965,6 +986,12 @@ def coarsened_pmds_layout(
 
     unique_communities = np.unique(membership)
     n_communities = len(unique_communities)
+
+    if n_communities <= dim:
+        # Size pivots from the full graph, as in the small-graph fallback.
+        # Reusing the coarse-level pivot count can fall below pmds_layout's
+        # 0.2 * n lower bound even when the caller passed a valid pivots.
+        return _pmds_layout_normalized(g, dim=dim, pivots=n_nodes, seed=seed)
 
     community_to_idx = {comm: i for i, comm in enumerate(unique_communities)}
 
@@ -1190,7 +1217,45 @@ def spectral_layout(
     seed: Optional[int] = None,
     method: Literal["eigen", "psvd"] = "psvd",
 ):
-    """Use a spectral layout algorithm to compute coordinates from a graph."""
+    """Use a spectral layout algorithm to compute coordinates from a graph.
+
+    The spectral layout algorithm computes ``dim`` eigenvectors of the graph Laplacian
+    corresponding to the smallest non-zero eigenvalues. The layout coordinates
+    are derived from the vectors by using each eigenvector as an embedding axis.
+    Resulting coordinates are normalized (centered at origin and scaled by median
+    radius) before return.
+
+    Args:
+        g: A connected NetworkX graph.
+        dim: Number of output dimension (3 by default).
+        normalize: If the symmetrically normalized Laplacian should be used in the
+        computations. Note that ``normalize=False`` is incompatible with
+        ``method='psvd'``. Defaults to ``True``.
+        seed: Optional random seed.
+        method: Which computational method to use. ``'eigen'`` uses an eigensolver to
+        compute the eigenvectors, while ``'psvd'`` solves an equivalent partial singular
+        value decomposition problem. Solutions generated by the different approaches are
+        equivalent, but ``'psvd'``is generally faster.
+
+    Returns:
+        Dictionary mapping each node in ``g`` to its normalized layout coordinates as a
+        one-dimensional array with length ``dim``.
+
+    Raises:
+        ValueError: If the graph (``g``) does not have more than 1 node.
+        ValueError: If the graph is directed.
+        ValueError: If the graph is not connected.
+        ValueError: If ``dim`` is not 2 or 3.
+        ValueError: If ``method`` is not 'eigen' or 'psvd'.
+        ValueError: If ``method`` is ``'psvd'`` and ``normalize`` is ``False``.
+        ValueError: If using ``'eigen'`` and the number ``dim + 1`` is not less than the
+        number of nodes in the input graph.
+        ValueError: If using the ``'psvd'`` method and ``g`` isn't a bipartite graph whose
+        nodes are partitioned exactly into 'A' and 'B' via the 'pixel_type' attribute.
+        ValueError: If using ``'psvd'`` and ``g`` is not a bipartite graph whose partition
+        sizes ``M``, ``N`` satisfy ``dim + 1 <= min(M, N) - 1``.
+
+    """
     # Validate inputs
     if g.number_of_nodes() in (0, 1):
         raise ValueError("g must have more than 1 node.")
@@ -1356,12 +1421,8 @@ def _validate_coarsened_pmds_parameters(
     if not (isinstance(resolution, (float, int)) and 0.01 <= resolution <= 10):
         raise ValueError("resolution must be a float between 0.01 and 10.")
 
-    n_nodes = len(g.nodes)
-    pivots_max = min(n_nodes, 1000)
-    if not (isinstance(pivots, int) and 10 <= pivots <= pivots_max):
-        raise ValueError(
-            f"pivots must be an integer between 10 and {pivots_max} (number of nodes or 1000, whichever is smaller)."
-        )
+    if not (isinstance(pivots, int) and 10 <= pivots <= 1000):
+        raise ValueError("pivots must be an integer between 10 and 1000.")
 
     if not (isinstance(n_iter, int) and 1 <= n_iter <= 100):
         raise ValueError("n_iter must be an integer between 1 and 100.")

@@ -86,7 +86,6 @@ class MockGraph(MagicMock):
         return (MagicMock, ())
 
 
-@pytest.mark.slow
 def test_analysis_manager():
     """Verify analysis manager."""
 
@@ -145,8 +144,10 @@ def test_analysis_manager():
         mock_dataset.data = pxl_files.data_slots
         return mock_dataset
 
+    # Run in-process: the mocks do not need a worker pool, whose startup
+    # dominates the runtime of this test.
     engine = AnalysisManager(
-        analysis_to_run=analysis_to_run, pxl_dataset_builder=mock_builder
+        analysis_to_run=analysis_to_run, pxl_dataset_builder=mock_builder, n_cores=1
     )
     mock_pixel_dataset = MockPixelDataset(component_stream)
 

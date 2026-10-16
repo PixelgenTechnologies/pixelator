@@ -2,6 +2,9 @@
 
 from pathlib import Path
 
+import polars as pl
+import pytest
+
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 
 
@@ -65,6 +68,35 @@ class TestPixelFileWriter:
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
             writer.write_adata(adata_data)
+
+    def test_write_adata_multiple_samples_raises(self, tmp_path, adata_data):
+        """Verify write adata raises when obs contains multiple samples.
+
+        Args:
+            tmp_path: tmp path.
+            adata_data: adata data.
+        """
+        adata_data = adata_data.copy()
+        adata_data.obs["sample"] = "sample_1"
+        adata_data.obs.iloc[0, adata_data.obs.columns.get_loc("sample")] = "sample_2"
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            with pytest.raises(ValueError, match="multiple samples"):
+                writer.write_adata(adata_data)
+
+    def test_write_edgelist_multiple_samples_raises(self, tmp_path, edgelist_dataframe):
+        """Verify write edgelist raises when the edgelist contains multiple samples.
+
+        Args:
+            tmp_path: tmp path.
+            edgelist_dataframe: edgelist dataframe.
+        """
+        edgelist_dataframe = edgelist_dataframe.with_columns(sample=pl.lit("sample_1"))
+        edgelist_dataframe[0, "sample"] = "sample_2"
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            with pytest.raises(ValueError, match="multiple samples"):
+                writer.write_edgelist(edgelist_dataframe)
 
     def test_write_metadata(self, tmp_path):
         """Verify write metadata.
