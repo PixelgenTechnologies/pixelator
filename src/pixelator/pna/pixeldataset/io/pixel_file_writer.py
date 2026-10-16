@@ -115,10 +115,10 @@ class PixelFileWriter:
 
         ``marker_1`` and ``marker_2`` are used as secondary keys when present.
         They do not change the ``.pxl`` size or the pruning, but Parquet
-        written from the table compresses much better: the marker columns
-        become long runs, and a row group that covers part of a component
-        then holds only the nodes of a few markers, which keeps the number of
-        distinct ``umi1`` values low enough for Parquet dictionary encoding.
+        written from the table is considerably smaller: the marker columns
+        compress to almost nothing, and the number of distinct ``umi1``
+        values per row group drops enough for Parquet to dictionary-encode
+        that column in most row groups.
 
         Args:
             table_name: Name of the table to create or replace.
