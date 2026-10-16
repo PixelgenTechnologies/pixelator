@@ -7,41 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- `proxiome-v2-immuno-156-Whitlow-v2.0` panel: immuno-155 plus the Whitlow CAR marker.
+### Data Analysis
+
+#### Added
 - `pixelator.pna.analysis.differential_abundance` for marker differential abundance (Wilcoxon).
-- Samples with no cells above the size threshold no longer fail the pipeline.
-- PNA graph step peels and reabsorbs the core-1 layer, improving runtime and memory.
-- Graph report now includes core-1 layer size and absorption statistics.
 - `PNAPixelDataset.layouts()` computes layouts on the fly.
 - Proximity helpers `summarize_proximity_scores`, `filter_proximity_scores` and `proximity_heatmap`.
 - Conjugate segmentation helpers `cc_protein_weights`, `segment_cell`, `partition_counts` and `distance_from_node_set`.
-- `PIXELATOR_DUCKDB_THREADS` environment variable sets the default DuckDB thread count.
 
-### Changed
-- `PixelFileWriter` stores `edgelist`, `proximity` and `layouts` sorted by `component` and markers,
-  which speeds up `component` filters on remote PXL files.
+#### Changed
 - Faceted `density_scatter_plot` estimates density per facet; `density_scope="joint"` restores old behavior.
-- `analysis --compute-proximity` computes expected join counts analytically, which is much faster.
-- Updated pixelgen-pixelator-core to 0.2.0, reducing graph step peak memory by ~20%.
 - `density_scatter_plot` moved from `pixelator.mpx.plot` to `pixelator.plot`.
-- `uei_count` is now optional on PNA edgelists.
 
-### Deprecated
+#### Deprecated
 - `PNAPixelDataset.precomputed_layouts()`; use `layouts()` instead.
 
-### Removed
+#### Removed
+- Layouts `fruchterman_reingold(_3d)` and `kamada_kawai(_3d)`.
+
+#### Fixed
+- `PNAPixelDataset.proximity(calculate_from_edgelist=True)` now uses exact variance and a minimum standard deviation of 1.
+- `Edgelist.to_record_batches` renames legacy `marker1`/`marker2` columns.
+- `coarsened_pmds_layout` no longer fails on low `pivots` when Leiden yields few communities.
+
+### Data Processing
+
+#### Added
+- `proxiome-v2-immuno-156-Whitlow-v2.0` panel: immuno-155 plus the Whitlow CAR marker.
+- Samples with no cells above the size threshold no longer fail the pipeline.
+- PNA graph step peels and reabsorbs the core-1 layer, improving runtime and memory.
+- Graph report now includes core-1 layer size and absorption statistics.
+- `PIXELATOR_DUCKDB_THREADS` environment variable sets the default DuckDB thread count.
+
+#### Changed
+- `PixelFileWriter` stores `edgelist`, `proximity` and `layouts` sorted by `component` and markers,
+  which speeds up `component` filters on remote PXL files.
+- `analysis --compute-proximity` computes expected join counts analytically, which is much faster.
+- Updated pixelgen-pixelator-core to 0.2.0, reducing graph step peak memory by ~20%.
+- `uei_count` is now optional on PNA edgelists.
+
+#### Removed
 - `--proximity-nbr-of-permutations` option of `single-cell-pna analysis`.
 - Stale nf-core/pixelator integration tests and workflow.
-- Layouts `fruchterman_reingold(_3d)` and `kamada_kawai(_3d)`.
 - Molecular Pixelation (MPX) support; use a release before 0.31.0 for MPX data.
 - `single-cell-pna graph_legacy` command; use `graph` instead.
 - Redundant UMI densification round-trip in the PNA graph step.
 
-### Fixed
-- `PNAPixelDataset.proximity(calculate_from_edgelist=True)` now uses exact variance and a minimum standard deviation of 1.
-- `Edgelist.to_record_batches` renames legacy `marker1`/`marker2` columns.
-- `coarsened_pmds_layout` no longer fails on low `pivots` when Leiden yields few communities.
+#### Fixed
 - Default core count respects CPU affinity and container CPU quotas.
 - Analysis workers are pinned to one Polars, BLAS/OpenMP and DuckDB thread.
 - Panel header parsing tolerates multiple trailing commas.
