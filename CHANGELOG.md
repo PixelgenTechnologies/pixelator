@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `proxiome-v2-immuno-156-Whitlow-v2.0` panel, the immuno-155 base panel with the Whitlow CAR marker added.
 - `pixelator.pna.analysis.differential_abundance` to run marker differential abundance (Wilcoxon via `scanpy.tl.rank_genes_groups`). Effect size is a mean difference, not scanpy's log-fold change.
 - Samples with no cells above the size threshold no longer fail the pipeline. A null pxl file
   with a reason is written and passed through later steps, so the sample still shows up downstream.
