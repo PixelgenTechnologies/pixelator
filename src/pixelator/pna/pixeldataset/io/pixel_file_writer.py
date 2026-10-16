@@ -103,6 +103,12 @@ class PixelFileWriter:
         edgelist through joins, which do not preserve any earlier ordering, so
         the sort is applied here, where every table write ends up.
 
+        ``marker_1`` and ``marker_2`` are used as secondary keys when present.
+        They do not change the ``.pxl`` size or the pruning, but Parquet
+        written from the table compresses much better: every edge of a node
+        then sits in one marker slice per component, so row groups contain few
+        enough distinct ``umi1`` values for dictionary encoding.
+
         Args:
             table_name: Name of the table to create or replace.
             edgelist_file: Path or list of paths to parquet file(s).
@@ -116,7 +122,8 @@ class PixelFileWriter:
             "SELECT * FROM read_parquet($parquet_file) LIMIT 0",
             params={"parquet_file": parquet_file},
         ).columns
-        order_by = "ORDER BY component" if "component" in columns else ""
+        sort_keys = [c for c in ("component", "marker_1", "marker_2") if c in columns]
+        order_by = f"ORDER BY {', '.join(sort_keys)}" if "component" in columns else ""
         self._connection.sql(
             f"""
             CREATE OR REPLACE TABLE {table_name} AS

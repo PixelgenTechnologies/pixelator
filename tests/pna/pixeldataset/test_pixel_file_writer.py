@@ -73,7 +73,9 @@ class TestPixelFileWriter:
 
         Sample calling and denoising rewrite the edgelist through joins, which
         scramble the order produced by the graph step. The writer must restore
-        it so that component filters can prune row groups.
+        it so that component filters can prune row groups. Marker columns, when
+        present, are secondary keys so that Parquet written from the table
+        compresses well.
 
         Args:
             tmp_path: tmp path.
@@ -92,17 +94,23 @@ class TestPixelFileWriter:
         parquet_path = tmp_path / f"{table_name}.parquet"
         shuffled.write_parquet(parquet_path)
 
+        sort_keys = [
+            c for c in ("component", "marker_1", "marker_2") if c in dataframe.columns
+        ]
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
             getattr(writer, f"write_{table_name}")(parquet_path)
             stored = (
                 writer.get_connection()
-                .execute(f"SELECT component FROM {table_name}")
-                .pl()["component"]
+                .execute(f"SELECT {', '.join(sort_keys)} FROM {table_name}")
+                .pl()
             )
 
-        assert stored.is_sorted()
-        assert sorted(stored.to_list()) == sorted(dataframe["component"].to_list())
+        assert stored["component"].is_sorted()
+        assert stored.equals(stored.sort(sort_keys, maintain_order=True))
+        assert sorted(stored["component"].to_list()) == sorted(
+            dataframe["component"].to_list()
+        )
 
     def test_write_adata(self, tmp_path, adata_data):
         """Verify write adata.

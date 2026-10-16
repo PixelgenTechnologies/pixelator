@@ -152,7 +152,9 @@ class TestPixelDataViewerQueries:
             lazy = session.execute_lazy(builder.proximity_query(None, None))
             assert isinstance(lazy, pl.LazyFrame)
             results = lazy.collect()
-        assert_frame_equal(results, _with_sample(proximity_dataframe))
+        assert_frame_equal(
+            results, _with_sample(proximity_dataframe), check_row_order=False
+        )
 
     def test_read_proximity_filter(self, pxl_view, proximity_dataframe):
         """Verify read proximity filter.
@@ -173,6 +175,7 @@ class TestPixelDataViewerQueries:
                 proximity_dataframe.filter(pl.col("component") == components[0])
             ),
             check_column_order=False,
+            check_row_order=False,
         )
 
     def test_read_proximity_len(self, pxl_view):
