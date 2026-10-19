@@ -9,10 +9,15 @@ from typing import Callable, List, Literal
 import numpy as np
 import pandas as pd
 import polars as pl
-from scipy.stats import mannwhitneyu, norm
+from scipy.stats import mannwhitneyu
 from statsmodels.stats.multitest import multipletests
 
-from pixelator.pna.analysis.permute import edgelist_permutations
+from pixelator.common.duckdb_utils import connect_duckdb
+from pixelator.pna.analysis.analytical_proximity_query_helper import (
+    DEFAULT_MIN_STD,
+    add_join_count_p,
+    jcs_with_analytical_stats,
+)
 from pixelator.pna.utils.utils import normalize_input_to_list
 
 _PROXIMITY_METRICS = ("log2_ratio", "join_count_z")
@@ -24,36 +29,6 @@ _SUMMARY_STATS: dict[str, Callable[[np.ndarray], float]] = {
 # with add_marker_counts=True emits marker_*_freq and marker_*_count.
 _PCT_COLUMN_PAIRS = (("p1", "p2"), ("marker_1_freq", "marker_2_freq"))
 _COUNT_COLUMN_PAIRS = (("count_1", "count_2"), ("marker_1_count", "marker_2_count"))
-
-
-def get_join_counts(edgelist: pl.DataFrame) -> pd.DataFrame:
-    """Compute the number of edges for each marker pair in the given edgelist.
-
-    Args:
-        edgelist: A DataFrame representing the edgelist with columns "marker_1" and "marker_2".
-
-    Returns:
-        DataFrame containing the number of edges for each marker pair. The resulting DataFrame
-        includes columns ``marker_1``, ``marker_2``, and ``join_count``.
-    """
-    pair_cnt = edgelist.group_by(["marker_1", "marker_2"]).len().to_pandas()
-    m1 = pair_cnt["marker_1"].astype(str)
-    m2 = pair_cnt["marker_2"].astype(str)
-    pair_cnt.loc[m1 > m2, "marker_1"] = m2
-    pair_cnt.loc[m1 > m2, "marker_2"] = m1
-    all_markers = list(set(pair_cnt["marker_1"]).union(set(pair_cnt["marker_2"])))
-    pair_cnt["marker_1"] = pd.Categorical(pair_cnt["marker_1"], categories=all_markers)
-    pair_cnt["marker_2"] = pd.Categorical(pair_cnt["marker_2"], categories=all_markers)
-    pair_cnt = (
-        pair_cnt.groupby(["marker_1", "marker_2"], observed=False)["len"]
-        .sum()
-        .reset_index()
-    )
-    pair_cnt.rename(columns={"len": "join_count"}, inplace=True)
-    pair_cnt = pair_cnt[
-        pair_cnt["marker_1"].astype(str) <= pair_cnt["marker_2"].astype(str)
-    ]  # Each marker-pair gets only one row, where marker_1/marker_2 are in lexographic order
-    return pair_cnt
 
 
 def _get_markers_above_min_count(edgelist: pl.DataFrame, min_count: int = 0) -> set:
@@ -91,96 +66,62 @@ def _get_markers_above_min_count(edgelist: pl.DataFrame, min_count: int = 0) -> 
     return set(passing_markers["marker"])
 
 
-def proximity_with_permute_stats(
+def jcs_with_analytical_stats_from_edgelist(
     edgelist: pl.DataFrame,
-    proximity_function: Callable[[pl.DataFrame], pd.DataFrame],
-    result_columns: list[str],
-    n_permutations: int = 100,
-    seed: int | None = 42,
-    min_std: float = 1.0,
     min_marker_count: int = 0,
+    min_std: float = DEFAULT_MIN_STD,
 ) -> pd.DataFrame:
-    """Compute proximity results augmented with statistics based on permutation tests.
+    """Compute join counts augmented with analytically calculated expected statistics.
 
-    This function calculates proximity metrics for a given edgelist and augments
-    the results with statistical measures derived from permutation tests. It
-    supports computing z-scores and p-values for specified result columns.
+    The expected join counts and their standard deviations are calculated
+    exactly under the null model where the markers of the umi1 and umi2 nodes are
+    independently permuted within a component (see `jcs_with_analytical_stats`).
 
     Args:
-        edgelist: A DataFrame representing the edgelist.
-        proximity_function: A function that computes proximity metrics for the given edgelist.
-        result_columns: A list of column names for which statistics (e.g., z-scores, p-values) will
-            be computed.
-        n_permutations: The number of permutations to perform. Defaults to 100.
-        seed: Seed for the random number generator. Defaults to 42.
-        min_std: Minimum standard deviation to use when normalizing z-scores. Defaults to 1.0.
-        min_marker_count: Minimum marker count threshold for filtering the edgelist. Defaults to 0.
+        edgelist: A DataFrame representing the edgelist of a single component.
+        min_marker_count: Minimum marker count to consider. Defaults to 0.
+        min_std: Minimum standard deviation to use when calculating the z-scores.
+            Defaults to 1.0.
 
     Returns:
-        A DataFrame containing the proximity results augmented with
-        statistical measures, including expected means, standard deviations,
-        z-scores, and p-values for the specified result columns.
+        A DataFrame with one row per marker pair containing the columns `marker_1`,
+        `marker_2`, `join_count`, `join_count_expected_mean`,
+        `join_count_expected_sd`, `join_count_z` and `join_count_p`.
     """
     passing_markers = _get_markers_above_min_count(edgelist, min_marker_count)
-    results = proximity_function(edgelist).set_index(["marker_1", "marker_2"])
 
-    def compute_permuted_results():
-        """Compute permuted results."""
-        permutations = edgelist_permutations(edgelist, n_permutations, seed)
-        for idx, perm in enumerate(permutations):
-            perm_results = proximity_function(perm)
-            perm_results["perm_idx"] = idx
-            yield perm_results
-
-    permuted_results = pd.concat(compute_permuted_results())
-
-    for col in result_columns:
-        results[f"{col}_expected_mean"] = permuted_results.groupby(
-            ["marker_1", "marker_2"], observed=False
-        )[col].mean()
-        results[f"{col}_expected_sd"] = permuted_results.groupby(
-            ["marker_1", "marker_2"], observed=False
-        )[col].std()
-        results[f"{col}_expected_mean"] = results[f"{col}_expected_mean"].fillna(0)
-        results[f"{col}_expected_sd"] = results[f"{col}_expected_sd"].fillna(min_std)
-        results[f"{col}_z"] = (
-            results[col] - results[f"{col}_expected_mean"]
-        ) / np.maximum(results[f"{col}_expected_sd"], min_std)
-        results[f"{col}_p"] = 2 * norm.sf(np.abs(results[f"{col}_z"]))
-
-    results = results.reset_index()
-    results = results[
-        results["marker_1"].isin(passing_markers)
-        & results["marker_2"].isin(passing_markers)
-    ]
-
-    return results
-
-
-def jcs_with_permute_stats(
-    edgelist: pl.DataFrame,
-    n_permutations: int = 100,
-    min_marker_count: int = 0,
-) -> pd.DataFrame:
-    """Compute proximity results augmented with statistics based on permutation tests.
-
-    Args:
-        edgelist: A DataFrame representing the edgelist.
-        n_permutations: Number of permutations to perform. Defaults to 100.
-        min_marker_count: Minimum marker count to consider. Defaults to 0.
-
-    Returns:
-        A DataFrame containing the proximity statistics.
-    """
-    return proximity_with_permute_stats(
-        edgelist,
-        get_join_counts,
-        ["join_count"],
-        n_permutations=n_permutations,
-        seed=42,
-        min_std=1.0,
-        min_marker_count=min_marker_count,
+    # The query works on sample and component level, these are constant here.
+    edgelist = edgelist.select(
+        "umi1",
+        "umi2",
+        "marker_1",
+        "marker_2",
+        sample=pl.lit("sample"),
+        component=pl.lit("component"),
     )
+    sql, params = jcs_with_analytical_stats(min_std=min_std)
+    with connect_duckdb() as connection:
+        connection.register("edgelist", edgelist.to_arrow())
+        results = connection.execute(sql, parameters=params).pl()
+
+    results = (
+        add_join_count_p(results)
+        .filter(
+            pl.col("marker_1").is_in(passing_markers)
+            & pl.col("marker_2").is_in(passing_markers)
+        )
+        .select(
+            "marker_1",
+            "marker_2",
+            "join_count",
+            "join_count_expected_mean",
+            "join_count_expected_sd",
+            "join_count_z",
+            "join_count_p",
+        )
+        .sort("marker_1", "marker_2")
+    )
+    return results.to_pandas()
 
 
 def summarize_proximity_scores(

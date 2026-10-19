@@ -5,7 +5,9 @@ Copyright © 2024 Pixelgen Technologies AB.
 
 import itertools
 import logging
+import os
 import typing
+import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import wraps
@@ -16,7 +18,7 @@ from typing import Callable, Generic, Iterable, Protocol, TypeVar
 import click
 import pandas as pd
 import polars as pl
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, parallel_config
 
 from pixelator.common.utils import get_available_cpu_count
 from pixelator.pna import read
@@ -25,6 +27,24 @@ from pixelator.pna.pixeldataset import Component, PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PxlFile
 
 logger = logging.getLogger(__name__)
+
+# loky restarts a worker once its RSS grows more than 300 MB above its size after
+# the first task. Large components legitimately need more than that (the allocator
+# keeps the peak), so the restarts are false positives, and the warning loky emits
+# for each restart is just noise.
+_LOKY_MAX_MEMORY_LEAK_SIZE = int(2e9)
+warnings.filterwarnings(
+    "ignore",
+    message="A worker stopped while some jobs were given to the executor",
+    category=UserWarning,
+)
+
+
+def _relax_loky_memory_leak_check():
+    """Raise the loky worker memory leak threshold (run in each loky worker)."""
+    from joblib.externals.loky import process_executor
+
+    process_executor._MAX_MEMORY_LEAK_SIZE = _LOKY_MAX_MEMORY_LEAK_SIZE
 
 
 @dataclass(frozen=True)
@@ -266,42 +286,73 @@ class AnalysisManager:
     def _execute_computations_in_parallel(
         self, component_stream: Iterable[Component | str]
     ):
-        with _get_joblib_executor(
-            nbr_cores=self._n_cores, verbose=100, return_as="generator_unordered"
-        ) as parallel:
+        # Polars sizes its pool from POLARS_MAX_THREADS at import, so this only
+        # affects the freshly spawned loky workers, not the parent process.
+        previous_polars_max_threads = os.environ.get("POLARS_MAX_THREADS")
+        os.environ["POLARS_MAX_THREADS"] = "1"
+        try:
+            with (
+                parallel_config(
+                    backend="loky",
+                    inner_max_num_threads=1,
+                    initializer=_relax_loky_memory_leak_check,
+                ),
+                _get_joblib_executor(
+                    nbr_cores=self._n_cores,
+                    verbose=100,
+                    return_as="generator_unordered",
+                ) as parallel,
+            ):
 
-            def func(component, analysis_to_run):
-                """Func.
+                def func(component, analysis_to_run):
+                    """Func.
 
-                Args:
-                    component: component.
-                    analysis_to_run: analysis to run.
-                """
-                results = []
-                for analysis_name, analysis in analysis_to_run.items():
-                    logger.debug(
-                        f"running {analysis_name} on {component.component_id if isinstance(component, Component) else component}"
-                    )
-                    results.append(
-                        (
-                            analysis_name,
-                            analysis.run_on_component(
-                                component, logging_setup=self._logging_setup
-                            ),
+                    Args:
+                        component: component.
+                        analysis_to_run: analysis to run.
+                    """
+                    # connect_duckdb reads this on every connect. It is restored
+                    # afterwards because with n_jobs=1 joblib runs this in the parent.
+                    previous_duckdb_threads = os.environ.get("PIXELATOR_DUCKDB_THREADS")
+                    os.environ["PIXELATOR_DUCKDB_THREADS"] = "1"
+                    try:
+                        results = []
+                        for analysis_name, analysis in analysis_to_run.items():
+                            logger.debug(
+                                f"running {analysis_name} on {component.component_id if isinstance(component, Component) else component}"
+                            )
+                            results.append(
+                                (
+                                    analysis_name,
+                                    analysis.run_on_component(
+                                        component, logging_setup=self._logging_setup
+                                    ),
+                                )
+                            )
+
+                        return results
+                    finally:
+                        if previous_duckdb_threads is None:
+                            os.environ.pop("PIXELATOR_DUCKDB_THREADS", None)
+                        else:
+                            os.environ["PIXELATOR_DUCKDB_THREADS"] = (
+                                previous_duckdb_threads
+                            )
+
+                yield from itertools.chain.from_iterable(
+                    parallel(
+                        delayed(func)(
+                            component,
+                            self.analysis_to_run,
                         )
+                        for component in component_stream
                     )
-
-                return results
-
-            yield from itertools.chain.from_iterable(
-                parallel(
-                    delayed(func)(
-                        component,
-                        self.analysis_to_run,
-                    )
-                    for component in component_stream
                 )
-            )
+        finally:
+            if previous_polars_max_threads is None:
+                os.environ.pop("POLARS_MAX_THREADS", None)
+            else:
+                os.environ["POLARS_MAX_THREADS"] = previous_polars_max_threads
 
     def _execute_computations_sequentially(
         self, component_stream: Iterable[Component | str]
