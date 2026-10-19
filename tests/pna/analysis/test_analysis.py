@@ -749,6 +749,55 @@ def test_calculate_differential_proximity_group_vars_skips_a_small_stratum():
     assert result.loc[0, "n_ref"] == 10
 
 
+def test_calculate_differential_proximity_group_vars_rejects_missing_values():
+    """A missing grouping value is an error, not a dropped stratum."""
+    proximity = _stratum_block("s1", 1.0, 5.0)
+    proximity.loc[0, "sample"] = pd.NA
+    with pytest.raises(ValueError, match="missing values"):
+        calculate_differential_proximity(
+            proximity,
+            contrast_column="cell_type",
+            reference="A",
+            targets=["B"],
+            group_vars="sample",
+        )
+
+
+def test_calculate_differential_proximity_rejects_shared_missing_group_label():
+    """The same missing grouping label in both tables is not a disagreement."""
+    proximity = _stratum_block("s1", 1.0, 5.0)
+    component = proximity.loc[0, "component"]
+    proximity.loc[proximity["component"] == component, "sample"] = pd.NA
+    cell_groups = proximity[["component", "cell_type", "sample"]].drop_duplicates()
+    with pytest.raises(ValueError, match="missing values") as error:
+        calculate_differential_proximity(
+            proximity,
+            contrast_column="cell_type",
+            reference="A",
+            targets=["B"],
+            group_vars="sample",
+            cell_groups=cell_groups,
+        )
+    assert "disagree" not in str(error.value)
+
+
+def test_calculate_differential_proximity_rejects_shared_missing_contrast_label():
+    """The same missing contrast label in both tables is not a disagreement."""
+    proximity = _stratum_block("s1", 1.0, 5.0)
+    component = proximity.loc[0, "component"]
+    proximity.loc[proximity["component"] == component, "cell_type"] = pd.NA
+    cell_groups = proximity[["component", "cell_type"]].drop_duplicates()
+    with pytest.raises(ValueError, match="missing values") as error:
+        calculate_differential_proximity(
+            proximity,
+            contrast_column="cell_type",
+            reference="A",
+            targets=["B"],
+            cell_groups=cell_groups,
+        )
+    assert "disagree" not in str(error.value)
+
+
 def test_calculate_differential_proximity_group_vars_rejects_two_values():
     """A component cannot belong to two values of a grouping column."""
     proximity = _stratum_block("s1", 1.0, 5.0)

@@ -619,6 +619,12 @@ def _component_groups(
                 "proximity_df must include a 'component' column when "
                 "cell_groups is provided."
             )
+        if contrast_column != "component":
+            _require_no_missing_labels(cell_groups, [contrast_column], "cell_groups")
+            if contrast_column in proximity_df.columns:
+                _require_no_missing_labels(
+                    proximity_df, [contrast_column], "proximity_df"
+                )
         labels = _one_label_per_component(cell_groups, contrast_column)
         if contrast_column != "component" and contrast_column in proximity_df.columns:
             proximity_labels = _one_label_per_component(proximity_df, contrast_column)
@@ -636,6 +642,8 @@ def _component_groups(
                 )
         return labels
     if "component" in proximity_df.columns:
+        if contrast_column != "component":
+            _require_no_missing_labels(proximity_df, [contrast_column], "proximity_df")
         return _one_label_per_component(proximity_df, contrast_column)
     return None
 
@@ -700,6 +708,21 @@ def _grouping_columns(
     return columns
 
 
+def _require_no_missing_labels(
+    source: pd.DataFrame, columns: list[str], table_name: str
+) -> None:
+    """Reject missing values in grouping or contrast columns."""
+    missing = source[columns].isna().any(axis=1)
+    if not bool(missing.any()):
+        return
+    if "component" in source.columns:
+        ids = source.loc[missing, "component"].unique()[:5].tolist()
+        raise ValueError(
+            f"{table_name} has missing values in {columns} for component(s): {ids}."
+        )
+    raise ValueError(f"{table_name} has missing values in {columns}.")
+
+
 def _require_one_value_per_component(
     source: pd.DataFrame, columns: list[str], table_name: str
 ) -> None:
@@ -724,14 +747,17 @@ def _require_group_vars(
         missing = [column for column in columns if column not in cell_groups.columns]
         if missing:
             raise ValueError(f"cell_groups is missing group_vars column(s): {missing}.")
+        _require_no_missing_labels(cell_groups, columns, "cell_groups")
         _require_one_value_per_component(cell_groups, columns, "cell_groups")
         if all(column in proximity_df.columns for column in columns):
+            _require_no_missing_labels(proximity_df, columns, "proximity_df")
             _require_one_value_per_component(proximity_df, columns, "proximity_df")
             _require_group_labels_agree(proximity_df, cell_groups, columns)
         return
     missing = [column for column in columns if column not in proximity_df.columns]
     if missing:
         raise ValueError(f"proximity_df is missing group_vars column(s): {missing}.")
+    _require_no_missing_labels(proximity_df, columns, "proximity_df")
     _require_one_value_per_component(proximity_df, columns, "proximity_df")
 
 
@@ -1042,8 +1068,9 @@ def calculate_differential_proximity(
             ``proximity_df``, if ``min_cells_per_group`` is negative, if
             ``cell_groups`` is missing a required column, if ``proximity_df``
             has no ``component`` column when ``cell_groups`` is provided, if a
-            component has more than one contrast or grouping label or the two
-            tables disagree, if ``group_vars`` includes ``contrast_column``,
+            component has more than one contrast or grouping label, if a
+            contrast or grouping label is missing, if the two tables disagree,
+            if ``group_vars`` includes ``contrast_column``,
             if the same component and marker pair has conflicting ``metric``
             values, or if ``metric_type`` removes every row.
 
