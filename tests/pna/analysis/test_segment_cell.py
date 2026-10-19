@@ -27,6 +27,7 @@ import pandas as pd
 import polars as pl
 import pytest
 from scipy.sparse import csr_matrix
+from sklearn.linear_model import LinearRegression
 
 from pixelator.pna.analysis.segmentation import cc_protein_weights, segment_cell
 from pixelator.pna.analysis.segmentation.segment import (
@@ -355,6 +356,59 @@ def test_segment_cell_ignores_a_shared_weight_scale(graph, weights):
     rescaled = PNAGraph.from_edgelist(_conjugate_edgelist())
     segment_cell(rescaled, w=weights * 7, verbose=False)
     assert _compartments(rescaled) == baseline
+
+
+def _positive_least_squares(profiles: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    model = LinearRegression(positive=True, fit_intercept=False)
+    model.fit(weights, profiles.T)
+    return np.asarray(model.coef_, dtype=float)
+
+
+def test_project_weights_matches_positive_least_squares():
+    """The vectorized two-coefficient solve matches per-node NNLS."""
+    rng = np.random.default_rng(0)
+    profiles = rng.random((200, 12))
+    profiles /= profiles.sum(axis=1, keepdims=True)
+    weights = rng.random((12, 2))
+    np.testing.assert_allclose(
+        _project_weights(profiles, weights),
+        _positive_least_squares(profiles, weights),
+        rtol=1e-8,
+        atol=1e-8,
+    )
+
+    exclusive = np.array(
+        [
+            [0.5, 0.5, 0.0, 0.0],
+            [0.0, 0.0, 0.4, 0.6],
+            [0.2, 0.2, 0.3, 0.3],
+            [0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+    exclusive_weights = np.array([[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]])
+    np.testing.assert_allclose(
+        _project_weights(exclusive, exclusive_weights),
+        _positive_least_squares(exclusive, exclusive_weights),
+        rtol=1e-8,
+        atol=1e-8,
+    )
+
+    duplicated = np.column_stack([weights[:, 0], weights[:, 0]])
+    np.testing.assert_allclose(
+        _project_weights(profiles, duplicated),
+        _positive_least_squares(profiles, duplicated),
+        rtol=1e-8,
+        atol=1e-8,
+    )
+    zero_column = weights.copy()
+    zero_column[:, 1] = 0.0
+    np.testing.assert_allclose(
+        _project_weights(profiles, zero_column),
+        _positive_least_squares(profiles, zero_column),
+        rtol=1e-8,
+        atol=1e-8,
+    )
+    assert _project_weights(np.zeros((0, 12)), weights).shape == (0, 2)
 
 
 def test_projection_keeps_a_shared_scale_but_not_per_column_scales():
