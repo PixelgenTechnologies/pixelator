@@ -214,13 +214,11 @@ class PixelDataViewer:
 
     def open(self) -> PixelDataViewerSession:
         """Return a new session with an open DuckDB connection (context manager or ``close()``)."""
-        sources: list[tuple[str, Path, str]] = [
+        sources: list[tuple[str, Path | str, str]] = [
             (sample_name, pxl_file.path, self._get_normalized_name(sample_name))
             for sample_name, pxl_file in self._db_to_file_mapping.items()
         ]
-        return PixelDataViewerSession(  # type: ignore[arg-type]
-            sources, marker_renames=self.marker_renames()
-        )
+        return PixelDataViewerSession(sources, marker_renames=self.marker_renames())
 
     def sample_names(self) -> list[str]:
         """Return the list of sample names known to the view."""
