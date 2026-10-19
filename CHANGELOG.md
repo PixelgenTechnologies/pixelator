@@ -51,7 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stale nf-core/pixelator integration tests and workflow.
 - Molecular Pixelation (MPX) support; use a release before 0.31.0 for MPX data.
 - `single-cell-pna graph_legacy` command; use `graph` instead.
-- Redundant UMI densification round-trip in the PNA graph step.
 
 #### Fixed
 - Default core count respects CPU affinity and container CPU quotas.
