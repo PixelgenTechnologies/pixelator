@@ -21,9 +21,9 @@ from .query_builder import Query
 # Unquoted DuckDB identifiers used in generated ATTACH / CREATE VIEW SQL.
 _SESSION_SQL_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\Z")
 
-# Tables with marker ids, and the columns that hold them (legacy names included).
+# Tables with marker ids, and the columns that hold them.
 _MARKER_TABLES = ("edgelist", "proximity")
-_MARKER_COLUMNS = ("marker_1", "marker_2", "marker1", "marker2")
+_MARKER_COLUMNS = ("marker_1", "marker_2")
 
 # Characters / substrings that must not appear in sample labels embedded as '...' literals.
 _SAMPLE_LABEL_UNSAFE_RE = re.compile(r"['\";\x00-\x1f\\]|--|/\*|\*/")
@@ -338,10 +338,16 @@ class PixelDataViewerSession:
                 f"SELECT column_name FROM (DESCRIBE SELECT * FROM {db_name}.{table_name})"
             ).fetchall()
         }
+        # imported here because the legacy package imports this package
+        from pixelator.pna.pixeldataset.legacy.marker_columns import (
+            legacy_marker_columns,
+        )
+
+        marker_columns = [
+            column for column in _MARKER_COLUMNS if column in columns
+        ] + legacy_marker_columns(columns)
         replaced = [
-            _marker_rename_expression(column, renames)
-            for column in _MARKER_COLUMNS
-            if column in columns
+            _marker_rename_expression(column, renames) for column in marker_columns
         ]
         return f"* REPLACE ({', '.join(replaced)})" if replaced else "*"
 
