@@ -88,10 +88,14 @@ def test_a_single_panel_aligns_with_itself():
 
 
 def test_each_source_of_a_concatenated_panel_is_aligned_on_its_own():
-    base_old = _panel("1.0.0", [_marker("CD3", "AAAA")], name="base")
-    addon_old = _panel("2.0.0", [_marker("CD19", "CCCC")], name="addon")
-    base_new = _panel("1.0.1", [_marker("CD3E", "AAAA")], name="base")
-    addon_new = _panel("2.0.1", [_marker("CD19A", "CCCC")], name="addon")
+    base_old = _panel("1.0.0", [_marker("CD3", "AAAA")], name="base", product="base")
+    addon_old = _panel(
+        "2.0.0", [_marker("CD19", "CCCC")], name="addon", product="addon"
+    )
+    base_new = _panel("1.0.1", [_marker("CD3E", "AAAA")], name="base", product="base")
+    addon_new = _panel(
+        "2.0.1", [_marker("CD19A", "CCCC")], name="addon", product="addon"
+    )
     old = PNAAntibodyPanel.concatenate([base_old, addon_old])
     new = PNAAntibodyPanel.concatenate([addon_new, base_new])
 
@@ -101,28 +105,52 @@ def test_each_source_of_a_concatenated_panel_is_aligned_on_its_own():
     assert alignment.marker_renames(new) == {}
 
 
-@pytest.mark.parametrize(
-    "other",
-    [
-        _panel("1.1.0", [_marker("CD3", "AAAA")]),
-        _panel("2.0.0", [_marker("CD3", "AAAA")]),
-        _panel("1.0.1", [_marker("CD3", "AAAA")], name="other"),
-        _panel("1.0.1", [_marker("CD3", "AAAA")], product="other"),
-    ],
-)
-def test_panels_that_differ_beyond_the_patch_version_are_rejected(other):
-    panel = _panel("1.0.0", [_marker("CD3", "AAAA")])
+@pytest.mark.parametrize("version", ["1.1.0", "2.0.0"])
+def test_sources_of_the_same_product_with_different_major_or_minor_are_rejected(
+    version,
+):
+    old = _panel("1.0.0", [_marker("CD3", "AAAA")])
+    other = _panel(version, [_marker("CD3", "AAAA")])
 
-    with pytest.raises(ValueError, match="differ in patch version only"):
-        align_panels([panel, other])
+    with pytest.raises(ValueError, match="same major and minor version"):
+        align_panels([old, other])
 
 
-def test_a_panel_with_an_extra_source_is_rejected():
-    base = _panel("1.0.0", [_marker("CD3", "AAAA")], name="base")
-    addon = _panel("1.0.0", [_marker("CD19", "CCCC")], name="addon")
+def test_a_product_with_two_major_minor_versions_among_addons_is_rejected():
+    base = _panel("1.0.0", [_marker("CD3", "AAAA")], name="base", product="base")
+    addon_a = _panel("1.0.0", [_marker("CD19", "CCCC")], name="addon", product="addon")
+    addon_b = _panel("1.1.0", [_marker("CD20", "GGGG")], name="addon", product="addon")
 
-    with pytest.raises(ValueError, match="differ in patch version only"):
-        align_panels([base, PNAAntibodyPanel.concatenate([base, addon])])
+    with pytest.raises(ValueError, match="addon: 1.0, 1.1"):
+        align_panels(
+            [
+                PNAAntibodyPanel.concatenate([base, addon_a]),
+                PNAAntibodyPanel.concatenate([base, addon_b]),
+            ]
+        )
+
+
+def test_panels_with_different_addons_align_into_base_plus_both_addons():
+    base_old = _panel("1.0.0", [_marker("CD3", "AAAA")], name="base", product="base")
+    base_new = _panel("1.0.1", [_marker("CD3E", "AAAA")], name="base", product="base")
+    addon_a = _panel("1.0.0", [_marker("CD19", "CCCC")], name="a", product="addon_a")
+    addon_b = _panel("1.0.0", [_marker("CD20", "GGGG")], name="b", product="addon_b")
+    sample_a = PNAAntibodyPanel.concatenate([base_old, addon_a])
+    sample_b = PNAAntibodyPanel.concatenate([base_new, addon_b])
+
+    alignment = align_panels([sample_a, sample_b])
+
+    assert alignment.marker_renames(sample_a) == {"CD3": "CD3E"}
+    assert alignment.marker_renames(sample_b) == {}
+
+
+def test_sources_without_a_product_are_matched_on_their_name():
+    old = _panel("1.0.0", [_marker("CD3", "AAAA")], name="custom", product=None)
+    new = _panel("1.0.1", [_marker("CD3E", "AAAA")], name="custom", product=None)
+
+    alignment = align_panels([old, new])
+
+    assert alignment.marker_renames(old) == {"CD3": "CD3E"}
 
 
 def test_no_panels_is_rejected():

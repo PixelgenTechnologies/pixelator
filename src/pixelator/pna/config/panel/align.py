@@ -1,4 +1,4 @@
-"""Align panels that differ only in their patch version.
+"""Align panels whose shared sources differ only in patch version.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
@@ -16,33 +16,15 @@ from pixelator.pna.config.panel.hashing import collapsed_hashing_marker_id
 
 _SEQUENCE_COLUMNS = ["sequence_1", "sequence_2"]
 
-# (name, product, major, minor): what a patch version must leave unchanged.
-_Family = tuple[str, str | None, int, int]
-
-
-def _source_family(source: PanelSource) -> _Family:
-    """Return the family of a panel source, which excludes the patch version."""
-    version = Version(source.metadata.version)
-    return (source.metadata.name, source.metadata.product, version.major, version.minor)
-
-
-def _panel_families(panel: PNAAntibodyPanel) -> frozenset[_Family]:
-    return frozenset(_source_family(source) for source in panel.sources)
-
-
-def _format_family(family: _Family) -> str:
-    name, product, major, minor = family
-    product_part = f" (product {product})" if product else ""
-    return f"{name}{product_part} {major}.{minor}.x"
-
 
 @dataclass(frozen=True)
 class PanelAlignment:
-    """The newest known row for every marker, keyed by its sequence pair.
+    """The result of aligning several panels.
 
     Attributes:
         rows: ``(sequence_1, sequence_2)`` to the newest row, as a dict with the
-            ``marker_id`` and every panel column.
+            ``marker_id`` and every panel column. Markers that only an older
+            version contains are included.
     """
 
     rows: dict[tuple[str, str], dict[str, Any]]
@@ -90,11 +72,16 @@ class PanelAlignment:
 
 
 def align_panels(panels: Sequence[PNAAntibodyPanel]) -> PanelAlignment:
-    """Align panels that are different patches of the same panel.
+    """Align panels whose shared sources are different patches of one another.
+
+    Panels may contain different sources. A base panel with add-on A and a base
+    panel with add-on B align into base plus A plus B, with the base at its
+    newest patch. Sources are matched on their product (their name when they
+    have none).
 
     Markers are matched on their sequence pair, so a marker that was renamed in
     a newer patch is still recognised. Each pair maps to the row of the newest
-    patch that contains it, including markers only an older patch has.
+    version that contains it.
 
     Args:
         panels: The panels to align, for example one per pxl file.
@@ -103,31 +90,39 @@ def align_panels(panels: Sequence[PNAAntibodyPanel]) -> PanelAlignment:
         The alignment of all the panels.
 
     Raises:
-        ValueError: When no panel is given, or when the panels do not all have
-            the same sources up to their patch version, meaning the same name,
-            product, major and minor version.
+        ValueError: When no panel is given, or when sources of the same product
+            have different major or minor versions.
     """
     if not panels:
         raise ValueError("At least one panel is required to align panels.")
 
-    families = [_panel_families(panel) for panel in panels]
-    if any(family != families[0] for family in families):
-        found = sorted({_format_family(f) for family in families for f in family})
+    sources = [
+        (
+            source.metadata.product or source.metadata.name,
+            Version(source.metadata.version),
+            panel.source_as_panel(i),
+        )
+        for panel in panels
+        for i, source in enumerate(panel.sources)
+    ]
+
+    source_versions: dict[str, set[tuple[int, int]]] = defaultdict(set)
+    for key, version, _ in sources:
+        source_versions[key].add((version.major, version.minor))
+    conflicts = {key: v for key, v in source_versions.items() if len(v) > 1}
+    if conflicts:
+        found = "; ".join(
+            f"{key}: {', '.join(f'{major}.{minor}' for major, minor in sorted(v))}"
+            for key, v in conflicts.items()
+        )
         raise ValueError(
-            "Panels can only be aligned when they differ in patch version only. "
-            f"Found: {', '.join(found)}"
+            "Sources of the same product must have the same major and minor "
+            f"version to be aligned. Found {found}"
         )
 
-    versioned_sources = [
-        (Version(source.metadata.version), panel.source_as_panel(index))
-        for panel in panels
-        for index, source in enumerate(panel.sources)
-    ]
     # Oldest first, so that rows of a newer patch overwrite older ones.
-    versioned_sources.sort(key=lambda versioned: versioned[0])
-
     rows: dict[tuple[str, str], dict[str, Any]] = {}
-    for _, source_panel in versioned_sources:
+    for _, _, source_panel in sorted(sources, key=lambda source: source[1]):
         for row in source_panel.df.reset_index().to_dict("records"):
             rows[(row["sequence_1"], row["sequence_2"])] = row
     return PanelAlignment(rows=rows)
