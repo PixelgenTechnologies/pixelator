@@ -340,11 +340,12 @@ class PixelDataViewerSession:
             legacy_marker_columns,
         )
 
-        marker_columns = [
-            column for column in _MARKER_COLUMNS if column in columns
-        ] + legacy_marker_columns(columns)
+        legacy_names = legacy_marker_columns(columns)
+        stored = [legacy_names.get(column, column) for column in _MARKER_COLUMNS]
         replaced = [
-            _marker_rename_expression(column, renames) for column in marker_columns
+            _marker_rename_expression(column, renames)
+            for column in stored
+            if column in columns
         ]
         return f"* REPLACE ({', '.join(replaced)})" if replaced else "*"
 
