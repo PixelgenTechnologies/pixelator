@@ -43,7 +43,8 @@ class PanelAlignment:
         panel, since the two could not be told apart in collapsed data.
 
         Args:
-            panel: A panel that was passed to :func:`align_panels`.
+            panel: A panel that was passed to
+                :func:`~pixelator.pna.config.panel.align.align_panels`.
 
         Returns:
             The renames, empty when the panel is already up to date.
