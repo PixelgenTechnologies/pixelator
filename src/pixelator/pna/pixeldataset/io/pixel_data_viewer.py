@@ -84,20 +84,18 @@ class PixelDataViewer:
     def __init__(
         self,
         sample_name_to_pxl_file_mapping: dict[str, PxlFile],
-        marker_renames: dict[str, dict[str, str]] | None = None,
     ):
         """Initialize the PixelDataViewer.
 
         Args:
             sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
-            marker_renames: Marker renames per sample, see :meth:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer.marker_renames`.
-                Worked out from the panels of the files when not given.
 
         Raises:
             ValueError: If any of the files are not valid PXL files.
         """
         self._db_to_file_mapping = sample_name_to_pxl_file_mapping
-        self._marker_renames = marker_renames
+        # worked out from the panels of the files on first use
+        self._marker_renames: dict[str, dict[str, str]] | None = None
         self._normalized_sample_name_mapping = self._map_sample_names_to_db_names(
             sample_name_to_pxl_file_mapping
         )
@@ -179,14 +177,13 @@ class PixelDataViewer:
             for sample_name, pxl_file in self._db_to_file_mapping.items()
             if sample_name in sample_names
         }
-        return PixelDataViewer(
-            filtered_mapping,
-            marker_renames={
-                sample_name: renames
-                for sample_name, renames in self.marker_renames().items()
-                if sample_name in filtered_mapping
-            },
-        )
+        filtered = PixelDataViewer(filtered_mapping)
+        filtered._marker_renames = {
+            sample_name: renames
+            for sample_name, renames in self.marker_renames().items()
+            if sample_name in filtered_mapping
+        }
+        return filtered
 
     def marker_renames(self) -> dict[str, dict[str, str]]:
         """Return how each sample's marker ids are renamed to line the samples up.
