@@ -13,13 +13,15 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import duckdb
-from anndata import AnnData
 
 from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.common.exceptions import PixelatorBaseException
-from pixelator.pna.config.panel import PNAAntibodyPanel
+
+if TYPE_CHECKING:
+    from pixelator.pna.config.panel import PNAAntibodyPanel
 
 PXL_FILE_MANDATOR_TABLES = [
     "__adata__X",
@@ -104,33 +106,14 @@ class PxlFile:
     def read_panel(self) -> PNAAntibodyPanel | None:
         """Load the antibody panel stored in this file.
 
-        The panel is rebuilt from ``uns['panel_metadata']`` and the panel
-        columns stored on ``var``.
-
         Returns:
             The panel, or None when the file does not store one.
         """
+        # imported here because the legacy package imports this module
+        from pixelator.pna.pixeldataset.legacy import LegacyPanelAdapter
+
         with connect_duckdb(self.path, read_only=True) as connection:
-            try:
-                uns_row = connection.execute(
-                    "SELECT value FROM __adata__uns"
-                ).fetchone()
-            except duckdb.CatalogException:
-                return None
-            if uns_row is None:
-                return None
-            uns = json.loads(uns_row[0]) if isinstance(uns_row[0], str) else uns_row[0]
-            if not isinstance(uns, dict) or "panel_metadata" not in uns:
-                return None
-            var = connection.execute("SELECT * FROM __adata__var").fetchdf()
-        var = var.set_index("index").rename_axis(index={"index": "marker_id"})
-        try:
-            return PNAAntibodyPanel.from_adata(
-                AnnData(var=var, uns=uns), file_name=self.path.name
-            )
-        except KeyError:
-            # panel_metadata without the panel columns
-            return None
+            return LegacyPanelAdapter(connection, file_name=self.path.name).read()
 
     def is_null_file(self) -> bool:
         """Return True when this file is a null pxl file."""
