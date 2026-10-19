@@ -853,7 +853,23 @@ def _differential_proximity_one_comparison(
         targets = kept_targets
 
     def calc_targets_differential():
-        """Calc targets differential."""
+        """Yield a Mann-Whitney result for each marker pair and target.
+
+        For each target, keep the proximity rows labeled with that target or
+        the reference. When ``min_n_obs`` is positive, drop marker pairs that
+        do not have more than that many detected rows in both groups. A
+        target with no remaining rows is skipped. When component ids are
+        available, align ``metric`` to every component in the two groups and
+        fill a missing score with 0. Otherwise use the observed scores, and
+        skip a pair that is missing from either group. Each remaining pair
+        is tested with a two-sided Mann-Whitney U test.
+
+        Yields:
+            One Series per tested marker pair and target, with ``marker_1``,
+            ``marker_2``, ``reference``, ``target``, ``u_stat``, ``p_value``,
+            ``auc``, ``median_diff``, ``tgt_median``, ``ref_median``,
+            ``n_ref``, ``n_tgt``, ``pct_ref``, and ``pct_tgt``.
+        """
         for target in targets:
             target_data = _filter_target_data(
                 proximity_df, contrast_column, reference, target, metric, min_n_obs
