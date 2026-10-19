@@ -7,21 +7,38 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Mapping
 
 import duckdb
 import polars as pl
 
 from pixelator.common.duckdb_utils import connect_duckdb
 
+from .panel_alignment import marker_renames_by_sample
 from .pxl_file import PXL_FILE_MANDATOR_TABLES, PXL_FILE_OTHER_TABLES, PxlFile
 from .query_builder import Query
 
 # Unquoted DuckDB identifiers used in generated ATTACH / CREATE VIEW SQL.
 _SESSION_SQL_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\Z")
 
+# Tables with marker ids, and the columns that hold them (legacy names included).
+_MARKER_TABLES = ("edgelist", "proximity")
+_MARKER_COLUMNS = ("marker_1", "marker_2", "marker1", "marker2")
+
 # Characters / substrings that must not appear in sample labels embedded as '...' literals.
 _SAMPLE_LABEL_UNSAFE_RE = re.compile(r"['\";\x00-\x1f\\]|--|/\*|\*/")
+
+
+def _marker_rename_expression(column: str, renames: Mapping[str, str]) -> str:
+    """Return a ``REPLACE`` entry that renames the marker ids in ``column``."""
+
+    def literal(value: str) -> str:
+        return "'" + value.replace("'", "''") + "'"
+
+    cases = " ".join(
+        f"WHEN {literal(old)} THEN {literal(new)}" for old, new in renames.items()
+    )
+    return f"CASE {column} {cases} ELSE {column} END AS {column}"
 
 
 def _validate_session_sql_identifier(value: str, *, what: str) -> None:
@@ -67,16 +84,20 @@ class PixelDataViewer:
     def __init__(
         self,
         sample_name_to_pxl_file_mapping: dict[str, PxlFile],
+        marker_renames: dict[str, dict[str, str]] | None = None,
     ):
         """Initialize the PixelDataViewer.
 
         Args:
             sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
+            marker_renames: Marker renames per sample, see :meth:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer.marker_renames`.
+                Worked out from the panels of the files when not given.
 
         Raises:
             ValueError: If any of the files are not valid PXL files.
         """
         self._db_to_file_mapping = sample_name_to_pxl_file_mapping
+        self._marker_renames = marker_renames
         self._normalized_sample_name_mapping = self._map_sample_names_to_db_names(
             sample_name_to_pxl_file_mapping
         )
@@ -148,13 +169,40 @@ class PixelDataViewer:
         return PixelDataViewer(sample_name_to_pxl_file_mapping)
 
     def filter_samples(self, sample_names: set[str]) -> "PixelDataViewer":
-        """Create a new PixelDataViewer with only a subset of the samples."""
+        """Create a new PixelDataViewer with only a subset of the samples.
+
+        The marker renames of the full view are kept, so a marker has the same
+        name before and after filtering.
+        """
         filtered_mapping = {
             sample_name: pxl_file
             for sample_name, pxl_file in self._db_to_file_mapping.items()
             if sample_name in sample_names
         }
-        return PixelDataViewer.from_sample_to_file_mappings(filtered_mapping)
+        return PixelDataViewer(
+            filtered_mapping,
+            marker_renames={
+                sample_name: renames
+                for sample_name, renames in self.marker_renames().items()
+                if sample_name in filtered_mapping
+            },
+        )
+
+    def marker_renames(self) -> dict[str, dict[str, str]]:
+        """Return how each sample's marker ids are renamed to line the samples up.
+
+        The renames come from aligning the antibody panels stored in the files,
+        see :func:`~pixelator.pna.config.panel.align.align_panels`, and are
+        applied to the ``edgelist`` and ``proximity`` views. They are worked out
+        on first use. Nothing is renamed, with a warning, when the panels cannot
+        be read or aligned.
+
+        Returns:
+            For each sample that needs it, ``stored marker id -> aligned marker id``.
+        """
+        if self._marker_renames is None:
+            self._marker_renames = marker_renames_by_sample(self._db_to_file_mapping)
+        return self._marker_renames
 
     @property
     def sample_to_file_mappings(self) -> dict[str, Path]:
@@ -170,7 +218,9 @@ class PixelDataViewer:
             (sample_name, pxl_file.path, self._get_normalized_name(sample_name))
             for sample_name, pxl_file in self._db_to_file_mapping.items()
         ]
-        return PixelDataViewerSession(sources)  # type: ignore[arg-type]
+        return PixelDataViewerSession(  # type: ignore[arg-type]
+            sources, marker_renames=self.marker_renames()
+        )
 
     def sample_names(self) -> list[str]:
         """Return the list of sample names known to the view."""
@@ -195,8 +245,19 @@ class PixelDataViewerSession:
     calls ``close()``). Each session uses its own connection.
     """
 
-    def __init__(self, sources: list[tuple[str, Path | str, str]]) -> None:
-        """Open a DuckDB connection and attach each PXL file in ``sources``."""
+    def __init__(
+        self,
+        sources: list[tuple[str, Path | str, str]],
+        marker_renames: Mapping[str, Mapping[str, str]] | None = None,
+    ) -> None:
+        """Open a DuckDB connection and attach each PXL file in ``sources``.
+
+        Args:
+            sources: ``(sample_name, pxl_path, db_name)`` for each file.
+            marker_renames: For each sample, ``stored marker id -> new marker id``,
+                applied to the marker columns of the ``edgelist`` and ``proximity``
+                views.
+        """
         normalized: list[tuple[str, Path, str]] = [
             (sample_name, Path(path), db_name) for sample_name, path, db_name in sources
         ]
@@ -205,6 +266,7 @@ class PixelDataViewerSession:
             _validate_session_sql_identifier(db_name, what="database alias (db_name)")
             _validate_session_file_path(path)
         self._sources = normalized
+        self._marker_renames = marker_renames or {}
         self._connection: duckdb.DuckDBPyConnection | None = (
             self._create_open_connection()
         )
@@ -238,8 +300,11 @@ class PixelDataViewerSession:
             # see: https://github.com/duckdb/duckdb/issues/13069
             table_queries: list[str] = []
             for sample_name, _path, db_name in self._sources:
+                select = self._select_columns(
+                    connection, sample_name, db_name, table_name
+                )
                 table_queries.append(
-                    f"SELECT *, '{sample_name}' AS sample FROM {db_name}.{table_name}"
+                    f"SELECT {select}, '{sample_name}' AS sample FROM {db_name}.{table_name}"
                 )
             if not table_queries:
                 return
@@ -257,6 +322,30 @@ class PixelDataViewerSession:
             # note that we are ignoring the exception here, since it is expected
             # that some tables may not be present in all files.
             pass
+
+    def _select_columns(
+        self,
+        connection: duckdb.DuckDBPyConnection,
+        sample_name: str,
+        db_name: str,
+        table_name: str,
+    ) -> str:
+        """Return the column list to select, renaming markers where needed."""
+        renames = self._marker_renames.get(sample_name)
+        if not renames or table_name not in _MARKER_TABLES:
+            return "*"
+        columns = {
+            row[0]
+            for row in connection.execute(
+                f"SELECT column_name FROM (DESCRIBE SELECT * FROM {db_name}.{table_name})"
+            ).fetchall()
+        }
+        replaced = [
+            _marker_rename_expression(column, renames)
+            for column in _MARKER_COLUMNS
+            if column in columns
+        ]
+        return f"* REPLACE ({', '.join(replaced)})" if replaced else "*"
 
     def close(self) -> None:
         """Close the DuckDB connection. Safe to call more than once."""
