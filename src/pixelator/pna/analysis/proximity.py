@@ -559,6 +559,9 @@ def _filter_target_data(
             .size()
             .unstack(fill_value=0)
         )
+        # A group that exists only in cell_groups has no proximity rows, so
+        # unstack omits its column. That is a count of 0, not a missing label.
+        group_counts = group_counts.reindex(columns=[reference, target], fill_value=0)
         valid_markers = group_counts[
             (group_counts[reference] > min_n_obs) & (group_counts[target] > min_n_obs)
         ].index

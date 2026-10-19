@@ -689,6 +689,35 @@ def test_calculate_differential_proximity_group_vars_rejects_two_values():
         )
 
 
+def test_calculate_differential_proximity_min_n_obs_allows_group_with_no_rows():
+    """A cell_groups-only group counts as zero detections under min_n_obs."""
+    proximity = pd.DataFrame(
+        {
+            "component": [f"a{i}" for i in range(10)],
+            "cell_type": ["A"] * 10,
+            "marker_1": ["M1"] * 10,
+            "marker_2": ["M1"] * 10,
+            "log2_ratio": [1.0] * 10,
+        }
+    )
+    cell_groups = pd.DataFrame(
+        {
+            "component": [f"a{i}" for i in range(10)] + [f"b{i}" for i in range(10)],
+            "cell_type": ["A"] * 10 + ["B"] * 10,
+        }
+    )
+    result = calculate_differential_proximity(
+        proximity,
+        contrast_column="cell_type",
+        reference="A",
+        targets=["B"],
+        cell_groups=cell_groups,
+        min_n_obs=1,
+    )
+    assert result.empty
+    assert "p_adjusted" in result.columns
+
+
 def test_calculate_differential_proximity_group_vars_rejects_the_contrast_column():
     """The contrast column is not a grouping variable."""
     proximity = _stratum_block("s1", 1.0, 5.0)
