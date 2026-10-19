@@ -22,15 +22,10 @@ class PixelFileWriter:
     In addition to writing data tables it will should take care of
     creating any indexes that can be used to speed up queries downstream.
 
-    Storage order: tables that have a ``component`` column (``edgelist``,
-    ``proximity``, ``layouts``) are stored sorted by ``component``, then by
-    ``marker_1`` and ``marker_2`` where those columns exist. DuckDB keeps
-    min/max statistics per row group, so with this order a filter on
-    ``component`` reads only the row groups that hold the requested
-    components instead of scanning the table. This matters most when a PXL
-    file is read over the network. The marker keys additionally make Parquet
-    exported from these tables considerably smaller. Row order within a sort
-    key is not defined; readers that need a specific order should sort.
+    Tables with a ``component`` column (``edgelist``, ``proximity``,
+    ``layouts``) are stored sorted by ``component``, then by ``marker_1`` and
+    ``marker_2`` where those columns exist. Row order within a sort key is not
+    defined; readers that need a specific order should sort.
 
     When writing using this it is recommended to use the writer as a
     context manager.
@@ -103,22 +98,7 @@ class PixelFileWriter:
     def _write_parquet_file_to_table(
         self, table_name, edgelist_file: Path | list[Path]
     ):
-        """Materialize parquet file(s) as a table, ordered by component when present.
-
-        Rows are stored sorted by ``component`` so that each DuckDB row group
-        covers a narrow range of components. This lets filters on ``component``
-        skip row groups via min/max statistics instead of scanning the whole
-        table, which matters most when the file is read remotely (e.g. S3).
-        Upstream steps such as sample calling and denoising rewrite the
-        edgelist through joins, which do not preserve any earlier ordering, so
-        the sort is applied here, where every table write ends up.
-
-        ``marker_1`` and ``marker_2`` are used as secondary keys when present.
-        They do not change the ``.pxl`` size or the pruning, but Parquet
-        written from the table is considerably smaller: the marker columns
-        compress to almost nothing, and the number of distinct ``umi1``
-        values per row group drops enough for Parquet to dictionary-encode
-        that column in most row groups.
+        """Materialize parquet file(s) as a table, sorted by component and markers when present.
 
         Args:
             table_name: Name of the table to create or replace.
@@ -133,6 +113,12 @@ class PixelFileWriter:
             "SELECT * FROM read_parquet($parquet_file) LIMIT 0",
             params={"parquet_file": parquet_file},
         ).columns
+        # Sorting by component lets DuckDB skip row groups on `component`
+        # filters via per-row-group min/max statistics, which matters most when
+        # the file is read remotely. Upstream joins (sample calling, denoising)
+        # scramble the order the graph step produced, so it is restored here,
+        # where every table write ends up. The marker keys do not affect
+        # pruning but make Parquet exported from the table considerably smaller.
         sort_keys = [c for c in ("component", "marker_1", "marker_2") if c in columns]
         order_by = f"ORDER BY {', '.join(sort_keys)}" if "component" in columns else ""
         self._connection.sql(

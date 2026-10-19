@@ -69,13 +69,7 @@ class TestPixelFileWriter:
     def test_tables_are_stored_sorted_by_component(
         self, tmp_path, request, table_name, dataframe_fixture
     ):
-        """Tables with a component column are written in component order.
-
-        Sample calling and denoising rewrite the edgelist through joins, which
-        scramble the order produced by the graph step. The writer must restore
-        it so that component filters can prune row groups. Marker columns, when
-        present, are secondary keys so that Parquet written from the table
-        compresses well.
+        """Tables with a component column are stored sorted by component, then markers.
 
         Args:
             tmp_path: tmp path.
@@ -106,11 +100,7 @@ class TestPixelFileWriter:
                 .pl()
             )
 
-        assert stored["component"].is_sorted()
-        assert stored.equals(stored.sort(sort_keys, maintain_order=True))
-        assert sorted(stored["component"].to_list()) == sorted(
-            dataframe["component"].to_list()
-        )
+        assert stored.equals(dataframe.select(sort_keys).sort(sort_keys))
 
     def test_write_adata(self, tmp_path, adata_data):
         """Verify write adata.
