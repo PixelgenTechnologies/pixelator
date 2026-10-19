@@ -733,7 +733,7 @@ class TestPNAPixelDatasetSnapshots:
 
         proximity_df = proximity.to_polars()
         assert isinstance(proximity_df, pl.DataFrame)
-        proximity_df = proximity_df.sort("component")
+        proximity_df = proximity_df.sort(pl.all())
 
         result = StringIO()
         proximity_df.write_csv(result)
@@ -752,7 +752,7 @@ class TestPNAPixelDatasetSnapshots:
 
         layouts_df = layouts.to_polars()
         assert isinstance(layouts_df, pl.DataFrame)
-        layouts_df = layouts_df.sort("component").select(sorted(layouts_df.columns))
+        layouts_df = layouts_df.select(sorted(layouts_df.columns)).sort(pl.all())
 
         result = StringIO()
         layouts_df.write_csv(result)

@@ -58,6 +58,50 @@ class TestPixelFileWriter:
         with PixelFileWriter(target) as writer:
             writer.write_edgelist(edgelist_parquet_path)
 
+    @pytest.mark.parametrize(
+        "table_name, dataframe_fixture",
+        [
+            ("edgelist", "edgelist_dataframe"),
+            ("proximity", "proximity_dataframe"),
+            ("layouts", "layout_dataframe"),
+        ],
+    )
+    def test_tables_are_stored_sorted_by_component(
+        self, tmp_path, request, table_name, dataframe_fixture
+    ):
+        """Tables with a component column are stored sorted by component, then markers.
+
+        Args:
+            tmp_path: tmp path.
+            request: pytest request fixture, used to resolve the dataframe fixture.
+            table_name: name of the table to write.
+            dataframe_fixture: name of the fixture providing the data.
+        """
+        # Stack copies under distinct component ids so the order is observable
+        # regardless of how many components the fixture happens to contain.
+        base = request.getfixturevalue(dataframe_fixture)
+        dataframe = pl.concat(
+            [base.with_columns(component=pl.lit(f"{i:016x}")) for i in range(5)]
+        )
+        shuffled = dataframe.sample(fraction=1.0, shuffle=True, seed=42)
+        assert not shuffled["component"].is_sorted()
+        parquet_path = tmp_path / f"{table_name}.parquet"
+        shuffled.write_parquet(parquet_path)
+
+        sort_keys = [
+            c for c in ("component", "marker_1", "marker_2") if c in dataframe.columns
+        ]
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            getattr(writer, f"write_{table_name}")(parquet_path)
+            stored = (
+                writer.get_connection()
+                .execute(f"SELECT {', '.join(sort_keys)} FROM {table_name}")
+                .pl()
+            )
+
+        assert stored.equals(dataframe.select(sort_keys).sort(sort_keys))
+
     def test_write_adata(self, tmp_path, adata_data):
         """Verify write adata.
 

@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   DuckDB connections. An explicit `threads` setting passed to a connection takes precedence.
 
 ### Changed
+- `PixelFileWriter` stores `edgelist`, `proximity` and `layouts` sorted by `component` and markers,
+  which speeds up `component` filters on remote PXL files.
 - Faceted `density_scatter_plot` now estimates density inside each facet and scales it to that facet's maximum by default, so panel colors follow the panel's own density. Pass `density_scope="joint"` for the previous behavior (one density on all panels). Non-faceted plots are unchanged. A facet that contains fewer than two cells, or has no two-dimensional spread, is drawn at a constant density. A non-faceted plot, and `density_scope="joint"`, still raise an error.
 - `pixelator single-cell-pna analysis --compute-proximity` now calculates the expected join counts and their
   standard deviations analytically instead of with marker permutations. The statistics are exact under the
