@@ -136,11 +136,10 @@ def segment_cell(
     random_state = int(random_state)
 
     node_order = list(graph.raw.nodes())
-    counts = graph.node_marker_counts.reindex(node_order).fillna(0)
     adjacency = graph.get_adjacency_sparse(node_ordering=node_order).tocsr()
 
     classification = _classify_nodes_nnls(
-        counts=counts,
+        marker_labels=_node_marker_labels(graph, node_order),
         adjacency=adjacency,
         w=w,
         cell_names=cell_names,
@@ -262,9 +261,43 @@ def _require_int_in_range(
         raise ValueError(f"{name} must be <= {maximum}.")
 
 
+def _node_marker_labels(graph: PNAGraph, node_order: Sequence[Hashable]) -> list[Any]:
+    """Marker name of each node, or ``None`` when the node has no marker.
+
+    PNA nodes carry a single protein. Callers use these names instead of a
+    dense nodes × proteins count table.
+    """
+    markers = dict(graph.raw.nodes(data="marker", default=None))
+    return [markers.get(node) for node in node_order]
+
+
+def _shared_markers(marker_labels: Sequence[Any], weight_index: pd.Index) -> list[Any]:
+    """Markers present on the graph and in ``w``, in pivot-table order."""
+    weight_markers = set(weight_index)
+    present = {marker for marker in marker_labels if marker in weight_markers}
+    return sorted(present)
+
+
+def _marker_indicator(
+    marker_labels: Sequence[Any], shared_markers: Sequence[Any]
+) -> sparse.csr_matrix:
+    """Sparse one-hot of ``shared_markers`` with one entry per labeled node."""
+    column_of = {marker: i for i, marker in enumerate(shared_markers)}
+    columns = np.fromiter(
+        (column_of.get(marker, -1) for marker in marker_labels),
+        dtype=np.int32,
+        count=len(marker_labels),
+    )
+    rows = np.flatnonzero(columns >= 0)
+    return sparse.csr_matrix(
+        (np.ones(rows.size, dtype=np.float64), (rows, columns[rows])),
+        shape=(len(marker_labels), len(shared_markers)),
+    )
+
+
 def _classify_nodes_nnls(
     *,
-    counts: pd.DataFrame,
+    marker_labels: Sequence[Any],
     adjacency: sparse.csr_matrix,
     w: pd.DataFrame,
     cell_names: Sequence[str],
@@ -276,7 +309,7 @@ def _classify_nodes_nnls(
     if verbose:
         logger.info("Classifying %s nodes using NNLS", list(cell_names))
 
-    shared_markers = [m for m in counts.columns if m in w.index]
+    shared_markers = _shared_markers(marker_labels, w.index)
     if not shared_markers:
         raise ValueError(
             "No proteins in w are present in the graph node marker counts."
@@ -284,8 +317,12 @@ def _classify_nodes_nnls(
 
     a_k = _expand_adjacency_matrix(adjacency, k)
     a_k.setdiag(1)
-    neighborhood_counts = a_k @ counts.loc[:, shared_markers].to_numpy(dtype=float)
-    profiles = _l1_normalize_rows(neighborhood_counts)
+    # Each node contributes its one marker. The dense result is only the
+    # proteins in w, after the neighborhood sum.
+    neighborhood_counts = a_k @ _marker_indicator(marker_labels, shared_markers)
+    if sparse.issparse(neighborhood_counts):
+        neighborhood_counts = neighborhood_counts.toarray()
+    profiles = _l1_normalize_rows(np.asarray(neighborhood_counts, dtype=float))
     weights = w.loc[shared_markers].to_numpy(dtype=float)
     scores = _project_weights(profiles, weights)
 

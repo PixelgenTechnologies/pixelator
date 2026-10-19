@@ -33,8 +33,11 @@ from pixelator.pna.analysis.segmentation import cc_protein_weights, segment_cell
 from pixelator.pna.analysis.segmentation.segment import (
     _expand_adjacency_matrix,
     _kmeans_midpoint,
+    _marker_indicator,
+    _node_marker_labels,
     _project_weights,
     _retained_component_nodes,
+    _shared_markers,
 )
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PNAPixelDataset
@@ -275,6 +278,24 @@ def test_segment_cell_zero_smoothing_still_classifies(graph, weights):
     labels = _compartments(graph)
     assert all(labels[node] == POP1 for node in CORE_T)
     assert all(labels[node] == POP2 for node in CORE_B)
+
+
+def test_neighborhood_counts_match_the_dense_marker_table(graph, weights):
+    """The one-marker indicator sums to the same neighborhood profiles."""
+    node_order = list(graph.raw.nodes())
+    marker_labels = _node_marker_labels(graph, node_order)
+    shared = _shared_markers(marker_labels, weights.index)
+    counts = graph.node_marker_counts.reindex(node_order).fillna(0)
+    dense_markers = [marker for marker in counts.columns if marker in weights.index]
+
+    adjacency = graph.get_adjacency_sparse(node_ordering=node_order).tocsr()
+    expanded = _expand_adjacency_matrix(adjacency, k=2)
+    expanded.setdiag(1)
+    from_indicator = expanded @ _marker_indicator(marker_labels, shared)
+    from_table = expanded @ counts.loc[:, dense_markers].to_numpy(dtype=float)
+
+    assert shared == dense_markers
+    np.testing.assert_allclose(from_indicator.toarray(), from_table)
 
 
 def test_segment_cell_missing_w_proteins_raises(graph):
