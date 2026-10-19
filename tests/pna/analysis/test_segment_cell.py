@@ -218,8 +218,9 @@ def test_retained_component_nodes_filters_when_every_node_is_kept(graph):
     node_order = list(graph.raw.nodes())
     keep_mask = np.ones(len(node_order), dtype=bool)
 
+    adjacency = graph.get_adjacency_sparse(node_ordering=node_order).tocsr()
     lcc = _retained_component_nodes(
-        graph=graph,
+        adjacency=adjacency,
         node_order=node_order,
         keep_mask=keep_mask,
         keep_largest_comp=True,
@@ -230,7 +231,7 @@ def test_retained_component_nodes_filters_when_every_node_is_kept(graph):
     assert "ta0" in lcc
 
     min_size = _retained_component_nodes(
-        graph=graph,
+        adjacency=adjacency,
         node_order=node_order,
         keep_mask=keep_mask,
         keep_largest_comp=False,
@@ -238,6 +239,37 @@ def test_retained_component_nodes_filters_when_every_node_is_kept(graph):
     )
     assert ISLAND_A not in min_size
     assert "ta0" in min_size
+
+
+def test_retained_component_tie_breaks_toward_the_earlier_node():
+    """Two components of equal size: keep the one that starts earlier."""
+    node_order = ["a", "b", "c", "d"]
+    adjacency = csr_matrix(
+        [
+            [0, 1, 0, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 1, 0],
+        ],
+        dtype=float,
+    )
+    kept = _retained_component_nodes(
+        adjacency=adjacency,
+        node_order=node_order,
+        keep_mask=np.ones(4, dtype=bool),
+        keep_largest_comp=True,
+        min_comp_size=1,
+    )
+    assert kept == ["a", "b"]
+
+    both = _retained_component_nodes(
+        adjacency=adjacency,
+        node_order=node_order,
+        keep_mask=np.array([False, False, True, True]),
+        keep_largest_comp=False,
+        min_comp_size=2,
+    )
+    assert both == ["c", "d"]
 
 
 def test_segment_cell_interface_expansion_one_hop(graph, weights):

@@ -12,6 +12,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from scipy import sparse
+from scipy.sparse.csgraph import connected_components
 from sklearn.cluster import KMeans
 
 from pixelator.common.utils import logger
@@ -150,14 +151,14 @@ def segment_cell(
     )
 
     c1_nodes = _retained_component_nodes(
-        graph=graph,
+        adjacency=adjacency,
         node_order=node_order,
         keep_mask=classification == 1,
         keep_largest_comp=keep_largest_comp,
         min_comp_size=min_comp_size,
     )
     c2_nodes = _retained_component_nodes(
-        graph=graph,
+        adjacency=adjacency,
         node_order=node_order,
         keep_mask=classification == 2,
         keep_largest_comp=keep_largest_comp,
@@ -505,37 +506,62 @@ def _kmeans_midpoint(values: np.ndarray, random_state: int) -> float:
     return float(np.mean(model.cluster_centers_))
 
 
+def _edges_within_mask(
+    adjacency: sparse.csr_matrix, keep_mask: np.ndarray
+) -> sparse.csr_matrix:
+    """Drop edges that touch a node outside ``keep_mask``.
+
+    The result is still indexed like ``adjacency``. Nodes outside the mask
+    become isolated and are ignored by the caller.
+    """
+    restricted = adjacency.tocsr(copy=True)
+    if restricted.nnz == 0:
+        return restricted
+    rows = np.repeat(np.arange(restricted.shape[0]), np.diff(restricted.indptr))
+    inside = keep_mask[rows] & keep_mask[restricted.indices]
+    restricted.data = np.where(inside, restricted.data, 0)
+    restricted.eliminate_zeros()
+    return restricted
+
+
 def _retained_component_nodes(
     *,
-    graph: PNAGraph,
+    adjacency: sparse.csr_matrix,
     node_order: list[Hashable],
     keep_mask: np.ndarray,
     keep_largest_comp: bool,
     min_comp_size: int,
 ) -> list[Hashable]:
-    nodes = [node for node, keep in zip(node_order, keep_mask) if keep]
-    if not nodes:
+    """Nodes kept after filtering connected components of ``keep_mask``.
+
+    Uses the CSR adjacency already built for scoring. Equal-sized components
+    are broken by the earliest node in ``node_order``.
+    """
+    keep_mask = np.asarray(keep_mask, dtype=bool)
+    member_idx = np.flatnonzero(keep_mask)
+    if member_idx.size == 0:
         return []
 
-    components = list(nx.connected_components(graph.raw.subgraph(nodes)))
-    if keep_largest_comp:
-        order_index = {node: i for i, node in enumerate(node_order)}
-        largest = max(
-            components,
-            key=lambda component: (
-                len(component),
-                -min(order_index[node] for node in component),
-            ),
-        )
-        return [node for node in node_order if node in largest]
+    if member_idx.size == adjacency.shape[0]:
+        component_graph = adjacency
+    else:
+        component_graph = _edges_within_mask(adjacency, keep_mask)
+    labels = connected_components(component_graph, directed=False, return_labels=True)[
+        1
+    ][member_idx]
 
-    keep_ids = {
-        node
-        for component in components
-        if len(component) >= min_comp_size
-        for node in component
-    }
-    return [node for node in node_order if node in keep_ids]
+    if keep_largest_comp:
+        sizes = np.bincount(labels)
+        earliest = np.full(sizes.shape[0], np.iinfo(np.intp).max, dtype=np.intp)
+        np.minimum.at(earliest, labels, member_idx)
+        candidates = np.flatnonzero(sizes == sizes.max())
+        # Same size: keep the component whose earliest node comes first.
+        chosen = candidates[np.argmin(earliest[candidates])]
+        selected = member_idx[labels == chosen]
+    else:
+        sizes = np.bincount(labels)
+        selected = member_idx[sizes[labels] >= min_comp_size]
+    return [node_order[i] for i in selected]
 
 
 def _fetch_interface_nodes(
