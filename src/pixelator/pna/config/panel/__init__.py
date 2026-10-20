@@ -11,12 +11,14 @@ from pixelator.pna.config.panel.antibody_panel import (
 )
 from pixelator.pna.config.panel.diff import changed_marker_ids
 from pixelator.pna.config.panel.hashing import (
+    ORIGINAL_HASH_COUNTS_PREFIX,
     collapsed_hashing_marker_id,
     sample_hashing_mask,
     split_hashing_marker_id,
 )
 
 __all__ = [
+    "ORIGINAL_HASH_COUNTS_PREFIX",
     "PNAAntibodyPanel",
     "PanelAlignment",
     "PanelSource",

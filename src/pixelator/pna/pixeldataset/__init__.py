@@ -36,6 +36,17 @@ names to on-disk ``PxlFile`` instances, and it constructs an
   filtering samples) and updated active components/markers, rebuilding ``AnnDataHelper``
   accordingly.
 
+.. rubric:: Combining files with different panel patches
+
+When a dataset spans several ``.pxl`` files whose antibody panels differ only in patch
+version (for example a marker renamed from ``CD3`` to ``CD3E``), the viewer aligns them with
+:func:`~pixelator.pna.config.panel.align.align_panels`. Marker ids in ``edgelist()``,
+``proximity()`` and ``adata()`` (``var`` index, ``X`` columns, ``obsm`` columns and the
+``original_hash_counts_*`` columns of ``obs``) take the newest name, and the panel columns
+of ``adata().var`` take the newest panel values. ``adata().uns["panel_metadata"]`` is not
+changed. Files are left as stored, with a warning, when a panel is missing or cannot be
+read, or when the panels cannot be aligned.
+
 .. rubric:: Dependency overview (ASCII)
 
 .. code-block:: none
