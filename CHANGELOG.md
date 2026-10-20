@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - Faceted `density_scatter_plot` estimates density per facet; `density_scope="joint"` restores old behavior.
 - `density_scatter_plot` moved from `pixelator.mpx.plot` to `pixelator.plot`.
-- `calculate_differential_proximity` zero-pads missing scores for every component in the two groups (`cell_groups` includes cells with no proximity rows). The default metric is `log2_ratio`, groups with fewer than 10 components are skipped, and the test uses the normal approximation with a continuity correction. Pairs below `diff_threshold` (default 0.01) or the detection-rate cutoffs are dropped before p-values are adjusted. `group_vars` repeats the comparison inside each combination of those columns. Missing contrast or `group_vars` labels are rejected.
+- `calculate_differential_proximity` counts missing scores as 0. The default metric is `log2_ratio`, groups under 10 cells are skipped, and `group_vars` repeats the comparison.
 
 #### Deprecated
 - `PNAPixelDataset.precomputed_layouts()`; use `layouts()` instead.
