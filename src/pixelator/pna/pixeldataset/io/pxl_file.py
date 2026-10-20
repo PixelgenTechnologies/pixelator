@@ -117,9 +117,10 @@ class PxlFile:
 
         with connect_duckdb(self.path, read_only=True) as connection:
             frames = read_panel_table_frames(connection)
-            if frames is not None:
-                return PNAAntibodyPanel.from_panel_tables(*frames)
-            return LegacyPanelAdapter(connection, file_name=self.path.name).read()
+            if frames is None:
+                # Files written before the panel tables existed.
+                return LegacyPanelAdapter(connection, file_name=self.path.name).read()
+            return PNAAntibodyPanel.from_panel_tables(*frames)
 
     def is_null_file(self) -> bool:
         """Return True when this file is a null pxl file."""
