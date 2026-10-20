@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - Faceted `density_scatter_plot` estimates density per facet; `density_scope="joint"` restores old behavior.
 - `density_scatter_plot` moved from `pixelator.mpx.plot` to `pixelator.plot`.
+- `calculate_differential_proximity` counts missing scores as 0. The default metric is `log2_ratio`, groups under 10 cells are skipped, and `group_vars` repeats the comparison.
 
 #### Deprecated
 - `PNAPixelDataset.precomputed_layouts()`; use `layouts()` instead.

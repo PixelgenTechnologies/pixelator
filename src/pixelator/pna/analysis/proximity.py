@@ -3,6 +3,7 @@
 Copyright © 2024 Pixelgen Technologies AB
 """
 
+import warnings
 from typing import Callable, List, Literal
 
 import numpy as np
@@ -499,6 +500,9 @@ def _filter_target_data(
             .size()
             .unstack(fill_value=0)
         )
+        # A group that exists only in cell_groups has no proximity rows, so
+        # unstack omits its column. That is a count of 0, not a missing label.
+        group_counts = group_counts.reindex(columns=[reference, target], fill_value=0)
         valid_markers = group_counts[
             (group_counts[reference] > min_n_obs) & (group_counts[target] > min_n_obs)
         ].index
@@ -508,8 +512,173 @@ def _filter_target_data(
     return target_data
 
 
+_DIFFERENTIAL_PROXIMITY_COLUMNS = [
+    "marker_1",
+    "marker_2",
+    "reference",
+    "target",
+    "u_stat",
+    "p_value",
+    "auc",
+    "median_diff",
+    "tgt_median",
+    "ref_median",
+    "n_ref",
+    "n_tgt",
+    "pct_ref",
+    "pct_tgt",
+    "p_adjusted",
+]
+
+
+def _empty_differential_proximity_result() -> pd.DataFrame:
+    """Return a zero-row result with the stable differential-proximity columns."""
+    return pd.DataFrame(columns=_DIFFERENTIAL_PROXIMITY_COLUMNS)
+
+
+def _collapse_duplicate_scores(proximity_df: pd.DataFrame, metric: str) -> pd.DataFrame:
+    """Keep one row per component and marker pair.
+
+    Identical duplicates are collapsed. Conflicting values of ``metric`` for
+    the same component and pair are rejected.
+    """
+    if "component" not in proximity_df.columns:
+        return proximity_df
+    keys = ["component", "marker_1", "marker_2"]
+    if not proximity_df.duplicated(keys).any():
+        return proximity_df
+    n_values = proximity_df.groupby(keys, sort=False)[metric].nunique(dropna=False)
+    if (n_values > 1).any():
+        raise ValueError(
+            f"proximity_df has conflicting {metric!r} values for the same "
+            "component and marker pair."
+        )
+    return proximity_df.drop_duplicates(keys)
+
+
+def _one_label_per_component(
+    source: pd.DataFrame, contrast_column: str
+) -> pd.DataFrame:
+    """Return one row per component and its contrast label."""
+    if contrast_column == "component":
+        return source[["component"]].drop_duplicates()
+    labels = source[[contrast_column, "component"]].drop_duplicates()
+    conflict = labels["component"].duplicated(keep=False)
+    if conflict.any():
+        ids = labels.loc[conflict, "component"].unique()[:5].tolist()
+        raise ValueError(
+            f"A component is assigned to more than one {contrast_column!r}: {ids}."
+        )
+    return labels
+
+
+def _metric_on_components(
+    group: pd.DataFrame, metric: str, components: np.ndarray
+) -> np.ndarray:
+    """Align ``metric`` to ``components``, filling components with no row with 0."""
+    scores = pd.Series(
+        group[metric].to_numpy(),
+        index=pd.Index(group["component"].to_numpy()),
+    )
+    return scores.reindex(components).fillna(0).to_numpy()
+
+
+def _detection_rate(values: np.ndarray) -> float:
+    """Fraction of values that are non-zero, rounded to 3 decimals."""
+    if len(values) == 0:
+        return 0.0
+    return round(float(np.count_nonzero(np.asarray(values) != 0)) / len(values), 3)
+
+
+def _component_groups(
+    proximity_df: pd.DataFrame,
+    contrast_column: str,
+    cell_groups: pd.DataFrame | None,
+) -> pd.DataFrame | None:
+    """Return one row per cell, with its contrast label.
+
+    ``cell_groups`` supplies cells that have no proximity rows. Otherwise the
+    cells are the components present in ``proximity_df``.
+    """
+    if cell_groups is not None:
+        required = (
+            {"component"}
+            if contrast_column == "component"
+            else {
+                "component",
+                contrast_column,
+            }
+        )
+        missing = required - set(cell_groups.columns)
+        if missing:
+            raise ValueError(
+                f"cell_groups is missing required column(s): {sorted(missing)}."
+            )
+        if "component" not in proximity_df.columns:
+            raise ValueError(
+                "proximity_df must include a 'component' column when "
+                "cell_groups is provided."
+            )
+        if contrast_column != "component":
+            _require_no_missing_labels(cell_groups, [contrast_column], "cell_groups")
+            if contrast_column in proximity_df.columns:
+                _require_no_missing_labels(
+                    proximity_df, [contrast_column], "proximity_df"
+                )
+        labels = _one_label_per_component(cell_groups, contrast_column)
+        if contrast_column != "component" and contrast_column in proximity_df.columns:
+            proximity_labels = _one_label_per_component(proximity_df, contrast_column)
+            compared = labels.merge(
+                proximity_labels, on="component", suffixes=("_groups", "_proximity")
+            )
+            left = f"{contrast_column}_groups"
+            right = f"{contrast_column}_proximity"
+            disagree = compared.loc[compared[left] != compared[right], "component"]
+            if not disagree.empty:
+                ids = disagree.unique()[:5].tolist()
+                raise ValueError(
+                    "cell_groups and proximity_df disagree on "
+                    f"{contrast_column!r} for component(s): {ids}."
+                )
+        return labels
+    if "component" in proximity_df.columns:
+        if contrast_column != "component":
+            _require_no_missing_labels(proximity_df, [contrast_column], "proximity_df")
+        return _one_label_per_component(proximity_df, contrast_column)
+    return None
+
+
+def _filter_pair_results(
+    results_df: pd.DataFrame,
+    diff_threshold: float,
+    min_pct: float,
+    min_diff_pct: float,
+) -> pd.DataFrame:
+    """Drop pairs that fail the median-difference or detection-rate thresholds."""
+    if results_df.empty:
+        return results_df
+    pct_max = results_df[["pct_ref", "pct_tgt"]].max(axis=1)
+    pct_min = results_df[["pct_ref", "pct_tgt"]].min(axis=1)
+    keep = (
+        (results_df["median_diff"].abs() >= diff_threshold)
+        & (pct_max >= min_pct)
+        & ((pct_max - pct_min) >= min_diff_pct)
+    )
+    return results_df.loc[keep].reset_index(drop=True)
+
+
 def _perform_mannwhitneyu_test(ref_group, tgt_group):
-    u_stat, p_value = mannwhitneyu(ref_group, tgt_group, alternative="two-sided")
+    u_stat, p_value = mannwhitneyu(
+        ref_group,
+        tgt_group,
+        alternative="two-sided",
+        use_continuity=True,
+        method="asymptotic",
+    )
+    # Every value tied makes the null variance zero, so the approximation is
+    # undefined. The groups do not differ.
+    if pd.isna(p_value):
+        p_value = 1.0
     auc = u_stat / (len(ref_group) * len(tgt_group))
     tgt_median = np.median(tgt_group)
     ref_median = np.median(ref_group)
@@ -517,92 +686,252 @@ def _perform_mannwhitneyu_test(ref_group, tgt_group):
     return u_stat, p_value, auc, median_diff, tgt_median, ref_median
 
 
-def calculate_differential_proximity(
+def _filter_metric_type(proximity_df: pd.DataFrame, metric_type: str) -> pd.DataFrame:
+    """Keep self pairs, co-pairs, or every pair."""
+    if metric_type == "self":
+        return proximity_df[proximity_df["marker_1"] == proximity_df["marker_2"]]
+    if metric_type == "co":
+        return proximity_df[proximity_df["marker_1"] != proximity_df["marker_2"]]
+    return proximity_df
+
+
+def _grouping_columns(
+    group_vars: str | List[str] | None, contrast_column: str
+) -> list[str]:
+    """Return grouping columns, rejecting the contrast column itself."""
+    columns = normalize_input_to_list(group_vars) or []
+    if contrast_column in columns:
+        raise ValueError(
+            f"{contrast_column!r} is the contrast column and cannot be one of "
+            "group_vars."
+        )
+    return columns
+
+
+def _require_no_missing_labels(
+    source: pd.DataFrame, columns: list[str], table_name: str
+) -> None:
+    """Reject missing values in grouping or contrast columns."""
+    missing = source[columns].isna().any(axis=1)
+    if not bool(missing.any()):
+        return
+    if "component" in source.columns:
+        ids = source.loc[missing, "component"].unique()[:5].tolist()
+        raise ValueError(
+            f"{table_name} has missing values in {columns} for component(s): {ids}."
+        )
+    raise ValueError(f"{table_name} has missing values in {columns}.")
+
+
+def _require_one_value_per_component(
+    source: pd.DataFrame, columns: list[str], table_name: str
+) -> None:
+    """Reject a component that carries more than one value of ``columns``."""
+    if "component" not in source.columns:
+        return
+    labels = source[["component", *columns]].drop_duplicates()
+    conflict = labels["component"].duplicated(keep=False)
+    if not conflict.any():
+        return
+    ids = labels.loc[conflict, "component"].unique()[:5].tolist()
+    raise ValueError(
+        f"A component has more than one value of {columns} in {table_name}: {ids}."
+    )
+
+
+def _require_group_vars(
+    proximity_df: pd.DataFrame, cell_groups, columns: list[str]
+) -> None:
+    """Require grouping columns, with one value per component."""
+    if cell_groups is not None:
+        missing = [column for column in columns if column not in cell_groups.columns]
+        if missing:
+            raise ValueError(f"cell_groups is missing group_vars column(s): {missing}.")
+        _require_no_missing_labels(cell_groups, columns, "cell_groups")
+        _require_one_value_per_component(cell_groups, columns, "cell_groups")
+        if all(column in proximity_df.columns for column in columns):
+            _require_no_missing_labels(proximity_df, columns, "proximity_df")
+            _require_one_value_per_component(proximity_df, columns, "proximity_df")
+            _require_group_labels_agree(proximity_df, cell_groups, columns)
+        return
+    missing = [column for column in columns if column not in proximity_df.columns]
+    if missing:
+        raise ValueError(f"proximity_df is missing group_vars column(s): {missing}.")
+    _require_no_missing_labels(proximity_df, columns, "proximity_df")
+    _require_one_value_per_component(proximity_df, columns, "proximity_df")
+
+
+def _require_group_labels_agree(
+    proximity_df: pd.DataFrame, cell_groups: pd.DataFrame, columns: list[str]
+) -> None:
+    """Reject a component whose grouping values differ between the two tables."""
+    if "component" not in proximity_df.columns:
+        return
+    compared = (
+        cell_groups[["component", *columns]]
+        .drop_duplicates()
+        .merge(
+            proximity_df[["component", *columns]].drop_duplicates(),
+            on="component",
+            suffixes=("_groups", "_proximity"),
+        )
+    )
+    disagree = pd.Series(False, index=compared.index)
+    for column in columns:
+        disagree = disagree | (
+            compared[f"{column}_groups"] != compared[f"{column}_proximity"]
+        )
+    if disagree.any():
+        ids = compared.loc[disagree, "component"].unique()[:5].tolist()
+        raise ValueError(
+            f"cell_groups and proximity_df disagree on {columns} for component(s): {ids}."
+        )
+
+
+def _rows_matching(frame: pd.DataFrame, stratum: dict) -> pd.Series:
+    """Return rows whose grouping columns equal ``stratum``."""
+    mask = pd.Series(True, index=frame.index)
+    for column, value in stratum.items():
+        mask = mask & frame[column].eq(value)
+    return mask
+
+
+def _iter_group_strata(proximity_df: pd.DataFrame, cell_groups, columns: list[str]):
+    """Yield each grouping combination and the cells and rows inside it."""
+    source = cell_groups if cell_groups is not None else proximity_df
+    keys = source[columns].drop_duplicates().sort_values(columns, kind="mergesort")
+    for record in keys.itertuples(index=False, name=None):
+        stratum = dict(zip(columns, record))
+        if cell_groups is not None:
+            cells = cell_groups.loc[_rows_matching(cell_groups, stratum)]
+            proximity_part = proximity_df.loc[
+                proximity_df["component"].isin(cells["component"])
+            ]
+            yield stratum, proximity_part, cells
+        else:
+            yield stratum, proximity_df.loc[_rows_matching(proximity_df, stratum)], None
+
+
+def _differential_proximity_one_comparison(
     proximity_df: pd.DataFrame,
     contrast_column: str,
     reference: str,
     targets: List[str] | None = None,
-    metric: str = "join_count_z",
-    metric_type: Literal["all", "self", "co"] = "all",
+    metric: str = "log2_ratio",
+    min_cells_per_group: int = 10,
     min_n_obs: int = 0,
+    diff_threshold: float = 0.01,
+    min_pct: float = 0,
+    min_diff_pct: float = float("-inf"),
+    cell_groups: pd.DataFrame | None = None,
+    stratum: dict | None = None,
     p_adjust_method: Literal[
         "bonferroni", "holm", "hochberg", "hommel", "fdr_bh", "fdr_by", "sidak"
     ] = "bonferroni",
 ) -> pd.DataFrame:
-    """Perform differential proximity analysis between groups of marker-pair data.
-
-    Compare a proximity metric between a reference group and one or more target
-    groups for marker pairs using the two-sided `Mann-Whitney U test <https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test>`_.
-    P-values are adjusted to counteract the `multiple comparisons problem <https://en.wikipedia.org/wiki/Multiple_comparisons_problem>`_.
-    See references below for resources on p-value adjustment methods.
-
-    Args:
-        proximity_df: Input data containing proximity metrics and grouping information.
-            Must include ``contrast_column``, ``marker_1``, ``marker_2``,
-            and the column determined by ``metric``.
-        contrast_column: Column name of the grouping variable.
-        reference: Reference group label in ``contrast_column``.
-        targets: Target group labels to compare against ``reference``. If ``None``,
-            all other groups in ``contrast_column`` except ``reference`` are used. Defaults to ``None``.
-        metric: Column name of the proximity metric to analyze. Defaults to
-            ``join_count_z``.
-        metric_type: Marker pairs to include: ``"self"`` (includes pairs for which ``marker_1`` and
-            ``marker_2`` are the same), ``"co"``
-            (includes pairs for which ``marker_1`` and ``marker_2`` are different), or
-            ``"all"``. This parameter defaults to ``"all"``.
-        min_n_obs: When greater than zero, marker pairs must have more than this
-            many observations in both ``reference`` and each target group. Defaults to 0.
-        p_adjust_method: Method for adjusting p-values for multiple comparisons.
-            ``p_adjust_method`` is passed to ``statsmodels.stats.multitest.multipletests``.
-            Defaults to ``"bonferroni"``.
-
-    Returns:
-        DataFrame containing the results of the differential
-        proximity analysis, including statistical metrics and adjusted p-values.
-
-    Raises:
-        ValueError: If ``contrast_column`` is not in ``proximity_df``.
-        ValueError: If no data remains after applying ``metric_type`` filtering.
-
-    References:
-        * `Bonferroni correction <https://en.wikipedia.org/wiki/Bonferroni_correction>`_
-        * `Holm–Bonferroni method <https://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method>`_
-        * `Hochberg method <https://www.sciencedirect.com/topics/mathematics/hochberg-method#:~:text=Hochberg's%20method%20is%20defined%20as,applicable%20when%20testing%20multiple%20hypotheses.>`_
-        * `Hommel <https://academic.oup.com/biomet/article-abstract/75/2/383/292949?redirectedFrom=fulltext&login=false>`_
-        * `False discovery rate <https://en.wikipedia.org/wiki/False_discovery_rate>`_
-        * `Sidak correction <https://en.wikipedia.org/wiki/%C5%A0id%C3%A1k_correction>`_
-    """
+    """Compare one reference against its targets, with no extra grouping."""
     if contrast_column not in proximity_df.columns:
         raise ValueError(f"{contrast_column} must be a column in the data.")
+    if metric not in proximity_df.columns:
+        raise ValueError(f"{metric} must be a column in the data.")
+    if min_cells_per_group < 0:
+        raise ValueError("min_cells_per_group must be a non-negative integer.")
+
+    # Check before ``label != reference``. pd.NA raises TypeError there, and
+    # NaN compares as not equal, so it would be collected as its own target.
+    _require_no_missing_labels(proximity_df, [contrast_column], "proximity_df")
+    if cell_groups is not None and contrast_column in cell_groups.columns:
+        _require_no_missing_labels(cell_groups, [contrast_column], "cell_groups")
 
     if targets is None:
-        targets = proximity_df[contrast_column].unique().tolist()
-        targets.remove(reference)
-
-    if metric_type == "self":
-        proximity_df = proximity_df[
-            proximity_df["marker_1"] == proximity_df["marker_2"]
-        ]
-    elif metric_type == "co":
-        proximity_df = proximity_df[
-            proximity_df["marker_1"] != proximity_df["marker_2"]
-        ]
+        labels = proximity_df[contrast_column]
+        if cell_groups is not None and contrast_column in cell_groups.columns:
+            labels = cell_groups[contrast_column]
+        targets = [label for label in labels.unique().tolist() if label != reference]
 
     if proximity_df.empty:
         raise ValueError("No data found for the specified metric type.")
 
+    proximity_df = _collapse_duplicate_scores(proximity_df, metric)
+    group_components = _component_groups(proximity_df, contrast_column, cell_groups)
+    pad_missing = group_components is not None
+    if group_components is not None and min_cells_per_group > 0:
+        n_cells = group_components.groupby(contrast_column, sort=False)[
+            "component"
+        ].nunique()
+        n_ref_cells = int(n_cells.get(reference, 0))
+        kept_targets = []
+        for target in targets:
+            n_tgt_cells = int(n_cells.get(target, 0))
+            if n_ref_cells < min_cells_per_group or n_tgt_cells < min_cells_per_group:
+                where = ""
+                if stratum:
+                    where = (
+                        " ("
+                        + ", ".join(
+                            f"{name}={value}" for name, value in stratum.items()
+                        )
+                        + ")"
+                    )
+                warnings.warn(
+                    f"Skipping {target} vs {reference}{where}: a group has fewer "
+                    f"than {min_cells_per_group} cells "
+                    f"({reference}={n_ref_cells}, {target}={n_tgt_cells}).",
+                    UserWarning,
+                    stacklevel=3,
+                )
+                continue
+            kept_targets.append(target)
+        targets = kept_targets
+
     def calc_targets_differential():
-        """Calc targets differential."""
+        """Yield a Mann-Whitney result for each marker pair and target.
+
+        For each target, keep the proximity rows labeled with that target or
+        the reference. When ``min_n_obs`` is positive, drop marker pairs that
+        do not have more than that many detected rows in both groups. A
+        target with no remaining rows is skipped. When component ids are
+        available, align ``metric`` to every component in the two groups and
+        fill a missing score with 0. Otherwise use the observed scores, and
+        skip a pair that is missing from either group. Each remaining pair
+        is tested with a two-sided Mann-Whitney U test.
+
+        Yields:
+            One Series per tested marker pair and target, with ``marker_1``,
+            ``marker_2``, ``reference``, ``target``, ``u_stat``, ``p_value``,
+            ``auc``, ``median_diff``, ``tgt_median``, ``ref_median``,
+            ``n_ref``, ``n_tgt``, ``pct_ref``, and ``pct_tgt``.
+        """
         for target in targets:
             target_data = _filter_target_data(
                 proximity_df, contrast_column, reference, target, metric, min_n_obs
             )
+            if target_data.empty:
+                continue
+            if pad_missing:
+                assert group_components is not None
+                comparison_components = group_components[
+                    group_components[contrast_column].isin([reference, target])
+                ]
+                ref_components = comparison_components.loc[
+                    comparison_components[contrast_column].eq(reference), "component"
+                ].to_numpy()
+                tgt_components = comparison_components.loc[
+                    comparison_components[contrast_column].eq(target), "component"
+                ].to_numpy()
+            else:
+                ref_components = None
+                tgt_components = None
 
             for (marker_1, marker_2), group in target_data.groupby(
                 ["marker_1", "marker_2"]
             ):
-                ref_group = group[group[contrast_column] == reference][metric]
-                tgt_group = group[group[contrast_column] == target][metric]
+                if pad_missing:
+                    ref_group = _metric_on_components(group, metric, ref_components)
+                    tgt_group = _metric_on_components(group, metric, tgt_components)
+                else:
+                    ref_group = group.loc[group[contrast_column] == reference, metric]
+                    tgt_group = group.loc[group[contrast_column] == target, metric]
 
                 if len(ref_group) == 0 or len(tgt_group) == 0:
                     continue
@@ -624,15 +953,204 @@ def calculate_differential_proximity(
                         "ref_median": ref_median,
                         "n_ref": len(ref_group),
                         "n_tgt": len(tgt_group),
+                        "pct_ref": _detection_rate(ref_group),
+                        "pct_tgt": _detection_rate(tgt_group),
                     }
                 )
                 yield results
 
-    results_df = pd.DataFrame((calc_targets_differential()))
+    results_df = pd.DataFrame(list(calc_targets_differential()))
     if results_df.empty:
-        return results_df
+        return _empty_differential_proximity_result()
+    results_df = _filter_pair_results(results_df, diff_threshold, min_pct, min_diff_pct)
+    if results_df.empty:
+        return _empty_differential_proximity_result()
     results_df["p_adjusted"] = multipletests(
         results_df["p_value"], method=p_adjust_method
     )[1]
 
     return results_df
+
+
+def calculate_differential_proximity(
+    proximity_df: pd.DataFrame,
+    contrast_column: str,
+    reference: str,
+    targets: List[str] | None = None,
+    metric: str = "log2_ratio",
+    metric_type: Literal["all", "self", "co"] = "all",
+    min_cells_per_group: int = 10,
+    min_n_obs: int = 0,
+    diff_threshold: float = 0.01,
+    min_pct: float = 0,
+    min_diff_pct: float = float("-inf"),
+    cell_groups: pd.DataFrame | None = None,
+    group_vars: str | List[str] | None = None,
+    p_adjust_method: Literal[
+        "bonferroni", "holm", "hochberg", "hommel", "fdr_bh", "fdr_by", "sidak"
+    ] = "bonferroni",
+) -> pd.DataFrame:
+    """Compare a proximity metric between a reference group and (one or more) target groups.
+
+    Each marker pair is tested with a two-sided
+    `Mann-Whitney U test <https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test>`_.
+    The p-value is the normal approximation with a continuity correction.
+    ``median_diff`` is the target median minus the reference median. ``auc``
+    is the fraction of reference-versus-target comparisons won by the
+    reference, with ties counting as half.
+
+    When ``proximity_df`` contains ``component``, each tested pair is aligned
+    to every component in the two groups and missing values of ``metric`` are
+    filled with 0. A marker pair never detected in either group of a comparison
+    is left out. Without ``component`` and without ``cell_groups``, only
+    observed rows are tested, and a pair missing from one of the two groups is
+    skipped.
+
+    ``group_vars`` repeats that comparison inside each combination of those
+    columns. Reference and target cells come from the same combination, and
+    p-values are adjusted inside it. Each result row carries the combination.
+
+    A comparison is skipped when either group contains fewer than
+    ``min_cells_per_group`` components. After the tests, pairs are removed
+    when the absolute median difference is below ``diff_threshold``, when the
+    larger detection rate is below ``min_pct``, or when the difference
+    between the two detection rates is below ``min_diff_pct``. Adjusted
+    p-values are computed on the pairs that remain, across every target in
+    the comparison.
+
+    Args:
+        proximity_df: Long-format proximity table. Must contain
+            ``contrast_column``, ``marker_1``, ``marker_2``, and ``metric``.
+            ``component`` is optional; when present, missing scores are
+            zero-padded.
+        contrast_column: Column that assigns each row to a group. ``"component"``
+            is allowed, and then each component is its own group.
+        reference: Label of the reference group in ``contrast_column``.
+        targets: Labels to compare against ``reference``. ``None`` uses every
+            other label in ``contrast_column``. Defaults to ``None``.
+        metric: Proximity column to test. Defaults to ``"log2_ratio"``.
+        metric_type: Which pairs to test. ``"self"`` keeps pairs where
+            ``marker_1`` and ``marker_2`` are equal, ``"co"`` keeps the rest,
+            and ``"all"`` keeps every pair. Defaults to ``"all"``.
+        min_cells_per_group: Minimum number of distinct components in each
+            group. A smaller group is skipped with a warning. Components are
+            counted in ``cell_groups`` when that table is given. The check is
+            skipped when no component id is available. Defaults to 10.
+        min_n_obs: Require more than this many detected rows in both groups
+            before zero-padding. ``0`` disables the check. Defaults to 0.
+        diff_threshold: Minimum absolute median difference. Pairs below it are
+            dropped before p-values are adjusted. Defaults to 0.01.
+        min_pct: Minimum larger detection rate. Exact zeros count as
+            undetected. Defaults to 0.
+        min_diff_pct: Minimum difference between the two detection rates.
+            Defaults to negative infinity.
+        cell_groups: Components to include, with columns ``component`` and
+            ``contrast_column`` (``component`` alone when that column is the
+            contrast). Required in order to zero-pad a component that has no
+            proximity rows. Components missing from ``proximity_df`` contribute
+            a 0. A component present in both tables must have the same
+            ``contrast_column`` label in both. Defaults to ``None``.
+        group_vars: Columns that split the comparison. Both groups in a
+            comparison come from the same combination of these columns.
+            Defaults to ``None``.
+        p_adjust_method: Method forwarded to
+            ``statsmodels.stats.multitest.multipletests``. Defaults to
+            ``"bonferroni"``.
+
+    Returns:
+        One row per marker pair, target, and grouping combination that passed
+        the thresholds, with columns ``marker_1``, ``marker_2``, ``reference``,
+        ``target``, ``u_stat``, ``p_value``, ``auc``, ``median_diff``,
+        ``tgt_median``, ``ref_median``, ``n_ref``, ``n_tgt``, ``pct_ref``,
+        ``pct_tgt``, and ``p_adjusted``, plus one column per entry in
+        ``group_vars``. ``n_ref`` and ``n_tgt`` include zero-padded components
+        when a component id is available, and count observed rows otherwise.
+        ``pct_ref`` and ``pct_tgt`` are the rounded detection rates. The same
+        columns are present, with no rows, when every comparison is skipped
+        or every pair is filtered.
+
+    Raises:
+        ValueError: If ``contrast_column`` or ``metric`` is not in
+            ``proximity_df``, if ``min_cells_per_group`` is negative, if
+            ``cell_groups`` is missing a required column, if ``proximity_df``
+            has no ``component`` column when ``cell_groups`` is provided, if a
+            component has more than one contrast or grouping label, if a
+            contrast or grouping label is missing, if the two tables disagree,
+            if ``group_vars`` includes ``contrast_column``,
+            if the same component and marker pair has conflicting ``metric``
+            values, or if ``metric_type`` removes every row.
+
+    Warns:
+        UserWarning: If a comparison is skipped because a group has fewer than
+            ``min_cells_per_group`` components. The message names the grouping
+            combination when ``group_vars`` is set.
+
+    References:
+        * `Bonferroni correction <https://en.wikipedia.org/wiki/Bonferroni_correction>`_
+        * `Holm–Bonferroni method <https://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method>`_
+        * `Hochberg method <https://www.sciencedirect.com/topics/mathematics/hochberg-method>`_
+        * `Hommel <https://academic.oup.com/biomet/article-abstract/75/2/383/292949>`_
+        * `False discovery rate <https://en.wikipedia.org/wiki/False_discovery_rate>`_
+        * `Sidak correction <https://en.wikipedia.org/wiki/%C5%A0id%C3%A1k_correction>`_
+    """
+    if contrast_column not in proximity_df.columns:
+        raise ValueError(f"{contrast_column} must be a column in the data.")
+    if metric not in proximity_df.columns:
+        raise ValueError(f"{metric} must be a column in the data.")
+    if min_cells_per_group < 0:
+        raise ValueError("min_cells_per_group must be a non-negative integer.")
+
+    columns = _grouping_columns(group_vars, contrast_column)
+    if columns:
+        _require_group_vars(proximity_df, cell_groups, columns)
+    proximity_df = _filter_metric_type(proximity_df, metric_type)
+    if proximity_df.empty:
+        raise ValueError("No data found for the specified metric type.")
+    if not columns:
+        return _differential_proximity_one_comparison(
+            proximity_df,
+            contrast_column,
+            reference,
+            targets,
+            metric=metric,
+            min_cells_per_group=min_cells_per_group,
+            min_n_obs=min_n_obs,
+            diff_threshold=diff_threshold,
+            min_pct=min_pct,
+            min_diff_pct=min_diff_pct,
+            cell_groups=cell_groups,
+            p_adjust_method=p_adjust_method,
+        )
+
+    frames = []
+    for stratum, proximity_part, cells_part in _iter_group_strata(
+        proximity_df, cell_groups, columns
+    ):
+        if proximity_part.empty:
+            result = _empty_differential_proximity_result()
+        else:
+            result = _differential_proximity_one_comparison(
+                proximity_part,
+                contrast_column,
+                reference,
+                targets,
+                metric=metric,
+                min_cells_per_group=min_cells_per_group,
+                min_n_obs=min_n_obs,
+                diff_threshold=diff_threshold,
+                min_pct=min_pct,
+                min_diff_pct=min_diff_pct,
+                cell_groups=cells_part,
+                stratum=stratum,
+                p_adjust_method=p_adjust_method,
+            )
+        for name, value in stratum.items():
+            result[name] = value
+        if not result.empty:
+            frames.append(result)
+    if not frames:
+        empty = _empty_differential_proximity_result()
+        for column in columns:
+            empty[column] = pd.Series(dtype="object")
+        return empty
+    return pd.concat(frames, ignore_index=True)
