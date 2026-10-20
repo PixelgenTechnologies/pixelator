@@ -61,16 +61,13 @@ def write_panel_tables(
         panel.marker_source_ids.reindex(panel.df.index).astype(int).to_numpy()
     )
 
-    connection.register("_panel_sources_df", sources_df)
-    connection.register("_panels_df", markers.reset_index(drop=True))
-    try:
-        connection.execute(
-            "CREATE OR REPLACE TABLE panel_sources AS SELECT * FROM _panel_sources_df"
-        )
-        connection.execute("CREATE OR REPLACE TABLE panels AS SELECT * FROM _panels_df")
-    finally:
-        connection.unregister("_panel_sources_df")
-        connection.unregister("_panels_df")
+    markers = markers.reset_index(drop=True)
+
+    # DuckDB reads the DataFrames above by their variable names
+    connection.execute(
+        "CREATE OR REPLACE TABLE panel_sources AS SELECT * FROM sources_df"
+    )
+    connection.execute("CREATE OR REPLACE TABLE panels AS SELECT * FROM markers")
 
 
 def read_panel_table_frames(
