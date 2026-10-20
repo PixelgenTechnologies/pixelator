@@ -18,8 +18,8 @@ def marker_renames_by_sample(
     """Return the marker renames that make the panels of several files agree.
 
     Alignment is skipped, and no marker is renamed, when there is a single file,
-    when a file does not store its panel, or when the panels cannot be aligned.
-    The last two cases are logged as warnings.
+    when the panel of a file is missing or cannot be read, or when the panels
+    cannot be aligned. The last two cases are logged as warnings.
 
     Args:
         pxl_files: The files of a view, by sample name.
@@ -32,7 +32,19 @@ def marker_renames_by_sample(
 
     panels: dict[str, PNAAntibodyPanel] = {}
     for sample_name, pxl_file in pxl_files.items():
-        panel = pxl_file.read_panel()
+        try:
+            panel = pxl_file.read_panel()
+        except Exception as err:
+            # Aligning is best effort: the panel stored by a file written after
+            # sample calling cannot always be rebuilt, and must not stop the
+            # view from opening.
+            logger.warning(
+                "Markers are not aligned across files because the antibody panel "
+                "of %s could not be read: %s",
+                pxl_file.path,
+                err,
+            )
+            return {}
         if panel is None:
             logger.warning(
                 "Markers are not aligned across files because %s does not store "

@@ -49,6 +49,7 @@ def _write_pxl(
     panel: PNAAntibodyPanel | None,
     marker_pair: tuple[str, str],
     legacy_columns: bool = False,
+    adata_markers: list[str] | None = None,
 ) -> PxlFile:
     """Write a pxl file whose single edge and proximity row use ``marker_pair``."""
     marker_1, marker_2 = marker_pair
@@ -60,7 +61,7 @@ def _write_pxl(
             "uei_count": [1],
             "marker_1": [marker_1],
             "marker_2": [marker_2],
-            "component": ["c1"],
+            "component": [sample],
         },
         schema={
             "umi1": pl.UInt64,
@@ -73,17 +74,19 @@ def _write_pxl(
         },
     )
     proximity = pl.DataFrame(
-        {"marker_1": [marker_1], "marker_2": [marker_2], "component": ["c1"]}
+        {"marker_1": [marker_1], "marker_2": [marker_2], "component": [sample]}
     )
     with PixelFileWriter(path) as writer:
         writer.write_edgelist(edgelist)
         connection = writer.get_connection()
         if panel is not None:
-            adata = pna_edgelist_to_anndata(connection, panel=panel)
+            adata = pna_edgelist_to_anndata(
+                connection, panel=panel, markers=adata_markers
+            )
         else:
             adata = anndata.AnnData(
                 X=np.zeros((1, 2)),
-                obs=pd.DataFrame(index=["c1"]),
+                obs=pd.DataFrame(index=[sample]),
                 var=pd.DataFrame(index=pd.Index(marker_pair, name="marker_id")),
             )
         writer.write_adata(adata)
@@ -214,6 +217,46 @@ class TestMarkerAlignment:
 
         assert viewer.marker_renames() == {}
         assert _markers(viewer) == {"old": {"CD3", "CD4"}, "other": {"CD3E", "CD4"}}
+
+    def test_a_file_whose_panel_cannot_be_read_leaves_the_markers_unchanged(
+        self, old_file, new_file, monkeypatch
+    ):
+        def fail(self):
+            raise TypeError("invalid stored panel")
+
+        monkeypatch.setattr(PxlFile, "read_panel", fail)
+
+        viewer = _viewer(old_file, new_file)
+
+        assert viewer.marker_renames() == {}
+        assert _markers(viewer) == {"old": {"CD3", "CD4"}, "new": {"CD3E", "CD4"}}
+
+    def test_files_written_after_sample_calling_still_open(self, tmp_path):
+        # Hashing clones are collapsed, so the panel stored on var is incomplete.
+        rows = [
+            _marker("CD3", "AAAA"),
+            {**_marker("B2M-1", "CCCC"), "sample_hashing": "yes"},
+            {**_marker("B2M-2", "GGGG"), "sample_hashing": "yes"},
+        ]
+        panel = PNAAntibodyPanel.from_metadata(
+            pd.DataFrame(rows).set_index("marker_id"),
+            AntibodyPanelMetadata(name="base", version="1.0.0", product="kit"),
+        )
+        files = [
+            _write_pxl(
+                tmp_path / f"{sample}.pxl",
+                sample,
+                panel,
+                ("CD3", "B2M"),
+                adata_markers=["CD3", "B2M"],
+            )
+            for sample in ("a", "b")
+        ]
+
+        viewer = _viewer(*files)
+
+        assert viewer.marker_renames() == {}
+        assert _markers(viewer) == {"a": {"CD3", "B2M"}, "b": {"CD3", "B2M"}}
 
     def test_a_file_without_a_panel_leaves_the_markers_unchanged(
         self, old_file, tmp_path
