@@ -154,16 +154,7 @@ class AnnDataHelper:
         }
 
         var = var.set_index("index").rename_axis(index={"index": "marker_id"})
-        stored_tables = set(
-            tables.filter(pl.col("database") == db_name).get_column("name").to_list()
-        )
-        var = self._with_panel_info(
-            session,
-            qb,
-            db_name,
-            var,
-            has_panel_tables=set(PANEL_TABLES).issubset(stored_tables),
-        )
+        var = self._with_panel_info(session, qb, db_name, var)
 
         adata = AnnData(
             X=X.set_index("index").rename_axis(index={"index": "component"}),
@@ -196,14 +187,23 @@ class AnnDataHelper:
         )
         return {old: new for old, new in renames.items() if old in columns}
 
+    @staticmethod
+    def _has_panel_tables(
+        session: PixelDataViewerSession, qb: QueryBuilder, db_name: str
+    ) -> bool:
+        """Return whether the file of ``db_name`` stores its panel in tables."""
+        tables = session.execute_eager(qb.adata_obsm_table_names_query(db_name))
+        stored_tables = set(
+            tables.filter(pl.col("database") == db_name).get_column("name").to_list()
+        )
+        return set(PANEL_TABLES).issubset(stored_tables)
+
     def _with_panel_info(
         self,
         session: PixelDataViewerSession,
         qb: QueryBuilder,
         db_name: str,
         var: pd.DataFrame,
-        *,
-        has_panel_tables: bool,
     ) -> pd.DataFrame:
         """Return ``var`` with the panel columns of its markers.
 
@@ -218,7 +218,7 @@ class AnnDataHelper:
             panel_markers = pd.DataFrame.from_dict(aligned_rows, orient="index").drop(
                 columns="marker_id"
             )
-        elif has_panel_tables:
+        elif self._has_panel_tables(session, qb, db_name):
             panel_markers = (
                 session.execute_eager(qb.panel_markers_query(db_name))
                 .to_pandas()
