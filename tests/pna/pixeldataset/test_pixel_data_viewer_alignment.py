@@ -26,6 +26,7 @@ from pixelator.pna.pixeldataset.io import (
 )
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.pixeldataset.io.query_builder import marker_rename_expression
+from tests.common.data_generator.pixelfile import with_legacy_panel_columns
 
 
 def _marker(marker_id: str, sequence: str) -> dict:
@@ -98,15 +99,12 @@ def _write_pxl(
         if panel is not None and stored_panel:
             writer.write_panel(panel)
         if panel is not None:
-            # Panel information cannot be added to the AnnData for a panel with
-            # several sources, and it is left out of var anyway once the panel
-            # is stored in its tables.
-            single_source = PNAAntibodyPanel.from_metadata(
-                panel.df, panel.sources[0].metadata
-            )
             adata = pna_edgelist_to_anndata(
-                connection, panel=single_source, markers=adata_markers
+                connection, panel=panel, markers=adata_markers
             )
+            if not stored_panel:
+                # Legacy files can only hold a panel with a single source.
+                adata = with_legacy_panel_columns(adata, panel)
         else:
             adata = anndata.AnnData(
                 X=np.zeros((1, 2)),
