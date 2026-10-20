@@ -163,6 +163,13 @@ class QueryBuilder:
             params={},
         )
 
+    def panel_markers_query(self, db_name: str) -> Query:
+        """Build a query for the stored panel markers of a single sample DB."""
+        return Query(
+            sql=f"SELECT * FROM {db_name}.panels ORDER BY row_nr",
+            params={},
+        )
+
     def adata_uns_query(self, db_name: str) -> Query:
         """Build AnnData uns query for a single underlying sample DB."""
         return Query(

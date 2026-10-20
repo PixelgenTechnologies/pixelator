@@ -19,9 +19,8 @@ import duckdb
 
 from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.common.exceptions import PixelatorBaseException
-
-if TYPE_CHECKING:
-    from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel.tables import read_panel_table_frames
 
 PXL_FILE_MANDATOR_TABLES = [
     "__adata__X",
@@ -106,6 +105,10 @@ class PxlFile:
     def read_panel(self) -> PNAAntibodyPanel | None:
         """Load the antibody panel stored in this file.
 
+        New files are read from the ``panels`` and ``panel_sources`` tables.
+        Older files go through
+        :class:`~pixelator.pna.pixeldataset.legacy.LegacyPanelAdapter`.
+
         Returns:
             The panel, or None when the file does not store one.
         """
@@ -113,6 +116,9 @@ class PxlFile:
         from pixelator.pna.pixeldataset.legacy import LegacyPanelAdapter
 
         with connect_duckdb(self.path, read_only=True) as connection:
+            frames = read_panel_table_frames(connection)
+            if frames is not None:
+                return PNAAntibodyPanel.from_panel_tables(*frames)
             return LegacyPanelAdapter(connection, file_name=self.path.name).read()
 
     def is_null_file(self) -> bool:

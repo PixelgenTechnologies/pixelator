@@ -17,6 +17,7 @@ from anndata import concat as anndata_concat
 
 from pixelator.common.statistics import clr_transformation, log1p_transformation
 from pixelator.pna.config.panel import ORIGINAL_HASH_COUNTS_PREFIX
+from pixelator.pna.config.panel.tables import PANEL_TABLES
 from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
@@ -153,7 +154,16 @@ class AnnDataHelper:
         }
 
         var = var.set_index("index").rename_axis(index={"index": "marker_id"})
-        self._set_aligned_panel_info(var)
+        stored_tables = set(
+            tables.filter(pl.col("database") == db_name).get_column("name").to_list()
+        )
+        var = self._with_panel_info(
+            session,
+            qb,
+            db_name,
+            var,
+            has_panel_tables=set(PANEL_TABLES).issubset(stored_tables),
+        )
 
         adata = AnnData(
             X=X.set_index("index").rename_axis(index={"index": "component"}),
@@ -186,20 +196,40 @@ class AnnDataHelper:
         )
         return {old: new for old, new in renames.items() if old in columns}
 
-    def _set_aligned_panel_info(self, var: pd.DataFrame) -> None:
-        """Overwrite the panel columns of ``var`` with the aligned panel rows.
+    def _with_panel_info(
+        self,
+        session: PixelDataViewerSession,
+        qb: QueryBuilder,
+        db_name: str,
+        var: pd.DataFrame,
+        *,
+        has_panel_tables: bool,
+    ) -> pd.DataFrame:
+        """Return ``var`` with the panel columns of its markers.
 
-        This makes ``var`` the same whichever sample is read first, as the
-        concatenated AnnData keeps the ``var`` of the first sample.
+        When the view aligned the panels of its files, the columns come from the
+        aligned panel rows. This makes ``var`` the same whichever sample is read
+        first, as the concatenated AnnData keeps the ``var`` of the first sample.
+        Otherwise they come from the panel tables of the file, if it has them.
+        Older files keep the panel columns on ``var`` and are left as they are.
         """
-        rows = self._view.aligned_panel_rows()
-        for marker_id in var.index:
-            row = rows.get(marker_id)
-            if row is None:
-                continue
-            for column, value in row.items():
-                if column in var.columns:
-                    var.at[marker_id, column] = value
+        aligned_rows = self._view.aligned_panel_rows()
+        if aligned_rows:
+            panel_markers = pd.DataFrame.from_dict(aligned_rows, orient="index").drop(
+                columns="marker_id"
+            )
+        elif has_panel_tables:
+            panel_markers = (
+                session.execute_eager(qb.panel_markers_query(db_name))
+                .to_pandas()
+                .set_index("marker_id")
+                .drop(columns=["row_nr", "source_id"])
+            )
+        else:
+            return var
+        # panel columns already on var (older files) are replaced
+        var = var.drop(columns=var.columns.intersection(panel_markers.columns))
+        return var.join(panel_markers.reindex(var.index), how="left")
 
     def _apply_transformations(
         self,
