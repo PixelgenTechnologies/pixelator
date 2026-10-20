@@ -12,6 +12,10 @@ import pandas as pd
 # Trailing ``-<digits>`` is the hash group (``B2M-1`` → ``B2M``). The same
 # pattern matches ordinary names such as ``PD-1``, so it is only applied to
 # rows already flagged by ``sample_hashing``.
+# Prefix of the obs columns that keep the counts of a hashing antibody (clone id
+# after the prefix) once sample calling has collapsed the clones in the data.
+ORIGINAL_HASH_COUNTS_PREFIX = "original_hash_counts_"
+
 _HASHING_MARKER_ID_RE = re.compile(r"^(?P<base>.+)-(?P<index>\d+)$")
 
 

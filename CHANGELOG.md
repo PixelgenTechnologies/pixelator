@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.segment_cell` to classify conjugate-graph nodes into two cell types (plus optional interface / `other`) using NMF weights from `cc_protein_weights`.
 - `pixelator.pna.plot.proximity_heatmap` to plot a clustered heatmap or dot plot of a summary proximity statistic between marker pairs.
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
+- Combining pxl files with panels differing in patch version aligns marker names.
 
 ### Changed
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
