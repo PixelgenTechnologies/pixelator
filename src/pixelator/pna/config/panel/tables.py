@@ -27,7 +27,12 @@ def panel_tables_present(connection: duckdb.DuckDBPyConnection) -> bool:
 def write_panel_tables(
     connection: duckdb.DuckDBPyConnection, panel: PNAAntibodyPanel
 ) -> None:
-    """Replace ``panels`` and ``panel_sources`` with ``panel``."""
+    """Store ``panel`` in the ``panels`` and ``panel_sources`` tables.
+
+    ``panels`` has one row per marker, with its ``source_id`` and ``row_nr``
+    (the marker order). ``panel_sources`` has one row per source. Tables already
+    in the file are dropped and rebuilt, so the file ends up with exactly ``panel``.
+    """
     source_rows = []
     for source_id, source in enumerate(panel.sources):
         metadata = source.metadata
