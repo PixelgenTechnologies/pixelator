@@ -1,8 +1,9 @@
-"""Tests for reading a panel stored in the ``uns`` and ``var`` tables of a pxl file.
+"""Tests for reading the panel of pxl files that predate the panel tables.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+import json
 from pathlib import Path
 
 import anndata
@@ -12,9 +13,13 @@ import pandas as pd
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import add_panel_information
+from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel
-from pixelator.pna.pixeldataset.io import PixelFileWriter
+from pixelator.pna.pixeldataset import read
+from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 from pixelator.pna.pixeldataset.legacy import LegacyPanelAdapter
+
+PANEL_NAME = "proxiome-v1-immuno-155-v1.0"
 
 
 def _panel() -> PNAAntibodyPanel:
@@ -82,3 +87,73 @@ def test_returns_none_without_an_uns_table(tmp_path):
     duckdb.connect(str(path)).close()
 
     assert _read(path) is None
+
+
+def _write_pxl_without_panel(path: Path, metadata: dict, uns: dict | None = None):
+    """Write a minimal pxl file with neither panel tables nor panel columns."""
+    with PixelFileWriter(path) as writer:
+        writer.write_metadata(metadata)
+        if uns is not None:
+            connection = writer.get_connection()
+            connection.execute("CREATE TABLE __adata__uns (value JSON)")
+            connection.execute("INSERT INTO __adata__uns VALUES (?)", [json.dumps(uns)])
+            connection.execute("CREATE TABLE __adata__var (index VARCHAR)")
+
+
+def test_panel_is_resolved_from_the_panel_name_of_pre_0_22_files(pna_pxl_file):
+    # this file has neither panel tables nor uns['panel_metadata']
+    panel = PxlFile(pna_pxl_file).read_panel()
+
+    assert panel == pna_config.get_panel(PANEL_NAME)
+
+
+def test_the_recorded_panel_version_is_ignored(tmp_path):
+    path = tmp_path / "old.pxl"
+    _write_pxl_without_panel(path, {"panel_name": PANEL_NAME, "panel_version": "0.1.0"})
+
+    panel = PxlFile(path).read_panel()
+
+    assert panel.version != "0.1.0"
+
+
+def test_from_pxl_dataset_uses_the_adapter_for_older_files(pna_pxl_file):
+    panel = PNAAntibodyPanel.from_pxl_dataset(read(pna_pxl_file))
+
+    assert panel.name == PANEL_NAME
+
+
+def test_unknown_panel_name_yields_no_panel(tmp_path):
+    path = tmp_path / "old.pxl"
+    _write_pxl_without_panel(path, {"panel_name": "not-a-panel"})
+
+    assert PxlFile(path).read_panel() is None
+
+
+def test_file_without_panel_name_yields_no_panel(tmp_path):
+    path = tmp_path / "old.pxl"
+    _write_pxl_without_panel(path, {"sample_name": "x"})
+
+    assert PxlFile(path).read_panel() is None
+
+
+def test_panel_metadata_without_panel_columns_falls_back_to_the_panel_name(tmp_path):
+    path = tmp_path / "old.pxl"
+    _write_pxl_without_panel(
+        path,
+        {"panel_name": PANEL_NAME},
+        uns={"panel_metadata": {"name": "x", "version": "1.0.0"}},
+    )
+
+    panel = PxlFile(path).read_panel()
+
+    assert panel is not None
+    assert panel.name == PANEL_NAME
+
+
+def test_adapter_looks_panels_up_in_the_given_config(pna_pxl_file):
+    class EmptyConfig:
+        def get_panel(self, name):
+            return None
+
+    with duckdb.connect(str(pna_pxl_file), read_only=True) as connection:
+        assert LegacyPanelAdapter(connection, config=EmptyConfig()).read() is None

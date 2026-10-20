@@ -172,26 +172,37 @@ class PNAAntibodyPanel:
         )
 
     @classmethod
-    def from_pxl_dataset(
-        cls, pxl_data: PNAPixelDataset, file_name: Optional[str] = None
-    ) -> Self:
-        """Create an AntibodyPanel from a pxl dataset.
+    def from_pxl_dataset(cls, pxl_data: PNAPixelDataset) -> PNAAntibodyPanel:
+        """Create an AntibodyPanel from the files of a pxl dataset.
 
         Args:
             pxl_data: A PNAPixelDataset object.
-            file_name: The optional name of the file from which the pxl dataset was loaded.
 
         Returns:
-            The AntibodyPanel object. (AntibodyPanel)
+            The panel stored in the dataset's files.
 
         Raises:
-            KeyError: exception if panel information is missing in the pxl dataset,
+            KeyError: exception if panel information is missing in a file.
+            ValueError: if the files do not store the same panel.
         """
+        # imported here because the pxl file module imports this module
+        from pixelator.pna.pixeldataset.io.pxl_file import PxlFile
+
         logger.debug("Creating Antibody panel from PNAPixelDataset object")
-        adata = pxl_data.adata()
-        panel = cls.from_adata(adata, file_name=file_name)
+        panels = []
+        for path in pxl_data.view.sample_to_file_mappings.values():
+            panel = PxlFile(path).read_panel()
+            if panel is None:
+                raise KeyError(
+                    f"{path} does not contain panel information. "
+                    "Please, regenerate your data with the most recent version of pixelator."
+                )
+            panels.append(panel)
+        first, *others = panels
+        if any(other != first for other in others):
+            raise ValueError("The pixel files do not store the same panel.")
         logger.debug("Antibody panel from PNAPixelDataset created")
-        return panel
+        return first
 
     @classmethod
     def from_adata(cls, adata: AnnData, file_name: Optional[str] = None) -> Self:
