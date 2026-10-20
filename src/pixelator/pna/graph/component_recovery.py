@@ -129,6 +129,7 @@ def build_pxl_file_with_components(
             logger.debug("Building pxl file")
 
             pxl_file_writer.write_metadata(metadata)
+            pxl_file_writer.write_panel(panel)
             pxl_file_writer.write_adata(adata)
 
     return PNAPixelDataset.from_pxl_files(path_output_pxl_file), component_stats
