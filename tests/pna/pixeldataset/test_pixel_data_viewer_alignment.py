@@ -6,6 +6,7 @@ Copyright © 2026 Pixelgen Technologies AB.
 from pathlib import Path
 
 import anndata
+import duckdb
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -13,14 +14,15 @@ import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config.panel import ORIGINAL_HASH_COUNTS_PREFIX, PNAAntibodyPanel
 from pixelator.pna.pixeldataset.io import (
     PixelDataViewer,
     PixelFileWriter,
     PxlFile,
     Query,
 )
-from pixelator.pna.pixeldataset.io.pixel_data_viewer import _marker_rename_expression
+from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
+from pixelator.pna.pixeldataset.io.query_builder import marker_rename_expression
 
 
 def _marker(marker_id: str, sequence: str) -> dict:
@@ -37,6 +39,12 @@ def _panel(
 ) -> PNAAntibodyPanel:
     """Build a panel from ``marker id -> sequence``."""
     rows = [_marker(marker_id, sequence) for marker_id, sequence in markers.items()]
+    return _panel_of_rows(version, rows, name, product)
+
+
+def _panel_of_rows(
+    version: str, rows: list[dict], name: str = "base", product: str = "kit"
+) -> PNAAntibodyPanel:
     return PNAAntibodyPanel.from_metadata(
         pd.DataFrame(rows).set_index("marker_id"),
         AntibodyPanelMetadata(name=name, version=version, product=product),
@@ -269,7 +277,130 @@ class TestMarkerAlignment:
         assert _markers(viewer) == {"old": {"CD3", "CD4"}, "none": {"CD3E", "CD4"}}
 
 
+def _read_adata(*pxl_files: PxlFile) -> anndata.AnnData:
+    return AnnDataHelper(_viewer(*pxl_files)).read_adata()
+
+
+class TestAnnDataAlignment:
+    """AnnData read from a view over files with different panel patches."""
+
+    def test_markers_use_the_newest_names(self, old_file, new_file):
+        adata = _read_adata(old_file, new_file)
+
+        assert sorted(adata.var_names) == ["CD3E", "CD4"]
+        assert sorted(adata.obs_names) == ["new", "old"]
+
+    def test_marker_counts_follow_the_renamed_markers(self, tmp_path):
+        old = _write_pxl(
+            tmp_path / "old.pxl",
+            "old",
+            _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"}),
+            ("CD3", "CD4"),
+        )
+        new = _write_pxl(
+            tmp_path / "new.pxl",
+            "new",
+            _panel("1.0.1", {"CD3E": "AAAA", "CD4": "CCCC"}),
+            ("CD3E", "CD3E"),
+        )
+
+        adata = _read_adata(old, new)
+
+        counts = adata.to_df()
+        assert counts.loc["old", "CD3E"] == 1
+        assert counts.loc["new", "CD3E"] == 2
+
+    @pytest.mark.parametrize("newest_first", [False, True])
+    def test_var_has_the_aligned_panel_information(self, tmp_path, newest_first):
+        def rows(uniprot_ids: tuple[str, str]) -> list[dict]:
+            return [
+                {**_marker("CD3E", "AAAA"), "uniprot_id": uniprot_ids[0]},
+                {**_marker("CD4", "CCCC"), "uniprot_id": uniprot_ids[1]},
+            ]
+
+        old_rows = rows(("P01730", "P01732"))
+        old_rows[0]["marker_id"] = "CD3"
+        old = _write_pxl(
+            tmp_path / "old.pxl",
+            "old",
+            _panel_of_rows("1.0.0", old_rows),
+            ("CD3", "CD4"),
+        )
+        new = _write_pxl(
+            tmp_path / "new.pxl",
+            "new",
+            _panel_of_rows("1.0.1", rows(("P01732", "P01730"))),
+            ("CD3E", "CD4"),
+        )
+
+        adata = _read_adata(*((new, old) if newest_first else (old, new)))
+
+        assert adata.var["uniprot_id"].to_dict() == {
+            "CD3E": "P01732",
+            "CD4": "P01730",
+        }
+
+    def test_hashing_counts_in_obs_follow_the_renamed_clones(
+        self, tmp_path, monkeypatch
+    ):
+        # Written after sample calling: the clones are collapsed in the data
+        # and only kept in obs, and the stored panel cannot be rebuilt, so the
+        # panels are served by read_panel.
+        def hashing_panel(version: str, base: str) -> PNAAntibodyPanel:
+            return _panel_of_rows(
+                version,
+                [
+                    _marker("CD3", "AAAA"),
+                    {**_marker(f"{base}-1", "CCCC"), "sample_hashing": "yes"},
+                    {**_marker(f"{base}-2", "GGGG"), "sample_hashing": "yes"},
+                ],
+            )
+
+        panels = {
+            "old.pxl": hashing_panel("1.0.0", "B2M"),
+            "new.pxl": hashing_panel("1.0.1", "B3M"),
+        }
+        monkeypatch.setattr(PxlFile, "read_panel", lambda self: panels[self.path.name])
+        files = []
+        for sample, base in (("old", "B2M"), ("new", "B3M")):
+            path = tmp_path / f"{sample}.pxl"
+            files.append(
+                _write_pxl(
+                    path,
+                    sample,
+                    panels[path.name],
+                    ("CD3", base),
+                    adata_markers=["CD3", base],
+                )
+            )
+            with duckdb.connect(str(path)) as connection:
+                for clone in (1, 2):
+                    column = f"{ORIGINAL_HASH_COUNTS_PREFIX}{base}-{clone}"
+                    connection.execute(
+                        f'ALTER TABLE __adata__obs ADD COLUMN "{column}" INTEGER DEFAULT {clone}'
+                    )
+
+        adata = _read_adata(*files)
+
+        assert sorted(adata.var_names) == ["B3M", "CD3"]
+        hash_columns = sorted(
+            column
+            for column in adata.obs.columns
+            if column.startswith(ORIGINAL_HASH_COUNTS_PREFIX)
+        )
+        assert hash_columns == [
+            f"{ORIGINAL_HASH_COUNTS_PREFIX}B3M-1",
+            f"{ORIGINAL_HASH_COUNTS_PREFIX}B3M-2",
+        ]
+        assert adata.obs[f"{ORIGINAL_HASH_COUNTS_PREFIX}B3M-2"].to_list() == [2, 2]
+
+    def test_a_single_file_is_read_as_stored(self, old_file):
+        adata = _read_adata(old_file)
+
+        assert sorted(adata.var_names) == ["CD3", "CD4"]
+
+
 def test_marker_ids_with_quotes_are_escaped_in_the_rename_expression():
-    expression = _marker_rename_expression("marker_1", {"A'B": "C"})
+    expression = marker_rename_expression("marker_1", {"A'B": "C"})
 
     assert "WHEN 'A''B' THEN 'C'" in expression
