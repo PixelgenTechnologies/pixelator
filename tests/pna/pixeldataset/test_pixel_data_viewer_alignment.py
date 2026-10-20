@@ -59,8 +59,13 @@ def _write_pxl(
     marker_pair: tuple[str, str],
     legacy_columns: bool = False,
     adata_markers: list[str] | None = None,
+    stored_panel: bool = True,
 ) -> PxlFile:
-    """Write a pxl file whose single edge and proximity row use ``marker_pair``."""
+    """Write a pxl file whose single edge and proximity row use ``marker_pair``.
+
+    The panel goes in the panel tables, or in ``uns`` and ``var`` as older files
+    do when ``stored_panel`` is False.
+    """
     marker_1, marker_2 = marker_pair
     edgelist = pl.DataFrame(
         {
@@ -88,9 +93,17 @@ def _write_pxl(
     with PixelFileWriter(path) as writer:
         writer.write_edgelist(edgelist)
         connection = writer.get_connection()
+        if panel is not None and stored_panel:
+            writer.write_panel(panel)
         if panel is not None:
+            # Panel information cannot be added to the AnnData for a panel with
+            # several sources, and it is left out of var anyway once the panel
+            # is stored in its tables.
+            single_source = PNAAntibodyPanel.from_metadata(
+                panel.df, panel.sources[0].metadata
+            )
             adata = pna_edgelist_to_anndata(
-                connection, panel=panel, markers=adata_markers
+                connection, panel=single_source, markers=adata_markers
             )
         else:
             adata = anndata.AnnData(
@@ -107,8 +120,23 @@ def _write_pxl(
 
 
 def _corrupt_stored_panel(pxl_file: PxlFile, corrupt: str) -> None:
-    """Damage the panel a file stores in ``uns`` and ``var``, in one way."""
+    """Damage the stored panel of a file in one way, wherever it is kept."""
     with duckdb.connect(str(pxl_file.path)) as connection:
+        tables = {
+            name
+            for (name,) in connection.execute(
+                "SELECT table_name FROM information_schema.tables"
+            ).fetchall()
+        }
+        if "panels" in tables:
+            statement = {
+                "invalid_version": "UPDATE panel_sources SET version = 'not-a-version'",
+                "missing_name": "UPDATE panel_sources SET name = NULL",
+                "invalid_sequences": "UPDATE panels SET sequence_1 = 'xx'",
+            }[corrupt]
+            connection.execute(statement)
+            return
+        # files that keep the panel in uns and var
         if corrupt == "invalid_sequences":
             connection.execute("UPDATE __adata__var SET sequence_1 = 'xx'")
             return
@@ -208,20 +236,23 @@ class TestMarkerAlignment:
 
         assert _viewer(old_file).marker_renames() == {}
 
-    def test_different_addons_only_rename_the_shared_base(self, tmp_path, monkeypatch):
+    def test_different_addons_only_rename_the_shared_base(self, tmp_path):
         base_old = _panel("1.0.0", {"CD3": "AAAA"}, name="base", product="base")
         base_new = _panel("1.0.1", {"CD3E": "AAAA"}, name="base", product="base")
         addon_a = _panel("1.0.0", {"CD19": "CCCC"}, name="a", product="addon_a")
         addon_b = _panel("1.0.0", {"CD20": "GGGG"}, name="b", product="addon_b")
-        # Files cannot store a panel with several sources yet, so they store
-        # the base panel and the combined panels are served by read_panel.
-        panels = {
-            "a.pxl": PNAAntibodyPanel.concatenate([base_old, addon_a]),
-            "b.pxl": PNAAntibodyPanel.concatenate([base_new, addon_b]),
-        }
-        monkeypatch.setattr(PxlFile, "read_panel", lambda self: panels[self.path.name])
-        sample_a = _write_pxl(tmp_path / "a.pxl", "a", base_old, ("CD3", "CD19"))
-        sample_b = _write_pxl(tmp_path / "b.pxl", "b", base_new, ("CD3E", "CD20"))
+        sample_a = _write_pxl(
+            tmp_path / "a.pxl",
+            "a",
+            PNAAntibodyPanel.concatenate([base_old, addon_a]),
+            ("CD3", "CD19"),
+        )
+        sample_b = _write_pxl(
+            tmp_path / "b.pxl",
+            "b",
+            PNAAntibodyPanel.concatenate([base_new, addon_b]),
+            ("CD3E", "CD20"),
+        )
 
         viewer = _viewer(sample_a, sample_b)
 
@@ -242,6 +273,7 @@ class TestMarkerAlignment:
         assert viewer.marker_renames() == {}
         assert _markers(viewer) == {"old": {"CD3", "CD4"}, "other": {"CD3E", "CD4"}}
 
+    @pytest.mark.parametrize("stored_panel", [True, False])
     @pytest.mark.parametrize(
         "corrupt",
         [
@@ -251,8 +283,15 @@ class TestMarkerAlignment:
         ],
     )
     def test_a_file_whose_panel_cannot_be_read_leaves_the_markers_unchanged(
-        self, old_file, new_file, corrupt
+        self, old_file, tmp_path, corrupt, stored_panel
     ):
+        new_file = _write_pxl(
+            tmp_path / "corrupt.pxl",
+            "new",
+            _panel("1.0.1", {"CD3E": "AAAA", "CD4": "CCCC"}),
+            ("CD3E", "CD4"),
+            stored_panel=stored_panel,
+        )
         _corrupt_stored_panel(new_file, corrupt)
 
         viewer = _viewer(old_file, new_file)
@@ -271,8 +310,9 @@ class TestMarkerAlignment:
         with pytest.raises(RuntimeError, match="a bug"):
             _viewer(old_file, new_file).marker_renames()
 
-    def test_files_written_after_sample_calling_still_open(self, tmp_path):
-        # Hashing clones are collapsed, so the panel stored on var is incomplete.
+    def test_files_written_after_sample_calling_are_left_alone(self, tmp_path):
+        # Hashing clones are collapsed in the data, while the stored panel
+        # keeps them. The panels are identical, so nothing is renamed.
         rows = [
             _marker("CD3", "AAAA"),
             {**_marker("B2M-1", "CCCC"), "sample_hashing": "yes"},
@@ -372,12 +412,9 @@ class TestAnnDataAlignment:
             "CD4": "P01730",
         }
 
-    def test_hashing_counts_in_obs_follow_the_renamed_clones(
-        self, tmp_path, monkeypatch
-    ):
+    def test_hashing_counts_in_obs_follow_the_renamed_clones(self, tmp_path):
         # Written after sample calling: the clones are collapsed in the data
-        # and only kept in obs, and the stored panel cannot be rebuilt, so the
-        # panels are served by read_panel.
+        # and only kept in obs.
         def hashing_panel(version: str, base: str) -> PNAAntibodyPanel:
             return _panel_of_rows(
                 version,
@@ -392,7 +429,6 @@ class TestAnnDataAlignment:
             "old.pxl": hashing_panel("1.0.0", "B2M"),
             "new.pxl": hashing_panel("1.0.1", "B3M"),
         }
-        monkeypatch.setattr(PxlFile, "read_panel", lambda self: panels[self.path.name])
         files = []
         for sample, base in (("old", "B2M"), ("new", "B3M")):
             path = tmp_path / f"{sample}.pxl"
@@ -430,6 +466,24 @@ class TestAnnDataAlignment:
         adata = _read_adata(old_file)
 
         assert sorted(adata.var_names) == ["CD3", "CD4"]
+        assert adata.var.loc["CD3", "sequence_1"] == "AAAA"
+
+    def test_files_storing_the_panel_in_var_align_with_files_using_panel_tables(
+        self, tmp_path, new_file
+    ):
+        legacy = _write_pxl(
+            tmp_path / "legacy.pxl",
+            "old",
+            _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"}),
+            ("CD3", "CD4"),
+            stored_panel=False,
+        )
+
+        adata = _read_adata(legacy, new_file)
+
+        assert sorted(adata.var_names) == ["CD3E", "CD4"]
+        assert adata.var["sequence_1"].to_dict() == {"CD3E": "AAAA", "CD4": "CCCC"}
+        assert not adata.var.columns.duplicated().any()
 
 
 def test_marker_ids_with_quotes_are_escaped_in_the_rename_expression():
