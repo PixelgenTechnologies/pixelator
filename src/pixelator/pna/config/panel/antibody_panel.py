@@ -5,6 +5,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
@@ -226,6 +227,50 @@ class PNAAntibodyPanel:
 
         logger.debug("Antibody panel from AnnData object created")
         return cls.from_metadata(df, metadata, file_name=file_name)
+
+    @classmethod
+    def from_panel_tables(cls, markers: pd.DataFrame, sources: pd.DataFrame) -> Self:
+        """Build a panel from the ``panels`` and ``panel_sources`` tables.
+
+        Args:
+            markers: The ``panels`` table, one row per marker.
+            sources: The ``panel_sources`` table, one row per source.
+
+        Returns:
+            The stored panel.
+        """
+        panel_sources = []
+        for row in sources.sort_values("source_id").itertuples(index=False):
+            metadata = AntibodyPanelMetadata(
+                name=row.name,
+                version=row.version,
+                product=None if pd.isna(row.product) else row.product,
+                description=None if pd.isna(row.description) else row.description,
+                aliases=json.loads(row.aliases),
+                archived=bool(row.archived),
+            )
+            panel_sources.append(
+                PanelSource(
+                    metadata=metadata,
+                    file_name=None if pd.isna(row.file_name) else row.file_name,
+                    filepath=None if pd.isna(row.filepath) else row.filepath,
+                    columns=None
+                    if pd.isna(row.columns)
+                    else tuple(json.loads(row.columns)),
+                )
+            )
+
+        markers = markers.sort_values("row_nr").set_index("marker_id")
+        source_ids = markers.pop("source_id").astype("int64")
+        df = markers.drop(columns=["row_nr"])
+        single_source = len(panel_sources) == 1
+        return cls(
+            df,
+            panel_sources,
+            source_ids,
+            file_name=panel_sources[0].file_name if single_source else None,
+            filepath=panel_sources[0].filepath if single_source else None,
+        )
 
     @classmethod
     def concatenate(cls, panels: Sequence[PNAAntibodyPanel]) -> PNAAntibodyPanel:
