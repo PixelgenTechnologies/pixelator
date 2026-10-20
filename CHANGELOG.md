@@ -7,87 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- `pixelator.pna.analysis.differential_abundance` to run marker differential abundance (Wilcoxon via `scanpy.tl.rank_genes_groups`). Effect size is a mean difference, not scanpy's log-fold change.
-- Samples with no cells above the size threshold no longer fail the pipeline. A null pxl file
-  with a reason is written and passed through later steps, so the sample still shows up downstream.
-- The PNA graph step now peels the core-1 layer off the edgelist before fast label propagation and Leiden,
-  then reattaches it to the resolved components in an iterative absorption phase that runs until no more
-  UMIs can be absorbed. This improves runtime by 2x and lower memory usage in some scenarios.
-- The graph report now includes the size of the core-1 layer, the fraction of it that was reabsorbed, and the number
-  of UMIs absorbed in each core-1 absorption iteration (`core1_umis_absorbed_per_iteration`).
-- `PNAPixelDataset.layouts()` computes Layouts on the fly, making it easier to work with cell layouts.
-- `pixelator.pna.analysis.summarize_proximity_scores` to collapse a per-component proximity score table into one row per marker pair.
-- `pixelator.pna.analysis.cc_protein_weights` to derive rank-2 NMF protein weights for two labeled populations (`mode="cell_abundance"`), for use as `w` in cell:cell conjugate segmentation.
-- `pixelator.pna.analysis.distance_from_node_set` to compute integer hop distances from a set of seed nodes on a `PNAGraph` (unreached nodes stay missing).
-- `pixelator.pna.analysis.partition_counts` to sum node protein counts by partition group (cell1 / cell2 / interface / other) on a `PNAGraph`.
-- `pixelator.pna.analysis.segment_cell` to classify conjugate-graph nodes into two cell types (plus optional interface / `other`) using NMF weights from `cc_protein_weights`.
-- `pixelator.pna.plot.proximity_heatmap` to plot a clustered heatmap or dot plot of a summary proximity statistic between marker pairs.
-- `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
-- The `PIXELATOR_DUCKDB_THREADS` environment variable sets the default thread count of Pixelator's
-  DuckDB connections. An explicit `threads` setting passed to a connection takes precedence.
+### Data Analysis
 
-### Changed
+#### Added
+- `pixelator.pna.analysis.differential_abundance` for marker differential abundance (Wilcoxon).
+- `PNAPixelDataset.layouts()` computes layouts on the fly.
+- Proximity helpers `summarize_proximity_scores`, `filter_proximity_scores` and `proximity_heatmap`.
+- Conjugate segmentation helpers `cc_protein_weights`, `segment_cell`, `partition_counts` and `distance_from_node_set`.
+
+#### Changed
+- Faceted `density_scatter_plot` estimates density per facet; `density_scope="joint"` restores old behavior.
+- `density_scatter_plot` moved from `pixelator.mpx.plot` to `pixelator.plot`.
 - `calculate_differential_proximity` zero-pads missing scores for every component in the two groups (`cell_groups` includes cells with no proximity rows). The default metric is `log2_ratio`, groups with fewer than 10 components are skipped, and the test uses the normal approximation with a continuity correction. Pairs below `diff_threshold` (default 0.01) or the detection-rate cutoffs are dropped before p-values are adjusted. `group_vars` repeats the comparison inside each combination of those columns. Missing contrast or `group_vars` labels are rejected.
+
+#### Deprecated
+- `PNAPixelDataset.precomputed_layouts()`; use `layouts()` instead.
+
+#### Removed
+- Layouts `fruchterman_reingold(_3d)` and `kamada_kawai(_3d)`.
+
+#### Fixed
+- `PNAPixelDataset.proximity(calculate_from_edgelist=True)` now uses exact variance and a minimum standard deviation of 1.
+- `Edgelist.to_record_batches` renames legacy `marker1`/`marker2` columns.
+- `coarsened_pmds_layout` no longer fails on low `pivots` when Leiden yields few communities.
+
+### Data Processing
+
+#### Added
+- `proxiome-v2-immuno-156-Whitlow-v2.0` panel: immuno-155 plus the Whitlow CAR marker.
+- Samples with no cells above the size threshold no longer fail the pipeline.
+- PNA graph step peels and reabsorbs the core-1 layer, improving runtime and memory.
+- Graph report now includes core-1 layer size and absorption statistics.
+- `PIXELATOR_DUCKDB_THREADS` environment variable sets the default DuckDB thread count.
+
+#### Changed
 - `PixelFileWriter` stores `edgelist`, `proximity` and `layouts` sorted by `component` and markers,
   which speeds up `component` filters on remote PXL files.
-- Faceted `density_scatter_plot` now estimates density inside each facet and scales it to that facet's maximum by default, so panel colors follow the panel's own density. Pass `density_scope="joint"` for the previous behavior (one density on all panels). Non-faceted plots are unchanged. A facet that contains fewer than two cells, or has no two-dimensional spread, is drawn at a constant density. A non-faceted plot, and `density_scope="joint"`, still raise an error.
-- `pixelator single-cell-pna analysis --compute-proximity` now calculates the expected join counts and their
-  standard deviations analytically instead of with marker permutations. The statistics are exact under the
-  same null model as the permutation test, so the results match permutation-based scores up to permutation noise,
-  and proximity scores are computed much faster. The output format is unchanged.
-- Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
-- `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
-- `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component
-  recovery path. When the column is absent, sample calling skips it and graph molecule
-  statistics use the number of edges.
+- `analysis --compute-proximity` computes expected join counts analytically, which is much faster.
+- Updated pixelgen-pixelator-core to 0.2.0, reducing graph step peak memory by ~20%.
+- `uei_count` is now optional on PNA edgelists.
 
-### Deprecated
-- `PNAPixelDataset.precomputed_layouts()` is deprecated. Use `layouts()` to
-  compute Layouts on the fly. The method still reads a stored `layouts` table
-  when one exists.
+#### Removed
+- `--proximity-nbr-of-permutations` option of `single-cell-pna analysis`.
+- Stale nf-core/pixelator integration tests and workflow.
+- Molecular Pixelation (MPX) support; use a release before 0.31.0 for MPX data.
+- `single-cell-pna graph_legacy` command; use `graph` instead.
 
-### Removed
-- The `--proximity-nbr-of-permutations` option of `pixelator single-cell-pna analysis`, since proximity scores
-  are no longer computed with permutations.
-- Stale nf-core/pixelator integration tests (`task test-nf-core-pixelator` and
-  `.github/workflows/nf-core-pixelator-tests.yml`).
-- The `fruchterman_reingold`, `fruchterman_reingold_3d`, `kamada_kawai`, and
-  `kamada_kawai_3d` layout algorithms. Use `coarsened_pmds_3d`, `wpmds_3d`,
-  `pmds`, `pmds_3d`, or `spectral_3d` instead.
-- Molecular Pixelation (MPX) support, including the `pixelator.mpx` package, the
-  `single-cell-mpx` CLI and MPX assay/panel configuration. To process MPX data,
-  use a release prior to 0.31.0 (for example `pip install 'pixelgen-pixelator<0.31.0'`).
-- Removed `pixelator single-cell-pna graph_legacy` command. Use `pixelator single-cell-pna graph` instead.
-- The PNA graph step no longer densifies UMI node ids in Python before community detection.
-  The native `run_hybrid_community_detection` already builds a dense node index internally and
-  returns the original UMIs, so the redundant `create_working_edgelist` /
-  `map_working_to_original_umi_names` round-trip has been removed. The filtered edgelist is now
-  passed directly to native community detection, and the recovered components are unchanged.
-
-### Fixed
-- `PNAPixelDataset.proximity(calculate_from_edgelist=True)` underestimated `join_count_expected_sd`
-  (by ~4% on average and up to ~20% on the test data) since it did not account for edges sharing the same node, and used a minimum
-  standard deviation of 1e-6 for `join_count_z`, giving very large z-scores for rare marker pairs.
-  It now uses the exact variance and a minimum standard deviation of 1, consistent with
-  `pixelator single-cell-pna analysis`. The DuckDB `stochastic` extension is no longer needed.
-- `Edgelist.to_record_batches` renames legacy `marker1` and `marker2` columns to `marker_1` and `marker_2`, matching `to_polars`, `to_df`, and `iterator`.
-- `coarsened_pmds_layout` sizes PMDS pivots from the full graph when Leiden
-  yields too few communities, so a valid low `pivots` no longer fails
-  `pmds_layout`'s `0.2 * n` lower bound.
-- The default number of cores and the fallbacks used when `--cores` is not set now respect the
-  CPU affinity mask (via `os.process_cpu_count()` or `os.sched_getaffinity()`) and the cgroup
-  CPU bandwidth quota (`docker run --cpus`, Kubernetes `limits.cpu`), taking the most restrictive
-  of the two, instead of always reporting the host machine's core count. This prevents
-  multiprocessing oversubscription and slowdowns when running inside a container or pod with a
-  restricted CPU allocation.
-- The PNA analysis engine now pins each `--cores` worker process to one Polars thread and one
-  BLAS/OpenMP thread. Previously every worker built a Polars pool sized to the host CPU count, so
-  `--cores N` ran `N` processes × a host-wide pool and oversubscribed large machines. `--cores` is
-  still the number of worker processes; the parent process's Polars pool is unchanged.
-- DuckDB connections opened inside PNA analysis-engine workers (e.g. by `layout`) are now capped at
-  one thread.
-- Panel header parsing now recovers from multiple trailing commas per line (e.g. `name: foo,,,,,,,`).
+#### Fixed
+- Default core count respects CPU affinity and container CPU quotas.
+- Analysis workers are pinned to one Polars, BLAS/OpenMP and DuckDB thread.
+- Panel header parsing tolerates multiple trailing commas.
 
 ## [0.30.0] - 2026-08-05
 
