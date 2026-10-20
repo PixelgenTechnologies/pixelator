@@ -837,6 +837,12 @@ def _differential_proximity_one_comparison(
     if min_cells_per_group < 0:
         raise ValueError("min_cells_per_group must be a non-negative integer.")
 
+    # Check before ``label != reference``. pd.NA raises TypeError there, and
+    # NaN compares as not equal, so it would be collected as its own target.
+    _require_no_missing_labels(proximity_df, [contrast_column], "proximity_df")
+    if cell_groups is not None and contrast_column in cell_groups.columns:
+        _require_no_missing_labels(cell_groups, [contrast_column], "cell_groups")
+
     if targets is None:
         labels = proximity_df[contrast_column]
         if cell_groups is not None and contrast_column in cell_groups.columns:

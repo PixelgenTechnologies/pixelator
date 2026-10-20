@@ -798,6 +798,45 @@ def test_calculate_differential_proximity_rejects_shared_missing_contrast_label(
     assert "disagree" not in str(error.value)
 
 
+def test_calculate_differential_proximity_rejects_missing_contrast_before_targets():
+    """An omitted target list does not turn a missing contrast label into a target."""
+    proximity = pd.DataFrame(
+        {
+            "component": ["a", "b"],
+            "cell_type": ["A", "B"],
+            "marker_1": ["M1", "M1"],
+            "marker_2": ["M1", "M1"],
+            "log2_ratio": [1.0, 2.0],
+        }
+    )
+    cell_groups = pd.DataFrame({"component": ["a", "b"], "cell_type": ["A", pd.NA]})
+    with pytest.raises(ValueError, match="missing values"):
+        calculate_differential_proximity(
+            proximity,
+            contrast_column="cell_type",
+            reference="A",
+            cell_groups=cell_groups,
+        )
+
+
+def test_calculate_differential_proximity_rejects_missing_contrast_without_component():
+    """Without a component id, a missing contrast label is not its own target."""
+    proximity = pd.DataFrame(
+        {
+            "sample": ["A", np.nan],
+            "marker_1": ["M1", "M1"],
+            "marker_2": ["M1", "M1"],
+            "log2_ratio": [1.0, 2.0],
+        }
+    )
+    with pytest.raises(ValueError, match="missing values"):
+        calculate_differential_proximity(
+            proximity,
+            contrast_column="sample",
+            reference="A",
+        )
+
+
 def test_calculate_differential_proximity_group_vars_rejects_two_values():
     """A component cannot belong to two values of a grouping column."""
     proximity = _stratum_block("s1", 1.0, 5.0)
