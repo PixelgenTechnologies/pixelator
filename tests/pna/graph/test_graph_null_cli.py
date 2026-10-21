@@ -99,3 +99,45 @@ def test_connected_component_exception_keeps_statistics():
     assert exc.statistics is stats
     with pytest.raises(ConnectedComponentException):
         raise exc
+
+
+def test_graph_cli_accepts_repeated_panel_options(tmp_path, monkeypatch):
+    """Several --panel values are concatenated before the graph step runs."""
+    seen = {}
+
+    def capture_panel(*args, **kwargs):
+        seen["panel"] = kwargs["panel"]
+        raise ConnectedComponentException("no cells", statistics=GraphStatistics())
+
+    monkeypatch.setattr(
+        "pixelator.pna.cli.graph.build_pxl_file_with_components", capture_panel
+    )
+    panels = []
+    for name, marker, sequence in [("left", "CD3", "AAAA"), ("right", "CD19", "CCCC")]:
+        path = tmp_path / f"{name}.csv"
+        path.write_text(
+            f"# ---\n# name: {name}\n# product: kit\n# version: 1.0.0\n# ---\n"
+            f"marker_id,control,sequence_1,sequence_2\n{marker},,{sequence},{sequence}\n"
+        )
+        panels += ["--panel", str(path)]
+
+    result = CliRunner().invoke(
+        cli.main_cli,
+        [
+            "--cores",
+            "1",
+            "single-cell-pna",
+            "graph",
+            str(_parquet(tmp_path)),
+            *panels,
+            "--output",
+            str(tmp_path / "out"),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert [source.metadata.name for source in seen["panel"].sources] == [
+        "left",
+        "right",
+    ]
+    assert PxlFile(tmp_path / "out" / "graph" / "sampleA.graph.pxl").is_null_file()
