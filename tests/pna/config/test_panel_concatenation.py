@@ -67,7 +67,7 @@ def test_load_antibody_panels_rejects_duplicate_markers(tmp_path):
     left = _write_panel_csv(tmp_path / "left.csv", "left", [("CD3", "AAAA")])
     right = _write_panel_csv(tmp_path / "right.csv", "right", [("CD3", "CCCC")])
 
-    with pytest.raises(AssertionError, match="marker_id"):
+    with pytest.raises(ValueError, match="marker_id 'CD3'"):
         load_antibody_panels(pna_config, [left, right])
 
 
@@ -213,12 +213,47 @@ def test_replace_source_blanks_optional_columns_missing_from_one_side():
 def test_concatenate_rejects_duplicate_marker_and_sequence():
     left = _panel("base", "1.0.0", [_marker("CD3", "AAAA")])
     same_marker = _panel("addon", "1.0.0", [_marker("CD3", "CCCC")])
-    with pytest.raises(AssertionError, match="marker_id were not unique"):
+    with pytest.raises(ValueError, match="marker_id 'CD3' is in both"):
         PNAAntibodyPanel.concatenate([left, same_marker])
 
     same_sequence = _panel("addon", "1.0.0", [_marker("CD19", "AAAA")])
-    with pytest.raises(AssertionError, match="sequence_1"):
+    with pytest.raises(ValueError, match="sequence_1 'AAAA' is in both"):
         PNAAntibodyPanel.concatenate([left, same_sequence])
+
+
+def test_concatenate_names_the_sources_that_overlap():
+    base = _panel("base", "1.0.0", [_marker("CD3", "AAAA")])
+    addon = _panel("addon", "2.1.0", [_marker("CD19", "CCCC")])
+    other = _panel("other", "3.0.0", [_marker("CD3", "GGGG")])
+
+    with pytest.raises(ValueError) as error:
+        PNAAntibodyPanel.concatenate([base, addon, other])
+
+    message = str(error.value)
+    assert "base 1.0.0 (input 1)" in message
+    assert "other 3.0.0 (input 3)" in message
+    assert "addon" not in message
+
+
+def test_concatenate_rejects_the_same_panel_twice():
+    panel = _panel("base", "1.0.0", [_marker("CD3", "AAAA")])
+
+    with pytest.raises(ValueError, match="input 1.*input 2"):
+        PNAAntibodyPanel.concatenate([panel, panel])
+
+
+def test_concatenate_reports_overlaps_in_every_column_and_caps_the_list():
+    rows = [_marker(f"M{i}", f"{'ACGT'[i // 4]}{'ACGT'[i % 4]}CC") for i in range(16)]
+    left = _panel("base", "1.0.0", rows)
+    right = _panel("addon", "1.0.0", rows)
+
+    with pytest.raises(ValueError) as error:
+        PNAAntibodyPanel.concatenate([left, right])
+
+    lines = str(error.value).splitlines()
+    # a header, ten overlaps, and a count of the rest
+    assert len(lines) == 12
+    assert lines[-1] == "and 38 more"
 
 
 def test_source_as_panel_drops_columns_added_by_another_source():

@@ -143,6 +143,27 @@ def validate_panel(ctx, param, value):
     return tuple(_validate_one_panel(item) for item in value)
 
 
+def load_panels(panels):
+    """Load the panels given with ``--panel`` and concatenate them.
+
+    Args:
+        panels: One panel or several, as validated by ``validate_panel``.
+
+    Returns:
+        The concatenated panel.
+
+    Raises:
+        click.UsageError: If the panels cannot be combined, for example when two
+            of them share a marker.
+    """
+    from pixelator.pna.config import load_antibody_panels, pna_config
+
+    try:
+        return load_antibody_panels(pna_config, panels)
+    except ValueError as err:
+        raise click.UsageError(f"Invalid value for --panel: {err}") from err
+
+
 def panel_option(func):
     """Decorate a click command and add the --panel option."""
     from pixelator.pna.config import pna_config

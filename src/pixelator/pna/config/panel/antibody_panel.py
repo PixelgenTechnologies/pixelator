@@ -63,6 +63,44 @@ def _stack_marker_tables(frames: list[pd.DataFrame]) -> pd.DataFrame:
     return df
 
 
+_MAX_REPORTED_OVERLAPS = 10
+
+
+def _check_sources_are_disjoint(parts: list[tuple[PanelSource, pd.DataFrame]]) -> None:
+    """Raise when two sources share a marker id or a sequence.
+
+    Sources are told apart by position, so the same panel given twice is
+    reported too.
+    """
+    owners: dict[tuple[str, str], int] = {}
+    overlaps = []
+    for index, (source, frame) in enumerate(parts):
+        keys = [("marker_id", str(marker_id)) for marker_id in frame.index]
+        for column in _UNIQUE_COLUMNS:
+            keys.extend((column, str(value)) for value in frame[column])
+        for key in keys:
+            owner = owners.setdefault(key, index)
+            if owner != index:
+                overlaps.append((key, owner, index))
+    if not overlaps:
+        return
+
+    def label(index: int) -> str:
+        metadata = parts[index][0].metadata
+        return f"{metadata.name} {metadata.version} (input {index + 1})"
+
+    lines = [
+        f"{column} {value!r} is in both {label(first)} and {label(second)}"
+        for (column, value), first, second in overlaps[:_MAX_REPORTED_OVERLAPS]
+    ]
+    if len(overlaps) > _MAX_REPORTED_OVERLAPS:
+        lines.append(f"and {len(overlaps) - _MAX_REPORTED_OVERLAPS} more")
+    raise ValueError(
+        "Panels to concatenate must not share a marker id or a sequence:\n"
+        + "\n".join(lines)
+    )
+
+
 class PNAAntibodyPanel:
     """Class representing a PNA antibody panel."""
 
@@ -291,9 +329,14 @@ class PNAAntibodyPanel:
         One panel is returned unchanged. Several panels are stacked in the
         given order. The result keeps every input source.
         ``marker_id``, ``sequence_1``, and ``sequence_2`` must be unique
-        across the concatenation. A column present on only some sources is
+        across the concatenation, otherwise a ``ValueError`` names the sources
+        that share them. A column present on only some sources is
         blank on the others, the same as an empty cell in a panel CSV.
         Each source still remembers the columns it was loaded with.
+
+        Raises:
+            ValueError: If no panel is given, or if two sources share a marker
+                id or a sequence.
         """
         if not panels:
             raise ValueError("At least one panel is required to concatenate.")
@@ -305,6 +348,7 @@ class PNAAntibodyPanel:
             for panel in panels
             for i, source in enumerate(panel.sources)
         ]
+        _check_sources_are_disjoint(parts)
         sources = [source for source, _ in parts]
         frames = [frame for _, frame in parts]
         df = _stack_marker_tables(frames)
