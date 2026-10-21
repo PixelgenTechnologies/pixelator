@@ -16,7 +16,7 @@ from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna import read
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel, collapsed_hashing_marker_id
-from pixelator.pna.pixeldataset.io import PixelFileWriter
+from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 from pixelator.pna.sample_calling import (
     _add_original_hash_counts_to_obs,
     _collect_nodes_to_remove,
@@ -514,6 +514,7 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
         writer.write_edgelist(edgelist)
         con = writer.get_connection()
         adata = pna_edgelist_to_anndata(con, panel=panel)
+        writer.write_panel(panel)
         writer.write_adata(adata)
         writer.write_metadata(
             {
@@ -548,6 +549,8 @@ def test_sample_calling_does_not_strip_suffix_from_non_hash_markers(
     dehashed_counts = dehashed_pxl.adata().to_df()
 
     assert dehashed_counts.loc["c1", "PD-1"] == original_counts.loc["c1", "PD-1"]
+    # the output keeps the whole panel, including the collapsed hashing markers
+    assert PxlFile(output_files[0]).read_panel() == panel
 
 
 def test_sample_calling_keeps_collapsed_hash_marker_missing_from_panel(
@@ -592,6 +595,7 @@ def test_sample_calling_keeps_collapsed_hash_marker_missing_from_panel(
         writer.write_edgelist(edgelist)
         con = writer.get_connection()
         adata = pna_edgelist_to_anndata(con, panel=panel)
+        writer.write_panel(panel)
         writer.write_adata(adata)
         writer.write_metadata({"sample_name": "input", "version": "0.1.0"})
 
@@ -677,6 +681,7 @@ def test_sample_calling_without_uei_count(tmp_path: Path):
         writer.write_edgelist(edgelist)
         con = writer.get_connection()
         adata = pna_edgelist_to_anndata(con, panel=panel)
+        writer.write_panel(panel)
         writer.write_adata(adata)
         writer.write_metadata(
             {

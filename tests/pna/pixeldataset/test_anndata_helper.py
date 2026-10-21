@@ -22,16 +22,20 @@ class TestAnnDataHelper:
     """Represent test ann data helper."""
 
     def test_anndata_helper_matches_dataset_adata_no_transforms(
-        self, pxl_dataset, adata_data
+        self, pxl_dataset, adata_data, panel
     ):
         """Verify anndata helper matches dataset adata no transforms.
 
         Args:
             pxl_dataset: pxl dataset.
             adata_data: adata data.
+            panel: panel.
         """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
+        adata_data.var = adata_data.var.join(
+            panel.df.reindex(adata_data.var_names), how="left"
+        )
 
         helper = AnnDataHelper(pxl_dataset.view)
         res = helper.read_adata(add_clr_transform=False, add_log1p_transform=False)

@@ -4,7 +4,6 @@ Copyright © 2025 Pixelgen Technologies AB.
 """
 
 from pathlib import Path
-from unittest import mock
 
 import networkx as nx
 import numpy as np
@@ -23,9 +22,10 @@ from pixelator.pna.analysis.denoise import (
 )
 from pixelator.pna.analysis_engine import AnalysisManager
 from pixelator.pna.config import pna_config
-from pixelator.pna.config.panel import load_antibody_panel
+from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PixelDatasetSaver, read
+from pixelator.pna.pixeldataset.io import PxlFile
 from tests.common.data_generator import write_pna_pxl
 
 
@@ -213,22 +213,15 @@ def test_denoise_one_core_analysis(synthetic_denoise_pxl_dataset, tmp_path):
     pxl_file_target = PixelDatasetSaver(pxl_dataset=synthetic_denoise_pxl_dataset).save(
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
-    with mock.patch(
-        "pixelator.pna.analysis.denoise.load_antibody_panel"
-    ) as mock_load_panel:
-        # This is a workaround to make sure that the correct panel is loaded
-        # eventhough we no longer set a default panel file.
-        def f(*args, **kwargs):
-            return load_antibody_panel(pna_config, "proxiome-v1-immuno-155-v1.0")
+    manager = AnalysisManager(
+        [DenoiseGraph(run_one_core=True, run_ace=False)], n_cores=1
+    )
+    denoised_dataset = manager.execute(synthetic_denoise_pxl_dataset, pxl_file_target)
 
-        mock_load_panel.side_effect = f
-
-        manager = AnalysisManager(
-            [DenoiseGraph(run_one_core=True, run_ace=False)], n_cores=1
-        )
-        denoised_dataset = manager.execute(
-            synthetic_denoise_pxl_dataset, pxl_file_target
-        )
+    # the denoised file keeps the panel of the input
+    assert PxlFile(pxl_file_target.path).read_panel() == (
+        PNAAntibodyPanel.from_pxl_dataset(synthetic_denoise_pxl_dataset)
+    )
 
     adata = denoised_dataset.adata()
     obs = adata.obs
@@ -308,16 +301,10 @@ def _run_one_core_denoise(dataset, target_path):
     target = PixelDatasetSaver(pxl_dataset=dataset).save(
         "PNA055_Sample07_S7", target_path
     )
-    with mock.patch(
-        "pixelator.pna.analysis.denoise.load_antibody_panel"
-    ) as mock_load_panel:
-        mock_load_panel.side_effect = lambda *args, **kwargs: load_antibody_panel(
-            pna_config, "proxiome-v1-immuno-155-v1.0"
-        )
-        manager = AnalysisManager(
-            [DenoiseGraph(run_one_core=True, run_ace=False)], n_cores=1
-        )
-        return manager.execute(dataset, target)
+    manager = AnalysisManager(
+        [DenoiseGraph(run_one_core=True, run_ace=False)], n_cores=1
+    )
+    return manager.execute(dataset, target)
 
 
 def test_denoise_one_core_analysis_deterministic(
@@ -503,18 +490,10 @@ def test_denoise_ace_analysis(synthetic_denoise_pxl_dataset, tmp_path):
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
 
-    with mock.patch(
-        "pixelator.pna.analysis.denoise.load_antibody_panel"
-    ) as mock_load_panel:
-        mock_load_panel.side_effect = lambda *args, **kwargs: load_antibody_panel(
-            pna_config, "proxiome-v1-immuno-155-v1.0"
-        )
-        manager = AnalysisManager(
-            [DenoiseGraph(run_one_core=False, run_ace=True)], n_cores=1
-        )
-        denoised_dataset = manager.execute(
-            synthetic_denoise_pxl_dataset, pxl_file_target
-        )
+    manager = AnalysisManager(
+        [DenoiseGraph(run_one_core=False, run_ace=True)], n_cores=1
+    )
+    denoised_dataset = manager.execute(synthetic_denoise_pxl_dataset, pxl_file_target)
 
     obs = denoised_dataset.adata().obs
 
@@ -557,18 +536,10 @@ def test_denoise_ace_pls_one_core(synthetic_denoise_pxl_dataset, tmp_path):
         "PNA055_Sample07_S7", Path(tmp_path) / "layout.pxl"
     )
 
-    with mock.patch(
-        "pixelator.pna.analysis.denoise.load_antibody_panel"
-    ) as mock_load_panel:
-        mock_load_panel.side_effect = lambda *args, **kwargs: load_antibody_panel(
-            pna_config, "proxiome-v1-immuno-155-v1.0"
-        )
-        manager = AnalysisManager(
-            [DenoiseGraph(run_one_core=True, run_ace=True, run_pls=True)], n_cores=1
-        )
-        denoised_dataset = manager.execute(
-            synthetic_denoise_pxl_dataset, pxl_file_target
-        )
+    manager = AnalysisManager(
+        [DenoiseGraph(run_one_core=True, run_ace=True, run_pls=True)], n_cores=1
+    )
+    denoised_dataset = manager.execute(synthetic_denoise_pxl_dataset, pxl_file_target)
 
     obs = denoised_dataset.adata().obs
 
