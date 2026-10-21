@@ -6,6 +6,7 @@ Copyright © 2022 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
@@ -60,6 +61,44 @@ def _stack_marker_tables(frames: list[pd.DataFrame]) -> pd.DataFrame:
     df = pd.concat(frames).fillna("")
     df.index.name = _INDEX_COLUMN
     return df
+
+
+_MAX_REPORTED_OVERLAPS = 10
+
+
+def _check_sources_are_disjoint(parts: list[tuple[PanelSource, pd.DataFrame]]) -> None:
+    """Raise when two sources share a marker id or a sequence.
+
+    Sources are told apart by position, so the same panel given twice is
+    reported too.
+    """
+    owners: dict[tuple[str, str], int] = {}
+    overlaps = []
+    for index, (source, frame) in enumerate(parts):
+        keys = [("marker_id", str(marker_id)) for marker_id in frame.index]
+        for column in _UNIQUE_COLUMNS:
+            keys.extend((column, str(value)) for value in frame[column])
+        for key in keys:
+            owner = owners.setdefault(key, index)
+            if owner != index:
+                overlaps.append((key, owner, index))
+    if not overlaps:
+        return
+
+    def label(index: int) -> str:
+        metadata = parts[index][0].metadata
+        return f"{metadata.name} {metadata.version} (input {index + 1})"
+
+    lines = [
+        f"{column} {value!r} is in both {label(first)} and {label(second)}"
+        for (column, value), first, second in overlaps[:_MAX_REPORTED_OVERLAPS]
+    ]
+    if len(overlaps) > _MAX_REPORTED_OVERLAPS:
+        lines.append(f"and {len(overlaps) - _MAX_REPORTED_OVERLAPS} more")
+    raise ValueError(
+        "Panels to concatenate must not share a marker id or a sequence:\n"
+        + "\n".join(lines)
+    )
 
 
 class PNAAntibodyPanel:
@@ -290,9 +329,14 @@ class PNAAntibodyPanel:
         One panel is returned unchanged. Several panels are stacked in the
         given order. The result keeps every input source.
         ``marker_id``, ``sequence_1``, and ``sequence_2`` must be unique
-        across the concatenation. A column present on only some sources is
+        across the concatenation, otherwise a ``ValueError`` names the sources
+        that share them. A column present on only some sources is
         blank on the others, the same as an empty cell in a panel CSV.
         Each source still remembers the columns it was loaded with.
+
+        Raises:
+            ValueError: If no panel is given, or if two sources share a marker
+                id or a sequence.
         """
         if not panels:
             raise ValueError("At least one panel is required to concatenate.")
@@ -304,6 +348,7 @@ class PNAAntibodyPanel:
             for panel in panels
             for i, source in enumerate(panel.sources)
         ]
+        _check_sources_are_disjoint(parts)
         sources = [source for source, _ in parts]
         frames = [frame for _, frame in parts]
         df = _stack_marker_tables(frames)
@@ -611,3 +656,24 @@ def load_antibody_panel(config: PNAConfig, panel: PathType) -> PNAAntibodyPanel:
 
     panel_obj = PNAAntibodyPanel.from_csv(panel)
     return panel_obj
+
+
+def load_antibody_panels(
+    config: PNAConfig, panels: PathType | Sequence[PathType]
+) -> PNAAntibodyPanel:
+    """Load one or more panels and concatenate them.
+
+    A single path or name is returned as that panel. Several inputs are
+    concatenated in order.
+
+    Args:
+        config: the config object
+        panels: one panel path or name, or a sequence of them
+    Returns:
+        the antibody panel (PNAAntibodyPanel)
+    """
+    if isinstance(panels, (str, os.PathLike)):
+        return load_antibody_panel(config, panels)
+    return PNAAntibodyPanel.concatenate(
+        [load_antibody_panel(config, panel) for panel in panels]
+    )

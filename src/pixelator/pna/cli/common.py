@@ -5,6 +5,7 @@ Copyright © 2024 Pixelgen Technologies AB
 
 import functools
 import logging
+import os
 from pathlib import Path
 
 import click
@@ -103,16 +104,7 @@ def design_option(func):
     return wrapper
 
 
-def validate_panel(ctx, param, value):
-    """Validate the panel commandline option.
-
-    Args:
-        ctx: The click context
-        param: The click parameter
-        value: The click value
-    Returns:
-        The validated value
-    """
+def _validate_one_panel(value):
     try:
         if Path(value).exists():
             return value
@@ -133,6 +125,45 @@ def validate_panel(ctx, param, value):
     return value
 
 
+def validate_panel(ctx, param, value):
+    """Validate the panel commandline option.
+
+    ``--panel`` may be repeated. Each value is a supported panel name or a path
+    to a panel CSV.
+
+    Args:
+        ctx: The click context
+        param: The click parameter
+        value: The click value, a single value or a sequence of values
+    Returns:
+        The validated value, in the same shape as the input
+    """
+    if isinstance(value, (str, os.PathLike)):
+        return _validate_one_panel(value)
+    return tuple(_validate_one_panel(item) for item in value)
+
+
+def load_panels(panels):
+    """Load the panels given with ``--panel`` and concatenate them.
+
+    Args:
+        panels: One panel or several, as validated by ``validate_panel``.
+
+    Returns:
+        The concatenated panel.
+
+    Raises:
+        click.UsageError: If the panels cannot be combined, for example when two
+            of them share a marker.
+    """
+    from pixelator.pna.config import load_antibody_panels, pna_config
+
+    try:
+        return load_antibody_panels(pna_config, panels)
+    except ValueError as err:
+        raise click.UsageError(f"Invalid value for --panel: {err}") from err
+
+
 def panel_option(func):
     """Decorate a click command and add the --panel option."""
     from pixelator.pna.config import pna_config
@@ -144,10 +175,13 @@ def panel_option(func):
     @click.option(
         "--panel",
         required=True,
-        default=None,
+        multiple=True,
         type=click.UNPROCESSED,
         callback=validate_panel,
-        help="The name of a panel to load from the supported panels. Optionally, provide a path to a custom panel file.",
+        help=(
+            "The name of a panel to load from the supported panels, or a path to a "
+            "custom panel file. Repeat to concatenate several panels."
+        ),
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):

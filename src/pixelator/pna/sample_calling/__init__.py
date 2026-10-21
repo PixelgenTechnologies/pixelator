@@ -379,8 +379,6 @@ def sample_calling(
             "sample_name": sample_name,
             "version": __version__,
             "technology": "single-cell-pna",
-            "panel_name": panel.name,
-            "panel_version": panel.version,
         }
 
         nodes_to_remove = _find_nodes_to_remove(

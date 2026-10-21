@@ -122,8 +122,6 @@ def build_pxl_file_with_components(
                 "sample_name": sample_name,
                 "version": __version__,
                 "technology": "single-cell-pna",
-                "panel_name": panel.name,
-                "panel_version": panel.version,
             }
 
             logger.debug("Building pxl file")
