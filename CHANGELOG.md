@@ -25,8 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.plot.proximity_heatmap` to plot a clustered heatmap or dot plot of a summary proximity statistic between marker pairs.
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 - Combining pxl files with panels differing in patch version aligns marker names.
+- `--panel` can be repeated to combine panels; pxl files store their panel.
 
 ### Changed
+- Output pxl metadata no longer has `panel_name` and `panel_version`.
 - Updated pixelgen-pixelator-core to 0.2.0 improving peak memory usage in the graph step by ~20%.
 - `density_scatter_plot` now lives in `pixelator.plot` (previously `pixelator.mpx.plot`).
 - `uei_count` is now optional on PNA edgelists in `sample_calling` and the graph component

@@ -7,7 +7,12 @@ import pandas as pd
 import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.config import pna_config
+from pixelator.pna.config.panel import (
+    PNAAntibodyPanel,
+    load_antibody_panel,
+    load_antibody_panels,
+)
 
 
 def _panel(
@@ -30,6 +35,40 @@ def _marker(marker_id: str, sequence: str, **extra) -> dict:
     }
     row.update(extra)
     return row
+
+
+def _write_panel_csv(path, name: str, rows: list[tuple[str, str]]):
+    header = f"# ---\n# name: {name}\n# product: kit\n# version: 1.0.0\n# ---\n"
+    lines = ["marker_id,control,sequence_1,sequence_2"]
+    lines += [f"{marker},,{sequence},{sequence}" for marker, sequence in rows]
+    path.write_text(header + "\n".join(lines) + "\n")
+    return path
+
+
+def test_load_antibody_panels_accepts_one_name_or_a_sequence():
+    name = "proxiome-v1-immuno-155-v1.0"
+    single = load_antibody_panel(pna_config, name)
+
+    assert load_antibody_panels(pna_config, name) == single
+    assert load_antibody_panels(pna_config, [name]) == single
+
+
+def test_load_antibody_panels_concatenates_panel_files(tmp_path):
+    left = _write_panel_csv(tmp_path / "left.csv", "left", [("CD3", "AAAA")])
+    right = _write_panel_csv(tmp_path / "right.csv", "right", [("CD19", "CCCC")])
+
+    panel = load_antibody_panels(pna_config, [left, right])
+
+    assert [source.metadata.name for source in panel.sources] == ["left", "right"]
+    assert panel.markers == ["CD3", "CD19"]
+
+
+def test_load_antibody_panels_rejects_duplicate_markers(tmp_path):
+    left = _write_panel_csv(tmp_path / "left.csv", "left", [("CD3", "AAAA")])
+    right = _write_panel_csv(tmp_path / "right.csv", "right", [("CD3", "CCCC")])
+
+    with pytest.raises(AssertionError, match="marker_id"):
+        load_antibody_panels(pna_config, [left, right])
 
 
 def test_concatenate_keeps_metadata_for_each_source():

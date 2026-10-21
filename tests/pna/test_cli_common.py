@@ -27,3 +27,16 @@ def test_validate_non_existing_panel():
     panel = "non-existing-panel"
     with pytest.raises(click.UsageError):
         validate_panel(None, None, panel)
+
+
+def test_validate_panel_accepts_repeated_values(pna_data_root):
+    """Verify that repeated panel values are validated one by one."""
+    name = "proxiome-v1-immuno-155-v1.0"
+    panel_file = pna_data_root / "panels/test-pna-panel.csv"
+    assert validate_panel(None, None, (name, panel_file)) == (name, panel_file)
+
+
+def test_validate_panel_rejects_a_bad_repeated_value():
+    """Verify that one unknown panel among several raises a UsageError."""
+    with pytest.raises(click.UsageError):
+        validate_panel(None, None, ("proxiome-v1-immuno-155-v1.0", "non-existing"))
