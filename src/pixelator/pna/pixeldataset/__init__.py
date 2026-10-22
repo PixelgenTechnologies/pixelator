@@ -50,7 +50,7 @@ read, or when the panels cannot be aligned.
 Panels that disagree on a marker cannot be combined safely: a marker id with different
 sequences, or a sequence pair with different marker ids in panels of different products.
 Loading such files raises :class:`~pixelator.pna.config.panel.align.PanelConflictError`.
-Pass ``force=True`` to :func:`~pixelator.pna.pixeldataset.read` or
+Pass ``force=True`` to ``read()`` or
 :meth:`~pixelator.pna.pixeldataset.dataset.PNAPixelDataset.from_pxl_files` to load them
 with a warning anyway, with markers matched on their sequences. ``adata()`` keeps only
 the markers that are in all samples, and warns about the ones it drops.
