@@ -47,6 +47,14 @@ of ``adata().var`` take the newest panel values. ``adata().uns["panel_metadata"]
 changed. Files are left as stored, with a warning, when a panel is missing or cannot be
 read, or when the panels cannot be aligned.
 
+Panels that disagree on a marker cannot be combined safely: a marker id with different
+sequences, or a sequence pair with different marker ids in panels of different products.
+Loading such files raises :class:`~pixelator.pna.config.panel.align.PanelConflictError`.
+Pass ``force=True`` to ``read()`` or
+:meth:`~pixelator.pna.pixeldataset.dataset.PNAPixelDataset.from_pxl_files` to load them
+with a warning anyway, with markers matched on their sequences. ``adata()`` keeps only
+the markers that are in all samples, and warns about the ones it drops.
+
 .. rubric:: Dependency overview (ASCII)
 
 .. code-block:: none
@@ -87,12 +95,16 @@ from pixelator.pna.pixeldataset.saver import PixelDatasetSaver
 from pixelator.pna.pixeldataset.types import Component
 
 
-def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
+def read(
+    paths: Path | list[Path] | str | list[str], force: bool = False
+) -> PNAPixelDataset:
     """Read data from one or more ``.pxl`` files.
 
     Args:
         paths: One or more paths to ``.pxl`` files. A single path or a list of
             paths may be passed. Each path may be a ``pathlib.Path`` or ``str``.
+        force: Load files whose antibody panels have conflicting markers, with a
+            warning, instead of raising.
 
     Returns:
         The data from the ``.pxl`` file(s).
@@ -104,6 +116,8 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
         ValueError: If a file is not a valid ``.pxl`` file, if a sample name cannot
             be determined from file metadata, or if a null file has no reason.
         FileNotFoundError: If any path does not exist on disk.
+        PanelConflictError: If the antibody panels of the files have conflicting
+            markers and ``force`` is not set.
     """
     if not paths:
         raise ValueError(
@@ -114,7 +128,7 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
     normalized_paths = [Path(p) for p in paths]  # type: ignore
     for path in normalized_paths:
         reject_null_pxl(PxlFile(path))
-    return PNAPixelDataset.from_pxl_files(normalized_paths)
+    return PNAPixelDataset.from_pxl_files(normalized_paths, force=force)
 
 
 __all__ = [

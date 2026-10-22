@@ -3,6 +3,7 @@
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+import logging
 from pathlib import Path
 
 import anndata
@@ -14,7 +15,13 @@ import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config.panel import ORIGINAL_HASH_COUNTS_PREFIX, PNAAntibodyPanel
+from pixelator.pna.config import pna_config
+from pixelator.pna.config.panel import (
+    ORIGINAL_HASH_COUNTS_PREFIX,
+    PanelConflictError,
+    PNAAntibodyPanel,
+)
+from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import (
     PixelDataViewer,
     PixelFileWriter,
@@ -433,3 +440,153 @@ def test_marker_ids_with_quotes_are_escaped_in_the_rename_expression():
     expression = marker_rename_expression("marker_1", {"A'B": "C"})
 
     assert "WHEN 'A''B' THEN 'C'" in expression
+
+
+class TestMarkerConflicts:
+    """Files whose panels give the same marker id to different sequences."""
+
+    @pytest.fixture(name="conflicting_files")
+    def conflicting_files_fixture(self, tmp_path) -> tuple[PxlFile, PxlFile]:
+        panels = [
+            _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"}, name="a", product="a"),
+            _panel("1.0.0", {"CD3": "GGGG", "CD4": "CCCC"}, name="b", product="b"),
+        ]
+        first, second = (
+            _write_pxl(tmp_path / f"{sample}.pxl", sample, panel, ("CD3", "CD4"))
+            for sample, panel in zip(("a", "b"), panels)
+        )
+        return first, second
+
+    def test_the_view_raises_when_the_markers_are_first_used(self, conflicting_files):
+        viewer = _viewer(*conflicting_files)
+
+        with pytest.raises(PanelConflictError, match="marker id 'CD3'"):
+            viewer.marker_renames()
+        with pytest.raises(PanelConflictError):
+            viewer.open()
+
+    def test_loading_a_dataset_raises_before_any_query(self, conflicting_files):
+        with pytest.raises(PanelConflictError, match="force=True"):
+            PNAPixelDataset.from_pxl_files(list(conflicting_files))
+
+    def test_read_raises_and_accepts_force(self, conflicting_files, caplog):
+        paths = [pxl_file.path for pxl_file in conflicting_files]
+
+        with pytest.raises(PanelConflictError):
+            read(paths)
+        with caplog.at_level(logging.WARNING):
+            dataset = read(paths, force=True)
+
+        assert "marker id 'CD3'" in caplog.text
+        assert dataset.view.marker_renames() == {}
+
+    def test_force_loads_the_files_with_the_newest_panel_row(self, tmp_path, caplog):
+        files = [
+            _write_pxl(
+                tmp_path / f"{sample}.pxl",
+                sample,
+                _panel("1.0.0", {"CD3": sequence, "CD4": "CCCC"}),
+                ("CD3", "CD4"),
+            )
+            for sample, sequence in (("old", "AAAA"), ("new", "GGGG"))
+        ]
+        # The new file has the newer patch, whatever the order of the files.
+        newer = _write_pxl(
+            tmp_path / "newer.pxl",
+            "newer",
+            _panel("1.0.1", {"CD3": "TTTT", "CD4": "CCCC"}),
+            ("CD3", "CD4"),
+        )
+        viewer = PixelDataViewer.from_files([newer, *files], force=True)
+
+        with caplog.at_level(logging.WARNING):
+            adata = AnnDataHelper(viewer).read_adata()
+
+        assert "marker id 'CD3'" in caplog.text
+        assert sorted(adata.obs_names) == ["new", "newer", "old"]
+        assert adata.var.loc["CD3", "sequence_1"] == "TTTT"
+
+    def test_the_version_error_still_falls_back_with_a_warning(
+        self, old_file, tmp_path, caplog
+    ):
+        other = _panel("1.1.0", {"CD3E": "AAAA", "CD4": "CCCC"})
+        other_file = _write_pxl(tmp_path / "o.pxl", "other", other, ("CD3E", "CD4"))
+
+        with caplog.at_level(logging.WARNING):
+            renames = _viewer(old_file, other_file).marker_renames()
+
+        assert renames == {}
+        assert "same major and minor version" in caplog.text
+
+    def test_real_panels_of_different_products_conflict(self, tmp_path, caplog):
+        panels = [
+            pna_config.get_panel("proxiome-v2-immuno-155-v2.0"),
+            pna_config.get_panel("proxiome-v2-immuno-156-FMC63-prerelease"),
+        ]
+        files = [
+            _write_pxl(
+                tmp_path / f"{sample}.pxl",
+                sample,
+                panel,
+                tuple(panel.df.index[:2]),
+            )
+            for sample, panel in zip(("a", "b"), panels)
+        ]
+
+        with pytest.raises(PanelConflictError, match="marker id 'B2M-1'"):
+            PNAPixelDataset.from_pxl_files(files)
+        with caplog.at_level(logging.WARNING):
+            dataset = PNAPixelDataset.from_pxl_files(files, force=True)
+
+        assert "marker id 'B2M-1'" in caplog.text
+        assert dataset.view.marker_renames() == {}
+
+
+class TestDroppedMarkers:
+    """The inner join of AnnData drops the markers that not all samples have."""
+
+    @staticmethod
+    def _files(tmp_path, markers: dict[str, str], extra: dict[str, str]):
+        """A file with ``markers``, and a file with ``markers`` and ``extra``."""
+        base = _panel("1.0.0", markers, name="base", product="base")
+        addon = _panel("1.0.0", extra, name="addon", product="addon")
+        return [
+            _write_pxl(tmp_path / "base.pxl", "base", base, ("CD3", "CD3")),
+            _write_pxl(
+                tmp_path / "addon.pxl",
+                "addon",
+                PNAAntibodyPanel.concatenate([base, addon]),
+                ("CD3", "CD3"),
+            ),
+        ]
+
+    def test_the_inner_join_warns_about_the_dropped_markers(self, tmp_path, caplog):
+        files = self._files(tmp_path, {"CD3": "AAAA"}, {"CD19": "CCCC"})
+
+        with caplog.at_level(logging.WARNING):
+            adata = _read_adata(*files)
+
+        assert list(adata.var_names) == ["CD3"]
+        assert "are dropped (1): CD19" in caplog.text
+
+    def test_only_the_first_dropped_markers_are_listed(self, tmp_path, caplog):
+        # 12 distinct sequences of 4 bases
+        extra = {
+            f"M{i:02}": "".join("ACGT"[i // 4**k % 4] for k in range(4))
+            for i in range(1, 13)
+        }
+        files = self._files(tmp_path, {"CD3": "TTTT"}, extra)
+
+        with caplog.at_level(logging.WARNING):
+            _read_adata(*files)
+
+        assert "are dropped (12)" in caplog.text
+        assert "M10" in caplog.text
+        assert "M11" not in caplog.text
+        assert "and 2 more" in caplog.text
+
+    def test_files_with_the_same_markers_do_not_warn(self, old_file, new_file, caplog):
+        with caplog.at_level(logging.WARNING):
+            _read_adata(old_file, new_file)
+
+        assert "are dropped" not in caplog.text
