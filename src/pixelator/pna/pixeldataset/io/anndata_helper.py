@@ -16,6 +16,7 @@ from anndata import AnnData, ImplicitModificationWarning
 from anndata import concat as anndata_concat
 
 from pixelator.common.statistics import clr_transformation, log1p_transformation
+from pixelator.common.utils import logger
 from pixelator.pna.config.panel import ORIGINAL_HASH_COUNTS_PREFIX
 from pixelator.pna.config.panel.tables import PANEL_TABLES
 from pixelator.pna.pixeldataset.utils import update_metrics_anndata
@@ -23,6 +24,8 @@ from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
 from .pixel_data_viewer import PixelDataViewer, PixelDataViewerSession
 from .query_builder import QueryBuilder
+
+_MAX_REPORTED_MARKERS = 10
 
 
 class AnnDataHelper:
@@ -70,9 +73,30 @@ class AnnDataHelper:
             raise ValueError(
                 "Failed to concatenate AnnData var - check that all samples have the same set of markers."
             ) from err
+        if self._adata_join_strategy == "inner":
+            self._warn_about_dropped_markers(adatas)
         concatenated.uns = adatas[0].uns
         update_metrics_anndata(concatenated, inplace=True)
         return concatenated
+
+    @staticmethod
+    def _warn_about_dropped_markers(adatas: list[AnnData]) -> None:
+        """Warn about the markers an inner join drops, as not all samples have them."""
+        all_markers = set().union(*(adata.var_names for adata in adatas))
+        shared_markers = set(adatas[0].var_names).intersection(
+            *(adata.var_names for adata in adatas[1:])
+        )
+        dropped = sorted(all_markers - shared_markers)
+        if not dropped:
+            return
+        shown = ", ".join(dropped[:_MAX_REPORTED_MARKERS])
+        more = len(dropped) - _MAX_REPORTED_MARKERS
+        logger.warning(
+            "Markers that are not in all samples are dropped (%d): %s%s",
+            len(dropped),
+            shown,
+            f" and {more} more" if more > 0 else "",
+        )
 
     def _read_adata_from_sample(
         self,

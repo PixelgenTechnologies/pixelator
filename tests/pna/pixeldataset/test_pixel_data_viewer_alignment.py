@@ -540,3 +540,53 @@ class TestMarkerConflicts:
 
         assert "marker id 'B2M-1'" in caplog.text
         assert dataset.view.marker_renames() == {}
+
+
+class TestDroppedMarkers:
+    """The inner join of AnnData drops the markers that not all samples have."""
+
+    @staticmethod
+    def _files(tmp_path, markers: dict[str, str], extra: dict[str, str]):
+        """A file with ``markers``, and a file with ``markers`` and ``extra``."""
+        base = _panel("1.0.0", markers, name="base", product="base")
+        addon = _panel("1.0.0", extra, name="addon", product="addon")
+        return [
+            _write_pxl(tmp_path / "base.pxl", "base", base, ("CD3", "CD3")),
+            _write_pxl(
+                tmp_path / "addon.pxl",
+                "addon",
+                PNAAntibodyPanel.concatenate([base, addon]),
+                ("CD3", "CD3"),
+            ),
+        ]
+
+    def test_the_inner_join_warns_about_the_dropped_markers(self, tmp_path, caplog):
+        files = self._files(tmp_path, {"CD3": "AAAA"}, {"CD19": "CCCC"})
+
+        with caplog.at_level(logging.WARNING):
+            adata = _read_adata(*files)
+
+        assert list(adata.var_names) == ["CD3"]
+        assert "are dropped (1): CD19" in caplog.text
+
+    def test_only_the_first_dropped_markers_are_listed(self, tmp_path, caplog):
+        # 12 distinct sequences of 4 bases
+        extra = {
+            f"M{i:02}": "".join("ACGT"[i // 4**k % 4] for k in range(4))
+            for i in range(1, 13)
+        }
+        files = self._files(tmp_path, {"CD3": "TTTT"}, extra)
+
+        with caplog.at_level(logging.WARNING):
+            _read_adata(*files)
+
+        assert "are dropped (12)" in caplog.text
+        assert "M10" in caplog.text
+        assert "M11" not in caplog.text
+        assert "and 2 more" in caplog.text
+
+    def test_files_with_the_same_markers_do_not_warn(self, old_file, new_file, caplog):
+        with caplog.at_level(logging.WARNING):
+            _read_adata(old_file, new_file)
+
+        assert "are dropped" not in caplog.text
