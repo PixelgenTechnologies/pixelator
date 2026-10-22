@@ -87,12 +87,16 @@ from pixelator.pna.pixeldataset.saver import PixelDatasetSaver
 from pixelator.pna.pixeldataset.types import Component
 
 
-def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
+def read(
+    paths: Path | list[Path] | str | list[str], force: bool = False
+) -> PNAPixelDataset:
     """Read data from one or more ``.pxl`` files.
 
     Args:
         paths: One or more paths to ``.pxl`` files. A single path or a list of
             paths may be passed. Each path may be a ``pathlib.Path`` or ``str``.
+        force: Load files whose antibody panels have conflicting markers, with a
+            warning, instead of raising.
 
     Returns:
         The data from the ``.pxl`` file(s).
@@ -104,6 +108,8 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
         ValueError: If a file is not a valid ``.pxl`` file, if a sample name cannot
             be determined from file metadata, or if a null file has no reason.
         FileNotFoundError: If any path does not exist on disk.
+        PanelConflictError: If the antibody panels of the files have conflicting
+            markers and ``force`` is not set.
     """
     if not paths:
         raise ValueError(
@@ -114,7 +120,7 @@ def read(paths: Path | list[Path] | str | list[str]) -> PNAPixelDataset:
     normalized_paths = [Path(p) for p in paths]  # type: ignore
     for path in normalized_paths:
         reject_null_pxl(PxlFile(path))
-    return PNAPixelDataset.from_pxl_files(normalized_paths)
+    return PNAPixelDataset.from_pxl_files(normalized_paths, force=force)
 
 
 __all__ = [
