@@ -3,7 +3,11 @@
 Copyright © 2022 Pixelgen Technologies AB.
 """
 
-from pixelator.pna.config.panel.align import PanelAlignment, align_panels
+from pixelator.pna.config.panel.align import (
+    PanelAlignment,
+    PanelConflictError,
+    align_panels,
+)
 from pixelator.pna.config.panel.antibody_panel import (
     PanelSource,
     PNAAntibodyPanel,
@@ -22,6 +26,7 @@ __all__ = [
     "ORIGINAL_HASH_COUNTS_PREFIX",
     "PNAAntibodyPanel",
     "PanelAlignment",
+    "PanelConflictError",
     "PanelSource",
     "align_panels",
     "changed_marker_ids",
