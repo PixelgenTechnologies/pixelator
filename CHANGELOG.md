@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelator.pna.analysis.filter_proximity_scores` to filter a proximity score table by marker abundance (Python analog of pixelatorR `FilterProximityScores`).
 - Combining pxl files with panels differing in patch version aligns marker names.
 - `--panel` can be repeated to combine panels; pxl files store their panel.
+- Loading pxl files with conflicting marker ids raises unless `force=True`.
 
 ### Changed
 - Output pxl metadata no longer has `panel_name` and `panel_version`.
