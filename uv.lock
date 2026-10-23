@@ -2302,7 +2302,7 @@ requires-dist = [
     { name = "numba", specifier = ">=0.56.4" },
     { name = "numpy", specifier = ">=2.0.0,<3.0.0" },
     { name = "pandas", specifier = ">=2.0.0,<3.0.0" },
-    { name = "pixelgen-pixelator-core", git = "https://github.com/PixelgenTechnologies/pixelator-core?subdirectory=packages%2Fpython_bindings&rev=9385fd9b4a4f9225bc062d87db98794efe4a8ff6" },
+    { name = "pixelgen-pixelator-core", git = "https://github.com/PixelgenTechnologies/pixelator-core?subdirectory=packages%2Fpython_bindings&rev=aad40128236fd003b7c1cc4f43aad2b41fbf43e0" },
     { name = "plotly" },
     { name = "polars", specifier = ">=1.0.0,<2.0.0" },
     { name = "pyarrow", specifier = ">=14" },
@@ -2351,7 +2351,7 @@ docs = [
 [[package]]
 name = "pixelgen-pixelator-core"
 version = "0.3.0rc1"
-source = { git = "https://github.com/PixelgenTechnologies/pixelator-core?subdirectory=packages%2Fpython_bindings&rev=9385fd9b4a4f9225bc062d87db98794efe4a8ff6#9385fd9b4a4f9225bc062d87db98794efe4a8ff6" }
+source = { git = "https://github.com/PixelgenTechnologies/pixelator-core?subdirectory=packages%2Fpython_bindings&rev=aad40128236fd003b7c1cc4f43aad2b41fbf43e0#aad40128236fd003b7c1cc4f43aad2b41fbf43e0" }
 
 [[package]]
 name = "platformdirs"
