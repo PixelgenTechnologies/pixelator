@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `single-cell-pna graph_legacy` command; use `graph` instead.
 
 #### Fixed
+- Independent collapse stores `read_count` as `uint32`, so a molecule with more than 65535 reads no longer fails the output cast.
 - Default core count respects CPU affinity and container CPU quotas.
 - Analysis workers are pinned to one Polars, BLAS/OpenMP and DuckDB thread.
 - Panel header parsing tolerates multiple trailing commas.
