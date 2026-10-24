@@ -60,7 +60,7 @@ dependencies = [
     "duckdb>=1.4.2,<2",
     "faiss-cpu>=1.10.0,<2",
     "levenshtein>=0.27.3",
-    "pixelgen-pixelator-core>=0.2.0,<0.3",
+    "pixelgen-pixelator-core>=0.3.0rc1,<0.4",
     "requests>=2.32.5",
 ]
 
@@ -97,6 +97,10 @@ docs = [
     "sphinx-click>=6.2.0",
     "sphinx-design>=0.6.1",
 ]
+
+# Test build against unreleased pixelator-core (PixelgenTechnologies/pixelator-core#34).
+[tool.uv.sources]
+pixelgen-pixelator-core = { git = "https://github.com/PixelgenTechnologies/pixelator-core", rev = "aad40128236fd003b7c1cc4f43aad2b41fbf43e0", subdirectory = "packages/python_bindings" }
 
 
 [project.scripts]

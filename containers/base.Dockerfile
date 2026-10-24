@@ -118,6 +118,11 @@ COPY .git /pixelator/.git
 
 ENV UV_PROJECT_ENVIRONMENT="/usr/"
 
+# pixelgen-pixelator-core is installed from a git source and needs Rust to build
+ADD https://sh.rustup.rs /rustup-init.sh
+RUN sh /rustup-init.sh -y --profile minimal && rm /rustup-init.sh
+ENV PATH="/root/.cargo/bin:$PATH"
+
 RUN if [ ! -z "${VERSION_OVERRIDE}" ]; then \
     echo "Overriding version to ${VERSION_OVERRIDE}"; \
     SETUPTOOLS_SCM_PRETEND_VERSION="${VERSION_OVERRIDE}" uv sync --no-editable --no-dev --reinstall-package pixelator ; \
