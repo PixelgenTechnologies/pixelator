@@ -27,13 +27,17 @@ import pandas as pd
 import polars as pl
 import pytest
 from scipy.sparse import csr_matrix
+from sklearn.linear_model import LinearRegression
 
 from pixelator.pna.analysis.segmentation import cc_protein_weights, segment_cell
 from pixelator.pna.analysis.segmentation.segment import (
     _expand_adjacency_matrix,
     _kmeans_midpoint,
+    _marker_indicator,
+    _node_marker_labels,
     _project_weights,
     _retained_component_nodes,
+    _shared_markers,
 )
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PNAPixelDataset
@@ -214,8 +218,9 @@ def test_retained_component_nodes_filters_when_every_node_is_kept(graph):
     node_order = list(graph.raw.nodes())
     keep_mask = np.ones(len(node_order), dtype=bool)
 
+    adjacency = graph.get_adjacency_sparse(node_ordering=node_order).tocsr()
     lcc = _retained_component_nodes(
-        graph=graph,
+        adjacency=adjacency,
         node_order=node_order,
         keep_mask=keep_mask,
         keep_largest_comp=True,
@@ -226,7 +231,7 @@ def test_retained_component_nodes_filters_when_every_node_is_kept(graph):
     assert "ta0" in lcc
 
     min_size = _retained_component_nodes(
-        graph=graph,
+        adjacency=adjacency,
         node_order=node_order,
         keep_mask=keep_mask,
         keep_largest_comp=False,
@@ -234,6 +239,37 @@ def test_retained_component_nodes_filters_when_every_node_is_kept(graph):
     )
     assert ISLAND_A not in min_size
     assert "ta0" in min_size
+
+
+def test_retained_component_tie_breaks_toward_the_earlier_node():
+    """Two components of equal size: keep the one that starts earlier."""
+    node_order = ["a", "b", "c", "d"]
+    adjacency = csr_matrix(
+        [
+            [0, 1, 0, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 1, 0],
+        ],
+        dtype=float,
+    )
+    kept = _retained_component_nodes(
+        adjacency=adjacency,
+        node_order=node_order,
+        keep_mask=np.ones(4, dtype=bool),
+        keep_largest_comp=True,
+        min_comp_size=1,
+    )
+    assert kept == ["a", "b"]
+
+    both = _retained_component_nodes(
+        adjacency=adjacency,
+        node_order=node_order,
+        keep_mask=np.array([False, False, True, True]),
+        keep_largest_comp=False,
+        min_comp_size=2,
+    )
+    assert both == ["c", "d"]
 
 
 def test_segment_cell_interface_expansion_one_hop(graph, weights):
@@ -274,6 +310,24 @@ def test_segment_cell_zero_smoothing_still_classifies(graph, weights):
     labels = _compartments(graph)
     assert all(labels[node] == POP1 for node in CORE_T)
     assert all(labels[node] == POP2 for node in CORE_B)
+
+
+def test_neighborhood_counts_match_the_dense_marker_table(graph, weights):
+    """The one-marker indicator sums to the same neighborhood profiles."""
+    node_order = list(graph.raw.nodes())
+    marker_labels = _node_marker_labels(graph, node_order)
+    shared = _shared_markers(marker_labels, weights.index)
+    counts = graph.node_marker_counts.reindex(node_order).fillna(0)
+    dense_markers = [marker for marker in counts.columns if marker in weights.index]
+
+    adjacency = graph.get_adjacency_sparse(node_ordering=node_order).tocsr()
+    expanded = _expand_adjacency_matrix(adjacency, k=2)
+    expanded.setdiag(1)
+    from_indicator = expanded @ _marker_indicator(marker_labels, shared)
+    from_table = expanded @ counts.loc[:, dense_markers].to_numpy(dtype=float)
+
+    assert shared == dense_markers
+    np.testing.assert_allclose(from_indicator.toarray(), from_table)
 
 
 def test_segment_cell_missing_w_proteins_raises(graph):
@@ -355,6 +409,59 @@ def test_segment_cell_ignores_a_shared_weight_scale(graph, weights):
     rescaled = PNAGraph.from_edgelist(_conjugate_edgelist())
     segment_cell(rescaled, w=weights * 7, verbose=False)
     assert _compartments(rescaled) == baseline
+
+
+def _positive_least_squares(profiles: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    model = LinearRegression(positive=True, fit_intercept=False)
+    model.fit(weights, profiles.T)
+    return np.asarray(model.coef_, dtype=float)
+
+
+def test_project_weights_matches_positive_least_squares():
+    """The vectorized two-coefficient solve matches per-node NNLS."""
+    rng = np.random.default_rng(0)
+    profiles = rng.random((200, 12))
+    profiles /= profiles.sum(axis=1, keepdims=True)
+    weights = rng.random((12, 2))
+    np.testing.assert_allclose(
+        _project_weights(profiles, weights),
+        _positive_least_squares(profiles, weights),
+        rtol=1e-8,
+        atol=1e-8,
+    )
+
+    exclusive = np.array(
+        [
+            [0.5, 0.5, 0.0, 0.0],
+            [0.0, 0.0, 0.4, 0.6],
+            [0.2, 0.2, 0.3, 0.3],
+            [0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+    exclusive_weights = np.array([[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]])
+    np.testing.assert_allclose(
+        _project_weights(exclusive, exclusive_weights),
+        _positive_least_squares(exclusive, exclusive_weights),
+        rtol=1e-8,
+        atol=1e-8,
+    )
+
+    duplicated = np.column_stack([weights[:, 0], weights[:, 0]])
+    np.testing.assert_allclose(
+        _project_weights(profiles, duplicated),
+        _positive_least_squares(profiles, duplicated),
+        rtol=1e-8,
+        atol=1e-8,
+    )
+    zero_column = weights.copy()
+    zero_column[:, 1] = 0.0
+    np.testing.assert_allclose(
+        _project_weights(profiles, zero_column),
+        _positive_least_squares(profiles, zero_column),
+        rtol=1e-8,
+        atol=1e-8,
+    )
+    assert _project_weights(np.zeros((0, 12)), weights).shape == (0, 2)
 
 
 def test_projection_keeps_a_shared_scale_but_not_per_column_scales():
