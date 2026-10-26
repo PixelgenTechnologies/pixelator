@@ -7,12 +7,17 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import duckdb
 import polars as pl
 from anndata import AnnData
 
+from pixelator.pna.config.panel.tables import write_panel_tables
 from pixelator.pna.utils import init_duckdb_conn
+
+if TYPE_CHECKING:
+    from pixelator.pna.config.panel import PNAAntibodyPanel
 
 
 class PixelFileWriter:
@@ -238,6 +243,16 @@ class PixelFileWriter:
                 CREATE TABLE __adata__obsm_{key} AS SELECT * FROM obsm_layer;
                 """,
             )
+
+    def write_panel(self, panel: PNAAntibodyPanel) -> None:
+        """Write the ``panels`` and ``panel_sources`` tables for ``panel``.
+
+        Any panel tables already in the file are replaced.
+
+        Args:
+            panel: The antibody panel to store.
+        """
+        write_panel_tables(self._connection, panel)
 
     def write_metadata(self, metadata: dict) -> None:
         """Write the metadata to the PXL file.
