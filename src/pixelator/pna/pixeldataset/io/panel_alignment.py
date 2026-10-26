@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Mapping
 
+import duckdb
+
 from pixelator.common.utils import logger
 from pixelator.pna.config.panel import PNAAntibodyPanel, align_panels
 from pixelator.pna.pixeldataset.io.pxl_file import PxlFile
@@ -34,10 +36,13 @@ def marker_renames_by_sample(
     for sample_name, pxl_file in pxl_files.items():
         try:
             panel = pxl_file.read_panel()
-        except Exception as err:
-            # Aligning is best effort: the panel stored by a file written after
-            # sample calling cannot always be rebuilt, and must not stop the
-            # view from opening.
+        except (duckdb.Error, ValueError, KeyError, AssertionError) as err:
+            # Aligning is best effort, and must not stop the view from opening.
+            # These are the ways a stored panel can be unreadable: a damaged
+            # file (duckdb.Error), malformed JSON or metadata (ValueError, which
+            # covers the JSON, pydantic and version errors), missing panel
+            # columns (KeyError), or a panel that fails validation
+            # (AssertionError). Anything else is a bug and is let through.
             logger.warning(
                 "Markers are not aligned across files because the antibody panel "
                 "of %s could not be read: %s",

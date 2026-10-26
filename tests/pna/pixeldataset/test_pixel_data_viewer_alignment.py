@@ -3,9 +3,11 @@
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+import json
 from pathlib import Path
 
 import anndata
+import duckdb
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -95,6 +97,21 @@ def _write_pxl(
         if legacy_columns:
             connection.execute("ALTER TABLE edgelist RENAME COLUMN marker_1 TO marker1")
     return PxlFile(path)
+
+
+def _corrupt_stored_panel(pxl_file: PxlFile, corrupt: str) -> None:
+    """Damage the panel a file stores in ``uns`` and ``var``, in one way."""
+    with duckdb.connect(str(pxl_file.path)) as connection:
+        if corrupt == "invalid_sequences":
+            connection.execute("UPDATE __adata__var SET sequence_1 = 'xx'")
+            return
+        (value,) = connection.execute("SELECT value FROM __adata__uns").fetchone()
+        uns = json.loads(value)
+        if corrupt == "invalid_version":
+            uns["panel_metadata"]["version"] = "not-a-version"
+        else:
+            del uns["panel_metadata"]["name"]
+        connection.execute("UPDATE __adata__uns SET value = ?", [json.dumps(uns)])
 
 
 def _viewer(*pxl_files: PxlFile) -> PixelDataViewer:
@@ -218,18 +235,34 @@ class TestMarkerAlignment:
         assert viewer.marker_renames() == {}
         assert _markers(viewer) == {"old": {"CD3", "CD4"}, "other": {"CD3E", "CD4"}}
 
+    @pytest.mark.parametrize(
+        "corrupt",
+        [
+            "invalid_version",
+            "missing_name",
+            "invalid_sequences",
+        ],
+    )
     def test_a_file_whose_panel_cannot_be_read_leaves_the_markers_unchanged(
-        self, old_file, new_file, monkeypatch
+        self, old_file, new_file, corrupt
     ):
-        def fail(self):
-            raise TypeError("invalid stored panel")
-
-        monkeypatch.setattr(PxlFile, "read_panel", fail)
+        _corrupt_stored_panel(new_file, corrupt)
 
         viewer = _viewer(old_file, new_file)
 
         assert viewer.marker_renames() == {}
         assert _markers(viewer) == {"old": {"CD3", "CD4"}, "new": {"CD3E", "CD4"}}
+
+    def test_an_unexpected_error_reading_a_panel_is_not_hidden(
+        self, old_file, new_file, monkeypatch
+    ):
+        def fail(self):
+            raise RuntimeError("a bug")
+
+        monkeypatch.setattr(PxlFile, "read_panel", fail)
+
+        with pytest.raises(RuntimeError, match="a bug"):
+            _viewer(old_file, new_file).marker_renames()
 
     def test_files_written_after_sample_calling_still_open(self, tmp_path):
         # Hashing clones are collapsed, so the panel stored on var is incomplete.
