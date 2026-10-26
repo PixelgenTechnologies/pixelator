@@ -7,16 +7,16 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Iterable, Mapping
+from typing import Any, Iterable, Mapping
 
 import duckdb
 import polars as pl
 
 from pixelator.common.duckdb_utils import connect_duckdb
 
-from .panel_alignment import marker_renames_by_sample
+from .panel_alignment import ViewAlignment, align_view_panels
 from .pxl_file import PXL_FILE_MANDATOR_TABLES, PXL_FILE_OTHER_TABLES, PxlFile
-from .query_builder import Query
+from .query_builder import Query, marker_rename_expression
 
 # Unquoted DuckDB identifiers used in generated ATTACH / CREATE VIEW SQL.
 _SESSION_SQL_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\Z")
@@ -27,18 +27,6 @@ _MARKER_COLUMNS = ("marker_1", "marker_2")
 
 # Characters / substrings that must not appear in sample labels embedded as '...' literals.
 _SAMPLE_LABEL_UNSAFE_RE = re.compile(r"['\";\x00-\x1f\\]|--|/\*|\*/")
-
-
-def _marker_rename_expression(column: str, renames: Mapping[str, str]) -> str:
-    """Return a ``REPLACE`` entry that renames the marker ids in ``column``."""
-
-    def literal(value: str) -> str:
-        return "'" + value.replace("'", "''") + "'"
-
-    cases = " ".join(
-        f"WHEN {literal(old)} THEN {literal(new)}" for old, new in renames.items()
-    )
-    return f"CASE {column} {cases} ELSE {column} END AS {column}"
 
 
 def _validate_session_sql_identifier(value: str, *, what: str) -> None:
@@ -95,7 +83,7 @@ class PixelDataViewer:
         """
         self._db_to_file_mapping = sample_name_to_pxl_file_mapping
         # worked out from the panels of the files on first use
-        self._marker_renames: dict[str, dict[str, str]] | None = None
+        self._alignment: ViewAlignment | None = None
         self._normalized_sample_name_mapping = self._map_sample_names_to_db_names(
             sample_name_to_pxl_file_mapping
         )
@@ -177,29 +165,44 @@ class PixelDataViewer:
             for sample_name, pxl_file in self._db_to_file_mapping.items()
             if sample_name in sample_names
         }
+        alignment = self._get_alignment()
         filtered = PixelDataViewer(filtered_mapping)
-        filtered._marker_renames = {
-            sample_name: renames
-            for sample_name, renames in self.marker_renames().items()
-            if sample_name in filtered_mapping
-        }
+        filtered._alignment = ViewAlignment(
+            renames={
+                sample_name: renames
+                for sample_name, renames in alignment.renames.items()
+                if sample_name in filtered_mapping
+            },
+            panel_rows=alignment.panel_rows,
+        )
         return filtered
+
+    def _get_alignment(self) -> ViewAlignment:
+        """Align the panels of the files on first use."""
+        if self._alignment is None:
+            self._alignment = align_view_panels(self._db_to_file_mapping)
+        return self._alignment
 
     def marker_renames(self) -> dict[str, dict[str, str]]:
         """Return how each sample's marker ids are renamed to line the samples up.
 
         The renames come from aligning the antibody panels stored in the files,
         see :func:`~pixelator.pna.config.panel.align.align_panels`, and are
-        applied to the ``edgelist`` and ``proximity`` views. They are worked out
-        on first use. Nothing is renamed, with a warning, when the panels cannot
-        be read or aligned.
+        applied to the ``edgelist`` and ``proximity`` views and to the AnnData.
+        They are worked out on first use. Nothing is renamed, with a warning,
+        when the panels cannot be read or aligned.
 
         Returns:
             For each sample that needs it, ``stored marker id -> aligned marker id``.
         """
-        if self._marker_renames is None:
-            self._marker_renames = marker_renames_by_sample(self._db_to_file_mapping)
-        return self._marker_renames
+        return self._get_alignment().renames
+
+    def aligned_panel_rows(self) -> dict[str, dict[str, Any]]:
+        """Return the aligned panel row of each marker, by aligned marker id.
+
+        Empty when the files were not aligned.
+        """
+        return self._get_alignment().panel_rows
 
     @property
     def sample_to_file_mappings(self) -> dict[str, Path]:
@@ -343,7 +346,7 @@ class PixelDataViewerSession:
         legacy_names = legacy_marker_columns(columns)
         stored = [legacy_names.get(column, column) for column in _MARKER_COLUMNS]
         replaced = [
-            _marker_rename_expression(column, renames)
+            marker_rename_expression(column, renames)
             for column in stored
             if column in columns
         ]

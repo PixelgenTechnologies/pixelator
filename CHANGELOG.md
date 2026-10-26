@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PNAPixelDataset.layouts()` computes layouts on the fly.
 - Proximity helpers `summarize_proximity_scores`, `filter_proximity_scores` and `proximity_heatmap`.
 - Conjugate segmentation helpers `cc_protein_weights`, `segment_cell`, `partition_counts` and `distance_from_node_set`.
+- Combining pxl files with panels differing in patch version aligns marker names.
 
 #### Changed
 - Faceted `density_scatter_plot` estimates density per facet; `density_scope="joint"` restores old behavior.

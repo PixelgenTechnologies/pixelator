@@ -19,7 +19,11 @@ import polars as pl
 from pixelator import __version__
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
 from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel, collapsed_hashing_marker_id
+from pixelator.pna.config.panel import (
+    ORIGINAL_HASH_COUNTS_PREFIX,
+    PNAAntibodyPanel,
+    collapsed_hashing_marker_id,
+)
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
@@ -203,9 +207,11 @@ def _add_original_hash_counts_to_obs(
     old_anndata_counts = old_adata.to_df()
     for ab in sorted(list(antibodies_for_obs)):
         if ab in old_anndata_counts.columns:
-            old_adata.obs[f"original_hash_counts_{ab}"] = old_anndata_counts[ab].values
+            old_adata.obs[f"{ORIGINAL_HASH_COUNTS_PREFIX}{ab}"] = old_anndata_counts[
+                ab
+            ].values
         else:
-            old_adata.obs[f"original_hash_counts_{ab}"] = 0
+            old_adata.obs[f"{ORIGINAL_HASH_COUNTS_PREFIX}{ab}"] = 0
 
 
 def _markers_after_hash_collapse(

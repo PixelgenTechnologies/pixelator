@@ -8,13 +8,15 @@ from __future__ import annotations
 import json
 import warnings
 from functools import cache
-from typing import Literal
+from typing import Literal, Mapping
 
+import pandas as pd
 import polars as pl
 from anndata import AnnData, ImplicitModificationWarning
 from anndata import concat as anndata_concat
 
 from pixelator.common.statistics import clr_transformation, log1p_transformation
+from pixelator.pna.config.panel import ORIGINAL_HASH_COUNTS_PREFIX
 from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
@@ -80,10 +82,35 @@ class AnnDataHelper:
         qb = QueryBuilder()
         db_name = self._view.normalized_sample_db_name(sample)
 
+        # How this sample's marker ids are renamed to line up with the other samples.
+        renames = self._view.marker_renames().get(sample, {})
+        hash_count_renames = {
+            f"{ORIGINAL_HASH_COUNTS_PREFIX}{old}": f"{ORIGINAL_HASH_COUNTS_PREFIX}{new}"
+            for old, new in renames.items()
+        }
+
         # Read full AnnData contents (components/markers are filtered in-memory later).
-        X = session.execute_eager(qb.adata_X_query(db_name, None)).to_pandas()
-        var = session.execute_eager(qb.adata_var_query(db_name, None)).to_pandas()
-        obs = session.execute_eager(qb.adata_obs_query(db_name, None)).to_pandas()
+        X = session.execute_eager(
+            qb.adata_X_query(
+                db_name,
+                None,
+                column_renames=self._renames_of_stored_columns(
+                    session, qb, f"{db_name}.__adata__X", renames
+                ),
+            )
+        ).to_pandas()
+        var = session.execute_eager(
+            qb.adata_var_query(db_name, None, marker_renames=renames)
+        ).to_pandas()
+        obs = session.execute_eager(
+            qb.adata_obs_query(
+                db_name,
+                None,
+                column_renames=self._renames_of_stored_columns(
+                    session, qb, f"{db_name}.__adata__obs", hash_count_renames
+                ),
+            )
+        ).to_pandas()
 
         uns_df = session.execute_eager(qb.adata_uns_query(db_name))
         uns = json.loads(uns_df.row(0)[0]) if not uns_df.is_empty() else None
@@ -109,7 +136,14 @@ class AnnDataHelper:
         obsm = {
             table.split("__adata__obsm_")[1]: (
                 session.execute_eager(
-                    qb.adata_obsm_query(db_name, table, None),
+                    qb.adata_obsm_query(
+                        db_name,
+                        table,
+                        None,
+                        column_renames=self._renames_of_stored_columns(
+                            session, qb, table, renames
+                        ),
+                    ),
                 )
                 .to_pandas()
                 .set_index("index")
@@ -118,15 +152,54 @@ class AnnDataHelper:
             for table in obsm_tables
         }
 
+        var = var.set_index("index").rename_axis(index={"index": "marker_id"})
+        self._set_aligned_panel_info(var)
+
         adata = AnnData(
             X=X.set_index("index").rename_axis(index={"index": "component"}),
-            var=var.set_index("index").rename_axis(index={"index": "marker_id"}),
+            var=var,
             obs=obs.set_index("index").rename_axis(index={"index": "component"}),
             uns=uns,
             obsm=obsm,
         )
         adata.obs["sample"] = sample
         return adata
+
+    @staticmethod
+    def _renames_of_stored_columns(
+        session: PixelDataViewerSession,
+        qb: QueryBuilder,
+        table: str,
+        renames: Mapping[str, str],
+    ) -> dict[str, str]:
+        """Return the renames that apply to columns ``table`` has.
+
+        A rename of a column the table lacks is dropped, for example a hashing
+        clone in a table written after sample calling.
+        """
+        if not renames:
+            return {}
+        columns = set(
+            session.execute_eager(qb.table_columns_query(table))[
+                "column_name"
+            ].to_list()
+        )
+        return {old: new for old, new in renames.items() if old in columns}
+
+    def _set_aligned_panel_info(self, var: pd.DataFrame) -> None:
+        """Overwrite the panel columns of ``var`` with the aligned panel rows.
+
+        This makes ``var`` the same whichever sample is read first, as the
+        concatenated AnnData keeps the ``var`` of the first sample.
+        """
+        rows = self._view.aligned_panel_rows()
+        for marker_id in var.index:
+            row = rows.get(marker_id)
+            if row is None:
+                continue
+            for column, value in row.items():
+                if column in var.columns:
+                    var.at[marker_id, column] = value
 
     def _apply_transformations(
         self,
