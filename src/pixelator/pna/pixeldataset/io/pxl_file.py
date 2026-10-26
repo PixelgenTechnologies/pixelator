@@ -13,11 +13,15 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import duckdb
 
 from pixelator.common.duckdb_utils import connect_duckdb
 from pixelator.common.exceptions import PixelatorBaseException
+
+if TYPE_CHECKING:
+    from pixelator.pna.config.panel import PNAAntibodyPanel
 
 PXL_FILE_MANDATOR_TABLES = [
     "__adata__X",
@@ -98,6 +102,18 @@ class PxlFile:
                 return json.loads(metadata[0]) if metadata else {}
         except duckdb.CatalogException:
             return {}
+
+    def read_panel(self) -> PNAAntibodyPanel | None:
+        """Load the antibody panel stored in this file.
+
+        Returns:
+            The panel, or None when the file does not store one.
+        """
+        # imported here because the legacy package imports this module
+        from pixelator.pna.pixeldataset.legacy import LegacyPanelAdapter
+
+        with connect_duckdb(self.path, read_only=True) as connection:
+            return LegacyPanelAdapter(connection, file_name=self.path.name).read()
 
     def is_null_file(self) -> bool:
         """Return True when this file is a null pxl file."""

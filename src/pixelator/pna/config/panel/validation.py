@@ -43,6 +43,8 @@ def _uniprot_ids_are_valid(id_str: object) -> bool:
 def _validate_sequences(panel_df, sequence_col):
     errors = []
     sequences = panel_df[sequence_col]
+    if sequences.isna().any():
+        return [f"All {sequence_col} values must be present."]
     ref_length = len(sequences.iloc[0])
     if not sequences.apply(lambda x: len(x) == ref_length).all():
         errors.append(f"All {sequence_col} values must have the same length.")
