@@ -23,8 +23,8 @@ class PanelAlignment:
 
     Attributes:
         rows: ``(sequence_1, sequence_2)`` to the newest row, as a dict with the
-            ``marker_id`` and every panel column. Markers that only an older
-            version contains are included.
+            ``marker_id`` and every panel column. Markers that only some of
+            the panels contain, for example those of an add-on, are included.
     """
 
     rows: dict[tuple[str, str], dict[str, Any]]

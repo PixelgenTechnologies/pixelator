@@ -53,16 +53,6 @@ def test_newest_row_wins_whatever_the_input_order():
         assert row["uniprot_id"] == "P01732"
 
 
-def test_markers_only_in_an_older_patch_keep_their_row():
-    old = _panel("1.0.0", [_marker("CD3", "AAAA"), _marker("CD8", "GGGG")])
-    new = _panel("1.0.1", [_marker("CD3E", "AAAA")])
-
-    alignment = align_panels([old, new])
-
-    assert alignment.rows[("GGGG", "GGGG")]["marker_id"] == "CD8"
-    assert alignment.marker_renames(old) == {"CD3": "CD3E"}
-
-
 def test_marker_renames_only_lists_ids_that_change():
     old = _panel("1.0.0", [_marker("CD3", "AAAA"), _marker("CD4", "CCCC")])
     new = _panel("1.0.1", [_marker("CD3E", "AAAA"), _marker("CD4", "CCCC")])
@@ -142,6 +132,9 @@ def test_panels_with_different_addons_align_into_base_plus_both_addons():
 
     assert alignment.marker_renames(sample_a) == {"CD3": "CD3E"}
     assert alignment.marker_renames(sample_b) == {}
+    # the markers of both add-ons are kept
+    assert alignment.rows[("CCCC", "CCCC")]["marker_id"] == "CD19"
+    assert alignment.rows[("GGGG", "GGGG")]["marker_id"] == "CD20"
 
 
 def test_sources_without_a_product_are_matched_on_their_name():
