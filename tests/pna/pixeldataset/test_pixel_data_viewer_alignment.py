@@ -16,7 +16,9 @@ import pytest
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import ORIGINAL_HASH_COUNTS_PREFIX, PNAAntibodyPanel
+from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import (
+    InplacePixelDataFilterer,
     PixelDataViewer,
     PixelFileWriter,
     PxlFile,
@@ -355,6 +357,28 @@ def _read_adata(*pxl_files: PxlFile) -> anndata.AnnData:
 
 class TestAnnDataAlignment:
     """AnnData read from a view over files with different panel patches."""
+
+    def test_the_dataset_adata_has_no_panel_metadata_in_uns(self, old_file, new_file):
+        for files in ([old_file], [old_file, new_file]):
+            adata = PNAPixelDataset.from_pxl_files(files).adata()
+
+            assert "panel_metadata" not in adata.uns
+
+    def test_the_dataset_drops_the_panel_metadata_of_legacy_files(self, tmp_path):
+        panel = _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"})
+        legacy = _write_pxl(
+            tmp_path / "legacy.pxl", "old", panel, ("CD3", "CD4"), stored_panel=False
+        )
+
+        assert "panel_metadata" in _read_adata(legacy).uns
+        assert (
+            "panel_metadata" not in PNAPixelDataset.from_pxl_files([legacy]).adata().uns
+        )
+
+    def test_filtering_a_file_in_place_keeps_its_stored_panel(self, old_file):
+        InplacePixelDataFilterer(old_file).filter_components({"old"})
+
+        assert old_file.read_panel() == _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"})
 
     def test_markers_use_the_newest_names(self, old_file, new_file):
         adata = _read_adata(old_file, new_file)
