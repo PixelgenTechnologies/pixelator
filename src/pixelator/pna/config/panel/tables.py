@@ -6,6 +6,7 @@ Copyright © 2026 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 import pandas as pd
@@ -19,10 +20,15 @@ PANEL_TABLES = ("panels", "panel_sources")
 PANEL_STORAGE_COLUMNS = frozenset({"row_nr", "source_id", "marker_id"})
 
 
+def has_panel_tables(table_names: Iterable[str]) -> bool:
+    """Return whether ``table_names`` include both panel tables."""
+    return set(PANEL_TABLES).issubset(table_names)
+
+
 def panel_tables_present(connection: duckdb.DuckDBPyConnection) -> bool:
     """Return whether both panel tables exist on this connection."""
-    names = set(connection.execute("SHOW TABLES").fetchdf()["name"].tolist())
-    return set(PANEL_TABLES).issubset(names)
+    names = connection.execute("SHOW TABLES").fetchdf()["name"].tolist()
+    return has_panel_tables(names)
 
 
 def stored_panel_marker_columns(connection: duckdb.DuckDBPyConnection) -> set[str]:

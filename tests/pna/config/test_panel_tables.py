@@ -13,6 +13,7 @@ from anndata import AnnData
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.config.panel.tables import (
+    has_panel_tables,
     panel_tables_present,
     read_panel_table_frames,
 )
@@ -113,6 +114,19 @@ def test_writing_a_panel_again_replaces_the_stored_one(tmp_path: Path):
 
     assert frames is not None
     assert PNAAntibodyPanel.from_panel_tables(*frames) == second
+
+
+@pytest.mark.parametrize(
+    ("names", "expected"),
+    [
+        (["panels", "panel_sources", "edgelist"], True),
+        (["panels", "edgelist"], False),
+        (["panel_sources"], False),
+        ([], False),
+    ],
+)
+def test_has_panel_tables_needs_both_tables(names: list[str], expected: bool):
+    assert has_panel_tables(names) is expected
 
 
 def test_a_file_without_panel_tables_has_no_frames(tmp_path: Path):

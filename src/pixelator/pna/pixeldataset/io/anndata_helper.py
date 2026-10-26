@@ -17,7 +17,7 @@ from anndata import concat as anndata_concat
 
 from pixelator.common.statistics import clr_transformation, log1p_transformation
 from pixelator.pna.config.panel import ORIGINAL_HASH_COUNTS_PREFIX
-from pixelator.pna.config.panel.tables import PANEL_TABLES
+from pixelator.pna.config.panel.tables import has_panel_tables
 from pixelator.pna.pixeldataset.utils import update_metrics_anndata
 from pixelator.pna.utils import normalize_input_to_list, normalize_input_to_set
 
@@ -193,10 +193,9 @@ class AnnDataHelper:
     ) -> bool:
         """Return whether the file of ``db_name`` stores its panel in tables."""
         tables = session.execute_eager(qb.adata_obsm_table_names_query(db_name))
-        stored_tables = set(
+        return has_panel_tables(
             tables.filter(pl.col("database") == db_name).get_column("name").to_list()
         )
-        return set(PANEL_TABLES).issubset(stored_tables)
 
     def _with_panel_info(
         self,
