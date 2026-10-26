@@ -1,0 +1,83 @@
+"""DuckDB storage for panel markers and their sources.
+
+Copyright © 2026 Pixelgen Technologies AB.
+"""
+
+from __future__ import annotations
+
+import json
+from typing import TYPE_CHECKING
+
+import pandas as pd
+
+if TYPE_CHECKING:
+    import duckdb
+
+    from pixelator.pna.config.panel.antibody_panel import PNAAntibodyPanel
+
+PANEL_TABLES = ("panels", "panel_sources")
+
+
+def panel_tables_present(connection: duckdb.DuckDBPyConnection) -> bool:
+    """Return whether both panel tables exist on this connection."""
+    names = set(connection.execute("SHOW TABLES").fetchdf()["name"].tolist())
+    return set(PANEL_TABLES).issubset(names)
+
+
+def write_panel_tables(
+    connection: duckdb.DuckDBPyConnection, panel: PNAAntibodyPanel
+) -> None:
+    """Store ``panel`` in the ``panels`` and ``panel_sources`` tables.
+
+    ``panels`` has one row per marker, with its ``source_id`` and ``row_nr``
+    (the marker order). ``panel_sources`` has one row per source. Tables already
+    in the file are dropped and rebuilt, so the file ends up with exactly ``panel``.
+    """
+    source_rows = []
+    for source_id, source in enumerate(panel.sources):
+        metadata = source.metadata
+        source_rows.append(
+            {
+                "source_id": source_id,
+                "name": metadata.name,
+                "version": metadata.version,
+                "product": metadata.product,
+                "description": metadata.description,
+                "aliases": json.dumps(list(metadata.aliases)),
+                "archived": bool(metadata.archived),
+                "file_name": source.file_name,
+                "filepath": source.filepath,
+                "columns": None
+                if source.columns is None
+                else json.dumps(list(source.columns)),
+            }
+        )
+    sources_df = pd.DataFrame(source_rows)
+
+    markers = panel.df.copy()
+    markers.insert(0, "marker_id", markers.index.astype(str))
+    markers.insert(0, "row_nr", range(len(markers)))
+    markers["source_id"] = (
+        panel.marker_source_ids.reindex(panel.df.index).astype(int).to_numpy()
+    )
+
+    markers = markers.reset_index(drop=True)
+
+    # DuckDB reads the DataFrames above by their variable names
+    connection.execute(
+        "CREATE OR REPLACE TABLE panel_sources AS SELECT * FROM sources_df"
+    )
+    connection.execute("CREATE OR REPLACE TABLE panels AS SELECT * FROM markers")
+
+
+def read_panel_table_frames(
+    connection: duckdb.DuckDBPyConnection,
+) -> tuple[pd.DataFrame, pd.DataFrame] | None:
+    """Return ``(markers, sources)`` or None when the tables are absent."""
+    if not panel_tables_present(connection):
+        return None
+    markers = connection.execute("SELECT * FROM panels ORDER BY row_nr").fetchdf()
+    sources = connection.execute(
+        "SELECT * FROM panel_sources ORDER BY source_id"
+    ).fetchdf()
+    return markers, sources
