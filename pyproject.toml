@@ -100,7 +100,7 @@ docs = [
 
 # Test build against unreleased pixelator-core (PixelgenTechnologies/pixelator-core#34).
 [tool.uv.sources]
-pixelgen-pixelator-core = { git = "https://github.com/PixelgenTechnologies/pixelator-core", rev = "aad40128236fd003b7c1cc4f43aad2b41fbf43e0", subdirectory = "packages/python_bindings" }
+pixelgen-pixelator-core = { git = "https://github.com/PixelgenTechnologies/pixelator-core", rev = "a37a7f7f081d6cbf098e4685ecea912a3fbe74f2", subdirectory = "packages/python_bindings" }
 
 
 [project.scripts]
