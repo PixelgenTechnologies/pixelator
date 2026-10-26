@@ -139,7 +139,7 @@ class TestPNAPixelDataset:
         """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
-        adata_data.uns.pop("panel_metadata")
+        adata_data.uns.pop("panel_metadata", None)
         adata_data.var = adata_data.var.join(
             panel.df.reindex(adata_data.var_names), how="left"
         )
