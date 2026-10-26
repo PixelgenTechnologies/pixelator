@@ -322,6 +322,14 @@ def test_panel_validation_requires_marker_id_index(panel_df):
     assert "`marker_id` is missing or is not set as index" in errors
 
 
+def test_panel_validation_reports_missing_sequences(panel_df):
+    """A missing sequence is reported, not raised as a TypeError."""
+    panel_df["sequence_1"] = panel_df["sequence_1"].astype(object)
+    panel_df.loc["marker2", "sequence_1"] = None
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df, validate_types=False)
+    assert "All sequence_1 values must be present." in errors
+
+
 def test_panel_validation_requires_unique_sequences(panel_df):
     """Sequence columns must contain unique values."""
     panel_df.loc["marker2", "sequence_1"] = panel_df.loc["marker1", "sequence_1"]

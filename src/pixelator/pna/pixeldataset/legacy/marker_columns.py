@@ -5,9 +5,17 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 from __future__ import annotations
 
+from typing import Iterable
+
 from pixelator.pna.pixeldataset.io import PixelDataViewerSession, Query
 
 _LEGACY_MARKER_COLUMNS = (("marker1", "marker_1"), ("marker2", "marker_2"))
+
+
+def legacy_marker_columns(columns: Iterable[str]) -> dict[str, str]:
+    """Map current marker column names to the legacy names found in ``columns``."""
+    present = set(columns)
+    return {new: old for old, new in _LEGACY_MARKER_COLUMNS if old in present}
 
 
 class LegacyMarkerQueryAdapter:
