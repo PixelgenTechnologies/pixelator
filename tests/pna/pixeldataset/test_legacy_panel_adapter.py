@@ -1,20 +1,25 @@
-"""Tests for reading a panel stored in the ``uns`` and ``var`` tables of a pxl file.
+"""Tests for reading the panel of pxl files that predate the panel tables.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+import json
 from pathlib import Path
 
 import anndata
 import duckdb
 import numpy as np
 import pandas as pd
+import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import add_panel_information
 from pixelator.pna.config.panel import PNAAntibodyPanel
-from pixelator.pna.pixeldataset.io import PixelFileWriter
+from pixelator.pna.pixeldataset import read
+from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 from pixelator.pna.pixeldataset.legacy import LegacyPanelAdapter
+
+PANEL_NAME = "proxiome-v1-immuno-155-v1.0"
 
 
 def _panel() -> PNAAntibodyPanel:
@@ -82,3 +87,44 @@ def test_returns_none_without_an_uns_table(tmp_path):
     duckdb.connect(str(path)).close()
 
     assert _read(path) is None
+
+
+def _write_pxl_without_panel(path: Path, metadata: dict, uns: dict | None = None):
+    """Write a minimal pxl file with neither panel tables nor panel columns."""
+    with PixelFileWriter(path) as writer:
+        writer.write_metadata(metadata)
+        if uns is not None:
+            connection = writer.get_connection()
+            connection.execute("CREATE TABLE __adata__uns (value JSON)")
+            connection.execute("INSERT INTO __adata__uns VALUES (?)", [json.dumps(uns)])
+            connection.execute("CREATE TABLE __adata__var (index VARCHAR)")
+
+
+def test_files_that_only_record_a_panel_name_yield_no_panel(pna_pxl_file):
+    # this file has neither panel tables nor uns['panel_metadata']
+    assert PxlFile(pna_pxl_file).read_panel() is None
+
+
+def test_from_pxl_dataset_asks_to_regenerate_files_without_a_stored_panel(
+    pna_pxl_file,
+):
+    with pytest.raises(KeyError, match="regenerate your data"):
+        PNAAntibodyPanel.from_pxl_dataset(read(pna_pxl_file))
+
+
+def test_file_without_panel_name_yields_no_panel(tmp_path):
+    path = tmp_path / "old.pxl"
+    _write_pxl_without_panel(path, {"sample_name": "x"})
+
+    assert PxlFile(path).read_panel() is None
+
+
+def test_panel_metadata_without_panel_columns_yields_no_panel(tmp_path):
+    path = tmp_path / "old.pxl"
+    _write_pxl_without_panel(
+        path,
+        {"panel_name": PANEL_NAME},
+        uns={"panel_metadata": {"name": "x", "version": "1.0.0"}},
+    )
+
+    assert PxlFile(path).read_panel() is None

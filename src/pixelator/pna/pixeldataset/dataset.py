@@ -214,6 +214,8 @@ class PNAPixelDataset:
         """Return the AnnData instance for the dataset.
 
         This will be filtered to only include the active samples, components, and markers.
+        ``uns`` has no ``panel_metadata``, whichever pixelator version wrote the files.
+        Read the panel with :meth:`~pixelator.pna.pixeldataset.io.pxl_file.PxlFile.read_panel`.
 
         Args:
             add_log1p_transform: If True, add the log1p transformation to the data.
@@ -222,10 +224,15 @@ class PNAPixelDataset:
         Returns:
             The AnnData instance for the dataset.
         """
-        return self._adata_helper.read_adata(
+        adata = self._adata_helper.read_adata(
             add_log1p_transform=add_log1p_transform,
             add_clr_transform=add_clr_transform,
         )
+        # Older files keep the panel in uns, newer ones do not. Drop it here, and
+        # not in the helper, since a file rewritten from the helper's AnnData
+        # would otherwise lose the panel it stores there.
+        adata.uns.pop("panel_metadata", None)
+        return adata
 
     def edgelist(
         self,
