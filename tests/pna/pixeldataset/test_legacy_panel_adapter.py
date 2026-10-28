@@ -13,11 +13,11 @@ import pandas as pd
 import pytest
 
 from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.pna.anndata import add_panel_information
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 from pixelator.pna.pixeldataset.legacy import LegacyPanelAdapter
+from tests.common.data_generator.pixelfile import with_legacy_panel_columns
 
 PANEL_NAME = "proxiome-v1-immuno-155-v1.0"
 
@@ -57,13 +57,13 @@ def _write(path: Path, adata: anndata.AnnData) -> Path:
 
 def test_reads_the_panel_stored_in_uns_and_var(tmp_path):
     panel = _panel()
-    path = _write(tmp_path / "a.pxl", add_panel_information(_adata(), panel))
+    path = _write(tmp_path / "a.pxl", with_legacy_panel_columns(_adata(), panel))
 
     assert _read(path) == panel
 
 
 def test_records_the_file_name_on_the_panel(tmp_path):
-    path = _write(tmp_path / "a.pxl", add_panel_information(_adata(), _panel()))
+    path = _write(tmp_path / "a.pxl", with_legacy_panel_columns(_adata(), _panel()))
 
     assert _read(path).filename == "a.pxl"
 

@@ -30,16 +30,6 @@ def calculate_antibody_metrics(counts_df):
     return pd.concat([total_antibody, relative_antibody, components_detected], axis=1)
 
 
-def add_panel_information(adata: AnnData, panel: PNAAntibodyPanel) -> AnnData:
-    """Add panel data to var."""
-    adata.var = adata.var.join(panel.df, how="left")
-
-    adata.uns["panel_metadata"] = panel.metadata.model_dump()
-    adata.uns["panel_metadata"]["panel_columns"] = list(panel.df.columns)
-
-    return adata
-
-
 def pna_edgelist_to_anndata(
     pixel_connection: duckdb.DuckDBPyConnection,
     panel: PNAAntibodyPanel,
@@ -56,7 +46,8 @@ def pna_edgelist_to_anndata(
             after hashing clones collapse to their base name.
 
     Returns:
-        An AnnData object with counts and panel information.
+        An AnnData object with counts. The panel is not stored on it, write it
+        with ``PixelFileWriter.write_panel``.
 
     Notes:
         Assumes that the 'edgelist' table exists in the DuckDB connection and contains the necessary columns.
@@ -203,8 +194,6 @@ def pna_edgelist_to_anndata(
         obs=components_metrics_df,
         var=antibody_metrics_df,
     )
-
-    adata = add_panel_information(adata, panel)
 
     total_marker_counts = node_counts_df.sum(axis=1)
     isotype_markers = panel.df.index[panel.df["control"]]
