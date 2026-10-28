@@ -40,8 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PNA graph step peels and reabsorbs the core-1 layer, improving runtime and memory.
 - Graph report now includes core-1 layer size and absorption statistics.
 - `PIXELATOR_DUCKDB_THREADS` environment variable sets the default DuckDB thread count.
+- `--panel` can be repeated to combine panels; pxl files store their panel.
 
 #### Changed
+- Output pxl metadata no longer has `panel_name` and `panel_version`.
 - `PixelFileWriter` stores `edgelist`, `proximity` and `layouts` sorted by `component` and markers,
   which speeds up `component` filters on remote PXL files.
 - `analysis --compute-proximity` computes expected join counts analytically, which is much faster.

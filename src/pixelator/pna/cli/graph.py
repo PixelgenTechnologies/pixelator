@@ -17,8 +17,8 @@ from pixelator.common.utils import (
     timer,
     write_parameters_file,
 )
-from pixelator.pna.cli.common import logger, output_option, panel_option
-from pixelator.pna.config import load_antibody_panel, pna_config
+from pixelator.pna.cli.common import load_panels, logger, output_option, panel_option
+from pixelator.pna.config import pna_config
 from pixelator.pna.graph.community_detection import (
     RefinementOptions,
     StagedRefinementOptions,
@@ -257,7 +257,7 @@ def graph(
     )
     output_path = graph_output / f"{sample_name}.graph.pxl"
 
-    panel = load_antibody_panel(pna_config, panel)
+    panel = load_panels(panel)
     initial_stage_refinement_options = RefinementOptions(
         leiden_resolution=initial_stage_leiden_resolution,
         max_edges_to_remove=initial_stage_max_edges_to_remove,
@@ -316,8 +316,6 @@ def graph(
             output_path,
             sample_name=sample_name,
             reason=str(exc),
-            panel_name=panel.name,
-            panel_version=panel.version,
         )
         report = _graph_report(
             sample_name,
