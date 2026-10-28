@@ -138,6 +138,7 @@ class TestPNAPixelDataset:
         """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
+        adata_data.uns.pop("panel_metadata")
 
         adata = pxl_dataset.adata(add_clr_transform=False, add_log1p_transform=False)
         adata_assert_equal(adata, adata_data)

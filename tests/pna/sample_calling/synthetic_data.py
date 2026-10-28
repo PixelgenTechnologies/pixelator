@@ -93,6 +93,7 @@ def write_synthetic_hashed_pxl(directory: Path) -> Path:
             }
         )
         writer.write_edgelist(edgelist)
+        writer.write_panel(panel)
         writer.write_adata(pna_edgelist_to_anndata(writer.get_connection(), panel))
     return path
 

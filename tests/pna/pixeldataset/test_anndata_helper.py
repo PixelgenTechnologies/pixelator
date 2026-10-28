@@ -58,6 +58,8 @@ class TestAnnDataHelper:
         assert set(res.obs.index) == {"fc07dea9b679aca7"}
         assert set(res.var.index) == {"MarkerA"}
 
+        # The dataset drops the panel from uns, the helper keeps it
+        res.uns.pop("panel_metadata")
         adata_assert_equal(
             res,
             filtered.adata(add_clr_transform=False, add_log1p_transform=False),
