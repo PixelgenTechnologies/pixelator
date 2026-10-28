@@ -343,6 +343,7 @@ def create_pxl_file(
         writer.write_edgelist(edgelist_parquet_path)
         con = writer.get_connection()
         adata = pna_edgelist_to_anndata(con, panel=panel)
+        writer.write_panel(panel)
         writer.write_adata(adata)
         writer.write_metadata(
             {
