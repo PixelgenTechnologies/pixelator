@@ -72,16 +72,22 @@ class PixelDataViewer:
     def __init__(
         self,
         sample_name_to_pxl_file_mapping: dict[str, PxlFile],
+        force: bool = False,
     ):
         """Initialize the PixelDataViewer.
 
         Args:
             sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
+            force: Load files whose panels have conflicting markers, with a warning,
+                instead of raising
+                :class:`~pixelator.pna.config.panel.align.PanelConflictError`
+                when the markers are first used.
 
         Raises:
             ValueError: If any of the files are not valid PXL files.
         """
         self._db_to_file_mapping = sample_name_to_pxl_file_mapping
+        self._force = force
         # worked out from the panels of the files on first use
         self._alignment: ViewAlignment | None = None
         self._normalized_sample_name_mapping = self._map_sample_names_to_db_names(
@@ -134,25 +140,33 @@ class PixelDataViewer:
             )
 
     @staticmethod
-    def from_files(pxl_files: Iterable[PxlFile]) -> "PixelDataViewer":
+    def from_files(
+        pxl_files: Iterable[PxlFile], force: bool = False
+    ) -> "PixelDataViewer":
         """Create a PixelDataViewer from a list of PxlFile objects.
 
         This will use the sample names from the PxlFile metadata as sample names.
+
+        Args:
+            pxl_files: The files of the view.
+            force: See :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer`.
         """
         return PixelDataViewer(
-            {pxl_file.sample_name: pxl_file for pxl_file in pxl_files}
+            {pxl_file.sample_name: pxl_file for pxl_file in pxl_files}, force=force
         )
 
     @staticmethod
     def from_sample_to_file_mappings(
         sample_name_to_pxl_file_mapping: dict[str, PxlFile],
+        force: bool = False,
     ) -> "PixelDataViewer":
         """Create a PixelDataViewer from a dictionary mapping sample names to PxlFile objects.
 
         Args:
             sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
+            force: See :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer`.
         """
-        return PixelDataViewer(sample_name_to_pxl_file_mapping)
+        return PixelDataViewer(sample_name_to_pxl_file_mapping, force=force)
 
     def filter_samples(self, sample_names: set[str]) -> "PixelDataViewer":
         """Create a new PixelDataViewer with only a subset of the samples.
@@ -166,7 +180,7 @@ class PixelDataViewer:
             if sample_name in sample_names
         }
         alignment = self._get_alignment()
-        filtered = PixelDataViewer(filtered_mapping)
+        filtered = PixelDataViewer(filtered_mapping, force=self._force)
         filtered._alignment = ViewAlignment(
             renames={
                 sample_name: renames
@@ -180,7 +194,9 @@ class PixelDataViewer:
     def _get_alignment(self) -> ViewAlignment:
         """Align the panels of the files on first use."""
         if self._alignment is None:
-            self._alignment = align_view_panels(self._db_to_file_mapping)
+            self._alignment = align_view_panels(
+                self._db_to_file_mapping, force=self._force
+            )
         return self._alignment
 
     def marker_renames(self) -> dict[str, dict[str, str]]:
@@ -194,6 +210,10 @@ class PixelDataViewer:
 
         Returns:
             For each sample that needs it, ``stored marker id -> aligned marker id``.
+
+        Raises:
+            PanelConflictError: When the panels have conflicting markers and the
+                view was not created with ``force``.
         """
         return self._get_alignment().renames
 

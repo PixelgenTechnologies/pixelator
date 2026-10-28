@@ -3,11 +3,23 @@
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+import itertools
+import logging
+
 import pandas as pd
 import pytest
+from packaging.version import Version
 
 from pixelator.common.config import AntibodyPanelMetadata
-from pixelator.pna.config.panel import PNAAntibodyPanel, align_panels
+from pixelator.pna.config.panel import (
+    PanelConflictError,
+    PNAAntibodyPanel,
+    align_panels,
+)
+from pixelator.pna.config.panel.align import (
+    _check_marker_conflicts,
+    _check_source_versions,
+)
 
 
 def _marker(marker_id: str, sequence: str, **extra) -> dict:
@@ -204,3 +216,250 @@ def test_unchanged_hashing_markers_have_no_renames():
     panel = _panel("1.0.0", [_hashing_marker("B2M-1", "AAAA")])
 
     assert align_panels([panel, panel]).marker_renames(panel) == {}
+
+
+def _two_products(first_rows: list[dict], second_rows: list[dict], *versions: str):
+    first_version, second_version = versions
+    return (
+        _panel(first_version, first_rows, name="a", product="a"),
+        _panel(second_version, second_rows, name="b", product="b"),
+    )
+
+
+def test_one_marker_id_with_two_sequence_pairs_is_rejected():
+    first, second = _two_products(
+        [_marker("B2M-1", "AAAA")], [_marker("B2M-1", "CCCC")], "1.0.0", "1.0.0"
+    )
+
+    with pytest.raises(PanelConflictError, match="marker id 'B2M-1'") as err:
+        align_panels([first, second])
+
+    assert "a 1.0.0" in str(err.value)
+    assert "b 1.0.0" in str(err.value)
+    assert "force=True" in str(err.value)
+
+
+def test_an_id_conflict_within_one_product_is_rejected():
+    old = _panel("1.0.0", [_marker("CD3", "AAAA")])
+    new = _panel("1.0.1", [_marker("CD3", "CCCC")])
+
+    with pytest.raises(PanelConflictError, match="marker id 'CD3'"):
+        align_panels([old, new])
+
+
+def test_the_same_pair_under_two_ids_in_different_products_is_rejected():
+    first, second = _two_products(
+        [_marker("CD3", "AAAA")], [_marker("CD3E", "AAAA")], "1.0.0", "2.0.0"
+    )
+
+    with pytest.raises(PanelConflictError, match="have different marker ids"):
+        align_panels([first, second])
+
+
+def test_the_same_pair_and_id_in_different_products_is_not_a_conflict():
+    first, second = _two_products(
+        [_marker("CD3", "AAAA")], [_marker("CD3", "AAAA")], "1.0.0", "1.0.0"
+    )
+
+    assert align_panels([first, second]).marker_renames(first) == {}
+
+
+def test_a_rename_within_a_product_is_not_a_conflict():
+    old = _panel("1.0.0", [_marker("CD3", "AAAA")])
+    new = _panel("1.0.1", [_marker("CD3E", "AAAA")])
+
+    alignment = align_panels([new, old])
+
+    assert alignment.marker_renames(old) == {"CD3": "CD3E"}
+
+
+def test_only_the_first_conflicts_are_listed():
+    first, second = _two_products(
+        [_marker(f"M{i}", f"AA{'ACGT'[i // 4]}{'ACGT'[i % 4]}") for i in range(12)],
+        [_marker(f"M{i}", f"CC{'ACGT'[i // 4]}{'ACGT'[i % 4]}") for i in range(12)],
+        "1.0.0",
+        "1.0.0",
+    )
+
+    with pytest.raises(PanelConflictError, match="and 2 more"):
+        align_panels([first, second])
+
+
+def test_force_warns_about_conflicts_instead_of_raising(caplog):
+    first, second = _two_products(
+        [_marker("B2M-1", "AAAA"), _marker("CD3", "GGGG")],
+        [_marker("B2M-1", "CCCC"), _marker("CD3E", "GGGG")],
+        "1.0.0",
+        "1.0.0",
+    )
+
+    with caplog.at_level(logging.WARNING):
+        alignment = align_panels([first, second], force=True)
+
+    assert "marker id 'B2M-1'" in caplog.text
+    assert "have different marker ids" in caplog.text
+    assert set(alignment.rows) == {
+        ("AAAA", "AAAA"),
+        ("CCCC", "CCCC"),
+        ("GGGG", "GGGG"),
+    }
+
+
+def test_force_keeps_the_last_product_for_a_pair_shared_by_two_products():
+    first, second = _two_products(
+        [_marker("CD3", "AAAA")], [_marker("CD3E", "AAAA")], "2.0.0", "1.0.0"
+    )
+
+    for panels, expected in (([first, second], "CD3E"), ([second, first], "CD3")):
+        row = align_panels(panels, force=True).rows[("AAAA", "AAAA")]
+        assert row["marker_id"] == expected
+
+
+def test_force_keeps_the_newest_row_of_an_id_with_several_pairs():
+    v0 = _panel("1.0.0", [_marker("CD3", "AAAA")])
+    v1 = _panel("1.0.1", [_marker("CD3", "CCCC")])
+    v2 = _panel("1.0.2", [_marker("CD3", "AAAA")])
+
+    alignment = align_panels([v0, v1, v2], force=True)
+
+    # The order of the rows follows their recency, so the last row is newest.
+    assert list(alignment.rows) == [("CCCC", "CCCC"), ("AAAA", "AAAA")]
+
+
+def _sources(*panels: PNAAntibodyPanel) -> list[tuple[str, Version, PNAAntibodyPanel]]:
+    """The ``(product, version, panel)`` entries the check functions take."""
+    return [
+        (
+            panel.sources[0].metadata.product,
+            Version(panel.sources[0].metadata.version),
+            panel,
+        )
+        for panel in panels
+    ]
+
+
+class TestCheckSourceVersions:
+    def test_patch_versions_of_one_product_are_accepted(self):
+        sources = _sources(
+            _panel("1.0.0", [_marker("CD3", "AAAA")]),
+            _panel("1.0.7", [_marker("CD3", "AAAA")]),
+        )
+
+        _check_source_versions(sources)
+
+    def test_different_products_may_have_different_versions(self):
+        sources = _sources(
+            _panel("1.0.0", [_marker("CD3", "AAAA")], product="a"),
+            _panel("2.1.0", [_marker("CD4", "CCCC")], product="b"),
+        )
+
+        _check_source_versions(sources)
+
+    def test_every_product_with_several_major_minor_versions_is_listed(self):
+        sources = _sources(
+            _panel("1.0.0", [_marker("CD3", "AAAA")], product="a"),
+            _panel("1.1.0", [_marker("CD3", "AAAA")], product="a"),
+            _panel("2.0.0", [_marker("CD4", "CCCC")], product="b"),
+            _panel("3.0.0", [_marker("CD4", "CCCC")], product="b"),
+            _panel("1.0.0", [_marker("CD8", "GGGG")], product="c"),
+        )
+
+        with pytest.raises(ValueError, match=r"a: 1\.0, 1\.1; b: 2\.0, 3\.0$"):
+            _check_source_versions(sources)
+
+
+class TestCheckMarkerConflicts:
+    def test_the_same_panel_in_several_files_is_not_a_conflict(self):
+        panel = _panel("1.0.0", [_marker("CD3", "AAAA")])
+
+        _check_marker_conflicts(_sources(panel, panel), force=False)
+
+    def test_an_id_with_two_sequence_pairs_names_the_sources(self):
+        sources = _sources(
+            _panel("1.0.0", [_marker("CD3", "AAAA")], product="b"),
+            _panel("1.0.0", [_marker("CD3", "CCCC")], product="a"),
+        )
+
+        with pytest.raises(PanelConflictError) as err:
+            _check_marker_conflicts(sources, force=False)
+
+        # the sources are sorted, whatever their order in the input
+        assert "marker id 'CD3' has different sequences in a 1.0.0, b 1.0.0" in str(
+            err.value
+        )
+
+    def test_a_sequence_pair_with_two_ids_across_products_names_the_sources(self):
+        sources = _sources(
+            _panel("1.0.0", [_marker("CD3", "AAAA")], product="a"),
+            _panel("1.0.0", [_marker("CD3E", "AAAA")], product="b"),
+        )
+
+        with pytest.raises(PanelConflictError) as err:
+            _check_marker_conflicts(sources, force=False)
+
+        assert (
+            "sequences ('AAAA', 'AAAA') have different marker ids in a 1.0.0, b 1.0.0"
+            in str(err.value)
+        )
+
+    def test_a_rename_within_a_product_is_accepted(self):
+        sources = _sources(
+            _panel("1.0.0", [_marker("CD3", "AAAA")]),
+            _panel("1.0.1", [_marker("CD3E", "AAAA")]),
+        )
+
+        _check_marker_conflicts(sources, force=False)
+
+    def test_a_rename_within_a_product_does_not_hide_a_conflict_with_another(self):
+        sources = _sources(
+            _panel("1.0.0", [_marker("CD3", "AAAA")], product="a"),
+            _panel("1.0.1", [_marker("CD3E", "AAAA")], product="a"),
+            _panel("1.0.0", [_marker("CD3", "AAAA")], product="b"),
+        )
+
+        with pytest.raises(PanelConflictError, match="have different marker ids"):
+            _check_marker_conflicts(sources, force=False)
+
+    def test_the_same_marker_in_different_products_is_accepted(self):
+        sources = _sources(
+            _panel("1.0.0", [_marker("CD3", "AAAA")], product="a"),
+            _panel("1.0.0", [_marker("CD3", "AAAA")], product="b"),
+        )
+
+        _check_marker_conflicts(sources, force=False)
+
+    def test_force_logs_every_conflict_and_does_not_raise(self, caplog):
+        sources = _sources(
+            _panel(
+                "1.0.0", [_marker("CD3", "AAAA"), _marker("CD4", "CCCC")], product="a"
+            ),
+            _panel(
+                "1.0.0", [_marker("CD3", "GGGG"), _marker("CD4E", "CCCC")], product="b"
+            ),
+        )
+
+        with caplog.at_level(logging.WARNING):
+            _check_marker_conflicts(sources, force=True)
+
+        assert "marker id 'CD3' has different sequences" in caplog.text
+        assert "sequences ('CCCC', 'CCCC') have different marker ids" in caplog.text
+        assert "Pass force=True" not in caplog.text
+
+    def test_at_most_ten_conflicts_are_listed(self):
+        bases = ["".join(pair) for pair in itertools.product("ACGT", repeat=2)]
+        ids = [f"M{i:02}" for i in range(12)]
+        sources = _sources(
+            _panel(
+                "1.0.0", [_marker(m, f"{b}AA") for m, b in zip(ids, bases)], product="a"
+            ),
+            _panel(
+                "1.0.0", [_marker(m, f"{b}CC") for m, b in zip(ids, bases)], product="b"
+            ),
+        )
+
+        with pytest.raises(PanelConflictError) as err:
+            _check_marker_conflicts(sources, force=False)
+
+        message = str(err.value)
+        assert message.count("has different sequences") == 10
+        assert "... and 2 more" in message

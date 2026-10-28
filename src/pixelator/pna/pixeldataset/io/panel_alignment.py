@@ -11,7 +11,11 @@ from typing import Any, Mapping
 import duckdb
 
 from pixelator.common.utils import logger
-from pixelator.pna.config.panel import PNAAntibodyPanel, align_panels
+from pixelator.pna.config.panel import (
+    PanelConflictError,
+    PNAAntibodyPanel,
+    align_panels,
+)
 from pixelator.pna.pixeldataset.io.pxl_file import PxlFile
 
 
@@ -30,18 +34,26 @@ class ViewAlignment:
     panel_rows: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
-def align_view_panels(pxl_files: Mapping[str, PxlFile]) -> ViewAlignment:
+def align_view_panels(
+    pxl_files: Mapping[str, PxlFile], force: bool = False
+) -> ViewAlignment:
     """Align the panels of the files of a view.
 
     Nothing is aligned when there is a single file, when the panel of a file is
     missing or cannot be read, or when the panels cannot be aligned. The last
-    two cases are logged as warnings.
+    two cases are logged as warnings. Conflicting markers are not one of them:
+    they raise, as the data of the files cannot be combined safely.
 
     Args:
         pxl_files: The files of a view, by sample name.
+        force: Log conflicting markers as a warning instead of raising.
 
     Returns:
         The alignment, empty when nothing was aligned.
+
+    Raises:
+        PanelConflictError: When the panels have conflicting markers and
+            ``force`` is not set.
     """
     if len(pxl_files) < 2:
         return ViewAlignment()
@@ -74,7 +86,9 @@ def align_view_panels(pxl_files: Mapping[str, PxlFile]) -> ViewAlignment:
         panels[sample_name] = panel
 
     try:
-        alignment = align_panels(list(panels.values()))
+        alignment = align_panels(list(panels.values()), force=force)
+    except PanelConflictError:
+        raise
     except ValueError as err:
         logger.warning("Markers are not aligned across files: %s", err)
         return ViewAlignment()
