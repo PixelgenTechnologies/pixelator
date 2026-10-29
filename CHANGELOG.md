@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Faceted `density_scatter_plot` estimates density per facet; `density_scope="joint"` restores old behavior.
 - `density_scatter_plot` moved from `pixelator.mpx.plot` to `pixelator.plot`.
 - `calculate_differential_proximity` counts missing scores as 0. The default metric is `log2_ratio`, groups under 10 cells are skipped, and `group_vars` repeats the comparison.
+- Minimum supported Python version is now 3.11.
 
 #### Deprecated
 - `PNAPixelDataset.precomputed_layouts()`; use `layouts()` instead.
@@ -48,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PixelFileWriter` stores `edgelist`, `proximity` and `layouts` sorted by `component` and markers,
   which speeds up `component` filters on remote PXL files.
 - `analysis --compute-proximity` computes expected join counts analytically, which is much faster.
-- Updated pixelgen-pixelator-core to 0.2.0, reducing graph step peak memory by ~20%.
+- Updated pixelgen-pixelator-core to 1.0.2, reducing graph step peak memory by ~20%.
 - `uei_count` is now optional on PNA edgelists.
 
 #### Removed
