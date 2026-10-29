@@ -48,7 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PixelFileWriter` stores `edgelist`, `proximity` and `layouts` sorted by `component` and markers,
   which speeds up `component` filters on remote PXL files.
 - `analysis --compute-proximity` computes expected join counts analytically, which is much faster.
-- Updated pixelgen-pixelator-core to 0.2.0, reducing graph step peak memory by ~20%.
+- Updated pixelgen-pixelator-core to 1.0.2, reducing graph step peak memory by ~20%.
+- Minimum supported Python version is now 3.11.
 - `uei_count` is now optional on PNA edgelists.
 
 #### Removed
