@@ -58,7 +58,7 @@ def build_hashing_panel() -> PNAAntibodyPanel:
             "sample_hashing": [hashing for _, hashing in markers],
         }
     ).set_index("marker_id")
-    return PNAAntibodyPanel(
+    return PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(name="test-hashing-panel", version="0.1.0"),
     )
@@ -93,6 +93,7 @@ def write_synthetic_hashed_pxl(directory: Path) -> Path:
             }
         )
         writer.write_edgelist(edgelist)
+        writer.write_panel(panel)
         writer.write_adata(pna_edgelist_to_anndata(writer.get_connection(), panel))
     return path
 

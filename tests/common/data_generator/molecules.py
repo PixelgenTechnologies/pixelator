@@ -11,10 +11,18 @@ from typing import TYPE_CHECKING
 import numpy as np
 import polars as pl
 
+from pixelator.pna.config.panel import split_hashing_marker_id
 from tests.common.data_generator.topology import generate_cell_graph
 
 if TYPE_CHECKING:
     from pixelator.pna.config.panel import PNAAntibodyPanel
+
+
+def _hashing_index(marker_id: str) -> int:
+    parts = split_hashing_marker_id(marker_id)
+    if parts is None:
+        raise ValueError(f"Hashing marker {marker_id!r} must end with -<digits>.")
+    return int(parts[1])
 
 
 def generate_edgelist(
@@ -197,7 +205,7 @@ def _hashing_indices_per_cell(
     if hashing.size == 0:
         return [None] * n_cells
     if hashing_indices is None:
-        indices = np.unique([int(m.rsplit("-", 1)[-1]) for m in hashing])
+        indices = np.unique([_hashing_index(str(m)) for m in hashing])
     else:
         indices = np.unique(hashing_indices)
     cell_indices = np.resize(indices, n_cells)
@@ -324,7 +332,7 @@ def _assign_markers(
         return node_umi_map
 
     hashing_markers = markers[is_hashing]
-    index = np.array([int(m.rsplit("-", 1)[-1]) for m in hashing_markers])
+    index = np.array([_hashing_index(str(m)) for m in hashing_markers])
     chosen = hashing_markers[index == hashing_index]
     if chosen.size == 0:
         return node_umi_map

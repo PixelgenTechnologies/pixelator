@@ -7,12 +7,20 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import duckdb
 import polars as pl
 from anndata import AnnData
 
+from pixelator.pna.config.panel.tables import (
+    stored_panel_marker_columns,
+    write_panel_tables,
+)
 from pixelator.pna.utils import init_duckdb_conn
+
+if TYPE_CHECKING:
+    from pixelator.pna.config.panel import PNAAntibodyPanel
 
 
 class PixelFileWriter:
@@ -198,6 +206,10 @@ class PixelFileWriter:
     def write_adata(self, adata: AnnData) -> None:
         """Write the AnnData object to the PXL file.
 
+        When the panel tables are already on this file, the marker columns
+        stored there and ``uns["panel_metadata"]`` are left out. Reading the
+        file joins the panel columns back onto ``var``.
+
         Args:
             adata: The AnnData object to write.
 
@@ -216,8 +228,12 @@ class PixelFileWriter:
 
         X = adata.to_df().reset_index(names="index")
         var = adata.var.reset_index(names="index")
-        obs = adata.obs.reset_index(names="index")
         uns = adata.uns
+        panel_columns = stored_panel_marker_columns(self._connection)
+        if panel_columns:
+            var = var.drop(columns=[c for c in var.columns if c in panel_columns])
+            uns = {key: uns[key] for key in uns if key != "panel_metadata"}
+        obs = adata.obs.reset_index(names="index")
 
         self._connection.sql(
             """
@@ -238,6 +254,16 @@ class PixelFileWriter:
                 CREATE TABLE __adata__obsm_{key} AS SELECT * FROM obsm_layer;
                 """,
             )
+
+    def write_panel(self, panel: PNAAntibodyPanel) -> None:
+        """Write the ``panels`` and ``panel_sources`` tables for ``panel``.
+
+        Any panel tables already in the file are replaced.
+
+        Args:
+            panel: The antibody panel to store.
+        """
+        write_panel_tables(self._connection, panel)
 
     def write_metadata(self, metadata: dict) -> None:
         """Write the metadata to the PXL file.

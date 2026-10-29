@@ -91,6 +91,7 @@ class PNAPixelDataset:
         | PxlFile
         | dict[str, Path],
         config: PixelDatasetConfig | None = None,
+        force: bool = False,
     ) -> PNAPixelDataset:
         """Alias for `from_pxl_files`.
 
@@ -98,8 +99,9 @@ class PNAPixelDataset:
             pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a
                 dictionary with sample names as keys and paths as values.
             config: The configuration for the dataset.
+            force: Load files with conflicting markers, with a warning, instead of raising.
         """
-        return PNAPixelDataset.from_pxl_files(pxl_files, config)
+        return PNAPixelDataset.from_pxl_files(pxl_files, config, force=force)
 
     @staticmethod
     def from_pxl_files(
@@ -109,6 +111,7 @@ class PNAPixelDataset:
         | PxlFile
         | dict[str, Path],
         config: PixelDatasetConfig | None = None,
+        force: bool = False,
     ) -> PNAPixelDataset:
         """Create a new PixelDataset from one or more .pxl files.
 
@@ -121,42 +124,38 @@ class PNAPixelDataset:
             pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a
                 dictionary with sample names as keys and paths as values.
             config: The configuration for the dataset.
+            force: Load files whose antibody panels have conflicting markers, with a
+                warning, instead of raising.
+
+        Raises:
+            PanelConflictError: If the antibody panels of the files have conflicting
+                markers and ``force`` is not set.
         """
         if isinstance(pxl_files, Path):
-            return PNAPixelDataset(
-                PixelDataViewer.from_files(pxl_files=[PxlFile(pxl_files)]),
-                config=config,
+            view = PixelDataViewer.from_files([PxlFile(pxl_files)], force=force)
+        elif isinstance(pxl_files, dict):
+            view = PixelDataViewer.from_sample_to_file_mappings(
+                {k: PxlFile(v) for k, v in pxl_files.items()}, force=force
+            )
+        elif isinstance(pxl_files, PxlFile):
+            view = PixelDataViewer.from_files([pxl_files], force=force)
+        else:
+            pxl_files = list(pxl_files)  # type: ignore
+            # Either you are a PxlFile, then let's go! Or we will assume you are
+            # a path and try that.
+            view = PixelDataViewer.from_files(
+                [
+                    f if isinstance(f, PxlFile) else PxlFile(f)  # type: ignore
+                    for f in pxl_files
+                ],
+                force=force,
             )
 
-        if isinstance(pxl_files, dict):
-            return PNAPixelDataset(
-                PixelDataViewer.from_sample_to_file_mappings(
-                    {k: PxlFile(v) for k, v in pxl_files.items()}
-                ),
-                config=config,
-            )
-
-        if isinstance(pxl_files, PxlFile):
-            return PNAPixelDataset(
-                PixelDataViewer.from_files(pxl_files=[pxl_files]),
-                config=config,
-            )
-
-        pxl_files = list(pxl_files)  # type: ignore
-        # Either you are a PxlFile, then let's go!
-        if all(isinstance(f, PxlFile) for f in pxl_files):
-            return PNAPixelDataset(
-                view=PixelDataViewer.from_files(pxl_files),  # type: ignore
-                config=config,
-            )
-
-        # Or we will assume you are path and try that!
-        return PNAPixelDataset(
-            view=PixelDataViewer.from_files(
-                pxl_files=[PxlFile(f) for f in pxl_files]  # type: ignore
-            ),
-            config=config,
-        )
+        # The view aligns the panels lazily. Do it now, so that conflicting
+        # markers are reported when loading rather than at the first query.
+        if len(view.sample_names()) > 1:
+            view.marker_renames()
+        return PNAPixelDataset(view, config=config)
 
     def sample_names(self) -> set[str]:
         """Return the set of sample names in the project."""
@@ -214,6 +213,8 @@ class PNAPixelDataset:
         """Return the AnnData instance for the dataset.
 
         This will be filtered to only include the active samples, components, and markers.
+        ``uns`` has no ``panel_metadata``, whichever pixelator version wrote the files.
+        Read the panel with :meth:`~pixelator.pna.pixeldataset.io.pxl_file.PxlFile.read_panel`.
 
         Args:
             add_log1p_transform: If True, add the log1p transformation to the data.
@@ -222,10 +223,15 @@ class PNAPixelDataset:
         Returns:
             The AnnData instance for the dataset.
         """
-        return self._adata_helper.read_adata(
+        adata = self._adata_helper.read_adata(
             add_log1p_transform=add_log1p_transform,
             add_clr_transform=add_clr_transform,
         )
+        # Older files keep the panel in uns, newer ones do not. Drop it here, and
+        # not in the helper, since a file rewritten from the helper's AnnData
+        # would otherwise lose the panel it stores there.
+        adata.uns.pop("panel_metadata", None)
+        return adata
 
     def edgelist(
         self,

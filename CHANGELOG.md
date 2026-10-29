@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `PNAPixelDataset.layouts()` computes layouts on the fly.
 - Proximity helpers `summarize_proximity_scores`, `filter_proximity_scores` and `proximity_heatmap`.
 - Conjugate segmentation helpers `cc_protein_weights`, `segment_cell`, `partition_counts` and `distance_from_node_set`.
+- Combining pxl files with panels differing in patch version aligns marker names.
+- Loading pxl files with conflicting marker ids raises unless `force=True`.
 
 #### Changed
 - Faceted `density_scatter_plot` estimates density per facet; `density_scope="joint"` restores old behavior.
@@ -39,8 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PNA graph step peels and reabsorbs the core-1 layer, improving runtime and memory.
 - Graph report now includes core-1 layer size and absorption statistics.
 - `PIXELATOR_DUCKDB_THREADS` environment variable sets the default DuckDB thread count.
+- `--panel` can be repeated to combine panels; pxl files store their panel.
 
 #### Changed
+- Output pxl metadata no longer has `panel_name` and `panel_version`.
 - `PixelFileWriter` stores `edgelist`, `proximity` and `layouts` sorted by `component` and markers,
   which speeds up `component` filters on remote PXL files.
 - `analysis --compute-proximity` computes expected join counts analytically, which is much faster.

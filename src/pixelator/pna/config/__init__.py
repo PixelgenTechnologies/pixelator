@@ -19,6 +19,7 @@ from pixelator.pna.config.config_instance import pna_config
 from pixelator.pna.config.panel import (
     PNAAntibodyPanel,
     load_antibody_panel,
+    load_antibody_panels,
 )
 
 __all__ = [
@@ -35,4 +36,5 @@ __all__ = [
     "PNAAntibodyPanel",
     "AntibodyPanelMetadata",
     "load_antibody_panel",
+    "load_antibody_panels",
 ]

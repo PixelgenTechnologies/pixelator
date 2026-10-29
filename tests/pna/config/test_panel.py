@@ -13,6 +13,10 @@ from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import read
 
 
+def _one_metadata() -> AntibodyPanelMetadata:
+    return AntibodyPanelMetadata(name="test_panel", version="0.0.0")
+
+
 @pytest.fixture
 def panel_df():
     """Panel df."""
@@ -40,7 +44,7 @@ def test_panel_validation(panel_df):
         "description": "panel description",
         "aliases": ["test_alias"],
     }
-    panel = PNAAntibodyPanel(
+    panel = PNAAntibodyPanel.from_metadata(
         df=panel_df,
         metadata=AntibodyPanelMetadata(**metadata),
         file_name="test.csv",
@@ -65,7 +69,7 @@ def test_panel_properties(panel_df):
     Args:
         panel_df: panel df.
     """
-    panel = PNAAntibodyPanel(df=panel_df, metadata=None)
+    panel = PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
@@ -80,7 +84,7 @@ def test_panel_validation_fails_on_underscores_in_marker_names(panel_df):
         AssertionError,
         match=r".*The marker_id column should not contain underscores.*Offending values:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
@@ -95,7 +99,7 @@ def test_panel_validation_fails_on_white_space_in_marker_names(panel_df):
         AssertionError,
         match=r".*The marker_id column should not contain white-spaces.*Offending values:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
@@ -110,7 +114,7 @@ def test_panel_validation_fails_on_invalid_uniprot_ids(panel_df):
         AssertionError,
         match=r".*Invalid UniProt IDs found.*Please conform to the naming convention or remove the following IDs:.*",
     ):
-        PNAAntibodyPanel(df=panel_df, metadata=None)
+        PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
@@ -120,7 +124,7 @@ def test_panel_validation_ok_on_concatenated_uniprot_ids(panel_df):
         panel_df: panel df.
     """
     panel_df.loc["marker1", "uniprot_id"] = "P05107;P15391"
-    PNAAntibodyPanel(df=panel_df, metadata=None)
+    PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_validation_ok_uniprotid_empty(panel_df):
@@ -130,7 +134,7 @@ def test_panel_validation_ok_uniprotid_empty(panel_df):
         panel_df: panel df.
     """
     panel_df.loc["marker1", "uniprot_id"] = ""
-    PNAAntibodyPanel(df=panel_df, metadata=None)
+    PNAAntibodyPanel.from_metadata(df=panel_df, metadata=_one_metadata())
 
 
 def test_panel_from_pxl(pxl_file):
@@ -234,3 +238,116 @@ CD45,no,no,TCCCTTGCGATTTAC,test001
 
         with pytest.raises(yaml.YAMLError):
             PNAAntibodyPanel.from_csv(tmp_file.name)
+
+
+def _marker_row(marker_id: str, sequence: str, **extra) -> dict:
+    row = {
+        "marker_id": marker_id,
+        "control": False,
+        "sequence_1": sequence,
+        "sequence_2": sequence,
+    }
+    row.update(extra)
+    return row
+
+
+def test_duplicate_marker_ids_are_rejected():
+    """Marker ids must be unique even when sequences differ."""
+    frame = pd.DataFrame(
+        [_marker_row("CD3", "AAAA"), _marker_row("CD3", "CCCC")]
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match="marker_id were not unique"):
+        PNAAntibodyPanel.from_metadata(
+            frame,
+            AntibodyPanelMetadata(name="base", version="1.0.0"),
+        )
+
+
+def test_hashing_marker_ids_need_a_numeric_suffix_and_must_not_nest():
+    """Hashing ids end with -<digits> and must not collapse onto each other."""
+    missing_suffix = pd.DataFrame(
+        [_marker_row("B2M", "AAAA", sample_hashing=True)]
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match="must end with -<digits>"):
+        PNAAntibodyPanel.from_metadata(
+            missing_suffix,
+            AntibodyPanelMetadata(name="base", version="1.0.0"),
+        )
+
+    nested = pd.DataFrame(
+        [
+            _marker_row("B2M-1", "AAAA", sample_hashing=True),
+            _marker_row("B2M-1-1", "CCCC", sample_hashing=True),
+        ]
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match="must not collapse"):
+        PNAAntibodyPanel.from_metadata(
+            nested,
+            AntibodyPanelMetadata(name="base", version="1.0.0"),
+        )
+
+
+def test_control_markers_cannot_be_hashing_markers():
+    """A marker cannot be both a control and a hashing marker."""
+    frame = pd.DataFrame(
+        [_marker_row("B2M-1", "AAAA", control=True, sample_hashing=True)]
+    ).set_index("marker_id")
+    with pytest.raises(AssertionError, match="cannot be hashing markers"):
+        PNAAntibodyPanel.from_metadata(
+            frame,
+            AntibodyPanelMetadata(name="base", version="1.0.0"),
+        )
+
+
+def test_panel_validation_reports_missing_required_columns(panel_df):
+    """A panel missing a required column is rejected before later checks."""
+    errors = PNAAntibodyPanel.validate_antibody_panel(
+        panel_df.drop(columns=["sequence_1"])
+    )
+    assert len(errors) == 1
+    assert "missing required columns" in errors[0]
+    assert "sequence_1" in errors[0]
+
+
+def test_panel_validation_reports_an_empty_panel(panel_df):
+    """An empty panel is rejected."""
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df.iloc[0:0])
+    assert "Panel file is empty" in errors
+
+
+def test_panel_validation_requires_marker_id_index(panel_df):
+    """The marker id must be the dataframe index."""
+    panel_df.index.name = "other"
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df, validate_types=False)
+    assert "`marker_id` is missing or is not set as index" in errors
+
+
+def test_panel_validation_reports_missing_sequences(panel_df):
+    """A missing sequence is reported, not raised as a TypeError."""
+    panel_df["sequence_1"] = panel_df["sequence_1"].astype(object)
+    panel_df.loc["marker2", "sequence_1"] = None
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df, validate_types=False)
+    assert "All sequence_1 values must be present." in errors
+
+
+def test_panel_validation_requires_unique_sequences(panel_df):
+    """Sequence columns must contain unique values."""
+    panel_df.loc["marker2", "sequence_1"] = panel_df.loc["marker1", "sequence_1"]
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df)
+    assert "All values in column: sequence_1 were not unique" in errors
+
+
+def test_panel_validation_requires_boolean_control(panel_df):
+    """The control column must be boolean once types are not re-checked."""
+    panel_df["control"] = ["no", "yes", "no"]
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df, validate_types=False)
+    assert "`control` column is not boolean" in errors
+
+
+def test_panel_validation_reports_column_type_mismatch(panel_df):
+    """Column types are checked when validate_types is left on."""
+    panel_df["control"] = ["no", "yes", "no"]
+    errors = PNAAntibodyPanel.validate_antibody_panel(panel_df)
+    assert any(
+        error.startswith("Column control has incorrect type.") for error in errors
+    )
