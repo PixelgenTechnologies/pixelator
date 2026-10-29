@@ -1,0 +1,47 @@
+pixelator.common.utils.paths
+============================
+
+.. py:module:: pixelator.common.utils.paths
+
+.. autoapi-nested-parse::
+
+   Utility functions for working with file paths and validating input files.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.utils.paths.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/utils/paths/create_output_stage_dir
+   /api/generated/pixelator/common/utils/paths/get_extension
+   /api/generated/pixelator/common/utils/paths/get_sample_name
+   /api/generated/pixelator/common/utils/paths/gz_size
+   /api/generated/pixelator/common/utils/paths/sanity_check_inputs
+
+.. autoapisummary::
+
+   pixelator.common.utils.paths.create_output_stage_dir
+   pixelator.common.utils.paths.get_extension
+   pixelator.common.utils.paths.get_sample_name
+   pixelator.common.utils.paths.gz_size
+   pixelator.common.utils.paths.sanity_check_inputs
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

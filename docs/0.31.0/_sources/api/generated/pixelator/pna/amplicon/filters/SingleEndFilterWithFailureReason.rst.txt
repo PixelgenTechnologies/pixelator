@@ -1,0 +1,30 @@
+pixelator.pna.amplicon.filters.SingleEndFilterWithFailureReason
+===============================================================
+
+.. py:class:: pixelator.pna.amplicon.filters.SingleEndFilterWithFailureReason(predicate: cutadapt.predicates.Predicate, writer=None)
+
+   Bases: :py:obj:`cutadapt.steps.SingleEndFilter`
+
+
+   A single-end read filter that records failure reasons.
+
+   A pipeline step that can filter reads, can redirect filtered ones to a writer, and
+   counts how many were filtered.
+
+   The "descriptive_identifier" method is used to provide a string that will be appended to
+   the read identifier of filtered reads when a filtered writer is provided.
+
+
+   .. py:method:: descriptive_identifier() -> str
+
+      Return a string identifier for this predicate.
+
+      Used in reports and added as a comment to the sequence id when writing failed reads.
+
+
+
+   .. py:method:: filtered() -> int
+
+      Return the number of filtered reads.
+
+

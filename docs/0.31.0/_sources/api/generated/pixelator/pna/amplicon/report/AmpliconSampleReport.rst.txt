@@ -1,0 +1,119 @@
+pixelator.pna.amplicon.report.AmpliconSampleReport
+==================================================
+
+.. py:class:: pixelator.pna.amplicon.report.AmpliconSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.base.SampleReport`
+
+
+   Model for an amplicon sample report.
+
+
+   .. py:attribute:: basepair_counts
+      :type:  BasesCountStatistics
+      :value: None
+
+
+
+   .. py:method:: failed_invalid_amplicon_reads() -> int
+
+      Calculate the number of reads discarded because they have a missing or partial region.
+
+
+
+   .. py:attribute:: failed_lbs_detected_in_umi_reads
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: failed_low_complexity_umi_reads
+      :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: failed_missing_upi1_umi1_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: failed_missing_upi2_umi2_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: failed_partial_upi1_umi1_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: failed_partial_upi2_umi2_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: failed_too_many_n_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:property:: fraction_discarded_reads
+      :type: float
+
+
+      Calculate the fraction of reads that were discarded by the amplicon step.
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: output_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: passed_missing_lbs1_anchor
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: passed_missing_uei_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: passed_partial_uei_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: q30_statistics
+      :type:  Q30Statistics
+      :value: None
+
+
+
+   .. py:attribute:: report_type
+      :type:  Literal['amplicon']
+      :value: 'amplicon'
+
+
+
+   .. py:attribute:: total_failed_reads
+      :type:  int
+      :value: None
+
+

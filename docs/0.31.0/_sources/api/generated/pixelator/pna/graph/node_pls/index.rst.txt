@@ -1,0 +1,44 @@
+pixelator.pna.graph.node_pls
+============================
+
+.. py:module:: pixelator.pna.graph.node_pls
+
+.. autoapi-nested-parse::
+
+   Functions for computing node-level Partial Least Squares (PLS) regression.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.graph.node_pls.GraphNormalizationOptions
+   pixelator.pna.graph.node_pls.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/node_pls/create_node_neighborhood_abundance_matrix
+   /api/generated/pixelator/pna/graph/node_pls/node_pls
+
+.. autoapisummary::
+
+   pixelator.pna.graph.node_pls.create_node_neighborhood_abundance_matrix
+   pixelator.pna.graph.node_pls.node_pls
+
+
+Module Contents
+---------------
+
+.. py:data:: GraphNormalizationOptions
+
+.. py:data:: logger
+

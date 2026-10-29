@@ -1,0 +1,14 @@
+pixelator.pna.analysis.denoise.get_stranded_nodes
+=================================================
+
+.. py:function:: pixelator.pna.analysis.denoise.get_stranded_nodes(component: pixelator.pna.graph.PNAGraph, nodes_to_remove: list = []) -> list
+
+   Identify nodes that become stranded after removing nodes_to_remove.
+
+   :param component: The graph component from which nodes will be removed.
+   :param nodes_to_remove: A list of nodes to be removed from the graph.
+
+   :returns: A list of stranded nodes that are disconnected from the largest connected component
+             after nodes_to_remove are removed.
+   :rtype: list
+

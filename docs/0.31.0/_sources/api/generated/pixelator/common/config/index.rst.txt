@@ -1,0 +1,47 @@
+pixelator.common.config
+=======================
+
+.. py:module:: pixelator.common.config
+
+.. autoapi-nested-parse::
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/common/config/panel/index
+   /api/generated/pixelator/common/config/utils/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/config/AntibodyPanelMetadata
+
+.. autoapisummary::
+
+   pixelator.common.config.AntibodyPanelMetadata
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/config/load_yaml_file
+
+.. autoapisummary::
+
+   pixelator.common.config.load_yaml_file
+
+

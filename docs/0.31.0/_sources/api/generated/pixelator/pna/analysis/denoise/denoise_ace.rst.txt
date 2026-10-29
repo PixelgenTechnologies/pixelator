@@ -1,0 +1,19 @@
+pixelator.pna.analysis.denoise.denoise_ace
+==========================================
+
+.. py:function:: pixelator.pna.analysis.denoise.denoise_ace(component: pixelator.pna.graph.PNAGraph, k: int = 3, max_k_core: int = 4, max_iter: int = 200, min_seed_pct: float = 0.1, nodes_to_move_threshold: int = 10, select_lcc: bool = True) -> list
+
+   Partition the graph with ACE and return nodes in the peripheral-like ("low") partition.
+
+   Nodes in the ``low`` partition are candidates for removal to retain a denser core-like graph.
+
+   :param component: The graph component to process.
+   :param k: Neighborhood radius (steps) for the transition matrix in ACE.
+   :param max_k_core: Maximum k-core layer used for seeding in ACE.
+   :param max_iter: Maximum expansion iterations per binding threshold in ACE.
+   :param min_seed_pct: Minimum fraction of nodes required for the initial ACE seed.
+   :param nodes_to_move_threshold: ACE convergence threshold (nodes moved per iteration).
+   :param select_lcc: If True, restrict the initial ACE seed to the largest connected component.
+
+   :returns: List of node identifiers to remove.
+

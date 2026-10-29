@@ -1,0 +1,103 @@
+pixelator.pna.demux.barcode_demuxer.PNAEmbedding
+================================================
+
+.. py:class:: pixelator.pna.demux.barcode_demuxer.PNAEmbedding(assay: pixelator.pna.config.PNAAssay)
+
+   A class for constructing a compact binary embedding of a PNA amplicon reads.
+
+   The embedding assumes a maximum length of 32 nucleotides
+   for each UMI and 15 nucleotides for the UEI.
+
+
+   .. py:attribute:: assay
+
+
+   .. py:method:: compress_uei_embedding(bitvector: numpy.typing.NDArray[numpy.uint8] | bytes) -> numpy.uint64
+
+      Compress the 3-bit per nucleotide embedded UEI into a 2-bit embedding.
+
+      :param bitvector: the 256-bit vector to unpack
+
+
+
+   .. py:method:: compress_umi_embedding(bitvector: numpy.typing.NDArray[numpy.uint8] | bytes) -> numpy.uint64
+
+      Compress the 3-bit per nucleotide into a more classical 2-bit embedding.
+
+      The nucleotides encoded in this space are not equidistant anymore, but it is more compact.
+
+      :param bitvector: the 128-bit umi vector
+
+      :returns: the new 2-bit embedding for given input
+
+      :raises ValueError: if the input vector is not 128 bits long
+
+
+
+   .. py:method:: decode(bitvector: numpy.ndarray, skip_uei: Literal[True]) -> tuple[bytes, bytes]
+                  decode(bitvector: numpy.ndarray, skip_uei: Literal[False]) -> tuple[bytes, bytes, bytes]
+
+      Unpack the 84-bit UMI1 bitvector from a byte array.
+
+      :param bitvector: the 256-bit vector to unpack
+      :param skip_uei: whether to skip unpacking the UEI
+
+
+
+   .. py:method:: decode_umi(umi_bytes: numpy.typing.NDArray[numpy.uint8] | bytes) -> bytes
+
+      Decode a 3-bit encoded 128-bit umi vector into a nucleotide sequence.
+
+      :param umi_bytes: the 128-bit umi vector
+
+      :returns: the decoded nucleotide sequence
+
+      :raises ValueError: if the input vector is not 128 bits long
+
+
+
+   .. py:method:: encode(umi1: bytes, umi2: bytes, uei: bytes)
+
+      Pack the unique molecule identifiers into a single 256-bit vector.
+
+      Each nucleotide is packed into 3 bits, so 8 nucleotides per 24-bit
+      Padding bits are added to make the total length 256 bits and to separate
+      the regions on byte boundaries.
+
+      256 bits is a common length for SIMD instructions (eg. 1 AVX-2 register or 2 Arm NEON
+      registers)
+      and thus commonly used for efficient similarity search. (eg. in FAISS).
+
+
+
+   .. py:method:: encode_umi(umi: bytes)
+
+      Encode a single umi into a 3-bit per nucleotide encoded 128-bit vector.
+
+      Each nucleotide is packed into 3 bits, so 8 nucleotides per 24-bit
+      The output is padded to 128 bits since that is a common SIMD vector length
+      and thus commonly used for efficient similarity search. (eg. in FAISS).
+
+      :returns: a 16-byte/128-bits array of packed nucleotides
+
+      :raises ValueError: if the UMI is longer than 32 nucleotides
+
+
+
+   .. py:method:: get_uei_bytes(embedded: bytes)
+
+      Return the bytes of the UEI from the molecule embedding.
+
+
+
+   .. py:method:: get_umi1_bytes(embedded: bytes)
+
+      Return the bytes of the UMI1 from the molecule embedding.
+
+
+
+   .. py:method:: get_umi2_bytes(embedded: bytes)
+
+      Return the bytes of the UMI2 from the molecule embedding.
+
+

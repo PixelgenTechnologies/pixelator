@@ -1,0 +1,7 @@
+pixelator.pna.config.panel.tables.has_panel_tables
+==================================================
+
+.. py:function:: pixelator.pna.config.panel.tables.has_panel_tables(table_names: collections.abc.Iterable[str]) -> bool
+
+   Return whether ``table_names`` include both panel tables.
+

@@ -1,0 +1,11 @@
+pixelator.common.utils.reverse_complement
+=========================================
+
+.. py:function:: pixelator.common.utils.reverse_complement(seq: str) -> str
+
+   Compute the reverse complement of a DNA seq.
+
+   :param seq: the DNA sequence
+
+   :returns: the reverse complement of the input sequence (str)
+

@@ -1,0 +1,7 @@
+pixelator.pna.utils.timer
+=========================
+
+.. py:function:: pixelator.pna.utils.timer(command_name: str | None = None)
+
+   Time the different steps of a function.
+

@@ -1,0 +1,14 @@
+pixelator.common.graph.math.mat_pow
+===================================
+
+.. py:function:: pixelator.common.graph.math.mat_pow(mat, power: int, prune_threshold: float | None = None)
+
+   Compute sparse matrix power with optional pruning.
+
+   :param mat: Input sparse matrix.
+   :param power: Exponent to raise the matrix to.
+   :param prune_threshold: Optional absolute-value threshold below which entries are set to zero
+                           before each multiplication step.
+
+   :returns: A sparse matrix equivalent to ``mat`` raised to ``power``.
+

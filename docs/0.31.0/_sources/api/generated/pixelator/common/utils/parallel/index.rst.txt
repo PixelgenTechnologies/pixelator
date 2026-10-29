@@ -1,0 +1,43 @@
+pixelator.common.utils.parallel
+===============================
+
+.. py:module:: pixelator.common.utils.parallel
+
+.. autoapi-nested-parse::
+
+   Utility functions for determining available CPU cores and building worker pools.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.utils.parallel.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/utils/parallel/get_available_cpu_count
+   /api/generated/pixelator/common/utils/parallel/get_pool_executor
+   /api/generated/pixelator/common/utils/parallel/get_process_pool_executor
+
+.. autoapisummary::
+
+   pixelator.common.utils.parallel.get_available_cpu_count
+   pixelator.common.utils.parallel.get_pool_executor
+   pixelator.common.utils.parallel.get_process_pool_executor
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

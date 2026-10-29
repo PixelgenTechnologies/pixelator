@@ -1,0 +1,75 @@
+pixelator.pna.report.models.SampleReport
+========================================
+
+.. py:class:: pixelator.pna.report.models.SampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Base class for all pixelator reports of `single-cell` subcommands.
+
+   :ivar sample_id: The sample id for which the report is generated.
+   :ivar product_id: The product id for which the report is generated.
+   :ivar report_type: The command for which the report is generated.
+   :ivar status: ``passed`` or ``failed``. JSON omits this field when the step passed.
+   :ivar null_reason: Why a failed step produced a null file. JSON includes this
+                      string only when ``status`` is ``failed``.
+
+
+
+   .. py:method:: from_json(p: pathlib.Path) -> Self
+      :classmethod:
+
+
+      Initialize a SampleReport from a report file.
+
+      :param p: The path to the report file.
+
+      :returns: A :class:`~pixelator.pna.report.models.base.SampleReport` object.
+
+
+
+   .. py:attribute:: null_reason
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: product_id
+      :type:  Literal['single-cell-pna']
+
+
+   .. py:attribute:: report_type
+      :type:  str
+
+
+   .. py:attribute:: sample_id
+      :type:  str
+
+
+   .. py:attribute:: status
+      :type:  Literal['passed', 'failed']
+      :value: 'passed'
+
+
+
+   .. py:method:: to_json(**kwargs: Any) -> str
+
+      Dump the report to a json string.
+
+      :param kwargs: Additional arguments to pass to `json.dumps`.
+
+      :returns: The report serialized to JSON as a string.
+
+
+
+   .. py:method:: write_json_file(p: str | os.PathLike, **kwargs: Any) -> None
+
+      Write a JSON serialized SampleReport to a file.
+
+      Non-existing intermediate directories in the path will be created.
+
+      :param p: The path to the file to write.
+      :param kwargs: Additional arguments to pass to `json.dumps`.
+
+

@@ -1,0 +1,30 @@
+pixelator.pna.collapse.utilities.FAISSBackend
+=============================================
+
+.. py:class:: pixelator.pna.collapse.utilities.FAISSBackend(threads: int | None = None)
+
+   A backend for building and searching binary indexes using FAISS.
+
+
+   .. py:method:: build_index(data: numpy.ndarray) -> faiss.IndexBinary
+
+      Build a binary index for the given data.
+
+      :param data: The data to build the index for.
+
+      :returns: The built index.
+
+
+
+   .. py:method:: search(index: faiss.IndexBinary, data: numpy.ndarray, k: int) -> tuple[numpy.ndarray, numpy.ndarray]
+
+      Search the index for the k nearest neighbors of the given data.
+
+      :param index: The index to search.
+      :param data: The data to search for.
+      :param k: The number of nearest neighbors to find.
+
+      :returns: The indices of the k nearest neighbors for each data point.
+                Indices will be -1 when less than k neighbors are found.
+
+

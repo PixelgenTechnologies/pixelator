@@ -1,0 +1,41 @@
+pixelator.pna.pixeldataset.download
+===================================
+
+.. py:module:: pixelator.pna.pixeldataset.download
+
+.. autoapi-nested-parse::
+
+   Module for downloading datasets that can be used with e.g. tutorials.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.download.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/download/Dataset
+   /api/generated/pixelator/pna/pixeldataset/download/DownloadableDatasets
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.download.Dataset
+   pixelator.pna.pixeldataset.download.DownloadableDatasets
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

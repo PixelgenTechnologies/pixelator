@@ -1,0 +1,71 @@
+pixelator.pna.DownloadableDatasets
+==================================
+
+.. py:class:: pixelator.pna.DownloadableDatasets
+
+   Download example datasets for tutorials and testing.
+
+   Fetch small example datasets (e.g. PNA PBMCs) with ``download_dataset()``.
+   Call ``list_datasets()`` to see available names and descriptions.
+
+   .. dropdown:: Example
+
+       .. code-block:: python
+
+           # Example: list available datasets and download datasets
+
+           from pathlib import Path
+           from pixelator.pna.pixeldataset.download import DownloadableDatasets
+
+           # List available datasets
+           DownloadableDatasets.list_datasets()
+
+           # Download the latest version of a dataset to the default folder
+           path = DownloadableDatasets.download_dataset("pna062-pha-pbmcs")
+
+           # Download to a specific path
+           path = DownloadableDatasets.download_dataset(
+               "pna062-unstim-pbmcs",
+               output_path=Path("./data/my_dataset.layout.pxl"),
+           )
+
+           # Download and overwrite an existing file
+           path = DownloadableDatasets.download_dataset(
+               "pna062-pha-pbmcs",
+               output_path=Path("./data/my_dataset.layout.pxl"),
+               overwrite=True,
+           )
+
+
+   .. py:method:: download_dataset(dataset_name: str, version: int | None = None, output_path: pathlib.Path | None = None, overwrite: bool = False) -> pathlib.Path
+      :staticmethod:
+
+
+      Download a dataset to a local path.
+
+      :param dataset_name: Name of the dataset to download.
+      :param version: Dataset version to download. Defaults to the latest
+                      version for ``dataset_name``.
+      :param output_path: Destination file path. Defaults to
+                          ``./pixelator-datasets/{dataset_name}.layout.pxl``
+                          (relative to the current working directory).
+      :param overwrite: Controls behavior when the destination file already exists.
+                        If True, the file is overwritten. If False, the download is skipped
+                        and the existing path is returned.
+
+      :returns: The path to the downloaded dataset.
+
+      :raises ValueError: If ``dataset_name`` is not found.
+      :raises KeyError: If ``version`` does not match a known version.
+      :raises requests.HTTPError: If the server returns an error status code.
+      :raises requests.RequestException: On connection or read failures.
+
+
+
+   .. py:method:: list_datasets()
+      :staticmethod:
+
+
+      Print a list of all available datasets.
+
+

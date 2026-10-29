@@ -1,0 +1,46 @@
+pixelator.pna.graph.constants
+=============================
+
+.. py:module:: pixelator.pna.graph.constants
+
+.. autoapi-nested-parse::
+
+   Constants used in the graph step.
+
+   Copyright (c) 2026 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.graph.constants.DEFAULT_WORKING_DIR
+   pixelator.pna.graph.constants.LEIDEN_RANDOM_SEED
+   pixelator.pna.graph.constants.MAX_CYCLE_SEARCH_STEPS
+   pixelator.pna.graph.constants.MAX_FRONTIER_SIZE_IN_CYCLE_SEARCH
+   pixelator.pna.graph.constants.MIN_PNA_COMPONENT_SIZE
+
+
+Module Contents
+---------------
+
+.. py:data:: DEFAULT_WORKING_DIR
+
+.. py:data:: LEIDEN_RANDOM_SEED
+   :value: 1
+
+
+.. py:data:: MAX_CYCLE_SEARCH_STEPS
+   :value: 13
+
+
+.. py:data:: MAX_FRONTIER_SIZE_IN_CYCLE_SEARCH
+   :value: 10000
+
+
+.. py:data:: MIN_PNA_COMPONENT_SIZE
+   :value: 8000
+
+

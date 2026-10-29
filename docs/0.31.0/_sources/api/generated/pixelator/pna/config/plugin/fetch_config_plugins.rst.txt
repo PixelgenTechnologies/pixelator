@@ -1,0 +1,11 @@
+pixelator.pna.config.plugin.fetch_config_plugins
+================================================
+
+.. py:function:: pixelator.pna.config.plugin.fetch_config_plugins() -> Generator[importlib.metadata.EntryPoint, None, None]
+
+   Find plugins and return them as in a generator.
+
+   :returns: A generator of the loaded plugins
+
+   :Yields: The entrypoint object (EntryPoint)
+

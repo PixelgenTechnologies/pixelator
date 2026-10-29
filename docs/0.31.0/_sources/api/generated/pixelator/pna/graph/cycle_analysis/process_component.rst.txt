@@ -1,0 +1,7 @@
+pixelator.pna.graph.cycle_analysis.process_component
+====================================================
+
+.. py:function:: pixelator.pna.graph.cycle_analysis.process_component(comp_name, edgelist_path, tmpdir)
+
+   Process a single component to remove edges not participating in cycles.
+

@@ -1,0 +1,15 @@
+pixelator.pna.graph.community_detection.calculate_post_recovery_component_statistics
+====================================================================================
+
+.. py:function:: pixelator.pna.graph.community_detection.calculate_post_recovery_component_statistics(edgelist_with_components_path: pathlib.Path, component_stats: pixelator.pna.graph.report.GraphStatistics, discarded_large_components: polars.DataFrame | None = None) -> pixelator.pna.graph.report.GraphStatistics
+
+   Calculate and update graph statistics after multiplet recovery.
+
+   :param edgelist_with_components_path: Path to the edgelist with components in Parquet format.
+   :param component_stats: Graph statistics to be updated.
+   :param discarded_large_components: Components already discarded for being above the upper size
+                                      bound before this point.
+
+   :returns: Updated graph statistics.
+   :rtype: GraphStatistics
+

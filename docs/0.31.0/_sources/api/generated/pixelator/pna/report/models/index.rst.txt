@@ -1,0 +1,35 @@
+pixelator.pna.report.models
+===========================
+
+.. py:module:: pixelator.pna.report.models
+
+.. autoapi-nested-parse::
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/report/models/base/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/report/models/SampleReport
+   /api/generated/pixelator/pna/report/models/SummaryStatistics
+
+.. autoapisummary::
+
+   pixelator.pna.report.models.SampleReport
+   pixelator.pna.report.models.SummaryStatistics
+
+

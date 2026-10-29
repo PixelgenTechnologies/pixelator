@@ -1,0 +1,24 @@
+pixelator.common.exceptions
+===========================
+
+.. py:module:: pixelator.common.exceptions
+
+.. autoapi-nested-parse::
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Exceptions
+----------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/exceptions/PixelatorBaseException
+
+.. autoapisummary::
+
+   pixelator.common.exceptions.PixelatorBaseException
+
+

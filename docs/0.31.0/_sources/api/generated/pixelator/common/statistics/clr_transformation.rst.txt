@@ -1,0 +1,49 @@
+pixelator.common.statistics.clr_transformation
+==============================================
+
+.. py:function:: pixelator.common.statistics.clr_transformation(df: pandas.DataFrame, axis: Literal[0, 1] = 1, non_negative: bool = True) -> pandas.DataFrame
+
+   Transform antibody counts using the centered log-ratio (CLR) algorithm.
+
+   This function performs a CLR transformation on the
+   provided dataframe containing antibody counts. The CLR transformation
+   divides the counts by the geometric mean and then applies a log
+   transformation to the ratio. Alternatively, it can log-transform the
+   counts first and then subtract the log-transformed geometric mean,
+   centering the transformed counts around zero (which may include negative values).
+
+   .. dropdown:: Detailed explanation
+
+       .. rubric:: Center value
+
+       In the implementation, a "center" value is calculated and used in the
+       computations. The center value is the arithmetic mean of the ``log1p``-transformed
+       abundances of all the proteins along the specified ``axis``.
+
+       .. rubric:: Ratio form
+
+       The function divides each protein abundance by the ``np.exp`` of the
+       center value and then applies a ``np.log1p`` transformation on the ratio.
+
+       .. rubric:: Difference form
+
+       The function calculates the natural logarithm with a
+       pseudocount of 1 (``np.log1p``) of each protein's abundance and
+       subtracts the center value from them.
+
+   :param df: Dataframe containing antibody counts (antibodies as columns).
+   :param axis: The axis along which to compute the center. ``axis=0`` centers per
+                antibody (column), and ``axis=1`` centers per component (row).
+                Defaults to ``1``.
+   :param non_negative: If ``True``, use the ratio form. If
+                        ``False``, use the difference form. Defaults to ``True``.
+
+   :returns: A dataframe with the same shape and index/columns as ``df`` containing
+             the CLR-transformed values.
+
+   :raises AssertionError: If the input axis is not 0 or 1.
+
+   .. rubric:: References
+
+   https://en.wikipedia.org/wiki/Compositional_data#Center_log_ratio_transform
+

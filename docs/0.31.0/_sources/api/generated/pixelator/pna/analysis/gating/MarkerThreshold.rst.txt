@@ -1,0 +1,29 @@
+pixelator.pna.analysis.gating.MarkerThreshold
+=============================================
+
+.. py:class:: pixelator.pna.analysis.gating.MarkerThreshold
+
+   The result of determining a positive/negative threshold for a marker.
+
+   :ivar marker: The name of the marker.
+   :ivar threshold: The CLR value used to call a component positive for the marker.
+                    ``None`` if the distribution was found to be unimodal and no
+                    threshold could reliably be determined.
+   :ivar separation_score: A measure of how well separated the two components
+                           of the fitted Gaussian mixture model are. Higher values indicate
+                           a more clearly bimodal distribution.
+
+
+
+
+   .. py:attribute:: marker
+      :type:  str
+
+
+   .. py:attribute:: separation_score
+      :type:  float
+
+
+   .. py:attribute:: threshold
+      :type:  float | None
+

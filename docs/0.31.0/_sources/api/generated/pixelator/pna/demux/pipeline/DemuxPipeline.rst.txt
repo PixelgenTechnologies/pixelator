@@ -1,0 +1,40 @@
+pixelator.pna.demux.pipeline.DemuxPipeline
+==========================================
+
+.. py:class:: pixelator.pna.demux.pipeline.DemuxPipeline(demuxer: pixelator.pna.demux.barcode_demuxer.BarcodeDemuxer, writer_queue: Optional[multiprocessing.Queue] = None)
+
+   A pipeline that processes reads and sends them to a writer queue for further processing.
+
+
+   .. py:method:: close()
+
+      Flush the remaining items to the queue and close the queue.
+
+      Closing the queue and joining the tread managing it
+      in the current active worker is needed to make sure
+      all data is visible to consumers.
+
+
+
+   .. py:method:: flush()
+
+      Flush any buffered data from the pipeline.
+
+
+
+   .. py:method:: process_reads(infiles: cutadapt.files.InputFiles, progress: Optional[cutadapt.utils.Progress] = None) -> Tuple[int, int, Optional[int]]
+
+      Run the pipeline. Return statistics.
+
+      :param infiles: Input chunks of data as a file-like object
+      :param progress: A progress object to update
+
+
+
+   .. py:method:: set_writer_queue(writer_queue: multiprocessing.Queue) -> None
+
+      Set the writer queue for the pipeline.
+
+      :param writer_queue: The queue to send the processed reads to
+
+

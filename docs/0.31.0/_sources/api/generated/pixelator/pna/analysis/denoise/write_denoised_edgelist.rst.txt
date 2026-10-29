@@ -1,0 +1,16 @@
+pixelator.pna.analysis.denoise.write_denoised_edgelist
+======================================================
+
+.. py:function:: pixelator.pna.analysis.denoise.write_denoised_edgelist(pxl: pixelator.pna.pixeldataset.PNAPixelDataset, umis_to_remove: list, output_edgelist_path: str)
+
+   Write a filtered edgelist (with specified UMIs removed) to a Parquet file.
+
+   This function takes an existing PNAPixelDataset, removes edges associated
+   with the specified UMIs, and writes the resulting edgelist to a Parquet file
+   at the specified path. It does not create a new pixel (.pxl) file or update
+   any AnnData object.
+
+   :param pxl: The original pixel dataset containing the edgelist.
+   :param umis_to_remove: A list of UMIs (nodes) to be removed from the edgelist.
+   :param output_edgelist_path: The file path where the filtered edgelist Parquet file will be saved.
+

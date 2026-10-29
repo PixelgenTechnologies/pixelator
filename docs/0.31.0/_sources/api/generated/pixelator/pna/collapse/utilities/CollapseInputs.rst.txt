@@ -1,0 +1,15 @@
+pixelator.pna.collapse.utilities.CollapseInputs
+===============================================
+
+.. py:class:: pixelator.pna.collapse.utilities.CollapseInputs
+
+   Output object for :func:`~pixelator.pna.collapse.utilities.check_collapse_strategy_inputs`.
+
+
+   .. py:attribute:: parquet
+      :type:  list[pathlib.Path] | tuple[list[pathlib.Path], list[pathlib.Path]]
+
+
+   .. py:attribute:: reports
+      :type:  list[pathlib.Path] | tuple[list[pathlib.Path], list[pathlib.Path]]
+

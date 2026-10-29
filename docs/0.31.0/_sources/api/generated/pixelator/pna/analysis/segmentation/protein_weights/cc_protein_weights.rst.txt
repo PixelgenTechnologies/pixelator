@@ -1,0 +1,96 @@
+pixelator.pna.analysis.segmentation.protein_weights.cc_protein_weights
+======================================================================
+
+.. py:function:: pixelator.pna.analysis.segmentation.protein_weights.cc_protein_weights(adata: anndata.AnnData, group_by: str, population_1: str, population_2: str, masked_markers: Sequence[str] | None = None, max_freq: float = 0.01, min_diff: float = 0.5, mode: ProteinWeightsMode = 'cell_abundance', max_components_per_population: int = 100, neighborhoods_per_component: int = 500, min_neighborhood_size: int = 10, k: int = 2, show_plot: bool = False, verbose: bool = True, random_state: int = 0) -> pandas.DataFrame
+
+   Derive protein weights for two cell populations.
+
+   Uses non-negative matrix factorization (NMF) on protein abundance to find
+   markers that distinguish two labeled populations, then returns a weight
+   for each protein in each population. Those weights are the usual input
+   when segmenting a cell:cell conjugate into its two cell types.
+
+   Markers that look similar in both populations are dropped first. Highly
+   abundant proteins such as HLA-ABC often get high weights in both
+   populations, which makes them poor cell-type markers; ``max_freq``
+   removes proteins that are common in both. ``min_diff`` keeps proteins
+   whose relative frequency differs enough between the two populations.
+
+   If spatial structure (for example platelet contamination) dominates the
+   abundance difference, pass those proteins as ``masked_markers`` so they
+   are left out of the model. CD41, CD36, CD62P, and CD9 are common choices.
+
+   Set ``show_plot=True`` to inspect the top weights. A useful model has high
+   weights on proteins that are mutually exclusive between the two cell
+   types (for example CD20 on B cells and CD3e on T cells).
+
+   Pass ``random_state`` if you want the same weights on repeated runs.
+   NMF can otherwise vary slightly because cells may be downsampled and
+   the factorization is not fully deterministic.
+
+   Currently only whole-cell abundance (``mode="cell_abundance"``) is
+   available. Neighborhood-based weights (``mode="k_neighborhood"``) are
+   not implemented yet.
+
+   :param adata: AnnData with protein counts in ``.X`` and population labels
+                 in ``obs[group_by]``, for example from ``dataset.adata()``.
+   :param group_by: Column in ``adata.obs`` with the cell-type labels.
+   :param population_1: Name of the first population. This becomes the first
+                        column of the result.
+   :param population_2: Name of the second population. This becomes the
+                        second column of the result.
+   :param masked_markers: Optional proteins to exclude from the model.
+   :param max_freq: Drop a protein if its frequency in *both* populations is
+                    at least this value. Default 0.01 (1%).
+   :param min_diff: Minimum relative frequency difference between the two
+                    populations, ``|(freq1 - freq2) / (freq1 + freq2)|``. Markers
+                    at this value are kept. Perfectly exclusive markers score 1.
+                    Default 0.5.
+   :param mode: How to build the abundance matrix. ``"cell_abundance"``
+                (default) uses whole-cell protein counts.
+                ``"k_neighborhood"`` is not available yet.
+   :param max_components_per_population: Maximum number of cells to use from
+                                         each population. Default 100.
+   :param neighborhoods_per_component: Neighborhoods to sample per cell when
+                                       ``mode="k_neighborhood"``. Default 500.
+   :param min_neighborhood_size: Minimum neighborhood size when
+                                 ``mode="k_neighborhood"``. Default 10.
+   :param k: Neighborhood hop distance when ``mode="k_neighborhood"``.
+             Default 2.
+   :param show_plot: If True, plot the top protein weights for each
+                     population. Default False.
+   :param verbose: If True, log progress and warn when a population is small
+                   or few markers remain. Default True.
+   :param random_state: Seed used when sampling cells and fitting NMF, so
+                        results can be reproduced. Default 0.
+
+   :returns: A DataFrame with one row per protein kept in the model and two
+             columns named after the two populations. Values are non-negative
+             NMF weights scaled so each column sums to 1.
+
+   :raises ValueError: If the labels are missing, a population is not present,
+       or fewer than 5 markers remain after filtering.
+   :raises NotImplementedError: If ``mode="k_neighborhood"``.
+
+   .. rubric:: Examples
+
+   After cell types are in ``adata.obs["cell_type"]``, fit weights for
+   monocytes vs CD4 T cells and inspect the result::
+
+       from pixelator.pna.analysis import cc_protein_weights
+       from pixelator.pna.pixeldataset import read
+
+       adata = read("sample.pxl").adata()
+       w = cc_protein_weights(
+           adata,
+           group_by="cell_type",
+           population_1="Mono",
+           population_2="CD4T",
+       )
+       w.head()
+
+   .. seealso::
+
+      ``cc_protein_weights`` in pixelatorR, the equivalent function for
+      R users.
+

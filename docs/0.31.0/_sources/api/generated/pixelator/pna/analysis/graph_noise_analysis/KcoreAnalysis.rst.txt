@@ -1,0 +1,42 @@
+pixelator.pna.analysis.graph_noise_analysis.KcoreAnalysis
+=========================================================
+
+.. py:class:: pixelator.pna.analysis.graph_noise_analysis.KcoreAnalysis
+
+   Bases: :py:obj:`pixelator.pna.analysis_engine.PerComponentTask`
+
+
+   Run k-core decomposition on each component.
+
+
+   .. py:attribute:: TASK_NAME
+      :value: 'k-core'
+
+
+
+   .. py:method:: add_to_pixel_file(data: pandas.DataFrame, pxl_file_target: pixelator.pna.pixeldataset.io.PxlFile) -> None
+
+      Add k-core count data for all components to adata.obs in pxl_dataset.
+
+      :param data: a pandas DataFrame containing k-core counts for all components.
+      :param pxl_file_target: the PxlFile to add the data to.
+
+
+
+   .. py:method:: run_on_component_graph(component: pixelator.pna.graph.PNAGraph, component_id: str) -> pandas.DataFrame
+
+      Run k-core analysis on a single component.
+
+      Calls summarize_k_cores on a component graph and returns a pandas DataFrame with k-core
+      counts.
+      The columns in the DataFrame are names 'k_core_1', 'k_core_2', ..., 'k_core_M' where M is
+      the
+      maximum k-core value in the component. The k-core counts are useful for quantifying graph
+      connectivity.
+
+      :param component: a networkx graph for a component to run the analysis on.
+      :param component_id: the id of the component.
+
+      :returns: a pandas DataFrame containing k-core counts.
+
+

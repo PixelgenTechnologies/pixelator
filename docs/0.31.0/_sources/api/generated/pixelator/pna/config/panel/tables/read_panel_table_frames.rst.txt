@@ -1,0 +1,7 @@
+pixelator.pna.config.panel.tables.read_panel_table_frames
+=========================================================
+
+.. py:function:: pixelator.pna.config.panel.tables.read_panel_table_frames(connection: duckdb.DuckDBPyConnection) -> tuple[pandas.DataFrame, pandas.DataFrame] | None
+
+   Return ``(markers, sources)`` or None when the tables are absent.
+

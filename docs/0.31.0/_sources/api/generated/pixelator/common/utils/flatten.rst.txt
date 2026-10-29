@@ -1,0 +1,15 @@
+pixelator.common.utils.flatten
+==============================
+
+.. py:function:: pixelator.common.utils.flatten(iterable: Iterable[Iterable[Any] | Any]) -> Generator[Any, None, None]
+
+   Flatten an Iterable containing items or collection of items.
+
+   Note: only list, set, tuple are flattened, strings and bytes are yielded as is
+
+   :param iterable: list of lists or list of sets
+
+   :returns: A generator yielding the flattened items (Generator[Any, None, None])
+
+   :Yields: the flattened items (Any)
+

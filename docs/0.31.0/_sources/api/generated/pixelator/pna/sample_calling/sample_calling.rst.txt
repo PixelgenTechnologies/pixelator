@@ -1,0 +1,29 @@
+pixelator.pna.sample_calling.sample_calling
+===========================================
+
+.. py:function:: pixelator.pna.sample_calling.sample_calling(input_pxl: pixelator.pna.pixeldataset.PNAPixelDataset, hashing_antibody_mapping: hash_antibodies.HashedAntibodyMapping, output_folder: pathlib.Path, enrichment_threshold: float = 10.0, remove_incompatible: bool = True, undetermined_sample_name: str = 'undetermined') -> list[pathlib.Path]
+
+   Split components of a pixel dataset by their sample.
+
+   Splits components of a pixel dataset by their sample and writes out
+   separate pxl files for each sample. This function processes a
+   PNAPixelDataset, assigns components to samples based on hash enrichment
+   factors and an enrichment threshold, and writes out pxl files for each
+   determined sample. It will also write a file for undetermined components
+   (under the name "{undetermined_sample_name}.dehashed.pxl").
+   It supports removing incompatible hashes and renaming hash markers in the output.
+
+   :param input_pxl: The input pixel dataset to be split by sample.
+   :param hashing_antibody_mapping: Information about hashing antibodies, including a mapping from
+                                    sample names to lists of hashed antibody names.
+   :param output_folder: Directory where output pxl files will be written.
+   :param enrichment_threshold: Minimum hash enrichment factor required to assign a component to a
+                                sample. The enrichment factor is the highest hash count divided by the second highest
+                                hash count. Defaults to 10.0.
+   :param remove_incompatible: Whether to remove hashes incompatible with the current sample from the
+                               edgelist. Defaults to True.
+   :param undetermined_sample_name: Name to use for undetermined components. Defaults to
+                                    "undetermined".
+
+   :returns: List of all output pxl files created.
+

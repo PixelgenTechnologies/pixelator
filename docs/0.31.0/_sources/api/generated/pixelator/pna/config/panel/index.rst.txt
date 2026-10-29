@@ -1,0 +1,97 @@
+pixelator.pna.config.panel
+==========================
+
+.. py:module:: pixelator.pna.config.panel
+
+.. autoapi-nested-parse::
+
+   Marker panel management for different PNA assays.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/config/panel/align/index
+   /api/generated/pixelator/pna/config/panel/antibody_panel/index
+   /api/generated/pixelator/pna/config/panel/diff/index
+   /api/generated/pixelator/pna/config/panel/hashing/index
+   /api/generated/pixelator/pna/config/panel/tables/index
+   /api/generated/pixelator/pna/config/panel/validation/index
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.ORIGINAL_HASH_COUNTS_PREFIX
+
+
+Exceptions
+----------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/PanelConflictError
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.PanelConflictError
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/PNAAntibodyPanel
+   /api/generated/pixelator/pna/config/panel/PanelAlignment
+   /api/generated/pixelator/pna/config/panel/PanelSource
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.PNAAntibodyPanel
+   pixelator.pna.config.panel.PanelAlignment
+   pixelator.pna.config.panel.PanelSource
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/align_panels
+   /api/generated/pixelator/pna/config/panel/changed_marker_ids
+   /api/generated/pixelator/pna/config/panel/collapsed_hashing_marker_id
+   /api/generated/pixelator/pna/config/panel/load_antibody_panel
+   /api/generated/pixelator/pna/config/panel/load_antibody_panels
+   /api/generated/pixelator/pna/config/panel/sample_hashing_mask
+   /api/generated/pixelator/pna/config/panel/split_hashing_marker_id
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.align_panels
+   pixelator.pna.config.panel.changed_marker_ids
+   pixelator.pna.config.panel.collapsed_hashing_marker_id
+   pixelator.pna.config.panel.load_antibody_panel
+   pixelator.pna.config.panel.load_antibody_panels
+   pixelator.pna.config.panel.sample_hashing_mask
+   pixelator.pna.config.panel.split_hashing_marker_id
+
+
+Package Contents
+----------------
+
+.. py:data:: ORIGINAL_HASH_COUNTS_PREFIX
+   :value: 'original_hash_counts_'
+
+

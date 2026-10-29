@@ -1,0 +1,7 @@
+pixelator.pna.anndata.add_missing_adata_info
+============================================
+
+.. py:function:: pixelator.pna.anndata.add_missing_adata_info(new_adata: anndata.AnnData, old_adata: anndata.AnnData) -> anndata.AnnData
+
+   Add missing obs and var columns from old_adata to new_adata.
+

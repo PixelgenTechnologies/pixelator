@@ -1,0 +1,7 @@
+pixelator.pna.graph.component_recovery_utils.n_molecules_sql
+============================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.n_molecules_sql(has_uei_count: bool) -> str
+
+   SQL expression for molecule count; defaults to edge count when absent.
+

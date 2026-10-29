@@ -1,0 +1,39 @@
+pixelator.pna.read_processing.runners.PipelineRunner
+====================================================
+
+.. py:class:: pixelator.pna.read_processing.runners.PipelineRunner
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   A read processing pipeline.
+
+
+   .. py:method:: close()
+      :abstractmethod:
+
+
+      Close all open file-descriptors.
+
+
+
+   .. py:method:: input_file_format() -> cutadapt.files.FileFormat
+      :abstractmethod:
+
+
+      Return the input file format of the input file(s).
+
+
+
+   .. py:method:: run(pipeline: cutadapt.pipeline.Pipeline, progress: cutadapt.utils.Progress, outfiles: cutadapt.files.OutputFiles) -> cutadapt.report.Statistics
+      :abstractmethod:
+
+
+      Run a pipeline on this runner.
+
+      :param pipeline: The pipeline to run.
+      :param progress: Use an object that supports .update() and .close() such as DummyProgress,
+                       cutadapt.utils.Progress or a tqdm instance.
+      :param outfiles: The output files.
+
+

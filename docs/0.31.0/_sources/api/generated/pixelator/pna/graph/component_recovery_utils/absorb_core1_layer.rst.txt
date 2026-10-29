@@ -1,0 +1,30 @@
+pixelator.pna.graph.component_recovery_utils.absorb_core1_layer
+===============================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.absorb_core1_layer(base_edgelist_path: pathlib.Path, core1_discard_path: pathlib.Path, working_dir: pathlib.Path, stats: pixelator.pna.graph.report.GraphStatistics) -> tuple[pathlib.Path, pixelator.pna.graph.report.GraphStatistics]
+
+   Reattach the core-1 layer to the components resolved without it.
+
+   A core-1 edge can be rescued if exactly one of its two UMIs already belongs to a known
+   component (a "frontier" edge); the peeled UMI is then assigned to that component too. If the
+   peeled UMI of a frontier edge would end up claiming more than one distinct component across
+   different frontier edges in the same round, all those edges are instead treated as "fused"
+   and discarded, since attaching them would silently merge two different components together.
+   Edges whose two UMIs already map to two different components ("conflict") are discarded
+   outright. This repeats, growing the known-component map each round, until it converges:
+   either no core-1 edges remain unresolved, or a round assigns no new UMIs to a component (at
+   which point no further round could make progress). The loop always terminates, since every
+   round that does not stop it strictly grows the set of UMIs with a known component.
+
+   A single piece of frontier evidence is enough to rescue an edge: a peeled UMI's path back to
+   the known structure is a tree, not a graph with redundant paths, so there is usually no
+   second independent piece of evidence to demand.
+
+   :param base_edgelist_path: Path to the edgelist with final ``component`` labels to absorb into.
+   :param core1_discard_path: The core-1 discard pile produced by ``peel_core1_nodes``.
+   :param working_dir: Directory to write intermediate parquet files to.
+   :param stats: Statistics object to update.
+
+   :returns: Path to the final edgelist (base edgelist plus every rescued core-1 edge), and updated
+             statistics.
+

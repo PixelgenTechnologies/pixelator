@@ -1,0 +1,23 @@
+pixelator.common.graph.backends
+===============================
+
+.. py:module:: pixelator.common.graph.backends
+
+.. autoapi-nested-parse::
+
+   Graph backends used by pixelator.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/common/graph/backends/implementations/index
+   /api/generated/pixelator/common/graph/backends/protocol/index
+
+

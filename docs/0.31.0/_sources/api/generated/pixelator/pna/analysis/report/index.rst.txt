@@ -1,0 +1,34 @@
+pixelator.pna.analysis.report
+=============================
+
+.. py:module:: pixelator.pna.analysis.report
+
+.. autoapi-nested-parse::
+
+   Model for report data returned by the single-cell analysis stage.
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/report/AnalysisSampleReport
+   /api/generated/pixelator/pna/analysis/report/DenoiseSampleReport
+   /api/generated/pixelator/pna/analysis/report/KCoreReport
+   /api/generated/pixelator/pna/analysis/report/ProximityReport
+   /api/generated/pixelator/pna/analysis/report/SvdReport
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.report.AnalysisSampleReport
+   pixelator.pna.analysis.report.DenoiseSampleReport
+   pixelator.pna.analysis.report.KCoreReport
+   pixelator.pna.analysis.report.ProximityReport
+   pixelator.pna.analysis.report.SvdReport
+
+

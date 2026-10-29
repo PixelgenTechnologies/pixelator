@@ -1,0 +1,39 @@
+pixelator.common.graph.graph
+============================
+
+.. py:module:: pixelator.common.graph.graph
+
+.. autoapi-nested-parse::
+
+   Functions related to the graph dataclass used in pixelator graph operations.
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.graph.graph.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/graph/graph/Graph
+
+.. autoapisummary::
+
+   pixelator.common.graph.graph.Graph
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

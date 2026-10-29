@@ -1,0 +1,16 @@
+pixelator.pna.sample_calling.warn_if_undetermined_has_high_enrichment
+=====================================================================
+
+.. py:function:: pixelator.pna.sample_calling.warn_if_undetermined_has_high_enrichment(undetermined_enrichment_factors: pandas.Series | numpy.ndarray, enrichment_threshold: float, undetermined_sample_name: str = 'undetermined') -> None
+
+   Warn if the undetermined sample has a high hash enrichment factor.
+
+   A high enrichment factor in undetermined components means they are clearly
+   dominated by one hash, suggesting the samplesheet may have wrong sample indices.
+
+   :param undetermined_enrichment_factors: Hash enrichment factors for undetermined components.
+   :param enrichment_threshold: Minimum hash enrichment factor required to assign a component to a
+                                sample.
+   :param undetermined_sample_name: Name to use for undetermined components. Defaults to
+                                    "undetermined".
+

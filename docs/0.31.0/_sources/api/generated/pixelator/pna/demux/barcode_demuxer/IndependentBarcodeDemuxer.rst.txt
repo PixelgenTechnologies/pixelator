@@ -1,0 +1,19 @@
+pixelator.pna.demux.barcode_demuxer.IndependentBarcodeDemuxer
+=============================================================
+
+.. py:class:: pixelator.pna.demux.barcode_demuxer.IndependentBarcodeDemuxer(assay: pixelator.pna.config.PNAAssay, panel: pixelator.pna.config.PNAAntibodyPanel, marker1_groups: dict[str, int], marker2_groups: dict[str, int])
+
+   Bases: :py:obj:`BarcodeDemuxer`
+
+
+   Find the nearest antibody for a given barcode.
+
+   The marker1 and marker2 barcode are grouped independently.
+   Each read will be present twice in the output, once for each barcode.
+
+
+   .. py:attribute:: marker1_groups
+
+
+   .. py:attribute:: marker2_groups
+

@@ -1,0 +1,39 @@
+pixelator.pna.sample_calling.hash_antibodies.HashedAntibodyMapping
+==================================================================
+
+.. py:class:: pixelator.pna.sample_calling.hash_antibodies.HashedAntibodyMapping(mapping: dict[str, list[str]], *, all_hashing_antibodies: list[str] | set[str])
+
+   Bases: :py:obj:`dict`\ [\ :py:obj:`str`\ , :py:obj:`list`\ [\ :py:obj:`str`\ ]\ ]
+
+
+   Mapping of samples to hashing antibodies.
+
+   Also stores information about all hashing antibodies, including those that are not mapped to any
+   sample.
+
+
+   .. py:method:: from_samplesheet(samplesheet_df: polars.DataFrame, all_hashing_antibodies: list[str] | set[str], pool_name: str) -> HashedAntibodyMapping
+      :classmethod:
+
+
+      Create a HashedAntibodyMapping from a samplesheet and a full list of hashing antibodies.
+
+      :param samplesheet_df: Must have columns pool, sample, hash_index.
+      :param all_hashing_antibodies: Full list/set of hashing antibodies (e.g. from panel). Required.
+      :param pool_name: Pool to filter by in the samplesheet.
+
+
+
+   .. py:property:: hashing_antibodies
+      :type: set[str]
+
+
+      All hashing antibodies (regardless of whether they are mapped to a sample).
+
+
+   .. py:property:: unmapped_hashing_antibodies
+      :type: set[str]
+
+
+      Hashing antibodies that are not mapped to any sample.
+

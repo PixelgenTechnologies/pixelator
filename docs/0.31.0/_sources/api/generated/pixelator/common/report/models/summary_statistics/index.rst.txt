@@ -1,0 +1,26 @@
+pixelator.common.report.models.summary_statistics
+=================================================
+
+.. py:module:: pixelator.common.report.models.summary_statistics
+
+.. autoapi-nested-parse::
+
+   Model for a collection of summary statistics of a distribution.
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/report/models/summary_statistics/SummaryStatistics
+
+.. autoapisummary::
+
+   pixelator.common.report.models.summary_statistics.SummaryStatistics
+
+

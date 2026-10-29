@@ -1,0 +1,22 @@
+pixelator.pna.demux.demux_barcode_groups
+========================================
+
+.. py:function:: pixelator.pna.demux.demux_barcode_groups(corrected_reads: pathlib.Path, assay: pixelator.pna.config.PNAAssay, panel: pixelator.pna.config.PNAAntibodyPanel, stats: pixelator.pna.demux.report.BarcodeCorrectionStatistics, output_dir: pathlib.Path, reads_per_chunk: int = 50000000, max_chunks: int = 8, threads: int = -1, stategy: Literal['independent', 'paired'] = 'paired')
+
+   Demux a FASTQ file containing marker information in the header.
+
+   Since there are many combinations of markers, the barcode groups are
+   not demultiplexed in individual (pid1, pid1) combinations but in batches.
+   Sequence records will be streamed into Arrow IPC files given a target batch size.
+
+   :param corrected_reads: The path to the corrected FASTQ file.
+   :param assay: The assay design.
+   :param panel: The antibody panel.
+   :param stats: The statistics from the barcode correction.
+   :param output_dir: The output directory.
+   :param reads_per_chunk: The target number of molecules in each batch.
+   :param max_chunks: The maximum number of batches.
+   :param threads: The number of threads to use for processing. The default of `-1` will use all
+                   available cores.
+   :param stategy: The demultiplexing strategy to use. Defaults to "paired".
+

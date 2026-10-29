@@ -1,0 +1,39 @@
+pixelator.pna.analysis.segmentation.protein_weights
+===================================================
+
+.. py:module:: pixelator.pna.analysis.segmentation.protein_weights
+
+.. autoapi-nested-parse::
+
+   NMF protein weights for two labeled cell populations.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.segmentation.protein_weights.ProteinWeightsMode
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/segmentation/protein_weights/cc_protein_weights
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.segmentation.protein_weights.cc_protein_weights
+
+
+Module Contents
+---------------
+
+.. py:data:: ProteinWeightsMode
+

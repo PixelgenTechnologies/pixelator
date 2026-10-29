@@ -1,0 +1,38 @@
+pixelator.pna.analysis.graph_noise_analysis.svd_pivot_distances
+===============================================================
+
+.. py:function:: pixelator.pna.analysis.graph_noise_analysis.svd_pivot_distances(g: networkx.Graph, pivots: int = 100, seed: int | None = None) -> tuple
+
+   Single Value Decomposition of a graphs shortest path matrix.
+
+   This function can be used to evaluate how well a graph can be represented
+   in 3D space.
+
+   Component graphs with high spatial resolution, i.e. where edges represent short distances
+   in actual space, should be easier to embed in a euclidean space using multidimensional
+   scaling techniques s.a. pMDS. In contrast, graphs with high spatial distortion or with
+   a high amount of noise will be harder to embed. An example of such noise is the presence
+   of edges which form long-range connections. Such connections will break the spatial
+   structure of the graph and form shortest paths which are not representative of the actual
+   spatial distances.
+
+   The idea behind this method is that if a graph truly represents a spatial 3D structure,
+   most of the variance should be explained by the first 3 singular vectors in the SVD. In
+   the best case scenario, the first 3 singular vectors should explain 100% of the variance
+   and all three singular vectors should contribute equally to the variance explained.
+
+   The algorithm is outlined below:
+
+   1. Select a number of pivot nodes at random.
+   2. Calculate the shortest path length from the pivots to all other nodes.
+   3. Double center the distance matrix.
+   4. Perform SVD on the centered distance matrix.
+
+   :param g: a networkx graph object
+   :param pivots: the number of pivot nodes to use
+   :param seed: the random seed to use
+
+   :returns: a tuple containing the results of the SVD
+
+   :raises ValueError: the number of pivots must be less than the number of nodes in the graph
+

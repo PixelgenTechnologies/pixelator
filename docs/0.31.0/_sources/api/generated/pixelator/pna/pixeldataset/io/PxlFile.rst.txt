@@ -1,0 +1,68 @@
+pixelator.pna.pixeldataset.io.PxlFile
+=====================================
+
+.. py:class:: pixelator.pna.pixeldataset.io.PxlFile(path: pathlib.Path, sample_name: str | None = None)
+
+   PxlFile represents a a pxl file on disk and provides basic utility methods.
+
+
+   .. py:method:: copy_pxl_file(src: PxlFile, target: pathlib.Path) -> PxlFile
+      :staticmethod:
+
+
+      Copy a PxlFile to a new location.
+
+      :param src: The source PxlFile.
+      :param target: The target path.
+
+      :returns: The new PxlFile.
+
+
+
+   .. py:method:: is_null_file() -> bool
+
+      Return True when this file is a null pxl file.
+
+
+
+   .. py:method:: is_pxl_file() -> bool
+
+      Check if the file is a PXL file.
+
+
+
+   .. py:method:: metadata() -> dict
+
+      Read the metadata from the PXL file.
+
+
+
+   .. py:method:: null_reason() -> str | None
+
+      Return why this file is null, or None when it is not null.
+
+      :returns: The stripped reason string, or None.
+
+
+
+   .. py:attribute:: path
+
+
+   .. py:method:: read_panel() -> pixelator.pna.config.panel.PNAAntibodyPanel | None
+
+      Load the antibody panel stored in this file.
+
+      New files are read from the ``panels`` and ``panel_sources`` tables.
+      Older files go through
+      :class:`~pixelator.pna.pixeldataset.legacy.LegacyPanelAdapter`.
+
+      :returns: The panel, or None when the file does not store one.
+
+
+
+   .. py:property:: sample_name
+      :type: str
+
+
+      Return the sample name of the PxlFile.
+

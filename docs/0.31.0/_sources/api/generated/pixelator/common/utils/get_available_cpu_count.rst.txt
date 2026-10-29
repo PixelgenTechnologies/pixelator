@@ -1,0 +1,16 @@
+pixelator.common.utils.get_available_cpu_count
+==============================================
+
+.. py:function:: pixelator.common.utils.get_available_cpu_count() -> int
+
+   Return the number of CPU cores available to the current process.
+
+   Combines the process' CPU affinity mask with the cgroup CPU bandwidth quota
+   and takes the most restrictive of the two, so that running inside a
+   constrained environment such as a container or a scheduler pod does not
+   report the host machine's core count. ``multiprocessing.cpu_count()`` reports
+   the host core count regardless of the assigned cores, which leads to
+   oversubscription and slower multiprocessing.
+
+   :returns: The number of usable CPU cores, always at least 1.
+

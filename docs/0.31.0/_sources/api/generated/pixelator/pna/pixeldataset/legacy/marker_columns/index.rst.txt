@@ -1,0 +1,39 @@
+pixelator.pna.pixeldataset.legacy.marker_columns
+================================================
+
+.. py:module:: pixelator.pna.pixeldataset.legacy.marker_columns
+
+.. autoapi-nested-parse::
+
+   Adapt queries so an edgelist with legacy marker column names matches the current schema.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/legacy/marker_columns/LegacyMarkerQueryAdapter
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.legacy.marker_columns.LegacyMarkerQueryAdapter
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/legacy/marker_columns/legacy_marker_columns
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.legacy.marker_columns.legacy_marker_columns
+
+

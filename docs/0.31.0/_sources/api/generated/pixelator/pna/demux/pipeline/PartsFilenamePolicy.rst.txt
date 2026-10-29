@@ -1,0 +1,24 @@
+pixelator.pna.demux.pipeline.PartsFilenamePolicy
+================================================
+
+.. py:class:: pixelator.pna.demux.pipeline.PartsFilenamePolicy(prefix: str)
+
+   Bases: :py:obj:`DemuxFilenamePolicy`
+
+
+   A filename policy for creating demux output files.
+
+   Each group will be written to a separate file with the
+   `part_???.demux.arrow` suffix.
+
+
+   .. py:method:: get_filename(group_index: int) -> str
+
+      Return the filename for the given group index.
+
+      :param group_index: The index of the group to write the data to
+
+
+
+   .. py:attribute:: prefix
+

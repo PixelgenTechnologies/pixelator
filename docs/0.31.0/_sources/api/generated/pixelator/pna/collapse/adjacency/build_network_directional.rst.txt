@@ -1,0 +1,16 @@
+pixelator.pna.collapse.adjacency.build_network_directional
+==========================================================
+
+.. py:function:: pixelator.pna.collapse.adjacency.build_network_directional(distances: numpy.typing.NDArray[numpy.int64], indices: numpy.typing.NDArray[numpy.uint64], read_counts: numpy.typing.NDArray[numpy.int64], cutoff: int) -> scipy.sparse.csr_matrix
+
+   Create a sparse directed adjacency matrix from a FAISS k-nearest query result.
+
+   Uses the "Directional" approach as described by UMI-tools.
+
+   :param distances: The distances of the k-nearest neighbors. A 2D array with shape (n_queries, k).
+   :param indices: The indices of the k-nearest neighbors. A 2D array with shape (n_queries, k).
+   :param read_counts: The read support for each molecule. A 1D array with shape (n_queries,).
+   :param cutoff: The distance cutoff to consider an edge between two nodes.
+
+   :returns: A sparse directed adjacency matrix in CSR format. (scipy.sparse.csr_matrix)
+

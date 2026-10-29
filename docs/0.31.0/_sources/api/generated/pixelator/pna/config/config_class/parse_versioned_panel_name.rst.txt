@@ -1,0 +1,13 @@
+pixelator.pna.config.config_class.parse_versioned_panel_name
+============================================================
+
+.. py:function:: pixelator.pna.config.config_class.parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional[str]]
+
+   Parse a panel identifier that may include a version expression.
+
+   :param panel_name: Panel identifier, optionally suffixed with a comparator and version fragment
+                      (for example ``panel>=1.2`` or ``panel==1``).
+
+   :returns: A tuple ``(name, specifier)`` where both values are None when no version
+             expression is detected.
+

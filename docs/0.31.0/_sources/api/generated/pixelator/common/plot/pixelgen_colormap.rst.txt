@@ -1,0 +1,15 @@
+pixelator.common.plot.pixelgen_colormap
+=======================================
+
+.. py:function:: pixelator.common.plot.pixelgen_colormap(name: str, n: int = 256) -> matplotlib.colors.LinearSegmentedColormap
+
+   Get one of the named Pixelgen branded gradients as a matplotlib colormap.
+
+   :param name: The name of the gradient. See `pixelgen_gradient`.
+   :param n: The number of discrete color levels to sample the colormap at.
+
+   :returns: A `matplotlib.colors.LinearSegmentedColormap` usable as a ``cmap=``
+             argument.
+
+   :raises ValueError: If ``name`` is not a known gradient.
+

@@ -1,0 +1,14 @@
+pixelator.common.statistics.correct_pvalues
+===========================================
+
+.. py:function:: pixelator.common.statistics.correct_pvalues(pvalues: numpy.ndarray) -> numpy.ndarray
+
+   Correct a series of p-values using the Benjamini-Hochberg method.
+
+   An outline of the method can be found here:
+   https://en.wikipedia.org/wiki/False_discovery_rate#Benjamini%E2%80%93Hochberg_procedure
+
+   :param pvalues: An array of p-values to adjust.
+
+   :returns: The array of adjusted p-values in the same order as the input array.
+

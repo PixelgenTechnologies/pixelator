@@ -1,0 +1,45 @@
+pixelator.plot
+==============
+
+.. py:module:: pixelator.plot
+
+.. autoapi-nested-parse::
+
+   Functions for creating plots from Pixelator data.
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.plot.colormap
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/plot/density_scatter_plot
+   /api/generated/pixelator/plot/pixelgen_sequential_colormap
+   /api/generated/pixelator/plot/set_pixelgen_theme
+   /api/generated/pixelator/plot/style_facet_strips
+
+.. autoapisummary::
+
+   pixelator.plot.density_scatter_plot
+   pixelator.plot.pixelgen_sequential_colormap
+   pixelator.plot.set_pixelgen_theme
+   pixelator.plot.style_facet_strips
+
+
+Package Contents
+----------------
+
+.. py:data:: colormap
+

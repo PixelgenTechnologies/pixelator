@@ -1,0 +1,22 @@
+pixelator.pna.graph.component_recovery_utils.ConnectedComponentException
+========================================================================
+
+.. py:exception:: pixelator.pna.graph.component_recovery_utils.ConnectedComponentException(message: str, statistics: pixelator.pna.graph.report.GraphStatistics | None = None)
+
+   Bases: :py:obj:`pixelator.common.exceptions.PixelatorBaseException`
+
+
+   Raised when the data yields no cells during component recovery.
+
+   This is a recoverable, data-caused error: the graph step should emit a
+   null pxl file and continue. Unexpected exceptions are not wrapped in this
+   type and must still fail the run.
+
+   :ivar statistics: Graph statistics gathered before the failure, when available.
+
+
+
+   .. py:attribute:: statistics
+      :value: None
+
+

@@ -1,0 +1,56 @@
+pixelator.plot.density_scatter_plot
+===================================
+
+.. py:function:: pixelator.plot.density_scatter_plot(adata: anndata.AnnData, marker1: str, marker2: str, layer: str | None = None, facet_row: str | None = None, facet_column: str | None = None, gate: pandas.Series | pandas.DataFrame | None = None, show_marginal: bool = False, density_scope: Literal['facet', 'joint'] = 'facet', scale_to_max: bool | None = None)
+
+   Pseudocolor density scatter plot.
+
+   This function creates a scatter plot of abundance data for two markers colored
+   based on the density of points:
+   Example usage: `density_scatter_plot(pxl.adata, "CD3E", "CD4")`.
+   It is also possible to specify one or two variables for faceting the plot by
+   columns and rows:
+   Example usage: `density_scatter_plot(pxl.adata, "CD3E", "CD4",
+   facet_row = "stimulation", facet_column = "donor")`.
+   `facet_row` and `facet_column` should be names of categorical columns in `adata.obs`.
+   In addition, a gate can be specified as a Series with xmin, xmax, ymin, and ymax
+   to mark a range for components of interest. Alternatively, gate can be specified
+   as a DataFrame to allow for different gate ranges for various conditions.
+   When both facet_row and facet_column are specified, the condition becomes a
+   tuple (facet_row, facet_column), if only one is specified, that parameter
+   becomes the condition. The condition permuations are used as the index of
+   the gate.
+   Example usage:
+   gate = pd.DataFrame(columns = ["xmin", "ymin", "xmax", "ymax"])
+   gate.loc["Resting"] = [2, 2, 5, 4]
+   gate.loc["PHA"] = [1.5, 1.5, 5, 4]
+   fig, ax = density_scatter_plot(pixel.adata, "CD3E", "CD4", layer="dsb",
+   facet_column="sample", gate=gate)
+
+   Faceted plots estimate the density inside each facet and scale it to that
+   facet's maximum, so each panel's colors reflect its own density.
+   ``density_scope="joint"`` keeps the previous behavior: one density
+   estimated on every point. Non-faceted plots are unchanged unless
+   ``scale_to_max=True``. A facet with too few points, or with no
+   two-dimensional spread, is drawn at a constant density. A non-faceted
+   plot, and ``density_scope="joint"``, raise ``ValueError`` naming the
+   markers and whether there are too few cells or the cells have no area.
+
+   :param adata: Anndata object containing the marker abundance data per component.
+   :param marker1: The first marker to plot (x-axis).
+   :param marker2: The second marker to plot (y-axis).
+   :param layer: The anndata layer (e.g. transformation) to use for the marker data. Defaults to None.
+   :param facet_row: The column to use for faceting the plot by rows. Defaults to None.
+   :param facet_column: The column to use for faceting the plot by columns. Defaults to None.
+   :param gate: The gate to use for marking a range of interest. Defaults to None.
+   :param show_marginal: Whether to show marginal distributions. Defaults to False.
+   :param density_scope: ``"facet"`` estimates density inside each facet.
+                         ``"joint"`` estimates one density on the whole dataset. Defaults to
+                         ``"facet"``. Has no effect when the plot is not faceted.
+   :param scale_to_max: Divide each density by its maximum. Defaults to True for
+                        per-facet densities and False otherwise.
+
+   :raises ValueError: If ``density_scope`` is not ``"facet"`` or ``"joint"``,
+       or if a non-faceted plot or ``density_scope="joint"`` has fewer
+       than two cells or cells with no area.
+

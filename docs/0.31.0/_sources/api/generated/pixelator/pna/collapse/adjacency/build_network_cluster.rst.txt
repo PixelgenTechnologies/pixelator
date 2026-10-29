@@ -1,0 +1,14 @@
+pixelator.pna.collapse.adjacency.build_network_cluster
+======================================================
+
+.. py:function:: pixelator.pna.collapse.adjacency.build_network_cluster(distances: numpy.typing.NDArray[numpy.int64], indices: numpy.typing.NDArray[numpy.uint64], read_counts: numpy.typing.NDArray[numpy.int64], cutoff: int) -> scipy.sparse.csr_matrix
+
+   Create a sparse adjacency matrix from a FAISS k-nearest query result.
+
+   Use the "Cluster" approach as described by UMI-tools.
+
+   :param distances: The distances of the k-nearest neighbors. A 2D array with shape (n_queries, k).
+   :param indices: The indices of the k-nearest neighbors. A 2D array with shape (n_queries, k).
+   :param read_counts: The read support for each molecule. A 1D array with shape (n_queries,).
+   :param cutoff: The distance cutoff to consider an edge between two nodes.
+

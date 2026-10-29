@@ -1,0 +1,65 @@
+pixelator.pna.config.assay
+==========================
+
+.. py:module:: pixelator.pna.config.assay
+
+.. autoapi-nested-parse::
+
+   Module containing classes and functions related to the different assay/designs used by pixelator.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.config.assay.DNA_CHARS
+   pixelator.pna.config.assay.PNARequiredRegions
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/assay/AssayModel
+   /api/generated/pixelator/pna/config/assay/PNAAssay
+   /api/generated/pixelator/pna/config/assay/PNARegionType
+   /api/generated/pixelator/pna/config/assay/Region
+   /api/generated/pixelator/pna/config/assay/RegionModel
+   /api/generated/pixelator/pna/config/assay/SequenceType
+
+.. autoapisummary::
+
+   pixelator.pna.config.assay.AssayModel
+   pixelator.pna.config.assay.PNAAssay
+   pixelator.pna.config.assay.PNARegionType
+   pixelator.pna.config.assay.Region
+   pixelator.pna.config.assay.RegionModel
+   pixelator.pna.config.assay.SequenceType
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/assay/get_position_in_parent
+
+.. autoapisummary::
+
+   pixelator.pna.config.assay.get_position_in_parent
+
+
+Module Contents
+---------------
+
+.. py:data:: DNA_CHARS
+
+.. py:data:: PNARequiredRegions
+

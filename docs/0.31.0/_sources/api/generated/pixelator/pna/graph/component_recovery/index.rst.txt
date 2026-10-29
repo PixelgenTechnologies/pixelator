@@ -1,0 +1,28 @@
+pixelator.pna.graph.component_recovery
+======================================
+
+.. py:module:: pixelator.pna.graph.component_recovery
+
+.. autoapi-nested-parse::
+
+   Build PXL output from edgelist via the graph-step component recovery pipeline.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/component_recovery/build_pxl_file_with_components
+   /api/generated/pixelator/pna/graph/component_recovery/update_stats_from_adata
+
+.. autoapisummary::
+
+   pixelator.pna.graph.component_recovery.build_pxl_file_with_components
+   pixelator.pna.graph.component_recovery.update_stats_from_adata
+
+

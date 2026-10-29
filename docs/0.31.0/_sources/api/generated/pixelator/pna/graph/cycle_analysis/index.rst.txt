@@ -1,0 +1,65 @@
+pixelator.pna.graph.cycle_analysis
+==================================
+
+.. py:module:: pixelator.pna.graph.cycle_analysis
+
+.. autoapi-nested-parse::
+
+   Cycle analysis and edge filtering based on cycle participation.
+
+   In a graph, edges that do not participate in any cycles can be indicative of noise or erroneous
+   connections.
+   Given that an edge indicates spatial proximity between two markers, we expect that true connections
+   should often be part of cycles formed by other nearby markers. Edges that are not part of any cycles
+   are more likely to be spurious and can be removed to improve the quality of the graph. To prevent
+   removing
+   edges in sparse regions, we only evaluate edges that connect nodes in core-2 or higher layers of the
+   graph.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.graph.cycle_analysis.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/cycle_analysis/ShortestPathFinder
+   /api/generated/pixelator/pna/graph/cycle_analysis/ShortestPathState
+
+.. autoapisummary::
+
+   pixelator.pna.graph.cycle_analysis.ShortestPathFinder
+   pixelator.pna.graph.cycle_analysis.ShortestPathState
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/cycle_analysis/process_component
+   /api/generated/pixelator/pna/graph/cycle_analysis/remove_no_cycle_edges
+
+.. autoapisummary::
+
+   pixelator.pna.graph.cycle_analysis.process_component
+   pixelator.pna.graph.cycle_analysis.remove_no_cycle_edges
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

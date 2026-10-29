@@ -1,0 +1,50 @@
+pixelator.pna.collapse.independent.collapser
+============================================
+
+.. py:module:: pixelator.pna.collapse.independent.collapser
+
+.. autoapi-nested-parse::
+
+   Collapse molecules from a demultiplexed PNA dataset.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.independent.collapser.CollapsibleRegion
+   pixelator.pna.collapse.independent.collapser.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/independent/collapser/CollapseInputFile
+   /api/generated/pixelator/pna/collapse/independent/collapser/IndependentCollapseStatisticsCollector
+   /api/generated/pixelator/pna/collapse/independent/collapser/MarkerCorrectionStats
+   /api/generated/pixelator/pna/collapse/independent/collapser/RegionCollapser
+   /api/generated/pixelator/pna/collapse/independent/collapser/SingleUMICollapseSampleReport
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.independent.collapser.CollapseInputFile
+   pixelator.pna.collapse.independent.collapser.IndependentCollapseStatisticsCollector
+   pixelator.pna.collapse.independent.collapser.MarkerCorrectionStats
+   pixelator.pna.collapse.independent.collapser.RegionCollapser
+   pixelator.pna.collapse.independent.collapser.SingleUMICollapseSampleReport
+
+
+Module Contents
+---------------
+
+.. py:data:: CollapsibleRegion
+
+.. py:data:: logger
+

@@ -1,0 +1,33 @@
+pixelator.common.report.models
+==============================
+
+.. py:module:: pixelator.common.report.models
+
+.. autoapi-nested-parse::
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/common/report/models/summary_statistics/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/report/models/SummaryStatistics
+
+.. autoapisummary::
+
+   pixelator.common.report.models.SummaryStatistics
+
+

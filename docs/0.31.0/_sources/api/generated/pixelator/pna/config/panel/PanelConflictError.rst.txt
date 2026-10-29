@@ -1,0 +1,10 @@
+pixelator.pna.config.panel.PanelConflictError
+=============================================
+
+.. py:exception:: pixelator.pna.config.panel.PanelConflictError
+
+   Bases: :py:obj:`ValueError`
+
+
+   Raised when panels disagree on which marker a sequence pair or id is.
+

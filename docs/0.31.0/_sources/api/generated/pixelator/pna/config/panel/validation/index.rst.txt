@@ -1,0 +1,26 @@
+pixelator.pna.config.panel.validation
+=====================================
+
+.. py:module:: pixelator.pna.config.panel.validation
+
+.. autoapi-nested-parse::
+
+   Schema checks for a PNA antibody panel dataframe.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/validation/validate_antibody_panel
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.validation.validate_antibody_panel
+
+

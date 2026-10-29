@@ -1,0 +1,32 @@
+pixelator.pna.collapse.adjacency
+================================
+
+.. py:module:: pixelator.pna.collapse.adjacency
+
+.. autoapi-nested-parse::
+
+   Module with helpers for calculating the adjacency matrix of a graph.
+
+   Given a list of close neigbours from a search on a FAISS index.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/adjacency/build_network_cluster
+   /api/generated/pixelator/pna/collapse/adjacency/build_network_cluster_from_range_query
+   /api/generated/pixelator/pna/collapse/adjacency/build_network_directional
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.adjacency.build_network_cluster
+   pixelator.pna.collapse.adjacency.build_network_cluster_from_range_query
+   pixelator.pna.collapse.adjacency.build_network_directional
+
+

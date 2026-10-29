@@ -1,0 +1,30 @@
+pixelator.pna.graph.adaptive_core_expansion
+===========================================
+
+.. py:module:: pixelator.pna.graph.adaptive_core_expansion
+
+.. autoapi-nested-parse::
+
+   Adaptive Core Expansion (ACE) graph partitioning implementation.
+
+   Copyright © 2026 Pixelgen Technologies AB
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph/adaptive_core_expansion/adaptive_core_expansion
+   /api/generated/pixelator/pna/graph/adaptive_core_expansion/normalize_counts
+   /api/generated/pixelator/pna/graph/adaptive_core_expansion/validate_best_candidate
+
+.. autoapisummary::
+
+   pixelator.pna.graph.adaptive_core_expansion.adaptive_core_expansion
+   pixelator.pna.graph.adaptive_core_expansion.normalize_counts
+   pixelator.pna.graph.adaptive_core_expansion.validate_best_candidate
+
+

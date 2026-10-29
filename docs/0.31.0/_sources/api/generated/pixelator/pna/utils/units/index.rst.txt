@@ -1,0 +1,39 @@
+pixelator.pna.utils.units
+=========================
+
+.. py:module:: pixelator.pna.utils.units
+
+.. autoapi-nested-parse::
+
+   Utility functions for parsing numbers with optional unit suffixes.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.utils.units.units
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/utils/units/parse_size
+
+.. autoapisummary::
+
+   pixelator.pna.utils.units.parse_size
+
+
+Module Contents
+---------------
+
+.. py:data:: units
+

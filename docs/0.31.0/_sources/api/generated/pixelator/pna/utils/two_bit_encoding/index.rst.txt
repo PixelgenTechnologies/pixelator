@@ -1,0 +1,34 @@
+pixelator.pna.utils.two_bit_encoding
+====================================
+
+.. py:module:: pixelator.pna.utils.two_bit_encoding
+
+.. autoapi-nested-parse::
+
+   Two-bit encoding of DNA sequences.
+
+   This module provides functions to encode/decode DNA sequences using two bits per nucleotide.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/utils/two_bit_encoding/pack_2bits
+   /api/generated/pixelator/pna/utils/two_bit_encoding/pack_4bits
+   /api/generated/pixelator/pna/utils/two_bit_encoding/unpack_2bits
+   /api/generated/pixelator/pna/utils/two_bit_encoding/unpack_4bits
+
+.. autoapisummary::
+
+   pixelator.pna.utils.two_bit_encoding.pack_2bits
+   pixelator.pna.utils.two_bit_encoding.pack_4bits
+   pixelator.pna.utils.two_bit_encoding.unpack_2bits
+   pixelator.pna.utils.two_bit_encoding.unpack_4bits
+
+

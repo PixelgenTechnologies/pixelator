@@ -1,0 +1,21 @@
+pixelator.pna.plot.write_sample_pair_comparison_report
+======================================================
+
+.. py:function:: pixelator.pna.plot.write_sample_pair_comparison_report(results: Sequence[pixelator.pna.analysis.comparison.SamplePairComparisonResult], output_path: pathlib.Path | str, title: str = 'Sample pair abundance/proximity similarity report') -> pathlib.Path
+
+   Collect abundance/proximity comparisons for a set of sample pairs into an HTML report.
+
+   For each `SamplePairComparisonResult` in ``results``, this creates the
+   abundance/proximity comparison figure (see `plot_sample_pair_comparison`)
+   and embeds it, together with the sample names, correlations, and gate (if
+   any), into a single self-contained HTML file.
+
+   :param results: The comparison results to include in the report, e.g. as
+                   returned by `pixelator.pna.analysis.comparison.compare_sample_pairs`
+                   or `pixelator.pna.analysis.comparison.compare_sample_pairs_by_gate`.
+   :param output_path: The path to write the HTML report to.
+   :param title: The title of the report. Defaults to
+                 "Sample pair abundance/proximity similarity report".
+
+   :returns: The path to the written HTML report.
+

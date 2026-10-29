@@ -1,0 +1,16 @@
+pixelator.pna.collapse.independent.combine_collapse.combine_independent_report_files
+====================================================================================
+
+.. py:function:: pixelator.pna.collapse.independent.combine_collapse.combine_independent_report_files(marker1_reports: list[pathlib.Path], marker2_reports: list[pathlib.Path], sample_id: str, stats, output_file) -> None
+
+   Combine collapse reports per marker into a single combined report.
+
+   :param marker1_reports: The list of marker1 reports.
+   :param marker2_reports: The list of marker2 reports.
+   :param sample_id: The sample ID to use for the combined report.
+   :param stats: Additional statistics calculated on the combined parquet data. These statistics
+                 cannot be derived from the individual reports.
+   :param output_file: The output file to write the combined report to.
+
+   :returns: None
+

@@ -1,0 +1,7 @@
+pixelator.pna.config.plugin.load_config_plugins
+===============================================
+
+.. py:function:: pixelator.pna.config.plugin.load_config_plugins(config: pixelator.pna.config.config_class.PNAConfig) -> pixelator.pna.config.config_class.PNAConfig
+
+   Load all config plugins.
+

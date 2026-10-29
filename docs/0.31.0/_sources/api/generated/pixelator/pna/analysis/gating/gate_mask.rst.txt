@@ -1,0 +1,25 @@
+pixelator.pna.analysis.gating.gate_mask
+=======================================
+
+.. py:function:: pixelator.pna.analysis.gating.gate_mask(clr: pandas.DataFrame, gate: list[str], min_separation_score: float = 3.0) -> tuple[pandas.Series, list[MarkerThreshold]]
+
+   Compute a boolean mask of components passing a gating specification.
+
+   For each marker in the gate, a positive/negative threshold is determined
+   from its CLR distribution in ``clr`` (see `determine_marker_threshold`).
+   Markers whose distribution is unimodal are ignored (i.e. they do not
+   constrain the mask).
+
+   :param clr: A DataFrame of CLR values with components as rows and markers as
+               columns.
+   :param gate: A list of gating strings, e.g. ``["+CD3e", "+CD4", "-CD19"]``.
+   :param min_separation_score: The minimum separation score required for a
+                                marker's distribution to be considered bimodal. Defaults to 3.0.
+
+   :returns: A tuple whose first element is a boolean ``pd.Series`` (indexed like
+             ``clr``) that is ``True`` for components passing all (non-ignored)
+             gating criteria, and whose second element is a list of
+             ``MarkerThreshold`` instances, one per marker in ``gate``.
+
+   :raises KeyError: If a marker in ``gate`` is not a column of ``clr``.
+

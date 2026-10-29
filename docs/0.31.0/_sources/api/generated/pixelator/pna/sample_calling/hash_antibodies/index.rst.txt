@@ -1,0 +1,26 @@
+pixelator.pna.sample_calling.hash_antibodies
+============================================
+
+.. py:module:: pixelator.pna.sample_calling.hash_antibodies
+
+.. autoapi-nested-parse::
+
+   Hash antibody mapping for sample calling.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/sample_calling/hash_antibodies/HashedAntibodyMapping
+
+.. autoapisummary::
+
+   pixelator.pna.sample_calling.hash_antibodies.HashedAntibodyMapping
+
+

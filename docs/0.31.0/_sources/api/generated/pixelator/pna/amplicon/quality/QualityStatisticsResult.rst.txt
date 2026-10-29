@@ -1,0 +1,42 @@
+pixelator.pna.amplicon.quality.QualityStatisticsResult
+======================================================
+
+.. py:class:: pixelator.pna.amplicon.quality.QualityStatisticsResult
+
+   Bases: :py:obj:`TypedDict`
+
+
+   The result of the quality statistics.
+
+
+   .. py:attribute:: fraction_q30_lbs1
+      :type:  float
+
+
+   .. py:attribute:: fraction_q30_lbs2
+      :type:  float
+
+
+   .. py:attribute:: fraction_q30_pid1
+      :type:  float
+
+
+   .. py:attribute:: fraction_q30_pid2
+      :type:  float
+
+
+   .. py:attribute:: fraction_q30_total
+      :type:  float
+
+
+   .. py:attribute:: fraction_q30_uei
+      :type:  float
+
+
+   .. py:attribute:: fraction_q30_umi1
+      :type:  float
+
+
+   .. py:attribute:: fraction_q30_umi2
+      :type:  float
+

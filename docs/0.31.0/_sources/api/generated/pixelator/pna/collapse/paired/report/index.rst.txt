@@ -1,0 +1,26 @@
+pixelator.pna.collapse.paired.report
+====================================
+
+.. py:module:: pixelator.pna.collapse.paired.report
+
+.. autoapi-nested-parse::
+
+   Functions and classes related to reporting for the collapse stage.
+
+   Copyright © 2024 Pixelgen Technologies AB
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/paired/report/CollapseSampleReport
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.paired.report.CollapseSampleReport
+
+

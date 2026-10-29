@@ -1,0 +1,23 @@
+pixelator.pna.pixeldataset.NullPxlFileError
+===========================================
+
+.. py:exception:: pixelator.pna.pixeldataset.NullPxlFileError(path: pathlib.Path, reason: str)
+
+   Bases: :py:obj:`pixelator.common.exceptions.PixelatorBaseException`
+
+
+   Raised when a reader is asked to open a null pxl file.
+
+   A null file means an upstream step produced no usable data for the sample.
+   The stored reason is included in the message and on ``reason``.
+
+   :ivar path: Path of the null pxl file.
+   :ivar reason: Why the upstream step produced no usable data.
+
+
+
+   .. py:attribute:: path
+
+
+   .. py:attribute:: reason
+

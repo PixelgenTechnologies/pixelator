@@ -1,0 +1,63 @@
+pixelator.common.utils.log_progress.LogProgress
+===============================================
+
+.. py:class:: pixelator.common.utils.log_progress.LogProgress(logger: logging.Logger, min_update_intervall_seconds: float = 60.0, min_update_intervall_items: int = 1, item_name: str = 'read')
+
+   Utility for logging progress updates at a controlled interval.
+
+   This class helps track and log the progress of processing items in a loop or batch job.
+   It periodically writes progress messages to the provided logger, including elapsed time,
+   items processed, and processing speed.
+
+
+   .. py:method:: close()
+
+      Log a final progress update and close the progress logger.
+
+      This should be called at the end of processing to ensure the last update is logged.
+
+
+
+   .. py:attribute:: item_name
+      :value: 'read'
+
+
+
+   .. py:attribute:: last_n_items
+      :value: 0
+
+
+
+   .. py:attribute:: last_time
+
+
+   .. py:attribute:: logger
+
+
+   .. py:attribute:: min_update_intervall_items
+      :value: 1
+
+
+
+   .. py:attribute:: min_update_intervall_seconds
+      :value: 60.0
+
+
+
+   .. py:attribute:: n_items
+      :value: 0
+
+
+
+   .. py:attribute:: start_time
+
+
+   .. py:method:: update(increment_items: int, final_update: bool = False)
+
+      Update the progress and log a message if enough time has passed or if final update.
+
+      :param increment_items: Number of items processed since the last update.
+      :param final_update: If True, forces a final log update regardless of interval. Defaults to
+                           False.
+
+

@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.precomputed_layouts
+==============================================
+
+.. py:module:: pixelator.pna.pixeldataset.precomputed_layouts
+
+.. autoapi-nested-parse::
+
+   Precomputed layouts wrapper for PNA pixel datasets.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/precomputed_layouts/PreComputedLayouts
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.precomputed_layouts.PreComputedLayouts
+
+

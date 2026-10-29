@@ -1,0 +1,26 @@
+pixelator.common.annotate.annotate_celltype
+===========================================
+
+.. py:module:: pixelator.common.annotate.annotate_celltype
+
+.. autoapi-nested-parse::
+
+   Functions for annotating cell types.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/annotate/annotate_celltype/annotate_cells
+
+.. autoapisummary::
+
+   pixelator.common.annotate.annotate_celltype.annotate_cells
+
+

@@ -1,0 +1,58 @@
+pixelator.pna.amplicon.build_amplicon.AmpliconBuilderStatistics
+===============================================================
+
+.. py:class:: pixelator.pna.amplicon.build_amplicon.AmpliconBuilderStatistics
+
+   Helper class for AmpliconBuilder to keep track of pipeline statistics.
+
+
+   .. py:method:: collect() -> dict[str, int]
+
+      Return a dictionary with statistics.
+
+
+
+   .. py:attribute:: failed_missing_upi1_umi1_reads
+      :value: 0
+
+
+
+   .. py:attribute:: failed_missing_upi2_umi2_reads
+      :value: 0
+
+
+
+   .. py:attribute:: failed_partial_upi1_umi1_reads
+      :value: 0
+
+
+
+   .. py:attribute:: failed_partial_upi2_umi2_reads
+      :value: 0
+
+
+
+   .. py:attribute:: failed_reads
+      :value: 0
+
+
+
+   .. py:attribute:: passed_missing_lbs1_anchor
+      :value: 0
+
+
+
+   .. py:attribute:: passed_missing_uei_reads
+      :value: 0
+
+
+
+   .. py:attribute:: passed_partial_uei_reads
+      :value: 0
+
+
+
+   .. py:attribute:: passed_reads
+      :value: 0
+
+

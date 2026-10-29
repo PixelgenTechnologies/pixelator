@@ -1,0 +1,32 @@
+pixelator.pna.analysis.comparison.compare_sample_pair
+=====================================================
+
+.. py:function:: pixelator.pna.analysis.comparison.compare_sample_pair(pxl1, pxl2, sample1_name: str | None = None, sample2_name: str | None = None, markers: set[str] | None = None, min_mean_clr: float = 1.5, min_expected_join_count: int = 10, min_n_cells: int = 50) -> SamplePairComparisonResult
+
+   Compare abundance and proximity similarity between a single pair of samples.
+
+   Mean marker CLR values (abundance) and mean marker-pair proximity log2 ratios
+   are compared between the two samples, and the Pearson correlation is computed
+   for each. For proximity scores, markers are first restricted to those expressed
+   (mean CLR above ``min_mean_clr``) in both samples.
+
+   :param pxl1: The first sample, given as a `PNAPixelDataset`, a path to a
+                ``.pxl`` file, or anything accepted by `pixelator.pna.read`.
+   :param pxl2: The second sample, in the same forms as ``pxl1``.
+   :param sample1_name: A name for the first sample, used for labeling the
+                        output. If not provided, it is inferred from the dataset.
+   :param sample2_name: A name for the second sample, used for labeling the
+                        output. If not provided, it is inferred from the dataset.
+   :param markers: If provided, restrict the comparison to this set of markers
+                   (still subject to the ``min_mean_clr`` filter). Defaults to all
+                   markers shared by the two datasets.
+   :param min_mean_clr: The minimum mean CLR value (in both samples) for a
+                        marker to be included in the comparison. Defaults to 1.5.
+   :param min_expected_join_count: The minimum expected join count for a marker
+                                   pair to be included in the proximity comparison. Defaults to 10.
+   :param min_n_cells: The minimum number of components required for a marker
+                       pair to be included in the proximity comparison. Defaults to 50.
+
+   :returns: A `SamplePairComparisonResult` with the abundance and proximity
+             comparison data and their correlations.
+

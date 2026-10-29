@@ -1,0 +1,42 @@
+pixelator.pna.sample_calling
+============================
+
+.. py:module:: pixelator.pna.sample_calling
+
+.. autoapi-nested-parse::
+
+   Plugin for mapping components to samples in sample-hashed datasets.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/sample_calling/hash_antibodies/index
+   /api/generated/pixelator/pna/sample_calling/report/index
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/sample_calling/collect_hash_info
+   /api/generated/pixelator/pna/sample_calling/create_final_report
+   /api/generated/pixelator/pna/sample_calling/sample_calling
+   /api/generated/pixelator/pna/sample_calling/warn_if_undetermined_has_high_enrichment
+
+.. autoapisummary::
+
+   pixelator.pna.sample_calling.collect_hash_info
+   pixelator.pna.sample_calling.create_final_report
+   pixelator.pna.sample_calling.sample_calling
+   pixelator.pna.sample_calling.warn_if_undetermined_has_high_enrichment
+
+

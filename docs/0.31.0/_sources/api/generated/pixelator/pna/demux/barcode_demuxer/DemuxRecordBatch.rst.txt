@@ -1,0 +1,63 @@
+pixelator.pna.demux.barcode_demuxer.DemuxRecordBatch
+====================================================
+
+.. py:class:: pixelator.pna.demux.barcode_demuxer.DemuxRecordBatch(capacity=10000)
+
+   A batch of demux records.
+
+   Batches are used to collect records before they are serialized and sent to the writer process.
+   A batch uses a pre-allocated fixed length numpy array per field to store the records.
+
+
+   .. py:method:: add_record(marker1: int, marker2: int, molecule: bytes)
+
+      Add a new record to the batch.
+
+      :param marker1: the first marker index
+      :param marker2: the second marker index
+      :param molecule: the molecule embedding
+
+
+
+   .. py:method:: capacity() -> int
+
+      Return the maximum number of records in the batch.
+
+
+
+   .. py:method:: clear()
+
+      Clear the batch.
+
+      Note that the memory is not released, only the size is reset to 0.
+
+
+
+   .. py:attribute:: marker1
+
+
+   .. py:attribute:: marker2
+
+
+   .. py:attribute:: molecule
+
+
+   .. py:method:: schema() -> pyarrow.Schema
+      :classmethod:
+
+
+      Return the schema of the record batch returned by `to_arrow`.
+
+
+
+   .. py:method:: serialize() -> pyarrow.Buffer
+
+      Serialize the record batch as Arrow IPC message.
+
+
+
+   .. py:method:: to_arrow() -> pyarrow.RecordBatch
+
+      Convert a number of cached records to a pyarrow RecordBatch.
+
+

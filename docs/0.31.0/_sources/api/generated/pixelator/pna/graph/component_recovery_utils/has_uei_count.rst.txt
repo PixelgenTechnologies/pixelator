@@ -1,0 +1,7 @@
+pixelator.pna.graph.component_recovery_utils.has_uei_count
+==========================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.has_uei_count(con, relation: str) -> bool
+
+   Return True if ``relation`` has a ``uei_count`` column.
+

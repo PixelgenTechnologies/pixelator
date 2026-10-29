@@ -1,0 +1,23 @@
+pixelator.common.annotate.annotate_celltype.annotate_cells
+==========================================================
+
+.. py:function:: pixelator.common.annotate.annotate_celltype.annotate_cells(query: anndata.AnnData | pandas.DataFrame, reference: anndata.AnnData | None = None, summarize_by_column: str | None = None, reference_groups: List[str] = ['celltype_l1', 'celltype_l2'], method: str = 'nmf', min_prediction_score: float = 0.0, min_cells_per_celltype: int | None = None, n_cells_per_group: int | None = None, skip_normalization: bool = False, nmf_seed: int = 123) -> anndata.AnnData
+
+   Annotate cell types transferring labels from a reference to a query.
+
+   Args:
+   query (AnnData): The unannotated target dataset.
+   reference (AnnData): The annotated reference dataset.
+   summarize_by_column (str | None): If provided, summarizes annotations to the most common label per cluster/factor in this column.
+   reference_groups (List[str]): The columns in `reference.obs` containing the ground truth labels.
+   method (str): Either 'scanpy' (PCA + KNN, mimics Seurat) or 'nmf' (Seeded Non-Negative Matrix Factorization).
+   min_prediction_score (float): Cells with prediction probabilities below this are labeled "Unknown".
+   min_cells_per_celltype (int | None): Minimum number of cells required in the reference data per cell type for annotation.
+   n_cells_per_group (int | None): Number of cells to sample per group for annotation.
+   skip_normalization (bool): If True, skips the library size normalization and log1p steps.
+   nmf_seed (int): Random seed for reproducibility in NMF method.
+
+   Returns:
+   AnnData: The query object with added annotations in `.obs`.
+
+

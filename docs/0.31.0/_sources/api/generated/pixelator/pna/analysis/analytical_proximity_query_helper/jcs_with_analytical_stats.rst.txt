@@ -1,0 +1,18 @@
+pixelator.pna.analysis.analytical_proximity_query_helper.jcs_with_analytical_stats
+==================================================================================
+
+.. py:function:: pixelator.pna.analysis.analytical_proximity_query_helper.jcs_with_analytical_stats(components: str | list[str] | set[str] | None = None, markers: str | list[str] | set[str] | None = None, min_std: float = DEFAULT_MIN_STD) -> tuple[str, dict]
+
+   Construct a SQL query for calculating proximity join counts with analytical statistics.
+
+   The query expects an `edgelist` table and returns one row per sample, component
+   and (unordered) marker pair with the columns: `sample`, `component`, `marker_1`,
+   `marker_2`, `join_count`, `join_count_expected_mean`, `join_count_expected_sd`
+   and `join_count_z`. Use `add_join_count_p` to add the p-values to the result.
+
+   :param components: A list of components to include in the analysis.
+   :param markers: A list of marker names to include in the analysis.
+   :param min_std: Minimum standard deviation used when calculating the z-scores.
+
+   :returns: A tuple containing the SQL query string and a dictionary of parameters.
+

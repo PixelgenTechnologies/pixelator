@@ -1,0 +1,13 @@
+pixelator.pna.demux.barcode_demuxer.partition_greedy
+====================================================
+
+.. py:function:: pixelator.pna.demux.barcode_demuxer.partition_greedy(items: Sequence[int], n: int) -> numpy.typing.NDArray[numpy.int32]
+
+   Greedy number partitioning of a set of items with a given weight into n subsets.
+
+   Each subset has an approximately equal sum of weights.
+
+   :param counts: a dictionary of items and their weights
+   :param n: the number of subsets
+   :param items: Items.
+

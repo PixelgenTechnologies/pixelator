@@ -1,0 +1,7 @@
+pixelator.common.utils.remove_csv_whitespaces
+=============================================
+
+.. py:function:: pixelator.common.utils.remove_csv_whitespaces(df: pandas.DataFrame) -> None
+
+   Remove leading and trailing blank spaces from csv files slurped by pandas.
+

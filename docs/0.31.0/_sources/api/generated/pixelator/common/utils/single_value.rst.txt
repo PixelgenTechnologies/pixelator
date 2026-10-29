@@ -1,0 +1,13 @@
+pixelator.common.utils.single_value
+===================================
+
+.. py:function:: pixelator.common.utils.single_value(xs: Union[List[T], Set[T]]) -> T
+
+   Extract the first value in a List or Set if the collection has a single value.
+
+   :param xs: a collection of values
+
+   :returns: the first value in the collection (T)
+
+   :raises AssertionError: if the collection is empty or has more than one value
+

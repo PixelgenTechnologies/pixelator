@@ -1,0 +1,17 @@
+pixelator.pna.graph.community_detection.refine_component
+========================================================
+
+.. py:function:: pixelator.pna.graph.community_detection.refine_component(component_id: str, component_edgelists_path: pathlib.Path, refinement_options: RefinementOptions, duckdb_config: dict = {}) -> tuple[pandas.Series, int, pandas.Series]
+
+   Refine a component by running Leiden community detection and removing crossing edges.
+
+   :param component_id: ID of the component to refine.
+   :param component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned)
+                                    format.
+   :param refinement_options: Options for refinement during community detection.
+   :param duckdb_config: Configuration for DuckDB connection.
+
+   :returns: A tuple of the sizes of the new components after refinement, the
+             number of crossing edges removed during refinement, and the sizes of
+             the discarded components after refinement.
+

@@ -1,0 +1,35 @@
+pixelator.pna.config.assay.PNARegionType
+========================================
+
+.. py:class:: pixelator.pna.config.assay.PNARegionType
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   Enum class representing different sequence types.
+
+
+   .. py:attribute:: AMPLICON
+      :value: 'amplicon'
+
+
+
+   .. py:attribute:: LBS
+      :value: 'lbs'
+
+
+
+   .. py:attribute:: PID
+      :value: 'pid'
+
+
+
+   .. py:attribute:: UEI
+      :value: 'uei'
+
+
+
+   .. py:attribute:: UMI
+      :value: 'umi'
+
+

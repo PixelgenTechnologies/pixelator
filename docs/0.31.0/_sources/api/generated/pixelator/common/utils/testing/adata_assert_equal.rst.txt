@@ -1,0 +1,7 @@
+pixelator.common.utils.testing.adata_assert_equal
+=================================================
+
+.. py:function:: pixelator.common.utils.testing.adata_assert_equal(actual: anndata.AnnData, expected: anndata.AnnData)
+
+   Assert that two AnnData objects are equal, ignoring the order of rows and columns.
+

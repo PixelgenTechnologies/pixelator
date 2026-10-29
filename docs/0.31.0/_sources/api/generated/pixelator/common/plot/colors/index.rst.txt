@@ -1,0 +1,72 @@
+pixelator.common.plot.colors
+============================
+
+.. py:module:: pixelator.common.plot.colors
+
+.. autoapi-nested-parse::
+
+   Pixelgen brand colors, gradients, and palettes shared across all plotting modules.
+
+   This module is the Python port of Pixelgen's internal ``themes_and_palettes.R``
+   helpers (originally written for ggplot2), adapted for use with matplotlib,
+   seaborn, and plotly.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.plot.colors.PIXELGEN_ACCENT_COLORS
+   pixelator.common.plot.colors.PIXELGEN_CELL_PALETTE
+   pixelator.common.plot.colors.PIXELGEN_GRADIENTS
+   pixelator.common.plot.colors.PIXELGEN_PALETTES
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/plot/colors/create_discrete_palette
+   /api/generated/pixelator/common/plot/colors/pixelgen_accent_colors
+   /api/generated/pixelator/common/plot/colors/pixelgen_colormap
+   /api/generated/pixelator/common/plot/colors/pixelgen_colorscale
+   /api/generated/pixelator/common/plot/colors/pixelgen_discrete_colors
+   /api/generated/pixelator/common/plot/colors/pixelgen_divergent_colormap
+   /api/generated/pixelator/common/plot/colors/pixelgen_gradient
+   /api/generated/pixelator/common/plot/colors/pixelgen_palette
+   /api/generated/pixelator/common/plot/colors/pixelgen_sequential_colormap
+
+.. autoapisummary::
+
+   pixelator.common.plot.colors.create_discrete_palette
+   pixelator.common.plot.colors.pixelgen_accent_colors
+   pixelator.common.plot.colors.pixelgen_colormap
+   pixelator.common.plot.colors.pixelgen_colorscale
+   pixelator.common.plot.colors.pixelgen_discrete_colors
+   pixelator.common.plot.colors.pixelgen_divergent_colormap
+   pixelator.common.plot.colors.pixelgen_gradient
+   pixelator.common.plot.colors.pixelgen_palette
+   pixelator.common.plot.colors.pixelgen_sequential_colormap
+
+
+Module Contents
+---------------
+
+.. py:data:: PIXELGEN_ACCENT_COLORS
+   :type:  dict[str, list[str]]
+
+.. py:data:: PIXELGEN_CELL_PALETTE
+   :type:  dict[str, str]
+
+.. py:data:: PIXELGEN_GRADIENTS
+   :type:  dict[str, list[str]]
+
+.. py:data:: PIXELGEN_PALETTES
+   :type:  dict[str, list[str]]
+

@@ -1,0 +1,24 @@
+pixelator.common.graph.backends.protocol.Edge
+=============================================
+
+.. py:class:: pixelator.common.graph.backends.protocol.Edge
+
+   Bases: :py:obj:`Protocol`
+
+
+   Protocol for edges in a graph.
+
+
+   .. py:property:: index
+      :type: int
+
+
+      The index of the edge.
+
+
+   .. py:property:: vertex_tuple
+      :type: Tuple[Vertex, Vertex]
+
+
+      Return the vertices the edge connects as a tuple.
+

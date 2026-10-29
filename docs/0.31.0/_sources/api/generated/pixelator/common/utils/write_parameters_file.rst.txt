@@ -1,0 +1,11 @@
+pixelator.common.utils.write_parameters_file
+============================================
+
+.. py:function:: pixelator.common.utils.write_parameters_file(click_context: click.Context, output_file: pathlib.Path, command_path: Optional[str] = None) -> None
+
+   Write the parameters used in for a command to a JSON file.
+
+   :param click_context: the click context object
+   :param output_file: the output file
+   :param command_path: the command to use as command name
+

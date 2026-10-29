@@ -1,0 +1,32 @@
+pixelator.pna.config.panel.PanelSource
+======================================
+
+.. py:class:: pixelator.pna.config.panel.PanelSource
+
+   One panel file that contributed markers to a ``PNAAntibodyPanel``.
+
+   ``columns`` is the marker columns this source was loaded with, in that
+   order. It is None when the file did not store them.
+
+
+   .. py:attribute:: columns
+      :type:  Sequence[str] | None
+      :value: None
+
+
+
+   .. py:attribute:: file_name
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: filepath
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: metadata
+      :type:  pixelator.common.config.panel.AntibodyPanelMetadata
+

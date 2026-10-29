@@ -1,0 +1,12 @@
+pixelator.common.utils.create_output_stage_dir
+==============================================
+
+.. py:function:: pixelator.common.utils.create_output_stage_dir(root: pixelator.common.types.PathType, name: str) -> pathlib.Path
+
+   Create a new subfolder with `name` under the given `root` directory.
+
+   :param root: the parent directory
+   :param name: the name of the directory to create
+
+   :returns: the created folder (Path) (Path)
+

@@ -1,0 +1,22 @@
+pixelator.common.graph.backends.protocol.EdgeSequence
+=====================================================
+
+.. py:class:: pixelator.common.graph.backends.protocol.EdgeSequence
+
+   Bases: :py:obj:`Iterable`\ [\ :py:obj:`Edge`\ ], :py:obj:`Protocol`
+
+
+   A sequence of edges from a graph.
+
+
+   .. py:method:: select_where(key, value) -> EdgeSequence
+
+      Select a subset of edges where `key == value`.
+
+
+
+   .. py:method:: select_within(component)
+
+      Select all edges that are part of `component`.
+
+

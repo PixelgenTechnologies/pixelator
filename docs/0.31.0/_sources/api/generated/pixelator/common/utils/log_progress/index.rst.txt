@@ -1,0 +1,26 @@
+pixelator.common.utils.log_progress
+===================================
+
+.. py:module:: pixelator.common.utils.log_progress
+
+.. autoapi-nested-parse::
+
+   Logging utility for reporting progress updates in long-running operations.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/utils/log_progress/LogProgress
+
+.. autoapisummary::
+
+   pixelator.common.utils.log_progress.LogProgress
+
+

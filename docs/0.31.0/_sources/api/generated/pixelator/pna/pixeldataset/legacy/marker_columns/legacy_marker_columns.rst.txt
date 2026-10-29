@@ -1,0 +1,7 @@
+pixelator.pna.pixeldataset.legacy.marker_columns.legacy_marker_columns
+======================================================================
+
+.. py:function:: pixelator.pna.pixeldataset.legacy.marker_columns.legacy_marker_columns(columns: Iterable[str]) -> dict[str, str]
+
+   Map current marker column names to the legacy names found in ``columns``.
+

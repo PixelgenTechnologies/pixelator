@@ -1,0 +1,7 @@
+pixelator.common.duckdb_utils.get_duckdb_max_temp_dir_size_from_env
+===================================================================
+
+.. py:function:: pixelator.common.duckdb_utils.get_duckdb_max_temp_dir_size_from_env() -> str | None
+
+   Return ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE``, or ``None`` if unset.
+

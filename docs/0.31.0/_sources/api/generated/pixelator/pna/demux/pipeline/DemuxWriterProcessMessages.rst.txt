@@ -1,0 +1,30 @@
+pixelator.pna.demux.pipeline.DemuxWriterProcessMessages
+=======================================================
+
+.. py:class:: pixelator.pna.demux.pipeline.DemuxWriterProcessMessages
+
+   Bases: :py:obj:`enum.IntEnum`
+
+
+   Enum for messages between different processes in the pipeline.
+
+
+   .. py:attribute:: DONE
+      :value: 1
+
+
+
+   .. py:attribute:: EXCEPTION
+      :value: 2
+
+
+
+   .. py:attribute:: READY
+      :value: 0
+
+
+
+   .. py:attribute:: SHUTDOWN
+      :value: 3
+
+

@@ -1,0 +1,54 @@
+pixelator.pna.collapse.statistics.CollapseStatistics
+====================================================
+
+.. py:class:: pixelator.pna.collapse.statistics.CollapseStatistics
+
+   Collect statistics about the collapse process.
+
+
+   .. py:method:: add_input_file(input_file: pathlib.PurePath, molecule_count: int, file_size: int) -> None
+                  add_input_file(input_file: pathlib.Path, molecule_count: int, file_size: int | None = None) -> None
+
+      Collect file statistics for an input file to the MoleculeCollapser.
+
+      :param input_file: The input file to collapse.
+      :param molecule_count: The number of molecules in the input file
+      :param file_size: File size.
+
+      :raises TypeError: If file_size is not provided when input_file is a PurePath.
+
+
+
+   .. py:method:: add_marker_stats(marker1: str, marker2: str, *, cluster_stats: MarkerLinkGroupStats, elapsed_time: float | None = None) -> None
+
+      Add statistics for a marker pair.
+
+      :param marker1: The first marker in the pair.
+      :param marker2: The second marker in the pair.
+      :param input_molecules_count: The number of unique molecules (UMI1+UMI2+UEI) before error
+                                    correction.
+      :param input_reads_count: The number of reads in unique molecules before error correction.
+      :param cluster_stats: The statistics for the marker pair.
+      :param elapsed_time: The time taken to process the marker pair.
+
+
+
+   .. py:method:: add_summary_statistics(collapsed_lz_df: polars.LazyFrame) -> None
+
+      Add summary statistics for the entire collapse process.
+
+      :param collapsed_lz_df: The collapsed dataframe.
+
+
+
+   .. py:method:: get_high_level_statistics() -> dict
+
+      Compute high level summary statistics from all the marker pairs.
+
+
+
+   .. py:method:: to_dict() -> dict
+
+      Return the statistics as a dictionary.
+
+

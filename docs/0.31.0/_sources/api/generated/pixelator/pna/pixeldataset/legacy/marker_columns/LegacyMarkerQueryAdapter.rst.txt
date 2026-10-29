@@ -1,0 +1,16 @@
+pixelator.pna.pixeldataset.legacy.marker_columns.LegacyMarkerQueryAdapter
+=========================================================================
+
+.. py:class:: pixelator.pna.pixeldataset.legacy.marker_columns.LegacyMarkerQueryAdapter(session: pixelator.pna.pixeldataset.io.PixelDataViewerSession)
+
+   Rename ``marker1`` and ``marker2`` on queries against a pre-rename edgelist.
+
+   A current file is left unchanged. Construct one adapter per open session and
+   reuse it for every query in that session.
+
+
+   .. py:method:: adapt(query: pixelator.pna.pixeldataset.io.Query) -> pixelator.pna.pixeldataset.io.Query
+
+      Return ``query`` with legacy marker columns renamed, when any are present.
+
+
