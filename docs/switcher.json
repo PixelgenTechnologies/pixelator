@@ -1,7 +1,11 @@
 [
   {
-    "version": "0.30.0",
-    "url": "https://PixelgenTechnologies.github.io/pixelator/0.30.0/",
+    "version": "0.31.0",
+    "url": "https://PixelgenTechnologies.github.io/pixelator/0.31.0/",
     "preferred": true
+  },
+  {
+    "version": "0.30.0",
+    "url": "https://PixelgenTechnologies.github.io/pixelator/0.30.0/"
   }
 ]
