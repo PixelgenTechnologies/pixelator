@@ -17,10 +17,18 @@ for usage examples.
 **PNAPixelDataset**
 
 * :class:`pixelator.pna.pixeldataset.PNAPixelDataset`
+* :meth:`pixelator.pna.pixeldataset.PNAPixelDataset.layouts`
+* :class:`pixelator.pna.pixeldataset.layouts.Layouts`
+
+  :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.precomputed_layouts` and
+  :class:`~pixelator.pna.pixeldataset.precomputed_layouts.PreComputedLayouts`
+  are deprecated; use :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.layouts`
+  instead.
 
 **Plotting**
 
 * :func:`pixelator.pna.plot.molecule_rank_plot`
+* :func:`pixelator.pna.plot.proximity_heatmap`
 
 **Abundance normalization**
 
@@ -30,3 +38,10 @@ for usage examples.
 **Analysis**
 
 * :func:`pixelator.pna.analysis.calculate_differential_proximity`
+* :func:`pixelator.pna.analysis.cc_protein_weights`
+* :func:`pixelator.pna.analysis.differential_abundance`
+* :func:`pixelator.pna.analysis.distance_from_node_set`
+* :func:`pixelator.pna.analysis.filter_proximity_scores`
+* :func:`pixelator.pna.analysis.partition_counts`
+* :func:`pixelator.pna.analysis.segment_cell`
+* :func:`pixelator.pna.analysis.summarize_proximity_scores`

@@ -1,0 +1,729 @@
+"""Tests for aligning the marker names of pxl files with different panel patches.
+
+Copyright © 2026 Pixelgen Technologies AB.
+"""
+
+import json
+import logging
+from pathlib import Path
+from typing import Literal
+
+import anndata
+import duckdb
+import numpy as np
+import pandas as pd
+import polars as pl
+import pytest
+
+from pixelator.common.config import AntibodyPanelMetadata
+from pixelator.pna.anndata import pna_edgelist_to_anndata
+from pixelator.pna.config import pna_config
+from pixelator.pna.config.panel import (
+    ORIGINAL_HASH_COUNTS_PREFIX,
+    PanelConflictError,
+    PNAAntibodyPanel,
+)
+from pixelator.pna.pixeldataset import PNAPixelDataset, read
+from pixelator.pna.pixeldataset.io import (
+    InplacePixelDataFilterer,
+    PixelDataViewer,
+    PixelFileWriter,
+    PxlFile,
+    Query,
+)
+from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
+from pixelator.pna.pixeldataset.io.query_builder import marker_rename_expression
+from tests.common.data_generator.pixelfile import with_legacy_panel_columns
+
+
+def _marker(marker_id: str, sequence: str) -> dict:
+    return {
+        "marker_id": marker_id,
+        "control": False,
+        "sequence_1": sequence,
+        "sequence_2": sequence,
+    }
+
+
+def _panel(
+    version: str, markers: dict[str, str], name: str = "base", product: str = "kit"
+) -> PNAAntibodyPanel:
+    """Build a panel from ``marker id -> sequence``."""
+    rows = [_marker(marker_id, sequence) for marker_id, sequence in markers.items()]
+    return _panel_of_rows(version, rows, name, product)
+
+
+def _panel_of_rows(
+    version: str, rows: list[dict], name: str = "base", product: str = "kit"
+) -> PNAAntibodyPanel:
+    return PNAAntibodyPanel.from_metadata(
+        pd.DataFrame(rows).set_index("marker_id"),
+        AntibodyPanelMetadata(name=name, version=version, product=product),
+    )
+
+
+def _write_pxl(
+    path: Path,
+    sample: str,
+    panel: PNAAntibodyPanel | None,
+    marker_pair: tuple[str, str],
+    legacy_columns: bool = False,
+    adata_markers: list[str] | None = None,
+    stored_panel: bool = True,
+) -> PxlFile:
+    """Write a pxl file whose single edge and proximity row use ``marker_pair``.
+
+    The panel goes in the panel tables, or in ``uns`` and ``var`` as older files
+    do when ``stored_panel`` is False.
+    """
+    marker_1, marker_2 = marker_pair
+    edgelist = pl.DataFrame(
+        {
+            "umi1": [1],
+            "umi2": [2],
+            "read_count": [1],
+            "uei_count": [1],
+            "marker_1": [marker_1],
+            "marker_2": [marker_2],
+            "component": [sample],
+        },
+        schema={
+            "umi1": pl.UInt64,
+            "umi2": pl.UInt64,
+            "read_count": pl.UInt32,
+            "uei_count": pl.UInt32,
+            "marker_1": pl.Utf8,
+            "marker_2": pl.Utf8,
+            "component": pl.Utf8,
+        },
+    )
+    proximity = pl.DataFrame(
+        {"marker_1": [marker_1], "marker_2": [marker_2], "component": [sample]}
+    )
+    with PixelFileWriter(path) as writer:
+        writer.write_edgelist(edgelist)
+        connection = writer.get_connection()
+        if panel is not None and stored_panel:
+            writer.write_panel(panel)
+        if panel is not None:
+            adata = pna_edgelist_to_anndata(
+                connection, panel=panel, markers=adata_markers
+            )
+            if not stored_panel:
+                # Legacy files can only hold a panel with a single source.
+                adata = with_legacy_panel_columns(adata, panel)
+        else:
+            adata = anndata.AnnData(
+                X=np.zeros((1, 2)),
+                obs=pd.DataFrame(index=[sample]),
+                var=pd.DataFrame(index=pd.Index(marker_pair, name="marker_id")),
+            )
+        writer.write_adata(adata)
+        writer.write_metadata({"sample_name": sample})
+        writer.write_proximity(proximity)
+        if legacy_columns:
+            connection.execute("ALTER TABLE edgelist RENAME COLUMN marker_1 TO marker1")
+    return PxlFile(path)
+
+
+def _corrupt_stored_panel(pxl_file: PxlFile, corrupt: str) -> None:
+    """Damage the stored panel of a file in one way, wherever it is kept."""
+    with duckdb.connect(str(pxl_file.path)) as connection:
+        tables = {
+            name
+            for (name,) in connection.execute(
+                "SELECT table_name FROM information_schema.tables"
+            ).fetchall()
+        }
+        if "panels" in tables:
+            statement = {
+                "invalid_version": "UPDATE panel_sources SET version = 'not-a-version'",
+                "missing_name": "UPDATE panel_sources SET name = NULL",
+                "invalid_sequences": "UPDATE panels SET sequence_1 = 'xx'",
+            }[corrupt]
+            connection.execute(statement)
+            return
+        # files that keep the panel in uns and var
+        if corrupt == "invalid_sequences":
+            connection.execute("UPDATE __adata__var SET sequence_1 = 'xx'")
+            return
+        (value,) = connection.execute("SELECT value FROM __adata__uns").fetchone()
+        uns = json.loads(value)
+        if corrupt == "invalid_version":
+            uns["panel_metadata"]["version"] = "not-a-version"
+        else:
+            del uns["panel_metadata"]["name"]
+        connection.execute("UPDATE __adata__uns SET value = ?", [json.dumps(uns)])
+
+
+def _viewer(*pxl_files: PxlFile) -> PixelDataViewer:
+    return PixelDataViewer.from_files(list(pxl_files))
+
+
+def _markers(viewer: PixelDataViewer, table: str = "edgelist") -> dict[str, set[str]]:
+    """Return the marker ids of each sample in a table of the view."""
+    with viewer.open() as session:
+        df = session.execute_eager(
+            Query(f"SELECT marker_1, marker_2, sample FROM {table}", {})
+        )
+    return {
+        sample: set(group["marker_1"]) | set(group["marker_2"])
+        for (sample,), group in df.group_by("sample")
+    }
+
+
+@pytest.fixture(name="old_file")
+def old_file_fixture(tmp_path) -> PxlFile:
+    panel = _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"})
+    return _write_pxl(tmp_path / "old.pxl", "old", panel, ("CD3", "CD4"))
+
+
+@pytest.fixture(name="new_file")
+def new_file_fixture(tmp_path) -> PxlFile:
+    panel = _panel("1.0.1", {"CD3E": "AAAA", "CD4": "CCCC"})
+    return _write_pxl(tmp_path / "new.pxl", "new", panel, ("CD3E", "CD4"))
+
+
+class TestReadPanel:
+    """Reading the panel stored in a pxl file."""
+
+    def test_returns_the_panel_stored_in_the_file(self, old_file):
+        assert old_file.read_panel() == _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"})
+
+    def test_returns_none_when_the_file_stores_no_panel(self, tmp_path):
+        pxl_file = _write_pxl(tmp_path / "x.pxl", "x", None, ("CD3", "CD4"))
+
+        assert pxl_file.read_panel() is None
+
+
+class TestMarkerAlignment:
+    """Marker names in a view over files with different panel patches."""
+
+    def test_edgelist_and_proximity_use_the_newest_marker_names(
+        self, old_file, new_file
+    ):
+        viewer = _viewer(old_file, new_file)
+
+        for table in ("edgelist", "proximity"):
+            assert _markers(viewer, table) == {
+                "old": {"CD3E", "CD4"},
+                "new": {"CD3E", "CD4"},
+            }
+
+    def test_marker_renames_lists_the_samples_that_change(self, old_file, new_file):
+        assert _viewer(old_file, new_file).marker_renames() == {"old": {"CD3": "CD3E"}}
+
+    def test_legacy_marker_columns_are_renamed(self, tmp_path, new_file):
+        panel = _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"})
+        legacy = _write_pxl(
+            tmp_path / "legacy.pxl", "old", panel, ("CD3", "CD4"), legacy_columns=True
+        )
+
+        with _viewer(legacy, new_file).open() as session:
+            df = session.execute_eager(
+                Query("SELECT marker1 FROM edgelist WHERE sample = 'old'", {})
+            )
+
+        assert df["marker1"].to_list() == ["CD3E"]
+
+    def test_files_with_identical_panels_are_left_alone(self, old_file, tmp_path):
+        panel = _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"})
+        same = _write_pxl(tmp_path / "same.pxl", "same", panel, ("CD3", "CD4"))
+
+        viewer = _viewer(old_file, same)
+
+        assert viewer.marker_renames() == {}
+        assert _markers(viewer)["same"] == {"CD3", "CD4"}
+
+    def test_a_single_file_does_not_read_its_panel(self, old_file, monkeypatch):
+        def fail(self):
+            raise AssertionError("the panel should not be read")
+
+        monkeypatch.setattr(PxlFile, "read_panel", fail)
+
+        assert _viewer(old_file).marker_renames() == {}
+
+    def test_different_addons_only_rename_the_shared_base(self, tmp_path):
+        base_old = _panel("1.0.0", {"CD3": "AAAA"}, name="base", product="base")
+        base_new = _panel("1.0.1", {"CD3E": "AAAA"}, name="base", product="base")
+        addon_a = _panel("1.0.0", {"CD19": "CCCC"}, name="a", product="addon_a")
+        addon_b = _panel("1.0.0", {"CD20": "GGGG"}, name="b", product="addon_b")
+        sample_a = _write_pxl(
+            tmp_path / "a.pxl",
+            "a",
+            PNAAntibodyPanel.concatenate([base_old, addon_a]),
+            ("CD3", "CD19"),
+        )
+        sample_b = _write_pxl(
+            tmp_path / "b.pxl",
+            "b",
+            PNAAntibodyPanel.concatenate([base_new, addon_b]),
+            ("CD3E", "CD20"),
+        )
+
+        viewer = _viewer(sample_a, sample_b)
+
+        assert viewer.marker_renames() == {"a": {"CD3": "CD3E"}}
+        assert _markers(viewer) == {"a": {"CD3E", "CD19"}, "b": {"CD3E", "CD20"}}
+
+    def test_filtering_samples_keeps_the_aligned_names(self, old_file, new_file):
+        filtered = _viewer(old_file, new_file).filter_samples({"old"})
+
+        assert _markers(filtered) == {"old": {"CD3E", "CD4"}}
+
+    def test_unalignable_panels_leave_the_markers_unchanged(self, old_file, tmp_path):
+        other = _panel("1.1.0", {"CD3E": "AAAA", "CD4": "CCCC"})
+        other_file = _write_pxl(tmp_path / "o.pxl", "other", other, ("CD3E", "CD4"))
+
+        viewer = _viewer(old_file, other_file)
+
+        assert viewer.marker_renames() == {}
+        assert _markers(viewer) == {"old": {"CD3", "CD4"}, "other": {"CD3E", "CD4"}}
+
+    @pytest.mark.parametrize("stored_panel", [True, False])
+    @pytest.mark.parametrize(
+        "corrupt",
+        [
+            "invalid_version",
+            "missing_name",
+            "invalid_sequences",
+        ],
+    )
+    def test_a_file_whose_panel_cannot_be_read_leaves_the_markers_unchanged(
+        self, old_file, tmp_path, corrupt, stored_panel
+    ):
+        new_file = _write_pxl(
+            tmp_path / "corrupt.pxl",
+            "new",
+            _panel("1.0.1", {"CD3E": "AAAA", "CD4": "CCCC"}),
+            ("CD3E", "CD4"),
+            stored_panel=stored_panel,
+        )
+        _corrupt_stored_panel(new_file, corrupt)
+
+        viewer = _viewer(old_file, new_file)
+
+        assert viewer.marker_renames() == {}
+        assert _markers(viewer) == {"old": {"CD3", "CD4"}, "new": {"CD3E", "CD4"}}
+
+    def test_an_unexpected_error_reading_a_panel_is_not_hidden(
+        self, old_file, new_file, monkeypatch
+    ):
+        def fail(self):
+            raise RuntimeError("a bug")
+
+        monkeypatch.setattr(PxlFile, "read_panel", fail)
+
+        with pytest.raises(RuntimeError, match="a bug"):
+            _viewer(old_file, new_file).marker_renames()
+
+    def test_files_written_after_sample_calling_are_left_alone(self, tmp_path):
+        # Hashing clones are collapsed in the data, while the stored panel
+        # keeps them. The panels are identical, so nothing is renamed.
+        rows = [
+            _marker("CD3", "AAAA"),
+            {**_marker("B2M-1", "CCCC"), "sample_hashing": "yes"},
+            {**_marker("B2M-2", "GGGG"), "sample_hashing": "yes"},
+        ]
+        panel = PNAAntibodyPanel.from_metadata(
+            pd.DataFrame(rows).set_index("marker_id"),
+            AntibodyPanelMetadata(name="base", version="1.0.0", product="kit"),
+        )
+        files = [
+            _write_pxl(
+                tmp_path / f"{sample}.pxl",
+                sample,
+                panel,
+                ("CD3", "B2M"),
+                adata_markers=["CD3", "B2M"],
+            )
+            for sample in ("a", "b")
+        ]
+
+        viewer = _viewer(*files)
+
+        assert viewer.marker_renames() == {}
+        assert _markers(viewer) == {"a": {"CD3", "B2M"}, "b": {"CD3", "B2M"}}
+
+    def test_a_file_without_a_panel_leaves_the_markers_unchanged(
+        self, old_file, tmp_path
+    ):
+        no_panel = _write_pxl(tmp_path / "n.pxl", "none", None, ("CD3E", "CD4"))
+
+        viewer = _viewer(old_file, no_panel)
+
+        assert viewer.marker_renames() == {}
+        assert _markers(viewer) == {"old": {"CD3", "CD4"}, "none": {"CD3E", "CD4"}}
+
+
+def _read_adata(
+    *pxl_files: PxlFile, join: Literal["inner", "outer"] = "inner"
+) -> anndata.AnnData:
+    return AnnDataHelper(_viewer(*pxl_files), adata_join_strategy=join).read_adata()
+
+
+class TestAnnDataAlignment:
+    """AnnData read from a view over files with different panel patches."""
+
+    def test_the_dataset_adata_has_no_panel_metadata_in_uns(self, old_file, new_file):
+        for files in ([old_file], [old_file, new_file]):
+            adata = PNAPixelDataset.from_pxl_files(files).adata()
+
+            assert "panel_metadata" not in adata.uns
+
+    def test_the_dataset_drops_the_panel_metadata_of_legacy_files(self, tmp_path):
+        panel = _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"})
+        legacy = _write_pxl(
+            tmp_path / "legacy.pxl", "old", panel, ("CD3", "CD4"), stored_panel=False
+        )
+
+        assert "panel_metadata" in _read_adata(legacy).uns
+        assert (
+            "panel_metadata" not in PNAPixelDataset.from_pxl_files([legacy]).adata().uns
+        )
+
+    def test_filtering_a_file_in_place_keeps_its_stored_panel(self, old_file):
+        InplacePixelDataFilterer(old_file).filter_components({"old"})
+
+        assert old_file.read_panel() == _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"})
+
+    def test_markers_use_the_newest_names(self, old_file, new_file):
+        adata = _read_adata(old_file, new_file)
+
+        assert sorted(adata.var_names) == ["CD3E", "CD4"]
+        assert sorted(adata.obs_names) == ["new", "old"]
+
+    def test_marker_counts_follow_the_renamed_markers(self, tmp_path):
+        old = _write_pxl(
+            tmp_path / "old.pxl",
+            "old",
+            _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"}),
+            ("CD3", "CD4"),
+        )
+        new = _write_pxl(
+            tmp_path / "new.pxl",
+            "new",
+            _panel("1.0.1", {"CD3E": "AAAA", "CD4": "CCCC"}),
+            ("CD3E", "CD3E"),
+        )
+
+        adata = _read_adata(old, new)
+
+        counts = adata.to_df()
+        assert counts.loc["old", "CD3E"] == 1
+        assert counts.loc["new", "CD3E"] == 2
+
+    @pytest.mark.parametrize("newest_first", [False, True])
+    def test_var_has_the_aligned_panel_information(self, tmp_path, newest_first):
+        def rows(uniprot_ids: tuple[str, str]) -> list[dict]:
+            return [
+                {**_marker("CD3E", "AAAA"), "uniprot_id": uniprot_ids[0]},
+                {**_marker("CD4", "CCCC"), "uniprot_id": uniprot_ids[1]},
+            ]
+
+        old_rows = rows(("P01730", "P01732"))
+        old_rows[0]["marker_id"] = "CD3"
+        old = _write_pxl(
+            tmp_path / "old.pxl",
+            "old",
+            _panel_of_rows("1.0.0", old_rows),
+            ("CD3", "CD4"),
+        )
+        new = _write_pxl(
+            tmp_path / "new.pxl",
+            "new",
+            _panel_of_rows("1.0.1", rows(("P01732", "P01730"))),
+            ("CD3E", "CD4"),
+        )
+
+        adata = _read_adata(*((new, old) if newest_first else (old, new)))
+
+        assert adata.var["uniprot_id"].to_dict() == {
+            "CD3E": "P01732",
+            "CD4": "P01730",
+        }
+
+    def test_hashing_counts_in_obs_follow_the_renamed_clones(self, tmp_path):
+        # Written after sample calling: the clones are collapsed in the data
+        # and only kept in obs.
+        def hashing_panel(version: str, base: str) -> PNAAntibodyPanel:
+            return _panel_of_rows(
+                version,
+                [
+                    _marker("CD3", "AAAA"),
+                    {**_marker(f"{base}-1", "CCCC"), "sample_hashing": "yes"},
+                    {**_marker(f"{base}-2", "GGGG"), "sample_hashing": "yes"},
+                ],
+            )
+
+        panels = {
+            "old.pxl": hashing_panel("1.0.0", "B2M"),
+            "new.pxl": hashing_panel("1.0.1", "B3M"),
+        }
+        files = []
+        for sample, base in (("old", "B2M"), ("new", "B3M")):
+            path = tmp_path / f"{sample}.pxl"
+            files.append(
+                _write_pxl(
+                    path,
+                    sample,
+                    panels[path.name],
+                    ("CD3", base),
+                    adata_markers=["CD3", base],
+                )
+            )
+            with duckdb.connect(str(path)) as connection:
+                for clone in (1, 2):
+                    column = f"{ORIGINAL_HASH_COUNTS_PREFIX}{base}-{clone}"
+                    connection.execute(
+                        f'ALTER TABLE __adata__obs ADD COLUMN "{column}" INTEGER DEFAULT {clone}'
+                    )
+
+        adata = _read_adata(*files)
+
+        assert sorted(adata.var_names) == ["B3M", "CD3"]
+        hash_columns = sorted(
+            column
+            for column in adata.obs.columns
+            if column.startswith(ORIGINAL_HASH_COUNTS_PREFIX)
+        )
+        assert hash_columns == [
+            f"{ORIGINAL_HASH_COUNTS_PREFIX}B3M-1",
+            f"{ORIGINAL_HASH_COUNTS_PREFIX}B3M-2",
+        ]
+        assert adata.obs[f"{ORIGINAL_HASH_COUNTS_PREFIX}B3M-2"].to_list() == [2, 2]
+
+    def test_a_single_file_is_read_as_stored(self, old_file):
+        adata = _read_adata(old_file)
+
+        assert sorted(adata.var_names) == ["CD3", "CD4"]
+        assert adata.var.loc["CD3", "sequence_1"] == "AAAA"
+
+    def test_files_storing_the_panel_in_var_align_with_files_using_panel_tables(
+        self, tmp_path, new_file
+    ):
+        legacy = _write_pxl(
+            tmp_path / "legacy.pxl",
+            "old",
+            _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"}),
+            ("CD3", "CD4"),
+            stored_panel=False,
+        )
+
+        adata = _read_adata(legacy, new_file)
+
+        assert sorted(adata.var_names) == ["CD3E", "CD4"]
+        assert adata.var["sequence_1"].to_dict() == {"CD3E": "AAAA", "CD4": "CCCC"}
+        assert not adata.var.columns.duplicated().any()
+
+
+def test_marker_ids_with_quotes_are_escaped_in_the_rename_expression():
+    expression = marker_rename_expression("marker_1", {"A'B": "C"})
+
+    assert "WHEN 'A''B' THEN 'C'" in expression
+
+
+class TestMarkerConflicts:
+    """Files whose panels give the same marker id to different sequences."""
+
+    @pytest.fixture(name="conflicting_files")
+    def conflicting_files_fixture(self, tmp_path) -> tuple[PxlFile, PxlFile]:
+        panels = [
+            _panel("1.0.0", {"CD3": "AAAA", "CD4": "CCCC"}, name="a", product="a"),
+            _panel("1.0.0", {"CD3": "GGGG", "CD4": "CCCC"}, name="b", product="b"),
+        ]
+        first, second = (
+            _write_pxl(tmp_path / f"{sample}.pxl", sample, panel, ("CD3", "CD4"))
+            for sample, panel in zip(("a", "b"), panels)
+        )
+        return first, second
+
+    def test_the_view_raises_when_the_markers_are_first_used(self, conflicting_files):
+        viewer = _viewer(*conflicting_files)
+
+        with pytest.raises(PanelConflictError, match="marker id 'CD3'"):
+            viewer.marker_renames()
+        with pytest.raises(PanelConflictError):
+            viewer.open()
+
+    def test_loading_a_dataset_raises_before_any_query(self, conflicting_files):
+        with pytest.raises(PanelConflictError, match="force=True"):
+            PNAPixelDataset.from_pxl_files(list(conflicting_files))
+
+    def test_read_raises_and_accepts_force(self, conflicting_files, caplog):
+        paths = [pxl_file.path for pxl_file in conflicting_files]
+
+        with pytest.raises(PanelConflictError):
+            read(paths)
+        with caplog.at_level(logging.WARNING):
+            dataset = read(paths, force=True)
+
+        assert "marker id 'CD3'" in caplog.text
+        assert dataset.view.marker_renames() == {}
+
+    def test_force_loads_the_files_with_the_newest_panel_row(self, tmp_path, caplog):
+        files = [
+            _write_pxl(
+                tmp_path / f"{sample}.pxl",
+                sample,
+                _panel("1.0.0", {"CD3": sequence, "CD4": "CCCC"}),
+                ("CD3", "CD4"),
+            )
+            for sample, sequence in (("old", "AAAA"), ("new", "GGGG"))
+        ]
+        # The new file has the newer patch, whatever the order of the files.
+        newer = _write_pxl(
+            tmp_path / "newer.pxl",
+            "newer",
+            _panel("1.0.1", {"CD3": "TTTT", "CD4": "CCCC"}),
+            ("CD3", "CD4"),
+        )
+        viewer = PixelDataViewer.from_files([newer, *files], force=True)
+
+        with caplog.at_level(logging.WARNING):
+            adata = AnnDataHelper(viewer).read_adata()
+
+        assert "marker id 'CD3'" in caplog.text
+        assert sorted(adata.obs_names) == ["new", "newer", "old"]
+        assert adata.var.loc["CD3", "sequence_1"] == "TTTT"
+
+    def test_the_version_error_still_falls_back_with_a_warning(
+        self, old_file, tmp_path, caplog
+    ):
+        other = _panel("1.1.0", {"CD3E": "AAAA", "CD4": "CCCC"})
+        other_file = _write_pxl(tmp_path / "o.pxl", "other", other, ("CD3E", "CD4"))
+
+        with caplog.at_level(logging.WARNING):
+            renames = _viewer(old_file, other_file).marker_renames()
+
+        assert renames == {}
+        assert "same major and minor version" in caplog.text
+
+    def test_real_panels_of_different_products_conflict(self, tmp_path, caplog):
+        panels = [
+            pna_config.get_panel("proxiome-v2-immuno-155-v2.0"),
+            pna_config.get_panel("proxiome-v2-immuno-156-FMC63-prerelease"),
+        ]
+        files = [
+            _write_pxl(
+                tmp_path / f"{sample}.pxl",
+                sample,
+                panel,
+                tuple(panel.df.index[:2]),
+            )
+            for sample, panel in zip(("a", "b"), panels)
+        ]
+
+        with pytest.raises(PanelConflictError, match="marker id 'B2M-1'"):
+            PNAPixelDataset.from_pxl_files(files)
+        with caplog.at_level(logging.WARNING):
+            dataset = PNAPixelDataset.from_pxl_files(files, force=True)
+
+        assert "marker id 'B2M-1'" in caplog.text
+        assert dataset.view.marker_renames() == {}
+
+
+class TestDroppedMarkers:
+    """The inner join of AnnData drops the markers that not all samples have."""
+
+    @staticmethod
+    def _files(tmp_path, markers: dict[str, str], extra: dict[str, str]):
+        """A file with ``markers``, and a file with ``markers`` and ``extra``."""
+        base = _panel("1.0.0", markers, name="base", product="base")
+        addon = _panel("1.0.0", extra, name="addon", product="addon")
+        return [
+            _write_pxl(tmp_path / "base.pxl", "base", base, ("CD3", "CD3")),
+            _write_pxl(
+                tmp_path / "addon.pxl",
+                "addon",
+                PNAAntibodyPanel.concatenate([base, addon]),
+                ("CD3", "CD3"),
+            ),
+        ]
+
+    def test_the_inner_join_warns_about_the_dropped_markers(self, tmp_path, caplog):
+        files = self._files(tmp_path, {"CD3": "AAAA"}, {"CD19": "CCCC"})
+
+        with caplog.at_level(logging.WARNING):
+            adata = _read_adata(*files)
+
+        assert list(adata.var_names) == ["CD3"]
+        assert "are dropped (1): CD19" in caplog.text
+
+    def test_only_the_first_dropped_markers_are_listed(self, tmp_path, caplog):
+        # 12 distinct sequences of 4 bases
+        extra = {
+            f"M{i:02}": "".join("ACGT"[i // 4**k % 4] for k in range(4))
+            for i in range(1, 13)
+        }
+        files = self._files(tmp_path, {"CD3": "TTTT"}, extra)
+
+        with caplog.at_level(logging.WARNING):
+            _read_adata(*files)
+
+        assert "are dropped (12)" in caplog.text
+        assert "M10" in caplog.text
+        assert "M11" not in caplog.text
+        assert "and 2 more" in caplog.text
+
+    def test_files_with_the_same_markers_do_not_warn(self, old_file, new_file, caplog):
+        with caplog.at_level(logging.WARNING):
+            _read_adata(old_file, new_file)
+
+        assert "are dropped" not in caplog.text
+
+
+class TestJoinWithMarkersOnlyInTheFirstSample:
+    """The join does not depend on the first sample having the fewest markers."""
+
+    @staticmethod
+    def _file(tmp_path, name: str, extra: dict[str, str]) -> PxlFile:
+        """A file with the CD3 base panel plus the add-on ``extra`` markers, if any.
+
+        Its single edge is on the first add-on marker, or on CD3 without an add-on.
+        """
+        base = _panel("1.0.0", {"CD3": "AAAA"}, name="base", product="base")
+        if not extra:
+            return _write_pxl(tmp_path / f"{name}.pxl", name, base, ("CD3", "CD3"))
+        addon = _panel("1.0.0", extra, name=name, product=name)
+        marker = next(iter(extra))
+        return _write_pxl(
+            tmp_path / f"{name}.pxl",
+            name,
+            PNAAntibodyPanel.concatenate([base, addon]),
+            (marker, marker),
+        )
+
+    def test_the_inner_join_keeps_the_shared_markers(self, tmp_path, caplog):
+        # the first file has an add-on marker the second file lacks
+        files = [
+            self._file(tmp_path, "addon", {"CD19": "CCCC"}),
+            self._file(tmp_path, "base", {}),
+        ]
+
+        with caplog.at_level(logging.WARNING):
+            adata = _read_adata(*files, join="inner")
+
+        assert list(adata.var_names) == ["CD3"]
+        assert adata.var.loc["CD3", "sequence_1"] == "AAAA"
+        assert "are dropped (1): CD19" in caplog.text
+
+    def test_the_outer_join_keeps_all_markers_and_counts_missing_ones_as_zero(
+        self, tmp_path, caplog
+    ):
+        # each file has a different add-on marker, and the first one has no CD20
+        files = [
+            self._file(tmp_path, "addon_a", {"CD19": "CCCC"}),
+            self._file(tmp_path, "addon_b", {"CD20": "GGGG"}),
+        ]
+
+        with caplog.at_level(logging.WARNING):
+            adata = _read_adata(*files, join="outer")
+
+        assert set(adata.var_names) == {"CD3", "CD19", "CD20"}
+        assert adata.var.loc["CD19", "sequence_1"] == "CCCC"
+        assert adata.var.loc["CD20", "sequence_1"] == "GGGG"
+        assert not np.isnan(adata.X).any()
+        # each add-on marker is only in one of the two samples
+        assert adata.var.loc[["CD19", "CD20"], "components"].tolist() == [1, 1]
+        assert "are dropped" not in caplog.text

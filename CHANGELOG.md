@@ -5,28 +5,89 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.31.0] - 2026-10-29
+
+### Data Analysis
+
+#### Added
+- `pixelator.pna.analysis.differential_abundance` for marker differential abundance (Wilcoxon).
+- `PNAPixelDataset.layouts()` computes layouts on the fly.
+- Proximity helpers `summarize_proximity_scores`, `filter_proximity_scores` and `proximity_heatmap`.
+- Conjugate segmentation helpers `cc_protein_weights`, `segment_cell`, `partition_counts` and `distance_from_node_set`.
+- Combining pxl files with panels differing in patch version aligns marker names.
+- Loading pxl files with conflicting marker ids raises unless `force=True`.
+
+#### Changed
+- Faceted `density_scatter_plot` estimates density per facet; `density_scope="joint"` restores old behavior.
+- `density_scatter_plot` moved from `pixelator.mpx.plot` to `pixelator.plot`.
+- `calculate_differential_proximity` counts missing scores as 0. The default metric is `log2_ratio`, groups under 10 cells are skipped, and `group_vars` repeats the comparison.
+- Minimum supported Python version is now 3.11.
+
+#### Deprecated
+- `PNAPixelDataset.precomputed_layouts()`; use `layouts()` instead.
+
+#### Removed
+- Layouts `fruchterman_reingold(_3d)` and `kamada_kawai(_3d)`.
+
+#### Fixed
+- `PNAPixelDataset.proximity(calculate_from_edgelist=True)` now uses exact variance and a minimum standard deviation of 1.
+- `Edgelist.to_record_batches` renames legacy `marker1`/`marker2` columns.
+- `coarsened_pmds_layout` no longer fails on low `pivots` when Leiden yields few communities.
+
+### Data Processing
+
+#### Added
+- `proxiome-v2-immuno-156-Whitlow-v2.0` panel: immuno-155 plus the Whitlow CAR marker.
+- Samples with no cells above the size threshold no longer fail the pipeline.
+- PNA graph step peels and reabsorbs the core-1 layer, improving runtime and memory.
+- Graph report now includes core-1 layer size and absorption statistics.
+- `PIXELATOR_DUCKDB_THREADS` environment variable sets the default DuckDB thread count.
+- `--panel` can be repeated to combine panels; pxl files store their panel.
+- Writing a pxl file with multiple sample identifiers raises an error.
+
+#### Changed
+- Output pxl metadata no longer has `panel_name` and `panel_version`.
+- `PixelFileWriter` stores `edgelist`, `proximity` and `layouts` sorted by `component` and markers,
+  which speeds up `component` filters on remote PXL files.
+- `analysis --compute-proximity` computes expected join counts analytically, which is much faster.
+- Updated pixelgen-pixelator-core to 1.0.2, reducing graph step peak memory by ~20%.
+- `uei_count` is now optional on PNA edgelists.
+
+#### Removed
+- `--proximity-nbr-of-permutations` option of `single-cell-pna analysis`.
+- Stale nf-core/pixelator integration tests and workflow.
+- Molecular Pixelation (MPX) support; use a release before 0.31.0 for MPX data.
+- `single-cell-pna graph_legacy` command; use `graph` instead.
+- Tau metrics and aggregate statistics from the graph report.
+
+#### Fixed
+- Independent collapse stores `read_count` as `uint32`, so a molecule with more than 65535 reads no longer fails the output cast.
+- Default core count respects CPU affinity and container CPU quotas.
+- Analysis workers are pinned to one Polars, BLAS/OpenMP and DuckDB thread.
+- Panel header parsing tolerates multiple trailing commas.
+
 ## [0.30.0] - 2026-08-05
 
 ### Added
-- `pixelator.pna.analysis.comparison.compare_sample_pairs` and `compare_sample_pairs_by_gate` 
-   to check that pairs of PNA samples are similar in terms of abundance (mean marker CLR) and 
-   proximity (mean marker-pair proximity score) patterns, reporting the correlation between 
+- `pixelator.pna.analysis.comparison.compare_sample_pairs` and `compare_sample_pairs_by_gate`
+   to check that pairs of PNA samples are similar in terms of abundance (mean marker CLR) and
+   proximity (mean marker-pair proximity score) patterns, reporting the correlation between
    each pair. In case of gating (e.g. `["+CD3e", "+CD4", "-CD19"]`), components are first filtered
    with positive/negative thresholds determined automatically from each marker's CLR distribution.
-- `pixelator.pna.analysis.gating.determine_marker_threshold` to determine a positive/negative CLR 
+- `pixelator.pna.analysis.gating.determine_marker_threshold` to determine a positive/negative CLR
    threshold for a marker, warning and skipping markers whose distribution appears unimodal.
 - `pixelator.pna.plot.plot_sample_pair_comparison` and `write_sample_pair_comparison_report` to plot
    and collect sample pair abundance/proximity comparisons into an HTML report.
-- Setup for generating API documentation pages from source files, and a workflow for building and 
+- Setup for generating API documentation pages from source files, and a workflow for building and
   deploying the docs automatically.
 - `PNAAssay` and `PNAAntibodyPanel` now hold an optional path to the path they were parsed from.
-- `pixelator.common.plot` with Pixelgen's brand colors, gradients, palettes, and theme 
-  (`PIXELGEN_ACCENT_COLORS`, `PIXELGEN_CELL_PALETTE`, `pixelgen_gradient`, `pixelgen_palette`, 
-  `pixelgen_accent_colors`, `pixelgen_discrete_colors`, `create_discrete_palette`, 
+- `pixelator.common.plot` with Pixelgen's brand colors, gradients, palettes, and theme
+  (`PIXELGEN_ACCENT_COLORS`, `PIXELGEN_CELL_PALETTE`, `pixelgen_gradient`, `pixelgen_palette`,
+  `pixelgen_accent_colors`, `pixelgen_discrete_colors`, `create_discrete_palette`,
   `pixelgen_colorscale`/`pixelgen_sequential_colormap`/`pixelgen_divergent_colormap`/`pixelgen_colormap`,
    `set_pixelgen_theme`/`pixelgen_theme`, `style_facet_strips`).
 - Spectral layout algorithm
-- `single-cell-pna denoise` and `single-cell-pna sample-calling` now report `input_reads` and 
+- `single-cell-pna denoise` and `single-cell-pna sample-calling` now report `input_reads` and
   `output_reads` in `report.json`.
 
 ### Changed

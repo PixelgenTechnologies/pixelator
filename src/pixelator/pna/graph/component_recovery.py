@@ -7,16 +7,18 @@ import tempfile
 from copy import copy
 from pathlib import Path
 
-import numpy as np
 from anndata import AnnData
 
-from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.cli.common import logger
 from pixelator.pna.config import PNAAntibodyPanel
 from pixelator.pna.graph.community_detection import (
     StagedRefinementOptions,
     find_components,
+)
+from pixelator.pna.graph.component_recovery_utils import (
+    has_uei_count,
+    n_molecules_sql,
 )
 from pixelator.pna.graph.report import GraphStatistics
 from pixelator.pna.pixeldataset import PNAPixelDataset
@@ -32,21 +34,6 @@ def update_stats_from_adata(adata: AnnData, stats: GraphStatistics) -> GraphStat
         "reads_in_component"
     ].median()
     component_stats.median_markers_per_component = adata.obs["n_umi"].median()
-
-    # Add tau_type metrics
-    aggregates_mask = adata.obs["tau_type"] != "normal"
-    number_of_aggregates = np.sum(aggregates_mask)
-
-    component_stats.aggregate_count = number_of_aggregates
-    aggregate_stats = (
-        adata[aggregates_mask].obs[["n_edges", "n_umi", "reads_in_component"]].sum()
-    )
-
-    component_stats.read_count_in_aggregates = aggregate_stats[
-        "reads_in_component"
-    ].item()
-    component_stats.node_count_in_aggregates = aggregate_stats["n_umi"].item()
-    component_stats.edge_count_in_aggregates = aggregate_stats["n_edges"].item()
 
     return component_stats
 
@@ -113,15 +100,15 @@ def build_pxl_file_with_components(
             )
             logger.debug("Counting molecules")
 
+            molecules_sql = n_molecules_sql(has_uei_count(pxl_connection, "edgelist"))
             sums = pxl_connection.execute(
-                "SELECT SUM(uei_count) as uei_count FROM edgelist"
+                f"SELECT {molecules_sql} as uei_count FROM edgelist"
             ).pl()
 
             component_stats.molecules_output = int(sums["uei_count"][0])
 
             logger.debug("Building edgelist from anndata")
             adata = pna_edgelist_to_anndata(pxl_connection, panel=panel)
-            call_aggregates(adata)
 
             component_stats = update_stats_from_adata(adata, component_stats)
 
@@ -135,13 +122,12 @@ def build_pxl_file_with_components(
                 "sample_name": sample_name,
                 "version": __version__,
                 "technology": "single-cell-pna",
-                "panel_name": panel.name,
-                "panel_version": panel.version,
             }
 
             logger.debug("Building pxl file")
 
             pxl_file_writer.write_metadata(metadata)
+            pxl_file_writer.write_panel(panel)
             pxl_file_writer.write_adata(adata)
 
     return PNAPixelDataset.from_pxl_files(path_output_pxl_file), component_stats

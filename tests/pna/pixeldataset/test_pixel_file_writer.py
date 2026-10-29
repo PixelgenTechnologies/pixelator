@@ -1,7 +1,16 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
+import json
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+import polars as pl
+import pytest
+from anndata import AnnData
+
+from pixelator.common.config import AntibodyPanelMetadata
+from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 
 
@@ -55,6 +64,50 @@ class TestPixelFileWriter:
         with PixelFileWriter(target) as writer:
             writer.write_edgelist(edgelist_parquet_path)
 
+    @pytest.mark.parametrize(
+        "table_name, dataframe_fixture",
+        [
+            ("edgelist", "edgelist_dataframe"),
+            ("proximity", "proximity_dataframe"),
+            ("layouts", "layout_dataframe"),
+        ],
+    )
+    def test_tables_are_stored_sorted_by_component(
+        self, tmp_path, request, table_name, dataframe_fixture
+    ):
+        """Tables with a component column are stored sorted by component, then markers.
+
+        Args:
+            tmp_path: tmp path.
+            request: pytest request fixture, used to resolve the dataframe fixture.
+            table_name: name of the table to write.
+            dataframe_fixture: name of the fixture providing the data.
+        """
+        # Stack copies under distinct component ids so the order is observable
+        # regardless of how many components the fixture happens to contain.
+        base = request.getfixturevalue(dataframe_fixture)
+        dataframe = pl.concat(
+            [base.with_columns(component=pl.lit(f"{i:016x}")) for i in range(5)]
+        )
+        shuffled = dataframe.sample(fraction=1.0, shuffle=True, seed=42)
+        assert not shuffled["component"].is_sorted()
+        parquet_path = tmp_path / f"{table_name}.parquet"
+        shuffled.write_parquet(parquet_path)
+
+        sort_keys = [
+            c for c in ("component", "marker_1", "marker_2") if c in dataframe.columns
+        ]
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            getattr(writer, f"write_{table_name}")(parquet_path)
+            stored = (
+                writer.get_connection()
+                .execute(f"SELECT {', '.join(sort_keys)} FROM {table_name}")
+                .pl()
+            )
+
+        assert stored.equals(dataframe.select(sort_keys).sort(sort_keys))
+
     def test_write_adata(self, tmp_path, adata_data):
         """Verify write adata.
 
@@ -65,6 +118,35 @@ class TestPixelFileWriter:
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
             writer.write_adata(adata_data)
+
+    def test_write_adata_multiple_samples_raises(self, tmp_path, adata_data):
+        """Verify write adata raises when obs contains multiple samples.
+
+        Args:
+            tmp_path: tmp path.
+            adata_data: adata data.
+        """
+        adata_data = adata_data.copy()
+        adata_data.obs["sample"] = "sample_1"
+        adata_data.obs.iloc[0, adata_data.obs.columns.get_loc("sample")] = "sample_2"
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            with pytest.raises(ValueError, match="multiple samples"):
+                writer.write_adata(adata_data)
+
+    def test_write_edgelist_multiple_samples_raises(self, tmp_path, edgelist_dataframe):
+        """Verify write edgelist raises when the edgelist contains multiple samples.
+
+        Args:
+            tmp_path: tmp path.
+            edgelist_dataframe: edgelist dataframe.
+        """
+        edgelist_dataframe = edgelist_dataframe.with_columns(sample=pl.lit("sample_1"))
+        edgelist_dataframe[0, "sample"] = "sample_2"
+        target = tmp_path / "file.pxl"
+        with PixelFileWriter(target) as writer:
+            with pytest.raises(ValueError, match="multiple samples"):
+                writer.write_edgelist(edgelist_dataframe)
 
     def test_write_metadata(self, tmp_path):
         """Verify write metadata.
@@ -97,3 +179,57 @@ class TestPixelFileWriter:
         target = tmp_path / "file.pxl"
         with PixelFileWriter(target) as writer:
             writer.write_layouts(layout_parquet_path)
+
+    def _var_columns(self, writer: PixelFileWriter) -> set[str]:
+        frame = (
+            writer.get_connection()
+            .execute("SELECT * FROM __adata__var LIMIT 0")
+            .fetchdf()
+        )
+        return set(frame.columns)
+
+    def _adata_with_panel_columns(self) -> AnnData:
+        return AnnData(
+            X=np.zeros((1, 1)),
+            obs=pd.DataFrame(index=["c1"]),
+            var=pd.DataFrame(
+                {
+                    "antibody_count": [1],
+                    "control": [False],
+                    "sequence_1": ["AAAA"],
+                    "sequence_2": ["AAAA"],
+                },
+                index=pd.Index(["CD3"], name="marker_id"),
+            ),
+            uns={"panel_metadata": {"name": "base"}, "other": "kept"},
+        )
+
+    def test_write_adata_omits_panel_columns_stored_in_the_panel_tables(self, tmp_path):
+        """Panel fields joined onto var in memory stay out of the written var."""
+        panel = PNAAntibodyPanel.from_metadata(
+            pd.DataFrame(
+                {"control": [False], "sequence_1": ["AAAA"], "sequence_2": ["AAAA"]},
+                index=pd.Index(["CD3"], name="marker_id"),
+            ),
+            AntibodyPanelMetadata(name="base", version="1.0.0", product="proxiome"),
+        )
+        with PixelFileWriter(tmp_path / "file.pxl") as writer:
+            writer.write_panel(panel)
+            writer.write_adata(self._adata_with_panel_columns())
+            columns = self._var_columns(writer)
+            uns = writer.get_connection().execute("SELECT value FROM __adata__uns")
+            uns_value = json.loads(uns.fetchone()[0])
+
+        assert columns == {"index", "antibody_count"}
+        assert uns_value == {"other": "kept"}
+
+    def test_write_adata_keeps_var_columns_when_no_panel_is_stored(self, tmp_path):
+        """A file without panel tables keeps whatever var and uns hold."""
+        with PixelFileWriter(tmp_path / "file.pxl") as writer:
+            writer.write_adata(self._adata_with_panel_columns())
+            columns = self._var_columns(writer)
+            uns = writer.get_connection().execute("SELECT value FROM __adata__uns")
+            uns_value = json.loads(uns.fetchone()[0])
+
+        assert {"control", "sequence_1", "sequence_2"} <= columns
+        assert "panel_metadata" in uns_value

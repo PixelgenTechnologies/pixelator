@@ -129,15 +129,20 @@ class TestPNAPixelDataset:
         """
         assert isinstance(pxl_dataset.view, PixelDataViewer)
 
-    def test_adata(self, pxl_dataset: PNAPixelDataset, adata_data):
+    def test_adata(self, pxl_dataset: PNAPixelDataset, adata_data, panel):
         """Verify adata.
 
         Args:
             adata_data: adata data.
             pxl_dataset: Pxl dataset.
+            panel: panel.
         """
         adata_data = adata_data.copy()
         adata_data.obs["sample"] = "test_sample"
+        adata_data.uns.pop("panel_metadata", None)
+        adata_data.var = adata_data.var.join(
+            panel.df.reindex(adata_data.var_names), how="left"
+        )
 
         adata = pxl_dataset.adata(add_clr_transform=False, add_log1p_transform=False)
         adata_assert_equal(adata, adata_data)
@@ -733,7 +738,7 @@ class TestPNAPixelDatasetSnapshots:
 
         proximity_df = proximity.to_polars()
         assert isinstance(proximity_df, pl.DataFrame)
-        proximity_df = proximity_df.sort("component")
+        proximity_df = proximity_df.sort(pl.all())
 
         result = StringIO()
         proximity_df.write_csv(result)
@@ -752,7 +757,7 @@ class TestPNAPixelDatasetSnapshots:
 
         layouts_df = layouts.to_polars()
         assert isinstance(layouts_df, pl.DataFrame)
-        layouts_df = layouts_df.sort("component").select(sorted(layouts_df.columns))
+        layouts_df = layouts_df.select(sorted(layouts_df.columns)).sort(pl.all())
 
         result = StringIO()
         layouts_df.write_csv(result)

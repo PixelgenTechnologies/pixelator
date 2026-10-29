@@ -4,7 +4,6 @@ Copyright © 2025 Pixelgen Technologies AB.
 """
 
 import logging
-import re
 import tempfile
 from itertools import chain
 from pathlib import Path
@@ -18,10 +17,13 @@ import pandas as pd
 import polars as pl
 
 from pixelator import __version__
-from pixelator.common.annotate.aggregates import call_aggregates
 from pixelator.pna.analysis_engine import AnalysisManager, PerComponentTask
-from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.anndata import add_missing_adata_info, pna_edgelist_to_anndata
+from pixelator.pna.config.panel import (
+    ORIGINAL_HASH_COUNTS_PREFIX,
+    PNAAntibodyPanel,
+    collapsed_hashing_marker_id,
+)
 from pixelator.pna.pixeldataset import PNAPixelDataset
 from pixelator.pna.pixeldataset.io import PixelFileWriter
 from pixelator.pna.sample_calling.hash_antibodies import HashedAntibodyMapping
@@ -205,19 +207,24 @@ def _add_original_hash_counts_to_obs(
     old_anndata_counts = old_adata.to_df()
     for ab in sorted(list(antibodies_for_obs)):
         if ab in old_anndata_counts.columns:
-            old_adata.obs[f"original_hash_counts_{ab}"] = old_anndata_counts[ab].values
+            old_adata.obs[f"{ORIGINAL_HASH_COUNTS_PREFIX}{ab}"] = old_anndata_counts[
+                ab
+            ].values
         else:
-            old_adata.obs[f"original_hash_counts_{ab}"] = 0
+            old_adata.obs[f"{ORIGINAL_HASH_COUNTS_PREFIX}{ab}"] = 0
 
 
-def _add_missing_adata_info(new_adata, old_adata):
-    missing_obs = set(old_adata.obs.columns) - set(new_adata.obs.columns)
-    missing_var = set(old_adata.var.columns) - set(new_adata.var.columns)
+def _markers_after_hash_collapse(
+    panel: PNAAntibodyPanel, hashing_antibodies: set[str]
+) -> list[str]:
+    """Return count-matrix markers after hashing ids collapse to their base name.
 
-    new_adata.obs = new_adata.obs.join(old_adata.obs[list(missing_obs)], how="left")
-    new_adata.var = new_adata.var.join(old_adata.var[list(missing_var)], how="left")
-
-    return new_adata
+    Hashing clones are left out. Each collapsed base that is not already on the
+    panel is appended in sorted order, so edgelist counts under that name are kept.
+    """
+    kept = [marker for marker in panel.markers if marker not in hashing_antibodies]
+    bases = {collapsed_hashing_marker_id(marker) for marker in hashing_antibodies}
+    return kept + sorted(bases - set(kept))
 
 
 def _build_post_sample_calling_anndata(
@@ -246,17 +253,23 @@ def _build_post_sample_calling_anndata(
         old_adata, hashing_antibody_mapping.hashing_antibodies
     )
 
-    # Create the anndata object and remove all panel hashing markers from var
-    new_adata = pna_edgelist_to_anndata(con, panel)
-    non_hashing_markers = [
-        marker
-        for marker in new_adata.var.index
-        if marker not in hashing_antibody_mapping.hashing_antibodies
-    ]
-    new_adata = new_adata[:, non_hashing_markers].copy()
+    # The edgelist already uses collapsed hashing ids (B2M-1 -> B2M). Include
+    # a collapsed base that the panel does not define, and leave the clones out.
+    new_adata = pna_edgelist_to_anndata(
+        con,
+        panel,
+        markers=_markers_after_hash_collapse(
+            panel, hashing_antibody_mapping.hashing_antibodies
+        ),
+    )
 
-    call_aggregates(new_adata)
-    new_adata = _add_missing_adata_info(new_adata, old_adata)
+    new_adata = add_missing_adata_info(new_adata, old_adata)
+    # `sample` is a reserved, transient column added when reading a
+    # multi-file view (see AnnDataHelper) and reflects the *original*
+    # physical input file(s) i.e. pool(s) names, which may no longer match the single
+    # dehashed `sample_name` this output file represents. Drop it here
+    # so each written PXL file only ever contains a single sample.
+    new_adata.obs = new_adata.obs.drop(columns=["sample"], errors="ignore")
     new_adata.obs = new_adata.obs.join(
         hash_info.select(["component", "hash_enrichment_factor"])
         .to_pandas()
@@ -366,8 +379,6 @@ def sample_calling(
             "sample_name": sample_name,
             "version": __version__,
             "technology": "single-cell-pna",
-            "panel_name": panel.name,
-            "panel_version": panel.version,
         }
 
         nodes_to_remove = _find_nodes_to_remove(
@@ -396,7 +407,7 @@ def sample_calling(
                 {
                     "hashed_marker": hashed_markers,
                     "base_marker": [
-                        re.sub(r"-\d+$", "", marker) for marker in hashed_markers
+                        collapsed_hashing_marker_id(marker) for marker in hashed_markers
                     ],
                 }
             )
@@ -404,8 +415,12 @@ def sample_calling(
 
             marker_1_sql = "COALESCE(hm1.base_marker, e.marker_1) AS marker_1"
             marker_2_sql = "COALESCE(hm2.base_marker, e.marker_2) AS marker_2"
+            edgelist_columns = {
+                row[0] for row in con.execute("DESCRIBE edgelist").fetchall()
+            }
+            uei_count_sql = "e.uei_count, " if "uei_count" in edgelist_columns else ""
             select_cols = (
-                "e.umi1, e.umi2, e.read_count, e.uei_count, "
+                f"e.umi1, e.umi2, e.read_count, {uei_count_sql}"
                 f"{marker_1_sql}, {marker_2_sql}, e.component"
             )
 
@@ -437,6 +452,7 @@ def sample_calling(
 
             with PixelFileWriter(target_path) as pxl_file_writer:
                 pxl_file_writer.write_metadata(metadata)
+                pxl_file_writer.write_panel(panel)
                 pxl_file_writer.write_edgelist(Path(tmp_edgelist_parquet.name))
                 pxl_file_writer.write_adata(adata)
             output_files.append(target_path)

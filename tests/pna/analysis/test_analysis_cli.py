@@ -1,67 +1,57 @@
 """Copyright © 2025 Pixelgen Technologies AB."""
 
-import tempfile
-from pathlib import Path
+import shutil
 
-import pytest
 from click.testing import CliRunner
 
 from pixelator import cli
 from pixelator.pna.pixeldataset import read
 
 
-@pytest.mark.slow
-def test_runs_ok(mocker, pna_data_root):
-    """Verify runs ok.
+def test_runs_ok(synthetic_analysis_pxl_file, tmp_path):
+    """The analysis command adds proximity, SVD and k-core results to the pxl file.
 
     Args:
-        mocker: mocker.
-        pna_data_root: pna data root.
+        synthetic_analysis_pxl_file: synthetic analysis pxl file.
+        tmp_path: tmp path.
     """
-    runner = CliRunner()
+    # The output file name is derived from the input file name, so the input is
+    # copied under the name of a real layout file.
+    input_pxl = tmp_path / "PNA055_Sample07_S7.layout.pxl"
+    shutil.copy(synthetic_analysis_pxl_file, input_pxl)
+    output_dir = tmp_path / "output"
 
-    # Picking a two components here to run to speed up the computations...
-    def downsample_read():
-        def f(paths):
-            pxl_dataset = read(paths)
-            single_component = list(pxl_dataset.components())[:2]
-            return pxl_dataset.filter(components=single_component)
+    args = [
+        "--cores",
+        "1",
+        "single-cell-pna",
+        "analysis",
+        str(input_pxl),
+        "--output",
+        str(output_dir),
+        "--compute-proximity",
+        "--compute-svd-var-explained",
+        "--svd-nbr-of-pivots",
+        "10",
+        "--compute-k-cores",
+    ]
+    result = CliRunner().invoke(cli.main_cli, args)
 
-        return f
+    assert result.exit_code == 0
 
-    mocker.patch("pixelator.pna.cli.analysis.read", new_callable=downsample_read)
+    analyzed = read(output_dir / "analysis" / "PNA055_Sample07_S7.analysis.pxl")
 
-    with tempfile.TemporaryDirectory() as d:
-        args = [
-            "--cores",
-            "1",
-            "single-cell-pna",
-            "analysis",
-            str(pna_data_root / "PNA055_Sample07_S7.layout.pxl"),
-            "--output",
-            d,
-            "--compute-proximity",
-            "--proximity-nbr-of-permutations",
-            "50",
-            "--compute-svd-var-explained",
-            "--svd-nbr-of-pivots",
-            "10",
-            "--compute-k-cores",
-        ]
-        cmd = runner.invoke(cli.main_cli, args)
+    # `--compute-proximity`
+    assert not analyzed.proximity().is_empty()
 
-        assert cmd.exit_code == 0
+    # `--compute-k-cores`
+    obs = analyzed.adata().obs
+    assert "k_core_1" in obs.columns
+    assert "k_core_2" in obs.columns
+    assert "k_core_3" in obs.columns
+    assert "average_k_core" in obs.columns
 
-        result = read(Path(d) / "analysis" / "PNA055_Sample07_S7.analysis.pxl")
-        assert not result.proximity().is_empty()
-
-        adata = result.adata()
-
-        assert "k_core_1" in adata.obs.columns
-        assert "k_core_2" in adata.obs.columns
-        assert "k_core_3" in adata.obs.columns
-        assert "average_k_core" in adata.obs.columns
-
-        assert "svd_var_expl_s1" in adata.obs.columns
-        assert "svd_var_expl_s2" in adata.obs.columns
-        assert "svd_var_expl_s3" in adata.obs.columns
+    # `--compute-svd-var-explained`
+    assert "svd_var_expl_s1" in obs.columns
+    assert "svd_var_expl_s2" in obs.columns
+    assert "svd_var_expl_s3" in obs.columns

@@ -1,8 +1,0 @@
-{
-  "cli": {
-    "command": "pixelator single-cell-mpx amplicon",
-    "options": {
-      "--output": "."
-    }
-  }
-}

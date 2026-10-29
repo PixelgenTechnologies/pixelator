@@ -9,10 +9,8 @@ import copy
 import pandas as pd
 import pytest
 
-from pixelator.common.config import (
-    RegionType,
-    get_position_in_parent,
-)
+from pixelator.common.config import AntibodyPanelMetadata
+from pixelator.pna.config.assay import PNARegionType, get_position_in_parent
 from pixelator.pna.config.config_class import (
     PNAConfig,
     load_assays_package,
@@ -20,6 +18,31 @@ from pixelator.pna.config.config_class import (
 )
 from pixelator.pna.config.config_instance import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
+
+
+def test_add_panel_rejects_multiple_sources():
+    """A config panel is one CSV, so a concatenation cannot be registered."""
+
+    def panel(name: str, marker: str, sequence: str) -> PNAAntibodyPanel:
+        frame = pd.DataFrame(
+            [
+                {
+                    "marker_id": marker,
+                    "control": False,
+                    "sequence_1": sequence,
+                    "sequence_2": sequence,
+                }
+            ]
+        ).set_index("marker_id")
+        return PNAAntibodyPanel.from_metadata(
+            frame, AntibodyPanelMetadata(name=name, version="1.0.0")
+        )
+
+    combined = PNAAntibodyPanel.concatenate(
+        [panel("base", "CD3", "AAAA"), panel("addon", "CD19", "CCCC")]
+    )
+    with pytest.raises(ValueError, match="single-source"):
+        PNAConfig().add_panel(combined)
 
 
 def test_config_creation():
@@ -78,7 +101,7 @@ def test_assay_get_regions_by_type():
 
     regions = assay.get_regions_by_type("lbs-1")
     for r in regions:
-        assert r.region_type is RegionType.LBS
+        assert r.region_type is PNARegionType.LBS
 
 
 def test_get_position_in_amplicon_pna_1():
@@ -326,6 +349,7 @@ def test_list_panel_names(pna_data_root):
             "proxiome-v2-immuno-156-FMC63-prerelease",
             "proxiome-v2-immuno-156-FMC63-v2.0",
             "proxiome-v2-immuno-156-G4S-v2.0",
+            "proxiome-v2-immuno-156-Whitlow-v2.0",
         ]
     )
 
@@ -343,6 +367,7 @@ def test_list_panel_names(pna_data_root):
         "proxiome-v2-immuno-156-FMC63-prerelease",
         "proxiome-v2-immuno-156-FMC63-v2.0",
         "proxiome-v2-immuno-156-G4S-v2.0",
+        "proxiome-v2-immuno-156-Whitlow-v2.0",
     ]
 
 
@@ -354,7 +379,7 @@ def test_loading_duplicate_aliases(config_with_multiple_versions, pna_data_root)
         pna_data_root: pna data root.
     """
     this_config = copy.deepcopy(config_with_multiple_versions)
-    from pixelator.common.config.config_class import PanelException
+    from pixelator.pna.config.config_class import PanelException
 
     with pytest.raises(PanelException):
         this_config.load_panel_file(

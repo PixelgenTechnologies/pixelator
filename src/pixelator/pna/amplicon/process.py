@@ -1,7 +1,6 @@
 """Copyright © 2024 Pixelgen Technologies AB."""
 
 import logging
-import multiprocessing as mp
 import sys
 from pathlib import Path
 from typing import Sequence
@@ -17,6 +16,7 @@ from cutadapt.modifiers import (
 from cutadapt.steps import PairedEndStep, SingleEndFilter, SingleEndSink, SingleEndStep
 from cutadapt.utils import DummyProgress, Progress
 
+from pixelator.common.utils import get_available_cpu_count
 from pixelator.common.utils.log_progress import LogProgress
 from pixelator.pna.amplicon.build_amplicon import (
     PairedEndAmpliconBuilder,
@@ -78,7 +78,7 @@ def amplicon_fastq(
     Returns:
         An `AmpliconStatistics` instance.
     """
-    threads = threads if threads > 0 else mp.cpu_count()
+    threads = threads if threads > 0 else get_available_cpu_count()
 
     if len(inputs) not in [1, 2]:
         raise ValueError("Expected one or two input files, got %s" % len(inputs))

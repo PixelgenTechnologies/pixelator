@@ -11,7 +11,21 @@ from typing import TYPE_CHECKING
 import polars as pl
 
 if TYPE_CHECKING:
+    from anndata import AnnData
+
     from pixelator.pna.config.panel import PNAAntibodyPanel
+
+
+def with_legacy_panel_columns(adata: AnnData, panel: PNAAntibodyPanel) -> AnnData:
+    """Store ``panel`` on ``adata`` the way files without panel tables do.
+
+    The panel columns go on ``var`` and the panel metadata in ``uns``. Only a
+    panel with a single source can be stored this way.
+    """
+    adata.var = adata.var.join(panel.df, how="left")
+    adata.uns["panel_metadata"] = panel.metadata.model_dump()
+    adata.uns["panel_metadata"]["panel_columns"] = list(panel.df.columns)
+    return adata
 
 
 def write_pna_pxl(
@@ -27,7 +41,7 @@ def write_pna_pxl(
     ``read_count``. Crossing edges (rows with a null ``component``) are dropped
     before the AnnData is built, so only genuine per-cell components are
     aggregated. The edge list is selected down to the pxl schema, written to the
-    file, and an AnnData with aggregate metrics is built and stored alongside it.
+    file, and an AnnData is built and stored alongside it.
 
     Args:
         edgelist: populated edge list from :func:`generate_edgelist`.
@@ -39,7 +53,6 @@ def write_pna_pxl(
         The path to the written pxl file.
     """
     from pixelator import __version__
-    from pixelator.common.annotate.aggregates import call_aggregates
     from pixelator.pna.anndata import pna_edgelist_to_anndata
     from pixelator.pna.pixeldataset.io import PixelFileWriter
 
@@ -56,13 +69,11 @@ def write_pna_pxl(
                 "sample_name": sample_name,
                 "version": __version__,
                 "technology": "single-cell-pna",
-                "panel_name": panel.name,
-                "panel_version": panel.version,
             }
         )
         writer.write_edgelist(pxl_edgelist)
         adata = pna_edgelist_to_anndata(writer.get_connection(), panel)
-        call_aggregates(adata)
+        writer.write_panel(panel)
         writer.write_adata(adata)
 
     return path

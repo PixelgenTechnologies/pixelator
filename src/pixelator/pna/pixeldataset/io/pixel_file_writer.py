@@ -7,12 +7,20 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import duckdb
 import polars as pl
 from anndata import AnnData
 
+from pixelator.pna.config.panel.tables import (
+    stored_panel_marker_columns,
+    write_panel_tables,
+)
 from pixelator.pna.utils import init_duckdb_conn
+
+if TYPE_CHECKING:
+    from pixelator.pna.config.panel import PNAAntibodyPanel
 
 
 class PixelFileWriter:
@@ -21,6 +29,11 @@ class PixelFileWriter:
     This class takes care of writing data to duckdb based pxl files.
     In addition to writing data tables it will should take care of
     creating any indexes that can be used to speed up queries downstream.
+
+    Tables with a ``component`` column (``edgelist``, ``proximity``,
+    ``layouts``) are stored sorted by ``component``, then by ``marker_1`` and
+    ``marker_2`` where those columns exist. Row order within a sort key is not
+    defined; readers that need a specific order should sort.
 
     When writing using this it is recommended to use the writer as a
     context manager.
@@ -93,28 +106,87 @@ class PixelFileWriter:
     def _write_parquet_file_to_table(
         self, table_name, edgelist_file: Path | list[Path]
     ):
+        """Materialize parquet file(s) as a table, sorted by component and markers when present.
+
+        Args:
+            table_name: Name of the table to create or replace.
+            edgelist_file: Path or list of paths to parquet file(s).
+        """
+        parquet_file = (
+            [str(f) for f in edgelist_file]
+            if isinstance(edgelist_file, list)
+            else str(edgelist_file)
+        )
+        columns = self._connection.sql(
+            "SELECT * FROM read_parquet($parquet_file) LIMIT 0",
+            params={"parquet_file": parquet_file},
+        ).columns
+        # Sorting by component lets DuckDB skip row groups on `component`
+        # filters via per-row-group min/max statistics, which matters most when
+        # the file is read remotely. Upstream joins (sample calling, denoising)
+        # scramble the order the graph step produced, so it is restored here,
+        # where every table write ends up. The marker keys do not affect
+        # pruning but make Parquet exported from the table considerably smaller.
+        sort_keys = [c for c in ("component", "marker_1", "marker_2") if c in columns]
+        order_by = f"ORDER BY {', '.join(sort_keys)}" if "component" in columns else ""
         self._connection.sql(
             f"""
             CREATE OR REPLACE TABLE {table_name} AS
-            SELECT * FROM read_parquet($parquet_file);
+            SELECT * FROM read_parquet($parquet_file)
+            {order_by};
             """,
-            params={
-                "parquet_file": [str(f) for f in edgelist_file]
-                if isinstance(edgelist_file, list)
-                else str(edgelist_file)
-            },
+            params={"parquet_file": parquet_file},
         )
+
+    def _assert_single_sample(self, edgelist: Path | pl.DataFrame) -> None:
+        """Ensure that the ``sample`` column, if present, has a single unique value.
+
+        Args:
+            edgelist: The path to the edgelist parquet file, or a DataFrame.
+
+        Raises:
+            ValueError: If the edgelist contains a ``sample`` column with more
+                than one unique value.
+        """
+        if isinstance(edgelist, Path):
+            columns = self._connection.sql(
+                "SELECT * FROM read_parquet($parquet_file) LIMIT 0",
+                params={"parquet_file": str(edgelist)},
+            ).columns
+            if "sample" not in columns:
+                return
+            samples = (
+                self._connection.sql(
+                    'SELECT DISTINCT "sample" FROM read_parquet($parquet_file)',
+                    params={"parquet_file": str(edgelist)},
+                )
+                .pl()["sample"]
+                .to_list()
+            )
+        else:
+            if "sample" not in edgelist.columns:
+                return
+            samples = edgelist["sample"].unique().to_list()
+
+        if len(samples) > 1:
+            raise ValueError(
+                f"Edgelist contains data for multiple samples ({samples}), "
+                "but a PXL file may only contain a single sample."
+            )
 
     def write_edgelist(self, edgelist: Path | pl.DataFrame) -> None:
         """Write the edgelist to the PXL file.
 
         Args:
             edgelist: The path to the edgelist parquet file.
+
+        Raises:
+            ValueError: If the edgelist contains data for more than one sample.
         """
+        self._assert_single_sample(edgelist)
         if isinstance(edgelist, Path):
             self._write_parquet_file_to_table("edgelist", edgelist)
             return
-
         try:
             with tempfile.NamedTemporaryFile(suffix=".parquet") as f:
                 file_path = Path(f.name)
@@ -134,15 +206,34 @@ class PixelFileWriter:
     def write_adata(self, adata: AnnData) -> None:
         """Write the AnnData object to the PXL file.
 
+        When the panel tables are already on this file, the marker columns
+        stored there and ``uns["panel_metadata"]`` are left out. Reading the
+        file joins the panel columns back onto ``var``.
+
         Args:
             adata: The AnnData object to write.
+
+        Raises:
+            ValueError: If ``adata.obs`` contains data for more than one sample.
         """
+        if "sample" in adata.obs.columns:
+            samples = adata.obs["sample"].unique().tolist()
+            if len(samples) > 1:
+                raise ValueError(
+                    f"`adata.obs` contains data for multiple samples ({samples}), "
+                    "but a PXL file may only contain a single sample."
+                )
+
         self._clean_existing_adata_tables()
 
         X = adata.to_df().reset_index(names="index")
         var = adata.var.reset_index(names="index")
-        obs = adata.obs.reset_index(names="index")
         uns = adata.uns
+        panel_columns = stored_panel_marker_columns(self._connection)
+        if panel_columns:
+            var = var.drop(columns=[c for c in var.columns if c in panel_columns])
+            uns = {key: uns[key] for key in uns if key != "panel_metadata"}
+        obs = adata.obs.reset_index(names="index")
 
         self._connection.sql(
             """
@@ -163,6 +254,16 @@ class PixelFileWriter:
                 CREATE TABLE __adata__obsm_{key} AS SELECT * FROM obsm_layer;
                 """,
             )
+
+    def write_panel(self, panel: PNAAntibodyPanel) -> None:
+        """Write the ``panels`` and ``panel_sources`` tables for ``panel``.
+
+        Any panel tables already in the file are replaced.
+
+        Args:
+            panel: The antibody panel to store.
+        """
+        write_panel_tables(self._connection, panel)
 
     def write_metadata(self, metadata: dict) -> None:
         """Write the metadata to the PXL file.

@@ -18,8 +18,6 @@ author = "Pixelgen Technologies"
 
 nitpicky = True
 nitpick_ignore_regex = [
-    # --- MPX excluded ---
-    (r"py:.*", r"pixelator\.mpx\..*"),
     # --- Unable to resolve intersphinx inventory ---
     (r"py:.*", r"polars\..*"),
     (r"py:.*", r"cutadapt\..*"),
@@ -84,8 +82,6 @@ autoapi_root = "api/generated"
 autoapi_add_toctree_entry = False
 
 autoapi_ignore = [
-    "*/pixelator/mpx/*",
-    "*/pixelator/mpx/**/*",
     "*/pixelator/cli/*",
     "*/pixelator/cli/**/*",
     "*/pixelator/pna/cli/*",

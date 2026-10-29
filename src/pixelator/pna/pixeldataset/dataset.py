@@ -7,16 +7,22 @@ from __future__ import annotations
 
 import copy
 import json
+import warnings
 from functools import cache
 from pathlib import Path
 from typing import Iterable
 
 from anndata import AnnData
 
+from pixelator.common.graph.backends.protocol import (
+    DEFAULT_LAYOUT_ALGORITHM,
+    SupportedLayoutAlgorithm,
+)
 from pixelator.pna.pixeldataset.config import PixelDatasetConfig
 from pixelator.pna.pixeldataset.edgelist import Edgelist
 from pixelator.pna.pixeldataset.io import PixelDataViewer, PxlFile, Query
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
+from pixelator.pna.pixeldataset.layouts import Layouts
 from pixelator.pna.pixeldataset.precomputed_layouts import PreComputedLayouts
 from pixelator.pna.pixeldataset.proximity import Proximity
 from pixelator.pna.utils import normalize_input_to_set
@@ -85,6 +91,7 @@ class PNAPixelDataset:
         | PxlFile
         | dict[str, Path],
         config: PixelDatasetConfig | None = None,
+        force: bool = False,
     ) -> PNAPixelDataset:
         """Alias for `from_pxl_files`.
 
@@ -92,8 +99,9 @@ class PNAPixelDataset:
             pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a
                 dictionary with sample names as keys and paths as values.
             config: The configuration for the dataset.
+            force: Load files with conflicting markers, with a warning, instead of raising.
         """
-        return PNAPixelDataset.from_pxl_files(pxl_files, config)
+        return PNAPixelDataset.from_pxl_files(pxl_files, config, force=force)
 
     @staticmethod
     def from_pxl_files(
@@ -103,6 +111,7 @@ class PNAPixelDataset:
         | PxlFile
         | dict[str, Path],
         config: PixelDatasetConfig | None = None,
+        force: bool = False,
     ) -> PNAPixelDataset:
         """Create a new PixelDataset from one or more .pxl files.
 
@@ -115,42 +124,38 @@ class PNAPixelDataset:
             pxl_files: The .pxl files to include in the dataset. Can be a list of paths or a
                 dictionary with sample names as keys and paths as values.
             config: The configuration for the dataset.
+            force: Load files whose antibody panels have conflicting markers, with a
+                warning, instead of raising.
+
+        Raises:
+            PanelConflictError: If the antibody panels of the files have conflicting
+                markers and ``force`` is not set.
         """
         if isinstance(pxl_files, Path):
-            return PNAPixelDataset(
-                PixelDataViewer.from_files(pxl_files=[PxlFile(pxl_files)]),
-                config=config,
+            view = PixelDataViewer.from_files([PxlFile(pxl_files)], force=force)
+        elif isinstance(pxl_files, dict):
+            view = PixelDataViewer.from_sample_to_file_mappings(
+                {k: PxlFile(v) for k, v in pxl_files.items()}, force=force
+            )
+        elif isinstance(pxl_files, PxlFile):
+            view = PixelDataViewer.from_files([pxl_files], force=force)
+        else:
+            pxl_files = list(pxl_files)  # type: ignore
+            # Either you are a PxlFile, then let's go! Or we will assume you are
+            # a path and try that.
+            view = PixelDataViewer.from_files(
+                [
+                    f if isinstance(f, PxlFile) else PxlFile(f)  # type: ignore
+                    for f in pxl_files
+                ],
+                force=force,
             )
 
-        if isinstance(pxl_files, dict):
-            return PNAPixelDataset(
-                PixelDataViewer.from_sample_to_file_mappings(
-                    {k: PxlFile(v) for k, v in pxl_files.items()}
-                ),
-                config=config,
-            )
-
-        if isinstance(pxl_files, PxlFile):
-            return PNAPixelDataset(
-                PixelDataViewer.from_files(pxl_files=[pxl_files]),
-                config=config,
-            )
-
-        pxl_files = list(pxl_files)  # type: ignore
-        # Either you are a PxlFile, then let's go!
-        if all(isinstance(f, PxlFile) for f in pxl_files):
-            return PNAPixelDataset(
-                view=PixelDataViewer.from_files(pxl_files),  # type: ignore
-                config=config,
-            )
-
-        # Or we will assume you are path and try that!
-        return PNAPixelDataset(
-            view=PixelDataViewer.from_files(
-                pxl_files=[PxlFile(f) for f in pxl_files]  # type: ignore
-            ),
-            config=config,
-        )
+        # The view aligns the panels lazily. Do it now, so that conflicting
+        # markers are reported when loading rather than at the first query.
+        if len(view.sample_names()) > 1:
+            view.marker_renames()
+        return PNAPixelDataset(view, config=config)
 
     def sample_names(self) -> set[str]:
         """Return the set of sample names in the project."""
@@ -208,6 +213,8 @@ class PNAPixelDataset:
         """Return the AnnData instance for the dataset.
 
         This will be filtered to only include the active samples, components, and markers.
+        ``uns`` has no ``panel_metadata``, whichever pixelator version wrote the files.
+        Read the panel with :meth:`~pixelator.pna.pixeldataset.io.pxl_file.PxlFile.read_panel`.
 
         Args:
             add_log1p_transform: If True, add the log1p transformation to the data.
@@ -216,10 +223,15 @@ class PNAPixelDataset:
         Returns:
             The AnnData instance for the dataset.
         """
-        return self._adata_helper.read_adata(
+        adata = self._adata_helper.read_adata(
             add_log1p_transform=add_log1p_transform,
             add_clr_transform=add_clr_transform,
         )
+        # Older files keep the panel in uns, newer ones do not. Drop it here, and
+        # not in the helper, since a file rewritten from the helper's AnnData
+        # would otherwise lose the panel it stores there.
+        adata.uns.pop("panel_metadata", None)
+        return adata
 
     def edgelist(
         self,
@@ -271,6 +283,11 @@ class PNAPixelDataset:
     ) -> PreComputedLayouts:
         """Return the PreComputedLayouts instance for the dataset.
 
+        .. deprecated:: Unreleased
+            Use :meth:`layouts` to compute Layouts on the fly instead. This
+            method still reads a stored ``layouts`` table when one exists, and
+            will be removed in a future release.
+
         Args:
             add_marker_counts: If True, add the marker counts to the precomputed layouts.
             add_spherical_norm: If True, add spherical coordinates to dataframe This will be
@@ -279,12 +296,76 @@ class PNAPixelDataset:
         Returns:
             The PreComputedLayouts instance for the dataset.
         """
+        warnings.warn(
+            "precomputed_layouts() is deprecated; use layouts() to compute "
+            "Layouts on the fly. In the future this method will be removed.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return PreComputedLayouts(
             self.view,
             components=self._active_components,
             adata_helper=self._adata_helper,
             add_marker_counts=add_marker_counts,
             add_spherical_norm=add_spherical_norm,
+        )
+
+    def layouts(
+        self,
+        algorithm: SupportedLayoutAlgorithm = DEFAULT_LAYOUT_ALGORITHM,
+        add_marker_counts: bool = True,
+        add_spherical_norm: bool = False,
+        random_seed: int | None = None,
+        **kwargs,
+    ) -> Layouts:
+        """Return Layouts for the active Components.
+
+        A Layout places each node of a Component graph in 2D or 3D so
+        you can visualize the cell and for example color nodes by marker.
+        Computation runs when you materialize the result (for example
+        :meth:`~pixelator.pna.pixeldataset.layouts.Layouts.to_df`).
+        This replaces the deprecated :meth:`precomputed_layouts`.
+
+        Choose a Layout algorithm with ``algorithm``. The default
+        ``coarsened_pmds_3d`` is the usual choice for PNA: it is fast on large
+        Components and produces a 3D Layout suitable for plotting.
+
+        Available Layout algorithms:
+
+        - ``coarsened_pmds_3d`` (default): 3D layout algorithm that uses a
+          pre-coarsening step. Fast and robust to structural artifacts.
+        - ``wpmds_3d``: 3D weighted PMDS; a good alternative when you want a
+          full (non-coarsened) PMDS Layout.
+        - ``pmds`` / ``pmds_3d``: 2D or 3D PMDS without coarsening.
+        - ``spectral_3d``: 3D spectral Layout. Extremely fast, generates high
+          quality layouts but can be sensitive to structural artifacts.
+
+        For most cases prefer ``coarsened_pmds_3d``, ``wpmds_3d``, or ``pmds`` (in that order).
+
+        .. code-block:: python
+
+                df = pxl_dataset.filter(components=component_id).layouts().to_df()
+
+        Args:
+            algorithm: Layout algorithm to use. Defaults to
+                ``DEFAULT_LAYOUT_ALGORITHM`` (``coarsened_pmds_3d``).
+            add_marker_counts: If True, add per-node marker counts.
+            add_spherical_norm: If True, add spherical unit-vector columns.
+            random_seed: Seed for Layout algorithms with a stochastic element.
+            **kwargs: Forwarded to the underlying Layout algorithm.
+
+        Returns:
+            A Layouts collection for the active Components.
+        """
+        return Layouts(
+            self.view,
+            components=self._active_components,
+            adata_helper=self._adata_helper,
+            algorithm=algorithm,
+            add_marker_counts=add_marker_counts,
+            add_spherical_norm=add_spherical_norm,
+            random_seed=random_seed,
+            algorithm_kwargs=kwargs,
         )
 
     def metadata(
@@ -317,7 +398,7 @@ class PNAPixelDataset:
         """Filter the dataset to only include the specified samples, components, and markers.
 
         Filtering by components will apply to all data modalities (i.e. adata, edgelist, proximity,
-        and precomputed layouts).
+        layouts, and precomputed layouts).
         However, filtering by markers will only apply to the adata and proximity data modalities,
         since filtering
         by markers in the edgelist and precomputed layouts will cause components to break up.

@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Tuple
 import semver
 from packaging.specifiers import SpecifierSet
 
-from pixelator.common.config.config_class import Config, PanelException
+from pixelator.common.exceptions import PixelatorBaseException
 from pixelator.common.types import PathType
 from pixelator.common.utils import logger
 from pixelator.pna.config.assay import PNAAssay
@@ -93,16 +93,23 @@ class PNAConfig:
     def add_panel(self, panel: PNAAntibodyPanel) -> None:
         """Register a panel and its lookup keys in the config.
 
-        The panel is indexed by panel name (or filename fallback), optional product,
-        and aliases.
+        The panel is indexed by panel name, optional product, and aliases.
+        Only a single-source panel can be registered. Panel CSV files are
+        one source.
 
         Args:
             panel: Panel object to add.
 
         Raises:
+            ValueError: If ``panel`` has more or fewer than one source.
             PanelException: If an alias already maps to a different panel key.
         """
-        key = panel.name if panel.name is not None else str(panel.filename)
+        if len(panel.sources) != 1:
+            raise ValueError(
+                "Only a single-source panel can be added to the config. "
+                f"Got {len(panel.sources)} sources."
+            )
+        key = panel.name
         self.panels[key].append(panel)
 
         # allow to also get panel by product name if provided in the panel file
@@ -279,24 +286,20 @@ class PNAConfig:
                 + "alias to disambiguate.",
             )
 
-        def keyfunc(p):
+        def keyfunc(p: PNAAntibodyPanel):
             """Keyfunc.
 
             Args:
-                p: p.
+                p: PNAAntibodyPanel.
+
+            Returns:
+                Parsed semantic version of the panel.
             """
             version = p.version
-            if version is None:
-                v = semver.Version.parse("0.0.0")
-
-            v = semver.Version.parse(version)
-            return v
+            return semver.Version.parse(version)
 
         panels_with_key = sorted(panels_with_key, key=keyfunc, reverse=True)
         return panels_with_key[0]
-
-
-ConfigType = typing.TypeVar("ConfigType", Config, PNAConfig)
 
 
 # Keep resource files materialized by ``importlib.resources.as_file`` alive for the
@@ -309,7 +312,7 @@ _resource_file_stack = ExitStack()
 atexit.register(_resource_file_stack.close)
 
 
-def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
+def load_assays_package(config: PNAConfig, package_name: str) -> PNAConfig:
     """Load default assays from a resources package.
 
     Args:
@@ -328,7 +331,7 @@ def load_assays_package(config: ConfigType, package_name: str) -> ConfigType:
     return config
 
 
-def load_panels_package(config: ConfigType, package_name: str) -> ConfigType:
+def load_panels_package(config: PNAConfig, package_name: str) -> PNAConfig:
     """Load default panels from a resources package.
 
     Args:
@@ -398,3 +401,9 @@ def parse_versioned_panel_name(panel_name: str) -> Tuple[Optional[str], Optional
         specified_version = None
 
     return version_stripped_name, specified_version
+
+
+class PanelException(PixelatorBaseException):
+    """Exception raised for failures to load a panel into the global configuration."""
+
+    pass

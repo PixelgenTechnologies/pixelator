@@ -73,7 +73,9 @@ class TestPixelDataViewerQueries:
             lazy = session.execute_lazy(builder.edgelist_query(None))
             assert isinstance(lazy, pl.LazyFrame)
             results = lazy.collect()
-        assert_frame_equal(results, _with_sample(edgelist_dataframe))
+        assert_frame_equal(
+            results, _with_sample(edgelist_dataframe), check_row_order=False
+        )
 
     def test_read_edgelist_filter(self, pxl_view, edgelist_dataframe):
         """Verify read edgelist filter.
@@ -93,6 +95,7 @@ class TestPixelDataViewerQueries:
             _with_sample(
                 edgelist_dataframe.filter(pl.col("component") == components[0])
             ),
+            check_row_order=False,
         )
 
     def test_read_edgelist_len(self, pxl_view):
@@ -133,7 +136,9 @@ class TestPixelDataViewerQueries:
                     batch_size=1_000_000,
                 )
             )
-        assert_frame_equal(result, _with_sample(edgelist_dataframe))
+        assert_frame_equal(
+            result, _with_sample(edgelist_dataframe), check_row_order=False
+        )
 
     def test_read_proximity(self, pxl_view, proximity_dataframe):
         """Verify read proximity.
@@ -147,7 +152,9 @@ class TestPixelDataViewerQueries:
             lazy = session.execute_lazy(builder.proximity_query(None, None))
             assert isinstance(lazy, pl.LazyFrame)
             results = lazy.collect()
-        assert_frame_equal(results, _with_sample(proximity_dataframe))
+        assert_frame_equal(
+            results, _with_sample(proximity_dataframe), check_row_order=False
+        )
 
     def test_read_proximity_filter(self, pxl_view, proximity_dataframe):
         """Verify read proximity filter.
@@ -168,6 +175,7 @@ class TestPixelDataViewerQueries:
                 proximity_dataframe.filter(pl.col("component") == components[0])
             ),
             check_column_order=False,
+            check_row_order=False,
         )
 
     def test_read_proximity_len(self, pxl_view):
@@ -213,7 +221,7 @@ class TestPixelDataViewerQueries:
                 builder.layouts_query(components=None, add_marker_counts=True),
             )
         result_df = _pivot_marker_table(result_df).drop(["umi", "marker"], strict=False)
-        result_df = result_df.sort("component").select(sorted(result_df.columns))
+        result_df = result_df.select(sorted(result_df.columns)).sort(pl.all())
 
         result = StringIO()
         result_df.write_csv(result)

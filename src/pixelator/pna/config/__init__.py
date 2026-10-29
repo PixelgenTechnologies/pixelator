@@ -14,11 +14,12 @@ from pixelator.pna.config.assay import (
     SequenceType,
     get_position_in_parent,
 )
-from pixelator.pna.config.config_class import Config, load_assays_package
+from pixelator.pna.config.config_class import load_assays_package
 from pixelator.pna.config.config_instance import pna_config
 from pixelator.pna.config.panel import (
     PNAAntibodyPanel,
     load_antibody_panel,
+    load_antibody_panels,
 )
 
 __all__ = [
@@ -29,11 +30,11 @@ __all__ = [
     "PNAAssay",
     "Region",
     "get_position_in_parent",
-    "Config",
     "pna_config",
     "load_assays_package",
     "load_yaml_file",
     "PNAAntibodyPanel",
     "AntibodyPanelMetadata",
     "load_antibody_panel",
+    "load_antibody_panels",
 ]

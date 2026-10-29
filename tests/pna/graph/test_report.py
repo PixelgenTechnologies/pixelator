@@ -100,9 +100,6 @@ def test_graph_sample_report():
         },
         median_reads_per_component=295,
         median_markers_per_component=12,
-        aggregate_count=3,
-        read_count_in_aggregates=123,
-        edge_count_in_aggregates=456,
     )
 
     assert report.component_count_pre_recovery == 10
@@ -130,10 +127,6 @@ def test_graph_sample_report():
     }
     assert report.median_reads_per_component == 295
     assert report.median_markers_per_component == 12
-    assert report.aggregate_count == 3
-    assert report.read_count_in_aggregates == 123
-    assert report.edge_count_in_aggregates == 456
-    assert report.fraction_of_aggregate_components == 0.5
     assert report.molecules_post_read_count_filtering == 1900
     assert report.reads_post_read_count_filtering == 1900
     assert report.reads_input == 2000
@@ -186,8 +179,5 @@ def test_graph_sample_report_to_json(snapshot):
         },
         median_reads_per_component=295,
         median_markers_per_component=12,
-        aggregate_count=100,
-        read_count_in_aggregates=123,
-        edge_count_in_aggregates=456,
     )
     snapshot.assert_match(report.to_json(indent=4), "graph_sample_report.json")

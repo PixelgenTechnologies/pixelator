@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
+import polars as pl
+import pyarrow as pa
 import pytest
 
 from pixelator.pna.cli.collapse import process_independent_files
@@ -61,6 +63,28 @@ class TestRegionCollapserInternals:
         umi2_seq2 = unpack_2bits(self.collapser._umi2_data[0], 28)
 
         assert umi2_seq == umi2_seq2
+
+    def test_read_count_schema_is_uint32(self):
+        """Both output schemas store read_count as uint32, including counts above 65535."""
+        assert self.collapser._umi1_schema.field("read_count").type == pa.uint32()
+        assert self.collapser._umi2_schema.field("read_count").type == pa.uint32()
+
+        overflow_count = 92117
+        table = pa.table(
+            {
+                "marker_1": ["CD8"],
+                "marker_2": ["CD4"],
+                "read_count": pa.array([overflow_count], type=pa.int64()),
+                "original_umi1": pa.array([1], type=pa.uint64()),
+                "original_umi2": pa.array([2], type=pa.uint64()),
+                "uei": pa.array([3], type=pa.uint64()),
+                "corrected_umi1": pa.array([1], type=pa.uint64()),
+            }
+        )
+
+        casted = table.cast(self.collapser._output_schema)
+        assert casted.schema.field("read_count").type == pa.uint32()
+        assert casted.column("read_count").to_pylist() == [overflow_count]
 
 
 def _fake_allocate_array(self, name, shape, dtype, zero_init=True):
@@ -152,6 +176,36 @@ class TestSharedMemoryWarnings:
         assert "insufficient" in caplog.text
         assert "Bus error" in caplog.text
         assert "docker run --shm-size=4g" in caplog.text or "shm_size" in caplog.text
+
+    @patch(
+        "pixelator.pna.collapse.independent.shared_memory_registry"
+        ".SharedMemoryRegistry.allocate_array",
+        _fake_allocate_array,
+    )
+    @patch(f"{COLLAPSER_MODULE}._get_shm_available_bytes", return_value=None)
+    def test_unique_umi_weights_are_uint32(self, _mock_shm_available, umi1_partition):
+        """Per-UMI weights are uint32 and keep a count above 65535."""
+        overflow_count = 92117
+        counts = np.asarray(umi1_partition["read_count"], dtype=np.uint32)
+        counts[0] = overflow_count
+        data = umi1_partition.with_columns(pl.Series("read_count", counts))
+
+        assay = pna_config.get_assay("proxiome-v1")
+        panel = pna_config.get_panel("proxiome-v1-immuno-155-v1.1")
+        collapser = RegionCollapser(
+            assay=assay,
+            panel=panel,
+            region_id="umi-1",
+            threads=1,
+            max_mismatches=1,
+        )
+        with collapser as c:
+            with c._init_shared_memory(data) as (_, read_counts):
+                expected = np.zeros(len(read_counts), dtype=np.uint32)
+                np.add.at(expected, c._db_to_molecule_idx, counts)
+                assert read_counts.dtype == np.uint32
+                np.testing.assert_array_equal(read_counts, expected)
+                assert int(read_counts.max()) >= overflow_count
 
 
 @pytest.mark.slow

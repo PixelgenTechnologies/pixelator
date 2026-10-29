@@ -6,11 +6,40 @@ Copyright © 2025 Pixelgen Technologies AB.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sized
+from typing import Mapping, Sized
 
 from pixelator.pna.analysis.analytical_proximity_query_helper import (
     jcs_with_analytical_stats,
 )
+
+
+def quote_identifier(name: str) -> str:
+    """Return ``name`` as a quoted SQL identifier."""
+    return '"' + name.replace('"', '""') + '"'
+
+
+def marker_rename_expression(column: str, renames: Mapping[str, str]) -> str:
+    """Return a ``REPLACE`` entry that renames the marker ids in ``column``."""
+
+    def literal(value: str) -> str:
+        return "'" + value.replace("'", "''") + "'"
+
+    cases = " ".join(
+        f"WHEN {literal(old)} THEN {literal(new)}" for old, new in renames.items()
+    )
+    column = quote_identifier(column)
+    return f"CASE {column} {cases} ELSE {column} END AS {column}"
+
+
+def _rename_columns(renames: Mapping[str, str] | None) -> str:
+    """Return a ``RENAME`` clause for ``SELECT *``, empty when there is nothing to rename."""
+    if not renames:
+        return ""
+    pairs = ", ".join(
+        f"{quote_identifier(old)} AS {quote_identifier(new)}"
+        for old, new in renames.items()
+    )
+    return f" RENAME ({pairs})"
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,14 +93,21 @@ class QueryBuilder:
         self,
         db_name: str,
         components: list[str] | None = None,
+        column_renames: Mapping[str, str] | None = None,
     ) -> Query:
         """Build AnnData X query for a single underlying sample DB.
 
         Note: marker filtering is intentionally not pushed down into SQL (column
         selection); consumers can filter markers in-memory after materialization.
+
+        Args:
+            db_name: The attached database of the sample.
+            components: Components to keep, or None for all.
+            column_renames: ``stored column -> new column``. Every stored column
+                must exist in the table.
         """
         return Query(
-            sql=f"""SELECT * FROM {db_name}.__adata__X
+            sql=f"""SELECT *{_rename_columns(column_renames)} FROM {db_name}.__adata__X
                     WHERE {self._optimized_where_condition("index", "components", components)}
                 """,
             params=self._normalize_list_param("components", components),
@@ -81,10 +117,14 @@ class QueryBuilder:
         self,
         db_name: str,
         components: list[str] | None = None,
+        column_renames: Mapping[str, str] | None = None,
     ) -> Query:
-        """Build AnnData obs query for a single underlying sample DB."""
+        """Build AnnData obs query for a single underlying sample DB.
+
+        ``column_renames`` is ``stored column -> new column``, see :meth:`adata_X_query`.
+        """
         return Query(
-            sql=f"""SELECT * FROM {db_name}.__adata__obs
+            sql=f"""SELECT *{_rename_columns(column_renames)} FROM {db_name}.__adata__obs
                     WHERE {self._optimized_where_condition("index", "components", components)}
                 """,
             params=self._normalize_list_param("components", components),
@@ -94,13 +134,40 @@ class QueryBuilder:
         self,
         db_name: str,
         markers: list[str] | None = None,
+        marker_renames: Mapping[str, str] | None = None,
     ) -> Query:
-        """Build AnnData var query for a single underlying sample DB."""
+        """Build AnnData var query for a single underlying sample DB.
+
+        With ``marker_renames`` (``stored marker id -> new marker id``) the marker
+        ids are renamed before ``markers`` is applied, so ``markers`` are new ids.
+        """
+        where = self._optimized_where_condition("index", "markers", markers)
+        if marker_renames:
+            var_table = (
+                f"(SELECT * REPLACE ({marker_rename_expression('index', marker_renames)})"
+                f" FROM {db_name}.__adata__var)"
+            )
+        else:
+            var_table = f"{db_name}.__adata__var"
         return Query(
-            sql=f"""SELECT * FROM {db_name}.__adata__var
-                    WHERE {self._optimized_where_condition("index", "markers", markers)}
+            sql=f"""SELECT * FROM {var_table}
+                    WHERE {where}
                 """,
             params=self._normalize_list_param("markers", markers),
+        )
+
+    def table_columns_query(self, table: str) -> Query:
+        """Build a query listing the column names of a table, as ``column_name``."""
+        return Query(
+            sql=f"SELECT column_name FROM (DESCRIBE SELECT * FROM {table})",
+            params={},
+        )
+
+    def panel_markers_query(self, db_name: str) -> Query:
+        """Build a query for the stored panel markers of a single sample DB."""
+        return Query(
+            sql=f"SELECT * FROM {db_name}.panels ORDER BY row_nr",
+            params={},
         )
 
     def adata_uns_query(self, db_name: str) -> Query:
@@ -122,11 +189,15 @@ class QueryBuilder:
         db_name: str,
         table_name: str,
         components: list[str] | None = None,
+        column_renames: Mapping[str, str] | None = None,
     ) -> Query:
-        """Build AnnData obsm query for a given obsm table in a sample DB."""
+        """Build AnnData obsm query for a given obsm table in a sample DB.
+
+        ``column_renames`` is ``stored column -> new column``, see :meth:`adata_X_query`.
+        """
         qualified = table_name if "." in table_name else f"{db_name}.main.{table_name}"
         return Query(
-            sql=f"""SELECT * FROM {qualified}
+            sql=f"""SELECT *{_rename_columns(column_renames)} FROM {qualified}
                     WHERE {self._optimized_where_condition("index", "components", components)}
                 """,
             params=self._normalize_list_param("components", components),

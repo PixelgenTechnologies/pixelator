@@ -6,7 +6,6 @@ Copyright © 2024 Pixelgen Technologies AB.
 import dataclasses
 import logging
 import math
-import multiprocessing
 import os
 import time
 import typing
@@ -26,6 +25,7 @@ import pyarrow.compute
 import pyarrow.parquet
 import pydantic
 
+from pixelator.common.utils import get_available_cpu_count
 from pixelator.pna.collapse.adjacency import (
     build_network_cluster,
     build_network_directional,
@@ -364,7 +364,7 @@ class RegionCollapser:
         fields=[
             pa.field("marker_1", pa.large_string()),
             pa.field("marker_2", pa.large_string()),
-            pa.field("read_count", pa.uint16()),
+            pa.field("read_count", pa.uint32()),
             pa.field("original_umi1", pa.uint64()),
             pa.field("original_umi2", pa.uint64()),
             pa.field("uei", pa.uint64()),
@@ -375,7 +375,7 @@ class RegionCollapser:
         fields=[
             pa.field("marker_1", pa.large_string()),
             pa.field("marker_2", pa.large_string()),
-            pa.field("read_count", pa.uint16()),
+            pa.field("read_count", pa.uint32()),
             pa.field("original_umi1", pa.uint64()),
             pa.field("original_umi2", pa.uint64()),
             pa.field("uei", pa.uint64()),
@@ -489,7 +489,7 @@ class RegionCollapser:
     @cached_property
     def _effective_threads(self):
         if self.threads <= -1:
-            return multiprocessing.cpu_count() + 1 - abs(self.threads)
+            return get_available_cpu_count() + 1 - abs(self.threads)
 
         return self.threads
 
@@ -566,7 +566,7 @@ class RegionCollapser:
         db: A 2D array of uint8 with shape (num_unique_umis, 12) containing the unique umis
             Each row is a 12-byte binary vector representing a unique umi.
 
-        read_counts: A 1D array of uint64 with shape (num_unique_umis) containing the read counts
+        read_counts: A 1D array of uint32 with shape (num_unique_umis) containing the read counts
         """
         # Inputs are 3 bit encoded UMI sequences
         # For the current 28 bases UMIs this results in 28/8 * 3 = 11 bytes per UMI
@@ -580,7 +580,7 @@ class RegionCollapser:
         # Warn when required shared memory exceeds available (avoids Bus error in Docker).
         shm_bytes = (
             num_unique_umis * (vector_length * np.dtype(np.uint8).itemsize)
-            + num_unique_umis * np.dtype(np.uint16).itemsize
+            + num_unique_umis * np.dtype(np.uint32).itemsize
         )
         available = _get_shm_available_bytes()
         logger.debug(
@@ -606,15 +606,16 @@ class RegionCollapser:
             db[idx, 0 : len(umi)] = np.frombuffer(umi, dtype=np.uint8)
 
         read_counts = self._memory.allocate_array(
-            "read_counts", shape=(num_unique_umis,), dtype=np.uint16, zero_init=False
+            "read_counts", shape=(num_unique_umis,), dtype=np.uint32, zero_init=True
         )
 
         # Sum the read counts for all molecules that map to the same unique umi.
-        # These read_counts are than used as weights in the network based deduplication.
-        read_counts[:] = np.bincount(
+        # These read_counts are then used as weights in the network based deduplication.
+        # Stored as uint32, matching the output read_count column.
+        np.add.at(
+            read_counts,
             self._db_to_molecule_idx,
-            weights=data["read_count"],
-            minlength=num_unique_umis,
+            np.asarray(data["read_count"], dtype=np.uint32),
         )
 
         yield db, read_counts

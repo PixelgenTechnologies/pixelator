@@ -6,8 +6,9 @@ Copyright © 2026 Pixelgen Technologies AB.
 import polars as pl
 import pytest
 
+from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config import pna_config
-from pixelator.pna.config.panel import load_antibody_panel
+from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.pixeldataset import read
 from tests.common.data_generator import (
     generate_edgelist,
@@ -93,20 +94,52 @@ def test_write_pna_pxl_components(written_pxl, generated_edgelist):
 
 
 def test_write_pna_pxl_adata_metrics(written_pxl):
-    """Aggregate metrics from call_aggregates and the rebuild are present."""
-    obs = read(written_pxl).adata().obs
+    """The rebuilt AnnData excludes retired Tau metrics."""
+    adata = read(written_pxl).adata()
+    obs = adata.obs
 
-    assert "tau_type" in obs.columns
     assert "isotype_fraction" in obs.columns
     assert "n_edges" in obs.columns
 
 
 def test_write_pna_pxl_metadata(written_pxl, real_panel):
-    """Metadata records the sample name, technology and panel identity."""
-    metadata = read(written_pxl).metadata()
+    """Sample metadata does not duplicate the stored panel."""
+    dataset = read(written_pxl)
+    metadata = dataset.metadata()
 
     assert set(metadata) == {SAMPLE_NAME}
     entry = metadata[SAMPLE_NAME]
     assert entry["technology"] == "single-cell-pna"
-    assert entry["panel_name"] == real_panel.name
-    assert entry["panel_version"] == real_panel.version
+    assert "panel_name" not in entry
+    assert "panel_version" not in entry
+    assert PNAAntibodyPanel.from_pxl_dataset(dataset) == real_panel
+
+
+def test_write_pna_pxl_stores_a_multi_source_panel(real_panel, tmp_path):
+    """A panel concatenated from several sources survives a write and read."""
+    halves = [real_panel.df.iloc[:100], real_panel.df.iloc[100:]]
+    panel = PNAAntibodyPanel.concatenate(
+        [
+            PNAAntibodyPanel.from_metadata(
+                half,
+                AntibodyPanelMetadata(name=name, version="1.0.0", product="proxiome"),
+            )
+            for name, half in zip(["part-a", "part-b"], halves)
+        ]
+    )
+    edgelist = generate_edgelist(
+        n_cells=N_CELLS,
+        n_nodes=500,
+        n_edges=N_EDGES,
+        min_neighbors=20,
+        panel=panel,
+        n_crossing_edges=N_CROSSING_EDGES,
+        rng=0,
+    )
+
+    path = write_pna_pxl(edgelist, panel, tmp_path / "multi.pxl")
+
+    dataset = read(path)
+    assert PNAAntibodyPanel.from_pxl_dataset(dataset) == panel
+    adata = dataset.adata()
+    assert "sequence_1" in adata.var.columns
