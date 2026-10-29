@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.31.0] - 2026-10-29
 
 ### Data Analysis
 
@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Graph report now includes core-1 layer size and absorption statistics.
 - `PIXELATOR_DUCKDB_THREADS` environment variable sets the default DuckDB thread count.
 - `--panel` can be repeated to combine panels; pxl files store their panel.
+- Writing a pxl file with multiple sample identifiers raises an error.
 
 #### Changed
 - Output pxl metadata no longer has `panel_name` and `panel_version`.
@@ -57,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stale nf-core/pixelator integration tests and workflow.
 - Molecular Pixelation (MPX) support; use a release before 0.31.0 for MPX data.
 - `single-cell-pna graph_legacy` command; use `graph` instead.
+- Tau metrics and aggregate statistics from the graph report.
 
 #### Fixed
 - Independent collapse stores `read_count` as `uint32`, so a molecule with more than 65535 reads no longer fails the output cast.
