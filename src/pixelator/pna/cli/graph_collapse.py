@@ -31,6 +31,7 @@ from pixelator.pna.graph_collapse.constants import (
     DEFAULT_MAX_DEGREE,
 )
 from pixelator.pna.graph_collapse.report import GraphCollapseSampleReport
+from pixelator.pna.pixeldataset import NullPxlFileError
 from pixelator.pna.pixeldataset.io import PxlFile
 
 
@@ -156,7 +157,29 @@ def graph_collapse(
 
     logger.info(f"Trying to collapse UMI errors on low-degree nodes in file {pxl_file}")
 
-    input_dataset = read(input_pxl_file.path)
+    metrics_file = graph_collapse_output / f"{sample_name}.report.json"
+    try:
+        input_dataset = read(input_pxl_file.path)
+    except NullPxlFileError as exc:
+        # The copied null pxl file stays in the output as the pass-through result.
+        logger.warning("%s", exc)
+        GraphCollapseSampleReport(
+            sample_id=sample_name,
+            product_id="single-cell-pna",
+            component_count=0,
+            umis_input=0,
+            umis_output=0,
+            reads_input=0,
+            reads_output=0,
+            nodes_considered=0,
+            targets_found=0,
+            bfs_distance_distribution={},
+            hamming_distance_distribution={},
+            nodes_collapsed=0,
+            status="failed",
+            null_reason=exc.reason,
+        ).write_json_file(metrics_file, indent=4)
+        return
     reads_input = int(input_dataset.adata().obs["reads_in_component"].sum())
     umis_input = int(input_dataset.adata().obs["n_umi"].sum())
 
@@ -191,7 +214,6 @@ def graph_collapse(
                     f"{row['corrected_sequence']}\n"
                 )
 
-    metrics_file = graph_collapse_output / f"{sample_name}.report.json"
     report = GraphCollapseSampleReport(
         sample_id=sample_name,
         product_id="single-cell-pna",
