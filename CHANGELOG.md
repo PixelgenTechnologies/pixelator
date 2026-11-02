@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `pixelator.testing` ships synthetic data generators (edgelists, pxl files, FASTQ reads).
 
+### Data Processing
+
+#### Added
+- `single-cell-pna edgelist` builds an edgelist directly from raw FASTQ reads.
+
 ## [0.31.0] - 2026-10-29
 
 ### Data Analysis
