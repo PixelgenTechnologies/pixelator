@@ -239,3 +239,26 @@ def test_aggregate_respects_memory_limit(tmp_path: Path):
     assert result.height == n_unique
     assert result.schema == EXPECTED_SCHEMA
     assert result.equals(result.sort(["umi1", "umi2", "marker_1", "marker_2"]))
+
+
+@pytest.mark.parametrize(
+    "dir_name",
+    ["it's", 'say "hi"', "back\\slash", "tab\\tnew\\nline", "100%_{braces}"],
+)
+def test_aggregate_handles_special_characters_in_paths(tmp_path: Path, dir_name: str):
+    """Quotes, backslashes and braces in input and output paths are not interpreted."""
+    work_dir = tmp_path / dir_name
+    work_dir.mkdir()
+    input_a = work_dir / "part'a.parquet"
+    input_b = work_dir / "part\\b.parquet"
+    output_path = work_dir / "out'put" / "agg.parquet"
+
+    _write_edgelist(input_a, [("A", "B", 1, 10), ("A", "B", 1, 10)])
+    _write_edgelist(input_b, [("A", "B", 1, 10), ("C", "D", 2, 20)])
+
+    stats = aggregate_edgelist([input_a, input_b], output_path)
+
+    assert stats.input_reads == 4
+    assert stats.output_molecules == 2
+    result = pl.read_parquet(output_path).sort("umi1")
+    assert result["read_count"].to_list() == [3, 1]

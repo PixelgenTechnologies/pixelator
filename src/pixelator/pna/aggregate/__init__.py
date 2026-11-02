@@ -24,10 +24,14 @@ def _normalize_edgelist_paths(edgelist: Path | Sequence[Path]) -> list[Path]:
     return paths
 
 
-def _parquet_list_literal(paths: Sequence[Path]) -> str:
-    """Build a DuckDB list literal of parquet paths for ``read_parquet``."""
-    quoted = ", ".join(f"'{path}'" for path in paths)
-    return f"[{quoted}]"
+def _quote_sql_string(value: str | Path) -> str:
+    """Quote a string as a DuckDB literal.
+
+    Only used where DuckDB cannot bind a parameter (the ``COPY ... TO`` target).
+    In DuckDB's standard strings a single quote is escaped by doubling it and
+    backslashes are literal.
+    """
+    return "'" + str(value).replace("'", "''") + "'"
 
 
 EXPECTED_EDGELIST_SCHEMA = {
@@ -56,11 +60,11 @@ def _compute_degree_distribution(
     conn: DuckDBPyConnection, output_file: Path, umi_column: str
 ) -> OrderedDict[int, int]:
     """Histogram of molecule-edge degree for a UMI column."""
-    result = conn.sql(
+    result = conn.execute(
         f"""
         WITH umi_counts AS (
             SELECT {umi_column} AS umi, COUNT(*) AS degree
-            FROM read_parquet('{output_file}')
+            FROM read_parquet(?)
             GROUP BY {umi_column}
         ),
         umi_degree_dist AS (
@@ -69,7 +73,8 @@ def _compute_degree_distribution(
             GROUP BY degree
         )
         SELECT degree, count FROM umi_degree_dist ORDER BY degree ASC
-        """
+        """,
+        [str(output_file)],
     )
     return OrderedDict((int(degree), int(count)) for degree, count in result.fetchall())
 
@@ -138,7 +143,6 @@ def aggregate_edgelist(
     edgelist_paths = _normalize_edgelist_paths(edgelist)
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    parquet_source = _parquet_list_literal(edgelist_paths)
 
     with init_duckdb_conn(
         memory_limit=memory_limit,
@@ -149,24 +153,29 @@ def aggregate_edgelist(
             _validate_edgelist_schema(conn, path)
         conn.execute("SET preserve_insertion_order = false")
 
+        # Input and output paths must not be spliced into the SQL as-is: the inputs
+        # are bound, and DuckDB cannot bind the COPY target, so it is quoted.
         conn.execute(
             f"""
             COPY (
                 SELECT marker_1, marker_2, umi1, umi2,
                     count(*)::UINTEGER AS read_count
-                FROM read_parquet({parquet_source})
+                FROM read_parquet(?)
                 GROUP BY marker_1, marker_2, umi1, umi2
                 ORDER BY umi1, umi2, marker_1, marker_2
-            ) TO '{output}' (FORMAT parquet, CODEC 'zstd', COMPRESSION_LEVEL 6);
-            """
+            ) TO {_quote_sql_string(output)}
+            (FORMAT parquet, CODEC 'zstd', COMPRESSION_LEVEL 6);
+            """,
+            [[str(path) for path in edgelist_paths]],
         )
 
         # No filtering during aggregate, so sum(read_count) == input row count.
         counts = conn.execute(
-            f"""
-            SELECT coalesce(sum(read_count), 0)::BIGINT, count(*)
-            FROM read_parquet('{output}')
             """
+            SELECT coalesce(sum(read_count), 0)::BIGINT, count(*)
+            FROM read_parquet(?)
+            """,
+            [str(output)],
         ).fetchone()
         # An aggregate query without GROUP BY always returns exactly one row.
         assert counts is not None
