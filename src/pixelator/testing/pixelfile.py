@@ -36,7 +36,8 @@ def write_pna_pxl(
 ) -> Path:
     """Write a populated edge list to a single-cell-pna pxl file.
 
-    The edge list must have the columns produced by :func:`generate_edgelist`:
+    The edge list must have the columns produced by
+    :func:`~pixelator.testing.molecules.generate_edgelist`:
     ``umi1``, ``marker_1``, ``umi2``, ``marker_2``, ``component`` and
     ``read_count``. Crossing edges (rows with a null ``component``) are dropped
     before the AnnData is built, so only genuine per-cell components are
@@ -44,7 +45,8 @@ def write_pna_pxl(
     file, and an AnnData is built and stored alongside it.
 
     Args:
-        edgelist: populated edge list from :func:`generate_edgelist`.
+        edgelist: populated edge list from
+            :func:`~pixelator.testing.molecules.generate_edgelist`.
         panel: antibody panel providing the marker metadata.
         path: output path for the ``.pxl`` file.
         sample_name: sample name recorded in the pxl metadata.

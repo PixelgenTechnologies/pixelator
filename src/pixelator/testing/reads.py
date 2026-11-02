@@ -38,7 +38,7 @@ def write_pna_fastq(
     times or not at all, and its read depth is random rather than tied to its
     ``read_count`` (that column is not used as a sampling weight). Every edge is
     eligible, including the crossing/chimeric edges produced by
-    :func:`generate_edgelist`, so background chimeras appear in the reads.
+    :func:`~pixelator.testing.molecules.generate_edgelist`, so background chimeras appear in the reads.
 
     Each sampled edge becomes one amplicon, assembled by concatenating, in
     order: the first umi, the first marker's pid sequence (``sequence_1``), the

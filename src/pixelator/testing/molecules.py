@@ -42,7 +42,7 @@ def generate_edgelist(
 ) -> pl.DataFrame:
     """Generate a populated edge list for ``n_cells`` cells with crossing edges.
 
-    Each cell is an independent graph (see :func:`generate_cell_graph`) populated
+    Each cell is an independent graph (see :func:`~pixelator.testing.topology.generate_cell_graph`) populated
     with umis and markers (see :func:`populate_cell`). The per-cell edge lists are
     concatenated and tagged with a unique ``component`` id, and
     ``n_crossing_edges`` chimeric edges are added: for each, two random edges are
@@ -50,7 +50,7 @@ def generate_edgelist(
     umi2/marker_2 of the second. Crossing edges have a null ``component``.
 
     Each cell also gets a cell type, cycled within each hashing index so that
-    every hashing index carries every cell type (see :func:`_cell_types_per_cell`).
+    every hashing index carries every cell type (see ``_cell_types_per_cell``).
 
     Args:
         n_cells: number of cell graphs to generate.
@@ -64,7 +64,7 @@ def generate_edgelist(
         hashing_indices: hashing indices to assign to cells. ``None`` uses every
             index in the panel.
         n_cell_types: number of cell types; each boosts its own block of
-            high-abundance markers (see :func:`_marker_probabilities`).
+            high-abundance markers (see ``_marker_probabilities``).
         cell_type_effect: factor applied to the probabilities of a cell type's
             marker block. ``1.0`` plants no cell-type signal.
         n_shared_markers: number of high-abundance markers that receive the
