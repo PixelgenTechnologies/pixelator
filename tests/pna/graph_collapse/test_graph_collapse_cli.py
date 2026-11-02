@@ -11,8 +11,8 @@ from click.testing import CliRunner
 from pixelator import cli
 
 
-def test_graph_collapse_cli_run(pna_pxl_file):
-    pxl_path = pna_pxl_file
+def test_graph_collapse_cli_run(graph_pxl_file):
+    pxl_path = graph_pxl_file
 
     with duckdb.connect(str(pxl_path), read_only=True) as con:
         input_umis = con.execute(
@@ -94,8 +94,8 @@ def test_graph_collapse_cli_run(pna_pxl_file):
         assert report["collapsed_sequences_file"] is None
 
 
-def test_graph_collapse_cli_report_collapsed_sequences(pna_pxl_file):
-    pxl_path = pna_pxl_file
+def test_graph_collapse_cli_report_collapsed_sequences(graph_pxl_file):
+    pxl_path = graph_pxl_file
 
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as d:
@@ -133,9 +133,9 @@ def test_graph_collapse_cli_report_collapsed_sequences(pna_pxl_file):
             assert set(corrected_sequence) <= set("ACGT")
 
 
-def test_graph_collapse_cli_memory_limit_reaches_duckdb(pna_pxl_file, monkeypatch):
+def test_graph_collapse_cli_memory_limit_reaches_duckdb(graph_pxl_file, monkeypatch):
     """--memory is a soft DuckDB limit, applied to the read and the writer connection."""
-    pxl_path = pna_pxl_file
+    pxl_path = graph_pxl_file
     seen = []
 
     import pixelator.pna.graph_collapse.collapse as collapse
@@ -178,14 +178,14 @@ def test_graph_collapse_cli_memory_limit_reaches_duckdb(pna_pxl_file, monkeypatc
     assert seen == ["1.9 GiB", "1.9 GiB"]
 
 
-def test_graph_collapse_cli_rejects_an_unparseable_memory_limit(pna_pxl_file):
+def test_graph_collapse_cli_rejects_an_unparseable_memory_limit(graph_pxl_file):
     runner = CliRunner()
     cmd = runner.invoke(
         cli.main_cli,
         [
             "single-cell-pna",
             "graph-collapse",
-            str(pna_pxl_file),
+            str(graph_pxl_file),
             "--output",
             "unused",
             "--design",
@@ -199,9 +199,9 @@ def test_graph_collapse_cli_rejects_an_unparseable_memory_limit(pna_pxl_file):
     assert "--memory option must be a positive integer" in cmd.output
 
 
-def test_graph_collapse_cli_hamming_threshold_zero_collapses_nothing(pna_pxl_file):
+def test_graph_collapse_cli_hamming_threshold_zero_collapses_nothing(graph_pxl_file):
     """Distinct UMIs differ in at least one symbol, so a threshold of 0 renames none."""
-    pxl_path = pna_pxl_file
+    pxl_path = graph_pxl_file
 
     runner = CliRunner()
     with tempfile.TemporaryDirectory() as d:

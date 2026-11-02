@@ -20,9 +20,8 @@ from pathlib import Path
 import duckdb
 
 from pixelator.pna.anndata import pna_edgelist_to_anndata
-from pixelator.pna.config import pna_config
-from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
-from pixelator.pna.pixeldataset import PNAPixelDataset, read
+from pixelator.pna.config.panel import PNAAntibodyPanel
+from pixelator.pna.pixeldataset import read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 from pixelator.pna.utils import init_duckdb_conn
 from pixelator.pna.utils.two_bit_encoding import unpack_2bits
@@ -185,15 +184,6 @@ def _collapsed_sequences(
     return rows
 
 
-def _load_panel(pxl_file_target: PxlFile) -> PNAAntibodyPanel:
-    try:
-        return PNAAntibodyPanel.from_pxl_dataset(read(pxl_file_target.path))
-    except KeyError:
-        pxl = PNAPixelDataset.from_files(pxl_file_target)
-        panel_name = pxl.metadata().popitem()[1]["panel_name"]
-        return load_antibody_panel(pna_config, panel_name)
-
-
 def run_graph_collapse(
     pxl_file_target: PxlFile,
     *,
@@ -273,7 +263,12 @@ def run_graph_collapse(
     # row is a distinct collapsed node.
     nodes_collapsed = kept.num_rows
     if nodes_collapsed:
-        panel = _load_panel(pxl_file_target)
+        # Rebuild counts from the markers already in var. Using the full panel
+        # would put markers removed by an earlier step (e.g. hashing clones
+        # removed by sample calling) back. The panel comes from the file only.
+        input_dataset = read(pxl_file_target.path)
+        panel = PNAAntibodyPanel.from_pxl_dataset(input_dataset)
+        markers = list(input_dataset.adata().var_names)
         with PixelFileWriter(pxl_file_target.path, temp_dir=temp_directory) as writer:
             con = writer.get_connection()
             if memory_limit is not None:
@@ -281,7 +276,7 @@ def run_graph_collapse(
             _store_renames(con, kept)
             rename_umis(con)
             collapse_identical_edges(con)
-            adata = pna_edgelist_to_anndata(con, panel)
+            adata = pna_edgelist_to_anndata(con, panel, markers=markers)
             adata = adata[adata.obs_names.sort_values(), :]
             writer.write_adata(adata)
 
