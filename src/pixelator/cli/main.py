@@ -102,13 +102,16 @@ def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
 # The PNA commands needs to be imported here, rather than
 # at the top, because otherwise things like importing
 # the configs will not work as expected.
+from pixelator.pna.cli.aggregate import aggregate
 from pixelator.pna.cli.amplicon import amplicon
 from pixelator.pna.cli.analysis import analysis
 from pixelator.pna.cli.collapse import collapse
 from pixelator.pna.cli.combine_collapse import combine_collapse
 from pixelator.pna.cli.demux import demux
 from pixelator.pna.cli.denoise import denoise
+from pixelator.pna.cli.edgelist import edgelist
 from pixelator.pna.cli.graph import graph
+from pixelator.pna.cli.graph_collapse import graph_collapse
 from pixelator.pna.cli.layout import layout
 from pixelator.pna.cli.misc import (
     list_single_cell_pna_designs,
@@ -166,6 +169,9 @@ single_cell_pna.add_command(denoise)
 single_cell_pna.add_command(analysis)
 single_cell_pna.add_command(layout)
 single_cell_pna.add_command(combine_collapse, name="combine-collapse")
+single_cell_pna.add_command(edgelist)
+single_cell_pna.add_command(aggregate)
+single_cell_pna.add_command(graph_collapse)
 
 # Add cli plugins as commands on top level
 add_cli_plugins(main_cli)
