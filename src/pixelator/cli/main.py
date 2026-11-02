@@ -111,6 +111,7 @@ from pixelator.pna.cli.demux import demux
 from pixelator.pna.cli.denoise import denoise
 from pixelator.pna.cli.edgelist import edgelist
 from pixelator.pna.cli.graph import graph
+from pixelator.pna.cli.graph_collapse import graph_collapse
 from pixelator.pna.cli.layout import layout
 from pixelator.pna.cli.misc import (
     list_single_cell_pna_designs,
@@ -170,6 +171,7 @@ single_cell_pna.add_command(layout)
 single_cell_pna.add_command(combine_collapse, name="combine-collapse")
 single_cell_pna.add_command(edgelist)
 single_cell_pna.add_command(aggregate)
+single_cell_pna.add_command(graph_collapse)
 
 # Add cli plugins as commands on top level
 add_cli_plugins(main_cli)

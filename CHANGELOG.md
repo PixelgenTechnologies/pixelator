@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 - `single-cell-pna edgelist` builds an edgelist directly from raw FASTQ reads.
 - `single-cell-pna aggregate` collapses per-read edgelists into unique molecules.
+- `single-cell-pna graph-collapse` merges likely UMI sequencing errors in a graph pxl file.
 
 ## [0.31.0] - 2026-10-29
 
