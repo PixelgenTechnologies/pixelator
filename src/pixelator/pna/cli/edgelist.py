@@ -4,7 +4,7 @@ Build an edgelist Parquet file straight from raw FASTQ reads using the
 ``pixelator_core.run_edgelist`` binding. Marker lookup and UMI encoding
 happen inline, so this skips the separate amplicon / demux / collapse stages.
 
-Copyright © 2025 Pixelgen Technologies AB.
+Copyright © 2026 Pixelgen Technologies AB.
 """
 
 import logging

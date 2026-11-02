@@ -1,1 +1,1 @@
-"""Copyright © 2025 Pixelgen Technologies AB."""
+"""Copyright © 2026 Pixelgen Technologies AB."""

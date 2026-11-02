@@ -1,6 +1,6 @@
 """End-to-end tests for the native `edgelist` CLI command.
 
-Copyright © 2025 Pixelgen Technologies AB.
+Copyright © 2026 Pixelgen Technologies AB.
 """
 
 import gzip
