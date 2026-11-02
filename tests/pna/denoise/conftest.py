@@ -7,7 +7,7 @@ import pytest
 
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import load_antibody_panel
-from tests.common.data_generator import (
+from pixelator.testing import (
     generate_edgelist,
     write_pna_pxl,
 )

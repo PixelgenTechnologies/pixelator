@@ -19,7 +19,7 @@ from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.anndata import pna_edgelist_to_anndata
 from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset.io import PixelFileWriter
-from tests.common.data_generator import generate_edgelist
+from pixelator.testing import generate_edgelist
 
 POOL_NAME = "synthetic_pool"
 SAMPLE_NAMES = ["PBMC", "Raji", "Jurkat"]

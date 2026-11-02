@@ -10,7 +10,7 @@ from pixelator.common.config import AntibodyPanelMetadata
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.pixeldataset import read
-from tests.common.data_generator import (
+from pixelator.testing import (
     generate_edgelist,
     write_pna_pxl,
 )

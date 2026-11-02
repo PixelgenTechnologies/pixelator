@@ -17,7 +17,7 @@ from pixelator.pna.config.panel import PNAAntibodyPanel
 from pixelator.pna.pixeldataset import read
 from pixelator.pna.pixeldataset.io import PixelFileWriter, PxlFile
 from pixelator.pna.pixeldataset.legacy import LegacyPanelAdapter
-from tests.common.data_generator.pixelfile import with_legacy_panel_columns
+from pixelator.testing.pixelfile import with_legacy_panel_columns
 
 PANEL_NAME = "proxiome-v1-immuno-155-v1.0"
 
