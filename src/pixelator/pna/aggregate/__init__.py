@@ -162,15 +162,15 @@ def aggregate_edgelist(
         )
 
         # No filtering during aggregate, so sum(read_count) == input row count.
-        input_reads, output_molecules = (
-            int(value)
-            for value in conn.execute(
-                f"""
-                SELECT coalesce(sum(read_count), 0)::BIGINT, count(*)
-                FROM read_parquet('{output}')
-                """
-            ).fetchone()
-        )
+        counts = conn.execute(
+            f"""
+            SELECT coalesce(sum(read_count), 0)::BIGINT, count(*)
+            FROM read_parquet('{output}')
+            """
+        ).fetchone()
+        # An aggregate query without GROUP BY always returns exactly one row.
+        assert counts is not None
+        input_reads, output_molecules = (int(value) for value in counts)
         umi1_degree_distribution = _compute_degree_distribution(conn, output, "umi1")
         umi2_degree_distribution = _compute_degree_distribution(conn, output, "umi2")
 
