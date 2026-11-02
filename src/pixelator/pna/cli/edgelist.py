@@ -70,7 +70,7 @@ logger = logging.getLogger(__name__)
 )
 @click.option(
     "--mismatch-threshold",
-    default=1,
+    default=0,
     show_default=True,
     type=click.IntRange(0, 3),
     help="Allow this many mismatches when matching marker barcodes.",
