@@ -22,7 +22,7 @@ from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.pixeldataset import PNAPixelDataset, read
 from pixelator.pna.pixeldataset.io import PixelFileWriter
-from tests.common.data_generator import generate_edgelist, write_pna_pxl
+from pixelator.testing import generate_edgelist, write_pna_pxl
 from tests.pna.data.pxl_data import (
     EDGELIST_DATA,
     LAYOUT_DATA,

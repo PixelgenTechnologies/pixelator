@@ -33,7 +33,7 @@ from pixelator.pna.pixeldataset.io import (
 )
 from pixelator.pna.pixeldataset.io.anndata_helper import AnnDataHelper
 from pixelator.pna.pixeldataset.io.query_builder import marker_rename_expression
-from tests.common.data_generator.pixelfile import with_legacy_panel_columns
+from pixelator.testing.pixelfile import with_legacy_panel_columns
 
 
 def _marker(marker_id: str, sequence: str) -> dict:

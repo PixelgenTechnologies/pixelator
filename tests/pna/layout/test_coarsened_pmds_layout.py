@@ -20,7 +20,7 @@ import pytest
 from pixelator.common.graph.backends.implementations._networkx import (
     coarsened_pmds_layout,
 )
-from tests.common.data_generator.topology import generate_cell_graph
+from pixelator.testing.topology import generate_cell_graph
 
 WEIGHT_MODES = ["tp", "crossing_edges"]
 

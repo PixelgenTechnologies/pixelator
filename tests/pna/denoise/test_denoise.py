@@ -26,7 +26,7 @@ from pixelator.pna.config.panel import PNAAntibodyPanel, load_antibody_panel
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PixelDatasetSaver, read
 from pixelator.pna.pixeldataset.io import PxlFile
-from tests.common.data_generator import write_pna_pxl
+from pixelator.testing import write_pna_pxl
 
 
 def test_get_overexpressed_markers_in_one_core_detects_enriched_marker():

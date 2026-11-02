@@ -12,7 +12,7 @@ from polars.testing import assert_frame_equal
 
 from pixelator.pna.config import pna_config
 from pixelator.pna.config.panel import split_hashing_marker_id
-from tests.common.data_generator.molecules import (
+from pixelator.testing.molecules import (
     _assign_markers,
     _assign_umis,
     _cell_types_per_cell,

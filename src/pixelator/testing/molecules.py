@@ -12,7 +12,7 @@ import numpy as np
 import polars as pl
 
 from pixelator.pna.config.panel import split_hashing_marker_id
-from tests.common.data_generator.topology import generate_cell_graph
+from pixelator.testing.topology import generate_cell_graph
 
 if TYPE_CHECKING:
     from pixelator.pna.config.panel import PNAAntibodyPanel
