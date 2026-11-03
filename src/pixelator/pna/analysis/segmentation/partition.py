@@ -11,6 +11,7 @@ from typing import Any
 import networkx as nx
 import pandas as pd
 
+from pixelator.pna.analysis.segmentation.segment import _node_marker_labels
 from pixelator.pna.graph import PNAGraph
 
 
@@ -75,14 +76,45 @@ def partition_counts(
         )
 
     node_order = list(graph.raw.nodes())
-    counts = graph.node_marker_counts.reindex(node_order)
     if partition_column is not None:
         labels = _labels_from_column(graph, partition_column, node_order)
     else:
         labels = _align_partition(partition, node_order)
 
-    grouped = counts.groupby(labels, sort=False, observed=False, dropna=False).sum()
+    grouped = _sum_markers_by_partition(labels, _node_marker_labels(graph, node_order))
     return _reindex_groups(grouped, _group_levels(labels))
+
+
+def _sum_markers_by_partition(
+    labels: pd.Series, marker_labels: Sequence[Any]
+) -> pd.DataFrame:
+    """Count nodes per partition and marker.
+
+    Each node has one marker, so the group totals are those counts. Nodes
+    without a marker contribute nothing. Marker columns are sorted, matching
+    ``DataFrame.pivot_table``.
+    """
+    markers = pd.Series(marker_labels, index=labels.index)
+    known = markers.notna()
+    if not bool(known.any()):
+        return pd.DataFrame(columns=pd.Index([], name="marker"))
+
+    grouped = (
+        markers.loc[known]
+        .to_frame("marker")
+        .assign(_count=1)
+        .groupby(
+            [labels.loc[known], "marker"],
+            sort=False,
+            observed=False,
+            dropna=False,
+        )["_count"]
+        .sum()
+        .unstack(fill_value=0)
+    )
+    grouped = grouped.reindex(columns=sorted(grouped.columns), fill_value=0)
+    grouped.columns.name = "marker"
+    return grouped
 
 
 def _labels_from_column(
