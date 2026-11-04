@@ -7,6 +7,7 @@ This document covers how to get up and running with developing pixelator.
 -   [Setup the developer environment](#setup-the-developer-environment)
 -   [Pixelator developer tools](#pixelator-developer-tools)
 -   [Adding new dependencies](#adding-new-dependencies)
+-   [Adding a panel](#adding-a-panel)
 -   [Testing pixelator](#testing-pixelator)
     -   [Pixelator unit tests](#pixelator-unit-tests)
 -   [Understanding the pixelator plugin system](#understanding-the-pixelator-plugin-system)
@@ -139,6 +140,19 @@ uv add <package>
 
 This will update `pyproject.toml` and `uv.lock` with the new dependency. Both
 these files should be committed to the repository to record the new dependency.
+
+## Adding a panel
+
+Bundled panels are the CSV files in `src/pixelator/pna/resources/panels/`.
+A CI workflow runs on every change to this directory.
+
+The checks are:
+
+-   **Unique version:** no two panels can have both the same `product` and the same `version`.
+    A panel without a `product` is identified by its `name`.
+-   **Patch bumps keep sequences:** panels of one product with the same major and minor version
+    must have the same set of `(sequence_1, sequence_2)` pairs. `marker_id` values may change.
+    Changing sequences requires a minor or major version bump.
 
 ## Testing pixelator
 

@@ -1,0 +1,47 @@
+#schema: https://github.com/softprops/github-actions-schemas/blob/master/workflow.json
+name: "Check panels"
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "src/pixelator/pna/resources/panels/**"
+      - "utils/panel_checks.py"
+      - ".github/workflows/check-panels.yml"
+  pull_request:
+    paths:
+      - "src/pixelator/pna/resources/panels/**"
+      - "utils/panel_checks.py"
+      - ".github/workflows/check-panels.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-panels:
+    name: "Check bundled panels"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python environment
+        uses: ./.github/actions/setup-python
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          uv sync --group dev
+
+      # Fails if a panel repeats a product and version, or if a patch bump
+      # changes the sequences of a panel.
+      - name: Check panels
+        run: |
+          uv run python utils/panel_checks.py
