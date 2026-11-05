@@ -87,17 +87,6 @@ def _write_edgelist(
             },
             "invalid types: marker_sequence_1 expected VARCHAR, got INTEGER",
         ),
-        (
-            {
-                "marker_1": ["CD3"],
-                "marker_2": ["CD4"],
-                "umi1": pl.Series([1], dtype=pl.UInt64),
-                "umi2": pl.Series([2], dtype=pl.UInt64),
-                "marker_sequence_1": ["AAAA"],
-            },
-            "marker sequence columns must both be present or both be absent: "
-            "missing marker_sequence_2",
-        ),
     ],
 )
 def test_aggregate_rejects_invalid_input_schema(
@@ -307,8 +296,33 @@ def test_aggregate_merges_marker_sequences_across_files(tmp_path: Path):
     assert counts[(5, "GGGG")] == 1
 
 
+def test_aggregate_keeps_a_single_marker_sequence_column(tmp_path: Path):
+    """Each marker sequence column is optional on its own."""
+    input_path = tmp_path / "sample.parquet"
+    output_path = tmp_path / "out.parquet"
+    _write_edgelist(
+        input_path,
+        [("CD3", "CD4", 1, 2), ("CD3", "CD4", 1, 2), ("CD3", "CD4", 1, 2)],
+        extra_columns={"marker_sequence_2": ["TTTT", "TTTT", "GGGG"]},
+    )
+
+    aggregate_edgelist(input_path, output_path)
+
+    result = pl.read_parquet(output_path)
+    assert result.schema == {
+        "marker_1": pl.String,
+        "marker_2": pl.String,
+        "umi1": pl.UInt64,
+        "umi2": pl.UInt64,
+        "marker_sequence_2": pl.String,
+        "read_count": pl.UInt32,
+    }
+    counts = {row["marker_sequence_2"]: row["read_count"] for row in result.to_dicts()}
+    assert counts == {"TTTT": 2, "GGGG": 1}
+
+
 def test_aggregate_rejects_mixed_marker_sequence_files(tmp_path: Path):
-    """Every input file must agree on whether marker sequences are present."""
+    """Every input file must have the same marker sequence columns."""
     with_sequences = tmp_path / "with_sequences.parquet"
     without_sequences = tmp_path / "without_sequences.parquet"
     output_path = tmp_path / "out.parquet"
@@ -319,11 +333,12 @@ def test_aggregate_rejects_mixed_marker_sequence_files(tmp_path: Path):
     )
     _write_edgelist(without_sequences, [("CD3", "CD4", 1, 2)])
 
-    with pytest.raises(InvalidEdgelistSchemaError, match="Missing from:") as exc_info:
+    with pytest.raises(
+        InvalidEdgelistSchemaError, match="must be the same on every edgelist"
+    ) as exc_info:
         aggregate_edgelist([with_sequences, without_sequences], output_path)
 
-    assert str(without_sequences) in str(exc_info.value)
-
+    assert f"{without_sequences}: none" in str(exc_info.value)
     assert not output_path.exists()
 
 
