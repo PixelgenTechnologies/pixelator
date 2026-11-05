@@ -2,18 +2,12 @@
 name: "Check panels"
 
 on:
-  push:
-    branches: [main, dev]
-    paths:
-      - "src/pixelator/pna/resources/panels/**"
-      - "utils/panel_checks.py"
-      - ".github/workflows/check-panels.yml"
   pull_request:
     paths:
       - "src/pixelator/pna/resources/panels/**"
-      - "utils/panel_checks.py"
+      - "utils/check_panels_*.py"
+      - "utils/panel_files.py"
       - ".github/workflows/check-panels.yml"
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,6 +19,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # The full history is needed to find the merge-base with the base branch.
+          fetch-depth: 0
 
       - name: Set up Python environment
         uses: ./.github/actions/setup-python
@@ -40,8 +37,14 @@ jobs:
         run: |
           uv sync --group dev
 
-      # Fails if a panel repeats a product and version, or if a patch bump
-      # changes the sequences of a panel.
-      - name: Check panels
+      # Fails if a panel's metadata does not match its file name or collides with
+      # another panel.
+      - name: Check panels metadata
         run: |
-          uv run python utils/panel_checks.py
+          uv run python utils/check_panels_static.py
+
+      # Fails if a panel modified in the PR changes its sequences or does not
+      # only raise its patch version.
+      - name: Check panel updates
+        run: |
+          uv run python utils/check_panels_update.py --base "origin/${{ github.base_ref }}"
