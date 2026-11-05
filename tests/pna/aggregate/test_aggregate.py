@@ -22,18 +22,38 @@ EXPECTED_SCHEMA = {
     "read_count": pl.UInt32,
 }
 
+EXPECTED_SCHEMA_WITH_SEQUENCES = {
+    "marker_1": pl.String,
+    "marker_2": pl.String,
+    "umi1": pl.UInt64,
+    "umi2": pl.UInt64,
+    "marker_sequence_1": pl.String,
+    "marker_sequence_2": pl.String,
+    "read_count": pl.UInt32,
+}
 
-def _write_edgelist(path: Path, rows: list[tuple[str, str, int, int]]) -> None:
+
+def _write_edgelist(
+    path: Path,
+    rows: list[tuple[str, str, int, int]],
+    sequences: list[tuple[str, str]] | None = None,
+    extra_columns: dict[str, list] | None = None,
+) -> None:
     """Write a native-style per-read edgelist parquet from row tuples."""
     marker_1, marker_2, umi1, umi2 = zip(*rows, strict=True)
-    pl.DataFrame(
-        {
-            "marker_1": list(marker_1),
-            "marker_2": list(marker_2),
-            "umi1": pl.Series(list(umi1), dtype=pl.UInt64),
-            "umi2": pl.Series(list(umi2), dtype=pl.UInt64),
-        }
-    ).write_parquet(path)
+    columns: dict[str, list | pl.Series] = {
+        "marker_1": list(marker_1),
+        "marker_2": list(marker_2),
+        "umi1": pl.Series(list(umi1), dtype=pl.UInt64),
+        "umi2": pl.Series(list(umi2), dtype=pl.UInt64),
+    }
+    if sequences is not None:
+        sequence_1, sequence_2 = zip(*sequences, strict=True)
+        columns["marker_sequence_1"] = list(sequence_1)
+        columns["marker_sequence_2"] = list(sequence_2)
+    if extra_columns is not None:
+        columns.update(extra_columns)
+    pl.DataFrame(columns).write_parquet(path)
 
 
 @pytest.mark.parametrize(
@@ -186,6 +206,129 @@ def test_aggregate_output_schema(tmp_path: Path):
 
     result = pl.read_parquet(output_path)
     assert result.schema == EXPECTED_SCHEMA
+
+
+def test_aggregate_keeps_marker_sequences(tmp_path: Path):
+    """Marker sequences are carried through to the collapsed molecules."""
+    input_path = tmp_path / "sample.parquet"
+    output_path = tmp_path / "out.parquet"
+    rows = [
+        ("CD3", "CD4", 1, 2),
+        ("CD3", "CD4", 1, 2),
+        ("CD3", "CD4", 1, 2),
+        ("CD8", "CD19", 5, 6),
+    ]
+    sequences = [
+        ("AAAA", "TTTT"),
+        ("AAAA", "TTTT"),
+        ("AAAA", "TTTT"),
+        ("GGGG", "CCCC"),
+    ]
+    _write_edgelist(input_path, rows, sequences=sequences)
+
+    stats = aggregate_edgelist(input_path, output_path)
+
+    result = pl.read_parquet(output_path)
+    assert result.schema == EXPECTED_SCHEMA_WITH_SEQUENCES
+    assert stats.input_reads == 4
+    assert stats.output_molecules == 2
+
+    by_key = {
+        (
+            row["marker_1"],
+            row["marker_2"],
+            row["umi1"],
+            row["umi2"],
+            row["marker_sequence_1"],
+            row["marker_sequence_2"],
+        ): row["read_count"]
+        for row in result.to_dicts()
+    }
+    assert by_key == {
+        ("CD3", "CD4", 1, 2, "AAAA", "TTTT"): 3,
+        ("CD8", "CD19", 5, 6, "GGGG", "CCCC"): 1,
+    }
+
+
+def test_aggregate_merges_marker_sequences_across_files(tmp_path: Path):
+    """Sequence columns from every input file collapse together."""
+    input_a = tmp_path / "part_a.parquet"
+    input_b = tmp_path / "part_b.parquet"
+    output_path = tmp_path / "out.parquet"
+    _write_edgelist(
+        input_a,
+        [("CD3", "CD4", 1, 2), ("CD8", "CD19", 5, 6)],
+        sequences=[("AAAA", "TTTT"), ("GGGG", "CCCC")],
+    )
+    _write_edgelist(
+        input_b,
+        [("CD3", "CD4", 1, 2)],
+        sequences=[("AAAA", "TTTT")],
+    )
+
+    stats = aggregate_edgelist([input_a, input_b], output_path)
+
+    result = pl.read_parquet(output_path)
+    assert result.schema == EXPECTED_SCHEMA_WITH_SEQUENCES
+    assert stats.input_reads == 3
+    assert stats.output_molecules == 2
+    counts = {
+        (row["umi1"], row["marker_sequence_1"]): row["read_count"]
+        for row in result.to_dicts()
+    }
+    assert counts[(1, "AAAA")] == 2
+    assert counts[(5, "GGGG")] == 1
+
+
+def test_aggregate_keeps_any_extra_column(tmp_path: Path):
+    """Extra columns are kept but do not split molecules."""
+    input_path = tmp_path / "sample.parquet"
+    output_path = tmp_path / "out.parquet"
+    _write_edgelist(
+        input_path,
+        [("CD3", "CD4", 1, 2), ("CD3", "CD4", 1, 2), ("CD3", "CD4", 1, 2)],
+        extra_columns={"read_id": ["r1", "r2", "r3"]},
+    )
+
+    stats = aggregate_edgelist(input_path, output_path)
+
+    result = pl.read_parquet(output_path)
+    assert result.columns == [
+        "marker_1",
+        "marker_2",
+        "umi1",
+        "umi2",
+        "read_id",
+        "read_count",
+    ]
+    assert stats.output_molecules == 1
+    assert result["read_count"].to_list() == [3]
+    # Which read's value is kept is arbitrary.
+    assert result["read_id"][0] in {"r1", "r2", "r3"}
+
+
+@pytest.mark.parametrize("with_sequences_first", [True, False])
+def test_aggregate_rejects_files_with_different_columns(
+    tmp_path: Path, with_sequences_first: bool
+):
+    """Input files must have the same columns, whichever file comes first."""
+    with_sequences = tmp_path / "with_sequences.parquet"
+    without_sequences = tmp_path / "without_sequences.parquet"
+    output_path = tmp_path / "out.parquet"
+    _write_edgelist(
+        with_sequences,
+        [("CD3", "CD4", 1, 2)],
+        sequences=[("AAAA", "TTTT")],
+    )
+    _write_edgelist(without_sequences, [("CD3", "CD4", 1, 2)])
+    inputs = [with_sequences, without_sequences]
+    if not with_sequences_first:
+        inputs.reverse()
+
+    with pytest.raises(InvalidEdgelistSchemaError, match="different columns or types"):
+        aggregate_edgelist(inputs, output_path)
+
+    assert not output_path.exists()
 
 
 def test_aggregate_sorts_by_umi_then_marker(tmp_path: Path):

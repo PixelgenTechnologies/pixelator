@@ -34,7 +34,9 @@ def _quote_sql_string(value: str | Path) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
 
-EXPECTED_EDGELIST_SCHEMA = {
+# Columns every edgelist must have. Other columns are allowed and are carried
+# through to the output.
+_REQUIRED_EDGELIST_SCHEMA = {
     "marker_1": "VARCHAR",
     "marker_2": "VARCHAR",
     "umi1": "UBIGINT",
@@ -79,42 +81,51 @@ def _compute_degree_distribution(
     return OrderedDict((int(degree), int(count)) for degree, count in result.fetchall())
 
 
-def _validate_edgelist_schema(conn: DuckDBPyConnection, edgelist: Path) -> None:
-    """Validate that a parquet file has the native edgelist schema."""
+def _validate_edgelist_schema(
+    conn: DuckDBPyConnection, edgelist: Path
+) -> dict[str, str]:
+    """Validate that a parquet file has the columns aggregate needs.
+
+    Extra columns are allowed.
+
+    Returns:
+        The file's schema, as a mapping of column name to DuckDB type.
+
+    Raises:
+        InvalidEdgelistSchemaError: A required column is missing or has the
+            wrong type.
+
+    """
     rows = conn.execute(
         "DESCRIBE SELECT * FROM read_parquet(?)", [str(edgelist)]
     ).fetchall()
     actual_schema = {str(row[0]): str(row[1]) for row in rows}
 
     missing = [
-        column for column in EXPECTED_EDGELIST_SCHEMA if column not in actual_schema
-    ]
-    extra = [
-        column for column in actual_schema if column not in EXPECTED_EDGELIST_SCHEMA
+        column for column in _REQUIRED_EDGELIST_SCHEMA if column not in actual_schema
     ]
     invalid_types = [
         f"{column} expected {expected_type}, got {actual_schema[column]}"
-        for column, expected_type in EXPECTED_EDGELIST_SCHEMA.items()
+        for column, expected_type in _REQUIRED_EDGELIST_SCHEMA.items()
         if column in actual_schema and actual_schema[column] != expected_type
     ]
 
     errors = []
     if missing:
         errors.append(f"missing columns: {', '.join(missing)}")
-    if extra:
-        errors.append(f"unexpected columns: {', '.join(extra)}")
     if invalid_types:
         errors.append(f"invalid types: {'; '.join(invalid_types)}")
 
     if errors:
         expected = ", ".join(
             f"{column} {data_type}"
-            for column, data_type in EXPECTED_EDGELIST_SCHEMA.items()
+            for column, data_type in _REQUIRED_EDGELIST_SCHEMA.items()
         )
         raise InvalidEdgelistSchemaError(
             f"Invalid edgelist schema for '{edgelist}': {'; '.join(errors)}. "
             f"Expected: {expected}."
         )
+    return actual_schema
 
 
 def aggregate_edgelist(
@@ -128,8 +139,14 @@ def aggregate_edgelist(
 
     Args:
         edgelist: Path or paths to the input per-read edgelist parquet file(s).
-            Multiple files are unioned and collapsed together.
-        output: Path to the output aggregated parquet file.
+            Multiple files are unioned and collapsed together, and must all
+            have the same columns. Reads collapse on ``marker_1``,
+            ``marker_2``, ``umi1`` and ``umi2`` only. Any other column (such
+            as ``marker_sequence_1`` and ``marker_sequence_2``) is carried
+            through with an arbitrary read's value, so it should be constant
+            per molecule.
+        output: Path to the output aggregated parquet file. It has the input
+            columns followed by ``read_count``.
         threads: Number of DuckDB threads. Defaults to DuckDB's own default.
         memory_limit: Soft memory limit in bytes. When set, DuckDB spills to
             disk once the limit is reached.
@@ -149,8 +166,15 @@ def aggregate_edgelist(
         threads=max(threads, 1) if threads is not None else None,
         temp_dir=temp_directory,
     ) as conn:
-        for path in edgelist_paths:
-            _validate_edgelist_schema(conn, path)
+        schemas = [_validate_edgelist_schema(conn, path) for path in edgelist_paths]
+        # DuckDB takes the columns of the first file and silently drops
+        # any that only later files have, so the files must agree.
+        for path, schema in zip(edgelist_paths[1:], schemas[1:], strict=True):
+            if schema != schemas[0]:
+                raise InvalidEdgelistSchemaError(
+                    f"Edgelist '{path}' has different columns or types than "
+                    f"'{edgelist_paths[0]}'."
+                )
         conn.execute("SET preserve_insertion_order = false")
 
         # Input and output paths must not be spliced into the SQL as-is: the inputs
@@ -159,6 +183,7 @@ def aggregate_edgelist(
             f"""
             COPY (
                 SELECT marker_1, marker_2, umi1, umi2,
+                    any_value(COLUMNS(* EXCLUDE (marker_1, marker_2, umi1, umi2))),
                     count(*)::UINTEGER AS read_count
                 FROM read_parquet(?)
                 GROUP BY marker_1, marker_2, umi1, umi2
