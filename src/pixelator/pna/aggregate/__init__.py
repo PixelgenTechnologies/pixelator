@@ -34,19 +34,14 @@ def _quote_sql_string(value: str | Path) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
 
-# Columns the collapse key needs. Other columns are allowed.
+# Columns every edgelist must have. Other columns are allowed and are carried
+# through to the output.
 _REQUIRED_EDGELIST_SCHEMA = {
     "marker_1": "VARCHAR",
     "marker_2": "VARCHAR",
     "umi1": "UBIGINT",
     "umi2": "UBIGINT",
 }
-
-# Panel barcodes of marker_1 and marker_2. Each is optional and part of the
-# output grouping key when present. DuckDB reads the dictionary encoding
-# written by edgelist as VARCHAR.
-_MARKER_SEQUENCE_COLUMNS = ("marker_sequence_1", "marker_sequence_2")
-_MARKER_SEQUENCE_TYPE = "VARCHAR"
 
 
 class InvalidEdgelistSchemaError(ValueError):
@@ -88,18 +83,17 @@ def _compute_degree_distribution(
 
 def _validate_edgelist_schema(
     conn: DuckDBPyConnection, edgelist: Path
-) -> tuple[str, ...]:
+) -> dict[str, str]:
     """Validate that a parquet file has the columns aggregate needs.
 
-    Extra columns are allowed. ``marker_sequence_1`` and ``marker_sequence_2``
-    are optional but must be ``VARCHAR`` when present.
+    Extra columns are allowed.
 
     Returns:
-        The marker sequence columns present in the file.
+        The file's schema, as a mapping of column name to DuckDB type.
 
     Raises:
-        InvalidEdgelistSchemaError: A required column is missing, or a required
-            or marker-sequence column has the wrong type.
+        InvalidEdgelistSchemaError: A required column is missing or has the
+            wrong type.
 
     """
     rows = conn.execute(
@@ -116,15 +110,6 @@ def _validate_edgelist_schema(
         if column in actual_schema and actual_schema[column] != expected_type
     ]
 
-    present_sequences = tuple(
-        column for column in _MARKER_SEQUENCE_COLUMNS if column in actual_schema
-    )
-    invalid_types.extend(
-        f"{column} expected {_MARKER_SEQUENCE_TYPE}, got {actual_schema[column]}"
-        for column in present_sequences
-        if actual_schema[column] != _MARKER_SEQUENCE_TYPE
-    )
-
     errors = []
     if missing:
         errors.append(f"missing columns: {', '.join(missing)}")
@@ -140,26 +125,7 @@ def _validate_edgelist_schema(
             f"Invalid edgelist schema for '{edgelist}': {'; '.join(errors)}. "
             f"Expected: {expected}."
         )
-    return present_sequences
-
-
-def _aggregate_copy_sql(output: Path, sequence_columns: tuple[str, ...]) -> str:
-    """Build the COPY statement that collapses reads into molecules.
-
-    Marker sequence columns are selected and grouped when the inputs have them,
-    so two reads collapse only when their panel barcodes agree.
-    """
-    key_columns = ", ".join(("marker_1", "marker_2", "umi1", "umi2", *sequence_columns))
-    return f"""
-            COPY (
-                SELECT {key_columns},
-                    count(*)::UINTEGER AS read_count
-                FROM read_parquet(?)
-                GROUP BY {key_columns}
-                ORDER BY umi1, umi2, marker_1, marker_2
-            ) TO {_quote_sql_string(output)}
-            (FORMAT parquet, CODEC 'zstd', COMPRESSION_LEVEL 6);
-            """
+    return actual_schema
 
 
 def aggregate_edgelist(
@@ -173,13 +139,14 @@ def aggregate_edgelist(
 
     Args:
         edgelist: Path or paths to the input per-read edgelist parquet file(s).
-            Multiple files are unioned and collapsed together. The optional
-            ``marker_sequence_1`` and ``marker_sequence_2`` columns are copied
-            to the output when present. Every file must have the same ones.
-            Other extra columns are ignored.
-        output: Path to the output aggregated parquet file. With marker
-            sequences, the columns are ``marker_1``, ``marker_2``, ``umi1``,
-            ``umi2``, the marker sequence columns, and ``read_count``.
+            Multiple files are unioned and collapsed together, and must all
+            have the same columns. Reads collapse on ``marker_1``,
+            ``marker_2``, ``umi1`` and ``umi2`` only. Any other column (such
+            as ``marker_sequence_1`` and ``marker_sequence_2``) is carried
+            through with an arbitrary read's value, so it should be constant
+            per molecule.
+        output: Path to the output aggregated parquet file. It has the input
+            columns followed by ``read_count``.
         threads: Number of DuckDB threads. Defaults to DuckDB's own default.
         memory_limit: Soft memory limit in bytes. When set, DuckDB spills to
             disk once the limit is reached.
@@ -199,27 +166,31 @@ def aggregate_edgelist(
         threads=max(threads, 1) if threads is not None else None,
         temp_dir=temp_directory,
     ) as conn:
-        sequence_columns_per_file = [
-            _validate_edgelist_schema(conn, path) for path in edgelist_paths
-        ]
-        sequence_columns = sequence_columns_per_file[0]
-        if any(columns != sequence_columns for columns in sequence_columns_per_file):
-            found = "; ".join(
-                f"{path}: {', '.join(columns) or 'none'}"
-                for path, columns in zip(
-                    edgelist_paths, sequence_columns_per_file, strict=True
+        schemas = [_validate_edgelist_schema(conn, path) for path in edgelist_paths]
+        # DuckDB takes the columns of the first file and silently drops
+        # any that only later files have, so the files must agree.
+        for path, schema in zip(edgelist_paths[1:], schemas[1:], strict=True):
+            if schema != schemas[0]:
+                raise InvalidEdgelistSchemaError(
+                    f"Edgelist '{path}' has different columns or types than "
+                    f"'{edgelist_paths[0]}'."
                 )
-            )
-            raise InvalidEdgelistSchemaError(
-                "Marker sequence columns must be the same on every edgelist. "
-                f"Found {found}."
-            )
         conn.execute("SET preserve_insertion_order = false")
 
         # Input and output paths must not be spliced into the SQL as-is: the inputs
         # are bound, and DuckDB cannot bind the COPY target, so it is quoted.
         conn.execute(
-            _aggregate_copy_sql(output, sequence_columns),
+            f"""
+            COPY (
+                SELECT marker_1, marker_2, umi1, umi2,
+                    any_value(COLUMNS(* EXCLUDE (marker_1, marker_2, umi1, umi2))),
+                    count(*)::UINTEGER AS read_count
+                FROM read_parquet(?)
+                GROUP BY marker_1, marker_2, umi1, umi2
+                ORDER BY umi1, umi2, marker_1, marker_2
+            ) TO {_quote_sql_string(output)}
+            (FORMAT parquet, CODEC 'zstd', COMPRESSION_LEVEL 6);
+            """,
             [[str(path) for path in edgelist_paths]],
         )
 
