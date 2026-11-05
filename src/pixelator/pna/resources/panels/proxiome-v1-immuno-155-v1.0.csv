@@ -3,7 +3,7 @@
 # product: proxiome-v1-immuno-155-v1
 # description: >-
 #     Panel for the Proxiome Immuno Kit with 155 markers + 3 control markers
-# version: 1.0.2
+# version: 1.0.1
 # ---
 marker_id,control,full_name,alt_id,uniprot_id,sequence_1,sequence_2
 HLA-ABC,,HLA class I histocompatibility antigen,,P04439;P01889;P10321,ACTTCCTAGG,ACTTCCTAGG
@@ -25,7 +25,7 @@ CD44,,CD44 antigen,,P16070,GTGAGTCAAT,GTGAGTCAAT
 CD52,,CAMPATH-1 antigen,CAMPATH-1,P31358,CTTTAGCAGG,CTTTAGCAGG
 CD59,,CD59 glycoprotein,Protectin;MAC-IP,P13987,GGTGTATGAG,GGTGTATGAG
 CD45RA,,"Receptor-type tyrosine-protein phosphatase C. Isoform (ABC, AB, and A)",,P08575,GGATTCGTGG,GGATTCGTGG
-CD36,,Platelet glycoprotein 4,FAT;SCARB3,P16671,TACCCTGCGA,TACCCTGCGA
+AAA,,Platelet glycoprotein 4,FAT;SCARB3,P16671,TACCCTGCGA,TACCCTAAAA
 CD2,,T cell surface antigen CD2,,P06729,TGCCGATGCC,TGCCGATGCC
 CD29,,Integrin beta-1,Integrin β1,P05556,TCCAGTGTCT,TCCAGTGTCT
 CD5,,T cell surface glycoprotein CD5,,P06127,CACCCATCAA,CACCCATCAA
