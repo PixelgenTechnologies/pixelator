@@ -17,6 +17,7 @@ from pixelator.testing.reads import (
     _write_fastq_records,
     _write_paired_reads,
     write_pna_fastq,
+    write_single_end_fastq,
 )
 
 # Amplicon length for proxiome-v2 with the length-10 marker_panel sequences:
@@ -295,3 +296,65 @@ def test_write_pna_fastq_reproducible(
     assert _read_fastq(paths_a[0]) == _read_fastq(paths_b[0])
     assert _read_fastq(paths_a[1]) == _read_fastq(paths_b[1])
     assert _read_fastq(paths_a[0]) != _read_fastq(paths_c[0])
+
+
+def test_write_single_end_fastq_reverse_complement(
+    tmp_path, populated_edgelist, marker_panel, assay
+):
+    """Without errors, each read is the reverse complement of the whole amplicon."""
+    path = write_single_end_fastq(
+        "s",
+        40,
+        populated_edgelist,
+        marker_panel,
+        assay,
+        substitution_error_rate=0.0,
+        output_dir=tmp_path,
+        rng=0,
+    )
+    assert path == tmp_path / "s.fastq.gz"
+    amplicons = _assemble_amplicons(
+        populated_edgelist, 40, marker_panel, assay, np.random.default_rng(0)
+    )
+    records = _read_fastq(path)
+    assert [rec[1] for rec in records] == [_reverse_complement(a) for a in amplicons]
+    assert [rec[0] for rec in records] == [f"s:{i}" for i in range(40)]
+    assert all(len(rec[1]) == len(rec[2]) == _AMPLICON_LENGTH for rec in records)
+
+
+def test_write_single_end_fastq_constant_quality(
+    tmp_path, populated_edgelist, marker_panel, assay
+):
+    """quality_std=0 writes a constant Q30 quality for every base."""
+    path = write_single_end_fastq(
+        "s",
+        30,
+        populated_edgelist,
+        marker_panel,
+        assay,
+        output_dir=tmp_path,
+        rng=0,
+        quality_std=0,
+    )
+    assert {c for rec in _read_fastq(path) for c in rec[2]} == {chr(30 + 33)}
+
+
+def test_write_single_end_fastq_reproducible(
+    tmp_path, populated_edgelist, marker_panel, assay
+):
+    """The same seed yields identical reads; a different seed differs."""
+    dirs = [tmp_path / name for name in ("a", "b", "c")]
+    for directory, seed in zip(dirs, (0, 0, 1)):
+        directory.mkdir()
+        write_single_end_fastq(
+            "s",
+            30,
+            populated_edgelist,
+            marker_panel,
+            assay,
+            output_dir=directory,
+            rng=seed,
+        )
+    a, b, c = (_read_fastq(directory / "s.fastq.gz") for directory in dirs)
+    assert a == b
+    assert a != c

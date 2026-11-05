@@ -83,6 +83,55 @@ def write_pna_fastq(
     )
 
 
+def write_single_end_fastq(
+    sample_name: str,
+    n_reads: int,
+    edgelist: pl.DataFrame,
+    panel: PNAAntibodyPanel,
+    assay: PNAAssay,
+    substitution_error_rate: float = 1e-5,
+    output_dir: str | Path = ".",
+    rng=None,
+    quality_std: float = 2.0,
+) -> Path:
+    """Convert a populated edge list into reads and write a single-end fastq file.
+
+    Amplicons are sampled, assembled and given substitution errors as in
+    :func:`write_pna_fastq`. Each read is the reverse complement of the whole
+    amplicon, so the pipeline reads this file with ``--read-reverse``.
+
+    Args:
+        sample_name: base name for the output ``<sample_name>.fastq.gz`` file.
+        n_reads: number of reads to sample.
+        edgelist: populated edge list with umi/marker columns for both endpoints.
+        panel: antibody panel providing the marker sequences.
+        assay: assay describing the read structure (region lengths and sequences).
+        substitution_error_rate: per-base probability of substituting a base for a
+            different (random) one.
+        output_dir: directory to write the fastq file into.
+        rng: a seed or numpy Generator for the random number generator.
+        quality_std: standard deviation of the per-base quality scores around
+            Q30. ``0`` writes a constant Q30, which compresses much better.
+
+    Returns:
+        The path of the written fastq file.
+    """
+    rng = np.random.default_rng(rng)
+    amplicons = _assemble_amplicons(edgelist, n_reads, panel, assay, rng)
+    amplicons = _add_substitutions(amplicons, substitution_error_rate, rng)
+    reads = [_reverse_complement(amplicon) for amplicon in amplicons]
+    read_length = len(reads[0]) if reads else 0
+
+    path = Path(output_dir) / f"{sample_name}.fastq.gz"
+    _write_fastq_records(
+        path,
+        [f"{sample_name}:{i}" for i in range(len(reads))],
+        reads,
+        _random_qualities(len(reads), read_length, rng, std_q=quality_std),
+    )
+    return path
+
+
 def _decode_2bit_dna(values: np.ndarray, length: int) -> list[str]:
     """Decode 2-bit-encoded integers into dna strings (A=0, C=1, G=2, T=3)."""
     bases = np.array(list("ACGT"))
