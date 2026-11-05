@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `single-cell-pna graph-collapse` merges likely UMI sequencing errors in a graph pxl file.
 - `pixelator.testing` ships synthetic data generators (edgelists, pxl files, FASTQ reads).
 
+#### Changed
+- Enable graph multiplet recovery and edge-cycle verification by default.
+- Set graph refinement Leiden resolution default to 0.5.
+- Set graph max refinement recursion depth default to 3.
+- Set graph initial and refinement max edges removed to 10 and 20.
+- Set graph component size defaults to 8000 and 1,000,000.
+
 ## [0.31.0] - 2026-10-29
 
 ### Data Analysis
