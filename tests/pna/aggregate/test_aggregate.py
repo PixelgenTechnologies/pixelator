@@ -22,18 +22,38 @@ EXPECTED_SCHEMA = {
     "read_count": pl.UInt32,
 }
 
+EXPECTED_SCHEMA_WITH_SEQUENCES = {
+    "marker_1": pl.String,
+    "marker_2": pl.String,
+    "umi1": pl.UInt64,
+    "umi2": pl.UInt64,
+    "marker_sequence_1": pl.String,
+    "marker_sequence_2": pl.String,
+    "read_count": pl.UInt32,
+}
 
-def _write_edgelist(path: Path, rows: list[tuple[str, str, int, int]]) -> None:
+
+def _write_edgelist(
+    path: Path,
+    rows: list[tuple[str, str, int, int]],
+    sequences: list[tuple[str, str]] | None = None,
+    extra_columns: dict[str, list] | None = None,
+) -> None:
     """Write a native-style per-read edgelist parquet from row tuples."""
     marker_1, marker_2, umi1, umi2 = zip(*rows, strict=True)
-    pl.DataFrame(
-        {
-            "marker_1": list(marker_1),
-            "marker_2": list(marker_2),
-            "umi1": pl.Series(list(umi1), dtype=pl.UInt64),
-            "umi2": pl.Series(list(umi2), dtype=pl.UInt64),
-        }
-    ).write_parquet(path)
+    columns: dict[str, list | pl.Series] = {
+        "marker_1": list(marker_1),
+        "marker_2": list(marker_2),
+        "umi1": pl.Series(list(umi1), dtype=pl.UInt64),
+        "umi2": pl.Series(list(umi2), dtype=pl.UInt64),
+    }
+    if sequences is not None:
+        sequence_1, sequence_2 = zip(*sequences, strict=True)
+        columns["marker_sequence_1"] = list(sequence_1)
+        columns["marker_sequence_2"] = list(sequence_2)
+    if extra_columns is not None:
+        columns.update(extra_columns)
+    pl.DataFrame(columns).write_parquet(path)
 
 
 @pytest.mark.parametrize(
@@ -55,6 +75,28 @@ def _write_edgelist(path: Path, rows: list[tuple[str, str, int, int]]) -> None:
                 "umi2": pl.Series([2], dtype=pl.UInt64),
             },
             "invalid types: umi1 expected UBIGINT, got VARCHAR",
+        ),
+        (
+            {
+                "marker_1": ["CD3"],
+                "marker_2": ["CD4"],
+                "umi1": pl.Series([1], dtype=pl.UInt64),
+                "umi2": pl.Series([2], dtype=pl.UInt64),
+                "marker_sequence_1": pl.Series([1], dtype=pl.Int32),
+                "marker_sequence_2": ["TTTT"],
+            },
+            "invalid types: marker_sequence_1 expected VARCHAR, got INTEGER",
+        ),
+        (
+            {
+                "marker_1": ["CD3"],
+                "marker_2": ["CD4"],
+                "umi1": pl.Series([1], dtype=pl.UInt64),
+                "umi2": pl.Series([2], dtype=pl.UInt64),
+                "marker_sequence_1": ["AAAA"],
+            },
+            "marker sequence columns must both be present or both be absent: "
+            "missing marker_sequence_2",
         ),
     ],
 )
@@ -186,6 +228,120 @@ def test_aggregate_output_schema(tmp_path: Path):
 
     result = pl.read_parquet(output_path)
     assert result.schema == EXPECTED_SCHEMA
+
+
+def test_aggregate_keeps_marker_sequences(tmp_path: Path):
+    """Marker sequences are copied and only identical sequences collapse."""
+    input_path = tmp_path / "sample.parquet"
+    output_path = tmp_path / "out.parquet"
+    rows = [
+        ("CD3", "CD4", 1, 2),
+        ("CD3", "CD4", 1, 2),
+        ("CD3", "CD4", 1, 2),
+        ("CD8", "CD19", 5, 6),
+    ]
+    sequences = [
+        ("AAAA", "TTTT"),
+        ("AAAA", "TTTT"),
+        ("CCCC", "TTTT"),
+        ("GGGG", "CCCC"),
+    ]
+    _write_edgelist(
+        input_path,
+        rows,
+        sequences=sequences,
+        extra_columns={"batch": ["a", "a", "a", "b"]},
+    )
+
+    stats = aggregate_edgelist(input_path, output_path)
+
+    result = pl.read_parquet(output_path)
+    assert result.schema == EXPECTED_SCHEMA_WITH_SEQUENCES
+    assert "batch" not in result.columns
+    assert stats.input_reads == 4
+    assert stats.output_molecules == 3
+
+    by_key = {
+        (
+            row["marker_1"],
+            row["marker_2"],
+            row["umi1"],
+            row["umi2"],
+            row["marker_sequence_1"],
+            row["marker_sequence_2"],
+        ): row["read_count"]
+        for row in result.to_dicts()
+    }
+    assert by_key[("CD3", "CD4", 1, 2, "AAAA", "TTTT")] == 2
+    assert by_key[("CD3", "CD4", 1, 2, "CCCC", "TTTT")] == 1
+    assert by_key[("CD8", "CD19", 5, 6, "GGGG", "CCCC")] == 1
+
+
+def test_aggregate_merges_marker_sequences_across_files(tmp_path: Path):
+    """Sequence columns from every input file collapse together."""
+    input_a = tmp_path / "part_a.parquet"
+    input_b = tmp_path / "part_b.parquet"
+    output_path = tmp_path / "out.parquet"
+    _write_edgelist(
+        input_a,
+        [("CD3", "CD4", 1, 2), ("CD8", "CD19", 5, 6)],
+        sequences=[("AAAA", "TTTT"), ("GGGG", "CCCC")],
+    )
+    _write_edgelist(
+        input_b,
+        [("CD3", "CD4", 1, 2)],
+        sequences=[("AAAA", "TTTT")],
+    )
+
+    stats = aggregate_edgelist([input_a, input_b], output_path)
+
+    result = pl.read_parquet(output_path)
+    assert result.schema == EXPECTED_SCHEMA_WITH_SEQUENCES
+    assert stats.input_reads == 3
+    assert stats.output_molecules == 2
+    counts = {
+        (row["umi1"], row["marker_sequence_1"]): row["read_count"]
+        for row in result.to_dicts()
+    }
+    assert counts[(1, "AAAA")] == 2
+    assert counts[(5, "GGGG")] == 1
+
+
+def test_aggregate_rejects_mixed_marker_sequence_files(tmp_path: Path):
+    """Every input file must agree on whether marker sequences are present."""
+    with_sequences = tmp_path / "with_sequences.parquet"
+    without_sequences = tmp_path / "without_sequences.parquet"
+    output_path = tmp_path / "out.parquet"
+    _write_edgelist(
+        with_sequences,
+        [("CD3", "CD4", 1, 2)],
+        sequences=[("AAAA", "TTTT")],
+    )
+    _write_edgelist(without_sequences, [("CD3", "CD4", 1, 2)])
+
+    with pytest.raises(InvalidEdgelistSchemaError, match="Missing from:") as exc_info:
+        aggregate_edgelist([with_sequences, without_sequences], output_path)
+
+    assert str(without_sequences) in str(exc_info.value)
+
+    assert not output_path.exists()
+
+
+def test_aggregate_ignores_unrelated_extra_columns(tmp_path: Path):
+    """Columns other than the marker sequences are not required and not copied."""
+    input_path = tmp_path / "sample.parquet"
+    output_path = tmp_path / "out.parquet"
+    _write_edgelist(
+        input_path,
+        [("CD3", "CD4", 1, 2), ("CD3", "CD4", 1, 2)],
+        extra_columns={"batch": ["a", "b"]},
+    )
+
+    aggregate_edgelist(input_path, output_path)
+
+    result = pl.read_parquet(output_path)
+    assert result.schema == EXPECTED_SCHEMA
+    assert result["read_count"].to_list() == [2]
 
 
 def test_aggregate_sorts_by_umi_then_marker(tmp_path: Path):

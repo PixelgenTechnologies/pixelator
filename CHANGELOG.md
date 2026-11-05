@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `single-cell-pna graph-collapse` merges likely UMI sequencing errors in a graph pxl file.
 - `pixelator.testing` ships synthetic data generators (edgelists, pxl files, FASTQ reads).
 
+#### Changed
+- `aggregate` keeps `marker_sequence_1` and `marker_sequence_2`.
+
 ## [0.31.0] - 2026-10-29
 
 ### Data Analysis
