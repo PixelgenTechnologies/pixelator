@@ -28,7 +28,8 @@ def test_sample1_matches_published_data(tmp_path):
             "sample1",
             "--sequencing",
             "paired",
-            "single-end",
+            "single-end-forward",
+            "single-end-reverse",
         ]
     )
     assert _content_md5(tmp_path / "sample1_R1.fastq.gz") == (
@@ -38,11 +39,14 @@ def test_sample1_matches_published_data(tmp_path):
         "b455a1e3386c86eca860545b79c5e2b0"
     )
 
-    metadata = json.loads((tmp_path / "sample1_single_end.metadata.json").read_text())
-    assert metadata["sample_name"] == "sample1_single_end"
-    assert metadata["edgelist"] == "sample1"
-    assert metadata["edgelist_seed"] == 3
-    assert metadata["n_reads"] == 21800
-    assert metadata["sequencing"] == "single_end"
-    with gzip.open(tmp_path / "sample1_single_end.fastq.gz", "rt") as fh:
-        assert sum(1 for _ in fh) == 4 * 21800
+    for direction, reverse_read in (("forward", False), ("reverse", True)):
+        name = f"sample1_single_end_{direction}"
+        metadata = json.loads((tmp_path / f"{name}.metadata.json").read_text())
+        assert metadata["sample_name"] == name
+        assert metadata["edgelist"] == "sample1"
+        assert metadata["edgelist_seed"] == 3
+        assert metadata["n_reads"] == 21800
+        assert metadata["sequencing"] == "single_end"
+        assert metadata["reverse_read"] is reverse_read
+        with gzip.open(tmp_path / f"{name}.fastq.gz", "rt") as fh:
+            assert sum(1 for _ in fh) == 4 * 21800

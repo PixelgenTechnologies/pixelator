@@ -90,6 +90,7 @@ def write_single_end_fastq(
     panel: PNAAntibodyPanel,
     assay: PNAAssay,
     substitution_error_rate: float = 1e-5,
+    reverse_read: bool = False,
     output_dir: str | Path = ".",
     rng=None,
     quality_std: float = 2.0,
@@ -97,8 +98,10 @@ def write_single_end_fastq(
     """Convert a populated edge list into reads and write a single-end fastq file.
 
     Amplicons are sampled, assembled and given substitution errors as in
-    :func:`write_pna_fastq`. Each read is the reverse complement of the whole
-    amplicon, so the pipeline reads this file with ``--read-reverse``.
+    :func:`write_pna_fastq`. Each read covers the whole amplicon: as is for a
+    forward read, passed to ``edgelist`` with ``--read-forward``, or reverse
+    complemented for a reverse read, passed with ``--read-reverse``. The same
+    seed gives the same amplicons in both directions.
 
     Args:
         sample_name: base name for the output ``<sample_name>.fastq.gz`` file.
@@ -108,6 +111,7 @@ def write_single_end_fastq(
         assay: assay describing the read structure (region lengths and sequences).
         substitution_error_rate: per-base probability of substituting a base for a
             different (random) one.
+        reverse_read: write reverse reads instead of forward reads.
         output_dir: directory to write the fastq file into.
         rng: a seed or numpy Generator for the random number generator.
         quality_std: standard deviation of the per-base quality scores around
@@ -119,7 +123,10 @@ def write_single_end_fastq(
     rng = np.random.default_rng(rng)
     amplicons = _assemble_amplicons(edgelist, n_reads, panel, assay, rng)
     amplicons = _add_substitutions(amplicons, substitution_error_rate, rng)
-    reads = [_reverse_complement(amplicon) for amplicon in amplicons]
+    if reverse_read:
+        reads = [_reverse_complement(amplicon) for amplicon in amplicons]
+    else:
+        reads = amplicons
     read_length = len(reads[0]) if reads else 0
 
     path = Path(output_dir) / f"{sample_name}.fastq.gz"

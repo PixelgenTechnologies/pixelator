@@ -14,8 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `single-cell-pna aggregate` collapses per-read edgelists into unique molecules.
 - `single-cell-pna graph-collapse` merges likely UMI sequencing errors in a graph pxl file.
 - `pixelator.testing` ships synthetic data generators (edgelists, pxl files, FASTQ reads).
-- `pixelator.testing.write_single_end_fastq` writes single-end reads, each the reverse complement of a whole amplicon.
-- `python -m pixelator.testing.test_data` regenerates the PNA pipeline test FASTQs and their single-end versions.
+- `pixelator.testing.write_single_end_fastq` writes single-end reads covering whole amplicons, as forward or reverse reads.
+- `python -m pixelator.testing.test_data` regenerates the PNA pipeline test FASTQs and their forward and reverse single-end versions.
 
 #### Changed
 - Enable graph multiplet recovery and edge-cycle verification by default.

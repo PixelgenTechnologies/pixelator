@@ -1,10 +1,13 @@
 """Generate the synthetic PNA FASTQ test data for pipeline tests.
 
 Writes paired-end ``<name>_R1/_R2.fastq.gz`` libraries and their single-end
-``<name>_single_end.fastq.gz`` counterparts, each with a ``.metadata.json``
-file recording its settings. A single-end library is read from the same edge
-list as its paired-end library, so both hold the same cells, but its reads are
-drawn with a seed of its own.
+``<name>_single_end_forward.fastq.gz`` and
+``<name>_single_end_reverse.fastq.gz`` counterparts, each with a
+``.metadata.json`` file recording its settings. A single-end library is read
+from the same edge list as its paired-end library, so both hold the same cells,
+but its reads are drawn with a seed of its own. The forward and reverse files
+share that seed, so each forward read is the reverse complement of the
+matching reverse read.
 
 Usage::
 
@@ -175,11 +178,12 @@ def write_paired_library(
 
 
 def write_single_end_library(
-    library: Library, edgelist: pl.DataFrame, output_dir: Path
+    library: Library, edgelist: pl.DataFrame, output_dir: Path, reverse_read: bool
 ) -> Path:
-    """Write the single-end fastq file and metadata of ``library``."""
+    """Write a forward or reverse single-end fastq file and metadata of ``library``."""
     spec = EDGELISTS[library.edgelist]
-    name = f"{library.name}_single_end"
+    direction = "reverse" if reverse_read else "forward"
+    name = f"{library.name}_single_end_{direction}"
     n_reads = 2 * spec.n_edges_total
     path = write_single_end_fastq(
         name,
@@ -187,6 +191,7 @@ def write_single_end_library(
         edgelist,
         spec.load_panel(),
         spec.load_assay(),
+        reverse_read=reverse_read,
         output_dir=output_dir,
         rng=library.single_end_seed,
         quality_std=QUALITY_STD,
@@ -201,6 +206,7 @@ def write_single_end_library(
         "n_reads": n_reads,
         "quality_std": QUALITY_STD,
         "sequencing": "single_end",
+        "reverse_read": reverse_read,
         **_edgelist_metadata(spec),
     }
     _write_metadata(output_dir / f"{name}.metadata.json", metadata)
@@ -214,8 +220,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--sequencing",
         nargs="+",
-        choices=["paired", "single-end"],
-        default=["paired", "single-end"],
+        choices=["paired", "single-end-forward", "single-end-reverse"],
+        default=["paired", "single-end-forward", "single-end-reverse"],
         help="Which kinds of fastq files to write.",
     )
     parser.add_argument(
@@ -236,8 +242,14 @@ def main(argv: list[str] | None = None) -> None:
         edgelist = edgelists[library.edgelist]
         if "paired" in args.sequencing:
             write_paired_library(library, edgelist, args.output_dir)
-        if "single-end" in args.sequencing:
-            write_single_end_library(library, edgelist, args.output_dir)
+        if "single-end-forward" in args.sequencing:
+            write_single_end_library(
+                library, edgelist, args.output_dir, reverse_read=False
+            )
+        if "single-end-reverse" in args.sequencing:
+            write_single_end_library(
+                library, edgelist, args.output_dir, reverse_read=True
+            )
 
 
 if __name__ == "__main__":

@@ -298,10 +298,11 @@ def test_write_pna_fastq_reproducible(
     assert _read_fastq(paths_a[0]) != _read_fastq(paths_c[0])
 
 
-def test_write_single_end_fastq_reverse_complement(
-    tmp_path, populated_edgelist, marker_panel, assay
+@pytest.mark.parametrize("reverse_read", [False, True])
+def test_write_single_end_fastq_whole_amplicon(
+    tmp_path, populated_edgelist, marker_panel, assay, reverse_read
 ):
-    """Without errors, each read is the reverse complement of the whole amplicon."""
+    """Without errors, each read is the whole amplicon, reverse-complemented if asked."""
     path = write_single_end_fastq(
         "s",
         40,
@@ -309,6 +310,7 @@ def test_write_single_end_fastq_reverse_complement(
         marker_panel,
         assay,
         substitution_error_rate=0.0,
+        reverse_read=reverse_read,
         output_dir=tmp_path,
         rng=0,
     )
@@ -316,8 +318,10 @@ def test_write_single_end_fastq_reverse_complement(
     amplicons = _assemble_amplicons(
         populated_edgelist, 40, marker_panel, assay, np.random.default_rng(0)
     )
+    if reverse_read:
+        amplicons = [_reverse_complement(a) for a in amplicons]
     records = _read_fastq(path)
-    assert [rec[1] for rec in records] == [_reverse_complement(a) for a in amplicons]
+    assert [rec[1] for rec in records] == amplicons
     assert [rec[0] for rec in records] == [f"s:{i}" for i in range(40)]
     assert all(len(rec[1]) == len(rec[2]) == _AMPLICON_LENGTH for rec in records)
 
@@ -358,3 +362,26 @@ def test_write_single_end_fastq_reproducible(
     a, b, c = (_read_fastq(directory / "s.fastq.gz") for directory in dirs)
     assert a == b
     assert a != c
+
+
+def test_write_single_end_fastq_directions_match(
+    tmp_path, populated_edgelist, marker_panel, assay
+):
+    """With the same seed, forward reads are the reverse complements of reverse reads."""
+    reads = {}
+    for reverse_read in (False, True):
+        directory = tmp_path / str(reverse_read)
+        directory.mkdir()
+        path = write_single_end_fastq(
+            "s",
+            30,
+            populated_edgelist,
+            marker_panel,
+            assay,
+            substitution_error_rate=0.05,
+            reverse_read=reverse_read,
+            output_dir=directory,
+            rng=0,
+        )
+        reads[reverse_read] = [rec[1] for rec in _read_fastq(path)]
+    assert reads[False] == [_reverse_complement(r) for r in reads[True]]
