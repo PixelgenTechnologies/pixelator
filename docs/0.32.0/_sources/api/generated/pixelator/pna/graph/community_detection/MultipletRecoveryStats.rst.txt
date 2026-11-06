@@ -1,0 +1,25 @@
+pixelator.pna.graph.community_detection.MultipletRecoveryStats
+==============================================================
+
+.. py:class:: pixelator.pna.graph.community_detection.MultipletRecoveryStats
+
+   Statistics from multiplet recovery.
+
+
+   .. py:attribute:: crossing_edges_removed
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: crossing_edges_removed_in_initial_stage
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: max_recursion_depth
+      :type:  int
+      :value: 0
+
+

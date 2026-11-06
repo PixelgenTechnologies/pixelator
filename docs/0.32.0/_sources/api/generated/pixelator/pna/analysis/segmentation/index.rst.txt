@@ -1,0 +1,44 @@
+pixelator.pna.analysis.segmentation
+===================================
+
+.. py:module:: pixelator.pna.analysis.segmentation
+
+.. autoapi-nested-parse::
+
+   Helpers for segmenting cell:cell conjugates.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/analysis/segmentation/distance/index
+   /api/generated/pixelator/pna/analysis/segmentation/partition/index
+   /api/generated/pixelator/pna/analysis/segmentation/protein_weights/index
+   /api/generated/pixelator/pna/analysis/segmentation/segment/index
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/segmentation/cc_protein_weights
+   /api/generated/pixelator/pna/analysis/segmentation/distance_from_node_set
+   /api/generated/pixelator/pna/analysis/segmentation/partition_counts
+   /api/generated/pixelator/pna/analysis/segmentation/segment_cell
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.segmentation.cc_protein_weights
+   pixelator.pna.analysis.segmentation.distance_from_node_set
+   pixelator.pna.analysis.segmentation.partition_counts
+   pixelator.pna.analysis.segmentation.segment_cell
+
+

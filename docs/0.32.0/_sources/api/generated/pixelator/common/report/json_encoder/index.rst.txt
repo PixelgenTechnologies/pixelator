@@ -1,0 +1,26 @@
+pixelator.common.report.json_encoder
+====================================
+
+.. py:module:: pixelator.common.report.json_encoder
+
+.. autoapi-nested-parse::
+
+   Custom JSON encoder for use in Pixelator.
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/report/json_encoder/PixelatorJSONEncoder
+
+.. autoapisummary::
+
+   pixelator.common.report.json_encoder.PixelatorJSONEncoder
+
+

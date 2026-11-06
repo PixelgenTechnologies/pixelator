@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.types
+================================
+
+.. py:module:: pixelator.pna.pixeldataset.types
+
+.. autoapi-nested-parse::
+
+   Shared small types for PNA pixel datasets.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/types/Component
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.types.Component
+
+

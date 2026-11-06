@@ -1,0 +1,31 @@
+pixelator.pna.sample_calling.collect_hash_info
+==============================================
+
+.. py:function:: pixelator.pna.sample_calling.collect_hash_info(input_pxl_file: pixelator.pna.pixeldataset.PNAPixelDataset, hashed_antibody_mapping: hash_antibodies.HashedAntibodyMapping, enrichment_threshold: float, undetermined_sample_name: str = 'undetermined') -> polars.DataFrame
+
+   Map components to samples in an sample-hashed dataset.
+
+   This function processes a pixel dataset and a mapping of components to
+   samples based on hashed antibodies. It computes the hashed antibody count
+   for each component, determines the most likely sample assignment for each
+   component, and calculates a hash enrichment factor for the assignment.
+
+   The hash enrichment factor is the ratio of the highest hash count to the
+   second highest hash count across all hash buckets. A higher value means
+   the component is more clearly dominated by one sample.
+
+   If the most likely assignment is to antibodies not belonging to any sample,
+   the component is assigned to the "undetermined" sample.
+
+   :param input_pxl_file: The input pixel dataset.
+   :param hashed_antibody_mapping: Mapping of sample names to hashed antibody names and the full list
+                                   of hashing antibodies (from panel).
+   :param enrichment_threshold: Minimum hash enrichment factor required to assign a component to a
+                                sample. The enrichment factor is the highest hash count divided by the second highest
+                                hash count.
+   :param undetermined_sample_name: Name to use for undetermined components. Defaults to
+                                    "undetermined".
+
+   :returns: Polars DataFrame with component id, per-sample hash counts, called sample, and hash
+             enrichment factor.
+

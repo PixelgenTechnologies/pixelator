@@ -1,0 +1,13 @@
+pixelator.pna.analysis.graph_noise_analysis.SvdAnalysisError
+============================================================
+
+.. py:exception:: pixelator.pna.analysis.graph_noise_analysis.SvdAnalysisError
+
+   Bases: :py:obj:`pixelator.common.exceptions.PixelatorBaseException`
+
+
+   An exception for errors in SvdAnalysis.
+
+   Currently used when trying to run SVD analysis on a graph with
+   fewer nodes than the number of pivot points.
+

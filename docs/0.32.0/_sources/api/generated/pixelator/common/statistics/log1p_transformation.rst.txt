@@ -1,0 +1,14 @@
+pixelator.common.statistics.log1p_transformation
+================================================
+
+.. py:function:: pixelator.common.statistics.log1p_transformation(df: pandas.DataFrame) -> pandas.DataFrame
+
+   Transform antibody counts using the log1p function.
+
+   This function applies the natural logarithm of (1 + x) to the count of each
+   marker or component, element-wise.
+
+   :param df: The dataframe of antibody counts (antibodies as columns).
+
+   :returns: A dataframe with the counts normalized.
+

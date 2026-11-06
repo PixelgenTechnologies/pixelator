@@ -1,0 +1,50 @@
+pixelator.pna.graph_collapse
+============================
+
+.. py:module:: pixelator.pna.graph_collapse
+
+.. autoapi-nested-parse::
+
+   Graph-collapse: a post-graph-step alternative to correcting UMI sequencing errors.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/graph_collapse/collapse/index
+   /api/generated/pixelator/pna/graph_collapse/constants/index
+   /api/generated/pixelator/pna/graph_collapse/report/index
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph_collapse/GraphCollapseResult
+
+.. autoapisummary::
+
+   pixelator.pna.graph_collapse.GraphCollapseResult
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph_collapse/run_graph_collapse
+
+.. autoapisummary::
+
+   pixelator.pna.graph_collapse.run_graph_collapse
+
+

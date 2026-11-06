@@ -1,0 +1,13 @@
+pixelator.pna.pixeldataset.config.PixelDatasetConfig
+====================================================
+
+.. py:class:: pixelator.pna.pixeldataset.config.PixelDatasetConfig
+
+   Configuration for a PixelDataset.
+
+
+   .. py:attribute:: adata_join_method
+      :type:  Literal['inner', 'outer']
+      :value: 'inner'
+
+

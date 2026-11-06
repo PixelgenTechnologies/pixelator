@@ -1,0 +1,14 @@
+pixelator.pna.graph_collapse.collapse.collapse_identical_edges
+==============================================================
+
+.. py:function:: pixelator.pna.graph_collapse.collapse.collapse_identical_edges(con: duckdb.DuckDBPyConnection) -> None
+
+   Merge edgelist rows that share every non-count column, summing counts.
+
+   ``read_count``, ``uei_count``, and ``corrected_read_count`` are the count
+   columns, when the table has them. Every other column is part of the edge
+   identity, so two rows with the same UMIs and a different marker stay
+   separate, as do the same UMIs in a different component.
+
+   :param con: Connection with an ``edgelist`` table.
+

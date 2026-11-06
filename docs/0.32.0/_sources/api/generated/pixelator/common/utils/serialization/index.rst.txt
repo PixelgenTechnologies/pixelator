@@ -1,0 +1,28 @@
+pixelator.common.utils.serialization
+====================================
+
+.. py:module:: pixelator.common.utils.serialization
+
+.. autoapi-nested-parse::
+
+   Utility functions for (de)serializing data to and from disk formats.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/utils/serialization/np_encoder
+   /api/generated/pixelator/common/utils/serialization/remove_csv_whitespaces
+
+.. autoapisummary::
+
+   pixelator.common.utils.serialization.np_encoder
+   pixelator.common.utils.serialization.remove_csv_whitespaces
+
+

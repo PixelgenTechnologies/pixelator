@@ -1,0 +1,26 @@
+pixelator.pna.plot.proximity
+============================
+
+.. py:module:: pixelator.pna.plot.proximity
+
+.. autoapi-nested-parse::
+
+   Proximity heatmap plots.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/plot/proximity/proximity_heatmap
+
+.. autoapisummary::
+
+   pixelator.pna.plot.proximity.proximity_heatmap
+
+

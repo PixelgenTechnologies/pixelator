@@ -1,0 +1,55 @@
+pixelator.pna.collapse.MoleculeCollapser
+========================================
+
+.. py:class:: pixelator.pna.collapse.MoleculeCollapser(assay: pixelator.pna.config.PNAAssay, panel: pixelator.pna.config.PNAAntibodyPanel, output: pathlib.Path, max_mismatches: int | float = 0.1, algorithm: MoleculeCollapserAlgorithm = 'directional', threads: int = -1, logger: logging.Logger | None = None, min_parallel_chunk_size: int = 2000)
+
+   Collapse molecules from a demultiplexed PNA dataset.
+
+   This class is responsible for collapsing molecules from a demultiplexed PNA dataset.
+   Collapsing is parallelized for each marker pair so parallelizing collapsing over multiple
+   independent groups is not needed.
+
+
+   .. py:attribute:: algorithm
+      :value: 'directional'
+
+
+
+   .. py:attribute:: assay
+
+
+   .. py:property:: max_hamming_mismatches
+      :type: int
+
+
+      Return the maximum hamming distance for the number of allowed mismatches.
+
+
+   .. py:attribute:: min_parallel_chunk_size
+      :value: 2000
+
+
+
+   .. py:attribute:: panel
+
+
+   .. py:method:: process_file(path: pathlib.Path) -> None
+
+      Collapse molecules from a single parquet file containing molecular data.
+
+      :param path: The path to the parquet file.
+
+
+
+   .. py:method:: statistics() -> pixelator.pna.collapse.paired.statistics.CollapseStatistics
+
+      Return the statistics collected during the collapse process.
+
+      :returns: The collapse statistics.
+
+
+
+   .. py:attribute:: threads
+      :value: -1
+
+

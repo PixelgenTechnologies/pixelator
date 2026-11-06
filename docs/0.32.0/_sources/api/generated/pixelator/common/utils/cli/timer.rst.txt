@@ -1,0 +1,7 @@
+pixelator.common.utils.cli.timer
+================================
+
+.. py:function:: pixelator.common.utils.cli.timer(func)
+
+   Time the different steps of a function.
+

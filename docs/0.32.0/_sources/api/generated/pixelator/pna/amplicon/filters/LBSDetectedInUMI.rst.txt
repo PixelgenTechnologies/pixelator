@@ -1,0 +1,51 @@
+pixelator.pna.amplicon.filters.LBSDetectedInUMI
+===============================================
+
+.. py:class:: pixelator.pna.amplicon.filters.LBSDetectedInUMI(assay, min_overlap=8, max_error_rate=0.2)
+
+   Bases: :py:obj:`cutadapt.predicates.Predicate`
+
+
+   Select wrongly anchored-reads that match a part of the LBS regions in the UMIs.
+
+   In UMI1 we check for matches to LBS1 at the end of the UMI1 region.
+   In UMI2 we check for matches to LBS2 at the start of the UMI2 region.
+
+   This filtering step expects the full amplicon sequence as input.
+
+   :param assay: The assay configuration.
+   :param min_overlap: Minimum overlap for alignment.
+   :param max_error_rate: Maximum error rate for alignment.
+
+
+   .. py:attribute:: assay
+
+
+   .. py:method:: descriptive_identifier() -> str
+
+      Return a string identifier for this predicate.
+
+      Used in reports and added as a comment to the sequence id when writing failed reads.
+
+
+
+   .. py:attribute:: max_error_rate
+      :value: 0.2
+
+
+
+   .. py:attribute:: min_overlap
+      :value: 8
+
+
+
+   .. py:method:: test(read, info: cutadapt.info.ModificationInfo = None) -> bool
+
+      Return True if the read contains any fixed region substrings.
+
+      :param read: The read to test.
+      :param info: The modification info.
+
+      :returns: True if the read contains any fixed region substrings, False otherwise.
+
+

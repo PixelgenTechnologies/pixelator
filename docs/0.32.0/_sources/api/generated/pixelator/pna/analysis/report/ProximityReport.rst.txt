@@ -1,0 +1,10 @@
+pixelator.pna.analysis.report.ProximityReport
+=============================================
+
+.. py:class:: pixelator.pna.analysis.report.ProximityReport(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Model for report data returned by the proximity analysis.
+

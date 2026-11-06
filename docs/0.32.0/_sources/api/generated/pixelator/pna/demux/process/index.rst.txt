@@ -1,0 +1,43 @@
+pixelator.pna.demux.process
+===========================
+
+.. py:module:: pixelator.pna.demux.process
+
+.. autoapi-nested-parse::
+
+   Correction and demultiplexing of marker barcodes in a FASTQ file.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.demux.process.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/demux/process/correct_marker_barcodes
+   /api/generated/pixelator/pna/demux/process/demux_barcode_groups
+   /api/generated/pixelator/pna/demux/process/finalize_batched_groups
+
+.. autoapisummary::
+
+   pixelator.pna.demux.process.correct_marker_barcodes
+   pixelator.pna.demux.process.demux_barcode_groups
+   pixelator.pna.demux.process.finalize_batched_groups
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

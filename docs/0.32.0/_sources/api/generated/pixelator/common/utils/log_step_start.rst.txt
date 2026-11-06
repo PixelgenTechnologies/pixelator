@@ -1,0 +1,14 @@
+pixelator.common.utils.log_step_start
+=====================================
+
+.. py:function:: pixelator.common.utils.log_step_start(step_name: str, input_files: Optional[List[str] | str] = None, output: Optional[str] = None, **kwargs) -> None
+
+   Add information about the start of a pixelator step to the logs.
+
+   :param step_name: name of the step that is starting
+   :param input_files: collection of input file paths
+   :param output: optional path to output
+   :param \*\*kwargs: any additional parameters that you wish to log
+
+   :returns: None
+

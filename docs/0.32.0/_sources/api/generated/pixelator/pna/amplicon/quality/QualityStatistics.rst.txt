@@ -1,0 +1,49 @@
+pixelator.pna.amplicon.quality.QualityStatistics
+================================================
+
+.. py:class:: pixelator.pna.amplicon.quality.QualityStatistics(data)
+
+   A pipline step that calculates the Q30 fraction for each region in the amplicon.
+
+
+   .. py:method:: collect() -> QualityStatisticsResult
+
+      Return the quality statistics for the complete amplicon and all regions.
+
+
+
+   .. py:method:: get_q30_fraction(region_id: str)
+
+      Return the fraction of bases with quality above 30 for a region.
+
+      The fraction is calculated as the number of bases with quality above
+      30 divided by the total number of sequenced bases.
+
+
+
+   .. py:method:: get_q30_fraction_total_bases(region_id: str)
+
+      Return the fraction of bases with quality above 30 for a region.
+
+      The fraction is calculated as the number of bases with quality above
+      30 divided by the total number bases in the region, even those that were not sequenced.
+
+
+
+   .. py:method:: q30_bases(region_id: str)
+
+      Return the number of bases with quality above 30 for a region.
+
+
+
+   .. py:method:: sequences_bases(region_id: str)
+
+      Return the number of sequenced bases for a region.
+
+
+
+   .. py:method:: total_bases(region_id: str)
+
+      Return the total number of bases for a region.
+
+

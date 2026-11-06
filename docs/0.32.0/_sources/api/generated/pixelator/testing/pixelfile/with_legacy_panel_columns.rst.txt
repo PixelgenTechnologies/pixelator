@@ -1,0 +1,10 @@
+pixelator.testing.pixelfile.with_legacy_panel_columns
+=====================================================
+
+.. py:function:: pixelator.testing.pixelfile.with_legacy_panel_columns(adata: anndata.AnnData, panel: pixelator.pna.config.panel.PNAAntibodyPanel) -> anndata.AnnData
+
+   Store ``panel`` on ``adata`` the way files without panel tables do.
+
+   The panel columns go on ``var`` and the panel metadata in ``uns``. Only a
+   panel with a single source can be stored this way.
+

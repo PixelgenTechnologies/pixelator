@@ -1,0 +1,21 @@
+pixelator.pna.graph.community_detection.run_leiden_refinement
+=============================================================
+
+.. py:function:: pixelator.pna.graph.community_detection.run_leiden_refinement(component_edgelists_path: pathlib.Path, refinement_options: StagedRefinementOptions, component_stats: pixelator.pna.graph.report.GraphStatistics, component_sizes: polars.DataFrame | None = None, max_workers: int = 10) -> tuple[pixelator.pna.graph.report.GraphStatistics, polars.DataFrame]
+
+   Recover multiplets by Leiden community detection, removing crossing edges.
+
+   :param component_edgelists_path: Path to the component edgelists in Parquet (hive partitioned)
+                                    format.
+   :param refinement_options: Options for refinement during community detection.
+   :param component_stats: Statistics about the components.
+   :param component_sizes: Optional precomputed sizes of components.
+   :param max_workers: Maximum number of worker processes to use.
+
+   :returns: A tuple of the updated component statistics and a DataFrame of
+             discarded component sizes.
+
+   :raises ValueError: If ``max_workers`` is invalid.
+   :raises DuckdbPerThreadMemoryError: If the configured memory split would give each thread less than
+       1 MiB.
+

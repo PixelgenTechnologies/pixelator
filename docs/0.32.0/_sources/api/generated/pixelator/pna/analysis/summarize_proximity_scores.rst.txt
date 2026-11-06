@@ -1,0 +1,59 @@
+pixelator.pna.analysis.summarize_proximity_scores
+=================================================
+
+.. py:function:: pixelator.pna.analysis.summarize_proximity_scores(proximity_df: pandas.DataFrame, proximity_metric: Literal['log2_ratio', 'join_count_z'] = 'log2_ratio', group_vars: str | List[str] | None = None, include_missing_obs: bool = True, summary_stat: Literal['mean', 'median'] = 'mean', detailed: bool = False) -> pandas.DataFrame
+
+   Summarize per-component proximity scores across components, for each marker pair.
+
+   Collapses a long-format proximity score table (one row per component and
+   marker pair) into one row per marker pair (optionally stratified by
+   ``group_vars``, e.g. sample or cell type), reporting the number of
+   components the pair was detected in and a summary statistic of
+   ``proximity_metric`` across those components.
+
+   A marker pair is only present for a component if it passed detection in
+   that component's proximity analysis. When ``include_missing_obs`` is
+   ``True`` (the default), components where a pair was not detected are
+   treated as having a ``proximity_metric`` value of 0 and are included when
+   computing the summary statistic, since an undetected pair corresponds to
+   no deviation from the expected join count.
+
+   :param proximity_df: A long-format proximity score table, e.g. from
+                        `Proximity.to_df`, with one row per ``component`` and marker
+                        pair. Must contain the columns ``component``, ``marker_1``,
+                        ``marker_2``, ``proximity_metric``, and (if ``detailed`` is
+                        ``True``) ``join_count`` and ``join_count_expected_mean``.
+   :param proximity_metric: The proximity score column to summarize, either
+                            ``"log2_ratio"`` or ``"join_count_z"``. Defaults to
+                            ``"log2_ratio"``.
+   :param group_vars: Additional column(s) to stratify the summary by, e.g.
+                      ``"sample"`` or ``["sample", "cell_type"]``. Each component must
+                      map to a single, consistent value of every ``group_vars`` column.
+                      Defaults to ``None``, which summarizes across all components in
+                      ``proximity_df``.
+   :param include_missing_obs: If ``True``, pad the values used to compute the
+                               summary statistic with a 0 for every component where the marker
+                               pair was not detected. Defaults to ``True``.
+   :param summary_stat: The summary statistic to compute, either ``"mean"`` or
+                        ``"median"``. Defaults to ``"mean"``.
+   :param detailed: If ``True``, also return the per-component values that went
+                    into the summary statistic (``{proximity_metric}_list``,
+                    ``join_count_list``, and ``join_count_expected_mean_list``), so
+                    that other statistics (e.g. standard deviation or quantiles) can
+                    be computed downstream. Defaults to ``False``.
+
+   :returns: A DataFrame with one row per unique combination of ``group_vars``,
+             ``marker_1`` and ``marker_2``, containing ``n_cells_detected`` (the
+             number of components the pair was detected in), ``n_cells`` (the
+             total number of components in that ``group_vars`` stratum),
+             ``n_cells_missing``, ``pct_detected``, and
+             ``{summary_stat}_{proximity_metric}`` (e.g. ``mean_log2_ratio``). If
+             ``detailed`` is ``True``, the per-component value list columns
+             described above are also included.
+
+   :raises ValueError: If ``proximity_metric`` or ``summary_stat`` is not one of
+       the supported options, if a required column is missing from
+       ``proximity_df``, or if ``proximity_df`` has more than one row for
+       some combination of ``component``, ``marker_1``, ``marker_2`` and
+       ``group_vars``.
+

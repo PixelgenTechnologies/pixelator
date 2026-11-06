@@ -1,0 +1,89 @@
+pixelator.common.plot
+=====================
+
+.. py:module:: pixelator.common.plot
+
+.. autoapi-nested-parse::
+
+   Pixelgen brand colors, palettes, and theme shared across all plotting modules.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/common/plot/colors/index
+   /api/generated/pixelator/common/plot/theme/index
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.plot.PIXELGEN_ACCENT_COLORS
+   pixelator.common.plot.PIXELGEN_CELL_PALETTE
+   pixelator.common.plot.PIXELGEN_GRADIENTS
+   pixelator.common.plot.PIXELGEN_PALETTES
+   pixelator.common.plot.STRIP_BACKGROUND_COLOR
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/plot/create_discrete_palette
+   /api/generated/pixelator/common/plot/pixelgen_accent_colors
+   /api/generated/pixelator/common/plot/pixelgen_colormap
+   /api/generated/pixelator/common/plot/pixelgen_colorscale
+   /api/generated/pixelator/common/plot/pixelgen_discrete_colors
+   /api/generated/pixelator/common/plot/pixelgen_divergent_colormap
+   /api/generated/pixelator/common/plot/pixelgen_gradient
+   /api/generated/pixelator/common/plot/pixelgen_palette
+   /api/generated/pixelator/common/plot/pixelgen_sequential_colormap
+   /api/generated/pixelator/common/plot/pixelgen_theme
+   /api/generated/pixelator/common/plot/set_pixelgen_theme
+   /api/generated/pixelator/common/plot/style_facet_strips
+
+.. autoapisummary::
+
+   pixelator.common.plot.create_discrete_palette
+   pixelator.common.plot.pixelgen_accent_colors
+   pixelator.common.plot.pixelgen_colormap
+   pixelator.common.plot.pixelgen_colorscale
+   pixelator.common.plot.pixelgen_discrete_colors
+   pixelator.common.plot.pixelgen_divergent_colormap
+   pixelator.common.plot.pixelgen_gradient
+   pixelator.common.plot.pixelgen_palette
+   pixelator.common.plot.pixelgen_sequential_colormap
+   pixelator.common.plot.pixelgen_theme
+   pixelator.common.plot.set_pixelgen_theme
+   pixelator.common.plot.style_facet_strips
+
+
+Package Contents
+----------------
+
+.. py:data:: PIXELGEN_ACCENT_COLORS
+   :type:  dict[str, list[str]]
+
+.. py:data:: PIXELGEN_CELL_PALETTE
+   :type:  dict[str, str]
+
+.. py:data:: PIXELGEN_GRADIENTS
+   :type:  dict[str, list[str]]
+
+.. py:data:: PIXELGEN_PALETTES
+   :type:  dict[str, list[str]]
+
+.. py:data:: STRIP_BACKGROUND_COLOR
+   :value: '#F2F2F2'
+
+

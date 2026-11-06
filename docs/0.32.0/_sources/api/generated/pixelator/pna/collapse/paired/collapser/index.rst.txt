@@ -1,0 +1,42 @@
+pixelator.pna.collapse.paired.collapser
+=======================================
+
+.. py:module:: pixelator.pna.collapse.paired.collapser
+
+.. autoapi-nested-parse::
+
+   Collapse molecules from a demultiplexed PNA dataset.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.paired.collapser.MoleculeCollapserAlgorithm
+   pixelator.pna.collapse.paired.collapser.logger
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/collapse/paired/collapser/MoleculeCollapser
+
+.. autoapisummary::
+
+   pixelator.pna.collapse.paired.collapser.MoleculeCollapser
+
+
+Module Contents
+---------------
+
+.. py:data:: MoleculeCollapserAlgorithm
+
+.. py:data:: logger
+

@@ -1,0 +1,7 @@
+pixelator.common.config.panel.parse_panel_header_metadata
+=========================================================
+
+.. py:function:: pixelator.common.config.panel.parse_panel_header_metadata(file: pathlib.Path) -> AntibodyPanelMetadata
+
+   Parse panel front-matter metadata and recover from trailing commas.
+

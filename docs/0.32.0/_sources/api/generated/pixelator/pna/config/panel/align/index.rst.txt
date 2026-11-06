@@ -1,0 +1,52 @@
+pixelator.pna.config.panel.align
+================================
+
+.. py:module:: pixelator.pna.config.panel.align
+
+.. autoapi-nested-parse::
+
+   Align panels whose shared sources differ only in patch version.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Exceptions
+----------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/align/PanelConflictError
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.align.PanelConflictError
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/align/PanelAlignment
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.align.PanelAlignment
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/align/align_panels
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.align.align_panels
+
+

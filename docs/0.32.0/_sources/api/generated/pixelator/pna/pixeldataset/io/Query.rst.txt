@@ -1,0 +1,15 @@
+pixelator.pna.pixeldataset.io.Query
+===================================
+
+.. py:class:: pixelator.pna.pixeldataset.io.Query
+
+   Encapsulate SQL text and bound parameters.
+
+
+   .. py:attribute:: params
+      :type:  dict[str, object]
+
+
+   .. py:attribute:: sql
+      :type:  str
+

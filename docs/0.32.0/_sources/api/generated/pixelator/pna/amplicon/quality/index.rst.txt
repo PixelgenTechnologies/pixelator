@@ -1,0 +1,30 @@
+pixelator.pna.amplicon.quality
+==============================
+
+.. py:module:: pixelator.pna.amplicon.quality
+
+.. autoapi-nested-parse::
+
+   Q30 quality statistics for the amplicon regions.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/amplicon/quality/QualityProfileStep
+   /api/generated/pixelator/pna/amplicon/quality/QualityStatistics
+   /api/generated/pixelator/pna/amplicon/quality/QualityStatisticsResult
+
+.. autoapisummary::
+
+   pixelator.pna.amplicon.quality.QualityProfileStep
+   pixelator.pna.amplicon.quality.QualityStatistics
+   pixelator.pna.amplicon.quality.QualityStatisticsResult
+
+

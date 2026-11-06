@@ -1,0 +1,22 @@
+pixelator.pna.demux.barcode_demuxer.BarcodeDemuxer
+==================================================
+
+.. py:class:: pixelator.pna.demux.barcode_demuxer.BarcodeDemuxer(assay: pixelator.pna.config.PNAAssay, panel: pixelator.pna.config.PNAAntibodyPanel)
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   An abstract base class for BarcodeDemuxer steps.
+
+
+   .. py:attribute:: assay
+
+
+   .. py:method:: flush()
+
+      Return all remaining groups.
+
+
+
+   .. py:attribute:: panel
+

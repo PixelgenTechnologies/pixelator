@@ -1,0 +1,70 @@
+pixelator.pna.collapse.independent.SingleUMICollapseSampleReport
+================================================================
+
+.. py:class:: pixelator.pna.collapse.independent.SingleUMICollapseSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.SampleReport`
+
+
+   Model for report data returned by the collapse stage.
+
+
+   .. py:attribute:: corrected_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: corrected_unique_umis
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: input_molecules
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: input_unique_umis
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: markers
+      :type:  list[MarkerCorrectionStats]
+      :value: None
+
+
+
+   .. py:attribute:: output_unique_umis
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: processed_files
+      :type:  list[CollapseInputFile]
+      :value: None
+
+
+
+   .. py:attribute:: region_id
+      :type:  str
+      :value: None
+
+
+
+   .. py:attribute:: report_type
+      :type:  str
+      :value: 'collapse-umi'
+
+

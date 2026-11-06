@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.layouts
+==================================
+
+.. py:module:: pixelator.pna.pixeldataset.layouts
+
+.. autoapi-nested-parse::
+
+   On-the-fly layouts wrapper for PNA pixel datasets.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/layouts/Layouts
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.layouts.Layouts
+
+

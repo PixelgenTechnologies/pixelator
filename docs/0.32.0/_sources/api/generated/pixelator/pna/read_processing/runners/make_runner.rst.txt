@@ -1,0 +1,15 @@
+pixelator.pna.read_processing.runners.make_runner
+=================================================
+
+.. py:function:: pixelator.pna.read_processing.runners.make_runner(inpaths: cutadapt.files.InputPaths, cores: int, buffer_size: Optional[int] = None, statistics_class: Type[cutadapt.report.Statistics] = Statistics) -> PipelineRunner
+
+   Run a pipeline.
+
+   This uses a SerialPipelineRunner if cores is 1 and a ParallelPipelineRunner otherwise.
+
+   :param inpaths: The input files.
+   :param cores: The number of cores to run the pipeline on (this is actually the number of worker
+                 processes, there will be one extra process for reading the input file(s))
+   :param buffer_size: Forwarded to `ParallelPipelineRunner()`. Ignored if cores is 1.
+   :param statistics_class: The class to use for collecting statistics.
+

@@ -1,0 +1,91 @@
+pixelator.pna.collapse.independent.collapser.MarkerCorrectionStats
+==================================================================
+
+.. py:class:: pixelator.pna.collapse.independent.collapser.MarkerCorrectionStats(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Collect statistics of groups of molecules that will be collapsed.
+
+   :ivar marker: The name of the marker for which we are collapsing UMIs.
+   :ivar region_id: The region id of the UMI to collapse. Either "umi-1" or "umi-2".
+   :ivar input_reads: The total number of input reads to the collapse process.
+   :ivar input_molecules: The total number of unique input reads to the collapse process.
+   :ivar input_unique_umis: The total number of unique UMIs of `region_id` among the input reads.
+   :ivar corrected_reads: The total number of reads that were modified by the error correction
+                          process.
+   :ivar corrected_molecules: The total number of unique reads that were modified by the error
+                              correction process.
+   :ivar corrected_unique_umis: The total number of unique UMIs of type `region_id` that were
+                                modified by the error correction process.
+   :ivar output_unique_umis: The total number of unique UMIs of type `region_id` after correction.
+
+
+
+   .. py:attribute:: corrected_reads
+      :type:  int
+      :value: 0
+
+
+
+   .. py:property:: corrected_reads_fraction
+      :type: float
+
+
+      The fraction of input reads that were corrected.
+
+
+   .. py:attribute:: corrected_unique_umis
+      :type:  int
+      :value: 0
+
+
+
+   .. py:property:: corrected_unique_umis_fraction
+      :type: float
+
+
+      The fraction of unique UMIs of `region_type` that were corrected.
+
+
+   .. py:attribute:: input_molecules
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: input_unique_umis
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: marker
+      :type:  str
+
+
+   .. py:property:: output_reads
+      :type: int
+
+
+      The total number of reads after correction.
+
+      This is always the same as `input_reads_count` but is included for consistency.
+
+
+   .. py:attribute:: output_unique_umis
+      :type:  int
+      :value: 0
+
+
+
+   .. py:attribute:: region_id
+      :type:  CollapsibleRegion
+

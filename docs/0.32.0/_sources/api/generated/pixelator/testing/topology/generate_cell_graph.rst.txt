@@ -1,0 +1,23 @@
+pixelator.testing.topology.generate_cell_graph
+==============================================
+
+.. py:function:: pixelator.testing.topology.generate_cell_graph(n_nodes: int, n_edges: int, min_neighbors: int, strategy='subsample', rng=None) -> polars.DataFrame
+
+   Generate a cell graph with nodes distributed on a unit sphere.
+
+   This function generates a graph where:
+   - Nodes are points distributed on the surface of a unit sphere.
+   - Edges are created based on the `min_neighbors` nearest neighbors for each node.
+   - The graph is made bipartite by removing edges between nodes of the same parity.
+   - The number of edges is subsampled to match `n_edges` if necessary.
+
+   :param n_nodes: The number of nodes in the graph.
+   :param n_edges: The target number of edges in the graph.
+   :param min_neighbors: The minimum number of neighbors for each node.
+   :param strategy: strategy to use match degree distribution
+   :param rng: a seed or numpy Generator for the random number generator
+
+   :returns: A polars DataFrame representing the edge list of the graph.
+
+   :raises ValueError: If `strategy` is not one of `subsample` or `negative-binomial`.
+

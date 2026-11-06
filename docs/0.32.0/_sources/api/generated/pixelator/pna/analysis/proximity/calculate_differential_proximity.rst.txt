@@ -1,0 +1,105 @@
+pixelator.pna.analysis.proximity.calculate_differential_proximity
+=================================================================
+
+.. py:function:: pixelator.pna.analysis.proximity.calculate_differential_proximity(proximity_df: pandas.DataFrame, contrast_column: str, reference: str, targets: List[str] | None = None, metric: str = 'log2_ratio', metric_type: Literal['all', 'self', 'co'] = 'all', min_cells_per_group: int = 10, min_n_obs: int = 0, diff_threshold: float = 0.01, min_pct: float = 0, min_diff_pct: float = float('-inf'), cell_groups: pandas.DataFrame | None = None, group_vars: str | List[str] | None = None, p_adjust_method: Literal['bonferroni', 'holm', 'hochberg', 'hommel', 'fdr_bh', 'fdr_by', 'sidak'] = 'bonferroni') -> pandas.DataFrame
+
+   Compare a proximity metric between a reference group and (one or more) target groups.
+
+   Each marker pair is tested with a two-sided
+   `Mann-Whitney U test <https://en.wikipedia.org/wiki/Mann%E2%80%93Whitney_U_test>`_.
+   The p-value is the normal approximation with a continuity correction.
+   ``median_diff`` is the target median minus the reference median. ``auc``
+   is the fraction of reference-versus-target comparisons won by the
+   reference, with ties counting as half.
+
+   When ``proximity_df`` contains ``component``, each tested pair is aligned
+   to every component in the two groups and missing values of ``metric`` are
+   filled with 0. A marker pair never detected in either group of a comparison
+   is left out. Without ``component`` and without ``cell_groups``, only
+   observed rows are tested, and a pair missing from one of the two groups is
+   skipped.
+
+   ``group_vars`` repeats that comparison inside each combination of those
+   columns. Reference and target cells come from the same combination, and
+   p-values are adjusted inside it. Each result row carries the combination.
+
+   A comparison is skipped when either group contains fewer than
+   ``min_cells_per_group`` components. After the tests, pairs are removed
+   when the absolute median difference is below ``diff_threshold``, when the
+   larger detection rate is below ``min_pct``, or when the difference
+   between the two detection rates is below ``min_diff_pct``. Adjusted
+   p-values are computed on the pairs that remain, across every target in
+   the comparison.
+
+   :param proximity_df: Long-format proximity table. Must contain
+                        ``contrast_column``, ``marker_1``, ``marker_2``, and ``metric``.
+                        ``component`` is optional; when present, missing scores are
+                        zero-padded.
+   :param contrast_column: Column that assigns each row to a group. ``"component"``
+                           is allowed, and then each component is its own group.
+   :param reference: Label of the reference group in ``contrast_column``.
+   :param targets: Labels to compare against ``reference``. ``None`` uses every
+                   other label in ``contrast_column``. Defaults to ``None``.
+   :param metric: Proximity column to test. Defaults to ``"log2_ratio"``.
+   :param metric_type: Which pairs to test. ``"self"`` keeps pairs where
+                       ``marker_1`` and ``marker_2`` are equal, ``"co"`` keeps the rest,
+                       and ``"all"`` keeps every pair. Defaults to ``"all"``.
+   :param min_cells_per_group: Minimum number of distinct components in each
+                               group. A smaller group is skipped with a warning. Components are
+                               counted in ``cell_groups`` when that table is given. The check is
+                               skipped when no component id is available. Defaults to 10.
+   :param min_n_obs: Require more than this many detected rows in both groups
+                     before zero-padding. ``0`` disables the check. Defaults to 0.
+   :param diff_threshold: Minimum absolute median difference. Pairs below it are
+                          dropped before p-values are adjusted. Defaults to 0.01.
+   :param min_pct: Minimum larger detection rate. Exact zeros count as
+                   undetected. Defaults to 0.
+   :param min_diff_pct: Minimum difference between the two detection rates.
+                        Defaults to negative infinity.
+   :param cell_groups: Components to include, with columns ``component`` and
+                       ``contrast_column`` (``component`` alone when that column is the
+                       contrast). Required in order to zero-pad a component that has no
+                       proximity rows. Components missing from ``proximity_df`` contribute
+                       a 0. A component present in both tables must have the same
+                       ``contrast_column`` label in both. Defaults to ``None``.
+   :param group_vars: Columns that split the comparison. Both groups in a
+                      comparison come from the same combination of these columns.
+                      Defaults to ``None``.
+   :param p_adjust_method: Method forwarded to
+                           ``statsmodels.stats.multitest.multipletests``. Defaults to
+                           ``"bonferroni"``.
+
+   :returns: One row per marker pair, target, and grouping combination that passed
+             the thresholds, with columns ``marker_1``, ``marker_2``, ``reference``,
+             ``target``, ``u_stat``, ``p_value``, ``auc``, ``median_diff``,
+             ``tgt_median``, ``ref_median``, ``n_ref``, ``n_tgt``, ``pct_ref``,
+             ``pct_tgt``, and ``p_adjusted``, plus one column per entry in
+             ``group_vars``. ``n_ref`` and ``n_tgt`` include zero-padded components
+             when a component id is available, and count observed rows otherwise.
+             ``pct_ref`` and ``pct_tgt`` are the rounded detection rates. The same
+             columns are present, with no rows, when every comparison is skipped
+             or every pair is filtered.
+
+   :raises ValueError: If ``contrast_column`` or ``metric`` is not in
+       ``proximity_df``, if ``min_cells_per_group`` is negative, if
+       ``cell_groups`` is missing a required column, if ``proximity_df``
+       has no ``component`` column when ``cell_groups`` is provided, if a
+       component has more than one contrast or grouping label, if a
+       contrast or grouping label is missing, if the two tables disagree,
+       if ``group_vars`` includes ``contrast_column``,
+       if the same component and marker pair has conflicting ``metric``
+       values, or if ``metric_type`` removes every row.
+
+   :Warns: **UserWarning** -- If a comparison is skipped because a group has fewer than
+           ``min_cells_per_group`` components. The message names the grouping
+           combination when ``group_vars`` is set.
+
+   .. rubric:: References
+
+   * `Bonferroni correction <https://en.wikipedia.org/wiki/Bonferroni_correction>`_
+   * `Holm–Bonferroni method <https://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method>`_
+   * `Hochberg method <https://www.sciencedirect.com/topics/mathematics/hochberg-method>`_
+   * `Hommel <https://academic.oup.com/biomet/article-abstract/75/2/383/292949>`_
+   * `False discovery rate <https://en.wikipedia.org/wiki/False_discovery_rate>`_
+   * `Sidak correction <https://en.wikipedia.org/wiki/%C5%A0id%C3%A1k_correction>`_
+

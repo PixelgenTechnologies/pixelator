@@ -1,0 +1,10 @@
+pixelator.pna.demux.correction.hamming_distance
+===============================================
+
+.. py:function:: pixelator.pna.demux.correction.hamming_distance(x, y)
+
+   Calculate the hamming distance between two integral values.
+
+   >>> [hamming_distance(x, 15) for x in [0, 8, 10, 12, 14, 15]]
+   [4, 3, 2, 2, 1, 0]
+

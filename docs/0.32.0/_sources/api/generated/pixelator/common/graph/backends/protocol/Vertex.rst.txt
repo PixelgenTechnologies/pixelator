@@ -1,0 +1,17 @@
+pixelator.common.graph.backends.protocol.Vertex
+===============================================
+
+.. py:class:: pixelator.common.graph.backends.protocol.Vertex
+
+   Bases: :py:obj:`Protocol`
+
+
+   Protocol for a single vertex in a graph.
+
+
+   .. py:property:: index
+      :type: int
+
+
+      Get the index of the vertex.
+

@@ -1,0 +1,24 @@
+pixelator.testing.populate_cell
+===============================
+
+.. py:function:: pixelator.testing.populate_cell(edgelist: polars.DataFrame, panel: pixelator.pna.config.panel.PNAAntibodyPanel, hashing_index: int | None = None, hashing_fraction: float = 0.2, rng=None, *, cell_type: int = 0, n_cell_types: int = 1, cell_type_effect: float = 1.0, n_shared_markers: int = 0) -> polars.DataFrame
+
+   Populate a cell edge list with umis and markers.
+
+   :param edgelist: edge list with ``node1`` and ``node2`` node-index columns.
+   :param panel: antibody panel providing the available markers.
+   :param hashing_index: hashing index (the ``-X`` suffix) whose markers receive
+                         the hashing overwrite for this cell. ``None`` (or a panel without
+                         hashing markers) skips the hashing overwrite.
+   :param hashing_fraction: fraction of the cell's umis assigned to the hashing
+                            markers of ``hashing_index``.
+   :param rng: a seed or numpy Generator for the random number generator.
+   :param cell_type: cell type of this cell, in ``[0, n_cell_types)``.
+   :param n_cell_types: number of cell types the marker blocks are split into.
+   :param cell_type_effect: factor applied to the probabilities of the cell
+                            type's marker block.
+   :param n_shared_markers: number of high-abundance markers boosted by
+                            ``cell_type_effect`` in every cell.
+
+   :returns: A polars DataFrame with columns ``umi1``, ``marker_1``, ``umi2``, ``marker_2``.
+

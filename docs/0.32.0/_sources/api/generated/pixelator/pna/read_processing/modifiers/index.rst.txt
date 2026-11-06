@@ -1,0 +1,29 @@
+pixelator.pna.read_processing.modifiers
+=======================================
+
+.. py:module:: pixelator.pna.read_processing.modifiers
+
+.. autoapi-nested-parse::
+
+   Implements a CombiningModifier interface for a Pipeline.
+
+   A modifier must be callable and typically implemented as a class with a
+   __call__ method.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/read_processing/modifiers/CombiningModifier
+
+.. autoapisummary::
+
+   pixelator.pna.read_processing.modifiers.CombiningModifier
+
+

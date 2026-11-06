@@ -1,0 +1,26 @@
+pixelator.pna.graph_collapse.report
+===================================
+
+.. py:module:: pixelator.pna.graph_collapse.report
+
+.. autoapi-nested-parse::
+
+   Reporting metadata for the graph-collapse command.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/graph_collapse/report/GraphCollapseSampleReport
+
+.. autoapisummary::
+
+   pixelator.pna.graph_collapse.report.GraphCollapseSampleReport
+
+

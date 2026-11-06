@@ -1,0 +1,34 @@
+pixelator.pna.read_processing.runners.SerialPipelineRunner
+==========================================================
+
+.. py:class:: pixelator.pna.read_processing.runners.SerialPipelineRunner(infiles: cutadapt.files.InputFiles, statistics_class: Type[cutadapt.report.Statistics] = Statistics)
+
+   Bases: :py:obj:`PipelineRunner`
+
+
+   Run a Pipeline on a single core.
+
+
+   .. py:method:: close()
+
+      Close all open file-descriptors from the `infiles`.
+
+
+
+   .. py:method:: input_file_format() -> cutadapt.files.FileFormat
+
+      Return the detected file format of the input file(s).
+
+
+
+   .. py:method:: run(pipeline: cutadapt.pipeline.Pipeline, progress: cutadapt.utils.Progress, outfiles: cutadapt.files.OutputFiles) -> cutadapt.report.Statistics
+
+      Run the pipeline on the input files.
+
+      :param pipeline: The pipeline to run.
+      :param progress: A progress object.
+      :param outfiles: The output files.
+
+      :returns: The statistics object.
+
+

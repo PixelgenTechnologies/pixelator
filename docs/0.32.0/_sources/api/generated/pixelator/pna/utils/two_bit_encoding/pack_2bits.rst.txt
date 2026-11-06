@@ -1,0 +1,15 @@
+pixelator.pna.utils.two_bit_encoding.pack_2bits
+===============================================
+
+.. py:function:: pixelator.pna.utils.two_bit_encoding.pack_2bits(kmer: bytes) -> numpy.uint64
+
+   Pack a kmer into an int using two bits per nucleotide.
+
+   A kmer must be at most 32 nucleotides long.
+   Any nucleotides beyond the 32nd are ignored.
+   N bases are not supported (will raise KeyError).
+
+   :param kmer: the kmer to pack
+
+   :returns: the packed kmer as an integer
+

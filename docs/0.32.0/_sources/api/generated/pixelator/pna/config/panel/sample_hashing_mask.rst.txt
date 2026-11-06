@@ -1,0 +1,7 @@
+pixelator.pna.config.panel.sample_hashing_mask
+==============================================
+
+.. py:function:: pixelator.pna.config.panel.sample_hashing_mask(sample_hashing: pandas.Series) -> pandas.Series
+
+   Return a boolean mask for values that flag a hashing marker.
+

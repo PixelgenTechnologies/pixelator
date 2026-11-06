@@ -1,0 +1,13 @@
+pixelator.pna.graph_collapse.collapse.drop_renames_with_different_markers
+=========================================================================
+
+.. py:function:: pixelator.pna.graph_collapse.collapse.drop_renames_with_different_markers(con: duckdb.DuckDBPyConnection) -> None
+
+   Delete ``_renames`` rows whose original and corrected UMI markers differ.
+
+   ``marker_1`` is the marker of ``umi1`` and ``marker_2`` is the marker of
+   ``umi2``. A pair is removed when any marker recorded for the original UMI
+   differs from any marker recorded for the corrected UMI.
+
+   :param con: Connection with an ``edgelist`` table and a ``_renames`` table.
+

@@ -1,0 +1,37 @@
+pixelator.common.statistics.dsb_normalize
+=========================================
+
+.. py:function:: pixelator.common.statistics.dsb_normalize(raw_abundance: pandas.DataFrame, isotype_controls: Union[List, None] = None)
+
+   Normalize abundance data using DSB - denoised and scaled by background.
+
+   This method is implemented as described in Mulè et al.'s dsb package.
+   The normalization steps are:
+
+   1. Log1p transformation.
+   2. Remove background abundance per marker.
+   3. Regularize abundance per component.
+
+   :param raw_abundance: The raw abundance count data with components as rows
+                         and markers as columns.
+   :param isotype_controls: Column names of isotype control markers in ``raw_abundance``.
+                            At least one is required.
+
+   :returns: A dataframe with the same shape and index/columns as ``raw_abundance``
+             containing the normalized abundance values.
+
+   :raises ValueError: If ``isotype_controls`` is ``None``.
+
+   .. rubric:: References
+
+   Integrating population and single-cell variations in vaccine responses
+   identifies a naturally adjuvanted human immune setpoint,
+   Matthew P. Mulè et al., Immunity, 2024,
+   https://doi.org/10.1016/j.immuni.2024.04.009
+
+   Normalizing and denoising protein expression data
+   from droplet-based single cell profiling
+   Matthew P. Mulè, Andrew J. Martins, & John S. Tsang,
+   Nature Communications, 2022
+   https://www.nature.com/articles/s41467-022-29356-8
+

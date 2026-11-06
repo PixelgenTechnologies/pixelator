@@ -1,0 +1,89 @@
+pixelator.pna.graph_collapse.report.GraphCollapseSampleReport
+=============================================================
+
+.. py:class:: pixelator.pna.graph_collapse.report.GraphCollapseSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.SampleReport`
+
+
+   Model for report data returned by the graph-collapse stage.
+
+
+   .. py:attribute:: bfs_distance_distribution
+      :type:  dict[int, int]
+      :value: None
+
+
+
+   .. py:attribute:: collapsed_sequences_file
+      :type:  str | None
+      :value: None
+
+
+
+   .. py:attribute:: component_count
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: hamming_distance_distribution
+      :type:  dict[int, int]
+      :value: None
+
+
+
+   .. py:attribute:: nodes_collapsed
+      :type:  int
+      :value: None
+
+
+
+   .. py:property:: nodes_collapsed_fraction
+      :type: float
+
+
+      Return the fraction of all input nodes that were collapsed.
+
+
+   .. py:attribute:: nodes_considered
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: reads_input
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: reads_output
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: report_type
+      :type:  str
+      :value: 'graph-collapse'
+
+
+
+   .. py:attribute:: targets_found
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: umis_input
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: umis_output
+      :type:  int
+      :value: None
+
+

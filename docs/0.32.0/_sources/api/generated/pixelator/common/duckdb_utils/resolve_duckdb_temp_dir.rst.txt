@@ -1,0 +1,13 @@
+pixelator.common.duckdb_utils.resolve_duckdb_temp_dir
+=====================================================
+
+.. py:function:: pixelator.common.duckdb_utils.resolve_duckdb_temp_dir(temp_dir: pathlib.Path | str | None = None) -> pathlib.Path
+
+   Resolve the DuckDB spill directory.
+
+   Uses the explicit argument, then ``PIXELATOR_DUCKDB_TEMP_DIR``, then ``/tmp``.
+
+   :param temp_dir: An explicit spill directory that takes precedence over the env var.
+
+   :returns: The resolved spill directory.
+

@@ -1,0 +1,81 @@
+pixelator.pna.collapse.independent.report.IndependentCollapseSampleReport
+=========================================================================
+
+.. py:class:: pixelator.pna.collapse.independent.report.IndependentCollapseSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.base.SampleReport`
+
+
+   Model for report data returned by the collapse stage.
+
+
+   .. py:attribute:: corrected_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:property:: corrected_umi1_reads
+      :type: int
+
+
+      The number of UMI1 reads that had an error and were corrected.
+
+
+   .. py:property:: corrected_umi2_reads
+      :type: int
+
+
+      The number of UMI2 reads that had an error and were corrected.
+
+
+   .. py:attribute:: input_molecules
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: markers
+      :type:  list[pixelator.pna.collapse.independent.collapser.MarkerCorrectionStats]
+      :value: None
+
+
+
+   .. py:attribute:: output_molecules
+      :type:  int
+      :value: None
+
+
+
+   .. py:property:: output_reads
+      :type: int
+
+
+      The total number of error-corrected output reads.
+
+      This is an alias for the input reads as no reads are removed during the collapse step.
+
+
+   .. py:attribute:: report_type
+      :type:  str
+      :value: 'collapse-independent'
+
+
+
+   .. py:attribute:: umi1_degree_distribution
+      :type:  dict[int, int]
+      :value: None
+
+
+
+   .. py:attribute:: umi2_degree_distribution
+      :type:  dict[int, int]
+      :value: None
+
+

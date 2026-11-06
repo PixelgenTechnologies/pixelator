@@ -1,0 +1,39 @@
+pixelator.pna.pixeldataset.utils
+================================
+
+.. py:module:: pixelator.pna.pixeldataset.utils
+
+.. autoapi-nested-parse::
+
+   Module for utilities for working with pixeldatasets.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.utils.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/utils/update_metrics_anndata
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.utils.update_metrics_anndata
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

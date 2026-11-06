@@ -1,0 +1,28 @@
+pixelator.testing.molecules
+===========================
+
+.. py:module:: pixelator.testing.molecules
+
+.. autoapi-nested-parse::
+
+   Marker and umi population for test data cell graphs.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/testing/molecules/generate_edgelist
+   /api/generated/pixelator/testing/molecules/populate_cell
+
+.. autoapisummary::
+
+   pixelator.testing.molecules.generate_edgelist
+   pixelator.testing.molecules.populate_cell
+
+

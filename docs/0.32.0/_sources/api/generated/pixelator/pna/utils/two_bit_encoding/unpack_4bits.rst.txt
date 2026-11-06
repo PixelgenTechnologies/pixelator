@@ -1,0 +1,10 @@
+pixelator.pna.utils.two_bit_encoding.unpack_4bits
+=================================================
+
+.. py:function:: pixelator.pna.utils.two_bit_encoding.unpack_4bits(packed: int, k: numpy.uint64) -> bytes
+
+   Unpack a kmer from an integer using four bits per nucleotides.
+
+   :param packed: the packed kmer as an integer
+   :param k: the length of the kmer
+

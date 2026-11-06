@@ -1,0 +1,26 @@
+pixelator.pna.analysis.segmentation.partition
+=============================================
+
+.. py:module:: pixelator.pna.analysis.segmentation.partition
+
+.. autoapi-nested-parse::
+
+   Protein counts aggregated by node partition.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/segmentation/partition/partition_counts
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.segmentation.partition.partition_counts
+
+

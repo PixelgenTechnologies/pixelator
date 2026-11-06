@@ -1,0 +1,26 @@
+pixelator.pna.layout.report
+===========================
+
+.. py:module:: pixelator.pna.layout.report
+
+.. autoapi-nested-parse::
+
+   Model for report data returned by the single-cell layout stage.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/layout/report/LayoutSampleReport
+
+.. autoapisummary::
+
+   pixelator.pna.layout.report.LayoutSampleReport
+
+

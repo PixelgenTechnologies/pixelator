@@ -1,0 +1,15 @@
+pixelator.common.plot.theme.pixelgen_theme
+==========================================
+
+.. py:function:: pixelator.common.plot.theme.pixelgen_theme() -> Iterator[None]
+
+   Context manager that applies the Pixelgen brand theme temporarily.
+
+   .. rubric:: Example
+
+   with pixelgen_theme():
+       fig, ax = plt.subplots()
+       ax.plot(...)
+
+   :Yields: None. rcParams and the default color palette are restored on exit.
+

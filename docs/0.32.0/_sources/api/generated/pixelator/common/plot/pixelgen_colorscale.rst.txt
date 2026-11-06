@@ -1,0 +1,23 @@
+pixelator.common.plot.pixelgen_colorscale
+=========================================
+
+.. py:function:: pixelator.common.plot.pixelgen_colorscale(hue: str = 'purples', direction: int = 1, min_level: int = 1, max_level: int = _N_ACCENT_LEVELS) -> list[str]
+
+   Get a Pixelgen branded continuous color scale for a given hue.
+
+   :param hue: The accent color hue to build the scale from. See
+               `pixelgen_accent_colors`.
+   :param direction: ``1`` for light-to-dark (the default accent color
+                     ordering), ``-1`` for dark-to-light.
+   :param min_level: The lightest accent color level (1-12) to include. Raise
+                     this above 1 to avoid the near-white end of a hue, e.g. for
+                     points plotted on a white background that would otherwise be
+                     hard to see.
+   :param max_level: The darkest accent color level (1-12) to include.
+
+   :returns: A list of hex color strings (``max_level - min_level + 1`` of them),
+             ordered as a continuous color scale.
+
+   :raises ValueError: If ``hue`` is unknown, ``direction`` is not 1 or -1, or
+       ``min_level``/``max_level`` are out of range or in the wrong order.
+

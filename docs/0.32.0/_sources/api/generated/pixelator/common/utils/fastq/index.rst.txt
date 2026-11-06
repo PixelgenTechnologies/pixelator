@@ -1,0 +1,50 @@
+pixelator.common.utils.fastq
+============================
+
+.. py:module:: pixelator.common.utils.fastq
+
+.. autoapi-nested-parse::
+
+   Utility functions for working with FASTQ read files and read pairs.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.utils.fastq.R1_REGEX
+   pixelator.common.utils.fastq.R2_REGEX
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/utils/fastq/get_read_sample_name
+   /api/generated/pixelator/common/utils/fastq/group_input_reads
+   /api/generated/pixelator/common/utils/fastq/is_read_file
+
+.. autoapisummary::
+
+   pixelator.common.utils.fastq.get_read_sample_name
+   pixelator.common.utils.fastq.group_input_reads
+   pixelator.common.utils.fastq.is_read_file
+
+
+Module Contents
+---------------
+
+.. py:data:: R1_REGEX
+   :value: '(.[Rr]1$)|(_[Rr]?1$)|(_[Rr]?1)(?P<suffix>_[0-9]{3})$'
+
+
+.. py:data:: R2_REGEX
+   :value: '(.[Rr]2$)|(_[Rr]?2$)|(_[Rr]?2)(?P<suffix>_[0-9]{3})$'
+
+

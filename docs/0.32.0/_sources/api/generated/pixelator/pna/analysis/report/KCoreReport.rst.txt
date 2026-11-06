@@ -1,0 +1,14 @@
+pixelator.pna.analysis.report.KCoreReport
+=========================================
+
+.. py:class:: pixelator.pna.analysis.report.KCoreReport(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Model for report data returned by the k-core analysis.
+
+
+   .. py:attribute:: median_average_k_core
+      :type:  float
+

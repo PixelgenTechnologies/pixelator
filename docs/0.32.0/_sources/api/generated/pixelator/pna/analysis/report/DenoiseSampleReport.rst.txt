@@ -1,0 +1,32 @@
+pixelator.pna.analysis.report.DenoiseSampleReport
+=================================================
+
+.. py:class:: pixelator.pna.analysis.report.DenoiseSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.base.SampleReport`
+
+
+   Model for report data returned by the single-cell denoise stage.
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+
+
+   .. py:attribute:: number_of_umis_removed
+      :type:  int | None
+
+
+   .. py:attribute:: output_reads
+      :type:  int
+
+
+   .. py:attribute:: ratio_of_umis_removed
+      :type:  float | None
+
+
+   .. py:attribute:: report_type
+      :type:  str
+      :value: 'denoise'
+
+

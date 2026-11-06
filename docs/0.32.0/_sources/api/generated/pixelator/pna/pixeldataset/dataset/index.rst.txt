@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.dataset
+==================================
+
+.. py:module:: pixelator.pna.pixeldataset.dataset
+
+.. autoapi-nested-parse::
+
+   Core PNA pixel dataset object.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/dataset/PNAPixelDataset
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.dataset.PNAPixelDataset
+
+

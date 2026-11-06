@@ -1,0 +1,60 @@
+pixelator.common.report.models.summary_statistics.SummaryStatistics
+===================================================================
+
+.. py:class:: pixelator.common.report.models.summary_statistics.SummaryStatistics(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   A collection of summary statistics for a distribution.
+
+
+   .. py:attribute:: count
+      :type:  int
+
+
+   .. py:method:: from_series(distribution: pandas.Series | polars.Series) -> Self
+      :classmethod:
+
+
+      Create a SummaryStatistics from a pandas or polars Series.
+
+      :param distribution: The series to summarize.
+
+      :returns: A SummaryStatistics object from given series.
+
+
+
+   .. py:method:: iqr() -> float
+
+      Return the interquartile range.
+
+
+
+   .. py:attribute:: max
+      :type:  float
+
+
+   .. py:attribute:: mean
+      :type:  float
+
+
+   .. py:attribute:: min
+      :type:  float
+
+
+   .. py:attribute:: q1
+      :type:  float
+
+
+   .. py:attribute:: q2
+      :type:  float
+
+
+   .. py:attribute:: q3
+      :type:  float
+
+
+   .. py:attribute:: std
+      :type:  float
+

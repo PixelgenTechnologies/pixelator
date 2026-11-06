@@ -1,0 +1,38 @@
+pixelator.pna.graph_collapse.constants
+======================================
+
+.. py:module:: pixelator.pna.graph_collapse.constants
+
+.. autoapi-nested-parse::
+
+   Default parameter values for graph-collapse.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.graph_collapse.constants.DEFAULT_BFS_DISTANCE
+   pixelator.pna.graph_collapse.constants.DEFAULT_HAMMING_THRESHOLD
+   pixelator.pna.graph_collapse.constants.DEFAULT_MAX_DEGREE
+
+
+Module Contents
+---------------
+
+.. py:data:: DEFAULT_BFS_DISTANCE
+   :value: 6
+
+
+.. py:data:: DEFAULT_HAMMING_THRESHOLD
+   :value: 2
+
+
+.. py:data:: DEFAULT_MAX_DEGREE
+   :value: 1
+
+

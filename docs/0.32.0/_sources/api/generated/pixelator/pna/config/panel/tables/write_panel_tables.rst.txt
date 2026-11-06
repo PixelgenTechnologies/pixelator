@@ -1,0 +1,11 @@
+pixelator.pna.config.panel.tables.write_panel_tables
+====================================================
+
+.. py:function:: pixelator.pna.config.panel.tables.write_panel_tables(connection: duckdb.DuckDBPyConnection, panel: pixelator.pna.config.panel.antibody_panel.PNAAntibodyPanel) -> None
+
+   Store ``panel`` in the ``panels`` and ``panel_sources`` tables.
+
+   ``panels`` has one row per marker, with its ``source_id`` and ``row_nr``
+   (the marker order). ``panel_sources`` has one row per source. Tables already
+   in the file are dropped and rebuilt, so the file ends up with exactly ``panel``.
+

@@ -1,0 +1,13 @@
+pixelator.pna.demux.barcode_demuxer.PairedBarcodeDemuxer
+========================================================
+
+.. py:class:: pixelator.pna.demux.barcode_demuxer.PairedBarcodeDemuxer(assay: pixelator.pna.config.PNAAssay, panel: pixelator.pna.config.PNAAntibodyPanel, supergroups: dict[tuple[str, str], int])
+
+   Bases: :py:obj:`BarcodeDemuxer`
+
+
+   Demux reads according to (PID1, PID2) groups.
+
+   Each (PID1, PID2) pair is assigned to group id.
+
+

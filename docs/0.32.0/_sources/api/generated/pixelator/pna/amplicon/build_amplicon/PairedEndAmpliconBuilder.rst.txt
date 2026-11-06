@@ -1,0 +1,31 @@
+pixelator.pna.amplicon.build_amplicon.PairedEndAmpliconBuilder
+==============================================================
+
+.. py:class:: pixelator.pna.amplicon.build_amplicon.PairedEndAmpliconBuilder(assay: pixelator.pna.config.assay.PNAAssay, mismatches: int | float = 0.2, writer=None)
+
+   Bases: :py:obj:`AmpliconBuilder`
+
+
+   A wrapper for AmpliconBuilder that handles paired-end reads.
+
+
+   .. py:method:: handle(read1: dnaio.SequenceRecord, read2: dnaio.SequenceRecord, info1: cutadapt.info.ModificationInfo | None = None, info2: cutadapt.info.ModificationInfo | None = None) -> tuple[Amplicon, AmpliconBuilderFailureReason | None]
+
+      Process paired-end sequencing reads and determine amplicon failure reasons.
+
+      This method scans the provided forward and reverse reads for specific regions, generates
+      consensus
+      sequences and quality scores for each region, and checks for errors. If consensus cannot be
+      reached,
+      it returns an Amplicon object with all regions set to None and an appropriate failure
+      reason.
+
+      :param read1: The forward sequencing read.
+      :param read2: The reverse sequencing read.
+      :param info1: Additional modification information for read1. Defaults to None.
+      :param info2: Additional modification information for read2. Defaults to None.
+
+      :returns: A tuple containing the constructed Amplicon object and a failure reason if applicable.
+                Returns None if both reads are None.
+
+

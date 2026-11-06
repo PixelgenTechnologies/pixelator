@@ -1,0 +1,19 @@
+pixelator.pna.graph.component_recovery_utils.get_count_statistics
+=================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.get_count_statistics(edgelist_path: pathlib.Path) -> dict
+
+   Get count statistics from an edgelist Parquet file.
+
+   This function reads an edgelist stored in a Parquet file and computes the total number of edges,
+   as well as the total number of distinct UMIs present in the edgelist. It returns these
+   statistics
+   in a dictionary.
+
+   :param edgelist_path: Path to the input Parquet file containing the edgelist.
+
+   :returns: A dictionary containing the following keys: - 'n_edges': Total number of edges in the
+             edgelist. - 'n_umi': Total number of distinct UMIs in the edgelist. - 'n_reads': Total
+             number of reads in the edgelist. - 'n_molecules': Total number of molecules in the edgelist.
+   :rtype: dict
+

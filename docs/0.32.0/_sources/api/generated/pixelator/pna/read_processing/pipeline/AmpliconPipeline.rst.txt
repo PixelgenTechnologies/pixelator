@@ -1,0 +1,43 @@
+pixelator.pna.read_processing.pipeline.AmpliconPipeline
+=======================================================
+
+.. py:class:: pixelator.pna.read_processing.pipeline.AmpliconPipeline(combiner: pixelator.pna.read_processing.modifiers.CombiningModifier, pre_modifiers: Iterable[cutadapt.modifiers.PairedEndModifier | cutadapt.modifiers.SingleEndModifier | tuple[cutadapt.modifiers.SingleEndModifier | None, cutadapt.modifiers.SingleEndModifier | None]] | None = None, pre_steps: Iterable[cutadapt.steps.PairedEndStep | cutadapt.steps.SingleEndStep] | None = None, post_modifiers: Iterable[cutadapt.modifiers.SingleEndModifier] | None = None, post_steps: Iterable[cutadapt.steps.SingleEndStep] | None = None)
+
+   Bases: :py:obj:`cutadapt.pipeline.Pipeline`
+
+
+   Process single-end or paired-end reads into a single amplicon sequence.
+
+   - If two files (R1+R2) are provided: pre‐steps (paired), then combine, then post‐steps (single).
+   - If only one file is provided (single‐end), you detect "R1" vs "R2" by looking at
+     read.name, and treat that one FASTQ as if it were already "combined.”  All
+     single‐end modifiers/steps run in that branch.
+
+   :param combiner: The step that combines the reads into a single amplicon sequence.
+   :param pre_modifiers: A list of modifiers that are applied to the reads before the combining step.
+   :param pre_steps: A list of steps that are applied to the reads before the combining step.
+   :param post_modifiers: A list of modifiers that are applied to the reads after the combining step.
+   :param post_steps: A list of steps that are applied to the reads after the combining step.
+
+
+   .. py:attribute:: override_untrimmed_pair_filter
+      :value: False
+
+
+
+   .. py:attribute:: paired
+      :type:  bool | None
+      :value: None
+
+
+
+   .. py:method:: process_reads(infiles: cutadapt.files.InputFiles, progress: Optional[cutadapt.utils.Progress] = None) -> Tuple[int, int, Optional[int]]
+
+      Receive a slice of reads and process them through the pipeline.
+
+      :param infiles: A list of input files to process.
+      :param progress: Progress.
+
+      :returns: (n_reads, total1_bp, total2_bp or None).
+
+

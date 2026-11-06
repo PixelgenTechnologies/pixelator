@@ -1,0 +1,52 @@
+pixelator.pna.edgelist.report.EdgelistSampleReport
+==================================================
+
+.. py:class:: pixelator.pna.edgelist.report.EdgelistSampleReport(/, **data: Any)
+
+   Bases: :py:obj:`pixelator.pna.report.models.SampleReport`
+
+
+   Model for a sample report from the native edgelist stage.
+
+
+   .. py:attribute:: dropped_by
+      :type:  dict[str, int]
+      :value: None
+
+
+
+   .. py:attribute:: input_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: output_reads
+      :type:  int
+      :value: None
+
+
+
+   .. py:attribute:: q30_statistics
+      :type:  Q30Statistics
+      :value: None
+
+
+
+   .. py:attribute:: reads_per_marker_1
+      :type:  dict[str, int]
+      :value: None
+
+
+
+   .. py:attribute:: reads_per_marker_2
+      :type:  dict[str, int]
+      :value: None
+
+
+
+   .. py:attribute:: report_type
+      :type:  str
+      :value: 'edgelist'
+
+

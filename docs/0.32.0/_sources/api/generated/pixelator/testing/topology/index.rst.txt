@@ -1,0 +1,26 @@
+pixelator.testing.topology
+==========================
+
+.. py:module:: pixelator.testing.topology
+
+.. autoapi-nested-parse::
+
+   Unit sphere graph topology generation for test data.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/testing/topology/generate_cell_graph
+
+.. autoapisummary::
+
+   pixelator.testing.topology.generate_cell_graph
+
+

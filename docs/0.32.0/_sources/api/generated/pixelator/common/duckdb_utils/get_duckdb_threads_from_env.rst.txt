@@ -1,0 +1,7 @@
+pixelator.common.duckdb_utils.get_duckdb_threads_from_env
+=========================================================
+
+.. py:function:: pixelator.common.duckdb_utils.get_duckdb_threads_from_env() -> str | None
+
+   Return ``PIXELATOR_DUCKDB_THREADS``, or ``None`` if unset.
+

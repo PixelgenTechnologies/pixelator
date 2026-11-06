@@ -1,0 +1,52 @@
+pixelator.pna.read_processing.runners.ParallelPipelineRunner
+============================================================
+
+.. py:class:: pixelator.pna.read_processing.runners.ParallelPipelineRunner(inpaths: cutadapt.files.InputPaths, n_workers: int, buffer_size: Optional[int] = None, statistics_class: StatisticsClass = Statistics)
+
+   Bases: :py:obj:`PipelineRunner`, :py:obj:`Generic`\ [\ :py:obj:`StatisticsClass`\ ]
+
+
+   Run a Pipeline in parallel.
+
+   - At construction, a reader process is spawned.
+   - When run() is called, as many worker processes as requested are spawned.
+   - In the main process, results are written to the output files in the correct
+     order, and statistics are aggregated.
+
+   If a worker needs work, it puts its own index into a Queue() (_need_work_queue).
+   The reader process listens on this queue and sends the raw data to the
+   worker that has requested work. For sending the data from reader to worker,
+   a Connection() is used. There is one such connection for each worker (self._pipes).
+
+   For sending the processed data from the worker to the main process, there
+   is a second set of connections, again one for each worker.
+
+   When the reader is finished, it sends 'poison pills' to all workers.
+   When a worker receives this, it sends a poison pill to the main process,
+   followed by a Statistics object that contains statistics about all the reads
+   processed by that worker.
+
+
+   .. py:method:: close() -> None
+
+      Close all open file-descriptors.
+
+
+
+   .. py:method:: input_file_format() -> cutadapt.files.FileFormat
+
+      Return the input file format of the input file(s).
+
+
+
+   .. py:method:: run(pipeline, progress, outfiles: cutadapt.files.OutputFiles) -> StatisticsClass
+
+      Run the pipeline on the input files.
+
+      :param pipeline: The pipeline to run.
+      :param progress: A progress object.
+      :param outfiles: The output files.
+
+      :returns: The statistics object.
+
+

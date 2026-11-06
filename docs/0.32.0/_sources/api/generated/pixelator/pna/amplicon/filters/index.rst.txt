@@ -1,0 +1,32 @@
+pixelator.pna.amplicon.filters
+==============================
+
+.. py:module:: pixelator.pna.amplicon.filters
+
+.. autoapi-nested-parse::
+
+   Filter classes for the PNA assay pipeline.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/amplicon/filters/LBSDetectedInUMI
+   /api/generated/pixelator/pna/amplicon/filters/LowComplexityUMI
+   /api/generated/pixelator/pna/amplicon/filters/SingleEndFilterWithFailureReason
+   /api/generated/pixelator/pna/amplicon/filters/TooManyN
+
+.. autoapisummary::
+
+   pixelator.pna.amplicon.filters.LBSDetectedInUMI
+   pixelator.pna.amplicon.filters.LowComplexityUMI
+   pixelator.pna.amplicon.filters.SingleEndFilterWithFailureReason
+   pixelator.pna.amplicon.filters.TooManyN
+
+

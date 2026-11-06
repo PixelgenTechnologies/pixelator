@@ -1,0 +1,12 @@
+pixelator.pna.config.panel.validation.validate_antibody_panel
+=============================================================
+
+.. py:function:: pixelator.pna.config.panel.validation.validate_antibody_panel(panel_df: pandas.DataFrame, validate_types: bool = True) -> list[str]
+
+   Validate antibody panel schema and content.
+
+   :param panel_df: Dataframe containing panel markers and sequences.
+   :param validate_types: If True, validate dataframe column types.
+
+   :returns: A list of validation error messages. Empty means valid input.
+

@@ -1,0 +1,45 @@
+pixelator.pna.config.panel.hashing
+==================================
+
+.. py:module:: pixelator.pna.config.panel.hashing
+
+.. autoapi-nested-parse::
+
+   Helpers for sample-hashing marker ids.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.hashing.ORIGINAL_HASH_COUNTS_PREFIX
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/hashing/collapsed_hashing_marker_id
+   /api/generated/pixelator/pna/config/panel/hashing/sample_hashing_mask
+   /api/generated/pixelator/pna/config/panel/hashing/split_hashing_marker_id
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.hashing.collapsed_hashing_marker_id
+   pixelator.pna.config.panel.hashing.sample_hashing_mask
+   pixelator.pna.config.panel.hashing.split_hashing_marker_id
+
+
+Module Contents
+---------------
+
+.. py:data:: ORIGINAL_HASH_COUNTS_PREFIX
+   :value: 'original_hash_counts_'
+
+

@@ -1,0 +1,74 @@
+pixelator.pna.analysis.graph_noise_analysis
+===========================================
+
+.. py:module:: pixelator.pna.analysis.graph_noise_analysis
+
+.. autoapi-nested-parse::
+
+   Plugin for computing post analysis metrics for R&D report.
+
+   Copyright © 2024 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.graph_noise_analysis.DeadendOptions
+   pixelator.pna.analysis.graph_noise_analysis.logger
+
+
+Exceptions
+----------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/graph_noise_analysis/SvdAnalysisError
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.graph_noise_analysis.SvdAnalysisError
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/graph_noise_analysis/KcoreAnalysis
+   /api/generated/pixelator/pna/analysis/graph_noise_analysis/SvdAnalysis
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.graph_noise_analysis.KcoreAnalysis
+   pixelator.pna.analysis.graph_noise_analysis.SvdAnalysis
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/graph_noise_analysis/non_backtracking_transition_probabilities
+   /api/generated/pixelator/pna/analysis/graph_noise_analysis/summarize_k_cores
+   /api/generated/pixelator/pna/analysis/graph_noise_analysis/svd_pivot_distances
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.graph_noise_analysis.non_backtracking_transition_probabilities
+   pixelator.pna.analysis.graph_noise_analysis.summarize_k_cores
+   pixelator.pna.analysis.graph_noise_analysis.svd_pivot_distances
+
+
+Module Contents
+---------------
+
+.. py:data:: DeadendOptions
+
+.. py:data:: logger
+

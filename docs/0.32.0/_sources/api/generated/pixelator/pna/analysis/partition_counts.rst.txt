@@ -1,0 +1,49 @@
+pixelator.pna.analysis.partition_counts
+=======================================
+
+.. py:function:: pixelator.pna.analysis.partition_counts(graph: pixelator.pna.graph.PNAGraph, partition: collections.abc.Sequence[Any] | pandas.Series | None = None, partition_column: str | None = None) -> pandas.DataFrame
+
+   Sum node protein counts by partition group.
+
+   Each node belongs to one group (for example ``cell1``, ``cell2``,
+   ``interface``, or ``other`` after conjugate segmentation). This returns
+   the protein count matrix collapsed to those groups: one row per partition
+   and one column per protein.
+
+   Provide exactly one of ``partition`` or ``partition_column``. A positional
+   ``partition`` vector is aligned to graph node order. A :class:`~pandas.Series`
+   whose index matches the node names is aligned by name.     A pandas
+   :class:`~pandas.Categorical` keeps its category order, including unused
+   levels as all-zero rows. Missing labels (``NA``) are kept as their own
+   row so those nodes still contribute to the totals.
+
+   :param graph: A :class:`~pixelator.pna.graph.PNAGraph` with node marker
+                 counts, typically a single component from
+                 ``dataset.edgelist().iterator()``.
+   :param partition: Labels for every node. Either this or
+                     ``partition_column`` must be provided.
+   :param partition_column: Name of a node attribute that holds the partition
+                            labels.
+
+   :returns: A DataFrame with one row per partition group and one column per
+             protein. Values are the summed node marker counts in that group.
+
+   :raises TypeError: If ``graph`` is not a :class:`~pixelator.pna.graph.PNAGraph`.
+   :raises ValueError: If neither or both of ``partition`` and
+       ``partition_column`` are given, if ``partition`` has the wrong
+       length, or if ``partition_column`` is missing from the graph.
+
+   .. rubric:: Examples
+
+   Sum markers by a vector of node labels, or by a node attribute::
+
+       from pixelator.pna.analysis import partition_counts
+
+       counts = partition_counts(graph, partition=labels)
+       counts = partition_counts(graph, partition_column="compartment")
+
+   .. seealso::
+
+      ``partition_counts`` in pixelatorR, the equivalent function for
+      R users.
+

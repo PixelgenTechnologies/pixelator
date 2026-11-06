@@ -1,0 +1,32 @@
+pixelator.pna.collapse.statistics.CollapseSummaryStatistics
+===========================================================
+
+.. py:class:: pixelator.pna.collapse.statistics.CollapseSummaryStatistics(/, **data: Any)
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+
+   Collect summary statistics on reads and ueis.
+
+
+   .. py:method:: from_lazy_frame(collapsed_lz_df: polars.LazyFrame)
+      :staticmethod:
+
+
+      Create a CollapseSummaryStatistics from a collapsed LazyFrame.
+
+      :param collapsed_lz_df: The collapsed dataframe.
+
+
+
+   .. py:attribute:: read_counts_stats
+      :type:  pixelator.common.report.models.SummaryStatistics | None
+      :value: None
+
+
+
+   .. py:attribute:: uei_stats
+      :type:  pixelator.common.report.models.SummaryStatistics | None
+      :value: None
+
+

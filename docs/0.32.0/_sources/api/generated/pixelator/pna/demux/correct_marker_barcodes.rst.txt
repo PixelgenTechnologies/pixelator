@@ -1,0 +1,21 @@
+pixelator.pna.demux.correct_marker_barcodes
+===========================================
+
+.. py:function:: pixelator.pna.demux.correct_marker_barcodes(input: pathlib.Path, assay: pixelator.pna.config.PNAAssay, panel: pixelator.pna.config.PNAAntibodyPanel, output: pathlib.Path, save_failed: bool = True, mismatches: int = 1, threads: int = -1) -> tuple[pixelator.pna.demux.report.BarcodeCorrectionStatistics, pathlib.Path, pathlib.Path | None]
+
+   Correct the marker barcodes in a FASTQ file.
+
+   Errors in the sequence barcodes within `mismatches` distance are
+   corrected to the list of known markers in the panel.
+   The original reads are left unmodified but the name of the
+   marker is added to the header.
+
+   :param input: The path to the input FASTQ file.
+   :param assay: The assay design.
+   :param panel: The antibody panel.
+   :param output: The output directory.
+   :param save_failed: Save failed reads to a separate file.
+   :param mismatches: The number of mismatches allowed when correcting towards known markers.
+   :param threads: The number of threads to use for processing. By default all available cores are
+                   used.
+

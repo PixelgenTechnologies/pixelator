@@ -1,0 +1,20 @@
+pixelator.pna.demux.pipeline.DemuxFilenamePolicy
+================================================
+
+.. py:class:: pixelator.pna.demux.pipeline.DemuxFilenamePolicy
+
+   Bases: :py:obj:`Protocol`
+
+
+   A policy to determine the filename of the output files.
+
+   The filename is determined by the sample name and the group index.
+
+
+   .. py:method:: get_filename(group_index: int) -> str
+
+      Return the filename for the given group index.
+
+      :param group_index: The index of the group to write the data to
+
+

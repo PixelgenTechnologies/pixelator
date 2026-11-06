@@ -1,0 +1,99 @@
+pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer
+===============================================================
+
+.. py:class:: pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer(sample_name_to_pxl_file_mapping: dict[str, pixelator.pna.pixeldataset.io.pxl_file.PxlFile], force: bool = False)
+
+   Maps sample names to PXL files and can open a :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewerSession`.
+
+   Query execution uses a :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewerSession` from ``viewer.open()``
+
+   .. code-block:: python
+
+       with viewer.open() as session:
+           df = session.execute_eager(Query("SELECT * FROM edgelist", {}))
+
+       # or: session = viewer.open(); ...; session.close()
+
+
+   .. py:method:: aligned_panel_rows() -> dict[str, dict[str, Any]]
+
+      Return the aligned panel row of each marker, by aligned marker id.
+
+      Empty when the files were not aligned.
+
+
+
+   .. py:method:: filter_samples(sample_names: set[str]) -> PixelDataViewer
+
+      Create a new PixelDataViewer with only a subset of the samples.
+
+      The marker renames of the full view are kept, so a marker has the same
+      name before and after filtering.
+
+
+
+   .. py:method:: from_files(pxl_files: Iterable[pixelator.pna.pixeldataset.io.pxl_file.PxlFile], force: bool = False) -> PixelDataViewer
+      :staticmethod:
+
+
+      Create a PixelDataViewer from a list of PxlFile objects.
+
+      This will use the sample names from the PxlFile metadata as sample names.
+
+      :param pxl_files: The files of the view.
+      :param force: See :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer`.
+
+
+
+   .. py:method:: from_sample_to_file_mappings(sample_name_to_pxl_file_mapping: dict[str, pixelator.pna.pixeldataset.io.pxl_file.PxlFile], force: bool = False) -> PixelDataViewer
+      :staticmethod:
+
+
+      Create a PixelDataViewer from a dictionary mapping sample names to PxlFile objects.
+
+      :param sample_name_to_pxl_file_mapping: A dictionary mapping sample names to PxlFile objects.
+      :param force: See :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer`.
+
+
+
+   .. py:method:: marker_renames() -> dict[str, dict[str, str]]
+
+      Return how each sample's marker ids are renamed to line the samples up.
+
+      The renames come from aligning the antibody panels stored in the files,
+      see :func:`~pixelator.pna.config.panel.align.align_panels`, and are
+      applied to the ``edgelist`` and ``proximity`` views and to the AnnData.
+      They are worked out on first use. Nothing is renamed, with a warning,
+      when the panels cannot be read or aligned.
+
+      :returns: For each sample that needs it, ``stored marker id -> aligned marker id``.
+
+      :raises PanelConflictError: When the panels have conflicting markers and the
+          view was not created with ``force``.
+
+
+
+   .. py:method:: normalized_sample_db_name(sample_name: str) -> str
+
+      Return the attached DuckDB database name for a sample.
+
+
+
+   .. py:method:: open() -> PixelDataViewerSession
+
+      Return a new session with an open DuckDB connection (context manager or ``close()``).
+
+
+
+   .. py:method:: sample_names() -> list[str]
+
+      Return the list of sample names known to the view.
+
+
+
+   .. py:property:: sample_to_file_mappings
+      :type: dict[str, pathlib.Path]
+
+
+      Return a dictionary mapping sample names to PxlFile objects.
+

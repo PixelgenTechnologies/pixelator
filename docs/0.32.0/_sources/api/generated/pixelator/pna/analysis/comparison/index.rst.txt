@@ -1,0 +1,43 @@
+pixelator.pna.analysis.comparison
+=================================
+
+.. py:module:: pixelator.pna.analysis.comparison
+
+.. autoapi-nested-parse::
+
+   Functions for comparing abundance and proximity similarity between sample pairs.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/comparison/SamplePairComparisonResult
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.comparison.SamplePairComparisonResult
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/comparison/compare_sample_pair
+   /api/generated/pixelator/pna/analysis/comparison/compare_sample_pairs
+   /api/generated/pixelator/pna/analysis/comparison/compare_sample_pairs_by_gate
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.comparison.compare_sample_pair
+   pixelator.pna.analysis.comparison.compare_sample_pairs
+   pixelator.pna.analysis.comparison.compare_sample_pairs_by_gate
+
+

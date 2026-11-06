@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.legacy.panel
+=======================================
+
+.. py:module:: pixelator.pna.pixeldataset.legacy.panel
+
+.. autoapi-nested-parse::
+
+   Rebuild the panel of a pxl file written before the panel tables existed.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/legacy/panel/LegacyPanelAdapter
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.legacy.panel.LegacyPanelAdapter
+
+

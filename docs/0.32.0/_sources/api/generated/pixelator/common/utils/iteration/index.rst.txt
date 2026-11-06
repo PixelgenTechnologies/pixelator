@@ -1,0 +1,30 @@
+pixelator.common.utils.iteration
+================================
+
+.. py:module:: pixelator.common.utils.iteration
+
+.. autoapi-nested-parse::
+
+   Utility functions for working with iterables and collections.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/utils/iteration/batched
+   /api/generated/pixelator/common/utils/iteration/flatten
+   /api/generated/pixelator/common/utils/iteration/single_value
+
+.. autoapisummary::
+
+   pixelator.common.utils.iteration.batched
+   pixelator.common.utils.iteration.flatten
+   pixelator.common.utils.iteration.single_value
+
+

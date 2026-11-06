@@ -1,0 +1,46 @@
+pixelator.testing
+=================
+
+.. py:module:: pixelator.testing
+
+.. autoapi-nested-parse::
+
+   Test data generation utilities for Pixelator.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/testing/molecules/index
+   /api/generated/pixelator/testing/pixelfile/index
+   /api/generated/pixelator/testing/reads/index
+   /api/generated/pixelator/testing/topology/index
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/testing/generate_cell_graph
+   /api/generated/pixelator/testing/generate_edgelist
+   /api/generated/pixelator/testing/populate_cell
+   /api/generated/pixelator/testing/write_pna_fastq
+   /api/generated/pixelator/testing/write_pna_pxl
+
+.. autoapisummary::
+
+   pixelator.testing.generate_cell_graph
+   pixelator.testing.generate_edgelist
+   pixelator.testing.populate_cell
+   pixelator.testing.write_pna_fastq
+   pixelator.testing.write_pna_pxl
+
+

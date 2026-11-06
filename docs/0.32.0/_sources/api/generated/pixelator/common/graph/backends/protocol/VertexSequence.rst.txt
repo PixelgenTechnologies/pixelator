@@ -1,0 +1,34 @@
+pixelator.common.graph.backends.protocol.VertexSequence
+=======================================================
+
+.. py:class:: pixelator.common.graph.backends.protocol.VertexSequence
+
+   Bases: :py:obj:`Iterable`\ [\ :py:obj:`Vertex`\ ], :py:obj:`Protocol`
+
+
+   A sequence of vertexes from a graph.
+
+
+   .. py:method:: attributes() -> Set[str]
+
+      Get all attributes associated with the vertices.
+
+
+
+   .. py:method:: get_attribute(attr: str) -> Iterable[Any]
+
+      Get the values of the attribute.
+
+
+
+   .. py:method:: get_vertex(vertex_id: int) -> Vertex
+
+      Get the Vertex corresponding to the vertex id.
+
+
+
+   .. py:method:: vertices() -> Iterable[Vertex]
+
+      Get an iterable of vertices.
+
+

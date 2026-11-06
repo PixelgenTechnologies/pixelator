@@ -1,0 +1,26 @@
+pixelator.pna.analysis.segmentation.distance
+============================================
+
+.. py:module:: pixelator.pna.analysis.segmentation.distance
+
+.. autoapi-nested-parse::
+
+   Hop distance from a set of seed nodes on a cell graph.
+
+   Copyright © 2026 Pixelgen Technologies AB.
+
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/analysis/segmentation/distance/distance_from_node_set
+
+.. autoapisummary::
+
+   pixelator.pna.analysis.segmentation.distance.distance_from_node_set
+
+

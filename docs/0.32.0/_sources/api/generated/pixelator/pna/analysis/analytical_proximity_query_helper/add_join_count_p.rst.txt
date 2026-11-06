@@ -1,0 +1,11 @@
+pixelator.pna.analysis.analytical_proximity_query_helper.add_join_count_p
+=========================================================================
+
+.. py:function:: pixelator.pna.analysis.analytical_proximity_query_helper.add_join_count_p(proximity: polars.DataFrame) -> polars.DataFrame
+
+   Add two-sided p-values (`join_count_p`) for the `join_count_z` scores.
+
+   :param proximity: A DataFrame with a `join_count_z` column.
+
+   :returns: The DataFrame with an added `join_count_p` column.
+

@@ -1,0 +1,150 @@
+pixelator.pna.pixeldataset
+==========================
+
+.. py:module:: pixelator.pna.pixeldataset
+
+.. autoapi-nested-parse::
+
+   PNA Pixel Dataset.
+
+   This package defines the high-level
+   :class:`~pixelator.pna.pixeldataset.dataset.PNAPixelDataset` API and the
+   modality helpers (:class:`~pixelator.pna.pixeldataset.edgelist.Edgelist`,
+   :class:`~pixelator.pna.pixeldataset.proximity.Proximity`,
+   :class:`~pixelator.pna.pixeldataset.layouts.Layouts`)
+   used to read filtered views of data stored in ``.pxl`` DuckDB files.
+
+   :class:`~pixelator.pna.pixeldataset.precomputed_layouts.PreComputedLayouts`
+   (from :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.precomputed_layouts`)
+   is deprecated; use :meth:`~pixelator.pna.pixeldataset.PNAPixelDataset.layouts`
+   instead.
+
+   Low-level access to those files (``PxlFile``, ``Query``, ``PixelDataViewer``, writers, and
+   :class:`~pixelator.pna.pixeldataset.io.anndata_helper.AnnDataHelper`) lives under
+   ``pixelator.pna.pixeldataset.io``; see that package’s module documentation for the IO-layer
+   diagrams.
+
+   .. rubric:: Architecture (dataset layer)
+
+   :class:`~pixelator.pna.pixeldataset.dataset.PNAPixelDataset` is the façade: it holds a
+   :class:`~pixelator.pna.pixeldataset.io.pixel_data_viewer.PixelDataViewer` that maps sample
+   names to on-disk ``PxlFile`` instances, and it constructs an
+   :class:`~pixelator.pna.pixeldataset.io.anndata_helper.AnnDataHelper` that shares that viewer.
+
+   - ``read()`` / ``from_pxl_files()`` build a ``PixelDataViewer`` from paths or ``PxlFile``
+     objects, then wrap it in ``PNAPixelDataset``.
+   - ``adata()`` delegates to ``AnnDataHelper.read_adata()`` (which opens the viewer’s DuckDB
+     session and runs queries built via ``QueryBuilder`` in the IO package).
+   - ``edgelist()``, ``proximity()``, and ``layouts()`` take the same ``view`` and
+     reuse the dataset’s ``AnnDataHelper`` so AnnData-backed joins stay consistent with the
+     active filters. ``precomputed_layouts()`` is deprecated.
+   - ``metadata()`` queries DuckDB through ``view.open()`` and ``Query`` directly.
+   - ``filter()`` returns a new ``PNAPixelDataset`` with a narrowed ``PixelDataViewer`` (when
+     filtering samples) and updated active components/markers, rebuilding ``AnnDataHelper``
+     accordingly.
+
+   .. rubric:: Combining files with different panel patches
+
+   When a dataset spans several ``.pxl`` files whose antibody panels differ only in patch
+   version (for example a marker renamed from ``CD3`` to ``CD3E``), the viewer aligns them with
+   :func:`~pixelator.pna.config.panel.align.align_panels`. Marker ids in ``edgelist()``,
+   ``proximity()`` and ``adata()`` (``var`` index, ``X`` columns, ``obsm`` columns and the
+   ``original_hash_counts_*`` columns of ``obs``) take the newest name, and the panel columns
+   of ``adata().var`` take the newest panel values. ``adata().uns`` has no ``panel_metadata``,
+   as files written by newer versions do not store it there. Files are left as stored, with a warning, when a panel is missing or cannot be
+   read, or when the panels cannot be aligned.
+
+   Panels that disagree on a marker cannot be combined safely: a marker id with different
+   sequences, or a sequence pair with different marker ids in panels of different products.
+   Loading such files raises :class:`~pixelator.pna.config.panel.align.PanelConflictError`.
+   Pass ``force=True`` to ``read()`` or
+   :meth:`~pixelator.pna.pixeldataset.dataset.PNAPixelDataset.from_pxl_files` to load them
+   with a warning anyway, with markers matched on their sequences. ``adata()`` keeps only
+   the markers that are in all samples, and warns about the ones it drops.
+
+   .. rubric:: Dependency overview (ASCII)
+
+   .. code-block:: none
+
+       pixeldataset
+       ┌────────────────────┐         ┌────────────────────┐
+       │ PNAPixelDataset    ├─owns───▶│ PixelDataViewer    │
+       └─────────┬──────────┘         └─────────┬──────────┘
+                 │                              │
+                 │ builds                       │ maps to PxlFile; open() → session
+                 ▼                              │
+       ┌────────────────────┐                   │
+       │ AnnDataHelper      ├─uses──────────────┘
+       └────────────────────┘
+
+       ┌────────────────────┐
+       │ Edgelist           ├──┐
+       │ Proximity          │  ├── view + shared AnnDataHelper (from PNAPixelDataset)
+       │ Layouts            │  │
+       │ PreComputedLayouts ├──┘  (deprecated; use Layouts)
+       └────────────────────┘
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /api/generated/pixelator/pna/pixeldataset/config/index
+   /api/generated/pixelator/pna/pixeldataset/dataset/index
+   /api/generated/pixelator/pna/pixeldataset/download/index
+   /api/generated/pixelator/pna/pixeldataset/edgelist/index
+   /api/generated/pixelator/pna/pixeldataset/io/index
+   /api/generated/pixelator/pna/pixeldataset/layouts/index
+   /api/generated/pixelator/pna/pixeldataset/legacy/index
+   /api/generated/pixelator/pna/pixeldataset/precomputed_layouts/index
+   /api/generated/pixelator/pna/pixeldataset/proximity/index
+   /api/generated/pixelator/pna/pixeldataset/saver/index
+   /api/generated/pixelator/pna/pixeldataset/types/index
+   /api/generated/pixelator/pna/pixeldataset/utils/index
+
+
+Exceptions
+----------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/NullPxlFileError
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.NullPxlFileError
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/Component
+   /api/generated/pixelator/pna/pixeldataset/Edgelist
+   /api/generated/pixelator/pna/pixeldataset/Layouts
+   /api/generated/pixelator/pna/pixeldataset/PNAPixelDataset
+   /api/generated/pixelator/pna/pixeldataset/PixelDatasetConfig
+   /api/generated/pixelator/pna/pixeldataset/PixelDatasetSaver
+   /api/generated/pixelator/pna/pixeldataset/PreComputedLayouts
+   /api/generated/pixelator/pna/pixeldataset/Proximity
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.Component
+   pixelator.pna.pixeldataset.Edgelist
+   pixelator.pna.pixeldataset.Layouts
+   pixelator.pna.pixeldataset.PNAPixelDataset
+   pixelator.pna.pixeldataset.PixelDatasetConfig
+   pixelator.pna.pixeldataset.PixelDatasetSaver
+   pixelator.pna.pixeldataset.PreComputedLayouts
+   pixelator.pna.pixeldataset.Proximity
+
+

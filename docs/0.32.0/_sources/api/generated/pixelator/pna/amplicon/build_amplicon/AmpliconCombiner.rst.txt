@@ -1,0 +1,34 @@
+pixelator.pna.amplicon.build_amplicon.AmpliconCombiner
+======================================================
+
+.. py:class:: pixelator.pna.amplicon.build_amplicon.AmpliconCombiner(assay: pixelator.pna.config.assay.PNAAssay)
+
+   Helper class for `AmpliconBuilder` to assemble an amplicon from different regions.
+
+
+   .. py:attribute:: assay
+
+
+   .. py:method:: build_qualities(pid1_umi1_region: bytes, pid2_umi2_region: bytes, uei_region: bytes | None = None, lbs1_region: bytes | None = None, lbs2_region: bytes | None = None) -> bytes
+
+      Build the amplicon qualities from the different regions.
+
+      All regions are assumed to have the correct length.
+
+      :param pid1_umi1_region: the PBS-1 and UMI-1 region qualities
+      :param uei_region: the UEI region qualities
+      :param pid2_umi2_region: the PBS-2 and UMI-2 region qualities
+      :param lbs1_region: the LBS-1 region qualities
+      :param lbs2_region: the LBS-2 region qualities
+
+
+
+   .. py:method:: build_sequence(pid1_umi1_region: bytes, pid2_umi2_region: bytes, uei_region: bytes | None) -> bytes
+
+      Build the amplicon sequence from the different regions.
+
+      :param pid1_umi1_region: the PBS-1 and UMI-1 region
+      :param uei_region: the UEI region
+      :param pid2_umi2_region: the PBS-2 and UMI-2 region
+
+

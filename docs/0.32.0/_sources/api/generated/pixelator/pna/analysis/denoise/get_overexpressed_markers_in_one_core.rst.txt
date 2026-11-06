@@ -1,0 +1,27 @@
+pixelator.pna.analysis.denoise.get_overexpressed_markers_in_one_core
+====================================================================
+
+.. py:function:: pixelator.pna.analysis.denoise.get_overexpressed_markers_in_one_core(node_marker_counts: pandas.DataFrame, node_core_numbers: pandas.Series, pval_significance_threshold: float = 0.05, inflate_factor: float = 1.5) -> pandas.DataFrame
+
+   Identify over-expressed markers in nodes belonging to core 1.
+
+   This function calculates the over-expression of markers in nodes that belong
+   to core 1 by comparing their marker counts to nodes in higher cores. It
+   uses Fisher's exact test to determine statistical significance and inflates
+   the excess count of markers based on the provided inflate factor.
+   The inflate factor increases the number of nodes with a given over-expressed
+   marker to be removed from the one-core layer.
+
+   :param node_marker_counts: A DataFrame where rows represent nodes and columns represent markers,
+                              with values indicating the count of each marker in each node.
+   :param node_core_numbers: A Series where the index corresponds to the nodes and the values indicate
+                             the core number each node belongs to.
+   :param pval_significance_threshold: The p-value threshold for statistical significance in Fisher's
+                                       exact test. Defaults to 0.05.
+   :param inflate_factor: A factor used to inflate the excess count of markers identified as
+                          overexpressed. Defaults to 1.5.
+   :param one_core_ratio_threshold: Components with higher nodes in
+
+   :returns: DataFrame with columns ``name`` (overexpressed marker) and ``count`` (inflated excess
+             count).
+

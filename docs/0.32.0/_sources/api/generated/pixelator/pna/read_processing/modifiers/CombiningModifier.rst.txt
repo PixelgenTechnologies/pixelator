@@ -1,0 +1,10 @@
+pixelator.pna.read_processing.modifiers.CombiningModifier
+=========================================================
+
+.. py:class:: pixelator.pna.read_processing.modifiers.CombiningModifier
+
+   Bases: :py:obj:`abc.ABC`
+
+
+   Interface for a modifier that combines two reads into a single read.
+

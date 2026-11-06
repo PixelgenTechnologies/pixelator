@@ -1,0 +1,12 @@
+pixelator.pna.graph.adaptive_core_expansion.validate_best_candidate
+===================================================================
+
+.. py:function:: pixelator.pna.graph.adaptive_core_expansion.validate_best_candidate(best_candidate: _PartitionCandidate | None, partitions: list[_PartitionCandidate], min_allowed_nodes_pct: float) -> _PartitionCandidate | None
+
+   Validate selected partition against minimum high-core node percentage.
+
+   :param best_candidate: Best candidate.
+   :param partitions: Partitions.
+   :param min_allowed_nodes_pct: Minimum fraction of nodes required in the final "high" core
+                                 partition.
+

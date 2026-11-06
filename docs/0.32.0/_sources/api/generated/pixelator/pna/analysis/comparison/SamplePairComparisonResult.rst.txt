@@ -1,0 +1,53 @@
+pixelator.pna.analysis.comparison.SamplePairComparisonResult
+============================================================
+
+.. py:class:: pixelator.pna.analysis.comparison.SamplePairComparisonResult
+
+   The result of comparing abundance and proximity similarity between a pair of samples.
+
+   :ivar sample1_name: The name of the first sample.
+   :ivar sample2_name: The name of the second sample.
+   :ivar abundance: A DataFrame with one row per marker, containing the mean CLR
+                    value of that marker in each of the two samples.
+   :ivar abundance_correlation: The Pearson correlation between the two samples'
+                                mean marker CLR values.
+   :ivar proximity: A DataFrame with one row per marker pair, containing the mean
+                    proximity log2 ratio and number of contributing components for each
+                    of the two samples.
+   :ivar proximity_correlation: The Pearson correlation between the two samples'
+                                mean proximity log2 ratios.
+   :ivar gate: The cell-type gate applied to both samples before comparison, if
+               any, e.g. ``["+CD3e", "+CD4", "-CD19"]``.
+
+
+
+
+   .. py:attribute:: abundance
+      :type:  pandas.DataFrame
+
+
+   .. py:attribute:: abundance_correlation
+      :type:  float
+
+
+   .. py:attribute:: gate
+      :type:  list[str] | None
+      :value: None
+
+
+
+   .. py:attribute:: proximity
+      :type:  pandas.DataFrame
+
+
+   .. py:attribute:: proximity_correlation
+      :type:  float
+
+
+   .. py:attribute:: sample1_name
+      :type:  str
+
+
+   .. py:attribute:: sample2_name
+      :type:  str
+

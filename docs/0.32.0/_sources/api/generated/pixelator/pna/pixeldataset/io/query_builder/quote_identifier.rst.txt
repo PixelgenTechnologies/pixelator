@@ -1,0 +1,7 @@
+pixelator.pna.pixeldataset.io.query_builder.quote_identifier
+============================================================
+
+.. py:function:: pixelator.pna.pixeldataset.io.query_builder.quote_identifier(name: str) -> str
+
+   Return ``name`` as a quoted SQL identifier.
+

@@ -1,0 +1,30 @@
+pixelator.pna.graph_collapse.run_graph_collapse
+===============================================
+
+.. py:function:: pixelator.pna.graph_collapse.run_graph_collapse(pxl_file_target: pixelator.pna.pixeldataset.io.PxlFile, *, n_threads: int, bfs_distance: int, hamming_threshold: int, umi1_length: int, umi2_length: int, max_degree: int = 1, report_collapsed_sequences: bool = False, memory_limit: int | None = None, temp_directory: str | pathlib.Path | None = None) -> GraphCollapseResult
+
+   Collapse the pxl edgelist with the Rust binding and rename matching UMIs.
+
+   The edgelist is streamed in component order. ``to_arrow_reader`` is the
+   DuckDB method that yields the record-batch reader the binding consumes. The
+   binding sorts the rows within each component itself, so the result does not
+   depend on the order DuckDB returns them in.
+
+   :param pxl_file_target: Copied pxl file updated in place.
+   :param n_threads: Passed to the binding as ``n_threads``.
+   :param bfs_distance: Passed to the binding as ``bfs_threshold``.
+   :param hamming_threshold: Passed to the binding as ``hamming_threshold``.
+   :param umi1_length: Nucleotide length used to decode a renamed UMI seen as umi1.
+   :param umi2_length: Nucleotide length used to decode a renamed UMI seen only as umi2.
+   :param max_degree: Passed to the binding as ``max_degree``. Nodes with a higher
+                      degree are not searched. The default, 1, investigates only leaves.
+   :param report_collapsed_sequences: Decode each kept rename into nucleotide
+                                      sequences. Off unless the CLI is writing the collapsed-sequence TSV.
+   :param memory_limit: Soft memory limit in bytes for the DuckDB connections that
+                        read and rewrite the edgelist. When set, DuckDB spills to disk once
+                        the limit is reached. The native search is not covered by it.
+   :param temp_directory: DuckDB spill directory. Defaults to
+                          ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
+
+   :returns: Counts and, when requested, the collapsed-sequence rows.
+

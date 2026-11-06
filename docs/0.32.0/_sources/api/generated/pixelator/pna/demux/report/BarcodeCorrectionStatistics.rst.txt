@@ -1,0 +1,39 @@
+pixelator.pna.demux.report.BarcodeCorrectionStatistics
+======================================================
+
+.. py:class:: pixelator.pna.demux.report.BarcodeCorrectionStatistics
+
+   Bases: :py:obj:`cutadapt.report.Statistics`
+
+
+   Collect statistics for the barcode correction step.
+
+
+   .. py:attribute:: FILTERS
+
+
+   .. py:method:: as_json(gc_content: float = 0.5, one_line: bool = False) -> Dict
+
+      Return a dict representation suitable for dumping in JSON format.
+
+      To achieve a more compact representation, set one_line to True, which
+      will wrap some items in a `cutadapt.json.OneLine` object, and use
+      `cutadapt.json.dumps` instead of `json.dumps` to dump the dict.
+
+
+
+   .. py:method:: collect(n: int, total_bp1: int, total_bp2: int | None, modifiers, steps, set_paired_to_none: bool = False)
+
+      Enable stats.paired to be set to None when unknown.
+
+
+
+   .. py:attribute:: paired
+      :value: False
+
+
+
+   .. py:property:: pid_pair_counter
+
+      Return the number of reads per PID pair.
+

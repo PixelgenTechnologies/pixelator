@@ -1,0 +1,45 @@
+pixelator.common.utils.cli
+==========================
+
+.. py:module:: pixelator.common.utils.cli
+
+.. autoapi-nested-parse::
+
+   Utility functions supporting the pixelator command line interface.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.utils.cli.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/utils/cli/click_echo
+   /api/generated/pixelator/common/utils/cli/log_step_start
+   /api/generated/pixelator/common/utils/cli/timer
+   /api/generated/pixelator/common/utils/cli/write_parameters_file
+
+.. autoapisummary::
+
+   pixelator.common.utils.cli.click_echo
+   pixelator.common.utils.cli.log_step_start
+   pixelator.common.utils.cli.timer
+   pixelator.common.utils.cli.write_parameters_file
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

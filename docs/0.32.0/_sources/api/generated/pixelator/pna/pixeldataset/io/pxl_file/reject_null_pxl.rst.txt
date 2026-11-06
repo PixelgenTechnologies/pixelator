@@ -1,0 +1,16 @@
+pixelator.pna.pixeldataset.io.pxl_file.reject_null_pxl
+======================================================
+
+.. py:function:: pixelator.pna.pixeldataset.io.pxl_file.reject_null_pxl(pxl_file: PxlFile) -> None
+
+   Raise if ``pxl_file`` is a null pxl file.
+
+   A null file with a reason raises :class:`NullPxlFileError`. A null file
+   with no reason is a broken file and raises ``ValueError`` instead, so
+   callers cannot treat it as a recoverable data failure.
+
+   :param pxl_file: Pxl file being opened.
+
+   :raises NullPxlFileError: If the file is null and stores a reason.
+   :raises ValueError: If the file is null but has no reason.
+

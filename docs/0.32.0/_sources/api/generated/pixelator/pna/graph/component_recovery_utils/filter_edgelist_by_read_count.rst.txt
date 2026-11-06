@@ -1,0 +1,17 @@
+pixelator.pna.graph.component_recovery_utils.filter_edgelist_by_read_count
+==========================================================================
+
+.. py:function:: pixelator.pna.graph.component_recovery_utils.filter_edgelist_by_read_count(input_edgelist_path: pathlib.Path, min_read_count: int, component_stats: pixelator.pna.graph.report.GraphStatistics, working_dir: pathlib.Path = DEFAULT_WORKING_DIR) -> tuple[pathlib.Path, pixelator.pna.graph.report.GraphStatistics]
+
+   Filter edges in the edgelist by minimum read count.
+
+   This function reads an edgelist from a Parquet file, filters out edges with read counts
+   below a specified threshold, and saves the filtered edgelist under ``working_dir``.
+
+   :param input_edgelist_path: Path to the input Parquet file containing the edgelist.
+   :param min_read_count: Minimum read count threshold for filtering edges.
+   :param component_stats: Statistics object to update with filtering information.
+   :param working_dir: Output directory; defaults to ``DEFAULT_WORKING_DIR`` (``/tmp``).
+
+   :returns: Path to the filtered edgelist and updated graph statistics.
+

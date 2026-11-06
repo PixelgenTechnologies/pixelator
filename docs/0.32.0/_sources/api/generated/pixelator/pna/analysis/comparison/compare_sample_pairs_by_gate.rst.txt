@@ -1,0 +1,38 @@
+pixelator.pna.analysis.comparison.compare_sample_pairs_by_gate
+==============================================================
+
+.. py:function:: pixelator.pna.analysis.comparison.compare_sample_pairs_by_gate(pairs: Sequence[tuple], gate: list[str], sample_names: Sequence[tuple[str, str]] | None = None, min_separation_score: float = 3.0, markers: set[str] | None = None, min_mean_clr: float = 1.5, min_expected_join_count: int = 10, min_n_cells: int = 50) -> list[SamplePairComparisonResult]
+
+   Compare abundance and proximity similarity across sample pairs, restricted to a cell-type gate.
+
+   Since components in a `PNAPixelDataset` don't have cell types assigned,
+   this wrapper first filters each pair of samples to the components matching
+   a gating specification, e.g. ``["+CD3e", "+CD4", "-CD19"]``, before running
+   the same comparison as `compare_sample_pairs`.
+
+   For each pair, the positive/negative threshold for every marker in
+   ``gate`` is determined from the pooled CLR distribution of both samples in
+   that pair (so that both samples are gated using the exact same threshold).
+   If a marker's distribution appears unimodal, a warning is issued and that
+   marker is ignored when gating (see `pixelator.pna.analysis.gating.determine_marker_threshold`).
+
+   :param pairs: A list of ``(pxl1, pxl2)`` pairs, where each element is a
+                 `PNAPixelDataset`, a path to a ``.pxl`` file, or anything accepted
+                 by `pixelator.pna.read`.
+   :param gate: A list of gating strings, e.g. ``["+CD3e", "+CD4", "-CD19"]``.
+   :param sample_names: An optional list of ``(sample1_name, sample2_name)``
+                        tuples, parallel to ``pairs``, used for labeling the output.
+   :param min_separation_score: The minimum separation score required for a
+                                gating marker's distribution to be considered bimodal. Defaults to 3.0.
+   :param markers: If provided, restrict the abundance/proximity comparison to
+                   this set of markers for all pairs.
+   :param min_mean_clr: The minimum mean CLR value (in both samples) for a
+                        marker to be included in the comparison. Defaults to 1.5.
+   :param min_expected_join_count: The minimum expected join count for a marker
+                                   pair to be included in the proximity comparison. Defaults to 10.
+   :param min_n_cells: The minimum number of components required for a marker
+                       pair to be included in the proximity comparison. Defaults to 50.
+
+   :returns: A list of `SamplePairComparisonResult`, one per pair in ``pairs``, each
+             annotated with the ``gate`` that was applied.
+

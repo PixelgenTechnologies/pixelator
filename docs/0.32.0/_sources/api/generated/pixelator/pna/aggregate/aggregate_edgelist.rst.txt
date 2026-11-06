@@ -1,0 +1,24 @@
+pixelator.pna.aggregate.aggregate_edgelist
+==========================================
+
+.. py:function:: pixelator.pna.aggregate.aggregate_edgelist(edgelist: pathlib.Path | collections.abc.Sequence[pathlib.Path], output: pathlib.Path, threads: int | None = None, memory_limit: int | None = None, temp_directory: str | pathlib.Path | None = None) -> AggregateStats
+
+   Collapse identical molecules and count reads.
+
+   :param edgelist: Path or paths to the input per-read edgelist parquet file(s).
+                    Multiple files are unioned and collapsed together, and must all
+                    have the same columns. Reads collapse on ``marker_1``,
+                    ``marker_2``, ``umi1`` and ``umi2`` only. Any other column (such
+                    as ``marker_sequence_1`` and ``marker_sequence_2``) is carried
+                    through with an arbitrary read's value, so it should be constant
+                    per molecule.
+   :param output: Path to the output aggregated parquet file. It has the input
+                  columns followed by ``read_count``.
+   :param threads: Number of DuckDB threads. Defaults to DuckDB's own default.
+   :param memory_limit: Soft memory limit in bytes. When set, DuckDB spills to
+                        disk once the limit is reached.
+   :param temp_directory: DuckDB spill directory. Defaults to
+                          ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
+
+   :returns: AggregateStats with input/output counts and UMI degree distributions.
+

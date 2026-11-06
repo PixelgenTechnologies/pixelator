@@ -1,0 +1,22 @@
+pixelator.pna.pixeldataset.types.Component
+==========================================
+
+.. py:class:: pixelator.pna.pixeldataset.types.Component
+
+   A dataclass to hold a component and its associated graph.
+
+
+   .. py:attribute:: component_id
+      :type:  str
+
+
+   .. py:attribute:: frame
+      :type:  polars.LazyFrame
+
+
+   .. py:property:: graph
+      :type: pixelator.pna.graph.PNAGraph
+
+
+      Get the graph.
+

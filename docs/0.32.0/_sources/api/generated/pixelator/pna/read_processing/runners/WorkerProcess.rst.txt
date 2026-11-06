@@ -1,0 +1,22 @@
+pixelator.pna.read_processing.runners.WorkerProcess
+===================================================
+
+.. py:class:: pixelator.pna.read_processing.runners.WorkerProcess(id_: int, pipeline: cutadapt.pipeline.Pipeline, inpaths: cutadapt.files.InputPaths, proxy_files: List[cutadapt.files.ProxyWriter], read_pipe: multiprocessing.connection.Connection, write_pipe: multiprocessing.connection.Connection, need_work_queue: multiprocessing.Queue, statistics_class: Type[cutadapt.report.Statistics] = Statistics)
+
+   Bases: :py:obj:`mpctx_Process`
+
+
+   A custom multiprocessing Proces for running a pipeline on chunks of data.
+
+   The worker repeatedly reads chunks of data from the read_pipe, runs the pipeline on it
+   and sends the processed chunks to the write_pipe.
+
+   To notify the reader process that it wants data, it puts its own identifier into the
+   need_work_queue before attempting to read data from the read_pipe.
+
+
+   .. py:method:: run()
+
+      Read chunks of data from the reader, process them and send them to the writer.
+
+

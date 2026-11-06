@@ -1,0 +1,43 @@
+pixelator.pna.config.panel.antibody_panel
+=========================================
+
+.. py:module:: pixelator.pna.config.panel.antibody_panel
+
+.. autoapi-nested-parse::
+
+   PNA antibody panel loading.
+
+   Copyright © 2022 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/antibody_panel/PNAAntibodyPanel
+   /api/generated/pixelator/pna/config/panel/antibody_panel/PanelSource
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.antibody_panel.PNAAntibodyPanel
+   pixelator.pna.config.panel.antibody_panel.PanelSource
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/config/panel/antibody_panel/load_antibody_panel
+   /api/generated/pixelator/pna/config/panel/antibody_panel/load_antibody_panels
+
+.. autoapisummary::
+
+   pixelator.pna.config.panel.antibody_panel.load_antibody_panel
+   pixelator.pna.config.panel.antibody_panel.load_antibody_panels
+
+

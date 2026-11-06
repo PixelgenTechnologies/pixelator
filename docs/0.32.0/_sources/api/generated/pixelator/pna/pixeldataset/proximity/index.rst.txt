@@ -1,0 +1,26 @@
+pixelator.pna.pixeldataset.proximity
+====================================
+
+.. py:module:: pixelator.pna.pixeldataset.proximity
+
+.. autoapi-nested-parse::
+
+   Proximity wrapper for PNA pixel datasets.
+
+   Copyright © 2025 Pixelgen Technologies AB.
+
+
+
+Classes
+-------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/pna/pixeldataset/proximity/Proximity
+
+.. autoapisummary::
+
+   pixelator.pna.pixeldataset.proximity.Proximity
+
+

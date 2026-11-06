@@ -1,0 +1,53 @@
+pixelator.common.statistics
+===========================
+
+.. py:module:: pixelator.common.statistics
+
+.. autoapi-nested-parse::
+
+   Functions for statistics/math.
+
+   This module contains functions related to various useful statistics/maths-concepts.
+
+   Copyright © 2023 Pixelgen Technologies AB.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   pixelator.common.statistics.logger
+
+
+Functions
+---------
+
+.. toctree::
+   :hidden:
+
+   /api/generated/pixelator/common/statistics/clr_transformation
+   /api/generated/pixelator/common/statistics/correct_pvalues
+   /api/generated/pixelator/common/statistics/dsb_normalize
+   /api/generated/pixelator/common/statistics/log1p_transformation
+   /api/generated/pixelator/common/statistics/rate_diff_transformation
+   /api/generated/pixelator/common/statistics/rel_normalization
+   /api/generated/pixelator/common/statistics/wilcoxon_test
+
+.. autoapisummary::
+
+   pixelator.common.statistics.clr_transformation
+   pixelator.common.statistics.correct_pvalues
+   pixelator.common.statistics.dsb_normalize
+   pixelator.common.statistics.log1p_transformation
+   pixelator.common.statistics.rate_diff_transformation
+   pixelator.common.statistics.rel_normalization
+   pixelator.common.statistics.wilcoxon_test
+
+
+Module Contents
+---------------
+
+.. py:data:: logger
+

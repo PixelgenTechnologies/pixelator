@@ -1,0 +1,139 @@
+pixelator.pna.analysis.denoise.DenoiseGraph
+===========================================
+
+.. py:class:: pixelator.pna.analysis.denoise.DenoiseGraph(*, run_one_core: bool = False, run_ace: bool = False, run_pls: bool = False, pval_significance_threshold: float = 0.05, inflate_factor: float = 1.5, one_core_ratio_threshold: float = 0.9, k: int = 3, max_k_core: int = 4, max_iter: int = 200, min_seed_pct: float = 0.1, nodes_to_move_threshold: int = 10, ace_select_lcc: bool = True, pls_ncomp: int = 5, pls_model_k: int = 2, pls_pred_k: int = 1, pls_use_weights: bool = True, pls_normalization: pixelator.pna.graph.node_pls.GraphNormalizationOptions = 'L1', pls_residualize: bool = False, pls_component_p_threshold: float = 0.01, min_pls_coreness_correlation: float = 0.0, pls_score_threshold: float = -3.0)
+
+   Bases: :py:obj:`pixelator.pna.analysis_engine.PerComponentTask`
+
+
+   Run graph denoising with one-core, ACE, PLS, merged removal, and stranding.
+
+
+   .. py:attribute:: TASK_NAME
+      :value: 'denoise-graph'
+
+
+
+   .. py:attribute:: ace_select_lcc
+      :value: True
+
+
+
+   .. py:method:: add_to_pixel_file(data: pandas.DataFrame, pxl_file_target: pixelator.pna.pixeldataset.io.PxlFile)
+
+      Filter edgelist by removed nodes and write denoise metrics to AnnData.
+
+
+
+   .. py:attribute:: inflate_factor
+      :value: 1.5
+
+
+
+   .. py:attribute:: k
+      :value: 3
+
+
+
+   .. py:attribute:: max_iter
+      :value: 200
+
+
+
+   .. py:attribute:: max_k_core
+      :value: 4
+
+
+
+   .. py:attribute:: min_pls_coreness_correlation
+      :value: 0.0
+
+
+
+   .. py:attribute:: min_seed_pct
+      :value: 0.1
+
+
+
+   .. py:attribute:: nodes_to_move_threshold
+      :value: 10
+
+
+
+   .. py:attribute:: one_core_ratio_threshold
+      :value: 0.9
+
+
+
+   .. py:attribute:: pls_component_p_threshold
+      :value: 0.01
+
+
+
+   .. py:attribute:: pls_model_k
+      :value: 2
+
+
+
+   .. py:attribute:: pls_ncomp
+      :value: 5
+
+
+
+   .. py:attribute:: pls_normalization
+      :value: 'L1'
+
+
+
+   .. py:attribute:: pls_pred_k
+      :value: 1
+
+
+
+   .. py:attribute:: pls_residualize
+      :value: False
+
+
+
+   .. py:attribute:: pls_score_threshold
+      :value: -3.0
+
+
+
+   .. py:attribute:: pls_use_weights
+      :value: True
+
+
+
+   .. py:attribute:: pval_significance_threshold
+      :value: 0.05
+
+
+
+   .. py:attribute:: run_ace
+      :value: False
+
+
+
+   .. py:method:: run_on_component_graph(component: pixelator.pna.graph.PNAGraph, component_id: str) -> pandas.DataFrame
+
+      Return nodes to remove (including stranded) and per-method metadata columns.
+
+      One-core, ACE, and PLS each see the same full ``component`` graph; removals are
+      merged afterward so no step is conditioned on another's output.
+
+      :param component: The graph component to process, containing node marker counts and raw graph
+                        data.
+      :param component_id: Component id.
+
+
+
+   .. py:attribute:: run_one_core
+      :value: False
+
+
+
+   .. py:attribute:: run_pls
+      :value: False
+
+

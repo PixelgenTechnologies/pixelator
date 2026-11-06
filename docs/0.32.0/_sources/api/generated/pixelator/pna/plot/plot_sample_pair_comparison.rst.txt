@@ -1,0 +1,21 @@
+pixelator.pna.plot.plot_sample_pair_comparison
+==============================================
+
+.. py:function:: pixelator.pna.plot.plot_sample_pair_comparison(result: pixelator.pna.analysis.comparison.SamplePairComparisonResult) -> tuple[matplotlib.figure.Figure, tuple[matplotlib.axes.Axes, matplotlib.axes.Axes]]
+
+   Plot the abundance and proximity comparison for a sample pair.
+
+   Produces a figure with two scatter plots, both expected to be concentrated
+   around the ``y = x`` line if the two samples are similar:
+
+   - Abundance: mean marker CLR value in sample 1 vs. sample 2.
+   - Proximity: mean marker-pair proximity log2 ratio in sample 1 vs. sample 2.
+
+   The Pearson correlation is annotated on each subplot.
+
+   :param result: A `SamplePairComparisonResult`, as returned by
+                  `pixelator.pna.analysis.comparison.compare_sample_pair`.
+
+   :returns: A tuple of the created figure and its two
+             axes (abundance, proximity).
+

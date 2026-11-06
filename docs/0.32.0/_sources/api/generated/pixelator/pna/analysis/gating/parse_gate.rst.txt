@@ -1,0 +1,15 @@
+pixelator.pna.analysis.gating.parse_gate
+========================================
+
+.. py:function:: pixelator.pna.analysis.gating.parse_gate(gate: list[str]) -> list[tuple[str, str]]
+
+   Parse a gating specification into a list of (marker, sign) tuples.
+
+   :param gate: A list of gating strings, e.g. ``["+CD3e", "+CD4", "-CD19"]``. Each
+                entry must start with ``+`` (positive) or ``-`` (negative) followed
+                by a marker name.
+
+   :returns: A list of ``(marker, sign)`` tuples, e.g. ``[("CD3e", "+"), ("CD4", "+"), ("CD19", "-")]``.
+
+   :raises ValueError: If any entry in ``gate`` is not prefixed with ``+`` or ``-``.
+

@@ -1,0 +1,74 @@
+pixelator.pna.demux.correction.BKTree
+=====================================
+
+.. py:class:: pixelator.pna.demux.correction.BKTree(distance_func, items=[])
+
+   BK-tree data structure.
+
+   The BK-tree allows fast querying of matches that are
+   "close" given a function to calculate a distance metric (e.g., Hamming
+   distance or Levenshtein distance).
+
+   Each node in the tree (including the root node) is a two-tuple of
+   (item, children_dict), where children_dict is a dict whose keys are
+   non-negative distances of the child to the current item and whose values
+   are nodes.
+
+   Adapter from: https://github.com/Jetsetter/pybktree
+   License: MIT
+
+
+   .. py:method:: add(item)
+
+      Add given item to this tree.
+
+      >>> tree = BKTree(hamming_distance)
+      >>> list(tree)
+      []
+      >>> tree.add(4)
+      >>> sorted(tree)
+      [4]
+      >>> tree.add(15)
+      >>> sorted(tree)
+      [4, 15]
+
+      :param item: The item to find matches for.
+
+
+
+   .. py:attribute:: distance_func
+
+
+   .. py:method:: find(item, n)
+
+      Find items in this tree with a distance <= `n` from `item`.
+
+      Return list of (distance, item) tuples ordered by distance.
+
+
+      >>> tree = BKTree(hamming_distance)
+      >>> tree.find(13, 1)
+      []
+      >>> tree.add(0)
+      >>> tree.find(1, 1)
+      [(1, 0)]
+      >>> for item in [0, 4, 5, 14, 15]:
+      ...     tree.add(item)
+      >>> sorted(tree)
+      [0, 0, 4, 5, 14, 15]
+      >>> sorted(tree.find(13, 1))
+      [(1, 5), (1, 15)]
+      >>> sorted(tree.find(13, 2))
+      [(1, 5), (1, 15), (2, 4), (2, 14)]
+      >>> sorted(tree.find(0, 1000)) == [(hamming_distance(x, 0), x) for x in tree]
+      True
+
+      :param item: The item to find matches for.
+      :param n: The maximum distance to consider a match.
+
+
+
+   .. py:attribute:: tree
+      :value: None
+
+

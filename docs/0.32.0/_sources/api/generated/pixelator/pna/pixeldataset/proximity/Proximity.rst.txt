@@ -1,0 +1,43 @@
+pixelator.pna.pixeldataset.proximity.Proximity
+==============================================
+
+.. py:class:: pixelator.pna.pixeldataset.proximity.Proximity(view: pixelator.pna.pixeldataset.io.PixelDataViewer, components: str | list[str] | set[str] | None = None, markers: str | list[str] | set[str] | None = None, adata_helper: pixelator.pna.pixeldataset.io.anndata_helper.AnnDataHelper | None = None, add_marker_counts: bool = True, add_log2_ratio: bool = True, calculate_from_edgelist: bool = False)
+
+   Representation of a proximity data.
+
+   This class allows you to access the proximity data as a pandas or polars
+   DataFrame. From there you can analyze the data further using your favorite
+   data analysis tools.
+
+
+   .. py:property:: components
+      :type: set[str]
+
+
+      Get the component names.
+
+
+   .. py:method:: is_empty()
+
+      Check if the proximity data is empty.
+
+
+
+   .. py:property:: markers
+      :type: set[str]
+
+
+      Get the marker names.
+
+
+   .. py:method:: to_df() -> pandas.DataFrame
+
+      Get the edgelist as a pandas DataFrame.
+
+
+
+   .. py:method:: to_polars() -> polars.DataFrame
+
+      Get the edgelist as a polars DataFrame.
+
+

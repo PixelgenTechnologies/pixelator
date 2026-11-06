@@ -1,0 +1,23 @@
+pixelator.pna.pixeldataset.download.Dataset
+===========================================
+
+.. py:class:: pixelator.pna.pixeldataset.download.Dataset
+
+   Metadata for a downloadable dataset.
+
+
+   .. py:attribute:: description
+      :type:  str
+
+
+   .. py:attribute:: name
+      :type:  str
+
+
+   .. py:attribute:: url
+      :type:  str
+
+
+   .. py:attribute:: version
+      :type:  int
+
