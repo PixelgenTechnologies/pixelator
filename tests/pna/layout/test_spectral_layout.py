@@ -11,7 +11,7 @@ from scipy.stats import spearmanr
 from pixelator.common.graph.backends.implementations._networkx import spectral_layout
 from pixelator.pna.graph import PNAGraph
 from pixelator.pna.pixeldataset import PNAPixelDataset
-from tests.common.data_generator.topology import generate_cell_graph
+from pixelator.testing.topology import generate_cell_graph
 
 METHOD_CONFIGS = [("eigen", True), ("eigen", False), ("psvd", True)]
 

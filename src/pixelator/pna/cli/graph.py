@@ -43,19 +43,19 @@ from pixelator.pna.pixeldataset.io import write_null_pxl
     metavar="parquet",
 )
 @click.option(
-    "--multiplet-recovery",
+    "--multiplet-recovery/--no-multiplet-recovery",
     required=False,
     is_flag=True,
-    default=False,
-    type=click.BOOL,
+    default=True,
+    show_default=True,
     help=("Activate the multiplet recovery using leiden community detection"),
 )
 @click.option(
-    "--edge-cycle-verification",
+    "--edge-cycle-verification/--no-edge-cycle-verification",
     required=False,
     is_flag=True,
-    default=False,
-    type=click.BOOL,
+    default=True,
+    show_default=True,
     help=(
         "Activate edge cycle verification to remove edges from well connected regions that are not part of cycles in the graph."
     ),
@@ -73,7 +73,7 @@ from pixelator.pna.pixeldataset.io import write_null_pxl
 )
 @click.option(
     "--refinement-stage-leiden-resolution",
-    default=0.01,
+    default=0.5,
     required=False,
     type=click.FloatRange(0, None),
     show_default=True,
@@ -94,7 +94,7 @@ from pixelator.pna.pixeldataset.io import write_null_pxl
 )
 @click.option(
     "--max-refinement-recursion-depth",
-    default=5,
+    default=3,
     required=False,
     type=click.IntRange(min=1, max=20),
     show_default=True,
@@ -104,7 +104,7 @@ from pixelator.pna.pixeldataset.io import write_null_pxl
 )
 @click.option(
     "--initial-stage-max-edges-to-remove",
-    default=None,
+    default=10,
     required=False,
     type=click.IntRange(min=1, max=None),
     show_default=True,
@@ -115,7 +115,7 @@ from pixelator.pna.pixeldataset.io import write_null_pxl
 )
 @click.option(
     "--refinement-stage-max-edges-to-remove",
-    default=4,
+    default=20,
     required=False,
     type=click.IntRange(min=1, max=None),
     show_default=True,
@@ -150,26 +150,22 @@ from pixelator.pna.pixeldataset.io import write_null_pxl
 )
 @click.option(
     "--component-size-max-threshold",
-    default=None,
+    default=1_000_000,
     required=False,
     type=click.IntRange(min=1, max=None),
     show_default=True,
     help=(
-        "Components with more nodes than this will be filtered from the output data. "
-        "Setting this (or --component-size-min-threshold) switches from automatic "
-        "(dynamic) component size filtering to a fixed threshold."
+        "Components with more nodes than this will be filtered from the output data."
     ),
 )
 @click.option(
     "--component-size-min-threshold",
-    default=None,
+    default=MIN_PNA_COMPONENT_SIZE,
     required=False,
     type=click.IntRange(min=1, max=None),
     show_default=True,
     help=(
-        "Components with fewer nodes than this will be filtered from the output data. "
-        "Setting this (or --component-size-max-threshold) switches from automatic "
-        "(dynamic) component size filtering to a fixed threshold."
+        "Components with fewer nodes than this will be filtered from the output data."
     ),
 )
 @panel_option
