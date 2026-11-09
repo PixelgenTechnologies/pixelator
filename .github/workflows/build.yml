@@ -3,11 +3,11 @@ name: "Build containers"
 
 on:
   push:
-    branches: [main, dev]
+    branches: [dev]
     tags:
       - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
   pull_request:
-    branches: [main, dev]
+    branches: [dev]
   workflow_dispatch:
 
 permissions:
