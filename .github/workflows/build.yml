@@ -38,8 +38,8 @@ jobs:
                 - 'pyproject.toml'
                 - 'src/**'
                 - 'containers/**'
-                - 'docker-bake.hcl'
-                - '.github/actions/**'
+                - '.github/actions/setup-image-build-env/action.yml'
+                - '.github/actions/build-dev-image/action.yml'
                 - '.github/workflows/build.yml'
                 - '.github/workflows/nf-core-pipeline-test.yml'
 
