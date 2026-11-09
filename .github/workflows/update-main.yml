@@ -1,0 +1,36 @@
+name: update-main
+
+# `main` is only a "latest release" pointer: fast-forward it to each published release tag.
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  fast-forward-main:
+    name: Fast-forward main to release tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # GitHub App token, allowed to push to `main`.
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Fast-forward main
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          # Without --force, git rejects the push if main is not an ancestor of the tag.
+          git push origin "refs/tags/${TAG}^{commit}:refs/heads/main"
