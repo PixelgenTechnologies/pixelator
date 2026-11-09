@@ -308,7 +308,8 @@ def test_graph_can_get_marker_counts(graph):
         graph: graph.
     """
     result = graph.node_marker_counts
-    assert set(result.columns) == {"MarkerC", "MarkerB", "MarkerA"}
+    assert list(result.columns) == ["MarkerA", "MarkerB", "MarkerC"]
+    assert list(result.index) == list(graph.raw.nodes())
     assert result.shape == (34, 3)
 
 
