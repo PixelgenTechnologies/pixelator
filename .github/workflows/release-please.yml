@@ -1,0 +1,40 @@
+name: release-please
+
+on:
+  push:
+    branches: [dev]
+  # Manual run, e.g. to regenerate the release PR after a conflict.
+  workflow_dispatch:
+
+# Queue runs instead of racing when a manual run overlaps a push.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Update release PR
+    # Manual runs from another branch are skipped.
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # A GitHub App token is required: events created with GITHUB_TOKEN
+      # do not trigger other workflows, so publish-pypi.yml, deploy-docs.yml
+      # and build.yml would never run on the release.
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          target-branch: dev
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
