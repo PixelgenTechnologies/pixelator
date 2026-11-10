@@ -8,6 +8,7 @@ from typing import Sequence
 
 import networkx as nx
 import numpy as np
+import pandas as pd
 import scipy.sparse as sp
 
 from pixelator.common.graph import Graph
@@ -336,6 +337,8 @@ def adaptive_core_expansion(
 
     raw_graph = g.raw
     node_list = list(raw_graph.nodes())
+    if not counts.index.equals(pd.Index(node_list)):
+        counts = counts.reindex(node_list)
 
     inital_k_cores, initial_max_k = _get_k_cores(
         graph=raw_graph,

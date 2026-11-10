@@ -7,6 +7,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 
 import logging
 from pathlib import Path
+from unittest.mock import PropertyMock, patch
 
 import networkx as nx
 import numpy as np
@@ -15,6 +16,7 @@ import pytest
 import scipy.sparse as sp
 
 from pixelator import read_pna as read
+from pixelator.pna.graph import PNAGraph, PNAGraphBackend
 from pixelator.pna.graph.adaptive_core_expansion import (
     _build_p_step_matrix,
     _expand_k_core_layer_until_min_seed_pct,
@@ -314,3 +316,73 @@ def test_validate_best_candidate_returns_none_when_no_partition_is_valid(caplog)
         )
     assert selected is None
     assert "Setting all nodes as 'high'" in caplog.text
+
+
+def test_adaptive_core_expansion_aligns_counts_to_node_order():
+    """ACE Bray-Curtis scoring aligns node_marker_counts with graph node insertion order."""
+    raw_graph = nx.Graph()
+    # Interleave node IDs so sorting by ID mixes core, mid, and periphery nodes
+    core_nodes = [100 - 3 * i for i in range(15)]
+    mid_nodes = [99 - 3 * i for i in range(15)]
+    periphery_nodes = [98 - 3 * i for i in range(15)]
+    raw_graph.add_nodes_from(core_nodes + mid_nodes + periphery_nodes)
+
+    # Core nodes: complete graph (degree >= 14, k-core >= 4)
+    for i, u in enumerate(core_nodes):
+        for v in core_nodes[i + 1 :]:
+            raw_graph.add_edge(u, v)
+
+    # Mid nodes: 2 edges to core, 2 edges to periphery -> tp_total to core is 0.5
+    # Recruited at binding_threshold=0.4 (1.0 > 0.4 at k=1 since periphery has no other edges? Wait: P = D_inv @ (A+I))
+    for i in range(15):
+        raw_graph.add_edge(mid_nodes[i], core_nodes[i])
+        raw_graph.add_edge(mid_nodes[i], core_nodes[(i + 1) % 15])
+        raw_graph.add_edge(mid_nodes[i], periphery_nodes[i])
+        raw_graph.add_edge(periphery_nodes[i], periphery_nodes[(i + 1) % 15])
+
+    # Core and mid share MarkerA; periphery has MarkerB.
+    # Thus recruiting mid_nodes (threshold 0.3) maximizes Bray-Curtis dissimilarity
+    # between high (MarkerA) and low (MarkerB), whereas stopping at core (threshold 0.8)
+    # leaves MarkerA in both high and low.
+    node_marker = {
+        n: ("MarkerB" if n in periphery_nodes else "MarkerA") for n in raw_graph.nodes()
+    }
+    nx.set_node_attributes(raw_graph, node_marker, "marker")
+
+    g = PNAGraph(PNAGraphBackend(raw_graph))
+    assert list(g.node_marker_counts.index) == list(raw_graph.nodes())
+
+    res_aligned = adaptive_core_expansion(
+        PNAGraph(PNAGraphBackend(raw_graph.copy())),
+        k=1,
+        max_k_core=4,
+        binding_thresholds=[0.8, 0.3],
+        max_iter=1,
+        nodes_to_move_threshold=1,
+        min_allowed_nodes_pct=0.2,
+    )
+    partitions_aligned = nx.get_node_attributes(res_aligned.raw, "partition")
+
+    # Even if node_marker_counts is returned sorted by node ID, ACE reindexes to node_list
+    shuffled_counts = g.node_marker_counts.sort_index()
+    assert list(shuffled_counts.index) != list(raw_graph.nodes())
+
+    g_sorted_counts = PNAGraph(PNAGraphBackend(raw_graph.copy()))
+    with patch.object(
+        PNAGraph, "node_marker_counts", new_callable=PropertyMock
+    ) as mock_counts:
+        mock_counts.return_value = shuffled_counts
+        res_reindexed = adaptive_core_expansion(
+            g_sorted_counts,
+            k=1,
+            max_k_core=4,
+            binding_thresholds=[0.8, 0.3],
+            max_iter=1,
+            nodes_to_move_threshold=1,
+            min_allowed_nodes_pct=0.2,
+        )
+
+    partitions_reindexed = nx.get_node_attributes(res_reindexed.raw, "partition")
+    assert partitions_reindexed == partitions_aligned
+    assert all(partitions_reindexed[n] == "high" for n in core_nodes + mid_nodes)
+    assert all(partitions_reindexed[n] == "low" for n in periphery_nodes)

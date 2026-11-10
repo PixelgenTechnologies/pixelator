@@ -186,8 +186,9 @@ class PNAGraphBackend(NetworkXGraphBackend):
         )
         markers_df = markers_df.reset_index(names="node")
         markers_df = markers_df.pivot_table(
-            index="node", columns=0, aggfunc="size", fill_value=0
+            index="node", columns=0, aggfunc="size", fill_value=0, sort=False
         )
+        markers_df = markers_df.reindex(sorted(markers_df.columns), axis=1)
         markers_df.columns.name = "marker"
 
         return markers_df
