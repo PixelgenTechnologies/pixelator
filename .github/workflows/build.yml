@@ -43,7 +43,13 @@ jobs:
     name: "Build"
     runs-on: ubuntu-latest
     needs: [pre_job]
-    if: needs.pre_job.outputs.paths_result == '{}' || !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
+    # Release tags and `main` always build: the release commit only touches the changelog,
+    # so the path filter would skip it after the earlier successful run on `dev`.
+    if: >-
+      github.ref_type == 'tag' ||
+      github.ref == 'refs/heads/main' ||
+      needs.pre_job.outputs.paths_result == '{}' ||
+      !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
 
     steps:
       - name: Checkout
