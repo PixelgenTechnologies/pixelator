@@ -38,6 +38,10 @@ jobs:
                 - 'pyproject.toml'
                 - 'src/**'
                 - 'containers/**'
+                - '.github/actions/setup-image-build-env/action.yml'
+                - '.github/actions/build-dev-image/action.yml'
+                - '.github/workflows/build.yml'
+                - '.github/workflows/nf-core-pipeline-test.yml'
 
   build:
     name: "Build"
@@ -50,6 +54,8 @@ jobs:
       github.ref == 'refs/heads/main' ||
       needs.pre_job.outputs.paths_result == '{}' ||
       !fromJSON(needs.pre_job.outputs.paths_result).python.should_skip
+    outputs:
+      image: ${{ steps.image_ref.outputs.image }}
 
     steps:
       - name: Checkout
@@ -71,3 +77,33 @@ jobs:
         with:
           cache-from: "type=registry,ref=ghcr.io/pixelgentechnologies/pixelator:dev-buildcache"
           cache-to: "type=registry,ref=ghcr.io/pixelgentechnologies/pixelator:dev-buildcache,mode=max"
+
+      # Pick the immutable `sha-<commit>` tag on ghcr.io for the downstream tests,
+      # so later pushes to the same PR or branch cannot swap the image under them.
+      - name: Select image for downstream tests
+        id: image_ref
+        env:
+          TAGS: ${{ steps.build_image.outputs.tags }}
+        run: |
+          image=$(echo "$TAGS" | grep -m1 '^ghcr.io/pixelgentechnologies/pixelator:sha-' || true)
+          if [[ -z "$image" ]]; then
+            image=$(echo "$TAGS" | grep -m1 '^ghcr.io/pixelgentechnologies/pixelator:' || true)
+          fi
+          if [[ -z "$image" ]]; then
+            echo "::error::No ghcr.io image tag found in: $TAGS"
+            exit 1
+          fi
+          echo "Image for downstream tests: $image"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+  nf-core-pipeline-test:
+    name: "nf-core/pixelator"
+    needs: [build]
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/nf-core-pipeline-test.yml
+    permissions:
+      contents: read
+      packages: read
+    with:
+      image: ${{ needs.build.outputs.image }}
+      pipeline-ref: "dev"

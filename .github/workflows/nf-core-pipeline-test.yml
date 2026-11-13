@@ -1,0 +1,187 @@
+#schema: https://github.com/softprops/github-actions-schemas/blob/master/workflow.json
+#
+# Run the nf-test suite of the nf-core/pixelator pipeline with a pixelator
+# container image built from this repository.
+#
+# Every pixelator step in the pipeline is switched to the given image with the
+# pipeline's `--pixelator_container` parameter. The question this answers is
+# "does the pipeline still run with this version of pixelator?", so snapshot
+# mismatches (pixelator version strings, changed outputs) do not fail the job:
+# the tests run with `--update-snapshot`, and the resulting snapshot changes
+# are reported in the job summary for review instead. Any other assertion,
+# such as a failed pipeline run or process, still fails the job.
+#
+# Called from build.yml after the image is pushed. It can also be started by
+# hand from the Actions tab ("Run workflow") with any image and pipeline ref.
+name: "nf-core/pixelator pipeline tests"
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: "Full reference of the pixelator image to test"
+        required: true
+        type: string
+      pipeline-ref:
+        description: "Branch, tag or commit of nf-core/pixelator to test against"
+        required: false
+        type: string
+        default: "dev"
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "Full reference of the pixelator image to test (e.g. ghcr.io/pixelgentechnologies/pixelator:pr-123)"
+        required: true
+        type: string
+      pipeline-ref:
+        description: "Branch, tag or commit of nf-core/pixelator to test against"
+        required: false
+        type: string
+        default: "dev"
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  NXF_ANSI_LOG: false
+  # Used when the versions cannot be read from the pipeline's own CI config
+  DEFAULT_NFT_VER: "0.9.4"
+  DEFAULT_NXF_VER: "25.10.4"
+
+jobs:
+  nf-test:
+    name: "nf-test (shard ${{ matrix.shard }}/${{ strategy.job-total }})"
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        # The test suite is split over these parallel jobs with `nf-test --shard`
+        shard: [1, 2, 3, 4]
+    env:
+      IMAGE: ${{ inputs.image }}
+      PIPELINE_REF: ${{ inputs.pipeline-ref }}
+
+    steps:
+      - name: Check out nf-core/pixelator
+        uses: actions/checkout@v4
+        with:
+          repository: nf-core/pixelator
+          ref: ${{ inputs.pipeline-ref }}
+
+      - name: Show pipeline commit
+        run: |
+          echo "Testing nf-core/pixelator@${PIPELINE_REF} ($(git rev-parse HEAD)) with ${IMAGE}"
+
+      # Use the same nf-test and Nextflow versions as the pipeline's own CI,
+      # so a version bump in the pipeline does not break this job.
+      - name: Read nf-test and Nextflow versions from the pipeline
+        id: versions
+        run: |
+          nft_ver=$(yq '.env.NFT_VER' .github/workflows/nf-test.yml 2>/dev/null || true)
+          nxf_ver=$(yq '.jobs["nf-test"].strategy.matrix.NXF_VER[0]' .github/workflows/nf-test.yml 2>/dev/null || true)
+          if [[ -z "$nft_ver" || "$nft_ver" == "null" ]]; then nft_ver="$DEFAULT_NFT_VER"; fi
+          if [[ -z "$nxf_ver" || "$nxf_ver" == "null" ]]; then nxf_ver="$DEFAULT_NXF_VER"; fi
+          echo "nf-test: $nft_ver, Nextflow: $nxf_ver"
+          echo "nft=$nft_ver" >> "$GITHUB_OUTPUT"
+          echo "nxf=$nxf_ver" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Nextflow
+        uses: nf-core/setup-nextflow@v3
+        with:
+          version: ${{ steps.versions.outputs.nxf }}
+
+      - name: Install nf-test
+        uses: nf-core/setup-nf-test@v2
+        with:
+          version: ${{ steps.versions.outputs.nft }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      # Pull up front so a missing image fails here with a clear message
+      # instead of deep inside a Nextflow task.
+      - name: Pull the pixelator image
+        run: |
+          docker pull "$IMAGE"
+          docker run --rm "$IMAGE" pixelator --version
+
+      - name: Use the pixelator image in all pipeline tests
+        run: |
+          {
+            echo ""
+            echo "// Added by the pixelator CI: run every pixelator step with the image under test"
+            echo "params.pixelator_container = '${IMAGE}'"
+          } >> tests/nextflow.config
+          tail -n 3 tests/nextflow.config
+
+      - name: Run nf-test
+        run: |
+          nf-test test \
+            --profile=+docker \
+            --update-snapshot \
+            --verbose \
+            --tap=test.tap \
+            --shard ${{ matrix.shard }}/${{ strategy.job-total }}
+
+      # Guard against the override silently not applying: in that case the
+      # pipeline would pull its own pinned pixelator release and pass anyway.
+      - name: Check that only the image under test was used
+        run: |
+          used=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep -E '/pixelator:' | grep -vxF "$IMAGE" || true)
+          if [[ -n "$used" ]]; then
+            echo "::error::The tests used pixelator images other than ${IMAGE}:"
+            echo "$used"
+            exit 1
+          fi
+          echo "Only ${IMAGE} was used for pixelator steps."
+
+      - name: Summarise results
+        if: always()
+        run: |
+          git diff -- '*.snap' > snapshot-changes.diff || true
+          {
+            echo "## nf-core/pixelator@${PIPELINE_REF} — shard ${{ matrix.shard }}/${{ strategy.job-total }}"
+            echo ""
+            echo "Image: \`${IMAGE}\`"
+            echo ""
+            if [[ -f test.tap ]]; then
+              echo "| Status | Test |"
+              echo "|:------:|------|"
+              while IFS= read -r line; do
+                if [[ $line =~ ^ok\ [0-9]+\ (.*)$ ]]; then
+                  echo "| ✅ | ${BASH_REMATCH[1]} |"
+                elif [[ $line =~ ^not\ ok\ [0-9]+\ (.*)$ ]]; then
+                  echo "| ❌ | ${BASH_REMATCH[1]} |"
+                fi
+              done < test.tap
+            else
+              echo "⚠️ No test results found."
+            fi
+            echo ""
+            if [[ -s snapshot-changes.diff ]]; then
+              echo "<details><summary>Snapshot changes compared to the pipeline (informational, not a failure)</summary>"
+              echo ""
+              echo '```diff'
+              head -n 400 snapshot-changes.diff
+              echo '```'
+              echo "</details>"
+            else
+              echo "No snapshot changes."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nf-core-pixelator-test-shard-${{ matrix.shard }}
+          path: |
+            test.tap
+            snapshot-changes.diff
+          if-no-files-found: ignore
