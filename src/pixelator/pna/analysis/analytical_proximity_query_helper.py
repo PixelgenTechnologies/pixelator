@@ -1,9 +1,11 @@
 """Module for constructing analytical proximity sql queries.
 
-The expected join counts are calculated analytically under the same null model
-as the marker permutation test: the markers of the umi1 nodes and the markers of
-the umi2 nodes are independently shuffled within each component, keeping the
-graph and the number of nodes per marker fixed.
+The expected join counts are calculated analytically under an edge-level null
+model: the `marker_1` labels and the `marker_2` labels are independently shuffled
+across the edges of each component, keeping the number of edges per marker on
+each side fixed. Since the marker frequencies are taken over edges rather than
+over nodes, markers whose nodes have a higher average degree get a
+correspondingly higher expected join count.
 
 Copyright © 2026 Pixelgen Technologies AB
 """
@@ -20,34 +22,29 @@ DEFAULT_MIN_STD = 1.0
 def _ordered_pair_moments(side_1: str, side_2: str) -> tuple[str, str]:
     """Construct SQL expressions for the mean and variance of an ordered join count.
 
-    The ordered join count N_XY is the number of edges where the umi1 node has
-    marker X (taken from the `side_1` marker table alias) and the umi2 node has
-    marker Y (taken from the `side_2` marker table alias).
+    The ordered join count N_XY is the number of edges where `marker_1` is X
+    (taken from the `side_1` marker table alias) and `marker_2` is Y (taken
+    from the `side_2` marker table alias).
 
-    Under the permutation null, with E edges, U1 umi1 nodes (of which n1 have
-    marker X) and U2 umi2 nodes (of which n2 have marker Y):
+    Under the edge-level permutation null, with E edges, of which e1 have
+    `marker_1` X and e2 have `marker_2` Y:
 
-        p = n1 / U1, a = n1 (n1 - 1) / (U1 (U1 - 1))
-        q = n2 / U2, b = n2 (n2 - 1) / (U2 (U2 - 1))
+        p = e1 / E, a = e1 (e1 - 1) / (E (E - 1))
+        q = e2 / E, b = e2 (e2 - 1) / (E (E - 1))
         E[N_XY] = E p q
-        Var[N_XY] = E p q + (S1 - E) p b + (S2 - E) a q + K a b - (E p q)^2
+        Var[N_XY] = E p q + E (E - 1) a b - (E p q)^2
 
-    where S1 and S2 are the sums of squared node degrees of umi1 and umi2 nodes,
-    and K = E^2 - S1 - S2 + E is the number of ordered edge pairs that share no
-    node. The S1 and S2 terms capture that all edges of a node carry the same
-    marker, which makes the join counts more variable than if every edge was an
-    independent draw.
+    Note that this null treats every edge as an independent draw, i.e. it does
+    not account for all edges of a node carrying the same marker.
     """
-    p = f"({side_1}.n1 / cs.n_umi1)"
-    q = f"({side_2}.n2 / cs.n_umi2)"
-    a = f"({side_1}.n1 * ({side_1}.n1 - 1) / cs.n_umi1_pairs)"
-    b = f"({side_2}.n2 * ({side_2}.n2 - 1) / cs.n_umi2_pairs)"
+    p = f"({side_1}.e1 / cs.n_edges)"
+    q = f"({side_2}.e2 / cs.n_edges)"
+    a = f"({side_1}.e1 * ({side_1}.e1 - 1) / cs.n_edge_pairs)"
+    b = f"({side_2}.e2 * ({side_2}.e2 - 1) / cs.n_edge_pairs)"
     mean = f"(cs.n_edges * {p} * {q})"
     var = f"""(
         cs.n_edges * {p} * {q}
-        + (cs.sum_sq_degree_1 - cs.n_edges) * {p} * {b}
-        + (cs.sum_sq_degree_2 - cs.n_edges) * {a} * {q}
-        + cs.n_disjoint_edge_pairs * {a} * {b}
+        + cs.n_edge_pairs * {a} * {b}
         - {mean} * {mean}
     )"""
     return mean, var
@@ -88,91 +85,49 @@ def jcs_with_analytical_stats(
             WHERE {"component IN $components" if components else "TRUE"}
         )"""
 
-    cte_nodes = """
-        umi1_nodes AS (
-            SELECT sample, component, umi1, ANY_VALUE(marker_1) AS marker, COUNT(*) AS degree
-            FROM current_edgelist
-            GROUP BY sample, component, umi1
-        ),
-        umi2_nodes AS (
-            SELECT sample, component, umi2, ANY_VALUE(marker_2) AS marker, COUNT(*) AS degree
-            FROM current_edgelist
-            GROUP BY sample, component, umi2
-        )"""
-
     cte_component_stats = """
-        umi1_stats AS (
-            SELECT
-                sample, component,
-                CAST(COUNT(*) AS DOUBLE) AS n_umi1,
-                CAST(SUM(degree) AS DOUBLE) AS n_edges,
-                CAST(SUM(degree * degree) AS DOUBLE) AS sum_sq_degree_1
-            FROM umi1_nodes
-            GROUP BY sample, component
-        ),
-        umi2_stats AS (
-            SELECT
-                sample, component,
-                CAST(COUNT(*) AS DOUBLE) AS n_umi2,
-                CAST(SUM(degree * degree) AS DOUBLE) AS sum_sq_degree_2
-            FROM umi2_nodes
-            GROUP BY sample, component
-        ),
         component_stats AS (
             SELECT
-                s1.sample, s1.component,
-                s1.n_edges, s1.n_umi1, s2.n_umi2,
-                s1.sum_sq_degree_1, s2.sum_sq_degree_2,
-                -- Number of ordered pairs of distinct nodes (clamped to avoid division by zero,
-                -- the numerators are always zero when there is only one node)
-                GREATEST(s1.n_umi1 * (s1.n_umi1 - 1), 1) AS n_umi1_pairs,
-                GREATEST(s2.n_umi2 * (s2.n_umi2 - 1), 1) AS n_umi2_pairs,
-                -- Number of ordered pairs of edges that share neither the umi1 nor the umi2 node
-                s1.n_edges * s1.n_edges - s1.sum_sq_degree_1 - s2.sum_sq_degree_2 + s1.n_edges
-                    AS n_disjoint_edge_pairs
-            FROM umi1_stats s1
-            JOIN umi2_stats s2
-                ON s1.sample = s2.sample AND s1.component = s2.component
+                sample, component,
+                CAST(COUNT(*) AS DOUBLE) AS n_edges,
+                -- Number of ordered pairs of distinct edges (clamped to avoid division
+                -- by zero, the numerators are always zero when there is only one edge)
+                GREATEST(CAST(COUNT(*) AS DOUBLE) * (COUNT(*) - 1), 1) AS n_edge_pairs
+            FROM current_edgelist
+            GROUP BY sample, component
         )"""
 
     cte_marker_stats = """
-        all_markers AS (
-            SELECT sample, component, marker FROM umi1_nodes
-            UNION
-            SELECT sample, component, marker FROM umi2_nodes
-        ),
         marker_1_counts AS (
-            SELECT sample, component, marker, COUNT(*) AS n1
-            FROM umi1_nodes
-            GROUP BY sample, component, marker
+            SELECT sample, component, marker_1 AS marker, COUNT(*) AS e1
+            FROM current_edgelist
+            GROUP BY sample, component, marker_1
         ),
         marker_2_counts AS (
-            SELECT sample, component, marker, COUNT(*) AS n2
-            FROM umi2_nodes
-            GROUP BY sample, component, marker
+            SELECT sample, component, marker_2 AS marker, COUNT(*) AS e2
+            FROM current_edgelist
+            GROUP BY sample, component, marker_2
         ),
         marker_stats AS (
             SELECT
-                am.sample,
-                am.component,
-                am.marker,
-                CAST(COALESCE(m1.n1, 0) AS DOUBLE) AS n1,
-                CAST(COALESCE(m2.n2, 0) AS DOUBLE) AS n2
-            FROM all_markers am
-            LEFT JOIN marker_1_counts m1
-                ON am.sample = m1.sample AND am.component = m1.component AND am.marker = m1.marker
-            LEFT JOIN marker_2_counts m2
-                ON am.sample = m2.sample AND am.component = m2.component AND am.marker = m2.marker
+                COALESCE(m1.sample, m2.sample) AS sample,
+                COALESCE(m1.component, m2.component) AS component,
+                COALESCE(m1.marker, m2.marker) AS marker,
+                CAST(COALESCE(m1.e1, 0) AS DOUBLE) AS e1,
+                CAST(COALESCE(m2.e2, 0) AS DOUBLE) AS e2
+            FROM marker_1_counts m1
+            FULL OUTER JOIN marker_2_counts m2
+                ON m1.sample = m2.sample AND m1.component = m2.component AND m1.marker = m2.marker
         )"""
 
     mean_ab, var_ab = _ordered_pair_moments("ma", "mb")
     mean_ba, var_ba = _ordered_pair_moments("mb", "ma")
-    # Covariance of the two ordered join counts N_AB and N_BA (A != B). Only edge pairs
-    # that share no node contribute, since a node can not have both marker A and B.
+    # Covariance of the two ordered join counts N_AB and N_BA (A != B). Only pairs of
+    # distinct edges contribute, since a single edge can not have marker_1 both A and B.
     cov_ab_ba = f"""(
-        cs.n_disjoint_edge_pairs
-        * (ma.n1 * mb.n1 / cs.n_umi1_pairs)
-        * (ma.n2 * mb.n2 / cs.n_umi2_pairs)
+        cs.n_edge_pairs
+        * (ma.e1 * mb.e1 / cs.n_edge_pairs)
+        * (ma.e2 * mb.e2 / cs.n_edge_pairs)
         - {mean_ab} * {mean_ba}
     )"""
 
@@ -240,7 +195,6 @@ def jcs_with_analytical_stats(
     analysis_query = f"""
     WITH
     {get_current_edgelist},
-    {cte_nodes},
     {cte_component_stats},
     {cte_marker_stats},
     {cte_expected},
