@@ -32,7 +32,9 @@ from pixelator.pna.pixeldataset.io import write_null_pxl
 
 @click.command(
     "graph",
-    short_help=("compute graph, components and metrics from an edge list"),
+    short_help=(
+        "compute graph, components and metrics from an aggregated edgelist (parquet)"
+    ),
     options_metavar="<options>",
 )
 @click.argument(
@@ -191,6 +193,8 @@ def graph(
     output,
 ):
     """Find connected components from the input molecules.
+
+    The input is the molecule edgelist Parquet file produced by the ``aggregate`` command.
 
     Before community detection, the core-1 layer (nodes that can be peeled off by repeatedly
     removing degree-1 UMIs, i.e. everything outside the graph's 2-core) is set aside, since it

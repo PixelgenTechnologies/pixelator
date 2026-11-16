@@ -10,7 +10,7 @@ import click
 import yappi
 
 from pixelator import __version__
-from pixelator.cli.common import AliasedOrderedGroup, logger
+from pixelator.cli.common import AliasedOrderedGroup, OrderedGroup, logger
 from pixelator.cli.logging import LoggingSetup
 from pixelator.cli.plugin import add_cli_plugins
 from pixelator.common.duckdb_utils import (
@@ -121,7 +121,7 @@ from pixelator.pna.cli.misc import (
 from pixelator.pna.cli.sample_calling import sample_calling_cli
 
 
-@click.group()
+@click.group(cls=OrderedGroup)
 @click.option(
     "--list-designs",
     is_flag=True,
@@ -159,19 +159,21 @@ def single_cell_pna():
 
 main_cli.add_command(single_cell_pna)
 
-# Add all commands to the group
-single_cell_pna.add_command(amplicon)
-single_cell_pna.add_command(demux)
-single_cell_pna.add_command(collapse)
+# Add all commands to the group, in pipeline order (this is the order shown in `--help`).
+# Main workflow: edgelist -> aggregate -> graph -> graph-collapse
+single_cell_pna.add_command(edgelist)
+single_cell_pna.add_command(aggregate)
 single_cell_pna.add_command(graph)
+single_cell_pna.add_command(graph_collapse)
 single_cell_pna.add_command(sample_calling_cli, name="sample-calling")
 single_cell_pna.add_command(denoise)
 single_cell_pna.add_command(analysis)
 single_cell_pna.add_command(layout)
+# Deprecated workflow: amplicon -> demux -> collapse
+single_cell_pna.add_command(amplicon)
+single_cell_pna.add_command(demux)
+single_cell_pna.add_command(collapse)
 single_cell_pna.add_command(combine_collapse, name="combine-collapse")
-single_cell_pna.add_command(edgelist)
-single_cell_pna.add_command(aggregate)
-single_cell_pna.add_command(graph_collapse)
 
 # Add cli plugins as commands on top level
 add_cli_plugins(main_cli)

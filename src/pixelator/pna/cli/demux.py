@@ -47,6 +47,7 @@ def _chunk_size_validator(ctx, param, value):
     "demux",
     short_help="demultiplex pixel data (FASTQ) to generate one file per antibody",
     options_metavar="<options>",
+    deprecated="use the `edgelist` command instead.",
 )
 @click.argument(
     "fastq_file",

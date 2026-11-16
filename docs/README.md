@@ -23,7 +23,7 @@ Key files:
 - Docstrings are formatted according to [Google conventions for docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings).
 - Where possible, internal names have cross-referencing pointing to a page in the docs, and external names map to the public external documentation site. Links to stable external documentation are kept in `intersphinx_mapping` in `docs/conf.py`.
 - The `__all__` lists in the package `__init__.py` files determine which name-links are shown on the parent package page in the API reference.
-- The CLI docs use [sphinx-click](https://sphinx-click.readthedocs.io/en/latest/). Only the `single-cell-pna` command tree is rendered, selected via `:commands: single-cell-pna` in `docs/cli/index.rst`.
+- The CLI docs use [sphinx-click](https://sphinx-click.readthedocs.io/en/latest/). The full `pixelator` command tree (`pixelator.cli.main:main_cli`) is rendered with `:nested: full` in `docs/cli/index.rst`, with no `:commands:` filter. Commands follow their registration order in `src/pixelator/cli/main.py`, and deprecated commands are labeled as such.
 - The site uses the [PyData Sphinx theme](https://pydata-sphinx-theme.readthedocs.io/) with a version switcher, configured in `html_theme_options` in `docs/conf.py` (the switcher reads `switcher.json`; see "Deployment").
 
 
