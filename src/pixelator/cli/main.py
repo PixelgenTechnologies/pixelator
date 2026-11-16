@@ -55,12 +55,9 @@ from pixelator.common.utils import click_echo, get_available_cpu_count
 def main_cli(ctx, verbose: bool, profile: bool, log_file: str, cores: int):
     """Run the main CLI entrypoint for pixelator.
 
-    \b
-    Exit codes:
-      0    success
-      1    error (e.g. invalid input); re-running will not help
-      137  out of memory, out of spill space or worker killed; re-run with
-           more resources
+    Exit codes: 0 on success, 1 on errors that re-running will not fix (e.g.
+    invalid input), and 137 when a command runs out of memory or spill space,
+    or a worker process is killed (re-run with more resources).
     """
     # early out if run in help mode
     if any(x in sys.argv for x in ["--help", "--version"]):
