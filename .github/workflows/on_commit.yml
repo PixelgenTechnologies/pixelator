@@ -3,15 +3,27 @@ on:
   push:
     branches: [dev]
 
+permissions: {}
+
 jobs:
   dispatch:
     name: send_commit_hash
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app-token
+        with:
+          client-id: ${{ vars.SYNC_DISPATCH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SYNC_DISPATCH_APP_PRIVATE_KEY }}
+          owner: PixelgenTechnologies
+          repositories: pixelator-internal
+          permission-contents: write
+
       - name: Post commit hash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-            curl -H "Accept: application/vnd.github.everest-preview+json" \
-            -H "Authorization: token ${{ secrets.DISPATCH_TOKEN }}" \
-            --request POST \
-            --data '{"event_type": "new-pixelator-commit", "client_payload": { "commit_hash": "${{ github.sha }}" }}' ${{ secrets.SEND_COMMIT_URL }}
+          gh api repos/PixelgenTechnologies/pixelator-internal/dispatches \
+            -f event_type=new-pixelator-commit \
+            -f "client_payload[commit_hash]=${GITHUB_SHA}"
