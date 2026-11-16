@@ -34,6 +34,7 @@ from pixelator.pna.utils import get_read_sample_name, is_read_file
     "amplicon",
     short_help=("process diverse raw pixel data (FASTQ) formats into common amplicon"),
     options_metavar="<options>",
+    deprecated="use the `edgelist` command instead.",
 )
 @click.argument(
     "fastq_1",

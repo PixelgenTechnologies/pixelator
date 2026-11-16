@@ -1,4 +1,4 @@
-"""Graph-collapse console script for pixelator (internal).
+"""Graph-collapse console script for pixelator.
 
 Copyright © 2026 Pixelgen Technologies AB.
 """
@@ -38,7 +38,7 @@ from pixelator.pna.pixeldataset.io import PxlFile
 @click.command(
     "graph-collapse",
     short_help=(
-        "collapse likely UMI sequencing errors on low-degree nodes, per component, after the graph step"
+        "Collapse likely UMI sequencing errors on low-degree nodes of a graph pxl file, per component."
     ),
     options_metavar="<options>",
 )
@@ -110,6 +110,9 @@ def graph_collapse(
     memory,
 ):
     """Collapse likely UMI sequencing errors on low-degree nodes, per component.
+
+    Runs on the pxl file produced by the ``graph`` command, as an alternative to the
+    deprecated ``collapse`` command, which corrects UMI errors before the graph step.
 
     Since a UMI read error is unlikely to recur, an erroneous UMI typically shows up as a leaf
     node (degree 1) in its component's proximity graph. ``--max-degree`` chooses which nodes

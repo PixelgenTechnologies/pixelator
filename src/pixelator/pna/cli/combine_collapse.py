@@ -58,6 +58,7 @@ def validate_mismatches(ctx, param, value):
     "combine-collapse",
     short_help=("Combine parquet and json files from partitioned collapse results."),
     options_metavar="<options>",
+    deprecated="use the `aggregate` command instead.",
 )
 @click.option(
     "--parquet",

@@ -69,6 +69,7 @@ def validate_mismatches(ctx, param, value):
         "Detect duplicates and perform error correction on demultiplexed PNA data (parquet)."
     ),
     options_metavar="<options>",
+    deprecated="use the `aggregate` command instead.",
 )
 @click.argument(
     "input_files",
