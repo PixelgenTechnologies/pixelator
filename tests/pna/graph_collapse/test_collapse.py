@@ -3,6 +3,8 @@
 Copyright © 2026 Pixelgen Technologies AB.
 """
 
+import shutil
+
 import duckdb
 
 from pixelator.pna.graph_collapse.collapse import (
@@ -182,6 +184,49 @@ def test_identical_edges_sum_their_counts():
     assert types["uei_count"] == "USMALLINT"
 
 
+def test_marker_sequences_are_kept_on_merged_edges():
+    """``marker_sequence_1`` and ``marker_sequence_2`` follow their markers through a merge.
+
+    1→2 makes (1, 4) the same edge as (2, 4). Both rows carry the same marker
+    sequences, so they still merge, and the merged row keeps them.
+    """
+    con = duckdb.connect()
+    con.execute("""
+        CREATE TABLE _batch_edges (
+            component VARCHAR,
+            marker_1 VARCHAR,
+            marker_2 VARCHAR,
+            umi1 UBIGINT,
+            umi2 UBIGINT,
+            marker_sequence_1 VARCHAR,
+            marker_sequence_2 VARCHAR,
+            read_count UINTEGER
+        )
+    """)
+    con.execute("""
+        INSERT INTO _batch_edges VALUES
+            ('c', 'CD3', 'CD4', 1, 4, 'AAAA', 'CCCC', 2),
+            ('c', 'CD3', 'CD4', 2, 4, 'AAAA', 'CCCC', 5),
+            ('c', 'CD3', 'CD8', 2, 8, 'AAAA', 'GGGG', 1)
+    """)
+    con.execute(
+        "CREATE TEMP TABLE _renames (component VARCHAR, original UBIGINT, corrected UBIGINT)"
+    )
+    con.execute("INSERT INTO _renames VALUES ('c', 1, 2)")
+    con.execute("CREATE TABLE edgelist AS SELECT * FROM _batch_edges LIMIT 0")
+
+    write_collapsed_edges(con)
+
+    assert con.execute("""
+        SELECT umi1, umi2, marker_sequence_1, marker_sequence_2, read_count
+        FROM edgelist
+        ORDER BY ALL
+    """).fetchall() == [
+        (2, 4, "AAAA", "CCCC", 7),
+        (2, 8, "AAAA", "GGGG", 1),
+    ]
+
+
 def test_renames_are_found_per_component_of_the_batch():
     """The binding's component ids map back to the names of the batch.
 
@@ -282,3 +327,41 @@ def test_result_does_not_depend_on_the_batch_size(graph_pxl_file, tmp_path):
     assert large["metadata"] == input_before["metadata"]
     assert large["tables"] == input_before["tables"]
     assert len(large["edgelist"]) < len(input_before["edgelist"])
+
+
+def test_marker_sequences_are_carried_into_the_output(graph_pxl_file, tmp_path):
+    """An edgelist with marker sequences keeps them, one per marker, and collapses as without.
+
+    The fixture predates the marker sequence columns, so they are added here,
+    derived from the marker names so that each marker has one sequence.
+    """
+    with_sequences = tmp_path / "with_sequences.pxl"
+    shutil.copy(graph_pxl_file, with_sequences)
+    with duckdb.connect(str(with_sequences)) as con:
+        con.execute("""
+            ALTER TABLE edgelist ADD COLUMN marker_sequence_1 VARCHAR;
+            ALTER TABLE edgelist ADD COLUMN marker_sequence_2 VARCHAR;
+            UPDATE edgelist SET
+                marker_sequence_1 = 'seq-' || marker_1,
+                marker_sequence_2 = 'seq-' || marker_2;
+        """)
+
+    without = _collapse(graph_pxl_file, tmp_path / "without.pxl", batch_edges=1)
+    with_ = _collapse(with_sequences, tmp_path / "with.pxl", batch_edges=1)
+
+    assert with_ == without
+    with duckdb.connect(str(tmp_path / "with.pxl"), read_only=True) as con:
+        columns = [row[0] for row in con.execute("DESCRIBE edgelist").fetchall()]
+        assert {"marker_sequence_1", "marker_sequence_2"} <= set(columns)
+        assert (
+            con.execute("""
+            SELECT COUNT(*) FROM edgelist
+            WHERE marker_sequence_1 IS DISTINCT FROM 'seq-' || marker_1
+               OR marker_sequence_2 IS DISTINCT FROM 'seq-' || marker_2
+        """).fetchone()[0]
+            == 0
+        )
+        n_with = con.execute("SELECT COUNT(*) FROM edgelist").fetchone()[0]
+    with duckdb.connect(str(tmp_path / "without.pxl"), read_only=True) as con:
+        n_without = con.execute("SELECT COUNT(*) FROM edgelist").fetchone()[0]
+    assert n_with == n_without

@@ -72,8 +72,29 @@ def edgelist_cli_run(testdata_300k):
 def test_edgelist_paired_run_writes_parquet(edgelist_cli_run):
     """Paired raw FASTQ reads produce a single edgelist parquet."""
     _, _, df = edgelist_cli_run
-    assert df.columns == ["marker_1", "marker_2", "umi1", "umi2"]
+    assert df.columns == [
+        "marker_1",
+        "marker_2",
+        "umi1",
+        "umi2",
+        "marker_sequence_1",
+        "marker_sequence_2",
+    ]
     assert df.height > 0
+
+
+def test_edgelist_stores_one_panel_sequence_per_marker(edgelist_cli_run):
+    """Each marker carries its panel sequence, the same on every row."""
+    _, _, df = edgelist_cli_run
+    for marker, sequence in (
+        ("marker_1", "marker_sequence_1"),
+        ("marker_2", "marker_sequence_2"),
+    ):
+        assert df[sequence].null_count() == 0
+        assert df[sequence].cast(pl.String).str.contains("^[ACGT]+$").all()
+        assert (
+            df.group_by(marker).agg(pl.col(sequence).n_unique())[sequence] == 1
+        ).all()
 
 
 def test_edgelist_output_names_follow_the_input_fastq(edgelist_cli_run):
