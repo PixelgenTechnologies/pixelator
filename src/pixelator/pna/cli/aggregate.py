@@ -32,7 +32,10 @@ logger = logging.getLogger(__name__)
     help=(
         "Collapse the per-read edgelist Parquet produced by the edgelist command "
         "into unique molecules, counting reads per molecule. Multiple input "
-        "files are merged into a single output."
+        "files are merged into a single output.\n\n"
+        "Exits with code 137 if DuckDB runs out of memory or spill space "
+        "(re-run with more resources), and with code 1 on other errors such as "
+        "invalid input."
     ),
     options_metavar="<options>",
 )

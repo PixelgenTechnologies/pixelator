@@ -7,7 +7,9 @@ import json
 import tempfile
 from pathlib import Path
 
+import duckdb
 import polars as pl
+import pytest
 from click.testing import CliRunner
 
 from pixelator import cli
@@ -153,6 +155,37 @@ def test_aggregate_cli_sample_name_override():
         assert not (out_dir / "sample.parquet").exists()
 
 
+@pytest.mark.parametrize(
+    "error",
+    [duckdb.OutOfMemoryException("out of memory"), MemoryError("out of memory")],
+)
+def test_aggregate_cli_exits_137_on_out_of_memory(monkeypatch, error):
+    """Out-of-memory failures exit with 137 so that they can be retried."""
+
+    def raise_oom(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr("pixelator.pna.cli.aggregate.aggregate_edgelist", raise_oom)
+
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        input_path = d / "sample.edgelist.parquet"
+        _write_edgelist(input_path)
+
+        result = CliRunner().invoke(
+            cli.main_cli,
+            [
+                "single-cell-pna",
+                "aggregate",
+                str(input_path),
+                "--output",
+                str(d),
+            ],
+        )
+
+        assert result.exit_code == 137
+
+
 def test_aggregate_cli_rejects_non_parquet():
     """Non-parquet input is rejected."""
     runner = CliRunner()
@@ -173,7 +206,7 @@ def test_aggregate_cli_rejects_non_parquet():
         ]
         result = runner.invoke(cli.main_cli, args)
 
-        assert result.exit_code != 0
+        assert result.exit_code == 1
 
 
 def test_aggregate_cli_reports_invalid_parquet_schema():
@@ -202,6 +235,7 @@ def test_aggregate_cli_reports_invalid_parquet_schema():
             ],
         )
 
-        assert result.exit_code != 0
+        # Input errors are not retryable, so they must not use the OOM code (137).
+        assert result.exit_code == 1
         assert "Invalid edgelist schema" in result.output
         assert "missing columns: umi2" in result.output
