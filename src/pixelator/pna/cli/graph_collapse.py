@@ -152,7 +152,6 @@ def graph_collapse(
 
     input_pxl_file = PxlFile(Path(pxl_file))
     output_path = graph_collapse_output / f"{sample_name}.graph-collapse.pxl"
-    output_pxl_file_target = PxlFile.copy_pxl_file(input_pxl_file, output_path)
 
     assay = pna_config.get_assay(design)
     umi1_length = assay.get_region_by_id("umi-1").max_len
@@ -164,7 +163,8 @@ def graph_collapse(
     try:
         input_dataset = read(input_pxl_file.path)
     except NullPxlFileError as exc:
-        # The copied null pxl file stays in the output as the pass-through result.
+        # A copy of the null pxl file is the pass-through result.
+        PxlFile.copy_pxl_file(input_pxl_file, output_path)
         logger.warning("%s", exc)
         GraphCollapseSampleReport(
             sample_id=sample_name,
@@ -187,7 +187,8 @@ def graph_collapse(
     umis_input = int(input_dataset.adata().obs["n_umi"].sum())
 
     result = run_graph_collapse(
-        output_pxl_file_target,
+        input_pxl_file,
+        output_path,
         n_threads=threads,
         bfs_distance=bfs_distance,
         hamming_threshold=hamming_threshold,
@@ -198,7 +199,7 @@ def graph_collapse(
         memory_limit=memory,
         temp_directory=ctx.obj.get("DUCKDB_TEMP_DIR"),
     )
-    collapsed_dataset = read(output_pxl_file_target.path)
+    collapsed_dataset = read(output_path)
 
     reads_output = int(collapsed_dataset.adata().obs["reads_in_component"].sum())
     umis_output = int(collapsed_dataset.adata().obs["n_umi"].sum())

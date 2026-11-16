@@ -134,7 +134,7 @@ def test_graph_collapse_cli_report_collapsed_sequences(graph_pxl_file):
 
 
 def test_graph_collapse_cli_memory_limit_reaches_duckdb(graph_pxl_file, monkeypatch):
-    """--memory is a soft DuckDB limit, applied to the read and the writer connection."""
+    """--memory is a soft DuckDB limit, applied to the connection that writes the output."""
     pxl_path = graph_pxl_file
     seen = []
 
@@ -175,7 +175,7 @@ def test_graph_collapse_cli_memory_limit_reaches_duckdb(graph_pxl_file, monkeypa
 
     assert cmd.exit_code == 0, cmd.output
     # 2G is 2000000000 bytes, which init_duckdb_conn expresses as 2000 MiB.
-    assert seen == ["1.9 GiB", "1.9 GiB"]
+    assert seen == ["1.9 GiB"]
 
 
 def test_graph_collapse_cli_rejects_an_unparseable_memory_limit(graph_pxl_file):

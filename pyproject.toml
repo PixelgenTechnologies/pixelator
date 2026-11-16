@@ -98,6 +98,11 @@ docs = [
 ]
 
 
+# TODO: Remove once pixelator-core is released with the batched graph-collapse
+# binding (PixelgenTechnologies/pixelator-core#53), and require that version above.
+[tool.uv.sources]
+pixelgen-pixelator-core = { git = "https://github.com/PixelgenTechnologies/pixelator-core", branch = "feature/pna-3683_batch_graph_collapse", subdirectory = "packages/python_bindings" }
+
 [project.scripts]
 pixelator = "pixelator.cli:main_cli"
 

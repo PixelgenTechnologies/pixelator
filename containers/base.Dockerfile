@@ -41,6 +41,10 @@ RUN microdnf install -y \
     nasm \
     && microdnf clean all
 
+# TODO: Remove once pixelgen-pixelator-core is installed from a released wheel
+# again. Until then it is built from a git branch, which needs a Rust toolchain.
+RUN microdnf install -y rust cargo && microdnf clean all
+
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1
 
 # Disable Python downloads, because we want to use the system interpreter

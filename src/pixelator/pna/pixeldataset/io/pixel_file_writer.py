@@ -6,6 +6,7 @@ Copyright © 2025 Pixelgen Technologies AB.
 from __future__ import annotations
 
 import tempfile
+from collections.abc import Collection
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,10 +18,15 @@ from pixelator.pna.config.panel.tables import (
     stored_panel_marker_columns,
     write_panel_tables,
 )
+from pixelator.pna.pixeldataset.io.query_builder import quote_identifier
 from pixelator.pna.utils import init_duckdb_conn
 
 if TYPE_CHECKING:
     from pixelator.pna.config.panel import PNAAntibodyPanel
+
+
+def _sql_string(value: str) -> str:
+    return "'" + value.replace("'", "''") + "'"
 
 
 class PixelFileWriter:
@@ -52,6 +58,8 @@ class PixelFileWriter:
         exits_ok: bool = False,
         temp_dir: Path | str | None = None,
         temp_dir_size_limit: str | None = None,
+        memory_limit: int | None = None,
+        threads: int | None = None,
     ):
         """Initialize the PixelFileWriter.
 
@@ -61,11 +69,15 @@ class PixelFileWriter:
             temp_dir: DuckDB spill directory. Defaults to ``PIXELATOR_DUCKDB_TEMP_DIR`` or ``/tmp``.
             temp_dir_size_limit: DuckDB spill size limit. Defaults to
                 ``PIXELATOR_DUCKDB_MAX_TEMP_DIR_SIZE`` when set.
+            memory_limit: DuckDB memory limit in bytes. No limit when ``None``.
+            threads: Number of DuckDB threads. DuckDB decides when ``None``.
         """
         self.path = path
         self.exists_ok = exits_ok
         self._temp_dir = temp_dir
         self._temp_dir_size_limit = temp_dir_size_limit
+        self._memory_limit = memory_limit
+        self._threads = threads
         if self.exists_ok and self.path.exists():
             self.path.unlink()
         self._connection: duckdb.DuckDBPyConnection = None  # type: ignore
@@ -77,6 +89,8 @@ class PixelFileWriter:
             read_only=False,
             temp_dir=self._temp_dir,
             temp_dir_size_limit=self._temp_dir_size_limit,
+            memory_limit=self._memory_limit,
+            threads=self._threads,
         )
 
     def close(self):
@@ -102,6 +116,44 @@ class PixelFileWriter:
     def __exit__(self, exc_type, exc_value, traceback):
         """Close the writer context manager."""
         self.close()
+
+    def copy_from(self, source: Path, empty_tables: Collection[str] = ()) -> None:
+        """Copy the contents of the PXL file ``source`` into this file.
+
+        Every schema, table, view, macro, type and sequence of ``source`` is
+        recreated here, with the same column types, and the rows of every table
+        are copied, except those of the tables named in ``empty_tables``, which
+        are left empty for the caller to fill. ``source`` is only read.
+
+        This file must not hold any of these objects yet.
+
+        Args:
+            source: The PXL file to copy from.
+            empty_tables: Names of tables in the ``main`` schema to create
+                without their rows.
+        """
+        alias = "__copy_source"
+        target = self._connection.execute("SELECT current_database()").fetchone()[0]  # type: ignore[index]
+        self._connection.execute(
+            f"ATTACH {_sql_string(str(source))} AS {alias} (READ_ONLY)"
+        )
+        try:
+            self._connection.execute(
+                f"COPY FROM DATABASE {alias} TO {quote_identifier(target)} (SCHEMA)"
+            )
+            tables = self._connection.execute(
+                "SELECT schema_name, table_name FROM duckdb_tables() WHERE database_name = ?",
+                [alias],
+            ).fetchall()
+            for schema, table in tables:
+                if schema == "main" and table in empty_tables:
+                    continue
+                name = f"{quote_identifier(schema)}.{quote_identifier(table)}"
+                self._connection.execute(
+                    f"INSERT INTO {name} SELECT * FROM {alias}.{name}"
+                )
+        finally:
+            self._connection.execute(f"DETACH {alias}")
 
     def _write_parquet_file_to_table(
         self, table_name, edgelist_file: Path | list[Path]
