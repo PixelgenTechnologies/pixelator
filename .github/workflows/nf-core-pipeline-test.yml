@@ -1,0 +1,144 @@
+#schema: https://github.com/softprops/github-actions-schemas/blob/master/workflow.json
+#
+# Run the nf-core/pixelator pipeline on its proxiome v2 test data with a
+# pixelator container image built from this repository.
+#
+# Every pixelator step in the pipeline is switched to the given image with the
+# pipeline's `--pixelator_container` parameter. The question this answers is
+# "does the pipeline still run with this version of pixelator?": the job fails
+# if any pipeline step fails. Outputs are not compared with expected results.
+name: "nf-core/pixelator pipeline test"
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: "Full reference of the pixelator image to test"
+        required: true
+        type: string
+      pipeline-ref:
+        description: "Branch, tag or commit of nf-core/pixelator to test against"
+        required: false
+        type: string
+        default: "dev"
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "Full reference of the pixelator image to test (e.g. ghcr.io/pixelgentechnologies/pixelator:pr-123)"
+        required: true
+        type: string
+      pipeline-ref:
+        description: "Branch, tag or commit of nf-core/pixelator to test against"
+        required: false
+        type: string
+        default: "dev"
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  NXF_ANSI_LOG: false
+  # The pipeline's test profile to run
+  TEST_PROFILE: "test_proxiome_v2"
+  # Used when the version cannot be read from the pipeline's own CI config
+  DEFAULT_NXF_VER: "25.10.4"
+
+jobs:
+  pipeline:
+    name: "proxiome v2 test run"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      IMAGE: ${{ inputs.image }}
+      PIPELINE_REF: ${{ inputs.pipeline-ref }}
+
+    steps:
+      - name: Check out nf-core/pixelator
+        uses: actions/checkout@v4
+        with:
+          repository: nf-core/pixelator
+          ref: ${{ inputs.pipeline-ref }}
+
+      - name: Show pipeline commit
+        run: |
+          echo "Testing nf-core/pixelator@${PIPELINE_REF} ($(git rev-parse HEAD)) with ${IMAGE}"
+
+      # Use the same Nextflow version as the pipeline's own CI, so a version
+      # bump in the pipeline does not break this job.
+      - name: Read Nextflow version from the pipeline
+        id: versions
+        run: |
+          nxf_ver=$(yq '.jobs["nf-test"].strategy.matrix.NXF_VER[0]' .github/workflows/nf-test.yml 2>/dev/null || true)
+          if [[ -z "$nxf_ver" || "$nxf_ver" == "null" ]]; then nxf_ver="$DEFAULT_NXF_VER"; fi
+          echo "Nextflow: $nxf_ver"
+          echo "nxf=$nxf_ver" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Nextflow
+        uses: nf-core/setup-nextflow@v3
+        with:
+          version: ${{ steps.versions.outputs.nxf }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      # Pull up front so a missing image fails here with a clear message
+      # instead of deep inside a Nextflow task.
+      - name: Pull the pixelator image
+        run: |
+          docker pull "$IMAGE"
+          docker run --rm "$IMAGE" pixelator --version
+
+      - name: Run the pipeline
+        run: |
+          nextflow run . \
+            -profile "${TEST_PROFILE},docker" \
+            --outdir results \
+            --pixelator_container "$IMAGE"
+
+      - name: Check that only the image under test was used
+        run: |
+          used=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep -E '/pixelator:' | grep -vxF "$IMAGE" || true)
+          if [[ -n "$used" ]]; then
+            echo "::error::The pipeline used pixelator images other than ${IMAGE}:"
+            echo "$used"
+            exit 1
+          fi
+          echo "Only ${IMAGE} was used for pixelator steps."
+
+      - name: Summarise results
+        if: always()
+        run: |
+          {
+            echo "## nf-core/pixelator@${PIPELINE_REF} — \`${TEST_PROFILE}\`"
+            echo ""
+            echo "- Pipeline commit: \`$(git rev-parse HEAD)\`"
+            echo "- Image: \`${IMAGE}\`"
+            echo ""
+            if [[ -d results ]]; then
+              echo "<details><summary>Output files</summary>"
+              echo ""
+              echo '```'
+              (cd results && find . -type f -not -path './pipeline_info/*' | sort | head -n 400)
+              echo '```'
+              echo "</details>"
+            else
+              echo "⚠️ No output directory was created."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Nextflow's execution report, timeline, trace and log, for debugging
+      - name: Upload run reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nf-core-pixelator-run-reports
+          path: |
+            results/pipeline_info/
+            .nextflow.log
+          include-hidden-files: true
+          if-no-files-found: ignore
